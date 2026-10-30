@@ -7,8 +7,11 @@ import com.getcapacitor.BridgeActivity;
 /**
  * The WebView paints behind the system bars; Capacitor owns CSS safe insets.
  * Location is approximate only (see UsCoarseLocationChromeClient).
+ * Launched through the activity-alias entries of AndroidManifest.xml: the
+ * default one keeps the old name .MainActivity, so the icon a phone already
+ * has on its home screen survives the update (app icons, 29/10/2026).
  */
-public class MainActivity extends BridgeActivity {
+public class UsActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

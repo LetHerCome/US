@@ -62,6 +62,21 @@ function relationshipDates(){
   const [sy,sm,sd]=parts;
   return nearMonths().map(([y,m])=>({y,m,months:(y-sy)*12+m-(sm-1)})).filter(x=>x.months>=0).map(({y,m,months})=>({day:clampedDay(y,m,sd),months}));
 }
+// Traguardi dei giorni (29/10/2026): every 100 days together in the months on
+// screen, as Eventi has them (they open Eventi, like a mesiversario).
+function daysMilestoneItems(){
+  const D=window.UsCalendarDomain,start=snapshot?.startedOn;
+  if(!D?.daysTogether||!dateParts(start))return [];
+  const [first,,last]=nearMonths();
+  const from=D.daysTogether(start,iso(first[0],first[1],1)),to=D.daysTogether(start,iso(last[0],last[1],new Date(last[0],last[1]+1,0).getDate()));
+  if(from===null||to===null||to<100)return [];
+  const [sy,sm,sd]=dateParts(start),out=[];
+  for(let days=Math.max(100,Math.ceil(from/100)*100);days<=to;days+=100){
+    const day=new Date(Date.UTC(sy,sm-1,sd)+days*864e5).toISOString().slice(0,10);
+    out.push({day,item:{kind:'relationship',months:-1,days,title:D.daysMilestoneTitle(days),time:D.daysMilestoneLine(days),sort:'00:00'}});
+  }
+  return out;
+}
 function relationshipItem(months){
   const base={kind:'relationship',months,sort:'00:00'};
   if(months===0)return {...base,title:'Il nostro giorno',time:'Dove è iniziato tutto'};
@@ -87,6 +102,7 @@ function itemsByDate() {
     map.get(day).push(item);
   };
   for(const {day,months} of relationshipDates())push(day,relationshipItem(months));
+  for(const {day,item} of daysMilestoneItems())push(day,item);
   for(const e of snapshot?.events||[]){
     const time=e.event_time?String(e.event_time).slice(0,5):'';
     for(const day of eventDates(e))push(day,{kind:'event',id:e.id,title:e.title||'Evento',time:time||(e.recurs_yearly?'Ogni anno':'Una data speciale'),sort:time||'00:01'});

@@ -294,8 +294,8 @@ const scope = (name) => settingsPage.match(new RegExp(`<section class="us-settin
 const settingsIn = (chunk) => [...chunk.matchAll(/data-us-setting="([a-z-]+)"/g)].map((m) => m[1]);
 
 test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the couple shares', () => {
-  // US V3 — Personalizza Oggi (Tema, Effetto) is this phone's own choice: TU.
-  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'oggi-theme', 'oggi-effect', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status', 'report']);
+  // US V3 — Personalizza Oggi was this phone's own choice in TU; since 29/10/2026 (founder) it lives in Sintonia only.
+  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'person-color', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status', 'report']);
   assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'together-mode', 'story-archive', 'leave-couple']);
   assert.match(scope('voi'), /<article class="us-couple-id-card" id="usCoupleIdCard"/, 'the couple card is shared state');
   assert.match(scope('tu'), /<h3 id="usSettingsTuTitle">Tu<\/h3>/);
@@ -305,7 +305,7 @@ test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the cou
 test('Settings: every control exists exactly once and keeps its existing action', () => {
   const all = settingsIn(settingsPage);
   assert.equal(new Set(all).size, all.length, 'no duplicated control');
-  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'leave-couple', 'location', 'logout', 'maudit', 'notifications', 'oggi-effect', 'oggi-theme', 'optimize-ricordi', 'privacy', 'profile-photo', 'relationship-date', 'report', 'story-archive', 'sync-status', 'together-mode', 'widgets']);
+  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'leave-couple', 'location', 'logout', 'maudit', 'notifications', 'optimize-ricordi', 'person-color', 'privacy', 'profile-photo', 'relationship-date', 'report', 'story-archive', 'sync-status', 'together-mode', 'widgets']);
   const settingsJs = read('settings.js');
   for (const name of all) assert.match(settingsJs, new RegExp(`if\\(name==='${name}'\\)`), `${name} is still handled`);
   for (const id of ['usRelationshipDateValue', 'usNotificationsValue', 'usDistanceUnitValue', 'usLocationState', 'usFeedbackValue', 'usSyncValue', 'usStoryArchiveValue', 'usSettingsBuild', 'usCoupleAvatars', 'usCoupleNames', 'usTogetherLine', 'usSettingsDeviceDot']) {
@@ -347,7 +347,7 @@ test('release: one BUILD_ID owns HTML, version marker and atomic shell cache', (
 
 test('no new dependencies', () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/haptics', '@capacitor/ios', '@capacitor/push-notifications', '@supabase/supabase-js', '@us/app-lock', '@us/google-signin', '@us/push-support', '@us/splash-theme', '@us/widget-bridge']); // Accesso con Google (25/10/2026): local Credential Manager plugin; M15: iOS platform; Native Security V1: local app-lock plugin; Native Notifications V1: official push plugin + local push-support; 18/10/2026: local splash-theme plugin (Android splash follows the app theme)
+  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/haptics', '@capacitor/ios', '@capacitor/push-notifications', '@capawesome/capacitor-app-update', '@supabase/supabase-js', '@us/app-icon', '@us/app-lock', '@us/google-signin', '@us/photo-place', '@us/push-support', '@us/splash-theme', '@us/widget-bridge']); // Mappa dei Ricordi (29/10/2026): local photo-place plugin; Icone dell'app (29/10/2026, Premi Sintonia V2): local app-icon plugin; Aggiornamento dell'app (29/10/2026, founder): Play in-app updates plugin; Accesso con Google (25/10/2026): local Credential Manager plugin; M15: iOS platform; Native Security V1: local app-lock plugin; Native Notifications V1: official push plugin + local push-support; 18/10/2026: local splash-theme plugin (Android splash follows the app theme)
   assert.deepEqual(Object.keys(pkg.devDependencies).sort(), ['@capacitor/cli', '@electric-sql/pglite', 'esbuild']);
 });
 

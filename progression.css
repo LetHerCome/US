@@ -46,7 +46,21 @@
 @media(min-width:560px){.us-reward-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
 /* ---------- preview primitives ---------- */
-.us-cos-stage,.us-cos-theme,.us-cos-accent{position:absolute;inset:0;display:block}
+.us-cos-stage,.us-cos-theme,.us-cos-accent,.us-cos-think{position:absolute;inset:0;display:block}
+/* Ti penso (Premi Sintonia V2): Classico one heart, Cuori a burst in your two colours. */
+.us-cos-think{background:radial-gradient(100% 70% at 50% 0%,rgba(255,255,255,.05),transparent 62%),#141018}
+.us-cos-think i{position:absolute;width:22%;aspect-ratio:1;left:39%;top:36%;background:var(--us-rosa);-webkit-mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat}
+.us-cos-think[data-think="classic"] i+i{display:none}
+.us-cos-think[data-think="hearts"] i:nth-child(1){left:22%;top:46%;width:18%;transform:rotate(-14deg)}
+.us-cos-think[data-think="hearts"] i:nth-child(2){left:40%;top:22%;width:24%;background:var(--us-lilla)}
+.us-cos-think[data-think="hearts"] i:nth-child(3){left:62%;top:44%;width:16%;transform:rotate(12deg)}
+/* Fase 2: the letter (the closed envelope) and the companions' accessories. */
+.us-cos-think[data-think="letter"] i{display:none}
+.us-cos-think[data-think="letter"]{background:var(--art) center/58% no-repeat,radial-gradient(100% 70% at 50% 0%,rgba(255,255,255,.05),transparent 62%),#141018}
+/* Their pictures come from progression.js (--art), fetched only when the collection shows them. */
+.us-cos-acc{position:absolute;inset:0;display:block;background:var(--art,none) center/58% no-repeat,radial-gradient(100% 70% at 50% 0%,rgba(255,255,255,.05),transparent 62%),#141018}
+.us-cos-icon{background-size:46%,auto}
+
 
 .us-cos-stage{display:grid;place-items:center;background:radial-gradient(110% 80% at 50% 0%,rgba(255,255,255,.06),transparent 64%),#141018}
 
@@ -255,3 +269,6 @@
    the first screen away from the next milestone and the collection. */
 
 #bond details:not([open]) > :not(summary){display:none!important}
+
+/* Founder, 29/10/2026: the Oggi gallery opens from its Sintonia groups. */
+.us-reward-group-gallery{display:block;width:100%;min-height:44px;margin:10px 0 2px;border:1px solid var(--us-color-line,rgba(255,255,255,.12));border-radius:999px;background:transparent;color:var(--us-color-text);font:600 14px/1.2 var(--us-font-ui);cursor:pointer}

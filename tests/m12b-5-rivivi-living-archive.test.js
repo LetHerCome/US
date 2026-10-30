@@ -120,65 +120,56 @@ test('M12B.5 dedup: a linked Moment whose source is not readable any more keeps 
   assert.equal(t[0].date, '2026-05-08');
 });
 
-// ---------------------------------------------------------------- eligibility
-test('M12B.5 eligibility: old Moment yes, recent Moment no; unkept Daily answers are not an input at all', () => {
+// ---------------------------------------------------------------- the very day
+// Founder, 29/10/2026: Rivivi only on the very day of a memory (the same date in
+// a past year, the same day of the month in a past month), never at random;
+// no such memory today, no Rivivi. TODAY is 2026-10-01.
+test('Rivivi: a memory of the same day, one or more months ago, comes back that day only', () => {
   const { api } = load();
-  assert.equal(api.pickRivivi(api.timeline([m('recent', '2026-09-20')]), TODAY), null);
-  assert.equal(api.pickRivivi(api.timeline([m('old', '2026-06-01')]), TODAY).entry.sourceKey, 'moment:old');
-  assert.doesNotMatch(CORE, /daily_answers|daily_questions|get_daily_state/, 'only intentionally kept Dailies (keepsakes) reach Ricordi/Rivivi');
+  const t = api.timeline([m('sep', '2026-09-01'), m('other', '2026-09-02')]);
+  const pick = api.pickRivivi(t, TODAY);
+  assert.equal(pick.entry.sourceKey, 'moment:sep');
+  assert.equal(pick.label, 'Un mese fa, oggi');
+  assert.equal(api.pickRivivi(t, '2026-10-02').entry.sourceKey, 'moment:other');
+  assert.equal(api.pickRivivi(t, '2026-10-03'), null, 'no memory of this day: no Rivivi');
+  assert.equal(api.pickRivivi(api.timeline([m('jun', '2026-06-01')]), TODAY).label, '4 mesi fa, oggi');
 });
 
-test('M12B.5 eligibility: lived Da vivere, Event completion and kept Daily without a photo are eligible on their own', () => {
+test('Rivivi: the same date in a past year wins over a month; among years the oldest', () => {
+  const { api } = load();
+  const t = api.timeline([m('apr25', '2025-04-01'), m('oct25', '2025-10-01'), m('oct24', '2024-10-01'), m('sep26', '2026-09-01')]);
+  const pick = api.pickRivivi(t, TODAY);
+  assert.equal(pick.entry.sourceKey, 'moment:oct24');
+  assert.equal(pick.reason, 'anniversary');
+  assert.equal(pick.label, '2 anni fa, oggi');
+  assert.equal(api.pickRivivi(api.timeline([m('oct25', '2025-10-01'), m('apr25', '2025-04-01')]), TODAY).label, 'Un anno fa, oggi', 'a year before 18 months');
+});
+
+test('Rivivi: every kind of memory counts, today and this month do not, the order of the input does not matter', () => {
   const { api } = load();
   for (const [t, key] of [
     [api.timeline([], [lived('b1', 'Mostra', '2026-06-01T18:00:00Z')], [], [], []), 'da_vivere:b1'],
     [api.timeline([], [], [], [ev('c1', '2026-06-01')], []), 'shared_event_completion:c1'],
     [api.timeline([], [], [kept('q1', '2026-06-01')], [], []), 'daily_question:q1'],
   ]) assert.equal(api.pickRivivi(t, TODAY).entry.sourceKey, key);
-  assert.equal(api.pickRivivi(api.timeline([], [], [kept('q1', '2026-09-25')], [ev('c1', '2026-09-28')], []), TODAY), null, 'recent facts wait');
+  assert.equal(api.pickRivivi(api.timeline([m('today', TODAY)]), TODAY), null, 'today itself is not a memory yet');
+  const t1 = api.timeline([m('a', '2026-05-01'), m('b', '2026-05-01')]);
+  assert.equal(api.pickRivivi(t1, TODAY).entry.sourceKey, api.pickRivivi([...t1].reverse(), TODAY).entry.sourceKey);
+  assert.equal(api.pickRivivi([], TODAY), null);
+  assert.equal(api.pickRivivi(null, TODAY), null);
+  assert.doesNotMatch(CORE, /daily_answers|daily_questions|get_daily_state/, 'only intentionally kept Dailies (keepsakes) reach Ricordi/Rivivi');
 });
 
-// ---------------------------------------------------------------- selection
-test('M12B.5 selection: an anniversary (±3 days, past year) wins across source kinds, closest first', () => {
+test('Rivivi: a memory of the 31st waits for a month that has one', () => {
   const { api } = load();
-  const t = api.timeline([m('m-old', '2026-03-01')], [lived('b1', 'Mostra', '2024-10-04T12:00:00Z')], [], [ev('c1', '2025-09-30')], []);
-  const pick = api.pickRivivi(t, TODAY);
-  assert.equal(pick.reason, 'anniversary');
-  assert.equal(pick.entry.sourceKey, 'shared_event_completion:c1');
-  assert.equal(pick.label, 'Un anno fa, in questi giorni');
+  const t = api.timeline([m('m31', '2026-08-31')]);
+  assert.equal(api.pickRivivi(t, '2026-09-30'), null);
+  assert.equal(api.pickRivivi(t, '2026-10-31').label, '2 mesi fa, oggi');
 });
 
-test('M12B.5 selection: without anniversary only 30+ day facts, stable for the whole day and independent of input order', () => {
-  const { api } = load();
-  const a = [m('m1', '2026-03-01')], b = [lived('b1', 'Mostra', '2026-05-01T12:00:00Z')], c = [ev('c1', '2026-06-01')], d = [kept('q1', '2026-07-01')], recent = [m('m-new', '2026-09-15')];
-  const t1 = api.timeline([...a, ...recent], b, d, c, []);
-  const t2 = api.timeline([...recent, ...a], [...b].reverse(), d, c, []);
-  const p1 = api.pickRivivi(t1, TODAY), p2 = api.pickRivivi(t1, TODAY), p3 = api.pickRivivi([...t2].reverse(), TODAY);
-  assert.equal(p1.reason, 'resurface');
-  assert.equal(p1.entry.sourceKey, p2.entry.sourceKey);
-  assert.equal(p1.entry.sourceKey, p3.entry.sourceKey);
-  assert.notEqual(p1.entry.sourceKey, 'moment:m-new');
-});
-
-test('M12B.5 selection: consecutive days rotate (also across a month boundary), so the same fact is not shown two days running', () => {
-  const { api } = load();
-  const t = api.timeline([m('m1', '2026-03-01'), m('m2', '2026-04-01')]);
-  for (const [d1, d2] of [['2026-09-30', '2026-10-01'], ['2026-10-31', '2026-11-01'], ['2026-12-31', '2027-01-01'], ['2026-06-10', '2026-06-11']]) {
-    assert.notEqual(api.pickRivivi(t, d1).entry.sourceKey, api.pickRivivi(t, d2).entry.sourceKey, `${d1} → ${d2}`);
-  }
-});
-
-// US 1.0 R7 replaces the anniversary-only gate: Rivivi also brings back "X mesi fa".
 test('US 1.0 R7: Ricordi paints Rivivi for anniversaries and for "X mesi fa"', () => {
   assert.match(CORE, /renderRicordiRivivi\(ricordiPickRivivi\(timeline,today\),displayUrls,names\);/);
   assert.doesNotMatch(CORE, /reason==='anniversary'\?/);
-});
-
-test('M12B.5 selection: only recent history, or nothing, gives no Rivivi (never filler)', () => {
-  const { api } = load();
-  assert.equal(api.pickRivivi(api.timeline([m('m1', '2026-09-10')], [lived('b1', 'X', '2026-09-20T10:00:00Z')], [], [], []), TODAY), null);
-  assert.equal(api.pickRivivi([], TODAY), null);
-  assert.equal(api.pickRivivi(null, TODAY), null);
 });
 
 test('M12B.5 consistency: Rivivi candidates, the story and Capitoli are the same entries', () => {
@@ -186,7 +177,7 @@ test('M12B.5 consistency: Rivivi candidates, the story and Capitoli are the same
   const t = api.timeline([m('m1', '2025-02-15'), m('m2', '2025-06-01')], [lived('b1', 'Mostra', '2025-03-01T10:00:00Z')], [kept('q1', '2025-04-01')], [ev('c1', '2025-02-14')], [prov('shared_event_completion', 'c1', 'm1')]);
   const total = [...api.chapters(t)].reduce((n, c) => n + c.count, 0);
   assert.equal(total, t.length);
-  for (const day of ['2026-02-14', '2026-03-01', '2026-04-01', '2026-06-01', TODAY]) {
+  for (const day of ['2026-02-14', '2026-03-01', '2026-04-01', '2026-06-01']) {
     const pick = api.pickRivivi(t, day);
     assert.ok(pick && keys(t).includes(pick.entry.sourceKey), day);
   }
@@ -219,7 +210,7 @@ test('M12B.5 card: a lived source with its photo shows source snapshot date/titl
     [m('m1', '2026-05-12', { caption: null })],
     [lived('b1', 'Concerto rinominato', '2026-05-11T22:00:00Z')],
     [], [], [prov('da_vivere', 'b1', 'm1', { source_title: 'Concerto al Circo Massimo', source_date: '2026-05-10' })]);
-  render(api.pickRivivi(t, TODAY), new Map([['p/m1', 'https://signed/m1']]), new Map([['u1', 'Francesco']]));
+  render(api.pickRivivi(t, '2026-10-10'), new Map([['p/m1', 'https://signed/m1']]), new Map([['u1', 'Francesco']]));
   assert.match(root.innerHTML, /data-ricordi-open="m1" data-source-key="da_vivere:b1" data-rivivi-kind="experience"/);
   assert.match(root.innerHTML, /data-date="10 mag 2026"/);
   assert.match(root.innerHTML, /data-caption="Concerto al Circo Massimo"/);
@@ -228,7 +219,7 @@ test('M12B.5 card: a lived source with its photo shows source snapshot date/titl
 
 test('M12B.5 card: Event without photo uses the historical snapshot title, says "Evento vissuto" and never opens the mutable event', () => {
   const { api, render, root } = load();
-  render(api.pickRivivi(api.timeline([], [], [], [ev('c1', '2026-03-07', { title: 'Cena a Roma', current_title: 'Rinominato' })], []), TODAY), new Map(), new Map());
+  render(api.pickRivivi(api.timeline([], [], [], [ev('c1', '2026-03-07', { title: 'Cena a Roma', current_title: 'Rinominato' })], []), '2026-10-07'), new Map(), new Map());
   assert.match(root.innerHTML, /<b translate="no">Cena a Roma<\/b><span>7 marzo 2026 · Evento vissuto<\/span>/);
   assert.match(root.innerHTML, /Vissuto insieme il 7 marzo 2026\.<\/p>/);
   assert.doesNotMatch(root.innerHTML, /Rinominato|editEvent|openEventEditor|data-ricordi-experience/);
@@ -236,14 +227,14 @@ test('M12B.5 card: Event without photo uses the historical snapshot title, says 
 
 test('M12B.5 card: a legacy completion (title_source live) is shown with the declared live fallback, nothing backfilled', () => {
   const { api, render, root } = load();
-  render(api.pickRivivi(api.timeline([], [], [], [ev('c1', '2026-03-07', { title: 'Anniversario', title_source: 'live' })], []), TODAY), new Map(), new Map());
+  render(api.pickRivivi(api.timeline([], [], [], [ev('c1', '2026-03-07', { title: 'Anniversario', title_source: 'live' })], []), '2026-10-07'), new Map(), new Map());
   assert.match(root.innerHTML, /<b translate="no">Anniversario<\/b>/);
   assert.match(root.innerHTML, /Il titolo è quello di oggi: quello di allora non era registrato\./);
 });
 
 test('M12B.5 card: a lived Da vivere without photo opens the existing Da vivere detail', () => {
   const { api, render, root } = load();
-  render(api.pickRivivi(api.timeline([], [lived('b1', 'Mostra di Frida', '2026-04-10T18:00:00Z')], [], [], []), TODAY), new Map(), new Map());
+  render(api.pickRivivi(api.timeline([], [lived('b1', 'Mostra di Frida', '2026-04-10T18:00:00Z')], [], [], []), '2026-10-10'), new Map(), new Map());
   assert.match(root.innerHTML, /<b translate="no">Mostra di Frida<\/b><span>10 aprile 2026 · Le vostre idee<\/span>/);
   assert.match(root.innerHTML, /<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="b1">Apri nelle vostre idee<\/button>/);
 });

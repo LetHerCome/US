@@ -11,11 +11,20 @@ project(':capacitor-haptics').projectDir = new File('../node_modules/@capacitor/
 include ':capacitor-push-notifications'
 project(':capacitor-push-notifications').projectDir = new File('../node_modules/@capacitor/push-notifications/android')
 
+include ':capawesome-capacitor-app-update'
+project(':capawesome-capacitor-app-update').projectDir = new File('../node_modules/@capawesome/capacitor-app-update/android')
+
+include ':us-app-icon'
+project(':us-app-icon').projectDir = new File('../native-plugins/us-app-icon/android')
+
 include ':us-app-lock'
 project(':us-app-lock').projectDir = new File('../native-plugins/us-app-lock/android')
 
 include ':us-google-signin'
 project(':us-google-signin').projectDir = new File('../native-plugins/us-google-signin/android')
+
+include ':us-photo-place'
+project(':us-photo-place').projectDir = new File('../native-plugins/us-photo-place/android')
 
 include ':us-push-support'
 project(':us-push-support').projectDir = new File('../native-plugins/us-push-support/android')

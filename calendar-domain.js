@@ -170,7 +170,37 @@
     return `${timedBranch},${allDayBranch}`;
   }
 
+  // Traguardi dei giorni insieme (29/10/2026): calendar days since «Insieme
+  // dal», a milestone every 100, 1000 with its own name. The same count as
+  // the server's hourly job (supabase/functions/_shared/relationship-milestones.mjs).
+  const DAYS_STEP = 100;
+  const isoDay = (value) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ''));
+    return m ? Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+  };
+  function daysTogether(startedOn, todayISO) {
+    const start = isoDay(startedOn), today = isoDay(todayISO);
+    return start === null || today === null ? null : Math.round((today - start) / 864e5);
+  }
+  function daysMilestoneOn(startedOn, todayISO) {
+    const days = daysTogether(startedOn, todayISO);
+    return days > 0 && days % DAYS_STEP === 0 ? days : 0;
+  }
+  function nextDaysMilestone(startedOn, todayISO) {
+    const days = daysTogether(startedOn, todayISO);
+    if (days === null || days < 0) return null;
+    const next = days > 0 && days % DAYS_STEP === 0 ? days : (Math.floor(days / DAYS_STEP) + 1) * DAYS_STEP;
+    return { date: new Date(isoDay(startedOn) + next * 864e5).toISOString().slice(0, 10), days: next, days_left: next - days };
+  }
+  const daysMilestoneTitle = (days) => (days === 1000 ? 'Mille giorni ♡' : `${days} giorni ♡`);
+  const daysMilestoneLine = (days) => (days === 1000 ? 'Mille giorni insieme' : `${days} giorni insieme`);
+
   return {
+    daysTogether,
+    daysMilestoneOn,
+    nextDaysMilestone,
+    daysMilestoneTitle,
+    daysMilestoneLine,
     normalizeIntervals,
     mergeIntervals,
     clipIntervals,

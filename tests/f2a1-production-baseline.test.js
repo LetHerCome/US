@@ -70,7 +70,34 @@ const us10MonthiversaryEdit = (text) => US10_MONTHIVERSARY.reduce((out, [from, t
   return out.replace(from, to);
 }, text);
 
-test('F2A.1 monthiversary-job: repo source is the deployed v4 bytes plus only the F2C VAPID edit, the N2 dispatcher edit and the US 1.0 date/copy edit', () => {
+// Traguardi dei giorni (29/10/2026): which milestones fall today comes from
+// ../_shared/relationship-milestones.mjs (every 100 days, then the
+// mesiversario); each is awarded, the first one granted is told. The
+// mesiversario award (kind, months, XP 60/200) and the copy are unchanged.
+const DAYS_MONTHIVERSARY = [
+  ['import { nativeTransport } from "../_shared/native-push-env.ts";\n',
+    'import { nativeTransport } from "../_shared/native-push-env.ts";\nimport { dueMilestones } from "../_shared/relationship-milestones.mjs";\n'],
+  ['const today=iso(now.year,now.month,now.day);const lastDay=new Date(Date.UTC(now.year,now.month,0)).getUTCDate();\n',
+    'const today=iso(now.year,now.month,now.day);\n'],
+  ['      const [sy,sm,sd]=String(couple.started_on||"").split("-").map(Number);if(!sy||!sm||!sd||Math.min(sd,lastDay)!==now.day)continue;\n'
+    + '      const months=(now.year-sy)*12+(now.month-sm);if(months<=0)continue;\n'
+    + '      const kind=months%12===0?"anniversary":"monthiversary",xp=kind==="anniversary"?200:60;\n'
+    + '      const {data:granted,error:awardError}=await admin.rpc("award_relationship_milestone",{target_couple_id:couple.id,target_milestone_date:today,target_months:months,target_kind:kind,target_xp:xp});\n'
+    + '      if(awardError){console.error("milestone award",awardError);continue;}if(!granted)continue;awarded++;\n',
+  '      let celebrate:any=null;\n'
+    + '      for(const due of dueMilestones(couple.started_on,now)){\n'
+    + '        const {data:granted,error:awardError}=due.kind==="days"?await admin.rpc("award_relationship_days_milestone",{target_couple_id:couple.id,target_milestone_date:today,target_days:due.days,target_xp:due.xp}):await admin.rpc("award_relationship_milestone",{target_couple_id:couple.id,target_milestone_date:today,target_months:due.months,target_kind:due.kind,target_xp:due.xp});\n'
+    + '        if(awardError){console.error("milestone award",awardError);continue;}if(!granted)continue;awarded++;celebrate??=due;\n'
+    + '      }\n'
+    + '      if(!celebrate)continue;const {kind,months,days}=celebrate;\n'],
+  ['buildNotification("relationship",{kind,months,tag:', 'buildNotification("relationship",{kind,months,days,tag:'],
+];
+const daysMonthiversaryEdit = (text) => DAYS_MONTHIVERSARY.reduce((out, [from, to]) => {
+  assert.equal(out.split(from).length, 2, `days edit applies exactly once: ${from.slice(0, 60)}`);
+  return out.replace(from, to);
+}, text);
+
+test('F2A.1 monthiversary-job: repo source is the deployed v4 bytes plus only the F2C VAPID edit, the N2 dispatcher edit, the US 1.0 date/copy edit and the days milestones', () => {
   const deployed = F2A.monthiversary_job;
   assert.equal(deployed.slug, 'monthiversary-job');
   assert.equal(deployed.version, 4);
@@ -79,12 +106,12 @@ test('F2A.1 monthiversary-job: repo source is the deployed v4 bytes plus only th
   assert.deepEqual(names, ['deno.json', 'index.ts']);
   for (const file of deployed.files) {
     const local = fs.readFileSync(path.join(ROOT, 'supabase/functions/monthiversary-job', file.name)).toString('utf8');
-    const expected = file.name === 'index.ts' ? us10MonthiversaryEdit(n2MonthiversaryEdit(f2cMonthiversaryEdit(file.content))) : file.content;
+    const expected = file.name === 'index.ts' ? daysMonthiversaryEdit(us10MonthiversaryEdit(n2MonthiversaryEdit(f2cMonthiversaryEdit(file.content)))) : file.content;
     if (file.name === 'index.ts') {
       assert.notEqual(f2cMonthiversaryEdit(file.content), file.content, 'the F2C edit applies to the recovered bytes');
       assert.notEqual(n2MonthiversaryEdit(f2cMonthiversaryEdit(file.content)), f2cMonthiversaryEdit(file.content), 'the N2 edit applies on top of F2C');
     }
-    assert.equal(local, expected, `${file.name} differs from the deployed source beyond the F2C, N2 and US 1.0 edits`);
+    assert.equal(local, expected, `${file.name} differs from the deployed source beyond the F2C, N2, US 1.0 and days edits`);
   }
   const provenance = read('supabase/functions/monthiversary-job/PROVENANCE.md');
   assert.match(provenance, new RegExp(sha256(deployed.files.find((f) => f.name === 'index.ts').content)), 'the recovered v4 hash stays recorded');
@@ -102,8 +129,11 @@ test('F2A.1 monthiversary-job: config.toml pins verify_jwt=false like production
 test('F2A.1 monthiversary-job: only the cron key, the VAPID key and the award RPC, all service_role-only', () => {
   const source = read('supabase/functions/monthiversary-job/index.ts');
   const rpcs = [...source.matchAll(/\.rpc\("([a-z_0-9]+)"/g)].map((m) => m[1]).sort();
-  assert.deepEqual(rpcs, ['award_relationship_milestone', 'get_internal_monthiversary_cron_key', 'get_internal_vapid_private_key']);
-  for (const name of rpcs) {
+  assert.deepEqual(rpcs, ['award_relationship_days_milestone', 'award_relationship_milestone', 'get_internal_monthiversary_cron_key', 'get_internal_vapid_private_key']);
+  // Added after the F2A capture: service_role-only in its own migration.
+  const daysSql = fs.readFileSync(path.join(ROOT, 'supabase/migrations/20261028232743_days_together_milestones_v1.sql'), 'utf8');
+  assert.ok(daysSql.includes('revoke all on function public.award_relationship_days_milestone(uuid, date, integer, integer) from public, anon, authenticated, service_role;\ngrant execute on function public.award_relationship_days_milestone(uuid, date, integer, integer) to service_role;'));
+  for (const name of rpcs.filter((n) => n !== 'award_relationship_days_milestone')) {
     const fn = prodFunctions.get(`public.${name}`);
     assert.ok(fn, `${name} exists in production`);
     assert.doesNotMatch(fn.acl, /(^|[{,])(anon|authenticated)=/, `${name} must not be client-callable`);

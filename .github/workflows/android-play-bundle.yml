@@ -39,6 +39,11 @@ on:
         description: 'Facoltativo: note della versione per i tester (italiano, max 500 caratteri)'
         type: string
         required: false
+      update_priority:
+        description: 'Aggiornamento dentro l app: 0 normale (scarica in sottofondo), 4-5 urgente (schermo intero)'
+        type: choice
+        default: '0'
+        options: ['0', '1', '2', '3', '4', '5']
   push:
     branches-ignore: [main]
     paths:
@@ -375,6 +380,7 @@ jobs:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           US_ANDROID_VERSION_NAME: ${{ inputs.version_name }}
           US_RELEASE_NOTES: ${{ inputs.release_notes }}
+          US_UPDATE_PRIORITY: ${{ inputs.update_priority }}
         run: |
           set -euo pipefail
           if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then echo "::error::Manca il secret PLAY_SERVICE_ACCOUNT_JSON nell'environment play-deploy"; exit 1; fi

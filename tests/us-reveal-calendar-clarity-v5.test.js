@@ -48,7 +48,7 @@ test('Noi: selected day labels both individual owners and the shared couple',()=
   {id:'b',entry_type:'personal',owner_id:'p2',title:'Palestra',is_all_day:true,dates:['2026-10-09']},
   {id:'c',entry_type:'shared',owner_id:null,title:'Cena',is_all_day:true,dates:['2026-10-09']}],events:[],startedOn:null},
   // US 1.0 (N2/N3): relationship and yearly dates are worked out over three months.
-  year:2026,month:9,relationshipDates:()=>[],eventDates:()=>[],dateOf:x=>new Date(x+'T12:00:00'),today:()=>'2026-10-09',
+  year:2026,month:9,relationshipDates:()=>[],daysMilestoneItems:()=>[],eventDates:()=>[],dateOf:x=>new Date(x+'T12:00:00'),today:()=>'2026-10-09',
   esc:x=>String(x??'').replace(/[&<>"']/g,'?'),icon:x=>'<i>'+x+'</i>'};
  vm.runInNewContext(noi.slice(a,b)+';this.api={ownerLabel,itemsByDate,itemMarkup};',box);
  const index=box.api.itemsByDate();

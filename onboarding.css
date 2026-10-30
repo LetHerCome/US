@@ -14,3 +14,11 @@ html.us-onboarding-active .us-auth-context{display:none;}
 html.us-onboarding-active .auth-overlay{overflow-y:auto;align-items:flex-start;padding-top:max(20px,env(safe-area-inset-top));padding-bottom:max(20px,env(safe-area-inset-bottom));}
 html.us-onboarding-active .auth-card{margin:auto;width:min(100%,420px);min-width:0;max-height:none;overflow:visible;flex-shrink:0;}
 @media(max-height:600px){html.us-onboarding-active .auth-logo{width:48px;height:48px;margin-bottom:10px;}html.us-onboarding-active .auth-card{padding:20px;}}
+
+/* Founder, 29/10/2026: the colour is picked at the first opening. */
+.us-ob-colors{display:grid;grid-template-columns:repeat(4,44px);justify-content:center;gap:12px 16px;margin:14px auto 4px}
+.us-ob-colors[hidden]{display:none}
+.us-ob-swatch{display:grid;place-items:center;width:44px;height:44px;padding:0;border:2px solid transparent;border-radius:50%;background:transparent;cursor:pointer}
+.us-ob-swatch i{display:block;width:30px;height:30px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.us-ob-swatch.is-on{border-color:var(--us-color-text,#f7efe9)}
+.us-ob-swatch:disabled{opacity:.3;cursor:default}

@@ -121,7 +121,9 @@ test('V3 on the baseline: applies twice to the same catalog, and nothing a coupl
 });
 
 test('V3 and the events guard on the full chain, in timestamp order: same catalog, points still unlock looks and countdown styles', async () => {
-  const files = fs.readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort();
+  // The chain up to Premi Sintonia V2 (29/10/2026), which moves the levels on
+  // purpose; its own ladder is pinned by sintonia-rewards-v2-db.test.js.
+  const files = fs.readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql') && f < '20261029031726').sort();
   assert.ok(files.indexOf(V3_FILE) >= 0 && files.indexOf(V3_FILE) < files.indexOf(GUARD_FILE), 'V3 runs before the guard');
   const [chain, reference] = await Promise.all([newDb(), rebuild()]);
   try {

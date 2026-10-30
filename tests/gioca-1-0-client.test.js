@@ -194,7 +194,8 @@ test('S2/S8/S10/T1: level moment, reward scope, Back and the old party (sources)
   // S8 — the scope is said under "I vostri sblocchi"; the next unlock is the mockup's card.
   assert.match(progression, /'Tocca un premio per usarlo\. Vale solo su questo telefono\.'/);
   assert.match(progression, /'Tocca uno stile per usarlo\. Vale per tutti e due\.'/);
-  assert.match(progression, /Prossimo sblocco · Livello \$\{level\}/);
+  // Sintonia V2 (29/10/2026): the level of the headline reward or of the next rewards.
+  assert.match(progression, /Prossimo sblocco · Livello \$\{target\}/);
   // S10 — the mockup's "Più tardi"; the reward stays in the collection; Back closes both windows.
   assert.match(html, /id="usProgressionUnlockLater">Più tardi<\/button>/);
   assert.match(nav, /name:'progression-unlock'[\s\S]*?closeUnlock/);

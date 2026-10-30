@@ -88,5 +88,14 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // trim the same day (~35 KB of rules for markup no longer in the app, and
   // two icons only the old Noi hub used) brings the shell back to ~2.77 MB.
   // The companion pictures stay out of the shell (runtime only, ~290 KB).
-  assert.ok(total <= 2.8 * 1024 * 1024, `precache is ${total} bytes: stays under 2.8 MB`);
+  // 28/10 closed-test fixes (invite link, password toggle, Google on sign-up,
+  // «Insieme dal» selects, sign-in after the verification email) and the Gioca
+  // daily count cross it by ~8 KB: 2.8 -> 2.85 MB.
+  // Premi Sintonia V2 (29/10/2026): Il vostro cielo (sky.js, ~9 KB; the star
+  // catalogue itself is fetched only when the sky is shown), Aurora, the
+  // seasons and Ti penso animato: 2.85 -> 2.9 MB.
+  // Mappa dei Ricordi (29/10/2026): «Dove», the place search and the map view
+  // (ricordi-place.js/css, ~28 KB; MapLibre itself is fetched only when the
+  // map opens): 2.9 -> 2.95 MB.
+  assert.ok(total <= 2.95 * 1024 * 1024, `precache is ${total} bytes: stays under 2.95 MB`);
 });

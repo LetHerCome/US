@@ -86,6 +86,37 @@
     }
   }
 
+  // Beta fix (28/10/2026): every password on the door can be shown with one
+  // tap, and goes back to dots when the step changes.
+  const passwordToggles = [];
+  function mountPasswordToggles() {
+    document.querySelectorAll('#authOverlay .us-auth-field input[type="password"]').forEach((input) => {
+      if (input.dataset.usPassToggle) return;
+      input.dataset.usPassToggle = 'on';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'us-pass-toggle';
+      button.setAttribute('aria-controls', input.id);
+      const sync = () => {
+        const shown = input.type === 'text';
+        button.dataset.shown = String(shown);
+        button.setAttribute('aria-pressed', String(shown));
+        button.setAttribute('aria-label', shown ? 'Nascondi password' : 'Mostra password');
+      };
+      button.addEventListener('click', () => {
+        input.type = input.type === 'password' ? 'text' : 'password';
+        sync();
+        input.focus({ preventScroll: true });
+      });
+      input.insertAdjacentElement('afterend', button);
+      passwordToggles.push({ input, sync });
+      sync();
+    });
+  }
+  function hidePasswords() {
+    for (const { input, sync } of passwordToggles) { input.type = 'password'; sync(); }
+  }
+
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredInstallPrompt = event;
@@ -99,7 +130,8 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('usAuthInstallBtn')?.addEventListener('click', install);
+    mountPasswordToggles();
     renderInstall();
   });
-  window.addEventListener('us-onboarding-view-change', renderInstall);
+  window.addEventListener('us-onboarding-view-change', () => { hidePasswords(); renderInstall(); });
 })();

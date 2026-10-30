@@ -148,7 +148,7 @@ test('first run: the step split keeps the controller fields and the only new wri
   assert.match(onboarding,/<input id="mc3Name"[^>]*required>/);
   assert.match(onboarding,/<label[^>]*for="mc3CreateName" hidden>/);assert.match(onboarding,/<label[^>]*for="mc3JoinName" hidden>/);
   assert.match(onboarding,/id="mc3BirthDay"/);assert.match(onboarding,/id="mc3BirthMonth"/);
-  for(const id of ['mc3CreateName','mc3JoinName','mc3Date','mc3CoupleName','mc3JoinCode','mc3ChooseCreate','mc3ChooseJoin','mc3Color','mc3ColorNext','mc3Waiting','mc3Generate','mc3CopyCode','mc3Revoke','mc3Refresh','mc3Retry','mc3Exit'])assert.match(onboarding,new RegExp(`id="${id}"`),id);
+  for(const id of ['mc3CreateName','mc3JoinName','mc3DateDay','mc3DateMonth','mc3DateYear','mc3CoupleName','mc3JoinCode','mc3ChooseCreate','mc3ChooseJoin','mc3Color','mc3ColorNext','mc3Waiting','mc3Generate','mc3CopyCode','mc3Revoke','mc3Refresh','mc3Retry','mc3Exit'])assert.match(onboarding,new RegExp(`id="${id}"`),id);
   // The controller still reads the create/join name fields, filled from "Tu".
   assert.match(ob,/controller\.create\(\{name:node\('mc3CreateName'\)\.value/);
   assert.match(ob,/name:node\('mc3JoinName'\)\.value,code:node\('mc3JoinCode'\)\.value/);
@@ -232,13 +232,45 @@ test('invite (1.0 A2): the automatic check is quiet, never blocks a tap and neve
   assert.equal(OB.CHECK_MS,10000);
 });
 
-test('invite (1.0 A2): the message to share and the share sheet with its fallback',async()=>{
-  const text=OB.inviteMessage('ABCD-EFGH','2026-10-16T12:03:00Z');
-  assert.equal(text,'Ti aspetto su US ♡\nScegli «Ho un codice d’invito» e incolla questo codice:\nABCD-EFGH\nScade il 16 ottobre alle 14:03.');
-  const english=OB.inviteMessage('ABCD-EFGH','2026-10-16T12:03:00Z',t=>`<${t}>`);
-  assert.equal(english.split('\n')[2],'ABCD-EFGH','the code is never translated');
+test('invite (beta fix 28/10): the message is a link to the invite, without the expiry',async()=>{
+  const code='01JBX4Z7Q8M2N5P6R9S3T4V7W8';
+  const text=OB.inviteMessage(code,undefined,'https://www.uscouple.app');
+  assert.equal(text,`Ti aspetto su US ♡\nApri il mio invito:\nhttps://www.uscouple.app/invito#${code}`);
+  assert.doesNotMatch(text,/[Ss]cade/,'the partner says when it expires, not the message');
+  const english=OB.inviteMessage(code,t=>`<${t}>`,'https://www.uscouple.app');
+  assert.equal(english.split('\n')[2],`https://www.uscouple.app/invito#${code}`,'the link is never translated');
   assert.equal(english.split('\n')[0],'<Ti aspetto su US ♡>');
-  assert.equal(OB.inviteMessage('X','nope').split('\n').length,3);
+  // The page that opens the link: this site on the web, production from the Android app.
+  assert.equal(OB.inviteLink(code,'https://us-staging-s31.pages.dev'),`https://us-staging-s31.pages.dev/invito#${code}`);
+  for(const origin of ['https://localhost','capacitor://localhost','http://127.0.0.1:8080',undefined])assert.equal(OB.inviteLink(code,origin),`https://www.uscouple.app/invito#${code}`,String(origin));
+});
+
+test('invite (beta fix 28/10): the code is found in whatever was pasted',()=>{
+  const code='01JBX4Z7Q8M2N5P6R9S3T4V7W8';
+  assert.equal(OB.inviteCodeIn(code),code);
+  assert.equal(OB.inviteCodeIn(' 01jbx-4z7q 8m2n5p6r9s3t4v7w8 '),code,'typed by hand, lower case, spaces and dashes');
+  assert.equal(OB.inviteCodeIn(`Ti aspetto su US ♡\nApri il mio invito:\nhttps://us-a33.pages.dev/invito#${code}`),code,'the whole WhatsApp message');
+  assert.equal(OB.inviteCodeIn(`Ti aspetto su US ♡\nScegli «Ho un codice d’invito» e incolla questo codice:\n${code}\nScade il 16 ottobre alle 14:03.`),code,'the old message too');
+  assert.equal(OB.inviteCodeIn(`https://us-a33.pages.dev/invito#${code}`),code,'the link alone');
+  for(const nope of ['','Ti aspetto su US','ABC',null])assert.equal(OB.inviteCodeIn(nope),'',String(nope));
+});
+
+test('invite (beta fix 28/10): the web app keeps the code of an opened invite link for the join step',()=>{
+  const code='01JBX4Z7Q8M2N5P6R9S3T4V7W8';
+  const store=()=>{const m=new Map();return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k)};};
+  const session=store(),cleaned=[];
+  const history={replaceState:(s,t,url)=>cleaned.push(url)};
+  const location={hash:`#invito=${code}`,pathname:'/',search:''};
+  assert.equal(OB.takeInvite({location,history,session}),code);
+  assert.deepEqual(cleaned,['/'],'the code leaves the address bar');
+  assert.equal(OB.takeInvite({location:{hash:'',pathname:'/',search:''},history,session}),code,'kept through a reload until used');
+  OB.takeInvite({session,used:true});
+  assert.equal(OB.takeInvite({location:{hash:'',pathname:'/',search:''},history,session}),'');
+  assert.equal(OB.takeInvite({location:{hash:'#access_token=x',pathname:'/',search:''},history,session}),'','other fragments are not invites');
+  assert.equal(cleaned.length,1);
+});
+
+test('invite (1.0 A2): the share sheet with its fallback',async()=>{
   const sent=[],copied=[];
   const clipboard={writeText:async value=>{copied.push(value);}};
   assert.equal(await OB.shareInvite('m',{share:async x=>{sent.push(x);},clipboard}),'shared');assert.deepEqual(sent,[{text:'m'}]);
@@ -261,4 +293,24 @@ test('first run (1.0 F5): the widget is offered only where the launcher can pin 
   assert.equal(await OB.widgetOfferWanted(widgets(Error('bridge'))),false);
   assert.equal(await OB.widgetOfferWanted({isAvailable:()=>true,installed:async()=>({pinSupported:true})}),false,'no pin request available');
   assert.equal(await OB.widgetOfferWanted(widgets({installed:{think:0,photo:2},pinSupported:true})),true);
+});
+
+test('beta fix 28/10: the setup takes the whole door, after Google’s Terms too', () => {
+  // After «Prima di entrare» (usGoogleTerms) the setup opened under it: only
+  // authLogin was put away. Every other auth step leaves when the setup comes.
+  const ob = fs.readFileSync(path.join(__dirname, '..', 'onboarding.js'), 'utf8');
+  assert.match(ob, /if\(active\)\{\n\s+node\('authOverlay'\)\.querySelectorAll\('\.auth-step\.active'\)\.forEach\(step=>\{if\(step!==root\)step\.classList\.remove\('active'\);\}\);/);
+  assert.doesNotMatch(ob, /node\('authLogin'\)\.classList\.remove\('active'\);node\('authOverlay'\)/);
+});
+
+test('beta fix 28/10: «Insieme dal» is day, month and year, so 1980 is one tap away', () => {
+  assert.equal(OB.togetherDate('7', '3', '1980'), '1980-03-07');
+  assert.equal(OB.togetherDate('29', '2', '2024'), '2024-02-29');
+  assert.equal(OB.togetherDate('', '3', '1980'), '', 'every part is needed');
+  assert.equal(OB.validDate(OB.togetherDate('30', '2', '2024'), '2026-10-28'), false, 'no 30 February');
+  assert.deepEqual(OB.togetherYears('2026-10-28').slice(0, 2), [2026, 2025]);
+  assert.equal(OB.togetherYears('2026-10-28').at(-1), 1900, 'down to 1900, newest first');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(html, /<legend>Insieme dal<\/legend>[\s\S]*?id="mc3DateDay"[\s\S]*?id="mc3DateMonth"[\s\S]*?id="mc3DateYear"/);
+  assert.doesNotMatch(html, /id="mc3Date" type="date"/);
 });

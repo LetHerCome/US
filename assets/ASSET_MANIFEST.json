@@ -503,6 +503,1212 @@
       "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
       "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
       "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-symbol-v2.png",
+      "status": "APPROVED",
+      "sha256": "a75c69e23a4e5cf94a6ad06f4b2ae126d8499b281e0a7010f511077427715e4a",
+      "immutable": true,
+      "purpose": "US launcher icon without frame (founder, 29/10/2026), fitted to the Android adaptive safe circle",
+      "usedBy": [
+        "android-launcher"
+      ]
+    },
+    {
+      "path": "assets/source/rewards/us-acc-scarf-v1.png",
+      "status": "APPROVED",
+      "sha256": "e9776eb0e5f2b912abca7b24749b56b442f0a57b01ec670fee31fda6b91379e3",
+      "immutable": true,
+      "purpose": "Sintonia V2 accessory I: knitted scarf, worn by every companion (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/rewards/us-acc-flowers-v1.png",
+      "status": "APPROVED",
+      "sha256": "3f2cf70987f5ae5907dc10f16f315bf1ce8c649b2ac2e4a81cc11f73ad8cff78",
+      "immutable": true,
+      "purpose": "Sintonia V2 accessory II: flower crown, worn by every companion (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/rewards/us-acc-crown-v1.png",
+      "status": "APPROVED",
+      "sha256": "7df9d63e0b6136431048978ec810a66bba9bb1e68b5547e4acc210db6070b20e",
+      "immutable": true,
+      "purpose": "Sintonia V2 level 19: golden crown for the companions (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/rewards/us-acc-gala-v1.png",
+      "status": "APPROVED",
+      "sha256": "0ec980ac2b018c25bf50bf3984be1469309dd9b1b2e19a95c46aa97113c4f404",
+      "immutable": true,
+      "purpose": "Sintonia V2 US Plus extra: Gala collar with bow tie (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/rewards/us-think-letter-closed-v1.png",
+      "status": "APPROVED",
+      "sha256": "0fa21743b672eff39b4f6b3705f91974634446445bae5976a131a7985841037a",
+      "immutable": true,
+      "purpose": "Sintonia V2 Ti penso letter, closed (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/rewards/us-think-letter-open-v1.png",
+      "status": "APPROVED",
+      "sha256": "968d4322afbed5248e9b6e627cdb3659e68b963f9acde6c175474c8cb65907cc",
+      "immutable": true,
+      "purpose": "Sintonia V2 Ti penso letter, open (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/derived/rewards/us-acc-scarf-v1.webp",
+      "status": "APPROVED",
+      "sha256": "221967605bfc6533057e7f716bb1f38976be3df09ce75f4d344e52bae1060474",
+      "immutable": true,
+      "purpose": "scarf on the companions (320 px)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/rewards/us-acc-scarf-v1.png",
+      "sourceSha256": "e9776eb0e5f2b912abca7b24749b56b442f0a57b01ec670fee31fda6b91379e3",
+      "operation": "CROP_CONTENT_3PCT_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-acc-flowers-v1.webp",
+      "status": "APPROVED",
+      "sha256": "89065453ba7280d90a7b89c6b7dae56012dd9757d78bb82286f5bd4b60e1e541",
+      "immutable": true,
+      "purpose": "flower crown on the companions (320 px)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/rewards/us-acc-flowers-v1.png",
+      "sourceSha256": "3f2cf70987f5ae5907dc10f16f315bf1ce8c649b2ac2e4a81cc11f73ad8cff78",
+      "operation": "CROP_CONTENT_3PCT_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-acc-crown-v1.webp",
+      "status": "APPROVED",
+      "sha256": "c33c9d009c03552509fcb531ac1bac5d1fb48e423a810a9d654e1ed4c0f324ab",
+      "immutable": true,
+      "purpose": "crown on the companions (320 px)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/rewards/us-acc-crown-v1.png",
+      "sourceSha256": "7df9d63e0b6136431048978ec810a66bba9bb1e68b5547e4acc210db6070b20e",
+      "operation": "CROP_CONTENT_3PCT_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-acc-gala-v1.webp",
+      "status": "APPROVED",
+      "sha256": "16d150d23f83db0b92c7def4523d2d06d1522eb806f1f591e6859388f371f3bc",
+      "immutable": true,
+      "purpose": "Gala collar on the companions (320 px)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/rewards/us-acc-gala-v1.png",
+      "sourceSha256": "0ec980ac2b018c25bf50bf3984be1469309dd9b1b2e19a95c46aa97113c4f404",
+      "operation": "CROP_CONTENT_3PCT_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-think-letter-closed-v1.webp",
+      "status": "APPROVED",
+      "sha256": "58855e9415871d637b2711d72ef49b2230e1d8084233808b1423c884dcf9540e",
+      "immutable": true,
+      "purpose": "Ti penso letter, closed (480 px)",
+      "usedBy": [
+        "think-letter"
+      ],
+      "source": "assets/source/rewards/us-think-letter-closed-v1.png",
+      "sourceSha256": "0fa21743b672eff39b4f6b3705f91974634446445bae5976a131a7985841037a",
+      "operation": "CROP_CONTENT_3PCT_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-think-letter-open-v1.webp",
+      "status": "APPROVED",
+      "sha256": "4d72cb2b31a09ec5f021b123f09f52eb6a5469a1a2af62532323272581f3c21d",
+      "immutable": true,
+      "purpose": "Ti penso letter, open (480 px)",
+      "usedBy": [
+        "think-letter"
+      ],
+      "source": "assets/source/rewards/us-think-letter-open-v1.png",
+      "sourceSha256": "968d4322afbed5248e9b6e627cdb3659e68b963f9acde6c175474c8cb65907cc",
+      "operation": "CROP_CONTENT_3PCT_WEBP_Q90"
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-symbol-notte-v1.png",
+      "status": "APPROVED",
+      "sha256": "34155dd3a70e7be420e317097f2a5ccd3319cd245bede40cd9e8eda78d0aeb1f",
+      "immutable": true,
+      "purpose": "App icon Notte: silver logo, fitted to the adaptive safe circle (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": [
+        "android-launcher-alias"
+      ]
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-background-notte-v1.png",
+      "status": "APPROVED",
+      "sha256": "ef84127d9e7c457d42884548e569fa413d68b2dfe99ca3713fa5a521d96ab0b0",
+      "immutable": true,
+      "purpose": "App icon Notte: night blue background (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": [
+        "android-launcher-alias"
+      ]
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-symbol-oro-v1.png",
+      "status": "APPROVED",
+      "sha256": "756a401bfeb30122374318bcef78972374baf79595bc42fce6f6bf33489dab68",
+      "immutable": true,
+      "purpose": "App icon Oro: gold logo, fitted to the adaptive safe circle (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": [
+        "android-launcher-alias"
+      ]
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-background-oro-v1.png",
+      "status": "APPROVED",
+      "sha256": "c36718277795114bf409d714afac50a84a694aae8f408126464d0db41cc68662",
+      "immutable": true,
+      "purpose": "App icon Oro: dark plum background with a gold glow (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": [
+        "android-launcher-alias"
+      ]
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-symbol-neon-v1.png",
+      "status": "APPROVED",
+      "sha256": "67a986fd9b13047a2c9c2cf1419c75050815117a402fffdf3b231276f110e804",
+      "immutable": true,
+      "purpose": "App icon Neon (US Plus): neon logo, fitted to the adaptive safe circle (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": [
+        "android-launcher-alias"
+      ]
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-background-neon-v1.png",
+      "status": "APPROVED",
+      "sha256": "7b842aecf5efac1d65b050a53fd967aff7f709e903d4dcb7bc05b668fbb74719",
+      "immutable": true,
+      "purpose": "App icon Neon (US Plus): dark background with a pink and lilac glow (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": [
+        "android-launcher-alias"
+      ]
+    },
+    {
+      "path": "assets/source/pet/us-pet-all-companions-sheet-v1.png",
+      "status": "APPROVED",
+      "sha256": "cface62bb946ee93aaaeadc5c5047b62022b40eb132d43df33a82ae79bd0251d",
+      "immutable": true,
+      "purpose": "All four companions on one sheet (Maudit sheet v2 + companions sheet v1, scaled, no labels): the reference for the accessory sheets",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "status": "APPROVED",
+      "sha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "immutable": true,
+      "purpose": "Founder ChatGPT sheet, approved 29/10/2026: the four companions wearing the scarf (blue for Maudit and the dragon, pink for the goat and the owl)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "status": "APPROVED",
+      "sha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "immutable": true,
+      "purpose": "Founder ChatGPT sheet, approved 29/10/2026: bow tie for Maudit and the dragon, pearls for the goat and the owl",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "status": "APPROVED",
+      "sha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "immutable": true,
+      "purpose": "Founder ChatGPT sheet, approved 29/10/2026: flower wreath (used for the goat and the owl)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "status": "APPROVED",
+      "sha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "immutable": true,
+      "purpose": "Founder ChatGPT sheet, approved 29/10/2026: laurel wreath for Maudit and the dragon",
+      "usedBy": []
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-scarf-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "507613b232c5a63114624e46504089e9282c910061d00f7110a95c49a73cc8ae",
+      "immutable": true,
+      "purpose": "the maudit wearing the scarf, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-scarf-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "c95fe5a11bdda28be534554519803fbdecf43fc7a9bf93399dcca34390be5a99",
+      "immutable": true,
+      "purpose": "the maudit wearing the scarf (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-scarf-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "37a1ee16f432abe35e3e8dc19545bda5c180b65d35b539845f3856db831c237a",
+      "immutable": true,
+      "purpose": "the maudit wearing the scarf, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-scarf-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "1c660cef399ae0a347a15152e5ad34cb297eb23e15f63abcb1799a37478343e6",
+      "immutable": true,
+      "purpose": "the maudit wearing the scarf, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-gala-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "5c9b7b0551a3dc32a2681218a79f27f4657f695b68c8299ee07e6c48af37a170",
+      "immutable": true,
+      "purpose": "the maudit wearing the gala, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-gala-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "0578447829ef2409671cfd17660315f1a9eb7f527a73bf37e7ab1fa13ca8149b",
+      "immutable": true,
+      "purpose": "the maudit wearing the gala (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-gala-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "7a663850956a17a7fd6e66f5d22af78622a0eeeb62f7685b375528ebccdf2fc8",
+      "immutable": true,
+      "purpose": "the maudit wearing the gala, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-gala-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "7a58ab4d0216336440cef6b2cfa909b35864eeddc62d64aecf4beaa9f0cebe42",
+      "immutable": true,
+      "purpose": "the maudit wearing the gala, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-flowers-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "c61fc387d37e7cd3e3382d8e6153dec0d78abae64d65860a8916ed682d1d4708",
+      "immutable": true,
+      "purpose": "the maudit wearing the flowers, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-flowers-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "f844d470967303b317c3768509080a3d5caa353342e96d859c93369b73a48bb4",
+      "immutable": true,
+      "purpose": "the maudit wearing the flowers (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-flowers-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "ecb73ce0ee2e174b40d4fdefed27654daec99af451ccd0c96875859f6fa03e3e",
+      "immutable": true,
+      "purpose": "the maudit wearing the flowers, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-flowers-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "1e01aa8993f2becf1f13a647e8dd1cb17652d1bbea9a3cf2d1841278cb67637f",
+      "immutable": true,
+      "purpose": "the maudit wearing the flowers, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-scarf-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "5c354cf694e01fabe7e025be6a4dba6707c4c4a033635a80a9f715bd26a2f6c4",
+      "immutable": true,
+      "purpose": "the goat wearing the scarf, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-scarf-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "59f8378726df37d6bc9a4eaf01910846c55435316a447c3fc2c3f76c0364dbd0",
+      "immutable": true,
+      "purpose": "the goat wearing the scarf (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-scarf-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "cbad3955eb2d691a4f1d5847399a0ac807af2670e857bb9d98bbb10b027869cf",
+      "immutable": true,
+      "purpose": "the goat wearing the scarf, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-scarf-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "9c841c96c94f16ea75f758249f76f4d318877db42d9139b582a36b34743e28c6",
+      "immutable": true,
+      "purpose": "the goat wearing the scarf, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-gala-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "29daeb711796a52679a5511339f9c1131453ca6cfc4a877a117f06aa773a00d5",
+      "immutable": true,
+      "purpose": "the goat wearing the gala, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-gala-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "8fcd21cc4f212a413bcad634aef39e42ca13ba602b54f2fca2ce11eeee10857a",
+      "immutable": true,
+      "purpose": "the goat wearing the gala (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-gala-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "3d28ed57774fc8fff6a1c58095437ff7a1a39b29308916fbd616d64e54233bfd",
+      "immutable": true,
+      "purpose": "the goat wearing the gala, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-gala-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "da6ecb1980339f83fca6e6a108b3292632d11d24c99884f3745190f08d461c3a",
+      "immutable": true,
+      "purpose": "the goat wearing the gala, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-flowers-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "bda20c7ce9e322e3c14385b26168180b9d778af8a165c9b92970e3164506dbcb",
+      "immutable": true,
+      "purpose": "the goat wearing the flowers, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-flowers-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "35496643148f773783290ab1124d4b88f2dc36039a41d7f22e6d12b1a372f7aa",
+      "immutable": true,
+      "purpose": "the goat wearing the flowers (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-flowers-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "703e93ef0ccd5b4fc2546c407bcdf2794662bc3307b88fe07c698f97bd85896a",
+      "immutable": true,
+      "purpose": "the goat wearing the flowers, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-flowers-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "b7495dd0dc11a23c9ebdbce036c751b1526a32e199e01285e73fbddbe5a2625a",
+      "immutable": true,
+      "purpose": "the goat wearing the flowers, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-scarf-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "6d36a5ca2b470e62d0dd9d424b375ab55e0b7a41e8a659d463f0febbefb1dd6f",
+      "immutable": true,
+      "purpose": "the owl wearing the scarf, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-scarf-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "f36576a977f136913d24b022dd5fff1bb8db074c7d467bf1be579e163ed6d28f",
+      "immutable": true,
+      "purpose": "the owl wearing the scarf (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-scarf-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "2d93d40ff25f2b9d88ef7a602476a711179df9b5eb905ab5db7e2c45277f4eea",
+      "immutable": true,
+      "purpose": "the owl wearing the scarf, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-scarf-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "a0a8a2b9e6bcee251b6c1dbc30acc8685726bf05b382ff06bde8b1b5b93776e7",
+      "immutable": true,
+      "purpose": "the owl wearing the scarf, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-gala-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "91be713d79d9a56b671d1dc50be6dfcf705b1b817081a190c70d0ae3da225ab6",
+      "immutable": true,
+      "purpose": "the owl wearing the gala, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-gala-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "6d92b09b486c26d2180c47714b99c34bd8c8658a86d2452091c3588c5afb810a",
+      "immutable": true,
+      "purpose": "the owl wearing the gala (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-gala-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "1c04e6e74d667ebbb946d05ef16f3b7abd4727bc1a5e5cc1892387c7290bcf81",
+      "immutable": true,
+      "purpose": "the owl wearing the gala, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-gala-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "c7a77711bae011a44d84bf013313ebe8a13b82995efab224077f9f1aa6d6c97b",
+      "immutable": true,
+      "purpose": "the owl wearing the gala, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-flowers-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "c07009a35c01bd156472df20d3f58af920a9c0335df2172cc5f6395a30187a44",
+      "immutable": true,
+      "purpose": "the owl wearing the flowers, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-flowers-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "725c840d3d12947f3147ed7b50905a64b55c13d208b80e2e94f5b8eebf7da0dd",
+      "immutable": true,
+      "purpose": "the owl wearing the flowers (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-flowers-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "7b19c83a28f8b2cade5c8669a4192583f5d170768e84c8d0f462b32695a01bb6",
+      "immutable": true,
+      "purpose": "the owl wearing the flowers, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-flowers-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "ddbaf9322e4e3d7e4806e4b4eba94b00c8c7237981ec0aff63d9eb24f19a405a",
+      "immutable": true,
+      "purpose": "the owl wearing the flowers, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-scarf-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "b95bc035cc4fd125d2cc112042b8c54062392a35afa8cf4bfc1ae9f5686912d3",
+      "immutable": true,
+      "purpose": "the dragon wearing the scarf, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-scarf-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "5c56c2145988ec4fcd6ebd22c8a8d094c4cb4cee36d6e0990f3facc1942603a7",
+      "immutable": true,
+      "purpose": "the dragon wearing the scarf (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-scarf-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "b34045e28fa47e43fa0bc4e3a5c3f3326a00a0ee32c672c69dbf545959048dbe",
+      "immutable": true,
+      "purpose": "the dragon wearing the scarf, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-scarf-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "8a464a15976150ddfd06d31885d56fcca895cf7de05e932bab33e3fddb3f3350",
+      "immutable": true,
+      "purpose": "the dragon wearing the scarf, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-gala-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "bf65bb99a516293cb359c8f4001671aedb152bebc943879d8346fa85512851a9",
+      "immutable": true,
+      "purpose": "the dragon wearing the gala, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-gala-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "2e048c473c6a71d568bdc43bbe2a3250e48eb27f0d00ef3bcaa733708b563b89",
+      "immutable": true,
+      "purpose": "the dragon wearing the gala (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-gala-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "a4a4c562806aeadd5c6df36741a19454a0704ffb43bf6c54e602fdecd2e73b10",
+      "immutable": true,
+      "purpose": "the dragon wearing the gala, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-gala-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "27daa3a2be6c6362690ce17e80dc4598ce2155104bae571e640f9ae2d5e36fb4",
+      "immutable": true,
+      "purpose": "the dragon wearing the gala, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-flowers-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "611ee27016f93060d6e7c5be3bce1fc3b5eea58caebd28637298d0ecc1960e22",
+      "immutable": true,
+      "purpose": "the dragon wearing the flowers, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-flowers-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "554a2b22b570c8564b6f676f1471c0c56977f677b1cb649493786c31f3edca9e",
+      "immutable": true,
+      "purpose": "the dragon wearing the flowers (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-flowers-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "38750568d7bb198518a6f1f57109cce6d66839f4ee27a906ca946ff88b68a399",
+      "immutable": true,
+      "purpose": "the dragon wearing the flowers, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-flowers-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "3a65990529a28fc6dc8066b8aa4e4f13db4845f657fd348ab18657409142bf29",
+      "immutable": true,
+      "purpose": "the dragon wearing the flowers, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "status": "APPROVED",
+      "sha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "immutable": true,
+      "purpose": "Founder ChatGPT sheet, approved 29/10/2026: king crown for Maudit and the dragon, queen tiara for the goat and the owl",
+      "usedBy": []
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-crown-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "548d809118a519f9913984e677ef870a3cc4a902d60b6caea20ddf0879568162",
+      "immutable": true,
+      "purpose": "the maudit wearing the crown, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-crown-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "304d5b4270e058a6cfb3f6ee8fe46897b52f93ebaed5863ca555ebf8247398de",
+      "immutable": true,
+      "purpose": "the maudit wearing the crown (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-crown-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "6d0143b2bf2b3ebdf7c1200028a588eab3e8d8d1865d37153e9476fecf4f14d6",
+      "immutable": true,
+      "purpose": "the maudit wearing the crown, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-crown-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "b58a90199e064d25694db19fcb5eb6a2c1bec917e0cb8ffcb259190bf845cbbb",
+      "immutable": true,
+      "purpose": "the maudit wearing the crown, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-crown-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "7f5ea87fd0434aaebc5a6700c397f59a602ae1598809ee9f33c5cc6e42578085",
+      "immutable": true,
+      "purpose": "the goat wearing the crown, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-crown-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "7c20b6a3b5b49ec9237804887da2f4e651a29df72bb48314f5e93d307286b9b3",
+      "immutable": true,
+      "purpose": "the goat wearing the crown (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-crown-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "45e0675e61c3fce0d7e646ea7d2c686c9cb979f38787e4edce101af2b0a7b2ae",
+      "immutable": true,
+      "purpose": "the goat wearing the crown, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-crown-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "61633ff010c98246a4ce7ddf35471ae82f6b9a12a0e6007a87bd492a178fae7c",
+      "immutable": true,
+      "purpose": "the goat wearing the crown, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-crown-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "cd2e6b85e72e931d8b9e7b3f4e70c70d3c22c359cdbf0594e7abd8fa82e4bedf",
+      "immutable": true,
+      "purpose": "the owl wearing the crown, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-crown-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "75cd8318d0e1868dd5c165055ec215188364cc7981e5700183cff68c098a859b",
+      "immutable": true,
+      "purpose": "the owl wearing the crown (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-crown-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "0b8686c013d789441230e0a2cf4c6c94ca321d60b63fd7cfc5893322ef72b39b",
+      "immutable": true,
+      "purpose": "the owl wearing the crown, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-crown-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "b633cb8f54c9dbc7725a83ee12be5a1c998dd9034945e8907e691609cf60b8d3",
+      "immutable": true,
+      "purpose": "the owl wearing the crown, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-crown-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "e0e1ad6924f1b41c63833f355d3a6f6940c8ee94a997c4377944dc89c3997ebf",
+      "immutable": true,
+      "purpose": "the dragon wearing the crown, awake pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-crown-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "b7e6aaf392f46eacfd89e709b87e0bb7c2d5bd7a33d7391f8d3e6008e33c2d98",
+      "immutable": true,
+      "purpose": "the dragon wearing the crown (awake, without its moving parts); 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-crown-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "d22bbe7a4748c826e6d3c8c6694a259b119a05eb631d1b320db43a80fa010979",
+      "immutable": true,
+      "purpose": "the dragon wearing the crown, sleep pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-crown-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "229fbe2b38b2c3ed929e19119c2829b7ad156381c5f497a3e84e8e35fb3e6298",
+      "immutable": true,
+      "purpose": "the dragon wearing the crown, happy pose; 24 px of headroom above the 192 px frame",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-crown-sheet-v1.png",
+      "sourceSha256": "3b5bbd4e25254acad77a9d49f23c46a3c18db8843b174185531eec175b1436b3",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_TOP24_WEBP_Q90"
+    },
+    {
+      "path": "android/app/src/main/res/drawable-nodpi/us_launcher_fg_night.webp",
+      "status": "APPROVED",
+      "sha256": "e728cf8405a9fedbccdaaa2b30048c941a8ed469f93c09a7cabf8de8bb0e7da3",
+      "immutable": true,
+      "purpose": "App icon night: adaptive foreground (432 px)",
+      "usedBy": [
+        "android-launcher-alias"
+      ],
+      "source": "assets/source/brand/app-icon/us-launcher-symbol-notte-v1.png",
+      "sourceSha256": "34155dd3a70e7be420e317097f2a5ccd3319cd245bede40cd9e8eda78d0aeb1f",
+      "operation": "RESIZE_432_WEBP_Q90"
+    },
+    {
+      "path": "android/app/src/main/res/drawable-nodpi/us_launcher_bg_night.webp",
+      "status": "APPROVED",
+      "sha256": "7befc3465937ccc1c2403b40de4e0824d7ada25296f1f74fc07a14ad6e8534ae",
+      "immutable": true,
+      "purpose": "App icon night: adaptive background (432 px)",
+      "usedBy": [
+        "android-launcher-alias"
+      ],
+      "source": "assets/source/brand/app-icon/us-launcher-background-notte-v1.png",
+      "sourceSha256": "ef84127d9e7c457d42884548e569fa413d68b2dfe99ca3713fa5a521d96ab0b0",
+      "operation": "RESIZE_432_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-app-icon-night-v1.webp",
+      "status": "APPROVED",
+      "sha256": "768fd0b87c104e991e29b493e89ab730b65ccf091532284eaabab0dceeabc09e",
+      "immutable": true,
+      "purpose": "App icon night: collection tile (160 px squircle)",
+      "usedBy": [
+        "progression-collection"
+      ],
+      "source": "assets/source/brand/app-icon/us-launcher-symbol-notte-v1.png",
+      "sourceSha256": "34155dd3a70e7be420e317097f2a5ccd3319cd245bede40cd9e8eda78d0aeb1f",
+      "operation": "COMPOSE_BG_FG_SQUIRCLE_160_WEBP_Q90"
+    },
+    {
+      "path": "android/app/src/main/res/drawable-nodpi/us_launcher_fg_gold.webp",
+      "status": "APPROVED",
+      "sha256": "1a254852ff423e146e705c525f0f4b220350155deab52f02ec4610e58e795f18",
+      "immutable": true,
+      "purpose": "App icon gold: adaptive foreground (432 px)",
+      "usedBy": [
+        "android-launcher-alias"
+      ],
+      "source": "assets/source/brand/app-icon/us-launcher-symbol-oro-v1.png",
+      "sourceSha256": "756a401bfeb30122374318bcef78972374baf79595bc42fce6f6bf33489dab68",
+      "operation": "RESIZE_432_WEBP_Q90"
+    },
+    {
+      "path": "android/app/src/main/res/drawable-nodpi/us_launcher_bg_gold.webp",
+      "status": "APPROVED",
+      "sha256": "403ce56a8881df545f331eef9bb6761b2d892ec5da2f46cbb24e46f715f15035",
+      "immutable": true,
+      "purpose": "App icon gold: adaptive background (432 px)",
+      "usedBy": [
+        "android-launcher-alias"
+      ],
+      "source": "assets/source/brand/app-icon/us-launcher-background-oro-v1.png",
+      "sourceSha256": "c36718277795114bf409d714afac50a84a694aae8f408126464d0db41cc68662",
+      "operation": "RESIZE_432_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-app-icon-gold-v1.webp",
+      "status": "APPROVED",
+      "sha256": "ef7734d8b1251bc4b7063b6b7392d6c266eb4ef6385088b40af32f652f31578e",
+      "immutable": true,
+      "purpose": "App icon gold: collection tile (160 px squircle)",
+      "usedBy": [
+        "progression-collection"
+      ],
+      "source": "assets/source/brand/app-icon/us-launcher-symbol-oro-v1.png",
+      "sourceSha256": "756a401bfeb30122374318bcef78972374baf79595bc42fce6f6bf33489dab68",
+      "operation": "COMPOSE_BG_FG_SQUIRCLE_160_WEBP_Q90"
+    },
+    {
+      "path": "android/app/src/main/res/drawable-nodpi/us_launcher_fg_neon.webp",
+      "status": "APPROVED",
+      "sha256": "8a24851523209fa5e77b5a9c9c15c018e409c242779e1bb08afa677ed59fda4c",
+      "immutable": true,
+      "purpose": "App icon neon: adaptive foreground (432 px)",
+      "usedBy": [
+        "android-launcher-alias"
+      ],
+      "source": "assets/source/brand/app-icon/us-launcher-symbol-neon-v1.png",
+      "sourceSha256": "67a986fd9b13047a2c9c2cf1419c75050815117a402fffdf3b231276f110e804",
+      "operation": "RESIZE_432_WEBP_Q90"
+    },
+    {
+      "path": "android/app/src/main/res/drawable-nodpi/us_launcher_bg_neon.webp",
+      "status": "APPROVED",
+      "sha256": "bceb859e4fe68168e7667e1d790836646c7fc559e1bfa89a6fc59dd012112129",
+      "immutable": true,
+      "purpose": "App icon neon: adaptive background (432 px)",
+      "usedBy": [
+        "android-launcher-alias"
+      ],
+      "source": "assets/source/brand/app-icon/us-launcher-background-neon-v1.png",
+      "sourceSha256": "7b842aecf5efac1d65b050a53fd967aff7f709e903d4dcb7bc05b668fbb74719",
+      "operation": "RESIZE_432_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-app-icon-neon-v1.webp",
+      "status": "APPROVED",
+      "sha256": "c1d6ed94192337559de89f58fed4adfbfeff746e7cedfaaf26ab7ae7445a7bca",
+      "immutable": true,
+      "purpose": "App icon neon: collection tile (160 px squircle)",
+      "usedBy": [
+        "progression-collection"
+      ],
+      "source": "assets/source/brand/app-icon/us-launcher-symbol-neon-v1.png",
+      "sourceSha256": "67a986fd9b13047a2c9c2cf1419c75050815117a402fffdf3b231276f110e804",
+      "operation": "COMPOSE_BG_FG_SQUIRCLE_160_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-app-icon-us-v1.webp",
+      "status": "APPROVED",
+      "sha256": "5379abb1a5cd27e4da55af99dbc215d07b177328545b7ad242d93ad5e2fb6f5a",
+      "immutable": true,
+      "purpose": "The usual app icon: collection tile (160 px squircle)",
+      "usedBy": [
+        "progression-collection"
+      ],
+      "source": "assets/source/brand/app-icon/us-launcher-symbol-v2.png",
+      "sourceSha256": "a75c69e23a4e5cf94a6ad06f4b2ae126d8499b281e0a7010f511077427715e4a",
+      "operation": "COMPOSE_WHITE_FG_SQUIRCLE_160_WEBP_Q90"
     }
   ]
 }

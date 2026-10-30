@@ -689,6 +689,13 @@
       root.querySelector('h3').textContent = text(options.title);
       const body = root.querySelector('p');
       if (options.body) body.textContent = text(options.body); else body.remove();
+      // A list (the Novità after an update), each line as plain text.
+      if (Array.isArray(options.items) && options.items.length) {
+        const list = documentRef.createElement('ul');
+        list.className = 'us-confirm-list';
+        options.items.forEach((item) => { const li = documentRef.createElement('li'); li.textContent = text(item); list.appendChild(li); });
+        root.querySelector('h3').after(list);
+      }
       const cancelButton = root.querySelector('[data-us-confirm="cancel"].ghost');
       if (options.single) cancelButton.remove(); else cancelButton.textContent = text(options.cancelLabel || 'Annulla');
       root.querySelector('[data-us-confirm="ok"]').textContent = text(options.confirmLabel || (options.single ? 'Chiudi' : 'Conferma'));
@@ -750,10 +757,153 @@
     }
     return true;
   }
+  // Ti penso animato (Premi Sintonia V2, livello 5): hearts in the couple's two
+  // colours burst up from the bottom of the screen. Nothing with reduced motion.
+  const HEART_COLORS = ['var(--us-rosa)', 'var(--us-lilla)'];
+  function heartBurst({ doc = typeof document !== 'undefined' ? document : null, count = 18 } = {}) {
+    const d = doc;
+    if (!d?.body || activeMotion.isReducedMotion()) return false;
+    const width = d.documentElement?.clientWidth || 400;
+    const height = d.documentElement?.clientHeight || 800;
+    for (let i = 0; i < count; i++) {
+      const h = d.createElement('span');
+      h.className = 'us-heart-burst';
+      h.setAttribute('aria-hidden', 'true');
+      h.style.background = HEART_COLORS[i % 2];
+      const size = `${(16 + Math.random() * 22).toFixed(0)}px`;
+      h.style.width = size;
+      h.style.height = size;
+      h.style.left = `${(width * (0.35 + Math.random() * 0.3)).toFixed(0)}px`;
+      h.style.top = `${height}px`;
+      d.body.appendChild(h);
+      if (typeof h.animate !== 'function') { h.remove(); continue; }
+      const dx = (Math.random() - 0.5) * width * 0.9;
+      const dy = -height * (0.55 + Math.random() * 0.4);
+      const anim = h.animate([
+        { transform: 'translate(0px,0px) scale(.4)', opacity: 0 },
+        { transform: `translate(${(dx * 0.3).toFixed(0)}px,${(dy * 0.3).toFixed(0)}px) scale(1) rotate(${(Math.random() * 30 - 15).toFixed(0)}deg)`, opacity: 1, offset: 0.25 },
+        { transform: `translate(${dx.toFixed(0)}px,${dy.toFixed(0)}px) scale(.8) rotate(${(Math.random() * 40 - 20).toFixed(0)}deg)`, opacity: 0 }
+      ], { duration: 1300 + Math.random() * 800, delay: i * 40, easing: DONE_EASE, fill: 'backwards' });
+      anim.onfinish = () => h.remove();
+      anim.oncancel = () => h.remove();
+    }
+    return true;
+  }
+  // Ti penso «lettera» (Sintonia V2, livello 15): a sealed envelope rises in the
+  // middle of the screen, opens on its heart and fades away.
+  const LETTER_ART = '/assets/derived/rewards/us-think-letter-';
+  function letterOpen({ doc = typeof document !== 'undefined' ? document : null } = {}) {
+    const d = doc;
+    if (!d?.body || activeMotion.isReducedMotion()) return false;
+    const box = d.createElement('span');
+    box.className = 'us-think-letter';
+    box.setAttribute('aria-hidden', 'true');
+    box.innerHTML = `<img class="is-closed" src="${LETTER_ART}closed-v1.webp" alt="" draggable="false"><img class="is-open" src="${LETTER_ART}open-v1.webp" alt="" draggable="false">`;
+    d.body.appendChild(box);
+    if (typeof box.animate !== 'function') { box.remove(); return false; }
+    const [closed, open] = box.querySelectorAll('img');
+    const anim = box.animate([
+      { transform: 'translate(-50%,-30%) scale(.6) rotate(-6deg)', opacity: 0, easing: DONE_EASE },
+      { transform: 'translate(-50%,-50%) scale(1) rotate(0deg)', opacity: 1, offset: 0.18 },
+      { transform: 'translate(-50%,-50%) scale(1) rotate(0deg)', opacity: 1, offset: 0.8, easing: 'ease-in' },
+      { transform: 'translate(-50%,-62%) scale(.96) rotate(0deg)', opacity: 0 }
+    ], { duration: 2600, fill: 'forwards' });
+    closed.animate([{ opacity: 1 }, { opacity: 1, offset: 0.3 }, { opacity: 0, offset: 0.42 }, { opacity: 0 }], { duration: 2600, fill: 'forwards' });
+    open.animate([{ opacity: 0 }, { opacity: 0, offset: 0.3 }, { opacity: 1, offset: 0.42 }, { opacity: 1 }], { duration: 2600, fill: 'forwards' });
+    anim.onfinish = () => box.remove();
+    anim.oncancel = () => box.remove();
+    return true;
+  }
   // A new item (a memory, an idea) arrives in its list once: a short fade and rise.
   function enter(element) {
     if (!element || typeof element.animate !== 'function' || activeMotion.isReducedMotion()) return false;
     element.animate([{ opacity: 0, transform: 'translateY(8px) scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: DONE_EASE });
+    return true;
+  }
+
+  // Il cuore (founder, 29/10/2026, «più reattivo e satisfied, senza coriandoli»):
+  // at the touch the heart squeezes and snaps past its size, and one soft wave
+  // from rosa to lilla opens around it and fades. The big one (every third
+  // heart) snaps higher, with a stronger cue and a second, wider wave. One layer
+  // over the page, so a redraw of the button does not cut it.
+  const LIKE_COLORS = ['--us-rosa', '--us-lilla'];
+  const LIKE_FALLBACK = { '--us-rosa': '#ff7c96', '--us-lilla': '#a98bff' };
+  function heartColor(d, name) {
+    try { return d.defaultView.getComputedStyle(d.documentElement).getPropertyValue(name).trim() || LIKE_FALLBACK[name]; } catch (_) { return LIKE_FALLBACK[name]; }
+  }
+  // Novità (founder, 30/10/2026): what changed, once per release, only on a
+  // phone that already knew US (a new install has nothing to compare).
+  function releaseNotesDue(id, { storage, returning = false } = {}) {
+    const scope = typeof window !== 'undefined' ? window : globalThis;
+    try {
+      const store = storage || scope.localStorage;
+      const seen = store.getItem('us:whats-new');
+      if (seen === String(id)) return false;
+      store.setItem('us:whats-new', String(id));
+      return Boolean(returning);
+    } catch (_) { return false; }
+  }
+  // Each person counts the hearts they give, on their phone: the 3rd, 6th, … is big.
+  function heartTurn(owner, storage) {
+    const scope = typeof window !== 'undefined' ? window : globalThis;
+    const key = `us:hearts:${owner || 'me'}`;
+    try {
+      const store = storage || scope.localStorage;
+      const count = (Number(store.getItem(key)) || 0) + 1;
+      store.setItem(key, String(count));
+      return { count, big: count % 3 === 0 };
+    } catch (_) { return { count: 0, big: false }; }
+  }
+  function heart(element, { big = false } = {}) {
+    const scope = typeof window !== 'undefined' ? window : globalThis;
+    scope.UsFeedback?.[big ? 'success' : 'action']?.();
+    const d = element?.ownerDocument;
+    if (!element?.getBoundingClientRect || !d?.body || activeMotion.isReducedMotion()) return false;
+    const glyph = element.querySelector?.('.us-icon, .think-reaction-glyph, .us-shell-icon') || element;
+    const r = (glyph.getBoundingClientRect ? glyph : element).getBoundingClientRect();
+    if (!r.width && !r.height) return true;
+    const size = Math.round(Math.max(20, r.width) * 1.6);
+    const rosa = heartColor(d, LIKE_COLORS[0]), lilla = heartColor(d, LIKE_COLORS[1]);
+    const layer = d.createElement('span');
+    layer.className = 'us-heart-fx';
+    layer.setAttribute('aria-hidden', 'true');
+    layer.style.left = `${Math.round(r.left + r.width / 2)}px`;
+    layer.style.top = `${Math.round(r.top + r.height / 2)}px`;
+    let pending = 0;
+    const settle = () => { if (--pending <= 0) layer.remove(); };
+    // Easings go on each step, as in a CSS animation (an option would bend the whole run).
+    const out = 'cubic-bezier(.16,1,.3,1)';
+    const ring = (width, c) => `inset 0 0 0 ${width}px ${c}`;
+    // A wave: a thick rosa ring that opens out, turns lilla and thins away.
+    const wave = (reach, delay) => {
+      const w = d.createElement('i');
+      w.className = 'us-heart-wave';
+      w.style.width = w.style.height = `${size}px`;
+      w.style.margin = `${-size / 2}px 0 0 ${-size / 2}px`;
+      layer.appendChild(w);
+      if (typeof w.animate !== 'function') return;
+      pending++;
+      const anim = w.animate([
+        { scale: 0.8, boxShadow: ring(size / 7, rosa), opacity: 0.85, easing: out },
+        { scale: reach, boxShadow: ring(0, lilla), opacity: 0 }
+      ], { duration: big ? 520 : 420, delay, fill: 'both' });
+      anim.onfinish = settle;
+      anim.oncancel = settle;
+    };
+    wave(big ? 1.9 : 1.55, 30);
+    if (big) wave(2.6, 150);
+    // The heart: squeezed at the touch, snaps past its size, settles.
+    if (typeof glyph.animate === 'function') {
+      glyph.animate([
+        { scale: 1, easing: 'cubic-bezier(.4,0,1,1)' },
+        { scale: 0.72, offset: 0.14, easing: 'cubic-bezier(.2,1.4,.4,1)' },
+        { scale: big ? 1.5 : 1.3, offset: 0.48, easing: 'ease-in-out' },
+        { scale: big ? 0.94 : 0.96, offset: 0.74, easing: 'ease-out' },
+        { scale: 1 }
+      ], { duration: big ? 620 : 440 });
+    }
+    d.body.appendChild(layer);
+    if (!pending) layer.remove();
     return true;
   }
 
@@ -762,6 +912,11 @@
     createFeedback,
     done,
     enter,
+    heartBurst,
+    letterOpen,
+    heart,
+    heartTurn,
+    releaseNotesDue,
     auroraPulse: () => activeAurora(),
     playOnce: (element, className, duration) => activePlayOnce(element, className, duration),
     confirm: (options) => confirmSurface(options),

@@ -65,3 +65,15 @@ award call (kind, months, XP 60/200, milestone date = today) is unchanged;
 tests/f2a1-production-baseline.test.js applies this edit after F2C and N2.
 US10_INDEX_TS_SHA256:
 6ba3d93f088a54c2583069f4ce7323a00200ab3cd3c82b03034181260b415a5f
+
+Traguardi dei giorni (29/10/2026, not deployed) changed index.ts in exactly
+one more way: which milestones fall today comes from
+`../_shared/relationship-milestones.mjs` `dueMilestones` (every 100 days
+together, 1000 the biggest prize, then the mesiversario with the US 1.0
+rule). Each is awarded (`award_relationship_days_milestone`, service_role,
+supabase/migrations/20261028232743_days_together_milestones_v1.sql, for the
+days; `award_relationship_milestone` unchanged for the months); the first one
+granted is told, once per person (`relationship` with kind `days` + days).
+tests/f2a1-production-baseline.test.js applies this edit after US 1.0.
+DAYS_INDEX_TS_SHA256:
+26233c569d67d7ad058c0d4152167647c064ac1b8a4e87f355e9d26543656f07

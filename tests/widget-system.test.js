@@ -513,7 +513,7 @@ test('ogni risorsa e ogni R.* referenziati esistono (regressione aapt senza Grad
   assert.deepEqual(missing, []);
 });
 
-test('plugin: niente Supabase client o session token, storage privato non-backup, MainActivity invariata', () => {
+test('plugin: niente Supabase client o session token, storage privato non-backup, UsActivity (ex MainActivity) invariata', () => {
   const sources = fs.readdirSync(path.join(ROOT, JAVA)).map((file) => read(`${JAVA}/${file}`)).join('\n');
   assert.doesNotMatch(sources, /OkHttp|io\.supabase|createClient|accessToken|refreshToken|access_token|refresh_token/);
   assert.match(read(`${JAVA}/UsWidgetStore.java`), /getNoBackupFilesDir\(\)/);
@@ -524,8 +524,8 @@ test('plugin: niente Supabase client o session token, storage privato non-backup
   assert.match(appManifest, /android:allowBackup="false"/);
   assert.match(appManifest, /android:dataExtractionRules="@xml\/data_extraction_rules"/);
   assert.match(read('android/app/src/main/res/xml/data_extraction_rules.xml'), /<cloud-backup>[\s\S]*<exclude domain="root"/);
-  const activity = read('android/app/src/main/java/com/usapp/us/MainActivity.java');
-  assert.match(activity, /public class MainActivity extends BridgeActivity/);
+  const activity = read('android/app/src/main/java/com/usapp/us/UsActivity.java');
+  assert.match(activity, /public class UsActivity extends BridgeActivity/);
   assert.match(activity, /super\.onCreate\(savedInstanceState\)/);
   assert.doesNotMatch(activity, /registerPlugin|addJavascriptInterface|loadUrl|Supabase|Push|Widget/);
 });

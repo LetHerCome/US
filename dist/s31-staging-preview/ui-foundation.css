@@ -1,0 +1,863 @@
+/* Due colori (2026-10-14): Fraunces for titles, Figtree for text and controls. See assets/fonts/PROVENANCE.md. */
+@font-face{font-family:"Fraunces";src:url("/assets/fonts/Fraunces-Soft-Roman.woff2") format("woff2");font-style:normal;font-weight:100 900;font-display:swap}
+@font-face{font-family:"Fraunces";src:url("/assets/fonts/Fraunces-Soft-Italic.woff2") format("woff2");font-style:italic;font-weight:100 900;font-display:swap}
+@font-face{font-family:"Figtree";src:url("/assets/fonts/Figtree-Latin.woff2") format("woff2");font-style:normal;font-weight:300 900;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Figtree";src:url("/assets/fonts/Figtree-LatinExt.woff2") format("woff2");font-style:normal;font-weight:300 900;font-display:swap;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
+:root {
+  /* ==========================================================================
+     US canonical tokens (US-UI-UNIFICATION-01). This block is the ONE palette,
+     surface, radius, spacing, type and motion authority for the whole PWA.
+     Feature stylesheets consume these tokens; they do not define their own
+     :root palettes. Legacy names at the end are aliases, never new values.
+     ========================================================================== */
+
+  /* Layers — ONE ladder for every fixed surface, bottom to top:
+       content    0–19   pages, Oggi widgets (inside #homeHero, isolated)
+       chrome     20     bottom nav (top bar 10 lives in the page)
+       notices    30–70  toast 30 · Daily nudge 65 · status/update bars 70
+       transient  10030  Ti penso arrival (passes through, never exclusive)
+       ambient    10040  PET: above notices + transient, pointer-events:none
+       sheets     10060+ every exclusive sheet/viewer; later ones stack above
+                         (stories 10050 is a full-screen viewer that hides the
+                         PET through the exclusive-surface rule, see pet.js)
+       rewards    10120  unlock / XP / level presentation
+       confirm    10300  the one confirmation sheet
+       auth       10250  front door: above every sheet it may interrupt
+     Feature files use these tokens instead of inventing new numbers. */
+  --us-layer-chrome:20;
+  --us-layer-transient:10030;
+  --us-layer-ambient:10040;
+  --us-layer-sheet:10060;
+  --us-layer-auth:10250;
+  --us-layer-app-lock:2147483000;     /* Native Security V1: above everything, incl. auth */
+
+  /* Due colori, un Noi (approved 2026-10-14). Each person has a colour,
+     the same on both phones: whoever created the couple (role francesco) is
+     rosa, whoever joined with the code (role beatrice) is lilla. Where they
+     overlap is Noi. --us-tu is "my" colour (my actions: buttons, toggles, my
+     answer), --us-partner is what comes from the other person, --us-noi is
+     what belongs to both (Sintonia, shared days). Rewards never touch the two
+     person colours: Atmosfere change the night, Accenti change --us-noi.
+     ui-foundation.js sets data-us-me on <html> from the signed-in profile. */
+  --us-rosa:#ff7c96;
+  --us-lilla:#a98bff;
+  --us-orchidea:#d98be0;
+  --us-ambra:#f3b76e;                    /* Ricordi */
+  --us-menta:#7fd8c4;                    /* Gioca */
+  --us-corallo:#ff8b7b;                  /* Oggi */
+  --us-rosso:#ff6b6b;                    /* actions that cannot be undone */
+  --us-verde:#7fd8a4;
+  --us-inchiostro:#1a1020;               /* dark ink on a coloured button */
+  --us-latte:#f7efe9;
+  --us-tu:var(--us-rosa);
+  --us-partner:var(--us-lilla);
+  --us-noi:var(--us-orchidea);
+  --us-tab:var(--us-corallo);            /* tint of the current tab, set per page */
+  --us-glow:rgba(217,139,224,.16);
+
+  /* Colour — the night canvas (Atmosfere rewards replace these five). */
+  --us-color-bg:#0f0b13;                 /* notte: brand canvas (manifest theme) */
+  --us-color-surface:#17111c;            /* notte 2: raised content */
+  --us-color-surface-2:#211a28;          /* notte 3 */
+  --us-color-elevated:#2a2232;           /* notte 4: controls on a surface */
+  --us-color-sheet:#17111c;              /* opaque sheets */
+  --us-color-text:var(--us-latte);
+  --us-color-text-2:rgba(247,239,233,.72);
+  --us-color-text-3:rgba(247,239,233,.50);
+  --us-color-text-on-accent:var(--us-inchiostro);
+  --us-color-rose:var(--us-rosa);
+  --us-color-rose-2:#ff9db0;
+  --us-color-violet:var(--us-lilla);
+  --us-color-plum:#28142f;
+  --us-color-paper:#e9e2d5;             /* photo-journal post-it signature */
+  --us-color-accent-ink:color-mix(in srgb,var(--us-noi) 62%,var(--us-latte));  /* eyebrows, accent text, icons */
+  --us-color-accent-soft:color-mix(in srgb,var(--us-noi) 14%,transparent);
+  --us-color-accent-line:color-mix(in srgb,var(--us-noi) 30%,transparent);
+  --us-color-accent-strong:var(--us-noi);      /* selected borders, focus */
+  --us-color-line:rgba(247,239,233,.09);
+  --us-color-line-strong:rgba(247,239,233,.17);
+  --us-color-positive:var(--us-verde);
+  --us-color-warning:var(--us-ambra);
+  --us-color-danger:var(--us-rosso);
+  --us-color-danger-ink:#ffb0ad;
+  --us-color-locked:rgba(247,239,233,.42);
+  /* No gradient on buttons: the primary action is flat, in my colour, with dark ink. */
+  --us-accent-gradient:linear-gradient(var(--us-tu),var(--us-tu));
+  --us-accent-shadow:none;
+
+  /* Surfaces — flat night layers with a hairline, no blur. L1 groups
+     content, L2 is an interactive card, L3 floats (sheet/popup). */
+  --us-glass-1-bg:rgba(247,239,233,.035);
+  --us-glass-1-border:1px solid var(--us-color-line);
+  --us-glass-2-bg:var(--us-color-surface);
+  --us-glass-2-border:1px solid var(--us-color-line);
+  --us-glass-2-shadow:none;
+  --us-glass-2-blur:none;
+  --us-glass-3-bg:var(--us-color-surface);
+  --us-glass-3-border:1px solid var(--us-color-line-strong);
+  --us-glass-3-blur:none;
+  --us-glass-3-shadow:0 30px 80px rgba(0,0,0,.55);
+  --us-glass-3-shadow-up:0 -20px 70px rgba(0,0,0,.5);
+  --us-glass-3-edge:transparent;
+  /* Sticky sheet header: occludes scrolled content. */
+  --us-sheet-head-bg:var(--us-color-surface);
+  --us-sheet-head-blur:none;
+  /* One scrim for every overlay: the page stays perceptible underneath. */
+  --us-scrim:rgba(8,5,11,.62);
+  --us-scrim-blur:none;
+
+  /* Fields — one recipe for inputs and textareas. */
+  --us-field-bg:var(--us-color-surface-2);
+  --us-field-border:1px solid var(--us-color-line);
+  --us-field-focus:0 0 0 3px color-mix(in srgb,var(--us-tu) 26%,transparent);
+
+  /* M1 shell authority: Midnight Correspondence typography and palette. */
+  --us-ink:var(--us-color-text);
+  --us-graphite:#121016;
+  --us-plum:var(--us-color-plum);
+  --us-porpora:#6e356f;
+  --us-pink:#f66f9e;
+  --us-magenta:#d64bda;
+  --us-violet:var(--us-color-violet);
+  --us-red:var(--us-color-danger);
+  --us-blue:#5b8def;
+  --us-text:var(--us-color-text);
+  --us-muted:var(--us-color-text-2);
+  --us-font-editorial:"Fraunces",Georgia,"Times New Roman",serif;
+  --us-font-ui:"Figtree",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --us-font-display:var(--us-font-editorial);
+  /* HUMAN-UI-02 — compact shell: a slim top pill (44px controls, no extra
+     padding) and a ~56px bottom nav before the device safe area. */
+  --us-top-chrome-height:46px;
+  --us-top-chrome-clearance:56px;
+  /* Spacing: compact 8 · standard 12 · section 18 · page 16 gutter. */
+  --us-space-1:4px;
+  --us-space-2:8px;
+  --us-space-3:10px;
+  --us-space-4:12px;
+  --us-space-5:16px;
+  --us-space-6:18px;
+  --us-space-7:22px;
+  --us-space-8:24px;
+  --us-space-compact:var(--us-space-2);
+  --us-space-standard:var(--us-space-4);
+  --us-space-section:var(--us-space-6);
+  --us-space-page:var(--us-space-5);
+  /* Radii: small badge · control (buttons, fields, rows) · card · sheet. */
+  --us-radius-sm:10px;
+  --us-radius-control:15px;
+  --us-radius-card:20px;
+  --us-radius-sheet:29px;
+  --us-radius-pill:999px;
+  --us-surface-canvas:var(--us-color-bg);
+  --us-surface-card:var(--us-color-surface);
+  --us-surface-elevated:var(--us-color-elevated);
+  --us-surface-sheet:var(--us-color-sheet);
+  --us-shadow-card:0 10px 28px rgba(0,0,0,.18);
+  --us-shadow-sheet:0 -24px 70px rgba(0,0,0,.5);
+  /* Motion: press · micro · fast · base · surface enter · surface exit. */
+  --us-motion-press:90ms;
+  --us-motion-micro:140ms;
+  --us-motion-fast:180ms;
+  --us-motion-base:220ms;
+  --us-motion-surface:260ms;
+  --us-motion-exit:200ms;
+  --us-motion-immersive:300ms;
+  --us-motion-photo:360ms;
+  --us-motion-photo-slow:420ms;
+  --us-motion-sheet:var(--us-motion-surface);
+  --us-ease-standard:cubic-bezier(.2,.8,.2,1);
+  --us-ease-enter:cubic-bezier(.22,1.15,.36,1);   /* soft spring: sheets, cards */
+  --us-ease-exit:cubic-bezier(.4,0,1,1);
+  --us-ease-spring:cubic-bezier(.34,1.56,.64,1);  /* press release */
+  --us-ease-io:cubic-bezier(.7,0,.2,1);           /* colour flood between tabs */
+  /* Type: page title · section title · card title · body · secondary · meta · eyebrow.
+     HUMAN-UI-02 hierarchy: one page title (~26px), section ~20px, object
+     ~17–19px, body 15px, state/meta 12–13px. Only one object per page may be
+     larger (Per voi, Risonanza, the Oggi photo). */
+  --us-type-page:26px;
+  --us-type-section:19px;
+  --us-type-card:15px;
+  --us-type-body:14px;
+  --us-text-secondary:12px;
+  --us-text-meta:11px;
+  --us-text-decorative:9px;
+  --us-type-eyebrow:10px;
+  --us-type-eyebrow-tracking:.14em;
+  --us-safe-top:var(--safe-area-inset-top,env(safe-area-inset-top,0px));
+  --us-safe-right:var(--safe-area-inset-right,env(safe-area-inset-right,0px));
+  --us-safe-bottom:var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px));
+  --us-safe-left:var(--safe-area-inset-left,env(safe-area-inset-left,0px));
+  --us-nav-height:56px;
+  --us-viewport-height:100dvh;
+  --us-focus:0 0 0 3px color-mix(in srgb,var(--us-noi) 30%,transparent);
+  --us-premium-glass:color-mix(in srgb,var(--us-color-surface) 94%,transparent);
+  --us-premium-glass-strong:var(--us-color-surface-2);
+  --us-premium-border:var(--us-color-line);
+  --us-premium-border-active:color-mix(in srgb,var(--us-tu) 45%,transparent);
+  --us-premium-blur:0px;
+  --us-premium-shadow:0 18px 50px rgba(0,0,0,.34);
+  --us-premium-inner-highlight:inset 0 0 0 0 transparent;
+  --us-premium-active-glow:none;
+
+  /* Popup material names used by feature sheets (L3 aliases). */
+  --us-glass-dim:var(--us-scrim);
+  --us-glass-dim-blur:var(--us-scrim-blur);
+  --us-glass-blur:var(--us-glass-3-blur);
+  --us-glass-surface:var(--us-glass-3-bg);
+  --us-glass-border:var(--us-glass-3-border);
+  --us-glass-shadow-sheet:var(--us-glass-3-shadow);
+  --us-glass-shadow-bottom:var(--us-glass-3-shadow-up);
+  --us-glass-top-edge:var(--us-glass-3-edge);
+  --us-glass-inner-surface:var(--us-glass-2-bg);
+  --us-glass-inner-border:var(--us-glass-2-border);
+  --us-glass-inner-highlight:inset 0 1px 0 rgba(255,255,255,.055);
+
+  /* Legacy names (styles.css / identity.css era): aliases only. */
+  --bg:var(--us-color-bg);
+  --card:var(--us-color-surface);
+  --card2:var(--us-color-surface-2);
+  --text:var(--us-color-text);
+  --muted:var(--us-color-text-2);
+  --pink:var(--us-color-rose);
+  --pink2:var(--us-color-rose-2);
+  --violet:var(--us-color-violet);
+  --accent:var(--us-color-warning);
+  --green:var(--us-color-positive);
+  --border:var(--us-color-line);
+  --shadow:0 18px 50px rgba(0,0,0,.34);
+  --glass:rgba(18,15,24,.66);
+  --glass-border:var(--us-color-line-strong);
+  --apple-ease:var(--us-ease-standard);
+  --us-bg:var(--us-color-bg);
+  --us-surface:var(--us-color-surface);
+  --us-surface-2:var(--us-color-surface-2);
+  --us-line:var(--us-color-line);
+  --us-serif:var(--us-font-editorial);
+  --us-sans:var(--us-font-ui);
+  --us-paper:var(--us-color-paper);
+}
+
+:where(button:not(:disabled):not([data-us-motion-tap="off"])) {
+  transition-property:transform;
+  transition-duration:var(--us-motion-press);
+  transition-timing-function:var(--us-ease-standard);
+}
+
+/* No CSS :active scale here: the press is the mockup's JS press only
+   (ui-foundation.js, `scale` .95 in 110 ms, spring back in 420 ms). A CSS
+   scale on top of it pressed twice and left a gap before the release. */
+
+[data-us-motion-surface] .us-modal-backdrop {
+  opacity:0;
+  transition:opacity var(--us-motion-surface) var(--us-ease-standard);
+}
+
+[data-us-motion-surface] [data-us-modal-panel] {
+  opacity:0;
+  transform:translateY(16px);
+  transition:transform var(--us-motion-surface) var(--us-ease-enter),opacity var(--us-motion-micro) var(--us-ease-standard);
+  will-change:transform,opacity;
+  animation:none;
+}
+
+[data-us-motion-surface].open .us-modal-backdrop,
+[data-us-motion-surface].show .us-modal-backdrop {
+  opacity:1;
+}
+
+[data-us-motion-surface].open [data-us-modal-panel],
+[data-us-motion-surface].show [data-us-modal-panel] {
+  opacity:1;
+  transform:none;
+}
+
+[data-us-motion-surface][data-us-motion-exiting] {
+  pointer-events:none;
+}
+
+[data-us-motion-surface][data-us-motion-exiting] .us-modal-backdrop {
+  opacity:0;
+}
+
+[data-us-motion-surface][data-us-motion-exiting] [data-us-modal-panel] {
+  opacity:0;
+  transform:translateY(16px);
+}
+
+:root[data-us-motion="reduced"] {
+  --us-motion-press:1ms;
+  --us-motion-micro:1ms;
+  --us-motion-fast:1ms;
+  --us-motion-base:1ms;
+  --us-motion-surface:1ms;
+  --us-motion-exit:1ms;
+  --us-motion-immersive:1ms;
+  --us-motion-photo:1ms;
+  --us-motion-photo-slow:1ms;
+}
+
+:root[data-us-motion="reduced"] :where(button:not(:disabled):not([data-us-motion-tap="off"])):active {
+  transform:none;
+}
+
+:root[data-us-motion="reduced"] [data-us-motion-surface] [data-us-modal-panel] {
+  transform:none;
+}
+
+@media (prefers-reduced-motion:reduce) {
+  :root {
+    --us-motion-press:1ms;
+    --us-motion-micro:1ms;
+    --us-motion-fast:1ms;
+    --us-motion-base:1ms;
+    --us-motion-surface:1ms;
+    --us-motion-exit:1ms;
+    --us-motion-immersive:1ms;
+    --us-motion-photo:1ms;
+    --us-motion-photo-slow:1ms;
+  }
+
+  :where(button:not(:disabled):not([data-us-motion-tap="off"])):active {
+    transform:none;
+  }
+}
+
+.us-modal-backdrop {
+  position:absolute;
+  inset:0;
+}
+
+.us-modal-close,
+.us-important-control {
+  min-width:44px;
+  min-height:44px;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* One focus ring for the whole product, the mockup's (2px --noi, 3px away;
+   zero specificity: a component may only move it, e.g. inset inside the
+   nav pill). No grey tap flash on a button (mockup). */
+:where(button) {
+  -webkit-tap-highlight-color:transparent;
+}
+:where(button,a[href],summary,[role="button"],[role="tab"],[tabindex]:not([tabindex="-1"])):focus-visible {
+  outline:2px solid var(--us-color-accent-strong);
+  outline-offset:3px;
+}
+
+.nav button:focus-visible {
+  outline-offset:-2px;
+}
+
+/* Shared centering for round/glyph icon buttons — size, color, and position stay with the caller. */
+.us-icon-center {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.us-premium-glass {
+  background:
+    radial-gradient(120% 150% at 0% 0%,rgba(255,140,195,.07),transparent 47%),
+    radial-gradient(110% 140% at 100% 100%,rgba(156,113,255,.08),transparent 52%),
+    var(--us-premium-glass);
+  border:1px solid var(--us-premium-border);
+  box-shadow:var(--us-premium-shadow),var(--us-premium-inner-highlight);
+  backdrop-filter:blur(var(--us-premium-blur)) saturate(1.14);
+  -webkit-backdrop-filter:blur(var(--us-premium-blur)) saturate(1.14);
+}
+
+/* M1 typography applies only to the shared shell hierarchy. */
+body{font-family:var(--us-font-ui)}
+h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
+
+.us-premium-control {
+  border-radius:999px;
+  background:rgba(31,27,37,.72);
+  border:1px solid rgba(255,235,247,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 28px rgba(0,0,0,.20);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+}
+
+/* M10E / M12A — Personal attention: ONE shared primitive for "YOU still have
+   something to do or see". The host adds .us-attention-orbit and is
+   position:relative; its renderer sets data-us-attention="on"|"off" from its
+   own canonical state (never a second notification-state store). It never
+   replaces a label: every host keeps a readable state of its own.
+   While "on" the same slow cycle drives two layers: a thin reflection that
+   travels once around the host (::after, pointer-events:none so taps, focus
+   rings and aria are untouched) and, when the host marks its glyph with
+   [data-us-attention-icon], the glyph itself (breathe + tiny tilt + soft
+   halo via the independent scale/rotate properties, so a host's own
+   transform transitions keep working). Each cycle ends in a calm rest. */
+@property --us-attention-angle{syntax:'<angle>';inherits:false;initial-value:0deg}
+.us-attention-orbit::after{
+  content:"";
+  position:absolute;
+  inset:var(--us-attention-inset,-2px);
+  border-radius:inherit;
+  padding:var(--us-attention-width,1.5px);
+  background:conic-gradient(from var(--us-attention-angle),rgba(255,122,168,0) 0deg,rgba(255,122,168,0) 190deg,rgba(255,140,184,.80) 292deg,rgba(184,150,255,.64) 334deg,rgba(255,122,168,0) 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .28s var(--us-ease-standard,ease);
+}
+.us-attention-orbit[data-us-attention="on"]::after{
+  opacity:1;
+  animation:us-attention-orbit var(--us-attention-period,5.2s) linear infinite;
+}
+.us-attention-orbit[data-us-attention="on"] [data-us-attention-icon]{
+  transform-origin:50% 50%;
+  animation:us-attention-breathe var(--us-attention-period,5.2s) var(--us-ease-standard,ease) infinite;
+}
+@keyframes us-attention-orbit{
+  0%{--us-attention-angle:0deg;opacity:0}
+  8%{opacity:1}
+  52%{--us-attention-angle:360deg;opacity:1}
+  64%,100%{--us-attention-angle:360deg;opacity:0}
+}
+@keyframes us-attention-breathe{
+  0%,60%,100%{scale:1;rotate:0deg;filter:drop-shadow(0 0 0 rgba(255,140,184,0))}
+  14%{scale:1.1;rotate:-5deg;filter:drop-shadow(0 0 5px rgba(255,140,184,.62))}
+  28%{scale:1.04;rotate:3deg;filter:drop-shadow(0 0 3px rgba(255,140,184,.38))}
+  42%{scale:1.08;rotate:-2deg;filter:drop-shadow(0 0 5px rgba(184,150,255,.5))}
+}
+/* Reduced motion / hidden document: no travel, a static visible cue instead. */
+:root[data-us-motion="reduced"] .us-attention-orbit[data-us-attention="on"]::after,
+:root[data-us-motion="reduced"] .us-attention-orbit[data-us-attention="on"] [data-us-attention-icon]{animation:none}
+:root[data-us-motion="reduced"] .us-attention-orbit[data-us-attention="on"]::after{
+  padding:var(--us-attention-width-static,2px);
+  background:linear-gradient(135deg,rgba(255,140,184,.72),rgba(184,150,255,.52));
+  transition:none;
+}
+:root[data-us-motion="reduced"] .us-attention-orbit[data-us-attention="on"] [data-us-attention-icon]{filter:drop-shadow(0 0 4px rgba(255,140,184,.5))}
+@media (prefers-reduced-motion:reduce){
+  .us-attention-orbit[data-us-attention="on"]::after,
+  .us-attention-orbit[data-us-attention="on"] [data-us-attention-icon]{animation:none}
+  .us-attention-orbit[data-us-attention="on"]::after{
+    padding:var(--us-attention-width-static,2px);
+    background:linear-gradient(135deg,rgba(255,140,184,.72),rgba(184,150,255,.52));
+    transition:none;
+  }
+  .us-attention-orbit[data-us-attention="on"] [data-us-attention-icon]{filter:drop-shadow(0 0 4px rgba(255,140,184,.5))}
+}
+:root[data-us-visibility="hidden"] .us-attention-orbit[data-us-attention="on"]::after,
+:root[data-us-visibility="hidden"] .us-attention-orbit[data-us-attention="on"] [data-us-attention-icon]{animation-play-state:paused}
+
+/* M12A — One-shot soft pulse (e.g. a received Ti penso): a single halo, never a loop. */
+.us-attention-pulse{position:relative}
+.us-attention-pulse::before{content:"";position:absolute;inset:-4px;border-radius:inherit;pointer-events:none;box-shadow:0 0 0 0 rgba(255,140,184,.46),0 0 18px 2px rgba(255,140,184,.30);opacity:0;animation:us-attention-pulse 900ms var(--us-ease-standard,ease) 1 both}
+@keyframes us-attention-pulse{0%{opacity:0;transform:scale(.94)}30%{opacity:1}100%{opacity:0;transform:scale(1.12)}}
+:root[data-us-motion="reduced"] .us-attention-pulse::before{animation:none;opacity:0}
+@media (prefers-reduced-motion:reduce){.us-attention-pulse::before{animation:none;opacity:0}}
+
+/* M12A — Shell aurora: ONE ambient light living behind the glass of the top
+   bar. Ambient state = a very slow, low-opacity drift of rose / violet / plum
+   light (transform + opacity only, no JS loop). The same layer reacts: the
+   bar's data-us-aurora="react" (set by UsUiFoundation.auroraPulse) lifts the
+   intensity for ~800ms and runs one travelling highlight, then returns. */
+.top.us-premium-top>.us-aurora{position:absolute;z-index:0;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;contain:paint;
+  /* M12A.1 — visibility tokens: ambient is clearly there when you look at the
+     bar; the reaction lifts it briefly. Tune here, nowhere else. */
+  --us-aurora-ambient:.62;--us-aurora-react:.96}
+.us-aurora::before,.us-aurora::after{content:"";position:absolute;top:-30%;bottom:-30%;pointer-events:none}
+.us-aurora::before{
+  left:-35%;width:170%;
+  background:
+    radial-gradient(36% 86% at 20% 50%,rgba(255,102,142,.78),transparent 74%),
+    radial-gradient(34% 86% at 52% 44%,rgba(169,133,255,.72),transparent 74%),
+    radial-gradient(32% 86% at 82% 56%,rgba(160,62,150,.74),transparent 74%);
+  opacity:var(--us-aurora-opacity,var(--us-aurora-ambient));
+  transition:opacity 260ms var(--us-ease-standard,ease);
+  animation:us-aurora-drift 12s ease-in-out infinite alternate;
+  will-change:transform;
+}
+.us-aurora::after{
+  left:0;width:38%;
+  background:linear-gradient(100deg,transparent,rgba(255,236,247,.46) 50%,transparent);
+  opacity:0;
+  transform:translate3d(-110%,0,0);
+}
+@keyframes us-aurora-drift{
+  from{transform:translate3d(-14%,0,0) scaleY(1)}
+  to{transform:translate3d(14%,0,0) scaleY(1.1)}
+}
+.top.us-premium-top[data-us-aurora="react"] .us-aurora::before{--us-aurora-opacity:var(--us-aurora-react);animation:us-aurora-drift 12s ease-in-out infinite alternate,us-aurora-surge 800ms var(--us-ease-standard,ease) 1}
+.top.us-premium-top[data-us-aurora="react"] .us-aurora::after{animation:us-aurora-sweep 800ms var(--us-ease-standard,ease) 1 both}
+@keyframes us-aurora-surge{0%,100%{translate:0 0}45%{translate:5% 0}}
+@keyframes us-aurora-sweep{0%{opacity:0;transform:translate3d(-110%,0,0)}25%{opacity:1}100%{opacity:0;transform:translate3d(280%,0,0)}}
+:root[data-us-visibility="hidden"] .us-aurora::before,
+:root[data-us-visibility="hidden"] .us-aurora::after{animation-play-state:paused}
+:root[data-us-motion="reduced"] .us-aurora::before,
+:root[data-us-motion="reduced"] .us-aurora::after{animation:none!important;transition:none;will-change:auto}
+:root[data-us-motion="reduced"] .us-aurora::before{transform:none}
+@media (prefers-reduced-motion:reduce){
+  .us-aurora::before,.us-aurora::after{animation:none!important;transition:none;will-change:auto}
+  .us-aurora::before{transform:none}
+}
+
+/* M12A — Tiles and their destinations: a tappable tile presses in, the
+   destination content eases in with a short fade + 8px rise. Purely
+   presentational: the tap handler navigates immediately. */
+[data-us-tile]{transition:transform var(--us-motion-press) var(--us-ease-standard)}
+[data-us-tile]:active{transform:scale(.975)}
+.us-content-enter{animation:us-content-enter var(--us-motion-fast) var(--us-ease-enter) 1 both}
+@keyframes us-content-enter{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:none}}
+:root[data-us-motion="reduced"] [data-us-tile]:active{transform:none}
+:root[data-us-motion="reduced"] .us-content-enter{animation:none}
+@media (prefers-reduced-motion:reduce){[data-us-tile]:active{transform:none}.us-content-enter{animation:none}}
+
+/* Fluidità 1 — first loads show the shape of what is coming instead of a
+   «Carico…» line. The words stay for screen readers (.us-sr, inside a
+   role="status"); the slow sheen stops with reduced motion. */
+.us-sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.us-skeleton{position:relative;display:block;overflow:hidden;border-radius:var(--us-skeleton-radius,14px);background:var(--us-color-surface-2)}
+.us-skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(247,239,233,.07),transparent);animation:us-skeleton-sweep 1.4s cubic-bezier(.4,0,.2,1) infinite}
+@keyframes us-skeleton-sweep{to{transform:translateX(100%)}}
+:root[data-us-motion="reduced"] .us-skeleton::after{animation:none;opacity:0}
+@media (prefers-reduced-motion:reduce){.us-skeleton::after{animation:none;opacity:0}}
+.us-skeleton-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:8px 2px}
+.us-skeleton-calendar>.us-skeleton{aspect-ratio:1;--us-skeleton-radius:50%}
+.us-skeleton-rows{display:grid;gap:10px;padding:4px 0}
+.us-skeleton-rows>.us-skeleton{height:64px;--us-skeleton-radius:18px}
+.us-skeleton-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;grid-column:1/-1}
+.us-skeleton-tiles>.us-skeleton{aspect-ratio:4/5;--us-skeleton-radius:20px}
+.us-skeleton-tiles>.us-skeleton:first-of-type{grid-column:1/-1;aspect-ratio:16/10}
+
+/* M12A — Bottom navigation: ONE sliding indicator. It sits behind the labels
+   and moves between the four slots; the position is derived from the existing
+   .active class (no navigation logic involved). Browsers without :has() keep
+   the per-tab active styling and simply hide the indicator. */
+.us-nav-track{position:absolute;z-index:0;inset:0;padding:inherit;box-sizing:border-box;pointer-events:none;border-radius:inherit;overflow:hidden}
+.us-nav-indicator{display:block;height:100%;width:calc(100% / var(--us-nav-slots,4));border-radius:24px;background:linear-gradient(150deg,rgba(255,102,142,.20),rgba(149,112,255,.16));box-shadow:inset 0 0 0 1px rgba(255,255,255,.10),0 6px 18px rgba(141,107,255,.16);transform:translate3d(calc(var(--us-nav-index,0) * 100%),0,0);opacity:0;transition:transform 210ms var(--us-ease-standard),opacity 140ms var(--us-ease-standard)}
+.us-nav:has(> button.active) .us-nav-indicator{opacity:1}
+.us-nav:has(> button:nth-of-type(1).active){--us-nav-index:0}
+.us-nav:has(> button:nth-of-type(2).active){--us-nav-index:1}
+.us-nav:has(> button:nth-of-type(3).active){--us-nav-index:2}
+.us-nav:has(> button:nth-of-type(4).active){--us-nav-index:3}
+:root[data-us-motion="reduced"] .us-nav-indicator{transition:none}
+@media (prefers-reduced-motion:reduce){.us-nav-indicator{transition:none}}
+@supports not selector(:has(*)){.us-nav-indicator{display:none}}
+
+/* ==========================================================================
+   US canonical primitives (US-UI-UNIFICATION-01)
+   Small on purpose: icon, eyebrow, buttons, fields, chip/segment, close,
+   scrim, sheet material, confirmation. Feature files consume them and keep
+   only layout and personality (a photo, a tint), never their own recipe.
+   ========================================================================== */
+
+/* Icon: official Phosphor SVG painted as a mask, never redrawn. */
+.us-icon {
+  display:inline-block;
+  flex:0 0 auto;
+  width:var(--us-icon-size,20px);
+  height:var(--us-icon-size,20px);
+  background-color:currentColor;
+  -webkit-mask:var(--us-icon-src) center/contain no-repeat;
+  mask:var(--us-icon-src) center/contain no-repeat;
+  pointer-events:none;
+}
+.us-icon[data-us-icon="x"]{--us-icon-src:url("/assets/icons/phosphor/x-regular.svg")}
+.us-icon[data-us-icon="camera"]{--us-icon-src:url("/assets/icons/phosphor/camera-regular.svg")}
+.us-icon[data-us-icon="video-camera"]{--us-icon-src:url("/assets/icons/phosphor/video-camera-regular.svg")}
+.us-icon[data-us-icon="microphone"]{--us-icon-src:url("/assets/icons/phosphor/microphone-regular.svg")}
+.us-icon[data-us-icon="camera-rotate"]{--us-icon-src:url("/assets/icons/phosphor/camera-rotate-regular.svg")}
+.us-icon[data-us-icon="monitor"]{--us-icon-src:url("/assets/icons/phosphor/monitor-regular.svg")}
+.us-icon[data-us-icon="flag"]{--us-icon-src:url("/assets/icons/phosphor/flag-regular.svg")}
+.us-icon[data-us-icon="calendar-blank"]{--us-icon-src:url("/assets/icons/phosphor/calendar-blank-regular.svg")}
+.us-icon[data-us-icon="play"]{--us-icon-src:url("/assets/icons/phosphor/play-regular.svg")}
+.us-icon[data-us-icon="stop"]{--us-icon-src:url("/assets/icons/phosphor/stop-regular.svg")}
+.us-icon[data-us-icon="caret-left"]{--us-icon-src:url("/assets/icons/phosphor/caret-left-regular.svg")}
+.us-icon[data-us-icon="caret-right"]{--us-icon-src:url("/assets/icons/phosphor/caret-right-regular.svg")}
+.us-icon[data-us-icon="caret-down"]{--us-icon-src:url("/assets/icons/phosphor/caret-down-regular.svg")}
+.us-icon[data-us-icon="plus"]{--us-icon-src:url("/assets/icons/phosphor/plus-regular.svg")}
+.us-icon[data-us-icon="bell"]{--us-icon-src:url("/assets/icons/phosphor/bell-regular.svg")}
+.us-icon[data-us-icon="map-pin"]{--us-icon-src:url("/assets/icons/phosphor/map-pin-regular.svg")}
+.us-icon[data-us-icon="arrows-clockwise"]{--us-icon-src:url("/assets/icons/phosphor/arrows-clockwise-regular.svg")}
+.us-icon[data-us-icon="arrows-left-right"]{--us-icon-src:url("/assets/icons/phosphor/arrows-left-right-regular.svg")}
+.us-icon[data-us-icon="user-circle"]{--us-icon-src:url("/assets/icons/phosphor/user-circle-regular.svg")}
+.us-icon[data-us-icon="image"]{--us-icon-src:url("/assets/icons/phosphor/image-regular.svg")}
+.us-icon[data-us-icon="squares-four"]{--us-icon-src:url("/assets/icons/phosphor/squares-four-regular.svg")}
+.us-icon[data-us-icon="calendar-heart"]{--us-icon-src:url("/assets/icons/phosphor/calendar-heart-regular.svg")}
+.us-icon[data-us-icon="clock-counter-clockwise"]{--us-icon-src:url("/assets/icons/phosphor/clock-counter-clockwise-regular.svg")}
+.us-icon[data-us-icon="heart"]{--us-icon-src:url("/assets/icons/phosphor/heart-straight-regular.svg")}
+.us-icon[data-us-icon="envelope"]{--us-icon-src:url("/assets/icons/phosphor/envelope-simple-regular.svg")}
+.us-icon[data-us-icon="lock"]{--us-icon-src:url("/assets/icons/phosphor/lock-simple-regular.svg")}
+.us-icon[data-us-icon="sparkle"]{--us-icon-src:url("/assets/icons/phosphor/sparkle-regular.svg")}
+.us-icon[data-us-icon="check"]{--us-icon-src:url("/assets/icons/phosphor/check-regular.svg")}
+.us-icon[data-us-icon="music-note"]{--us-icon-src:url("/assets/icons/phosphor/music-note-regular.svg")}
+.us-icon[data-us-icon="pencil"]{--us-icon-src:url("/assets/icons/phosphor/pencil-simple-regular.svg")}
+.us-icon[data-us-icon="calendar-dots"]{--us-icon-src:url("/assets/icons/phosphor/calendar-dots-regular.svg")}
+.us-icon[data-us-icon="flag-banner"]{--us-icon-src:url("/assets/icons/phosphor/flag-banner-regular.svg")}
+.us-icon[data-us-icon="list-bullets"]{--us-icon-src:url("/assets/icons/phosphor/list-bullets-regular.svg")}
+.us-icon[data-us-icon="chalkboard-simple"]{--us-icon-src:url("/assets/icons/phosphor/chalkboard-simple-regular.svg")}
+.us-icon[data-us-icon="palette"]{--us-icon-src:url("/assets/icons/phosphor/palette-regular.svg")}
+.us-icon[data-us-icon="sparkle-fill"]{--us-icon-src:url("/assets/icons/phosphor/sparkle-fill.svg")}
+.us-icon[data-us-icon="heart-fill"]{--us-icon-src:url("/assets/icons/phosphor/heart-straight-fill.svg")}
+.us-icon[data-us-icon="lock-simple"]{--us-icon-src:url("/assets/icons/phosphor/lock-simple-regular.svg")}
+.us-icon[data-us-icon="cat"]{--us-icon-src:url("/assets/icons/phosphor/cat-regular.svg")}
+
+/* Eyebrow: the small uppercase label above a title, one voice everywhere. */
+.tiny,
+.us-eyebrow {
+  display:block;
+  font-family:var(--us-font-ui);
+  font-size:var(--us-type-eyebrow);
+  font-weight:750;
+  line-height:1.3;
+  letter-spacing:var(--us-type-eyebrow-tracking);
+  text-transform:uppercase;
+  color:var(--us-color-accent-ink);
+  opacity:.82;
+}
+
+/* Buttons: primary · secondary (.ghost) · quiet · danger · icon. */
+.primary {
+  background:var(--us-accent-gradient);
+  color:var(--us-color-text-on-accent);
+  box-shadow:var(--us-accent-shadow);
+}
+.ghost,
+.us-btn-secondary {
+  background:rgba(255,255,255,.07);
+  color:var(--us-color-text);
+  box-shadow:inset 0 0 0 1px var(--us-color-line-strong);
+}
+.us-btn-quiet {
+  background:transparent;
+  color:var(--us-color-accent-ink);
+  box-shadow:none;
+}
+.us-btn-danger {
+  background:rgba(228,90,104,.12);
+  color:var(--us-color-danger-ink);
+  box-shadow:inset 0 0 0 1px rgba(228,90,104,.30);
+}
+.us-icon-button {
+  width:44px;
+  height:44px;
+  min-width:44px;
+  padding:0;
+  display:inline-grid;
+  place-items:center;
+  border-radius:50%;
+  background:var(--us-glass-2-bg);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10),inset 0 1px 0 rgba(255,255,255,.055);
+  color:var(--us-color-text);
+}
+:where(button):disabled,
+:where(button)[aria-disabled="true"] {
+  cursor:not-allowed;
+}
+:where(.primary,.ghost,.us-btn-secondary,.us-btn-quiet,.us-btn-danger,.us-icon-button):disabled {
+  opacity:.45;
+  box-shadow:none;
+}
+
+/* Fields: one surface for every input and textarea. Zero specificity so a
+   feature may still set layout; colour and border come from here. */
+:where(textarea,input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"])) {
+  background:var(--us-field-bg);
+  border:var(--us-field-border);
+  border-radius:var(--us-radius-control);
+  color:var(--us-color-text);
+  transition:border-color var(--us-motion-micro) var(--us-ease-standard),box-shadow var(--us-motion-micro) var(--us-ease-standard);
+}
+:where(textarea,input)::placeholder {
+  color:var(--us-color-text-3);
+}
+:where(textarea,input:not([type="checkbox"]):not([type="radio"])):focus-visible {
+  outline:2px solid var(--us-color-accent-strong);
+  outline-offset:3px;
+}
+:where(input[type="checkbox"],input[type="radio"]) {
+  accent-color:var(--us-color-accent-strong);
+}
+
+/* Chip and segmented control: pill track, selected = accent soft. */
+.us-chip {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:32px;
+  padding:0 12px;
+  border-radius:var(--us-radius-pill);
+  background:var(--us-glass-1-bg);
+  box-shadow:inset 0 0 0 1px var(--us-color-line);
+  color:var(--us-color-text-2);
+  font-size:var(--us-text-secondary);
+  font-weight:650;
+}
+.us-segment {
+  display:flex;
+  gap:4px;
+  padding:4px;
+  border-radius:var(--us-radius-pill);
+  background:var(--us-glass-1-bg);
+  box-shadow:inset 0 0 0 1px var(--us-color-line);
+}
+.us-segment>button {
+  flex:1 1 0;
+  min-height:40px;
+  padding:0 14px;
+  border-radius:var(--us-radius-pill);
+  background:transparent;
+  color:var(--us-color-text-2);
+  font-size:13px;
+  font-weight:650;
+  transition:background var(--us-motion-micro) var(--us-ease-standard),color var(--us-motion-micro) var(--us-ease-standard);
+}
+.us-chip[aria-pressed="true"],
+.us-chip.is-active,
+.us-segment>button.is-active,
+.us-segment>button[aria-pressed="true"],
+.us-segment>button[aria-selected="true"] {
+  background:var(--us-color-accent-soft);
+  box-shadow:inset 0 0 0 1px var(--us-color-accent-line);
+  color:var(--us-color-text);
+}
+
+/* Close: one button for every popup, sheet and viewer (Phosphor X). */
+.us-modal-close {
+  width:44px;
+  height:44px;
+  padding:0;
+  flex:0 0 auto;
+  display:inline-grid;
+  place-items:center;
+  border:0;
+  border-radius:50%;
+  background:var(--us-glass-2-bg);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10),inset 0 1px 0 rgba(255,255,255,.055);
+  -webkit-backdrop-filter:blur(10px) saturate(1.2);
+  backdrop-filter:blur(10px) saturate(1.2);
+  color:var(--us-color-text);
+  font-size:0;
+  line-height:0;
+}
+.us-modal-close>.us-icon{--us-icon-size:18px}
+.us-modal-close:not(:has(.us-icon))::before {
+  content:"";
+  width:18px;
+  height:18px;
+  background-color:currentColor;
+  -webkit-mask:url("/assets/icons/phosphor/x-regular.svg") center/contain no-repeat;
+  mask:url("/assets/icons/phosphor/x-regular.svg") center/contain no-repeat;
+}
+/* Over a photo or a camera feed the same button darkens for contrast. */
+.us-modal-close.is-on-media {
+  background:rgba(8,4,14,.42);
+}
+
+/* Scrim: the one overlay behind every popup and sheet. */
+.us-modal-backdrop {
+  background:var(--us-scrim);
+  -webkit-backdrop-filter:var(--us-scrim-blur);
+  backdrop-filter:var(--us-scrim-blur);
+}
+
+/* Sheet: the floating material (glass level 3). The approved baseline is the
+   Left for You composer; every popup, sheet and confirmation shares it. */
+.us-sheet {
+  position:relative;
+  background:var(--us-glass-3-bg);
+  border:var(--us-glass-3-border);
+  box-shadow:var(--us-glass-3-shadow);
+  -webkit-backdrop-filter:var(--us-glass-3-blur);
+  backdrop-filter:var(--us-glass-3-blur);
+  color:var(--us-color-text);
+}
+.us-sheet::before {
+  content:"";
+  position:absolute;
+  top:0;
+  left:14px;
+  right:14px;
+  height:1px;
+  background:var(--us-glass-3-edge);
+  pointer-events:none;
+  z-index:1;
+}
+/* Bottom-anchored sheets cast their shadow upward and open at the top only. */
+.us-sheet.is-bottom {
+  border-radius:var(--us-radius-sheet) var(--us-radius-sheet) 0 0;
+  border-bottom:0;
+  box-shadow:var(--us-glass-3-shadow-up);
+}
+.us-sheet.is-floating {
+  border-radius:var(--us-radius-sheet);
+}
+/* Sheet header: eyebrow + editorial title + close, same rhythm everywhere. */
+.us-sheet-title {
+  margin:4px 0 0;
+  font-family:var(--us-font-editorial);
+  font-size:24px;
+  font-weight:500;
+  line-height:1.15;
+  letter-spacing:-.3px;
+  color:var(--us-color-text);
+}
+
+/* Confirmation (UsUiFoundation.confirm): a small floating sheet. */
+.us-confirm {
+  position:fixed;
+  inset:0;
+  z-index:10300;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:0 max(12px,var(--us-safe-right)) calc(max(12px,var(--us-safe-bottom)) + 8px) max(12px,var(--us-safe-left));
+}
+.us-confirm .us-modal-backdrop {
+  position:absolute;
+  inset:0;
+}
+.us-confirm-sheet {
+  width:min(100%,420px);
+  padding:22px 20px 18px;
+  border-radius:var(--us-radius-sheet);
+}
+.us-confirm-sheet h3 {
+  margin:6px 0 0;
+  font-family:var(--us-font-editorial);
+  font-size:22px;
+  font-weight:500;
+  line-height:1.2;
+  color:var(--us-color-text);
+  overflow-wrap:anywhere;
+}
+.us-confirm-sheet p {
+  margin:8px 0 0;
+  color:var(--us-color-text-2);
+  font-size:13px;
+  line-height:1.5;
+}
+.us-confirm-actions {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);
+  gap:9px;
+  margin-top:18px;
+}
+.us-confirm-actions button {
+  min-height:48px;
+}
+@media (min-width:700px) {
+  .us-confirm {
+    align-items:center;
+  }
+}
+
+/* Page titles step down once on the narrowest phones. */
+@media (max-width:370px) {
+  :root {
+    --us-type-page:23px;
+  }
+}

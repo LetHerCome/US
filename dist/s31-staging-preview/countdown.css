@@ -1,0 +1,140 @@
+/* One timepiece on the existing photograph. Six identities, no new assets. */
+.us-countdown-display[hidden],.us-countdown-overlay [hidden]{display:none!important}
+.us-countdown-entry{display:none!important}
+.us-countdown-display{position:relative;z-index:4;max-width:100%;padding:0;border:0;background:none;color:var(--us-latte,#f7efe9);cursor:pointer;text-align:center;min-height:44px}
+/* Parity with the approved mockup (.cd): the time sits at 15% of the screen,
+   centred, over the photo; the hero itself no longer lays it out. */
+#home #homeHero .us-countdown-display{position:absolute;z-index:4;top:15%;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);margin:0}
+#homeHero[data-us-countdown]{display:block;padding:0}
+/* The art is the mockup's button (.cd button): a centred column, number then label. */
+.us-countdown-art{position:relative;isolation:isolate;display:flex;flex-flow:row wrap;align-items:baseline;justify-content:center;column-gap:.26em;padding:6px 18px;border-radius:24px;color:var(--us-latte,#f7efe9);line-height:1;min-width:0;text-shadow:none}
+.us-countdown-title{order:3;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.us-countdown-number{order:1;flex:0 0 100%;display:flex;justify-content:center;font:300 92px/.9 var(--us-font-display);letter-spacing:-.03em;font-variant-numeric:lining-nums tabular-nums;text-shadow:0 6px 40px rgba(0,0,0,.35)}
+.us-countdown-art[data-countdown-clock="true"] .us-countdown-number{font-size:52px;letter-spacing:-.02em}
+.us-countdown-unit,.us-countdown-tail,.us-countdown-title{order:2;font:italic 400 19px/1.5 var(--us-font-display);letter-spacing:0;color:var(--us-color-text-2,rgba(247,239,233,.72))}
+.us-countdown-title{order:3}
+.us-countdown-art:not([data-countdown-kind]) .us-countdown-title::before{content:"· "}
+.us-countdown-art:has(.us-countdown-unit:empty) .us-countdown-title::before{content:none}
+.us-countdown-art[data-countdown-kind="together"] .us-countdown-title{display:none}
+.us-countdown-sub{order:4;flex:0 0 100%;font:italic 400 15px/1.3 var(--us-font-display);color:var(--us-color-text-2,rgba(247,239,233,.72));font-variant-numeric:tabular-nums}
+.us-countdown-art .us-countdown-unit:empty,.us-countdown-art .us-countdown-sub:empty,.us-countdown-art .us-countdown-title:empty{display:none!important}
+.us-countdown-digit{display:inline-block;}
+.us-countdown-digit.is-changing{animation:us-countdown-tick .38s cubic-bezier(.2,.7,.2,1)}
+@keyframes us-countdown-tick{0%{opacity:.3;transform:translateY(7px)}100%{opacity:1;transform:none}}
+.us-countdown-deco{position:absolute;z-index:-1;inset:0;pointer-events:none;border-radius:inherit;}
+.us-countdown-deco>i{display:none;}
+.us-countdown-digit.is-sep{opacity:.82;}
+/* Editoriale (mockup default): Fraunces 300, 92px; the words in italic under it. */
+[data-countdown-style="editorial"] .us-countdown-number{font:300 92px/.9 var(--us-font-display);letter-spacing:-.03em}
+[data-countdown-style="editorial"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
+[data-countdown-style="editorial"] .us-countdown-digit.is-changing{animation:us-countdown-rise .46s cubic-bezier(.2,.75,.2,1);}
+@keyframes us-countdown-rise{0%{opacity:0;transform:translateY(.16em);clip-path:inset(0 0 40% 0)}100%{opacity:1;transform:none;clip-path:inset(0)}}
+/* Partenze (mockup signal): every digit on its own dark flap, the words in small caps. */
+[data-countdown-style="signal"] .us-countdown-number{display:flex;gap:5px;font:600 54px/1 ui-monospace,"SF Mono","Roboto Mono",Menlo,monospace;letter-spacing:0;text-shadow:none}
+[data-countdown-style="signal"] .us-countdown-digit{position:relative;display:grid;place-items:center;width:46px;height:66px;border-radius:8px;background:linear-gradient(180deg,#26202c 0 49%,#1c1720 51%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 8px 20px rgba(0,0,0,.35)}
+[data-countdown-style="signal"] .us-countdown-digit::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.6)}
+[data-countdown-style="signal"] .us-countdown-digit.is-sep{width:auto;background:none;box-shadow:none;opacity:1}
+[data-countdown-style="signal"] .us-countdown-digit.is-sep::after{content:none}
+[data-countdown-style="signal"][data-countdown-clock="true"] .us-countdown-digit{width:34px;height:50px}
+[data-countdown-style="signal"][data-countdown-clock="true"] .us-countdown-number{font-size:38px}
+[data-countdown-style="signal"] .us-countdown-unit{margin-top:8px;font:700 12px/1.5 var(--us-font-ui);letter-spacing:.2em;text-transform:uppercase}
+[data-countdown-style="signal"] :is(.us-countdown-tail,.us-countdown-title){margin-top:8px;font:700 12px/1.5 var(--us-font-ui);letter-spacing:.2em;text-transform:uppercase}
+[data-countdown-style="signal"] .us-countdown-digit.is-changing{animation:us-countdown-flap .42s cubic-bezier(.3,.7,.25,1);}
+@keyframes us-countdown-flap{0%{transform:perspective(320px) rotateX(-88deg)}60%{transform:perspective(320px) rotateX(10deg)}100%{transform:none}}
+/* Vetro (mockup glass): a round lens of frosted light around the time. */
+[data-countdown-style="glass"]{width:178px;height:178px;padding:6px 18px;border-radius:50%;align-content:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3)}
+[data-countdown-style="glass"] .us-countdown-number{font:300 66px/.9 var(--us-font-display);letter-spacing:-.03em}
+[data-countdown-style="glass"][data-countdown-clock="true"] .us-countdown-number{font-size:34px}
+[data-countdown-style="glass"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
+/* Aurora (mockup aurora): the light moves slowly inside the figures. */
+[data-countdown-style="aurora"] .us-countdown-number{font:500 92px/.9 var(--us-font-display);letter-spacing:-.03em;background:linear-gradient(100deg,var(--us-rosa),var(--us-ambra),var(--us-lilla),var(--us-rosa));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;animation:us-countdown-aurora 9s ease-in-out infinite alternate}
+[data-countdown-style="aurora"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
+@keyframes us-countdown-aurora{to{background-position:100% 0}}
+/* Orbita (mockup orbit): a ring and one point of light that goes round once a minute. */
+[data-countdown-style="orbit"]{width:190px;height:190px;padding:6px 18px;border-radius:50%;align-content:center;border:1.5px solid rgba(255,255,255,.25)}
+[data-countdown-style="orbit"]::after{content:"";position:absolute;top:-5px;left:50%;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;background:var(--us-ambra);box-shadow:0 0 14px var(--us-ambra);transform-origin:4.5px 99px;transform:rotate(var(--us-cd-sweep,0deg));transition:transform 1s linear;pointer-events:none}
+[data-countdown-style="orbit"][data-sweep-jump]::after{transition:none;}
+[data-countdown-style="orbit"] .us-countdown-number{font:300 66px/.9 var(--us-font-display);letter-spacing:-.03em}
+[data-countdown-style="orbit"][data-countdown-clock="true"] .us-countdown-number{font-size:34px}
+[data-countdown-style="orbit"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
+/* Cromo (mockup chrome): the figures in polished metal. */
+[data-countdown-style="chrome"] .us-countdown-number{font:600 92px/.9 var(--us-font-display);letter-spacing:-.03em;background:linear-gradient(180deg,#fff 0%,#c9c3d4 38%,#6e6878 52%,#e8e2f0 64%,#a59fb0 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+[data-countdown-style="chrome"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
+/* Oggi theme Cinematic (mockup): lighter, wider figures; the words in spaced small caps. */
+html[data-us-oggi-theme="cinematic"] #home .us-countdown-display .us-countdown-number{font-weight:400;letter-spacing:.06em;font-size:64px}
+html[data-us-oggi-theme="cinematic"] #home .us-countdown-display :is(.us-countdown-unit,.us-countdown-tail,.us-countdown-title){font:700 11px/1.5 var(--us-font-ui);letter-spacing:.32em;text-transform:uppercase}
+.us-oggi-focus .us-countdown-display{opacity:0;pointer-events:none;}
+.us-countdown-display:focus-visible{outline:2px solid var(--us-color-accent-ink);outline-offset:5px;}
+/* Canonical sheet, content scrolls including the action when the keyboard opens. */
+.us-countdown-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:end;justify-content:center;}
+.us-countdown-overlay[aria-hidden="false"]{display:flex;}
+.us-countdown-sheet{position:relative;width:min(100%,540px);max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 16px);overflow-y:auto;overscroll-behavior:contain;padding:22px 20px calc(20px + var(--us-safe-bottom));border-radius:30px 30px 0 0;}
+.us-countdown-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.us-countdown-head h2{margin:4px 0 0;font:500 30px/1.1 var(--us-font-editorial);}
+.us-countdown-head .tiny{font-size:9px;letter-spacing:.2em;}
+.us-countdown-head .us-modal-close{min-width:44px;min-height:44px;}
+.us-countdown-hint{font-size:13px;color:var(--us-color-text-2);margin:18px 0;}
+.us-countdown-list{display:grid;gap:6px;}
+.us-countdown-row{display:flex;align-items:stretch;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:rgba(255,255,255,.025);overflow:hidden;}
+.us-countdown-row:has([aria-pressed="true"]){border-color:rgba(248,153,190,.5);background:rgba(244,123,168,.07);}
+.us-countdown-row button{background:none;border:0;color:var(--us-color-text);font:inherit;cursor:pointer;}
+.us-countdown-row button:disabled{opacity:.4;cursor:default;}
+.us-countdown-row [data-countdown-select]{flex:1;min-width:0;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 12px 15px 16px;text-align:left;min-height:60px;}
+.us-countdown-row b{display:block;font-size:14px;font-weight:600;overflow-wrap:anywhere;}
+.us-countdown-row small{display:block;font-size:11px;color:var(--us-color-text-2);margin-top:4px;}
+.us-countdown-check{font-size:14px;color:var(--us-color-accent-ink);}
+.us-countdown-edit{min-width:44px;display:grid;place-items:center;}
+.us-countdown-list-actions,.us-countdown-editor-actions{display:flex;gap:10px;margin-top:20px;align-items:center;}
+.us-countdown-list-actions button,.us-countdown-editor-actions button{min-height:44px;}
+.us-countdown-list-actions .primary,.us-countdown-editor-actions .primary{flex:1;}
+.us-countdown-back{display:flex;align-items:center;gap:4px;background:none;border:0;color:var(--us-color-text-2);min-height:44px;padding:0;font:inherit;font-size:12px;cursor:pointer;margin-top:10px;}
+#usCountdownEditorHeading{font:500 21px/1.2 var(--us-font-editorial);margin:4px 0 14px;}
+.us-countdown-preview{height:190px;display:grid;place-items:center;border-radius:24px;background:radial-gradient(ellipse at 30% 20%,rgba(162,100,151,.16),transparent 70%),linear-gradient(135deg,#25222e,#0d0e16);border:1px solid rgba(255,255,255,.07);overflow:hidden;}
+.us-countdown-preview .us-countdown-art{transform:scale(.75);}
+.us-countdown-fields{display:grid;grid-template-columns:1fr;gap:14px;margin:20px 0;}
+.us-countdown-fields label{display:grid;gap:7px;font-size:11px;color:var(--us-color-text-2);min-width:0;}
+.us-countdown-fields input,.us-countdown-fields select{box-sizing:border-box;width:100%;min-width:0;min-height:48px;border:1px solid rgba(255,255,255,.12);border-radius:13px;padding:11px 12px;background:rgba(255,255,255,.035);color:var(--us-color-text);font:inherit;font-size:16px;color-scheme:dark;}
+.us-countdown-status{display:flex;align-items:center;gap:8px;font-size:12px;line-height:1.5;color:var(--us-color-text-2);margin-top:12px;}
+.us-countdown-status:has(#usCountdownStatus:empty){display:none;}
+.us-countdown-status button{min-height:44px;flex-shrink:0;}
+@media(max-height:700px){
+  #home #homeHero .us-countdown-display{top:12%}
+  #home .us-countdown-number{font-size:72px;}
+  #home [data-countdown-style="signal"] .us-countdown-number{font-size:44px}
+  #home [data-countdown-style="signal"] .us-countdown-digit{width:38px;height:54px}
+  #home [data-countdown-style="glass"]{width:148px;height:148px}
+  #home [data-countdown-style="orbit"]{width:150px;height:150px}
+  #home [data-countdown-style="orbit"]::after{transform-origin:4.5px 79px}
+  #home :is([data-countdown-style="glass"],[data-countdown-style="orbit"]) .us-countdown-number{font-size:52px}
+  #home .us-countdown-art[data-countdown-clock="true"] .us-countdown-number{font-size:34px;}
+}
+/* Very short phones (≤600 px): the time sits right under the top bar and shrinks,
+   so the photo, the invitation and the Daily card keep their bands. */
+@media(max-height:600px) and (orientation:portrait){
+  #home #homeHero .us-countdown-display{top:70px}
+  #home .us-countdown-number{font-size:60px;}
+  #home :is([data-countdown-style="glass"],[data-countdown-style="orbit"]){width:120px;height:120px}
+  #home [data-countdown-style="orbit"]::after{transform-origin:4.5px 64px}
+  #home :is([data-countdown-style="glass"],[data-countdown-style="orbit"]) .us-countdown-number{font-size:42px}
+  #home :is([data-countdown-style="glass"],[data-countdown-style="orbit"]) .us-countdown-unit{font-size:15px}
+  #home [data-countdown-style="signal"] .us-countdown-number{font-size:36px}
+  #home [data-countdown-style="signal"] .us-countdown-digit{width:32px;height:46px}
+}
+@media(orientation:landscape) and (max-height:560px){
+  #home #homeHero:not([data-us-countdown]) .us-oggi-stack{right:72px;}
+  #home #homeHero.is-empty .home-empty-state{right:72px;}
+  #home #homeHero .us-countdown-display{top:50%;left:25%;transform:translate(-50%,-50%)}
+  .us-countdown-entry{right:15px;}
+  #home .us-countdown-number{font-size:64px;}
+  #home [data-countdown-style="orbit"],#home [data-countdown-style="glass"]{width:130px;height:130px;}
+  #home [data-countdown-style="orbit"]::after{transform-origin:4.5px 69px}
+  #home .us-countdown-art[data-countdown-clock="true"] .us-countdown-number{font-size:30px;}
+  .us-countdown-sheet{max-height:calc(var(--us-viewport-height) - 8px);padding-top:15px;}
+}
+@media(prefers-reduced-motion:reduce){.us-countdown-art *,.us-countdown-art::after{animation:none!important;transition:none!important;}.us-countdown-display{transition:none;}}
+/* Reduced motion: every identity stays, nothing moves; the orbit light rests at twelve. */
+:root[data-us-motion="reduced"] .us-countdown-art *,:root[data-us-motion="reduced"] .us-countdown-art::after{animation:none!important;transition:none!important;}
+@media(prefers-reduced-motion:reduce){[data-countdown-style="orbit"]::after{transform:none!important;}}
+:root[data-us-motion="reduced"] [data-countdown-style="orbit"]::after{transform:none!important;}
+html[data-us-visibility="hidden"] .us-countdown-art *,html[data-us-visibility="hidden"] .us-countdown-art::after{animation-play-state:paused!important;}
+#home:not(.active) .us-countdown-art *,#home:not(.active) .us-countdown-art::after,.us-oggi-focus .us-countdown-art *,.us-oggi-focus .us-countdown-art::after{animation-play-state:paused!important;}

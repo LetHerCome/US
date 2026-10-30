@@ -13,18 +13,78 @@
 
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
-            android:name=".MainActivity"
+            android:name=".UsActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
             android:exported="true">
 
+            <!-- App Links (29/10/2026): the shared invite https://<US site>/invito#CODE
+                 opens US; the site proves it with /.well-known/assetlinks.json. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="${usInviteHost}" android:path="/invito" />
+                <data android:scheme="https" android:host="${usInviteHostOld}" android:path="/invito" />
+            </intent-filter>
+
+        </activity>
+
+        <!-- App icons (Premi Sintonia V2, 29/10/2026): the couple picks the icon in
+             the app (native-plugins/us-app-icon). Each icon is a launcher entry;
+             exactly one is enabled. The default keeps the old name .MainActivity,
+             so the icon already on a home screen survives the update. -->
+        <activity-alias
+            android:name=".MainActivity"
+            android:targetActivity=".UsActivity"
+            android:label="@string/title_activity_main"
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
-        </activity>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherNight"
+            android:targetActivity=".UsActivity"
+            android:label="@string/title_activity_main"
+            android:icon="@mipmap/ic_launcher_night"
+            android:roundIcon="@mipmap/ic_launcher_night"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherGold"
+            android:targetActivity=".UsActivity"
+            android:label="@string/title_activity_main"
+            android:icon="@mipmap/ic_launcher_gold"
+            android:roundIcon="@mipmap/ic_launcher_gold"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherNeon"
+            android:targetActivity=".UsActivity"
+            android:label="@string/title_activity_main"
+            android:icon="@mipmap/ic_launcher_neon"
+            android:roundIcon="@mipmap/ic_launcher_neon"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- S3: new data-only FCM messages are NEVER system-auto-rendered.
              A native service verifies owner before creating the generic OS banner.

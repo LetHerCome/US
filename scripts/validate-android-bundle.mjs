@@ -28,6 +28,8 @@ export const PLAY_MIN_TARGET_SDK = 36;
 export const EXPECTED_MIN_SDK = 26;
 // Google Play rejects versionCode above 2,100,000,000.
 export const PLAY_MAX_VERSION_CODE = 2100000000;
+// App icons (Premi Sintonia V2, 29/10/2026): one launcher activity-alias per icon.
+export const APP_ICON_ALIASES = ['MainActivity', 'LauncherNight', 'LauncherGold', 'LauncherNeon'].map((name) => `${APPLICATION_ID}.${name}`);
 export const GUARDED_FCM_SERVICE = 'com.usapp.us.UsGuardedMessagingService';
 export const FCM_ACTION = 'com.google.firebase.MESSAGING_EVENT';
 
@@ -61,6 +63,7 @@ export const FORBIDDEN_PERMISSIONS = [
 export const DATA_SAFETY_PERMISSIONS = {
   'android.permission.CAMERA': 'Foto e video (fotocamera)',
   'android.permission.ACCESS_COARSE_LOCATION': 'Posizione approssimativa',
+  'android.permission.ACCESS_MEDIA_LOCATION': 'Posizione delle foto (Mappa dei Ricordi)',
   'android.permission.RECORD_AUDIO': 'Audio (note vocali)',
   'android.permission.POST_NOTIFICATIONS': 'Notifiche',
   'com.google.android.gms.permission.AD_ID': 'ID pubblicità'
@@ -209,11 +212,14 @@ export function checkManifest(summary, { expectVersionCode, expectVersionName, m
     warn('record-audio-missing', 'RECORD_AUDIO assente: le note vocali di "Lasciato per te" non funzionano su Android (roadmap B2, manifest della Squadra 1)');
   }
 
-  const openExported = summary.components.filter((c) => c.exported === 'true' && !c.permission
-    && !(c.kind === 'activity' && c.name === `${APPLICATION_ID}.MainActivity`));
+  // The app's screen (UsActivity, MainActivity before the app icons of 29/10/2026)
+  // and the launcher entries of the app icons are the only open components.
+  const launcherEntry = (c) => (c.kind === 'activity' && [`${APPLICATION_ID}.MainActivity`, `${APPLICATION_ID}.UsActivity`].includes(c.name))
+    || (c.kind === 'activity-alias' && APP_ICON_ALIASES.includes(c.name));
+  const openExported = summary.components.filter((c) => c.exported === 'true' && !c.permission && !launcherEntry(c));
   openExported.length
     ? fail('exported-components', openExported.map((c) => `${c.kind} ${c.name}`).join(', '))
-    : pass('exported-components', 'solo MainActivity o componenti protetti da permesso');
+    : pass('exported-components', 'solo la schermata di US, le icone dell\'app o componenti protetti da permesso');
 
   const fcmReceivers = summary.components.filter((c) => c.kind === 'service' && c.actions.includes(FCM_ACTION));
   const guardedOnly = fcmReceivers.length === 1 && fcmReceivers[0].name === GUARDED_FCM_SERVICE && fcmReceivers[0].exported !== 'true';

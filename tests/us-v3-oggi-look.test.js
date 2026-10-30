@@ -13,8 +13,10 @@ const lookCss = read('oggi-look.css');
 const progressionJs = read('progression.js');
 const html = read('index.html');
 
-const THEMES = ['original', 'romantic', 'pastel', 'cinematic', 'moonlight', 'seasonal'];
-const EFFECTS = ['none', 'hearts', 'stars', 'petals', 'fireflies', 'bokeh', 'snow'];
+// Premi Sintonia V2 (29/10/2026): Il vostro cielo, the headline of level 20.
+const THEMES = ['original', 'romantic', 'pastel', 'cinematic', 'moonlight', 'sky', 'seasonal'];
+// Premi Sintonia V2 (29/10/2026): Aurora, the Plus extra of level 4.
+const EFFECTS = ['none', 'hearts', 'stars', 'petals', 'fireflies', 'bokeh', 'snow', 'aurora'];
 
 // ------------------------------------------------------------------ fake DOM
 function fakeNode(id = '') {
@@ -83,7 +85,7 @@ const v3Rewards = (level) => [
 ];
 
 // ------------------------------------------------------------------ catalog + CSS
-test('Oggi looks: six curated themes and seven effects, with a free starter set and no fake currency', () => {
+test('Oggi looks: six curated themes and eight effects (Aurora since Sintonia V2), with a free starter set and no fake currency', () => {
   const { look } = boot();
   assert.deepEqual(plain(look.THEMES.map((t) => t.id)), THEMES);
   assert.deepEqual(plain(look.EFFECTS.map((e) => e.id)), EFFECTS);
@@ -103,13 +105,14 @@ test('Oggi looks: every theme is ONE token block shared by the real Oggi and its
 
 test('Oggi looks: themes never restyle global US — only --oggi-* tokens consumed by Oggi selectors', () => {
   const blocks = [...lookCss.matchAll(/html\[data-us-oggi-theme="[a-z]+"\],[^{]*\{([^}]*)\}/g)].map((m) => m[1]);
-  assert.equal(blocks.length, 5);
+  assert.equal(blocks.length, 6);
   for (const body of blocks) {
     const props = [...body.matchAll(/(--[a-z0-9-]+):/g)].map((m) => m[1]);
     assert.ok(props.length > 8);
     assert.ok(props.every((p) => p.startsWith('--oggi-')), `only Oggi tokens: ${props.filter((p) => !p.startsWith('--oggi-'))}`);
   }
-  const consumers = [...lookCss.matchAll(/^(html\[data-us-oggi-theme[^{]*)\{/gm)].map((m) => m[1]).filter((sel) => !/^html\[data-us-oggi-theme="[a-z]+"\],/.test(sel));
+  // Token blocks: one per theme, and the seasons of Stagioni (Sintonia V2) on top of theirs.
+  const consumers = [...lookCss.matchAll(/^(html\[data-us-oggi-theme[^{]*)\{/gm)].map((m) => m[1]).filter((sel) => !/^html\[data-us-oggi-theme="[a-z]+"\](\[data-us-oggi-season="[a-z]+"\])?,/.test(sel));
   assert.ok(consumers.length > 6);
   for (const sel of consumers) assert.match(sel, /#home|#homeHero|body:has\(#home\.page\.active\)/, `scoped to Oggi: ${sel}`);
   assert.doesNotMatch(lookCss, /data-us-theme=/, 'the global Atmosfera US stays progression.css territory');
@@ -161,7 +164,7 @@ test('Oggi looks: locked looks preview but cannot be applied; looks the server d
 
   const after = boot({ rewards: v3Rewards(6), level: 6 });
   await after.progression.hydrate({ force: true, showUnlocks: false });
-  assert.deepEqual(plain(after.look.status('theme', 'moonlight')), { state: 'locked', level: 7 });
+  assert.deepEqual(plain(after.look.status('theme', 'moonlight')), { state: 'locked', level: 7, plus: false });
   assert.equal(after.look.status('theme', 'cinematic').state, 'unlocked');
   assert.equal(await after.progression.setLook('theme', 'moonlight'), false, 'locked');
   assert.equal(await after.progression.setLook('theme', 'cinematic'), true);
@@ -212,14 +215,15 @@ test('Oggi effects: fewer particles on modest phones, the same deterministic com
 });
 
 // ------------------------------------------------------------------ wiring
-test('Oggi looks: reachable from Settings and Sintonia, Back-aware, shipped to PWA and native', () => {
-  assert.match(html, /data-us-setting="oggi-theme"[\s\S]{0,400}id="usOggiThemeValue"/);
-  assert.match(html, /data-us-setting="oggi-effect"[\s\S]{0,400}id="usOggiEffectValue"/);
-  const settings = read('settings.js');
-  assert.match(settings, /if\(name==='oggi-theme'\)return window\.USOggiLook\?\.openGallery\?\.\(\{tab:'theme'\}\)/);
-  assert.match(settings, /if\(name==='oggi-effect'\)return window\.USOggiLook\?\.openGallery\?\.\(\{tab:'effect'\}\)/);
+test('Oggi looks: reachable from Sintonia (not Settings), Back-aware, shipped to PWA and native', () => {
+  // Founder, 29/10/2026: themes and effects live in Sintonia, where they are
+  // unlocked; Settings no longer lists them. Their groups open the full gallery.
+  assert.doesNotMatch(html, /data-us-setting="oggi-(theme|effect)"|PERSONALIZZA OGGI/);
+  assert.match(progressionJs, /const LOOK_GALLERY = Object\.freeze\(\{ oggi_theme: 'theme', oggi_effect: 'effect' \}\);/);
+  assert.match(progressionJs, /if \(gallery\?\.dataset\?\.lookGallery\) \{ window\.USOggiLook\?\.openGallery\?\.\(\{ tab: gallery\.dataset\.lookGallery \}\); return; \}/);
   // Round 3 (mockup 076): a look tile in the Sintonia collection applies the look directly, like
-  // every other tile; the full gallery stays reachable from Settings (above).
+  // every other tile; Il vostro cielo first opens its page (city and hour).
+  assert.match(progressionJs, /if \(data\.lookSlot === 'theme' && data\.lookId === 'sky'\) \{ window\.USOggiLook\?\.openGallery\?\.\(\{ tab: 'theme', look: 'sky' \}\); return; \}/);
   assert.match(progressionJs, /ok = setDeviceLook\(data\.lookSlot, data\.lookId\)/);
   const nav = read('navigation.js');
   assert.match(nav, /name:'oggi-look',\s*find:\(\)=>document\.getElementById\('usLookSheet'\)/);

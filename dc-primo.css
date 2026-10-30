@@ -257,7 +257,7 @@ html .auth-overlay #usOnboarding[data-us-busy] :is(button,input,select,textarea)
 html .auth-overlay #mc3BackCreate,
 html .auth-overlay #mc3BackJoin,
 html .auth-overlay #mc3CopyCode,
-html .auth-overlay #usGoogleSignIn,
+html .auth-overlay :is(#usGoogleSignIn,#usGoogleSignUp),
 html .auth-overlay #usVerifyResend,
 html .auth-overlay #mc3Waiting.has-code #mc3Generate,
 .us-setup .us-setup-secondary{
@@ -607,6 +607,10 @@ html #authOverlay.auth-overlay #usOnboarding :is(#mc3BackMe,#mc3Exit).mc3-back.u
 /* A floated legend is a plain grid item: the 6px under it, as under every label. */
 #usOnboarding .us-ob-bday legend{float:left;width:100%}
 .us-ob-bday-row{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);gap:8px}
+/* Insieme dal (beta fix 28/10): day, month, year in the same selects. */
+.us-ob-date-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);gap:8px}
+.us-ob-date-row .us-ob-select::after{right:9px}
+html .auth-overlay .auth-card .us-ob-date-row .us-ob-select select{padding-left:11px;padding-right:28px}
 .us-ob-select{position:relative;display:block;min-width:0}
 .us-ob-select::after{
   content:"";

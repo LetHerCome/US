@@ -35,6 +35,12 @@ const SLOTS = Object.freeze({
   theme: { pref: 'theme_reward_id', label: 'Atmosfera', place: 'lo sfondo di tutta US', unlock: 'Nuova atmosfera', where: 'In tutta US' },
   accent: { pref: 'accent_reward_id', label: 'Colore di Noi', place: 'controlli, progressi, navigazione', unlock: 'Nuovo colore di Noi', where: 'Selezioni e progressi, in tutta US' },
   effect: { pref: 'effect_reward_id', label: 'Simbolo US', place: 'il simbolo in alto', unlock: 'Nuovo effetto del simbolo', where: 'Il simbolo in alto su Oggi' },
+  // Premi Sintonia V2: how this phone receives a Ti penso.
+  ti_penso: { pref: 'ti_penso', label: 'Ti penso', place: 'quando ne ricevi uno', unlock: 'Nuovo Ti penso', where: 'Quando ricevi un Ti penso' },
+  // Premi Sintonia V2, Fase 2: what the companion wears on this phone (pet.css).
+  pet_accessory: { pref: 'pet_accessory', label: 'Accessori', place: 'sul vostro Compagno', unlock: 'Nuovo accessorio', where: 'Sul vostro Compagno, sopra la barra' },
+  // and the icon of US on this phone (native-plugins/us-app-icon, the Android app).
+  app_icon: { pref: 'app_icon', label: 'Icona dell’app', place: 'sul tuo telefono', unlock: 'Nuova icona', where: 'L’icona di US sul tuo telefono, nell’app Android' },
   frame: { pref: 'frame_reward_id', retired: true, label: 'Cornici', place: 'sulla foto di Oggi', unlock: 'NUOVA CORNICE', where: 'Sulla foto di Oggi' },
   sticker: { pref: 'sticker_reward_id', retired: true, label: 'Adesivi', place: 'su Oggi e sull’ultimo ricordo', unlock: 'NUOVO ADESIVO', where: 'Su Oggi e sull’ultimo ricordo' },
   badge: { pref: 'badge_reward_id', retired: true, label: 'Spille', place: 'tra voi due, in Noi', unlock: 'NUOVA SPILLA', where: 'In Noi, tra i vostri ritratti' },
@@ -270,7 +276,10 @@ const ITEM_COLOR = Object.freeze({
 const SLOT_DEFAULT = Object.freeze({
   theme: { id: 'us', title: 'Notte', description: 'La notte di US, com’è adesso.' },
   accent: { id: 'orchidea', title: 'Orchidea', description: 'Il colore di Noi, dove i vostri due colori si incontrano.' },
-  effect: { id: 'none', title: 'Fermo', description: 'Il simbolo US, senza movimento.' }
+  effect: { id: 'none', title: 'Fermo', description: 'Il simbolo US, senza movimento.' },
+  ti_penso: { id: 'classic', title: 'Classico', description: 'Il Ti penso di sempre: un cuore e il vostro nome.' },
+  pet_accessory: { id: 'none', title: 'Niente', description: 'Il vostro Compagno com’è.' },
+  app_icon: { id: 'us', title: 'US', description: 'L’icona di sempre.' }
 });
 function itemColor(cat, id) { return ITEM_COLOR[cat]?.[id] || ''; }
 // The mockup's item for a reward row: { cat, id } in the preview's terms.
@@ -299,9 +308,22 @@ function miniCount() {
   const days = daysTogether();
   return days ? `<span class="n">${esc(days)}</span><span class="u">giorni</span>` : '';
 }
+// Premi Sintonia V2, Fase 2: pictures fetched only when a tile shows them.
+const REWARD_ART = '/assets/derived/rewards/';
+// An accessory tile shows this phone's companion wearing it; one not drawn on
+// the companions yet shows the accessory alone.
+function accessoryArt(id) {
+  const pet = window.USPet;
+  const who = pet?.companion?.();
+  if (id === 'none' || pet?.WORN?.includes(id)) return pet?.wornArt?.(who, id === 'none' ? '' : id) || '/assets/derived/pet/us-pet-maudit-awake-v2.webp';
+  return `${REWARD_ART}us-acc-${id}-v1.webp`;
+}
 function artMarkup(item, big = false) {
   if (!item) return '<span class="us-cos-stage"></span>';
   const { cat, id } = item;
+  if (cat === 'ti_penso') return `<span class="us-cos-think" data-think="${esc(id)}"${id === 'letter' ? ` style="--art:url('${REWARD_ART}us-think-letter-closed-v1.webp')"` : ''}><i></i><i></i><i></i></span>`;
+  if (cat === 'app_icon') return `<span class="us-cos-acc us-cos-icon" data-icon="${esc(id)}" style="--art:url('${REWARD_ART}us-app-icon-${esc(id)}-v1.webp')"></span>`;
+  if (cat === 'pet_accessory') return `<span class="us-cos-acc" data-acc="${esc(id)}" style="--art:url('${esc(accessoryArt(id))}')"></span>`;
   if (cat === 'oggi_theme') return `<span class="mini" data-theme="${esc(id)}">${miniCount()}</span>`;
   if (cat === 'oggi_effect') return `<span class="mini">${id !== 'none' && FX.has(id) ? `<canvas data-fx="${esc(id)}"></canvas>` : ''}${miniCount()}</span>`;
   if (cat === 'theme') {
@@ -568,6 +590,19 @@ function syncSplashTheme(theme) {
   }).catch(() => { splashThemeSent = undefined; });
 }
 window.UsSplashThemeSync = syncSplashTheme;
+// Premi Sintonia V2: the app icon of this phone. Android swaps the launcher entry
+// only when the icon really changes (it is read first): a swap redraws the home screen.
+let appIconSent;
+function syncAppIcon(icon) {
+  const name = icon || 'us';
+  if (appIconSent === name) return;
+  const plugin = window.Capacitor?.Plugins?.UsAppIcon;
+  if (!plugin?.get || !plugin?.set) return;
+  appIconSent = name;
+  Promise.resolve(plugin.get())
+    .then((current) => (current?.icon === name ? null : plugin.set({ icon: name })))
+    .catch(() => { appIconSent = undefined; });
+}
 function applyPreferences(next = state) {
   const root = document.documentElement;
   const hero = $('homeHero');
@@ -576,9 +611,14 @@ function applyPreferences(next = state) {
   const theme = value('theme');
   const accent = value('accent');
   const effect = value('effect');
+  const think = value('ti_penso');
+  const accessory = value('pet_accessory');
+  syncAppIcon(value('app_icon'));
   // A data attribute on <html> restyles the whole page: written only when it changes.
   if (root.dataset.usTheme !== (theme || undefined)) { if (theme) root.dataset.usTheme = theme; else delete root.dataset.usTheme; }
   syncSplashTheme(theme);
+  if (root.dataset.usThinkFx !== (think || undefined)) { if (think) root.dataset.usThinkFx = think; else delete root.dataset.usThinkFx; }
+  window.USPet?.setAppearance?.({ accessory: accessory || '' });
   if (root.dataset.usAccent !== (accent || undefined)) { if (accent) root.dataset.usAccent = accent; else delete root.dataset.usAccent; }
   if (root.dataset.usEffect !== (effect || undefined)) { if (effect) root.dataset.usEffect = effect; else delete root.dataset.usEffect; }
   clearRetiredCosmetics(root, hero);
@@ -790,7 +830,7 @@ function renderRhythm(next = state) {
 
 // The mockup's category order (sintonia.js CATS): the chips, the next
 // unlock's "e …" and the collection all follow it.
-const CHIP_ORDER = Object.freeze(['theme', 'accent', 'oggi_theme', 'oggi_effect', 'effect', 'countdown', 'companion']);
+const CHIP_ORDER = Object.freeze(['theme', 'accent', 'oggi_theme', 'oggi_effect', 'effect', 'ti_penso', 'pet_accessory', 'app_icon', 'countdown', 'companion']);
 const chipRank = (category) => { const i = CHIP_ORDER.indexOf(category); return i < 0 ? CHIP_ORDER.length : i; };
 // The server's next_reward may be a retired category: the next unlock is
 // read from the same server rows, every presented reward of the next level.
@@ -847,43 +887,68 @@ function nextCompanion() {
   return list.find((c) => !c.unlocked) || null;
 }
 const companionArt = (c) => `<img class="us-progression-companion-art" src="${esc(c.art)}" alt="" draggable="false" decoding="async">`;
+// Premi Sintonia V2 (29/10/2026): the next HEADLINE reward the server names
+// (next_headline), when this version can show it.
+function headlineReward(next){
+  const id = next?.next_headline?.id;
+  const reward = id ? (next.rewards || []).find((r) => r.id === id) : null;
+  return reward && presented(reward) && artItem(reward) ? reward : null;
+}
 function renderNext(next = state) {
   const root = $('usProgressionNext');
   if (!root) return;
   const { level, rewards } = nextPresentedRewards(next);
   const companion = nextCompanion();
-  if (companion && (!rewards.length || companion.level < level)) {
+  // One headline per level: the next one in big, or the companion if it comes first.
+  const headline=headlineReward(next);
+  const headlineLevel = headline ? Number(headline.level_required) || 0 : 0;
+  const total = Number(next?.total_xp) || 0;
+  if (companion && (headline ? companion.level <= headlineLevel : (!rewards.length || companion.level < level))) {
     if (root.dataset.rewardCat !== 'companion') root.dataset.rewardCat = 'companion';
     // Level already reached: the companion is on its way (the next read of get_companions_v1).
-    const xp = xpToLevel(Number(next?.total_xp) || 0, companion.level);
-    const line = xp > 0 ? `Un compagno sopra la barra · mancano ${fmt(xp)} XP` : 'Un compagno sopra la barra';
+    const xp = xpToLevel(total, companion.level);
+    const soon = daysEstimate(xp, next);
+    const line = xp > 0 ? `Un compagno sopra la barra · mancano ${fmt(xp)} XP${soon ? ` · ${soon}` : ''}` : 'Un compagno sopra la barra';
     paintHTML(root, `<span class="us-progression-next-preview" aria-hidden="true">${companionArt(companion)}</span><span class="us-progression-next-copy"><small>Prossimo sblocco · Livello ${companion.level}</small><b>${esc(companion.name)}</b><span>${esc(line)}</span></span><span class="us-progression-next-chev" aria-hidden="true"></span>`);
     return;
   }
-  const first = rewards[0];
+  const first = headline || rewards[0];
+  const target = headline ? headlineLevel : level;
   const cat = first ? artItem(first).cat : '';
   if (root.dataset.rewardCat !== cat) root.dataset.rewardCat = cat;
   if (!first) {
     paintHTML(root, '<span class="us-progression-next-copy"><small>Collezione completa</small><b>Avete raggiunto tutti gli sblocchi di questa versione</b></span>');
     return;
   }
-  const missing = fmt(xpToLevel(Number(next?.total_xp) || 0, level));
-  const second = rewards[1] ? presentedTitle(rewards[1]) : '';
-  const line = second ? `e ${second} · mancano ${missing} XP` : `mancano ${missing} XP`;
-  if (paintHTML(root, `<span class="us-progression-next-preview" aria-hidden="true">${artMarkup(artItem(first))}</span><span class="us-progression-next-copy"><small>Prossimo sblocco · Livello ${level}</small><b>${esc(presentedTitle(first))}</b><span>${esc(line)}</span></span><span class="us-progression-next-chev" aria-hidden="true"></span>`)) startCanvases(root);
+  const xp = xpToLevel(total, target);
+  const missing = fmt(xp);
+  const estimate=daysEstimate(xp, next);
+  const second = !headline && rewards[1] ? presentedTitle(rewards[1]) : '';
+  const line = `${second ? `e ${second} · ` : ''}mancano ${missing} XP${estimate ? ` · ${estimate}` : ''}`;
+  if (paintHTML(root, `<span class="us-progression-next-preview" aria-hidden="true">${artMarkup(artItem(first))}</span><span class="us-progression-next-copy"><small>Prossimo sblocco · Livello ${target}</small><b>${esc(presentedTitle(first))}</b><span>${esc(line)}</span></span><span class="us-progression-next-chev" aria-hidden="true"></span>`)) startCanvases(root);
+}
+// «circa N giorni» on the couple's own pace (points of the last 14 days);
+// nothing without a pace, nor beyond a year.
+function daysEstimate(xp, next) {
+  const pace = (Number(next?.xp_last_14_days) || 0) / 14;
+  if (!(xp > 0) || !(pace > 0)) return '';
+  const days = Math.ceil(xp / pace);
+  if (days > 365) return '';
+  return days === 1 ? 'circa 1 giorno' : `circa ${days} giorni`;
 }
 
 // One tile of the collection (sintonia.js tile): the art, the name and
 // "In uso" / "Livello 6" / "Sbloccato" / "Incluso".
-function tileMarkup({ attrs, cls = '', on, locked, level, free, title, art }) {
-  const status = on ? 'In uso' : locked ? `Livello ${level}` : free ? 'Incluso' : 'Sbloccato';
-  const label = `${title}${locked ? `, si sblocca al livello ${level}` : on ? ', in uso' : ''}`;
+function tileMarkup({ attrs, cls = '', on, locked, level, free, title, art, plus = false }) {
+  // V2: a Plus extra needs the level and US Plus (nothing to buy yet).
+  const status = on ? 'In uso' : locked ? (plus ? `Livello ${level} · US Plus` : `Livello ${level}`) : free ? 'Incluso' : 'Sbloccato';
+  const label = `${title}${locked ? `, si sblocca al livello ${level}${plus ? ' con US Plus' : ''}` : on ? ', in uso' : ''}`;
   return `<button type="button" class="us-progression-reward${cls ? ` ${cls}` : ''} ${locked ? 'is-locked' : 'is-unlocked'}${on ? ' is-equipped' : ''}" ${attrs}${locked ? ` data-locked="true" data-level="${esc(level)}"` : ''} aria-pressed="${on ? 'true' : 'false'}" aria-label="${esc(label)}"><span class="us-progression-reward-preview" aria-hidden="true">${art}</span><span class="us-progression-reward-copy"><b>${esc(title)}</b><small>${esc(status)}</small></span></button>`;
 }
 function rewardTile(reward) {
   return tileMarkup({
     attrs: `data-progression-reward="${esc(reward.id)}" data-category="${esc(reward.category)}"`,
-    on: Boolean(reward.equipped), locked: !reward.unlocked, level: reward.level_required,
+    on: Boolean(reward.equipped), locked: !reward.unlocked, level: reward.level_required, plus: Boolean(reward.requires_plus),
     title: reward.title, art: artMarkup(artItem(reward))
   });
 }
@@ -913,10 +978,14 @@ function countdownTile(style, next) {
     title: style.name, art: artMarkup({ cat: 'countdown', id: style.id })
   });
 }
+// Founder, 29/10/2026: themes and effects of Oggi live here, not in Settings:
+// their groups open the full gallery (previews, the sky's city and hour).
+const LOOK_GALLERY = Object.freeze({ oggi_theme: 'theme', oggi_effect: 'effect' });
 function groupMarkup({ category, label, place, owned, total, tiles }) {
+  const gallery = LOOK_GALLERY[category] ? `<button type="button" class="us-reward-group-gallery" data-look-gallery="${LOOK_GALLERY[category]}">Apri la galleria con le anteprime</button>` : '';
   return (open) => `<details class="us-reward-group" data-category="${category}" aria-label="${esc(label)}"${open ? ' open' : ''}>
       <summary class="us-reward-group-head"><b>${esc(label)}</b><span>${esc(place)}</span><em>${owned}/${total}</em></summary>
-      <div class="us-reward-grid">${tiles}</div>
+      <div class="us-reward-grid">${tiles}</div>${gallery}
     </details>`;
 }
 function countdownGroup(next) {
@@ -1383,6 +1452,8 @@ $('usProgressionRewards')?.addEventListener('click', async (event) => {
     window.UsFeedback?.selection?.();
     return;
   }
+  const gallery = event.target.closest?.('[data-look-gallery]');
+  if (gallery?.dataset?.lookGallery) { window.USOggiLook?.openGallery?.({ tab: gallery.dataset.lookGallery }); return; }
   const tile = event.target.closest?.('[data-progression-reward],[data-progression-default],[data-countdown-style-select],[data-look-slot],[data-companion-pick]');
   if (!tile || tile.disabled) return;
   const data = tile.dataset || {};
@@ -1409,6 +1480,8 @@ $('usProgressionRewards')?.addEventListener('click', async (event) => {
     ok = await window.USCountdown?.setStyle?.(data.countdownStyleSelect);
     if (ok) renderRewards(state);
   } else if (data.lookSlot) {
+    // Il vostro cielo needs its city and hour: it opens its own page first.
+    if (data.lookSlot === 'theme' && data.lookId === 'sky') { window.USOggiLook?.openGallery?.({ tab: 'theme', look: 'sky' }); return; }
     category = LOOK_SLOT[data.lookSlot] || '';
     ok = setDeviceLook(data.lookSlot, data.lookId);
   } else if (data.progressionDefault) {

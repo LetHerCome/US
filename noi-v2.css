@@ -130,7 +130,7 @@
 #quiz .us-gioca-sintonia .us-progression-next{display:flex;gap:14px;padding:14px 15px;border-radius:var(--us-radius-card);background:linear-gradient(145deg,rgba(255,102,142,.08),rgba(169,133,255,.08)),rgba(255,255,255,.03);border-color:rgba(255,183,210,.18)}
 #quiz .us-gioca-sintonia .us-progression-next-preview{flex-basis:76px;width:76px;height:76px;border-radius:18px;filter:none;opacity:1;box-shadow:0 10px 24px rgba(0,0,0,.22)}
 #quiz .us-gioca-sintonia .us-progression-next-copy{gap:5px}
-#quiz .us-gioca-sintonia .us-progression-next-copy b{font-size:22px;line-height:1.08}
+#quiz .us-gioca-sintonia .us-progression-next-copy b{font-size:17px;line-height:1.08}
 #quiz .us-gioca-sintonia .us-progression-rewards-section{display:block;padding:16px 14px 6px;overflow:visible;border-radius:var(--us-radius-card)}
 #quiz .us-gioca-sintonia .us-progression-rewards-head{align-items:start;margin:0 2px 8px}
 #quiz .us-gioca-sintonia .us-progression-rewards-head h3{font-size:22px}

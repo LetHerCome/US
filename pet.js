@@ -125,10 +125,15 @@ const COMPANIONS=Object.freeze({
 const COMPANION_IDS=Object.freeze(Object.keys(COMPANIONS));
 // Before the couple has unlocked any companion, nothing sits above the bar.
 const NO_COMPANION='none';
-const art=(id,name)=>PET_ART+'us-pet-'+id+'-'+name+'-'+COMPANIONS[id].v+'.webp';
-function companionMarkup(id){
+// Premi Sintonia V2: accessories drawn on each companion (the founder's sheets,
+// cut into the same frames). The moving parts stay the approved ones.
+// Their pictures are 24 px taller than the frame (a crown stands above it): pet.css lifts them.
+const WORN=Object.freeze(['scarf','gala','flowers','crown']);
+const WORN_POSES=Object.freeze(['awake','body','sleep','happy']);
+const art=(id,name,worn='')=>PET_ART+'us-pet-'+id+'-'+(WORN.includes(worn)&&WORN_POSES.includes(name)?worn+'-'+name+'-v1':name+'-'+COMPANIONS[id].v)+'.webp';
+function companionMarkup(id,worn=''){
   const c=COMPANIONS[id],[W,H]=c.size;
-  const img=(cls,name,style='')=>'<img class="'+cls+'" src="'+art(id,name)+'" alt="" draggable="false" decoding="async"'+style+'>';
+  const img=(cls,name,style='')=>'<img class="'+cls+(WORN.includes(worn)&&WORN_POSES.includes(name)?' us-pet-worn':'')+'" src="'+art(id,name,worn)+'" alt="" draggable="false" decoding="async"'+style+'>';
   const parts=Object.entries(c.parts).map(([name,[x,y]])=>img('us-pet-part us-pet-'+name,name,' style="transform-origin:'+(x/W*100).toFixed(2)+'% '+(y/H*100).toFixed(2)+'%"')).join('');
   const body=img('us-pet-body','body');
   const lids=c.eyes.map(([x0,y0,x1,y1,fur])=>{
@@ -149,6 +154,7 @@ const FLIGHT=Object.freeze([
 ]);
 function mountCompanion(host,id){
   host.innerHTML='<span class="us-pet-figure" data-pet-production="'+id+'">'+companionMarkup(id)+'</span>';
+  let worn='';
   const figure=host.querySelector?.('.us-pet-figure'),w=host.ownerDocument?.defaultView;
   let state='idle',timer=null,flight=null;
   const reduced=()=>{try{return Boolean(w?.UsUiFoundation?.isReducedMotion?.()||w?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);}catch(_){return false;}};
@@ -174,6 +180,12 @@ function mountCompanion(host,id){
       state=next;
       if(next==='sleep'&&flight)flight.cancel();
       if(next==='idle')arm();else clear();
+    },
+    // The accessory changes the pictures, not the rig: the figure stays (and its flight).
+    setAppearance(next={}){
+      const want=WORN.includes(next.accessory)?next.accessory:'';
+      if(want===worn||!figure)return;
+      worn=want;figure.innerHTML=companionMarkup(id,worn);
     },
     destroy(){clear();if(flight)flight.cancel();host.innerHTML='';}
   };
@@ -436,7 +448,9 @@ function install(w){
 
 // Before install (or when disabled) every entry point is a safe no-op.
 return {
-  PET_ASSET_STATUS,STATES,REASONS,TIMING,COMPANIONS,COMPANION_IDS,NO_COMPANION,createPet,registerRenderer,canMount,computeBlockers:blockers,install,MAUDIT_KEYS,
+  PET_ASSET_STATUS,STATES,REASONS,TIMING,COMPANIONS,COMPANION_IDS,NO_COMPANION,createPet,registerRenderer,canMount,computeBlockers:blockers,install,MAUDIT_KEYS,WORN,
+  // The awake picture of a companion, wearing an accessory or not (the collection tiles).
+  wornArt:(id,worn='')=>art(COMPANION_IDS.includes(id)?id:'maudit','awake',worn),
   enabled:false,
   react:()=>false,
   useRenderer:()=>false,

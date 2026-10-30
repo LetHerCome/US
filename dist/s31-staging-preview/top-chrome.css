@@ -1,0 +1,42 @@
+/* US contextual top chrome V2
+   Full floating shell only on Oggi. All other primary pages release the
+   entire reserved height: no pill, logo or invisible spacer. The existing
+   .page.active drives state for taps, swipes and browser history. */
+
+.top.us-premium-top {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity 190ms var(--us-ease-standard, ease),
+    transform 280ms var(--us-ease-standard, ease),
+    visibility 0s linear 0s;
+}
+
+/* Page padding, Noi internal heights and Settings use this shared token.
+   Only remove the shell clearance. The app's --us-safe-top still protects
+   content from Android/iOS status bars and cutouts. */
+body:has(.app > .page.active:not(#home)) {
+  --us-top-chrome-clearance: 0px;
+}
+
+body:has(.app > .page.active:not(#home)) .top.us-premium-top {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-26px) scale(.97);
+  pointer-events: none;
+  transition:
+    opacity 190ms var(--us-ease-standard, ease),
+    transform 280ms var(--us-ease-standard, ease),
+    visibility 0s linear 280ms;
+}
+
+/* Browser and in-app reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  .top.us-premium-top {
+    transition: none !important;
+  }
+}
+:root[data-us-motion="reduced"] .top.us-premium-top {
+  transition: none !important;
+}

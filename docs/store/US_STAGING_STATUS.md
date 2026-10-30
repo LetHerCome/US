@@ -2,6 +2,16 @@
 **Checked:** 2026-10-22 (read-only schema and Edge comparison with production) · earlier full database gate 2026-10-10
 **State:** AT PRODUCTION LEVEL except the documented differences below / S2 ON STAGING ONLY / ALL CRONS OFF
 
+## Update 2026-10-29 — patch unica in prova (PR #232–#237)
+
+- **SQL applicato su staging** (workflow «Supabase SQL (manual)», approvato dal founder): `20261028201759_gioca_daily_limit_v1`, `20261028232743_days_together_milestones_v1`, `20261029012149_app_min_version_v1`, `20261029014653_person_colors_plus_v1`.
+- **Edge:** `monthiversary-job` con i traguardi dei giorni. **I cron restano spenti**: il job delle 9 non gira su staging, quindi punti e notifiche dei traguardi qui non arrivano da soli.
+- **Accesso Google** acceso dal founder su questo progetto (29/10).
+- **US Plus per tutti** (dati, non schema): il founder esegue `docs/store/US_STAGING_PLUS_PER_TUTTI.sql` nell'SQL Editor di staging. Si può rieseguire per gli account nuovi. Mai in produzione.
+- **Premi Sintonia V2, Fase 1** (29/10, dopo la patch unica): SQL `20261029031726_sintonia_rewards_v2_phase1` applicato tre volte: la seconda con `couples.sky_city` e `set_sky_city`, la terza (run 40874645740) con `couples.sky_minutes` e `set_sky(città, minuti)` al posto di `set_sky_city`. Anteprima dal branch `claude/sintonia-premi-v2`, build `us-sintonia-v2-20261029-55`.
+- **Premi Sintonia V2, Fase 2** (29/10): SQL `20261029161354_sintonia_rewards_v2_phase2` applicato (run 40913690551) e riapplicato con i nomi «Coroncina», Gala e Corona per maschi e femmine (run 40924951034). Accessori disegnati addosso ai Compagni e Ti penso «lettera» sull'anteprima; manca il foglio della corona.
+- **Sintonia tutta sbloccata** (dati, non schema, founder 29/10): `docs/store/US_STAGING_SINTONIA_TUTTA.sql` porta ogni coppia al livello dopo il premio più alto (con la scala V2, il 21) e sblocca tutti i premi e i Compagni, già segnati come visti. Rieseguibile. Mai in produzione.
+
 ## Update 2026-10-22 — parity with production
 
 **How it was checked:** a read-only fingerprint of the catalog on both projects, via `supabase db query --linked --project-ref …`: functions (body, `search_path`, SECURITY DEFINER), function and table ACLs, columns, RLS, policies (storage included), indexes, triggers, constraints, cron jobs, extensions and buckets, about 1,790 objects. It read no table rows. Edge functions were compared through the bundle hash (`ezbr_sha256`) from `supabase functions list`.

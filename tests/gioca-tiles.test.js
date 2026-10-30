@@ -71,13 +71,13 @@ test('Gioca hub: no page header prose, no separate in-progress list, one week st
   assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"[\s\S]*?<small>Giocato questa settimana<\/small>/);
 });
 
-test('Gioca hub: a spent week stays compact and locks unplayed tiles until Monday', async () => {
+test('Gioca hub: a spent day stays compact and locks unplayed tiles until tomorrow', async () => {
   const html = await hub(homeOf({ per_voi: { state: 'played', session_id: 'p' },
-    allowance: allowance({ used: 3, per_voi_used: 1, free_used: 2, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) })).html();
-  assert.doesNotMatch(html, /Nuovi giochi lunedì/, 'the hub does not duplicate exhaustion prose; tiles carry the state');
+    allowance: allowance({ used: 1, limit: 1, per_voi_used: 1, free_used: 1, free_limit: 1, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) })).html();
+  assert.doesNotMatch(html, /Nuovi giochi domani/, 'the hub does not duplicate exhaustion prose; tiles carry the state');
   // Round 3 parity: no budget strip; a locked tile is dimmed and says when.
   assert.doesNotMatch(html, /Tutti giocati|us-gv2-rhythm/);
-  assert.match(html, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true" aria-label="Scopritevi: [^"]+\. Da lunedì"[\s\S]*?<small>Da lunedì<\/small>/);
+  assert.match(html, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true" aria-label="Scopritevi: [^"]+\. Da domani"[\s\S]*?<small>Da domani<\/small>/);
 });
 
 test('Gioca hub: Per voi is one line of state plus one action', async () => {
@@ -99,6 +99,24 @@ test('Gioca CSS: tiles use the canonical tokens and the Noi chip recipe, never a
   assert.match(css, /var\(--us-accent-gradient\)/);
 });
 
+
+// D4 (28/10/2026): one round a day. The hub says how many are left today,
+// under I vostri giochi, from the server's allowance.
+const titleHint = (html) => html.match(/id="usGv2ChooseTitle">I vostri giochi<\/h3><small>([^<]*)<\/small>/)?.[1];
+const day = (over = {}) => allowance({ period: 'day', resets_on: '2026-10-29', limit: 1, free_limit: 1, ...over });
+
+test('Gioca hub: the title says one round is left today', async () => {
+  assert.equal(titleHint(await hub(homeOf({ allowance: day() })).html()), '1 partita da giocare oggi');
+});
+
+test('Gioca hub: once the day is spent, the title says the next round is tomorrow', async () => {
+  const spent = day({ used: 1, free_used: 1, per_voi_used: 1, free_available: false, per_voi_available: false });
+  assert.equal(titleHint(await hub(homeOf({ allowance: spent })).html()), 'Domani un’altra partita');
+});
+
+test('Gioca hub: a larger daily allowance is counted', async () => {
+  assert.equal(titleHint(await hub(homeOf({ allowance: day({ free_limit: 3, free_used: 1 }) })).html()), '2 partite da giocare oggi');
+});
 
 test('Gioca V4 hub: bento title keeps the low-friction hint', async () => {
   const html = await hub(homeOf()).html();

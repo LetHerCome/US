@@ -1,0 +1,9 @@
+/* Compagni V1: the companions among the unlockables of Sintonia
+   (progression.js, I vostri sblocchi and Prossimo sblocco). The owner's
+   awake pose on the card; a locked companion is its dark silhouette. */
+#quiz .us-gioca-sintonia .us-progression-companion .us-progression-reward-preview,
+.us-progression-next-preview:has(.us-progression-companion-art){display:grid;place-items:end center;background:radial-gradient(90% 70% at 50% 100%,rgba(247,239,233,.10),transparent 70%),rgba(247,239,233,.04)}
+.us-progression-companion-art{display:block;width:86%;height:86%;margin-bottom:6%;object-fit:contain;object-position:50% 100%;-webkit-user-drag:none}
+#quiz .us-gioca-sintonia .us-progression-reward.us-progression-companion.is-locked .us-progression-reward-preview{filter:none}
+#quiz .us-gioca-sintonia .us-progression-reward.us-progression-companion.is-locked .us-progression-reward-preview>.us-progression-companion-art{filter:brightness(0);opacity:.34}
+.us-progression-reward.us-progression-companion.is-locked .us-progression-companion-art{filter:brightness(0);opacity:.34}

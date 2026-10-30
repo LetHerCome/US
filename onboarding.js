@@ -10,10 +10,27 @@
   const validName=value=>typeof value==='string'&&!/[\u0000-\u001f\u007f-\u009f]/u.test(value)&&Array.from(value.trim()).length>=1&&Array.from(value.trim()).length<=40;
   const normalizeCode=value=>String(value||'').toUpperCase().replace(/[\s-]/g,'').replace(/O/g,'0').replace(/[IL]/g,'1');
   const validCode=value=>/^[0-9A-HJKMNP-TV-Z]{26}$/.test(normalizeCode(value));
+  // WhatsApp copies a whole message, never one line: the code is found in
+  // what was pasted (the code typed by hand, the invite link, an old message).
+  function inviteCodeIn(value){
+    const text=String(value||'');
+    if(validCode(text))return normalizeCode(text);
+    const hit=text.split(/[^0-9A-Za-z]+/).find(word=>word.length===26&&validCode(word));
+    return hit?normalizeCode(hit):'';
+  }
   function romeToday(now=new Date()){
     const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
     const part=type=>parts.find(p=>p.type===type).value;
     return `${part('year')}-${part('month')}-${part('day')}`;
+  }
+  // «Insieme dal»: three selects (day, month, year), newest year first.
+  function togetherDate(day,month,year){
+    if(!(day&&month&&year))return '';
+    return `${String(year).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  }
+  function togetherYears(today=romeToday()){
+    const last=Number(String(today).slice(0,4));
+    return Array.from({length:last-1899},(_,i)=>last-i);
   }
   function validDate(value,today=romeToday()){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(value)||value<'1900-01-01'||value>today)return false;
@@ -150,8 +167,9 @@
       },
       join(fields){
         if(state.kind!=='AUTHENTICATED_NO_PROFILE')return Promise.resolve(null);
-        if(!validName(fields.name)||!validCode(fields.code))return Promise.resolve(publish({...state,message:'Controlla il nome (1–40 caratteri) e il codice d’invito (26 caratteri).'}));
-        return mutate('accept_partner_invite',{p_code:normalizeCode(fields.code),p_display_name:fields.name.trim()},{membership:true});
+        const code=inviteCodeIn(fields.code);
+        if(!validName(fields.name)||!code)return Promise.resolve(publish({...state,message:'Controlla il nome (1–40 caratteri) e il codice d’invito (26 caratteri).'}));
+        return mutate('accept_partner_invite',{p_code:code,p_display_name:fields.name.trim()},{membership:true});
       },
       generate(){return state.kind==='MEMBER_WAITING_PARTNER'?mutate('create_partner_invite'):Promise.resolve(null);},
       revoke(){return state.kind==='MEMBER_WAITING_PARTNER'?mutate('revoke_partner_invite'):Promise.resolve(null);}
@@ -177,6 +195,32 @@
   const storeGet=(store,key)=>{try{return store?.getItem?.(key)??null;}catch(_e){return null;}};
   const storeSet=(store,key,value)=>{try{store.setItem(key,value);return true;}catch(_e){return false;}};
   const storeRemove=(store,key)=>{try{store?.removeItem?.(key);}catch(_e){}};
+  // The invite page (invito.html) opens the web app on /#invito=CODE: the code
+  // leaves the address bar and waits in this tab until the join step uses it.
+  const PENDING_INVITE='us:onboarding:v1:pending-invite';
+  // App Links (29/10/2026): the shared link opens the Android app with its URL
+  // (https://<US site>/invito#CODE). Only the US sites' invite page counts:
+  // www.uscouple.app (30/10/2026), and the old address for links already shared.
+  const INVITE_HOSTS=['www.uscouple.app','uscouple.app','us-a33.pages.dev','us-staging-s31.pages.dev'];
+  function inviteFromLink(value){
+    try{
+      const url=new URL(String((typeof value==='object'?value?.url:value)||''));
+      if(url.protocol!=='https:'||!INVITE_HOSTS.includes(url.hostname)||!/^\/invito(\.html)?$/.test(url.pathname))return '';
+      return inviteCodeIn(decodeURIComponent(url.hash.slice(1)));
+    }catch(_e){return '';}
+  }
+  function takeInvite({location,history,session,url,used=false}={}){
+    if(used){storeRemove(session,PENDING_INVITE);return '';}
+    const linked=url?inviteFromLink(url):'';
+    if(linked)storeSet(session,PENDING_INVITE,linked);
+    const hit=/^#invito=([0-9A-Za-z-]+)$/.exec(String(location?.hash||''));
+    const code=hit?inviteCodeIn(decodeURIComponent(hit[1])):'';
+    if(hit){
+      try{history?.replaceState?.(null,'',`${location.pathname||'/'}${location.search||''}`);}catch(_e){}
+      if(code)storeSet(session,PENDING_INVITE,code);
+    }
+    return inviteCodeIn(storeGet(session,PENDING_INVITE));
+  }
   const pad2=n=>String(n).padStart(2,'0');
   const leapYear=year=>year%4===0&&(year%100!==0||year%400===0);
   const colourName=role=>role==='beatrice'?'il lilla':'il rosa';
@@ -302,11 +346,21 @@
       return `scade il ${part('day')} ${part('month')} alle ${part('hour')}:${part('minute')}`;
     }catch(_e){return '';}
   }
-  // What "Condividi" sends: in the sender's language, the code on its own line, never translated.
-  function inviteMessage(code,expiresAt,t){
+  // The invite page (invito.html) on this site; from the Android app and from
+  // any address of production, on www.uscouple.app. The code rides in the
+  // fragment: it never reaches a server log.
+  const INVITE_SITE='https://www.uscouple.app';
+  const PRODUCTION_SITES=['https://www.uscouple.app','https://uscouple.app','https://us-a33.pages.dev'];
+  function inviteLink(code,origin=globalThis.location?.origin){
+    const own=/^https:\/\/(?!localhost\b)[a-z0-9.-]+$/i.test(String(origin||''))&&!PRODUCTION_SITES.includes(origin);
+    const site=own?origin:INVITE_SITE;
+    return `${site}/invito#${encodeURIComponent(String(code||''))}`;
+  }
+  // What "Condividi" sends: in the sender's language, the link on its own line,
+  // never translated. No expiry: the one who invites says it, if needed.
+  function inviteMessage(code,t,origin){
     const say=typeof t==='function'?t:(text=>text);
-    const expiry=inviteExpiry(expiresAt);
-    return [say('Ti aspetto su US ♡'),say('Scegli «Ho un codice d’invito» e incolla questo codice:'),String(code||''),expiry?say(`S${expiry.slice(1)}.`):''].filter(Boolean).join('\n');
+    return [say('Ti aspetto su US ♡'),say('Apri il mio invito:'),inviteLink(code,origin)].join('\n');
   }
   // The share sheet where the phone has one (web, iOS); otherwise the message
   // goes to the clipboard. The Android app has no share sheet without a plugin.
@@ -553,6 +607,41 @@
     }
     host.append(legend);
   }
+  // Founder, 29/10/2026: at the first opening each person picks their colour
+  // (free in beta, colors_free on the server). The partner's colour, chosen or
+  // by default, is taken; the circles take the choice at once.
+  // The read and the write come from app.js through mount(), as the rest of onboarding.
+  let colourIO=null;
+  async function mountColourPicker(host,{profile}){
+    const colors=globalThis.UsPersonColors;
+    if(!host)return;
+    if(!colors||!profile?.id||!profile?.couple_id||!colourIO){host.hidden=true;return;}
+    const ticket=host.dataset.ticket=String(Date.now()+Math.random());
+    let profiles=[{id:profile.id,role:profile.role,person_color:profile.person_color||null}];
+    try{
+      const {data}=await colourIO.readCouple(profile.couple_id);
+      if(host.dataset.ticket!==ticket)return;
+      if(Array.isArray(data)&&data.length)profiles=data;
+    }catch(_){/* only me: the partner's default below */}
+    // Before the partner joins, their default colour is theirs already.
+    if(!profiles.some(p=>p.id!==profile.id))profiles.push({id:'~partner',role:profile.role==='beatrice'?'francesco':'beatrice',person_color:null});
+    const paint=()=>{
+      host.innerHTML=colors.choices(profiles,profile.id).map(c=>`<button type="button" class="us-ob-swatch${c.mine?' is-on':''}" data-colour="${c.id}" aria-pressed="${c.mine}" aria-label="${c.name}"${c.taken?' disabled':''}><i style="background:${c.hex}"></i></button>`).join('');
+      host.hidden=false;
+    };
+    host.onclick=async event=>{
+      const btn=event.target.closest?.('[data-colour]');
+      if(!btn||btn.disabled||btn.classList.contains('is-on'))return;
+      const colour=btn.dataset.colour;
+      const {error}=await colourIO.rpc('set_my_color',{p_color:colour});
+      if(error){globalThis.toast?.('Non riesco a salvare il colore. Riprova.');return;}
+      const me=profiles.find(p=>p.id===profile.id);if(me)me.person_color=colour;
+      profile.person_color=colour;
+      colors.applyCoupleColors(profiles.filter(p=>p.id!=='~partner'));
+      paint();
+    };
+    paint();
+  }
   // The colour fills the screen, then shrinks into your circle (or theirs, when they arrive).
   // `wait`: it starts with the new step (after the old one has gone), as colorOn() in the design.
   function playColour(overlay,host,wait=0){
@@ -766,7 +855,7 @@
     function copyFor(step){
       const partner=partnerName(),role=profile?.role;
       if(step==='noi')return `${partner} ha accettato l’invito ed è ${partnerColourName(role)}, tu ${colourName(role)}. Dove vi incontrate nasce il vostro colore.`;
-      if(step==='color')return `${partner} è ${partnerColourName(role)}. Ognuno ha il suo colore, uguale su entrambi i telefoni: dove vi incontrate nasce il Noi.`;
+      if(step==='color')return 'Scegli il tuo: lo vedete uguale tutti e due, e quello della tua persona resta suo. Dove vi incontrate nasce il Noi.';
       if(step==='push')return 'Solo per le cose vostre, anche a US chiusa. Cosa ricevere lo scegli tu.';
       if(step==='place')return 'Se la attivi, in Oggi vedete la distanza tra voi.';
       return mode==='device'?'Su questo telefono è tutto a posto.':'';
@@ -931,7 +1020,8 @@
       secondary.hidden=!(step==='push'||step==='place');
       const title=$('usSetupTitle');
       if(step==='noi'){setTitle(title,'Ora siete ','un Noi');drawVenn(venn,{kind:'joined',role,partner:partnerName()});primary.textContent='Continua';}
-      if(step==='color'){setTitle(title,'Il tuo colore è ',colourName(role));drawVenn(venn,{kind:'join',role,partner:partnerName()});primary.textContent='Continua';}
+      if(step==='color'){setTitle(title,'Scegli ','il tuo colore');drawVenn(venn,{kind:'join',role,partner:partnerName()});primary.textContent='Continua';mountColourPicker($('usSetupColors'),{profile});}
+      if(step!=='color')$('usSetupColors').hidden=true;
       if(step==='push'){setTitle(title,'Non perderti ','un Ti penso');primary.textContent='Attiva le notifiche';}
       if(step==='place'){setTitle(title,'Anche da ','lontano');primary.textContent='Attiva la posizione';}
       if(step==='ready'){if(mode==='device')setTitle(title,'Eccoti ','di nuovo');else setTitle(title,'Il vostro US ','è pronto');primary.textContent='Entra in US';drawReady(false);}
@@ -1076,7 +1166,8 @@
     return Object.freeze({maybeOpen,close,markPasswordSignIn,get open(){return isOpen;}});
   }
 
-  function mount({readProfile,rpc,resume,signOut,openStep,insertEvent}){
+  function mount({readProfile,readCouple,rpc,resume,signOut,openStep,insertEvent}){
+    colourIO=typeof readCouple==='function'&&typeof rpc==='function'?{readCouple,rpc}:null;
     const root=document.getElementById('usOnboarding');
     const node=id=>document.getElementById(id);
     let mode='me',lastKind='',lastView='',lastInvite='',hiddenPrivate=[],me={name:'',birthday:null},meFor='',justCreated=false,note={text:'',kind:''},dismissed='';
@@ -1095,7 +1186,9 @@
       if(!['SIGNED_OUT','PAIRED'].includes(controller.state.kind))return;
       root.classList.remove('active');root.dataset.view='';
     }
-    const clearForms=()=>root.querySelectorAll('input,textarea').forEach(el=>{el.value='';});
+    const clearForms=()=>root.querySelectorAll('input,textarea,.us-ob-together select').forEach(el=>{el.value='';});
+    // An invite link opened this tab: keep its code before anything else reads the address.
+    if(typeof location==='object')takeInvite({location,history:globalThis.history,session:globalThis.sessionStorage});
     function protect(active){
       document.documentElement.classList.toggle('us-onboarding-active',active);
       if(active&&!hiddenPrivate.length){
@@ -1111,6 +1204,10 @@
     const daySelect=node('mc3BirthDay'),monthSelect=node('mc3BirthMonth');
     for(let day=1;day<=31;day++)daySelect.add(new Option(String(day),String(day)));
     MONTHS.forEach((month,i)=>monthSelect.add(new Option(month,String(i+1))));
+    const dateDay=node('mc3DateDay'),dateMonth=node('mc3DateMonth'),dateYear=node('mc3DateYear');
+    for(let day=1;day<=31;day++)dateDay.add(new Option(String(day),String(day)));
+    MONTHS.forEach((month,i)=>dateMonth.add(new Option(month,String(i+1))));
+    togetherYears().forEach(year=>dateYear.add(new Option(String(year),String(year))));
     const tour=mountTour({openStep});
     const setup=mountSetup();
     function fillMe(){
@@ -1176,7 +1273,8 @@
       protect(active);
       root.classList.toggle('active',active);
       if(active){
-        node('authLogin').classList.remove('active');node('authOverlay').classList.remove('hidden');
+        node('authOverlay').querySelectorAll('.auth-step.active').forEach(step=>{if(step!==root)step.classList.remove('active');});
+        node('authOverlay').classList.remove('hidden');
         document.documentElement.classList.remove('us-auth-pending','us-returning-device','us-auth-ready');
         tour.close();
       }
@@ -1191,7 +1289,7 @@
       // The bar moves once the old step has gone (a copied step leaves for 180 ms).
       node('mc3Progress').style.setProperty('--us-ob-delay',`${Math.max(0,swap?.after||0)}ms`);
       node('mc3Progress').style.setProperty('--us-progress',view==='me'?'.25':'.5');
-      const titles={me:['Iniziamo da ','te'],choice:['Il vostro US, ','da qui'],create:['Crea il ','vostro spazio'],join:['Entra nel ','vostro US'],color:['Il tuo colore è ',colourName(role)],waiting:['Il tuo spazio ','è pronto'],error:['Verifichiamo il tuo accesso','']};
+      const titles={me:['Iniziamo da ','te'],choice:['Il vostro US, ','da qui'],create:['Crea il ','vostro spazio'],join:['Entra nel ','vostro US'],color:['Scegli ','il tuo colore'],waiting:['Il tuo spazio ','è pronto'],error:['Verifichiamo il tuo accesso','']};
       setTitle(node('mc3Title'),...titles[view]);
       const ownName=waiting?state.profile.display_name.trim():me.name;
       const copy={
@@ -1199,7 +1297,7 @@
         choice:me.name?`${me.name}, ora crea il vostro spazio o raggiungi la tua persona.`:'Ora crea il vostro spazio o raggiungi la tua persona.',
         create:'Da questa data partono i giorni insieme, il mesiversario e l’anniversario.',
         join:'Scrivi il codice che ti ha mandato la tua persona.',
-        color:`Ognuno ha il suo colore, uguale su entrambi i telefoni. La tua persona sarà ${partnerColourName(role)}: dove vi incontrate nasce il Noi.`,
+        color:'Scegli il tuo: lo vedete uguale tutti e due, e potrai cambiarlo in Impostazioni. Dove vi incontrate nasce il Noi.',
         waiting:state.code?`${ownName}, invita la tua persona: mandale questo codice.`:`${ownName}, invita la tua persona. Quando entrerà, troverete qui il vostro spazio.`,
         error:'La sessione è conservata. Puoi riprovare o uscire.'
       }[view];
@@ -1239,7 +1337,7 @@
         if(pressed){delete pressed.button.dataset.usBusy;if(pressed.text)pressed.button.textContent=pressed.text;pressed=null;}
         delete root.dataset.usBusy;
       }
-      if(view==='color'&&lastView!=='color')drawVenn(node('mc3Venn'),{kind:'wait',role,partner:''});
+      if(view==='color'&&lastView!=='color'){drawVenn(node('mc3Venn'),{kind:'wait',role,partner:''});mountColourPicker(node('mc3Colors'),{profile:state.profile});}
       if(active&&changed){node('mc3Title').focus({preventScroll:true});node('authOverlay').scrollTop=0;}
       if(swap){
         const after=arriveSwap(root,{swap});
@@ -1273,14 +1371,14 @@
       const joined=result?.profile?.couple_id&&(result.kind==='PAIRED'||result.kind==='MEMBER_WAITING_PARTNER');
       if(kind&&joined)storeSet(localStorage,FIRST_RUN_KEYS.setupPending(result.profile.id),kind==='create'?'created':'joined');
       if(kind==='create'&&result?.kind!=='MEMBER_WAITING_PARTNER')justCreated=false;
-      if(result?.kind==='PAIRED')resume();
+      if(result?.kind==='PAIRED'){if(kind==='join')takeInvite({session:sessionStorage,used:true});resume();}
     };
     const switchTo=(next,focusId)=>{
       clearForms();mode=next;note={text:'',kind:''};
       if(controller.state.kind==='AUTHENTICATED_NO_PROFILE')dismissed=controller.state.message||'';
       if(next==='me')fillMe();
       if(next==='create')node('mc3CreateName').value=me.name;
-      if(next==='join')node('mc3JoinName').value=me.name;
+      if(next==='join'){node('mc3JoinName').value=me.name;node('mc3JoinCode').value=takeInvite({location,history,session:sessionStorage});}
       render(controller.state);node(focusId).focus();
     };
     // A step of this phone only (Tu, Voi, create, join, the colour to the
@@ -1316,11 +1414,21 @@
       const id=controller.userId;rememberBirthday(sessionStorage,id,check.value);typedBirthday={userId:id,value:check.value};
       goTo('choice','mc3Title');
     });
-    for(const [id,next,focusId] of [['mc3ChooseCreate','create','mc3Date'],['mc3ChooseJoin','join','mc3JoinCode'],['mc3BackCreate','choice','mc3Title'],['mc3BackJoin','choice','mc3Title'],['mc3BackMe','me','mc3Title']])node(id).addEventListener('click',()=>goTo(next,focusId));
+    for(const [id,next,focusId] of [['mc3ChooseCreate','create','mc3DateDay'],['mc3ChooseJoin','join','mc3JoinCode'],['mc3BackCreate','choice','mc3Title'],['mc3BackJoin','choice','mc3Title'],['mc3BackMe','me','mc3Title']])node(id).addEventListener('click',()=>goTo(next,focusId));
+    // App Links: an invite link opened the app (or the app was already open).
+    // The code waits for «Ho un codice d’invito»; from «Voi» it goes straight there.
+    const acceptInviteLink=value=>{
+      const code=takeInvite({url:value,session:sessionStorage});
+      if(!code||!inviteFromLink(value))return false;
+      if(mode==='join'&&root.dataset.view==='join')node('mc3JoinCode').value=code;
+      else if(mode==='choice'&&root.dataset.view==='choice')goTo('join','mc3JoinCode');
+      return true;
+    };
+    window.UsPlatform?.listenForNativeAppUrl?.(acceptInviteLink);
+    Promise.resolve(window.UsPlatform?.getNativeLaunchUrl?.()).then(acceptInviteLink).catch(()=>{});
     node('mc3ColorNext').addEventListener('click',()=>{justCreated=false;goTo('waiting','mc3Title');});
-    node('mc3Date').max=romeToday();
     const press=(button,label,text='')=>{if(button&&!controller.state.busy)pressed={button,label,text};};
-    node('mc3Create').addEventListener('submit',event=>{event.preventDefault();justCreated=true;press(event.submitter||node('mc3Create').querySelector('[type=submit]'),'Creo…','Crea il nostro spazio');run(()=>controller.create({name:node('mc3CreateName').value,date:node('mc3Date').value,coupleName:node('mc3CoupleName').value}),'create');});
+    node('mc3Create').addEventListener('submit',event=>{event.preventDefault();justCreated=true;press(event.submitter||node('mc3Create').querySelector('[type=submit]'),'Creo…','Crea il nostro spazio');run(()=>controller.create({name:node('mc3CreateName').value,date:togetherDate(dateDay.value,dateMonth.value,dateYear.value),coupleName:node('mc3CoupleName').value}),'create');});
     // The code box is a textarea (two lines, as in the design): Enter still sends.
     node('mc3JoinCode').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();node('mc3Join').requestSubmit?.();}});
     node('mc3Join').addEventListener('submit',event=>{event.preventDefault();press(event.submitter||node('mc3Join').querySelector('[type=submit]'),'Entro…','Entra nel nostro US');const fields={name:node('mc3JoinName').value,code:node('mc3JoinCode').value};node('mc3JoinCode').value='';run(()=>controller.join(fields),'join');});
@@ -1340,7 +1448,7 @@
     node('mc3ShareCode').addEventListener('click',async()=>{
       const code=controller.state.code,ticket=controller.epoch;if(!code)return;
       const still=()=>controller.epoch===ticket&&controller.state.code===code;
-      const how=await shareInvite(inviteMessage(code,controller.state.membership?.invite?.expires_at,window.UsI18n?.t));
+      const how=await shareInvite(inviteMessage(code,window.UsI18n?.t));
       if(!still())return;
       if(how==='shared')say('Fatto. Appena la tua persona entra, lo vedi qui.','success');
       else if(how==='copied')say('Messaggio copiato: incollalo nella chat con la tua persona.','success');
@@ -1358,7 +1466,7 @@
     controller.tour=tour;controller.setup=setup;
     return controller;
   }
-  return Object.freeze({route,validName,validDate,normalizeCode,validCode,romeToday,errorMessage,createController,mount,
+  return Object.freeze({route,validName,validDate,normalizeCode,validCode,inviteCodeIn,inviteLink,inviteFromLink,takeInvite,togetherDate,togetherYears,romeToday,errorMessage,createController,mount,
     FIRST_RUN_KEYS,tourWanted,birthdayCheck,nextBirthday,birthdayEvent,rememberBirthday,saveBirthday,setupMode,setupSteps,pushStepState,placeStepWanted,daysTogether,inviteExpiry,
     inviteMessage,shareInvite,widgetOfferWanted,CHECK_MS,authSwap,authArrive,shake});
 });

@@ -250,3 +250,123 @@ Only durable decisions belong here. New missions should not reopen them without 
 
 - Ogni prova (SQL, Edge, interruttori, build di prova, dati di test) si fa su US-STAGING (`com.usapp.us.staging`). La produzione è in mano ai tester del test chiuso e poi agli utenti.
 - In produzione arrivano solo **patch mirate** di cose già funzionanti su staging, ciascuna con il via del founder. Le letture in produzione restano ammesse; le scritture di prova no.
+
+## 2026-10-29 — Colori delle persone a scelta, con US Plus
+
+**Fonte:** founder, 29/10/2026: «dare la possibilità di cambiare il colore dei cerchi con altre variazioni di colore» e «metterei il cambio colore per la versione premium».
+
+Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori delle persone»):
+- Ognuno può scegliere il proprio colore da una tavolozza di 8: rosa, lilla, cielo, salvia, oro, pesca, rubino, perla. Tutti e due lo vedete uguale sui due telefoni. I due colori della coppia devono essere diversi.
+- Senza scelta valgono quelli di sempre: rosa per chi ha creato lo spazio, lilla per chi è entrato con il codice.
+- Il colore di Noi non cambia: resta l'orchidea o l'accento sbloccato.
+- **Solo con US Plus**, cioè quando almeno uno dei due ha Plus (D4). Il colore già scelto resta anche dopo la fine di Plus, come tutto ciò che la coppia ha creato.
+- **Senza Plus la voce si vede, bloccata** (founder, 29/10: «facciamo vedere che si sblocca solo con plus, c'è il pulsante bloccato»): lucchetto e «US Plus»; toccandola si vedono gli 8 colori bloccati e «Si sblocca con US Plus». Nessun pulsante d'acquisto, prezzo o abbonamento finché Plus non è in vendita: per il test chiuso vale ancora D4, «chi è nel test chiuso non vede pagamenti».
+- Restano come sono: logo US, icona dell'app, splash e animazione d'apertura (asset approvati).
+- Per farlo serve la base dell'accesso Plus su Supabase (missione `plus-v1-staging.md` §2, solo la lettura). Gli acquisti e il webhook di RevenueCat restano ai passi successivi.
+
+## 2026-10-29 — Nuova scala dei premi Sintonia
+
+**Fonte:** founder, 29/10/2026, sessione /grill-me: «devono essere veramente fighe le cose e ovviamente a scalare, quello di livello più alto è più figo del livello basso»; «quelli grandi che ci si arriva piano piano li teniamo [gratis], ne mettiamo giusto un po' a livelli più bassi che possono far venire gola, ovviamente più curati, quelli con il Plus».
+
+1. **Niente si toglie mai.** Chi ha un premio lo tiene. Chi è già a un livello riceve subito, senza annunci a raffica, i premi nuovi che gli spettano.
+2. **La scala arriva al livello 20.** Oltre il 20, una stella in più nel vostro cielo a ogni livello. La curva dei punti non cambia (200 per il livello 2, poi +150 a livello); si rivede solo se i dati di produzione la smentiscono.
+3. **Un premio principale per livello**, e i 21 premi piccoli di oggi come contorno nei livelli bassi. Dei 14 premi mai usciti tornano solo Istantanea e Filo d'oro; gli altri 12 escono dal catalogo.
+4. **Scala gratuita:**
+
+   | Livello | Premio principale |
+   |---|---|
+   | 2 | Petali |
+   | 3 | Maudit |
+   | 4 | Cinematic |
+   | 5 | Ti penso animato, gufo |
+   | 6 | Widget «Notte» |
+   | 7 | Istantanea |
+   | 8 | Capra |
+   | 9 | Accessori I |
+   | 10 | Tema delle stagioni |
+   | 11 | Drago |
+   | 12 | Accessori II |
+   | 13 | Icona «Notte» |
+   | 14 | Filo d'oro |
+   | 15 | Ti penso «lettera» |
+   | 16 | Drago che vola |
+   | 17 | Widget «Oro» |
+   | 18 | Icona d'oro |
+   | 19 | Corona per i Compagni |
+   | 20 | «Il vostro cielo» |
+
+5. **Extra US Plus** ai livelli 4, 7 e 10, molto curati, accanto al premio gratuito senza mai sostituirlo: Aurora sulla foto di Oggi (livello 4), icona «Neon» dell'app (livello 7), abiti «Gala» per i Compagni (livello 10). Servono il livello e Plus (di uno dei due). Senza Plus si vedono con il lucchetto e «Si sblocca con US Plus», senza acquisti finché Plus non è in vendita. Una volta presi restano anche dopo la fine di Plus.
+6. **Regola fissa:** premi Plus solo tra il livello 2 e il 12; mai tra i premi principali gratuiti, mai in cima.
+7. **In Noi** si vede in grande il prossimo premio principale, con un'anteprima e la stima «tra circa N giorni» sul ritmo della coppia.
+8. **«Il vostro cielo»:** le stelle della sera di «Insieme dal», sopra la città scelta da una lista quando si sblocca. Niente GPS.
+9. **Immagini:** prompt scritti da Claude, immagini generate e approvate dal founder (ChatGPT), stile identico al foglio dei Compagni; le icone partono dal logo approvato.
+10. **Rilascio:** non nella patch unica (#232–#237), ma in una patch successiva in due fasi. Missione: `docs/missions/sintonia-premi-v2.md`.
+
+## 2026-10-29 — App più ariosa: titoli più piccoli
+
+**Fonte:** founder, 29/10/2026: «la grandezza di tutto all'interno della nostra app la stavo confrontando con couple joy e lì sembra tutto più arioso»; scelto il «dopo» del prima/dopo di sette schermate.
+
+- Il testo normale resta com'è (14–15). Si rimpiccioliscono titoli e parti in evidenza: titoli di pagina 26–28, di sezione circa 20, di scheda circa 17; barra in basso 58.
+- I bersagli da toccare restano almeno 40 px; le illustrazioni approvate non cambiano.
+- La mascotte segue l'altezza della barra (`--us-nav-height`).
+- Le misure si cambiano nei file di design che già decidono (`dc-*.css`, `countdown.css`, `due-colori.css`), non con regole aggiunte sopra.
+
+## 2026-10-29 — Icona dell'app senza cornice
+
+**Fonte:** founder, 29/10/2026: il bordo attorno al logo «forse potrebbe dare problemi a telefoni con le icone a cerchio»; logo nuovo generato e approvato dal founder («Approvate»).
+
+- L'icona del telefono è solo «US» con la stellina, sullo sfondo bianco di sempre: la forma del telefono fa da cornice.
+- Il logo con la cornice resta dove non c'è una forma attorno: splash d'apertura, logo in alto nell'app, icona web e notifiche.
+- Le icone premio «Notte», «Oro» e «Neon» (Sintonia V2) partono dallo stesso logo senza cornice.
+
+## 2026-10-29 — Accessori dei Compagni disegnati addosso, versioni da maschio e da femmina
+
+**Fonte:** founder, 29/10/2026: gli accessori incollati sopra i Compagni sono «messi malissimo»; «Maudit e il drago sono maschi, quindi la sciarpa sì ma un altro colore e la coroncina evitiamola»; «corona da re e corona da regina»; per il Gala «la gonna su un gufo stona».
+
+- Ogni accessorio è disegnato addosso a ogni Compagno su un foglio ChatGPT identico all'originale, poi tagliato nelle pose approvate. Mai più adesivi sopra il disegno.
+- Maschi (Maudit, drago): sciarpina blu notte, coroncina d'alloro, papillon, corona da re. Femmine (capra, gufo): sciarpina rosa, coroncina di fiori, collana di perle, corona da regina.
+- Il premio resta uno («Sciarpina», «Coroncina», «Gala», «Corona»): ognuno lo vede nella versione del suo Compagno.
+
+## 2026-10-29 — Fix dalla prova dell'APK di staging
+
+**Fonte:** founder, 29/10/2026, provando l'APK di staging: «in impostazioni la scritta maudit cambiamola con ''compagni''», «il tuo colore facciamolo scegliere anche quando aprono per la prima volta l'app», «tema e effetto perchè sono li in impostazioni se poi sono anche in ''sintonia''», «esce rivivi solo quando è il giorno stesso di quel ricordo»; sul colore: «per la beta però lo lasciamo gratis perchè ancora non inseriamo il plus».
+
+- In Impostazioni la voce dei compagni si chiama «Compagni» (acceso o spento).
+- Tema ed Effetto si scelgono solo in Sintonia, dove c'è anche la galleria con le anteprime. Impostazioni non li ripete.
+- Ognuno sceglie il proprio colore già alla prima apertura (creazione della coppia o ingresso con il codice). Il colore del partner non si può prendere.
+- Finché US Plus non è in vendita i colori sono gratis per tutti. Lo decide il server con l'interruttore `app_flags.plus_on_sale`, che accende solo il founder; da quel giorno cambiare colore richiede Plus e il colore già scelto resta. Modifica la decisione «Colori a scelta con US Plus» del 29/10.
+- «Rivivi» compare solo nel giorno esatto di un ricordo passato: stesso giorno e mese («Un anno fa, oggi»), altrimenti stesso giorno del mese («N mesi fa, oggi»). Gli anni vincono sui mesi; negli altri giorni non c'è.
+- «Il vostro anno su US» (founder, 29/10: «è rimasto il vostro anno..»): in Noi compare solo quando la coppia compie un anno su US (`couples.created_at`, giorno di Roma; il 29 febbraio vale il 28), per 30 giorni, ogni anno. L'anniversario della relazione in Oggi apre Eventi.
+- Il cuore (founder, 29/10: «cambierei anche l'animazione del mi piace … e ogni 3 mi piace una più grande»): i cuori di Oggi (risposta del partner), della risposta a un Ti penso e del Ti penso in alto a sinistra («la stessa cosa anche al Ti penso») hanno la stessa animazione, contati insieme, rosa→lilla, reattiva e senza coriandoli (founder: «più reattivo e satisfied … senza coriandoli»): il cuore scatta al tocco e un'onda si apre attorno; ogni terzo cuore di una persona è quello grande, con lo scatto più alto e una seconda onda. Il conto sta sul telefono di ciascuno.
+- Rimandati, ognuno con la sua decisione: Sintonia più semplice (prima un prima/dopo), il mega recap di «Il vostro anno su US» e i recap dei mesiversari, foto senza posizione (selettore nativo).
+
+## 2026-10-29 — Mappa dei Ricordi
+
+**Fonte:** founder, 29/10/2026: grill «Mappa dei Ricordi» (D1–D8, con la prova tecnica D8 sull'APK di staging: la foto della galleria dello Xiaomi è arrivata senza posizione), poi il giro sulla posizione automatica, il fornitore e il posto nell'interfaccia («concordo con tutto»). Patch: [`PROSSIMA_PATCH_PRODUZIONE.md`](store/PROSSIMA_PATCH_PRODUZIONE.md).
+
+- **D1:** un posto per Ricordo.
+- **D2:** il posto viene dal GPS della foto **e** dalla ricerca a mano di un posto o di un indirizzo.
+- **D3:** serve il consenso. Il posto è arrotondato a circa 100 m (tre decimali, li tiene la colonna stessa) e lo vede solo la coppia (RLS dei Ricordi). Il nome salvato è breve: il posto o la via **senza numero civico**, poi la città.
+- **D4:** MapLibre, con le tile di **OpenFreeMap** e la ricerca di **Photon** (komoot): niente chiavi, account o costi. MapTiler no: chiederebbe un account e una chiave del founder. Se l'uso cresce, Photon va ospitato da noi o sostituito: il servizio pubblico è «fair use», senza garanzie.
+- **D5:** gratis, niente Plus.
+- **D6:** i Ricordi vecchi si collocano solo a mano. **Tutti e due** possono aggiungere, cambiare o togliere il posto di qualsiasi Ricordo della coppia (`set_moment_place`), anche di quelli caricati dall'altra persona.
+- **D7:** i traguardi (città e paesi visitati) vengono dopo.
+- **Android, posizione automatica:** Android toglie il GPS alle foto che arrivano dal Photo Picker o dal file input del WebView. Il plugin nativo `us-photo-place` apre il **selettore documenti di sistema** (`ACTION_OPEN_DOCUMENT`) e, con `ACCESS_MEDIA_LOCATION`, legge il GPS dell'originale. Niente `READ_MEDIA_IMAGES`: Play lo riserva alle app di sole foto. La prima volta US spiega a cosa serve il posto («Continua» / «Non ora»), poi Android chiede il permesso; nel browser vale la stessa spiegazione prima di leggere il posto dal file.
+- **Interfaccia:** «Dove · facoltativo» nel composer, sotto la data; la riga «Dove» nell'album del Ricordo; in Ricordi l'interruttore «Mappa» accanto a «Mese per mese», con i Ricordi come foto rotonde, raggruppati quando sono vicini.
+- **Couple Joy (analisi dell'APK 4.29.0 del 29/10, solo per confronto):** usa Google Maps e la ricerca di Google passando dal proprio server (`/v1/places/search`, `/v1/maps/reverse-geocode`, `/v1/map/pins`). Non dichiara `ACCESS_MEDIA_LOCATION`, quindi su Android non legge il posto dalle foto. Conta anche città e paesi visitati, cioè il nostro D7.
+- **Governance:** il lavoro va sul branch e su staging. SQL, Edge dell'export, merge e pubblicazione in produzione hanno ciascuno un'approvazione separata; prima vanno aggiornate l'informativa privacy (Photon e OpenFreeMap) e la Sicurezza dei dati su Play.
+
+## 2026-10-30 — Dominio www.uscouple.app
+
+**Fonte:** founder, 29–30/10/2026: dominio `uscouple.app` comprato su Cloudflare, «io volevo www», «il dominio deve stare in produzione»; Resend verificato su `uscouple.app` e SMTP di Supabase produzione attivo («funziona»).
+
+- L'indirizzo principale di US è `https://www.uscouple.app`. `uscouple.app` e `us-a33.pages.dev` restano lo stesso sito, e i link già condivisi continuano a funzionare.
+- Inviti, App Links, privacy e termini usano `www.uscouple.app`; l'app Android accetta anche il vecchio indirizzo.
+- Le mail di US partono da «US <noreply@uscouple.app>» via Resend, solo in produzione; lo staging resta con la mail di Supabase (scelta del founder).
+
+## 2026-10-30 — L'icona dell'app resta quella di sempre
+
+**Fonte:** founder, 30/10/2026: «su produzione rimane la stessa icona e poi se una persona vuole prende le altre icone sbloccandole su Sintonia».
+
+- In produzione l'icona predefinita resta quella con la cornice. Sostituisce la decisione «Icona dell'app senza cornice» del 29/10, che non va in produzione.
+- Le altre icone (Notte, Oro, Neon) si sbloccano in Sintonia, come premi.

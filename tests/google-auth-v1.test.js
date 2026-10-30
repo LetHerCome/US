@@ -129,3 +129,11 @@ test('deletion and leaving: a Google account confirms with Google, the same acco
   }
   assert.equal(fetches.length, 1, 'nothing reaches the server without Google');
 });
+
+test('beta fix 28/10: «Continua con Google» also under «Crea il tuo account», wired like the login one', () => {
+  const html = read('index.html');
+  const signup = html.slice(html.indexOf('id="usSignup"'), html.indexOf('id="usVerifyEmail"'));
+  assert.match(signup, /id="usSignupSubmit" type="submit">Registrati<\/button>\s*<button type="button" class="us-auth-google" id="usGoogleSignUp" hidden>[\s\S]*?Continua con Google/);
+  const app = read('app.js');
+  assert.match(app, /\[\['usGoogleSignIn','loginStatus'\],\['usGoogleSignUp','usSignupStatus'\]\]/);
+});

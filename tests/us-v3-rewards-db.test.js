@@ -99,7 +99,11 @@ test('US V3 rewards: the migration is forward-only data work — no grants, poli
 
 test('US V3 rewards: client catalog and migration agree on reward ids and levels', () => {
   const look = read('oggi-look.js');
-  for (const [, id, level] of V3.matchAll(/\('(oggi_[a-z_]+)',\s+(\d+),/g)) {
+  // The latest level of each look: V3, then Premi Sintonia V2 (29/10/2026).
+  const levels = new Map();
+  const v2 = fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261029031726_sintonia_rewards_v2_phase1.sql'), 'utf8');
+  for (const sql of [V3, v2]) for (const [, id, level] of sql.matchAll(/\('(oggi_[a-z_]+)',\s+(\d+),/g)) levels.set(id, level);
+  for (const [id, level] of levels) {
     assert.match(look, new RegExp(`reward: '${id}', level: ${level}[,\\s]`), `${id} level ${level}`);
   }
 });

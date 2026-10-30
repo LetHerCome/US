@@ -41,16 +41,16 @@ test('legal pages: standalone, complete and linked to their other language', () 
     assert.match(html, /href="\/elimina-account"/, `${file} links the deletion page`);
     assert.match(html, /Moonee Lab \(Francesco Monti\)/, `${file} names the controller`);
     assert.match(html, /mailto:moonee\.team@gmail\.com/, `${file} gives the contact`);
-    assert.match(html, /(Ultimo aggiornamento|Last updated): (17|25) (ottobre|October) 2026/, file);
+    assert.match(html, /(Ultimo aggiornamento|Last updated): (17|25|30) (ottobre|October) 2026/, file);
   }
 });
 
 test('legal pages: the sign-up box and Settings point to the published pages', () => {
   global.window = global.window || {};
   const S31 = require('../public-auth.js');
-  assert.equal(S31.legalUrl(S31.LEGAL_URLS.privacy), 'https://us-a33.pages.dev/privacy');
-  assert.equal(S31.legalUrl(S31.LEGAL_URLS.terms), 'https://us-a33.pages.dev/termini');
+  assert.equal(S31.legalUrl(S31.LEGAL_URLS.privacy), 'https://www.uscouple.app/privacy');
+  assert.equal(S31.legalUrl(S31.LEGAL_URLS.terms), 'https://www.uscouple.app/termini');
   const settings = read('settings.js');
-  assert.match(settings, /https:\/\/us-a33\.pages\.dev\/\$\{page\}\$\{en\?'-en':''\}/);
+  assert.match(settings, /https:\/\/www\.uscouple\.app\/\$\{page\}\$\{en\?'-en':''\}/);
   assert.match(settings, /legal\('privacy'\)[^]*legal\('termini'\)/);
 });

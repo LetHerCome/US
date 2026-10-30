@@ -116,7 +116,7 @@ test('first run: Tu with birthday, create, colour, invite; the partner joins; ea
     // Back keeps what was typed.
     await page.click('#mc3BackMe');await visible(page,'mc3Me');assert.equal(await page.inputValue('#mc3Name'),'Mira');assert.equal(await page.inputValue('#mc3BirthMonth'),'3');
     await page.click('#mc3MeNext');await visible(page,'mc3Choice');
-    await page.click('#mc3ChooseCreate');await page.fill('#mc3Date','2024-01-01');await page.locator('#mc3Create button[type=submit]').click();
+    await page.click('#mc3ChooseCreate');await page.selectOption('#mc3DateDay','1');await page.selectOption('#mc3DateMonth','1');await page.selectOption('#mc3DateYear','2024');await page.locator('#mc3Create button[type=submit]').click();
     await visible(page,'mc3Color');
     assert.equal(await text(page,'#mc3Title'),'Il tuo colore è il lilla');
     await page.waitForFunction(()=>(window.__QA.inserts||[]).length===1);
@@ -249,7 +249,7 @@ test('1.0 A2: Condividi, the code through a trip to another app, and the partner
     }});
     const page=creator.page;
     await visible(page,'mc3Me');await page.fill('#mc3Name','Mira');await page.click('#mc3MeNext');
-    await page.click('#mc3ChooseCreate');await page.fill('#mc3Date','2024-01-01');await page.locator('#mc3Create button[type=submit]').click();
+    await page.click('#mc3ChooseCreate');await page.selectOption('#mc3DateDay','1');await page.selectOption('#mc3DateMonth','1');await page.selectOption('#mc3DateYear','2024');await page.locator('#mc3Create button[type=submit]').click();
     await visible(page,'mc3Color');await page.click('#mc3ColorNext');await visible(page,'mc3Waiting');
     assert.equal(await page.locator('#mc3ShareCode').isVisible(),false,'nothing to share before a code');
     await page.click('#mc3Generate');await page.waitForFunction(()=>document.getElementById('mc3Code').value.length>0);
@@ -288,7 +288,7 @@ test('1.0 F5: on Android "Tutto pronto" offers the Ti penso widget once the laun
     // The creator waits; the partner (this phone) joins with an Android launcher that can pin.
     const creator=await pageFor(h,b,{user:'u1'});const c=creator.page;
     await visible(c,'mc3Me');await c.fill('#mc3Name','Mira');await c.click('#mc3MeNext');
-    await c.click('#mc3ChooseCreate');await c.fill('#mc3Date','2024-01-01');await c.locator('#mc3Create button[type=submit]').click();
+    await c.click('#mc3ChooseCreate');await c.selectOption('#mc3DateDay','1');await c.selectOption('#mc3DateMonth','1');await c.selectOption('#mc3DateYear','2024');await c.locator('#mc3Create button[type=submit]').click();
     await visible(c,'mc3Color');await c.click('#mc3ColorNext');await c.click('#mc3Generate');await c.waitForFunction(()=>document.getElementById('mc3Code').value.length>0);
     const token=await c.inputValue('#mc3Code');
     const partner=await pageFor(h,b,{user:'u2'});const page=partner.page;

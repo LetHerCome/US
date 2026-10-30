@@ -20,7 +20,7 @@
   </nav>
   <p class="kicker">US · Privacy</p>
   <h1>Informativa sulla privacy</h1>
-  <p class="updated">Ultimo aggiornamento: 25 ottobre 2026</p>
+  <p class="updated">Ultimo aggiornamento: 30 ottobre 2026</p>
 
   <h2>1. Chi siamo</h2>
   <p>US è un’app per coppie. Titolare del trattamento: Moonee Lab (Francesco Monti), email <a href="mailto:moonee.team@gmail.com">moonee.team@gmail.com</a>.</p>
@@ -34,6 +34,7 @@
       <tr><td>Nome, nome della coppia, data di inizio della relazione</td><td>far funzionare lo spazio di coppia</td><td>esecuzione del contratto</td></tr>
       <tr><td>Foto, note vocali, messaggi, risposte, umori, eventi del calendario, liste, partite; video solo in “Lasciato per te”, fino a 30 secondi o 20 MB</td><td>mostrarli al tuo partner, che è lo scopo dell’app</td><td>esecuzione del contratto</td></tr>
       <tr><td>Posizione approssimativa di questo telefono, solo se attivi la funzione e solo mentre l’app è aperta</td><td>calcolare la distanza tra voi</td><td>consenso, revocabile in qualsiasi momento dall’app (Impostazioni › Posizione › Smetti e cancella) o dalle impostazioni del telefono</td></tr>
+      <tr><td>Il posto di un Ricordo, se lo aggiungi: letto dalla foto (solo se dai il permesso) o cercato da te, arrotondato a circa 100 metri, con un nome breve senza numero civico</td><td>mostrare i vostri Ricordi sulla mappa, a te e al tuo partner</td><td>esecuzione del contratto; per leggere il posto dalle foto, il tuo consenso, revocabile dalle impostazioni del telefono</td></tr>
       <tr><td>Token di notifica del dispositivo e identificativo di installazione</td><td>inviarti le notifiche che hai attivato</td><td>esecuzione del contratto</td></tr>
       <tr><td>Progressi e attività nell’app (ad esempio giochi completati)</td><td>far funzionare le funzioni dell’app</td><td>esecuzione del contratto</td></tr>
       <tr><td>Testo cercato nella ricerca musicale</td><td>trovare il brano su Spotify</td><td>esecuzione del contratto</td></tr>
@@ -50,10 +51,12 @@
       <ul>
         <li>Supabase (database, autenticazione, archiviazione file), con i dati in un centro dati dell’Unione europea (Parigi, Francia);</li>
         <li>Google Firebase Cloud Messaging (notifiche);</li>
-        <li>Google, per l’accesso con Google se lo scegli e per l’invio delle email dell’account (conferma dell’indirizzo e recupero della password) dal nostro indirizzo Gmail;</li>
+        <li>Google, per l’accesso con Google se lo scegli;</li>
+        <li>Resend, per l’invio delle email dell’account (conferma dell’indirizzo e recupero della password) dal nostro indirizzo noreply@uscouple.app;</li>
         <li>Cloudflare (distribuzione dell’app web).</li>
       </ul>
     </li>
+    <li><b>Mappa dei Ricordi:</b> Photon (komoot, Germania) riceve il testo che cerchi e, per dare un nome al posto di una foto, le coordinate già arrotondate; OpenFreeMap riceve la zona della mappa che stai guardando; jsDelivr distribuisce la libreria della mappa. Ricevono anche l’indirizzo IP del tuo dispositivo, come ogni sito, ma nessun dato del tuo account.</li>
     <li><b>Spotify</b> riceve il testo che cerchi, inviato dal nostro server senza dati che ti identificano. Quando apri un brano, il player viene caricato direttamente da Spotify e si applica l’informativa di Spotify.</li>
     <li>Le autorità, solo se la legge lo impone.</li>
   </ul>
@@ -74,7 +77,7 @@
   <p>Il database viene copiato ogni giorno in un backup gestito da Supabase, nello stesso centro dati dell’Unione europea. Ogni copia viene conservata 7 giorni e poi sovrascritta: un dato che elimini può quindi restare in un backup al massimo per 7 giorni, senza essere usato.</p>
 
   <h2>6. Eliminare l’account</h2>
-  <p>Puoi chiedere l’eliminazione dall’app (Impostazioni › Privacy e dati › Elimina account), dalla pagina <a href="/elimina-account">us-a33.pages.dev/elimina-account</a> o scrivendo a <a href="mailto:moonee.team@gmail.com">moonee.team@gmail.com</a>.</p>
+  <p>Puoi chiedere l’eliminazione dall’app (Impostazioni › Privacy e dati › Elimina account), dalla pagina <a href="/elimina-account">www.uscouple.app/elimina-account</a> o scrivendo a <a href="mailto:moonee.team@gmail.com">moonee.team@gmail.com</a>.</p>
   <p>Eliminiamo il tuo profilo e i tuoi dati personali: risposte, umore, quiz, posizione, dispositivi e notifiche, storie, appuntamenti personali, messaggi programmati non ancora consegnati. Quello che avete condiviso nello spazio di coppia (Momenti e foto, messaggi già consegnati, appuntamenti ed eventi condivisi, desideri, i “Lasciato per te” che il tuo partner ha conservato, la storia della coppia) resta al tuo partner, senza il tuo nome; il partner può cancellarlo. Se eri l’ultimo membro della coppia, viene cancellato tutto lo spazio. Puoi chiedere una copia dei tuoi dati prima dell’eliminazione (vedi il punto 9).</p>
 
   <h2>7. Uscire dalla coppia</h2>

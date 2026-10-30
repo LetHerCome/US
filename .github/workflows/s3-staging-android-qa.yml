@@ -16,7 +16,11 @@ concurrency:
 
 jobs:
   signed-apk:
-    if: github.ref == 'refs/heads/mission/us-store-s3-native-push-owner-gate-20261010'
+    # Also the Premi Sintonia V2 branch (29/10/2026), started by hand only
+    # (workflow_dispatch): its QA app is how accessories, app icons, the Ti penso
+    # letter and the sky are tried on the phone. Mappa dei Ricordi (29/10/2026):
+    # also its branch, by hand only, for the native photo picker and the map.
+    if: github.ref == 'refs/heads/mission/us-store-s3-native-push-owner-gate-20261010' || (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/claude/sintonia-premi-v2' || github.ref == 'refs/heads/claude/mappa-ricordi'))
     runs-on: windows-latest
     timeout-minutes: 70
     env:
@@ -118,8 +122,10 @@ jobs:
           npm run build:capacitor-web
           node -e "const f=require('fs');for(const name of ['app.js','dist/capacitor/app.js']){const s=f.readFileSync(name,'utf8');const prod=s.includes('iiakdfsxpywdkxravqjh');const staging=s.includes('dugmhngrfkuieeletatb');console.log('S3 hosting isolation',name,'production=',prod,'staging=',staging,'bytes=',s.length);if(prod||!staging)throw Error('QA app bundle uses incorrect Supabase host in '+name)};"
 
+      # The S3 FCM diagnostics patch notifications.js by exact text from 10/10;
+      # later builds carry the app's own diagnostics, so they are built without it.
       - name: Install isolated QA diagnostic panel
-        if: steps.signing.outputs.ready == 'true'
+        if: steps.signing.outputs.ready == 'true' && github.ref == 'refs/heads/mission/us-store-s3-native-push-owner-gate-20261010'
         run: |
           node --check scripts/s3-staging-push-diagnostics.mjs
           node scripts/s3-staging-push-diagnostics.mjs bundle
@@ -129,7 +135,7 @@ jobs:
         run: npx cap sync android
 
       - name: Instrument FCM receiver in staging build ONLY
-        if: steps.signing.outputs.ready == 'true'
+        if: steps.signing.outputs.ready == 'true' && github.ref == 'refs/heads/mission/us-store-s3-native-push-owner-gate-20261010'
         run: node scripts/s3-staging-push-diagnostics.mjs android
 
       - name: Test and assemble signed release

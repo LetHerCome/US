@@ -25,7 +25,7 @@ const definitions = [
  ['daily_answers','user_id','id,couple_id,user_id,question_id,answer,created_at,updated_at,server_answered_at',true],
  ['quiz_responses','user_id','id,couple_id,user_id,set_id,question_id,answer_index,created_at,updated_at,week_start',true],
  ['calendar_entries','created_by','id,couple_id,entry_type,owner_id,created_by,title,description,location,is_all_day,starts_at,ends_at,start_date,end_date,created_at,updated_at',true],
- ['moments','created_by','id,couple_id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at',true],
+ ['moments','created_by','id,couple_id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at,place_lat,place_lon,place_label,place_source',true],
  ['moment_photos','created_by','id,couple_id,moment_id,created_by,storage_path,caption,position,created_at',true],
  ['shared_events','created_by','id,couple_id,created_by,title,event_date,event_time,location,note,recurs_yearly,created_at,updated_at',true],
  ['bucket_items','created_by','id,couple_id,created_by,title,note,status,completed,completed_at,created_at,updated_at',true],

@@ -26,6 +26,8 @@ const RUNTIME_FILES = [
   'ui-foundation.css',
   'ui-foundation.js',
   'platform.js',
+  'app-update.js',
+  'person-colors.js',
   'app-lock.js',
   'app-lock.css',
   'notifications.js',
@@ -39,6 +41,8 @@ const RUNTIME_FILES = [
   'events.js',
   'moments-albums.css',
   'moments-albums.js',
+  'ricordi-place.css',
+  'ricordi-place.js',
   'navigation.js',
   'games.css',
   'games.js',
@@ -84,6 +88,9 @@ const RUNTIME_FILES = [
   'noi-v2.js',
   'noi-v2.css',
   'oggi-look.js',
+  // Il vostro cielo (Premi Sintonia V2): the sky and its stars.
+  'sky.js',
+  'assets/data/stars-bsc5-v1.json',
   'oggi-look.css',
   'state-system.css',
   'auth-first-run.css',
@@ -99,6 +106,11 @@ const RUNTIME_FILES = [
   // Public account deletion page (Google Play): standalone, outside the app shell.
   'elimina-account.html',
   'elimina-account.js',
+  // Public invite page: the link a partner shares (onboarding.js inviteLink).
+  'invito.html',
+  'invito.js',
+  // App Links: the site vouches for the Android app that opens /invito.
+  '.well-known/assetlinks.json',
   // Public legal pages (Play listing, sign-up box, Settings › Privacy e dati).
   'legal.css',
   'privacy.html',

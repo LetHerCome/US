@@ -51,11 +51,11 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 #thinkButton.us-top-think,
 #leftForYouPartnerEntry.us-envelope-control{
   position:relative;
-  flex:0 0 46px;
-  width:46px;
-  height:46px;
-  min-width:46px;
-  min-height:46px;
+  flex:0 0 40px;
+  width:40px;
+  height:40px;
+  min-width:40px;
+  min-height:40px;
   padding:0;
   display:grid;
   place-items:center;
@@ -93,8 +93,6 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 #thinkButton.us-top-think.sent:disabled{opacity:1!important;filter:none!important}
 #thinkButton.sent .us-shell-icon--think{animation:dc-oggi-heart .7s ease-out}
 @keyframes dc-oggi-heart{0%{scale:1}25%{scale:1.3}50%{scale:.92}70%{scale:1.12}100%{scale:1}}
-/* The two sparks that fly from the heart (mockup .spark). */
-.dc-oggi-spark{position:fixed;z-index:65;width:12px;height:12px;border-radius:50%;pointer-events:none}
 
 /* Envelope: the icon stays still; "there is something for you" is two small
    dots, rosa and lilla, that beat (mockup .beat). Same hook (data-us-attention). */
@@ -164,7 +162,7 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 @keyframes dc-oggi-card-in{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
 
 /* Caption: Fraunces italic 30px, then the day and who, with their colour. */
-#home #usOggiCaption.og-cap{min-width:0;margin:0 4px;font:400 30px/1.05 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text);pointer-events:none}
+#home #usOggiCaption.og-cap{min-width:0;margin:0 4px;font:400 22px/1.05 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text);pointer-events:none}
 #home #usOggiCaption em{font-style:italic;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #home #usOggiCaption small{display:flex;align-items:center;gap:8px;margin-top:6px;font:400 13px/1.1 var(--us-font-ui);letter-spacing:0;color:var(--us-color-text-2)}
 #home #usOggiCaption .dot,#today .question .locked .dot{display:inline-block;flex:none;width:9px;height:9px;border-radius:50%;background:var(--us-noi)}
@@ -246,7 +244,7 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 #home #usDailyRitual .us-daily-ritual-question{
   grid-column:1/-1;
   margin:0;
-  font:400 21px/1.2 var(--us-font-display);
+  font:400 18px/1.2 var(--us-font-display);
   color:var(--us-color-text);
   text-wrap:balance;
   display:-webkit-box;
@@ -257,8 +255,8 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 #home #usDailyRitual[data-state="error"] .us-daily-ritual-question{font-size:17px;color:var(--us-color-text-2)}
 /* Long questions step down instead of leaving the card: more lines, smaller type. */
 #home #usDailyRitual .us-daily-ritual-question{overflow-wrap:anywhere}
-#home #usDailyRitual .us-daily-ritual-question[data-length="long"]{font-size:18px;line-height:1.22;-webkit-line-clamp:3}
-#home #usDailyRitual .us-daily-ritual-question[data-length="xlong"]{font-size:16px;line-height:1.25;-webkit-line-clamp:4}
+#home #usDailyRitual .us-daily-ritual-question[data-length="long"]{font-size:16px;line-height:1.22;-webkit-line-clamp:3}
+#home #usDailyRitual .us-daily-ritual-question[data-length="xlong"]{font-size:15px;line-height:1.25;-webkit-line-clamp:4}
 #home #usDailyRitual .dq-foot{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
 #home #usDailyRitual[data-state="revealed"]{touch-action:pan-y;user-select:none;-webkit-user-select:none}
 #home #usDailyRitual .us-daily-ritual-swipe{display:block;grid-column:1/-1;margin-top:-2px;font:400 11px/1.4 var(--us-font-ui);letter-spacing:.02em;color:var(--us-color-text-3,var(--us-color-text-2));opacity:.8}
@@ -298,10 +296,10 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 /* Short screens: the photo keeps its room; the question takes one line, then steps aside. */
 @media(max-height:700px){
   #home #usDailyRitual{gap:8px 12px;padding:13px 14px}
-  #home #usDailyRitual .us-daily-ritual-question{font-size:18px;-webkit-line-clamp:1}
+  #home #usDailyRitual .us-daily-ritual-question{font-size:16px;-webkit-line-clamp:1}
   #home #usDailyRitual .us-daily-ritual-question:is([data-length="long"],[data-length="xlong"]){font-size:15px;line-height:1.25;-webkit-line-clamp:2}
   #home .us-oggi-dock{gap:8px}
-  #home #usOggiCaption.og-cap{font-size:24px}
+  #home #usOggiCaption.og-cap{font-size:20px}
 }
 @media(max-height:600px){
   #home #usDailyRitual .us-daily-ritual-question{display:none}
@@ -1035,13 +1033,11 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
 /* ---------- 13 · Reduced motion: movement becomes a fade or nothing ---------- */
 :root[data-us-motion="reduced"] :is(#thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-head>div>*,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-visual i,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind){animation:none!important}
 :root[data-us-motion="reduced"] #home .us-daily-ritual-ring *{transition:none!important}
-:root[data-us-motion="reduced"] .dc-oggi-spark{display:none!important}
 :root[data-us-motion="reduced"] #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
 :root[data-us-motion="reduced"] #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-fade .2s linear both!important}
 @media (prefers-reduced-motion:reduce){
   #thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-head>div>*,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-visual i,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind{animation:none!important}
   #home .us-daily-ritual-ring *{transition:none!important}
-  .dc-oggi-spark{display:none!important}
   #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
   #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-fade .2s linear both!important}
   #leftForYouPartnerEntry.us-attention-orbit[data-us-attention="on"]::after{animation:none;transition:none}

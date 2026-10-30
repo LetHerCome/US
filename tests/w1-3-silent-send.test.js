@@ -190,13 +190,13 @@ test('feedback widget distingue sending, sent e failed senza animazione fragile'
   assert.doesNotMatch(provider + models, /AnimationDrawable|ObjectAnimator|ValueAnimator/);
 });
 
-test('MainActivity non tocca widget o credenziali e nessuna credential entra nello snapshot', () => {
-  const activity = read('android/app/src/main/java/com/usapp/us/MainActivity.java').replace(/\r\n/g, '\n').trim();
+test('UsActivity (ex MainActivity) non tocca widget o credenziali e nessuna credential entra nello snapshot', () => {
+  const activity = read('android/app/src/main/java/com/usapp/us/UsActivity.java').replace(/\r\n/g, '\n').trim();
   const snapshot = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetStore.java')
     + read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetContract.java');
-  // MainActivity now carries edge-to-edge and the coarse-location WebView client
+  // UsActivity (ex MainActivity) now carries edge-to-edge and the coarse-location WebView client
   // (#195); it must still stay out of widget state and credentials.
-  assert.match(activity, /public class MainActivity extends BridgeActivity \{/);
+  assert.match(activity, /public class UsActivity extends BridgeActivity \{/);
   assert.doesNotMatch(activity, /token|credential|Authorization|SharedPreferences|UsWidget|widget/i);
   assert.doesNotMatch(snapshot, /token|credential|Authorization/i);
 });

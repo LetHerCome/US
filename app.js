@@ -182,6 +182,7 @@ function clearUsCoupleContext(){
   const profileImage=document.getElementById('profileAvatarImg');
   if(profileImage){profileImage.hidden=true;profileImage.removeAttribute('src');}
   const profileInitial=document.getElementById('profileAvatarFallback');if(profileInitial)profileInitial.textContent='·';
+  window.UsPersonColors?.applyCoupleColors?.([]);
   refreshUsIdentityLabels();
 }
 async function hydrateUsCoupleContext(){
@@ -194,8 +195,8 @@ async function hydrateUsCoupleContext(){
   let coupleResult,profilesResult;
   try{
     [coupleResult,profilesResult]=await Promise.all([
-      sb.from('couples').select('id,name,started_on').eq('id',coupleId).maybeSingle(),
-      sb.from('profiles').select('id,display_name,role,couple_id').eq('couple_id',coupleId).order('created_at',{ascending:true})
+      sb.from('couples').select('id,name,started_on,sky_city,sky_minutes,created_at').eq('id',coupleId).maybeSingle(),
+      sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true})
     ]);
   }catch(error){
     if(window.usProfile===profile&&window.usProfile?.couple_id===coupleId&&generation===usCoupleContextState.generation)clearUsCoupleContext();
@@ -210,6 +211,8 @@ async function hydrateUsCoupleContext(){
   }
   usCoupleContextState.couple=coupleResult.data||null;
   usCoupleContextState.profiles=(profilesResult.data||[]).filter(row=>row.couple_id===coupleId);
+  // Colori a scelta (US Plus, 29/10/2026): each person in their colour, on both phones.
+  window.UsPersonColors?.applyCoupleColors?.(usCoupleContextState.profiles);
   usCoupleContextState.identityKey=identityKey;
   updateTogetherDays(usCoupleContextState.couple?.started_on);
   refreshUsIdentityLabels();
@@ -915,6 +918,8 @@ let usAuthUserId='';
 let usInitCloudAgain=false;
 const usOnboarding=window.UsOnboarding.mount({
   readProfile:id=>usWithDeadline(sb.from('profiles').select('id,display_name,role,couple_id,avatar_path').eq('id',id).maybeSingle(),5000),
+  // The first-run colour picker reads both of you, to leave the partner's colour taken.
+  readCouple:coupleId=>usWithDeadline(sb.from('profiles').select('id,role,person_color').eq('couple_id',coupleId),5000),
   // A mutation retains its guard until the real request settles: a local timer
   // cannot cancel a database transaction or safely authorize another rotation.
   rpc:(name,args)=>{
@@ -1151,6 +1156,8 @@ async function initCloud(){
     // then this installation's registration is refreshed if it was activated here.
     window.UsNotifications?.authReady?.(profile)?.catch?.(error=>console.warn('[US Notifications] auth ready',error));
     selectedRole = profile.role;
+    // Novità: a phone that already knew US sees once what changed in this release.
+    try{const usReturningDevice=Boolean(localStorage.getItem('us:fix4:last-profile'));usShowWhatsNew(usReturningDevice);}catch(_e){}
     try{localStorage.setItem('us:fix4:last-profile',JSON.stringify(profile));}catch(_e){}
     // First run: once per user on this phone, after onboarding here or a
     // password sign-in in this tab. Never for a session restored at launch.
@@ -1637,9 +1644,11 @@ async function hydrateProfileAvatars(){
   if(!viewer)return;
   const fallback=document.getElementById('profileAvatarFallback');
   if(fallback)fallback.textContent=usIdentity().initialForRole(viewer.role);
-  const {data:profiles,error}=await sb.from('profiles').select('id,display_name,role,avatar_path,couple_id').eq('couple_id',coupleId);
+  const {data:profiles,error}=await sb.from('profiles').select('id,display_name,role,avatar_path,couple_id,person_color').eq('couple_id',coupleId);
   if(window.usProfile!==viewer||window.usProfile?.couple_id!==coupleId)return;
   if(error){console.warn(error);return;}
+  // Back in the app: a colour the other person changed meanwhile shows here.
+  window.UsPersonColors?.applyCoupleColors?.((profiles||[]).filter(p=>p.couple_id===coupleId));
   for(const profile of (profiles||[]).filter(p=>p.couple_id===coupleId)){
     const url=await signedAvatarUrl(profile.avatar_path);
     if(window.usProfile!==viewer||window.usProfile?.couple_id!==coupleId)return;
@@ -2301,20 +2310,25 @@ window.loginAccount=loginAccount;
 // (an Auth client without the sign-up contract) leaves the login working.
 window.usS31Auth = (()=>{
   try{return window.UsPublicAuthS31?.mount({
-    auth: sb.auth, endpoint: SB_URL, openStep: showAuthStep
+    auth: sb.auth, endpoint: SB_URL, openStep: showAuthStep,
+    // Back from the verification email: in, as a password sign-in (loginAccount).
+    onSignedIn: async id=>{usOnboarding.setup?.markPasswordSignIn?.(id);await initCloud();}
   }) || null;}
   catch(error){console.warn('[US Auth] sign-up unavailable',error);return null;}
 })();
 // Accesso con Google (google-auth.js, 25/10/2026): it creates accounts, so it
 // appears only where sign-up is open and the Google client is configured.
 window.usGoogleAuth = window.usS31Auth && window.UsGoogleAuth?.create?.({auth:sb.auth}) || null;
+// Aggiornamento dell'app (29/10/2026): Play in-app updates and the server's minimum version (app-update.js).
+window.UsAppUpdate?.start?.({readMin:platform=>sb.rpc('get_app_min_version',{p_platform:platform}).then(({data,error})=>{if(error)throw error;return data;})});
 const US_GOOGLE_SIGN_IN_ERRORS=Object.freeze({
   no_account:'Aggiungi un account Google al telefono e riprova.',
   not_configured:'Accesso con Google non disponibile su questo telefono.',
   unavailable:'Accesso con Google non disponibile su questo telefono.'
 });
-(function mountGoogleSignIn(){
-  const button=document.getElementById('usGoogleSignIn');
+// The same Google button on the login and, since the beta (28/10), on sign-up.
+for(const [id,statusId] of [['usGoogleSignIn','loginStatus'],['usGoogleSignUp','usSignupStatus']])(function mountGoogleSignIn(){
+  const button=document.getElementById(id);
   if(!button||!window.usGoogleAuth?.supported?.())return;
   button.hidden=false;
   const label=button.querySelector('.us-auth-google-label');
@@ -2322,7 +2336,7 @@ const US_GOOGLE_SIGN_IN_ERRORS=Object.freeze({
     if(button.disabled)return;
     button.disabled=true;
     if(label)label.textContent='Accesso…';
-    setAuthStatus('loginStatus','');
+    setAuthStatus(statusId,'');
     const result=await window.usGoogleAuth.signIn();
     if(label)label.textContent='Continua con Google';
     button.disabled=false;
@@ -2333,7 +2347,7 @@ const US_GOOGLE_SIGN_IN_ERRORS=Object.freeze({
     }
     // Closing Google's sheet is a choice, not an error.
     if(result.ok||result.kind==='cancelled')return;
-    setAuthStatus('loginStatus',US_GOOGLE_SIGN_IN_ERRORS[result.kind]||'Non riesco ad accedere con Google. Riprova.','error');
+    setAuthStatus(statusId,US_GOOGLE_SIGN_IN_ERRORS[result.kind]||'Non riesco ad accedere con Google. Riprova.','error');
   });
 })();
 (function mountGoogleTerms(){
@@ -2569,6 +2583,15 @@ function oggiMonthiversary(startedOn,todayISO){
   return {months,years:months%12===0?months/12:0};
 }
 function celebrationTodayPriorityViewModel(startedOn,todayISO){
+  // Traguardi dei giorni (29/10/2026): every 100 days together, 1000 its own
+  // name. On a mesiversario too it takes the slot (the bigger day).
+  const daysMilestone=window.UsCalendarDomain?.daysMilestoneOn?.(startedOn,todayISO)||0;
+  if(daysMilestone)return {
+    id:`celebration:${todayISO}`,factKey:`celebration:${todayISO}`,arrivalType:'monthiversary',category:'celebration',attention:true,
+    title:daysMilestone===1000?'Oggi sono mille giorni ♡':`Oggi sono ${daysMilestone} giorni ♡`,
+    detail:daysMilestone===1000?'Un traguardo tutto vostro':'Un traguardo insieme',
+    action:'events',actionLabel:'Apri'
+  };
   const day=oggiMonthiversary(startedOn,todayISO);
   if(!day)return null;
   const title=day.years
@@ -2577,8 +2600,8 @@ function celebrationTodayPriorityViewModel(startedOn,todayISO){
   return {
     id:`celebration:${todayISO}`,factKey:`celebration:${todayISO}`,arrivalType:'monthiversary',category:'celebration',attention:true,
     title,detail:day.years?'Il vostro anniversario':'Il vostro mesiversario',
-    // The anniversary opens Il vostro anno (year-recap.js); a monthiversary, Eventi.
-    action:day.years?'recap':'events',actionLabel:day.years?'Guarda il vostro anno':'Apri'
+    // Both open Eventi: Il vostro anno su US has its own day (year-recap.js usYear).
+    action:'events',actionLabel:'Apri'
   };
 }
 function oggiStartedOn(){
@@ -3221,6 +3244,7 @@ async function sendThinkReaction(reaction){
   if(!usIncomingThink?.id||usThinkReactionFinal||usThinkReactionInFlight)return false;
   if(!['heart','hug','miss_you'].includes(reaction))return false;
   usThinkReactionInFlight=true;renderThinkReactionUi();
+  if(reaction==='heart')usHeartLike(document.querySelector('#thinkArrival [data-think-reaction="heart"]'));
   const {data,error}=await sb.rpc('set_think_reaction',{target_message_id:usIncomingThink.id,target_reaction:reaction});
   if(error){
     const terminal=error.code==='23505'&&String(error.message||'').includes('already_reacted');
@@ -3248,8 +3272,8 @@ async function sendThinkReaction(reaction){
     renderThinkReactionUi();
     sendWebPushEvent('think_reaction',usIncomingThink.id,{reaction:usThinkReactionFinal}).catch(()=>{});
     window.UsTodayPriority?.refresh?.();
-    // Fluidità 2: the chosen reaction answers the tap.
-    window.UsUiFoundation?.done?.(document.querySelector(`[data-think-reaction="${usThinkReactionFinal}"]`),{feel:'action'});
+    // Fluidità 2: the chosen reaction answers the tap (the heart already has its own animation).
+    if(usThinkReactionFinal!=='heart')window.UsUiFoundation?.done?.(document.querySelector(`[data-think-reaction="${usThinkReactionFinal}"]`),{feel:'action'});
     toast('Reazione inviata',{icon:'check',quiet:false});
     setTimeout(()=>closeThinkArrival(),1300);
     return true;
@@ -3398,6 +3422,7 @@ function dailyPartnerReactionLine(meta,partner){
   if(meta?.partner_reaction==='cry')return `${partner}: mi hai commosso`;
   return '';
 }
+let usTodayRevealDrawn='';
 function renderTodayReveal(){
   const reveal=document.getElementById('todayReveal'),state=window.todayState;
   if(!reveal||!state?.both_answered)return;
@@ -3408,8 +3433,33 @@ function renderTodayReveal(){
   // Without the personal meta (offline) there is nothing to react on.
   const controls=meta?`<div class="today-reactions" role="group" aria-label="La tua reazione"><button type="button" class="today-reaction" data-daily-reaction="heart" aria-label="${escapeHtml(US_DAILY_REACTIONS.heart.label)}" aria-pressed="${mine==='heart'}"><span class="us-icon" data-us-icon="${mine==='heart'?'heart-fill':'heart'}" aria-hidden="true"></span></button><button type="button" class="today-reaction today-reaction--words" data-daily-reaction="cry" aria-pressed="${mine==='cry'}">${escapeHtml(US_DAILY_REACTIONS.cry.label)}</button></div>`:'';
   reveal.className='today-reveal today-reveal--simple';
-  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>Tu</b><p translate="no">'+escapeHtml(state.my_answer||'')+'</p>'+note+'</div>'+
+  const html='<div class="today-answer" data-us-daily-answer="mine"><b>Tu</b><p translate="no">'+escapeHtml(state.my_answer||'')+'</p>'+note+'</div>'+
     '<div class="today-answer" data-us-daily-answer="partner"><b translate="no">'+escapeHtml(partner)+'</b><p translate="no">'+escapeHtml(state.partner_answer||'')+'</p>'+controls+'</div>';
+  // The same drawing stays: the heart animating on the button is not cut by the server's reply.
+  if(usTodayRevealDrawn===html&&reveal.firstElementChild)return;usTodayRevealDrawn=html;reveal.innerHTML=html;
+}
+// Il cuore (founder, 29/10/2026): one animation for every heart given; every third is the big one.
+function usHeartLike(button){const turn=window.UsUiFoundation?.heartTurn?.(window.usProfile?.id);window.UsUiFoundation?.heart?.(button,{big:Boolean(turn?.big)});}
+// Novità (founder, 30/10/2026): the beta testers see once, after the update,
+// what changed. One id per release; a new install does not see it.
+const US_WHATS_NEW=Object.freeze({
+  id:'1.3',
+  title:'US si è aggiornata',
+  items:[
+    'Il tuo colore: scegline uno tra 8, anche da Impostazioni (gratis nella beta).',
+    'Il cuore nuovo, sulle risposte e sui Ti penso: ogni 3 cuori, uno più grande.',
+    'Mappa dei Ricordi: metti il posto ai Ricordi e ritrovateli sulla mappa.',
+    'Sintonia: nuovi premi, tra cui Il vostro cielo, Aurora, Stagioni, accessori per i Compagni e icone dell\'app.',
+    'Gioca: una partita al giorno, con il conto di quelle rimaste.',
+    'Traguardi ogni 100 giorni insieme, e Rivivi nel giorno esatto di un ricordo.',
+    'Inviti con un link che apre US, emoji in ogni campo e schermate più ariose.',
+    'Da ora US si aggiorna da sola.'
+  ]
+});
+function usShowWhatsNew(returning){
+  if(!window.UsUiFoundation?.releaseNotesDue?.(US_WHATS_NEW.id,{returning}))return;
+  // After the first paint of Oggi, not over it.
+  setTimeout(()=>{window.UsUiFoundation?.notice?.({kicker:'Novità',title:US_WHATS_NEW.title,items:US_WHATS_NEW.items,confirmLabel:'Ho capito',icon:'sparkle'});},1400);
 }
 // One tap = my reaction; the same tap again takes it back. The server
 // (set_daily_answer_reaction) decides; on error everything goes back.
@@ -3421,12 +3471,13 @@ async function setDailyAnswerReaction(reaction){
   const previous=meta,next=meta.my_reaction===reaction?null:reaction;
   usDailyReactionInFlight=true;
   window.todayRevealMeta={...meta,my_reaction:next};renderTodayReveal();
+  if(next==='heart')usHeartLike(document.querySelector('#todayReveal [data-daily-reaction="heart"]'));
   try{
     const {data,error}=await sb.rpc('set_daily_answer_reaction',{target_question_id:questionId,target_reaction:next});
     if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reaction_invalid');
     if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
     renderTodayReveal();
-    if(next)window.UsUiFoundation?.done?.(document.querySelector(`#todayReveal [data-daily-reaction="${next}"]`),{feel:'action'});
+    if(next&&next!=='heart')window.UsUiFoundation?.done?.(document.querySelector(`#todayReveal [data-daily-reaction="${next}"]`),{feel:'action'});
     // O2: the other phone hears about a ♥ or "mi hai commosso" (the server reads it back).
     if(next)sendWebPushEvent('daily_reaction',questionId);
     return {status:'saved'};
@@ -3614,6 +3665,11 @@ let pendingMomentSource=null;
 // photos are actually picked (undefined: keep the current one, e.g. "Cambia foto").
 let pendingMomentSourceNext;
 let pendingMomentPickToken=0;
+// Mappa dei Ricordi — the place of the new memory ({lat,lon,label,source},
+// rounded), shown in "Dove" before saving: saved only if it is still there.
+let pendingMomentPlace=null;
+const US_MOMENT_COLUMNS='id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at';
+const US_MOMENT_PLACE_COLUMNS='place_lat,place_lon,place_label,place_source';
 const US_MOMENT_MAX_PHOTOS=10;
 const US_MOMENT_TYPES=['image/jpeg','image/png','image/webp'];
 
@@ -3672,6 +3728,42 @@ async function readJpegExifDate(file){
   return null;
 }
 
+// Mappa dei Ricordi (founder, 29/10/2026): the GPS position of a JPEG (EXIF GPS
+// IFD), rounded to about 100 m. On Android the web view gets the photo without
+// it (the native UsPhotoPlace plugin reads it there); a browser may keep it.
+async function readJpegExifGps(file){
+  if(file?.type!=='image/jpeg')return null;
+  try{
+    const view=new DataView(await file.slice(0,Math.min(file.size,512*1024)).arrayBuffer());
+    if(view.byteLength<4||view.getUint16(0,false)!==0xFFD8)return null;
+    let offset=2;
+    while(offset+4<view.byteLength){
+      if(view.getUint8(offset)!==0xFF){offset++;continue;}
+      const marker=view.getUint8(offset+1);offset+=2;
+      if(marker===0xDA||marker===0xD9)break;
+      const size=view.getUint16(offset,false);
+      if(size<2||offset+size>view.byteLength)break;
+      if(marker===0xE1&&String.fromCharCode(...[0,1,2,3].map(i=>view.getUint8(offset+2+i)))==='Exif'){
+        const tiff=offset+8,little=view.getUint16(tiff,false)===0x4949;
+        const u16=p=>view.getUint16(p,little),u32=p=>view.getUint32(p,little);
+        const ifd=pos=>{const out={};const n=u16(pos);for(let i=0;i<n;i++){const e=pos+2+i*12;if(e+12>view.byteLength)break;out[u16(e)]={type:u16(e+2),count:u32(e+4),at:e+8};}return out;};
+        const gpsAt=ifd(tiff+u32(tiff+4))[0x8825];
+        if(!gpsAt)return null;
+        const gps=ifd(tiff+u32(gpsAt.at));
+        const dms=t=>{if(!t||t.type!==5||t.count<3)return null;const p=tiff+u32(t.at);const r=k=>u32(p+k*8)/(u32(p+k*8+4)||1);return r(0)+r(1)/60+r(2)/3600;};
+        const ref=t=>t?String.fromCharCode(view.getUint8(t.at)):'';
+        let lat=dms(gps[2]),lon=dms(gps[4]);
+        if(lat===null||lon===null||(!lat&&!lon))return null;
+        if(ref(gps[1])==='S')lat=-lat;
+        if(ref(gps[3])==='W')lon=-lon;
+        return {lat:Math.round(lat*1000)/1000,lon:Math.round(lon*1000)/1000};
+      }
+      offset+=size;
+    }
+  }catch(error){console.warn('[US Moments] EXIF GPS',error);}
+  return null;
+}
+
 async function detectMomentDate(file){
   const exif=await readJpegExifDate(file);
   if(exif)return exif;
@@ -3720,9 +3812,33 @@ function momentUpBar(stage){
   if(typeof fill.animate==='function'&&!window.UsUiFoundation?.isReducedMotion?.())fill.animate([{width:from},{width:to}],{duration,easing:'cubic-bezier(.2,.8,.2,1)'});
 }
 
-function pickMomentPhoto(){
-  document.getElementById('momentFile').click();
+// Android: the native picker brings the photos with their place; anywhere else
+// (or if it fails) the file input of always.
+async function pickMomentPhoto(){
+  let picked=null;
+  try{picked=await window.UsRicordiPlace?.pickWithPlaces?.();}
+  catch(error){console.warn('[US Mappa] scelta foto',error);picked=null;}
+  if(!picked){document.getElementById('momentFile').click();return;}
+  if(picked.files.length)await acceptMomentFiles(picked.files,picked.places,picked.skipped);
 }
+// "Dove": the place of the memory being written.
+function renderMomentPlace(){
+  const label=document.getElementById('momentPlaceLabel');
+  const clear=document.getElementById('momentPlaceClear');
+  const field=document.getElementById('momentPlaceField');
+  if(label)label.textContent=pendingMomentPlace?.label||'Aggiungi il posto';
+  if(clear)clear.hidden=!pendingMomentPlace;
+  field?.classList.toggle('has-place',Boolean(pendingMomentPlace));
+}
+async function editMomentPlace(){
+  const place=await window.UsRicordiPlace?.choose?.({current:pendingMomentPlace,near:pendingMomentPlace});
+  if(place===undefined)return;
+  pendingMomentPlace=place;
+  renderMomentPlace();
+}
+window.editMomentPlace=editMomentPlace;
+function clearMomentPlace(){pendingMomentPlace=null;renderMomentPlace();}
+window.clearMomentPlace=clearMomentPlace;
 window.pickMomentPhoto=pickMomentPhoto;
 
 // The source of "Aggiungi la foto" (a lived Da vivere or Event): its day is the
@@ -3756,6 +3872,8 @@ function resetMomentComposer(){
   pendingMomentSourceNext=undefined;
   pendingMomentPickToken++;
   pendingMomentDate=localDateISO();
+  pendingMomentPlace=null;
+  renderMomentPlace();
   if(pendingMomentPreviewUrl){URL.revokeObjectURL(pendingMomentPreviewUrl);pendingMomentPreviewUrl=null;}
   renderMomentExtras();
   const fileInput=document.getElementById('momentFile');if(fileInput)fileInput.value='';
@@ -3766,15 +3884,37 @@ function resetMomentComposer(){
   updateMomentDateWhen();
 }
 
-document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
+document.getElementById('momentFile')?.addEventListener('change',event=>{
   const picked=[...(event.target.files||[])];
+  event.target.value='';
+  if(picked.length)acceptMomentFiles(picked,null,0);
+});
+
+// The place of the photos just picked: the first that has one. Android hands it
+// over from the native picker (places); a browser may keep it in the file,
+// read only after the same consent. A place searched by hand is never replaced.
+async function findMomentPlace(files,places,token){
+  if(pendingMomentPlace?.source==='search')return;
+  pendingMomentPlace=null;renderMomentPlace();
+  let coords=null;
+  for(const file of files){
+    coords=places?places.get(file)||null:await readJpegExifGps(file);
+    if(coords)break;
+  }
+  if(!coords||token!==pendingMomentPickToken)return;
+  if(!places&&!(await window.UsRicordiPlace?.photoConsent?.()))return;
+  const place=await window.UsRicordiPlace?.fromCoords?.(coords.lat,coords.lon);
+  if(!place||token!==pendingMomentPickToken||pendingMomentPlace?.source==='search')return;
+  pendingMomentPlace=place;
+  renderMomentPlace();
+}
+
+async function acceptMomentFiles(picked,places,skippedBefore){
   const compose=document.getElementById('momentCompose');
   const img=document.getElementById('momentPreviewImg');
-  event.target.value='';
-  if(!picked.length)return;
   const valid=picked.filter(file=>US_MOMENT_TYPES.includes(file.type)&&file.size<=20*1024*1024);
   if(!valid.length)return toast(picked.some(file=>US_MOMENT_TYPES.includes(file.type))?'Foto troppo grande: massimo 20 MB':'Per ora usa JPG, PNG o WebP');
-  const skipped=picked.length-valid.length;
+  const skipped=picked.length-valid.length+(Number(skippedBefore)||0);
   if(valid.length>US_MOMENT_MAX_PHOTOS)toast('Al massimo 10 foto alla volta: tengo le prime 10');
   else if(skipped)toast(skipped===1?'Una foto saltata: usa JPG, PNG o WebP fino a 20 MB':`${skipped} foto saltate: usa JPG, PNG o WebP fino a 20 MB`);
   const files=valid.slice(0,US_MOMENT_MAX_PHOTOS);
@@ -3790,13 +3930,14 @@ document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
   renderMomentExtras();
   updateDetectedMomentDate();
   window.UsMomentComposer?.show?.();
+  findMomentPlace(files,places,token).catch(error=>console.warn('[US Mappa] posto della foto',error));
   // A lived source already knows its day; otherwise the first photo says it.
   if(pendingMomentSource?.date)return;
   const detected=await detectMomentDate(files[0]);
   if(token!==pendingMomentPickToken)return;
   pendingMomentDate=detected;
   updateDetectedMomentDate();
-});
+}
 
 // M12A — a newly created Ricordo settles in and catches the light ONCE. The id
 // is remembered until its card is first rendered (a concurrent refresh may
@@ -3825,6 +3966,7 @@ async function uploadMoment(){
   const file=pendingMomentFile;
   const extras=[...pendingMomentExtras];
   const source=pendingMomentSource;
+  const place=window.UsRicordiPlace?.normalize?.(pendingMomentPlace)||null;
   const total=1+extras.length;
   btn.disabled=true;btn.textContent='Ottimizzo…';momentUpBar('optimize');
   try{
@@ -3850,7 +3992,8 @@ async function uploadMoment(){
       storage_path:path,
       thumbnail_path:uploadedThumbnail?thumbnailPath:null,
       caption:caption||null,
-      moment_date:momentDate
+      moment_date:momentDate,
+      ...(place?{place_lat:place.lat,place_lon:place.lon,place_label:place.label,place_source:place.source}:{})
     }).select('id').single();
     if(rowError){
       const cleanup=[path];if(uploadedThumbnail)cleanup.push(thumbnailPath);
@@ -4112,27 +4255,25 @@ function ricordiPeriodLabel(dateISO){const [y,m]=dateISO.split('-');return {mont
 // Rivivi selector: keeps the archive's deterministic historical selection
 // contract. The 1.0 surface applies a stricter presentation gate in hydrate:
 // only a true anniversary is shown to the couple.
+// Founder, 29/10/2026: Rivivi only on the very day of a memory — the same date
+// in a past year ("Un anno fa, oggi") or the same day of the month in a past
+// month ("3 mesi fa, oggi") — never at random. A year wins over months, then
+// the oldest; no memory of this day, no Rivivi.
 function ricordiPickRivivi(entries,todayISO){
   const rows=(entries||[]).filter(e=>e?.sourceKey&&/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||''))&&e.date<todayISO);
-  if(!rows.length)return null;
-  const [ty]=todayISO.split('-').map(Number);
+  const [ty,tm,td]=String(todayISO).split('-').map(Number);
   let best=null;
   for(const e of rows){
-    const years=ty-Number(e.date.slice(0,4));
-    if(years<1)continue;
-    const sameYearDay=`${ty}${e.date.slice(4)}`;
-    const off=Math.abs(ricordiDayDiff(sameYearDay,todayISO));
-    if(off<=3&&(!best||off<best.off||(off===best.off&&(years<best.years||(years===best.years&&e.sourceKey<best.entry.sourceKey)))))best={entry:e,off,years};
+    const [y,mo,d]=e.date.split('-').map(Number);
+    const months=(ty-y)*12+(tm-mo);
+    if(d!==td||months<1)continue;
+    const yearly=months%12===0;
+    if(!best||yearly>best.yearly||(yearly===best.yearly&&(months>best.months||(months===best.months&&e.sourceKey<best.entry.sourceKey))))best={entry:e,months,yearly};
   }
-  if(best)return {entry:best.entry,row:best.entry.row,reason:'anniversary',label:best.years===1?'Un anno fa, in questi giorni':`${best.years} anni fa, in questi giorni`};
-  const older=rows.filter(e=>ricordiDayDiff(todayISO,e.date)>=30).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.sourceKey<b.sourceKey?-1:1));
-  if(!older.length)return null;
-  const dayIndex=Math.max(0,ricordiDayDiff(todayISO,'1970-01-01'));
-  const entry=older[dayIndex%older.length];
-  const days=ricordiDayDiff(todayISO,entry.date);
-  const months=Math.floor(days/30.44);
-  const label=days>=365?(Math.floor(days/365)===1?'Un anno fa':`${Math.floor(days/365)} anni fa`):(months<=1?'Un mese fa':`${months} mesi fa`);
-  return {entry,row:entry.row,reason:'resurface',label};
+  if(!best)return null;
+  const years=best.months/12;
+  const label=best.yearly?(years===1?'Un anno fa, oggi':`${years} anni fa, oggi`):(best.months===1?'Un mese fa, oggi':`${best.months} mesi fa, oggi`);
+  return {entry:best.entry,row:best.entry.row,reason:best.yearly?'anniversary':'monthsary',label};
 }
 // Capitoli: raccolte secondarie per anno, contate sulle stesse voci (una
 // esperienza con la sua foto conta una volta), copertina = foto più recente.
@@ -4160,6 +4301,11 @@ function ricordiNewLabel(name){
   const who=String(name||'').trim();
   return who&&who!=='La tua persona'&&who!=='Noi'?`Nuovo da ${who}`:'Nuovo dalla tua persona';
 }
+// Mappa dei Ricordi: the card carries its place, for the album's "Dove" and the map.
+function ricordiPlaceAttrs(row){
+  if(row?.place_lat==null||row?.place_lon==null||!row?.place_label)return '';
+  return ` data-place-lat="${escapeHtml(row.place_lat)}" data-place-lon="${escapeHtml(row.place_lon)}" data-place-label="${escapeHtml(row.place_label)}" data-place-source="${escapeHtml(row.place_source||'search')}"`;
+}
 function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priority=false,fresh=false){
   const displayISO=/^\d{4}-\d{2}-\d{2}$/.test(String(source?.date||''))?String(source.date):row.moment_date;
   const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'short',year:'numeric'});
@@ -4174,7 +4320,7 @@ function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priori
   const title=row.caption||sourceTitle;
   const kicker=done?`<small class="ricordi-moment-source ricordi-done-kicker" data-source-key="${escapeHtml(source.sourceKey)}">L’avete fatto${row.caption&&sourceTitle&&sourceTitle!==row.caption?`<span translate="no"> · ${escapeHtml(sourceTitle)}</span>`:''}</small>`:'';
   const freshLabel=fresh?`<span class="ricordi-new-label">${escapeHtml(ricordiNewLabel(author))}</span>`:'';
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}${done?' ricordi-done ricordi-wide':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}"${row.created_by==null?' data-moment-orphan="1"':''} data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(title)}"${fresh?' data-ricordi-new':''} onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${freshLabel}${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${kicker}${title?`<p translate="no">${escapeHtml(title)}</p>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by" translate="no">${escapeHtml(author||'Noi')}</span></span></div></article>`;
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}${done?' ricordi-done ricordi-wide':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}"${row.created_by==null?' data-moment-orphan="1"':''} data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(title)}"${ricordiPlaceAttrs(row)}${fresh?' data-ricordi-new':''} onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${freshLabel}${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${kicker}${title?`<p translate="no">${escapeHtml(title)}</p>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by" translate="no">${escapeHtml(author||'Noi')}</span></span></div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
@@ -4378,7 +4524,9 @@ async function hydrateMomentsCore(){
   // Start all archive reads together, but as soon as Moments arrive start
   // resolving their signed media URLs too. Previously media resolution waited
   // for every enrichment query, adding a full network round-trip to first paint.
-  const momentsPromise=sb.from('moments').select('id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false});
+  // Mappa dei Ricordi: the place comes with the memory; a database without it yet reads as before.
+  const momentsQuery=columns=>sb.from('moments').select(columns).order('moment_date',{ascending:false}).order('created_at',{ascending:false});
+  const momentsPromise=momentsQuery(`${US_MOMENT_COLUMNS},${US_MOMENT_PLACE_COLUMNS}`).then(result=>result?.error?momentsQuery(US_MOMENT_COLUMNS):result);
   const profilesPromise=sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id);
   const livedPromise=sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived');
   const keptPromise=usReadLocalized(columns=>sb.from('daily_question_keepsakes').select(columns).order('question_date',{ascending:false}),'id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at','question_text_localized');
@@ -4417,7 +4565,7 @@ async function hydrateMomentsCore(){
   const today=localDateISO();
   // R5 — before the "nothing changed" shortcut: the dot follows the visit.
   const freshIds=ricordiNewSync(rows||[]);
-  const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.thumbnail_path||'',r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
+  const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.thumbnail_path||'',r.caption||'',r.moment_date,r.created_at,r.place_lat??'',r.place_lon??'',r.place_label||'']),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
   if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature&&!forceMedia)return;
   if(!rows?.length&&!livedRows.length&&!keptRows.length&&!eventRows.length){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
@@ -4776,6 +4924,13 @@ function resonanceHistoryEntries(quests,eventCompletions,eventHistory,milestones
     if(!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'event',sourceKey,title,xp,at:row.completed_at,titleSource:history?.title_source||(row.event_title_snapshot?'snapshot':'missing')});
   }
   for(const row of milestones||[]){
+    // Traguardi dei giorni (29/10/2026): every 100 days together.
+    if(row.kind==='days'){
+      const days=Math.max(0,Math.floor(Number(row?.days_together)||0));
+      const sourceKey=`milestone:${row.milestone_date}:days`;
+      if(row?.milestone_date&&days&&!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'milestone',milestone:'days',days,months:0,sourceKey,title:'',xp:Math.max(0,Number(row.xp_awarded)||0),at:row.milestone_date});
+      continue;
+    }
     const months=Math.max(0,Math.floor(Number(row?.months_together)||0));
     if(!row?.milestone_date||!months)continue;
     const kind=row.kind==='anniversary'?'anniversary':'monthiversary';
@@ -4793,6 +4948,7 @@ function resonanceHistoryDate(at){
 // The mockup's row: an icon, what it was, "what · when", and its points.
 function resonanceHistoryWhat(entry){
   if(entry.kind==='milestone'){
+    if(entry.milestone==='days')return {title:window.UsCalendarDomain?.daysMilestoneTitle?.(entry.days)||`${entry.days} giorni ♡`,detail:window.UsCalendarDomain?.daysMilestoneLine?.(entry.days)||`${entry.days} giorni insieme`,own:false};
     if(entry.milestone==='anniversary'){const years=Math.max(1,Math.round(entry.months/12));return {title:'Anniversario',detail:years===1?'1 anno insieme':`${years} anni insieme`,own:false};}
     return {title:'Mesiversario',detail:entry.months===1?'1 mese insieme':`${entry.months} mesi insieme`,own:false};
   }
@@ -4833,7 +4989,7 @@ async function hydrateResonanceHistory(){
     usReadLocalized(columns=>sb.from('bond_weekly_quests').select(columns).eq('couple_id',coupleId).not('completed_at','is',null).order('completed_at',{ascending:false}).limit(8),'id,title,xp,completed_at','title_localized').then(usLocalizedTitles),
     sb.from('shared_event_completions').select('id,xp_awarded,completed_at,event_title_snapshot').eq('couple_id',coupleId).order('completed_at',{ascending:false}).limit(8),
     sb.from('relationship_event_history').select('source_ref,title,title_source,completed_at').order('completed_at',{ascending:false}).limit(8),
-    sb.from('relationship_milestones').select('milestone_date,kind,months_together,xp_awarded').eq('couple_id',coupleId).order('milestone_date',{ascending:false}).limit(6)
+    sb.from('relationship_milestones').select('milestone_date,kind,months_together,days_together,xp_awarded').eq('couple_id',coupleId).order('milestone_date',{ascending:false}).limit(6)
   ]);
   if(window.usProfile!==profile)return;
   if(questError)console.warn(questError);
@@ -5857,8 +6013,8 @@ async function sendThinkSignal(){
   // Mockup: the heart takes my colour for a moment and two sparks, mine and
   // theirs, fly out of it; then "Ti penso inviato a …".
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),2400);
-  if(btn&&!result?.duplicate)thinkSparks(btn);
-  window.UsFeedback?.action?.();
+  // Il cuore (founder, 29/10/2026): the same heart as the others, counted with them.
+  if(btn&&!result?.duplicate)usHeartLike(btn);else window.UsFeedback?.action?.();
   if(result?.duplicate)toast('Già inviato',{quiet:true});
   else toast(`Ti penso inviato a ${partner.display_name||usIdentity().partnerName}`,{icon:'heart',quiet:false});
   await hydrateThink();
@@ -5866,18 +6022,6 @@ async function sendThinkSignal(){
   return true;
 }
 window.sendThinkSignal=sendThinkSignal;
-function thinkSparks(btn){
-  if(dailyRitualReducedMotion()||typeof document.createElement!=='function')return;
-  const r=btn.getBoundingClientRect?.();if(!r)return;
-  const root=getComputedStyle(document.documentElement);
-  [[root.getPropertyValue('--us-tu').trim()||'#ff7c96',-1],[root.getPropertyValue('--us-partner').trim()||'#a98bff',1]].forEach(([color,side],i)=>{
-    const d=document.createElement('span');d.className='dc-oggi-spark';d.setAttribute('aria-hidden','true');
-    d.style.background=color;d.style.left=`${r.left+r.width/2-6}px`;d.style.top=`${r.top+r.height/2-6}px`;
-    document.body.appendChild(d);
-    const a=d.animate?.([{translate:'0 0',opacity:1,scale:1},{translate:`${side*18}px 26px`,opacity:1,scale:1.1,offset:.35},{translate:`${130+side*8}px 8px`,opacity:0,scale:.5}],{duration:950,delay:i*70,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});
-    if(a)a.onfinish=()=>d.remove();else d.remove();
-  });
-}
 function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
   usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;
@@ -5890,6 +6034,11 @@ function handleIncomingThink(row){
   // attention tone — only because US is active right now.
   window.UsFeedback?.attention?.();
   window.UsUiFoundation?.auroraPulse?.();
+  // Ti penso animato (Sintonia V2, livello 5): hearts in your two colours, if this phone chose them;
+  // the letter (livello 15) opens on its heart.
+  const thinkFx=document.documentElement.dataset.usThinkFx;
+  if(thinkFx==='hearts')window.UsUiFoundation?.heartBurst?.();
+  else if(thinkFx==='letter')window.UsUiFoundation?.letterOpen?.();
   Promise.resolve(window.UsTodayPriority?.refresh?.()).then(()=>{
     const card=document.querySelector('#usTodayPriorityRegion [data-us-arrival-type="think-received"]');
     window.UsUiFoundation?.playOnce?.(card,'us-attention-pulse',900);

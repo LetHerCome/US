@@ -10,7 +10,8 @@ const owner='e8c90d50-81e9-4a0d-beeb-5886c63c4963';
 const couple='46155127-5742-42d0-8195-5f6d0992ae7b';
 const spec=EXPORT_DOMAINS.find(x=>x.table==='moments');
 const fakeRow=n=>({id:id(n),couple_id:couple,created_by:owner,storage_path:null,
-  thumbnail_path:null,caption:'Own memory',moment_date:'2026-10-12',created_at:'2026-10-12T00:00:00Z'});
+  thumbnail_path:null,caption:'Own memory',moment_date:'2026-10-12',created_at:'2026-10-12T00:00:00Z',
+  place_lat:null,place_lon:null,place_label:null,place_source:null});
 const failCode=(code)=>e=>e?.code===code;
 function mockPager(data,observed=[]){
  return async ({spec:called,sortKey,cursor,limit})=>{

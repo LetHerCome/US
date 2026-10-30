@@ -1,0 +1,271 @@
+/* US · Settings 2 */
+.us-settings2-page{padding-bottom:18px!important}
+.us-settings2-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 3px 10px}
+.us-settings2-head h2{margin:0!important;letter-spacing:-.65px!important;font-size:var(--us-type-page)!important}
+.us-settings2-head p{margin:0!important;max-width:300px;color:var(--us-muted,#918d99)!important;font-size:var(--us-text-secondary)!important;line-height:1.45}
+.us-settings2-device-dot{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.075);color:#777581;font-size:26px;line-height:1}
+.us-settings2-device-dot.ok{color:var(--us-color-positive);box-shadow:inset 0 0 0 1px rgba(114,201,152,.08)}
+.us-settings2-device-dot.bad{color:var(--us-color-rose-2)}
+
+.us-couple-id-card{margin-bottom:8px;padding:14px;border-radius:22px;background:radial-gradient(circle at 87% 4%,rgba(143,134,200,.13),transparent 38%),radial-gradient(circle at 5% 95%,rgba(232,138,162,.09),transparent 42%),var(--us-color-surface);border:1px solid rgba(255,255,255,.075);box-shadow:0 16px 38px rgba(0,0,0,.18)}
+.us-couple-id-top{display:flex;align-items:center;gap:13px}
+.us-couple-avatars{display:flex;align-items:center;min-width:69px}
+.us-couple-avatar{width:42px;height:42px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--us-color-elevated);border:2px solid var(--us-color-surface);color:#f3f1ed;font-size:12px;font-weight:800}
+.us-couple-avatar+ .us-couple-avatar{margin-left:-13px}
+.us-couple-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.us-couple-id-copy{min-width:0;flex:1}
+.us-couple-id-copy>small{display:block;color:#817e89;font-size:10px;font-weight:780;letter-spacing:.13em}
+.us-couple-id-copy>b{display:block;margin-top:4px;font-family:var(--us-serif,Georgia,serif);font-size:19px;font-weight:600;letter-spacing:-.35px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.us-couple-id-copy>span{display:block;margin-top:4px;color:#a3a0ab;font-size:13px;line-height:1.35}
+.us-couple-stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:12px;padding-top:11px;border-top:1px solid rgba(255,255,255,.055)}
+.us-couple-stats>span{text-align:center;border-left:1px solid rgba(255,255,255,.05)}
+.us-couple-stats>span:first-child{border-left:0}
+.us-couple-stats b{display:block;font-size:16px;font-weight:720}
+.us-couple-stats small{display:block;margin-top:2px;color:#8a8794;font-size:12px}
+
+.us-settings2-label{margin:14px 5px 6px;color:#8a8794;font-size:11px;font-weight:750;letter-spacing:.12em}
+/* HUMAN-UI-02 — two ownership sections: Tu (this person, this phone) and Voi (shared). */
+.us-settings2-section{margin-top:14px}
+.us-settings2-section-head{display:flex;align-items:baseline;gap:10px;margin:0 5px 8px}
+.us-settings2-section-head h3{margin:0;font-size:20px;font-weight:650;letter-spacing:-.2px;color:var(--us-color-text)}
+.us-settings2-section-head small{color:var(--us-color-text-3);font-size:13px}
+.us-settings2-about{margin-top:18px}
+.us-settings2-group{overflow:hidden;border-radius:22px;background:rgba(17,19,26,.88);border:1px solid rgba(255,255,255,.065)}
+.us-settings2-row{min-height:54px!important;padding:8px 12px!important;grid-template-columns:32px minmax(0,1fr) auto 16px!important;gap:10px!important;border-radius:0!important;background:transparent!important;border-top:1px solid rgba(255,255,255,.05)!important}
+.us-settings2-row:first-child{border-top:0!important}
+.us-settings2-row:active{background:rgba(255,255,255,.026)!important}
+.us-settings2-icon{width:32px;height:32px;border-radius:11px;display:grid;place-items:center;background:var(--us-color-accent-soft);border:1px solid var(--us-color-accent-line);color:var(--us-color-accent-ink);--us-icon-size:18px}
+.us-settings2-photo-icon{font-size:17px}
+.us-settings2-row .us-setting-main b{font-size:15px!important;font-weight:600!important}
+.us-settings2-row .us-setting-main small{font-size:12px!important;color:#73717c!important;line-height:1.38}
+.us-settings2-row .us-setting-value{font-size:13px!important;color:#9c99a5!important}
+
+.us-settings2-version-row{min-height:54px;padding:8px 12px;display:flex;align-items:center;gap:10px}
+.us-settings2-brand-mini{font-family:var(--us-serif,Georgia,serif);font-style:italic;font-size:11px}
+.us-settings2-version-row>span:last-child b{display:block;font-size:11px}
+.us-settings2-version-row>span:last-child small{display:block;margin-top:3px;color:#676570;font-size:var(--us-text-meta);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.us-settings2-disconnect{width:100%;min-height:48px;margin-top:12px;border-radius:16px;background:rgba(232,138,162,.045);border:1px solid rgba(232,138,162,.11);color:var(--us-color-rose-2);font-size:14px;font-weight:700}
+.us-settings2-footer{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 2px;color:#57555f;font-size:var(--us-text-meta)}
+.us-settings2-footer button{min-width:44px;min-height:44px;padding:2px;background:none;color:#75727d;font-size:var(--us-text-meta);font-weight:650}
+
+.us-settings2-modal-copy{padding:13px 14px;border-radius:17px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.055);color:#9b98a4;font-size:var(--us-text-secondary);line-height:1.5}
+.us-settings2-field{display:block;margin-top:13px}.us-settings2-field>span{display:block;margin:0 0 7px 3px;color:#aaa6b1;font-size:var(--us-text-meta);font-weight:680}
+.us-settings2-action-stack{display:flex;flex-direction:column;gap:8px;margin-top:12px}.us-settings2-action-stack button{width:100%}
+.us-settings2-push-master{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 2px 14px;border-bottom:1px solid rgba(255,255,255,.055)}
+.us-settings2-push-master span{min-width:0}.us-settings2-push-master b{display:block;font-size:12px}.us-settings2-push-master small{display:block;margin-top:3px;color:#777580;font-size:var(--us-text-meta)}.us-settings2-push-master button{min-width:88px;min-height:44px;padding:10px 12px;font-size:var(--us-text-meta)}
+.us-settings2-toggle-list{display:flex;flex-direction:column;margin-top:8px}
+.us-settings2-toggle-row{width:100%;min-height:60px;padding:10px 4px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:0;background:none;color:#f1efeb;border-top:1px solid rgba(255,255,255,.045);text-align:left}
+.us-settings2-toggle-row:first-child{border-top:0}.us-settings2-toggle-row span b{display:block;font-size:11px}.us-settings2-toggle-row span small{display:block;margin-top:3px;color:#777580;font-size:var(--us-text-meta)}
+.us-settings2-toggle-row>i{position:relative;width:42px;height:24px;flex:0 0 42px;border-radius:99px;background:var(--us-color-elevated);transition:background var(--us-motion-fast) var(--us-ease-standard)}
+.us-settings2-toggle-row>i u{position:absolute;width:18px;height:18px;border-radius:50%;left:3px;top:3px;background:#8a8790;text-decoration:none;transition:transform var(--us-motion-fast) var(--us-ease-standard),background var(--us-motion-fast) var(--us-ease-standard)}
+.us-settings2-toggle-row>i.on{background:linear-gradient(90deg,rgba(232,138,162,.7),rgba(143,134,200,.7))}.us-settings2-toggle-row>i.on u{transform:translateX(18px);background:#f7f4ef}
+.us-settings2-toggle-row:disabled{opacity:.55}
+/* Maudit V1 — an inline On/Off row: same track and knob as the sheet toggles; aria-checked is the one state. */
+.us-settings2-switch{position:relative;display:block;width:42px;height:24px;border-radius:99px;background:var(--us-color-elevated);transition:background var(--us-motion-fast) var(--us-ease-standard)}
+.us-settings2-switch u{position:absolute;width:18px;height:18px;border-radius:50%;left:3px;top:3px;background:#8a8790;text-decoration:none;transition:transform var(--us-motion-fast) var(--us-ease-standard),background var(--us-motion-fast) var(--us-ease-standard)}
+.us-settings2-switch-row[aria-checked="true"] .us-settings2-switch{background:linear-gradient(90deg,rgba(232,138,162,.7),rgba(143,134,200,.7))}
+.us-settings2-switch-row[aria-checked="true"] .us-settings2-switch u{transform:translateX(18px);background:#f7f4ef}
+.us-settings2-footnote{margin:10px 3px 0;color:#66636e;font-size:var(--us-text-meta);line-height:1.45}
+.us-settings2-status-list{display:flex;flex-direction:column}.us-settings2-status-list>div{min-height:58px;padding:9px 2px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,.045)}.us-settings2-status-list>div:first-child{border-top:0}.us-settings2-status-list b{display:block;font-size:var(--us-text-meta)}.us-settings2-status-list small{display:block;margin-top:3px;color:#777580;font-size:var(--us-text-meta)}.us-settings2-status-list i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--us-color-elevated);color:#777580;font-style:normal;font-size:10px}.us-settings2-status-list i.ok{background:rgba(114,201,152,.1);color:var(--us-color-positive)}
+.us-settings2-build-detail{margin-top:10px;padding:11px 12px;border-radius:15px;background:rgba(255,255,255,.025);color:#8e8b96;font-size:var(--us-text-meta)}.us-settings2-build-detail small{color:#5e5c66;font-size:var(--us-text-decorative)}
+
+@media(max-width:360px){
+  .us-settings2-row{grid-template-columns:32px minmax(0,1fr) auto 14px!important;padding-left:9px!important;padding-right:9px!important}
+  .us-settings2-icon{width:30px;height:30px;background:var(--us-color-accent-soft);border:1px solid var(--us-color-accent-line);color:var(--us-color-accent-ink);--us-icon-size:18px}
+  .us-couple-id-card{padding:15px}
+  .us-settings2-row .us-setting-main b{font-size:14px!important}
+}
+
+
+/* ===== US-SETTINGS-DENSITY-01 · compact utility surface =====
+   Same settings/actions; tighter hierarchy and no floating affection control over rows. */
+#settings .us-settings2-page{
+  padding-bottom:10px!important;
+}
+#settings .us-settings2-head{
+  gap:10px;
+  margin:0 2px 7px;
+}
+#settings .us-settings2-head h2{
+  font-size:30px!important;
+  line-height:1!important;
+}
+#settings .us-settings2-device-dot{
+  width:26px;
+  height:26px;
+  font-size:21px;
+  border-radius:50%;
+}
+
+#settings .us-settings2-section{
+  margin-top:10px;
+}
+#settings .us-settings2-section-head{
+  gap:8px;
+  margin:0 4px 5px;
+}
+#settings .us-settings2-section-head h3{
+  font-size:17px;
+  line-height:1.15;
+}
+#settings .us-settings2-section-head small{
+  font-size:11.5px;
+}
+#settings .us-settings2-label{
+  margin:10px 4px 5px;
+  font-size:9.5px;
+  letter-spacing:.13em;
+}
+
+#settings .us-settings2-group{
+  border-radius:18px;
+  background:rgba(17,19,26,.82);
+}
+#settings .us-settings2-row{
+  min-height:48px!important;
+  padding:6px 10px!important;
+  grid-template-columns:28px minmax(0,1fr) auto 14px!important;
+  gap:8px!important;
+}
+#settings .us-settings2-row:has(.us-setting-main small){
+  min-height:56px!important;
+}
+#settings .us-settings2-icon{
+  width:28px;
+  height:28px;
+  border-radius:9px;
+  --us-icon-size:16px;
+}
+#settings .us-settings2-photo-icon{
+  font-size:15px;
+}
+#settings .us-settings2-row .us-setting-main b{
+  font-size:13.5px!important;
+  line-height:1.2!important;
+}
+#settings .us-settings2-row .us-setting-main small{
+  margin-top:2px!important;
+  font-size:10.5px!important;
+  line-height:1.25!important;
+}
+#settings .us-settings2-row .us-setting-value{
+  font-size:11.5px!important;
+}
+#settings .us-setting-state{
+  width:26px;
+  height:26px;
+  font-size:13px;
+}
+#settings .us-setting-chevron{
+  --us-icon-size:14px!important;
+}
+
+/* Couple identity remains useful, but stops behaving like a hero card. */
+#settings .us-couple-id-card{
+  margin-bottom:7px;
+  padding:10px 11px;
+  border-radius:18px;
+  box-shadow:0 10px 26px rgba(0,0,0,.14);
+}
+#settings .us-couple-id-top{
+  gap:9px;
+}
+#settings .us-couple-avatars{
+  min-width:56px;
+}
+#settings .us-couple-avatar{
+  width:34px;
+  height:34px;
+  font-size:10px;
+}
+#settings .us-couple-avatar + .us-couple-avatar{
+  margin-left:-10px;
+}
+#settings .us-couple-id-copy>small{
+  font-size:8.5px;
+}
+#settings .us-couple-id-copy>b{
+  margin-top:2px;
+  font-size:16px;
+}
+#settings .us-couple-id-copy>span{
+  margin-top:2px;
+  font-size:11px;
+  line-height:1.25;
+}
+#settings .us-couple-stats{
+  margin-top:8px;
+  padding-top:7px;
+}
+#settings .us-couple-stats b{
+  font-size:14px;
+}
+#settings .us-couple-stats small{
+  margin-top:1px;
+  font-size:10px;
+}
+
+#settings .us-settings2-about{
+  margin-top:12px;
+}
+#settings .us-settings2-version-row{
+  min-height:48px;
+  padding:6px 10px;
+}
+#settings .us-settings2-disconnect{
+  min-height:44px;
+  margin-top:9px;
+  border-radius:14px;
+  font-size:12.5px;
+}
+#settings .us-settings2-footer{
+  margin:10px 0 0;
+}
+
+/* Settings is already a control surface; don't cover it with Ti penso. */
+body:has(#settings.page.active) #thinkButton{
+  display:none!important;
+}
+
+@media(max-height:700px){
+  #settings .us-settings2-section{margin-top:8px}
+  #settings .us-settings2-row{min-height:46px!important;padding-top:5px!important;padding-bottom:5px!important}
+  #settings .us-settings2-row:has(.us-setting-main small){min-height:52px!important}
+  #settings .us-settings2-label{margin-top:8px}
+  #settings .us-couple-id-card{padding:9px 10px}
+}
+
+
+/* US-SETTINGS-ORGANIZE-01 — semantic groups, same action IDs and handlers. */
+#settings .us-settings2-section[data-us-settings-scope="tu"]{margin-top:9px}
+#settings .us-settings2-label{margin:18px 5px 7px;font-size:10px;letter-spacing:.13em;color:var(--us-color-text-3)}
+#settings .us-settings2-section-head{margin-bottom:3px}
+#settings .us-settings2-group{border-radius:19px}
+#settings .us-settings2-row{min-height:58px!important;gap:11px!important;padding:10px 12px!important}
+#settings .us-settings2-row .us-setting-main b{font-size:14px!important}
+#settings .us-settings2-section[data-us-settings-scope="voi"]{margin-top:25px}
+#settings .us-settings2-page{padding-bottom:30px!important}
+
+/* US-SONIC-V1 — short, explicit samples inside existing centered Settings. */
+.us-feedback-preview{margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,.08)}
+.us-feedback-preview-heading{display:flex;flex-direction:column;gap:3px;padding:0 2px 10px}
+.us-feedback-preview-heading b{font-size:13px;font-weight:650;color:var(--us-color-text)}
+.us-feedback-preview-heading small{font-size:11.5px;color:var(--us-color-text-3)}
+.us-feedback-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.us-feedback-preview-grid button{min-height:47px;padding:10px;border:1px solid rgba(255,255,255,.12);border-radius:15px;background:rgba(255,255,255,.045);color:var(--us-color-text);font-size:12px;font-weight:650;text-align:center}
+.us-feedback-preview-grid button:active{background:var(--us-color-accent-soft)}
+.us-feedback-preview-grid button:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px}
+.us-feedback-preview-note{margin:13px 2px 0;color:var(--us-color-text-3);font-size:11px;line-height:1.45}
+.us-feedback-preview-grid button[data-feedback-preview="haptic-test"]{grid-column:1/-1;border-color:var(--us-color-accent-line)}
+
+/* S3.2 account deletion: reuses settings sheet primitives; only status + spacing. */
+.us-account-delete-status{margin:12px 0 0;color:var(--us-color-rose-2)}
+.us-account-delete-copy+form .us-settings2-field input{width:100%}
+
+/* 1.0 Segnala un problema: same sheet primitives; only the choice list. */
+.us-report-categories{margin:13px 0 0;padding:0;border:0}
+.us-report-categories legend{margin:0 0 7px 3px;padding:0;color:#aaa6b1;font-size:var(--us-text-meta);font-weight:680}
+.us-report-option{display:flex;align-items:center;gap:10px;min-height:44px;margin-top:6px;padding:8px 12px;border-radius:15px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.055);color:var(--us-color-text);font-size:var(--us-text-secondary)}
+.us-report-option input{width:18px;height:18px;padding:0;flex:0 0 auto;accent-color:var(--us-color-accent-strong)}
+#usReportForm textarea{width:100%;min-height:110px;resize:vertical}

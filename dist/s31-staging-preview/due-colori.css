@@ -1,0 +1,218 @@
+/* ==========================================================================
+   Due colori, un Noi — the 1.0 design layer (approved by the founder on
+   2026-10-14). Loaded after every feature stylesheet, so at equal
+   specificity it wins. Tokens live in ui-foundation.css; this file applies
+   them to the shell: night canvas, person colours, tab tint, type, buttons,
+   bottom navigation and press feedback. Each area has its own section below.
+   Rules: my colour (--us-tu) marks my actions, --us-partner what comes from
+   the other person, --us-noi what is ours; the tab colour only says where
+   you are. No gradient on buttons, no blur on surfaces.
+   ========================================================================== */
+
+/* ---------- Person colours: rosa for the creator, lilla for who joined ---------- */
+:root[data-us-me="beatrice"]{--us-tu:var(--us-lilla);--us-partner:var(--us-rosa)}
+
+/* ---------- Tab colour: Oggi corallo, Noi orchidea, Ricordi ambra, Gioca menta ----------
+   Not inherited: only the canvas (html, body) and the bar read it. An
+   inherited custom property that changes on :root restyles all ~2000
+   elements, and it changes exactly when a tab opens (measured: a page
+   switch costs half as much without it). */
+@property --us-tab{syntax:'*';inherits:false}
+body{--us-tab:inherit}
+:root:has(#home.page.active){--us-tab:var(--us-corallo)}
+:root:has(#bond.page.active){--us-tab:var(--us-noi)}
+:root:has(#moments.page.active){--us-tab:var(--us-ambra)}
+:root:has(#quiz.page.active){--us-tab:var(--us-menta)}
+:root:has(#settings.page.active){--us-tab:var(--us-color-text-3)}
+
+/* ---------- Canvas: the night, with a faint glow of the tab colour on top ---------- */
+html,body{
+  background:
+    radial-gradient(70% 300px at 50% -60px,color-mix(in srgb,var(--us-tab) 13%,transparent),transparent 72%),
+    var(--us-color-bg);
+  color:var(--us-color-text);
+}
+body{font-family:var(--us-font-ui);font-size:15px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+:root[data-us-theme] body{
+  background:
+    radial-gradient(70% 300px at 50% -60px,color-mix(in srgb,var(--us-tab) 13%,transparent),transparent 72%),
+    radial-gradient(circle at 20% -10%,var(--us-theme-glow-a),transparent 35%),
+    var(--us-color-bg);
+}
+
+/* ---------- Type: Fraunces for titles, Figtree for everything else ---------- */
+h1,h2,h3,.us-editorial,.us-sheet-title{font-family:var(--us-font-display);font-weight:400;letter-spacing:-.01em}
+input,textarea,select,button{font-family:inherit}
+.tiny,.us-eyebrow{font-weight:700;opacity:1}
+
+/* ---------- Buttons: flat, my colour, dark ink; pressed = a small spring ---------- */
+.primary{
+  background:var(--us-tu);
+  color:var(--us-inchiostro);
+  font-weight:700;
+  box-shadow:none;
+}
+/* Disabled: the same colour at .45 (mockup .btn-primary:disabled). */
+.primary:disabled{opacity:.45;cursor:default}
+.ghost,.us-btn-secondary{
+  background:transparent;
+  color:var(--us-color-text);
+  box-shadow:inset 0 0 0 1px var(--us-color-line-strong);
+  font-weight:600;
+}
+.us-btn-danger{
+  background:var(--us-rosso);
+  color:var(--us-inchiostro);
+  box-shadow:none;
+  font-weight:700;
+}
+.us-icon-button,.us-modal-close{
+  background:var(--us-color-surface);
+  box-shadow:inset 0 0 0 1px var(--us-color-line);
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
+.us-modal-close.is-on-media{background:rgba(15,11,19,.42);box-shadow:inset 0 0 0 1px var(--us-color-line-strong)}
+/* Press: every tap answers with the mockup's .tap press (core.js press /
+   release), driven by ui-foundation.js on the independent `scale` property:
+   down to .95 in 110 ms, back with the spring in 420 ms. No CSS :active
+   scale here, so nothing presses twice. */
+
+/* Selected chips and segments take my colour. */
+.us-chip[aria-pressed="true"],.us-chip.is-active,
+.us-segment>button.is-active,.us-segment>button[aria-pressed="true"],.us-segment>button[aria-selected="true"]{
+  background:var(--us-color-text);
+  color:var(--us-inchiostro);
+  box-shadow:none;
+}
+:where(input[type="checkbox"],input[type="radio"]){accent-color:var(--us-tu)}
+
+/* ---------- Surfaces: flat night, hairline, no blur ---------- */
+.us-premium-glass{
+  background:var(--us-color-surface);
+  border-color:var(--us-color-line);
+  box-shadow:none;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
+.us-premium-control{
+  background:var(--us-color-surface);
+  border-color:var(--us-color-line);
+  box-shadow:none;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
+/* The aurora behind the top bar goes: the tab colour already says where you are. */
+.us-aurora{display:none!important}
+
+/* ---------- Bottom navigation: the mockup's .nav (style.css), exactly ----------
+   12 px from the sides (centred, 456 px at most) and the bottom (plus the safe area), 70 px tall,
+   radius 28, padding 5, hairline, notte-2 at 94% with the 16 px blur, no
+   shadow. The blob (indicator) is the tab colour at 16%, it slides with the
+   spring in 560 ms and takes the new colour at once. Active: the icon in
+   the tab colour with a 28% fill, the label in latte; labels 12/600. */
+:root{--us-nav-height:70px}
+.us-nav.us-nav-premium{
+  left:50%!important;
+  right:auto!important;
+  bottom:max(12px,var(--us-safe-bottom))!important;
+  width:min(456px,calc(100% - 24px))!important;
+  max-width:none!important;
+  height:70px!important;
+  min-height:70px!important;
+  margin:0!important;
+  padding:5px!important;
+  display:grid!important;
+  grid-template-columns:repeat(4,1fr)!important;
+  gap:0!important;
+  box-sizing:border-box!important;
+  border:1px solid var(--us-color-line-strong)!important;
+  border-radius:28px!important;
+  background:color-mix(in srgb,var(--us-color-surface) 94%,transparent)!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:blur(16px)!important;
+  backdrop-filter:blur(16px)!important;
+  transition:translate .45s var(--us-ease-io),transform var(--us-motion-fast) var(--us-ease-standard),opacity var(--us-motion-micro) var(--us-ease-standard)!important;
+}
+.us-nav.us-nav-premium::before{display:none}
+.us-nav-premium button{
+  position:relative;
+  display:grid!important;
+  place-items:center;
+  align-content:center;
+  gap:3px!important;
+  width:auto!important;
+  min-width:0!important;
+  height:auto!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:22px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--us-color-text-3)!important;
+  font-size:12px;
+  font-weight:600;
+  transition:color .3s!important;
+}
+.us-nav-premium button .nicon{width:24px!important;height:24px!important;min-width:24px!important;min-height:24px!important;margin:0!important;transform:none!important;transition:none!important}
+.us-nav-premium .us-nav-icon{width:24px;height:24px}
+.us-nav-icon,.us-nav-icon-off{color:var(--us-color-text-3)}
+.us-nav-premium .nlabel{font-size:12px;font-weight:600;line-height:1.2;letter-spacing:0;color:var(--us-color-text-3)}
+.us-nav-premium button[data-page="home"]{--us-nav-c:var(--us-corallo)}
+.us-nav-premium button[data-page="bond"]{--us-nav-c:var(--us-noi)}
+.us-nav-premium button[data-page="moments"]{--us-nav-c:var(--us-ambra)}
+.us-nav-premium button[data-page="quiz"]{--us-nav-c:var(--us-menta)}
+/* Active icon = the outline in the tab colour over its own 28% silhouette
+   (the regular and the fill drawing of the same Phosphor icon, stacked). */
+.us-nav-premium button.active .nicon{color:var(--us-nav-c)!important}
+.us-nav-premium button.active .us-nav-icon-off{display:block!important;color:var(--us-nav-c)!important}
+.us-nav-premium button.active .us-nav-icon-on{display:block!important;color:color-mix(in srgb,var(--us-nav-c) 28%,transparent)!important}
+.us-nav-premium button.active .nlabel{font-weight:600;color:var(--us-color-text)}
+.us-nav-premium .us-nav-track{padding:5px}
+.us-nav:has(> button[data-page="home"].active){--us-nav-blob:var(--us-corallo)}
+.us-nav:has(> button[data-page="bond"].active){--us-nav-blob:var(--us-noi)}
+.us-nav:has(> button[data-page="moments"].active){--us-nav-blob:var(--us-ambra)}
+.us-nav:has(> button[data-page="quiz"].active){--us-nav-blob:var(--us-menta)}
+.us-nav-indicator{
+  border-radius:22px;
+  background:var(--us-nav-blob,var(--us-tab));
+  opacity:.16!important;
+  box-shadow:none;
+  transition:transform 560ms var(--us-ease-spring);
+}
+.us-nav:not(:has(> button.active)) .us-nav-indicator{opacity:0!important}
+:root[data-us-theme] .us-nav-indicator,:root[data-us-accent] .us-nav-indicator{background:var(--us-nav-blob,var(--us-tab))}
+:root[data-us-theme] .us-nav-premium button.active .us-nav-icon-off,:root[data-us-accent] .us-nav-premium button.active .us-nav-icon-off{color:var(--us-nav-c)}
+:root[data-us-motion="reduced"] .us-nav-indicator{transition:none}
+@media (prefers-reduced-motion:reduce){.us-nav-indicator{transition:none}}
+/* Focus Photo (a tap on the photo or on the US mark): the bar slides away. */
+body:has(#homeHero.us-oggi-focus) .us-nav.us-nav-premium{translate:0 120px}
+
+/* ---------- Colour flood between tabs (due-colori.js) ---------- */
+.us-flood{position:fixed;inset:0;z-index:19;pointer-events:none;background:var(--us-flood,var(--us-tab));clip-path:circle(0 at 50% 100%)}
+.us-flood[hidden]{display:none}
+/* Under the colour the new page opens fully opaque, as the mockup's view
+   (its own short fade would show it translucent in the growing circle). */
+.page.us-marea-in{animation:none!important}
+
+/* ---------- Settings over Noi (due-colori.js slide, mockup UP.push/pop) ----------
+   The page that leaves stays painted where it was, out of the flow; the one
+   that slides on top is opaque (a mockup view has the night behind it) and
+   casts the mockup's shadow to the left. The veil is brightness .6 as a
+   composited 40 % black layer between the two. */
+.page.us-slide-ghost{display:block!important;position:fixed!important;left:var(--us-ghost-left)!important;top:var(--us-ghost-top)!important;width:var(--us-ghost-width)!important;margin:0!important;pointer-events:none!important;animation:none!important}
+.page.us-slide-ghost.is-under{z-index:1}
+.page.us-slide-live.is-under{position:relative;z-index:1;animation:none!important}
+.page.us-slide-live.is-over{position:relative;z-index:3;isolation:isolate;animation:none!important}
+.page.us-slide-ghost.is-over{z-index:3;isolation:isolate}
+.page.us-slide-live.is-over::before,.page.us-slide-ghost.is-over::before{content:"";position:absolute;z-index:-1;inset:-100vh -32px;background:var(--us-color-bg);box-shadow:-30px 0 60px rgba(0,0,0,.45);pointer-events:none}
+.us-slide-veil{position:fixed;inset:0;z-index:2;background:#000;opacity:0;pointer-events:none}
+
+/* ---------- Focus Photo (mockup .screen.is-focus): the top bar fades away ---------- */
+.app>.top.us-premium-top{transition:opacity .45s var(--us-ease-standard)}
+body:has(#homeHero.us-oggi-focus) .app>.top.us-premium-top{opacity:0;pointer-events:none}
+
+/* ---------- No glow halos (approved notes): the one-shot arrival halo goes ----------
+   The arrival itself is told by the Momento and by Maudit's hop. */
+.us-attention-pulse::before{display:none}

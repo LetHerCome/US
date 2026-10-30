@@ -1,0 +1,1050 @@
+/* US · Moments Albums
+   Additive visual layer. Does not restyle Home / navigation / calendar. */
+
+body.us-album-open{overflow:hidden;touch-action:none}
+
+.moment-card.has-album .moment-delete{display:none!important}
+.moment-album-count{
+  position:absolute;right:10px;bottom:10px;z-index:4;
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:27px;padding:5px 9px;border-radius:999px;
+  background:rgba(8,10,15,.70);border:1px solid rgba(255,255,255,.16);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  color:var(--us-color-text);font-size:var(--us-text-meta);font-weight:800;letter-spacing:.035em;
+  box-shadow:0 7px 20px rgba(0,0,0,.26)
+}
+
+.us-album-overlay{
+  position:fixed;inset:0;z-index:10080;
+  display:none;background:var(--us-color-bg);color:var(--us-color-text);
+}
+.us-album-overlay.show{display:block}
+.us-album-shell{
+  width:min(520px,100%);height:100dvh;height:var(--us-viewport-height,100dvh);
+  margin:0 auto;background:
+    radial-gradient(circle at 85% -10%,rgba(169,133,255,.09),transparent 26%),
+    radial-gradient(circle at 10% 10%,rgba(255,102,142,.07),transparent 30%),var(--us-color-bg);
+  overflow:hidden;position:relative;
+}
+.us-album-scroll{
+  height:100%;overflow-y:auto;overscroll-behavior:contain;
+  padding-bottom:calc(38px + var(--us-safe-bottom));
+  scrollbar-width:none;
+}
+.us-album-scroll::-webkit-scrollbar{display:none}
+
+.us-album-close{position:fixed;z-index:8;top:calc(var(--us-safe-top) + 12px);left:max(14px,calc((100vw - min(520px,100vw))/2 + 14px))}
+.us-album-cover-stage{
+  min-height:42vh;background:var(--us-color-bg);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding-top:max(0px,var(--us-safe-top));
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.us-album-cover-stage img{
+  width:100%;height:min(58vh,590px);min-height:42vh;
+  object-fit:contain;object-position:center top;
+  display:block;background:var(--us-color-bg);
+}
+.us-album-loading{
+  min-height:55vh;display:grid;place-items:center;
+  color:var(--us-color-text-2);font-size:12px
+}
+
+.us-album-info{padding:17px 17px 2px}
+.us-album-meta-line{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  color:var(--us-color-text-2);font-size:var(--us-text-meta);text-transform:uppercase;letter-spacing:.07em;
+  margin:0 3px 12px
+}
+.us-album-meta-line b{color:var(--us-color-text);font-size:var(--us-text-meta)}
+.us-album-caption-postit{
+  margin:0 5px 25px;padding:15px 16px 14px;
+  border-radius:4px 13px 7px 12px;
+  background:linear-gradient(150deg,rgba(62,55,68,.88),rgba(34,31,39,.95));
+  border:1px solid rgba(255,255,255,.11);
+  box-shadow:0 12px 25px rgba(0,0,0,.18);
+  transform:rotate(-.45deg);
+}
+.us-album-caption-postit[hidden]{display:none!important}
+.us-album-caption-postit p{margin:0;color:var(--us-color-text);line-height:1.48;font-size:13px;white-space:pre-wrap}
+.us-album-caption-postit small{display:block;margin-top:8px;color:var(--us-color-text-2);font-size:var(--us-text-meta)}
+
+.us-album-section{padding:0 17px 10px}
+.us-album-section-head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:14px;
+  margin:4px 3px 12px;
+}
+.us-album-section-head h3{margin:4px 0 0;font-size:19px}
+.us-album-add{
+  min-height:44px;padding:9px 13px;border-radius:14px;
+  background:rgba(255,255,255,.075);color:var(--us-color-text);
+  border:1px solid rgba(255,255,255,.10);font-size:var(--us-text-meta)
+}
+
+.us-album-composer{
+  margin:0 0 15px;padding:10px;border-radius:20px;
+  background:var(--us-surface-sheet);border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 12px 30px rgba(0,0,0,.18)
+}
+.us-album-composer[hidden]{display:none!important}
+.us-album-composer-preview{
+  width:100%;height:240px;display:block;object-fit:contain;
+  border-radius:15px;background:var(--us-color-bg);
+}
+.us-album-composer input{margin-top:9px;border-radius:14px!important;font-size:16px!important}
+.us-album-composer-actions{display:flex;gap:8px;margin-top:9px}
+.us-album-composer-actions button{flex:1;min-height:44px;border-radius:14px;font-size:var(--us-text-meta)}
+.us-album-cancel{background:var(--us-color-elevated);color:var(--us-color-text)}
+.us-album-save{background:linear-gradient(135deg,var(--us-color-rose),var(--us-color-violet));color:white}
+
+.us-album-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px 11px;
+  padding:4px 1px 12px;
+}
+.us-album-empty{
+  grid-column:1/-1;padding:25px 18px;border-radius:20px;
+  border:1px dashed rgba(255,255,255,.11);
+  color:var(--us-color-text-2);text-align:center;font-size:11px;line-height:1.5
+}
+.us-album-photo-card{
+  position:relative;min-width:0;padding:7px 7px 11px;
+  border-radius:4px 12px 6px 13px;
+  background:linear-gradient(155deg,var(--us-color-elevated),var(--us-color-surface-2));
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 12px 28px rgba(0,0,0,.20);
+  transform:rotate(-.7deg);cursor:pointer;
+}
+.us-album-photo-card:nth-child(2n){transform:rotate(.65deg)}
+.us-album-photo-card:nth-child(3n){transform:rotate(-.25deg)}
+.us-album-photo-card img{
+  width:100%;aspect-ratio:1/1.08;display:block;object-fit:cover;
+  border-radius:3px 9px 4px 9px;background:var(--us-color-bg)
+}
+.us-album-photo-copy{padding:8px 4px 0}
+.us-album-photo-copy p{
+  margin:0;color:var(--us-color-text);font-size:var(--us-text-secondary);line-height:1.42;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden
+}
+.us-album-photo-copy small{
+  display:block;margin-top:5px;color:var(--us-color-text-2);font-size:var(--us-text-meta);text-transform:uppercase;letter-spacing:.06em
+}
+.us-album-photo-delete{
+  position:absolute;right:2px;top:2px;z-index:3;
+  width:44px;height:44px;min-width:44px;min-height:44px;
+  padding:0;border:0;background:transparent;display:grid;place-items:center
+}
+.us-delete-icon{
+  width:31px;height:31px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(8,10,14,.58);border:1px solid rgba(255,255,255,.14);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none
+}
+.us-delete-icon svg{
+  width:15px;height:15px;fill:none;stroke:#fff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round
+}
+
+/* Dedicated fullscreen gallery. */
+.us-album-lightbox{position:fixed;inset:0;z-index:10120;background:var(--us-color-bg);display:none;align-items:center;justify-content:center;touch-action:none;opacity:0;transition:opacity var(--us-motion-surface) var(--us-ease-standard)}
+.us-album-lightbox.show{display:flex}
+.us-album-lightbox.show{opacity:1}
+.us-album-lightbox[data-us-motion-exiting]{opacity:0}
+.us-album-lightbox-stage{position:relative;width:100%;height:100%;overflow:hidden}
+.us-album-lightbox-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;opacity:0;transform:translateX(0);transition:transform var(--us-motion-base) var(--us-ease-standard),opacity var(--us-motion-micro) var(--us-ease-standard);pointer-events:none;
+  padding:max(54px,calc(var(--us-safe-top) + 46px)) 0
+          max(92px,calc(var(--us-safe-bottom) + 78px));
+}
+.us-album-lightbox-photo.active{opacity:1}
+.us-album-lightbox-photo.is-preparing.us-lightbox-enter-next{opacity:1;transform:translateX(14%);transition:none}
+.us-album-lightbox-photo.is-preparing.us-lightbox-enter-prev{opacity:1;transform:translateX(-14%);transition:none}
+.us-album-lightbox-photo.active.us-lightbox-exit-next{opacity:1;transform:translateX(-14%)}
+.us-album-lightbox-photo.active.us-lightbox-exit-prev{opacity:1;transform:translateX(14%)}
+.us-album-lightbox-close{position:absolute;z-index:5;right:14px;top:calc(var(--us-safe-top) + 12px)}
+.us-album-lightbox-count{
+  position:absolute;z-index:4;left:14px;top:calc(var(--us-safe-top) + 22px);
+  color:var(--us-color-text);font-size:var(--us-text-meta);letter-spacing:.09em
+}
+.us-album-lightbox-info{
+  position:absolute;z-index:4;left:0;right:0;bottom:0;
+  padding:36px 22px calc(var(--us-safe-bottom) + 19px);
+  background:linear-gradient(transparent,rgba(0,0,0,.78));
+  text-align:center;pointer-events:none
+}
+.us-album-lightbox-info b{display:block;font-size:var(--us-text-meta);letter-spacing:.07em;text-transform:uppercase}
+.us-album-lightbox-info p{margin:7px auto 0;max-width:380px;color:var(--us-color-text);font-size:12px;line-height:1.45;white-space:pre-wrap}
+.us-album-lightbox-info p:empty{display:none}
+
+@media(max-width:360px){
+  .us-album-grid{gap:12px 9px}
+  .us-album-cover-stage img{height:min(54vh,510px)}
+  .us-album-composer-preview{height:210px}
+}
+@media(orientation:landscape) and (max-height:560px){
+  .us-album-cover-stage{min-height:64vh}
+  .us-album-cover-stage img{height:76vh;min-height:64vh}
+  .us-album-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(prefers-reduced-motion:reduce){
+  .us-album-photo-card,.us-album-caption-postit{transform:none!important}
+}
+/* ============================================================
+   US · Moments Visual Fix
+   Pure visual/interaction polish over the existing Moments logic.
+   ============================================================ */
+
+/* Page header */
+#moments>.section{position:relative}
+#moments>.section>h2{display:none!important}
+.us-moments-head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+  margin:2px 3px 19px;
+}
+.us-moments-head-copy{min-width:0}
+.us-moments-eyebrow{font-size:var(--us-type-eyebrow);font-weight:750;letter-spacing:var(--us-type-eyebrow-tracking);text-transform:uppercase;color:var(--us-color-accent-ink)}
+.us-moments-head h2{display:block!important;margin:4px 0 3px!important;font-style:italic;font-weight:500;letter-spacing:-.6px;line-height:1.02;font-size:var(--us-type-page)!important}
+.us-moments-head p{
+  margin:0!important;color:var(--us-color-text-2)!important;font-size:11px!important;line-height:1.35
+}
+.us-moments-head-actions{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.us-moments-total{
+  color:var(--us-color-text-2);font-size:var(--us-text-meta);font-weight:720;white-space:nowrap
+}
+.us-moments-add{width:42px;height:42px;padding:0;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);color:var(--us-color-text);border:1px solid rgba(255,255,255,.11);box-shadow:0 10px 26px rgba(0,0,0,.19);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.us-moments-add:active{transform:scale(.94)}
+
+/* Composer becomes a focused bottom sheet instead of occupying the feed */
+.us-moment-compose-overlay{
+  position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;
+  align-items:flex-end;justify-content:center;
+  background:transparent;
+  padding-top:calc(var(--us-safe-top) + 10px);
+}
+.us-moment-compose-overlay.show{display:flex}
+.us-moment-compose-sheet{width:min(500px,100%);max-height:calc(var(--us-viewport-height,100dvh) - max(24px,var(--us-safe-top)));overflow:auto;overscroll-behavior:contain;position:relative;z-index:1;padding:10px 14px calc(16px + var(--us-safe-bottom))}
+.us-moment-compose-grabber{
+  width:36px;height:4px;border-radius:99px;background:rgba(255,255,255,.20);
+  margin:1px auto 12px
+}
+.us-moment-compose-title{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 3px 12px
+}
+.us-moment-compose-title div{min-width:0}
+.us-moment-compose-title small{
+  display:block;color:var(--us-color-text-2);font-size:9px;letter-spacing:.11em;text-transform:uppercase
+}
+.us-moment-compose-title b{display:block;margin-top:3px;font-size:17px}
+.us-moment-compose-sheet .moment-compose{margin:0!important}
+.us-moment-compose-sheet .moment-picker{
+  border-radius:20px!important;background:var(--us-color-surface-2)!important;
+  border-color:rgba(255,255,255,.09)!important;
+  box-shadow:none!important
+}
+.us-moment-compose-sheet .moment-picker-empty{min-height:132px!important}
+.us-moment-compose-sheet .moment-preview{aspect-ratio:4/3!important}
+.us-moment-compose-sheet .moment-details{padding:12px 0 0!important}
+.us-moment-compose-sheet .moment-private{text-align:center;margin-top:11px!important}
+body.us-moment-compose-open{overflow:hidden}
+
+/* Feed: cleaner photographic journal instead of generic cards */
+#moments .moment-grid{
+  gap:16px 12px!important;align-items:start!important;
+  padding:0 1px 8px
+}
+#moments .moment-card.moment-postit{
+  background:#f1ede4!important;
+  border-radius:5px 12px 7px 10px!important;
+  padding:6px 6px 10px!important;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.45) inset,
+    0 12px 30px rgba(0,0,0,.22)!important;
+  transform:rotate(-.18deg)!important;
+  transition:transform var(--us-motion-fast) var(--us-ease-standard),box-shadow var(--us-motion-fast) var(--us-ease-standard)!important
+}
+#moments .moment-card.moment-postit:nth-child(2n){transform:rotate(.20deg)!important}
+#moments .moment-card.moment-postit:nth-child(3n){transform:rotate(-.08deg)!important}
+#moments .moment-card.moment-postit:active{
+  transform:rotate(0) scale(.985)!important;
+  box-shadow:0 7px 18px rgba(0,0,0,.18)!important
+}
+#moments .moment-card.moment-postit img{
+  aspect-ratio:4/5!important;border-radius:3px 8px 4px 8px!important;
+  background:#d6d0c5!important
+}
+#moments .moment-card.moment-postit:nth-child(4n+2) img{aspect-ratio:1/1!important}
+#moments .moment-card.moment-postit:nth-child(4n+4) img{aspect-ratio:5/4!important}
+#moments .moment-card.moment-postit .moment-meta{
+  padding:10px 5px 1px!important;min-height:62px!important
+}
+#moments .moment-card.moment-postit .moment-meta b{
+  color:#292722!important;font-family:Georgia,serif!important;
+  font-size:12px!important;font-weight:600!important;letter-spacing:-.1px
+}
+#moments .moment-card.moment-postit .moment-meta p{
+  color:#625d54!important;font-size:10px!important;
+  line-height:1.42!important;margin-top:5px!important
+}
+#moments .moment-card.moment-postit .moment-by{
+  color:#8a8275!important;font-size:8px!important;letter-spacing:.09em!important
+}
+
+/* Replace prototype-looking delete X with discreet overflow control */
+#moments .moment-card.moment-postit .moment-delete{
+  top:1px;right:4px;
+  width:44px;height:44px;min-width:44px;min-height:44px;
+  border:0;border-radius:0;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;
+  font-size:0;box-shadow:none
+}
+.us-overflow-icon{
+  width:34px;height:28px;border-radius:999px;display:grid;place-items:center;
+  border:1px solid rgba(255,255,255,.16);background:rgba(7,9,13,.58);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:0 5px 15px rgba(0,0,0,.16);pointer-events:none
+}
+.us-overflow-icon svg{
+  width:18px;height:6px;fill:#fff
+}
+#moments .moment-album-count{
+  top:10px!important;right:10px!important;bottom:auto!important;
+  min-height:26px!important;padding:5px 9px!important;
+  background:rgba(7,9,13,.62)!important;border-color:rgba(255,255,255,.14)!important;
+  font-size:8px!important;letter-spacing:.05em!important
+}
+#moments .moment-card.has-album .moment-album-count{right:10px!important}
+
+/* Album shell */
+.us-album-overlay{
+  background:var(--us-color-bg)!important;
+  opacity:0;transition:opacity var(--us-motion-fast) var(--us-ease-standard)
+}
+.us-album-overlay.show{opacity:1}
+.us-album-shell{
+  background:
+    radial-gradient(circle at 86% 0%,rgba(169,133,255,.08),transparent 27%),
+    radial-gradient(circle at 8% 18%,rgba(255,102,142,.055),transparent 31%),
+    var(--us-color-bg)!important
+}
+.us-album-overlay.show .us-album-shell{animation:usAlbumVisualIn var(--us-motion-base) var(--us-ease-standard)}
+.us-album-overlay[data-us-motion-surface] .us-album-shell{animation:none!important}
+@keyframes usAlbumVisualIn{from{transform:translateY(14px);opacity:.68}to{transform:none;opacity:1}}
+
+
+/* Hero uses the same photo blurred behind the intact image */
+.us-album-cover-stage{
+  position:relative!important;isolation:isolate;overflow:hidden!important;
+  height:min(58vh,600px)!important;min-height:390px!important;
+  padding:0!important;background:var(--us-color-bg)!important;
+  align-items:center!important;
+  border-bottom:0!important
+}
+.us-album-cover-blur{
+  position:absolute;z-index:-2;inset:-35px;
+  background-size:cover;background-position:center;
+  filter:blur(28px) saturate(.82);opacity:.52;transform:scale(1.08)
+}
+.us-album-cover-stage::after{
+  content:"";position:absolute;z-index:-1;inset:0;
+  background:
+    linear-gradient(180deg,rgba(5,7,10,.20),rgba(5,7,10,.02) 48%,rgba(5,7,10,.58) 100%),
+    rgba(8,10,14,.12)
+}
+.us-album-cover-stage img{
+  position:relative;z-index:1;
+  width:100%!important;height:100%!important;min-height:0!important;
+  object-fit:contain!important;object-position:center center!important;
+  background:transparent!important;padding:0 8px
+}
+
+/* Metadata floats into the hero instead of forming another block */
+.us-album-info{
+  position:relative;z-index:3;margin-top:-34px!important;
+  padding:0 17px 4px!important
+}
+.us-album-meta-line{
+  width:max-content;max-width:100%;
+  min-height:32px;margin:0 4px 14px!important;padding:7px 11px!important;
+  display:flex!important;gap:10px!important;
+  background:rgba(12,14,19,.65);
+  border:1px solid rgba(255,255,255,.10);border-radius:999px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  color:var(--us-color-text-2)!important;font-size:var(--us-text-meta)!important;
+  box-shadow:0 8px 20px rgba(0,0,0,.18)
+}
+.us-album-meta-line b{font-size:var(--us-text-meta)!important;color:var(--us-color-text)!important}
+
+/* Main note becomes an actual warm post-it */
+.us-album-caption-postit{
+  max-width:92%;margin:0 auto 30px!important;padding:18px 18px 16px!important;
+  border-radius:3px 13px 5px 11px!important;
+  background:
+    linear-gradient(155deg,rgba(255,255,255,.22),transparent 35%),
+    #eee9de!important;
+  border:0!important;
+  box-shadow:0 14px 34px rgba(0,0,0,.23)!important;
+  transform:rotate(-.28deg)!important
+}
+.us-album-caption-postit p{
+  color:#292722!important;font-family:Georgia,serif;
+  font-size:14px!important;line-height:1.5!important
+}
+.us-album-caption-postit small{
+  color:#766f65!important;font-size:var(--us-text-meta)!important;text-transform:uppercase;
+  letter-spacing:.07em
+}
+
+/* Album content */
+.us-album-section{padding:2px 17px 18px!important}
+.us-album-section-head{
+  align-items:center!important;margin:0 2px 15px!important
+}
+.us-album-section-head h3{
+  font-family:Georgia,serif;font-size:21px!important;font-weight:500;
+  letter-spacing:-.35px;margin-top:4px!important
+}
+.us-album-section-head .us-album-add{display:none!important}
+
+/* Editorial sequence: one wide photo, then a pair, repeated */
+.us-album-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:15px 11px!important;padding:2px 0 10px!important
+}
+.us-album-photo-card{
+  padding:6px 6px 10px!important;
+  border-radius:4px 11px 6px 10px!important;
+  background:#eee9de!important;
+  border:0!important;
+  box-shadow:0 13px 31px rgba(0,0,0,.22)!important;
+  transform:rotate(-.14deg)!important
+}
+.us-album-photo-card:nth-of-type(2n){transform:rotate(.16deg)!important}
+.us-album-photo-card:nth-of-type(3n+1){grid-column:1/-1}
+.us-album-photo-card img{
+  aspect-ratio:1/1.05!important;border-radius:3px 8px 4px 8px!important;
+  background:#cbc6bc!important
+}
+.us-album-photo-card:nth-of-type(3n+1) img{aspect-ratio:16/10!important}
+.us-album-photo-copy{padding:9px 5px 1px!important}
+.us-album-photo-copy p{
+  color:#3a3731!important;font-family:Georgia,serif;
+  font-size:var(--us-text-secondary)!important;line-height:1.45!important
+}
+.us-album-photo-copy small{
+  color:#80786c!important;font-size:var(--us-text-meta)!important;letter-spacing:.07em!important;
+  display:flex!important;align-items:center;gap:6px
+}
+.us-author-initial{
+  width:18px;height:18px;border-radius:50%;display:inline-grid;place-items:center;
+  background:var(--us-color-elevated);color:var(--us-color-text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;
+  font-size:8px;font-weight:800;letter-spacing:0;flex:0 0 auto
+}
+/* Integrated "add another piece" card */
+.us-album-add-tile{
+  width:100%;min-height:92px;margin:7px 0 4px;padding:16px;
+  display:flex;align-items:center;justify-content:center;gap:11px;
+  border-radius:20px;
+  border:1px dashed rgba(255,255,255,.14);
+  background:rgba(255,255,255,.025);color:var(--us-color-text);
+  font-size:11px;font-weight:720
+}
+.us-album-add-tile>span{
+  width:33px;height:33px;border-radius:12px;display:grid;place-items:center;
+  background:rgba(255,255,255,.065);color:var(--us-color-text);font-size:19px;font-weight:400
+}
+.us-album-add-tile:active{background:rgba(255,255,255,.055)}
+
+/* Album composer feels like a note being added, not a generic form */
+.us-album-composer{
+  padding:9px!important;border-radius:19px!important;
+  background:var(--us-color-surface)!important;border-color:rgba(255,255,255,.08)!important
+}
+.us-album-composer-preview{height:260px!important;border-radius:13px!important}
+.us-album-save{background:linear-gradient(135deg,var(--us-color-rose),var(--us-color-violet))!important}
+
+/* Fullscreen gallery polish */
+.us-album-lightbox{background:var(--us-color-bg)!important}
+.us-album-lightbox-count{
+  left:50%!important;transform:translateX(-50%);
+  top:calc(var(--us-safe-top) + 24px)!important;
+  color:rgba(255,255,255,.72)!important
+}
+.us-album-lightbox-info{
+  padding-top:62px!important;
+  background:linear-gradient(transparent,rgba(0,0,0,.84))!important
+}
+.us-album-lightbox-info b{font-size:var(--us-text-meta)!important}
+.us-album-lightbox-info p{
+  font-family:Georgia,serif;font-size:13px!important;line-height:1.5!important
+}
+
+@media(max-width:360px){
+  .us-moments-head{margin-bottom:16px}
+  .us-moments-head h2{font-size:var(--us-type-page)!important}
+  #moments .moment-grid{gap:13px 9px!important}
+  .us-album-cover-stage{min-height:350px!important;height:55vh!important}
+  .us-album-caption-postit{max-width:95%}
+}
+@media(orientation:landscape) and (max-height:560px){
+  .us-album-cover-stage{height:75vh!important;min-height:310px!important}
+  .us-album-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .us-album-photo-card:nth-of-type(3n+1){grid-column:auto}
+  .us-album-photo-card:nth-of-type(4n+1){grid-column:span 2}
+}
+@media(prefers-reduced-motion:reduce){.us-moment-compose-sheet,.us-album-overlay.show .us-album-shell{animation:none!important}.us-album-lightbox,.us-album-lightbox-stage,.us-album-lightbox-photo{transform:none!important;transition:opacity 100ms linear!important}}
+/* ============================================================
+   US · Moments Consistency Fix
+   ============================================================ */
+
+/* Feed cards: every cover uses the same photographic frame. */
+#moments .moment-grid{
+  align-items:stretch!important;
+}
+#moments .moment-card.moment-postit{
+  display:flex!important;
+  flex-direction:column!important;
+  height:100%!important;
+}
+#moments .moment-card.moment-postit img,
+#moments .moment-card.moment-postit:nth-child(4n+2) img,
+#moments .moment-card.moment-postit:nth-child(4n+4) img{
+  width:100%!important;
+  aspect-ratio:4/5!important;
+  object-fit:cover!important;
+  object-position:center!important;
+}
+#moments .moment-card.moment-postit .moment-meta{
+  min-height:82px!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+#moments .moment-card.moment-postit .moment-meta p{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+}
+#moments .moment-card.moment-postit .moment-album-count{
+  margin-top:auto;
+}
+
+/* Open album: same stage geometry for portrait, square and landscape covers. */
+.us-album-cover-stage{
+  position:relative!important;
+  height:min(55dvh,560px)!important;
+  min-height:360px!important;
+  max-height:560px!important;
+  display:grid!important;
+  place-items:center!important;
+  overflow:hidden!important;
+  padding-top:0!important;
+  background:var(--us-color-bg)!important;
+}
+.us-album-cover-stage img#usAlbumCover{
+  position:relative!important;
+  z-index:2!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  cursor:pointer;
+}
+.us-album-cover-stage .us-album-cover-blur{
+  position:absolute!important;
+  inset:-22px!important;
+  width:calc(100% + 44px)!important;
+  height:calc(100% + 44px)!important;
+  object-fit:cover!important;
+  filter:blur(24px) brightness(.48) saturate(.8)!important;
+  opacity:.56!important;
+  transform:scale(1.04)!important;
+  z-index:0!important;
+}
+
+/* Every secondary card has the same visual rhythm. */
+.us-album-photo-card{
+  display:flex!important;
+  flex-direction:column!important;
+  height:100%!important;
+}
+.us-album-photo-card img{
+  aspect-ratio:4/5!important;
+  object-fit:cover!important;
+}
+.us-album-photo-copy{
+  min-height:58px!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+.us-album-photo-copy small{
+  margin-top:auto!important;
+}
+
+/* Always-accessible add action, even when the album only has its cover. */
+.us-album-floating-add{
+  position:fixed;
+  z-index:12;
+  right:max(14px,calc((100vw - min(520px,100vw))/2 + 14px));
+  bottom:calc(var(--us-safe-bottom) + 18px);
+  min-height:46px;
+  padding:9px 13px 9px 10px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#f5f3ef;
+  background:rgba(17,19,26,.88);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 13px 34px rgba(0,0,0,.34);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+}
+.us-album-floating-add>span{
+  width:29px;height:29px;border-radius:50%;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,rgba(232,138,162,.18),rgba(143,134,200,.18));
+  color:#f5f3ef;font-size:18px;font-weight:400;
+}
+.us-album-floating-add>span .us-icon,.us-album-add-tile>span .us-icon{--us-icon-size:16px}
+.us-album-floating-add b{font-size:var(--us-text-meta);font-weight:720}
+.us-album-overlay:not(.show) .us-album-floating-add{display:none!important}
+body.us-keyboard-open .us-album-floating-add,
+.us-album-overlay:has(.us-album-composer:not([hidden])) .us-album-floating-add{
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+/* Empty album still visually invites an addition. */
+.us-album-empty{
+  min-height:118px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:24px 18px!important;
+}
+
+@media(max-width:360px){
+  .us-album-cover-stage{height:min(52dvh,500px)!important;min-height:320px!important}
+  .us-album-floating-add b{display:none}
+  .us-album-floating-add{padding:8px}
+}
+
+/* M5J · Conservati, inside the existing Ricordi experience. */
+.us-conservati-entry{
+  width:100%;min-height:72px;margin:0 0 14px;padding:12px 14px;
+  display:flex;align-items:center;gap:12px;text-align:left;
+  border:1px solid rgba(255,255,255,.10);border-radius:19px;
+  background:linear-gradient(120deg,rgba(246,111,158,.10),rgba(139,114,248,.09));
+  color:var(--us-text);box-shadow:0 9px 24px rgba(0,0,0,.16)
+}
+.us-conservati-entry:active{transform:scale(.99)}
+.us-conservati-entry-mark{width:38px;height:38px;flex:0 0 auto;display:grid;place-items:center;border-radius:14px;background:rgba(255,255,255,.08);font-size:20px;color:#f2a6c7}
+.us-conservati-entry-copy{min-width:0;display:grid;gap:4px;flex:1}
+.us-conservati-entry-copy b{font:500 17px/1.1 var(--us-font-editorial);color:var(--us-color-text)}
+.us-conservati-entry-copy small{color:rgba(247,242,248,.62);font-size:11px;line-height:1.35}
+.us-conservati-entry-chevron{color:rgba(247,242,248,.52);display:grid;--us-icon-size:18px}
+
+.conservati-overlay{position:fixed;inset:0;z-index:10130;display:none;align-items:flex-end;justify-content:center;padding-top:var(--us-safe-top)}
+.conservati-overlay.show{display:flex}
+.conservati-backdrop{position:absolute;inset:0}
+.conservati-sheet{position:relative;z-index:1;width:min(520px,100%);max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top));overflow:auto;overscroll-behavior:contain;padding:0 0 calc(18px + var(--us-safe-bottom));color:var(--us-text)}
+.conservati-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 19px 13px;background:var(--us-sheet-head-bg);-webkit-backdrop-filter:var(--us-sheet-head-blur);backdrop-filter:var(--us-sheet-head-blur);border-bottom:1px solid var(--us-color-line)}
+.conservati-head h2{margin:3px 0 4px;font:400 27px/1 var(--us-font-editorial);letter-spacing:-.02em}
+.conservati-head small{display:block;max-width:310px;color:rgba(247,242,248,.63);font-size:11px;line-height:1.4}
+.conservati-body{padding:12px 18px 0}
+.conservati-loading,.conservati-empty,.conservati-error{padding:34px 12px 40px;text-align:center;color:var(--us-muted)}
+.conservati-loading p{margin:0;font-size:12px}
+.conservati-empty h3,.conservati-error h3{margin:0 0 8px;font:400 23px/1.15 var(--us-font-editorial);color:var(--us-color-text)}
+.conservati-empty p,.conservati-error p{max-width:280px;margin:0 auto;color:rgba(247,242,248,.62);font-size:12px;line-height:1.5}
+.conservati-error button{min-height:44px;margin-top:16px;padding:0 17px;border:1px solid rgba(246,111,158,.24);border-radius:14px;background:rgba(246,111,158,.10);color:var(--us-color-text);font-weight:650}
+.conservati-list{display:grid;gap:9px;padding-bottom:6px}
+.conservati-card{width:100%;min-height:74px;padding:11px 12px;display:flex;align-items:center;gap:11px;text-align:left;border:1px solid rgba(255,255,255,.085);border-radius:17px;background:rgba(255,255,255,.035);color:var(--us-text)}
+.conservati-card:active{background:rgba(255,255,255,.075)}
+.conservati-card-mark{width:36px;height:36px;flex:0 0 auto;display:grid;place-items:center;border-radius:13px;background:rgba(255,255,255,.065);color:#efabc8;--us-icon-size:18px}
+.conservati-card-copy{min-width:0;flex:1;display:grid;gap:3px}
+.conservati-card-copy b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700}
+.conservati-card-copy small{color:rgba(247,242,248,.52);font-size:10px}
+.conservati-card-copy>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(247,242,248,.72);font-size:11px}
+.conservati-card-kind{flex:0 0 auto;color:#c5a8c3;font-size:9px;letter-spacing:.03em}
+.conservati-detail{padding:2px 1px 12px}
+.conservati-back{min-height:44px;padding:0 8px 0 2px;display:flex;align-items:center;gap:6px;border:0;background:transparent;color:#efb1d0;font:600 12px var(--us-font-ui)}
+.conservati-provenance{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:5px 3px 12px;color:rgba(247,242,248,.76);font-size:11px}
+.conservati-provenance time{color:rgba(247,242,248,.5);font-size:10px}
+.conservati-item-content .left-for-you-item{min-height:0;padding:14px 4px;border:0;border-radius:0;background:transparent;box-shadow:none}
+.conservati-item-content .left-for-you-photo,.conservati-item-content .left-for-you-video{max-width:100%;max-height:54dvh}
+.conservati-item-content audio{width:100%}
+.conservati-media-unavailable{margin:18px 0;padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:14px;color:var(--us-muted);font-size:12px;text-align:center}
+.conservati-loading[hidden],.conservati-empty[hidden],.conservati-error[hidden],.conservati-list[hidden],.conservati-detail[hidden]{display:none!important}
+@media(max-width:360px){.conservati-head{padding-inline:15px;background:var(--us-sheet-head-bg);-webkit-backdrop-filter:var(--us-sheet-head-blur);backdrop-filter:var(--us-sheet-head-blur);border-bottom:1px solid var(--us-color-line)}.conservati-body{padding-inline:14px}.conservati-card-kind{max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+@media(prefers-reduced-motion:reduce){.us-conservati-entry:active{transform:none}}
+
+/* ============================================================
+   M8A · Ricordi living archive
+   Dark / plum / liquid glass, fotografia prima di tutto: niente carta
+   beige, niente griglia da file manager. Selettori con #moments
+   .ricordi-story / #usAlbumOverlay per prevalere sui layer legacy
+   (identity.css, M5 photo journal) senza toccarli.
+   ============================================================ */
+#moments .ricordi-kicker{font-size:var(--us-type-eyebrow);font-weight:750;letter-spacing:var(--us-type-eyebrow-tracking);text-transform:uppercase;color:var(--us-color-accent-ink)}
+#moments .ricordi-section-head{margin:26px 2px 12px}
+#moments .ricordi-section-head h3{margin:4px 0 0;font-family:Georgia,serif;font-weight:500;font-size:21px;letter-spacing:-.2px;color:var(--text,var(--us-color-text))}
+#moments .ricordi-rivivi{margin:4px 0 14px}
+#moments .ricordi-rivivi[hidden],#moments .ricordi-chapters[hidden]{display:none}
+#moments .ricordi-rivivi .ricordi-kicker{margin:0 2px 8px}
+#moments .ricordi-rivivi-card{position:relative;display:block;width:100%;padding:0;border:1px solid rgba(255,255,255,.10);border-radius:26px;overflow:hidden;background:#120e18;text-align:left;box-shadow:0 24px 60px rgba(0,0,0,.42),0 0 0 1px rgba(169,133,255,.06) inset;transition:transform var(--us-motion-fast) var(--us-ease-standard)}
+#moments .ricordi-rivivi-card:active{transform:scale(.99)}
+#moments .ricordi-rivivi-card img{display:block;width:100%;aspect-ratio:4/5;max-height:min(46vh,440px);object-fit:cover}
+#moments .ricordi-rivivi-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,6,16,0) 38%,rgba(22,10,30,.55) 64%,rgba(12,7,18,.94) 100%);pointer-events:none}
+#moments .ricordi-rivivi-copy{position:absolute;left:18px;right:18px;bottom:18px;z-index:1;display:flex;flex-direction:column;gap:5px;color:#fff}
+#moments .ricordi-rivivi-copy small{font-size:11px;font-weight:700;letter-spacing:.02em;color:#ffc3d3}
+#moments .ricordi-rivivi-copy b{font-family:Georgia,serif;font-weight:500;font-size:27px;line-height:1.08;letter-spacing:-.4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#moments .ricordi-rivivi-copy span{font-size:11.5px;color:rgba(255,255,255,.66)}
+
+/* La vostra storia: timeline per mese, prima foto del mese a tutta larghezza. */
+#moments .ricordi-story-head{margin-top:24px}
+#moments .moment-grid.ricordi-story{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;align-items:start!important}
+#moments .ricordi-story .ricordi-period{grid-column:1/-1;display:flex;align-items:baseline;gap:8px;margin:14px 2px 0;padding-top:14px;border-top:1px solid rgba(255,255,255,.07)}
+#moments .ricordi-story .ricordi-period:first-child{margin-top:0;padding-top:0;border-top:0}
+#moments .ricordi-story .ricordi-period b{font-family:Georgia,serif;font-weight:500;font-size:19px;color:var(--text,var(--us-color-text))}
+#moments .ricordi-story .ricordi-period span{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted,var(--us-color-text-2))}
+#moments .ricordi-story .moment-card.moment-postit{height:auto!important;padding:0!important;border-radius:20px!important;background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015)),rgba(24,18,32,.88)!important;background-color:rgba(24,18,32,.88)!important;border:1px solid rgba(255,255,255,.09)!important;box-shadow:0 16px 36px rgba(0,0,0,.30)!important;transform:none!important;overflow:hidden!important;color:var(--text,var(--us-color-text))!important}
+#moments .ricordi-story .moment-card.moment-postit img{aspect-ratio:4/5!important;border-radius:0!important;margin:0!important;width:100%!important}
+#moments .ricordi-story .moment-card.moment-postit.ricordi-feature,#moments .ricordi-story .moment-card.moment-postit.ricordi-wide{grid-column:1/-1}
+#moments .ricordi-story .moment-card.moment-postit.ricordi-wide img{aspect-ratio:16/11!important}
+#moments .ricordi-story .moment-card.moment-postit.ricordi-feature img{aspect-ratio:16/11!important}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta{min-height:0!important;padding:10px 12px 13px!important;background:transparent!important}
+#moments .ricordi-story .moment-card.moment-postit .moment-by{font-size:9px!important;font-weight:800!important;letter-spacing:.12em!important;color:#d8c6ff!important;text-transform:uppercase}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta b{font-family:Georgia,serif!important;font-weight:500!important;font-size:15px!important;color:var(--text,var(--us-color-text))!important;margin-top:3px}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta p{color:rgba(246,247,251,.72)!important;font-size:12px!important;margin-top:4px!important}
+#moments .ricordi-story .moment-card.moment-postit.ricordi-feature .moment-meta b{font-size:18px!important}
+#moments .ricordi-story .moment-card.moment-postit .moment-delete{background:transparent!important;border:0!important;box-shadow:none!important}
+#moments .ricordi-story .moment-card .moment-album-count{background:rgba(12,8,18,.6)!important;color:#fff!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#moments .ricordi-story .ricordi-experience{grid-column:1/-1;display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border-radius:20px;border:1px solid rgba(255,142,170,.16);background:radial-gradient(circle at 0% 0%,rgba(255,102,142,.16),transparent 55%),linear-gradient(145deg,rgba(169,133,255,.10),rgba(255,255,255,.02)),rgba(22,16,30,.9);color:var(--text,var(--us-color-text));text-align:left}
+#moments .ricordi-experience-mark{flex:0 0 32px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#ffc3d3;font-size:13px}
+#moments .ricordi-experience-mark::before{content:"";width:15px;height:15px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/heart-straight-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-regular.svg") center/contain no-repeat}
+#moments .ricordi-experience-copy{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+#moments .ricordi-experience-copy small{font-size:10.5px;color:var(--muted,var(--us-color-text-2))}
+#moments .ricordi-experience-copy b{font-family:Georgia,serif;font-weight:500;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#moments .ricordi-experience-source{flex:0 0 auto;font-size:10px;font-style:italic;color:var(--muted,var(--us-color-text-2))}
+/* M12B.4 — Domanda del giorno conservata: stessa famiglia della card esperienza, apribile sul posto. */
+#moments .ricordi-story .ricordi-daily{grid-column:1/-1;width:100%;border-radius:20px;border:1px solid rgba(169,133,255,.18);background:radial-gradient(circle at 0% 0%,rgba(169,133,255,.16),transparent 55%),linear-gradient(145deg,rgba(255,102,142,.08),rgba(255,255,255,.02)),rgba(22,16,30,.9);color:var(--text,var(--us-color-text))}
+#moments .ricordi-daily summary{display:flex;align-items:center;gap:12px;min-height:44px;padding:13px 14px;cursor:pointer;list-style:none;text-align:left}
+#moments .ricordi-daily summary::-webkit-details-marker{display:none}
+#moments .ricordi-daily summary:focus-visible{outline:2px solid var(--us-color-focus,#ffc3d3);outline-offset:-2px;border-radius:20px}
+#moments .ricordi-daily-mark{color:#d8c8ff}
+#moments .ricordi-daily-mark::before{-webkit-mask-image:url("/assets/icons/phosphor/question-regular.svg");mask-image:url("/assets/icons/phosphor/question-regular.svg")}
+#moments .ricordi-daily[open] .ricordi-experience-copy b{white-space:normal}
+#moments .ricordi-daily-answers{display:grid;gap:8px;padding:0 14px 14px}
+#moments .ricordi-daily-answer{padding:11px 12px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08)}
+#moments .ricordi-daily-answer b{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,var(--us-color-text-2))}
+#moments .ricordi-daily-answer p{margin:5px 0 0;white-space:pre-wrap;line-height:1.45;font-size:14px}
+#moments .ricordi-empty b{font-family:Georgia,serif;font-weight:500}
+
+/* Capitoli: raccolte secondarie, una riga orizzontale discreta. */
+#moments .ricordi-chapters .ricordi-section-head{margin-top:30px}
+#moments .ricordi-chapter-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 6px;scrollbar-width:none;overscroll-behavior-x:contain}
+#moments .ricordi-chapter-row::-webkit-scrollbar{display:none}
+#moments .ricordi-chapter{position:relative;flex:0 0 156px;height:172px;padding:0;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.10);background:linear-gradient(160deg,rgba(169,133,255,.20),rgba(255,102,142,.10)),#15101d;scroll-snap-align:start;text-align:left;color:#fff}
+#moments .ricordi-chapter img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.78}
+#moments .ricordi-chapter::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(12,7,18,.9));pointer-events:none}
+#moments .ricordi-chapter span{position:absolute;z-index:1;left:12px;right:12px;bottom:11px;display:flex;flex-direction:column;gap:2px}
+#moments .ricordi-chapter b{font-family:Georgia,serif;font-weight:500;font-size:24px}
+#moments .ricordi-chapter small{font-size:10.5px;color:rgba(255,255,255,.72)}
+@media(min-width:720px){#moments .ricordi-rivivi-card img{aspect-ratio:16/10}}
+
+/* M12B.5 · Rivivi source-aware: una voce senza foto (esperienza Da vivere,
+   Evento vissuto, Domanda conservata) nello stesso vetro di Rivivi, aperta sul
+   posto in sola lettura. Icone Phosphor già nella shell. */
+#moments .ricordi-rivivi-card.ricordi-rivivi-note{background:radial-gradient(circle at 0% 0%,rgba(255,102,142,.18),transparent 58%),radial-gradient(circle at 100% 100%,rgba(169,133,255,.18),transparent 60%),rgba(22,16,30,.94);color:var(--text,var(--us-color-text))}
+#moments .ricordi-rivivi-note::after{display:none}
+#moments .ricordi-rivivi-note:active{transform:none}
+#moments .ricordi-rivivi-note summary{display:flex;align-items:flex-start;gap:14px;min-height:44px;padding:20px 18px;cursor:pointer;list-style:none}
+#moments .ricordi-rivivi-note summary::-webkit-details-marker{display:none}
+#moments .ricordi-rivivi-note summary:focus-visible{outline:2px solid var(--us-color-focus,#ffc3d3);outline-offset:-2px;border-radius:26px}
+#moments .ricordi-rivivi-mark{flex:0 0 40px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#ffc3d3}
+#moments .ricordi-rivivi-mark::before{content:"";width:18px;height:18px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/heart-straight-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-regular.svg") center/contain no-repeat}
+#moments .ricordi-rivivi-mark-event::before,#moments .ricordi-event-mark::before{-webkit-mask-image:url("/assets/icons/phosphor/calendar-heart-regular.svg");mask-image:url("/assets/icons/phosphor/calendar-heart-regular.svg")}
+#moments .ricordi-rivivi-mark-daily{color:#d8c8ff}
+#moments .ricordi-rivivi-mark-daily::before{-webkit-mask-image:url("/assets/icons/phosphor/question-regular.svg");mask-image:url("/assets/icons/phosphor/question-regular.svg")}
+#moments .ricordi-rivivi-text{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px}
+#moments .ricordi-rivivi-text small{font-size:11px;font-weight:700;letter-spacing:.02em;color:#ffc3d3}
+#moments .ricordi-rivivi-text b{font-family:Georgia,serif;font-weight:500;font-size:24px;line-height:1.12;letter-spacing:-.3px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+#moments .ricordi-rivivi-note[open] .ricordi-rivivi-text b{display:block;-webkit-line-clamp:unset}
+#moments .ricordi-rivivi-text span{font-size:11.5px;color:var(--muted,var(--us-color-text-2))}
+#moments .ricordi-rivivi-body{padding:0 18px 18px}
+#moments .ricordi-rivivi-body .ricordi-daily-answers{padding:0}
+#moments .ricordi-rivivi-detail{margin:0;font-size:13.5px;line-height:1.45;color:var(--muted,var(--us-color-text-2))}
+#moments .ricordi-rivivi-link{margin-top:12px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--text,var(--us-color-text));font:inherit;font-size:13px;font-weight:600}
+#moments .ricordi-story .ricordi-event{border-color:rgba(169,133,255,.18)}
+#moments .ricordi-moment-source{display:block;margin-top:3px;font-size:10.5px;color:var(--muted,var(--us-color-text-2));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Moment detail immersivo. */
+#usAlbumOverlay .us-album-story{padding:18px 22px 22px}
+#usAlbumOverlay .us-album-provenance{display:block;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#d8c6ff}
+#usAlbumOverlay .us-album-title{margin:6px 0 0;font-family:Georgia,serif;font-weight:500;font-size:29px;line-height:1.1;letter-spacing:-.5px;color:#fff}
+#usAlbumOverlay .us-album-byline{margin:8px 0 0;font-size:12.5px;color:rgba(246,247,251,.66)}
+#usAlbumOverlay .us-album-caption-postit{display:none!important}
+#usAlbumOverlay .us-album-meta-line{opacity:.9}
+#usAlbumOverlay .us-album-photo-card{background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015)),rgba(24,18,32,.9)!important;background-color:rgba(24,18,32,.9)!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:18px!important;padding:0!important;overflow:hidden!important;transform:none!important;color:var(--text,var(--us-color-text))!important}
+#usAlbumOverlay .us-album-photo-card img{border-radius:0!important;margin:0!important}
+#usAlbumOverlay .us-album-photo-copy{padding:9px 11px 11px!important}
+#usAlbumOverlay .us-album-photo-copy p{color:rgba(246,247,251,.8)!important}
+#usAlbumOverlay .us-album-photo-copy small{color:var(--muted,var(--us-color-text-2))!important}
+
+/* M12A — a newly created Ricordo settles in and catches the light once (.ricordi-new
+   is added by UsUiFoundation.playOnce and removed when it has played). Independent
+   translate/scale keep the card's own rotation and transitions untouched. */
+#moments .moment-card.ricordi-new{animation:ricordi-settle 420ms var(--us-ease-enter) 1 both}
+#moments .moment-card.ricordi-new::after{content:"";position:absolute;inset:0;z-index:2;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(255,244,250,.55) 50%,transparent 65%);background-size:260% 100%;background-position:130% 0;animation:ricordi-light-catch 900ms 240ms var(--us-ease-standard) 1 both}
+@keyframes ricordi-settle{from{opacity:0;translate:0 12px;scale:.97}to{opacity:1;translate:0 0;scale:1}}
+@keyframes ricordi-light-catch{0%{background-position:130% 0;opacity:1}80%{opacity:1}100%{background-position:-30% 0;opacity:0}}
+@media(prefers-reduced-motion:reduce){#moments .moment-card.ricordi-new,#moments .moment-card.ricordi-new::after{animation:none}}
+:root[data-us-motion="reduced"] #moments .moment-card.ricordi-new,:root[data-us-motion="reduced"] #moments .moment-card.ricordi-new::after{animation:none}
+@media(prefers-reduced-motion:reduce){#moments .ricordi-rivivi-card:active{transform:none}}
+
+
+/* ===== US-RICORDI-DENSITY-01 · show more memories, less chrome =====
+   Presentation only. Archive semantics, upload flow and source truth stay unchanged. */
+
+/* Header: one compact line after top chrome. */
+#moments .us-moments-head{
+  align-items:center;
+  gap:12px;
+  margin:0 2px 12px;
+}
+#moments .us-moments-head h2{
+  margin:0!important;
+  font-size:30px!important;
+  line-height:.98!important;
+}
+#moments .us-moments-head-actions{gap:7px}
+#moments .us-moments-total{
+  font-size:10.5px;
+  font-weight:700;
+  color:var(--us-color-text-3);
+}
+#moments .us-moments-add{
+  width:44px;height:44px;
+  box-shadow:none;
+  background:rgba(255,255,255,.055);
+  border-color:rgba(255,255,255,.09);
+}
+
+/* Rivivi: compact editorial resurfacing instead of another hero. */
+#moments .ricordi-rivivi{
+  margin:0 0 10px;
+}
+#moments .ricordi-rivivi .ricordi-kicker{
+  margin:0 2px 6px;
+  font-size:10px;
+}
+#moments .ricordi-rivivi-card{
+  border-radius:20px;
+  box-shadow:0 12px 28px rgba(0,0,0,.22),0 0 0 1px rgba(169,133,255,.045) inset;
+}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note){
+  display:grid;
+  grid-template-columns:108px minmax(0,1fr);
+  min-height:96px;
+  background:linear-gradient(145deg,rgba(255,102,142,.055),rgba(169,133,255,.065)),rgba(19,14,27,.92);
+}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note)::after{display:none}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) img{
+  width:108px;height:100%;
+  min-height:96px;
+  aspect-ratio:auto;
+  max-height:none;
+  object-fit:cover;
+}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy{
+  position:static;
+  align-self:center;
+  padding:12px 14px;
+  gap:3px;
+}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy small{font-size:10px}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy b{
+  font-size:20px;
+  line-height:1.06;
+  -webkit-line-clamp:2;
+}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy span{
+  font-size:10.5px;
+  line-height:1.2;
+}
+
+/* Text-only Rivivi uses the same compact rhythm. */
+#moments .ricordi-rivivi-note summary{
+  align-items:center;
+  gap:11px;
+  padding:12px 13px;
+}
+#moments .ricordi-rivivi-mark{
+  width:34px;height:34px;
+  flex-basis:34px;
+}
+#moments .ricordi-rivivi-mark::before{width:16px;height:16px}
+#moments .ricordi-rivivi-text{gap:3px}
+#moments .ricordi-rivivi-text small{font-size:10px}
+#moments .ricordi-rivivi-text b{
+  font-size:20px;
+  line-height:1.08;
+  -webkit-line-clamp:2;
+}
+#moments .ricordi-rivivi-text span{font-size:10.5px}
+#moments .ricordi-rivivi-body{padding:0 13px 13px}
+
+/* Conservati is a destination row, not a feature hero. */
+#moments .us-conservati-entry{
+  min-height:54px;
+  margin:0 0 14px;
+  padding:7px 11px;
+  gap:10px;
+  border-radius:17px;
+  background:rgba(255,255,255,.028);
+  border-color:rgba(255,255,255,.075);
+  box-shadow:none;
+}
+#moments .us-conservati-entry-mark{
+  width:32px;height:32px;
+  border-radius:11px;
+  font-size:17px;
+  background:rgba(255,137,172,.075);
+}
+#moments .us-conservati-entry-copy{gap:1px}
+#moments .us-conservati-entry-copy b{
+  font:600 15px/1.1 var(--us-font-ui);
+}
+#moments .us-conservati-entry-chevron{--us-icon-size:16px}
+
+/* Section hierarchy: label small, month is the title. */
+#moments .ricordi-section-head{
+  margin:16px 2px 7px;
+}
+#moments .ricordi-story-head{
+  margin-top:16px;
+}
+#moments .ricordi-story-head h3{
+  margin:0;
+  font-family:var(--us-font-ui)!important;
+  font-size:10px!important;
+  font-weight:750!important;
+  letter-spacing:.13em!important;
+  text-transform:uppercase;
+  color:var(--us-color-text-3)!important;
+}
+#moments .ricordi-story .ricordi-period{
+  gap:7px;
+  margin:9px 2px 0;
+  padding-top:9px;
+}
+#moments .ricordi-story .ricordi-period b{
+  font-size:18px;
+  line-height:1.05;
+}
+#moments .ricordi-story .ricordi-period span{
+  font-size:10px;
+}
+
+/* More photographic density: keep one feature per month, but stop it eating a screen. */
+#moments .moment-grid.ricordi-story{
+  gap:10px!important;
+}
+#moments .ricordi-story .moment-card.moment-postit{
+  border-radius:17px!important;
+  box-shadow:0 10px 24px rgba(0,0,0,.22)!important;
+}
+#moments .ricordi-story .moment-card.moment-postit.ricordi-feature img{
+  aspect-ratio:16/9!important;
+}
+#moments .ricordi-story .moment-card.moment-postit.ricordi-wide img{
+  aspect-ratio:16/10!important;
+}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta{
+  padding:8px 10px 10px!important;
+}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta b{
+  font-size:13.5px!important;
+  margin-top:2px;
+}
+#moments .ricordi-story .moment-card.moment-postit.ricordi-feature .moment-meta b{
+  font-size:15px!important;
+}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta p{
+  font-size:11px!important;
+  line-height:1.3!important;
+  margin-top:3px!important;
+}
+#moments .ricordi-story .moment-card.moment-postit .moment-by{
+  font-size:8.5px!important;
+}
+
+/* On Ricordi the photos are the content: Ti penso does not float over them. */
+body:has(#moments.page.active) #thinkButton{
+  display:none!important;
+}
+
+@media(max-height:700px){
+  #moments .us-moments-head{margin-bottom:9px}
+  #moments .ricordi-rivivi-card:not(.ricordi-rivivi-note){
+    grid-template-columns:92px minmax(0,1fr);
+    min-height:86px;
+  }
+  #moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) img{
+    width:92px;min-height:86px;
+  }
+  #moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy{
+    padding:10px 12px;
+  }
+  #moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy b,
+  #moments .ricordi-rivivi-text b{font-size:18px}
+}
+
+
+/* ===== US-SECONDARY-SURFACES-01 · Conservati + album utility density ===== */
+.conservati-head{padding:14px 16px 10px}
+.conservati-head h2{margin:2px 0 3px;font-size:23px}
+.conservati-head small{font-size:10.5px}
+.conservati-body{padding:9px 14px 0}
+.conservati-loading,.conservati-empty,.conservati-error{padding:26px 10px 30px}
+.conservati-list{gap:7px}
+.conservati-card{
+  min-height:60px;
+  padding:8px 9px;
+  gap:9px;
+  border-radius:15px;
+}
+.conservati-card-mark{width:32px;height:32px;border-radius:11px;--us-icon-size:16px}
+.conservati-card-copy{gap:2px}
+.conservati-card-copy b{font-size:11.5px}
+.conservati-card-copy small{font-size:9.5px}
+.conservati-card-copy>span{font-size:10.5px}
+.conservati-provenance{margin:3px 2px 9px}
+#usAlbumOverlay .us-album-section{padding-left:14px;padding-right:14px}
+#usAlbumOverlay .us-album-section-head{margin-bottom:8px}
+#usAlbumOverlay .us-album-section-head h3{font-size:18px}
+
+/* ===== Ricordi · Elimina → Eliminato · Annulla =====
+   One 44px pill that grows in place (112 → 206px). Nothing is deleted while
+   the fuse burns; Annulla only cancels the timer. No modal, no success toast. */
+.us-undo-delete{position:relative;display:inline-flex;align-items:center;flex:0 0 auto;width:112px;height:44px;margin-top:14px;border-radius:22px;overflow:hidden;isolation:isolate;
+  border:1px solid color-mix(in srgb,var(--us-color-danger) 38%,rgba(255,255,255,.1));
+  background:color-mix(in srgb,var(--us-color-danger) 13%,rgba(255,255,255,.03));
+  transition:width 440ms cubic-bezier(.3,1.28,.42,1),background-color 220ms ease,border-color 220ms ease}
+.us-undo-delete[hidden]{display:none!important}
+.us-undo-delete[data-state="done"],.us-undo-delete[data-state="committing"]{width:206px;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.13)}
+.us-undo-delete-go{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;border-radius:inherit;background:transparent;color:var(--us-color-danger-ink);font:650 14px/1 var(--us-font-ui);letter-spacing:.005em;transition:opacity 150ms ease,transform 240ms cubic-bezier(.2,.9,.3,1)}
+.us-undo-delete-go:active{background:color-mix(in srgb,var(--us-color-danger) 10%,transparent)}
+.us-undo-delete-done{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 5px 0 16px;opacity:0;transform:translateX(10px);pointer-events:none;transition:opacity 200ms 70ms ease,transform 280ms 70ms cubic-bezier(.2,.9,.3,1)}
+.us-undo-delete-label{color:var(--us-color-text-2);font:600 13.5px/1 var(--us-font-ui);white-space:nowrap}
+.us-undo-delete-undo{height:34px;padding:0 15px;border:0;border-radius:17px;background:var(--us-color-text);color:#150f19;font:700 13px/1 var(--us-font-ui);white-space:nowrap}
+.us-undo-delete-undo:active{transform:scale(.96)}
+.us-undo-delete-undo:disabled{opacity:.45}
+.us-undo-delete:is([data-state="done"],[data-state="committing"]) .us-undo-delete-go{opacity:0;transform:translateX(-12px);pointer-events:none}
+.us-undo-delete:is([data-state="done"],[data-state="committing"]) .us-undo-delete-done{opacity:1;transform:none;pointer-events:auto}
+.us-undo-delete-fuse{position:absolute;left:16px;right:98px;bottom:9px;height:2px;border-radius:2px;background:color-mix(in srgb,var(--us-color-danger-ink) 70%,transparent);transform-origin:left center;transform:scaleX(0);opacity:0}
+.us-undo-delete[data-state="done"] .us-undo-delete-fuse{opacity:1;animation:us-undo-fuse var(--us-undo-grace,4000ms) linear forwards}
+.us-undo-delete[data-state="committing"] .us-undo-delete-fuse{opacity:0}
+@keyframes us-undo-fuse{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+#momentsGrid .moment-card.is-pending-delete{display:none!important}
+#usAlbumOverlay .us-album-cover-stage img{transition:opacity 260ms ease,filter 260ms ease}
+#usAlbumOverlay.is-pending-delete .us-album-cover-stage img{opacity:.3;filter:grayscale(.7)}
+#usAlbumOverlay.is-pending-delete :is(.us-album-add,.us-album-floating-add,.us-album-section){opacity:.35;pointer-events:none}
+@media(prefers-reduced-motion:reduce){
+  .us-undo-delete,.us-undo-delete-go,.us-undo-delete-done,#usAlbumOverlay .us-album-cover-stage img{transition:none!important}
+}

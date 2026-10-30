@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- App icon reward (Premi Sintonia V2, 29/10/2026), used by the launcher entry .LauncherGold. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/us_launcher_bg_gold"/>
+    <foreground android:drawable="@drawable/us_launcher_fg_gold"/>
+</adaptive-icon>

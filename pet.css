@@ -3,7 +3,7 @@
    bottom bar, its feet 4 px over the bar's top edge, 54 × 48. It never walks
    and is never carried; only its state changes (pet.js). The layer stays
    pointer-transparent; only the hit target on the cat takes a tap. */
-.us-pet-layer{position:fixed;z-index:var(--us-layer-ambient);right:calc((100% - min(456px,calc(100% - 24px))) / 2 + 10px);bottom:calc(max(12px,var(--us-safe-bottom)) + 66px);width:54px;height:48px;pointer-events:none;transition:opacity .3s,translate .45s var(--us-ease-standard)}
+.us-pet-layer{position:fixed;z-index:var(--us-layer-ambient);right:calc((100% - min(456px,calc(100% - 24px))) / 2 + 10px);bottom:calc(max(12px,var(--us-safe-bottom)) + var(--us-nav-height) - 4px);width:54px;height:48px;pointer-events:none;transition:opacity .3s,translate .45s var(--us-ease-standard)}
 .us-pet-layer[hidden]{display:none!important}
 .us-pet-layer,.us-pet-layer *{pointer-events:none!important;user-select:none;-webkit-user-select:none}
 .us-pet-actor{position:absolute;inset:0;display:block;touch-action:manipulation}
@@ -34,6 +34,9 @@ body:has(#thinkArrival.open) .us-pet-layer{opacity:0;visibility:hidden;transitio
    The dragon flies its loop with the wings beating (pet.js, Web Animations). */
 .us-pet-rig{position:absolute;left:50%;bottom:0;height:48px;translate:-50% 0;display:block}
 .us-pet-rig img,.us-pet-rig svg{position:absolute;inset:0;width:100%;height:100%;display:block;-webkit-user-drag:none}
+/* Premi Sintonia V2: a companion wearing an accessory is drawn 24 px taller
+   than its 192 px frame (room for a crown): the picture grows upwards. */
+.us-pet-rig img.us-pet-worn{top:auto;bottom:0;height:112.5%}
 .us-pet-awake{position:absolute;inset:0;transform-origin:50% 100%;transition:opacity .18s,rotate .45s var(--us-ease-spring)}
 .us-pet-pose{opacity:0;transition:opacity .18s}
 .us-pet-lids,.us-pet-blink{opacity:0}

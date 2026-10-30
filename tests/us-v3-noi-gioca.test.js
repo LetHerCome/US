@@ -95,9 +95,12 @@ const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate(
 const todayIso = ymd(now);
 
 test('Noi calendar: only the weeks the month spans, today selected, one dot per owner colour, items in time order', async () => {
-  const later = new Date(now.getFullYear(), now.getMonth(), Math.min(now.getDate() + 1, 28), 12);
+  // Another day of this month (tomorrow, or yesterday on the last day): never today.
+  const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const later = new Date(now.getFullYear(), now.getMonth(), now.getDate() < last ? now.getDate() + 1 : now.getDate() - 1, 12);
   const snapshot = {
-    startedOn: `2022-${pad(now.getMonth() + 1)}-${pad(Math.min(now.getDate(), 28))}`,
+    // The anniversary is today, whatever today is (2020 is a leap year: 29 February exists too).
+    startedOn: `2020-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
     events: [{ id: 'e1', title: 'Cena', event_date: todayIso, event_time: '20:30:00' }],
     appointments: [
       { id: 'a2', title: 'Palestra', entry_type: 'personal', owner_id: 'f', is_all_day: false, starts_at: `${todayIso}T18:00:00`, dates: [todayIso] },

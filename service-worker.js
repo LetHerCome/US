@@ -1,4 +1,4 @@
-const BUILD_ID = "us-accesso-google-20261025-40";
+const BUILD_ID = "us-rilascio-20261030-74";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -36,6 +36,7 @@ const APP_SHELL = [
   versioned("/noi-v2.js"),
   versioned("/oggi-look.css"),
   versioned("/oggi-look.js"),
+  versioned("/sky.js"),
   "/assets/third-party/spotify/spotify-full-logo-white.svg",
   versioned("/styles.css"),
   versioned("/ui-foundation.css"),
@@ -47,6 +48,8 @@ const APP_SHELL = [
   versioned("/events.js"),
   versioned("/moments-albums.css"),
   versioned("/moments-albums.js"),
+  versioned("/ricordi-place.css"),
+  versioned("/ricordi-place.js"),
   versioned("/navigation.js"),
   versioned("/games.css"),
   versioned("/games.js"),
@@ -60,6 +63,8 @@ const APP_SHELL = [
   versioned("/companions.js"),
   versioned("/distance.css"),
   versioned("/distance.js"),
+  versioned("/app-update.js"),
+  versioned("/person-colors.js"),
   versioned("/pet.css"),
   versioned("/pet.js"),
   versioned("/settings.css"),
@@ -113,6 +118,7 @@ const APP_SHELL = [
   "/assets/icons/phosphor/arrows-left-right-regular.svg",
   "/assets/icons/phosphor/smiley-regular.svg",
   "/assets/icons/phosphor/eye-regular.svg",
+  "/assets/icons/phosphor/eye-slash-regular.svg",
   "/assets/icons/phosphor/clock-counter-clockwise-regular.svg",
   "/assets/icons/phosphor/signpost-regular.svg",
   "/assets/icons/phosphor/x-regular.svg",
@@ -189,6 +195,7 @@ const APP_DOCUMENTS = new Set(["/", "/index.html"]);
 // Public pages outside the app shell: account deletion and the legal pages.
 const US_STANDALONE_DOCUMENTS = new Set([
   "/elimina-account", "/elimina-account.html",
+  "/invito", "/invito.html",
   "/privacy", "/privacy.html", "/privacy-en", "/privacy-en.html",
   "/termini", "/termini.html", "/termini-en", "/termini-en.html"
 ]);

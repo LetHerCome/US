@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="color-scheme" content="dark"/>
+<meta name="theme-color" content="#0a0a0e"/>
+<meta name="robots" content="noindex"/>
+<meta name="referrer" content="no-referrer"/>
+<title>US · Invito</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png"/>
+<style>
+:root{
+  --bg:#0a0a0e;--surface:#15141b;--line:rgba(255,255,255,.09);
+  --text:#f1efeb;--text-2:#b9b5c0;--text-3:#8d8996;
+  --rose:#ff8fab;--rose-soft:rgba(232,138,162,.10);--ok:#9fe0b4;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:520px;margin:0 auto;padding:max(24px,env(safe-area-inset-top)) 16px max(40px,env(safe-area-inset-bottom))}
+h1{font-size:28px;line-height:1.2;margin:8px 0 4px}
+h2{font-size:19px;margin:0 0 10px}
+p,li{color:var(--text-2)}
+a{color:var(--rose)}
+.kicker{color:var(--text-3);font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:0}
+section{margin-top:18px;padding:18px 16px;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+ol{padding-left:20px;margin:0}
+li+li{margin-top:6px}
+.code{display:block;margin:4px 0 0;padding:14px;border-radius:14px;background:#0f0e14;border:1px solid var(--line);font:600 clamp(14px,4.4vw,19px)/1.4 ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;letter-spacing:.02em;text-align:center;word-break:break-all;user-select:all;-webkit-user-select:all}
+.button{display:flex;align-items:center;justify-content:center;margin-top:14px;width:100%;min-height:50px;border-radius:16px;border:1px solid rgba(232,138,162,.45);background:rgba(232,138,162,.14);color:var(--rose);font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
+.button.quiet{background:transparent;border-color:var(--line);color:var(--text)}
+.button:focus-visible,a:focus-visible{outline:2px solid var(--rose);outline-offset:2px}
+#copyStatus{margin:10px 0 0;min-height:1.5em;color:var(--ok)}
+.notice{border-color:rgba(232,138,162,.35);background:var(--rose-soft);color:var(--text)}
+.small{font-size:14px;color:var(--text-3)}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<script defer src="/invito.js"></script>
+</head>
+<body>
+<main>
+  <p class="kicker">US · Invito</p>
+  <h1>Ti aspettano su US ♡</h1>
+  <p>La tua persona ha creato il vostro spazio privato e ti ha invitato a entrare.</p>
+
+  <section id="inviteReady" aria-labelledby="codeTitle" hidden>
+    <h2 id="codeTitle">Il tuo codice d’invito</h2>
+    <code class="code" id="inviteCode" translate="no"></code>
+    <button type="button" class="button" id="copyCode">Copia codice</button>
+    <p id="copyStatus" role="status" aria-live="polite"></p>
+  </section>
+
+  <section id="inviteSteps" aria-labelledby="stepsTitle" hidden>
+    <h2 id="stepsTitle">Hai US sul telefono?</h2>
+    <ol>
+      <li>Copia il codice qui sopra.</li>
+      <li>Apri US e accedi, oppure crea il tuo account.</li>
+      <li>Scegli <b>Ho un codice d’invito</b> e incolla il codice.</li>
+    </ol>
+    <a class="button quiet" id="openWeb" href="/">Usa US dal browser</a>
+    <a class="button quiet" href="https://play.google.com/store/apps/details?id=com.usapp.us" rel="noopener">Scarica US da Google Play</a>
+  </section>
+
+  <section class="notice" id="inviteMissing" role="alert" hidden>
+    <p>Questo invito non è completo. Chiedi alla tua persona di condividerlo di nuovo da US.</p>
+  </section>
+
+  <p class="small">Il codice vale solo per te e scade dopo poco: se non funziona, chiedine uno nuovo.</p>
+</main>
+</body>
+</html>

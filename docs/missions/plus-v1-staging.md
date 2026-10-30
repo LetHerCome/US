@@ -1,6 +1,6 @@
 # Mission — US Plus V1 su staging
 
-**Status:** DA INIZIARE. Nessun passo è autorizzato per implicazione: ognuno ha il via del founder.
+**Status:** §1 (Gioca una partita al giorno) fatto sul branch `claude/gioca-una-al-giorno`, in prova su staging. Il resto da iniziare. Nessun passo è autorizzato per implicazione: ognuno ha il via del founder.
 **Decisione:** nuova D4 del 28/10/2026 in [`docs/DECISIONS.md`](../DECISIONS.md), più la regola «prove solo su staging» dello stesso giorno.
 **Ricerca:** [`docs/product/lancio-marketing-monetizzazione.md`](../product/lancio-marketing-monetizzazione.md), §3 (Play Billing, RevenueCat, schema dell'accesso) e §4.5 (prova su staging).
 **Dove:** US-STAGING (`com.usapp.us.staging`, Supabase `us-staging-s31`). In produzione arrivano solo patch mirate di ciò che su staging funziona.
@@ -15,12 +15,16 @@
 
 - **Oggi:** `private.game_v2_week_limits()` dà 1 «Per voi» + 2 libere a settimana, con al massimo 3 partite aperte (`supabase/migrations/20261004000000_us_2_0_baseline.sql`). Il controllo è in `start_game_round` (`20261014220000_content_1_0.sql`); la settimana è in Europe/Rome.
 - **Dopo:** una partita al giorno, di qualsiasi tipo, sul giorno di Europe/Rome; 7 a settimana. Restano invariati la ripresa delle partite aperte, il blocco a 3 aperte e i lock. Con Plus, nessun limite (passo 4).
-- **Client:** `games.js` e le scritte che parlano di partite «questa settimana».
-- **Test:** aggiornare `tests/m11f-game-v2-weekly-rhythm.test.js` e quelli che leggono `free_limit`/`per_voi_limit`. Prima il test che fallisce.
+- **Fatto (28/10):** la migrazione `20261028201759_gioca_daily_limit_v1.sql` ridefinisce solo `private.game_v2_week_limits` e `private.game_v2_week_usage`. `start_game_round`, `start_swipe_round` e `get_game_v2_home` leggono già tutto da lì e non cambiano. Il risultato ha le stesse chiavi di prima, più `period: 'day'` e `day`; `resets_on` diventa domani. I messaggi d'errore restano «weekly allowance exhausted» e «weekly per voi played», così l'app già installata continua a capirli.
+- **Client:** `games.js` dice «Da domani», «Nuovi giochi domani», «Per oggi avete giocato» e «Userete il gioco di oggi»; l'inglese è in `i18n-en.js`. «Giocato questa settimana» resta sulle schede dei tipi già giocati nella settimana.
+- **Test:** `tests/gioca-daily-limit-v1-db.test.js` (8, con tutte le migrazioni del repo in PGlite) e i test del client di Gioca aggiornati. `tests/m11f-game-v2-weekly-rhythm.test.js` resta com'è: prova la catena storica `migrations_history`, non la produzione di oggi.
+- **Ordine in produzione:** prima l'SQL, poi l'AAB. Tra i due, l'app vecchia dice ancora «lunedì» per una partita che torna domani: solo le scritte sono sbagliate, i limiti no.
 - **Contenuti (controllati il 28/10 sulle migrazioni):** circa 230 domande curate su 5 tipi di partita (da circa 32 per «Rivivete» a circa 64 per «Quanto mi conosci»), 5 per partita. La selezione non si blocca mai: quando le domande sono a riposo (30–120 giorni) ripropone le meno recenti. Con una partita al giorno sparsa sui tipi, le prime ripetizioni arrivano dopo circa 6 settimane. Con Plus e partite illimitate arrivano prima: i pacchetti a tema servono prima di vendere Plus.
 - **Produzione:** patch mirata solo dopo la prova su staging, con il via del founder (SQL dal workflow «Supabase SQL (manual)» più l'AAB con il client).
 
 ## 2. L'accesso della coppia su Supabase staging
+
+- **Fatto in parte (29/10, per i colori a scelta):** `plus_entitlements` (lettura propria, scrittura solo dal server), `private.couple_has_plus` e `get_couple_plus()` nella migrazione `20261029014653_person_colors_plus_v1.sql`. Restano il webhook di RevenueCat e i suoi test.
 
 - Tabella degli abbonamenti per utente:
   - colonne: utente, fonte (`play`, `beta`, `manuale`), prodotto, stato, scadenza, ultimo evento;
