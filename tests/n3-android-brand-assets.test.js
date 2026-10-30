@@ -10,7 +10,6 @@ const ROOT = path.resolve(__dirname, '..');
 const BRAND_MANIFEST = path.join(ROOT, 'android', 'brand-assets-manifest.json');
 const SOURCES = [
   'assets/source/brand/us-symbol-master-v1.png',
-  'assets/source/brand/app-icon/us-launcher-symbol-v2.png',
   'assets/source/brand/app-icon/us-adaptive-foreground-v1.png',
   'assets/source/brand/app-icon/us-adaptive-background-v1.png',
   'assets/source/brand/splash/us-splash-master-v1.png'
@@ -81,7 +80,7 @@ windowsTest('launcher e splash Android usano soltanto il nuovo set brand', () =>
   assert.match(manifest, /android:icon="@mipmap\/ic_launcher"/);
   assert.match(manifest, /android:roundIcon="@mipmap\/ic_launcher_round"/);
   assert.match(adaptive, /@color\/ic_launcher_background/);
-  assert.match(adaptive, /@drawable\/us_adaptive_foreground_v2/);
+  assert.match(adaptive, /@drawable\/us_adaptive_foreground_v1/);
   assert.match(baseStyles, /@drawable\/us_splash_background/);
   assert.match(v31Styles, /windowSplashScreenAnimatedIcon/);
   assert.match(v31Styles, /@drawable\/us_splash_symbol/);
@@ -89,16 +88,12 @@ windowsTest('launcher e splash Android usano soltanto il nuovo set brand', () =>
 });
 
 // 19/10/2026: il founder ha scelto il logo di sempre su sfondo bianco (prima era nero #08040E).
-// 29/10/2026: l'icona perde la cornice (founder: la forma del telefono fa già da
-// cornice); lo splash resta con il logo di sempre.
 windowsTest('foreground Android deriva dal master trasparente e il launcher ha lo sfondo bianco', () => {
   runBrandBuild();
   const brand = JSON.parse(fs.readFileSync(BRAND_MANIFEST, 'utf8'));
-  const foreground = brand.derivatives.find((entry) => entry.path.endsWith('/us_adaptive_foreground_v2.png'));
+  const foreground = brand.derivatives.find((entry) => entry.path.endsWith('/us_adaptive_foreground_v1.png'));
   assert.ok(foreground, 'foreground adaptive derivato mancante');
-  assert.deepEqual(foreground.sources, ['assets/source/brand/app-icon/us-launcher-symbol-v2.png']);
-  const framed = brand.derivatives.find((entry) => entry.path.endsWith('/us_adaptive_foreground_v1.png'));
-  assert.deepEqual(framed.sources, ['assets/source/brand/us-symbol-master-v1.png'], 'il logo con la cornice resta per le notifiche e il web');
+  assert.deepEqual(foreground.sources, ['assets/source/brand/us-symbol-master-v1.png']);
   assert.match(foreground.operation, /FIT_CENTER.*TRANSPARENT/i);
 
   const colors = fs.readFileSync(path.join(ROOT, 'android/app/src/main/res/values/colors.xml'), 'utf8');
@@ -107,11 +102,9 @@ windowsTest('foreground Android deriva dal master trasparente e il launcher ha l
   const legacy = brand.derivatives.filter((entry) => /mipmap-[^/]+\/ic_launcher(?:_round)?\.png$/.test(entry.path));
   assert.equal(legacy.length, 10);
   legacy.forEach((entry) => {
-    assert.deepEqual(entry.sources, ['assets/source/brand/app-icon/us-launcher-symbol-v2.png']);
+    assert.deepEqual(entry.sources, ['assets/source/brand/us-symbol-master-v1.png']);
     assert.match(entry.operation, /FIT_CENTER_WHITE/);
   });
-  const splash = brand.derivatives.find((entry) => entry.path.endsWith('/us_splash_symbol.png'));
-  assert.deepEqual(splash.sources, ['assets/source/brand/us-symbol-master-v1.png'], 'lo splash resta con il logo di sempre');
 });
 
 test('le risorse base Android hanno una sola authority per type e name', () => {

@@ -363,3 +363,10 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - L'indirizzo principale di US è `https://www.uscouple.app`. `uscouple.app` e `us-a33.pages.dev` restano lo stesso sito, e i link già condivisi continuano a funzionare.
 - Inviti, App Links, privacy e termini usano `www.uscouple.app`; l'app Android accetta anche il vecchio indirizzo.
 - Le mail di US partono da «US <noreply@uscouple.app>» via Resend, solo in produzione; lo staging resta con la mail di Supabase (scelta del founder).
+
+## 2026-10-30 — L'icona dell'app resta quella di sempre
+
+**Fonte:** founder, 30/10/2026: «su produzione rimane la stessa icona e poi se una persona vuole prende le altre icone sbloccandole su Sintonia».
+
+- In produzione l'icona predefinita resta quella con la cornice. Sostituisce la decisione «Icona dell'app senza cornice» del 29/10, che non va in produzione.
+- Le altre icone (Notte, Oro, Neon) si sbloccano in Sintonia, come premi.
