@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import { sha256Hex, validDeviceHash } from "../_shared/widget-think-contract.mjs";
+import { widgetTokenScope } from "../_shared/widget-note-contract.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 
 const cors = {
@@ -34,6 +35,9 @@ Deno.serve(async (request) => {
     const deviceIdHash = String(body?.deviceIdHash || "");
     if (!validDeviceHash(deviceIdHash)) return json({ error: "invalid_device" }, 400);
     if (operation !== "issue" && operation !== "revoke") return json({ error: "invalid_operation" }, 400);
+    // Ti penso by default; the Nota widget asks for its own scope (widget-nota-v1).
+    const scope = widgetTokenScope(body?.scope);
+    if (!scope) return json({ error: "invalid_scope" }, 400);
     const { data: profile, error: profileError } = await admin
       .from("profiles")
       .select("id,couple_id")
@@ -44,7 +48,7 @@ Deno.serve(async (request) => {
     let active = admin.from("widget_action_tokens")
       .update({ revoked_at: new Date().toISOString() })
       .eq("device_id_hash", deviceIdHash)
-      .eq("scope", "think:send")
+      .eq("scope", scope)
       .is("revoked_at", null);
     if (operation === "revoke") active = active.eq("profile_id", profile.id);
     const { error: revokeError } = await active;
@@ -58,7 +62,7 @@ Deno.serve(async (request) => {
       profile_id: profile.id,
       device_id_hash: deviceIdHash,
       token_hash: tokenHash,
-      scope: "think:send",
+      scope,
       expires_at: expiresAt
     });
     if (insertError) throw insertError;

@@ -19,7 +19,8 @@
     { kind: 'photo', name: 'Foto & Noi', copy: 'La fotografia che vedi su Oggi, con i giorni insieme.', shape: 'square' },
     { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda del giorno e a chi tocca rispondere. Mai le risposte.', shape: 'wide' },
     { kind: 'message', name: 'Messaggio', copy: 'L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso.', shape: 'square' },
-    { kind: 'days', name: 'Giorni insieme', copy: 'Le vostre foto e i giorni insieme, che crescono ogni mezzanotte.', shape: 'square' }
+    { kind: 'days', name: 'Giorni insieme', copy: 'Le vostre foto e i giorni insieme, che crescono ogni mezzanotte.', shape: 'square' },
+    { kind: 'note', name: 'Nota', copy: 'Una vostra nota sulla Home: la spunti lì, e la matita apre una finestrella per scriverci.', shape: 'square' }
   ]);
   window.UsWidgetCatalog = CATALOG;
 
@@ -98,6 +99,11 @@
     return `<div class="us-wp-days"><span class="us-wp-days-dots"></span><b>${esc(days ? days.value : '♡')}</b><small>${esc(days ? days.unit : 'I vostri giorni insieme')}</small></div>`;
   }
 
+  // Nota: three lines with their squares, the middle one ticked.
+  function notePreview() {
+    return '<div class="us-wp-note"><i></i><i class="is-done"></i><i></i></div>';
+  }
+
   function photoPreview(snapshot, previewUrl) {
     const days = daysLine(snapshot);
     const line = days ? `<span class="us-wp-photo-days"><b>${esc(days.value)}</b><small>${esc(days.unit)}</small></span>` : '';
@@ -115,6 +121,7 @@
     if (kind === 'daily') return dailyPreview(snapshot);
     if (kind === 'message') return messagePreview();
     if (kind === 'days') return daysPreview(snapshot);
+    if (kind === 'note') return notePreview();
     return photoPreview(snapshot, view.photoPreviewUrl);
   }
 

@@ -84,6 +84,35 @@
                 android:resource="@xml/us_widget_days_info" />
         </receiver>
         <receiver
+            android:name="com.usapp.widget.UsNoteWidgetProvider"
+            android:exported="false"
+            android:label="@string/us_widget_note_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/us_widget_note_info" />
+        </receiver>
+        <!-- Nota (widget-nota-v1): the tick, the writing window and the choice
+             of the note, all opened only by the widget's own PendingIntents. -->
+        <receiver
+            android:name="com.usapp.widget.UsNoteWidgetActionReceiver"
+            android:exported="false" />
+        <activity
+            android:name="com.usapp.widget.UsNoteEditActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.DeviceDefault.Dialog.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name="com.usapp.widget.UsNoteChooseActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.DeviceDefault.Dialog.NoActionBar" />
+        <receiver
             android:name="com.usapp.widget.UsThinkWidgetActionReceiver"
             android:exported="false" />
         <receiver

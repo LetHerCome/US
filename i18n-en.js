@@ -2608,6 +2608,7 @@
     'La domanda del giorno e a chi tocca rispondere. Mai le risposte.': 'Today’s question and whose turn it is. Never the answers.',
     Messaggio: 'Message',
     'Le vostre foto e i giorni insieme, che crescono ogni mezzanotte.': 'Your photos and your days together, one more every midnight.',
+    'Una vostra nota sulla Home: la spunti lì, e la matita apre una finestrella per scriverci.': 'One of your notes on the Home screen: tick it there, and the pencil opens a small window to write in it.',
     'L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso.': 'Your partner’s last Ti penso, or their Lasciato per te still closed.',
     'Rispondi quando vuoi': 'Answer whenever you like',
     'Hai risposto': 'You answered',

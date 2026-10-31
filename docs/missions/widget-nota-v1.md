@@ -2,7 +2,7 @@
 
 **Fonte:** founder, 31/10/2026: quattro widget scelti da un'app di riferimento; questo è il quarto. Dipende dalle Note condivise (`docs/missions/note-condivise-v1.md`, branch `claude/note-condivise`, tabella `public.couple_notes`).
 **Branch:** `claude/gallant-ardinghelli-bb2acf`. Solo Android. Prima staging; la produzione solo con il via del founder.
-**Stato:** disegno scritto prima del codice (31/10/2026).
+**Stato:** disegno scritto prima del codice (31/10/2026), poi costruito sul branch dopo l'unione delle Note condivise (`3e9e3a8c`). Migrazione `20261031175636_widget_note_v1.sql`.
 
 ## Cosa vede e cosa fa chi lo usa
 
@@ -30,19 +30,22 @@
    - il token non c'è, è revocato o scaduto, o ha uno scope diverso da `note:rw`;
    - la persona del token **non è più nella coppia** del token (ha lasciato o cambiato coppia);
    - la nota non è di quella coppia (stesso errore di «nota inesistente», così non si scopre niente delle altre coppie).
-5. **Autore e ora li scrive il server**: `updated_by`, `updated_at` e `revision` li mette l'RPC. Il trigger delle Note condivise vale solo per il ruolo `authenticated`; qui scrive la funzione. `couple_id` e `created_by` non cambiano mai.
+5. **Autore e ora li scrive il server**, in modo esplicito: `updated_by`, `updated_at` e `revision` li mette la funzione `security definer`.
+   - Il trigger `private.couple_notes_guard` delle Note condivise vale solo per il ruolo `authenticated`: con ogni altro ruolo lascia passare tutto. Quindi la funzione non può contare su di lui.
+   - `couple_id` e `created_by` non cambiano mai.
+   - Senza questo, l'app non mostrerebbe l'avviso «Bea l'ha appena modificata».
 6. **Stessi limiti dell'app**, controllati nell'RPC e dai vincoli della tabella:
    - titolo 80 caratteri, testo 4000, 100 voci da 200 caratteri, voci nella forma `{id, text, done}`;
    - niente nota vuota.
    L'Edge rifiuta già le richieste fuori misura (corpo massimo 24 KB).
-7. **Freno:** al massimo una scrittura ogni 400 ms per token (`last_action_at`), contro i doppi tocchi e i cicli. Le spunte ripetute sulla stessa voce con lo stesso valore non scrivono.
+7. **Freno:** al massimo una scrittura ogni 250 ms per token (`last_action_at`), contro i doppi tocchi e i cicli; la lettura non ha freno. Sul telefono le spunte partono una alla volta (un solo thread), quindi in uso normale il freno non scatta. Le spunte ripetute sulla stessa voce con lo stesso valore non scrivono.
 8. **Niente rete in background.**
    - Il widget va in rete solo dopo un tocco: spunta, apertura della finestrella, «Salva». La risposta riporta la nota aggiornata, che sostituisce la copia sul telefono.
    - Il resto del tempo il widget mostra la copia che l'app scrive quando è aperta: le note della coppia, solo se c'è un widget Nota.
 9. **Indirizzo del server scelto dall'app, non fisso.**
    - Il widget Ti penso oggi chiama sempre la produzione (indirizzo fisso in `UsWidgetActionClient.java`), quindi nell'APK di staging non funziona.
    - Per la Nota l'app passa al telefono l'indirizzo delle Edge insieme al token. Il codice nativo accetta solo i due progetti US (produzione `iiakdfsxpywdkxravqjh`, staging `dugmhngrfkuieeletatb`) in `https`. Così un token non può finire su un altro server.
-   - Ti penso resta com'è: cambiarlo è un lavoro a parte.
+   - Ti penso usa la stessa regola dal commit `77d174c0` (`UsWidgetEndpoints`), con un'eccezione: una credenziale salvata prima, senza indirizzo, va in produzione come prima. La Nota invece senza indirizzo non parte.
 10. **Copia delle note sul telefono:**
     - nella cartella privata dell'app, esclusa dai backup (`noBackupFilesDir`, come la foto del widget), legata all'account (hash del proprietario);
     - solo le note della coppia, al massimo le 30 più recenti più quelle scelte dai widget;
@@ -76,7 +79,9 @@
 - **`UsNoteWidgetProvider`:** titolo; testo oppure fino a 6 voci, ognuna una riga cliccabile con il quadratino (`PendingIntent` verso un receiver interno, non esportato); «+3» se ce ne sono altre; «Bea · 20 min fa»; la matita. Funziona da Android 8 (minSdk 26), senza CheckBox di Android 12.
 - **`UsNoteWidgetActionReceiver`:** spunta subito sulla copia (ottimistica), poi chiama il server. Se il server rifiuta, torna indietro e mostra «Non salvato» per qualche secondo.
 - **`UsNoteEditActivity`** (tema dialogo): titolo, testo, voci (aggiungi, togli, spunta), «Salva» e «Annulla». Prima legge la nota dal server; se non c'è rete mostra la copia e salva quando si preme «Salva».
-- **`UsNoteWidgetConfigureActivity`:** quando si mette il widget, l'elenco delle note dalla copia sul telefono. Se la copia non c'è: «Apri US per scegliere una nota». Un widget senza nota mostra «Tocca per scegliere una nota».
+- **`UsNoteChooseActivity`:** l'elenco delle note dalla copia sul telefono. Se la copia non c'è: «Apri US per scegliere una nota».
+  - Un widget appena messo mostra «Tocca per scegliere una nota»: il tocco apre la scelta con il `PendingIntent` del widget. Lo stesso dalla finestrella, con «Cambia nota».
+  - Niente `android:configure` per il launcher. Alcuni launcher aprono quella schermata direttamente, e allora dovrebbe essere esportata. Così invece tutte le Activity restano `exported="false"` e il widget funziona con ogni launcher.
 - **`UsWidgetCredentialStore`:** un posto per token e scope; per la nota anche l'indirizzo delle Edge.
 
 ### App (WebView)

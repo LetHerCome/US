@@ -19,7 +19,14 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import org.json.JSONObject;
 
+/**
+ * Device-scoped widget credentials, Keystore-encrypted, never in a backup.
+ * Ti penso ("think:send") keeps its historical file; the Nota widget
+ * ("note:rw", widget-nota-v1) has its own, with the Edge address the app gave.
+ */
 final class UsWidgetCredentialStore {
+    static final String THINK = "think:send";
+    static final String NOTE = "note:rw";
     private static final String KEYSTORE = "AndroidKeyStore";
     private static final String KEY_ALIAS = "us.widget.think.action.v1";
     private static final Pattern OWNER = Pattern.compile("^[a-f0-9]{64}$");
@@ -28,9 +35,13 @@ final class UsWidgetCredentialStore {
     private final AtomicFile deviceFile;
 
     UsWidgetCredentialStore(Context context) {
+        this(context, THINK);
+    }
+
+    UsWidgetCredentialStore(Context context, String scope) {
         File directory = new File(context.getNoBackupFilesDir(), "us-widget");
         if (!directory.exists()) directory.mkdirs();
-        credentialFile = new AtomicFile(new File(directory, "action-credential-v1.json"));
+        credentialFile = new AtomicFile(new File(directory, NOTE.equals(scope) ? "note-credential-v1.json" : "action-credential-v1.json"));
         deviceFile = new AtomicFile(new File(directory, "device-id-v1.txt"));
     }
 
