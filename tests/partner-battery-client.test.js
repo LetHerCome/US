@@ -73,7 +73,7 @@ test('device: native first, then the browser; a desktop without a battery says n
   assert.equal(await readDevice({ navigator: { getBattery: async () => { throw new Error('denied'); } } }), null);
 });
 
-test('wiring: launch and foreground only, own Realtime channel, distance capsule and widget', () => {
+test('wiring: launch and foreground only, the one Realtime channel, distance capsule and widget', () => {
   const app = read('app.js');
   const source = read('partner-battery.js');
   const html = read('index.html');
@@ -81,10 +81,12 @@ test('wiring: launch and foreground only, own Realtime channel, distance capsule
   assert.match(app, /usRunWhenIdle\(\(\)=>window\.UsPartnerBattery\?\.onForeground\?\.\('launch'\),\d+\);/);
   assert.match(app, /if\(options\.foreground\)usAfterForeground\(\(\)=>window\.UsPartnerBattery\?\.onForeground\?\.\('resume'\),\d+\);/);
   assert.doesNotMatch(source, /setInterval\([^)]*report/);
-  // Realtime on its own channel, opened only once the table answered, so a
-  // web build that lands before the SQL never breaks the main US channel.
-  assert.match(source, /table: 'couple_batteries', filter: `couple_id=eq\.\$\{profile\.couple_id\}`/);
-  assert.doesNotMatch(app, /couple_batteries/);
+  // Realtime: one line on the app's one channel (startUsRealtime, as the
+  // notes), never a parallel channel of its own (ARCHITECTURE.md).
+  const live = app.slice(app.indexOf('function startUsRealtime()'), app.indexOf('window.startUsRealtime=startUsRealtime;'));
+  assert.match(live, /\.on\('postgres_changes',\{event:'\*',schema:'public',table:'couple_batteries',filter:`couple_id=eq\.\$\{coupleId\}`\},payload=>window\.UsPartnerBattery\?\.onChange\?\.\(payload\)\)/);
+  assert.doesNotMatch(source, /\.channel\(|removeChannel|\.subscribe\(|postgres_changes/);
+  assert.match(source, /return \{[^}]*\bonChange\b[^}]*\};\s*\}\);\s*$/);
   assert.match(source, /db\.rpc\('report_battery', \{ p_level: reading\.level, p_charging: reading\.charging \}\)/);
   // Oggi: in the distance capsule, after the distance (name for screen readers
   // only, never translated). Noi has no battery row.
@@ -137,7 +139,7 @@ function page({ distanceState = 'ready' } = {}) {
 test('capsule: the partner battery beside a distance, nothing without one', () => {
   const p = page();
   assert.equal(p.slot.hidden, true, 'no reading yet');
-  p.api.onRealtime({ eventType: 'UPDATE', new: { user_id: 'b', level: 18, charging: false, updated_at: new Date(Date.now() - 125 * 60000).toISOString() } });
+  p.api.onChange({ eventType: 'UPDATE', new: { user_id: 'b', level: 18, charging: false, updated_at: new Date(Date.now() - 125 * 60000).toISOString() } });
   assert.equal(p.slot.hidden, false);
   assert.equal(p.parts.level.textContent, '18%');
   assert.equal(p.parts.name.textContent, 'Bea');
@@ -160,7 +162,7 @@ test('capsule: the partner battery beside a distance, nothing without one', () =
   assert.equal(p.slot.hidden, true, 'no capsule, no battery');
 
   const old = page();
-  old.api.onRealtime({ eventType: 'UPDATE', new: { user_id: 'b', level: 64, charging: true, updated_at: new Date(Date.now() - 25 * 3600000).toISOString() } });
+  old.api.onChange({ eventType: 'UPDATE', new: { user_id: 'b', level: 64, charging: true, updated_at: new Date(Date.now() - 25 * 3600000).toISOString() } });
   assert.equal(old.slot.hidden, true, 'a day old: not shown');
   assert.equal(old.api.sheetLine(), '');
 });

@@ -6111,6 +6111,7 @@ function startUsRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'relationship_milestones',filter:`couple_id=eq.${coupleId}`},()=>{scheduleUsRealtimeRefresh('events');hydrateBondSummary();})
     .on('postgres_changes',{event:'*',schema:'public',table:'bond_weekly_quests',filter:`couple_id=eq.${coupleId}`},()=>{hydrateBondSummary();if(document.getElementById('bond')?.classList.contains('active'))hydrateBond();})
     .on('postgres_changes',{event:'*',schema:'public',table:'couple_notes',filter:`couple_id=eq.${coupleId}`},payload=>window.UsCoupleNotes?.onChange?.(payload))
+    .on('postgres_changes',{event:'*',schema:'public',table:'couple_batteries',filter:`couple_id=eq.${coupleId}`},payload=>window.UsPartnerBattery?.onChange?.(payload))
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'couples',filter:`id=eq.${coupleId}`},payload=>{renderBondProgress(payload.new?.bond_xp||0);window.USProgression?.refreshAfterAction?.();})
     .subscribe();
 }
