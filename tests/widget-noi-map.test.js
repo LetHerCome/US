@@ -35,6 +35,27 @@ test('never a real map: no tiles, no coordinates, no network in the widget', () 
   assert.doesNotMatch(sources, /\btiles?\b|maplibre|openfreemap|googleapis|latitude|longitude|HttpURLConnection|fetch\(/i);
 });
 
+// Founder, 31/10/2026: "Vera, ma solo sfondo". A fixed piece of dark map drawn
+// once into the app, a candidate until approved on staging; never their place.
+test('the map background: a fixed image in the app, DRAFT in the manifest, attributed', () => {
+  const crypto = require('node:crypto');
+  const file = `${PLUGIN}/res/drawable-nodpi/us_widget_noi_map_v1.webp`;
+  const bytes = fs.readFileSync(path.join(ROOT, file));
+  assert.equal(bytes.toString('ascii', 0, 4) + bytes.toString('ascii', 8, 12), 'RIFFWEBP');
+  assert.ok(bytes.length < 200 * 1024, 'small enough for the widget');
+  const entry = JSON.parse(read('assets/ASSET_MANIFEST.json')).assets.find((asset) => asset.path === file);
+  assert.equal(entry.status, 'DRAFT', 'a candidate until the founder approves it');
+  assert.equal(entry.sha256, crypto.createHash('sha256').update(bytes).digest('hex'));
+  assert.match(entry.purpose, /OpenStreetMap contributors \(ODbL\)/);
+  assert.match(entry.purpose, /Never the couple/);
+  const layout = res('layout/us_widget_noi_map.xml');
+  assert.match(layout, /android:clipToOutline="true"/);
+  assert.match(layout, /android:id="@\+id\/us_noi_map_bg"[\s\S]*?android:scaleType="centerCrop"[\s\S]*?android:src="@drawable\/us_widget_noi_map_v1"/);
+  assert.ok(layout.indexOf('us_noi_map_bg') < layout.indexOf('us_noi_me_bubble'), 'the map is behind everything');
+  assert.match(res('layout/us_widget_preview_noi.xml'), /@drawable\/us_widget_noi_map_v1/);
+  for (const page of ['privacy.html', 'privacy-en.html']) assert.match(read(page), /© OpenStreetMap contributors/, page);
+});
+
 test('provider: Android 12+ picks compact or map by size; older phones by the reported size', () => {
   const provider = read(`${JAVA}/UsNoiWidgetProvider.java`);
   assert.match(provider, /Build\.VERSION\.SDK_INT >= Build\.VERSION_CODES\.S/);

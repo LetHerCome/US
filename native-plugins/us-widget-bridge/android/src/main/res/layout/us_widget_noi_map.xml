@@ -2,13 +2,26 @@
 <!-- Noi stile mappa (founder, 31/10/2026), from 4x2: the two round portraits
      at the sides, the distance in the middle on a dashed path, above each
      portrait a bubble with that person's last Ti penso, the partner's battery
-     under their portrait. Me on the left, the partner on the right. The
-     decorative map behind it waits for an approved asset; never a real map. -->
+     under their portrait. Me on the left, the partner on the right. Behind
+     it a fixed piece of dark map (founder: "vera, ma solo sfondo"), drawn
+     once into the app: never where the two of them are. Candidate asset
+     (DRAFT in ASSET_MANIFEST) until the founder approves it on staging.
+     clipToOutline keeps the map inside the card's corners (Android 12+). -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_noi_map_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_background">
+    android:background="@drawable/us_widget_background"
+    android:clipToOutline="true">
+
+    <ImageView
+        android:id="@+id/us_noi_map_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:src="@drawable/us_widget_noi_map_v1" />
 
     <LinearLayout
         android:layout_width="match_parent"

@@ -311,11 +311,16 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - sotto la foto del partner, piccola, la sua batteria.
   Più avanti nella nuvoletta andrà lo stato con emoji.
 - **Il 2×1 già messo** resta la scheda di prima (foto in coppia, distanza, batteria accanto a «NOI»). Android 12+ sceglie da solo la vista in base alla misura; sui telefoni più vecchi decide la misura che il launcher comunica. Un widget nuovo parte da 4×2.
-- **Sfondo:** per ora la scheda notte. La mappa decorativa scura aspetta un asset approvato (domanda aperta al founder). Mai una mappa vera: US promette «mai dove sei».
+- **Sfondo (founder: «Vera, ma solo sfondo»):** un pezzo fisso di mappa scura, Torino col Po, sempre lo stesso.
+  - Disegnata una volta con lo stile scuro di OpenFreeMap della Mappa dei Ricordi, senza scritte, e inclusa nell'app (`drawable-nodpi/us_widget_noi_map_v1.webp`, 1600×800, 85 KB). Il widget non si collega a nessun servizio di mappe e non mostra mai dove siete.
+  - È **candidata**: `DRAFT` in `assets/ASSET_MANIFEST.json`, la approva il founder dall'APK di staging.
+  - Attribuzione «© OpenStreetMap contributors» (ODbL) e OpenFreeMap / OpenMapTiles nella privacy, italiano e inglese.
+  - Da Android 12 la mappa resta dentro gli angoli arrotondati della scheda. Su Android 11 e precedenti gli angoli della mappa restano squadrati, quasi invisibili sul nero.
 - **Dati:** nessun dato nuovo. Le nuvolette usano gli orari di Ti penso che il widget già riceveva; le foto rotonde le prepara l'app quando è aperta (come la foto in coppia), con gli stessi anelli. Il widget non va in rete.
 - **Anteprima nel selettore dei widget** (Android 12+): la vista a mappa, generica, senza volti né nomi. L'immagine PNG per Android 11 e precedenti è ancora quella del 2×1.
 - **Da provare dall'APK di staging:**
-  - mettere il widget «Noi»: deve partire grande (4×2) con le due foto, la distanza sulla linea tratteggiata e la batteria del partner;
+  - mettere il widget «Noi»: deve partire grande (4×2) con la mappa scura dietro, le due foto, la distanza sulla linea tratteggiata e la batteria del partner;
+  - dire se la mappa va bene (è candidata);
   - mandarsi un Ti penso: dopo aver aperto US, la nuvoletta sopra il partner dice «ti ha pensato · proprio ora», poi «5 min fa», «10 min fa»;
   - mandare un Ti penso dal widget Ti penso: la nuvoletta sopra di me cambia subito;
   - rimpicciolire il widget a 2×1: torna la scheda di prima;
@@ -330,7 +335,7 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - Sotto, in una nuvoletta chiara con un piccolo cuore rosa, il messaggio più recente tra il suo ultimo Ti penso («Ti ha pensato · 10 min fa») e il suo Lasciato per te ancora chiuso («Ti ha lasciato una foto · 5 min fa»; anche messaggio, vocale, video, canzone).
   - Senza niente di recente: «Il suo prossimo pensiero arriverà qui», con il cuore vuoto. Un Ti penso più vecchio di una settimana non è più una novità; una busta chiusa resta finché non si apre.
 - **Il tocco** apre quel messaggio nell'app, per la stessa strada delle notifiche: Ti penso apre il foglio per ricambiare, la busta apre Lasciato per te. Sul freddo aspetta l'accesso.
-- **Privacy, scelta da confermare:** del Lasciato per te il widget conosce solo il tipo e l'ora, mai le parole, la foto o il link. Così la sorpresa resta nell'app, sulla schermata Home non compare il contenuto, e niente sopravvive alla pulizia dei Lasciato per te. Se il founder vuole vedere le parole nella nuvoletta, va deciso.
+- **Privacy (founder: «Solo tipo e ora»):** del Lasciato per te il widget conosce solo il tipo e l'ora, mai le parole, la foto o il link. Così la sorpresa resta nell'app, sulla schermata Home non compare il contenuto, e niente sopravvive alla pulizia dei Lasciato per te.
 - **Corretto per strada (stesso contratto dei widget):** l'app non passava mai al widget «La domanda di oggi» la domanda (`platform.js` scartava il blocco `daily`), e quel widget non si poteva aggiungere dalla galleria di Impostazioni (mancava nell'elenco dei tipi). Ora passano tutti e due.
 - **Galleria in Impostazioni:** nuova voce «Messaggio» (inglese «Message»), con la sua anteprima.
 - **Da provare dall'APK di staging:**

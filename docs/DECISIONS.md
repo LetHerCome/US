@@ -381,3 +381,13 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Noi** resta com'è: niente riga della batteria, e la scheda della coppia con la distanza resta spenta.
 - **Widget «Noi»:** invariato, con icona e percentuale accanto a «NOI».
 - Dopo un giorno la batteria non si vede più, né su Oggi né nel widget.
+
+## 2026-10-31 — Widget: la mappa di «Noi» e il «Messaggio»
+
+**Fonte:** founder, 31/10/2026. Per la mappa ha risposto «li deve prendere da maps», poi, alla domanda di chiarimento, «Vera, ma solo sfondo». Per «Messaggio» ha scelto «Solo tipo e ora». Completa «Posizione, widget e Note condivise» del 31/10.
+
+- **Mappa del widget «Noi»:** decorativa e fissa, **mai la posizione della coppia**. È un pezzo vero di città, scuro e sempre lo stesso: Torino, il Po. Si disegna una volta con lo stile scuro di OpenFreeMap della Mappa dei Ricordi, senza scritte, e sta dentro l'app. Il widget non si collega a nessun servizio di mappe.
+  - Niente Google Maps: le sue condizioni vietano di salvare le immagini, e la Static API chiede una chiave a pagamento.
+  - Dati © OpenStreetMap contributors (ODbL), stile OpenFreeMap / OpenMapTiles, citati nella privacy.
+  - È candidata (`DRAFT` in `assets/ASSET_MANIFEST.json`) finché il founder non la approva dall'APK di staging.
+- **«Messaggio»:** di un Lasciato per te il widget mostra solo il tipo e l'ora («Ti ha lasciato una foto · 10 min fa»), mai le parole, la foto o il link.
