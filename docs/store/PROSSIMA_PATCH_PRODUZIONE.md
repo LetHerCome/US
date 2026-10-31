@@ -1,5 +1,13 @@
 # Prossima patch in produzione
 
+## Note condivise in Noi (31/10/2026)
+
+**Stato:** su staging, non in produzione. **Branch:** `claude/note-condivise`. **Build:** `us-note-condivise-20261031-76`. Missione: `docs/missions/note-condivise-v1.md`.
+
+- In Noi, sotto il calendario, un quarto collegamento **Note** apre un Foglio con le note della coppia: titolo, testo e lista a spunta, scritte e spuntate da tutti e due. Si salvano da sole; se l'altra persona salva la nota aperta compare un avviso.
+- **Database:** migrazione `20261031132258_couple_notes_v1.sql` (tabella `couple_notes`, RLS di coppia, tempo reale, export dei dati, autori staccati quando qualcuno lascia la coppia o elimina l'account). Su staging e poi in produzione solo con il workflow «Supabase SQL (manual)» e il via del founder.
+- **Privacy:** le note sono contenuto della coppia come le Idee; entrano nell'export dei dati. Nessun nuovo tipo di dato per Google Play.
+
 ## Dopo la 1.3.0 (fix dalle prove in produzione, 30/10/2026)
 
 **Stato:** su staging, non ancora in produzione. **Branch:** `claude/fix-prod-1-3-1`. **Build:** `us-fix-20261030-75`.

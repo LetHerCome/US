@@ -9,6 +9,7 @@ async function seedTenant(db,cid,u,v,n){
   await db.exec(`
     insert into public.activity(couple_id,actor_id,type) values('${cid}','${u}','mc2_test');
     insert into public.bucket_items(id,couple_id,created_by,title) values('${id(1)}','${cid}','${u}','Private idea ${n}');
+    insert into public.couple_notes(id,couple_id,created_by,updated_by,title) values('${id(10)}','${cid}','${u}','${u}','Private note ${n}');
     insert into public.calendar_entries(id,couple_id,entry_type,created_by,title,is_all_day,start_date,end_date)
       values('${id(2)}','${cid}','shared','${u}','Private calendar ${n}',true,'2026-01-01','2026-01-01');
     insert into public.calendar_reminders(couple_id,entry_id,recipient_id,offset_minutes,requested_by) values('${cid}','${id(2)}','${v}',1440,'${u}');

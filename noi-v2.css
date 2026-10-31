@@ -103,7 +103,7 @@
 .us-noi-v2-empty-month .us-noi-v2-text-action{margin:6px 0 0}
 
 /* Secondary destinations: three quiet, equal tiles. */
-.us-noi-v2-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:2px 0 8px}
+.us-noi-v2-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:2px 0 8px}
 .us-noi-v2-links button{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-height:92px;border-radius:var(--us-radius-card);border:1px solid var(--noi-line);background:rgba(255,255,255,.035);color:var(--us-color-text);padding:12px;text-align:left;transition:transform var(--us-motion-press) var(--us-ease-standard),background var(--us-motion-fast)}
 .us-noi-v2-links button:active{transform:scale(.97);background:rgba(255,255,255,.06)}
 .us-noi-v2-link-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:rgba(255,102,142,.11);color:var(--us-color-rose)}

@@ -264,7 +264,7 @@ test('Noi: the couple row stays centered, "La nostra settimana" owns the week, a
   assert.match(app, /if\(profile\.role==='beatrice'\)setAvatarSlot\('pairAvatarBeatrice',url\);/);
   assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"|id="usCalendarEntry"|noi-hub-card/);
   const targets = [...bond.matchAll(/data-noi-open-link="([a-z-]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(targets, ['lavagna', 'quest', 'eventi']);
+  assert.deepEqual(targets, ['lavagna', 'quest', 'eventi', 'note'], 'Note condivise (31/10/2026) are the fourth');
   assert.match(app, /document\.querySelector\(`#usNoiV2 \[data-noi-open-link="\$\{from\}"\]`\)\?\.focus\(\{preventScroll:true\}\)/, 'closing a section focuses its link again');
 });
 
