@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Noi 2x1: the two portraits (rosa and lilla rings, drawn by the app as a
-     transparent PNG), the label in Noi's orchid, the distance in serif and
-     one italic line. Sizes hold at the 2x1 minimum (110dp wide). -->
+     transparent PNG), the label in Noi's orchid with the partner's battery on
+     its right, the distance in serif and one italic line. Sizes hold at the
+     2x1 minimum (110dp wide). The italic line is the partner's status line:
+     today it says "tra voi"; "a casa / fuori" (later) goes there too. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_noi_root"
     android:layout_width="match_parent"
@@ -43,18 +45,51 @@
         android:gravity="center_vertical"
         android:orientation="vertical">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:includeFontPadding="false"
-            android:letterSpacing="0.14"
-            android:maxLines="1"
-            android:text="@string/us_widget_noi_name"
-            android:textAllCaps="true"
-            android:textColor="@color/us_widget_orchidea"
-            android:textSize="11sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:includeFontPadding="false"
+                android:letterSpacing="0.14"
+                android:maxLines="1"
+                android:text="@string/us_widget_noi_name"
+                android:textAllCaps="true"
+                android:textColor="@color/us_widget_orchidea"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <!-- Batteria del partner: Phosphor glyph and percentage, hidden when unknown. -->
+            <ImageView
+                android:id="@+id/us_noi_battery_icon"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="4dp"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:src="@drawable/us_widget_battery_high"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/us_noi_battery"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:fontFamily="sans-serif-medium"
+                android:fontFeatureSettings="tnum"
+                android:importantForAccessibility="no"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:textColor="@color/us_widget_text_2"
+                android:textSize="11sp"
+                android:visibility="gone" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/us_noi_distance"

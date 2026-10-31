@@ -315,6 +315,10 @@
     'Aggiungi un ricordo': 'Add a memory',
     'Aggiornamento disponibile': 'Update available',
 
+    // ------------------------------------------------------------ Noi: partner battery
+    'Batteria:': 'Battery:',
+    'in carica': 'charging',
+
     // ------------------------------------------------------------ Oggi: distance
     'Distanza tra voi': 'Distance between you',
     'Posizione non disponibile': 'Location unavailable',

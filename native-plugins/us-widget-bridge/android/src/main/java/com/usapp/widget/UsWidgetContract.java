@@ -66,6 +66,14 @@ final class UsWidgetContract {
                     ? coupleIn.optString("distanceText", "") : "")
                 .put("distanceState", "stale".equals(coupleIn.optString("distanceState", ""))
                     ? "stale" : "ready");
+            // Batteria del partner: the level the partner last reported, whether
+            // it was charging and when (server time). Unknown: level -1.
+            int batteryLevel = coupleIn.optInt("batteryLevel", -1);
+            String batteryAt = instantText(coupleIn.optString("batteryAt", ""));
+            if (batteryLevel < 0 || batteryLevel > 100 || batteryAt.isEmpty()) { batteryLevel = -1; batteryAt = ""; }
+            couple.put("batteryLevel", batteryLevel)
+                .put("batteryCharging", batteryLevel >= 0 && coupleIn.optBoolean("batteryCharging", false))
+                .put("batteryAt", batteryAt);
 
             JSONObject countdownIn = optObject(input, "countdown");
             String kind = countdownIn.optString("kind", "");

@@ -41,7 +41,8 @@
   let pendingKind = '';
 
   const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastSentAt: '', lastAnsweredAt: '' });
-  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready' });
+  // Batteria del partner: level -1 = unknown (UsWidgetContract.java).
+  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready', batteryLevel: -1, batteryCharging: false, batteryAt: '' });
   const emptyCountdown = () => ({ active: false, kind: '', title: '', target: '', style: 'editorial' });
   const emptyPhoto = () => ({ state: 'none', key: '', takenOn: '' });
   // La domanda di oggi: the day, the shared question and whose turn it is. Never an answer.
@@ -190,7 +191,10 @@
         startedOn: civilDate(data.startedOn),
         frame,
         distanceText: couple.distanceText,
-        distanceState: couple.distanceState
+        distanceState: couple.distanceState,
+        batteryLevel: couple.batteryLevel,
+        batteryCharging: couple.batteryCharging,
+        batteryAt: couple.batteryAt
       };
       coupleSyncedAt = Date.now();
       return scheduleWrite();
@@ -209,6 +213,22 @@
     const distanceState = next?.distanceState === 'stale' ? 'stale' : 'ready';
     if (couple.distanceText === distanceText && couple.distanceState === distanceState) return Promise.resolve(false);
     couple = { ...couple, distanceText, distanceState };
+    return scheduleWrite();
+  }
+
+  // Batteria del partner: the last reading Noi shows (partner-battery.js). The
+  // widget itself makes it quieter after an hour and drops it after a day.
+  function syncNoiBattery() {
+    if (!ownerHash) return Promise.resolve(false);
+    const next = window.UsPartnerBattery?.widgetState?.();
+    if (next === undefined) return Promise.resolve(false);
+    const batteryLevel = Number.isInteger(next?.level) ? next.level : -1;
+    const batteryAt = batteryLevel >= 0 ? isoInstant(next.at) : '';
+    const battery = batteryAt
+      ? { batteryLevel, batteryCharging: next.charging === true, batteryAt }
+      : { batteryLevel: -1, batteryCharging: false, batteryAt: '' };
+    if (couple.batteryLevel === battery.batteryLevel && couple.batteryCharging === battery.batteryCharging && couple.batteryAt === battery.batteryAt) return Promise.resolve(false);
+    couple = { ...couple, ...battery };
     return scheduleWrite();
   }
 
@@ -476,6 +496,7 @@
     countdown = countdownFromOggi() || countdown;
     await Promise.all([syncCouple({ force: true }), scheduleWrite(), ensureCredential(status)]);
     await syncNoiDistance();
+    await syncNoiBattery();
     // The portrait and Oggi photo only sync after first UI paint.
     setTimeout(() => {
       syncPhoto({ force: true }).catch(() => {});
@@ -585,6 +606,7 @@
     syncDaily,
     syncCouple,
     syncNoiDistance,
+    syncNoiBattery,
     syncNoiPortrait,
     syncPhoto,
     clear,
@@ -617,6 +639,7 @@
     // painted Oggi event is authoritative for the widget photo.
     window.addEventListener('us:home-photo-changed', () => { syncPhoto({ force: true }).catch(() => {}); });
     window.addEventListener('us:distance-changed', () => { syncNoiDistance().catch(() => {}); });
+    window.addEventListener('us:partner-battery-changed', () => { syncNoiBattery().catch(() => {}); });
     window.addEventListener('us:noi-portraits-ready', () => { syncNoiPortrait().catch(() => {}); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden || !ownerHash) return;

@@ -143,7 +143,9 @@
         startedOn: safeCivilDate(couple.startedOn),
         frame: typeof couple.frame === 'string' && /^[a-z0-9_]{1,24}$/.test(couple.frame) ? couple.frame : '',
         distanceText: typeof couple.distanceText === 'string' && /^[0-9., ]{1,16} ?(km|m|mi|ft)$/.test(couple.distanceText) ? couple.distanceText : '',
-        distanceState: couple.distanceState === 'stale' ? 'stale' : 'ready'
+        distanceState: couple.distanceState === 'stale' ? 'stale' : 'ready',
+        // Batteria del partner (UsWidgetContract.java): -1 when unknown.
+        ...widgetBattery(couple)
       },
       countdown: {
         active,
@@ -158,6 +160,29 @@
         takenOn: photoReady ? safeCivilDate(photo.takenOn) : ''
       }
     };
+  }
+
+  function widgetBattery(couple) {
+    const level = Number.isInteger(couple.batteryLevel) && couple.batteryLevel >= 0 && couple.batteryLevel <= 100 ? couple.batteryLevel : -1;
+    const at = level >= 0 ? safeInstant(couple.batteryAt) : '';
+    return at
+      ? { batteryLevel: level, batteryCharging: couple.batteryCharging === true, batteryAt: at }
+      : { batteryLevel: -1, batteryCharging: false, batteryAt: '' };
+  }
+
+  // Batteria del partner: this phone's own battery, asked only while US is
+  // open. null when the APK predates the method or the phone cannot tell.
+  async function readNativeBattery() {
+    const plugin = widgetBridge();
+    if (!plugin || typeof plugin.getBatteryStatus !== 'function') return null;
+    try {
+      const result = await plugin.getBatteryStatus();
+      const level = Number(result?.level);
+      if (result?.supported !== true || !Number.isInteger(level) || level < 0 || level > 100) return null;
+      return { level, charging: result.charging === true };
+    } catch (_) {
+      return null;
+    }
   }
 
   async function activateWidgetAccount(ownerHash) {
@@ -332,6 +357,7 @@
     requestWidgetPin,
     openWidgetSettings,
     listenForWidgetPinned,
+    readNativeBattery,
     getNativeLaunchUrl,
     listenForNativeAppUrl
   });

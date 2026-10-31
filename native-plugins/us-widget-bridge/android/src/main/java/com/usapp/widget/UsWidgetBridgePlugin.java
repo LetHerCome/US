@@ -3,8 +3,10 @@ package com.usapp.widget;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.provider.Settings;
 import android.util.Base64;
@@ -187,6 +189,22 @@ public class UsWidgetBridgePlugin extends Plugin {
         } catch (RuntimeException error) {
             call.resolve(result.put("supported", true).put("requested", false));
         }
+    }
+
+    /**
+     * Batteria del partner: this phone's own level and whether it is charging,
+     * read only when the open app asks (launch, return to the foreground).
+     * No permission, no receiver, nothing runs in the background.
+     */
+    @PluginMethod
+    public void getBatteryStatus(PluginCall call) {
+        BatteryManager battery = (BatteryManager) getContext().getSystemService(Context.BATTERY_SERVICE);
+        int level = battery == null ? Integer.MIN_VALUE : battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        if (level < 0 || level > 100) {
+            call.resolve(new JSObject().put("supported", false));
+            return;
+        }
+        call.resolve(new JSObject().put("supported", true).put("level", level).put("charging", battery.isCharging()));
     }
 
     /** Opens the screen where Home-screen shortcut/widget permission lives (Xiaomi first). */

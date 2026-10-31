@@ -158,6 +158,11 @@ final class UsWidgetModels {
         return new Daily(question, state);
     }
 
+    /** Batteria del partner: quieter after an hour, gone after a day. */
+    static final long BATTERY_FRESH_MS = 60 * 60_000L;
+    static final long BATTERY_VISIBLE_MS = 24 * 60 * 60_000L;
+    static final int BATTERY_LOW = 20;
+
     static final class Couple {
         String names = "";
         long days = -1;
@@ -165,7 +170,22 @@ final class UsWidgetModels {
         String todayInvitation = "";
         String distanceText = "";
         boolean distanceStale = false;
+        /** The partner's battery, -1 when unknown or older than a day. */
+        int batteryLevel = -1;
+        boolean batteryCharging = false;
+        boolean batteryOld = false;
+        /** When the battery goes quiet or disappears. */
+        Instant batteryNextChange = null;
         Instant nextChange = null;
+
+        boolean batteryShown() { return batteryLevel >= 0; }
+        /** Phosphor glyph, same thresholds as the app (partner-battery.js). */
+        String batteryGlyph() {
+            if (batteryCharging) return "charging";
+            if (batteryLevel <= BATTERY_LOW) return "low";
+            return batteryLevel <= 60 ? "medium" : "high";
+        }
+        boolean batteryLow() { return batteryShown() && !batteryCharging && batteryLevel <= BATTERY_LOW; }
     }
 
     /** A tiny rotating invitation, not a fabricated question or fake game state.
@@ -192,6 +212,17 @@ final class UsWidgetModels {
         out.frame = c.optString("frame", "");
         out.distanceText = c.optString("distanceText", "");
         out.distanceStale = "stale".equals(c.optString("distanceState", ""));
+        int level = c.optInt("batteryLevel", -1);
+        Instant at = UsWidgetContract.instant(c.optString("batteryAt", ""));
+        if (level >= 0 && level <= 100 && at != null) {
+            long age = Math.max(0L, Duration.between(at, now).toMillis());
+            if (age < BATTERY_VISIBLE_MS) {
+                out.batteryLevel = level;
+                out.batteryCharging = c.optBoolean("batteryCharging", false);
+                out.batteryOld = age >= BATTERY_FRESH_MS;
+                out.batteryNextChange = at.plusMillis(out.batteryOld ? BATTERY_VISIBLE_MS : BATTERY_FRESH_MS);
+            }
+        }
         out.nextChange = nextRomeMidnight(now);
         return out;
     }

@@ -297,6 +297,58 @@ public class UsWidgetModelsTest {
         assertEquals("", UsWidgetContract.normalize(snap).getJSONObject("couple").getString("distanceText"));
     }
 
+    // ---------- Batteria del partner ----------
+
+    @Test
+    public void partnerBatteryIsShownForADayAndQuieterAfterAnHour() throws Exception {
+        JSONObject snap = snapshot(null);
+        snap.getJSONObject("couple").put("batteryLevel", 18).put("batteryCharging", false).put("batteryAt", "2026-10-31T10:00:00Z");
+        JSONObject clean = UsWidgetContract.normalize(snap);
+        assertEquals(18, clean.getJSONObject("couple").getInt("batteryLevel"));
+        assertEquals("2026-10-31T10:00:00Z", clean.getJSONObject("couple").getString("batteryAt"));
+
+        UsWidgetModels.Couple fresh = UsWidgetModels.couple(clean, Instant.parse("2026-10-31T10:20:00Z"));
+        assertTrue(fresh.batteryShown());
+        assertFalse(fresh.batteryOld);
+        assertTrue(fresh.batteryLow());
+        assertEquals("low", fresh.batteryGlyph());
+        assertEquals(Instant.parse("2026-10-31T11:00:00Z"), fresh.batteryNextChange);
+
+        UsWidgetModels.Couple old = UsWidgetModels.couple(clean, Instant.parse("2026-10-31T13:00:00Z"));
+        assertTrue(old.batteryOld);
+        assertEquals(Instant.parse("2026-11-01T10:00:00Z"), old.batteryNextChange);
+
+        UsWidgetModels.Couple gone = UsWidgetModels.couple(clean, Instant.parse("2026-11-01T10:00:00Z"));
+        assertFalse(gone.batteryShown());
+        assertNull(gone.batteryNextChange);
+    }
+
+    @Test
+    public void partnerBatteryGlyphsAndBadInputs() throws Exception {
+        JSONObject snap = snapshot(null);
+        JSONObject couple = snap.getJSONObject("couple").put("batteryAt", "2026-10-31T10:00:00Z");
+        Instant now = Instant.parse("2026-10-31T10:05:00Z");
+        couple.put("batteryLevel", 18).put("batteryCharging", true);
+        UsWidgetModels.Couple charging = UsWidgetModels.couple(UsWidgetContract.normalize(snap), now);
+        assertEquals("charging", charging.batteryGlyph());
+        assertFalse(charging.batteryLow());
+        couple.put("batteryLevel", 60).put("batteryCharging", false);
+        assertEquals("medium", UsWidgetModels.couple(UsWidgetContract.normalize(snap), now).batteryGlyph());
+        couple.put("batteryLevel", 61);
+        assertEquals("high", UsWidgetModels.couple(UsWidgetContract.normalize(snap), now).batteryGlyph());
+
+        for (Object level : new Object[] { 101, -5, "pieno" }) {
+            couple.put("batteryLevel", level);
+            JSONObject clean = UsWidgetContract.normalize(snap);
+            assertEquals(-1, clean.getJSONObject("couple").getInt("batteryLevel"));
+            assertFalse(UsWidgetModels.couple(clean, now).batteryShown());
+        }
+        couple.put("batteryLevel", 50).put("batteryAt", "ieri");
+        assertFalse(UsWidgetModels.couple(UsWidgetContract.normalize(snap), now).batteryShown());
+        // An older app writes no battery at all.
+        assertFalse(UsWidgetModels.couple(snapshot(null), now).batteryShown());
+    }
+
     // ---------- La domanda di oggi ----------
 
     @Test

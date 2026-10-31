@@ -1179,6 +1179,8 @@ async function initCloud(){
     usRunWhenIdle(()=>startLocationRefreshTimer(),650);
     usRunWhenIdle(()=>hydrateProfileAvatars(),520);
     usRunWhenIdle(()=>maybeAutoRefreshLocation('launch'),1400);
+    // Batteria del partner: read in Noi and the widget, reported only while US is in use.
+    usRunWhenIdle(()=>window.UsPartnerBattery?.onForeground?.('launch'),1600);
     usRunWhenIdle(()=>refreshWebPushUi(),1100);
     usRunWhenIdle(()=>hydrateThink(),900);
     // Native has no service-worker image cache. Prewarm only the first few
@@ -6173,6 +6175,7 @@ async function refreshVisibleState(options={}){
   // M12A — returning to the foreground re-checks the location wherever the user lands.
   if(options.foreground)usAfterForeground(()=>maybeAutoRefreshLocation('resume'),900);
   if(options.foreground)usAfterForeground(()=>hydrateProfileAvatars(),1500);
+  if(options.foreground)usAfterForeground(()=>window.UsPartnerBattery?.onForeground?.('resume'),1700);
   if(active==='home'||todayOpen){
     if(options.foreground)hydrateHomePhoto(false).catch(()=>{});
     await hydrateToday();
