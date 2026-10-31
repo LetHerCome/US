@@ -358,3 +358,16 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - il numero è lo stesso dell'app su Oggi («Insieme da»);
   - il giorno dopo, a mezzanotte, cresce di uno senza aprire US;
   - il tocco apre Noi.
+
+## 2026-10-31 — Ti penso dal widget: al server giusto anche da staging (solo Android)
+
+**Fonte:** trovato durante il widget «Nota»; il founder: «correggilo come la Nota». **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; serve un APK nuovo.
+
+- **Prima:** il widget Ti penso mandava sempre all'Edge di produzione (indirizzo fisso in `UsWidgetActionClient.java`). Nell'APK di staging il cuore del widget non partiva: la produzione rifiutava il token di staging, e il widget chiedeva di aprire US.
+- **Ora:**
+  - insieme al token l'app passa al telefono l'indirizzo delle sue Edge (`SB_URL` + `/functions/v1`, quindi staging nell'APK di staging);
+  - il codice nativo accetta solo i due progetti US in https (`UsWidgetEndpoints`), così il token non può andare su un altro server;
+  - niente redirect.
+- **Chi ha già il widget in produzione:** la credenziale salvata prima non ha l'indirizzo, quindi va alla produzione come oggi. Non serve fare niente.
+- **Test:** `UsWidgetEndpointsTest` (JVM), `tests/w1-3-silent-send.test.js`, `tests/widget-system.test.js`.
+- **Da provare dall'APK di staging:** il cuore del widget Ti penso manda davvero il pensiero; l'altro telefono lo riceve.

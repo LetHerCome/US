@@ -266,7 +266,9 @@ window.addEventListener('us-identity-change',event=>{
   if(noiIdeaState.selectedId)renderNoiIdeaDetailState(noiIdeaFindItem(noiIdeaState.selectedId));
 });
 
+// functionsUrl: the widgets send to the Edge of this build (staging or production).
 window.UsWidgetCredentialApi=Object.freeze({
+  functionsUrl:`${SB_URL}/functions/v1`,
   async issue(deviceIdHash){
     if(!window.UsPlatform?.isNative||!/^[a-f0-9]{64}$/.test(String(deviceIdHash||'')))return null;
     const {data,error}=await sb.functions.invoke('widget-device-token',{body:{operation:'issue',deviceIdHash}});

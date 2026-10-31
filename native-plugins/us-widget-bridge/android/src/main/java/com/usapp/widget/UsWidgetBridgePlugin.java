@@ -67,7 +67,11 @@ public class UsWidgetBridgePlugin extends Plugin {
     @PluginMethod
     public void setActionCredential(PluginCall call) {
         String ownerHash = call.getString("ownerHash", "");
-        if (!ownerHash.equals(store.owner()) || !credentials.write(ownerHash, call.getString("token", ""), call.getString("expiresAt", ""))) {
+        // The Edge address of this build (staging or production); a wrong one is refused.
+        String functionsUrl = call.getString("functionsUrl", "");
+        boolean addressOk = functionsUrl.isEmpty() || !UsWidgetEndpoints.functionsBase(functionsUrl).isEmpty();
+        if (!ownerHash.equals(store.owner()) || !addressOk
+            || !credentials.write(ownerHash, call.getString("token", ""), call.getString("expiresAt", ""), functionsUrl)) {
             call.reject("Invalid widget action credential");
             return;
         }

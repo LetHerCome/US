@@ -48,7 +48,7 @@ public final class UsThinkWidgetActionReceiver extends BroadcastReceiver {
             try {
                 UsWidgetCredentialStore credentials = new UsWidgetCredentialStore(app);
                 String token = credentials.readToken(owner);
-                String result = token.isEmpty() ? UsWidgetActionClient.UNAUTHORIZED : new UsWidgetActionClient().send(token, actionId);
+                String result = token.isEmpty() ? UsWidgetActionClient.UNAUTHORIZED : new UsWidgetActionClient().send(credentials.functionsBase(owner), token, actionId);
                 // Logout or account switch while the request was in flight: drop the result.
                 if (!owner.equals(store.owner())) return;
                 if (UsWidgetActionClient.UNAUTHORIZED.equals(result)) credentials.clear();

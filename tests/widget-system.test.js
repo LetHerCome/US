@@ -56,7 +56,7 @@ function loadWidgets({
     writeWidgetPhoto: async () => true,
     clearWidgets: async () => { events.push(['clear']); return true; },
     getWidgetDeviceIdentity: async () => ({ deviceId: '5a86d7aa-37d8-48ed-9122-a8f42d80ff9e' }),
-    storeWidgetActionCredential: async (ownerHash, token) => { events.push(['credential', ownerHash, token]); return storeCredentialResult; },
+    storeWidgetActionCredential: async (ownerHash, token, expiresAt, options) => { events.push(['credential', ownerHash, token, options?.functionsUrl || '']); return storeCredentialResult; },
     clearWidgetActionCredential: async () => events.push(['credential-clear']),
     getNativeLaunchUrl: async () => launchUrl,
     listenForNativeAppUrl(handler) { urlListeners += 1; appUrlOpen = handler; return Promise.resolve({ remove() {} }); },
@@ -221,6 +221,12 @@ test('auth ready provisiona la credential device-scoped solo quando manca o va r
   const renew = loadWidgets({ credential: 'renew' });
   await renew.widgets.authReady({ id: 'user-1' });
   assert.equal(renew.counts.issue, 1);
+
+  // The widget sends to the Edge of this build (staging or production).
+  const staging = loadWidgets({ credential: 'missing' });
+  staging.sandbox.UsWidgetCredentialApi.functionsUrl = 'https://dugmhngrfkuieeletatb.supabase.co/functions/v1';
+  await staging.widgets.authReady({ id: 'user-1' });
+  assert.equal(staging.events.find((event) => event[0] === 'credential')[3], 'https://dugmhngrfkuieeletatb.supabase.co/functions/v1');
 });
 
 test('fallimento provisioning non conserva credential; credential non cifrata viene revocata', async () => {

@@ -271,12 +271,16 @@
     return /^[0-9a-f-]{36}$/i.test(deviceId) ? { deviceId } : null;
   }
 
-  async function storeWidgetActionCredential(ownerHash, token, expiresAt = '') {
+  // functionsUrl: the Edge address of this build (production or staging),
+  // so the widget sends to the server that issued the token. Native accepts
+  // only the two US projects (UsWidgetEndpoints).
+  async function storeWidgetActionCredential(ownerHash, token, expiresAt = '', { functionsUrl = '' } = {}) {
     const plugin = widgetBridge();
     const safeHash = validOwnerHash(ownerHash);
     const safeToken = typeof token === 'string' && /^[A-Za-z0-9_-]{43}$/.test(token) ? token : '';
+    const safeUrl = /^https:\/\/[a-z0-9]{20}\.supabase\.co\/functions\/v1$/.test(functionsUrl) ? functionsUrl : '';
     if (!plugin || !safeHash || !safeToken || typeof plugin.setActionCredential !== 'function') return false;
-    await plugin.setActionCredential({ ownerHash: safeHash, token: safeToken, expiresAt: safeInstant(expiresAt) });
+    await plugin.setActionCredential({ ownerHash: safeHash, token: safeToken, expiresAt: safeInstant(expiresAt), ...(safeUrl ? { functionsUrl: safeUrl } : {}) });
     return true;
   }
 

@@ -495,7 +495,10 @@
       const issued = await window.UsWidgetCredentialApi.issue(deviceIdHash);
       if (!issued?.token) throw new Error('credential_not_issued');
       if (token !== generation) throw new Error('account_changed');
-      const stored = await platform.storeWidgetActionCredential(targetOwnerHash, issued.token, issued.expiresAt || '');
+      // The widget sends to the Edge of this build (staging or production).
+      const stored = await platform.storeWidgetActionCredential(targetOwnerHash, issued.token, issued.expiresAt || '', {
+        functionsUrl: window.UsWidgetCredentialApi.functionsUrl || ''
+      });
       if (!stored) throw new Error('credential_not_stored');
       return true;
     } catch (error) {
