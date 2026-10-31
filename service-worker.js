@@ -1,4 +1,4 @@
-const BUILD_ID = "us-rilascio-20261030-74";
+const BUILD_ID = "us-note-condivise-20261031-76";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -59,6 +59,8 @@ const APP_SHELL = [
   versioned("/countdown.js"),
   versioned("/year-recap.css"),
   versioned("/year-recap.js"),
+  versioned("/couple-notes.css"),
+  versioned("/couple-notes.js"),
   versioned("/companions.css"),
   versioned("/companions.js"),
   versioned("/distance.css"),

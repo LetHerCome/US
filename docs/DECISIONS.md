@@ -370,3 +370,12 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 
 - In produzione l'icona predefinita resta quella con la cornice. Sostituisce la decisione «Icona dell'app senza cornice» del 29/10, che non va in produzione.
 - Le altre icone (Notte, Oro, Neon) si sbloccano in Sintonia, come premi.
+
+## 2026-10-31 — Posizione, widget e Note condivise (dopo lo studio di Love8)
+
+**Fonte:** founder, 31/10/2026: grill D1–D16 sullo studio dell'app Love8, riepilogo confermato («Sì, è giusto»).
+
+- **Posizione:** niente tracciamento continuo. Si aggiungono, in quest'ordine: la batteria del partner (aggiornata solo ad app aperta, con l'orario, senza notifiche); «a casa / fuori» in automatico con un solo recinto attorno alla Casa che ognuno mette sulla mappa (la posizione di casa non lascia il telefono, al server arriva solo lo stato; va attivato da tutti e due; serve «Consenti sempre» e la dichiarazione a Play); la notifica solo per l'arrivo a casa, che ognuno può spegnere; la condivisione a tempo (30 minuti o 1 ora, punto preciso, «Smetti», poi cancellata).
+- **Widget:** il primo è «Noi» con a casa / fuori, batteria e distanza; il widget del Compagno è tolto per ora; poi lo stato con emoji e il carosello di foto. Solo Android.
+- **Note condivise in Noi:** titolo, testo e lista a spunta, modificabili da tutti e due; vince l'ultimo salvataggio, con l'avviso quando l'altra persona salva la nota aperta. Missione: `docs/missions/note-condivise-v1.md`.
+- **Ordine:** Note condivise e widget «Noi» con batteria e distanza; poi «a casa»; poi la condivisione a tempo. Tutto prima su staging.

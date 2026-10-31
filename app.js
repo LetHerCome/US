@@ -843,6 +843,7 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.UsCoupleContext?.clear?.();
   window.USCountdown?.reset?.();
   window.UsYearRecap?.reset?.();
+  window.UsCoupleNotes?.reset?.();
   window.UsCompanions?.reset?.();
   window.UsDistance?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
@@ -6084,6 +6085,7 @@ function startUsRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'shared_event_completions',filter:`couple_id=eq.${coupleId}`},()=>{scheduleUsRealtimeRefresh('events');hydrateBondSummary();})
     .on('postgres_changes',{event:'*',schema:'public',table:'relationship_milestones',filter:`couple_id=eq.${coupleId}`},()=>{scheduleUsRealtimeRefresh('events');hydrateBondSummary();})
     .on('postgres_changes',{event:'*',schema:'public',table:'bond_weekly_quests',filter:`couple_id=eq.${coupleId}`},()=>{hydrateBondSummary();if(document.getElementById('bond')?.classList.contains('active'))hydrateBond();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'couple_notes',filter:`couple_id=eq.${coupleId}`},payload=>window.UsCoupleNotes?.onChange?.(payload))
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'couples',filter:`id=eq.${coupleId}`},payload=>{renderBondProgress(payload.new?.bond_xp||0);window.USProgression?.refreshAfterAction?.();})
     .subscribe();
 }

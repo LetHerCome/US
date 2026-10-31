@@ -2495,6 +2495,25 @@
     'Scegli un motivo e scrivi cosa è successo.': 'Choose a reason and write what happened.',
     'Segnalazione non inviata. Riprova o scrivi a {email}.': 'Report not sent. Try again or write to {email}.',
 
+    // ------------------------------------------------------- Note condivise (31/10/2026)
+    Note: 'Notes',
+    'Nuova nota': 'New note',
+    'Le vostre note': 'Your notes',
+    'Spesa, valigia, film da vedere: scrivetele qui, le vedete tutti e due.': 'Shopping, packing, films to watch: write them here, you both see them.',
+    'Non riesco a caricare le note': 'I can’t load the notes',
+    'Chiudi le note': 'Close the notes',
+    'Scrivi qualcosa…': 'Write something…',
+    'Aggiungi una voce': 'Add an item',
+    'Togli la voce': 'Remove the item',
+    'Eliminare la nota?': 'Delete the note?',
+    'Sparisce per voi due.': 'It goes for both of you.',
+    Salvata: 'Saved',
+    'Non salvata, riprovo…': 'Not saved, trying again…',
+    'Non salvata: controlla la connessione': 'Not saved: check your connection',
+    'Carica la sua versione': 'Load their version',
+    '{name} l’ha appena modificata.': '{name} just changed it.',
+    'Aggiornata da {name}.': 'Updated by {name}.',
+
     // ------------------------------------------------------- Il vostro anno
     'Il vostro anno': 'Your year',
     'Il vostro anno su US': 'Your year on US',
