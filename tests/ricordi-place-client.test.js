@@ -134,3 +134,17 @@ test('in the full-screen photo «Dove» has its own row in the foot', () => {
   for (const other of ['us-album-title', 'us-album-byline', 'us-album-caption-postit', 'us-album-ask', 'us-album-carousel-status', 'us-album-acts', 'us-album-section'])
     assert.notEqual(row(other), place, other);
 });
+
+// Founder, 30/10/2026 (production): the place of a Ricordo added before 1.3
+// could not be saved. The app's client is the global `sb` of app.js (a
+// const, so never window.sb): set_moment_place must go through it.
+test('saving a place uses the app client, the global sb', async () => {
+  const calls = [];
+  globalThis.sb = { rpc: async (name, args) => { calls.push([name, args]); return { data: { id: 'm1' }, error: null }; } };
+  try {
+    assert.deepEqual(await P.save('m1', { lat: 44.494887, lon: 11.342616, label: 'Bologna', source: 'search' }), { id: 'm1' });
+    assert.deepEqual(calls, [['set_moment_place', { p_moment: 'm1', p_lat: 44.495, p_lon: 11.343, p_label: 'Bologna', p_source: 'search' }]]);
+    await P.save('m1', null);
+    assert.deepEqual(calls[1][1], { p_moment: 'm1', p_lat: null, p_lon: null, p_label: null, p_source: null }, 'clearing the place');
+  } finally { delete globalThis.sb; }
+});
