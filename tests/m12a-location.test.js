@@ -324,3 +324,31 @@ test('tapping the capsule opens a tiny sheet; the explanation only when sharing 
   assert.equal(seen.at(-1)[1].confirmLabel, 'Attiva');
   assert.equal(needs.calls.geolocation.length, 0, 'declining the sheet asks nothing');
 });
+
+// Batteria del partner (founder, 31/10/2026, option C): the sheet the capsule
+// opens says the partner's battery under the distance, only beside a real one.
+test('the distance sheet carries the partner battery line beside a distance', async () => {
+  const seen = [];
+  const h = harness({ server: pair(4, 4) });
+  h.sandbox.window.UsUiFoundation = { notice: async (o) => seen.push(o) };
+  h.sandbox.window.UsPartnerBattery = { sheetLine: () => 'Bea · 18% · 2 ore fa' };
+  await h.api.hydrateDistance();
+  await h.api.openDistanceDetail();
+  assert.equal(seen[0].title, '477 km tra voi');
+  assert.equal(seen[0].note, 'Bea · 18% · 2 ore fa');
+  assert.match(seen[0].body, /^Aggiornata 4 min fa\. /, 'the location sentence stays as it was');
+
+  const waiting = harness({ server: { ...pair(1, 1), partner_sharing: false, partner_updated_at: null, distance_km: null } });
+  waiting.sandbox.window.UsUiFoundation = { notice: async (o) => seen.push(o) };
+  waiting.sandbox.window.UsPartnerBattery = { sheetLine: () => 'Bea · 18% · 2 ore fa' };
+  await waiting.api.hydrateDistance();
+  await waiting.api.openDistanceDetail();
+  assert.equal(seen.at(-1).note, undefined, 'no distance yet: no battery either');
+
+  const none = harness({ server: pair(4, 4) });
+  none.sandbox.window.UsUiFoundation = { notice: async (o) => seen.push(o) };
+  none.sandbox.window.UsPartnerBattery = { sheetLine: () => '' };
+  await none.api.hydrateDistance();
+  await none.api.openDistanceDetail();
+  assert.equal(seen.at(-1).note, undefined, 'no reading: nothing');
+});

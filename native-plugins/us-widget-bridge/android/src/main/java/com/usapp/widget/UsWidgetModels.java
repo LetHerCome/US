@@ -158,6 +158,11 @@ final class UsWidgetModels {
         return new Daily(question, state);
     }
 
+    /** Batteria del partner: quieter after an hour, gone after a day. */
+    static final long BATTERY_FRESH_MS = 60 * 60_000L;
+    static final long BATTERY_VISIBLE_MS = 24 * 60 * 60_000L;
+    static final int BATTERY_LOW = 20;
+
     static final class Couple {
         String names = "";
         long days = -1;
@@ -165,7 +170,22 @@ final class UsWidgetModels {
         String todayInvitation = "";
         String distanceText = "";
         boolean distanceStale = false;
+        /** The partner's battery, -1 when unknown or older than a day. */
+        int batteryLevel = -1;
+        boolean batteryCharging = false;
+        boolean batteryOld = false;
+        /** When the battery goes quiet or disappears. */
+        Instant batteryNextChange = null;
         Instant nextChange = null;
+
+        boolean batteryShown() { return batteryLevel >= 0; }
+        /** Phosphor glyph, same thresholds as the app (partner-battery.js). */
+        String batteryGlyph() {
+            if (batteryCharging) return "charging";
+            if (batteryLevel <= BATTERY_LOW) return "low";
+            return batteryLevel <= 60 ? "medium" : "high";
+        }
+        boolean batteryLow() { return batteryShown() && !batteryCharging && batteryLevel <= BATTERY_LOW; }
     }
 
     /** A tiny rotating invitation, not a fabricated question or fake game state.
@@ -192,6 +212,17 @@ final class UsWidgetModels {
         out.frame = c.optString("frame", "");
         out.distanceText = c.optString("distanceText", "");
         out.distanceStale = "stale".equals(c.optString("distanceState", ""));
+        int level = c.optInt("batteryLevel", -1);
+        Instant at = UsWidgetContract.instant(c.optString("batteryAt", ""));
+        if (level >= 0 && level <= 100 && at != null) {
+            long age = Math.max(0L, Duration.between(at, now).toMillis());
+            if (age < BATTERY_VISIBLE_MS) {
+                out.batteryLevel = level;
+                out.batteryCharging = c.optBoolean("batteryCharging", false);
+                out.batteryOld = age >= BATTERY_FRESH_MS;
+                out.batteryNextChange = at.plusMillis(out.batteryOld ? BATTERY_VISIBLE_MS : BATTERY_FRESH_MS);
+            }
+        }
         out.nextChange = nextRomeMidnight(now);
         return out;
     }
@@ -310,6 +341,146 @@ final class UsWidgetModels {
         if (minutes < 60) return from.plus(60, ChronoUnit.MINUTES).plusSeconds(1);
         if (minutes < 1440) return from.plus((minutes / 60 + 1) * 60, ChronoUnit.MINUTES).plusSeconds(1);
         return nextRomeMidnight(now);
+    }
+
+    // ---------- Noi stile mappa: the Ti penso bubbles ----------
+
+    /** Above each portrait, that person's last Ti penso and how long ago. */
+    static final class Bubbles {
+        String partner = "";
+        String me = "";
+        Instant nextChange = null;
+    }
+
+    static final long BUBBLE_VISIBLE_MS = 7 * DAY_MS;
+
+    static Bubbles noiBubbles(JSONObject snapshot, JSONObject action, Instant now) {
+        Bubbles out = new Bubbles();
+        if (snapshot == null) return out;
+        JSONObject t = UsWidgetContract.optObject(snapshot, "think");
+        String partner = t.optString("partnerName", "").trim();
+        Instant received = UsWidgetContract.instant(t.optString("lastReceivedAt", ""));
+        Instant sent = UsWidgetContract.instant(t.optString("lastSentAt", ""));
+        // A Ti penso sent from the widget is newer than the app's last read.
+        Instant nativeSent = action == null ? null : UsWidgetContract.instant(action.optString("sentAt", ""));
+        if (nativeSent != null && (sent == null || nativeSent.isAfter(sent))) sent = nativeSent;
+        String ago = bubbleAgo(received, now);
+        if (!ago.isEmpty()) {
+            out.partner = "ti ha pensato · " + ago;
+            out.nextChange = earliest(out.nextChange, bubbleNextChange(received, now));
+        }
+        ago = bubbleAgo(sent, now);
+        if (!ago.isEmpty()) {
+            out.me = (partner.isEmpty() ? "Ti penso" : "hai pensato a " + partner) + " · " + ago;
+            out.nextChange = earliest(out.nextChange, bubbleNextChange(sent, now));
+        }
+        return out;
+    }
+
+    /** "proprio ora", then 5-minute steps in the first hour; "" after a week. */
+    static String bubbleAgo(Instant at, Instant now) {
+        if (at == null) return "";
+        long ms = now.toEpochMilli() - at.toEpochMilli();
+        // A couple of minutes of clock skew between phone and server is "now".
+        if (ms < -120_000L || ms >= BUBBLE_VISIBLE_MS) return "";
+        long minutes = Math.max(0, ms / 60_000L);
+        if (minutes < 5) return "proprio ora";
+        if (minutes < 60) return (minutes / 5 * 5) + " min fa";
+        if (minutes < 120) return "1 ora fa";
+        if (minutes < 1440) return (minutes / 60) + " ore fa";
+        if (minutes < 2880) return "ieri";
+        return (minutes / 1440) + " giorni fa";
+    }
+
+    /** When bubbleAgo next changes: every 5 minutes, then hourly, then daily. */
+    static Instant bubbleNextChange(Instant at, Instant now) {
+        long minutes = Math.max(0, Duration.between(at, now).toMinutes());
+        long step = minutes < 60 ? 5 : minutes < 1440 ? 60 : 1440;
+        return at.plus((minutes / step + 1) * step, ChronoUnit.MINUTES);
+    }
+
+    private static Instant earliest(Instant a, Instant b) {
+        if (a == null) return b;
+        if (b == null) return a;
+        return a.isBefore(b) ? a : b;
+    }
+
+    // ---------- Giorni insieme ----------
+
+    /** The big number of days together (Rome civil days, as in the app), or a quiet line. */
+    static final class Days {
+        boolean empty = true;
+        String value = "";
+        String unit = "";
+        Instant nextChange = null;
+    }
+
+    static Days days(JSONObject snapshot, Instant now) {
+        Days out = new Days();
+        if (snapshot == null) {
+            out.unit = "Apri US per collegare il widget";
+            return out;
+        }
+        long days = daysTogether(UsWidgetContract.optObject(snapshot, "couple").optString("startedOn", ""), now);
+        if (days < 0) {
+            out.unit = "I vostri giorni insieme";
+            return out;
+        }
+        out.empty = false;
+        out.value = Long.toString(days);
+        out.unit = days == 1 ? "giorno insieme" : "giorni insieme";
+        out.nextChange = nextRomeMidnight(now);
+        return out;
+    }
+
+    // ---------- Messaggio ----------
+
+    /** The partner's last Ti penso, or the Lasciato per te still closed, whichever is newer. */
+    static final class Message {
+        boolean empty = true;
+        String text = "";
+        /** "10 min fa"; empty when it would be older than a week. */
+        String when = "";
+        /** us://widget/<destination>: the Ti penso, the envelope, or just US. */
+        String destination = "message";
+        Instant nextChange = null;
+    }
+
+    static Message message(JSONObject snapshot, Instant now) {
+        Message out = new Message();
+        if (snapshot == null) {
+            out.text = "Apri US per collegare il widget";
+            return out;
+        }
+        Instant received = UsWidgetContract.instant(UsWidgetContract.optObject(snapshot, "think").optString("lastReceivedAt", ""));
+        // A Ti penso older than a week is not news; a closed envelope still waits.
+        if (received != null && bubbleAgo(received, now).isEmpty()) received = null;
+        JSONObject left = UsWidgetContract.optObject(snapshot, "left");
+        Instant leftAt = UsWidgetContract.instant(left.optString("at", ""));
+        String leftKind = left.optString("kind", "");
+        if (leftKind.isEmpty()) leftAt = null;
+        if (received == null && leftAt == null) {
+            out.text = "Il suo prossimo pensiero arriverà qui";
+            return out;
+        }
+        out.empty = false;
+        boolean envelope = leftAt != null && (received == null || leftAt.isAfter(received));
+        Instant at = envelope ? leftAt : received;
+        out.text = envelope ? "Ti ha lasciato " + leftNoun(leftKind) : "Ti ha pensato";
+        out.destination = envelope ? "message/left" : "message/think";
+        out.when = bubbleAgo(at, now);
+        if (!out.when.isEmpty()) out.nextChange = bubbleNextChange(at, now);
+        return out;
+    }
+
+    static String leftNoun(String kind) {
+        switch (kind) {
+            case "photo": return "una foto";
+            case "audio": return "un vocale";
+            case "video": return "un video";
+            case "music": return "una canzone";
+            default: return "un messaggio";
+        }
     }
 
     static final long RETRY_SAME_ACTION_MS = 2 * 60_000L;

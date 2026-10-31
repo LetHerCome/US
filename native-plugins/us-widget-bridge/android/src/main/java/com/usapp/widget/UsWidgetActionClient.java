@@ -12,19 +12,21 @@ import org.json.JSONObject;
  * The only network call a widget makes: "Ti penso" with the device-scoped
  * widget credential (never a Supabase session). The server deduplicates on
  * (credential, actionId), so repeating the same actionId cannot send twice.
+ * It goes to the Edge of the build that issued the credential (staging or
+ * production, UsWidgetEndpoints); an older credential without one, to production.
  */
 final class UsWidgetActionClient {
     static final String SENT = "sent";
     static final String FAILED = "failed";
     static final String UNAUTHORIZED = "unauthorized";
     static final String RATE_LIMITED = "rate_limited";
-    private static final String ENDPOINT = "https://iiakdfsxpywdkxravqjh.supabase.co/functions/v1/widget-think-send";
     private static final int TIMEOUT_MS = 4000;
 
-    String send(String token, String actionId) {
+    String send(String functionsBase, String token, String actionId) {
         HttpURLConnection connection = null;
         try {
-            connection = (HttpURLConnection) new URL(ENDPOINT).openConnection();
+            connection = (HttpURLConnection) new URL(UsWidgetEndpoints.thinkSend(functionsBase)).openConnection();
+            connection.setInstanceFollowRedirects(false);
             connection.setRequestMethod("POST");
             connection.setConnectTimeout(TIMEOUT_MS);
             connection.setReadTimeout(TIMEOUT_MS);

@@ -1,4 +1,4 @@
-const BUILD_ID = "us-staging-20261031-79";
+const BUILD_ID = "us-staging-20261031-80";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -50,6 +50,7 @@ const APP_SHELL = [
   versioned("/moments-albums.js"),
   versioned("/ricordi-place.css"),
   versioned("/ricordi-place.js"),
+  versioned("/partner-battery.js"),
   versioned("/navigation.js"),
   versioned("/games.css"),
   versioned("/games.js"),
@@ -148,6 +149,10 @@ const APP_SHELL = [
   "/assets/icons/phosphor/bell-regular.svg",
   "/assets/icons/phosphor/squares-four-regular.svg",
   "/assets/icons/phosphor/map-pin-regular.svg",
+  "/assets/icons/phosphor/battery-low-regular.svg",
+  "/assets/icons/phosphor/battery-medium-regular.svg",
+  "/assets/icons/phosphor/battery-high-regular.svg",
+  "/assets/icons/phosphor/battery-charging-regular.svg",
   "/assets/icons/phosphor/arrows-clockwise-regular.svg",
   "/assets/icons/phosphor/user-circle-regular.svg",
   "/assets/icons/phosphor/image-regular.svg",

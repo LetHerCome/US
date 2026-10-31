@@ -32,8 +32,6 @@ final class UsWidgetStore {
     private final AtomicFile thinkHistoryFile;
     private final AtomicFile photoFile;
     private final AtomicFile photoMetaFile;
-    private final AtomicFile noiPortraitFile;
-    private final AtomicFile noiPortraitMetaFile;
 
     UsWidgetStore(Context context) {
         directory = new File(context.getNoBackupFilesDir(), "us-widget");
@@ -45,8 +43,6 @@ final class UsWidgetStore {
         thinkHistoryFile = new AtomicFile(new File(directory, "think-history-v1.json"));
         photoFile = new AtomicFile(new File(mediaDirectory, "photo.jpg"));
         photoMetaFile = new AtomicFile(new File(mediaDirectory, "photo-meta.json"));
-        noiPortraitFile = new AtomicFile(new File(mediaDirectory, "noi-portrait.jpg"));
-        noiPortraitMetaFile = new AtomicFile(new File(mediaDirectory, "noi-portrait-meta.json"));
         // V1 kept the action status inside the shared snapshot. It is superseded.
         new File(directory, "snapshot-v1.json").delete();
     }
@@ -76,8 +72,10 @@ final class UsWidgetStore {
         thinkHistoryFile.delete();
         photoFile.delete();
         photoMetaFile.delete();
-        noiPortraitFile.delete();
-        noiPortraitMetaFile.delete();
+        for (String slot : PORTRAIT_SLOTS) {
+            portraitFile(slot).delete();
+            portraitMetaFile(slot).delete();
+        }
     }
 
     // ---------- semantic snapshot ----------
@@ -197,31 +195,48 @@ final class UsWidgetStore {
         return next;
     }
 
-    // WebView-prepared two-person portrait, never a signed URL.
-    synchronized boolean writeNoiPortrait(String ownerHash, byte[] bytes) {
-        if (!owner().equals(ownerHash) || ownerHash.isEmpty() || bytes == null ||
+    // WebView-prepared portraits, never a signed URL: "pair" is the two-person
+    // portrait of Noi 2x1, "me" and "partner" the round ones of Noi stile mappa.
+    static final String[] PORTRAIT_SLOTS = { "pair", "me", "partner" };
+
+    static boolean validPortraitSlot(String slot) {
+        for (String known : PORTRAIT_SLOTS) if (known.equals(slot)) return true;
+        return false;
+    }
+
+    private AtomicFile portraitFile(String slot) {
+        return new AtomicFile(new File(mediaDirectory, "pair".equals(slot) ? "noi-portrait.jpg" : "noi-portrait-" + slot + ".png"));
+    }
+
+    private AtomicFile portraitMetaFile(String slot) {
+        return new AtomicFile(new File(mediaDirectory, "pair".equals(slot) ? "noi-portrait-meta.json" : "noi-portrait-" + slot + "-meta.json"));
+    }
+
+    synchronized boolean writeNoiPortrait(String ownerHash, String slot, byte[] bytes) {
+        if (!validPortraitSlot(slot) || !owner().equals(ownerHash) || ownerHash.isEmpty() || bytes == null ||
             bytes.length < 64 || bytes.length > MAX_PHOTO_BYTES || !isImage(bytes)) return false;
+        AtomicFile file = portraitFile(slot);
         FileOutputStream output = null;
         try {
-            output = noiPortraitFile.startWrite();
+            output = file.startWrite();
             output.write(bytes);
             output.flush();
-            noiPortraitFile.finishWrite(output);
-            return writeAtomic(noiPortraitMetaFile,
+            file.finishWrite(output);
+            return writeAtomic(portraitMetaFile(slot),
                 new JSONObject().put("ownerHash", ownerHash).toString());
         } catch (Exception ignored) {
-            if (output != null) noiPortraitFile.failWrite(output);
+            if (output != null) file.failWrite(output);
             return false;
         }
     }
 
-    synchronized byte[] readNoiPortrait() {
+    synchronized byte[] readNoiPortrait(String slot) {
         String activeOwner = owner();
-        if (activeOwner.isEmpty()) return null;
+        if (activeOwner.isEmpty() || !validPortraitSlot(slot)) return null;
         try {
-            JSONObject meta = new JSONObject(readAtomic(noiPortraitMetaFile));
+            JSONObject meta = new JSONObject(readAtomic(portraitMetaFile(slot)));
             if (!activeOwner.equals(meta.optString("ownerHash", ""))) return null;
-            return noiPortraitFile.readFully();
+            return portraitFile(slot).readFully();
         } catch (Exception ignored) { return null; }
     }
 

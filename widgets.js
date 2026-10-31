@@ -13,8 +13,10 @@
 
   const platform = window.UsPlatform;
   const nativeEnabled = Boolean(platform?.isNative && platform?.hasWidgetBridge?.() !== false);
-  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily']);
-  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home' });
+  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days']);
+  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', days: 'bond' });
+  // Messaggio opens the message itself: the Ti penso or the closed envelope.
+  const MESSAGE_TARGETS = Object.freeze({ think: 'think', left: 'left_for_you' });
   const COUPLE_TTL_MS = 30 * 60 * 1000;
   const PHOTO_TTL_MS = 10 * 60 * 1000;
   const PHOTO_MAX_EDGE = 720;
@@ -36,21 +38,27 @@
   let noiPortraitPreviewUrl = '';
   let noiPortraitSignature = '';
   let noiPortraitSync = null;
+  let noiRoundPreviewUrls = { me: '', partner: '' };
   let lastLink = { url: '', at: 0 };
   let pendingDestination = '';
   let pendingKind = '';
 
   const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastSentAt: '', lastAnsweredAt: '' });
-  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready' });
+  // Batteria del partner: level -1 = unknown (UsWidgetContract.java).
+  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready', batteryLevel: -1, batteryCharging: false, batteryAt: '' });
   const emptyCountdown = () => ({ active: false, kind: '', title: '', target: '', style: 'editorial' });
   const emptyPhoto = () => ({ state: 'none', key: '', takenOn: '' });
   // La domanda di oggi: the day, the shared question and whose turn it is. Never an answer.
   const emptyDaily = () => ({ date: '', question: '', state: 'none' });
+  // Messaggio: the newest Lasciato per te still closed for me, kind and time only.
+  const emptyLeft = () => ({ kind: '', at: '' });
+  const LEFT_KINDS = Object.freeze(['text', 'photo', 'audio', 'video', 'music']);
   let think = emptyThink();
   let couple = emptyCouple();
   let countdown = emptyCountdown();
   let photo = emptyPhoto();
   let daily = emptyDaily();
+  let left = emptyLeft();
 
   async function sha256Hex(value) {
     const bytes = new TextEncoder().encode(String(value || ''));
@@ -76,7 +84,8 @@
       couple: { ...couple, names: [...couple.names] },
       countdown: { ...countdown },
       photo: { ...photo },
-      daily: { ...daily }
+      daily: { ...daily },
+      left: { ...left }
     };
   }
 
@@ -135,6 +144,19 @@
     return scheduleWrite();
   }
 
+  // Oggi's unseen Lasciato per te rows (app.js loadOggiLeftItems): never the
+  // words, the photo or the link, only what kind the newest is and when.
+  function publishLeft(items) {
+    if (!ownerHash || !Array.isArray(items)) return Promise.resolve(false);
+    const newest = items
+      .filter((item) => LEFT_KINDS.includes(item?.kind) && isoInstant(item?.created_at))
+      .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
+    const next = newest ? { kind: newest.kind, at: isoInstant(newest.created_at) } : emptyLeft();
+    if (next.kind === left.kind && next.at === left.at) return Promise.resolve(false);
+    left = next;
+    return scheduleWrite();
+  }
+
   async function publishThink(next = {}) {
     think = {
       partnerName: cleanText(next.partnerName || think.partnerName, 40),
@@ -190,7 +212,10 @@
         startedOn: civilDate(data.startedOn),
         frame,
         distanceText: couple.distanceText,
-        distanceState: couple.distanceState
+        distanceState: couple.distanceState,
+        batteryLevel: couple.batteryLevel,
+        batteryCharging: couple.batteryCharging,
+        batteryAt: couple.batteryAt
       };
       coupleSyncedAt = Date.now();
       return scheduleWrite();
@@ -209,6 +234,22 @@
     const distanceState = next?.distanceState === 'stale' ? 'stale' : 'ready';
     if (couple.distanceText === distanceText && couple.distanceState === distanceState) return Promise.resolve(false);
     couple = { ...couple, distanceText, distanceState };
+    return scheduleWrite();
+  }
+
+  // Batteria del partner: the last reading Noi shows (partner-battery.js). The
+  // widget itself makes it quieter after an hour and drops it after a day.
+  function syncNoiBattery() {
+    if (!ownerHash) return Promise.resolve(false);
+    const next = window.UsPartnerBattery?.widgetState?.();
+    if (next === undefined) return Promise.resolve(false);
+    const batteryLevel = Number.isInteger(next?.level) ? next.level : -1;
+    const batteryAt = batteryLevel >= 0 ? isoInstant(next.at) : '';
+    const battery = batteryAt
+      ? { batteryLevel, batteryCharging: next.charging === true, batteryAt }
+      : { batteryLevel: -1, batteryCharging: false, batteryAt: '' };
+    if (couple.batteryLevel === battery.batteryLevel && couple.batteryCharging === battery.batteryCharging && couple.batteryAt === battery.batteryAt) return Promise.resolve(false);
+    couple = { ...couple, ...battery };
     return scheduleWrite();
   }
 
@@ -268,6 +309,68 @@
     return {base64, preview: URL.createObjectURL(png)};
   }
 
+  // Noi stile mappa: one round portrait per person (same ring colours), 56dp
+  // at 3x, transparent. The widget puts me on the left, the partner on the right.
+  async function composeRoundPortrait(url, colour) {
+    const S = 3, size = Math.round(56 * S), ring = 2.5 * S, c = size / 2, radius = c - ring;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('noi_round_canvas');
+    ctx.save();
+    ctx.beginPath(); ctx.arc(c, c, radius, 0, Math.PI * 2); ctx.clip();
+    ctx.fillStyle = '#2a2232';
+    ctx.fillRect(0, 0, size, size);
+    let bitmap;
+    try {
+      const response = await fetch(url, { credentials: 'omit' });
+      if (!response.ok) throw new Error('avatar_download');
+      const blob = await response.blob();
+      if (!/^image\//.test(blob.type || 'image/')) throw new Error('avatar_type');
+      bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+      const scale = Math.max(radius * 2 / bitmap.width, radius * 2 / bitmap.height);
+      const w = bitmap.width * scale, h = bitmap.height * scale;
+      ctx.drawImage(bitmap, c - w / 2, c - h / 2, w, h);
+    } finally { bitmap?.close?.(); }
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(c, c, radius + ring / 2, 0, Math.PI * 2);
+    ctx.strokeStyle = colour; ctx.lineWidth = ring; ctx.stroke();
+    const png = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (!png) throw new Error('noi_round_encode');
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+      reader.onerror = reject;
+      reader.readAsDataURL(png);
+    });
+    return { base64, preview: URL.createObjectURL(png) };
+  }
+
+  // urls come by role (creator, partner); "me" is the viewer's own.
+  async function writeRoundPortraits(urls, owner, token) {
+    const mine = window.usProfile?.role === 'beatrice' ? 1 : 0;
+    const colours = ['#ff7c96', '#a98bff'];
+    const previews = {};
+    for (const [slot, index] of [['me', mine], ['partner', 1 - mine]]) {
+      if (!urls[index]) continue;
+      try {
+        const image = await composeRoundPortrait(urls[index], colours[index]);
+        if (token !== generation || !(await platform.writeWidgetNoiPortrait(owner, image.base64, slot))) { URL.revokeObjectURL(image.preview); continue; }
+        previews[slot] = image.preview;
+      } catch (error) { console.warn('[US Widget] Noi round portrait', error); }
+    }
+    for (const slot of ['me', 'partner']) {
+      if (!previews[slot]) continue;
+      if (noiRoundPreviewUrls[slot]) URL.revokeObjectURL(noiRoundPreviewUrls[slot]);
+      noiRoundPreviewUrls[slot] = previews[slot];
+    }
+  }
+
+  function clearRoundPreviews() {
+    for (const slot of ['me', 'partner']) if (noiRoundPreviewUrls[slot]) URL.revokeObjectURL(noiRoundPreviewUrls[slot]);
+    noiRoundPreviewUrls = { me: '', partner: '' };
+  }
+
   function syncNoiPortrait({ force = false } = {}) {
     if (!nativeEnabled || !ownerHash || !platform?.writeWidgetNoiPortrait) return Promise.resolve(false);
     if (noiPortraitSync) return noiPortraitSync;
@@ -281,8 +384,10 @@
       try {
         image=await composeNoiPortrait(urls);
         if(token!==generation){URL.revokeObjectURL(image.preview);return false;}
-        const ok=await platform.writeWidgetNoiPortrait(owner,image.base64);
+        const ok=await platform.writeWidgetNoiPortrait(owner,image.base64,'pair');
         if(token!==generation || !ok){URL.revokeObjectURL(image.preview);return false;}
+        await writeRoundPortraits(urls,owner,token);
+        if(token!==generation){URL.revokeObjectURL(image.preview);return false;}
         if(noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
         noiPortraitPreviewUrl=image.preview;
         noiPortraitSignature=signature;
@@ -390,7 +495,10 @@
       const issued = await window.UsWidgetCredentialApi.issue(deviceIdHash);
       if (!issued?.token) throw new Error('credential_not_issued');
       if (token !== generation) throw new Error('account_changed');
-      const stored = await platform.storeWidgetActionCredential(targetOwnerHash, issued.token, issued.expiresAt || '');
+      // The widget sends to the Edge of this build (staging or production).
+      const stored = await platform.storeWidgetActionCredential(targetOwnerHash, issued.token, issued.expiresAt || '', {
+        functionsUrl: window.UsWidgetCredentialApi.functionsUrl || ''
+      });
       if (!stored) throw new Error('credential_not_stored');
       return true;
     } catch (error) {
@@ -455,6 +563,7 @@
     if (nextHash !== ownerHash || activeCoupleId !== (profile.couple_id || '')) {
       generation += 1;
       think = emptyThink();
+      left = emptyLeft();
       couple = emptyCouple();
       countdown = emptyCountdown();
       photo = emptyPhoto();
@@ -465,6 +574,7 @@
       noiPortraitSignature = '';
       if (noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
       noiPortraitPreviewUrl = '';
+      clearRoundPreviews();
       setPreview('');
     }
     activeCoupleId=profile.couple_id || '';
@@ -476,6 +586,7 @@
     countdown = countdownFromOggi() || countdown;
     await Promise.all([syncCouple({ force: true }), scheduleWrite(), ensureCredential(status)]);
     await syncNoiDistance();
+    await syncNoiBattery();
     // The portrait and Oggi photo only sync after first UI paint.
     setTimeout(() => {
       syncPhoto({ force: true }).catch(() => {});
@@ -498,7 +609,8 @@
     noiPortraitSignature = '';
     if (noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
     noiPortraitPreviewUrl = '';
-    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();
+    clearRoundPreviews();
+    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();left = emptyLeft();
     setPreview('');
     const provisioning = credentialProvisionInFlight;
     if (provisioning) try { await provisioning; } catch (_) {}
@@ -523,6 +635,8 @@
       if (url.protocol !== 'us:' || url.hostname !== 'widget') return null;
       const path = url.pathname.replace(/^\/+/, '');
       if (path === 'noi/play') return { kind: 'noi-play', url: urlValue };
+      const message = path.match(/^message\/(think|left)$/);
+      if (message) return { kind: 'message', target: MESSAGE_TARGETS[message[1]], url: urlValue };
       const kind = path.split('/')[0];
       return KINDS.includes(kind) ? { kind, url: urlValue } : null;
     } catch (_) { return null; }
@@ -545,6 +659,12 @@
     const now = Date.now();
     if (lastLink.url === link.url && now - lastLink.at < 1500) return Promise.resolve(true);
     lastLink = { url: link.url, at: now };
+    // The Ti penso or the envelope: the same path as their notifications,
+    // which also waits for the sign-in on a cold start.
+    if (link.target && typeof window.UsPushNavigation?.open === 'function') {
+      window.UsPushNavigation.open(link.target);
+      return Promise.resolve(true);
+    }
     const page = DESTINATIONS[link.kind];
     pendingDestination = window.usProfile ? '' : page;
     pendingKind = window.usProfile ? '' : link.kind;
@@ -557,7 +677,7 @@
   // ---------- Widget Hub support ----------
 
   function view() {
-    return { snapshot: snapshot(), photoPreviewUrl, noiPortraitPreviewUrl, ready: Boolean(ownerHash) };
+    return { snapshot: snapshot(), photoPreviewUrl, noiPortraitPreviewUrl, noiRoundPreviewUrls: { ...noiRoundPreviewUrls }, ready: Boolean(ownerHash) };
   }
 
   async function installed() {
@@ -581,10 +701,12 @@
     KINDS,
     authReady,
     publishThink,
+    publishLeft,
     syncCountdown,
     syncDaily,
     syncCouple,
     syncNoiDistance,
+    syncNoiBattery,
     syncNoiPortrait,
     syncPhoto,
     clear,
@@ -617,6 +739,7 @@
     // painted Oggi event is authoritative for the widget photo.
     window.addEventListener('us:home-photo-changed', () => { syncPhoto({ force: true }).catch(() => {}); });
     window.addEventListener('us:distance-changed', () => { syncNoiDistance().catch(() => {}); });
+    window.addEventListener('us:partner-battery-changed', () => { syncNoiBattery().catch(() => {}); });
     window.addEventListener('us:noi-portraits-ready', () => { syncNoiPortrait().catch(() => {}); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden || !ownerHash) return;

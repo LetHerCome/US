@@ -747,6 +747,16 @@
 #usWidgetHub .us-wp-think>:not(i){display:none}
 #usWidgetHub .us-wp-think i{display:grid;place-items:center;width:30px;height:30px;margin:0}
 #usWidgetHub .us-wp-think svg{width:30px;height:30px;fill:currentColor}
+#usWidgetHub .us-wp-message{display:grid;place-items:center;background:var(--us-color-elevated)}
+#usWidgetHub .us-wp-message-bubble{display:grid;place-items:center;width:34px;height:24px;border-radius:9px;background:var(--us-color-text)}
+#usWidgetHub .us-wp-message i{display:grid;width:13px;height:13px}
+#usWidgetHub .us-wp-message svg{width:13px;height:13px;fill:var(--us-rosa)}
+#usWidgetHub .us-wp-days{display:grid;place-content:center;justify-items:center;gap:2px;background:var(--us-color-elevated)}
+#usWidgetHub .us-wp-days-dots{display:flex}
+#usWidgetHub .us-wp-days-dots::before,#usWidgetHub .us-wp-days-dots::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--us-rosa)}
+#usWidgetHub .us-wp-days-dots::after{margin-left:3px;background:var(--us-lilla)}
+#usWidgetHub .us-wp-days b{font-family:var(--us-font-display);font-weight:400;font-size:20px;line-height:1;color:var(--us-color-text)}
+#usWidgetHub .us-wp-days small{display:none}
 #usWidgetHub .us-wp-countdown{display:grid;place-content:center;gap:1px;text-align:center;background:var(--us-color-elevated)}
 #usWidgetHub .us-wp-countdown>:not(b):not(.us-wp-cd-unit):not(p){display:none}
 #usWidgetHub .us-wp-countdown b{font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1;color:var(--us-color-text)}

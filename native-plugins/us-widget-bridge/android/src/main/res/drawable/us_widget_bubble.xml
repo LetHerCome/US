@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Noi stile mappa: the speech bubble above a portrait, latte on the night card. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#F2F7EFE9" />
+    <corners android:radius="12dp" />
+</shape>

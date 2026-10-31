@@ -166,6 +166,27 @@ test('client Android usa header token, action id e nessun retry o Supabase clien
   assert.ok(timeout > 0 && timeout <= 4000, 'il singolo tentativo deve terminare entro la finestra di goAsync del receiver');
 });
 
+// 31/10/2026: the widget sent Ti penso to production even from the staging
+// APK. Now it goes to the Edge of the build that issued the credential.
+test('Ti penso dal widget va all’Edge della build che ha emesso la credential, solo progetti US', () => {
+  const W = 'native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget';
+  const client = read(`${W}/UsWidgetActionClient.java`);
+  assert.match(client, /new URL\(UsWidgetEndpoints\.thinkSend\(functionsBase\)\)/);
+  assert.match(client, /connection\.setInstanceFollowRedirects\(false\);/);
+  assert.doesNotMatch(client, /supabase\.co/, 'no fixed address in the client');
+  const endpoints = read(`${W}/UsWidgetEndpoints.java`);
+  assert.match(endpoints, /PROJECTS = \{ "iiakdfsxpywdkxravqjh", "dugmhngrfkuieeletatb" \}/);
+  assert.match(endpoints, /return \(base\.isEmpty\(\) \? PRODUCTION : base\) \+ "\/widget-think-send";/);
+  assert.match(read(`${W}/UsThinkWidgetActionReceiver.java`), /new UsWidgetActionClient\(\)\.send\(credentials\.functionsBase\(owner\), token, actionId\)/);
+  assert.match(read(`${W}/UsWidgetCredentialStore.java`), /return UsWidgetEndpoints\.functionsBase\(payload\.optString\("functionsUrl", ""\)\);/);
+  const bridge = read(`${W}/UsWidgetBridgePlugin.java`);
+  assert.match(bridge, /boolean addressOk = functionsUrl\.isEmpty\(\) \|\| !UsWidgetEndpoints\.functionsBase\(functionsUrl\)\.isEmpty\(\);/);
+  // The app gives its own address: a staging build carries the staging SB_URL.
+  assert.match(read('app.js'), /window\.UsWidgetCredentialApi=Object\.freeze\(\{\n  functionsUrl:`\$\{SB_URL\}\/functions\/v1`,/);
+  assert.match(read('widgets.js'), /functionsUrl: window\.UsWidgetCredentialApi\.functionsUrl \|\| ''/);
+  assert.match(read('platform.js'), /\.\.\.\(safeUrl \? \{ functionsUrl: safeUrl \} : \{\}\)/);
+});
+
 test('credential native è Keystore encrypted, non-backup e account-isolated', () => {
   const store = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetCredentialStore.java');
   assert.match(store, /AndroidKeyStore/);

@@ -297,6 +297,182 @@ public class UsWidgetModelsTest {
         assertEquals("", UsWidgetContract.normalize(snap).getJSONObject("couple").getString("distanceText"));
     }
 
+    // ---------- Batteria del partner ----------
+
+    @Test
+    public void partnerBatteryIsShownForADayAndQuieterAfterAnHour() throws Exception {
+        JSONObject snap = snapshot(null);
+        snap.getJSONObject("couple").put("batteryLevel", 18).put("batteryCharging", false).put("batteryAt", "2026-10-31T10:00:00Z");
+        JSONObject clean = UsWidgetContract.normalize(snap);
+        assertEquals(18, clean.getJSONObject("couple").getInt("batteryLevel"));
+        assertEquals("2026-10-31T10:00:00Z", clean.getJSONObject("couple").getString("batteryAt"));
+
+        UsWidgetModels.Couple fresh = UsWidgetModels.couple(clean, Instant.parse("2026-10-31T10:20:00Z"));
+        assertTrue(fresh.batteryShown());
+        assertFalse(fresh.batteryOld);
+        assertTrue(fresh.batteryLow());
+        assertEquals("low", fresh.batteryGlyph());
+        assertEquals(Instant.parse("2026-10-31T11:00:00Z"), fresh.batteryNextChange);
+
+        UsWidgetModels.Couple old = UsWidgetModels.couple(clean, Instant.parse("2026-10-31T13:00:00Z"));
+        assertTrue(old.batteryOld);
+        assertEquals(Instant.parse("2026-11-01T10:00:00Z"), old.batteryNextChange);
+
+        UsWidgetModels.Couple gone = UsWidgetModels.couple(clean, Instant.parse("2026-11-01T10:00:00Z"));
+        assertFalse(gone.batteryShown());
+        assertNull(gone.batteryNextChange);
+    }
+
+    @Test
+    public void partnerBatteryGlyphsAndBadInputs() throws Exception {
+        JSONObject snap = snapshot(null);
+        JSONObject couple = snap.getJSONObject("couple").put("batteryAt", "2026-10-31T10:00:00Z");
+        Instant now = Instant.parse("2026-10-31T10:05:00Z");
+        couple.put("batteryLevel", 18).put("batteryCharging", true);
+        UsWidgetModels.Couple charging = UsWidgetModels.couple(UsWidgetContract.normalize(snap), now);
+        assertEquals("charging", charging.batteryGlyph());
+        assertFalse(charging.batteryLow());
+        couple.put("batteryLevel", 60).put("batteryCharging", false);
+        assertEquals("medium", UsWidgetModels.couple(UsWidgetContract.normalize(snap), now).batteryGlyph());
+        couple.put("batteryLevel", 61);
+        assertEquals("high", UsWidgetModels.couple(UsWidgetContract.normalize(snap), now).batteryGlyph());
+
+        for (Object level : new Object[] { 101, -5, "pieno" }) {
+            couple.put("batteryLevel", level);
+            JSONObject clean = UsWidgetContract.normalize(snap);
+            assertEquals(-1, clean.getJSONObject("couple").getInt("batteryLevel"));
+            assertFalse(UsWidgetModels.couple(clean, now).batteryShown());
+        }
+        couple.put("batteryLevel", 50).put("batteryAt", "ieri");
+        assertFalse(UsWidgetModels.couple(UsWidgetContract.normalize(snap), now).batteryShown());
+        // An older app writes no battery at all.
+        assertFalse(UsWidgetModels.couple(snapshot(null), now).batteryShown());
+    }
+
+    // ---------- Noi stile mappa: the Ti penso bubbles ----------
+
+    @Test
+    public void noiBubblesSayEachPersonsLastTiPensoWithTheTime() throws Exception {
+        JSONObject snap = snapshot(null);
+        snap.getJSONObject("think").put("lastReceivedAt", "2026-10-31T10:50:00Z").put("lastSentAt", "2026-10-31T08:00:00Z");
+        Instant now = Instant.parse("2026-10-31T11:00:00Z");
+        UsWidgetModels.Bubbles bubbles = UsWidgetModels.noiBubbles(UsWidgetContract.normalize(snap), null, now);
+        assertEquals("ti ha pensato · 10 min fa", bubbles.partner);
+        assertEquals("hai pensato a Beatrice · 3 ore fa", bubbles.me);
+        // "10 min fa" moves to "15 min fa" at 11:05; nothing ticks every minute.
+        assertEquals(Instant.parse("2026-10-31T11:05:00Z"), bubbles.nextChange);
+    }
+
+    @Test
+    public void noiBubblesRoundTheFirstHourAndHideAfterAWeek() throws Exception {
+        Instant at = Instant.parse("2026-10-31T10:00:00Z");
+        assertEquals("proprio ora", UsWidgetModels.bubbleAgo(at, at.plusSeconds(4 * 60)));
+        assertEquals("5 min fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(9 * 60)));
+        assertEquals("55 min fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(59 * 60)));
+        assertEquals("1 ora fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(119 * 60)));
+        assertEquals("2 ore fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(120 * 60)));
+        assertEquals("ieri", UsWidgetModels.bubbleAgo(at, at.plusSeconds(30 * 3600)));
+        assertEquals("6 giorni fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(6 * 86400 + 60)));
+        assertEquals("a week old: no bubble", "", UsWidgetModels.bubbleAgo(at, at.plusSeconds(7 * 86400)));
+        assertEquals("from the future: no bubble", "", UsWidgetModels.bubbleAgo(at, at.minusSeconds(3600)));
+        assertEquals("", UsWidgetModels.bubbleAgo(null, at));
+    }
+
+    @Test
+    public void noiBubblesWithoutThoughtsOrNamesAndWithTheWidgetSend() throws Exception {
+        Instant now = Instant.parse("2026-10-31T11:00:00Z");
+        UsWidgetModels.Bubbles empty = UsWidgetModels.noiBubbles(snapshot(null), null, now);
+        assertEquals("", empty.partner);
+        assertEquals("", empty.me);
+        assertNull(empty.nextChange);
+        JSONObject snap = snapshot(null);
+        snap.getJSONObject("think").put("partnerName", "").put("lastSentAt", "2026-10-31T08:00:00Z");
+        // A Ti penso sent from the widget a moment ago is newer than the app's last read.
+        JSONObject action = new JSONObject().put("status", "sent").put("sentAt", "2026-10-31T10:58:00Z");
+        UsWidgetModels.Bubbles mine = UsWidgetModels.noiBubbles(UsWidgetContract.normalize(snap), action, now);
+        assertEquals("Ti penso · proprio ora", mine.me);
+        assertNull(UsWidgetModels.noiBubbles(null, null, now).nextChange);
+    }
+
+    // ---------- Messaggio: the partner's last Ti penso or Lasciato per te ----------
+
+    @Test
+    public void messageShowsTheNewestOfTiPensoAndAWaitingLasciatoPerTe() throws Exception {
+        Instant now = Instant.parse("2026-10-31T11:00:00Z");
+        JSONObject snap = snapshot(null);
+        snap.getJSONObject("think").put("lastReceivedAt", "2026-10-31T10:50:00Z");
+        UsWidgetModels.Message think = UsWidgetModels.message(UsWidgetContract.normalize(snap), now);
+        assertEquals("Ti ha pensato", think.text);
+        assertEquals("10 min fa", think.when);
+        assertEquals("message/think", think.destination);
+        assertEquals(Instant.parse("2026-10-31T11:05:00Z"), think.nextChange);
+
+        snap.put("left", new JSONObject().put("kind", "photo").put("at", "2026-10-31T10:55:00Z").put("body", "SEGRETO"));
+        JSONObject clean = UsWidgetContract.normalize(snap);
+        assertFalse("never the content", clean.toString().contains("SEGRETO"));
+        UsWidgetModels.Message left = UsWidgetModels.message(clean, now);
+        assertEquals("Ti ha lasciato una foto", left.text);
+        assertEquals("5 min fa", left.when);
+        assertEquals("message/left", left.destination);
+
+        // A Ti penso newer than the waiting envelope wins.
+        snap.getJSONObject("think").put("lastReceivedAt", "2026-10-31T10:58:00Z");
+        assertEquals("Ti ha pensato", UsWidgetModels.message(UsWidgetContract.normalize(snap), now).text);
+    }
+
+    @Test
+    public void messageKindsOldEnvelopesAndEmptyStates() throws Exception {
+        Instant now = Instant.parse("2026-10-31T11:00:00Z");
+        String[][] kinds = { { "text", "un messaggio" }, { "audio", "un vocale" }, { "video", "un video" }, { "music", "una canzone" } };
+        for (String[] kind : kinds) {
+            JSONObject snap = snapshot(null).put("left", new JSONObject().put("kind", kind[0]).put("at", "2026-10-31T09:00:00Z"));
+            assertEquals("Ti ha lasciato " + kind[1], UsWidgetModels.message(UsWidgetContract.normalize(snap), now).text);
+        }
+        // An envelope still closed after ten days still waits; only the time goes.
+        JSONObject old = snapshot(null).put("left", new JSONObject().put("kind", "text").put("at", "2026-10-21T09:00:00Z"));
+        UsWidgetModels.Message waiting = UsWidgetModels.message(UsWidgetContract.normalize(old), now);
+        assertEquals("Ti ha lasciato un messaggio", waiting.text);
+        assertEquals("", waiting.when);
+        // A Ti penso of last month is not news.
+        JSONObject stale = snapshot(null);
+        stale.getJSONObject("think").put("lastReceivedAt", "2026-10-01T09:00:00Z");
+        UsWidgetModels.Message quiet = UsWidgetModels.message(UsWidgetContract.normalize(stale), now);
+        assertTrue(quiet.empty);
+        assertEquals("message", quiet.destination);
+        assertEquals("unknown kind", "", UsWidgetContract.normalize(snapshot(null).put("left", new JSONObject().put("kind", "secret").put("at", "2026-10-31T09:00:00Z"))).getJSONObject("left").getString("kind"));
+        assertTrue(UsWidgetModels.message(null, now).empty);
+    }
+
+    // ---------- Giorni insieme ----------
+
+    @Test
+    public void daysTogetherCountsRomeDaysLikeTheAppAndTurnsAtMidnight() throws Exception {
+        // startedOn 2026-04-21; 31/10 in Rome is day 193 (the app counts the first day as 0).
+        Instant now = Instant.parse("2026-10-31T11:00:00Z");
+        UsWidgetModels.Days days = UsWidgetModels.days(snapshot(null), now);
+        assertFalse(days.empty);
+        assertEquals("193", days.value);
+        assertEquals("giorni insieme", days.unit);
+        assertEquals(UsWidgetModels.nextRomeMidnight(now), days.nextChange);
+        JSONObject first = snapshot(null);
+        first.getJSONObject("couple").put("startedOn", "2026-10-30");
+        assertEquals("giorno insieme", UsWidgetModels.days(UsWidgetContract.normalize(first), now).unit);
+    }
+
+    @Test
+    public void daysTogetherWithoutADateOrAccount() throws Exception {
+        Instant now = Instant.parse("2026-10-31T11:00:00Z");
+        JSONObject snap = snapshot(null);
+        snap.getJSONObject("couple").put("startedOn", "2027-01-01");
+        UsWidgetModels.Days future = UsWidgetModels.days(UsWidgetContract.normalize(snap), now);
+        assertTrue(future.empty);
+        assertEquals("I vostri giorni insieme", future.unit);
+        assertNull(future.nextChange);
+        UsWidgetModels.Days none = UsWidgetModels.days(null, now);
+        assertTrue(none.empty);
+        assertEquals("Apri US per collegare il widget", none.unit);
+    }
+
     // ---------- La domanda di oggi ----------
 
     @Test

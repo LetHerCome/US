@@ -290,3 +290,104 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - una foto nuova con «Salva posizione» attivo nella fotocamera dello Xiaomi: «Dove» si riempie da solo;
   - una foto senza posizione: «Dove» resta vuoto e si cerca a mano;
   - la mappa: segnaposti, gruppi, tocco che apre il Ricordo, ritorno a «Mese per mese».
+
+## 2026-10-31 — Batteria del partner
+
+**Fonte:** founder, grill del 31/10/2026 (dopo lo studio di Love8: posizione rispettosa, niente tracciamento continuo). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; niente su staging né in produzione.
+
+- **Cosa fa:** quando US è aperta (all'avvio e al ritorno in primo piano) il telefono manda il proprio livello di batteria e se è in carica, al massimo ogni 15 minuti. Niente lavori in background, nessuna notifica. L'altra persona vede l'ultimo livello e da quanto tempo; dopo un giorno non si vede più. Senza dato non compare niente.
+- **Oggi (scelta del founder del 31/10, in `DECISIONS.md`):** nella pillola della distanza, dopo i chilometri, l'icona Phosphor della batteria (bassa, media, alta, in carica) e la percentuale: «12 km · 🔋 18%». Sotto il 20% e non in carica l'icona è corallo. Si vede solo accanto a una distanza (anche l'ultima nota): con «Attiva posizione» o «In attesa» non compare. Si aggiorna col tempo reale (canale Realtime a parte, aperto solo dopo che la tabella ha risposto).
+- **Scheda «Distanza»** (tocco sulla pillola): sotto la distanza la riga «Bea · 18% · 2 ore fa» (con «in carica» se serve). Per questa riga la scheda di conferma (`UsUiFoundation.notice`) ha una nuova opzione `note`.
+- **Noi:** invariato, nessuna riga della batteria.
+- **Widget Android «Noi»:** accanto a «NOI», in alto a destra, l'icona e la percentuale. Dopo un'ora più tenue, dopo un giorno sparisce (il widget si ridisegna da solo a quelle ore). La riga in corsivo sotto la distanza resta libera per «a casa / fuori» (lavoro successivo, con i recinti).
+- **Database:** migrazione `20261031134410_couple_battery_v1.sql`: tabella `couple_batteries` (una riga per persona, FK verso `profiles` con cascade), RLS «stessa coppia» finché il proprietario ne fa parte, scrittura solo con `report_battery(p_level, p_charging)` (orario del server; lo stesso invio entro un minuto non scrive niente), pubblicazione `supabase_realtime`. Test: `tests/couple-battery-v1-db.test.js`.
+  - **Ordine:** prima l'SQL, poi il web. Un web arrivato prima non rompe niente: vede che la tabella manca e smette di chiedere.
+  - **Export dei dati:** la batteria entra nell'export (`s3-2-export-core.mjs`); la Edge `export-my-data` va pubblicata **dopo** l'SQL.
+- **Android:** nuovo metodo `getBatteryStatus` nel plugin `us-widget-bridge` (`BatteryManager`, nessun permesso). Serve un APK nuovo; l'APK vecchio usa la Battery API del WebView, se c'è. Sul web vale la Battery API del browser (Chrome sì; Safari e Firefox no: lì non si manda niente). Un computer senza batteria non manda niente.
+- **Icone:** Phosphor `battery-low`, `battery-medium`, `battery-high`, `battery-charging` (regular, `@phosphor-icons/core` 2.1.1), registrate in `assets/ICON_REGISTRY.json`; nel widget gli stessi tracciati come vector drawable.
+- **Privacy:** `privacy.html` e `privacy-en.html` aggiornate al 31/10 (tabella dei dati, «Batteria», chi vede, conservazione, eliminazione).
+- **Prima della produzione:**
+  - Sicurezza dei dati su Play: decidere se dichiarare il livello della batteria (la voce più vicina è «Informazioni e prestazioni dell'app › Diagnostica», che cita la durata della batteria), raccolto per «Funzionalità dell'app»;
+  - non c'è un interruttore per non condividere la batteria: da decidere se serve prima della produzione;
+  - testo «Novità»: «Oggi: la batteria di chi ami accanto alla distanza, anche nel widget.» / «Today: your partner's battery beside the distance, in the widget too.»;
+  - senza posizione condivisa la batteria si vede solo nel widget: da decidere se serve anche su Oggi senza distanza.
+- **Da provare dall'APK di staging (dopo SQL e web su staging):**
+  - sui due telefoni, con la posizione condivisa: aprire US, poi su Oggi la pillola dice «12 km · 🔋 18%» con la batteria dell'altro; il tocco apre la scheda «Distanza» con «Bea · 18% · proprio ora»;
+  - un telefono senza posizione condivisa: la pillola dice «Attiva posizione» senza batteria;
+  - mettere in carica un telefono, chiudere e riaprire US dopo 15 minuti: sull'altro compare l'icona col fulmine senza ricaricare la pagina (tempo reale);
+  - riaprire US entro 15 minuti: non manda niente di nuovo (l'orario non cambia);
+  - widget «Noi» sulla schermata Home: icona e percentuale accanto a «NOI»; dopo un'ora più tenue; il tocco apre Noi;
+  - un telefono sotto il 20%: icona corallo nella pillola e nel widget;
+  - Noi: nessuna riga della batteria.
+
+## 2026-10-31 — Widget «Noi» stile mappa (solo Android)
+
+**Fonte:** founder, 31/10/2026 (tre modelli da un'app di riferimento più il widget delle note; questo è il primo). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; serve un APK nuovo.
+
+- **Cosa cambia:** da 4×2 in su il widget «Noi» mostra:
+  - le due foto rotonde ai lati, io a sinistra e il partner a destra, con gli anelli rosa e lilla di sempre;
+  - in mezzo la distanza su una linea tratteggiata, con «tra voi» o «ultima nota»;
+  - sopra ogni foto una nuvoletta con l'ultimo Ti penso di quella persona: «ti ha pensato · 10 min fa» sopra il partner, «hai pensato a Bea · 2 ore fa» sopra di me. Nella prima ora va a passi di 5 minuti, poi a ore e a giorni; dopo una settimana la nuvoletta sparisce;
+  - sotto la foto del partner, piccola, la sua batteria.
+  Più avanti nella nuvoletta andrà lo stato con emoji.
+- **Il 2×1 già messo** resta la scheda di prima (foto in coppia, distanza, batteria accanto a «NOI»). Android 12+ sceglie da solo la vista in base alla misura; sui telefoni più vecchi decide la misura che il launcher comunica. Un widget nuovo parte da 4×2.
+- **Sfondo (founder: «Vera, ma solo sfondo»):** un pezzo fisso di mappa scura, Torino col Po, sempre lo stesso.
+  - Disegnata una volta con lo stile scuro di OpenFreeMap della Mappa dei Ricordi, senza scritte, e inclusa nell'app (`drawable-nodpi/us_widget_noi_map_v1.webp`, 1600×800, 85 KB). Il widget non si collega a nessun servizio di mappe e non mostra mai dove siete.
+  - È **candidata**: `DRAFT` in `assets/ASSET_MANIFEST.json`, la approva il founder dall'APK di staging.
+  - Attribuzione «© OpenStreetMap contributors» (ODbL) e OpenFreeMap / OpenMapTiles nella privacy, italiano e inglese.
+  - Da Android 12 la mappa resta dentro gli angoli arrotondati della scheda. Su Android 11 e precedenti gli angoli della mappa restano squadrati, quasi invisibili sul nero.
+- **Dati:** nessun dato nuovo. Le nuvolette usano gli orari di Ti penso che il widget già riceveva; le foto rotonde le prepara l'app quando è aperta (come la foto in coppia), con gli stessi anelli. Il widget non va in rete.
+- **Anteprima nel selettore dei widget** (Android 12+): la vista a mappa, generica, senza volti né nomi. L'immagine PNG per Android 11 e precedenti è ancora quella del 2×1.
+- **Da provare dall'APK di staging:**
+  - mettere il widget «Noi»: deve partire grande (4×2) con la mappa scura dietro, le due foto, la distanza sulla linea tratteggiata e la batteria del partner;
+  - dire se la mappa va bene (è candidata);
+  - mandarsi un Ti penso: dopo aver aperto US, la nuvoletta sopra il partner dice «ti ha pensato · proprio ora», poi «5 min fa», «10 min fa»;
+  - mandare un Ti penso dal widget Ti penso: la nuvoletta sopra di me cambia subito;
+  - rimpicciolire il widget a 2×1: torna la scheda di prima;
+  - il tocco apre Noi.
+
+## 2026-10-31 — Widget «Messaggio» (solo Android)
+
+**Fonte:** founder, 31/10/2026 (secondo dei widget scelti). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; serve un APK nuovo.
+
+- **Cosa fa:** widget 2×2.
+  - In alto la foto rotonda del partner.
+  - Sotto, in una nuvoletta chiara con un piccolo cuore rosa, il messaggio più recente tra il suo ultimo Ti penso («Ti ha pensato · 10 min fa») e il suo Lasciato per te ancora chiuso («Ti ha lasciato una foto · 5 min fa»; anche messaggio, vocale, video, canzone).
+  - Senza niente di recente: «Il suo prossimo pensiero arriverà qui», con il cuore vuoto. Un Ti penso più vecchio di una settimana non è più una novità; una busta chiusa resta finché non si apre.
+- **Il tocco** apre quel messaggio nell'app, per la stessa strada delle notifiche: Ti penso apre il foglio per ricambiare, la busta apre Lasciato per te. Sul freddo aspetta l'accesso.
+- **Privacy (founder: «Solo tipo e ora»):** del Lasciato per te il widget conosce solo il tipo e l'ora, mai le parole, la foto o il link. Così la sorpresa resta nell'app, sulla schermata Home non compare il contenuto, e niente sopravvive alla pulizia dei Lasciato per te.
+- **Corretto per strada (stesso contratto dei widget):** l'app non passava mai al widget «La domanda di oggi» la domanda (`platform.js` scartava il blocco `daily`), e quel widget non si poteva aggiungere dalla galleria di Impostazioni (mancava nell'elenco dei tipi). Ora passano tutti e due.
+- **Galleria in Impostazioni:** nuova voce «Messaggio» (inglese «Message»), con la sua anteprima.
+- **Da provare dall'APK di staging:**
+  - aggiungere «Messaggio» da Impostazioni › Widget;
+  - farsi mandare un Ti penso e aprire US: «Ti ha pensato · proprio ora»; il tocco apre il foglio per ricambiare;
+  - farsi lasciare una foto in Lasciato per te: «Ti ha lasciato una foto»; il tocco apre la busta; aperta la busta, torna il Ti penso;
+  - «La domanda di oggi»: ora mostra la domanda del giorno e si aggiunge da Impostazioni.
+
+## 2026-10-31 — Widget «Giorni insieme» (solo Android)
+
+**Fonte:** founder, 31/10/2026 (terzo dei widget scelti). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; serve un APK nuovo.
+
+- **Cosa fa:** widget 2×2 con le due foto rotonde vicine e un cuore rosa in mezzo. Sotto, grande in serif, il numero dei giorni insieme, con «giorni insieme» («193 giorni insieme»). Cambia a mezzanotte di Roma. Il tocco apre Noi.
+- **Dati:** nessuno nuovo. La data d'inizio della coppia arrivava già ai widget per «Foto & Noi» e per il Countdown «Insieme da». I giorni si contano come nell'app (`countdown.js`: il primo giorno è 0). Le foto rotonde sono le stesse del widget «Noi» stile mappa.
+- **Verifica chiesta dal founder:** il Countdown «Insieme da» e «Foto & Noi» mostravano già i giorni, ma senza le due foto e il cuore. Questo widget li mette insieme e non tocca gli altri.
+- **Senza data:** «I vostri giorni insieme», senza numero.
+- **Galleria in Impostazioni:** nuova voce «Giorni insieme».
+- **Da provare dall'APK di staging:**
+  - aggiungere «Giorni insieme» da Impostazioni › Widget;
+  - il numero è lo stesso dell'app su Oggi («Insieme da»);
+  - il giorno dopo, a mezzanotte, cresce di uno senza aprire US;
+  - il tocco apre Noi.
+
+## 2026-10-31 — Ti penso dal widget: al server giusto anche da staging (solo Android)
+
+**Fonte:** trovato durante il widget «Nota»; il founder: «correggilo come la Nota». **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; serve un APK nuovo.
+
+- **Prima:** il widget Ti penso mandava sempre all'Edge di produzione (indirizzo fisso in `UsWidgetActionClient.java`). Nell'APK di staging il cuore del widget non partiva: la produzione rifiutava il token di staging, e il widget chiedeva di aprire US.
+- **Ora:**
+  - insieme al token l'app passa al telefono l'indirizzo delle sue Edge (`SB_URL` + `/functions/v1`, quindi staging nell'APK di staging);
+  - il codice nativo accetta solo i due progetti US in https (`UsWidgetEndpoints`), così il token non può andare su un altro server;
+  - niente redirect.
+- **Chi ha già il widget in produzione:** la credenziale salvata prima non ha l'indirizzo, quindi va alla produzione come oggi. Non serve fare niente.
+- **Test:** `UsWidgetEndpointsTest` (JVM), `tests/w1-3-silent-send.test.js`, `tests/widget-system.test.js`.
+- **Da provare dall'APK di staging:** il cuore del widget Ti penso manda davvero il pensiero; l'altro telefono lo riceve.

@@ -581,6 +581,10 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 .us-icon[data-us-icon="plus"]{--us-icon-src:url("/assets/icons/phosphor/plus-regular.svg")}
 .us-icon[data-us-icon="bell"]{--us-icon-src:url("/assets/icons/phosphor/bell-regular.svg")}
 .us-icon[data-us-icon="map-pin"]{--us-icon-src:url("/assets/icons/phosphor/map-pin-regular.svg")}
+.us-icon[data-us-icon="battery-low"]{--us-icon-src:url("/assets/icons/phosphor/battery-low-regular.svg")}
+.us-icon[data-us-icon="battery-medium"]{--us-icon-src:url("/assets/icons/phosphor/battery-medium-regular.svg")}
+.us-icon[data-us-icon="battery-high"]{--us-icon-src:url("/assets/icons/phosphor/battery-high-regular.svg")}
+.us-icon[data-us-icon="battery-charging"]{--us-icon-src:url("/assets/icons/phosphor/battery-charging-regular.svg")}
 .us-icon[data-us-icon="arrows-clockwise"]{--us-icon-src:url("/assets/icons/phosphor/arrows-clockwise-regular.svg")}
 .us-icon[data-us-icon="arrows-left-right"]{--us-icon-src:url("/assets/icons/phosphor/arrows-left-right-regular.svg")}
 .us-icon[data-us-icon="user-circle"]{--us-icon-src:url("/assets/icons/phosphor/user-circle-regular.svg")}
@@ -844,6 +848,8 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
   font-size:13px;
   line-height:1.5;
 }
+/* One short line under the title (the partner's battery in the Distanza sheet). */
+.us-confirm-sheet .us-confirm-note{margin:8px 0 0;color:var(--us-color-text);font-size:14px;font-weight:600;line-height:1.4;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .us-confirm-actions {
   display:grid;
   grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);

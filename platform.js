@@ -143,7 +143,9 @@
         startedOn: safeCivilDate(couple.startedOn),
         frame: typeof couple.frame === 'string' && /^[a-z0-9_]{1,24}$/.test(couple.frame) ? couple.frame : '',
         distanceText: typeof couple.distanceText === 'string' && /^[0-9., ]{1,16} ?(km|m|mi|ft)$/.test(couple.distanceText) ? couple.distanceText : '',
-        distanceState: couple.distanceState === 'stale' ? 'stale' : 'ready'
+        distanceState: couple.distanceState === 'stale' ? 'stale' : 'ready',
+        // Batteria del partner (UsWidgetContract.java): -1 when unknown.
+        ...widgetBattery(couple)
       },
       countdown: {
         active,
@@ -156,8 +158,49 @@
         state: photoReady ? 'ready' : 'none',
         key: photoReady ? photoKey : '',
         takenOn: photoReady ? safeCivilDate(photo.takenOn) : ''
-      }
+      },
+      daily: widgetDaily(input?.daily),
+      left: widgetLeft(input?.left)
     };
+  }
+
+  // La domanda di oggi (UsWidgetContract.java): the day, the shared question
+  // and whose turn it is. Never an answer.
+  function widgetDaily(daily = {}) {
+    const date = safeCivilDate(daily?.date);
+    const question = safeText(daily?.question, 240);
+    const state = /^(todo|your_turn|waiting|ready)$/.test(daily?.state || '') ? daily.state : '';
+    return date && question && state ? { date, question, state } : { date: '', question: '', state: 'none' };
+  }
+
+  // Messaggio: the newest Lasciato per te still closed, by kind and time only.
+  function widgetLeft(left = {}) {
+    const kind = /^(text|photo|audio|video|music)$/.test(left?.kind || '') ? left.kind : '';
+    const at = kind ? safeInstant(left?.at) : '';
+    return kind && at ? { kind, at } : { kind: '', at: '' };
+  }
+
+  function widgetBattery(couple) {
+    const level = Number.isInteger(couple.batteryLevel) && couple.batteryLevel >= 0 && couple.batteryLevel <= 100 ? couple.batteryLevel : -1;
+    const at = level >= 0 ? safeInstant(couple.batteryAt) : '';
+    return at
+      ? { batteryLevel: level, batteryCharging: couple.batteryCharging === true, batteryAt: at }
+      : { batteryLevel: -1, batteryCharging: false, batteryAt: '' };
+  }
+
+  // Batteria del partner: this phone's own battery, asked only while US is
+  // open. null when the APK predates the method or the phone cannot tell.
+  async function readNativeBattery() {
+    const plugin = widgetBridge();
+    if (!plugin || typeof plugin.getBatteryStatus !== 'function') return null;
+    try {
+      const result = await plugin.getBatteryStatus();
+      const level = Number(result?.level);
+      if (result?.supported !== true || !Number.isInteger(level) || level < 0 || level > 100) return null;
+      return { level, charging: result.charging === true };
+    } catch (_) {
+      return null;
+    }
   }
 
   async function activateWidgetAccount(ownerHash) {
@@ -200,12 +243,13 @@
   }
 
   // A private JPEG composite of the two avatars, never remote URLs.
-  async function writeWidgetNoiPortrait(ownerHash, base64) {
+  // slot: "pair" (Noi 2x1), "me" or "partner" (Noi stile mappa).
+  async function writeWidgetNoiPortrait(ownerHash, base64, slot = 'pair') {
     const plugin = widgetBridge();
     const safeHash = validOwnerHash(ownerHash);
     const data = typeof base64 === 'string' && /^[A-Za-z0-9+/=]+$/.test(base64) && base64.length <= 2_800_000 ? base64 : '';
-    if (!plugin || !safeHash || !data || typeof plugin.writeNoiPortrait !== 'function') return false;
-    await plugin.writeNoiPortrait({ ownerHash: safeHash, data });
+    if (!plugin || !safeHash || !data || !['pair', 'me', 'partner'].includes(slot) || typeof plugin.writeNoiPortrait !== 'function') return false;
+    await plugin.writeNoiPortrait({ ownerHash: safeHash, data, slot });
     return true;
   }
 
@@ -227,12 +271,16 @@
     return /^[0-9a-f-]{36}$/i.test(deviceId) ? { deviceId } : null;
   }
 
-  async function storeWidgetActionCredential(ownerHash, token, expiresAt = '') {
+  // functionsUrl: the Edge address of this build (production or staging),
+  // so the widget sends to the server that issued the token. Native accepts
+  // only the two US projects (UsWidgetEndpoints).
+  async function storeWidgetActionCredential(ownerHash, token, expiresAt = '', { functionsUrl = '' } = {}) {
     const plugin = widgetBridge();
     const safeHash = validOwnerHash(ownerHash);
     const safeToken = typeof token === 'string' && /^[A-Za-z0-9_-]{43}$/.test(token) ? token : '';
+    const safeUrl = /^https:\/\/[a-z0-9]{20}\.supabase\.co\/functions\/v1$/.test(functionsUrl) ? functionsUrl : '';
     if (!plugin || !safeHash || !safeToken || typeof plugin.setActionCredential !== 'function') return false;
-    await plugin.setActionCredential({ ownerHash: safeHash, token: safeToken, expiresAt: safeInstant(expiresAt) });
+    await plugin.setActionCredential({ ownerHash: safeHash, token: safeToken, expiresAt: safeInstant(expiresAt), ...(safeUrl ? { functionsUrl: safeUrl } : {}) });
     return true;
   }
 
@@ -243,7 +291,7 @@
     return true;
   }
 
-  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo'];
+  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days'];
 
   async function getInstalledWidgets() {
     const plugin = widgetBridge();
@@ -332,6 +380,7 @@
     requestWidgetPin,
     openWidgetSettings,
     listenForWidgetPinned,
+    readNativeBattery,
     getNativeLaunchUrl,
     listenForNativeAppUrl
   });

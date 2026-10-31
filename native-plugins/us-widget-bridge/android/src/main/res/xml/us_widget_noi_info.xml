@@ -9,7 +9,7 @@
     android:previewImage="@drawable/us_widget_preview_noi"
     android:previewLayout="@layout/us_widget_preview_noi"
     android:resizeMode="horizontal|vertical"
-    android:targetCellWidth="2"
-    android:targetCellHeight="1"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
     android:updatePeriodMillis="3600000"
     android:widgetCategory="home_screen" />

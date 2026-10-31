@@ -217,6 +217,13 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 }
 #home #homeHero .og-row .home-distance-pill .us-icon{--us-icon-size:17px;color:var(--us-noi)}
 #home #homeHero .og-row .home-distance-pill b{font-weight:600}
+/* Batteria del partner beside the distance (founder, 31/10/2026): "12 km · 🔋 18%".
+   Low and not charging: the glyph in corallo, nothing louder. */
+#home #homeHero .og-row .home-distance-pill .us-distance-battery{display:inline-flex;align-items:center;gap:4px;color:var(--us-color-text-2);font-variant-numeric:tabular-nums}
+#home #homeHero .og-row .home-distance-pill .us-distance-battery[hidden]{display:none}
+#home #homeHero .og-row .home-distance-pill .us-distance-battery::before{content:"·";content:"·" / "";margin-right:2px}
+#home #homeHero .og-row .home-distance-pill .us-distance-battery .us-icon{--us-icon-size:16px;color:var(--us-color-text-2)}
+#home #homeHero .og-row .home-distance-pill .us-distance-battery[data-low="true"] .us-icon{color:var(--us-corallo)}
 #home :is(#usOggiNext,.og-row .home-distance-pill):focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
 
 /* ---------- 4 · Domanda di oggi on Oggi (mockup .dq + .ring) ---------- */

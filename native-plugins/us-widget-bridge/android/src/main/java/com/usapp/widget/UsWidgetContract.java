@@ -23,6 +23,7 @@ final class UsWidgetContract {
     private static final Pattern DISTANCE = Pattern.compile("^[0-9., ]{1,16} ?(km|m|mi|ft)$");
     private static final Pattern CIVIL_DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
     private static final Pattern DAILY_STATE = Pattern.compile("^(todo|your_turn|waiting|ready)$");
+    private static final Pattern LEFT_KIND = Pattern.compile("^(text|photo|audio|video|music)$");
 
     private UsWidgetContract() {}
 
@@ -66,6 +67,14 @@ final class UsWidgetContract {
                     ? coupleIn.optString("distanceText", "") : "")
                 .put("distanceState", "stale".equals(coupleIn.optString("distanceState", ""))
                     ? "stale" : "ready");
+            // Batteria del partner: the level the partner last reported, whether
+            // it was charging and when (server time). Unknown: level -1.
+            int batteryLevel = coupleIn.optInt("batteryLevel", -1);
+            String batteryAt = instantText(coupleIn.optString("batteryAt", ""));
+            if (batteryLevel < 0 || batteryLevel > 100 || batteryAt.isEmpty()) { batteryLevel = -1; batteryAt = ""; }
+            couple.put("batteryLevel", batteryLevel)
+                .put("batteryCharging", batteryLevel >= 0 && coupleIn.optBoolean("batteryCharging", false))
+                .put("batteryAt", batteryAt);
 
             JSONObject countdownIn = optObject(input, "countdown");
             String kind = countdownIn.optString("kind", "");
@@ -106,6 +115,14 @@ final class UsWidgetContract {
                 .put("question", question)
                 .put("state", dailyState);
 
+            // Messaggio: the newest Lasciato per te still closed for me, by kind
+            // and time only. Never its words, photo or link.
+            JSONObject leftIn = optObject(input, "left");
+            String leftKind = leftIn.optString("kind", "");
+            String leftAt = instantText(leftIn.optString("at", ""));
+            if (!LEFT_KIND.matcher(leftKind).matches() || leftAt.isEmpty()) { leftKind = ""; leftAt = ""; }
+            JSONObject left = new JSONObject().put("kind", leftKind).put("at", leftAt);
+
             return new JSONObject()
                 .put("schemaVersion", SCHEMA_VERSION)
                 .put("ownerHash", ownerHash)
@@ -114,7 +131,8 @@ final class UsWidgetContract {
                 .put("couple", couple)
                 .put("countdown", countdown)
                 .put("photo", photo)
-                .put("daily", daily);
+                .put("daily", daily)
+                .put("left", left);
         } catch (Exception ignored) {
             return null;
         }

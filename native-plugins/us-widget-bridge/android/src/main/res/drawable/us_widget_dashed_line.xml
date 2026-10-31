@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Noi stile mappa: the dashed path between the two of you. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="line">
+    <stroke
+        android:width="1.5dp"
+        android:color="#99F7EFE9"
+        android:dashWidth="5dp"
+        android:dashGap="4dp" />
+</shape>

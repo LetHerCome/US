@@ -379,3 +379,24 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Widget:** il primo è «Noi» con a casa / fuori, batteria e distanza; il widget del Compagno è tolto per ora; poi lo stato con emoji e il carosello di foto. Solo Android.
 - **Note condivise in Noi:** titolo, testo e lista a spunta, modificabili da tutti e due; vince l'ultimo salvataggio, con l'avviso quando l'altra persona salva la nota aperta. Missione: `docs/missions/note-condivise-v1.md`.
 - **Ordine:** Note condivise e widget «Noi» con batteria e distanza; poi «a casa»; poi la condivisione a tempo. Tutto prima su staging.
+
+## 2026-10-31 — Batteria del partner: accanto alla distanza su Oggi
+
+**Fonte:** founder, 31/10/2026: «Accanto alla distanza su Oggi» (scelta tra tre posti, con l'anteprima «( 12 km · 🔋 18% )»). Completa «Posizione, widget e Note condivise» del 31/10, per il posto della batteria nell'app.
+
+- **Oggi:** la batteria del partner sta nella pillola della distanza, dopo i chilometri: icona Phosphor e percentuale. Sotto il 20% e non in carica l'icona è corallo.
+- **Scheda «Distanza»** (si apre toccando la pillola): sotto la distanza, una riga con nome, percentuale e da quanto tempo: «Bea · 18% · 2 ore fa».
+- La batteria si vede solo accanto a una distanza (anche l'ultima nota). Con «Attiva posizione», «In attesa» o senza pillola, su Oggi non compare.
+- **Noi** resta com'è: niente riga della batteria, e la scheda della coppia con la distanza resta spenta.
+- **Widget «Noi»:** invariato, con icona e percentuale accanto a «NOI».
+- Dopo un giorno la batteria non si vede più, né su Oggi né nel widget.
+
+## 2026-10-31 — Widget: la mappa di «Noi» e il «Messaggio»
+
+**Fonte:** founder, 31/10/2026. Per la mappa ha risposto «li deve prendere da maps», poi, alla domanda di chiarimento, «Vera, ma solo sfondo». Per «Messaggio» ha scelto «Solo tipo e ora». Completa «Posizione, widget e Note condivise» del 31/10.
+
+- **Mappa del widget «Noi»:** decorativa e fissa, **mai la posizione della coppia**. È un pezzo vero di città, scuro e sempre lo stesso: Torino, il Po. Si disegna una volta con lo stile scuro di OpenFreeMap della Mappa dei Ricordi, senza scritte, e sta dentro l'app. Il widget non si collega a nessun servizio di mappe.
+  - Niente Google Maps: le sue condizioni vietano di salvare le immagini, e la Static API chiede una chiave a pagamento.
+  - Dati © OpenStreetMap contributors (ODbL), stile OpenFreeMap / OpenMapTiles, citati nella privacy.
+  - È candidata (`DRAFT` in `assets/ASSET_MANIFEST.json`) finché il founder non la approva dall'APK di staging.
+- **«Messaggio»:** di un Lasciato per te il widget mostra solo il tipo e l'ora («Ti ha lasciato una foto · 10 min fa»), mai le parole, la foto o il link.

@@ -315,6 +315,10 @@
     'Aggiungi un ricordo': 'Add a memory',
     'Aggiornamento disponibile': 'Update available',
 
+    // ------------------------------------------------------------ Oggi: partner battery (distance capsule)
+    'Batteria:': 'Battery:',
+    'in carica': 'charging',
+
     // ------------------------------------------------------------ Oggi: distance
     'Distanza tra voi': 'Distance between you',
     'Posizione non disponibile': 'Location unavailable',
@@ -1625,7 +1629,7 @@
     // Widgets
     'Un pensiero con un tocco, anche con US chiusa.': 'A thought in one tap, even when US is closed.',
     'Lo stesso Countdown che hai scelto su Oggi.': 'The same Countdown you chose on Today.',
-    'Le vostre foto profilo e la distanza tra voi.': 'Your profile photos and the distance between you.',
+    'Le vostre foto, la distanza tra voi, i Ti penso e la batteria di chi ami.': 'Your photos, the distance between you, your Ti penso and your partner’s battery.',
     'Foto & Noi': 'Photo & Us',
     'La fotografia che vedi su Oggi, con i giorni insieme.': 'The photo you see on Today, with your days together.',
     '{name} ti sta pensando': '{name} is thinking of you',
@@ -2602,6 +2606,9 @@
     'Da scegliere': 'Not set',
     'Grazie: le missioni ora sono pensate per voi': 'Thanks: the missions are now picked for you',
     'La domanda del giorno e a chi tocca rispondere. Mai le risposte.': 'Today’s question and whose turn it is. Never the answers.',
+    Messaggio: 'Message',
+    'Le vostre foto e i giorni insieme, che crescono ogni mezzanotte.': 'Your photos and your days together, one more every midnight.',
+    'L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso.': 'Your partner’s last Ti penso, or their Lasciato per te still closed.',
     'Rispondi quando vuoi': 'Answer whenever you like',
     'Hai risposto': 'You answered',
     'La domanda di oggi vi aspetta in US': 'Today’s question is waiting in US',

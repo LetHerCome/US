@@ -266,7 +266,9 @@ window.addEventListener('us-identity-change',event=>{
   if(noiIdeaState.selectedId)renderNoiIdeaDetailState(noiIdeaFindItem(noiIdeaState.selectedId));
 });
 
+// functionsUrl: the widgets send to the Edge of this build (staging or production).
 window.UsWidgetCredentialApi=Object.freeze({
+  functionsUrl:`${SB_URL}/functions/v1`,
   async issue(deviceIdHash){
     if(!window.UsPlatform?.isNative||!/^[a-f0-9]{64}$/.test(String(deviceIdHash||'')))return null;
     const {data,error}=await sb.functions.invoke('widget-device-token',{body:{operation:'issue',deviceIdHash}});
@@ -826,6 +828,8 @@ async function performPushNavigation(target,intent={}){
   if(pages.includes(target))go(target);
 }
 window.UsNotifications?.onNavigate?.(intent=>performPushNavigation(intent.target,intent));
+// The Messaggio widget opens its Ti penso or envelope through the same path.
+window.UsPushNavigation=Object.freeze({open:(target)=>performPushNavigation(target)});
 function captureInitialPushTarget(){
   try{
     const url=new URL(location.href),target=url.searchParams.get('open');
@@ -1180,6 +1184,8 @@ async function initCloud(){
     usRunWhenIdle(()=>startLocationRefreshTimer(),650);
     usRunWhenIdle(()=>hydrateProfileAvatars(),520);
     usRunWhenIdle(()=>maybeAutoRefreshLocation('launch'),1400);
+    // Batteria del partner: read in Noi and the widget, reported only while US is in use.
+    usRunWhenIdle(()=>window.UsPartnerBattery?.onForeground?.('launch'),1600);
     usRunWhenIdle(()=>refreshWebPushUi(),1100);
     usRunWhenIdle(()=>hydrateThink(),900);
     // Native has no service-worker image cache. Prewarm only the first few
@@ -1609,7 +1615,9 @@ async function openDistanceDetail(){
     return;
   }
   const age=model.age?`Aggiornata ${relativeLocationAge(model.age)}. `:'';
-  await ui?.notice?.({kicker:'DISTANZA',icon:'map-pin',title:model.detail||'Posizione non disponibile',body:`${age}Puoi smettere di condividerla da Impostazioni › Posizione.`});
+  // Batteria del partner (partner-battery.js): under the distance, as in the capsule.
+  const battery=(model.state==='ready'||model.state==='stale')?window.UsPartnerBattery?.sheetLine?.():'';
+  await ui?.notice?.({kicker:'DISTANZA',icon:'map-pin',title:model.detail||'Posizione non disponibile',note:battery||undefined,body:`${age}Puoi smettere di condividerla da Impostazioni › Posizione.`});
 }
 window.openDistanceDetail=openDistanceDetail;
 
@@ -3157,6 +3165,7 @@ async function loadOggiLeftItems(){
     }catch(error){console.warn('[US Oggi] Lasciato per te',error);return;}
   }
   if(before!==usOggiLeft.items.map(item=>item.id).join(','))refreshTodayPriorities();
+  window.UsWidgets?.publishLeft?.(usOggiLeft.items)?.catch?.(()=>{});
 }
 (()=>{
   const envelope=document.getElementById('leftForYouPartnerEntry');
@@ -6175,6 +6184,7 @@ async function refreshVisibleState(options={}){
   // M12A — returning to the foreground re-checks the location wherever the user lands.
   if(options.foreground)usAfterForeground(()=>maybeAutoRefreshLocation('resume'),900);
   if(options.foreground)usAfterForeground(()=>hydrateProfileAvatars(),1500);
+  if(options.foreground)usAfterForeground(()=>window.UsPartnerBattery?.onForeground?.('resume'),1700);
   if(active==='home'||todayOpen){
     if(options.foreground)hydrateHomePhoto(false).catch(()=>{});
     await hydrateToday();

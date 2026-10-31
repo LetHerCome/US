@@ -1709,6 +1709,16 @@
       "source": "assets/source/brand/app-icon/us-launcher-symbol-v2.png",
       "sourceSha256": "a75c69e23a4e5cf94a6ad06f4b2ae126d8499b281e0a7010f511077427715e4a",
       "operation": "COMPOSE_WHITE_FG_SQUIRCLE_160_WEBP_Q90"
+    },
+    {
+      "path": "native-plugins/us-widget-bridge/android/src/main/res/drawable-nodpi/us_widget_noi_map_v1.webp",
+      "status": "DRAFT",
+      "sha256": "2544a9901a1cc1ce3c246ef1e6885fb08701818301ba599a99a53cb2c9e62bf7",
+      "immutable": false,
+      "purpose": "Candidate (founder, 31/10/2026: \"Vera, ma solo sfondo\"): fixed dark map behind the Noi widget (4x2). A piece of Turin (the Po, San Salvario) drawn once with MapLibre and the OpenFreeMap dark style of the Mappa dei Ricordi, every label removed, 1600x800 WebP. Never the couple’s position; the widget never contacts a map service. Map data © OpenStreetMap contributors (ODbL), style OpenFreeMap / OpenMapTiles. The founder approves it from the staging APK.",
+      "usedBy": [
+        "android-noi-widget"
+      ]
     }
   ]
 }

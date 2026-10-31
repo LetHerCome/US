@@ -24,7 +24,9 @@ final class UsWidgets {
     static final String NOI = "noi";
     static final String PHOTO = "photo";
     static final String DAILY = "daily";
-    static final String[] KINDS = { THINK, COUNTDOWN, NOI, PHOTO, DAILY };
+    static final String MESSAGE = "message";
+    static final String DAYS = "days";
+    static final String[] KINDS = { THINK, COUNTDOWN, NOI, PHOTO, DAILY, MESSAGE, DAYS };
     static final String ACTION_TICK = "com.usapp.us.WIDGET_TICK";
     static final String ACTION_PINNED = "com.usapp.us.WIDGET_PINNED";
     static final String EXTRA_KIND = "us_widget_kind";
@@ -38,6 +40,8 @@ final class UsWidgets {
             case NOI: return UsNoiWidgetProvider.class;
             case PHOTO: return UsPhotoWidgetProvider.class;
             case DAILY: return UsDailyWidgetProvider.class;
+            case MESSAGE: return UsMessageWidgetProvider.class;
+            case DAYS: return UsDaysWidgetProvider.class;
             default: return null;
         }
     }
@@ -120,8 +124,10 @@ final class UsWidgets {
         switch (kind) {
             case THINK: return UsThinkWidgetProvider.render(context, state);
             case COUNTDOWN: return UsCountdownWidgetProvider.render(context, state);
-            case NOI: return UsNoiWidgetProvider.render(context, state);
+            case NOI: return UsNoiWidgetProvider.render(context, state, options);
             case DAILY: return UsDailyWidgetProvider.render(context, state);
+            case MESSAGE: return UsMessageWidgetProvider.render(context, state);
+            case DAYS: return UsDaysWidgetProvider.render(context, state);
             default: return UsPhotoWidgetProvider.render(context, state, options);
         }
     }

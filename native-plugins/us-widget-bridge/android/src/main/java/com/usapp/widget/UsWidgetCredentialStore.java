@@ -43,6 +43,11 @@ final class UsWidgetCredentialStore {
     }
 
     synchronized boolean write(String ownerHash, String token, String expiresAt) {
+        return write(ownerHash, token, expiresAt, "");
+    }
+
+    /** functionsUrl: the Edge address of the build that issued it (UsWidgetEndpoints), or "". */
+    synchronized boolean write(String ownerHash, String token, String expiresAt, String functionsUrl) {
         if (!OWNER.matcher(ownerHash).matches() || !TOKEN.matcher(token).matches()) return false;
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
@@ -53,6 +58,8 @@ final class UsWidgetCredentialStore {
                 .put("expiresAt", UsWidgetContract.instantText(expiresAt))
                 .put("iv", Base64.encodeToString(cipher.getIV(), Base64.NO_WRAP))
                 .put("ciphertext", Base64.encodeToString(encrypted, Base64.NO_WRAP));
+            String base = UsWidgetEndpoints.functionsBase(functionsUrl);
+            if (!base.isEmpty()) payload.put("functionsUrl", base);
             return writeAtomic(credentialFile, payload.toString());
         } catch (Exception ignored) {
             return false;
@@ -71,6 +78,17 @@ final class UsWidgetCredentialStore {
             cipher.init(Cipher.DECRYPT_MODE, key(), new GCMParameterSpec(128, iv));
             String token = new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
             return TOKEN.matcher(token).matches() ? token : "";
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    /** The Edge address stored with the credential, re-checked on every read; "" when none. */
+    synchronized String functionsBase(String ownerHash) {
+        try {
+            JSONObject payload = new JSONObject(readAtomic(credentialFile));
+            if (!payload.optString("ownerHash", "").equals(ownerHash)) return "";
+            return UsWidgetEndpoints.functionsBase(payload.optString("functionsUrl", ""));
         } catch (Exception ignored) {
             return "";
         }

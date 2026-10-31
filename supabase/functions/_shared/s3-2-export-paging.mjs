@@ -8,7 +8,7 @@ export const EXPORT_PAGE_LIMIT = 500;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const fail = code => { const e=new Error(code);e.code=code;return e; };
 const validUUID = value => typeof value === 'string' && UUID.test(value) && value===value.toLowerCase();
-const SORT_KEYS=Object.freeze({notification_preferences:'user_id'});
+const SORT_KEYS=Object.freeze({notification_preferences:'user_id',couple_batteries:'user_id'});
 
 export function sortKeyForExportDomain(table){
  if(typeof table!=='string'||!/^[a-z][a-z0-9_]*$/.test(table))throw fail('export_paging_bad_table');

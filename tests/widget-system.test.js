@@ -56,7 +56,7 @@ function loadWidgets({
     writeWidgetPhoto: async () => true,
     clearWidgets: async () => { events.push(['clear']); return true; },
     getWidgetDeviceIdentity: async () => ({ deviceId: '5a86d7aa-37d8-48ed-9122-a8f42d80ff9e' }),
-    storeWidgetActionCredential: async (ownerHash, token) => { events.push(['credential', ownerHash, token]); return storeCredentialResult; },
+    storeWidgetActionCredential: async (ownerHash, token, expiresAt, options) => { events.push(['credential', ownerHash, token, options?.functionsUrl || '']); return storeCredentialResult; },
     clearWidgetActionCredential: async () => events.push(['credential-clear']),
     getNativeLaunchUrl: async () => launchUrl,
     listenForNativeAppUrl(handler) { urlListeners += 1; appUrlOpen = handler; return Promise.resolve({ remove() {} }); },
@@ -155,6 +155,8 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
     couple: { names: ['Francesco', 'Beatrice', 'Terzo'], startedOn: '2026-04-21', frame: '../evil', userId: 'raw' },
     countdown: { active: true, kind: 'clock', title: 'Viaggio', target: '2026-12-01T18:30:00.000Z', style: 'neon' },
     photo: { state: 'ready', key: 'https://example.test/a.jpg', url: 'https://example.test/a.jpg', takenOn: '2026-10-01' },
+    daily: { date: '2026-10-31', question: 'Una domanda?', state: 'your_turn', answer: 'secret' },
+    left: { kind: 'photo', at: '2026-10-31T09:00:00.000Z', body: 'secret', media_path: 'https://example.test/p.jpg' },
     accessToken: 'secret', refreshToken: 'secret', supabaseUrl: 'secret', supabaseKey: 'secret'
   });
   const sent = calls[0].snapshot;
@@ -168,7 +170,11 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   assert.equal(sent.countdown.style, 'editorial');
   assert.equal(sent.countdown.kind, 'clock');
   assert.deepEqual({ ...sent.photo }, { state: 'none', key: '', takenOn: '' });
-  assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'ownerHash', 'photo', 'schemaVersion', 'think', 'updatedAt']);
+  // La domanda di oggi and Messaggio travel too (31/10: daily was dropped
+  // here, so the widget never got the question): meaning only, never content.
+  assert.deepEqual({ ...sent.daily }, { date: '2026-10-31', question: 'Una domanda?', state: 'your_turn' });
+  assert.deepEqual({ ...sent.left }, { kind: 'photo', at: '2026-10-31T09:00:00.000Z' });
+  assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'left', 'ownerHash', 'photo', 'schemaVersion', 'think', 'updatedAt']);
 
   assert.equal(await platform.writeWidgetSnapshot({ schemaVersion: 2, ownerHash: 'raw-user-id' }), false, 'owner non hash rifiutato');
 });
@@ -215,6 +221,12 @@ test('auth ready provisiona la credential device-scoped solo quando manca o va r
   const renew = loadWidgets({ credential: 'renew' });
   await renew.widgets.authReady({ id: 'user-1' });
   assert.equal(renew.counts.issue, 1);
+
+  // The widget sends to the Edge of this build (staging or production).
+  const staging = loadWidgets({ credential: 'missing' });
+  staging.sandbox.UsWidgetCredentialApi.functionsUrl = 'https://dugmhngrfkuieeletatb.supabase.co/functions/v1';
+  await staging.widgets.authReady({ id: 'user-1' });
+  assert.equal(staging.events.find((event) => event[0] === 'credential')[3], 'https://dugmhngrfkuieeletatb.supabase.co/functions/v1');
 });
 
 test('fallimento provisioning non conserva credential; credential non cifrata viene revocata', async () => {
@@ -341,6 +353,41 @@ test('deep link widget aprono la destinazione giusta una volta sola e non invian
   assert.equal(harness.counts.issue, 0);
   assert.equal(harness.events.some((event) => event[0] === 'snapshot' && /sent/i.test(JSON.stringify(event[1].think.lastSentAt))), false);
   assert.doesNotMatch(read('widgets.js'), /sendThinkSignal|widget-think-send/);
+});
+
+// Messaggio (31/10): the tap opens the Ti penso or the closed envelope through
+// the same path as their notifications; the widget never sends anything.
+test('Messaggio: deep links open the Ti penso or the envelope, nothing else', async () => {
+  const harness = loadWidgets({ credential: 'ready' });
+  const opened = [];
+  harness.sandbox.UsPushNavigation = { open: (target) => opened.push(target) };
+  await harness.widgets.authReady({ id: 'user-1' });
+  harness.sandbox.usProfile = { id: 'user-1' };
+  await harness.emitUrl('us://widget/message/think');
+  await harness.emitUrl('us://widget/message/left');
+  assert.deepEqual(opened, ['think', 'left_for_you']);
+  await harness.emitUrl('us://widget/message');
+  assert.deepEqual(harness.events.filter((event) => event[0] === 'go').map((event) => event[1]), ['home']);
+  // An unknown path only opens US, like "think/send": it never opens or sends a message.
+  await harness.emitUrl('us://widget/message/send');
+  assert.deepEqual(opened, ['think', 'left_for_you']);
+});
+
+test('Messaggio: the newest closed Lasciato per te travels by kind and time only', async () => {
+  const harness = loadWidgets({ credential: 'ready' });
+  await harness.widgets.authReady({ id: 'user-1' });
+  await harness.widgets.publishLeft([
+    { id: 'a', kind: 'text', created_at: '2026-10-31T08:00:00Z', body: 'SEGRETO' },
+    { id: 'b', kind: 'photo', created_at: '2026-10-31T09:30:00Z', media_path: 'secret/path.jpg' },
+    { id: 'c', kind: 'hack', created_at: '2026-10-31T10:00:00Z' }
+  ]);
+  await settle();
+  const last = harness.snapshots().at(-1);
+  assert.deepEqual({ ...last.left }, { kind: 'photo', at: '2026-10-31T09:30:00.000Z' });
+  assert.doesNotMatch(JSON.stringify(last), /SEGRETO|secret|"a"|"b"/);
+  await harness.widgets.publishLeft([]);
+  await settle();
+  assert.deepEqual({ ...harness.snapshots().at(-1).left }, { kind: '', at: '' }, 'opened: nothing waits');
 });
 
 test('Foto & Noi follows the painted Oggi hero, not an independent latest-Ricordo query', () => {
@@ -472,7 +519,7 @@ test('Ti penso shows "Inviato" for a readable moment; no sent counter on the wid
 
 test('manifest dichiara 4 provider e i receiver interni, tutti non esportati', () => {
   const manifest = read(`${PLUGIN}/AndroidManifest.xml`);
-  for (const provider of ['UsThinkWidgetProvider', 'UsCountdownWidgetProvider', 'UsNoiWidgetProvider', 'UsPhotoWidgetProvider']) {
+  for (const provider of ['UsThinkWidgetProvider', 'UsCountdownWidgetProvider', 'UsNoiWidgetProvider', 'UsPhotoWidgetProvider', 'UsDailyWidgetProvider', 'UsMessageWidgetProvider', 'UsDaysWidgetProvider']) {
     const block = manifest.match(new RegExp(`<receiver[^>]*${provider}"[\\s\\S]*?</receiver>`))?.[0] || '';
     assert.match(block, /android:exported="false"/, provider);
     assert.match(block, /APPWIDGET_UPDATE/, provider);
@@ -481,12 +528,13 @@ test('manifest dichiara 4 provider e i receiver interni, tutti non esportati', (
   }
   assert.equal((manifest.match(/android:exported="true"/g) || []).length, 0);
   assert.match(manifest, /UsWidgetSystemReceiver"\s+android:exported="false"/);
-  for (const info of ['think', 'countdown', 'noi', 'photo']) {
+  for (const info of ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days']) {
     const xml = read(`${PLUGIN}/res/xml/us_widget_${info}_info.xml`);
     assert.match(xml, /android:updatePeriodMillis="3600000"/);
     assert.match(xml, /android:widgetCategory="home_screen"/);
   }
-  assert.match(read(`${PLUGIN}/res/xml/us_widget_noi_info.xml`), /android:targetCellHeight="1"/);
+  // Noi stile mappa (31/10): 4x2 by default; the 2x1 placed before keeps the compact card.
+  assert.match(read(`${PLUGIN}/res/xml/us_widget_noi_info.xml`), /android:targetCellWidth="4"[\s\S]*android:targetCellHeight="2"/);
   assert.match(read(`${PLUGIN}/res/xml/us_widget_think_info.xml`), /android:targetCellHeight="2"/);
 });
 
