@@ -2587,6 +2587,8 @@
     'Da scegliere': 'Not set',
     'Grazie: le missioni ora sono pensate per voi': 'Thanks: the missions are now picked for you',
     'La domanda del giorno e a chi tocca rispondere. Mai le risposte.': 'Today’s question and whose turn it is. Never the answers.',
+    Messaggio: 'Message',
+    'L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso.': 'Your partner’s last Ti penso, or their Lasciato per te still closed.',
     'Rispondi quando vuoi': 'Answer whenever you like',
     'Hai risposto': 'You answered',
     'La domanda di oggi vi aspetta in US': 'Today’s question is waiting in US',

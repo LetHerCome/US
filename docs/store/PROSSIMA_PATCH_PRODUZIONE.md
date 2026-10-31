@@ -320,3 +320,21 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - mandare un Ti penso dal widget Ti penso: la nuvoletta sopra di me cambia subito;
   - rimpicciolire il widget a 2×1: torna la scheda di prima;
   - il tocco apre Noi.
+
+## 2026-10-31 — Widget «Messaggio» (solo Android)
+
+**Fonte:** founder, 31/10/2026 (secondo dei widget scelti). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; serve un APK nuovo.
+
+- **Cosa fa:** widget 2×2.
+  - In alto la foto rotonda del partner.
+  - Sotto, in una nuvoletta chiara con un piccolo cuore rosa, il messaggio più recente tra il suo ultimo Ti penso («Ti ha pensato · 10 min fa») e il suo Lasciato per te ancora chiuso («Ti ha lasciato una foto · 5 min fa»; anche messaggio, vocale, video, canzone).
+  - Senza niente di recente: «Il suo prossimo pensiero arriverà qui», con il cuore vuoto. Un Ti penso più vecchio di una settimana non è più una novità; una busta chiusa resta finché non si apre.
+- **Il tocco** apre quel messaggio nell'app, per la stessa strada delle notifiche: Ti penso apre il foglio per ricambiare, la busta apre Lasciato per te. Sul freddo aspetta l'accesso.
+- **Privacy, scelta da confermare:** del Lasciato per te il widget conosce solo il tipo e l'ora, mai le parole, la foto o il link. Così la sorpresa resta nell'app, sulla schermata Home non compare il contenuto, e niente sopravvive alla pulizia dei Lasciato per te. Se il founder vuole vedere le parole nella nuvoletta, va deciso.
+- **Corretto per strada (stesso contratto dei widget):** l'app non passava mai al widget «La domanda di oggi» la domanda (`platform.js` scartava il blocco `daily`), e quel widget non si poteva aggiungere dalla galleria di Impostazioni (mancava nell'elenco dei tipi). Ora passano tutti e due.
+- **Galleria in Impostazioni:** nuova voce «Messaggio» (inglese «Message»), con la sua anteprima.
+- **Da provare dall'APK di staging:**
+  - aggiungere «Messaggio» da Impostazioni › Widget;
+  - farsi mandare un Ti penso e aprire US: «Ti ha pensato · proprio ora»; il tocco apre il foglio per ricambiare;
+  - farsi lasciare una foto in Lasciato per te: «Ti ha lasciato una foto»; il tocco apre la busta; aperta la busta, torna il Ti penso;
+  - «La domanda di oggi»: ora mostra la domanda del giorno e si aggiunge da Impostazioni.

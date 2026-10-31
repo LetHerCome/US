@@ -405,6 +405,56 @@ final class UsWidgetModels {
         return a.isBefore(b) ? a : b;
     }
 
+    // ---------- Messaggio ----------
+
+    /** The partner's last Ti penso, or the Lasciato per te still closed, whichever is newer. */
+    static final class Message {
+        boolean empty = true;
+        String text = "";
+        /** "10 min fa"; empty when it would be older than a week. */
+        String when = "";
+        /** us://widget/<destination>: the Ti penso, the envelope, or just US. */
+        String destination = "message";
+        Instant nextChange = null;
+    }
+
+    static Message message(JSONObject snapshot, Instant now) {
+        Message out = new Message();
+        if (snapshot == null) {
+            out.text = "Apri US per collegare il widget";
+            return out;
+        }
+        Instant received = UsWidgetContract.instant(UsWidgetContract.optObject(snapshot, "think").optString("lastReceivedAt", ""));
+        // A Ti penso older than a week is not news; a closed envelope still waits.
+        if (received != null && bubbleAgo(received, now).isEmpty()) received = null;
+        JSONObject left = UsWidgetContract.optObject(snapshot, "left");
+        Instant leftAt = UsWidgetContract.instant(left.optString("at", ""));
+        String leftKind = left.optString("kind", "");
+        if (leftKind.isEmpty()) leftAt = null;
+        if (received == null && leftAt == null) {
+            out.text = "Il suo prossimo pensiero arriverà qui";
+            return out;
+        }
+        out.empty = false;
+        boolean envelope = leftAt != null && (received == null || leftAt.isAfter(received));
+        Instant at = envelope ? leftAt : received;
+        out.text = envelope ? "Ti ha lasciato " + leftNoun(leftKind) : "Ti ha pensato";
+        out.destination = envelope ? "message/left" : "message/think";
+        out.when = bubbleAgo(at, now);
+        if (!out.when.isEmpty()) out.nextChange = bubbleNextChange(at, now);
+        return out;
+    }
+
+    static String leftNoun(String kind) {
+        switch (kind) {
+            case "photo": return "una foto";
+            case "audio": return "un vocale";
+            case "video": return "un video";
+            case "music": return "una canzone";
+            default: return "un messaggio";
+        }
+    }
+
     static final long RETRY_SAME_ACTION_MS = 2 * 60_000L;
 
     /**

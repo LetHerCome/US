@@ -13,8 +13,10 @@
 
   const platform = window.UsPlatform;
   const nativeEnabled = Boolean(platform?.isNative && platform?.hasWidgetBridge?.() !== false);
-  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily']);
-  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home' });
+  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message']);
+  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home' });
+  // Messaggio opens the message itself: the Ti penso or the closed envelope.
+  const MESSAGE_TARGETS = Object.freeze({ think: 'think', left: 'left_for_you' });
   const COUPLE_TTL_MS = 30 * 60 * 1000;
   const PHOTO_TTL_MS = 10 * 60 * 1000;
   const PHOTO_MAX_EDGE = 720;
@@ -48,11 +50,15 @@
   const emptyPhoto = () => ({ state: 'none', key: '', takenOn: '' });
   // La domanda di oggi: the day, the shared question and whose turn it is. Never an answer.
   const emptyDaily = () => ({ date: '', question: '', state: 'none' });
+  // Messaggio: the newest Lasciato per te still closed for me, kind and time only.
+  const emptyLeft = () => ({ kind: '', at: '' });
+  const LEFT_KINDS = Object.freeze(['text', 'photo', 'audio', 'video', 'music']);
   let think = emptyThink();
   let couple = emptyCouple();
   let countdown = emptyCountdown();
   let photo = emptyPhoto();
   let daily = emptyDaily();
+  let left = emptyLeft();
 
   async function sha256Hex(value) {
     const bytes = new TextEncoder().encode(String(value || ''));
@@ -78,7 +84,8 @@
       couple: { ...couple, names: [...couple.names] },
       countdown: { ...countdown },
       photo: { ...photo },
-      daily: { ...daily }
+      daily: { ...daily },
+      left: { ...left }
     };
   }
 
@@ -134,6 +141,19 @@
     const next = dailyFromToday();
     if (!next || JSON.stringify(next) === JSON.stringify(daily)) return Promise.resolve(false);
     daily = next;
+    return scheduleWrite();
+  }
+
+  // Oggi's unseen Lasciato per te rows (app.js loadOggiLeftItems): never the
+  // words, the photo or the link, only what kind the newest is and when.
+  function publishLeft(items) {
+    if (!ownerHash || !Array.isArray(items)) return Promise.resolve(false);
+    const newest = items
+      .filter((item) => LEFT_KINDS.includes(item?.kind) && isoInstant(item?.created_at))
+      .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
+    const next = newest ? { kind: newest.kind, at: isoInstant(newest.created_at) } : emptyLeft();
+    if (next.kind === left.kind && next.at === left.at) return Promise.resolve(false);
+    left = next;
     return scheduleWrite();
   }
 
@@ -540,6 +560,7 @@
     if (nextHash !== ownerHash || activeCoupleId !== (profile.couple_id || '')) {
       generation += 1;
       think = emptyThink();
+      left = emptyLeft();
       couple = emptyCouple();
       countdown = emptyCountdown();
       photo = emptyPhoto();
@@ -586,7 +607,7 @@
     if (noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
     noiPortraitPreviewUrl = '';
     clearRoundPreviews();
-    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();
+    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();left = emptyLeft();
     setPreview('');
     const provisioning = credentialProvisionInFlight;
     if (provisioning) try { await provisioning; } catch (_) {}
@@ -611,6 +632,8 @@
       if (url.protocol !== 'us:' || url.hostname !== 'widget') return null;
       const path = url.pathname.replace(/^\/+/, '');
       if (path === 'noi/play') return { kind: 'noi-play', url: urlValue };
+      const message = path.match(/^message\/(think|left)$/);
+      if (message) return { kind: 'message', target: MESSAGE_TARGETS[message[1]], url: urlValue };
       const kind = path.split('/')[0];
       return KINDS.includes(kind) ? { kind, url: urlValue } : null;
     } catch (_) { return null; }
@@ -633,6 +656,12 @@
     const now = Date.now();
     if (lastLink.url === link.url && now - lastLink.at < 1500) return Promise.resolve(true);
     lastLink = { url: link.url, at: now };
+    // The Ti penso or the envelope: the same path as their notifications,
+    // which also waits for the sign-in on a cold start.
+    if (link.target && typeof window.UsPushNavigation?.open === 'function') {
+      window.UsPushNavigation.open(link.target);
+      return Promise.resolve(true);
+    }
     const page = DESTINATIONS[link.kind];
     pendingDestination = window.usProfile ? '' : page;
     pendingKind = window.usProfile ? '' : link.kind;
@@ -669,6 +698,7 @@
     KINDS,
     authReady,
     publishThink,
+    publishLeft,
     syncCountdown,
     syncDaily,
     syncCouple,

@@ -30,6 +30,10 @@
     <string name="us_widget_daily_preview_question">Quale piccolo momento vorresti rivivere insieme?</string>
     <string name="us_widget_noi_description">Le vostre foto, la distanza tra voi, i Ti penso e la batteria di chi ami.</string>
 
+    <string name="us_widget_message_name">Messaggio</string>
+    <string name="us_widget_message_description">L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso</string>
+    <string name="us_widget_message_empty">Il suo prossimo pensiero arriverà qui</string>
+
     <string name="us_widget_photo_name">Foto &amp; Noi</string>
     <string name="us_widget_photo_description">La foto di Oggi e i giorni insieme</string>
     <string name="us_widget_photo_empty">La foto di Oggi apparirà qui</string>
@@ -42,6 +46,8 @@
     <string name="us_widget_preview_battery" formatted="false">64%</string>
     <string name="us_widget_preview_days">365</string>
     <string name="us_widget_preview_days_unit">giorni insieme</string>
+    <string name="us_widget_preview_message">Ti ha pensato</string>
+    <string name="us_widget_preview_message_when">10 min fa</string>
     <string name="us_widget_preview_countdown">Il prossimo viaggio</string>
     <string name="us_widget_preview_countdown_value">12</string>
     <string name="us_widget_preview_countdown_unit">giorni</string>

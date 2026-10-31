@@ -826,6 +826,8 @@ async function performPushNavigation(target,intent={}){
   if(pages.includes(target))go(target);
 }
 window.UsNotifications?.onNavigate?.(intent=>performPushNavigation(intent.target,intent));
+// The Messaggio widget opens its Ti penso or envelope through the same path.
+window.UsPushNavigation=Object.freeze({open:(target)=>performPushNavigation(target)});
 function captureInitialPushTarget(){
   try{
     const url=new URL(location.href),target=url.searchParams.get('open');
@@ -3160,6 +3162,7 @@ async function loadOggiLeftItems(){
     }catch(error){console.warn('[US Oggi] Lasciato per te',error);return;}
   }
   if(before!==usOggiLeft.items.map(item=>item.id).join(','))refreshTodayPriorities();
+  window.UsWidgets?.publishLeft?.(usOggiLeft.items)?.catch?.(()=>{});
 }
 (()=>{
   const envelope=document.getElementById('leftForYouPartnerEntry');

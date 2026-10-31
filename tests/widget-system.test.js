@@ -155,6 +155,8 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
     couple: { names: ['Francesco', 'Beatrice', 'Terzo'], startedOn: '2026-04-21', frame: '../evil', userId: 'raw' },
     countdown: { active: true, kind: 'clock', title: 'Viaggio', target: '2026-12-01T18:30:00.000Z', style: 'neon' },
     photo: { state: 'ready', key: 'https://example.test/a.jpg', url: 'https://example.test/a.jpg', takenOn: '2026-10-01' },
+    daily: { date: '2026-10-31', question: 'Una domanda?', state: 'your_turn', answer: 'secret' },
+    left: { kind: 'photo', at: '2026-10-31T09:00:00.000Z', body: 'secret', media_path: 'https://example.test/p.jpg' },
     accessToken: 'secret', refreshToken: 'secret', supabaseUrl: 'secret', supabaseKey: 'secret'
   });
   const sent = calls[0].snapshot;
@@ -168,7 +170,11 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   assert.equal(sent.countdown.style, 'editorial');
   assert.equal(sent.countdown.kind, 'clock');
   assert.deepEqual({ ...sent.photo }, { state: 'none', key: '', takenOn: '' });
-  assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'ownerHash', 'photo', 'schemaVersion', 'think', 'updatedAt']);
+  // La domanda di oggi and Messaggio travel too (31/10: daily was dropped
+  // here, so the widget never got the question): meaning only, never content.
+  assert.deepEqual({ ...sent.daily }, { date: '2026-10-31', question: 'Una domanda?', state: 'your_turn' });
+  assert.deepEqual({ ...sent.left }, { kind: 'photo', at: '2026-10-31T09:00:00.000Z' });
+  assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'left', 'ownerHash', 'photo', 'schemaVersion', 'think', 'updatedAt']);
 
   assert.equal(await platform.writeWidgetSnapshot({ schemaVersion: 2, ownerHash: 'raw-user-id' }), false, 'owner non hash rifiutato');
 });
@@ -343,6 +349,41 @@ test('deep link widget aprono la destinazione giusta una volta sola e non invian
   assert.doesNotMatch(read('widgets.js'), /sendThinkSignal|widget-think-send/);
 });
 
+// Messaggio (31/10): the tap opens the Ti penso or the closed envelope through
+// the same path as their notifications; the widget never sends anything.
+test('Messaggio: deep links open the Ti penso or the envelope, nothing else', async () => {
+  const harness = loadWidgets({ credential: 'ready' });
+  const opened = [];
+  harness.sandbox.UsPushNavigation = { open: (target) => opened.push(target) };
+  await harness.widgets.authReady({ id: 'user-1' });
+  harness.sandbox.usProfile = { id: 'user-1' };
+  await harness.emitUrl('us://widget/message/think');
+  await harness.emitUrl('us://widget/message/left');
+  assert.deepEqual(opened, ['think', 'left_for_you']);
+  await harness.emitUrl('us://widget/message');
+  assert.deepEqual(harness.events.filter((event) => event[0] === 'go').map((event) => event[1]), ['home']);
+  // An unknown path only opens US, like "think/send": it never opens or sends a message.
+  await harness.emitUrl('us://widget/message/send');
+  assert.deepEqual(opened, ['think', 'left_for_you']);
+});
+
+test('Messaggio: the newest closed Lasciato per te travels by kind and time only', async () => {
+  const harness = loadWidgets({ credential: 'ready' });
+  await harness.widgets.authReady({ id: 'user-1' });
+  await harness.widgets.publishLeft([
+    { id: 'a', kind: 'text', created_at: '2026-10-31T08:00:00Z', body: 'SEGRETO' },
+    { id: 'b', kind: 'photo', created_at: '2026-10-31T09:30:00Z', media_path: 'secret/path.jpg' },
+    { id: 'c', kind: 'hack', created_at: '2026-10-31T10:00:00Z' }
+  ]);
+  await settle();
+  const last = harness.snapshots().at(-1);
+  assert.deepEqual({ ...last.left }, { kind: 'photo', at: '2026-10-31T09:30:00.000Z' });
+  assert.doesNotMatch(JSON.stringify(last), /SEGRETO|secret|"a"|"b"/);
+  await harness.widgets.publishLeft([]);
+  await settle();
+  assert.deepEqual({ ...harness.snapshots().at(-1).left }, { kind: '', at: '' }, 'opened: nothing waits');
+});
+
 test('Foto & Noi follows the painted Oggi hero, not an independent latest-Ricordo query', () => {
   const app = read('app.js');
   const provider = app.slice(app.indexOf('  async latestPhoto(){'), app.indexOf('\n});', app.indexOf('  async latestPhoto(){')));
@@ -472,7 +513,7 @@ test('Ti penso shows "Inviato" for a readable moment; no sent counter on the wid
 
 test('manifest dichiara 4 provider e i receiver interni, tutti non esportati', () => {
   const manifest = read(`${PLUGIN}/AndroidManifest.xml`);
-  for (const provider of ['UsThinkWidgetProvider', 'UsCountdownWidgetProvider', 'UsNoiWidgetProvider', 'UsPhotoWidgetProvider']) {
+  for (const provider of ['UsThinkWidgetProvider', 'UsCountdownWidgetProvider', 'UsNoiWidgetProvider', 'UsPhotoWidgetProvider', 'UsDailyWidgetProvider', 'UsMessageWidgetProvider']) {
     const block = manifest.match(new RegExp(`<receiver[^>]*${provider}"[\\s\\S]*?</receiver>`))?.[0] || '';
     assert.match(block, /android:exported="false"/, provider);
     assert.match(block, /APPWIDGET_UPDATE/, provider);
@@ -481,7 +522,7 @@ test('manifest dichiara 4 provider e i receiver interni, tutti non esportati', (
   }
   assert.equal((manifest.match(/android:exported="true"/g) || []).length, 0);
   assert.match(manifest, /UsWidgetSystemReceiver"\s+android:exported="false"/);
-  for (const info of ['think', 'countdown', 'noi', 'photo']) {
+  for (const info of ['think', 'countdown', 'noi', 'photo', 'daily', 'message']) {
     const xml = read(`${PLUGIN}/res/xml/us_widget_${info}_info.xml`);
     assert.match(xml, /android:updatePeriodMillis="3600000"/);
     assert.match(xml, /android:widgetCategory="home_screen"/);

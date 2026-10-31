@@ -158,8 +158,26 @@
         state: photoReady ? 'ready' : 'none',
         key: photoReady ? photoKey : '',
         takenOn: photoReady ? safeCivilDate(photo.takenOn) : ''
-      }
+      },
+      daily: widgetDaily(input?.daily),
+      left: widgetLeft(input?.left)
     };
+  }
+
+  // La domanda di oggi (UsWidgetContract.java): the day, the shared question
+  // and whose turn it is. Never an answer.
+  function widgetDaily(daily = {}) {
+    const date = safeCivilDate(daily?.date);
+    const question = safeText(daily?.question, 240);
+    const state = /^(todo|your_turn|waiting|ready)$/.test(daily?.state || '') ? daily.state : '';
+    return date && question && state ? { date, question, state } : { date: '', question: '', state: 'none' };
+  }
+
+  // Messaggio: the newest Lasciato per te still closed, by kind and time only.
+  function widgetLeft(left = {}) {
+    const kind = /^(text|photo|audio|video|music)$/.test(left?.kind || '') ? left.kind : '';
+    const at = kind ? safeInstant(left?.at) : '';
+    return kind && at ? { kind, at } : { kind: '', at: '' };
   }
 
   function widgetBattery(couple) {
@@ -269,7 +287,7 @@
     return true;
   }
 
-  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo'];
+  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo', 'daily', 'message'];
 
   async function getInstalledWidgets() {
     const plugin = widgetBridge();
