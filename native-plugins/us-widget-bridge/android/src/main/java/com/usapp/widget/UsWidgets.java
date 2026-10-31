@@ -120,7 +120,7 @@ final class UsWidgets {
         switch (kind) {
             case THINK: return UsThinkWidgetProvider.render(context, state);
             case COUNTDOWN: return UsCountdownWidgetProvider.render(context, state);
-            case NOI: return UsNoiWidgetProvider.render(context, state);
+            case NOI: return UsNoiWidgetProvider.render(context, state, options);
             case DAILY: return UsDailyWidgetProvider.render(context, state);
             default: return UsPhotoWidgetProvider.render(context, state, options);
         }

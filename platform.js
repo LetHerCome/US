@@ -225,12 +225,13 @@
   }
 
   // A private JPEG composite of the two avatars, never remote URLs.
-  async function writeWidgetNoiPortrait(ownerHash, base64) {
+  // slot: "pair" (Noi 2x1), "me" or "partner" (Noi stile mappa).
+  async function writeWidgetNoiPortrait(ownerHash, base64, slot = 'pair') {
     const plugin = widgetBridge();
     const safeHash = validOwnerHash(ownerHash);
     const data = typeof base64 === 'string' && /^[A-Za-z0-9+/=]+$/.test(base64) && base64.length <= 2_800_000 ? base64 : '';
-    if (!plugin || !safeHash || !data || typeof plugin.writeNoiPortrait !== 'function') return false;
-    await plugin.writeNoiPortrait({ ownerHash: safeHash, data });
+    if (!plugin || !safeHash || !data || !['pair', 'me', 'partner'].includes(slot) || typeof plugin.writeNoiPortrait !== 'function') return false;
+    await plugin.writeNoiPortrait({ ownerHash: safeHash, data, slot });
     return true;
   }
 

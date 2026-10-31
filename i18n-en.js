@@ -1629,7 +1629,7 @@
     // Widgets
     'Un pensiero con un tocco, anche con US chiusa.': 'A thought in one tap, even when US is closed.',
     'Lo stesso Countdown che hai scelto su Oggi.': 'The same Countdown you chose on Today.',
-    'Le vostre foto profilo e la distanza tra voi.': 'Your profile photos and the distance between you.',
+    'Le vostre foto, la distanza tra voi, i Ti penso e la batteria di chi ami.': 'Your photos, the distance between you, your Ti penso and your partner’s battery.',
     'Foto & Noi': 'Photo & Us',
     'La fotografia che vedi su Oggi, con i giorni insieme.': 'The photo you see on Today, with your days together.',
     '{name} ti sta pensando': '{name} is thinking of you',

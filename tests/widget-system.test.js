@@ -486,7 +486,8 @@ test('manifest dichiara 4 provider e i receiver interni, tutti non esportati', (
     assert.match(xml, /android:updatePeriodMillis="3600000"/);
     assert.match(xml, /android:widgetCategory="home_screen"/);
   }
-  assert.match(read(`${PLUGIN}/res/xml/us_widget_noi_info.xml`), /android:targetCellHeight="1"/);
+  // Noi stile mappa (31/10): 4x2 by default; the 2x1 placed before keeps the compact card.
+  assert.match(read(`${PLUGIN}/res/xml/us_widget_noi_info.xml`), /android:targetCellWidth="4"[\s\S]*android:targetCellHeight="2"/);
   assert.match(read(`${PLUGIN}/res/xml/us_widget_think_info.xml`), /android:targetCellHeight="2"/);
 });
 

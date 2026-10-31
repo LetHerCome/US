@@ -343,6 +343,68 @@ final class UsWidgetModels {
         return nextRomeMidnight(now);
     }
 
+    // ---------- Noi stile mappa: the Ti penso bubbles ----------
+
+    /** Above each portrait, that person's last Ti penso and how long ago. */
+    static final class Bubbles {
+        String partner = "";
+        String me = "";
+        Instant nextChange = null;
+    }
+
+    static final long BUBBLE_VISIBLE_MS = 7 * DAY_MS;
+
+    static Bubbles noiBubbles(JSONObject snapshot, JSONObject action, Instant now) {
+        Bubbles out = new Bubbles();
+        if (snapshot == null) return out;
+        JSONObject t = UsWidgetContract.optObject(snapshot, "think");
+        String partner = t.optString("partnerName", "").trim();
+        Instant received = UsWidgetContract.instant(t.optString("lastReceivedAt", ""));
+        Instant sent = UsWidgetContract.instant(t.optString("lastSentAt", ""));
+        // A Ti penso sent from the widget is newer than the app's last read.
+        Instant nativeSent = action == null ? null : UsWidgetContract.instant(action.optString("sentAt", ""));
+        if (nativeSent != null && (sent == null || nativeSent.isAfter(sent))) sent = nativeSent;
+        String ago = bubbleAgo(received, now);
+        if (!ago.isEmpty()) {
+            out.partner = "ti ha pensato · " + ago;
+            out.nextChange = earliest(out.nextChange, bubbleNextChange(received, now));
+        }
+        ago = bubbleAgo(sent, now);
+        if (!ago.isEmpty()) {
+            out.me = (partner.isEmpty() ? "Ti penso" : "hai pensato a " + partner) + " · " + ago;
+            out.nextChange = earliest(out.nextChange, bubbleNextChange(sent, now));
+        }
+        return out;
+    }
+
+    /** "proprio ora", then 5-minute steps in the first hour; "" after a week. */
+    static String bubbleAgo(Instant at, Instant now) {
+        if (at == null) return "";
+        long ms = now.toEpochMilli() - at.toEpochMilli();
+        // A couple of minutes of clock skew between phone and server is "now".
+        if (ms < -120_000L || ms >= BUBBLE_VISIBLE_MS) return "";
+        long minutes = Math.max(0, ms / 60_000L);
+        if (minutes < 5) return "proprio ora";
+        if (minutes < 60) return (minutes / 5 * 5) + " min fa";
+        if (minutes < 120) return "1 ora fa";
+        if (minutes < 1440) return (minutes / 60) + " ore fa";
+        if (minutes < 2880) return "ieri";
+        return (minutes / 1440) + " giorni fa";
+    }
+
+    /** When bubbleAgo next changes: every 5 minutes, then hourly, then daily. */
+    static Instant bubbleNextChange(Instant at, Instant now) {
+        long minutes = Math.max(0, Duration.between(at, now).toMinutes());
+        long step = minutes < 60 ? 5 : minutes < 1440 ? 60 : 1440;
+        return at.plus((minutes / step + 1) * step, ChronoUnit.MINUTES);
+    }
+
+    private static Instant earliest(Instant a, Instant b) {
+        if (a == null) return b;
+        if (b == null) return a;
+        return a.isBefore(b) ? a : b;
+    }
+
     static final long RETRY_SAME_ACTION_MS = 2 * 60_000L;
 
     /**

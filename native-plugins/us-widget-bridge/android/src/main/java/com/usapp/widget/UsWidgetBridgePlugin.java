@@ -127,11 +127,12 @@ public class UsWidgetBridgePlugin extends Plugin {
     @PluginMethod
     public void writeNoiPortrait(PluginCall call) {
         String ownerHash = call.getString("ownerHash", "");
+        String slot = call.getString("slot", "pair");
         String data = call.getString("data", "");
         byte[] bytes;
         try { bytes = data.length() > UsWidgetStore.MAX_PHOTO_BYTES * 2 ? null : Base64.decode(data, Base64.DEFAULT); }
         catch (IllegalArgumentException ignored) { bytes = null; }
-        if (!store.writeNoiPortrait(ownerHash, bytes)) {
+        if (!store.writeNoiPortrait(ownerHash, slot, bytes)) {
             call.reject("Invalid Noi portrait");
             return;
         }

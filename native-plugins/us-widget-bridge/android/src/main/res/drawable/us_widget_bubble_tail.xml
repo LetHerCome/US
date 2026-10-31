@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The bubble's point, towards the portrait under it (same latte as us_widget_bubble). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="12dp"
+    android:height="6dp"
+    android:viewportWidth="12"
+    android:viewportHeight="6">
+    <path
+        android:fillColor="#F2F7EFE9"
+        android:pathData="M0,0H12L6,6Z" />
+</vector>

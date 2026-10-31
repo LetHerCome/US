@@ -15,7 +15,7 @@
   const CATALOG = Object.freeze([
     { kind: 'think', name: 'Ti penso', copy: 'Un pensiero con un tocco, anche con US chiusa.', shape: 'square' },
     { kind: 'countdown', name: 'Countdown', copy: 'Lo stesso Countdown che hai scelto su Oggi.', shape: 'square' },
-    { kind: 'noi', name: 'Noi', copy: 'Le vostre foto profilo e la distanza tra voi.', shape: 'wide' },
+    { kind: 'noi', name: 'Noi', copy: 'Le vostre foto, la distanza tra voi, i Ti penso e la batteria di chi ami.', shape: 'wide' },
     { kind: 'photo', name: 'Foto & Noi', copy: 'La fotografia che vedi su Oggi, con i giorni insieme.', shape: 'square' },
     { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda del giorno e a chi tocca rispondere. Mai le risposte.', shape: 'wide' }
   ]);

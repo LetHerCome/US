@@ -36,6 +36,7 @@
   let noiPortraitPreviewUrl = '';
   let noiPortraitSignature = '';
   let noiPortraitSync = null;
+  let noiRoundPreviewUrls = { me: '', partner: '' };
   let lastLink = { url: '', at: 0 };
   let pendingDestination = '';
   let pendingKind = '';
@@ -288,6 +289,68 @@
     return {base64, preview: URL.createObjectURL(png)};
   }
 
+  // Noi stile mappa: one round portrait per person (same ring colours), 56dp
+  // at 3x, transparent. The widget puts me on the left, the partner on the right.
+  async function composeRoundPortrait(url, colour) {
+    const S = 3, size = Math.round(56 * S), ring = 2.5 * S, c = size / 2, radius = c - ring;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('noi_round_canvas');
+    ctx.save();
+    ctx.beginPath(); ctx.arc(c, c, radius, 0, Math.PI * 2); ctx.clip();
+    ctx.fillStyle = '#2a2232';
+    ctx.fillRect(0, 0, size, size);
+    let bitmap;
+    try {
+      const response = await fetch(url, { credentials: 'omit' });
+      if (!response.ok) throw new Error('avatar_download');
+      const blob = await response.blob();
+      if (!/^image\//.test(blob.type || 'image/')) throw new Error('avatar_type');
+      bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+      const scale = Math.max(radius * 2 / bitmap.width, radius * 2 / bitmap.height);
+      const w = bitmap.width * scale, h = bitmap.height * scale;
+      ctx.drawImage(bitmap, c - w / 2, c - h / 2, w, h);
+    } finally { bitmap?.close?.(); }
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(c, c, radius + ring / 2, 0, Math.PI * 2);
+    ctx.strokeStyle = colour; ctx.lineWidth = ring; ctx.stroke();
+    const png = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (!png) throw new Error('noi_round_encode');
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+      reader.onerror = reject;
+      reader.readAsDataURL(png);
+    });
+    return { base64, preview: URL.createObjectURL(png) };
+  }
+
+  // urls come by role (creator, partner); "me" is the viewer's own.
+  async function writeRoundPortraits(urls, owner, token) {
+    const mine = window.usProfile?.role === 'beatrice' ? 1 : 0;
+    const colours = ['#ff7c96', '#a98bff'];
+    const previews = {};
+    for (const [slot, index] of [['me', mine], ['partner', 1 - mine]]) {
+      if (!urls[index]) continue;
+      try {
+        const image = await composeRoundPortrait(urls[index], colours[index]);
+        if (token !== generation || !(await platform.writeWidgetNoiPortrait(owner, image.base64, slot))) { URL.revokeObjectURL(image.preview); continue; }
+        previews[slot] = image.preview;
+      } catch (error) { console.warn('[US Widget] Noi round portrait', error); }
+    }
+    for (const slot of ['me', 'partner']) {
+      if (!previews[slot]) continue;
+      if (noiRoundPreviewUrls[slot]) URL.revokeObjectURL(noiRoundPreviewUrls[slot]);
+      noiRoundPreviewUrls[slot] = previews[slot];
+    }
+  }
+
+  function clearRoundPreviews() {
+    for (const slot of ['me', 'partner']) if (noiRoundPreviewUrls[slot]) URL.revokeObjectURL(noiRoundPreviewUrls[slot]);
+    noiRoundPreviewUrls = { me: '', partner: '' };
+  }
+
   function syncNoiPortrait({ force = false } = {}) {
     if (!nativeEnabled || !ownerHash || !platform?.writeWidgetNoiPortrait) return Promise.resolve(false);
     if (noiPortraitSync) return noiPortraitSync;
@@ -301,8 +364,10 @@
       try {
         image=await composeNoiPortrait(urls);
         if(token!==generation){URL.revokeObjectURL(image.preview);return false;}
-        const ok=await platform.writeWidgetNoiPortrait(owner,image.base64);
+        const ok=await platform.writeWidgetNoiPortrait(owner,image.base64,'pair');
         if(token!==generation || !ok){URL.revokeObjectURL(image.preview);return false;}
+        await writeRoundPortraits(urls,owner,token);
+        if(token!==generation){URL.revokeObjectURL(image.preview);return false;}
         if(noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
         noiPortraitPreviewUrl=image.preview;
         noiPortraitSignature=signature;
@@ -485,6 +550,7 @@
       noiPortraitSignature = '';
       if (noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
       noiPortraitPreviewUrl = '';
+      clearRoundPreviews();
       setPreview('');
     }
     activeCoupleId=profile.couple_id || '';
@@ -519,6 +585,7 @@
     noiPortraitSignature = '';
     if (noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
     noiPortraitPreviewUrl = '';
+    clearRoundPreviews();
     think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();
     setPreview('');
     const provisioning = credentialProvisionInFlight;
@@ -578,7 +645,7 @@
   // ---------- Widget Hub support ----------
 
   function view() {
-    return { snapshot: snapshot(), photoPreviewUrl, noiPortraitPreviewUrl, ready: Boolean(ownerHash) };
+    return { snapshot: snapshot(), photoPreviewUrl, noiPortraitPreviewUrl, noiRoundPreviewUrls: { ...noiRoundPreviewUrls }, ready: Boolean(ownerHash) };
   }
 
   async function installed() {

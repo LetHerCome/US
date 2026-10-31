@@ -299,3 +299,24 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - widget «Noi» sulla schermata Home: icona e percentuale accanto a «NOI»; dopo un'ora più tenue; il tocco apre Noi;
   - un telefono sotto il 20%: icona corallo nella pillola e nel widget;
   - Noi: nessuna riga della batteria.
+
+## 2026-10-31 — Widget «Noi» stile mappa (solo Android)
+
+**Fonte:** founder, 31/10/2026 (tre modelli da un'app di riferimento più il widget delle note; questo è il primo). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; serve un APK nuovo.
+
+- **Cosa cambia:** da 4×2 in su il widget «Noi» mostra:
+  - le due foto rotonde ai lati, io a sinistra e il partner a destra, con gli anelli rosa e lilla di sempre;
+  - in mezzo la distanza su una linea tratteggiata, con «tra voi» o «ultima nota»;
+  - sopra ogni foto una nuvoletta con l'ultimo Ti penso di quella persona: «ti ha pensato · 10 min fa» sopra il partner, «hai pensato a Bea · 2 ore fa» sopra di me. Nella prima ora va a passi di 5 minuti, poi a ore e a giorni; dopo una settimana la nuvoletta sparisce;
+  - sotto la foto del partner, piccola, la sua batteria.
+  Più avanti nella nuvoletta andrà lo stato con emoji.
+- **Il 2×1 già messo** resta la scheda di prima (foto in coppia, distanza, batteria accanto a «NOI»). Android 12+ sceglie da solo la vista in base alla misura; sui telefoni più vecchi decide la misura che il launcher comunica. Un widget nuovo parte da 4×2.
+- **Sfondo:** per ora la scheda notte. La mappa decorativa scura aspetta un asset approvato (domanda aperta al founder). Mai una mappa vera: US promette «mai dove sei».
+- **Dati:** nessun dato nuovo. Le nuvolette usano gli orari di Ti penso che il widget già riceveva; le foto rotonde le prepara l'app quando è aperta (come la foto in coppia), con gli stessi anelli. Il widget non va in rete.
+- **Anteprima nel selettore dei widget** (Android 12+): la vista a mappa, generica, senza volti né nomi. L'immagine PNG per Android 11 e precedenti è ancora quella del 2×1.
+- **Da provare dall'APK di staging:**
+  - mettere il widget «Noi»: deve partire grande (4×2) con le due foto, la distanza sulla linea tratteggiata e la batteria del partner;
+  - mandarsi un Ti penso: dopo aver aperto US, la nuvoletta sopra il partner dice «ti ha pensato · proprio ora», poi «5 min fa», «10 min fa»;
+  - mandare un Ti penso dal widget Ti penso: la nuvoletta sopra di me cambia subito;
+  - rimpicciolire il widget a 2×1: torna la scheda di prima;
+  - il tocco apre Noi.

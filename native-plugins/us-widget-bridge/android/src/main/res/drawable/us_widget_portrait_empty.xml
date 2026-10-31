@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A portrait not painted yet: the card's surface in a quiet ring. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="#FF2A2232" />
+    <stroke android:width="2dp" android:color="#2BF7EFE9" />
+</shape>
