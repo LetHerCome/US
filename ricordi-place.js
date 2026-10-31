@@ -243,10 +243,16 @@
     });
   }
 
+  // The app's client is the global `sb` of app.js, a const: never window.sb.
+  // eslint-disable-next-line no-undef
+  const client = () => { try { return sb; } catch (_) { return w?.sb || null; } };
+
   // Either member places, moves or clears a saved Ricordo (set_moment_place).
   async function save(momentId, place) {
     const p = place ? normalize(place) : null;
-    const { data, error } = await w.sb.rpc('set_moment_place', {
+    const db = client();
+    if (!db) throw new Error('supabase_unavailable');
+    const { data, error } = await db.rpc('set_moment_place', {
       p_moment: momentId, p_lat: p?.lat ?? null, p_lon: p?.lon ?? null, p_label: p?.label ?? null, p_source: p?.source ?? null,
     });
     if (error) throw error;

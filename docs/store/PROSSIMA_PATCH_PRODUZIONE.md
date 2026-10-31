@@ -5,6 +5,7 @@
 **Stato:** su staging, non ancora in produzione. **Branch:** `claude/fix-prod-1-3-1`. **Build:** `us-fix-20261030-75`.
 
 - **Mappa dei Ricordi:** «Aggiungi il posto» ora sta nella foto a schermo intero, sotto la nota. Prima, sui ricordi caricati prima della 1.3, finiva sotto lo schermo e non si poteva toccare (`dc-ricordi.css`, test in `tests/ricordi-place-client.test.js`).
+- **Mappa dei Ricordi, salvataggio del posto:** scegliere il posto di un ricordo già caricato non salvava niente: `ricordi-place.js` cercava il client in `window.sb`, che non esiste (in `app.js` `sb` è una costante). Ora usa `sb` come gli altri moduli. Trovato dalla sessione dei widget il 31/10; test in `tests/ricordi-place-client.test.js`.
 - **Controllo ortografico di tutte le domande (31/10):** migrazione `20261031120000_ortografia_domande.sql` (solo testi, test in `tests/ortografia-domande-db.test.js`). Su staging serve il run del workflow «Supabase SQL (manual)» con l'approvazione del founder; in produzione lo stesso file, con il suo via.
 - **Emoji di Gboard nella risposta alla domanda del giorno:** ancora aperto. Il campo non ha `autocomplete="off"` (la causa trovata il 29/10 per gli altri campi), quindi la causa è un'altra. Il 31/10, nell'emulatore con Gboard e un APK di debug, il campo passa a Gboard testo normale a più righe (`inputType=0x2c001`): tastiera completa, tasto emoji e pannello emoji funzionanti. Serve una registrazione dal telefono del founder per vedere quando cambia la tastiera.
 
