@@ -270,3 +270,27 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - una foto nuova con «Salva posizione» attivo nella fotocamera dello Xiaomi: «Dove» si riempie da solo;
   - una foto senza posizione: «Dove» resta vuoto e si cerca a mano;
   - la mappa: segnaposti, gruppi, tocco che apre il Ricordo, ritorno a «Mese per mese».
+
+## 2026-10-31 — Batteria del partner
+
+**Fonte:** founder, grill del 31/10/2026 (dopo lo studio di Love8: posizione rispettosa, niente tracciamento continuo). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; niente su staging né in produzione.
+
+- **Cosa fa:** quando US è aperta (all'avvio e al ritorno in primo piano) il telefono manda il proprio livello di batteria e se è in carica, al massimo ogni 15 minuti. Niente lavori in background, nessuna notifica. L'altra persona vede l'ultimo livello e da quanto tempo; dopo un giorno non si vede più. Senza dato non compare niente.
+- **Noi:** una riga discreta sotto il titolo «Noi»: nome, icona Phosphor della batteria (bassa, media, alta, in carica), percentuale, «2 ore fa». Sotto il 20% e non in carica l'icona è corallo. Si aggiorna col tempo reale (canale Realtime a parte, aperto solo dopo che la tabella ha risposto).
+- **Widget Android «Noi»:** accanto a «NOI», in alto a destra, l'icona e la percentuale. Dopo un'ora più tenue, dopo un giorno sparisce (il widget si ridisegna da solo a quelle ore). La riga in corsivo sotto la distanza resta libera per «a casa / fuori» (lavoro successivo, con i recinti).
+- **Database:** migrazione `20261031134410_couple_battery_v1.sql`: tabella `couple_batteries` (una riga per persona, FK verso `profiles` con cascade), RLS «stessa coppia» finché il proprietario ne fa parte, scrittura solo con `report_battery(p_level, p_charging)` (orario del server; lo stesso invio entro un minuto non scrive niente), pubblicazione `supabase_realtime`. Test: `tests/couple-battery-v1-db.test.js`.
+  - **Ordine:** prima l'SQL, poi il web. Un web arrivato prima non rompe niente: vede che la tabella manca e smette di chiedere.
+  - **Export dei dati:** la batteria entra nell'export (`s3-2-export-core.mjs`); la Edge `export-my-data` va pubblicata **dopo** l'SQL.
+- **Android:** nuovo metodo `getBatteryStatus` nel plugin `us-widget-bridge` (`BatteryManager`, nessun permesso). Serve un APK nuovo; l'APK vecchio usa la Battery API del WebView, se c'è. Sul web vale la Battery API del browser (Chrome sì; Safari e Firefox no: lì non si manda niente). Un computer senza batteria non manda niente.
+- **Icone:** Phosphor `battery-low`, `battery-medium`, `battery-high`, `battery-charging` (regular, `@phosphor-icons/core` 2.1.1), registrate in `assets/ICON_REGISTRY.json`; nel widget gli stessi tracciati come vector drawable.
+- **Privacy:** `privacy.html` e `privacy-en.html` aggiornate al 31/10 (tabella dei dati, «Batteria», chi vede, conservazione, eliminazione).
+- **Prima della produzione:**
+  - Sicurezza dei dati su Play: decidere se dichiarare il livello della batteria (la voce più vicina è «Informazioni e prestazioni dell'app › Diagnostica», che cita la durata della batteria), raccolto per «Funzionalità dell'app»;
+  - non c'è un interruttore per non condividere la batteria: da decidere se serve prima della produzione;
+  - testo «Novità»: «Noi: la batteria di chi ami, anche nel widget.» / «Us: your partner's battery, in the widget too.».
+- **Da provare dall'APK di staging (dopo SQL e web su staging):**
+  - sui due telefoni: aprire US, poi in Noi sotto il titolo compare la batteria dell'altro con «proprio ora»;
+  - mettere in carica un telefono, chiudere e riaprire US dopo 15 minuti: sull'altro compare l'icona col fulmine senza ricaricare la pagina (tempo reale);
+  - riaprire US entro 15 minuti: non manda niente di nuovo (l'orario non cambia);
+  - widget «Noi» sulla schermata Home: icona e percentuale accanto a «NOI»; dopo un'ora più tenue; il tocco apre Noi;
+  - un telefono sotto il 20%: icona corallo in Noi e nel widget.
