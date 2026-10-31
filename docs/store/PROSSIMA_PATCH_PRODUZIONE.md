@@ -4,7 +4,7 @@
 
 **Stato:** su staging, non in produzione. **Branch:** `claude/note-condivise`. **Build:** `us-note-condivise-20261031-76`. Missione: `docs/missions/note-condivise-v1.md`.
 
-- In Noi, sotto il calendario, un quarto collegamento **Note** apre un Foglio con le note della coppia: titolo, testo e lista a spunta, scritte e spuntate da tutti e due. Si salvano da sole; se l'altra persona salva la nota aperta compare un avviso.
+- In Noi, sotto il calendario, un quarto collegamento **Note** apre un Foglio con le note della coppia come **quadratini**: si leggono senza aprirle, le voci si spuntano sul quadratino e toccandolo ci si scrive sopra (si allarga sul posto). Titolo, testo e lista a spunta, di tutti e due. Si salvano da sole; se l'altra persona salva la nota aperta compare un avviso.
 - **Database:** migrazione `20261031132258_couple_notes_v1.sql` (tabella `couple_notes`, RLS di coppia, tempo reale, export dei dati, autori staccati quando qualcuno lascia la coppia o elimina l'account). Su staging e poi in produzione solo con il workflow «Supabase SQL (manual)» e il via del founder.
 - **Privacy:** le note sono contenuto della coppia come le Idee; entrano nell'export dei dati. Nessun nuovo tipo di dato per Google Play.
 

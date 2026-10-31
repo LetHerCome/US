@@ -69,23 +69,49 @@ function install(w){
   };
   const byLine=n=>[nameOf(n.updated_by),when(n.updated_at)].filter(Boolean).join(' · ');
 
-  // ---------------------------------------------------------------- list
+  // ---------------------------------------------------------------- grid
+  // Founder, 31/10/2026: every note is a square you read without opening it,
+  // tick on the spot and write on by tapping it (it widens in place).
+  // What fits in a square: three items, the ones still to do first; the
+  // count at the foot ("1 di 7") says there are more.
+  const SHOWN=3;
+  function tile(n){
+    const s=summary(n),who=n.updated_by===me()?'tu':'partner',title=String(n.title||'').trim();
+    const list=items(n).filter(i=>i.text.trim()),shown=[...list.filter(i=>!i.done),...list.filter(i=>i.done)].slice(0,SHOWN);
+    const content=list.length
+      ?`<ul class="us-notes-tile-items">${shown.map(i=>`<li class="${i.done?'is-done':''}"><label class="us-notes-check is-small"><input type="checkbox" data-tick="${esc(i.id)}"${i.done?' checked':''} aria-label="${esc(i.text)}"><span aria-hidden="true"></span></label><span class="us-notes-tile-item" data-focus="item:${esc(i.id)}" translate="no">${esc(i.text)}</span></li>`).join('')}</ul>`
+      :`<p class="us-notes-tile-text" data-focus="text" translate="no">${esc(String(n.body||'').trim())}</p>`;
+    return `<li class="us-notes-tile" data-note-id="${esc(n.id)}" data-who="${who}">
+      <button type="button" class="us-notes-tile-title" data-focus="title" aria-label="Scrivi sulla nota ${esc(title||s.preview||'senza titolo')}"><span translate="no">${esc(title||'Nota')}</span></button>
+      ${content}
+      <small class="us-notes-by"><i class="us-notes-dot" data-who="${who}" aria-hidden="true"></i><span>${esc(byLine(n))}</span>${s.progress?`<b>${esc(s.progress)}</b>`:''}</small>
+    </li>`;
+  }
   function paintList(){
-    view='list';fields=null;
-    const add='<button type="button" class="us-notes-new" data-notes-new><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Nuova nota</span></button>';
+    view=editing?'editor':'list';
     if(!loaded){body.innerHTML='<div class="us-skeleton-rows" role="status"><span class="us-sr">Carico le note…</span><i class="us-skeleton"></i><i class="us-skeleton"></i></div>';return;}
-    if(!notes.length){
-      body.innerHTML=`<div class="us-notes-empty"><b>Le vostre note</b><span>Spesa, valigia, film da vedere: scrivetele qui, le vedete tutti e due.</span></div>${add}`;
-      return;
-    }
-    body.innerHTML=`${add}<ul class="us-notes-list">${sortNotes(notes).map(n=>{
-      const s=summary(n),who=n.updated_by===me()?'tu':'partner';
-      const title=String(n.title||'').trim()||s.preview||'Nota';
-      return `<li><button type="button" class="us-notes-card" data-note-id="${esc(n.id)}">
-        <span class="us-notes-card-top"><b translate="no">${esc(title)}</b>${s.progress?`<span class="us-notes-progress">${esc(s.progress)}</span>`:''}</span>
-        ${String(n.title||'').trim()&&s.preview?`<span class="us-notes-preview" translate="no">${esc(s.preview)}</span>`:''}
-        <small class="us-notes-by"><i class="us-notes-dot" data-who="${who}" aria-hidden="true"></i>${esc(byLine(n))}</small>
-      </button></li>`;}).join('')}</ul>`;
+    const add='<li><button type="button" class="us-notes-tile-add" data-notes-new><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Nuova nota</span></button></li>';
+    const slot='<li class="us-notes-tile is-editing" data-editor></li>';
+    const intro=notes.length||editing?'':'<p class="us-notes-intro">Spesa, valigia, film da vedere: scrivetele qui, le vedete tutti e due.</p>';
+    body.innerHTML=`${intro}<ul class="us-notes-grid">${editing&&!editing.id?slot:add}${sortNotes(notes).map(n=>editing?.id===n.id?slot:tile(n)).join('')}</ul>`;
+    fields=null;
+    const host=body.querySelector('[data-editor]');
+    if(host)mountEditor(host);
+  }
+  // Another note changed while one is open: only its square is redrawn.
+  function repaintTile(id){
+    const li=body.querySelector(`.us-notes-tile[data-note-id="${CSS.escape(id)}"]`),n=notes.find(x=>x.id===id);
+    if(li&&!li.classList.contains('is-editing'))n?li.outerHTML=tile(n):li.remove();
+  }
+  // Ticked on the square, saved at once.
+  async function tick(noteId,itemId,done){
+    const n=notes.find(x=>x.id===noteId),client=db();
+    const item=n&&items(n).find(i=>i.id===itemId);
+    if(!item||!client)return;
+    item.done=done;repaintTile(noteId);
+    const {data,error}=await client.from('couple_notes').update({items:payload(n).items}).eq('id',noteId).select(COLS).maybeSingle();
+    if(error||!data){console.warn('[US Note] tick',error);item.done=!done;repaintTile(noteId);return;}
+    notes=notes.map(x=>x.id===data.id?data:x);repaintTile(noteId);
   }
   async function load(){
     const client=db(),k=key();
@@ -100,6 +126,7 @@ function install(w){
     }
     notes=data||[];loaded=true;owner=k;
     if(view==='list')paintList();
+    else notes.forEach(n=>repaintTile(n.id));
   }
 
   // ---------------------------------------------------------------- editor
@@ -111,25 +138,37 @@ function install(w){
     </li>`;
   }
   function paintItems(){if(fields)fields.list.innerHTML=editing.items.map(itemRow).join('');}
-  function openEditor(note){
-    clearTimeout(timer);dirty=false;remote=null;
-    editing=note?{...note,items:items(note).map(i=>({...i}))}:{id:null,title:'',body:'',items:[],revision:0,updated_by:me()};
-    view='editor';
-    body.innerHTML=`<div class="us-notes-editor">
-      <div class="us-notes-bar"><button type="button" class="us-notes-back" data-notes-back><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span><span>Note</span></button><small class="us-notes-status" role="status" aria-live="polite"></small></div>
+  // The open note: its square widens in place and takes the fields. Built
+  // once per opening, never while typing.
+  function mountEditor(host){
+    host.dataset.noteId=editing.id||'';
+    host.innerHTML=`<div class="us-notes-editor">
       <p class="us-notes-notice" hidden><span></span><button type="button" class="ghost" data-notes-take hidden>Carica la sua versione</button></p>
       <input type="text" class="us-notes-title" maxlength="${LIMITS.title}" placeholder="Titolo" aria-label="Titolo" enterkeyhint="next">
-      <textarea class="us-notes-text" maxlength="${LIMITS.body}" rows="3" placeholder="Scrivi qualcosa…" aria-label="Testo della nota"></textarea>
+      <textarea class="us-notes-text" maxlength="${LIMITS.body}" rows="2" placeholder="Scrivi qualcosa…" aria-label="Testo della nota"></textarea>
       <ul class="us-notes-items" aria-label="Lista"></ul>
       <button type="button" class="us-notes-add-item" data-notes-add-item><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Aggiungi una voce</span></button>
-      <div class="us-notes-foot"><small class="us-notes-meta"></small><button type="button" class="us-notes-delete" data-notes-delete hidden><span class="us-icon" data-us-icon="trash" aria-hidden="true"></span><span>Elimina</span></button></div>
+      <div class="us-notes-foot"><small class="us-notes-meta"></small><small class="us-notes-status" role="status" aria-live="polite"></small></div>
+      <div class="us-notes-actions"><button type="button" class="us-notes-delete" data-notes-delete hidden><span class="us-icon" data-us-icon="trash" aria-hidden="true"></span><span>Elimina</span></button><button type="button" class="us-notes-done" data-notes-done>Fatto</button></div>
     </div>`;
-    const ed=body.firstElementChild;
+    const ed=host.firstElementChild;
     fields={title:ed.querySelector('.us-notes-title'),text:ed.querySelector('.us-notes-text'),list:ed.querySelector('.us-notes-items'),
       status:ed.querySelector('.us-notes-status'),notice:ed.querySelector('.us-notes-notice'),meta:ed.querySelector('.us-notes-meta'),del:ed.querySelector('[data-notes-delete]')};
     fields.title.value=editing.title||'';fields.text.value=editing.body||'';
     paintItems();paintMeta();
-    if(!note)setTimeout(()=>fields?.title.focus({preventScroll:true}),60);
+  }
+  // focus: "title", "text" or "item:<id>", where the square was touched.
+  async function openEditor(note,focus='title'){
+    if(editing&&!await closeEditor({repaint:false}))return;
+    clearTimeout(timer);dirty=false;remote=null;
+    editing=note?{...note,items:items(note).map(i=>({...i}))}:{id:null,title:'',body:'',items:[],revision:0,updated_by:me()};
+    paintList();
+    if(!fields)return;
+    const target=focus.startsWith('item:')?fields.list.querySelector(`[data-item-id="${CSS.escape(focus.slice(5))}"] .us-notes-item-text`):focus==='text'?fields.text:fields.title;
+    const el=target||fields.title;
+    el.focus({preventScroll:true});
+    if(typeof el.setSelectionRange==='function'){const end=el.value.length;try{el.setSelectionRange(end,end);}catch(_){}}
+    el.closest('.us-notes-tile')?.scrollIntoView?.({block:'nearest',behavior:w.UsUiFoundation?.isReducedMotion?.()?'auto':'smooth'});
   }
   function paintMeta(){
     if(!fields)return;
@@ -189,8 +228,8 @@ function install(w){
     paintItems();paintMeta();
   }
   // Closing waits for the save; offline the note stays open, nothing lost.
-  async function closeEditor(){
-    if(!editing){paintList();return true;}
+  async function closeEditor({repaint=true}={}){
+    if(!editing){if(repaint)paintList();return true;}
     syncFields();
     const target=editing;
     // Empty list items go when the note is closed.
@@ -199,8 +238,8 @@ function install(w){
     for(let i=0;saving&&i<100;i++)await new Promise(r=>setTimeout(r,50));
     if(isEmpty(target)&&target.id){if(!await removeNote(target.id,{ask:false}))return false;}
     else{await save({keep:false});if(dirty){status('Non salvata: controlla la connessione');return false;}}
-    editing=null;fields=null;
-    paintList();
+    editing=null;fields=null;view='list';
+    if(repaint)paintList();
     return true;
   }
   async function removeNote(id,{ask=true}={}){
@@ -235,7 +274,9 @@ function install(w){
         else{take(row);notice(`Aggiornata da ${who}.`,{ttl:4000});}
       }
     }
-    if(opened()&&view==='list')paintList();
+    if(!opened())return;
+    if(view==='list')paintList();
+    else for(const id of [gone,row?.id])if(id&&id!==editing?.id)repaintTile(id);
   }
 
   // ---------------------------------------------------------------- shell
@@ -261,9 +302,15 @@ function install(w){
     if(t.closest('[data-notes-close]'))return close();
     if(t.closest('[data-notes-retry]'))return load();
     if(t.closest('[data-notes-new]'))return openEditor(null);
-    const card=t.closest('[data-note-id]');
-    if(card){const n=notes.find(x=>x.id===card.dataset.noteId);if(n)openEditor(n);return;}
-    if(t.closest('[data-notes-back]'))return closeEditor();
+    const square=t.closest('.us-notes-tile:not(.is-editing)');
+    if(square){
+      // The box ticks (change event below); anywhere else you write there.
+      if(t.closest('.us-notes-check'))return;
+      const n=notes.find(x=>x.id===square.dataset.noteId);
+      if(n)openEditor(n,t.closest('[data-focus]')?.dataset.focus||'text');
+      return;
+    }
+    if(t.closest('[data-notes-done]'))return closeEditor();
     if(t.closest('[data-notes-take]')){if(remote)take(remote);notice('');return;}
     if(t.closest('[data-notes-delete]')){
       const id=editing?.id;
@@ -282,6 +329,11 @@ function install(w){
       const id=remove.closest('[data-item-id]')?.dataset.itemId;
       editing.items=editing.items.filter(i=>i.id!==id);paintItems();changed();
     }
+  });
+  root.addEventListener('change',event=>{
+    const box=event.target.closest?.('[data-tick]');
+    const square=box?.closest('.us-notes-tile:not(.is-editing)');
+    if(square)tick(square.dataset.noteId,box.dataset.tick,box.checked);
   });
   root.addEventListener('input',event=>{
     if(!fields||!editing)return;

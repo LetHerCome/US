@@ -52,6 +52,11 @@ test('wired into Noi: link, Foglio, back, realtime, reset, cache and builds', ()
     assert.ok(read(f).includes("'couple-notes.js'") && read(f).includes("'couple-notes.css'"), f);
   }
   const js = read('couple-notes.js');
+  // Founder, 31/10/2026: squares you read, tick and write on in place.
+  assert.match(js, /class="us-notes-grid"/);
+  assert.match(js, /data-tick="\$\{esc\(i\.id\)\}"/, 'items tick on the square');
+  assert.match(js, /class="us-notes-tile is-editing" data-editor/, 'the square widens to be written on');
+  assert.match(read('couple-notes.css'), /\.us-notes-tile\.is-editing\{grid-column:1\/-1;/);
   assert.doesNotMatch(js, /autocomplete=/, 'the keyboard keeps suggestions and emoji');
   assert.doesNotMatch(js, /\.channel\(/, 'no second realtime channel');
   assert.ok(read('i18n-en.js').includes("'Nuova nota': 'New note'"));

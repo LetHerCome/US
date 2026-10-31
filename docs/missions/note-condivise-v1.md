@@ -12,6 +12,15 @@ In Noi, sotto il calendario, un quarto collegamento **Note** accanto a Lavagna, 
 - Sotto ogni nota: chi l'ha modificata per ultimo e quando («Bea · ieri»).
 - Niente foto né allegati in V1.
 
+## Quadratini (founder, 31/10/2026)
+
+«Le note intendo come un quadratino dove si possano vedere senza entrarci e scrivere lì sopra.»
+
+- Le note sono una **griglia di quadratini** a due colonne, il primo è «Nuova nota». Ogni quadratino mostra il titolo, il testo oppure le prime tre voci ancora da fare, chi l'ha toccata per ultimo e quante voci sono fatte («1 di 7»), con il colore di quella persona.
+- Le voci si **spuntano sul quadratino**, senza aprirlo, e si salvano subito.
+- Toccando il quadratino **ci scrivi sopra**: si allarga a tutta riga sul posto, con il cursore dove hai toccato (titolo, testo o voce). «Fatto» lo richiude.
+- In più, un **widget sulla home** con una nota scelta: affidato alla sessione dei widget (spunta sul widget, matita che apre una finestrella di scrittura sopra la home).
+
 ## Due persone che scrivono insieme (D8)
 
 Vince l'ultimo salvataggio. Se l'altra persona modifica la nota che hai aperta, compare un avviso: «Bea l'ha appena modificata». Senza modifiche tue in sospeso la nota si aggiorna da sola; con modifiche tue in sospeso l'avviso offre di caricare la sua versione. Niente scrittura contemporanea in tempo reale.
