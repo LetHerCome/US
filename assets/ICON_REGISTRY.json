@@ -47,6 +47,6 @@
     { "id": "google", "label": "Continua con Google", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "GoogleLogo", "customAssetPath": null, "status": "APPROVED", "usedBy": ["auth-login", "auth-signup"] },
     { "id": "password-show", "label": "Mostra password", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Eye", "customAssetPath": null, "status": "APPROVED", "usedBy": ["auth-password"] },
     { "id": "password-hide", "label": "Nascondi password", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "EyeSlash", "customAssetPath": null, "status": "APPROVED", "usedBy": ["auth-password"] },
-    { "id": "partner-battery", "label": "Batteria del partner", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "BatteryLow / BatteryMedium / BatteryHigh / BatteryCharging", "customAssetPath": null, "status": "APPROVED", "usedBy": ["noi-partner-battery", "android-noi-widget"] }
+    { "id": "partner-battery", "label": "Batteria del partner", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "BatteryLow / BatteryMedium / BatteryHigh / BatteryCharging", "customAssetPath": null, "status": "APPROVED", "usedBy": ["oggi-distance", "android-noi-widget"] }
   ]
 }

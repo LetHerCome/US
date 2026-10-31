@@ -1,9 +1,11 @@
 // Batteria del partner (founder, grill del 31/10/2026; SQL couple_battery_v1).
 // This phone reports its own battery (percentage, charging) only while US is
 // in use: at launch and on return to the foreground, at most every 15 minutes.
-// No background work and no push. Noi shows the partner's last reading
-// ("Bea · 18% · 2 ore fa") and the Android widget "Noi" gets the same one.
-// Without a reading, or with one a day old, nothing is shown.
+// No background work and no push. Oggi shows the partner's last reading beside
+// the distance (founder, option C: "( 12 km · 🔋 18% )"), the Distanza sheet
+// the capsule opens says how long ago ("Bea · 18% · 2 ore fa"), and the
+// Android widget "Noi" gets the same reading. Without a reading, with one a day
+// old, or without a distance in the capsule, Oggi shows nothing.
 // - Android reads the battery natively (UsWidgetBridge.getBatteryStatus);
 //   elsewhere the browser's Battery API, where it exists.
 // - Realtime uses its own channel, opened once the table has answered: a web
@@ -46,7 +48,7 @@
     return hours === 1 ? '1 ora fa' : `${hours} ore fa`;
   }
 
-  // Pure: what Noi shows for the partner's row, or null for nothing.
+  // Pure: the partner's reading as Oggi shows it, or null for nothing.
   function model(row, { now = Date.now(), partnerName = '' } = {}) {
     const level = row?.level;
     const at = Date.parse(row?.updated_at || '');
@@ -64,6 +66,13 @@
       low: !charging && level <= LOW,
       text: `${level}%`
     };
+  }
+
+  // Pure: the Distanza sheet's line, "Bea · 18% · 2 ore fa". Each piece goes
+  // through `translate` on its own (the dictionary has them one by one).
+  function line(m, translate = (text) => text) {
+    if (!m) return '';
+    return [m.name, m.text, m.charging ? translate('in carica') : '', translate(m.when)].filter(Boolean).join(' · ');
   }
 
   // This phone's battery: native first, then the browser. null = unknown.
@@ -85,7 +94,7 @@
     }
   }
 
-  if (!w) return { shouldReport, glyph, ago, model, readDevice, REPORT_GAP_MS, VISIBLE_MS };
+  if (!w) return { shouldReport, glyph, ago, model, line, readDevice, REPORT_GAP_MS, VISIBLE_MS };
 
   // loaded: the couple's rows have been read once for this identity.
   const state = { key: '', loaded: false, partner: null, mineAt: null, lastTriedAt: 0, inFlight: false, missing: false };
@@ -108,25 +117,43 @@
     unsubscribe();
   }
 
+  // Only beside a real distance (ready, or the last known one): next to
+  // "In attesa" or "Attiva posizione" the battery would read as part of them.
+  function withDistance(pill) {
+    const state = pill?.dataset?.usDistanceState;
+    return Boolean(pill && !pill.hidden && (state === 'ready' || state === 'stale'));
+  }
+
+  // The distance capsule on Oggi (app.js renders the distance, this the battery).
+  function paint() {
+    const pill = w.document?.getElementById('distanceWidget');
+    const slot = w.document?.getElementById('distanceBattery');
+    if (!pill || !slot) return;
+    const m = withDistance(pill) ? current() : null;
+    slot.hidden = !m;
+    // The capsule's aria-label is the distance; the battery is its description.
+    if (m) pill.setAttribute('aria-describedby', 'distanceBattery');
+    else pill.removeAttribute('aria-describedby');
+    if (!m) return;
+    slot.dataset.low = m.low ? 'true' : 'false';
+    slot.querySelector('[data-battery-name]').textContent = m.name;
+    slot.querySelector('[data-battery-icon]').dataset.usIcon = m.icon;
+    slot.querySelector('[data-battery-level]').textContent = m.text;
+    slot.querySelector('[data-battery-charging]').hidden = !m.charging;
+  }
+
   function render() {
-    const m = current();
-    const row = w.document?.getElementById('usPartnerBattery');
-    if (row) {
-      row.hidden = !m;
-      if (m) {
-        row.dataset.low = m.low ? 'true' : 'false';
-        row.querySelector('[data-battery-name]').textContent = m.name;
-        row.querySelector('[data-battery-icon]').dataset.usIcon = m.icon;
-        row.querySelector('[data-battery-level]').textContent = m.text;
-        row.querySelector('[data-battery-charging]').hidden = !m.charging;
-        row.querySelector('[data-battery-when]').textContent = m.when;
-      }
-    }
+    paint();
     w.dispatchEvent(new Event('us:partner-battery-changed'));
   }
 
+  // The Distanza sheet (app.js openDistanceDetail), in the current language.
+  function sheetLine() {
+    return line(current(), (text) => (typeof w.usT === 'function' ? w.usT(text) : text));
+  }
+
   // The couple's rows (mine and the partner's, RLS): my last time decides
-  // whether to report, the partner's is what Noi shows.
+  // whether to report, the partner's is what Oggi shows.
   async function refresh() {
     const profile = w.usProfile;
     const key = identityKey(profile);
@@ -224,8 +251,10 @@
     if (!event.detail?.identityKey) { reset(); state.key = ''; }
     render();
   });
-  // "2 ore fa" moves on while the page stays open; no network.
+  // The capsule changed state (a distance arrived, or sharing stopped).
+  w.addEventListener('us:distance-changed', paint);
+  // A reading turns a day old while the page stays open; no network.
   setInterval(() => { if (!w.document?.hidden && state.partner) render(); }, 60000);
 
-  return { shouldReport, glyph, ago, model, readDevice, refresh, onForeground, onRealtime, widgetState, REPORT_GAP_MS, VISIBLE_MS };
+  return { shouldReport, glyph, ago, model, line, readDevice, refresh, onForeground, onRealtime, sheetLine, widgetState, REPORT_GAP_MS, VISIBLE_MS };
 });

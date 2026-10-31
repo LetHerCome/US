@@ -1610,7 +1610,9 @@ async function openDistanceDetail(){
     return;
   }
   const age=model.age?`Aggiornata ${relativeLocationAge(model.age)}. `:'';
-  await ui?.notice?.({kicker:'DISTANZA',icon:'map-pin',title:model.detail||'Posizione non disponibile',body:`${age}Puoi smettere di condividerla da Impostazioni › Posizione.`});
+  // Batteria del partner (partner-battery.js): under the distance, as in the capsule.
+  const battery=(model.state==='ready'||model.state==='stale')?window.UsPartnerBattery?.sheetLine?.():'';
+  await ui?.notice?.({kicker:'DISTANZA',icon:'map-pin',title:model.detail||'Posizione non disponibile',note:battery||undefined,body:`${age}Puoi smettere di condividerla da Impostazioni › Posizione.`});
 }
 window.openDistanceDetail=openDistanceDetail;
 

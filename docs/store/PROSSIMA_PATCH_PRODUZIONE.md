@@ -276,7 +276,9 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 **Fonte:** founder, grill del 31/10/2026 (dopo lo studio di Love8: posizione rispettosa, niente tracciamento continuo). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; niente su staging né in produzione.
 
 - **Cosa fa:** quando US è aperta (all'avvio e al ritorno in primo piano) il telefono manda il proprio livello di batteria e se è in carica, al massimo ogni 15 minuti. Niente lavori in background, nessuna notifica. L'altra persona vede l'ultimo livello e da quanto tempo; dopo un giorno non si vede più. Senza dato non compare niente.
-- **Noi:** una riga discreta sotto il titolo «Noi»: nome, icona Phosphor della batteria (bassa, media, alta, in carica), percentuale, «2 ore fa». Sotto il 20% e non in carica l'icona è corallo. Si aggiorna col tempo reale (canale Realtime a parte, aperto solo dopo che la tabella ha risposto).
+- **Oggi (scelta del founder del 31/10, in `DECISIONS.md`):** nella pillola della distanza, dopo i chilometri, l'icona Phosphor della batteria (bassa, media, alta, in carica) e la percentuale: «12 km · 🔋 18%». Sotto il 20% e non in carica l'icona è corallo. Si vede solo accanto a una distanza (anche l'ultima nota): con «Attiva posizione» o «In attesa» non compare. Si aggiorna col tempo reale (canale Realtime a parte, aperto solo dopo che la tabella ha risposto).
+- **Scheda «Distanza»** (tocco sulla pillola): sotto la distanza la riga «Bea · 18% · 2 ore fa» (con «in carica» se serve). Per questa riga la scheda di conferma (`UsUiFoundation.notice`) ha una nuova opzione `note`.
+- **Noi:** invariato, nessuna riga della batteria.
 - **Widget Android «Noi»:** accanto a «NOI», in alto a destra, l'icona e la percentuale. Dopo un'ora più tenue, dopo un giorno sparisce (il widget si ridisegna da solo a quelle ore). La riga in corsivo sotto la distanza resta libera per «a casa / fuori» (lavoro successivo, con i recinti).
 - **Database:** migrazione `20261031134410_couple_battery_v1.sql`: tabella `couple_batteries` (una riga per persona, FK verso `profiles` con cascade), RLS «stessa coppia» finché il proprietario ne fa parte, scrittura solo con `report_battery(p_level, p_charging)` (orario del server; lo stesso invio entro un minuto non scrive niente), pubblicazione `supabase_realtime`. Test: `tests/couple-battery-v1-db.test.js`.
   - **Ordine:** prima l'SQL, poi il web. Un web arrivato prima non rompe niente: vede che la tabella manca e smette di chiedere.
@@ -287,10 +289,13 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 - **Prima della produzione:**
   - Sicurezza dei dati su Play: decidere se dichiarare il livello della batteria (la voce più vicina è «Informazioni e prestazioni dell'app › Diagnostica», che cita la durata della batteria), raccolto per «Funzionalità dell'app»;
   - non c'è un interruttore per non condividere la batteria: da decidere se serve prima della produzione;
-  - testo «Novità»: «Noi: la batteria di chi ami, anche nel widget.» / «Us: your partner's battery, in the widget too.».
+  - testo «Novità»: «Oggi: la batteria di chi ami accanto alla distanza, anche nel widget.» / «Today: your partner's battery beside the distance, in the widget too.»;
+  - senza posizione condivisa la batteria si vede solo nel widget: da decidere se serve anche su Oggi senza distanza.
 - **Da provare dall'APK di staging (dopo SQL e web su staging):**
-  - sui due telefoni: aprire US, poi in Noi sotto il titolo compare la batteria dell'altro con «proprio ora»;
+  - sui due telefoni, con la posizione condivisa: aprire US, poi su Oggi la pillola dice «12 km · 🔋 18%» con la batteria dell'altro; il tocco apre la scheda «Distanza» con «Bea · 18% · proprio ora»;
+  - un telefono senza posizione condivisa: la pillola dice «Attiva posizione» senza batteria;
   - mettere in carica un telefono, chiudere e riaprire US dopo 15 minuti: sull'altro compare l'icona col fulmine senza ricaricare la pagina (tempo reale);
   - riaprire US entro 15 minuti: non manda niente di nuovo (l'orario non cambia);
   - widget «Noi» sulla schermata Home: icona e percentuale accanto a «NOI»; dopo un'ora più tenue; il tocco apre Noi;
-  - un telefono sotto il 20%: icona corallo in Noi e nel widget.
+  - un telefono sotto il 20%: icona corallo nella pillola e nel widget;
+  - Noi: nessuna riga della batteria.

@@ -315,7 +315,7 @@
     'Aggiungi un ricordo': 'Add a memory',
     'Aggiornamento disponibile': 'Update available',
 
-    // ------------------------------------------------------------ Noi: partner battery
+    // ------------------------------------------------------------ Oggi: partner battery (distance capsule)
     'Batteria:': 'Battery:',
     'in carica': 'charging',
 

@@ -370,3 +370,14 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 
 - In produzione l'icona predefinita resta quella con la cornice. Sostituisce la decisione «Icona dell'app senza cornice» del 29/10, che non va in produzione.
 - Le altre icone (Notte, Oro, Neon) si sbloccano in Sintonia, come premi.
+
+## 2026-10-31 — Batteria del partner: accanto alla distanza su Oggi
+
+**Fonte:** founder, 31/10/2026: «Accanto alla distanza su Oggi» (scelta tra tre posti, con l'anteprima «( 12 km · 🔋 18% )»). Completa «Posizione, widget e Note condivise» del 31/10, per il posto della batteria nell'app.
+
+- **Oggi:** la batteria del partner sta nella pillola della distanza, dopo i chilometri: icona Phosphor e percentuale. Sotto il 20% e non in carica l'icona è corallo.
+- **Scheda «Distanza»** (si apre toccando la pillola): sotto la distanza, una riga con nome, percentuale e da quanto tempo: «Bea · 18% · 2 ore fa».
+- La batteria si vede solo accanto a una distanza (anche l'ultima nota). Con «Attiva posizione», «In attesa» o senza pillola, su Oggi non compare.
+- **Noi** resta com'è: niente riga della batteria, e la scheda della coppia con la distanza resta spenta.
+- **Widget «Noi»:** invariato, con icona e percentuale accanto a «NOI».
+- Dopo un giorno la batteria non si vede più, né su Oggi né nel widget.

@@ -453,7 +453,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         <p class="og-cap" id="usOggiCaption" hidden><em id="usOggiCaptionText" translate="no"></em><small><span class="dot" id="usOggiCaptionDot" aria-hidden="true"></span><span id="usOggiCaptionMeta"></span></small></p>
         <div class="og-row" id="usOggiRow" hidden>
           <button type="button" class="og-next" id="usOggiNext" hidden><span class="us-icon" data-us-icon="calendar-blank" aria-hidden="true"></span><b id="usOggiNextWhen"></b><span id="usOggiNextTitle" translate="no"></span></button>
-          <button type="button" class="home-distance-pill us-distance-capsule og-pill" id="distanceWidget" onclick="openDistanceDetail()" aria-haspopup="dialog" aria-label="Distanza tra voi" data-us-distance-state="unknown" hidden><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><b id="distanceValue"></b></button>
+          <button type="button" class="home-distance-pill us-distance-capsule og-pill" id="distanceWidget" onclick="openDistanceDetail()" aria-haspopup="dialog" aria-label="Distanza tra voi" data-us-distance-state="unknown" hidden><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><b id="distanceValue"></b><span class="us-distance-battery" id="distanceBattery" hidden><span class="us-sr-only">Batteria:</span> <span class="us-sr-only" data-battery-name translate="no"></span> <span class="us-icon" data-us-icon="battery-high" data-battery-icon aria-hidden="true"></span><b data-battery-level></b><span class="us-sr-only" data-battery-charging hidden>in carica</span></span></button>
         </div>
         <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
         <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
@@ -640,8 +640,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
             <button type="button" class="us-noi-v2-settings" onclick="go('settings',{nav:true})" aria-label="Impostazioni"><img class="us-approved-custom-icon" src="/assets/derived/runtime/us-icon-settings-128-v1.png" alt="" width="22" height="22" decoding="async"></button>
           </div>
         </header>
-        <!-- Batteria del partner (partner-battery.js): hidden without a reading of the last day. -->
-        <p class="us-partner-battery" id="usPartnerBattery" hidden><span class="noi-sr">Batteria:</span> <span class="us-partner-battery-name" data-battery-name translate="no"></span><span class="us-icon" data-us-icon="battery-high" data-battery-icon aria-hidden="true"></span><b data-battery-level></b><span class="noi-sr" data-battery-charging hidden>in carica</span><span class="us-partner-battery-when" data-battery-when></span></p>
         <div class="us-noi-v2-monthbar">
           <h3 id="usNoiV2Month" aria-live="polite">—</h3>
           <div class="us-noi-v2-month-nav">
