@@ -78,6 +78,13 @@ const layers=[
     close:()=>window.UsDistance?.close?.()
   },
   {
+    // Note condivise: back goes from a note to the list, then out.
+    name:'notes',
+    find:()=>document.getElementById('usNotesSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsCoupleNotes?.back?.()
+  },
+  {
     name:'year-recap',
     find:()=>document.getElementById('usRecapSheet'),
     open:el=>el?.classList.contains('open'),

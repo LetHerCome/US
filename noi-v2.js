@@ -490,6 +490,8 @@ function openLink(link){
   // shown as a Foglio over the month. Missioni and Eventi open their sheets.
   if(link==='lavagna'){mode='week';render();}
   if(link==='quest'||link==='eventi')window.openNoiSection?.(link);
+  // Note condivise (couple-notes.js): their own Foglio.
+  if(link==='note')window.UsCoupleNotes?.open?.();
 }
 // Back (navigation.js) and leaving Noi bring the week view back to the month.
 function closeWeek(){

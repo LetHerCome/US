@@ -37,6 +37,7 @@
     "20261029161354_sintonia_rewards_v2_phase2.sql",
     "20261029203000_colors_free_in_beta.sql",
     "20261029222210_ricordi_place_v1.sql",
+    "20261031132258_couple_notes_v1.sql",
     "20261031134410_couple_battery_v1.sql"
   ],
   "forward_migrations": [
@@ -70,6 +71,7 @@
     "20261029161354_sintonia_rewards_v2_phase2.sql",
     "20261029203000_colors_free_in_beta.sql",
     "20261029222210_ricordi_place_v1.sql",
+    "20261031132258_couple_notes_v1.sql",
     "20261031134410_couple_battery_v1.sql"
   ],
   "counts": {

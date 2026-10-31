@@ -10,14 +10,14 @@ const bond = () => read('index.html').match(/<main id="bond"[\s\S]*?<\/main>/)?.
 const app = () => read('app.js');
 const css = () => read('styles.css');
 
-test('M9D / 1.0: Noi opens on its calendar with three destinations, no old hub, no new bottom tab', () => {
+test('M9D / 1.0: Noi opens on its calendar with four destinations, no old hub, no new bottom tab', () => {
   const page = bond();
   // 1.0 (N10): the invisible old Lavagna and hub are gone with their loaders.
   assert.doesNotMatch(page, /id="noiHub"|id="noiWeekBoard"|noi-hub-card/);
   assert.doesNotMatch(read('calendar.js'), /noiWeekBoard|refreshNoiWeekBoard/);
   const links = page.match(/<nav class="us-noi-v2-links"[\s\S]*?<\/nav>/)?.[0] || '';
-  assert.deepEqual([...links.matchAll(/data-noi-open-link="([^"]+)"/g)].map((m) => m[1]), ['lavagna', 'quest', 'eventi']);
-  assert.deepEqual([...links.matchAll(/<b>([^<]+)<\/b>/g)].map((m) => m[1]), ['Lavagna', 'Missioni', 'Eventi']);
+  assert.deepEqual([...links.matchAll(/data-noi-open-link="([^"]+)"/g)].map((m) => m[1]), ['lavagna', 'quest', 'eventi', 'note'], 'Note condivise (31/10/2026) are the fourth');
+  assert.deepEqual([...links.matchAll(/<b>([^<]+)<\/b>/g)].map((m) => m[1]), ['Lavagna', 'Missioni', 'Eventi', 'Note']);
   assert.match(bond(), /data-noi-view="hub"/);
   assert.match(bond(), /id="noiSectionBar" hidden/);
   const nav = read('index.html').match(/<nav class="nav[^"]*"[\s\S]*?<\/nav>/)?.[0] || '';

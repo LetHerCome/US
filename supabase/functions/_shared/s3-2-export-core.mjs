@@ -29,6 +29,7 @@ const definitions = [
  ['moment_photos','created_by','id,couple_id,moment_id,created_by,storage_path,caption,position,created_at',true],
  ['shared_events','created_by','id,couple_id,created_by,title,event_date,event_time,location,note,recurs_yearly,created_at,updated_at',true],
  ['bucket_items','created_by','id,couple_id,created_by,title,note,status,completed,completed_at,created_at,updated_at',true],
+ ['couple_notes','created_by','id,couple_id,created_by,updated_by,title,body,items,created_at,updated_at',true],
  ['shared_messages','sender_id','id,couple_id,sender_id,recipient_id,kind,title,body,unlock_at,opened_at,created_at',true],
  ['left_for_you','sender_id','id,couple_id,sender_id,recipient_id,kind,body,media_path,created_at',true],
  ['stories','author_id','id,couple_id,author_id,media_path,caption,duration_seconds,created_at,expires_at',true],
