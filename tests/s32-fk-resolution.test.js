@@ -14,7 +14,9 @@ const PERSONAL_CASCADE=new Set([
   // US Plus (29/10/2026): the entitlement goes with the account (Play's subscription is warned about before deletion, D4).
   'auth.users>plus_entitlements.user_id',
   'profiles>calendar_entries.owner_id','profiles>calendar_reminders.recipient_id','profiles>calendar_reminders.requested_by',
-  'profiles>conserva_contributions.conserved_by','profiles>couple_locations.user_id','profiles>device_push_tokens.user_id',
+  'profiles>conserva_contributions.conserved_by','profiles>couple_locations.user_id',
+  // Batteria del partner (31/10/2026): the last level reported goes with the person.
+  'profiles>couple_batteries.user_id','profiles>device_push_tokens.user_id',
   'profiles>notification_preferences.user_id','profiles>partner_knowledge_attempts.user_id','profiles>progression_reward_views.profile_id',
   'profiles>push_event_log.sender_id','profiles>push_subscriptions.user_id','profiles>stories.author_id','profiles>story_views.viewer_id',
   'profiles>widget_action_tokens.profile_id','profiles>widget_scriptable_installations.profile_id',
@@ -53,7 +55,7 @@ test('every user reference is classified, and shared content fails closed',async
       else assert.fail('unclassified user reference: '+key+' — decide what account deletion does with it');
     }
     for(const key of [...PERSONAL_CASCADE,...OPERATIONAL_SET_NULL,...SHARED_FAIL_CLOSED])assert.ok(seen.has(key),'stale classification '+key);
-    assert.equal(seen.size,39);
+    assert.equal(seen.size,40);
   }finally{await db.close();}
 });
 

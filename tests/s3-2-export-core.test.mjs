@@ -30,8 +30,8 @@ const expectBlocked=(fn,match)=>assert.throws(fn,e=>e instanceof Error&&
   (typeof match==='string'?e.code===match:true));
 const read=(file)=>fs.readFileSync(new URL(file,import.meta.url),'utf8');
 
-test('strict owner-only export contains 13 domains without partner secrets',()=>{
-  assert.equal(EXPORT_DOMAINS.length,13);
+test('strict owner-only export contains 14 domains without partner secrets',()=>{
+  assert.equal(EXPORT_DOMAINS.length,14);
   const data=baseData();
   data.moments[0].caption='Own lovely memory';
   data.moments[0].storage_path=forbiddenSecret;

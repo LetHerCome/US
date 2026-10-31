@@ -33,6 +33,8 @@ const definitions = [
  ['left_for_you','sender_id','id,couple_id,sender_id,recipient_id,kind,body,media_path,created_at',true],
  ['stories','author_id','id,couple_id,author_id,media_path,caption,duration_seconds,created_at,expires_at',true],
  ['notification_preferences','user_id','user_id,think,today,bond,relationship,left_for_you,games,updated_at',false],
+ // Batteria del partner (31/10/2026): the last level this person reported.
+ ['couple_batteries','user_id','user_id,couple_id,level,charging,updated_at',true],
 ];
 export const EXPORT_DOMAINS = Object.freeze(definitions.map(([table,owner,cols,tenant])=>{
  const fields=Object.freeze(cols.split(','));
