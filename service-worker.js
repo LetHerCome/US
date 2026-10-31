@@ -1,4 +1,4 @@
-const BUILD_ID = "us-note-condivise-20261031-76";
+const BUILD_ID = "us-note-quadratini-20261031-78";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

@@ -97,5 +97,7 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // Mappa dei Ricordi (29/10/2026): «Dove», the place search and the map view
   // (ricordi-place.js/css, ~28 KB; MapLibre itself is fetched only when the
   // map opens): 2.9 -> 2.95 MB.
-  assert.ok(total <= 2.95 * 1024 * 1024, `precache is ${total} bytes: stays under 2.95 MB`);
+  // Note condivise (31/10/2026): the notes of the couple in Noi, needed
+  // offline too (couple-notes.js/css, ~29 KB): 2.95 -> 3.0 MB.
+  assert.ok(total <= 3.0 * 1024 * 1024, `precache is ${total} bytes: stays under 3.0 MB`);
 });
