@@ -2588,6 +2588,7 @@
     'Grazie: le missioni ora sono pensate per voi': 'Thanks: the missions are now picked for you',
     'La domanda del giorno e a chi tocca rispondere. Mai le risposte.': 'Today’s question and whose turn it is. Never the answers.',
     Messaggio: 'Message',
+    'Le vostre foto e i giorni insieme, che crescono ogni mezzanotte.': 'Your photos and your days together, one more every midnight.',
     'L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso.': 'Your partner’s last Ti penso, or their Lasciato per te still closed.',
     'Rispondi quando vuoi': 'Answer whenever you like',
     'Hai risposto': 'You answered',

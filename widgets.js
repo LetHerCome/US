@@ -13,8 +13,8 @@
 
   const platform = window.UsPlatform;
   const nativeEnabled = Boolean(platform?.isNative && platform?.hasWidgetBridge?.() !== false);
-  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message']);
-  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home' });
+  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days']);
+  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', days: 'bond' });
   // Messaggio opens the message itself: the Ti penso or the closed envelope.
   const MESSAGE_TARGETS = Object.freeze({ think: 'think', left: 'left_for_you' });
   const COUPLE_TTL_MS = 30 * 60 * 1000;

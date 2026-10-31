@@ -513,7 +513,7 @@ test('Ti penso shows "Inviato" for a readable moment; no sent counter on the wid
 
 test('manifest dichiara 4 provider e i receiver interni, tutti non esportati', () => {
   const manifest = read(`${PLUGIN}/AndroidManifest.xml`);
-  for (const provider of ['UsThinkWidgetProvider', 'UsCountdownWidgetProvider', 'UsNoiWidgetProvider', 'UsPhotoWidgetProvider', 'UsDailyWidgetProvider', 'UsMessageWidgetProvider']) {
+  for (const provider of ['UsThinkWidgetProvider', 'UsCountdownWidgetProvider', 'UsNoiWidgetProvider', 'UsPhotoWidgetProvider', 'UsDailyWidgetProvider', 'UsMessageWidgetProvider', 'UsDaysWidgetProvider']) {
     const block = manifest.match(new RegExp(`<receiver[^>]*${provider}"[\\s\\S]*?</receiver>`))?.[0] || '';
     assert.match(block, /android:exported="false"/, provider);
     assert.match(block, /APPWIDGET_UPDATE/, provider);
@@ -522,7 +522,7 @@ test('manifest dichiara 4 provider e i receiver interni, tutti non esportati', (
   }
   assert.equal((manifest.match(/android:exported="true"/g) || []).length, 0);
   assert.match(manifest, /UsWidgetSystemReceiver"\s+android:exported="false"/);
-  for (const info of ['think', 'countdown', 'noi', 'photo', 'daily', 'message']) {
+  for (const info of ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days']) {
     const xml = read(`${PLUGIN}/res/xml/us_widget_${info}_info.xml`);
     assert.match(xml, /android:updatePeriodMillis="3600000"/);
     assert.match(xml, /android:widgetCategory="home_screen"/);

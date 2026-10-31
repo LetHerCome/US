@@ -38,7 +38,7 @@ test('provider: the newest message opens itself; the photo is the partner portra
   const models = read(`${JAVA}/UsWidgetModels.java`);
   assert.match(models, /out\.destination = envelope \? "message\/left" : "message\/think";/);
   const widgets = read(`${JAVA}/UsWidgets.java`);
-  assert.match(widgets, /static final String\[\] KINDS = \{ THINK, COUNTDOWN, NOI, PHOTO, DAILY, MESSAGE \};/);
+  assert.match(widgets, /static final String\[\] KINDS = \{[^}]*\bMESSAGE\b[^}]*\};/);
   assert.match(widgets, /case MESSAGE: return UsMessageWidgetProvider\.render\(context, state\);/);
 });
 
@@ -48,7 +48,7 @@ test('contract: kind and time of the closed envelope, on both sides', () => {
   assert.match(contract, /JSONObject left = new JSONObject\(\)\.put\("kind", leftKind\)\.put\("at", leftAt\);/);
   const platform = read('platform.js');
   assert.match(platform, /function widgetLeft\(left = \{\}\)/);
-  assert.match(platform, /const WIDGET_KINDS = \['think', 'countdown', 'noi', 'photo', 'daily', 'message'\];/);
+  assert.match(platform, /const WIDGET_KINDS = \[[^\]]*'daily', 'message'[^\]]*\];/);
   // Oggi's unseen rows feed it; the app opens the message through the push path.
   const app = read('app.js');
   assert.match(app, /window\.UsWidgets\?\.publishLeft\?\.\(usOggiLeft\.items\)/);

@@ -18,7 +18,8 @@
     { kind: 'noi', name: 'Noi', copy: 'Le vostre foto, la distanza tra voi, i Ti penso e la batteria di chi ami.', shape: 'wide' },
     { kind: 'photo', name: 'Foto & Noi', copy: 'La fotografia che vedi su Oggi, con i giorni insieme.', shape: 'square' },
     { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda del giorno e a chi tocca rispondere. Mai le risposte.', shape: 'wide' },
-    { kind: 'message', name: 'Messaggio', copy: 'L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso.', shape: 'square' }
+    { kind: 'message', name: 'Messaggio', copy: 'L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso.', shape: 'square' },
+    { kind: 'days', name: 'Giorni insieme', copy: 'Le vostre foto e i giorni insieme, che crescono ogni mezzanotte.', shape: 'square' }
   ]);
   window.UsWidgetCatalog = CATALOG;
 
@@ -91,6 +92,12 @@
     return `<div class="us-wp-message"><span class="us-wp-message-bubble"><i>${HEART}</i></span></div>`;
   }
 
+  // Giorni insieme: the number of days, as on the Home screen.
+  function daysPreview(snapshot) {
+    const days = daysLine(snapshot);
+    return `<div class="us-wp-days"><span class="us-wp-days-dots"></span><b>${esc(days ? days.value : '♡')}</b><small>${esc(days ? days.unit : 'I vostri giorni insieme')}</small></div>`;
+  }
+
   function photoPreview(snapshot, previewUrl) {
     const days = daysLine(snapshot);
     const line = days ? `<span class="us-wp-photo-days"><b>${esc(days.value)}</b><small>${esc(days.unit)}</small></span>` : '';
@@ -107,6 +114,7 @@
     if (kind === 'noi') return noiPreview(snapshot, view.noiPortraitPreviewUrl);
     if (kind === 'daily') return dailyPreview(snapshot);
     if (kind === 'message') return messagePreview();
+    if (kind === 'days') return daysPreview(snapshot);
     return photoPreview(snapshot, view.photoPreviewUrl);
   }
 

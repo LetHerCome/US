@@ -405,6 +405,34 @@ final class UsWidgetModels {
         return a.isBefore(b) ? a : b;
     }
 
+    // ---------- Giorni insieme ----------
+
+    /** The big number of days together (Rome civil days, as in the app), or a quiet line. */
+    static final class Days {
+        boolean empty = true;
+        String value = "";
+        String unit = "";
+        Instant nextChange = null;
+    }
+
+    static Days days(JSONObject snapshot, Instant now) {
+        Days out = new Days();
+        if (snapshot == null) {
+            out.unit = "Apri US per collegare il widget";
+            return out;
+        }
+        long days = daysTogether(UsWidgetContract.optObject(snapshot, "couple").optString("startedOn", ""), now);
+        if (days < 0) {
+            out.unit = "I vostri giorni insieme";
+            return out;
+        }
+        out.empty = false;
+        out.value = Long.toString(days);
+        out.unit = days == 1 ? "giorno insieme" : "giorni insieme";
+        out.nextChange = nextRomeMidnight(now);
+        return out;
+    }
+
     // ---------- Messaggio ----------
 
     /** The partner's last Ti penso, or the Lasciato per te still closed, whichever is newer. */

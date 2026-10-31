@@ -54,7 +54,7 @@ test('shell: Settings row, sheet, native back, Oggi card, reset, precache and bo
 });
 
 test('widget «La domanda di oggi»: the question and whose turn it is, never an answer', () => {
-  assert.match(widgets, /const KINDS = Object\.freeze\(\['think', 'countdown', 'noi', 'photo', 'daily'\]\);/);
+  assert.match(widgets, /const KINDS = Object\.freeze\(\['think', 'countdown', 'noi', 'photo', 'daily'[^\]]*\]\);/);
   assert.match(widgets, /const emptyDaily = \(\) => \(\{ date: '', question: '', state: 'none' \}\);/);
   const from = widgets.slice(widgets.indexOf('function dailyFromToday()'), widgets.indexOf('function syncDaily()'));
   assert.match(from, /const turn = state\.both_answered \? 'ready' : state\.my_answer != null \? 'waiting' : state\.partner_has_answer \? 'your_turn' : 'todo';/);
@@ -69,7 +69,7 @@ test('widget «La domanda di oggi»: the question and whose turn it is, never an
   assert.match(info, /android:targetCellHeight="2"/);
   const provider = read(`${W}/java/com/usapp/widget/UsDailyWidgetProvider.java`);
   assert.match(provider, /state\.needsUpdateAt\(UsWidgetModels\.nextRomeMidnight\(state\.now\)\)/, 'turns at midnight in Rome');
-  assert.match(read(`${W}/java/com/usapp/widget/UsWidgets.java`), /static final String\[\] KINDS = \{ THINK, COUNTDOWN, NOI, PHOTO, DAILY \};/);
+  assert.match(read(`${W}/java/com/usapp/widget/UsWidgets.java`), /static final String\[\] KINDS = \{ THINK, COUNTDOWN, NOI, PHOTO, DAILY\b[^}]*\};/);
   const strings = read(`${W}/res/values/strings.xml`);
   assert.doesNotMatch(strings.match(/us_widget_daily[\s\S]*?us_widget_noi_description/)[0], /l\\?['’]altr[oa]|entrambi|ognuno/i);
 });

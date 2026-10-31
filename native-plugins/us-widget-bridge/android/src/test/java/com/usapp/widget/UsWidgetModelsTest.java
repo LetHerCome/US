@@ -443,6 +443,36 @@ public class UsWidgetModelsTest {
         assertTrue(UsWidgetModels.message(null, now).empty);
     }
 
+    // ---------- Giorni insieme ----------
+
+    @Test
+    public void daysTogetherCountsRomeDaysLikeTheAppAndTurnsAtMidnight() throws Exception {
+        // startedOn 2026-04-21; 31/10 in Rome is day 193 (the app counts the first day as 0).
+        Instant now = Instant.parse("2026-10-31T11:00:00Z");
+        UsWidgetModels.Days days = UsWidgetModels.days(snapshot(null), now);
+        assertFalse(days.empty);
+        assertEquals("193", days.value);
+        assertEquals("giorni insieme", days.unit);
+        assertEquals(UsWidgetModels.nextRomeMidnight(now), days.nextChange);
+        JSONObject first = snapshot(null);
+        first.getJSONObject("couple").put("startedOn", "2026-10-30");
+        assertEquals("giorno insieme", UsWidgetModels.days(UsWidgetContract.normalize(first), now).unit);
+    }
+
+    @Test
+    public void daysTogetherWithoutADateOrAccount() throws Exception {
+        Instant now = Instant.parse("2026-10-31T11:00:00Z");
+        JSONObject snap = snapshot(null);
+        snap.getJSONObject("couple").put("startedOn", "2027-01-01");
+        UsWidgetModels.Days future = UsWidgetModels.days(UsWidgetContract.normalize(snap), now);
+        assertTrue(future.empty);
+        assertEquals("I vostri giorni insieme", future.unit);
+        assertNull(future.nextChange);
+        UsWidgetModels.Days none = UsWidgetModels.days(null, now);
+        assertTrue(none.empty);
+        assertEquals("Apri US per collegare il widget", none.unit);
+    }
+
     // ---------- La domanda di oggi ----------
 
     @Test

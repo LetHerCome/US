@@ -34,6 +34,10 @@
     <string name="us_widget_message_description">L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso</string>
     <string name="us_widget_message_empty">Il suo prossimo pensiero arriverà qui</string>
 
+    <string name="us_widget_days_name">Giorni insieme</string>
+    <string name="us_widget_days_description">Le vostre foto e i giorni insieme, che crescono ogni mezzanotte</string>
+    <string name="us_widget_days_empty">I vostri giorni insieme</string>
+
     <string name="us_widget_photo_name">Foto &amp; Noi</string>
     <string name="us_widget_photo_description">La foto di Oggi e i giorni insieme</string>
     <string name="us_widget_photo_empty">La foto di Oggi apparirà qui</string>

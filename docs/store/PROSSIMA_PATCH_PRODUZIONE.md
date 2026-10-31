@@ -338,3 +338,18 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - farsi mandare un Ti penso e aprire US: «Ti ha pensato · proprio ora»; il tocco apre il foglio per ricambiare;
   - farsi lasciare una foto in Lasciato per te: «Ti ha lasciato una foto»; il tocco apre la busta; aperta la busta, torna il Ti penso;
   - «La domanda di oggi»: ora mostra la domanda del giorno e si aggiunge da Impostazioni.
+
+## 2026-10-31 — Widget «Giorni insieme» (solo Android)
+
+**Fonte:** founder, 31/10/2026 (terzo dei widget scelti). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; serve un APK nuovo.
+
+- **Cosa fa:** widget 2×2 con le due foto rotonde vicine e un cuore rosa in mezzo. Sotto, grande in serif, il numero dei giorni insieme, con «giorni insieme» («193 giorni insieme»). Cambia a mezzanotte di Roma. Il tocco apre Noi.
+- **Dati:** nessuno nuovo. La data d'inizio della coppia arrivava già ai widget per «Foto & Noi» e per il Countdown «Insieme da». I giorni si contano come nell'app (`countdown.js`: il primo giorno è 0). Le foto rotonde sono le stesse del widget «Noi» stile mappa.
+- **Verifica chiesta dal founder:** il Countdown «Insieme da» e «Foto & Noi» mostravano già i giorni, ma senza le due foto e il cuore. Questo widget li mette insieme e non tocca gli altri.
+- **Senza data:** «I vostri giorni insieme», senza numero.
+- **Galleria in Impostazioni:** nuova voce «Giorni insieme».
+- **Da provare dall'APK di staging:**
+  - aggiungere «Giorni insieme» da Impostazioni › Widget;
+  - il numero è lo stesso dell'app su Oggi («Insieme da»);
+  - il giorno dopo, a mezzanotte, cresce di uno senza aprire US;
+  - il tocco apre Noi.
