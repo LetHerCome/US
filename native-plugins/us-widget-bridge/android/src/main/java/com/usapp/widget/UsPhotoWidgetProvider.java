@@ -16,16 +16,15 @@ import android.view.View;
 import android.widget.RemoteViews;
 
 /**
- * Foto & giorni, Pastello (founder, 02/11/2026: "i 195 giorni insieme con la
- * foto che cambia"). Oggi's photo of this hour and of the next two (cached by
- * US while open, never a URL, never fetched here) change by themselves every
- * hour; the bars say which of the three. The days together in Fraunces; in
- * the 4x2 also your portraits and "dal 21 aprile · Lisbona, 12 ottobre".
- * Giorni insieme widgets placed before render the same (UsDaysWidgetProvider).
+ * Foto & Noi (founder, 02/11/2026: the style it had before Pastello, "è più
+ * carino"): Oggi's photo edge to edge, the night rising from the bottom and
+ * the days together in serif. The photo still changes by itself every hour:
+ * Oggi's photo of this hour and of the next two, cached by US while open
+ * (never a URL, never fetched here). One layout for every size. Giorni
+ * insieme widgets placed before render the same (UsDaysWidgetProvider).
  */
 public final class UsPhotoWidgetProvider extends AppWidgetProvider {
     private static final int MAX_EDGE_PX = 720;
-    private static final int[] BARS = { R.id.us_photo_bar_1, R.id.us_photo_bar_2, R.id.us_photo_bar_3 };
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
@@ -46,49 +45,37 @@ public final class UsPhotoWidgetProvider extends AppWidgetProvider {
         UsWidgetModels.Couple couple = UsWidgetModels.couple(state.snapshot, state.now);
         UsWidgetModels.PhotoSlot slot = UsWidgetModels.photoSlot(state.snapshot, state.now);
         state.needsUpdateAt(slot.nextChange);
-        if (couple.days >= 0) state.needsUpdateAt(couple.nextChange);
-        byte[] bytes = slot.ready() ? state.store.readPhoto(slot.key) : null;
-        float density = UsWidgets.density(context);
-        RemoteViews small = fill(context, new RemoteViews(context.getPackageName(), R.layout.us_widget_photo), state, couple, slot,
-            bytes == null ? null : framed(bytes, 170, 170, density));
-        RemoteViews medium = fill(context, new RemoteViews(context.getPackageName(), R.layout.us_widget_photo_medium), state, couple, slot,
-            bytes == null ? null : framed(bytes, 350, 170, density));
-        // The 2x2 shows which of the hour's photos this is.
-        boolean several = bytes != null && slot.count > 1;
-        small.setViewVisibility(R.id.us_photo_bars, several ? View.VISIBLE : View.GONE);
-        for (int i = 0; i < BARS.length; i++) {
-            small.setViewVisibility(BARS[i], i < slot.count ? View.VISIBLE : View.GONE);
-            small.setImageViewResource(BARS[i], i == slot.index ? R.drawable.us_widget_pastel_bar_on : R.drawable.us_widget_pastel_bar_off);
-        }
-        // 4x2: the two of you, and since when, where and when the photo is.
-        UsWidgets.avatar(medium, state.store.readNoiPortrait("me"), R.id.us_photo_me, UsWidgetModels.personColor(state.snapshot, true));
-        UsWidgets.avatar(medium, state.store.readNoiPortrait("partner"), R.id.us_photo_partner, UsWidgetModels.personColor(state.snapshot, false));
-        String line = UsWidgetModels.photoLine(state.snapshot, slot);
-        medium.setTextViewText(R.id.us_photo_line, line);
-        medium.setViewVisibility(R.id.us_photo_line, line.isEmpty() ? View.GONE : View.VISIBLE);
-        return UsWidgets.sized(options, small, medium);
-    }
-
-    private static RemoteViews fill(Context context, RemoteViews views, UsWidgets.State state,
-            UsWidgetModels.Couple couple, UsWidgetModels.PhotoSlot slot, Bitmap photo) {
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.us_widget_photo);
         views.setOnClickPendingIntent(R.id.us_photo_root, UsWidgets.open(context, "photo", 4501));
         boolean days = couple.days >= 0;
+        if (days) state.needsUpdateAt(couple.nextChange);
         views.setViewVisibility(R.id.us_photo_days, days ? View.VISIBLE : View.GONE);
         views.setViewVisibility(R.id.us_photo_unit, days ? View.VISIBLE : View.GONE);
         views.setTextViewText(R.id.us_photo_days, days ? Long.toString(couple.days) : "");
         views.setTextViewText(R.id.us_photo_unit, couple.days == 1 ? "giorno insieme" : "giorni insieme");
-        views.setViewVisibility(R.id.us_photo_image, photo == null ? View.GONE : View.VISIBLE);
-        if (photo != null) views.setImageViewBitmap(R.id.us_photo_image, photo);
-        views.setViewVisibility(R.id.us_photo_placeholder, photo == null ? View.VISIBLE : View.GONE);
+
+        byte[] bytes = slot.ready() ? state.store.readPhoto(slot.key) : null;
+        Bitmap photo = null;
+        if (bytes != null) {
+            int widthDp = options == null ? 0 : options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0);
+            int heightDp = options == null ? 0 : options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0);
+            if (widthDp <= 0) widthDp = 160;
+            if (heightDp <= 0) heightDp = widthDp;
+            photo = framed(bytes, widthDp, heightDp, UsWidgets.density(context));
+        }
+        boolean shown = photo != null;
+        if (shown) views.setImageViewBitmap(R.id.us_photo_image, photo);
+        views.setViewVisibility(R.id.us_photo_image, shown ? View.VISIBLE : View.GONE);
+        views.setViewVisibility(R.id.us_photo_scrim, shown ? View.VISIBLE : View.GONE);
+        views.setViewVisibility(R.id.us_photo_placeholder, shown ? View.GONE : View.VISIBLE);
         views.setTextViewText(R.id.us_photo_placeholder, context.getString(state.snapshot == null ? R.string.us_widget_connect : R.string.us_widget_photo_empty));
         String place = slot.label.isEmpty() ? "" : ", " + slot.label;
-        views.setContentDescription(R.id.us_photo_root, (photo == null ? context.getString(R.string.us_widget_photo_name) : "La vostra foto di Oggi" + place)
+        views.setContentDescription(R.id.us_photo_root, (shown ? "La vostra foto di Oggi" + place : context.getString(R.string.us_widget_photo_name))
             + (days ? ", " + couple.days + (couple.days == 1 ? " giorno insieme" : " giorni insieme") : ""));
         return views;
     }
 
-
-    /** Decodes downsampled, crops to the shape and rounds the corners like the board's cards (26dp). */
+    /** Decodes downsampled, crops to the shape and rounds the corners like the US cards (24dp). */
     static Bitmap framed(byte[] bytes, int widthDp, int heightDp, float density) {
         try {
             float scale = Math.min(1f, MAX_EDGE_PX / (Math.max(widthDp, heightDp) * density));
@@ -116,7 +103,7 @@ public final class UsPhotoWidgetProvider extends AppWidgetProvider {
             shader.setLocalMatrix(matrix);
             Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
             paint.setShader(shader);
-            float radius = 26 * density * scale;
+            float radius = 24 * density * scale;
             canvas.drawRoundRect(new RectF(0, 0, outW, outH), radius, radius, paint);
             source.recycle();
             return out;

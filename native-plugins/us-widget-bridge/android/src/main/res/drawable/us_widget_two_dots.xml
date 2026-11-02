@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Due colori": rosa and lilla overlapping, the US mark of the two of you. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="44dp"
+    android:height="28dp">
+    <item android:width="28dp" android:height="28dp" android:gravity="start|center_vertical">
+        <shape android:shape="oval"><solid android:color="#FFFF7C96" /></shape>
+    </item>
+    <item android:width="28dp" android:height="28dp" android:gravity="end|center_vertical">
+        <shape android:shape="oval"><solid android:color="#D9A98BFF" /></shape>
+    </item>
+</layer-list>

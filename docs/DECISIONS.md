@@ -432,3 +432,9 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 5. **Notifica:** nessuna; solo widget e app.
 
 **Dati:** `public.member_status`, una riga per persona, senza storico: stato, forma, `set_at` ed `expires_at` scritti dal server. RLS: la coppia legge, ognuno scrive solo il suo. Va con l'account e con l'uscita dalla coppia, entra nell'export, passa dal canale Realtime unico. Migrazione su staging solo col workflow approvato dal founder.
+
+## 2026-11-02 — Widget: correzioni dopo la prova dell'APK
+
+**Fonte:** founder, 02/11/2026, prova dell'APK di staging (run 41477230331, staging d80f4d57).
+
+- **Foto & Noi:** torna lo stile di prima del Pastello («è più carino») e il nome «Foto & Noi». Resta la foto che cambia ogni ora.

@@ -34,19 +34,18 @@ test('widgets: picker previews are generic, never a real name, face or photo', (
   for (const text of [previews, strings]) assert.doesNotMatch(text, /Beatrice|Francesco|\bBea\b|\bFra\b/);
   assert.doesNotMatch(previews, /android:text="[^@]/, 'preview text comes from strings.xml');
   assert.doesNotMatch(previews, /us_widget_background"/, 'no night card left in a preview');
-  // Pastello: the board's sunset instead of a photo.
-  assert.match(res('layout/us_widget_preview_photo.xml'), /@drawable\/us_widget_pastel_photo_empty/);
-  assert.match(res('drawable/us_widget_pastel_photo_empty.xml'), /<gradient/);
+  // Foto & Noi keeps the look it had before Pastello (founder, 02/11/2026): an abstract photo.
+  assert.match(res('layout/us_widget_preview_photo.xml'), /@drawable\/us_widget_preview_photo_art/);
   for (const info of KINDS) {
     const xml = res(`xml/us_widget_${info}_info.xml`);
     assert.match(xml, new RegExp(`android:previewLayout="@layout/us_widget_preview_${info}"`), info);
     assert.match(xml, new RegExp(`android:previewImage="@drawable/us_widget_preview_${info}"`), info);
   }
-  // Giorni insieme is part of Foto & giorni: out of the list, still working where it is.
+  // Giorni insieme is part of Foto & Noi: out of the list, still working where it is.
   assert.match(res('xml/us_widget_days_info.xml'), /android:widgetFeatures="hide_from_picker"/);
 });
 
-test('widgets: preview PNGs are the Pastello cards, at 2x (168dp square, 192x96dp Noi, 240x120dp wide)', () => {
+test('widgets: preview PNGs at 2x (168dp square, 192x96dp Noi, 240x120dp wide); Foto & Noi keeps its picture of before', () => {
   const png = (k) => fs.readFileSync(path.join(ROOT, PLUGIN, `res/drawable-nodpi/us_widget_preview_${k}.png`));
   const size = (k) => { const bytes = png(k); return [bytes.readUInt32BE(16), bytes.readUInt32BE(20)]; };
   for (const k of ['think', 'photo', 'countdown', 'message', 'memories']) assert.deepEqual(size(k), [336, 336], k);
@@ -55,7 +54,7 @@ test('widgets: preview PNGs are the Pastello cards, at 2x (168dp square, 192x96d
   for (const k of KINDS) {
     const bytes = png(k);
     assert.equal(bytes[25], 6, `${k}: RGBA, the rounded corners are transparent`);
-    assert.ok(bytes.length < 120 * 1024, `${k}: small`);
+    assert.ok(bytes.length < 160 * 1024, `${k}: small`);
   }
 });
 
