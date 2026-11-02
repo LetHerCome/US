@@ -455,3 +455,5 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Da provare:** un Countdown a una data e uno con l'ora, 2×2 e 4×2, tema chiaro e scuro.
 - **Lasciato per te:** busta disegnata, la foto piccola di chi te l'ha lasciato, un bigliettino inclinato col sigillo rosa: «Ti ha lasciato una foto» in Fraunces e «da Bea · 10 min fa»; nel 4×2 sotto «la scopri solo dentro US». La sorpresa resta chiusa. Via la pillola «Apri» (apre il tocco su tutto il widget).
   - **Da provare:** lasciare una foto da un telefono e guardare l'altro; senza account «Apri US per collegarlo» non si taglia; tema chiaro e scuro.
+- **Come stai:** fondo sfumato, la foto tonda di chi ami (o l'iniziale) con l'emoji come adesivo, il nome in Fraunces e «innamorata · da 1 ora»; nel 4×2 due metà sfumate, tu a sinistra e chi ami a destra, il cuore in mezzo. Via le metà di colore piatto.
+  - **Da provare:** scegliere uno stato: compare sulla foto; senza foto l'iniziale; tema chiaro e scuro.
