@@ -103,7 +103,7 @@ final class UsWidgetArt {
      * Fraunces on a soft field (never a flat disc of colour).
      */
     static void avatar(RemoteViews views, Context context, byte[] raw, int imageId, int letterId, String name, int sizeDp) {
-        Bitmap photo = decode(raw);
+        Bitmap photo = round(decode(raw));
         if (photo != null) {
             views.setImageViewBitmap(imageId, photo);
             views.setViewVisibility(letterId, View.GONE);
@@ -111,6 +111,25 @@ final class UsWidgetArt {
         }
         views.setImageViewResource(imageId, R.drawable.us_widget_art_field);
         serif(views, context, letterId, initial(name), sizeDp * 0.46f, sizeDp, 1, true, Layout.Alignment.ALIGN_CENTER);
+    }
+
+    /** Always round, even when a portrait arrives square: the centre, cut in a circle. */
+    static Bitmap round(Bitmap source) {
+        if (source == null) return null;
+        try {
+            int side = Math.min(source.getWidth(), source.getHeight());
+            Bitmap out = Bitmap.createBitmap(side, side, Bitmap.Config.ARGB_8888);
+            BitmapShader shader = new BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+            Matrix matrix = new Matrix();
+            matrix.setTranslate((side - source.getWidth()) / 2f, (side - source.getHeight()) / 2f);
+            shader.setLocalMatrix(matrix);
+            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+            paint.setShader(shader);
+            new Canvas(out).drawCircle(side / 2f, side / 2f, side / 2f, paint);
+            return out;
+        } catch (Throwable ignored) {
+            return source;
+        }
     }
 
     static String initial(String name) {
