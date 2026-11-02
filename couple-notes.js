@@ -258,8 +258,6 @@ function install(w){
   // ---------------------------------------------------------------- live
   // Realtime (app.js startUsRealtime): a change of the couple's notes.
   function onChange(event){
-    // The Nota widgets follow the couple's notes (widgets.js, widget-nota-v1).
-    w.dispatchEvent?.(new Event('us:couple-notes-changed'));
     if(!key()||key()!==owner)return;
     const row=event?.new&&event.new.id?event.new:null;
     const gone=event?.eventType==='DELETE'?event.old?.id:null;

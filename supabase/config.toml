@@ -28,9 +28,6 @@ verify_jwt = true
 [functions.widget-think-send]
 verify_jwt = false
 
-[functions.widget-note]
-verify_jwt = false
-
 [functions.us-widget-state]
 verify_jwt = false
 

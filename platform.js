@@ -273,68 +273,25 @@
 
   // functionsUrl: the Edge address of this build (production or staging),
   // so the widget sends to the server that issued the token. Native accepts
-  // only the two US projects (UsWidgetEndpoints). scope "note:rw": the Nota
-  // widget (widget-nota-v1), which cannot work without the address.
-  async function storeWidgetActionCredential(ownerHash, token, expiresAt = '', { scope = '', functionsUrl = '' } = {}) {
+  // only the two US projects (UsWidgetEndpoints).
+  async function storeWidgetActionCredential(ownerHash, token, expiresAt = '', { functionsUrl = '' } = {}) {
     const plugin = widgetBridge();
     const safeHash = validOwnerHash(ownerHash);
     const safeToken = typeof token === 'string' && /^[A-Za-z0-9_-]{43}$/.test(token) ? token : '';
     const safeUrl = /^https:\/\/[a-z0-9]{20}\.supabase\.co\/functions\/v1$/.test(functionsUrl) ? functionsUrl : '';
     if (!plugin || !safeHash || !safeToken || typeof plugin.setActionCredential !== 'function') return false;
-    const note = scope === 'note:rw';
-    if (note && !safeUrl) return false;
-    await plugin.setActionCredential({ ownerHash: safeHash, token: safeToken, expiresAt: safeInstant(expiresAt), ...(safeUrl ? { functionsUrl: safeUrl } : {}), ...(note ? { scope } : {}) });
+    await plugin.setActionCredential({ ownerHash: safeHash, token: safeToken, expiresAt: safeInstant(expiresAt), ...(safeUrl ? { functionsUrl: safeUrl } : {}) });
     return true;
   }
 
-  async function clearWidgetActionCredential(scope = '') {
+  async function clearWidgetActionCredential() {
     const plugin = widgetBridge();
     if (!plugin || typeof plugin.clearActionCredential !== 'function') return false;
-    await plugin.clearActionCredential(scope === 'note:rw' ? { scope } : {});
+    await plugin.clearActionCredential();
     return true;
   }
 
-  // Nota: how many Nota widgets, which notes they show, the note credential.
-  async function getNoteWidgets() {
-    const plugin = widgetBridge();
-    if (!plugin || typeof plugin.getNoteWidgets !== 'function') return null;
-    const result = await plugin.getNoteWidgets();
-    const noteIds = (Array.isArray(result?.noteIds) ? result.noteIds : []).filter((id) => WIDGET_NOTE_ID.test(String(id)));
-    return {
-      placed: Math.max(0, Number(result?.placed) || 0),
-      noteIds,
-      credential: ['missing', 'ready', 'renew'].includes(result?.credential) ? result.credential : 'missing',
-      revokePending: result?.revokePending === true
-    };
-  }
-
-  // Nota: the couple's notes for the widgets, within the app's limits
-  // (couple_notes_v1); native checks them again.
-  async function writeWidgetNotes(ownerHash, notes) {
-    const plugin = widgetBridge();
-    const safeHash = validOwnerHash(ownerHash);
-    if (!plugin || !safeHash || !Array.isArray(notes) || typeof plugin.writeNotes !== 'function') return false;
-    const clean = notes.map(widgetNote).filter(Boolean).slice(0, 40);
-    await plugin.writeNotes({ notes: { ownerHash: safeHash, notes: clean } });
-    return true;
-  }
-
-  const WIDGET_NOTE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-  function widgetNote(note) {
-    const id = String(note?.id || '');
-    const title = typeof note?.title === 'string' ? note.title.trim() : '';
-    const body = typeof note?.body === 'string' ? note.body : '';
-    const items = Array.isArray(note?.items) ? note.items : [];
-    if (!WIDGET_NOTE_ID.test(id) || title.length > 80 || body.length > 4000 || items.length > 100) return null;
-    const cleanItems = [];
-    for (const item of items) {
-      if (typeof item?.id !== 'string' || !item.id || item.id.length > 40 || typeof item.text !== 'string' || item.text.length > 200 || typeof item.done !== 'boolean') return null;
-      cleanItems.push({ id: item.id, text: item.text, done: item.done });
-    }
-    return { id, title, body, items: cleanItems, updatedAt: safeInstant(note.updatedAt), byName: safeText(note.byName, 40), byMe: note.byMe === true, revision: Math.max(1, Number.parseInt(note.revision, 10) || 1) };
-  }
-
-  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days', 'note'];
+  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days'];
 
   async function getInstalledWidgets() {
     const plugin = widgetBridge();
@@ -415,8 +372,6 @@
     readWidgetSnapshot,
     writeWidgetPhoto,
     writeWidgetNoiPortrait,
-    writeWidgetNotes,
-    getNoteWidgets,
     clearWidgets,
     getWidgetDeviceIdentity,
     storeWidgetActionCredential,

@@ -28,13 +28,11 @@ public class UsWidgetBridgePlugin extends Plugin {
     private static WeakReference<UsWidgetBridgePlugin> active = new WeakReference<>(null);
     private UsWidgetStore store;
     private UsWidgetCredentialStore credentials;
-    private UsWidgetCredentialStore noteCredentials;
 
     @Override
     public void load() {
         store = new UsWidgetStore(getContext());
         credentials = new UsWidgetCredentialStore(getContext());
-        noteCredentials = new UsWidgetCredentialStore(getContext(), UsWidgetCredentialStore.NOTE);
         active = new WeakReference<>(this);
     }
 
@@ -48,14 +46,12 @@ public class UsWidgetBridgePlugin extends Plugin {
     public void activateAccount(PluginCall call) {
         String ownerHash = call.getString("ownerHash", "");
         credentials.clearForOwnerChange(ownerHash);
-        noteCredentials.clearForOwnerChange(ownerHash);
         if (!store.activateAccount(ownerHash)) {
             call.reject("Invalid widget account");
             return;
         }
         UsWidgets.refreshAll(getContext());
-        call.resolve(new JSObject().put("credential", credentials.status(ownerHash))
-            .put("noteCredential", noteCredentials.status(ownerHash)));
+        call.resolve(new JSObject().put("credential", credentials.status(ownerHash)));
     }
 
     @PluginMethod
@@ -68,18 +64,14 @@ public class UsWidgetBridgePlugin extends Plugin {
         call.resolve(new JSObject().put("deviceId", deviceId));
     }
 
-    /** scope "note:rw" (Nota) also carries the Edge address, only one of the two US projects. */
     @PluginMethod
     public void setActionCredential(PluginCall call) {
         String ownerHash = call.getString("ownerHash", "");
-        // The Edge address of this build (staging or production); a wrong one is
-        // refused. The Nota credential ("note:rw") cannot work without one.
-        boolean note = UsWidgetCredentialStore.NOTE.equals(call.getString("scope", ""));
+        // The Edge address of this build (staging or production); a wrong one is refused.
         String functionsUrl = call.getString("functionsUrl", "");
-        boolean addressOk = functionsUrl.isEmpty() ? !note : !UsWidgetEndpoints.functionsBase(functionsUrl).isEmpty();
-        UsWidgetCredentialStore target = note ? noteCredentials : credentials;
+        boolean addressOk = functionsUrl.isEmpty() || !UsWidgetEndpoints.functionsBase(functionsUrl).isEmpty();
         if (!ownerHash.equals(store.owner()) || !addressOk
-            || !target.write(ownerHash, call.getString("token", ""), call.getString("expiresAt", ""), functionsUrl)) {
+            || !credentials.write(ownerHash, call.getString("token", ""), call.getString("expiresAt", ""), functionsUrl)) {
             call.reject("Invalid widget action credential");
             return;
         }
@@ -89,42 +81,9 @@ public class UsWidgetBridgePlugin extends Plugin {
 
     @PluginMethod
     public void clearActionCredential(PluginCall call) {
-        if (UsWidgetCredentialStore.NOTE.equals(call.getString("scope", ""))) {
-            noteCredentials.clear();
-            store.setNoteRevokePending(false);
-        } else {
-            credentials.clear();
-        }
+        credentials.clear();
         UsWidgets.refreshAll(getContext());
         call.resolve();
-    }
-
-    /** Nota: the couple's notes the open app reads, for the widgets that show them. */
-    @PluginMethod
-    public void writeNotes(PluginCall call) {
-        JSObject notes = call.getObject("notes");
-        if (notes == null || !store.writeNotes(notes)) {
-            call.reject("Invalid widget notes");
-            return;
-        }
-        UsWidgets.refreshAll(getContext());
-        call.resolve();
-    }
-
-    /**
-     * Nota: how many Nota widgets are placed, which notes they show (ids only),
-     * the note credential's state and whether a server revocation is due.
-     */
-    @PluginMethod
-    public void getNoteWidgets(PluginCall call) {
-        try {
-            call.resolve(new JSObject().put("placed", UsWidgets.ids(getContext(), UsWidgets.NOTE).length)
-                .put("noteIds", store.selectedNoteIds())
-                .put("credential", noteCredentials.status(store.owner()))
-                .put("revokePending", store.noteRevokePending()));
-        } catch (Exception error) {
-            call.reject("Widget notes unavailable");
-        }
     }
 
     @PluginMethod
@@ -189,7 +148,6 @@ public class UsWidgetBridgePlugin extends Plugin {
     @PluginMethod
     public void clearAll(PluginCall call) {
         credentials.clear();
-        noteCredentials.clear();
         store.clearAll();
         UsWidgets.refreshAll(getContext());
         call.resolve();

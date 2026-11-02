@@ -757,11 +757,6 @@
 #usWidgetHub .us-wp-days-dots::after{margin-left:3px;background:var(--us-lilla)}
 #usWidgetHub .us-wp-days b{font-family:var(--us-font-display);font-weight:400;font-size:20px;line-height:1;color:var(--us-color-text)}
 #usWidgetHub .us-wp-days small{display:none}
-#usWidgetHub .us-wp-note{display:grid;align-content:center;gap:5px;padding:0 14px!important;background:var(--us-color-elevated)}
-#usWidgetHub .us-wp-note i{display:flex;align-items:center;gap:5px;height:7px}
-#usWidgetHub .us-wp-note i::before{content:"";flex:none;width:7px;height:7px;border:1.5px solid var(--us-color-text-2);border-radius:2px}
-#usWidgetHub .us-wp-note i::after{content:"";flex:1;height:3px;border-radius:2px;background:var(--us-color-text-3)}
-#usWidgetHub .us-wp-note i.is-done::before{border-color:var(--us-lilla);background:var(--us-lilla)}
 #usWidgetHub .us-wp-countdown{display:grid;place-content:center;gap:1px;text-align:center;background:var(--us-color-elevated)}
 #usWidgetHub .us-wp-countdown>:not(b):not(.us-wp-cd-unit):not(p){display:none}
 #usWidgetHub .us-wp-countdown b{font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1;color:var(--us-color-text)}

@@ -75,7 +75,7 @@ function loadWidgets({
     go(page) { events.push(['go', page]); },
     UsWidgetCredentialApi: {
       issue: async (hash) => { counts.issue += 1; events.push(['issue', hash]); return issueResult; },
-      revoke: async (hash, scope) => { counts.revoke += 1; events.push(['revoke', hash, scope || 'think:send']); return true; }
+      revoke: async (hash) => { counts.revoke += 1; events.push(['revoke', hash]); return true; }
     },
     UsWidgetDataApi: {
       couple: async () => ({ names: ['Francesco', 'Beatrice'], startedOn: '2026-04-21' }),
@@ -265,11 +265,8 @@ test('logout con credential già pronta revoca comunque per device hash', async 
   const harness = loadWidgets({ credential: 'ready' });
   await harness.widgets.authReady({ id: 'user-1' });
   await harness.widgets.clear();
-  // Ti penso's token and, if any, the Nota widget's (widget-nota-v1).
-  assert.equal(harness.counts.revoke, 2);
-  const revoked = harness.events.filter((event) => event[0] === 'revoke');
-  assert.match(revoked[0][1], /^[a-f0-9]{64}$/);
-  assert.deepEqual(revoked.map((event) => event[2]), ['think:send', 'note:rw']);
+  assert.equal(harness.counts.revoke, 1);
+  assert.match(harness.events.find((event) => event[0] === 'revoke')[1], /^[a-f0-9]{64}$/);
 });
 
 test('snapshot isolato per account: owner hash, nessun id raw, nessun dato del vecchio account', async () => {
@@ -391,53 +388,6 @@ test('Messaggio: the newest closed Lasciato per te travels by kind and time only
   await harness.widgets.publishLeft([]);
   await settle();
   assert.deepEqual({ ...harness.snapshots().at(-1).left }, { kind: '', at: '' }, 'opened: nothing waits');
-});
-
-// Nota (widget-nota-v1): the note token and the copy of the notes exist only
-// while a Nota widget is on the Home screen.
-function noteHarness(widgetsState) {
-  const harness = loadWidgets({ credential: 'ready' });
-  const calls = [];
-  Object.assign(harness.sandbox.UsPlatform, {
-    getNoteWidgets: async () => widgetsState,
-    writeWidgetNotes: async (owner, notes) => { calls.push(['notes', owner, notes.map((note) => note.id)]); return true; },
-    storeWidgetActionCredential: async (owner, token, expiresAt, options) => { calls.push(['store', options?.scope || '', options?.functionsUrl || '']); return true; },
-    clearWidgetActionCredential: async (scope) => { calls.push(['clear', scope || '']); return true; }
-  });
-  harness.sandbox.UsWidgetCredentialApi = {
-    functionsUrl: 'https://dugmhngrfkuieeletatb.supabase.co/functions/v1',
-    issue: async (hash, scope) => { calls.push(['issue', scope || 'think:send']); return { token: TOKEN, expiresAt: '2027-01-01T00:00:00.000Z' }; },
-    revoke: async (hash, scope) => { calls.push(['revoke', scope || 'think:send']); return true; }
-  };
-  harness.sandbox.UsWidgetDataApi.notes = async (ids) => { calls.push(['read', [...ids]]); return [{ id: '5a86d7aa-37d8-48ed-9122-a8f42d80ff9e' }]; };
-  return { harness, calls };
-}
-
-test('Nota: without a Nota widget nothing is asked; a token left behind is revoked', async () => {
-  const quiet = noteHarness({ placed: 0, noteIds: [], credential: 'missing', revokePending: false });
-  await quiet.harness.widgets.authReady({ id: 'user-1' });
-  await quiet.harness.widgets.syncNotes();
-  assert.deepEqual(quiet.calls, []);
-  const left = noteHarness({ placed: 0, noteIds: [], credential: 'missing', revokePending: true });
-  await left.harness.widgets.authReady({ id: 'user-1' });
-  await left.harness.widgets.syncNotes();
-  assert.deepEqual(left.calls, [['revoke', 'note:rw'], ['clear', 'note:rw']]);
-});
-
-test('Nota: with a widget, its own token with the Edge address, then the notes', async () => {
-  const placed = noteHarness({ placed: 1, noteIds: ['5a86d7aa-37d8-48ed-9122-a8f42d80ff9e'], credential: 'missing', revokePending: false });
-  await placed.harness.widgets.authReady({ id: 'user-1' });
-  await placed.harness.widgets.syncNotes();
-  assert.deepEqual(placed.calls.slice(0, 3), [
-    ['issue', 'note:rw'],
-    ['store', 'note:rw', 'https://dugmhngrfkuieeletatb.supabase.co/functions/v1'],
-    ['read', ['5a86d7aa-37d8-48ed-9122-a8f42d80ff9e']]
-  ]);
-  assert.equal(placed.calls[3][0], 'notes');
-  const ready = noteHarness({ placed: 2, noteIds: [], credential: 'ready', revokePending: false });
-  await ready.harness.widgets.authReady({ id: 'user-1' });
-  await ready.harness.widgets.syncNotes();
-  assert.equal(ready.calls.some((call) => call[0] === 'issue'), false, 'a ready token is not issued again');
 });
 
 test('Foto & Noi follows the painted Oggi hero, not an independent latest-Ricordo query', () => {

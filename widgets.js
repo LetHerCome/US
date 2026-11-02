@@ -13,8 +13,8 @@
 
   const platform = window.UsPlatform;
   const nativeEnabled = Boolean(platform?.isNative && platform?.hasWidgetBridge?.() !== false);
-  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days', 'note']);
-  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', days: 'bond', note: 'bond' });
+  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days']);
+  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', days: 'bond' });
   // Messaggio opens the message itself: the Ti penso or the closed envelope.
   const MESSAGE_TARGETS = Object.freeze({ think: 'think', left: 'left_for_you' });
   const COUPLE_TTL_MS = 30 * 60 * 1000;
@@ -38,7 +38,6 @@
   let noiPortraitPreviewUrl = '';
   let noiPortraitSignature = '';
   let noiPortraitSync = null;
-  let notesSync = null;
   let noiRoundPreviewUrls = { me: '', partner: '' };
   let lastLink = { url: '', at: 0 };
   let pendingDestination = '';
@@ -588,7 +587,6 @@
     await Promise.all([syncCouple({ force: true }), scheduleWrite(), ensureCredential(status)]);
     await syncNoiDistance();
     await syncNoiBattery();
-    syncNotes().catch(() => {});
     // The portrait and Oggi photo only sync after first UI paint.
     setTimeout(() => {
       syncPhoto({ force: true }).catch(() => {});
@@ -620,54 +618,11 @@
     if (nativeEnabled && revokeHash && window.UsWidgetCredentialApi?.revoke) {
       try { await window.UsWidgetCredentialApi.revoke(revokeHash); }
       catch (error) { console.warn('[US Widget] credential revoke', error); }
-      // The Nota widget's own token, if any (widget-nota-v1).
-      try { await window.UsWidgetCredentialApi.revoke(revokeHash, 'note:rw'); }
-      catch (error) { console.warn('[US Widget] note credential revoke', error); }
     }
     if(request!==authRequest)return false;
     if (!nativeEnabled) return false;
     try { return await platform.clearWidgets(); }
     catch (error) { console.warn('[US Widget] clear', error); return false; }
-  }
-
-  // ---------- Nota (docs/missions/widget-nota-v1.md) ----------
-
-  // Only while a Nota widget is on the Home screen: the note credential
-  // (scope note:rw, this build's Edge address) and the copy of the couple's
-  // notes. Without one, nothing is asked; a token left by a removed widget
-  // is revoked on the server here.
-  async function provisionNoteCredential(target, token) {
-    if (!deviceIdHash || !window.UsWidgetCredentialApi?.issue) return false;
-    const issued = await window.UsWidgetCredentialApi.issue(deviceIdHash, 'note:rw');
-    if (!issued?.token || token !== generation) return false;
-    return platform.storeWidgetActionCredential(target, issued.token, issued.expiresAt || '', {
-      scope: 'note:rw',
-      functionsUrl: window.UsWidgetCredentialApi.functionsUrl || ''
-    });
-  }
-
-  function syncNotes() {
-    if (!nativeEnabled || !ownerHash || typeof platform.getNoteWidgets !== 'function') return Promise.resolve(false);
-    if (notesSync) return notesSync;
-    const token = generation;
-    const target = ownerHash;
-    notesSync = (async () => {
-      const widgets = await platform.getNoteWidgets();
-      if (!widgets || token !== generation) return false;
-      if (!widgets.placed) {
-        if (widgets.revokePending && deviceIdHash && window.UsWidgetCredentialApi?.revoke) {
-          await window.UsWidgetCredentialApi.revoke(deviceIdHash, 'note:rw');
-          await platform.clearWidgetActionCredential('note:rw');
-        }
-        return false;
-      }
-      if (widgets.credential !== 'ready') await provisionNoteCredential(target, token);
-      const notes = await window.UsWidgetDataApi?.notes?.(widgets.noteIds);
-      if (token !== generation || !Array.isArray(notes)) return false;
-      return platform.writeWidgetNotes(target, notes);
-    })().catch((error) => { console.warn('[US Widget] notes', error); return false; })
-      .finally(() => { notesSync = null; });
-    return notesSync;
   }
 
   // ---------- deep links ----------
@@ -747,7 +702,6 @@
     authReady,
     publishThink,
     publishLeft,
-    syncNotes,
     syncCountdown,
     syncDaily,
     syncCouple,
@@ -787,14 +741,6 @@
     window.addEventListener('us:distance-changed', () => { syncNoiDistance().catch(() => {}); });
     window.addEventListener('us:partner-battery-changed', () => { syncNoiBattery().catch(() => {}); });
     window.addEventListener('us:noi-portraits-ready', () => { syncNoiPortrait().catch(() => {}); });
-    // Nota: the notes changed in the app, or a Nota widget was just placed.
-    // A burst of saves while one types becomes one read, 2 s after the last.
-    let notesTimer = 0;
-    window.addEventListener('us:couple-notes-changed', () => {
-      clearTimeout(notesTimer);
-      notesTimer = setTimeout(() => { syncNotes().catch(() => {}); }, 2000);
-    });
-    window.addEventListener('us:widget-pinned', (event) => { if (event?.detail?.kind === 'note') syncNotes().catch(() => {}); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden || !ownerHash) return;
       // The phone's widgets are not on screen while US is: they refresh just
@@ -808,7 +754,6 @@
         syncNoiDistance().catch(() => {});
         syncNoiPortrait().catch(() => {});
         syncPhoto().catch(() => {});
-        syncNotes().catch(() => {});
       }, 2000);
     });
   }

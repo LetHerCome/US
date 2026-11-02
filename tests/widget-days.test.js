@@ -43,9 +43,9 @@ test('provider: the same days as the app, redrawn at Rome midnight, opens Noi, n
 
 test('wiring: kind, deep link to Noi, pin from Settings, hub tile', () => {
   const widgets = read('widgets.js');
-  assert.match(widgets, /const KINDS = Object\.freeze\(\[[^\]]*'days'[^\]]*\]\);/);
+  assert.match(widgets, /const KINDS = Object\.freeze\(\[[^\]]*'days'\]\);/);
   assert.match(widgets, /days: 'bond'/);
-  assert.match(read('platform.js'), /const WIDGET_KINDS = \[[^\]]*'days'[^\]]*\];/);
+  assert.match(read('platform.js'), /const WIDGET_KINDS = \[[^\]]*'days'\];/);
   const hub = read('widget-hub.js');
   assert.match(hub, /\{ kind: 'days', name: 'Giorni insieme', copy: '[^']+', shape: 'square' \}/);
   assert.match(hub, /if \(kind === 'days'\) return daysPreview\(snapshot\);/);

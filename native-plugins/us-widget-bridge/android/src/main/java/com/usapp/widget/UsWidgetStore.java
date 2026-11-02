@@ -32,9 +32,6 @@ final class UsWidgetStore {
     private final AtomicFile thinkHistoryFile;
     private final AtomicFile photoFile;
     private final AtomicFile photoMetaFile;
-    private final AtomicFile notesFile;
-    private final AtomicFile noteWidgetsFile;
-    private final File noteRevokeFile;
 
     UsWidgetStore(Context context) {
         directory = new File(context.getNoBackupFilesDir(), "us-widget");
@@ -46,9 +43,6 @@ final class UsWidgetStore {
         thinkHistoryFile = new AtomicFile(new File(directory, "think-history-v1.json"));
         photoFile = new AtomicFile(new File(mediaDirectory, "photo.jpg"));
         photoMetaFile = new AtomicFile(new File(mediaDirectory, "photo-meta.json"));
-        notesFile = new AtomicFile(new File(directory, "notes-v1.json"));
-        noteWidgetsFile = new AtomicFile(new File(directory, "note-widgets-v1.json"));
-        noteRevokeFile = new File(directory, "note-revoke-pending");
         // V1 kept the action status inside the shared snapshot. It is superseded.
         new File(directory, "snapshot-v1.json").delete();
     }
@@ -78,8 +72,6 @@ final class UsWidgetStore {
         thinkHistoryFile.delete();
         photoFile.delete();
         photoMetaFile.delete();
-        clearNotes();
-        noteRevokeFile.delete();
         for (String slot : PORTRAIT_SLOTS) {
             portraitFile(slot).delete();
             portraitMetaFile(slot).delete();
@@ -295,103 +287,6 @@ final class UsWidgetStore {
     synchronized void clearPhoto() {
         photoFile.delete();
         photoMetaFile.delete();
-    }
-
-    // ---------- Nota: the couple's notes and which note each widget shows ----------
-
-    /** The app's copy (UsNoteModels.normalizeCache), only for the active account. */
-    synchronized boolean writeNotes(JSONObject input) {
-        JSONObject clean = UsNoteModels.normalizeCache(input, owner());
-        return clean != null && writeAtomic(notesFile, clean.toString());
-    }
-
-    synchronized JSONObject readNotes() {
-        try { return UsNoteModels.normalizeCache(new JSONObject(readAtomic(notesFile)), owner()); }
-        catch (Exception ignored) { return null; }
-    }
-
-    /** A note as the server or the optimistic tick left it; status: "" or "failed" with its time. */
-    synchronized boolean replaceNote(JSONObject note, String status) {
-        JSONObject cache = readNotes();
-        JSONObject clean = UsNoteModels.normalizeNote(note);
-        if (cache == null || clean == null) return false;
-        try {
-            if (!status.isEmpty()) clean.put("status", status).put("statusAt", Instant.now().toString());
-            JSONArray notes = cache.getJSONArray("notes");
-            JSONArray next = new JSONArray().put(clean);
-            for (int i = 0; i < notes.length(); i++) {
-                JSONObject other = notes.getJSONObject(i);
-                if (!other.optString("id").equals(clean.optString("id")) && next.length() < UsNoteModels.MAX_NOTES) next.put(other);
-            }
-            return writeAtomic(notesFile, cache.put("notes", next).toString());
-        } catch (Exception ignored) {
-            return false;
-        }
-    }
-
-    synchronized boolean selectNote(int widgetId, String noteId) {
-        if (!UsNoteModels.validNoteId(noteId) || owner().isEmpty()) return false;
-        try {
-            JSONObject map = noteWidgets();
-            map.put(Integer.toString(widgetId), noteId);
-            return writeAtomic(noteWidgetsFile, new JSONObject().put("ownerHash", owner()).put("widgets", map).toString());
-        } catch (Exception ignored) {
-            return false;
-        }
-    }
-
-    synchronized String noteFor(int widgetId) {
-        String noteId = noteWidgets().optString(Integer.toString(widgetId), "");
-        return UsNoteModels.validNoteId(noteId) ? noteId : "";
-    }
-
-    /** The notes the placed widgets show: the app keeps them in the copy. */
-    synchronized JSONArray selectedNoteIds() {
-        JSONObject map = noteWidgets();
-        HashSet<String> ids = new HashSet<>();
-        for (java.util.Iterator<String> keys = map.keys(); keys.hasNext(); ) {
-            String noteId = map.optString(keys.next(), "");
-            if (UsNoteModels.validNoteId(noteId)) ids.add(noteId);
-        }
-        return new JSONArray(ids);
-    }
-
-    /** Widgets removed from the Home screen; with the last one the notes copy goes too. */
-    synchronized void forgetNoteWidgets(int[] removed, boolean noneLeft) {
-        if (noneLeft) { clearNotes(); return; }
-        try {
-            JSONObject map = noteWidgets();
-            for (int id : removed) map.remove(Integer.toString(id));
-            writeAtomic(noteWidgetsFile, new JSONObject().put("ownerHash", owner()).put("widgets", map).toString());
-        } catch (Exception ignored) {}
-    }
-
-    synchronized void clearNotes() {
-        notesFile.delete();
-        noteWidgetsFile.delete();
-    }
-
-    /** The last Nota widget went with US closed: the app revokes its access on the server next time. */
-    synchronized void setNoteRevokePending(boolean pending) {
-        try {
-            if (pending) noteRevokeFile.createNewFile();
-            else noteRevokeFile.delete();
-        } catch (Exception ignored) {}
-    }
-
-    synchronized boolean noteRevokePending() {
-        return noteRevokeFile.exists();
-    }
-
-    private JSONObject noteWidgets() {
-        try {
-            JSONObject stored = new JSONObject(readAtomic(noteWidgetsFile));
-            String owner = owner();
-            JSONObject map = stored.optJSONObject("widgets");
-            return !owner.isEmpty() && owner.equals(stored.optString("ownerHash")) && map != null ? map : new JSONObject();
-        } catch (Exception ignored) {
-            return new JSONObject();
-        }
     }
 
     static boolean isImage(byte[] bytes) {

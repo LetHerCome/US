@@ -180,8 +180,7 @@ test('Ti penso dal widget va all’Edge della build che ha emesso la credential,
   assert.match(read(`${W}/UsThinkWidgetActionReceiver.java`), /new UsWidgetActionClient\(\)\.send\(credentials\.functionsBase\(owner\), token, actionId\)/);
   assert.match(read(`${W}/UsWidgetCredentialStore.java`), /return UsWidgetEndpoints\.functionsBase\(payload\.optString\("functionsUrl", ""\)\);/);
   const bridge = read(`${W}/UsWidgetBridgePlugin.java`);
-  // Ti penso may come without an address (older app); the Nota never (widget-nota-v1).
-  assert.match(bridge, /boolean addressOk = functionsUrl\.isEmpty\(\) \? !note : !UsWidgetEndpoints\.functionsBase\(functionsUrl\)\.isEmpty\(\);/);
+  assert.match(bridge, /boolean addressOk = functionsUrl\.isEmpty\(\) \|\| !UsWidgetEndpoints\.functionsBase\(functionsUrl\)\.isEmpty\(\);/);
   // The app gives its own address: a staging build carries the staging SB_URL.
   assert.match(read('app.js'), /window\.UsWidgetCredentialApi=Object\.freeze\(\{\n  functionsUrl:`\$\{SB_URL\}\/functions\/v1`,/);
   assert.match(read('widgets.js'), /functionsUrl: window\.UsWidgetCredentialApi\.functionsUrl \|\| ''/);

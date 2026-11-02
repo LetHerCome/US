@@ -267,18 +267,17 @@ window.addEventListener('us-identity-change',event=>{
 });
 
 // functionsUrl: the widgets send to the Edge of this build (staging or production).
-// scope: Ti penso by default, "note:rw" for the Nota widget (widget-nota-v1).
 window.UsWidgetCredentialApi=Object.freeze({
   functionsUrl:`${SB_URL}/functions/v1`,
-  async issue(deviceIdHash,scope){
+  async issue(deviceIdHash){
     if(!window.UsPlatform?.isNative||!/^[a-f0-9]{64}$/.test(String(deviceIdHash||'')))return null;
-    const {data,error}=await sb.functions.invoke('widget-device-token',{body:{operation:'issue',deviceIdHash,...(scope==='note:rw'?{scope}:{})}});
+    const {data,error}=await sb.functions.invoke('widget-device-token',{body:{operation:'issue',deviceIdHash}});
     if(error||!data?.token)throw error||new Error('Widget credential unavailable');
     return {token:data.token,expiresAt:data.expiresAt||''};
   },
-  async revoke(deviceIdHash,scope){
+  async revoke(deviceIdHash){
     if(!window.UsPlatform?.isNative||!/^[a-f0-9]{64}$/.test(String(deviceIdHash||'')))return false;
-    const {error}=await sb.functions.invoke('widget-device-token',{body:{operation:'revoke',deviceIdHash,...(scope==='note:rw'?{scope}:{})}});
+    const {error}=await sb.functions.invoke('widget-device-token',{body:{operation:'revoke',deviceIdHash}});
     if(error)throw error;
     return true;
   }
@@ -298,21 +297,6 @@ window.UsWidgetDataApi=Object.freeze({
     if(window.usProfile!==profile||window.usProfile?.couple_id!==cid)return null;
     if(coupleRes.error||profilesRes.error)throw coupleRes.error||profilesRes.error;
     return {startedOn:coupleRes.data?.started_on||'',names:(profilesRes.data||[]).map(p=>p.display_name).filter(Boolean)};
-  },
-  // Nota (widget-nota-v1): the couple's notes for the Nota widgets, the ones
-  // they show first, then the most recent; who touched each last, by name.
-  async notes(ids=[]){
-    const profile=window.usProfile,cid=profile?.couple_id;
-    if(!window.UsPlatform?.isNative||!cid)return null;
-    const fields='id,title,body,items,updated_at,updated_by,revision';
-    const recent=await sb.from('couple_notes').select(fields).eq('couple_id',cid).order('updated_at',{ascending:false}).limit(40);
-    if(window.usProfile!==profile||window.usProfile?.couple_id!==cid)return null;
-    if(recent.error)throw recent.error;
-    const shown=(ids||[]).filter(id=>!(recent.data||[]).some(row=>row.id===id)).slice(0,10);
-    const more=shown.length?await sb.from('couple_notes').select(fields).eq('couple_id',cid).in('id',shown):{data:[]};
-    if(window.usProfile!==profile||window.usProfile?.couple_id!==cid)return null;
-    const partner=usIdentity().partnerName||'';
-    return [...(more.data||[]),...(recent.data||[])].map(row=>({id:row.id,title:row.title||'',body:row.body||'',items:Array.isArray(row.items)?row.items:[],updatedAt:row.updated_at||'',byMe:row.updated_by===profile.id,byName:row.updated_by&&row.updated_by!==profile.id?partner:'',revision:row.revision||1}));
   },
   // A last-known, already-rendered distance label, never coordinates.
   noiDistance(){
