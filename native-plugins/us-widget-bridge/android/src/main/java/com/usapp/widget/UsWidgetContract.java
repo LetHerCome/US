@@ -24,6 +24,8 @@ final class UsWidgetContract {
     private static final Pattern CIVIL_DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
     private static final Pattern DAILY_STATE = Pattern.compile("^(todo|your_turn|waiting|ready)$");
     private static final Pattern LEFT_KIND = Pattern.compile("^(text|photo|audio|video|music)$");
+    // Come stai: the twelve keys of public.member_status.
+    static final Pattern STATUS_KEY = Pattern.compile("^(innamorato|felice|stanco|giu|nervoso|malato|festa|lavoro|studio|palestra|viaggio|tavola)$");
     private static final Pattern COLOR = Pattern.compile("^#[0-9a-fA-F]{6}$");
 
     private UsWidgetContract() {}
@@ -178,7 +180,10 @@ final class UsWidgetContract {
                 .put("photo", photo)
                 .put("daily", daily)
                 .put("left", left)
-                .put("memories", memories);
+                .put("memories", memories)
+                .put("status", new JSONObject()
+                    .put("me", statusPerson(optObject(optObject(input, "status"), "me")))
+                    .put("partner", statusPerson(optObject(optObject(input, "status"), "partner"))));
         } catch (Exception ignored) {
             return null;
         }
@@ -187,6 +192,20 @@ final class UsWidgetContract {
     static JSONObject optObject(JSONObject parent, String key) {
         JSONObject value = parent == null ? null : parent.optJSONObject(key);
         return value == null ? new JSONObject() : value;
+    }
+
+    /** Come stai: a key of the twelve, the words' form and the server's times. Never free text. */
+    static JSONObject statusPerson(JSONObject in) throws Exception {
+        String status = in.optString("status", "");
+        String at = instantText(in.optString("at", ""));
+        String until = instantText(in.optString("until", ""));
+        boolean shown = STATUS_KEY.matcher(status).matches() && !at.isEmpty() && !until.isEmpty();
+        String form = in.optString("form", "");
+        return new JSONObject()
+            .put("status", shown ? status : "")
+            .put("form", form.equals("m") || form.equals("f") ? form : "")
+            .put("at", shown ? at : "")
+            .put("until", shown ? until : "");
     }
 
     static String text(String value, int max) {

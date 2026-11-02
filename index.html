@@ -31,6 +31,7 @@
 <link rel="stylesheet" href="/couple-notes.css?v=us-widgets-note-20261031-79"/>
 <link rel="stylesheet" href="/companions.css?v=us-widgets-note-20261031-79"/>
 <link rel="stylesheet" href="/distance.css?v=us-widgets-note-20261031-79"/>
+<link rel="stylesheet" href="/member-status.css?v=us-widgets-note-20261031-79"/>
 <link rel="stylesheet" href="/pet.css?v=us-widgets-note-20261031-79"/>
 <link rel="stylesheet" href="/settings.css?v=us-widgets-note-20261031-79"/>
 <link rel="stylesheet" href="/identity.css?v=us-widgets-note-20261031-79"/>
@@ -455,6 +456,8 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         <div class="og-row" id="usOggiRow" hidden>
           <button type="button" class="og-next" id="usOggiNext" hidden><span class="us-icon" data-us-icon="calendar-blank" aria-hidden="true"></span><b id="usOggiNextWhen"></b><span id="usOggiNextTitle" translate="no"></span></button>
           <button type="button" class="home-distance-pill us-distance-capsule og-pill" id="distanceWidget" onclick="openDistanceDetail()" aria-haspopup="dialog" aria-label="Distanza tra voi" data-us-distance-state="unknown" hidden><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><b id="distanceValue"></b><span class="us-distance-battery" id="distanceBattery" hidden><span class="us-sr-only">Batteria:</span> <span class="us-sr-only" data-battery-name translate="no"></span> <span class="us-icon" data-us-icon="battery-high" data-battery-icon aria-hidden="true"></span><b data-battery-level></b><span class="us-sr-only" data-battery-charging hidden>in carica</span></span></button>
+          <!-- Come stai (02/11/2026): the partner's state and mine; a tap opens the twelve. -->
+          <button type="button" class="og-pill us-status-pill" id="usOggiStatus" aria-haspopup="dialog" aria-label="Come stai? Scegli" hidden><span data-status-partner translate="no" hidden></span><span data-status-mine>Come stai?</span></button>
         </div>
         <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
         <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
@@ -505,6 +508,41 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         </form>
       </div>
       <div class="us-countdown-status" role="status" aria-live="polite"><span id="usCountdownStatus"></span><button type="button" id="usCountdownRetry" class="ghost">Riprova</button></div>
+    </section>
+  </div>
+
+  <!-- Come stai (02/11/2026): the twelve states, or the words' form (Settings). -->
+  <div id="usStatusSheet" class="us-status-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+    <div class="us-modal-backdrop" data-status-close></div>
+    <section class="us-sheet is-bottom us-status-sheet" role="dialog" aria-modal="true" aria-labelledby="usStatusHeading" data-us-modal-panel>
+      <header class="us-status-head"><div><span class="tiny">COME STAI</span><h2 id="usStatusHeading">Come stai?</h2></div><button type="button" class="us-modal-close" data-us-modal-close data-status-close aria-label="Chiudi come stai"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+      <div data-status-panel="status">
+        <p class="us-status-partner" id="usStatusPartnerLine" translate="no" hidden></p>
+        <div class="us-status-grid" role="group" aria-label="Come stai">
+          <button type="button" class="us-status-choice" data-status="innamorato" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🥰</span><span data-status-word>in amore</span></button>
+          <button type="button" class="us-status-choice" data-status="felice" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😊</span><span data-status-word>felice</span></button>
+          <button type="button" class="us-status-choice" data-status="stanco" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😴</span><span data-status-word>senza energie</span></button>
+          <button type="button" class="us-status-choice" data-status="giu" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😔</span><span data-status-word>giù</span></button>
+          <button type="button" class="us-status-choice" data-status="nervoso" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😤</span><span data-status-word>nervi tesi</span></button>
+          <button type="button" class="us-status-choice" data-status="malato" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🤒</span><span data-status-word>non sto bene</span></button>
+          <button type="button" class="us-status-choice" data-status="festa" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🥳</span><span data-status-word>in festa</span></button>
+          <button type="button" class="us-status-choice" data-status="lavoro" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">💼</span><span data-status-word>al lavoro</span></button>
+          <button type="button" class="us-status-choice" data-status="studio" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">📚</span><span data-status-word>studio</span></button>
+          <button type="button" class="us-status-choice" data-status="palestra" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🏋️</span><span data-status-word>in palestra</span></button>
+          <button type="button" class="us-status-choice" data-status="viaggio" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🚗</span><span data-status-word>in viaggio</span></button>
+          <button type="button" class="us-status-choice" data-status="tavola" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🍝</span><span data-status-word>a tavola</span></button>
+        </div>
+        <p class="us-status-note" id="usStatusNote">Lo vede solo la tua persona, per 12 ore.</p>
+        <button type="button" class="us-status-clear" id="usStatusClear" hidden>Togli</button>
+      </div>
+      <div data-status-panel="form" hidden>
+        <p class="us-status-lead">Come vuoi che diciamo le parole di «Come stai»? Vale per te, nell'app e nel widget.</p>
+        <div class="us-status-forms" role="group" aria-label="Le parole di Come stai">
+          <button type="button" class="us-status-form" data-status-form="m" aria-pressed="false"><b>Al maschile</b><small>innamorato, stanco</small></button>
+          <button type="button" class="us-status-form" data-status-form="f" aria-pressed="false"><b>Al femminile</b><small>innamorata, stanca</small></button>
+          <button type="button" class="us-status-form" data-status-form="" aria-pressed="false"><b>Senza scegliere</b><small>in amore, senza energie</small></button>
+        </div>
+      </div>
     </section>
   </div>
 
@@ -823,6 +861,11 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="palette"></span></span>
           <span class="us-setting-main"><b>Il tuo colore</b><small>Lo vedete tutti e due</small></span>
           <span class="us-setting-value" id="usPersonColorValue"></span><span class="us-icon us-person-color-lock" data-us-icon="lock" aria-hidden="true"></span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="status-form">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="heart"></span></span>
+          <span class="us-setting-main"><b>Come stai</b><small>Le tue parole, al maschile o al femminile</small></span>
+          <span class="us-setting-value" id="usStatusFormValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         </div>
         <div class="us-settings2-label" data-s>NOTIFICHE E PRIVACY</div>
@@ -1314,6 +1357,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 <script defer src="/moments-albums.js?v=us-widgets-note-20261031-79"></script>
 <script defer src="/ricordi-place.js?v=us-widgets-note-20261031-79"></script>
 <script defer src="/partner-battery.js?v=us-widgets-note-20261031-79"></script>
+<script defer src="/member-status.js?v=us-widgets-note-20261031-79"></script>
 <script defer src="/ricordi-inline-carousel.js?v=us-widgets-note-20261031-79"></script>
 <script defer src="/calendar-domain.js?v=us-widgets-note-20261031-79"></script>
 <script defer src="/calendar.js?v=us-widgets-note-20261031-79"></script>

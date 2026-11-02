@@ -177,7 +177,7 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   assert.deepEqual({ ...sent.left }, { kind: 'photo', at: '2026-10-31T09:00:00.000Z' });
   // Ricordi a pila: which memory, never its path or URL (the stack is a separate picture).
   assert.deepEqual({ ...sent.memories }, { state: 'ready', label: 'Un anno fa', anniversary: true, day: '2026-10-31', date: '2025-10-31', title: 'Lisbona', count: 8, stack: 3 });
-  assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'left', 'memories', 'ownerHash', 'photo', 'schemaVersion', 'think', 'updatedAt']);
+  assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'left', 'memories', 'ownerHash', 'photo', 'schemaVersion', 'status', 'think', 'updatedAt']);
 
   assert.equal(await platform.writeWidgetSnapshot({ schemaVersion: 2, ownerHash: 'raw-user-id' }), false, 'owner non hash rifiutato');
 });

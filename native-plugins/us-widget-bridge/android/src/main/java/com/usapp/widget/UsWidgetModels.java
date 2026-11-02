@@ -475,6 +475,62 @@ final class UsWidgetModels {
     private static final String[] MONTHS = { "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
         "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre" };
 
+    // ---------- Come stai ----------
+
+    /** The founder's twelve (02/11/2026): key, emoji, masculine, feminine, undeclined. Same as member-status.js. */
+    static final String[][] STATUSES = {
+        { "innamorato", "🥰", "innamorato", "innamorata", "in amore" },
+        { "felice", "😊", "felice", "felice", "felice" },
+        { "stanco", "😴", "stanco", "stanca", "senza energie" },
+        { "giu", "😔", "giù", "giù", "giù" },
+        { "nervoso", "😤", "nervoso", "nervosa", "nervi tesi" },
+        { "malato", "🤒", "non sto bene", "non sto bene", "non sto bene" },
+        { "festa", "🥳", "in festa", "in festa", "in festa" },
+        { "lavoro", "💼", "al lavoro", "al lavoro", "al lavoro" },
+        { "studio", "📚", "studio", "studio", "studio" },
+        { "palestra", "🏋️", "in palestra", "in palestra", "in palestra" },
+        { "viaggio", "🚗", "in viaggio", "in viaggio", "in viaggio" },
+        { "tavola", "🍝", "a tavola", "a tavola", "a tavola" }
+    };
+
+    static final class StatusPerson {
+        boolean shown = false;
+        String emoji = "";
+        /** "innamorata · da 1 ora". */
+        String line = "";
+        Instant nextChange = null;
+    }
+
+    /** One member's state, while its twelve hours last. */
+    static StatusPerson statusPerson(JSONObject in, Instant now) {
+        StatusPerson out = new StatusPerson();
+        String key = in.optString("status", "");
+        Instant at = UsWidgetContract.instant(in.optString("at", ""));
+        Instant until = UsWidgetContract.instant(in.optString("until", ""));
+        if (at == null || until == null || !now.isBefore(until)) return out;
+        for (String[] s : STATUSES) {
+            if (!s[0].equals(key)) continue;
+            String form = in.optString("form", "");
+            String word = form.equals("m") ? s[2] : form.equals("f") ? s[3] : s[4];
+            out.shown = true;
+            out.emoji = s[1];
+            out.line = word + " · " + statusSince(at, now);
+            Instant step = bubbleNextChange(at, now);
+            out.nextChange = step.isBefore(until) ? step : until;
+            return out;
+        }
+        return out;
+    }
+
+    /** "proprio ora", "da 10 min", "da 1 ora", "da 3 ore" (5-minute steps in the first hour). */
+    static String statusSince(Instant at, Instant now) {
+        long minutes = Math.max(0, Duration.between(at, now).toMinutes());
+        if (minutes < 5) return "proprio ora";
+        if (minutes < 60) return "da " + (minutes / 5 * 5) + " min";
+        if (minutes < 120) return "da 1 ora";
+        return "da " + (minutes / 60) + " ore";
+    }
+
     // ---------- Ricordi a pila ----------
 
     static final class Memories {

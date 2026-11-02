@@ -19,7 +19,8 @@
     { kind: 'photo', name: 'Foto & giorni', copy: 'La foto di Oggi, che cambia ogni ora, con i giorni insieme.', shape: 'square' },
     { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda del giorno e a chi tocca rispondere. Mai le risposte.', shape: 'wide' },
     { kind: 'message', name: 'Lasciato per te', copy: 'Il Lasciato per te ancora chiuso: solo che cosa è e quando.', shape: 'square' },
-    { kind: 'memories', name: 'Ricordi a pila', copy: 'Le vostre foto di questo giorno, un anno fa. Altrimenti le più recenti.', shape: 'square' }
+    { kind: 'memories', name: 'Ricordi a pila', copy: 'Le vostre foto di questo giorno, un anno fa. Altrimenti le più recenti.', shape: 'square' },
+    { kind: 'status', name: 'Come stai', copy: 'Come state tu e chi ami, con un’emoji. Dura 12 ore.', shape: 'wide' }
   ]);
   window.UsWidgetCatalog = CATALOG;
 
@@ -110,6 +111,14 @@
     return `<div class="us-wp-photo"><p>${IMAGE}<span>${esc(text)}</span></p></div>`;
   }
 
+  // Come stai: the two emoji as the app shows them now.
+  function statusPreview() {
+    const s = window.UsMemberStatus;
+    const now = s?.widgetState?.() || {};
+    const emoji = (person) => s?.STATUSES?.find((item) => item.key === person?.status)?.emoji || '·';
+    return `<div class="us-wp-photo"><p><span>${esc(emoji(now.me))} ♡ ${esc(emoji(now.partner))}</span></p></div>`;
+  }
+
   function preview(kind, view) {
     const snapshot = view.snapshot || {};
     if (kind === 'think') return thinkPreview(snapshot);
@@ -118,6 +127,7 @@
     if (kind === 'daily') return dailyPreview(snapshot);
     if (kind === 'message') return messagePreview();
     if (kind === 'memories') return memoriesPreview(snapshot);
+    if (kind === 'status') return statusPreview();
     return photoPreview(snapshot, view.photoPreviewUrl);
   }
 

@@ -180,7 +180,8 @@
       },
       daily: widgetDaily(input?.daily),
       left: widgetLeft(input?.left),
-      memories: widgetMemories(input?.memories)
+      memories: widgetMemories(input?.memories),
+      status: { me: widgetStatusPerson(input?.status?.me), partner: widgetStatusPerson(input?.status?.partner) }
     };
   }
 
@@ -215,6 +216,16 @@
       count: Number.isInteger(memories.count) ? Math.max(0, Math.min(9999, memories.count)) : 0,
       stack: Number.isInteger(memories.stack) ? Math.max(1, Math.min(3, memories.stack)) : 1
     };
+  }
+
+  // Come stai (UsWidgetContract.java): one of the twelve keys, the words' form
+  // and the server's times. Never free text.
+  const STATUS_KEYS = ['innamorato', 'felice', 'stanco', 'giu', 'nervoso', 'malato', 'festa', 'lavoro', 'studio', 'palestra', 'viaggio', 'tavola'];
+  function widgetStatusPerson(person = {}) {
+    const at = safeInstant(person?.at), until = safeInstant(person?.until);
+    const shown = STATUS_KEYS.includes(person?.status) && Boolean(at && until);
+    const form = person?.form === 'm' || person?.form === 'f' ? person.form : '';
+    return { status: shown ? person.status : '', form, at: shown ? at : '', until: shown ? until : '' };
   }
 
   function widgetBattery(couple) {
@@ -329,7 +340,7 @@
     return true;
   }
 
-  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days', 'memories'];
+  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days', 'memories', 'status'];
 
   async function getInstalledWidgets() {
     const plugin = widgetBridge();

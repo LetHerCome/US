@@ -99,5 +99,7 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // map opens): 2.9 -> 2.95 MB.
   // Note condivise (31/10/2026): the notes of the couple in Noi, needed
   // offline too (couple-notes.js/css, ~29 KB): 2.95 -> 3.0 MB.
-  assert.ok(total <= 3.0 * 1024 * 1024, `precache is ${total} bytes: stays under 3.0 MB`);
+  // Widget Pastello and Come stai (02/11/2026): the twelve states in Oggi
+  // (member-status.js/css, ~16 KB) and the widgets' sync: 3.0 -> 3.05 MB.
+  assert.ok(total <= 3.05 * 1024 * 1024, `precache is ${total} bytes: stays under 3.05 MB`);
 });

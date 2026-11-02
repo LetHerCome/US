@@ -1230,6 +1230,7 @@ async function initCloud(){
     usRunWhenIdle(()=>maybeAutoRefreshLocation('launch'),1400);
     // Batteria del partner: read in Noi and the widget, reported only while US is in use.
     usRunWhenIdle(()=>window.UsPartnerBattery?.onForeground?.('launch'),1600);
+    usRunWhenIdle(()=>window.UsMemberStatus?.onForeground?.('launch'),1700);
     usRunWhenIdle(()=>refreshWebPushUi(),1100);
     usRunWhenIdle(()=>hydrateThink(),900);
     // Native has no service-worker image cache. Prewarm only the first few
@@ -2123,8 +2124,8 @@ function oggiNearestNext(...sources){
 function syncOggiRow(){
   const row=document.getElementById('usOggiRow');
   if(!row)return;
-  const next=document.getElementById('usOggiNext'),pill=document.getElementById('distanceWidget');
-  row.hidden=Boolean((!next||next.hidden)&&(!pill||pill.hidden));
+  const next=document.getElementById('usOggiNext'),pill=document.getElementById('distanceWidget'),status=document.getElementById('usOggiStatus');
+  row.hidden=Boolean((!next||next.hidden)&&(!pill||pill.hidden)&&(!status||status.hidden));
 }
 function renderOggiNext(model){
   const button=document.getElementById('usOggiNext');
@@ -6149,6 +6150,7 @@ function startUsRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'bond_weekly_quests',filter:`couple_id=eq.${coupleId}`},()=>{hydrateBondSummary();if(document.getElementById('bond')?.classList.contains('active'))hydrateBond();})
     .on('postgres_changes',{event:'*',schema:'public',table:'couple_notes',filter:`couple_id=eq.${coupleId}`},payload=>window.UsCoupleNotes?.onChange?.(payload))
     .on('postgres_changes',{event:'*',schema:'public',table:'couple_batteries',filter:`couple_id=eq.${coupleId}`},payload=>window.UsPartnerBattery?.onChange?.(payload))
+    .on('postgres_changes',{event:'*',schema:'public',table:'member_status',filter:`couple_id=eq.${coupleId}`},payload=>window.UsMemberStatus?.onChange?.(payload))
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'couples',filter:`id=eq.${coupleId}`},payload=>{renderBondProgress(payload.new?.bond_xp||0);window.USProgression?.refreshAfterAction?.();})
     .subscribe();
 }
@@ -6239,6 +6241,7 @@ async function refreshVisibleState(options={}){
   if(options.foreground)usAfterForeground(()=>maybeAutoRefreshLocation('resume'),900);
   if(options.foreground)usAfterForeground(()=>hydrateProfileAvatars(),1500);
   if(options.foreground)usAfterForeground(()=>window.UsPartnerBattery?.onForeground?.('resume'),1700);
+  if(options.foreground)usAfterForeground(()=>window.UsMemberStatus?.onForeground?.('resume'),1800);
   if(active==='home'||todayOpen){
     if(options.foreground)hydrateHomePhoto(false).catch(()=>{});
     await hydrateToday();

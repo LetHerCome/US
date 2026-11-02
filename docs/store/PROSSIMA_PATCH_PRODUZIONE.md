@@ -421,3 +421,10 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Come:** la pila la disegna US mentre è aperta (all'avvio, ogni 6 ore, quando cambia Ricordi), dalle anteprime che Ricordi già usa, e passa al widget due immagini (2×2 e 4×2). Nella fotografia del widget c'è solo quale ricordo è, mai un percorso o un link. Le immagini stanno nella memoria privata del widget e si cancellano con l'account.
   - **Dati:** nessuno nuovo; legge i Ricordi come la pagina Ricordi. Il tocco apre Ricordi.
   - **Da provare:** mettere il widget; con una foto di oggi un anno fa compare «Un anno fa»; senza, le tre più recenti; aggiungere una foto in Ricordi: la pila cambia.
+- **5 · Come stai** (funzione nuova, app e widget; `docs/missions/widget-come-stai-v1.md`):
+  - **In Oggi** una pillola accanto alla distanza: l'emoji di chi ami e la tua, o «Come stai?». Il tocco apre i 12 stati (🥰 😊 😴 😔 😤 🤒 🥳 💼 📚 🏋️ 🚗 🍝); un tocco salva, «Togli» lo toglie. Dura 12 ore. Niente notifica.
+  - **In Impostazioni › Tu › «Come stai»** ognuno sceglie le sue parole al maschile o al femminile; senza scelta, parole che non cambiano («in amore», «senza energie»).
+  - **Widget** (Android): 2×2 con lo stato di chi ami («innamorata · da 1 ora»); 4×2 con te su metà rosa e chi ami su metà lilla, il cuore nel mezzo. Il tocco apre i 12 stati in Oggi; il widget non scrive mai.
+  - **SQL:** `20261102170000_member_status_v1.sql` (tabella `member_status`, RLS di coppia, ore del server, Realtime). Va su staging **prima** del web, col workflow «Supabase SQL (manual)» approvato dal founder; senza tabella l'app non mostra la pillola.
+  - **Privacy:** aggiunte la riga dei dati e una frase («Come stai»), italiano e inglese.
+  - **Da provare:** scegliere uno stato su un telefono: sull'altro compare subito in Oggi e nel widget; cambiare la forma in Impostazioni; dopo 12 ore sparisce.

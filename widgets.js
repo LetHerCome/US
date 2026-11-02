@@ -13,8 +13,8 @@
 
   const platform = window.UsPlatform;
   const nativeEnabled = Boolean(platform?.isNative && platform?.hasWidgetBridge?.() !== false);
-  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days', 'memories']);
-  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', days: 'bond', memories: 'moments' });
+  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days', 'memories', 'status']);
+  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', days: 'bond', memories: 'moments', status: 'home' });
   // Messaggio opens the message itself: the Ti penso or the closed envelope.
   const MESSAGE_TARGETS = Object.freeze({ think: 'think', left: 'left_for_you' });
   const COUPLE_TTL_MS = 30 * 60 * 1000;
@@ -56,6 +56,9 @@
   const emptyLeft = () => ({ kind: '', at: '' });
   const LEFT_KINDS = Object.freeze(['text', 'photo', 'audio', 'video', 'music']);
   // Ricordi a pila: which memory the stack shows; the pictures are separate files.
+  // Come stai: each one's state (one of twelve), the words' form and the server's times.
+  const emptyStatusPerson = () => ({ status: '', form: '', at: '', until: '' });
+  const emptyStatus = () => ({ me: emptyStatusPerson(), partner: emptyStatusPerson() });
   const emptyMemories = () => ({ state: 'none', label: '', anniversary: false, day: '', date: '', title: '', count: 0, stack: 0 });
   let think = emptyThink();
   let couple = emptyCouple();
@@ -64,6 +67,7 @@
   let daily = emptyDaily();
   let left = emptyLeft();
   let memories = emptyMemories();
+  let comeStai = emptyStatus();
   let memoriesSyncedAt = 0;
   let memoriesSignature = '';
   let memoriesSync = null;
@@ -94,7 +98,8 @@
       photo: { ...photo, next: photo.next.map((item) => ({ ...item })) },
       daily: { ...daily },
       left: { ...left },
-      memories: { ...memories }
+      memories: { ...memories },
+      status: { me: { ...comeStai.me }, partner: { ...comeStai.partner } }
     };
   }
 
@@ -387,6 +392,18 @@
       }finally{noiPortraitSync=null;}
     })();
     return noiPortraitSync;
+  }
+
+  // Come stai (member-status.js): what the app shows, for the widget.
+  function syncStatus() {
+    if (!ownerHash) return Promise.resolve(false);
+    const next = window.UsMemberStatus?.widgetState?.();
+    if (!next) return Promise.resolve(false);
+    const clean = (person) => ({ status: cleanText(person?.status, 16), form: person?.form === 'm' || person?.form === 'f' ? person.form : '', at: isoInstant(person?.at), until: isoInstant(person?.until) });
+    const value = { me: clean(next.me), partner: clean(next.partner) };
+    if (JSON.stringify(value) === JSON.stringify(comeStai)) return Promise.resolve(false);
+    comeStai = value;
+    return scheduleWrite();
   }
 
   // ---------- Ricordi a pila ----------
@@ -732,6 +749,7 @@
       couple = { ...emptyCouple(), ...native.couple, names: [] };
       countdown = { ...emptyCountdown(), ...native.countdown };
       daily = { ...emptyDaily(), ...native.daily };
+      comeStai = { me: { ...emptyStatusPerson(), ...native.status?.me }, partner: { ...emptyStatusPerson(), ...native.status?.partner } };
       memories = native.memories?.state === 'ready' ? { ...emptyMemories(), ...native.memories } : emptyMemories();
       photo = native.photo?.state === 'ready' && native.photo.key === seed.photoKey ? { ...emptyPhoto(), ...native.photo, next: Array.isArray(native.photo.next) ? native.photo.next : [] } : emptyPhoto();
       return true;
@@ -750,6 +768,7 @@
       think = emptyThink();
       left = emptyLeft();
       memories = emptyMemories();
+      comeStai = emptyStatus();
       memoriesSyncedAt = 0;
       memoriesSignature = '';
       couple = emptyCouple();
@@ -795,7 +814,7 @@
     photoResyncRequested = false;
     noiPortraitSignature = '';
     clearRoundPreviews();
-    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();left = emptyLeft();memories = emptyMemories();memoriesSyncedAt = 0;memoriesSignature = '';
+    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();left = emptyLeft();comeStai = emptyStatus();memories = emptyMemories();memoriesSyncedAt = 0;memoriesSignature = '';
     setPreview('');
     const provisioning = credentialProvisionInFlight;
     if (provisioning) try { await provisioning; } catch (_) {}
@@ -856,6 +875,8 @@
     openDestination(page);
     // La domanda di oggi opens the question itself.
     if (link.kind === 'daily' && window.usProfile) setTimeout(() => window.openToday?.(), 120);
+    // Come stai opens the twelve, in Oggi.
+    if (link.kind === 'status' && window.usProfile) setTimeout(() => window.UsMemberStatus?.open?.('status'), 400);
     return Promise.resolve(true);
   }
 
@@ -888,6 +909,7 @@
     authReady,
     publishThink,
     publishLeft,
+    syncStatus,
     memoriesPick,
     syncMemories,
     syncCountdown,
@@ -916,7 +938,7 @@
       if (pendingDestination && event?.detail?.paired) {
         const kind = pendingKind;
         const page = pendingDestination;
-        setTimeout(() => { openDestination(page); if (kind === 'daily') setTimeout(() => window.openToday?.(), 400); }, 60);
+        setTimeout(() => { openDestination(page); if (kind === 'daily') setTimeout(() => window.openToday?.(), 400); if (kind === 'status') setTimeout(() => window.UsMemberStatus?.open?.('status'), 1200); }, 60);
       }
       pendingDestination = '';
       pendingKind = '';
@@ -930,6 +952,7 @@
     window.addEventListener('us:partner-battery-changed', () => { syncNoiBattery().catch(() => {}); });
     window.addEventListener('us:noi-portraits-ready', () => { syncNoiPortrait().catch(() => {}); });
     // Ricordi changed (a photo added, moved or deleted): the stack follows.
+    window.addEventListener('us:member-status-changed', () => { syncStatus().catch(() => {}); });
     window.addEventListener('us:moments-updated', () => { syncMemories({ force: true }).catch(() => {}); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden || !ownerHash) return;

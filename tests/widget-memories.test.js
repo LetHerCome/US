@@ -63,8 +63,8 @@ test('pick: otherwise the newest three; nothing without photos; never the future
 
 test('sync: drawn in the WebView, two pictures to native, Ricordi changes redraw it', () => {
   const widgets = read('widgets.js');
-  assert.match(widgets, /const KINDS = Object\.freeze\(\[[^\]]*'memories'\]\);/);
-  assert.match(widgets, /memories: 'moments' \}\);/);
+  assert.match(widgets, /const KINDS = Object\.freeze\(\[[^\]]*'memories'[^\]]*\]\);/);
+  assert.match(widgets, /memories: 'moments'[,}]/);
   assert.match(widgets, /platform\.writeWidgetNoiPortrait\(owner, small, 'memories'\)/);
   assert.match(widgets, /platform\.writeWidgetNoiPortrait\(owner, wide, 'memories_wide'\)/);
   assert.match(widgets, /canvas\.toBlob\(resolve, 'image\/webp', 0\.9\)/);
@@ -77,7 +77,7 @@ test('sync: drawn in the WebView, two pictures to native, Ricordi changes redraw
   assert.match(api, /\.slice\(0,3\)/);
   const platform = read('platform.js');
   assert.match(platform, /\['pair', 'me', 'partner', 'memories', 'memories_wide'\]\.includes\(slot\)/);
-  assert.match(platform, /const WIDGET_KINDS = \[[^\]]*'memories'\];/);
+  assert.match(platform, /const WIDGET_KINDS = \[[^\]]*'memories'[^\]]*\];/);
   assert.match(platform, /memories: widgetMemories\(input\?\.memories\)/);
 });
 
@@ -88,7 +88,7 @@ test('native: a new provider, 2x2 and 4x2, the label only on the day', () => {
   assert.match(provider, /UsWidgets\.open\(context, "memories", 4701\)/);
   assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(/i);
   const widgetsJava = read(`${JAVA}/UsWidgets.java`);
-  assert.match(widgetsJava, /static final String\[\] KINDS = \{[^}]*\bMEMORIES \};/);
+  assert.match(widgetsJava, /static final String\[\] KINDS = \{[^}]*\bMEMORIES\b[^}]*\};/);
   assert.match(widgetsJava, /case MEMORIES: return UsMemoriesWidgetProvider\.render\(context, state, options\);/);
   assert.match(read(`${JAVA}/UsWidgetStore.java`), /PORTRAIT_SLOTS = \{ "pair", "me", "partner", "memories", "memories_wide" \};/);
   const model = read(`${JAVA}/UsWidgetModels.java`);
