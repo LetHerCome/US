@@ -309,6 +309,23 @@ window.UsWidgetDataApi=Object.freeze({
       distanceNear:known&&Boolean(model.near),
       distanceAt:known&&typeof model.age==='string'?model.age:''};
   },
+  // Ricordi a pila: each Ricordo's day, place, caption and preview path,
+  // newest first (as Ricordi reads them). No URL yet, never sent anywhere.
+  async memories(){
+    const profile=window.usProfile;
+    if(!profile?.couple_id)return null;
+    const query=columns=>sb.from('moments').select(columns).order('moment_date',{ascending:false}).order('created_at',{ascending:false}).limit(1000);
+    const result=await query(`${US_MOMENT_COLUMNS},${US_MOMENT_PLACE_COLUMNS}`).then(res=>res?.error?query(US_MOMENT_COLUMNS):res);
+    if(window.usProfile!==profile)return null;
+    if(result?.error)throw result.error;
+    return {today:localDateISO(),rows:(result?.data||[]).map(row=>({id:String(row.id),date:row.moment_date||'',path:ricordiPreviewPath(row),place:row.place_label||'',caption:row.caption||''}))};
+  },
+  // Signed URLs for the stack's previews; they stay inside the WebView.
+  async memoryUrls(paths){
+    const list=(Array.isArray(paths)?paths:[]).filter(path=>typeof path==='string'&&path).slice(0,3);
+    const urls=await usGetSignedUrls(list,US_MEDIA_URL_TTL_S);
+    return list.map(path=>urls.get(path)||'');
+  },
   // The exact two profile portraits displayed in Noi; signed URLs stay inside the WebView.
   noiAvatarSources(){
     return ['pairAvatarFrancesco','pairAvatarBeatrice'].map(id=>{
@@ -1213,6 +1230,7 @@ async function initCloud(){
     usRunWhenIdle(()=>maybeAutoRefreshLocation('launch'),1400);
     // Batteria del partner: read in Noi and the widget, reported only while US is in use.
     usRunWhenIdle(()=>window.UsPartnerBattery?.onForeground?.('launch'),1600);
+    usRunWhenIdle(()=>window.UsMemberStatus?.onForeground?.('launch'),1700);
     usRunWhenIdle(()=>refreshWebPushUi(),1100);
     usRunWhenIdle(()=>hydrateThink(),900);
     // Native has no service-worker image cache. Prewarm only the first few
@@ -2106,8 +2124,8 @@ function oggiNearestNext(...sources){
 function syncOggiRow(){
   const row=document.getElementById('usOggiRow');
   if(!row)return;
-  const next=document.getElementById('usOggiNext'),pill=document.getElementById('distanceWidget');
-  row.hidden=Boolean((!next||next.hidden)&&(!pill||pill.hidden));
+  const next=document.getElementById('usOggiNext'),pill=document.getElementById('distanceWidget'),status=document.getElementById('usOggiStatus');
+  row.hidden=Boolean((!next||next.hidden)&&(!pill||pill.hidden)&&(!status||status.hidden));
 }
 function renderOggiNext(model){
   const button=document.getElementById('usOggiNext');
@@ -6132,6 +6150,7 @@ function startUsRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'bond_weekly_quests',filter:`couple_id=eq.${coupleId}`},()=>{hydrateBondSummary();if(document.getElementById('bond')?.classList.contains('active'))hydrateBond();})
     .on('postgres_changes',{event:'*',schema:'public',table:'couple_notes',filter:`couple_id=eq.${coupleId}`},payload=>window.UsCoupleNotes?.onChange?.(payload))
     .on('postgres_changes',{event:'*',schema:'public',table:'couple_batteries',filter:`couple_id=eq.${coupleId}`},payload=>window.UsPartnerBattery?.onChange?.(payload))
+    .on('postgres_changes',{event:'*',schema:'public',table:'member_status',filter:`couple_id=eq.${coupleId}`},payload=>window.UsMemberStatus?.onChange?.(payload))
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'couples',filter:`id=eq.${coupleId}`},payload=>{renderBondProgress(payload.new?.bond_xp||0);window.USProgression?.refreshAfterAction?.();})
     .subscribe();
 }
@@ -6222,6 +6241,7 @@ async function refreshVisibleState(options={}){
   if(options.foreground)usAfterForeground(()=>maybeAutoRefreshLocation('resume'),900);
   if(options.foreground)usAfterForeground(()=>hydrateProfileAvatars(),1500);
   if(options.foreground)usAfterForeground(()=>window.UsPartnerBattery?.onForeground?.('resume'),1700);
+  if(options.foreground)usAfterForeground(()=>window.UsMemberStatus?.onForeground?.('resume'),1800);
   if(active==='home'||todayOpen){
     if(options.foreground)hydrateHomePhoto(false).catch(()=>{});
     await hydrateToday();

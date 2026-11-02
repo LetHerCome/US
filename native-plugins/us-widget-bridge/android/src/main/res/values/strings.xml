@@ -33,6 +33,17 @@
     <string name="us_widget_message_description">Il Lasciato per te ancora chiuso: solo che cosa è e quando</string>
     <string name="us_widget_message_empty">Il prossimo Lasciato per te arriverà qui</string>
     <string name="us_widget_message_open">Apri</string>
+    <string name="us_widget_memories_name">Ricordi a pila</string>
+    <string name="us_widget_status_name">Come stai</string>
+    <string name="us_widget_status_description">Come state tu e chi ami, con un’emoji. Dura 12 ore</string>
+    <string name="us_widget_status_me">Tu</string>
+    <string name="us_widget_preview_status_name">La tua persona</string>
+    <string name="us_widget_preview_status_emoji">🥰</string>
+    <string name="us_widget_preview_status_line">in amore · da 1 ora</string>
+    <string name="us_widget_memories_description">Le vostre foto di questo giorno, un anno fa. Altrimenti le più recenti</string>
+    <string name="us_widget_memories_empty">I vostri ricordi appariranno qui</string>
+    <string name="us_widget_preview_memories">Un ricordo</string>
+    <string name="us_widget_preview_memories_date">12 ott</string>
 
     <string name="us_widget_days_name">Giorni insieme</string>
 

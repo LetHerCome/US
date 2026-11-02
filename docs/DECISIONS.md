@@ -420,3 +420,15 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
   9. Countdown.
 - **Non scelti:** il widget «Nota» (la 8). Tolto con un revert: niente migrazione `widget_note_v1`, niente Edge `widget-note`, niente scope `note:rw`. Le Note condivise restano.
 - Le classi dei widget che ne sostituiscono uno restano le stesse, così i widget già messi sulla Home non spariscono.
+
+## 2026-11-02 — «Come stai»: le risposte del founder
+
+**Fonte:** founder, 02/11/2026, risposte alle cinque domande di `docs/missions/widget-come-stai-v1.md`, tutte con la proposta.
+
+1. **Dove si sceglie:** nell'app, in Oggi, accanto alla distanza e alla batteria. Il tocco sul widget apre lì. Nessuna scrittura dal widget e nessun token nuovo.
+2. **Parole:** ognuno sceglie una volta in Impostazioni la forma maschile o femminile; app e widget usano quella. Senza scelta, la parola non declinata («in amore», «senza energie», «nervi tesi»).
+3. **Stati:** i 12 proposti (🥰 😊 😴 😔 😤 🤒 🥳 💼 📚 🏋️ 🚗 🍝). Niente testo libero.
+4. **Durata:** 12 ore, con l'ora del server.
+5. **Notifica:** nessuna; solo widget e app.
+
+**Dati:** `public.member_status`, una riga per persona, senza storico: stato, forma, `set_at` ed `expires_at` scritti dal server. RLS: la coppia legge, ognuno scrive solo il suo. Va con l'account e con l'uscita dalla coppia, entra nell'export, passa dal canale Realtime unico. Migrazione su staging solo col workflow approvato dal founder.

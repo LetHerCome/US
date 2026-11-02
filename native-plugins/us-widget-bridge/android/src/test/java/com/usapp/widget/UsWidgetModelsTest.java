@@ -482,6 +482,89 @@ public class UsWidgetModelsTest {
         assertTrue(UsWidgetModels.message(null, now).empty);
     }
 
+    // ---------- Come stai ----------
+
+    private static JSONObject status(JSONObject me, JSONObject partner) throws Exception {
+        return UsWidgetContract.normalize(snapshot(null).put("status", new JSONObject().put("me", me).put("partner", partner)));
+    }
+
+    @Test
+    public void statusSaysTheWordInTheChosenFormAndHowLongAgo() throws Exception {
+        Instant now = Instant.parse("2026-11-02T12:00:00Z");
+        JSONObject clean = status(
+            new JSONObject().put("status", "stanco").put("form", "m").put("at", "2026-11-02T11:40:00Z").put("until", "2026-11-02T23:40:00Z"),
+            new JSONObject().put("status", "innamorato").put("form", "f").put("at", "2026-11-02T10:55:00Z").put("until", "2026-11-02T22:55:00Z").put("text", "SEGRETO"));
+        assertFalse("never free text", clean.toString().contains("SEGRETO"));
+        JSONObject in = clean.getJSONObject("status");
+        UsWidgetModels.StatusPerson me = UsWidgetModels.statusPerson(in.getJSONObject("me"), now);
+        UsWidgetModels.StatusPerson partner = UsWidgetModels.statusPerson(in.getJSONObject("partner"), now);
+        assertEquals("😴", me.emoji);
+        assertEquals("stanco · da 20 min", me.line);
+        assertEquals(Instant.parse("2026-11-02T12:05:00Z"), me.nextChange);
+        assertEquals("🥰", partner.emoji);
+        assertEquals("innamorata · da 1 ora", partner.line);
+        // Without a form, the undeclined word.
+        JSONObject plain = status(new JSONObject().put("status", "nervoso").put("at", "2026-11-02T11:58:00Z").put("until", "2026-11-02T23:58:00Z"), new JSONObject());
+        assertEquals("nervi tesi · proprio ora", UsWidgetModels.statusPerson(plain.getJSONObject("status").getJSONObject("me"), now).line);
+    }
+
+    @Test
+    public void statusGoesAfterTwelveHoursAndRefusesUnknownStates() throws Exception {
+        JSONObject in = status(
+            new JSONObject().put("status", "felice").put("at", "2026-11-02T00:00:00Z").put("until", "2026-11-02T12:00:00Z"),
+            new JSONObject().put("status", "arrabbiato").put("at", "2026-11-02T11:00:00Z").put("until", "2026-11-02T23:00:00Z")).getJSONObject("status");
+        UsWidgetModels.StatusPerson before = UsWidgetModels.statusPerson(in.getJSONObject("me"), Instant.parse("2026-11-02T11:30:00Z"));
+        assertTrue(before.shown);
+        assertEquals(Instant.parse("2026-11-02T12:00:00Z"), before.nextChange);
+        assertFalse(UsWidgetModels.statusPerson(in.getJSONObject("me"), Instant.parse("2026-11-02T12:00:00Z")).shown);
+        assertEquals("", in.getJSONObject("partner").getString("status"));
+        assertFalse(UsWidgetModels.statusPerson(in.getJSONObject("partner"), Instant.parse("2026-11-02T11:30:00Z")).shown);
+        assertEquals(12, UsWidgetModels.STATUSES.length);
+    }
+
+    // ---------- Ricordi a pila ----------
+
+    private static JSONObject memories(JSONObject memories) throws Exception {
+        return UsWidgetContract.normalize(snapshot(null).put("memories", memories));
+    }
+
+    @Test
+    public void memoriesSayUnAnnoFaOnlyOnTheDay() throws Exception {
+        Instant now = Instant.parse("2026-10-12T09:00:00Z");
+        JSONObject in = new JSONObject().put("state", "ready").put("label", "Un anno fa").put("anniversary", true)
+            .put("day", "2026-10-12").put("date", "2025-10-12").put("title", "Lisbona").put("count", 8).put("stack", 3)
+            .put("path", "secret/a.jpg");
+        JSONObject clean = memories(in);
+        assertFalse("never a path", clean.toString().contains("secret"));
+        UsWidgetModels.Memories view = UsWidgetModels.memories(clean, now);
+        assertTrue(view.shown);
+        assertEquals("Un anno fa", view.pill);
+        assertEquals("Lisbona", view.title);
+        assertEquals("12 ottobre · 8 foto", view.line);
+        assertEquals("12 ott", view.shortDate);
+        assertEquals(3, view.stack);
+        assertEquals(Instant.parse("2026-10-12T22:00:30Z"), view.nextChange);
+        // The next day the stack stays, the label goes.
+        assertEquals("", UsWidgetModels.memories(clean, Instant.parse("2026-10-13T09:00:00Z")).pill);
+    }
+
+    @Test
+    public void memoriesNewestAndUntitledAndEmpty() throws Exception {
+        Instant now = Instant.parse("2026-11-02T09:00:00Z");
+        JSONObject in = new JSONObject().put("state", "ready").put("label", "I più recenti").put("anniversary", false)
+            .put("day", "2026-10-30").put("date", "2026-10-28").put("title", "").put("count", 1).put("stack", 7);
+        UsWidgetModels.Memories view = UsWidgetModels.memories(memories(in), now);
+        assertEquals("I più recenti", view.pill);
+        assertEquals("28 ottobre", view.title);
+        assertEquals("1 foto", view.line);
+        assertEquals("", view.shortDate);
+        assertEquals(3, view.stack);
+        assertNull(view.nextChange);
+        assertFalse(UsWidgetModels.memories(memories(new JSONObject().put("state", "ready").put("date", "ieri")), now).shown);
+        assertFalse(UsWidgetModels.memories(snapshot(null), now).shown);
+        assertFalse(UsWidgetModels.memories(null, now).shown);
+    }
+
     // ---------- Foto & giorni (Pastello) ----------
 
     private static JSONObject photos(String hour) throws Exception {

@@ -72,6 +72,13 @@ const layers=[
     close:()=>window.closeNoiSection?.()
   },
   {
+    // Come stai: back closes the sheet.
+    name:'status',
+    find:()=>document.getElementById('usStatusSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsMemberStatus?.close?.()
+  },
+  {
     name:'distance',
     find:()=>document.getElementById('usDistanceSheet'),
     open:el=>el?.classList.contains('open'),

@@ -13,13 +13,14 @@
 
   const platform = window.UsPlatform;
   const nativeEnabled = Boolean(platform?.isNative && platform?.hasWidgetBridge?.() !== false);
-  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days']);
-  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', days: 'bond' });
+  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days', 'memories', 'status']);
+  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', days: 'bond', memories: 'moments', status: 'home' });
   // Messaggio opens the message itself: the Ti penso or the closed envelope.
   const MESSAGE_TARGETS = Object.freeze({ think: 'think', left: 'left_for_you' });
   const COUPLE_TTL_MS = 30 * 60 * 1000;
   const PHOTO_TTL_MS = 10 * 60 * 1000;
   const PHOTO_MAX_EDGE = 720;
+  const MEMORIES_TTL_MS = 6 * 60 * 60 * 1000;
 
   let ownerHash = '';
   let deviceIdHash = '';
@@ -54,12 +55,22 @@
   // Messaggio: the newest Lasciato per te still closed for me, kind and time only.
   const emptyLeft = () => ({ kind: '', at: '' });
   const LEFT_KINDS = Object.freeze(['text', 'photo', 'audio', 'video', 'music']);
+  // Ricordi a pila: which memory the stack shows; the pictures are separate files.
+  // Come stai: each one's state (one of twelve), the words' form and the server's times.
+  const emptyStatusPerson = () => ({ status: '', form: '', at: '', until: '' });
+  const emptyStatus = () => ({ me: emptyStatusPerson(), partner: emptyStatusPerson() });
+  const emptyMemories = () => ({ state: 'none', label: '', anniversary: false, day: '', date: '', title: '', count: 0, stack: 0 });
   let think = emptyThink();
   let couple = emptyCouple();
   let countdown = emptyCountdown();
   let photo = emptyPhoto();
   let daily = emptyDaily();
   let left = emptyLeft();
+  let memories = emptyMemories();
+  let comeStai = emptyStatus();
+  let memoriesSyncedAt = 0;
+  let memoriesSignature = '';
+  let memoriesSync = null;
 
   async function sha256Hex(value) {
     const bytes = new TextEncoder().encode(String(value || ''));
@@ -86,7 +97,9 @@
       countdown: { ...countdown },
       photo: { ...photo, next: photo.next.map((item) => ({ ...item })) },
       daily: { ...daily },
-      left: { ...left }
+      left: { ...left },
+      memories: { ...memories },
+      status: { me: { ...comeStai.me }, partner: { ...comeStai.partner } }
     };
   }
 
@@ -381,6 +394,195 @@
     return noiPortraitSync;
   }
 
+  // Come stai (member-status.js): what the app shows, for the widget.
+  function syncStatus() {
+    if (!ownerHash) return Promise.resolve(false);
+    const next = window.UsMemberStatus?.widgetState?.();
+    if (!next) return Promise.resolve(false);
+    const clean = (person) => ({ status: cleanText(person?.status, 16), form: person?.form === 'm' || person?.form === 'f' ? person.form : '', at: isoInstant(person?.at), until: isoInstant(person?.until) });
+    const value = { me: clean(next.me), partner: clean(next.partner) };
+    if (JSON.stringify(value) === JSON.stringify(comeStai)) return Promise.resolve(false);
+    comeStai = value;
+    return scheduleWrite();
+  }
+
+  // ---------- Ricordi a pila ----------
+
+  // The photos of this day in a past year ("Un anno fa", the oldest year
+  // first, as Rivivi), or else the newest three. rows: newest first.
+  function memoriesPick(rows, todayISO) {
+    const civil = /^\d{4}-\d{2}-\d{2}$/;
+    if (!civil.test(String(todayISO || ''))) return null;
+    const photos = (Array.isArray(rows) ? rows : [])
+      .filter((row) => row && civil.test(String(row.date || '')) && row.date <= todayISO && typeof row.path === 'string' && row.path)
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    if (!photos.length) return null;
+    const past = photos.filter((row) => row.date.slice(5) === todayISO.slice(5) && row.date < todayISO);
+    const anniversary = past.length > 0;
+    let stack;
+    let label;
+    if (anniversary) {
+      const day = past[past.length - 1].date;
+      const years = Number(todayISO.slice(0, 4)) - Number(day.slice(0, 4));
+      stack = photos.filter((row) => row.date === day).slice(0, 3);
+      label = years === 1 ? 'Un anno fa' : `${years} anni fa`;
+    } else {
+      stack = photos.slice(0, 3);
+      label = 'I più recenti';
+    }
+    const top = stack[0];
+    return {
+      label,
+      anniversary,
+      day: todayISO,
+      date: top.date,
+      title: cleanText(top.place || top.caption || '', 60),
+      count: photos.filter((row) => row.date === top.date).length,
+      rows: stack
+    };
+  }
+
+  // The board's stack: up to three prints, the back ones turned, the top one
+  // with a white border, all with a soft shadow; transparent around them.
+  // 2x2: 176 x 148 dp; 4x2: 220 x 176 dp; drawn at 3x.
+  const STACK_SMALL = { width: 176, height: 148, radius: 14, cards: [
+    { x: 88, y: 80, w: 116, h: 120, turn: 0 }, { x: 88, y: 80, w: 116, h: 120, turn: 7 }, { x: 88, y: 80, w: 116, h: 120, turn: -9 }] };
+  const STACK_WIDE = { width: 220, height: 176, radius: 12, cards: [
+    { x: 112, y: 90, w: 112, h: 132, turn: 0 }, { x: 148, y: 84, w: 112, h: 132, turn: 5 }, { x: 78, y: 88, w: 112, h: 132, turn: -8 }] };
+  const PRINT_FALLBACK = [['#ffd3a8', '#ff7c96', '#5a2f63'], ['#ffe0b0', '#f3b76e', '#8a4b3a'], ['#bfe3ff', '#6d8fd6', '#2e2a5a']];
+
+  async function loadBitmap(url) {
+    if (!url) return null;
+    try {
+      // The same signed URL Ricordi paints: the HTTP cache usually answers.
+      const response = await fetch(url, { credentials: 'omit' });
+      if (!response.ok) throw new Error(`memory_http_${response.status}`);
+      const blob = await response.blob();
+      if (!/^image\//.test(blob.type || 'image/')) throw new Error('memory_not_image');
+      return await createImageBitmap(blob, { imageOrientation: 'from-image' });
+    } catch (error) {
+      console.warn('[US Widget] memory photo', error);
+      return null;
+    }
+  }
+
+  async function composeStack(bitmaps, layout) {
+    const S = 3;
+    const canvas = document.createElement('canvas');
+    canvas.width = layout.width * S;
+    canvas.height = layout.height * S;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('memories_canvas');
+    const rounded = (w, h, r) => {
+      ctx.beginPath();
+      ctx.moveTo(-w / 2 + r, -h / 2);
+      ctx.arcTo(w / 2, -h / 2, w / 2, h / 2, r);
+      ctx.arcTo(w / 2, h / 2, -w / 2, h / 2, r);
+      ctx.arcTo(-w / 2, h / 2, -w / 2, -h / 2, r);
+      ctx.arcTo(-w / 2, -h / 2, w / 2, -h / 2, r);
+      ctx.closePath();
+    };
+    // Back to front: the third print, the second, then the top one.
+    for (let i = bitmaps.length - 1; i >= 0; i--) {
+      const card = layout.cards[i];
+      const w = card.w * S, h = card.h * S, r = layout.radius * S;
+      ctx.save();
+      ctx.translate(card.x * S, card.y * S);
+      ctx.rotate(card.turn * Math.PI / 180);
+      ctx.shadowColor = i === 0 ? 'rgba(26,16,32,.28)' : 'rgba(26,16,32,.22)';
+      ctx.shadowBlur = (i === 0 ? 20 : 16) * S;
+      ctx.shadowOffsetY = (i === 0 ? 8 : 6) * S;
+      rounded(w, h, r);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.shadowColor = 'transparent';
+      // The top print has the board's white border.
+      const inset = i === 0 ? 4 * S : 0;
+      ctx.save();
+      rounded(w - inset * 2, h - inset * 2, Math.max(0, r - inset));
+      ctx.clip();
+      const bitmap = bitmaps[i];
+      if (bitmap) {
+        const scale = Math.max((w - inset * 2) / bitmap.width, (h - inset * 2) / bitmap.height);
+        const bw = bitmap.width * scale, bh = bitmap.height * scale;
+        ctx.drawImage(bitmap, -bw / 2, -bh / 2, bw, bh);
+      } else {
+        const [a, b, c] = PRINT_FALLBACK[i];
+        const glow = ctx.createRadialGradient(-w * 0.25, -h * 0.3, 0, -w * 0.25, -h * 0.3, Math.max(w, h));
+        glow.addColorStop(0, a); glow.addColorStop(0.5, b); glow.addColorStop(1, c);
+        ctx.fillStyle = glow;
+        ctx.fillRect(-w / 2, -h / 2, w, h);
+      }
+      ctx.restore();
+      ctx.restore();
+    }
+    let blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.9));
+    if (!blob || blob.type !== 'image/webp') blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('memories_encode');
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+    return dataUrl.slice(dataUrl.indexOf(',') + 1);
+  }
+
+  // Ricordi a pila: every few hours, on a new day, or when Ricordi changes.
+  // The photos are drawn here; only the two pictures reach native.
+  function syncMemories({ force = false } = {}) {
+    if (!nativeEnabled || !ownerHash || !platform?.writeWidgetNoiPortrait) return Promise.resolve(false);
+    if (memoriesSync) return memoriesSync;
+    const api = window.UsWidgetDataApi;
+    if (typeof api?.memories !== 'function' || typeof api?.memoryUrls !== 'function') return Promise.resolve(false);
+    const fresh = Date.now() - memoriesSyncedAt < MEMORIES_TTL_MS;
+    const token = generation, owner = ownerHash;
+    memoriesSync = (async () => {
+      const bitmaps = [];
+      try {
+        if (!force && fresh && memories.day === localDay()) return false;
+        const data = await api.memories();
+        if (token !== generation || !data) return false;
+        const pick = memoriesPick(data.rows, data.today);
+        memoriesSyncedAt = Date.now();
+        if (!pick) {
+          if (memories.state === 'none') return false;
+          memories = emptyMemories();
+          memoriesSignature = '';
+          return scheduleWrite();
+        }
+        const next = { state: 'ready', label: pick.label, anniversary: pick.anniversary, day: pick.day, date: pick.date, title: pick.title, count: pick.count, stack: pick.rows.length };
+        const signature = JSON.stringify([pick.rows.map((row) => [row.id, row.path]), next]);
+        if (signature === memoriesSignature) return false;
+        const urls = await api.memoryUrls(pick.rows.map((row) => row.path));
+        if (token !== generation) return false;
+        for (const url of urls) bitmaps.push(await loadBitmap(url));
+        if (token !== generation) return false;
+        const small = await composeStack(bitmaps, STACK_SMALL);
+        const wide = await composeStack(bitmaps, STACK_WIDE);
+        if (token !== generation) return false;
+        const ok = await platform.writeWidgetNoiPortrait(owner, small, 'memories')
+          && await platform.writeWidgetNoiPortrait(owner, wide, 'memories_wide');
+        if (token !== generation || !ok) return false;
+        memories = next;
+        memoriesSignature = signature;
+        return scheduleWrite();
+      } catch (error) {
+        console.warn('[US Widget] memories', error);
+        return false;
+      } finally {
+        for (const bitmap of bitmaps) bitmap?.close?.();
+        memoriesSync = null;
+      }
+    })();
+    return memoriesSync;
+  }
+
+  function localDay() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  }
+
   // Oggi's currently visible hero photo, downscaled in the WebView and
   // handed to native as bytes. The signed URL never leaves this page.
   // Android refreshes the cached photo on launch and while US is active;
@@ -547,6 +749,8 @@
       couple = { ...emptyCouple(), ...native.couple, names: [] };
       countdown = { ...emptyCountdown(), ...native.countdown };
       daily = { ...emptyDaily(), ...native.daily };
+      comeStai = { me: { ...emptyStatusPerson(), ...native.status?.me }, partner: { ...emptyStatusPerson(), ...native.status?.partner } };
+      memories = native.memories?.state === 'ready' ? { ...emptyMemories(), ...native.memories } : emptyMemories();
       photo = native.photo?.state === 'ready' && native.photo.key === seed.photoKey ? { ...emptyPhoto(), ...native.photo, next: Array.isArray(native.photo.next) ? native.photo.next : [] } : emptyPhoto();
       return true;
     } catch (_) {
@@ -563,6 +767,10 @@
       generation += 1;
       think = emptyThink();
       left = emptyLeft();
+      memories = emptyMemories();
+      comeStai = emptyStatus();
+      memoriesSyncedAt = 0;
+      memoriesSignature = '';
       couple = emptyCouple();
       countdown = emptyCountdown();
       photo = emptyPhoto();
@@ -588,6 +796,7 @@
     setTimeout(() => {
       syncPhoto({ force: true }).catch(() => {});
       syncNoiPortrait({ force: true }).catch(() => {});
+      syncMemories().catch(() => {});
     }, 2500);
     return true;
   }
@@ -605,7 +814,7 @@
     photoResyncRequested = false;
     noiPortraitSignature = '';
     clearRoundPreviews();
-    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();left = emptyLeft();
+    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();left = emptyLeft();comeStai = emptyStatus();memories = emptyMemories();memoriesSyncedAt = 0;memoriesSignature = '';
     setPreview('');
     const provisioning = credentialProvisionInFlight;
     if (provisioning) try { await provisioning; } catch (_) {}
@@ -666,6 +875,8 @@
     openDestination(page);
     // La domanda di oggi opens the question itself.
     if (link.kind === 'daily' && window.usProfile) setTimeout(() => window.openToday?.(), 120);
+    // Come stai opens the twelve, in Oggi.
+    if (link.kind === 'status' && window.usProfile) setTimeout(() => window.UsMemberStatus?.open?.('status'), 400);
     return Promise.resolve(true);
   }
 
@@ -689,6 +900,7 @@
     await write;
     if (kind === 'photo') await syncPhoto({ force: true });
     if (kind === 'noi') await syncNoiPortrait({ force: true });
+    if (kind === 'memories') await syncMemories({ force: true });
     return platform.requestWidgetPin(kind);
   }
 
@@ -697,6 +909,9 @@
     authReady,
     publishThink,
     publishLeft,
+    syncStatus,
+    memoriesPick,
+    syncMemories,
     syncCountdown,
     syncDaily,
     syncCouple,
@@ -723,7 +938,7 @@
       if (pendingDestination && event?.detail?.paired) {
         const kind = pendingKind;
         const page = pendingDestination;
-        setTimeout(() => { openDestination(page); if (kind === 'daily') setTimeout(() => window.openToday?.(), 400); }, 60);
+        setTimeout(() => { openDestination(page); if (kind === 'daily') setTimeout(() => window.openToday?.(), 400); if (kind === 'status') setTimeout(() => window.UsMemberStatus?.open?.('status'), 1200); }, 60);
       }
       pendingDestination = '';
       pendingKind = '';
@@ -736,6 +951,9 @@
     window.addEventListener('us:distance-changed', () => { syncNoiDistance().catch(() => {}); });
     window.addEventListener('us:partner-battery-changed', () => { syncNoiBattery().catch(() => {}); });
     window.addEventListener('us:noi-portraits-ready', () => { syncNoiPortrait().catch(() => {}); });
+    // Ricordi changed (a photo added, moved or deleted): the stack follows.
+    window.addEventListener('us:member-status-changed', () => { syncStatus().catch(() => {}); });
+    window.addEventListener('us:moments-updated', () => { syncMemories({ force: true }).catch(() => {}); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden || !ownerHash) return;
       // The phone's widgets are not on screen while US is: they refresh just
@@ -749,6 +967,7 @@
         syncNoiDistance().catch(() => {});
         syncNoiPortrait().catch(() => {});
         syncPhoto().catch(() => {});
+        syncMemories().catch(() => {});
       }, 2000);
     });
   }

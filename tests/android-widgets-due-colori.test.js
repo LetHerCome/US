@@ -23,27 +23,60 @@ test('widgets: the palette is the app tokens (ui-foundation.css)', () => {
   assert.match(res('drawable/us_widget_background.xml'), /android:startColor="#FF17111C"[\s\S]*<stroke android:width="1dp" android:color="#17F7EFE9"/);
 });
 
+// Widget Pastello (02/11/2026): every widget's picker preview is its Pastello
+// card, both the layout (Android 12+) and the picture many launchers show
+// instead (Xiaomi among them). Generic: never a real name, face or photo.
+const KINDS = ['think', 'noi', 'photo', 'countdown', 'daily', 'message', 'memories', 'status'];
+
 test('widgets: picker previews are generic, never a real name, face or photo', () => {
-  const previews = ['think', 'noi', 'photo', 'countdown'].map((k) => res(`layout/us_widget_preview_${k}.xml`)).join('\n');
+  const previews = KINDS.map((k) => res(`layout/us_widget_preview_${k}.xml`)).join('\n');
   const strings = res('values/strings.xml');
   for (const text of [previews, strings]) assert.doesNotMatch(text, /Beatrice|Francesco|\bBea\b|\bFra\b/);
   assert.doesNotMatch(previews, /android:text="[^@]/, 'preview text comes from strings.xml');
+  assert.doesNotMatch(previews, /us_widget_background"/, 'no night card left in a preview');
   // Pastello: the board's sunset instead of a photo.
   assert.match(res('layout/us_widget_preview_photo.xml'), /@drawable\/us_widget_pastel_photo_empty/);
   assert.match(res('drawable/us_widget_pastel_photo_empty.xml'), /<gradient/);
-  for (const info of ['think', 'noi', 'photo', 'countdown']) {
+  for (const info of KINDS) {
     const xml = res(`xml/us_widget_${info}_info.xml`);
-    assert.match(xml, new RegExp(`android:previewLayout="@layout/us_widget_preview_${info}"`));
-    assert.match(xml, new RegExp(`android:previewImage="@drawable/us_widget_preview_${info}"`));
+    assert.match(xml, new RegExp(`android:previewLayout="@layout/us_widget_preview_${info}"`), info);
+    assert.match(xml, new RegExp(`android:previewImage="@drawable/us_widget_preview_${info}"`), info);
+  }
+  // Giorni insieme is part of Foto & giorni: out of the list, still working where it is.
+  assert.match(res('xml/us_widget_days_info.xml'), /android:widgetFeatures="hide_from_picker"/);
+});
+
+test('widgets: preview PNGs are the Pastello cards, at 2x (168dp square, 192x96dp Noi, 240x120dp wide)', () => {
+  const png = (k) => fs.readFileSync(path.join(ROOT, PLUGIN, `res/drawable-nodpi/us_widget_preview_${k}.png`));
+  const size = (k) => { const bytes = png(k); return [bytes.readUInt32BE(16), bytes.readUInt32BE(20)]; };
+  for (const k of ['think', 'photo', 'countdown', 'message', 'memories']) assert.deepEqual(size(k), [336, 336], k);
+  assert.deepEqual(size('noi'), [384, 192]);
+  for (const k of ['daily', 'status']) assert.deepEqual(size(k), [480, 240], k);
+  for (const k of KINDS) {
+    const bytes = png(k);
+    assert.equal(bytes[25], 6, `${k}: RGBA, the rounded corners are transparent`);
+    assert.ok(bytes.length < 120 * 1024, `${k}: small`);
   }
 });
 
-test('widgets: preview PNGs keep their size (2x of 168dp, Noi 192x96dp) and are new', () => {
-  const size = (k) => { const b = fs.readFileSync(path.join(ROOT, PLUGIN, `res/drawable-nodpi/us_widget_preview_${k}.png`)); return [b.readUInt32BE(16), b.readUInt32BE(20)]; };
-  assert.deepEqual(size('think'), [336, 336]);
-  assert.deepEqual(size('photo'), [336, 336]);
-  assert.deepEqual(size('countdown'), [336, 336]);
-  assert.deepEqual(size('noi'), [384, 192]);
+test('widgets: after an app update every widget redraws at once from the saved snapshot', () => {
+  const manifest = read(`${PLUGIN}/AndroidManifest.xml`);
+  assert.match(manifest, /UsWidgetSystemReceiver"\s+android:exported="false">\s*<intent-filter>[\s\S]*?<action android:name="android\.intent\.action\.MY_PACKAGE_REPLACED" \/>[\s\S]*?<\/intent-filter>/);
+  const receiver = read(`${JAVA}/UsWidgetSystemReceiver.java`);
+  assert.match(receiver, /case Intent\.ACTION_MY_PACKAGE_REPLACED:[\s\S]*?UsWidgets\.refreshAll\(context\);/);
+  // refreshAll draws every kind from the stored snapshot, with the new layouts.
+  const widgets = read(`${JAVA}/UsWidgets.java`);
+  assert.match(widgets, /static synchronized void refreshAll\(Context context\)/);
+});
+
+test('Impostazioni › Widget: each tile is the Pastello card of its widget', () => {
+  const css = read('dc-settings.css');
+  for (const rule of ['.us-wp-think{background:linear-gradient(140deg,#ffe3ea,#efe4ff)', '.us-wp-countdown{background:linear-gradient(160deg,#dbeaff', '.us-wp-daily{display:grid', '.us-wp-message{background:linear-gradient(150deg,#d9ccff,#f6d3f0)', '.us-wp-memories{position:relative', '.us-wp-status{display:grid']) {
+    assert.ok(css.includes(`#usWidgetHub ${rule}`), rule);
+  }
+  const hub = read('widget-hub.js');
+  assert.match(hub, /data-style="pastel"/);
+  assert.doesNotMatch(hub, /data-style="\$\{esc\(c\.style/);
 });
 
 // Pastello (founder, 02/11/2026): the light theme of the approved board.

@@ -429,3 +429,18 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Solo tipo e ora** (founder, 31/10): mai le parole, la foto o il link.
   - **Cambia:** mostra solo il Lasciato per te ancora chiuso, non più l'ultimo Ti penso (per quello c'è il widget Ti penso). Senza niente da aprire: «Il prossimo Lasciato per te arriverà qui».
   - **Da provare:** lasciare una foto da un telefono: sull'altro, aperta US, il widget dice «Ti ha lasciato una foto · ora»; aprirla: il widget torna vuoto; il 4×2 con «Apri».
+- **6 · Ricordi a pila** (widget nuovo): carta crema-lilla con una pila di tre foto, quelle dietro girate, quella sopra col bordo bianco. Sotto il posto in Fraunces e il giorno («Lisbona · 12 ott»); nel 4×2 a destra «Un anno fa», il posto, «12 ottobre · 8 foto» e un trattino per ogni foto della pila.
+  - **Quali foto:** le foto di questo giorno in un anno passato («Un anno fa», «2 anni fa»: vince l'anno più lontano, come Rivivi); altrimenti le tre più recenti, con «I più recenti». «Un anno fa» vale solo quel giorno: a mezzanotte l'etichetta sparisce, la pila resta finché US non si riapre.
+  - **Come:** la pila la disegna US mentre è aperta (all'avvio, ogni 6 ore, quando cambia Ricordi), dalle anteprime che Ricordi già usa, e passa al widget due immagini (2×2 e 4×2). Nella fotografia del widget c'è solo quale ricordo è, mai un percorso o un link. Le immagini stanno nella memoria privata del widget e si cancellano con l'account.
+  - **Dati:** nessuno nuovo; legge i Ricordi come la pagina Ricordi. Il tocco apre Ricordi.
+  - **Da provare:** mettere il widget; con una foto di oggi un anno fa compare «Un anno fa»; senza, le tre più recenti; aggiungere una foto in Ricordi: la pila cambia.
+- **Anteprime Pastello:** nella lista dei widget del telefono ogni widget ha la sua carta Pastello, sia come layout (Android 12+) sia come immagine PNG, che molti launcher (Xiaomi compreso) mostrano al posto del layout. In Impostazioni › Widget ogni tessera è la carta del suo widget. «Giorni insieme» non compare più nella lista (è dentro Foto & giorni); quelli già sulla Home continuano a funzionare.
+  - **Dopo un aggiornamento** i widget già sulla Home si ridisegnano da soli col layout nuovo (`MY_PACKAGE_REPLACED`, c'era già dalla V1; ora ha un test). Su Xiaomi, se l'avvio automatico di US è spento, il sistema può bloccare questo segnale: allora si ridisegnano alla prima apertura di US o al giro dell'ora.
+  - **Da provare:** aprire la lista dei widget del telefono: tutte carte chiare, nessuna scura; Impostazioni › Widget in US.
+- **5 · Come stai** (funzione nuova, app e widget; `docs/missions/widget-come-stai-v1.md`):
+  - **In Oggi** una pillola accanto alla distanza: l'emoji di chi ami e la tua, o «Come stai?». Il tocco apre i 12 stati (🥰 😊 😴 😔 😤 🤒 🥳 💼 📚 🏋️ 🚗 🍝); un tocco salva, «Togli» lo toglie. Dura 12 ore. Niente notifica.
+  - **In Impostazioni › Tu › «Come stai»** ognuno sceglie le sue parole al maschile o al femminile; senza scelta, parole che non cambiano («in amore», «senza energie»).
+  - **Widget** (Android): 2×2 con lo stato di chi ami («innamorata · da 1 ora»); 4×2 con te su metà rosa e chi ami su metà lilla, il cuore nel mezzo. Il tocco apre i 12 stati in Oggi; il widget non scrive mai.
+  - **SQL:** `20261102170000_member_status_v1.sql` (tabella `member_status`, RLS di coppia, ore del server, Realtime). Va su staging **prima** del web, col workflow «Supabase SQL (manual)» approvato dal founder; senza tabella l'app non mostra la pillola.
+  - **Privacy:** aggiunte la riga dei dati e una frase («Come stai»), italiano e inglese.
+  - **Da provare:** scegliere uno stato su un telefono: sull'altro compare subito in Oggi e nel widget; cambiare la forma in Impostazioni; dopo 12 ore sparisce.

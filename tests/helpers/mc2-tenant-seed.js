@@ -15,6 +15,7 @@ async function seedTenant(db,cid,u,v,n){
     insert into public.calendar_reminders(couple_id,entry_id,recipient_id,offset_minutes,requested_by) values('${cid}','${id(2)}','${v}',1440,'${u}');
     insert into public.couple_locations(user_id,couple_id,latitude,longitude) values('${u}','${cid}',41,12),('${v}','${cid}',42,13);
     insert into public.couple_batteries(user_id,couple_id,level,charging) values('${u}','${cid}',18,false),('${v}','${cid}',64,true);
+    insert into public.member_status(user_id,couple_id,status,form) values('${u}','${cid}','felice','m'),('${v}','${cid}','stanco',null);
     insert into public.daily_answers(question_id,user_id,couple_id,answer) values('${qid}','${u}','${cid}','PRIVATE-${n}-one'),('${qid}','${v}','${cid}','PRIVATE-${n}-two');
     insert into public.daily_question_keepsakes(couple_id,question_id,question_text,question_date,francesco_answer,beatrice_answer,revealed_at,kept_by_role)
       values('${cid}','${qid}','Private kept ${n}','2026-01-01','Private one','Private two',now(),'francesco');

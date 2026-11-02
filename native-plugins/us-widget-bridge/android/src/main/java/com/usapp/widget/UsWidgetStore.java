@@ -215,7 +215,9 @@ final class UsWidgetStore {
     // WebView-prepared portraits, never a signed URL: "me" and "partner" are
     // the round ones of every Pastello widget. "pair", the two-person portrait
     // of the old Noi 2x1, is no longer written; it stays so the wipe removes it.
-    static final String[] PORTRAIT_SLOTS = { "pair", "me", "partner" };
+    // "memories" and "memories_wide": the stack of Ricordi a pila, drawn by US
+    // as one picture for the 2x2 and one for the 4x2.
+    static final String[] PORTRAIT_SLOTS = { "pair", "me", "partner", "memories", "memories_wide" };
 
     static boolean validPortraitSlot(String slot) {
         for (String known : PORTRAIT_SLOTS) if (known.equals(slot)) return true;

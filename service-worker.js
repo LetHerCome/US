@@ -1,4 +1,4 @@
-const BUILD_ID = "us-staging-20261102-83";
+const BUILD_ID = "us-staging-20261102-84";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -51,6 +51,7 @@ const APP_SHELL = [
   versioned("/ricordi-place.css"),
   versioned("/ricordi-place.js"),
   versioned("/partner-battery.js"),
+  versioned("/member-status.js"),
   versioned("/navigation.js"),
   versioned("/games.css"),
   versioned("/games.js"),
@@ -66,6 +67,7 @@ const APP_SHELL = [
   versioned("/companions.js"),
   versioned("/distance.css"),
   versioned("/distance.js"),
+  versioned("/member-status.css"),
   versioned("/app-update.js"),
   versioned("/person-colors.js"),
   versioned("/pet.css"),

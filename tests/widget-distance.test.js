@@ -94,7 +94,7 @@ test('data: the app hands over the distance, "vicini" and when it was read; neve
 
 test('portraits: one per person, by owner and slot, all wiped with the account', () => {
   const store = read(`${JAVA}/UsWidgetStore.java`);
-  assert.match(store, /static final String\[\] PORTRAIT_SLOTS = \{ "pair", "me", "partner" \};/);
+  assert.match(store, /static final String\[\] PORTRAIT_SLOTS = \{ "pair", "me", "partner"[^}]*\};/);
   assert.match(store, /if \(!validPortraitSlot\(slot\) \|\| !owner\(\)\.equals\(ownerHash\)/);
   assert.match(store, /for \(String slot : PORTRAIT_SLOTS\) \{\s*portraitFile\(slot\)\.delete\(\);\s*portraitMetaFile\(slot\)\.delete\(\);/);
   const widgets = read('widgets.js');

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker preview (Android 12+), Come stai in Pastello. Generic: a
+     lilla circle without a face, every text from strings.xml. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/us_widget_pastel_status"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/us_widget_pastel_circle"
+            android:tint="@color/us_widget_lilla" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:fontFamily="@font/us_figtree"
+            android:includeFontPadding="false"
+            android:text="@string/us_widget_preview_status_name"
+            android:textColor="@color/us_widget_pastel_ink"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="@string/us_widget_preview_status_emoji"
+        android:textSize="56sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/us_figtree"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="@string/us_widget_preview_status_line"
+        android:textColor="@color/us_widget_pastel_sub"
+        android:textSize="11sp" />
+</LinearLayout>
