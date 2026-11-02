@@ -83,15 +83,14 @@ test('Distanza e batteria 2x1: the board\'s card, the same round portraits', () 
   assert.doesNotMatch(round, /no-store/, 'a reused signed URL comes from the HTTP cache');
 });
 
-test('Countdown: the base style is the upright serif of Oggi; reward styles keep their look', () => {
+// Countdown Pastello (02/11): one look for every style; tests/widget-countdown.test.js.
+test('Countdown: the board\'s card replaces the night card and the reward looks', () => {
   const provider = read(`${JAVA}/UsCountdownWidgetProvider.java`);
   const layout = res('layout/us_widget_countdown.xml');
-  assert.match(layout, /@\+id\/us_cd_value_display/);
-  assert.match(layout, /@\+id\/us_cd_clock_display/);
-  assert.match(provider, /int titleColor = 0xFFFF8B7B;\s*int face = DISPLAY;/);
-  for (const style of ['glass', 'orbit']) {
-    const block = provider.slice(provider.indexOf(`case "${style}":`), provider.indexOf('break;', provider.indexOf(`case "${style}":`)));
-    assert.match(block, /rewardBase\(look\);/, `${style} keeps its pre-1.0 base`);
+  assert.match(layout, /android:background="@drawable\/us_widget_pastel_countdown"/);
+  assert.match(layout, /android:id="@\+id\/us_cd_value"[\s\S]*?android:fontFamily="@font\/us_fraunces"/);
+  assert.doesNotMatch(provider, /rewardBase|us_widget_cd_|Look look/);
+  for (const name of ['aurora_bg', 'aurora_glow', 'chrome_tag', 'glass_bg', 'orbit_ring', 'signal_bg', 'signal_tag']) {
+    assert.equal(fs.existsSync(path.join(ROOT, PLUGIN, `res/drawable/us_widget_cd_${name}.xml`)), false, name);
   }
-  assert.match(provider, /private static void rewardBase\(Look look\) \{\s*look\.titleColor = 0xE6FFF8FD;\s*look\.face = LIGHT;/);
 });

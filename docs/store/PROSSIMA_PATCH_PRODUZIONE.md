@@ -405,3 +405,10 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Niente mappa:** tolti lo sfondo `us_widget_noi_map_v1.webp` (era `DRAFT`, non più nel manifest), le nuvolette dei Ti penso e la doppia foto del vecchio 2×1. Nella privacy resta l'attribuzione di OpenStreetMap per la Mappa dei Ricordi; via la frase sullo sfondo del widget, e il widget si chiama «Distanza e batteria» (italiano e inglese).
   - **Dati:** nessuno nuovo. Al widget arrivano anche «vicini» (prima si perdeva) e l'ora della lettura più vecchia delle due, già calcolate dall'app; mai le coordinate.
   - **Da provare:** mettere il widget nel 2×2 e nel 4×2; con la posizione condivisa la distanza e «aggiornato …», vicini sotto i 3 km; la batteria del partner; il tocco apre Noi.
+- **9 · Countdown** (sostituisce l'attuale): lo stesso Countdown scelto su Oggi.
+  - 2×2: carta azzurro-lilla-rosa, l'etichetta bianca «Mancano» («Ci siamo» il giorno stesso, «Insieme da» per i giorni insieme), il numero in Fraunces prugna, «giorni · Lisbona» in corsivo e la barra rosa-lilla;
+  - 4×2: un cielo con la sera a sinistra, «Lisbona · 14 novembre», il numero con «giorni» e le ore («4 ore»), 14 tacche;
+  - barra e tacche sono le ultime due settimane: a 12 giorni se ne accendono 2, il giorno stesso tutte. Per «Insieme da» l'anno verso il prossimo anniversario;
+  - l'ultimo giorno di un Countdown con l'ora il numero diventa il conto alla rovescia che va da solo, come prima;
+  - **differenze dalla tavola:** le ore senza i minuti («4 ore», non «4 ore · 21 minuti»), così il widget si ridisegna una volta all'ora e non ogni minuto; la riga «giorni a Lisbona» diventa «giorni · Lisbona» perché il titolo è libero («giorni a Il nostro momento» non va). Gli stili premio del Countdown (Aurora, Chrome, Orbit…) restano nell'app ma non cambiano più l'aspetto del widget.
+  - **Da provare:** un Countdown a una data e uno con l'ora, nel 2×2 e nel 4×2; l'ultimo giorno il conto alla rovescia; «Insieme da».

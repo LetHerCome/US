@@ -9,14 +9,19 @@ import android.view.View;
 import android.widget.RemoteViews;
 
 /**
- * Countdown: the native face of the same Countdown selected in Oggi. It has
- * no editor and no data of its own; it renders the semantic selection
- * (together / days / clock + style) and ticks natively in the final day.
+ * Countdown, Pastello (approved board, 02/11/2026): the native face of the
+ * same Countdown selected in Oggi. It has no editor and no data of its own;
+ * it renders the semantic selection (together / days / clock) and ticks
+ * natively in the final day. 2x2: "Mancano", the number, "giorni · Lisbona"
+ * and the bar of the last two weeks; 4x2: the sky, "Lisbona · 14 novembre",
+ * the number with the hours, 14 ticks. One look for every Countdown style.
  */
 public final class UsCountdownWidgetProvider extends AppWidgetProvider {
-    private static final int[] VALUES = { R.id.us_cd_value_light, R.id.us_cd_value_serif, R.id.us_cd_value_bold, R.id.us_cd_value_display };
-    private static final int[] CLOCKS = { R.id.us_cd_clock_light, R.id.us_cd_clock_serif, R.id.us_cd_clock_bold, R.id.us_cd_clock_display };
-    private static final int LIGHT = 0, SERIF = 1, BOLD = 2, DISPLAY = 3;
+    private static final int[] TICKS = {
+        R.id.us_cd_tick_0, R.id.us_cd_tick_1, R.id.us_cd_tick_2, R.id.us_cd_tick_3, R.id.us_cd_tick_4,
+        R.id.us_cd_tick_5, R.id.us_cd_tick_6, R.id.us_cd_tick_7, R.id.us_cd_tick_8, R.id.us_cd_tick_9,
+        R.id.us_cd_tick_10, R.id.us_cd_tick_11, R.id.us_cd_tick_12, R.id.us_cd_tick_13
+    };
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
@@ -33,137 +38,59 @@ public final class UsCountdownWidgetProvider extends AppWidgetProvider {
         UsWidgets.refreshAll(context);
     }
 
-    /** How each US Countdown style translates to RemoteViews constraints. */
-    static final class Look {
-        int background = R.drawable.us_widget_background;
-        int deco = 0;
-        int titleBackground = 0;
-        // US 1.0 base ("Due colori"): the label in Oggi's coral, the number in
-        // upright serif latte, the unit and the extra line in italic latte 72%.
-        int titleColor = 0xFFFF8B7B;
-        int face = DISPLAY;
-        int valueColor = 0xFFF7EFE9;
-        boolean unitCaps = false;
-        int unitColor = 0xB8F7EFE9;
-        int subColor = 0xB8F7EFE9;
-    }
-
-    static Look look(String style) {
-        Look look = new Look();
-        switch (style == null ? "" : style) {
-            case "signal":
-                look.background = R.drawable.us_widget_cd_signal_bg;
-                look.titleBackground = R.drawable.us_widget_cd_signal_tag;
-                look.titleColor = 0xFFF3D28B;
-                look.face = BOLD;
-                look.valueColor = 0xFFF4EFE4;
-                look.unitCaps = true;
-                look.unitColor = 0xD1F4EFE4;
-                look.subColor = 0xFFF3D28B;
-                break;
-            case "glass":
-                look.background = R.drawable.us_widget_cd_glass_bg;
-                rewardBase(look);
-                look.unitColor = 0xE6FFFFFF;
-                look.subColor = 0xE6FFFFFF;
-                break;
-            case "aurora":
-                look.background = R.drawable.us_widget_cd_aurora_bg;
-                look.deco = R.drawable.us_widget_cd_aurora_glow;
-                look.titleColor = 0xFFFFF4ED;
-                look.face = SERIF;
-                look.valueColor = 0xFFFFC8DF;
-                look.unitCaps = true;
-                look.unitColor = 0xFFF5DCF0;
-                look.subColor = 0xFFDDD2FF;
-                break;
-            case "orbit":
-                look.deco = R.drawable.us_widget_cd_orbit_ring;
-                rewardBase(look);
-                look.titleColor = 0xD9FFEBDC;
-                look.subColor = 0xFFFFD5AA;
-                break;
-            case "chrome":
-                look.titleBackground = R.drawable.us_widget_cd_chrome_tag;
-                look.titleColor = 0xFF262C37;
-                look.face = BOLD;
-                look.valueColor = 0xFFE0E6EF;
-                look.unitCaps = true;
-                look.unitColor = 0xFFE3E7EE;
-                look.subColor = 0xFFE3E7EE;
-                break;
-            default:
-                break;
-        }
-        return look;
-    }
-
-    /** The pre-1.0 base that the glass and orbit reward styles were designed on: they keep it. */
-    private static void rewardBase(Look look) {
-        look.titleColor = 0xE6FFF8FD;
-        look.face = LIGHT;
-        look.valueColor = 0xFFFFF8FD;
-        look.unitColor = 0xF0FFF8FD;
-        look.subColor = 0xFFFF8EAD;
-    }
-
-    static RemoteViews render(Context context, UsWidgets.State state) {
+    static RemoteViews render(Context context, UsWidgets.State state, Bundle options) {
         UsWidgetModels.Countdown model = UsWidgetModels.countdown(state.snapshot, state.now);
         state.needsUpdateAt(model.nextChange);
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.us_widget_countdown);
-        views.setOnClickPendingIntent(R.id.us_cd_root, UsWidgets.open(context, "countdown", 4201));
-        Look look = look(model.style);
-        views.setInt(R.id.us_cd_root, "setBackgroundResource", look.background);
-        for (int id : VALUES) views.setViewVisibility(id, View.GONE);
-        for (int id : CLOCKS) {
-            views.setChronometer(id, SystemClock.elapsedRealtime(), null, false);
-            views.setViewVisibility(id, View.GONE);
+        RemoteViews small = fill(context, state, model, R.layout.us_widget_countdown);
+        RemoteViews medium = fill(context, state, model, R.layout.us_widget_countdown_medium);
+        if (!model.empty) {
+            small.setTextViewText(R.id.us_cd_title, model.label);
+            small.setTextViewText(R.id.us_cd_line, model.line);
+            small.setProgressBar(R.id.us_cd_progress, 1000, model.progress, false);
+            medium.setTextViewText(R.id.us_cd_title, model.headline);
+            medium.setViewVisibility(R.id.us_cd_unit_column, model.ticking ? View.GONE : View.VISIBLE);
+            medium.setTextViewText(R.id.us_cd_unit, model.unit);
+            medium.setTextViewText(R.id.us_cd_sub, model.sub);
+            medium.setViewVisibility(R.id.us_cd_sub, model.sub.isEmpty() ? View.GONE : View.VISIBLE);
+            int lit = model.ticks();
+            for (int i = 0; i < TICKS.length; i++) {
+                medium.setImageViewResource(TICKS[i], i < lit ? R.drawable.us_widget_pastel_tick_on : R.drawable.us_widget_pastel_tick_off);
+            }
         }
+        return UsWidgets.sized(options, small, medium);
+    }
+
+    private static RemoteViews fill(Context context, UsWidgets.State state, UsWidgetModels.Countdown model, int layout) {
+        RemoteViews views = new RemoteViews(context.getPackageName(), layout);
+        views.setOnClickPendingIntent(R.id.us_cd_root, UsWidgets.open(context, "countdown", 4201));
+        views.setChronometer(R.id.us_cd_clock, SystemClock.elapsedRealtime(), null, false);
+        views.setViewVisibility(R.id.us_cd_clock, View.GONE);
         if (model.empty) {
-            views.setViewVisibility(R.id.us_cd_deco, View.GONE);
-            views.setViewVisibility(R.id.us_cd_title, View.GONE);
-            views.setViewVisibility(R.id.us_cd_unit_serif, View.GONE);
-            views.setViewVisibility(R.id.us_cd_unit_caps, View.GONE);
-            views.setViewVisibility(R.id.us_cd_sub, View.GONE);
+            views.setViewVisibility(R.id.us_cd_content, View.GONE);
             views.setViewVisibility(R.id.us_cd_empty, View.VISIBLE);
             views.setTextViewText(R.id.us_cd_empty, context.getString(state.snapshot == null ? R.string.us_widget_connect : R.string.us_widget_countdown_empty));
             views.setContentDescription(R.id.us_cd_root, context.getString(R.string.us_widget_countdown_name));
             return views;
         }
         views.setViewVisibility(R.id.us_cd_empty, View.GONE);
-        views.setViewVisibility(R.id.us_cd_deco, look.deco == 0 ? View.GONE : View.VISIBLE);
-        if (look.deco != 0) views.setImageViewResource(R.id.us_cd_deco, look.deco);
-        views.setViewVisibility(R.id.us_cd_title, View.VISIBLE);
-        views.setTextViewText(R.id.us_cd_title, model.title);
-        views.setTextColor(R.id.us_cd_title, look.titleColor);
-        views.setInt(R.id.us_cd_title, "setBackgroundResource", look.titleBackground);
-
+        views.setViewVisibility(R.id.us_cd_content, View.VISIBLE);
         if (model.ticking) {
-            int clock = CLOCKS[look.face];
-            views.setViewVisibility(clock, View.VISIBLE);
-            views.setTextColor(clock, look.valueColor);
+            views.setViewVisibility(R.id.us_cd_value, View.GONE);
+            views.setViewVisibility(R.id.us_cd_clock, View.VISIBLE);
             // Counts down on its own with US closed; the alarm at the target redraws "Ci siamo".
-            views.setChronometer(clock, SystemClock.elapsedRealtime() + model.remainingMs, null, true);
-            views.setChronometerCountDown(clock, true);
+            views.setChronometer(R.id.us_cd_clock, SystemClock.elapsedRealtime() + model.remainingMs, null, true);
+            views.setChronometerCountDown(R.id.us_cd_clock, true);
         } else {
-            int value = VALUES[look.face];
-            views.setViewVisibility(value, View.VISIBLE);
-            views.setTextViewText(value, model.value);
-            views.setTextColor(value, look.valueColor);
+            views.setViewVisibility(R.id.us_cd_value, View.VISIBLE);
+            views.setTextViewText(R.id.us_cd_value, model.value);
         }
-        int unit = look.unitCaps ? R.id.us_cd_unit_caps : R.id.us_cd_unit_serif;
-        views.setViewVisibility(R.id.us_cd_unit_caps, View.GONE);
-        views.setViewVisibility(R.id.us_cd_unit_serif, View.GONE);
-        if (!model.unit.isEmpty()) {
-            views.setViewVisibility(unit, View.VISIBLE);
-            views.setTextViewText(unit, model.unit);
-            views.setTextColor(unit, look.unitColor);
-        }
-        views.setViewVisibility(R.id.us_cd_sub, model.sub.isEmpty() ? View.GONE : View.VISIBLE);
-        views.setTextViewText(R.id.us_cd_sub, model.sub);
-        views.setTextColor(R.id.us_cd_sub, look.subColor);
-        String spoken = model.ticking ? model.title + ", ultimo giorno" : model.title + ", " + model.value + " " + model.unit + " " + model.sub;
-        views.setContentDescription(R.id.us_cd_root, spoken.trim());
+        views.setContentDescription(R.id.us_cd_root, spoken(model));
         return views;
+    }
+
+    static String spoken(UsWidgetModels.Countdown model) {
+        if (model.ticking) return model.title + ", ultimo giorno";
+        String text = model.headline + ", " + model.value + " " + model.unit + (model.sub.isEmpty() ? "" : " " + model.sub);
+        return text.trim();
     }
 }

@@ -1,21 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The latte speech bubble of Noi stile mappa: dark text, at most two lines. -->
-    <style name="UsWidgetBubble">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:maxWidth">150dp</item>
-        <item name="android:background">@drawable/us_widget_bubble</item>
-        <item name="android:paddingStart">10dp</item>
-        <item name="android:paddingTop">6dp</item>
-        <item name="android:paddingEnd">10dp</item>
-        <item name="android:paddingBottom">6dp</item>
-        <item name="android:ellipsize">end</item>
-        <item name="android:maxLines">2</item>
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textColor">@color/us_widget_bg</item>
-        <item name="android:textSize">11sp</item>
+    <!-- Countdown 4x2: one of the 14 ticks of the last two weeks (5 dp, 5 dp apart). -->
+    <style name="UsWidgetTick">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginEnd">5dp</item>
+        <item name="android:scaleType">fitXY</item>
+        <item name="android:src">@drawable/us_widget_pastel_tick_off</item>
         <item name="android:importantForAccessibility">no</item>
+        <item name="android:contentDescription">@null</item>
     </style>
 </resources>

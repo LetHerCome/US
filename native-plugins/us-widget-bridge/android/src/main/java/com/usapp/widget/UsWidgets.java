@@ -126,7 +126,7 @@ final class UsWidgets {
     static RemoteViews render(Context context, String kind, State state, Bundle options) {
         switch (kind) {
             case THINK: return UsThinkWidgetProvider.render(context, state, options);
-            case COUNTDOWN: return UsCountdownWidgetProvider.render(context, state);
+            case COUNTDOWN: return UsCountdownWidgetProvider.render(context, state, options);
             case NOI: return UsNoiWidgetProvider.render(context, state, options);
             case DAILY: return UsDailyWidgetProvider.render(context, state, options);
             case MESSAGE: return UsMessageWidgetProvider.render(context, state);

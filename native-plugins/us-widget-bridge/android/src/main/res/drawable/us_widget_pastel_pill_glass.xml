@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The board's label on a photo or a sky (latte 18%). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#2EF7EFE9" />
+    <corners android:radius="999dp" />
+</shape>

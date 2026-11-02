@@ -1,45 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget picker preview (Android 12+), base style. Generic title. -->
+<!-- Widget picker preview (Android 12+), Countdown in Pastello. Generic:
+     every text from strings.xml. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_background"
-    android:gravity="center"
+    android:background="@drawable/us_widget_pastel_countdown"
     android:orientation="vertical"
-    android:padding="14dp">
+    android:padding="16dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:fontFamily="sans-serif-medium"
+        android:background="@drawable/us_widget_pastel_pill"
+        android:fontFamily="@font/us_figtree"
         android:includeFontPadding="false"
-        android:letterSpacing="0.14"
-        android:maxLines="1"
+        android:paddingStart="9dp"
+        android:paddingTop="3dp"
+        android:paddingEnd="9dp"
+        android:paddingBottom="3dp"
         android:text="@string/us_widget_preview_countdown"
-        android:textAllCaps="true"
-        android:textColor="@color/us_widget_corallo"
+        android:textColor="@color/us_widget_pastel_ink"
+        android:textFontWeight="800"
         android:textSize="11sp"
         android:textStyle="bold" />
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:fontFamily="serif"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fontFamily="@font/us_fraunces"
+        android:gravity="bottom|start"
         android:includeFontPadding="false"
         android:text="@string/us_widget_preview_countdown_value"
-        android:textColor="@color/us_widget_text"
+        android:textColor="@color/us_widget_pastel_plum"
         android:textSize="58sp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:fontFamily="serif"
+        android:layout_marginTop="2dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/us_fraunces"
         android:includeFontPadding="false"
+        android:maxLines="1"
         android:text="@string/us_widget_preview_countdown_unit"
-        android:textColor="@color/us_widget_text_2"
-        android:textSize="16sp"
+        android:textColor="@color/us_widget_pastel_ink"
+        android:textSize="15sp"
         android:textStyle="italic" />
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="12dp"
+        android:indeterminate="false"
+        android:max="14"
+        android:progress="2"
+        android:progressDrawable="@drawable/us_widget_pastel_progress" />
 </LinearLayout>

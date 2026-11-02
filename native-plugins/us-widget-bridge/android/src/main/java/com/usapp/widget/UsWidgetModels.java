@@ -64,6 +64,26 @@ final class UsWidgetModels {
         boolean ticking = false;
         long remainingMs = 0;
         Instant nextChange = null;
+        /** Pastello 2x2: the white label ("Mancano", "Ci siamo", "Insieme da"). */
+        String label = "";
+        /** Pastello 4x2: "Lisbona · 14 novembre". */
+        String headline = "";
+        /** Pastello 2x2: the italic line under the number ("giorni · Lisbona"). */
+        String line = "";
+        /** The bar and the 14 ticks: the last two weeks before the day (per mille);
+         * for "Insieme da", the year towards the next anniversary. */
+        int progress = 0;
+
+        /** Of the 4x2's 14 ticks, how many are lit. */
+        int ticks() { return Math.round(progress * 14 / 1000f); }
+    }
+
+    static final int TICKS = 14;
+
+    /** The last two weeks before the day, per mille: 12 days left is 2 of 14. */
+    static int fortnight(long daysLeft) {
+        long passed = TICKS - Math.min(TICKS, Math.max(0, daysLeft));
+        return (int) (passed * 1000 / TICKS);
     }
 
     static Countdown countdown(JSONObject snapshot, Instant now) {
@@ -81,6 +101,12 @@ final class UsWidgetModels {
             out.title = title.isEmpty() ? "Insieme da" : title;
             out.value = Long.toString(days);
             out.unit = dayUnit(days);
+            out.label = out.title;
+            String since = italianDay(target);
+            out.headline = since.isEmpty() ? out.title : "Insieme dal " + since;
+            out.line = days == 1 ? "giorno insieme" : "giorni insieme";
+            out.sub = "insieme";
+            out.progress = (int) (Math.floorMod(days, 365L) * 1000 / 365);
             out.nextChange = nextRomeMidnight(now);
             return out;
         }
@@ -95,6 +121,7 @@ final class UsWidgetModels {
             out.value = Long.toString(n);
             out.unit = dayUnit(n);
             out.sub = delta <= 0 ? "Ci siamo" : "";
+            pastel(out, italianDay(clean), n, delta <= 0);
             out.nextChange = delta <= 0 ? null : nextRomeMidnight(now);
             return out;
         }
@@ -103,10 +130,12 @@ final class UsWidgetModels {
             if (at == null) return out;
             out.empty = false;
             out.title = title;
+            String day = italianDay(at.atZone(ROME).toLocalDate().toString());
             long delta = at.toEpochMilli() - now.toEpochMilli();
             if (delta <= 0) {
                 out.value = "00:00:00";
                 out.sub = "Ci siamo";
+                pastel(out, day, 0, true);
                 return out;
             }
             // Same rounding as the web display: whole seconds, rounded up.
@@ -116,12 +145,16 @@ final class UsWidgetModels {
                 out.ticking = true;
                 out.remainingMs = delta;
                 out.nextChange = at;
+                pastel(out, day, 0, false);
+                out.line = title;
                 return out;
             }
             long hours = (seconds % 86_400) / 3600;
             out.value = Long.toString(days);
             out.unit = dayUnit(days);
-            out.sub = hours == 0 ? "" : hours == 1 ? "e 1 ora" : "e " + hours + " ore";
+            // The board's "4 ore · 21 minuti": hours only, so the widget redraws once an hour.
+            out.sub = hours == 0 ? "" : hours == 1 ? "1 ora" : hours + " ore";
+            pastel(out, day, days, false);
             // Redraw when the hour figure changes, or when the final day starts.
             long untilHourChange = (seconds % 3600) * 1000L;
             if (untilHourChange == 0) untilHourChange = 3_600_000L;
@@ -132,6 +165,14 @@ final class UsWidgetModels {
         }
         out.empty = true;
         return out;
+    }
+
+    /** Pastello labels of a Countdown towards a day: "Mancano", "Lisbona · 14 novembre". */
+    private static void pastel(Countdown out, String day, long daysLeft, boolean arrived) {
+        out.label = arrived ? "Ci siamo" : "Mancano";
+        out.headline = day.isEmpty() ? out.title : out.title + " · " + day;
+        out.line = out.unit.isEmpty() ? out.title : out.unit + " · " + out.title;
+        out.progress = fortnight(daysLeft);
     }
 
     // ---------- Noi / Foto & Noi ----------

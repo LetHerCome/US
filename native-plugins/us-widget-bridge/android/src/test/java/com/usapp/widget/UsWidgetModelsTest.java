@@ -110,6 +110,37 @@ public class UsWidgetModelsTest {
         assertEquals("168", view.value);
         assertEquals("giorni", view.unit);
         assertEquals("aurora", view.style);
+        // Pastello: the year towards the next anniversary.
+        assertEquals("Insieme da", view.label);
+        assertEquals("Insieme dal 21 aprile", view.headline);
+        assertEquals("giorni insieme", view.line);
+        assertEquals(168 * 1000 / 365, view.progress);
+    }
+
+    @Test
+    public void countdownPastelLabelsAndTheLastTwoWeeks() throws Exception {
+        Instant now = Instant.parse("2026-11-02T10:00:00Z");
+        UsWidgetModels.Countdown view = UsWidgetModels.countdown(snapshot(countdown("days", "2026-11-14", "editorial").put("title", "Lisbona")), now);
+        assertEquals("12", view.value);
+        assertEquals("Mancano", view.label);
+        assertEquals("Lisbona · 14 novembre", view.headline);
+        assertEquals("giorni · Lisbona", view.line);
+        assertEquals(2, view.ticks());
+        // Far away: the ticks are all dark; on the day, all lit.
+        assertEquals(0, UsWidgetModels.countdown(snapshot(countdown("days", "2026-12-25", "editorial")), now).ticks());
+        UsWidgetModels.Countdown today = UsWidgetModels.countdown(snapshot(countdown("days", "2026-11-02", "editorial")), now);
+        assertEquals("Ci siamo", today.label);
+        assertEquals(14, today.ticks());
+        assertEquals(1000, UsWidgetModels.fortnight(-3));
+        // The clock: the day in Rome, the hours apart, the title alone in the final day.
+        UsWidgetModels.Countdown clock = UsWidgetModels.countdown(snapshot(countdown("clock", "2026-11-05T23:30:00Z", "editorial").put("title", "Concerto")), now);
+        assertEquals("Concerto · 6 novembre", clock.headline);
+        assertEquals("13 ore", clock.sub);
+        assertEquals(11, clock.ticks());
+        UsWidgetModels.Countdown last = UsWidgetModels.countdown(snapshot(countdown("clock", "2026-11-02T20:00:00Z", "editorial").put("title", "Concerto")), now);
+        assertTrue(last.ticking);
+        assertEquals("Concerto", last.line);
+        assertEquals(14, last.ticks());
     }
 
     @Test
@@ -131,7 +162,7 @@ public class UsWidgetModelsTest {
         UsWidgetModels.Countdown far = UsWidgetModels.countdown(snapshot(countdown("clock", "2026-10-09T15:30:00Z", "orbit")), now);
         assertFalse(far.ticking);
         assertEquals("3", far.value);
-        assertEquals("e 5 ore", far.sub);
+        assertEquals("5 ore", far.sub);
         assertNotNull(far.nextChange);
 
         UsWidgetModels.Countdown last = UsWidgetModels.countdown(snapshot(countdown("clock", "2026-10-06T20:00:00Z", "orbit")), now);

@@ -49,7 +49,7 @@
     <string name="us_widget_preview_days_unit">giorni insieme</string>
     <string name="us_widget_preview_message">Ti ha pensato</string>
     <string name="us_widget_preview_message_when">10 min fa</string>
-    <string name="us_widget_preview_countdown">Il prossimo viaggio</string>
+    <string name="us_widget_preview_countdown">Mancano</string>
     <string name="us_widget_preview_countdown_value">12</string>
-    <string name="us_widget_preview_countdown_unit">giorni</string>
+    <string name="us_widget_preview_countdown_unit">giorni · Il prossimo viaggio</string>
 </resources>
