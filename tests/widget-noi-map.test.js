@@ -84,9 +84,11 @@ test('portraits: one per person, by owner and slot, all wiped with the account',
   assert.match(read('platform.js'), /!\['pair', 'me', 'partner'\]\.includes\(slot\)/);
   const widgets = read('widgets.js');
   const round = widgets.slice(widgets.indexOf('async function composeRoundPortrait'), widgets.indexOf('function clearRoundPreviews'));
-  // The same two colours as the 2x1 card, by role; "me" is the viewer.
+  // Pastello (02/11): each person's colour (rosa and lilla, or the one chosen),
+  // the initial when there is no photo; "me" is the viewer.
   assert.match(round, /const mine = window\.usProfile\?\.role === 'beatrice' \? 1 : 0;/);
-  assert.match(round, /const colours = \['#ff7c96', '#a98bff'\];/);
+  assert.match(round, /colour\('rosa', '#ff7c96'\)[\s\S]*colour\('lilla', '#a98bff'\)/);
+  assert.match(round, /ctx\.fillText\(initial \|\| '·', c, c \+ radius \* 0\.06\);/);
   assert.match(round, /writeWidgetNoiPortrait\(owner, image\.base64, slot\)/);
   assert.match(round, /canvas\.toBlob\(resolve, 'image\/png'\)/);
   assert.match(widgets, /platform\.writeWidgetNoiPortrait\(owner,image\.base64,'pair'\)/);

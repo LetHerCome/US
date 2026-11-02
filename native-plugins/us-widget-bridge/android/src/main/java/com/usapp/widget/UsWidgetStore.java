@@ -123,6 +123,12 @@ final class UsWidgetStore {
 
     /** Records the action status; keeps the pending action id for idempotent retries. */
     synchronized boolean writeAction(String status, String actionId) {
+        JSONObject previous = readAction();
+        return writeAction(status, actionId, previous != null && previous.optBoolean("reply", false));
+    }
+
+    /** reply: the tap answered the partner's thought ("Ricambiato", not "Inviato"). */
+    synchronized boolean writeAction(String status, String actionId, boolean reply) {
         String owner = owner();
         if (owner.isEmpty()) return false;
         JSONObject previous = readAction();
@@ -133,7 +139,8 @@ final class UsWidgetStore {
                 .put("status", status)
                 .put("at", now)
                 .put("actionId", actionId == null ? "" : actionId)
-                .put("sentAt", status.equals("sent") ? now : previous == null ? "" : previous.optString("sentAt", ""));
+                .put("sentAt", status.equals("sent") ? now : previous == null ? "" : previous.optString("sentAt", ""))
+                .put("reply", reply);
             return writeAtomic(actionFile, next.toString());
         } catch (Exception ignored) {
             return false;
@@ -181,6 +188,17 @@ final class UsWidgetStore {
 
     synchronized int countThinkSent24h(Instant now) {
         return recentThinkEvents(now).length();
+    }
+
+    /** The widget's own sends after {@code since} (the app's count covers the ones before). */
+    synchronized int countThinkSentSince(Instant since, Instant now) {
+        JSONArray events = recentThinkEvents(now);
+        int count = 0;
+        for (int i = 0; i < events.length(); i++) {
+            Instant at = UsWidgetContract.instant(events.optJSONObject(i).optString("at", ""));
+            if (at != null && at.isAfter(since)) count++;
+        }
+        return count;
     }
 
     synchronized Instant nextThinkExpiry(Instant now) {

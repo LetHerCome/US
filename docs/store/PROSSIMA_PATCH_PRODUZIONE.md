@@ -379,3 +379,16 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 - **Chi ha già il widget in produzione:** la credenziale salvata prima non ha l'indirizzo, quindi va alla produzione come oggi. Non serve fare niente.
 - **Test:** `UsWidgetEndpointsTest` (JVM), `tests/w1-3-silent-send.test.js`, `tests/widget-system.test.js`.
 - **Da provare dall'APK di staging:** il cuore del widget Ti penso manda davvero il pensiero; l'altro telefono lo riceve.
+
+## 2026-11-02 — Widget «Pastello» (solo Android)
+
+**Fonte:** founder, 02/11/2026, tavola approvata (`docs/DECISIONS.md`, «Widget: la famiglia Pastello»). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; serve un APK nuovo. Il widget «Nota» è tolto (revert di `1e0d8e9a`): niente migrazione `widget_note_v1` né Edge `widget-note`.
+
+- **2 · Ti penso:**
+  - nuova carta chiara, Fraunces e Figtree, avatar con la foto o l'iniziale e il colore della persona;
+  - «Bea ti ha pensato · 2 min fa» e «Ricambia»;
+  - al tocco il widget passa subito a «Ricambiato · adesso» (o «Inviato» se non era una risposta) e invia in sottofondo; «Ancora» manda di nuovo. Se non parte: «Non è partito · Riprova»;
+  - il cuore fa la stessa animazione dell'app (1→0,72→1,3→0,96→1 in 440 ms, onda da rosa a lilla), in una finestrella trasparente di un attimo sopra la Home (`UsThinkHeartActivity`, non esportata); con le animazioni spente invia e basta;
+  - nel medio (4×2): «12 volte che vi siete pensati oggi», i Ti penso di tutti e due di oggi (giorno di Roma), contati dall'app più quelli mandati dal widget dopo.
+  - **Font:** Fraunces e Figtree dell'app, decompressi da WOFF2 a TTF (`res/font`, circa 290 KB).
+  - **Da provare:** il cuore sul widget, che diventa subito rosa con «Ricambiato · adesso» e fa l'animazione dell'app; il medio con il contatore; la foto dell'altro nell'avatar, o la sua iniziale sul suo colore.

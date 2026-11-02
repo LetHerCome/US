@@ -43,7 +43,8 @@
     <string name="us_widget_photo_empty">La foto di Oggi apparirà qui</string>
 
     <!-- Widget picker previews: the same for every user, never a real name or photo. -->
-    <string name="us_widget_preview_think">Ti sta pensando</string>
+    <string name="us_widget_preview_think">Ti ha pensato</string>
+    <string name="us_widget_preview_think_when">2 min fa</string>
     <string name="us_widget_preview_think_cta">Ricambia</string>
     <string name="us_widget_preview_noi">12 km</string>
     <string name="us_widget_preview_bubble">ti ha pensato · 10 min fa</string>

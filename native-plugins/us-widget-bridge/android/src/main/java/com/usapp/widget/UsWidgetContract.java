@@ -47,7 +47,10 @@ final class UsWidgetContract {
                 .put("lastReceivedAt", instantText(thinkIn.optString("lastReceivedAt", "")))
                 .put("lastSentAt", instantText(thinkIn.optString("lastSentAt", "")))
                 // A reaction to the partner's thought answers it as well as a thought does.
-                .put("lastAnsweredAt", instantText(thinkIn.optString("lastAnsweredAt", "")));
+                .put("lastAnsweredAt", instantText(thinkIn.optString("lastAnsweredAt", "")))
+                // How many times the two of them thought of each other that Rome day.
+                .put("todayCount", Math.max(0, Math.min(999, thinkIn.optInt("todayCount", 0))))
+                .put("todayDate", civilDate(thinkIn.optString("todayDate", "")));
 
             JSONObject coupleIn = optObject(input, "couple");
             JSONArray namesIn = coupleIn.optJSONArray("names");

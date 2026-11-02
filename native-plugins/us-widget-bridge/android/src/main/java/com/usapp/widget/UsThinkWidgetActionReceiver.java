@@ -40,8 +40,9 @@ public final class UsThinkWidgetActionReceiver extends BroadcastReceiver {
         String actionId = UsWidgetModels.actionIdFor(state.action, state.now);
         UsWidgetStore store = state.store;
         String owner = store.owner();
-        store.writeAction("sending", actionId);
-        // Immediately paint Invio... without re-encoding Foto & Noi.
+        // "Ricambiato" when the tap answers the partner's thought, "Inviato" otherwise.
+        store.writeAction("sending", actionId, UsWidgetModels.unanswered(UsWidgetContract.optObject(state.snapshot, "think"), state.action));
+        // Paint "Ricambiato · adesso" at once, without re-encoding the photos.
         UsWidgets.refreshThink(app);
         PendingResult pending = goAsync();
         EXECUTOR.execute(() -> {

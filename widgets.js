@@ -43,7 +43,7 @@
   let pendingDestination = '';
   let pendingKind = '';
 
-  const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastSentAt: '', lastAnsweredAt: '' });
+  const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastSentAt: '', lastAnsweredAt: '', todayCount: 0, todayDate: '' });
   // Batteria del partner: level -1 = unknown (UsWidgetContract.java).
   const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready', batteryLevel: -1, batteryCharging: false, batteryAt: '' });
   const emptyCountdown = () => ({ active: false, kind: '', title: '', target: '', style: 'editorial' });
@@ -162,7 +162,10 @@
       partnerName: cleanText(next.partnerName || think.partnerName, 40),
       lastReceivedAt: isoInstant(next.lastReceivedAt),
       lastSentAt: isoInstant(next.lastSentAt),
-      lastAnsweredAt: isoInstant(next.lastAnsweredAt)
+      lastAnsweredAt: isoInstant(next.lastAnsweredAt),
+      // "12 volte che vi siete pensati oggi" on the Ti penso widget.
+      todayCount: Number.isInteger(next.todayCount) ? Math.max(0, Math.min(999, next.todayCount)) : 0,
+      todayDate: civilDate(next.todayDate)
     };
     return scheduleWrite();
   }
@@ -311,29 +314,44 @@
 
   // Noi stile mappa: one round portrait per person (same ring colours), 56dp
   // at 3x, transparent. The widget puts me on the left, the partner on the right.
-  async function composeRoundPortrait(url, colour) {
-    const S = 3, size = Math.round(56 * S), ring = 2.5 * S, c = size / 2, radius = c - ring;
+  // Pastello (approved board, 02/11/2026): the real profile photo, round,
+  // a see-through gap, then a ring in the person's colour. Without a photo,
+  // the initial on that colour. Transparent, 192 px, so every widget scales it.
+  async function composeRoundPortrait(url, colour, initial) {
+    const size = 192, ring = 10, gap = 8, c = size / 2, radius = c - ring - gap;
     const canvas = document.createElement('canvas');
     canvas.width = size; canvas.height = size;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('noi_round_canvas');
     ctx.save();
     ctx.beginPath(); ctx.arc(c, c, radius, 0, Math.PI * 2); ctx.clip();
-    ctx.fillStyle = '#2a2232';
+    ctx.fillStyle = colour;
     ctx.fillRect(0, 0, size, size);
+    let painted = false;
     let bitmap;
-    try {
-      const response = await fetch(url, { credentials: 'omit' });
-      if (!response.ok) throw new Error('avatar_download');
-      const blob = await response.blob();
-      if (!/^image\//.test(blob.type || 'image/')) throw new Error('avatar_type');
-      bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
-      const scale = Math.max(radius * 2 / bitmap.width, radius * 2 / bitmap.height);
-      const w = bitmap.width * scale, h = bitmap.height * scale;
-      ctx.drawImage(bitmap, c - w / 2, c - h / 2, w, h);
-    } finally { bitmap?.close?.(); }
+    if (url) {
+      try {
+        const response = await fetch(url, { credentials: 'omit' });
+        if (!response.ok) throw new Error('avatar_download');
+        const blob = await response.blob();
+        if (!/^image\//.test(blob.type || 'image/')) throw new Error('avatar_type');
+        bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+        const scale = Math.max(radius * 2 / bitmap.width, radius * 2 / bitmap.height);
+        const w = bitmap.width * scale, h = bitmap.height * scale;
+        ctx.drawImage(bitmap, c - w / 2, c - h / 2, w, h);
+        painted = true;
+      } catch (error) { console.warn('[US Widget] avatar photo', error); }
+      finally { bitmap?.close?.(); }
+    }
+    if (!painted) {
+      ctx.fillStyle = '#1a1020';
+      ctx.font = `400 ${Math.round(radius * 0.92)}px Fraunces, Georgia, serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initial || '·', c, c + radius * 0.06);
+    }
     ctx.restore();
-    ctx.beginPath(); ctx.arc(c, c, radius + ring / 2, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.arc(c, c, c - ring / 2, 0, Math.PI * 2);
     ctx.strokeStyle = colour; ctx.lineWidth = ring; ctx.stroke();
     const png = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     if (!png) throw new Error('noi_round_encode');
@@ -346,15 +364,27 @@
     return { base64, preview: URL.createObjectURL(png) };
   }
 
-  // urls come by role (creator, partner); "me" is the viewer's own.
-  async function writeRoundPortraits(urls, owner, token) {
+  // The two people by role (creator, partner): the colour each one shows
+  // (rosa and lilla, or the one chosen: app tokens --us-rosa and --us-lilla)
+  // and the initial. null while the couple is not known yet.
+  function avatarPeople() {
+    const identity = window.UsIdentity?.current?.();
+    if (!identity?.initialForRole || !window.usProfile?.couple_id) return null;
+    const style = typeof getComputedStyle === 'function' ? getComputedStyle(document.documentElement) : null;
+    const colour = (token, fallback) => (style?.getPropertyValue(`--us-${token}`) || '').trim() || fallback;
+    return [
+      { colour: colour('rosa', '#ff7c96'), initial: identity.initialForRole('francesco') },
+      { colour: colour('lilla', '#a98bff'), initial: identity.initialForRole('beatrice') }
+    ];
+  }
+
+  // urls and people come by role (creator, partner); "me" is the viewer's own.
+  async function writeRoundPortraits(urls, people, owner, token) {
     const mine = window.usProfile?.role === 'beatrice' ? 1 : 0;
-    const colours = ['#ff7c96', '#a98bff'];
     const previews = {};
     for (const [slot, index] of [['me', mine], ['partner', 1 - mine]]) {
-      if (!urls[index]) continue;
       try {
-        const image = await composeRoundPortrait(urls[index], colours[index]);
+        const image = await composeRoundPortrait(urls[index], people[index].colour, people[index].initial);
         if (token !== generation || !(await platform.writeWidgetNoiPortrait(owner, image.base64, slot))) { URL.revokeObjectURL(image.preview); continue; }
         previews[slot] = image.preview;
       } catch (error) { console.warn('[US Widget] Noi round portrait', error); }
@@ -375,21 +405,27 @@
     if (!nativeEnabled || !ownerHash || !platform?.writeWidgetNoiPortrait) return Promise.resolve(false);
     if (noiPortraitSync) return noiPortraitSync;
     const urls = window.UsWidgetDataApi?.noiAvatarSources?.();
-    if (!Array.isArray(urls) || !urls.some(Boolean)) return Promise.resolve(false);
-    const signature = urls.join('|');
-    if (!force && signature === noiPortraitSignature && noiPortraitPreviewUrl) return Promise.resolve(false);
+    const people = avatarPeople();
+    // Without photos the avatars are the initials on each person's colour.
+    if (!Array.isArray(urls) || !people) return Promise.resolve(false);
+    const signature = [...urls, ...people.map((person) => `${person.colour}:${person.initial}`)].join('|');
+    if (!force && signature === noiPortraitSignature) return Promise.resolve(false);
     const token=generation, owner=ownerHash;
     noiPortraitSync=(async()=>{
       let image=null;
       try {
-        image=await composeNoiPortrait(urls);
-        if(token!==generation){URL.revokeObjectURL(image.preview);return false;}
-        const ok=await platform.writeWidgetNoiPortrait(owner,image.base64,'pair');
-        if(token!==generation || !ok){URL.revokeObjectURL(image.preview);return false;}
-        await writeRoundPortraits(urls,owner,token);
-        if(token!==generation){URL.revokeObjectURL(image.preview);return false;}
-        if(noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
-        noiPortraitPreviewUrl=image.preview;
+        if(urls.some(Boolean)){
+          image=await composeNoiPortrait(urls);
+          if(token!==generation){URL.revokeObjectURL(image.preview);return false;}
+          const ok=await platform.writeWidgetNoiPortrait(owner,image.base64,'pair');
+          if(token!==generation || !ok){URL.revokeObjectURL(image.preview);return false;}
+        }
+        await writeRoundPortraits(urls,people,owner,token);
+        if(token!==generation){if(image)URL.revokeObjectURL(image.preview);return false;}
+        if(image){
+          if(noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
+          noiPortraitPreviewUrl=image.preview;
+        }
         noiPortraitSignature=signature;
         window.dispatchEvent(new Event('us:noi-widget-photo-updated'));
         return true;

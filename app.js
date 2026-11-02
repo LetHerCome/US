@@ -6004,7 +6004,11 @@ async function hydrateThink(){
     usThinkKnownReactionSignature=signature;
   }
   window.UsTodayPriority?.refresh?.();
-  window.UsWidgets?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||'',lastAnsweredAt:receivedReaction?.updated_at||''}).catch(()=>{});
+  // The Ti penso widget counts both people's thoughts of this Rome day.
+  const romeDay=at=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(at));}catch(_){return '';}};
+  const todayDate=romeDay(Date.now());
+  const todayCount=(rows||[]).filter(row=>romeDay(row.created_at)===todayDate).length;
+  window.UsWidgets?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||'',lastAnsweredAt:receivedReaction?.updated_at||'',todayCount,todayDate}).catch(()=>{});
 }
 window.hydrateThink=hydrateThink;
 async function sendThinkSignal(){

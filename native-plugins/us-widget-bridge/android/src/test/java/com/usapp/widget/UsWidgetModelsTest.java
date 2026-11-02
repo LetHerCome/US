@@ -174,74 +174,87 @@ public class UsWidgetModelsTest {
         assertEquals("Apri", noCredential.cta);
     }
 
+    // Pastello (founder, 02/11/2026): the tap turns the widget at once into
+    // "Ricambiato · adesso" and sends behind it; "Ancora" sends again.
     @Test
-    public void thinkSendingAndJustSentAreBusy() throws Exception {
-        Instant now = Instant.parse("2026-10-06T10:00:05Z");
-        UsWidgetModels.Think sending = UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, now);
-        assertTrue(sending.busy);
-        assertEquals("Invio…", sending.cta);
-        UsWidgetModels.Think sent = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, now);
-        assertTrue(sent.busy);
-        assertEquals("Inviato a Beatrice", sent.message);
-        // Past the cooldown the heart sends again, while "Inviato a …" is still readable.
-        UsWidgetModels.Think readable = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, Instant.parse("2026-10-06T10:00:07Z"));
-        assertFalse(readable.busy);
-        assertEquals("Inviato a Beatrice", readable.message);
-        UsWidgetModels.Think later = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, Instant.parse("2026-10-06T10:00:10Z"));
-        assertFalse(later.busy);
+    public void thinkTapIsDoneAtOnceAndSendsBehind() throws Exception {
+        JSONObject s = snapshot(null);
+        s.getJSONObject("think").put("lastReceivedAt", "2026-10-06T09:58:00Z");
+        Instant now = Instant.parse("2026-10-06T10:00:01Z");
+        UsWidgetModels.Think sending = UsWidgetModels.think(s, action("sending", "2026-10-06T10:00:00Z").put("reply", true), true, now);
+        assertTrue(sending.done);
+        assertTrue("in flight: a second tap waits", sending.busy);
+        assertEquals("Ricambiato", sending.line);
+        assertEquals("adesso", sending.when);
+        assertEquals("Ancora", sending.cta);
+        UsWidgetModels.Think sent = UsWidgetModels.think(s, action("sent", "2026-10-06T10:00:00Z").put("reply", true), true, Instant.parse("2026-10-06T10:00:30Z"));
+        assertTrue(sent.done);
+        assertFalse("past the cooldown the heart sends again", sent.busy);
+        assertEquals("Ricambiato", sent.line);
+        // Not a reply: "Inviato".
+        assertEquals("Inviato", UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:00:30Z")).line);
+        // After a minute the widget tells the day again.
+        UsWidgetModels.Think later = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:01:01Z"));
+        assertFalse(later.done);
+        assertEquals("Pensa a Beatrice", later.line);
         assertEquals("Ti penso", later.cta);
-        assertEquals("Pensa a Beatrice", later.message);
+        assertEquals(Instant.parse("2026-10-06T10:01:00Z"), sent.nextChange);
     }
 
     @Test
-    public void thinkInterruptedSendBecomesRetry() throws Exception {
+    public void thinkFailureAndPauseAskToRetry() throws Exception {
         UsWidgetModels.Think stale = UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:01:00Z"));
         assertFalse(stale.busy);
+        assertFalse(stale.done);
+        assertEquals("Non è partito", stale.line);
         assertEquals("Riprova", stale.cta);
-    }
-
-    @Test
-    public void thinkToneSaysWhoseMoveItIs() throws Exception {
-        // "Due colori": rosa for the other person's thought, lilla for mine, quiet otherwise.
-        Instant now = Instant.parse("2026-10-06T12:00:00Z");
-        JSONObject s = snapshot(null);
-        assertEquals(UsWidgetModels.TONE_QUIET, UsWidgetModels.think(s, null, true, now).tone);
-        assertEquals("Beatrice", UsWidgetModels.think(s, null, true, now).partner);
-        s.getJSONObject("think").put("lastReceivedAt", "2026-10-06T11:30:00Z");
-        assertEquals(UsWidgetModels.TONE_PARTNER, UsWidgetModels.think(s, null, true, now).tone);
-        Instant sentNow = Instant.parse("2026-10-06T10:00:05Z");
-        assertEquals(UsWidgetModels.TONE_ME, UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, sentNow).tone);
-        assertEquals(UsWidgetModels.TONE_ME, UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, sentNow).tone);
-        assertEquals(UsWidgetModels.TONE_QUIET, UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:01:00Z")).tone);
-        assertEquals(UsWidgetModels.TONE_QUIET, UsWidgetModels.think(null, null, false, now).tone);
+        assertEquals("Riprova", UsWidgetModels.think(snapshot(null), action("rate_limited", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:00:30Z")).cta);
+        UsWidgetModels.Think unauthorized = UsWidgetModels.think(snapshot(null), action("unauthorized", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:00:30Z"));
+        assertFalse(unauthorized.canSend);
+        assertEquals("Apri", unauthorized.cta);
     }
 
     @Test
     public void ricambiaOnlyWhileThePartnerThoughtIsUnanswered() throws Exception {
         Instant now = Instant.parse("2026-10-06T12:00:00Z");
         JSONObject s = snapshot(null);
-        s.getJSONObject("think").put("lastReceivedAt", "2026-10-06T11:30:00Z").put("lastSentAt", "2026-10-06T08:00:00Z");
+        s.getJSONObject("think").put("lastReceivedAt", "2026-10-06T11:50:00Z").put("lastSentAt", "2026-10-06T08:00:00Z");
         UsWidgetModels.Think unanswered = UsWidgetModels.think(s, null, true, now);
         assertEquals("Ricambia", unanswered.cta);
-        assertEquals("Beatrice ti sta pensando", unanswered.message);
+        assertEquals("Beatrice ti ha pensato", unanswered.line);
+        assertEquals("10 min fa", unanswered.when);
+        assertEquals("Beatrice", unanswered.partner);
 
-        s.getJSONObject("think").put("lastSentAt", "2026-10-06T11:45:00Z");
+        s.getJSONObject("think").put("lastSentAt", "2026-10-06T11:55:00Z");
         UsWidgetModels.Think answered = UsWidgetModels.think(s, null, true, now);
         assertEquals("Ti penso", answered.cta);
-        assertEquals("Pensa a Beatrice", answered.message);
+        assertEquals("Pensa a Beatrice", answered.line);
+        assertEquals("", answered.when);
 
         // A send made from the widget answers too, before the app has synced.
         s.getJSONObject("think").put("lastSentAt", "2026-10-06T08:00:00Z");
-        JSONObject nativeSent = action("sent", "2026-10-06T11:40:00Z").put("sentAt", "2026-10-06T11:40:00Z");
+        JSONObject nativeSent = action("sent", "2026-10-06T11:40:00Z").put("sentAt", "2026-10-06T11:52:00Z");
         assertEquals("Ti penso", UsWidgetModels.think(s, nativeSent, true, now).cta);
 
         // A reaction to the partner's thought answers it too.
-        s.getJSONObject("think").put("lastAnsweredAt", "2026-10-06T11:35:00Z");
+        s.getJSONObject("think").put("lastAnsweredAt", "2026-10-06T11:55:00Z");
         assertEquals("Ti penso", UsWidgetModels.think(s, null, true, now).cta);
+    }
 
-        UsWidgetModels.Think fresh = UsWidgetModels.think(snapshot(null), null, true, now);
-        assertEquals("Pensa a Beatrice", fresh.message);
-        assertEquals("Ti penso", fresh.cta);
+    @Test
+    public void thinkCountIsTodayInRomeFromTheAppPlusTheWidgetSends() throws Exception {
+        Instant now = Instant.parse("2026-10-06T12:00:00Z");
+        JSONObject s = snapshot(null);
+        assertEquals("an older app says nothing", -1, UsWidgetModels.thinkCount(UsWidgetContract.normalize(s), 0, now));
+        s.getJSONObject("think").put("todayCount", 11).put("todayDate", "2026-10-06");
+        JSONObject clean = UsWidgetContract.normalize(s);
+        assertEquals(11, UsWidgetModels.thinkCount(clean, 0, now));
+        assertEquals("plus the widget's own sends after the app's count", 12, UsWidgetModels.thinkCount(clean, 1, now));
+        // Midnight in Rome: yesterday's count is not today's.
+        assertEquals(0, UsWidgetModels.thinkCount(clean, 0, Instant.parse("2026-10-06T22:30:00Z")));
+        s.getJSONObject("think").put("todayCount", -4);
+        assertEquals(0, UsWidgetModels.thinkCount(UsWidgetContract.normalize(s), 0, now));
+        assertEquals(1, UsWidgetModels.thinkCount(null, 1, now));
     }
 
     @Test

@@ -45,19 +45,28 @@ test('widgets: preview PNGs keep their size (2x of 168dp, Noi 192x96dp) and are 
   assert.deepEqual(size('noi'), [384, 192]);
 });
 
-test('Ti penso: the colour says whose move it is, the name is italic, no tiny type', () => {
-  const layout = res('layout/us_widget_think.xml');
+// Pastello (founder, 02/11/2026): the light theme of the approved board.
+test('Ti penso Pastello: the board\'s card, Fraunces and Figtree, the heart button that fills', () => {
+  const small = res('layout/us_widget_think.xml');
+  const medium = res('layout/us_widget_think_medium.xml');
   const provider = read(`${JAVA}/UsThinkWidgetProvider.java`);
-  const models = read(`${JAVA}/UsWidgetModels.java`);
-  assert.match(layout, /@\+id\/us_widget_kicker/);
-  assert.match(layout, /android:id="@\+id\/us_widget_message"[\s\S]*?android:fontFamily="serif"[\s\S]*?android:textSize="18sp"/);
-  assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)sp"/, 'nothing under 11sp');
-  assert.match(models, /static final String TONE_PARTNER = "partner";/);
-  assert.match(provider, /if \(UsWidgetModels\.TONE_PARTNER\.equals\(tone\)\) return 0xFFFF7C96;/);
-  assert.match(provider, /if \(UsWidgetModels\.TONE_ME\.equals\(tone\)\) return 0xFFA98BFF;/);
-  assert.match(provider, /new StyleSpan\(Typeface\.ITALIC\)/);
-  assert.match(provider, /views\.setInt\(R\.id\.us_widget_heart, "setColorFilter", quiet \? 0xCCF7EFE9 : tone\);/);
-  assert.match(provider, /"setBackgroundResource", pillFor\(model\.tone\)/);
+  for (const layout of [small, medium]) {
+    assert.match(layout, /android:background="@drawable\/us_widget_pastel_think"/);
+    assert.match(layout, /android:id="@\+id\/us_widget_message"[\s\S]*?android:fontFamily="@font\/us_fraunces"/);
+    assert.match(layout, /android:fontFamily="@font\/us_figtree"/);
+    assert.match(layout, /@drawable\/us_widget_pastel_heart/);
+    assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, 'nothing under 11sp');
+  }
+  assert.match(res('drawable/us_widget_pastel_think.xml'), /android:endColor="#FFEFE4FF"[\s\S]*android:startColor="#FFFFE3EA"/);
+  assert.match(res('values/colors.xml'), /<color name="us_widget_pastel_ink">#FF1A1020<\/color>/);
+  assert.match(provider, /views\.setInt\(R\.id\.us_widget_heart_bg, "setColorFilter", model\.done \? ROSA : 0xFFFFFFFF\);/);
+  assert.match(provider, /views\.setInt\(R\.id\.us_widget_heart, "setColorFilter", model\.done \? 0xFFFFFFFF : ROSA\);/);
+  // The fonts are the app's own, decompressed to TTF for Android.
+  for (const font of ['us_font_fraunces.ttf', 'us_font_fraunces_italic.ttf', 'us_font_figtree.ttf']) {
+    const bytes = fs.readFileSync(path.join(ROOT, PLUGIN, 'res/font', font));
+    assert.equal(bytes.readUInt32BE(0), 0x00010000, font);
+  }
+  assert.match(res('font/us_fraunces.xml'), /@font\/us_font_fraunces_italic/);
 });
 
 test('Noi 2x1: night card, orchid label, serif distance, italic line, two-colour portrait', () => {

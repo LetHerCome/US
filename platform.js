@@ -136,7 +136,10 @@
         partnerName: safeText(think.partnerName, 40),
         lastReceivedAt: safeInstant(think.lastReceivedAt),
         lastSentAt: safeInstant(think.lastSentAt),
-        lastAnsweredAt: safeInstant(think.lastAnsweredAt)
+        lastAnsweredAt: safeInstant(think.lastAnsweredAt),
+        // Ti penso of both that Rome day (UsWidgetContract.java).
+        todayCount: Number.isInteger(think.todayCount) ? Math.max(0, Math.min(999, think.todayCount)) : 0,
+        todayDate: safeCivilDate(think.todayDate)
       },
       couple: {
         names: (Array.isArray(couple.names) ? couple.names : []).map((name) => safeText(name, 40)).filter(Boolean).slice(0, 2),

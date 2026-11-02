@@ -400,3 +400,21 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
   - Dati © OpenStreetMap contributors (ODbL), stile OpenFreeMap / OpenMapTiles, citati nella privacy.
   - È candidata (`DRAFT` in `assets/ASSET_MANIFEST.json`) finché il founder non la approva dall'APK di staging.
 - **«Messaggio»:** di un Lasciato per te il widget mostra solo il tipo e l'ora («Ti ha lasciato una foto · 10 min fa»), mai le parole, la foto o il link.
+
+## 2026-11-02 — Widget: la famiglia «Pastello»
+
+**Fonte:** founder, 02/11/2026: «mi fanno schifo un po tutti, quelli manterrei per ora sono i 195 giorni insieme con la foto che cambia e quello che dice il partner ''beatrice'' ti ha pensato e sotto ricambia, al massimo lo farei piu veloce e toccando il cuore con la stessa animazione del ti penso dentro l'app». Riferimenti: Love8 e Paired. Tavola approvata: https://claude.ai/artifact/PvmHiSaPhF27JhLr1DzBg4. Sostituisce l'aspetto dei widget del 16/10 («Due colori») e la mappa di «Noi» del 31/10.
+
+- **Stile:** «Pastello», il tema chiaro della tavola: carte chiare a sfumatura, Fraunces per titoli e numeri, Figtree per il testo, inchiostro `#1a1020`. Tutti in piccolo (2×2) e medio (4×2).
+- **Avatar:** le foto vere dei profili, tonde, con il colore della persona come bordo. Senza foto, l'iniziale sul colore (rosa per chi ha il ruolo francesco, lilla per beatrice, o il colore scelto).
+- **I widget:**
+  1. Foto & giorni (rifà «Foto & Noi»; «Giorni insieme» confluisce qui);
+  2. Ti penso, più veloce: al tocco passa subito a «Ricambiato · adesso» e invia in sottofondo; il cuore fa la stessa animazione dell'app, in una finestrella trasparente di un attimo sopra la Home; nel medio, quante volte vi siete pensati oggi;
+  3. La domanda di oggi;
+  4. Distanza e batteria, senza mappa (sostituisce «Noi»);
+  5. Come stai, con l'emoji di ognuno: funzione nuova anche nell'app, per ultima, dopo un disegno;
+  6. Ricordi a pila;
+  7. Lasciato per te (sostituisce «Messaggio»): solo tipo e ora;
+  9. Countdown.
+- **Non scelti:** il widget «Nota» (la 8). Tolto con un revert: niente migrazione `widget_note_v1`, niente Edge `widget-note`, niente scope `note:rw`. Le Note condivise restano.
+- Le classi dei widget che ne sostituiscono uno restano le stesse, così i widget già messi sulla Home non spariscono.

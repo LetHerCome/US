@@ -20,9 +20,8 @@ import org.json.JSONObject;
 final class UsWidgetModels {
     static final ZoneId ROME = ZoneId.of("Europe/Rome");
     static final long DAY_MS = 86_400_000L;
-    /** "Sent" stays visible this long; taps inside the first part are ignored. */
-    /** "Inviato a …" stays long enough to be read (it is the only success feedback). */
-    static final long SENT_VISIBLE_MS = 5_000L;
+    /** "Ricambiato · adesso" stays a minute; taps inside the first part are ignored. */
+    static final long SENT_VISIBLE_MS = 60_000L;
     static final long SEND_COOLDOWN_MS = 1_800L;
     static final long FAILED_VISIBLE_MS = 10 * 60_000L;
     /** A "sending" older than this was interrupted (process killed). */
@@ -229,102 +228,113 @@ final class UsWidgetModels {
 
     // ---------- Ti penso ----------
 
+    /**
+     * Pastello (founder, 02/11/2026): the partner's last thought ("Bea ti ha
+     * pensato · 2 min fa", "Ricambia"); a tap turns it at once into
+     * "Ricambiato · adesso" and the send goes behind; "Ancora" sends again.
+     */
     static final class Think {
-        String message = "";
+        String line = "";
+        String when = "";
         String cta = "";
         /** Heart tap sends; otherwise it opens US. */
         boolean canSend = false;
-        /** A tap right now would be ignored (in flight or just sent). */
+        /** A tap right now would be ignored (in flight or just tapped). */
         boolean busy = false;
-        boolean pulse = false;
-        /** Whose move the widget shows: partner (rosa), me (lilla), quiet (latte). */
-        String tone = TONE_QUIET;
-        /** The other person's name, styled in the message when it appears there. */
+        /** Just tapped: the heart button is full rosa, "adesso". */
+        boolean done = false;
+        /** The other person's name, as the app shows it. */
         String partner = "";
         Instant nextChange = null;
     }
 
-    static final String TONE_QUIET = "quiet";
-    static final String TONE_PARTNER = "partner";
-    static final String TONE_ME = "me";
-
     /**
-     * @param action native action state: status (idle|sending|sent|failed|unauthorized|rate_limited), at, sentAt
+     * @param action native action state: status (idle|sending|sent|failed|unauthorized|rate_limited), at, sentAt, reply
      * @param hasCredential the device-scoped send credential exists for this account
      */
     static Think think(JSONObject snapshot, JSONObject action, boolean hasCredential, Instant now) {
         Think out = new Think();
         if (snapshot == null) {
-            out.message = "Apri US per collegare il widget";
+            out.line = "Apri US per collegare il widget";
             out.cta = "Apri";
             return out;
         }
         JSONObject t = UsWidgetContract.optObject(snapshot, "think");
         String partner = t.optString("partnerName", "").trim();
         out.partner = partner;
+        String who = partner.isEmpty() ? "L’altra persona" : partner;
         String status = action == null ? "idle" : action.optString("status", "idle");
         Instant actionAt = action == null ? null : UsWidgetContract.instant(action.optString("at", ""));
         long sinceAction = actionAt == null ? Long.MAX_VALUE : Math.max(0, now.toEpochMilli() - actionAt.toEpochMilli());
 
         if (!hasCredential || status.equals("unauthorized")) {
-            out.message = "Apri US per riattivare l’invio";
+            out.line = "Apri US per riattivare l’invio";
             out.cta = "Apri";
             return out;
         }
         out.canSend = true;
-        if (status.equals("sending") && sinceAction < SENDING_STALE_MS) {
-            out.message = "Invio…";
-            out.cta = "Invio…";
-            out.busy = true;
-            out.pulse = true;
-            out.tone = TONE_ME;
-            out.nextChange = actionAt.plusMillis(SENDING_STALE_MS);
-            return out;
-        }
-        if (status.equals("sent") && sinceAction < SENT_VISIBLE_MS) {
-            out.message = partner.isEmpty() ? "Pensiero inviato" : "Inviato a " + partner;
-            out.cta = "Inviato";
-            out.tone = TONE_ME;
-            out.busy = sinceAction < SEND_COOLDOWN_MS;
-            out.nextChange = actionAt.plusMillis(out.busy ? SEND_COOLDOWN_MS : SENT_VISIBLE_MS);
+        boolean sending = status.equals("sending") && sinceAction < SENDING_STALE_MS;
+        if (sending || (status.equals("sent") && sinceAction < SENT_VISIBLE_MS)) {
+            // Shown the moment the heart is tapped, before the server answers.
+            out.done = true;
+            out.line = action.optBoolean("reply", false) ? "Ricambiato" : "Inviato";
+            out.when = "adesso";
+            out.cta = "Ancora";
+            out.busy = sending || sinceAction < SEND_COOLDOWN_MS;
+            out.nextChange = actionAt.plusMillis(sending ? SENDING_STALE_MS : out.busy ? SEND_COOLDOWN_MS : SENT_VISIBLE_MS);
             return out;
         }
         if ((status.equals("failed") || (status.equals("sending") && sinceAction >= SENDING_STALE_MS)) && sinceAction < FAILED_VISIBLE_MS) {
-            out.message = "Non è partito";
+            out.line = "Non è partito";
             out.cta = "Riprova";
             out.nextChange = actionAt.plusMillis(FAILED_VISIBLE_MS);
             return out;
         }
         if (status.equals("rate_limited") && sinceAction < FAILED_VISIBLE_MS) {
-            out.message = "Un attimo di pausa";
+            out.line = "Un attimo di pausa";
             out.cta = "Riprova";
             out.nextChange = actionAt.plusMillis(FAILED_VISIBLE_MS);
             return out;
         }
 
         Instant received = UsWidgetContract.instant(t.optString("lastReceivedAt", ""));
-        Instant sent = UsWidgetContract.instant(t.optString("lastSentAt", ""));
-        Instant nativeSent = action == null ? null : UsWidgetContract.instant(action.optString("sentAt", ""));
-        if (nativeSent != null && (sent == null || nativeSent.isAfter(sent))) sent = nativeSent;
-        String who = partner.isEmpty() ? "L’altra persona" : partner;
-
-        // "Ricambia" only while the partner's thought is the latest one and
-        // still unanswered. Once answered it becomes a plain "Ti penso".
-        Instant answered = UsWidgetContract.instant(t.optString("lastAnsweredAt", ""));
-        boolean unanswered = received != null
-            && (sent == null || received.isAfter(sent))
-            && (answered == null || received.isAfter(answered));
-        if (unanswered) {
-            long minutes = Math.max(0, Duration.between(received, now).toMinutes());
-            out.message = minutes < 60 ? who + " ti sta pensando" : who + " ti ha pensato\n" + ago(minutes);
+        if (unanswered(t, action)) {
+            out.line = who + " ti ha pensato";
+            out.when = bubbleAgo(received, now);
             out.cta = "Ricambia";
-            out.tone = TONE_PARTNER;
-            out.nextChange = nextAgoChange(received, now);
+            if (!out.when.isEmpty()) out.nextChange = bubbleNextChange(received, now);
             return out;
         }
-        out.message = partner.isEmpty() ? "Manda un pensiero" : "Pensa a " + partner;
+        out.line = partner.isEmpty() ? "Manda un pensiero" : "Pensa a " + partner;
         out.cta = "Ti penso";
         return out;
+    }
+
+    /**
+     * "Ricambia" only while the partner's thought is the latest one and still
+     * unanswered (a thought or a reaction answers it, a widget send too).
+     */
+    static boolean unanswered(JSONObject think, JSONObject action) {
+        Instant received = UsWidgetContract.instant(think.optString("lastReceivedAt", ""));
+        Instant sent = UsWidgetContract.instant(think.optString("lastSentAt", ""));
+        Instant nativeSent = action == null ? null : UsWidgetContract.instant(action.optString("sentAt", ""));
+        if (nativeSent != null && (sent == null || nativeSent.isAfter(sent))) sent = nativeSent;
+        Instant answered = UsWidgetContract.instant(think.optString("lastAnsweredAt", ""));
+        return received != null
+            && (sent == null || received.isAfter(sent))
+            && (answered == null || received.isAfter(answered));
+    }
+
+    /**
+     * How many times the two of you thought of each other today (Rome day): the
+     * app's count plus the widget's own sends after it. -1 when nothing knows.
+     */
+    static int thinkCount(JSONObject snapshot, int widgetSendsAfter, Instant now) {
+        JSONObject t = snapshot == null ? null : snapshot.optJSONObject("think");
+        String date = t == null ? "" : t.optString("todayDate", "");
+        if (date.isEmpty()) return widgetSendsAfter > 0 ? widgetSendsAfter : -1;
+        int app = date.equals(romeToday(now).toString()) ? Math.max(0, t.optInt("todayCount", 0)) : 0;
+        return app + Math.max(0, widgetSendsAfter);
     }
 
     static String ago(long minutes) {
