@@ -21,4 +21,5 @@
     <color name="us_widget_pastel_ink">#FF1A1020</color>
     <color name="us_widget_pastel_sub">#FF5B4A63</color>
     <color name="us_widget_pastel_plum">#FF3B1F5C</color>
+    <color name="us_widget_pastel_heart_bg">#FFFFF1F0</color>
 </resources>

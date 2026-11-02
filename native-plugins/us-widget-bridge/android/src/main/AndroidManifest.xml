@@ -97,7 +97,7 @@
         <receiver
             android:name="com.usapp.widget.UsDaysWidgetProvider"
             android:exported="false"
-            android:label="@string/us_widget_days_name">
+            android:label="@string/us_widget_photo_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

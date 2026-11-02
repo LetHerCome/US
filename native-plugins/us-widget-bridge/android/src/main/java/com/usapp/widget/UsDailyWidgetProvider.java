@@ -19,6 +19,7 @@ import android.widget.RemoteViews;
  */
 public final class UsDailyWidgetProvider extends AppWidgetProvider {
     private static final int TRACK = 0x2E3B1F5C;
+    private static final int TRACK_NIGHT = 0xFF453A52;
 
     @Override public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
         UsWidgets.refreshAll(context);
@@ -56,8 +57,8 @@ public final class UsDailyWidgetProvider extends AppWidgetProvider {
         medium.setTextViewText(R.id.us_daily_status, status(daily.state, who));
         UsWidgets.avatar(medium, state.store.readNoiPortrait("me"), R.id.us_daily_me, me);
         UsWidgets.avatar(medium, state.store.readNoiPortrait("partner"), R.id.us_daily_partner, them);
-        medium.setInt(R.id.us_daily_me_done, "setColorFilter", daily.meAnswered() ? me : TRACK);
-        medium.setInt(R.id.us_daily_partner_done, "setColorFilter", daily.partnerAnswered() ? them : TRACK);
+        UsWidgets.themedColor(medium, context, R.id.us_daily_me_done, "setColorFilter", daily.meAnswered() ? me : TRACK, daily.meAnswered() ? me : TRACK_NIGHT);
+        UsWidgets.themedColor(medium, context, R.id.us_daily_partner_done, "setColorFilter", daily.partnerAnswered() ? them : TRACK, daily.partnerAnswered() ? them : TRACK_NIGHT);
         medium.setContentDescription(R.id.us_daily_root, context.getString(R.string.us_widget_daily_name) + ". " + question + ". " + status(daily.state, who));
         small.setContentDescription(R.id.us_daily_root, context.getString(R.string.us_widget_daily_name) + ". " + question + (line.isEmpty() ? "" : ". " + line));
         // The question turns at midnight in Rome.

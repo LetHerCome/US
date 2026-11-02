@@ -782,7 +782,6 @@
 #usWidgetHub .us-wp-noi .us-wp-noi-portrait::before,#usWidgetHub .us-wp-noi .us-wp-noi-portrait::after{width:16px;height:16px;box-shadow:0 0 0 2px #fff;background:#ff7c96}
 #usWidgetHub .us-wp-noi .us-wp-noi-portrait::after{background:#a98bff}
 #usWidgetHub .us-wp-noi .us-wp-noi-info b{color:#5b4a63}
-#usWidgetHub .us-wp-photo{background:linear-gradient(140deg,#ffd3a8,#ff7c96 50%,#6b3a72)}
 #usWidgetHub .us-wp-daily{display:grid;place-items:center;background:linear-gradient(140deg,#e4d9ff,#ffe0d4);color:#1a1020}
 #usWidgetHub .us-wp-daily>*{display:none}
 #usWidgetHub .us-wp-daily::after{content:"Oggi";padding:3px 8px;border-radius:999px;background:#fff;font:800 10px/1.2 var(--us-font-ui)}

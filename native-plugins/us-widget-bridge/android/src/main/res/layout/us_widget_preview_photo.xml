@@ -1,52 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget picker preview (Android 12+), Foto & giorni in Pastello. Generic:
-     the board's sunset instead of a photo, every text from strings.xml. -->
+<!-- Widget picker preview (Android 12+). An abstract "photo", never a real one. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_pastel_photo_empty"
-    android:clipToOutline="true">
+    android:background="@drawable/us_widget_preview_photo_art">
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:importantForAccessibility="no"
         android:scaleType="fitXY"
-        android:src="@drawable/us_widget_pastel_scrim_bottom" />
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="14dp"
-        android:layout_marginTop="12dp"
-        android:orientation="horizontal">
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_pastel_bar_on" />
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_pastel_bar_off" />
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_pastel_bar_off" />
-    </LinearLayout>
+        android:src="@drawable/us_widget_photo_scrim" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:orientation="vertical"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:paddingStart="14dp"
         android:paddingEnd="14dp"
         android:paddingBottom="12dp">
@@ -54,21 +25,23 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/us_fraunces"
+            android:fontFamily="serif"
             android:includeFontPadding="false"
             android:text="@string/us_widget_preview_days"
             android:textColor="@color/us_widget_text"
-            android:textSize="52sp" />
+            android:textSize="34sp" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:fontFamily="@font/us_fraunces"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:fontFamily="serif"
             android:includeFontPadding="false"
+            android:maxLines="2"
             android:text="@string/us_widget_preview_days_unit"
-            android:textColor="#EBF7EFE9"
-            android:textSize="15sp"
+            android:textColor="@color/us_widget_text"
+            android:textSize="14sp"
             android:textStyle="italic" />
     </LinearLayout>
 </FrameLayout>

@@ -1633,7 +1633,6 @@
     'La distanza tra voi e la batteria di chi ami. Mai dove siete.': 'The distance between you and your partner’s battery. Never where you are.',
     'Foto & Noi': 'Photo & Us',
     'La foto di Oggi, che cambia ogni ora, con i giorni insieme.': 'Today’s photo, changing every hour, with your days together.',
-    'Foto & giorni': 'Photo & days',
     '{name} ti sta pensando': '{name} is thinking of you',
     'Pensa a {name}': 'Think of {name}',
     Ricambia: 'Think back',

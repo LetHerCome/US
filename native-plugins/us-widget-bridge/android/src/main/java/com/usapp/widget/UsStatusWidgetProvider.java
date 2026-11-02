@@ -42,7 +42,7 @@ public final class UsStatusWidgetProvider extends AppWidgetProvider {
             person(views, partner, R.id.us_status_partner_emoji, R.id.us_status_partner_line, "…", "ancora niente");
         }
         UsWidgets.avatar(medium, state.store.readNoiPortrait("me"), R.id.us_status_me_avatar, meColour);
-        person(medium, me, R.id.us_status_me_emoji, R.id.us_status_me_line, "＋", "Come stai?");
+        person(medium, me, R.id.us_status_me_emoji, R.id.us_status_me_line, "＋", "Scegli come stai in Oggi");
         small.setContentDescription(R.id.us_status_root, spoken(name, partner) + ". Apri Come stai");
         medium.setContentDescription(R.id.us_status_root, "Tu: " + (me.shown ? me.line : "nessuno stato") + ". " + spoken(name, partner) + ". Apri Come stai");
         return UsWidgets.sized(options, small, medium);

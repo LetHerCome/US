@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The photo shown now among the hour's three (14 x 3 dp). -->
+<!-- Ricordi a pila, Midnight: a print underneath (latte 25%). -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#FFF7EFE9" />
+    <solid android:color="#40F7EFE9" />
     <corners android:radius="2dp" />
-    <size android:width="14dp" android:height="3dp" />
+    <size android:width="6dp" android:height="4dp" />
 </shape>

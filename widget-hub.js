@@ -16,7 +16,7 @@
     { kind: 'think', name: 'Ti penso', copy: 'Un pensiero con un tocco, anche con US chiusa.', shape: 'square' },
     { kind: 'countdown', name: 'Countdown', copy: 'Lo stesso Countdown che hai scelto su Oggi.', shape: 'square' },
     { kind: 'noi', name: 'Distanza e batteria', copy: 'La distanza tra voi e la batteria di chi ami. Mai dove siete.', shape: 'wide' },
-    { kind: 'photo', name: 'Foto & giorni', copy: 'La foto di Oggi, che cambia ogni ora, con i giorni insieme.', shape: 'square' },
+    { kind: 'photo', name: 'Foto & Noi', copy: 'La foto di Oggi, che cambia ogni ora, con i giorni insieme.', shape: 'square' },
     { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda del giorno e a chi tocca rispondere. Mai le risposte.', shape: 'wide' },
     { kind: 'message', name: 'Lasciato per te', copy: 'Il Lasciato per te ancora chiuso: solo che cosa è e quando.', shape: 'square' },
     { kind: 'memories', name: 'Ricordi a pila', copy: 'Le vostre foto di questo giorno, un anno fa. Altrimenti le più recenti.', shape: 'square' },

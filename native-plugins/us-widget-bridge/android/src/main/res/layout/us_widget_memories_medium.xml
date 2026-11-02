@@ -52,7 +52,7 @@
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
-            <Space
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1" />
@@ -82,7 +82,7 @@
                 android:textColor="@color/us_widget_pastel_sub"
                 android:textSize="12sp" />
 
-            <Space
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1" />

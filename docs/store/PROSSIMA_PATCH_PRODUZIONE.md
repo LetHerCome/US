@@ -406,6 +406,8 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Font:** Fraunces e Figtree dell'app, decompressi da WOFF2 a TTF (`res/font`, circa 290 KB).
   - **Da provare:** il cuore sul widget, che diventa subito rosa con «Ricambiato · adesso» e fa l'animazione dell'app; il medio con il contatore; la foto dell'altro nell'avatar, o la sua iniziale sul suo colore.
 - **1 · Foto & giorni** (rifà «Foto & Noi»; «Giorni insieme» confluisce qui):
+  - **Giorni insieme** non c'è più: chi l'aveva sulla Home vede Foto & Noi (stessa classe, nascosta dalla lista dei widget, col nome Foto & Noi).
+  - **Dopo la prova dell'APK (founder, 02/11):** torna lo **stile di prima** e il nome «Foto & Noi» (foto a tutto riquadro, velo scuro in basso, giorni in serif, un solo layout per ogni misura). Resta la foto che cambia ogni ora; via trattini, foto rotonde e riga del posto del Pastello.
   - la foto di Oggi di quest'ora e quelle delle due ore successive, scelte con lo stesso calcolo di Oggi (`homeRotationPick`). Il widget le cambia da solo ogni ora anche a US chiusa, e i tre trattini in alto dicono quale delle tre è; dopo la terza resta sull'ultima finché US non si riapre;
   - sotto, i giorni insieme in Fraunces («195 giorni insieme»); nel 4×2 anche le vostre due foto e «dal 21 aprile · Lisbona, 12 ottobre» (da quando, e il posto o la didascalia e la data della foto);
   - sul telefono restano al massimo tre foto, solo quelle che il widget nomina; le altre si cancellano;
@@ -437,6 +439,12 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 - **Anteprime Pastello:** nella lista dei widget del telefono ogni widget ha la sua carta Pastello, sia come layout (Android 12+) sia come immagine PNG, che molti launcher (Xiaomi compreso) mostrano al posto del layout. In Impostazioni › Widget ogni tessera è la carta del suo widget. «Giorni insieme» non compare più nella lista (è dentro Foto & giorni); quelli già sulla Home continuano a funzionare.
   - **Dopo un aggiornamento** i widget già sulla Home si ridisegnano da soli col layout nuovo (`MY_PACKAGE_REPLACED`, c'era già dalla V1; ora ha un test). Su Xiaomi, se l'avvio automatico di US è spento, il sistema può bloccare questo segnale: allora si ridisegnano alla prima apertura di US o al giro dell'ora.
   - **Da provare:** aprire la lista dei widget del telefono: tutte carte chiare, nessuna scura; Impostazioni › Widget in US.
+- **Correzioni dopo la prova dell'APK (founder, 02/11):**
+  - **Ti penso e la Domanda «non si vedevano»:** il launcher scriveva «Impossibile caricare il widget» per un elemento (`Space`) che i widget Android non accettano. Tolto ovunque; un test ora accetta solo gli elementi ammessi. Visti sull'emulatore uno per uno, in chiaro e in scuro.
+  - **Ti penso:** il cuore usciva dal bordo, ora sta dentro. **Distanza e batteria:** senza distanza «Distanza non nota» copriva le foto, ora è piccola.
+  - **Tema del telefono:** chiaro = Pastello, scuro = «Midnight» (i colori notte di US); cambia da solo appena cambia il tema, anteprime comprese. Su Android 11 e precedenti i colori del cuore e della batteria si aggiornano al giro successivo.
+  - **Da provare:** cambiare il tema del telefono con i widget sulla Home.
+  - **Limite noto:** i launcher non applicano i caratteri Fraunces e Figtree nei widget: si vede il carattere del sistema.
 - **5 · Come stai** (funzione nuova, app e widget; `docs/missions/widget-come-stai-v1.md`):
   - **In Oggi** una pillola accanto alla distanza: l'emoji di chi ami e la tua, o «Come stai?». Il tocco apre i 12 stati (🥰 😊 😴 😔 😤 🤒 🥳 💼 📚 🏋️ 🚗 🍝); un tocco salva, «Togli» lo toglie. Dura 12 ore. Niente notifica.
   - **In Impostazioni › Tu › «Come stai»** ognuno sceglie le sue parole al maschile o al femminile; senza scelta, parole che non cambiano («in amore», «senza energie»).

@@ -14,7 +14,7 @@
 
     <string name="us_widget_noi_name">Distanza e batteria</string>
     <string name="us_widget_noi_me">Tu</string>
-    <string name="us_widget_noi_unknown">Distanza non nota</string>
+    <string name="us_widget_noi_unknown">Distanza non ancora nota</string>
     <string name="us_widget_daily_name">La domanda di oggi</string>
     <string name="us_widget_daily_pill">Oggi</string>
     <string name="us_widget_daily_description">La domanda di oggi e a chi tocca rispondere. Mai le risposte.</string>
@@ -45,9 +45,8 @@
     <string name="us_widget_preview_memories">Un ricordo</string>
     <string name="us_widget_preview_memories_date">12 ott</string>
 
-    <string name="us_widget_days_name">Giorni insieme</string>
 
-    <string name="us_widget_photo_name">Foto &amp; giorni</string>
+    <string name="us_widget_photo_name">Foto &amp; Noi</string>
     <string name="us_widget_photo_description">La foto di Oggi, che cambia ogni ora, e i giorni insieme</string>
     <string name="us_widget_photo_empty">La foto di Oggi apparirà qui</string>
 

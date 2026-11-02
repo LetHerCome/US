@@ -1,7 +1,7 @@
-// Widget Foto & giorni, Pastello (founder, 02/11/2026: "i 195 giorni insieme
-// con la foto che cambia"). Oggi's photo of this hour and of the next two,
-// picked the way Oggi picks them, change by themselves every hour with US
-// closed; the bars say which. Giorni insieme (31/10) joined it.
+// Widget Foto & Noi (founder, 02/11/2026): the style it had before Pastello
+// ("è più carino"), with the photo that changes by itself every hour: Oggi's
+// photo of this hour and of the next two, picked the way Oggi picks them.
+// Giorni insieme (31/10) joined it.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -13,20 +13,15 @@ const JAVA = `${PLUGIN}/java/com/usapp/widget`;
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const res = (file) => read(`${PLUGIN}/res/${file}`);
 
-test('layouts: the photo under a veil, the bars, the days in Fraunces; the 4x2 adds you two and the line', () => {
-  const small = res('layout/us_widget_photo.xml');
-  const medium = res('layout/us_widget_photo_medium.xml');
-  for (const layout of [small, medium]) {
-    assert.match(layout, /android:clipToOutline="true"/);
-    assert.match(layout, /android:id="@\+id\/us_photo_days"[\s\S]*?android:fontFamily="@font\/us_fraunces"/);
-    assert.match(layout, /android:id="@\+id\/us_photo_unit"[\s\S]*?android:textStyle="italic"/);
-    assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/);
-  }
-  assert.match(small, /@\+id\/us_photo_bar_1[\s\S]*@\+id\/us_photo_bar_2[\s\S]*@\+id\/us_photo_bar_3/);
-  assert.match(small, /@drawable\/us_widget_pastel_scrim_bottom/);
-  assert.match(medium, /@drawable\/us_widget_pastel_scrim_left/);
-  assert.match(medium, /@\+id\/us_photo_me[\s\S]*@\+id\/us_photo_partner/);
-  assert.match(medium, /@\+id\/us_photo_line/);
+test('layout: the look of before, the photo edge to edge, the night from below, the days in serif', () => {
+  const layout = res('layout/us_widget_photo.xml');
+  assert.match(layout, /android:background="@drawable\/us_widget_background"/);
+  assert.match(layout, /android:id="@\+id\/us_photo_scrim"[\s\S]*?android:src="@drawable\/us_widget_photo_scrim"/);
+  assert.match(layout, /android:id="@\+id\/us_photo_days"[\s\S]*?android:fontFamily="serif"[\s\S]*?android:textSize="34sp"/);
+  assert.match(layout, /android:id="@\+id\/us_photo_unit"[\s\S]*?android:textStyle="italic"/);
+  assert.match(layout, /@drawable\/us_widget_two_dots/);
+  assert.equal(fs.existsSync(path.join(ROOT, PLUGIN, 'res/layout/us_widget_photo_medium.xml')), false, 'one layout for every size, as before');
+  assert.match(res('values/strings.xml'), /<string name="us_widget_photo_name">Foto &amp; Noi<\/string>/);
 });
 
 test('provider: the slot of this hour, redrawn at the next hour and at Rome midnight; no network', () => {
@@ -34,14 +29,20 @@ test('provider: the slot of this hour, redrawn at the next hour and at Rome midn
   assert.match(provider, /UsWidgetModels\.photoSlot\(state\.snapshot, state\.now\)/);
   assert.match(provider, /state\.needsUpdateAt\(slot\.nextChange\);/);
   assert.match(provider, /state\.store\.readPhoto\(slot\.key\)/);
-  assert.match(provider, /return UsWidgets\.sized\(options, small, medium\);/);
-  assert.match(provider, /UsWidgetModels\.photoLine\(state\.snapshot, slot\)/);
+  assert.match(provider, /new RemoteViews\(context\.getPackageName\(\), R\.layout\.us_widget_photo\)/);
   assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(/i);
-  // Giorni insieme placed before render Foto & giorni; it is no longer offered.
+  // Giorni insieme placed before render Foto & Noi; it is no longer offered.
   assert.match(read(`${JAVA}/UsDaysWidgetProvider.java`), /return UsPhotoWidgetProvider\.render\(context, state, options\);/);
   assert.match(res('xml/us_widget_days_info.xml'), /android:initialLayout="@layout\/us_widget_photo"/);
   assert.doesNotMatch(read('widget-hub.js'), /kind: 'days'/);
-  assert.match(read('widget-hub.js'), /\{ kind: 'photo', name: 'Foto & giorni', copy: '[^']+', shape: 'square' \}/);
+  // One widget only (founder, 02/11/2026): the app never offers Giorni insieme again;
+  // the class stays, hidden and named Foto & Noi, for the ones already placed.
+  assert.doesNotMatch(read('widgets.js'), /'days', 'memories'|days: 'bond'/);
+  assert.doesNotMatch(read('platform.js'), /'message', 'days'/);
+  assert.match(read(`${PLUGIN}/AndroidManifest.xml`), /UsDaysWidgetProvider"\s+android:exported="false"\s+android:label="@string\/us_widget_photo_name"/);
+  assert.match(res('xml/us_widget_days_info.xml'), /android:widgetFeatures="hide_from_picker"/);
+  assert.doesNotMatch(res('values/strings.xml'), /Giorni insieme</);
+  assert.match(read('widget-hub.js'), /\{ kind: 'photo', name: 'Foto & Noi', copy: '[^']+', shape: 'square' \}/);
 });
 
 test('store: up to three photos by key, only the ones the snapshot names, all gone with the account', () => {
