@@ -457,3 +457,5 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Da provare:** lasciare una foto da un telefono e guardare l'altro; senza account «Apri US per collegarlo» non si taglia; tema chiaro e scuro.
 - **Come stai:** fondo sfumato, la foto tonda di chi ami (o l'iniziale) con l'emoji come adesivo, il nome in Fraunces e «innamorata · da 1 ora»; nel 4×2 due metà sfumate, tu a sinistra e chi ami a destra, il cuore in mezzo. Via le metà di colore piatto.
   - **Da provare:** scegliere uno stato: compare sulla foto; senza foto l'iniziale; tema chiaro e scuro.
+- **Foto & Noi** (foto a tutto widget, segue il tema): la foto di Oggi con la grana leggera che in basso sfuma nella carta del tema (crema col tema chiaro, notte col tema scuro, come prima), «195» in Fraunces e «giorni insieme» in corsivo. Senza foto: illustrazione col sole e la luna e «La foto di Oggi apparirà qui». Resta la foto che cambia ogni ora.
+  - **Da provare:** con la foto, tema chiaro e scuro; senza foto.

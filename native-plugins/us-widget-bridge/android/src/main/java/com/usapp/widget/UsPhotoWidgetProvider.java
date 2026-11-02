@@ -12,16 +12,19 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.os.Bundle;
+import android.text.Layout;
 import android.view.View;
 import android.widget.RemoteViews;
 
 /**
- * Foto & Noi (founder, 02/11/2026: the style it had before Pastello, "è più
- * carino"): Oggi's photo edge to edge, the night rising from the bottom and
- * the days together in serif. The photo still changes by itself every hour:
+ * Foto & Noi, Foto protagonista (founder, 02/11/2026: "Segue il tema (B)"):
+ * Oggi's photo edge to edge under a light grain, melting from below into the
+ * paper of the phone's theme (cream in Pastello, the night in Midnight), the
+ * days together in Fraunces. The photo still changes by itself every hour:
  * Oggi's photo of this hour and of the next two, cached by US while open
- * (never a URL, never fetched here). One layout for every size. Giorni
- * insieme widgets placed before render the same (UsDaysWidgetProvider).
+ * (never a URL, never fetched here). Without one, an illustration. One layout
+ * for every size. Giorni insieme widgets placed before render the same
+ * (UsDaysWidgetProvider).
  */
 public final class UsPhotoWidgetProvider extends AppWidgetProvider {
     private static final int MAX_EDGE_PX = 720;
@@ -49,10 +52,9 @@ public final class UsPhotoWidgetProvider extends AppWidgetProvider {
         views.setOnClickPendingIntent(R.id.us_photo_root, UsWidgets.open(context, "photo", 4501));
         boolean days = couple.days >= 0;
         if (days) state.needsUpdateAt(couple.nextChange);
-        views.setViewVisibility(R.id.us_photo_days, days ? View.VISIBLE : View.GONE);
-        views.setViewVisibility(R.id.us_photo_unit, days ? View.VISIBLE : View.GONE);
-        views.setTextViewText(R.id.us_photo_days, days ? Long.toString(couple.days) : "");
-        views.setTextViewText(R.id.us_photo_unit, couple.days == 1 ? "giorno insieme" : "giorni insieme");
+        // "195 giorni insieme" in Fraunces, the unit in italic on two lines beside the number.
+        UsWidgetArt.serif(views, context, R.id.us_photo_days, days ? Long.toString(couple.days) : "", 40f, 160, 1, false, Layout.Alignment.ALIGN_NORMAL);
+        UsWidgetArt.serif(views, context, R.id.us_photo_unit, days ? (couple.days == 1 ? "giorno\ninsieme" : "giorni\ninsieme") : "", 14f, 90, 2, true, Layout.Alignment.ALIGN_NORMAL);
 
         byte[] bytes = slot.ready() ? state.store.readPhoto(slot.key) : null;
         Bitmap photo = null;
@@ -65,9 +67,13 @@ public final class UsPhotoWidgetProvider extends AppWidgetProvider {
         }
         boolean shown = photo != null;
         if (shown) views.setImageViewBitmap(R.id.us_photo_image, photo);
+        else UsWidgetArt.art(views, context, R.id.us_photo_art, R.id.us_photo_grain, R.drawable.us_widget_art_photo, options, true);
+        views.setViewVisibility(R.id.us_photo_art, shown ? View.GONE : View.VISIBLE);
         views.setViewVisibility(R.id.us_photo_image, shown ? View.VISIBLE : View.GONE);
+        // The photo melts into the theme's paper (founder, 02/11/2026: it follows the theme).
         views.setViewVisibility(R.id.us_photo_scrim, shown ? View.VISIBLE : View.GONE);
         views.setViewVisibility(R.id.us_photo_placeholder, shown ? View.GONE : View.VISIBLE);
+        if (shown) views.setViewVisibility(R.id.us_photo_grain, UsWidgetArt.clips() ? View.VISIBLE : View.GONE);
         views.setTextViewText(R.id.us_photo_placeholder, context.getString(state.snapshot == null ? R.string.us_widget_connect : R.string.us_widget_photo_empty));
         String place = slot.label.isEmpty() ? "" : ", " + slot.label;
         views.setContentDescription(R.id.us_photo_root, (shown ? "La vostra foto di Oggi" + place : context.getString(R.string.us_widget_photo_name))
