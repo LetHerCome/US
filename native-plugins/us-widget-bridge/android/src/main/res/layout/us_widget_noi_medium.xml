@@ -1,171 +1,170 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Distanza e batteria 4x2, Pastello: "Tu" on the left and the partner on
-     the right with their battery, a dotted arc with a heart between you, the
-     distance in Fraunces and how old the reading is. Never a map. -->
+<!-- Distanza e batteria 4x2, Foto protagonista: your two portraits in the top
+     corners, the dotted path with the heart between them, the distance in
+     Fraunces and "aggiornato 10 min fa"; at the bottom "Tu" and the partner
+     with the battery. Never a map, never where you are. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_noi_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_pastel_distance"
-    android:paddingStart="18dp"
-    android:paddingTop="14dp"
-    android:paddingEnd="18dp"
-    android:paddingBottom="14dp">
+    android:background="@drawable/us_widget_card"
+    android:clipToOutline="true">
 
     <ImageView
+        android:id="@+id/us_noi_art"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:layout_marginStart="52dp"
-        android:layout_marginTop="28dp"
-        android:layout_marginEnd="52dp"
+        android:layout_height="match_parent"
         android:contentDescription="@null"
         android:importantForAccessibility="no"
-        android:scaleType="fitXY"
-        android:src="@drawable/us_widget_pastel_arc" />
+        android:scaleType="centerCrop"
+        android:src="@drawable/us_widget_art_noi_m" />
 
     <FrameLayout
-        android:layout_width="26dp"
-        android:layout_height="26dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="6dp">
+        android:id="@+id/us_noi_grain"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/us_widget_grain" />
+
+    <FrameLayout
+        android:layout_width="46dp"
+        android:layout_height="46dp"
+        android:layout_marginStart="18dp"
+        android:layout_marginTop="16dp">
 
         <ImageView
+            android:id="@+id/us_noi_me"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:contentDescription="@null"
             android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_pastel_circle"
-            android:tint="@color/us_widget_pastel_heart_bg" />
+            android:scaleType="fitCenter"
+            android:src="@drawable/us_widget_art_field" />
 
         <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
+            android:id="@+id/us_noi_me_initial"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:contentDescription="@null"
             android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_pastel_heart" />
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="46dp"
+        android:layout_height="46dp"
+        android:layout_gravity="end"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="18dp">
+
+        <ImageView
+            android:id="@+id/us_noi_partner"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:scaleType="fitCenter"
+            android:src="@drawable/us_widget_art_field" />
+
+        <ImageView
+            android:id="@+id/us_noi_partner_initial"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:visibility="gone" />
     </FrameLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="start|bottom"
-        android:gravity="center_horizontal"
-        android:orientation="vertical">
-
-        <ImageView
-            android:id="@+id/us_noi_me"
-            android:layout_width="66dp"
-            android:layout_height="66dp"
-            android:contentDescription="@null"
-            android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_pastel_circle" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:fontFamily="@font/us_figtree"
-            android:importantForAccessibility="no"
-            android:includeFontPadding="false"
-            android:text="@string/us_widget_noi_me"
-            android:textColor="@color/us_widget_pastel_ink"
-            android:textSize="11.5sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:gravity="center_horizontal"
-        android:orientation="vertical">
-
-        <ImageView
-            android:id="@+id/us_noi_partner"
-            android:layout_width="66dp"
-            android:layout_height="66dp"
-            android:contentDescription="@null"
-            android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_pastel_circle" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/us_noi_partner_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:fontFamily="@font/us_figtree"
-                android:importantForAccessibility="no"
-                android:includeFontPadding="false"
-                android:maxLines="1"
-                android:maxWidth="72dp"
-                android:textColor="@color/us_widget_pastel_ink"
-                android:textSize="11.5sp"
-                android:textStyle="bold" />
-
-            <ImageView
-                android:id="@+id/us_noi_battery_icon"
-                android:layout_width="15dp"
-                android:layout_height="15dp"
-                android:layout_marginStart="4dp"
-                android:contentDescription="@null"
-                android:importantForAccessibility="no"
-                android:src="@drawable/us_widget_battery_high"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/us_noi_battery"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="2dp"
-                android:fontFamily="@font/us_figtree"
-                android:fontFeatureSettings="tnum"
-                android:importantForAccessibility="no"
-                android:includeFontPadding="false"
-                android:maxLines="1"
-                android:textColor="@color/us_widget_pastel_sub"
-                android:textSize="11.5sp"
-                android:visibility="gone" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|bottom"
-        android:layout_marginBottom="14dp"
+        android:layout_marginBottom="40dp"
         android:gravity="center_horizontal"
         android:orientation="vertical">
 
-        <TextView
+        <ImageView
             android:id="@+id/us_noi_distance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:fontFamily="@font/us_fraunces"
+            android:adjustViewBounds="true"
+            android:contentDescription="@null"
             android:importantForAccessibility="no"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:textColor="@color/us_widget_pastel_ink"
-            android:textSize="40sp" />
+            android:scaleType="fitCenter" />
 
         <TextView
             android:id="@+id/us_noi_caption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="3dp"
+            android:ellipsize="end"
             android:fontFamily="@font/us_figtree"
             android:importantForAccessibility="no"
             android:includeFontPadding="false"
             android:maxLines="1"
             android:textColor="@color/us_widget_pastel_sub"
             android:textSize="11.5sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="14dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/us_figtree"
+            android:importantForAccessibility="no"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:text="@string/us_widget_noi_me"
+            android:textColor="@color/us_widget_pastel_ink"
+            android:textSize="12.5sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/us_noi_partner_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/us_figtree"
+            android:importantForAccessibility="no"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:maxWidth="120dp"
+            android:textColor="@color/us_widget_pastel_ink"
+            android:textSize="12.5sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/us_noi_battery_icon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginEnd="3dp"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:src="@drawable/us_widget_battery_high"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/us_noi_battery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/us_figtree"
+            android:fontFeatureSettings="tnum"
+            android:importantForAccessibility="no"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="@color/us_widget_pastel_sub"
+            android:textSize="12sp" />
     </LinearLayout>
 </FrameLayout>

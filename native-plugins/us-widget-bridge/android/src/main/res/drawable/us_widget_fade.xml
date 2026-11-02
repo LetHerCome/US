@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The photo melts into the cream paper from below, where the text sits. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:centerColor="#40FFF6EE"
+        android:centerY="0.45"
+        android:endColor="#F7FFF6EE"
+        android:startColor="#00FFF6EE" />
+</shape>

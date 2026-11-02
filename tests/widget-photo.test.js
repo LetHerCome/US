@@ -13,13 +13,19 @@ const JAVA = `${PLUGIN}/java/com/usapp/widget`;
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const res = (file) => read(`${PLUGIN}/res/${file}`);
 
-test('layout: the look of before, the photo edge to edge, the night from below, the days in serif', () => {
+test('layout: the photo edge to edge, melting into the theme\'s paper, the days in Fraunces', () => {
+  // Foto protagonista (founder, 02/11/2026: "Segue il tema (B)").
   const layout = res('layout/us_widget_photo.xml');
-  assert.match(layout, /android:background="@drawable\/us_widget_background"/);
-  assert.match(layout, /android:id="@\+id\/us_photo_scrim"[\s\S]*?android:src="@drawable\/us_widget_photo_scrim"/);
-  assert.match(layout, /android:id="@\+id\/us_photo_days"[\s\S]*?android:fontFamily="serif"[\s\S]*?android:textSize="34sp"/);
-  assert.match(layout, /android:id="@\+id\/us_photo_unit"[\s\S]*?android:textStyle="italic"/);
-  assert.match(layout, /@drawable\/us_widget_two_dots/);
+  const provider = read(`${JAVA}/UsPhotoWidgetProvider.java`);
+  assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/);
+  assert.match(layout, /android:id="@\+id\/us_photo_art"[\s\S]*?@drawable\/us_widget_art_photo"/);
+  assert.match(layout, /android:id="@\+id\/us_photo_scrim"[\s\S]*?android:src="@drawable\/us_widget_fade"/);
+  assert.match(res('drawable/us_widget_fade.xml'), /#F7FFF6EE/, 'cream in Pastello');
+  assert.match(res('drawable-night/us_widget_fade.xml'), /#F717111C/, 'the night in Midnight');
+  assert.match(layout, /<ImageView\s+android:id="@\+id\/us_photo_days"/);
+  assert.match(layout, /<ImageView\s+android:id="@\+id\/us_photo_unit"/);
+  assert.ok(provider.includes('UsWidgetArt.serif(views, context, R.id.us_photo_days, days ? Long.toString(couple.days) : "", 40f'));
+  assert.ok(provider.includes('"giorni\\ninsieme"'));
   assert.equal(fs.existsSync(path.join(ROOT, PLUGIN, 'res/layout/us_widget_photo_medium.xml')), false, 'one layout for every size, as before');
   assert.match(res('values/strings.xml'), /<string name="us_widget_photo_name">Foto &amp; Noi<\/string>/);
 });

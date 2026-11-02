@@ -35,7 +35,8 @@ test('widgets: picker previews are generic, never a real name, face or photo', (
   assert.doesNotMatch(previews, /android:text="[^@]/, 'preview text comes from strings.xml');
   assert.doesNotMatch(previews, /us_widget_background"/, 'no night card left in a preview');
   // Foto & Noi keeps the look it had before Pastello (founder, 02/11/2026): an abstract photo.
-  assert.match(res('layout/us_widget_preview_photo.xml'), /@drawable\/us_widget_preview_photo_art/);
+  // Foto protagonista: each preview layout shows the same generic picture as previewImage.
+  for (const k of KINDS) assert.ok(res(`layout/us_widget_preview_${k}.xml`).includes(`@drawable/us_widget_preview_${k}"`), k);
   for (const info of KINDS) {
     const xml = res(`xml/us_widget_${info}_info.xml`);
     assert.match(xml, new RegExp(`android:previewLayout="@layout/us_widget_preview_${info}"`), info);
@@ -68,9 +69,10 @@ test('widgets: after an app update every widget redraws at once from the saved s
   assert.match(widgets, /static synchronized void refreshAll\(Context context\)/);
 });
 
-test('Impostazioni › Widget: each tile is the Pastello card of its widget', () => {
+test('Impostazioni › Widget: each tile is its widget, a soft field of colour, never a flat one', () => {
   const css = read('dc-settings.css');
-  for (const rule of ['.us-wp-think{background:linear-gradient(140deg,#ffe3ea,#efe4ff)', '.us-wp-countdown{background:linear-gradient(160deg,#dbeaff', '.us-wp-daily{display:grid', '.us-wp-message{background:linear-gradient(150deg,#d9ccff,#f6d3f0)', '.us-wp-memories{position:relative', '.us-wp-status{display:grid']) {
+  assert.ok(css.includes('#usWidgetHub .us-widget-hub-preview>*{--us-wp-aurora:radial-gradient('));
+  for (const rule of ['.us-wp-think{background:var(--us-wp-aurora)', '.us-wp-countdown{background:var(--us-wp-aurora)', '.us-wp-daily{display:grid', '.us-wp-message{background:var(--us-wp-aurora)', '.us-wp-memories{position:relative;background:var(--us-wp-aurora)', '.us-wp-status{display:grid', '.us-wp-photo:not(.has-photo){background:var(--us-wp-aurora)']) {
     assert.ok(css.includes(`#usWidgetHub ${rule}`), rule);
   }
   const hub = read('widget-hub.js');
@@ -79,21 +81,27 @@ test('Impostazioni › Widget: each tile is the Pastello card of its widget', ()
 });
 
 // Pastello (founder, 02/11/2026): the light theme of the approved board.
-test('Ti penso Pastello: the board\'s card, Fraunces and Figtree, the heart button that fills', () => {
+test('Ti penso, Foto protagonista: illustration and grain, Fraunces drawn as a picture, only the heart', () => {
   const small = res('layout/us_widget_think.xml');
   const medium = res('layout/us_widget_think_medium.xml');
   const provider = read(`${JAVA}/UsThinkWidgetProvider.java`);
-  for (const layout of [small, medium]) {
-    assert.match(layout, /android:background="@drawable\/us_widget_pastel_think"/);
-    assert.match(layout, /android:id="@\+id\/us_widget_message"[\s\S]*?android:fontFamily="@font\/us_fraunces"/);
+  for (const [layout, art] of [[small, 'think_s'], [medium, 'think_m']]) {
+    assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/);
+    assert.match(layout, /android:id="@\+id\/us_think_art"[\s\S]*?android:scaleType="centerCrop"/);
+    assert.ok(layout.includes(`@drawable/us_widget_art_${art}"`), art);
+    assert.match(layout, /android:id="@\+id\/us_think_grain"[\s\S]*?@drawable\/us_widget_grain"/);
+    assert.match(layout, /android:id="@\+id\/us_think_line"[\s\S]*?android:scaleType="fitStart"/);
     assert.match(layout, /android:fontFamily="@font\/us_figtree"/);
-    assert.match(layout, /@drawable\/us_widget_pastel_heart/);
+    assert.match(layout, /@drawable\/us_widget_glass"[\s\S]*@drawable\/us_widget_pastel_heart/);
+    assert.doesNotMatch(layout.replace(/<!--[\s\S]*?-->/g, ''), /us_widget_cta|Ricambia/, 'only the heart answers (founder, 02/11/2026)');
     assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, 'nothing under 11sp');
   }
-  assert.match(res('drawable/us_widget_pastel_think.xml'), /android:endColor="#FFEFE4FF"[\s\S]*android:startColor="#FFFFE3EA"/);
   assert.match(res('values/colors.xml'), /<color name="us_widget_pastel_ink">#FF1A1020<\/color>/);
-  assert.match(provider, /UsWidgets\.themedColor\(views, context, R\.id\.us_widget_heart_bg, "setColorFilter", model\.done \? ROSA : 0xFFFFFFFF, model\.done \? ROSA : 0xFF3B2F3F\);/);
-  assert.match(provider, /views\.setInt\(R\.id\.us_widget_heart, "setColorFilter", model\.done \? 0xFFFFFFFF : ROSA\);/);
+  assert.ok(provider.includes('UsWidgetArt.serif(small, context, R.id.us_think_line, model.line, 19f'));
+  assert.ok(provider.includes('UsWidgetArt.avatar(views, context, avatar, R.id.us_think_avatar, R.id.us_think_initial, model.partner'));
+  assert.ok(provider.includes('UsWidgets.themedColor(views, context, R.id.us_widget_heart_bg, "setColorFilter", model.done ? ROSA : 0, model.done ? ROSA : 0);'));
+  assert.ok(provider.includes('views.setInt(R.id.us_widget_heart, "setColorFilter", model.done ? 0xFFFFFFFF : ROSA);'));
+  assert.doesNotMatch(provider, /us_widget_cta/);
   // The fonts are the app's own, decompressed to TTF for Android.
   for (const font of ['us_font_fraunces.ttf', 'us_font_fraunces_italic.ttf', 'us_font_figtree.ttf']) {
     const bytes = fs.readFileSync(path.join(ROOT, PLUGIN, 'res/font', font));
@@ -104,10 +112,11 @@ test('Ti penso Pastello: the board\'s card, Fraunces and Figtree, the heart butt
 
 // Distanza e batteria (Pastello, 02/11): the round portraits come from the
 // HTTP cache like every avatar; tests/widget-distance.test.js has the rest.
-test('Distanza e batteria 2x1: the board\'s card, the same round portraits', () => {
+test('Distanza e batteria 2x1: the illustrated card, the same round portraits', () => {
   const layout = res('layout/us_widget_noi.xml');
   const widgets = read('widgets.js');
-  assert.match(layout, /android:background="@drawable\/us_widget_pastel_distance"/);
+  assert.match(layout, /android:background="@drawable\/us_widget_card"/);
+  assert.match(layout, /@drawable\/us_widget_art_noi_m"/);
   assert.doesNotMatch(layout, /us_widget_background|us_widget_two_dots|♡/);
   assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)sp"/);
   const round = widgets.slice(widgets.indexOf('async function composeRoundPortrait'), widgets.indexOf('function clearRoundPreviews'));
@@ -116,11 +125,11 @@ test('Distanza e batteria 2x1: the board\'s card, the same round portraits', () 
 });
 
 // Countdown Pastello (02/11): one look for every style; tests/widget-countdown.test.js.
-test('Countdown: the board\'s card replaces the night card and the reward looks', () => {
+test('Countdown: one illustrated look replaces the night card and the reward looks', () => {
   const provider = read(`${JAVA}/UsCountdownWidgetProvider.java`);
   const layout = res('layout/us_widget_countdown.xml');
-  assert.match(layout, /android:background="@drawable\/us_widget_pastel_countdown"/);
-  assert.match(layout, /android:id="@\+id\/us_cd_value"[\s\S]*?android:fontFamily="@font\/us_fraunces"/);
+  assert.match(layout, /@drawable\/us_widget_art_countdown_s"/);
+  assert.ok(provider.includes('UsWidgetArt.serif(views, context, R.id.us_cd_value, model.value'));
   assert.doesNotMatch(provider, /rewardBase|us_widget_cd_|Look look/);
   for (const name of ['aurora_bg', 'aurora_glow', 'chrome_tag', 'glass_bg', 'orbit_ring', 'signal_bg', 'signal_tag']) {
     assert.equal(fs.existsSync(path.join(ROOT, PLUGIN, `res/drawable/us_widget_cd_${name}.xml`)), false, name);

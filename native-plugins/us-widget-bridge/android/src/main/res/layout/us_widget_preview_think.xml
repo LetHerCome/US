@@ -1,73 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget picker preview (Android 12+), Ti penso in Pastello. Generic: a
-     portrait without a face, no names, every text from strings.xml. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Widget picker preview (Android 12+), Foto protagonista (founder, 02/11/2026):
+     the same picture as previewImage, Pastello or Midnight with the phone's
+     theme. Generic: no name, no face, no photo. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_pastel_think"
-    android:padding="16dp">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:importantForAccessibility="no"
-                android:src="@drawable/us_widget_pastel_circle"
-                android:tint="@color/us_widget_lilla" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:fontFamily="@font/us_figtree"
-                android:includeFontPadding="false"
-                android:text="@string/us_widget_preview_think_when"
-                android:textColor="@color/us_widget_pastel_sub"
-                android:textSize="11.5sp" />
-        </LinearLayout>
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="52dp"
-            android:fontFamily="@font/us_fraunces"
-            android:includeFontPadding="false"
-            android:text="@string/us_widget_preview_think"
-            android:textColor="@color/us_widget_pastel_ink"
-            android:textSize="19sp" />
-    </LinearLayout>
-
-    <FrameLayout
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="bottom|end">
-
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_pastel_circle" />
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center"
-            android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_pastel_heart" />
-    </FrameLayout>
-</FrameLayout>
+    android:contentDescription="@null"
+    android:importantForAccessibility="no"
+    android:scaleType="fitCenter"
+    android:src="@drawable/us_widget_preview_think" />

@@ -1,66 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget picker preview (Android 12+), Distanza e batteria in Pastello.
-     Generic: two portraits without faces, every text from strings.xml. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Widget picker preview (Android 12+), Foto protagonista (founder, 02/11/2026):
+     the same picture as previewImage, Pastello or Midnight with the phone's
+     theme. Generic: no name, no face, no photo. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_pastel_distance"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="16dp">
-
-    <FrameLayout
-        android:layout_width="92dp"
-        android:layout_height="52dp">
-
-        <ImageView
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_pastel_circle"
-            android:tint="@color/us_widget_rosa" />
-
-        <ImageView
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:layout_gravity="end"
-            android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_pastel_circle"
-            android:tint="@color/us_widget_lilla" />
-    </FrameLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:fontFamily="@font/us_fraunces"
-        android:includeFontPadding="false"
-        android:text="@string/us_widget_preview_noi"
-        android:textColor="@color/us_widget_pastel_ink"
-        android:textSize="34sp" />
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_battery_high"
-            android:tint="@color/us_widget_pastel_sub" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
-            android:fontFamily="@font/us_figtree"
-            android:includeFontPadding="false"
-            android:text="@string/us_widget_preview_battery"
-            android:textColor="@color/us_widget_pastel_sub"
-            android:textSize="11sp" />
-    </LinearLayout>
-</LinearLayout>
+    android:contentDescription="@null"
+    android:importantForAccessibility="no"
+    android:scaleType="fitCenter"
+    android:src="@drawable/us_widget_preview_noi" />

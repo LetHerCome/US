@@ -5,7 +5,7 @@
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:layout_weight">1</item>
-        <item name="android:layout_marginEnd">5dp</item>
+        <item name="android:layout_marginEnd">3dp</item>
         <item name="android:scaleType">fitXY</item>
         <item name="android:src">@drawable/us_widget_pastel_tick_off</item>
         <item name="android:importantForAccessibility">no</item>

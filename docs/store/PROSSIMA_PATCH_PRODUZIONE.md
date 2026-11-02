@@ -452,3 +452,27 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **SQL:** `20261102170000_member_status_v1.sql` (tabella `member_status`, RLS di coppia, ore del server, Realtime). Va su staging **prima** del web, col workflow «Supabase SQL (manual)» approvato dal founder; senza tabella l'app non mostra la pillola.
   - **Privacy:** aggiunte la riga dei dati e una frase («Come stai»), italiano e inglese.
   - **Da provare:** scegliere uno stato su un telefono: sull'altro compare subito in Oggi e nel widget; cambiare la forma in Impostazioni; dopo 12 ore sparisce.
+
+## 2026-11-02 — Widget «Foto protagonista» (solo Android)
+
+**Fonte:** founder, 02/11/2026 (`docs/DECISIONS.md`, «Widget: "Foto protagonista"»). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; serve un APK nuovo. Nessun SQL, nessun dato nuovo.
+
+- **Base comune:** 17 illustrazioni morbide (chiaro e scuro, WebP, circa 180 KB in tutto) e una grana leggera; i titoli e i numeri in Fraunces disegnati dal widget, perché il launcher non usa i caratteri dell'app; le iniziali su un fondo sfumato al posto dei dischi di colore.
+- **Ti penso:** illustrazione col cuore disegnato, la foto di chi ami piccola e tonda (o l'iniziale), «Bea ti ha pensato» in Fraunces, solo il cuore di vetro: niente «Ricambia», anche nel 4×2. Nel 4×2 «12 volte oggi» in rosa accanto al cuore. Non collegato: «Apri US» e sotto «per riattivare l'invio» (prima «Apri US per riattivare…» tagliato).
+  - **Da provare:** il cuore diventa rosa al tocco; «Apri US» non si taglia; tema chiaro e scuro.
+- **La domanda di oggi:** illustrazione con due nuvolette, l'etichetta di vetro «Domanda di oggi», la domanda in Fraunces; sotto la piccola foto di chi ha risposto e «ha risposto · tocca a te». Nel 4×2 le vostre due foto (quella di chi non ha ancora risposto più tenue) e «Bea ha risposto · **tocca a te**». Il vuoto sotto la domanda non c'è più. Via pallini e barrette colorate.
+  - **Da provare:** rispondere da un telefono: sull'altro, aperta US, compare la foto di chi ha risposto; tema chiaro e scuro.
+- **Distanza e batteria:** illustrazione col sentiero a puntini e il cuore, la distanza in Fraunces e «aggiornato 10 min fa»; le vostre foto piccole e tonde (nel 2×2 in basso accanto a «Tu» e a «Bea 78%», nel 4×2 negli angoli in alto); il 2×1 già messo con la stessa illustrazione.
+  - **Da provare:** 2×1, 2×2 e 4×2; senza distanza «Distanza non ancora nota» piccola; tema chiaro e scuro.
+- **Countdown:** sempre illustrato (il sole sull'orizzonte), l'etichetta di vetro «Mancano», il numero in Fraunces con «giorni / Lisbona» in corsivo, 14 tacche (rosa i giorni passati) anche nel 2×2 al posto della barra; nel 4×2 «Lisbona · 14 novembre · 4 ore» sotto le tacche. L'ultimo giorno resta il conto alla rovescia.
+  - **Da provare:** un Countdown a una data e uno con l'ora, 2×2 e 4×2, tema chiaro e scuro.
+- **Lasciato per te:** busta disegnata, la foto piccola di chi te l'ha lasciato, un bigliettino inclinato col sigillo rosa: «Ti ha lasciato una foto» in Fraunces e «da Bea · 10 min fa»; nel 4×2 sotto «la scopri solo dentro US». La sorpresa resta chiusa. Via la pillola «Apri» (apre il tocco su tutto il widget).
+  - **Da provare:** lasciare una foto da un telefono e guardare l'altro; senza account «Apri US per collegarlo» non si taglia; tema chiaro e scuro.
+- **Come stai:** fondo sfumato, la foto tonda di chi ami (o l'iniziale) con l'emoji come adesivo, il nome in Fraunces e «innamorata · da 1 ora»; nel 4×2 due metà sfumate, tu a sinistra e chi ami a destra, il cuore in mezzo. Via le metà di colore piatto.
+  - **Da provare:** scegliere uno stato: compare sulla foto; senza foto l'iniziale; tema chiaro e scuro.
+- **Foto & Noi** (foto a tutto widget, segue il tema): la foto di Oggi con la grana leggera che in basso sfuma nella carta del tema (crema col tema chiaro, notte col tema scuro, come prima), «195» in Fraunces e «giorni insieme» in corsivo. Senza foto: illustrazione col sole e la luna e «La foto di Oggi apparirà qui». Resta la foto che cambia ogni ora.
+  - **Da provare:** con la foto, tema chiaro e scuro; senza foto.
+- **Ricordi a pila** (foto a tutto widget): nel 2×2 il ricordo più recente riempie il widget e gli altri due spuntano dal bordo in alto; la data va su una riga sua («2 nov · un anno fa») e il titolo in Fraunces sotto, così «Weekend a Firenze» non si taglia più. Nel 4×2 un ventaglio di tre foto su un fondo sfumato, «Un anno fa», il titolo e «2 novembre · 8 foto». Senza ricordi: polaroid vuote disegnate. Le immagini le disegna US (`widgets.js`), quindi serve anche il web nuovo.
+  - **Da provare:** con un ricordo di oggi un anno fa e senza; un titolo lungo.
+- **Anteprime:** nella lista dei widget del telefono ogni widget ha la sua immagine Foto protagonista, generica (nessun nome, viso o foto vera), chiara col tema chiaro e scura col tema scuro, anche Foto & Noi; da Android 12 il layout d'anteprima mostra la stessa immagine. In Impostazioni › Widget le tessere hanno fondi sfumati al posto dei colori pieni.
+  - **Da provare:** la lista dei widget del telefono in chiaro e in scuro; Impostazioni › Widget.

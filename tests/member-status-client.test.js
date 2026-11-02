@@ -91,7 +91,10 @@ test('widget: a new kind, both halves, the tap opens the twelve, never a write',
     assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, `${name}: nothing under 11sp`);
   }
   const medium = read(`${PLUGIN}/res/layout/us_widget_status_medium.xml`);
-  for (const id of ['us_status_me_avatar', 'us_status_me_emoji', 'us_status_me_line']) assert.match(medium, new RegExp(`@\\+id/${id}"`), id);
-  assert.match(medium, /@drawable\/us_widget_pastel_status_me"[\s\S]*@drawable\/us_widget_pastel_status_partner"[\s\S]*@drawable\/us_widget_pastel_heart"/);
+  for (const id of ['us_status_me_avatar', 'us_status_me_initial', 'us_status_me_name', 'us_status_me_emoji', 'us_status_me_line']) assert.match(medium, new RegExp(`@\\+id/${id}"`), id);
+  // Foto protagonista: two soft halves in one illustration, the heart between.
+  assert.match(medium, /@drawable\/us_widget_art_status_m"[\s\S]*@drawable\/us_widget_pastel_heart"/);
+  assert.match(read(`${PLUGIN}/res/layout/us_widget_status.xml`), /@drawable\/us_widget_art_status_s"/);
+  assert.ok(provider.includes('UsWidgetArt.avatar(small, context, theirs, R.id.us_status_partner_avatar, R.id.us_status_partner_initial, partnerName, 74);'));
   assert.match(read('widget-hub.js'), /\{ kind: 'status', name: 'Come stai', copy: '[^']+', shape: 'wide' \}/);
 });

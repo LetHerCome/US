@@ -440,3 +440,15 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Foto & Noi:** torna lo stile di prima del Pastello («è più carino») e il nome «Foto & Noi». Resta la foto che cambia ogni ora.
 - **Giorni insieme:** era uguale a Foto & Noi, ne resta uno solo, Foto & Noi. La classe resta, nascosta dalla lista dei widget (`hide_from_picker`) e con il nome Foto & Noi, e disegna Foto & Noi: togliere il provider farebbe diventare «Impossibile caricare il widget» quelli già sulla Home. L'app non lo offre e non lo conta più.
 - **Tema chiaro e scuro:** ogni widget segue il tema del telefono. Pastello col tema chiaro, «Midnight» (i colori notte di US, il ramo `notte` della tavola) col tema scuro. Niente widget in più: risorse `-night` (colori, sfondi, anteprime) e i colori messi dal codice in due forme (`setColorInt`), così da Android 12 il launcher cambia da solo quando cambia il tema. Le immagini disegnate da US (avatar, pila dei Ricordi) hanno lo sfondo trasparente e vanno bene in tutti e due. Foto & Noi resta com'era prima, scuro.
+
+## 2026-11-02 — Widget: «Foto protagonista»
+
+**Fonte:** founder, 02/11/2026 («dobbiamo pulire questi widget, sono troppo poco artistici»), proposte sul canvas (https://claude.ai/artifact/PvmHiSaPhF27JhLr1DzBg4, sezione «Rework»), poi «ha senso prendere la foto solo quando si tratta di riferimenti», «Segue il tema (B)» e «Sì, implementa».
+
+- **La foto solo dove è il contenuto:** a tutto widget in Foto & Noi (la foto di Oggi) e in Ricordi a pila (le foto del ricordo), sempre prese dall'app. Gli altri sei sono illustrati.
+- **Illustrazioni:** campi di colore sfocati e un disegno a tratto per widget, con una grana leggera sopra; mai dischi di colore piatto. Le foto profilo restano piccole e tonde, per dire chi è; senza foto, l'iniziale in Fraunces su un fondo sfumato. Sono risorse WebP con la forma Pastello e quella Midnight, così da Android 12 il launcher le cambia col tema; prima di Android 12 il codice le disegna con gli angoli arrotondati nel tema del momento, senza grana.
+- **Fraunces:** il launcher scrive i testi dei widget nel suo carattere. Titoli e numeri (la frase di Ti penso, la domanda, i km, i giorni) sono disegnati da `UsWidgetArt` come immagine bianca col carattere dell'app e colorati col tema; i testi piccoli restano testo vero nel carattere del sistema. Nessun WebView in più.
+- **Ti penso:** solo il cuore, nessuna scritta «Ricambia», anche nel 4×2. Non collegato: «Apri US» e sotto il perché, mai tagliato.
+- **Foto & Noi** segue il tema (scelta B): col tema chiaro la foto sfuma nella crema Pastello, col tema scuro come prima.
+- **Lasciato per te** resta una busta chiusa: la sorpresa non si vede nel widget.
+- **Countdown** sempre illustrato: nessun dato nuovo per una foto del viaggio.

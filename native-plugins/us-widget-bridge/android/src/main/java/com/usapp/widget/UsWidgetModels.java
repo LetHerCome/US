@@ -300,6 +300,8 @@ final class UsWidgetModels {
         String line = "";
         String when = "";
         String cta = "";
+        /** Under a short "Apri US": what for, so the line is never cut. */
+        String hint = "";
         /** Heart tap sends; otherwise it opens US. */
         boolean canSend = false;
         /** A tap right now would be ignored (in flight or just tapped). */
@@ -318,7 +320,8 @@ final class UsWidgetModels {
     static Think think(JSONObject snapshot, JSONObject action, boolean hasCredential, Instant now) {
         Think out = new Think();
         if (snapshot == null) {
-            out.line = "Apri US per collegare il widget";
+            out.line = "Apri US";
+            out.hint = "per collegarlo";
             out.cta = "Apri";
             return out;
         }
@@ -331,7 +334,8 @@ final class UsWidgetModels {
         long sinceAction = actionAt == null ? Long.MAX_VALUE : Math.max(0, now.toEpochMilli() - actionAt.toEpochMilli());
 
         if (!hasCredential || status.equals("unauthorized")) {
-            out.line = "Apri US per riattivare l’invio";
+            out.line = "Apri US";
+            out.hint = "per riattivare l’invio";
             out.cta = "Apri";
             return out;
         }

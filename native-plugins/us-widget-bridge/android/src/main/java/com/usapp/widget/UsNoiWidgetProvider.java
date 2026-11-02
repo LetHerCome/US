@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Layout;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.RelativeSizeSpan;
@@ -15,11 +16,12 @@ import android.widget.RemoteViews;
 import java.util.Map;
 
 /**
- * Distanza e batteria, Pastello (approved board, 02/11/2026); it replaces Noi
- * and its map. Your two portraits, the distance the app computed (never a
- * map, never where you are), how old it is and the partner's battery. 2x2 and
- * 4x2 (a dotted arc and a heart between you); a Noi placed before as 2x1 gets
- * a one-row card. The class name is stable: placed widgets keep working.
+ * Distanza e batteria, Foto protagonista (founder, 02/11/2026); it replaced
+ * Noi and its map. An illustration with a dotted path and a heart, your two
+ * small portraits, the distance the app computed in Fraunces (never a map,
+ * never where you are), how old it is and the partner's battery. 2x2 and 4x2;
+ * a Noi placed before as 2x1 gets a one-row card. The class name is stable:
+ * placed widgets keep working.
  */
 public final class UsNoiWidgetProvider extends AppWidgetProvider {
     @Override public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
@@ -35,14 +37,16 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
         String partner = UsWidgetContract.optObject(state.snapshot, "think").optString("partnerName", "").trim();
         state.needsUpdateAt(couple.batteryNextChange);
         state.needsUpdateAt(couple.distanceNextChange);
-        RemoteViews row = fill(context, state, couple, partner, R.layout.us_widget_noi);
-        RemoteViews small = fill(context, state, couple, partner, R.layout.us_widget_noi_small);
-        RemoteViews medium = fill(context, state, couple, partner, R.layout.us_widget_noi_medium);
+        RemoteViews row = fill(context, state, couple, partner, R.layout.us_widget_noi, R.drawable.us_widget_art_noi_m, options, 34, 24f, 150);
+        RemoteViews small = fill(context, state, couple, partner, R.layout.us_widget_noi_small, R.drawable.us_widget_art_noi_s, options, 22, 34f, 150);
+        RemoteViews medium = fill(context, state, couple, partner, R.layout.us_widget_noi_medium, R.drawable.us_widget_art_noi_m, options, 46, 40f, 230);
         // 2x1: the battery, or how old the distance is when the battery is unknown.
         if (!couple.batteryShown()) row.setTextViewText(R.id.us_noi_battery, couple.distanceAgo);
-        // 2x2: "Bea 78%". 4x2: the name above, the battery beside it; and the age under the distance.
+        // 2x2: "Bea 78%" beside her portrait. 4x2: the name, the battery beside it. Both: the age under the distance.
         small.setViewVisibility(R.id.us_noi_battery_row, couple.batteryShown() ? View.VISIBLE : View.GONE);
         if (couple.batteryShown()) small.setTextViewText(R.id.us_noi_battery, (partner.isEmpty() ? "" : partner + " ") + couple.batteryLevel + "%");
+        small.setTextViewText(R.id.us_noi_caption, couple.distanceAgo);
+        small.setViewVisibility(R.id.us_noi_caption, couple.distanceAgo.isEmpty() ? View.GONE : View.VISIBLE);
         medium.setTextViewText(R.id.us_noi_partner_name, partner.isEmpty() ? "La tua persona" : partner);
         medium.setTextViewText(R.id.us_noi_caption, couple.distanceAgo);
         medium.setViewVisibility(R.id.us_noi_caption, couple.distanceAgo.isEmpty() ? View.GONE : View.VISIBLE);
@@ -59,12 +63,14 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
         return height >= 110 ? small : row;
     }
 
-    private static RemoteViews fill(Context context, UsWidgets.State state, UsWidgetModels.Couple couple, String partner, int layout) {
+    private static RemoteViews fill(Context context, UsWidgets.State state, UsWidgetModels.Couple couple, String partner, int layout,
+                                    int art, Bundle options, int portraitDp, float distanceSp, int distanceWidthDp) {
         RemoteViews views = new RemoteViews(context.getPackageName(), layout);
         views.setOnClickPendingIntent(R.id.us_noi_root, UsWidgets.open(context, "noi", 4401));
-        UsWidgets.avatar(views, state.store.readNoiPortrait("me"), R.id.us_noi_me, UsWidgetModels.personColor(state.snapshot, true));
-        UsWidgets.avatar(views, state.store.readNoiPortrait("partner"), R.id.us_noi_partner, UsWidgetModels.personColor(state.snapshot, false));
-        views.setTextViewText(R.id.us_noi_distance, distance(context, couple));
+        UsWidgetArt.art(views, context, R.id.us_noi_art, R.id.us_noi_grain, art, options, art == R.drawable.us_widget_art_noi_m);
+        UsWidgetArt.avatar(views, context, state.store.readNoiPortrait("me"), R.id.us_noi_me, R.id.us_noi_me_initial, "Tu", portraitDp);
+        UsWidgetArt.avatar(views, context, state.store.readNoiPortrait("partner"), R.id.us_noi_partner, R.id.us_noi_partner_initial, partner, portraitDp);
+        UsWidgetArt.serif(views, context, R.id.us_noi_distance, distance(context, couple), distanceSp, distanceWidthDp, 2, false, Layout.Alignment.ALIGN_CENTER);
         renderBattery(context, views, couple);
         views.setContentDescription(R.id.us_noi_root, description(couple, partner));
         return views;
