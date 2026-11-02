@@ -56,13 +56,13 @@
 
   function countdownPreview(snapshot) {
     const c = snapshot.countdown || {};
-    if (!c.active) return '<div class="us-wp-countdown" data-style="editorial"><p>Scegli un Countdown su Oggi</p></div>';
+    if (!c.active) return '<div class="us-wp-countdown" data-style="pastel"><p>Scegli un Countdown su Oggi</p></div>';
     let view = null;
     if (c.kind === 'together') view = together(c.target);
     else view = window.USCountdown?.display?.({ mode: c.kind, target: c.target });
     if (!view) view = { value: '12', unit: 'giorni', label: '' };
     const clock = view.value.includes(':');
-    return `<div class="us-wp-countdown" data-style="${esc(c.style || 'editorial')}"><span class="us-wp-cd-title"${c.kind === 'together' ? '' : ' translate="no"'}>${esc(c.title)}</span><b${clock ? ' class="is-clock"' : ''}>${esc(view.value)}</b>${view.unit ? `<span class="us-wp-cd-unit">${esc(view.unit)}</span>` : ''}${view.label && !clock ? `<span class="us-wp-cd-sub">${esc(view.label)}</span>` : ''}</div>`;
+    return `<div class="us-wp-countdown" data-style="pastel"><span class="us-wp-cd-title"${c.kind === 'together' ? '' : ' translate="no"'}>${esc(c.title)}</span><b${clock ? ' class="is-clock"' : ''}>${esc(view.value)}</b>${view.unit ? `<span class="us-wp-cd-unit">${esc(view.unit)}</span>` : ''}${view.label && !clock ? `<span class="us-wp-cd-sub">${esc(view.label)}</span>` : ''}</div>`;
   }
 
   function daysLine(snapshot) {
@@ -108,7 +108,7 @@
   function memoriesPreview(snapshot) {
     const m = snapshot.memories || {};
     const text = m.state === 'ready' ? [m.label, m.title].filter(Boolean).join(' · ') : 'I vostri ricordi appariranno qui';
-    return `<div class="us-wp-photo"><p>${IMAGE}<span>${esc(text)}</span></p></div>`;
+    return `<div class="us-wp-memories" aria-label="${esc(text)}"><i></i><i></i><i></i></div>`;
   }
 
   // Come stai: the two emoji as the app shows them now.
@@ -116,7 +116,7 @@
     const s = window.UsMemberStatus;
     const now = s?.widgetState?.() || {};
     const emoji = (person) => s?.STATUSES?.find((item) => item.key === person?.status)?.emoji || '·';
-    return `<div class="us-wp-photo"><p><span>${esc(emoji(now.me))} ♡ ${esc(emoji(now.partner))}</span></p></div>`;
+    return `<div class="us-wp-status"><span>${esc(emoji(now.me))}</span><span>${esc(emoji(now.partner))}</span></div>`;
   }
 
   function preview(kind, view) {

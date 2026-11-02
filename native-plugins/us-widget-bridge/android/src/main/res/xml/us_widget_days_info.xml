@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Giorni insieme is now part of Foto & giorni (Pastello, 02/11/2026): hidden
+     from the widget list; the ones already on a Home screen keep working. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/us_widget_photo_description"
     android:initialLayout="@layout/us_widget_photo"
@@ -11,4 +13,5 @@
     android:targetCellWidth="2"
     android:targetCellHeight="2"
     android:updatePeriodMillis="3600000"
+    android:widgetFeatures="hide_from_picker"
     android:widgetCategory="home_screen" />
