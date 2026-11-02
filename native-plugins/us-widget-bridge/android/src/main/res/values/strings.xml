@@ -29,9 +29,10 @@
     <string name="us_widget_daily_preview_question">Quale piccolo momento vorresti rivivere insieme?</string>
     <string name="us_widget_noi_description">La distanza tra voi e la batteria di chi ami. Mai dove siete.</string>
 
-    <string name="us_widget_message_name">Messaggio</string>
-    <string name="us_widget_message_description">L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso</string>
-    <string name="us_widget_message_empty">Il suo prossimo pensiero arriverà qui</string>
+    <string name="us_widget_message_name">Lasciato per te</string>
+    <string name="us_widget_message_description">Il Lasciato per te ancora chiuso: solo che cosa è e quando</string>
+    <string name="us_widget_message_empty">Il prossimo Lasciato per te arriverà qui</string>
+    <string name="us_widget_message_open">Apri</string>
 
     <string name="us_widget_days_name">Giorni insieme</string>
 
@@ -47,7 +48,7 @@
     <string name="us_widget_preview_battery" formatted="false">78%</string>
     <string name="us_widget_preview_days">365</string>
     <string name="us_widget_preview_days_unit">giorni insieme</string>
-    <string name="us_widget_preview_message">Ti ha pensato</string>
+    <string name="us_widget_preview_message">Ti ha lasciato una foto</string>
     <string name="us_widget_preview_message_when">10 min fa</string>
     <string name="us_widget_preview_countdown">Mancano</string>
     <string name="us_widget_preview_countdown_value">12</string>

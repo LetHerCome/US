@@ -412,3 +412,7 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - l'ultimo giorno di un Countdown con l'ora il numero diventa il conto alla rovescia che va da solo, come prima;
   - **differenze dalla tavola:** le ore senza i minuti («4 ore», non «4 ore · 21 minuti»), così il widget si ridisegna una volta all'ora e non ogni minuto; la riga «giorni a Lisbona» diventa «giorni · Lisbona» perché il titolo è libero («giorni a Il nostro momento» non va). Gli stili premio del Countdown (Aurora, Chrome, Orbit…) restano nell'app ma non cambiano più l'aspetto del widget.
   - **Da provare:** un Countdown a una data e uno con l'ora, nel 2×2 e nel 4×2; l'ultimo giorno il conto alla rovescia; «Insieme da».
+- **7 · Lasciato per te** (sostituisce «Messaggio», che in Impostazioni ora si chiama così): carta lilla-rosa, la foto di chi ami (o la sua iniziale sul suo colore), una nuvoletta bianca «Ti ha lasciato una foto», sotto «10 min fa» e la busta rosa. Nel 4×2 anche «la scopri solo dentro US», «Bea · 10 min fa» e la pillola rosa «Apri». Il tocco apre il Lasciato per te.
+  - **Solo tipo e ora** (founder, 31/10): mai le parole, la foto o il link.
+  - **Cambia:** mostra solo il Lasciato per te ancora chiuso, non più l'ultimo Ti penso (per quello c'è il widget Ti penso). Senza niente da aprire: «Il prossimo Lasciato per te arriverà qui».
+  - **Da provare:** lasciare una foto da un telefono: sull'altro, aperta US, il widget dice «Ti ha lasciato una foto · ora»; aprirla: il widget torna vuoto; il 4×2 con «Apri».

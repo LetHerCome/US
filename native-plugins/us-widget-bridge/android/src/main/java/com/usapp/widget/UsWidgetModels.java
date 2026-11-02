@@ -498,35 +498,37 @@ final class UsWidgetModels {
     static final class Message {
         boolean empty = true;
         String text = "";
+        /** Pastello 4x2: "la scopri solo dentro US". */
+        String hint = "";
         /** "10 min fa"; empty when it would be older than a week. */
         String when = "";
-        /** us://widget/<destination>: the Ti penso, the envelope, or just US. */
+        /** us://widget/<destination>: the envelope, or just US. */
         String destination = "message";
         Instant nextChange = null;
     }
 
+    /**
+     * Lasciato per te, Pastello (02/11/2026): the envelope still closed for
+     * me, only its kind and how long ago. The Ti penso has its own widget.
+     */
     static Message message(JSONObject snapshot, Instant now) {
         Message out = new Message();
         if (snapshot == null) {
             out.text = "Apri US per collegare il widget";
             return out;
         }
-        Instant received = UsWidgetContract.instant(UsWidgetContract.optObject(snapshot, "think").optString("lastReceivedAt", ""));
-        // A Ti penso older than a week is not news; a closed envelope still waits.
-        if (received != null && bubbleAgo(received, now).isEmpty()) received = null;
         JSONObject left = UsWidgetContract.optObject(snapshot, "left");
-        Instant leftAt = UsWidgetContract.instant(left.optString("at", ""));
-        String leftKind = left.optString("kind", "");
-        if (leftKind.isEmpty()) leftAt = null;
-        if (received == null && leftAt == null) {
-            out.text = "Il suo prossimo pensiero arriverà qui";
+        Instant at = UsWidgetContract.instant(left.optString("at", ""));
+        String kind = left.optString("kind", "");
+        if (kind.isEmpty() || at == null) {
+            out.text = "Il prossimo Lasciato per te arriverà qui";
             return out;
         }
         out.empty = false;
-        boolean envelope = leftAt != null && (received == null || leftAt.isAfter(received));
-        Instant at = envelope ? leftAt : received;
-        out.text = envelope ? "Ti ha lasciato " + leftNoun(leftKind) : "Ti ha pensato";
-        out.destination = envelope ? "message/left" : "message/think";
+        String noun = leftNoun(kind);
+        out.text = "Ti ha lasciato " + noun;
+        out.hint = (noun.startsWith("una ") ? "la" : "lo") + " scopri solo dentro US";
+        out.destination = "message/left";
         out.when = bubbleAgo(at, now);
         if (!out.when.isEmpty()) out.nextChange = bubbleNextChange(at, now);
         return out;

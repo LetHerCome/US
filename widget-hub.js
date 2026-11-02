@@ -18,7 +18,7 @@
     { kind: 'noi', name: 'Distanza e batteria', copy: 'La distanza tra voi e la batteria di chi ami. Mai dove siete.', shape: 'wide' },
     { kind: 'photo', name: 'Foto & giorni', copy: 'La foto di Oggi, che cambia ogni ora, con i giorni insieme.', shape: 'square' },
     { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda del giorno e a chi tocca rispondere. Mai le risposte.', shape: 'wide' },
-    { kind: 'message', name: 'Messaggio', copy: 'L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso.', shape: 'square' }
+    { kind: 'message', name: 'Lasciato per te', copy: 'Il Lasciato per te ancora chiuso: solo che cosa è e quando.', shape: 'square' }
   ]);
   window.UsWidgetCatalog = CATALOG;
 

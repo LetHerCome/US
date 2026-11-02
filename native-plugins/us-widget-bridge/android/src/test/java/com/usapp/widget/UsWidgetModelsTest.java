@@ -432,39 +432,40 @@ public class UsWidgetModelsTest {
         assertFalse(UsWidgetModels.couple(snapshot(null), now).distanceNear);
     }
 
-    // ---------- Messaggio: the partner's last Ti penso or Lasciato per te ----------
+    // ---------- Lasciato per te: only the kind and the time of the closed envelope ----------
 
     @Test
-    public void messageShowsTheNewestOfTiPensoAndAWaitingLasciatoPerTe() throws Exception {
+    public void messageShowsOnlyTheWaitingLasciatoPerTe() throws Exception {
         Instant now = Instant.parse("2026-10-31T11:00:00Z");
         JSONObject snap = snapshot(null);
-        snap.getJSONObject("think").put("lastReceivedAt", "2026-10-31T10:50:00Z");
-        UsWidgetModels.Message think = UsWidgetModels.message(UsWidgetContract.normalize(snap), now);
-        assertEquals("Ti ha pensato", think.text);
-        assertEquals("10 min fa", think.when);
-        assertEquals("message/think", think.destination);
-        assertEquals(Instant.parse("2026-10-31T11:05:00Z"), think.nextChange);
+        // A Ti penso alone is for the Ti penso widget.
+        snap.getJSONObject("think").put("lastReceivedAt", "2026-10-31T10:58:00Z");
+        UsWidgetModels.Message none = UsWidgetModels.message(UsWidgetContract.normalize(snap), now);
+        assertTrue(none.empty);
+        assertEquals("Il prossimo Lasciato per te arriverà qui", none.text);
+        assertEquals("", none.hint);
+        assertEquals("message", none.destination);
 
-        snap.put("left", new JSONObject().put("kind", "photo").put("at", "2026-10-31T10:55:00Z").put("body", "SEGRETO"));
+        snap.put("left", new JSONObject().put("kind", "photo").put("at", "2026-10-31T10:50:00Z").put("body", "SEGRETO"));
         JSONObject clean = UsWidgetContract.normalize(snap);
         assertFalse("never the content", clean.toString().contains("SEGRETO"));
         UsWidgetModels.Message left = UsWidgetModels.message(clean, now);
         assertEquals("Ti ha lasciato una foto", left.text);
-        assertEquals("5 min fa", left.when);
+        assertEquals("la scopri solo dentro US", left.hint);
+        assertEquals("10 min fa", left.when);
         assertEquals("message/left", left.destination);
-
-        // A Ti penso newer than the waiting envelope wins.
-        snap.getJSONObject("think").put("lastReceivedAt", "2026-10-31T10:58:00Z");
-        assertEquals("Ti ha pensato", UsWidgetModels.message(UsWidgetContract.normalize(snap), now).text);
+        assertEquals(Instant.parse("2026-10-31T11:05:00Z"), left.nextChange);
     }
 
     @Test
     public void messageKindsOldEnvelopesAndEmptyStates() throws Exception {
         Instant now = Instant.parse("2026-10-31T11:00:00Z");
-        String[][] kinds = { { "text", "un messaggio" }, { "audio", "un vocale" }, { "video", "un video" }, { "music", "una canzone" } };
+        String[][] kinds = { { "text", "un messaggio", "lo" }, { "audio", "un vocale", "lo" }, { "video", "un video", "lo" }, { "music", "una canzone", "la" } };
         for (String[] kind : kinds) {
             JSONObject snap = snapshot(null).put("left", new JSONObject().put("kind", kind[0]).put("at", "2026-10-31T09:00:00Z"));
-            assertEquals("Ti ha lasciato " + kind[1], UsWidgetModels.message(UsWidgetContract.normalize(snap), now).text);
+            UsWidgetModels.Message view = UsWidgetModels.message(UsWidgetContract.normalize(snap), now);
+            assertEquals("Ti ha lasciato " + kind[1], view.text);
+            assertEquals(kind[2] + " scopri solo dentro US", view.hint);
         }
         // An envelope still closed after ten days still waits; only the time goes.
         JSONObject old = snapshot(null).put("left", new JSONObject().put("kind", "text").put("at", "2026-10-21T09:00:00Z"));

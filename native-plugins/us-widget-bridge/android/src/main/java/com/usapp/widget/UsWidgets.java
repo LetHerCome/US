@@ -129,7 +129,7 @@ final class UsWidgets {
             case COUNTDOWN: return UsCountdownWidgetProvider.render(context, state, options);
             case NOI: return UsNoiWidgetProvider.render(context, state, options);
             case DAILY: return UsDailyWidgetProvider.render(context, state, options);
-            case MESSAGE: return UsMessageWidgetProvider.render(context, state);
+            case MESSAGE: return UsMessageWidgetProvider.render(context, state, options);
             case DAYS: return UsDaysWidgetProvider.render(context, state, options);
             default: return UsPhotoWidgetProvider.render(context, state, options);
         }
