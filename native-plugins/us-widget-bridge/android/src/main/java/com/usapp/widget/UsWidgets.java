@@ -128,7 +128,7 @@ final class UsWidgets {
             case THINK: return UsThinkWidgetProvider.render(context, state, options);
             case COUNTDOWN: return UsCountdownWidgetProvider.render(context, state);
             case NOI: return UsNoiWidgetProvider.render(context, state, options);
-            case DAILY: return UsDailyWidgetProvider.render(context, state);
+            case DAILY: return UsDailyWidgetProvider.render(context, state, options);
             case MESSAGE: return UsMessageWidgetProvider.render(context, state);
             case DAYS: return UsDaysWidgetProvider.render(context, state, options);
             default: return UsPhotoWidgetProvider.render(context, state, options);
@@ -163,6 +163,25 @@ final class UsWidgets {
         }
         int width = options == null ? 0 : options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0);
         return width >= MEDIUM_MIN_WIDTH_DP ? medium : small;
+    }
+
+    /**
+     * Pastello portrait: the round photo with its ring (prepared by US), or
+     * a plain circle in that person's colour until it arrives.
+     */
+    static void avatar(RemoteViews views, byte[] raw, int id, int colour) {
+        android.graphics.Bitmap bitmap = null;
+        if (raw != null) {
+            try { bitmap = android.graphics.BitmapFactory.decodeByteArray(raw, 0, raw.length); }
+            catch (RuntimeException ignored) {}
+        }
+        if (bitmap != null) {
+            views.setImageViewBitmap(id, bitmap);
+            views.setInt(id, "setColorFilter", 0);
+        } else {
+            views.setImageViewResource(id, R.drawable.us_widget_pastel_circle);
+            views.setInt(id, "setColorFilter", colour);
+        }
     }
 
     /** Opens US on a destination. ACTION_VIEW so @capacitor/app emits appUrlOpen on a warm app too. */

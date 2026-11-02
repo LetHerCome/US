@@ -24,6 +24,7 @@ final class UsWidgetContract {
     private static final Pattern CIVIL_DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
     private static final Pattern DAILY_STATE = Pattern.compile("^(todo|your_turn|waiting|ready)$");
     private static final Pattern LEFT_KIND = Pattern.compile("^(text|photo|audio|video|music)$");
+    private static final Pattern COLOR = Pattern.compile("^#[0-9a-fA-F]{6}$");
 
     private UsWidgetContract() {}
 
@@ -75,6 +76,13 @@ final class UsWidgetContract {
             int batteryLevel = coupleIn.optInt("batteryLevel", -1);
             String batteryAt = instantText(coupleIn.optString("batteryAt", ""));
             if (batteryLevel < 0 || batteryLevel > 100 || batteryAt.isEmpty()) { batteryLevel = -1; batteryAt = ""; }
+            // Pastello: each person's colour as the app shows it (rosa, lilla or the one chosen).
+            JSONObject colorsIn = optObject(coupleIn, "colors");
+            String meColor = colorsIn.optString("me", "");
+            String partnerColor = colorsIn.optString("partner", "");
+            couple.put("colors", new JSONObject()
+                .put("me", COLOR.matcher(meColor).matches() ? meColor.toLowerCase() : "")
+                .put("partner", COLOR.matcher(partnerColor).matches() ? partnerColor.toLowerCase() : ""));
             couple.put("batteryLevel", batteryLevel)
                 .put("batteryCharging", batteryLevel >= 0 && coupleIn.optBoolean("batteryCharging", false))
                 .put("batteryAt", batteryAt);

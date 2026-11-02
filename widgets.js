@@ -45,7 +45,8 @@
 
   const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastSentAt: '', lastAnsweredAt: '', todayCount: 0, todayDate: '' });
   // Batteria del partner: level -1 = unknown (UsWidgetContract.java).
-  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready', batteryLevel: -1, batteryCharging: false, batteryAt: '' });
+  // colors: each person's colour as the app shows it (Pastello widgets).
+  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready', batteryLevel: -1, batteryCharging: false, batteryAt: '', colors: { me: '', partner: '' } });
   const emptyCountdown = () => ({ active: false, kind: '', title: '', target: '', style: 'editorial' });
   // Foto & giorni: Oggi's photo of this hour, then of the next two (next).
   const emptyPhoto = () => ({ state: 'none', key: '', takenOn: '', label: '', hour: '', next: [] });
@@ -82,7 +83,7 @@
       ownerHash,
       updatedAt: new Date().toISOString(),
       think: { ...think },
-      couple: { ...couple, names: [...couple.names] },
+      couple: { ...couple, names: [...couple.names], colors: { ...couple.colors } },
       countdown: { ...countdown },
       photo: { ...photo, next: photo.next.map((item) => ({ ...item })) },
       daily: { ...daily },
@@ -219,7 +220,8 @@
         distanceState: couple.distanceState,
         batteryLevel: couple.batteryLevel,
         batteryCharging: couple.batteryCharging,
-        batteryAt: couple.batteryAt
+        batteryAt: couple.batteryAt,
+        colors: couple.colors
       };
       coupleSyncedAt = Date.now();
       return scheduleWrite();
@@ -422,6 +424,11 @@
           if(token!==generation || !ok){URL.revokeObjectURL(image.preview);return false;}
         }
         await writeRoundPortraits(urls,people,owner,token);
+        // The same colours for the widgets' dots and bars.
+        const mine=window.usProfile?.role==='beatrice'?1:0;
+        const hex=(value)=>(/^#[0-9a-f]{6}$/i.test(value)?value.toLowerCase():'');
+        const colors={me:hex(people[mine].colour),partner:hex(people[1-mine].colour)};
+        if(token===generation&&JSON.stringify(colors)!==JSON.stringify(couple.colors)){couple={...couple,colors};scheduleWrite();}
         if(token!==generation){if(image)URL.revokeObjectURL(image.preview);return false;}
         if(image){
           if(noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);

@@ -143,6 +143,18 @@ final class UsWidgetModels {
         final String state;
         Daily(String question, String state) { this.question = question; this.state = state; }
         boolean shown() { return !question.isEmpty(); }
+        boolean partnerAnswered() { return "your_turn".equals(state) || "ready".equals(state); }
+        boolean meAnswered() { return "waiting".equals(state) || "ready".equals(state); }
+    }
+
+    /** Each person's colour (ARGB): the app's, or rosa for me and lilla for the partner. */
+    static int personColor(JSONObject snapshot, boolean me) {
+        String hex = UsWidgetContract.optObject(UsWidgetContract.optObject(snapshot, "couple"), "colors").optString(me ? "me" : "partner", "");
+        if (hex.length() == 7 && hex.charAt(0) == '#') {
+            try { return 0xFF000000 | Integer.parseInt(hex.substring(1), 16); }
+            catch (NumberFormatException ignored) {}
+        }
+        return me ? 0xFFFF7C96 : 0xFFA98BFF;
     }
 
     /** The question of the day while it is still the same day in Rome. */

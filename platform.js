@@ -148,7 +148,12 @@
         distanceText: typeof couple.distanceText === 'string' && /^[0-9., ]{1,16} ?(km|m|mi|ft)$/.test(couple.distanceText) ? couple.distanceText : '',
         distanceState: couple.distanceState === 'stale' ? 'stale' : 'ready',
         // Batteria del partner (UsWidgetContract.java): -1 when unknown.
-        ...widgetBattery(couple)
+        ...widgetBattery(couple),
+        // Pastello: each person's colour, #rrggbb or nothing.
+        colors: {
+          me: /^#[0-9a-f]{6}$/i.test(couple.colors?.me || '') ? couple.colors.me.toLowerCase() : '',
+          partner: /^#[0-9a-f]{6}$/i.test(couple.colors?.partner || '') ? couple.colors.partner.toLowerCase() : ''
+        }
       },
       countdown: {
         active,

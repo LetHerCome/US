@@ -498,6 +498,35 @@ public class UsWidgetModelsTest {
         assertEquals("", UsWidgetModels.italianDay("ieri"));
     }
 
+    // ---------- Colori delle persone (Pastello) ----------
+
+    @Test
+    public void eachPersonsColourOrTheUsualOne() throws Exception {
+        JSONObject snap = snapshot(null);
+        assertEquals(0xFFFF7C96, UsWidgetModels.personColor(UsWidgetContract.normalize(snap), true));
+        assertEquals(0xFFA98BFF, UsWidgetModels.personColor(UsWidgetContract.normalize(snap), false));
+        snap.getJSONObject("couple").put("colors", new JSONObject().put("me", "#a98bff").put("partner", "#6FB8FF"));
+        JSONObject clean = UsWidgetContract.normalize(snap);
+        assertEquals(0xFFA98BFF, UsWidgetModels.personColor(clean, true));
+        assertEquals(0xFF6FB8FF, UsWidgetModels.personColor(clean, false));
+        snap.getJSONObject("couple").put("colors", new JSONObject().put("me", "red").put("partner", "#12345"));
+        clean = UsWidgetContract.normalize(snap);
+        assertEquals("only #rrggbb", "", clean.getJSONObject("couple").getJSONObject("colors").getString("me"));
+        assertEquals(0xFFFF7C96, UsWidgetModels.personColor(clean, true));
+    }
+
+    @Test
+    public void dailyKnowsWhoHasAnswered() throws Exception {
+        JSONObject snap = snapshot(null);
+        snap.put("daily", new JSONObject().put("date", "2026-10-25").put("question", "Una domanda").put("state", "your_turn"));
+        UsWidgetModels.Daily daily = UsWidgetModels.daily(UsWidgetContract.normalize(snap), Instant.parse("2026-10-25T10:00:00Z"));
+        assertTrue(daily.partnerAnswered());
+        assertFalse(daily.meAnswered());
+        snap.getJSONObject("daily").put("state", "ready");
+        UsWidgetModels.Daily both = UsWidgetModels.daily(UsWidgetContract.normalize(snap), Instant.parse("2026-10-25T10:00:00Z"));
+        assertTrue(both.partnerAnswered() && both.meAnswered());
+    }
+
     // ---------- La domanda di oggi ----------
 
     @Test

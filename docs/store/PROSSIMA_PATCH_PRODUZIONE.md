@@ -398,3 +398,6 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - sul telefono restano al massimo tre foto, solo quelle che il widget nomina; le altre si cancellano;
   - i widget «Giorni insieme» già messi mostrano Foto & giorni, che in Impostazioni non c'è più come voce a sé.
   - **Da provare:** mettere Foto & giorni, chiudere US e tornare dopo un'ora: la foto è cambiata ed è la stessa di Oggi; il 4×2 con le due foto e la riga del posto.
+- **3 · La domanda di oggi:** carta lilla-pesca; l'etichetta bianca «Oggi» (nel 4×2 «La domanda di oggi»); la domanda in Figtree extra grassetto; chi ha risposto, con il pallino del suo colore. Nel 4×2 anche le vostre due foto con un cuore e una barretta a testa, che si colora quando quella persona ha risposto, e «Bea ha risposto · **tocca a te**». Mai le risposte.
+  - **Colori:** ora il widget conosce il colore che ognuno mostra nell'app (rosa, lilla o quello scelto), per pallini, barrette e avatar senza foto.
+  - **Da provare:** rispondere da un telefono: sull'altro, aperta US, il widget dice «Bea ha risposto · tocca a te» e colora la barretta di Bea.

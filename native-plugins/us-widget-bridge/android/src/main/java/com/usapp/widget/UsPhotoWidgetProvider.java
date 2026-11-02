@@ -61,8 +61,8 @@ public final class UsPhotoWidgetProvider extends AppWidgetProvider {
             small.setImageViewResource(BARS[i], i == slot.index ? R.drawable.us_widget_pastel_bar_on : R.drawable.us_widget_pastel_bar_off);
         }
         // 4x2: the two of you, and since when, where and when the photo is.
-        avatar(medium, state.store.readNoiPortrait("me"), R.id.us_photo_me, 0xFFFF7C96);
-        avatar(medium, state.store.readNoiPortrait("partner"), R.id.us_photo_partner, 0xFFA98BFF);
+        UsWidgets.avatar(medium, state.store.readNoiPortrait("me"), R.id.us_photo_me, UsWidgetModels.personColor(state.snapshot, true));
+        UsWidgets.avatar(medium, state.store.readNoiPortrait("partner"), R.id.us_photo_partner, UsWidgetModels.personColor(state.snapshot, false));
         String line = UsWidgetModels.photoLine(state.snapshot, slot);
         medium.setTextViewText(R.id.us_photo_line, line);
         medium.setViewVisibility(R.id.us_photo_line, line.isEmpty() ? View.GONE : View.VISIBLE);
@@ -87,20 +87,6 @@ public final class UsPhotoWidgetProvider extends AppWidgetProvider {
         return views;
     }
 
-    private static void avatar(RemoteViews views, byte[] raw, int id, int colour) {
-        Bitmap bitmap = null;
-        if (raw != null) {
-            try { bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length); }
-            catch (RuntimeException ignored) {}
-        }
-        if (bitmap != null) {
-            views.setImageViewBitmap(id, bitmap);
-            views.setInt(id, "setColorFilter", 0);
-        } else {
-            views.setImageViewResource(id, R.drawable.us_widget_pastel_circle);
-            views.setInt(id, "setColorFilter", colour);
-        }
-    }
 
     /** Decodes downsampled, crops to the shape and rounds the corners like the board's cards (26dp). */
     static Bitmap framed(byte[] bytes, int widthDp, int heightDp, float density) {
