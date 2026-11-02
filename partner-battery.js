@@ -8,8 +8,9 @@
 // old, or without a distance in the capsule, Oggi shows nothing.
 // - Android reads the battery natively (UsWidgetBridge.getBatteryStatus);
 //   elsewhere the browser's Battery API, where it exists.
-// - Realtime uses its own channel, opened once the table has answered: a web
-//   build that lands before the SQL never breaks the main US channel.
+// - Realtime: one line on the app's one channel (app.js startUsRealtime,
+//   as the notes) calls onChange; never a parallel channel (ARCHITECTURE.md).
+//   The SQL goes before the web, so the table is there when it subscribes.
 (function (root, factory) {
   const api = factory(root);
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -98,8 +99,6 @@
 
   // loaded: the couple's rows have been read once for this identity.
   const state = { key: '', loaded: false, partner: null, mineAt: null, lastTriedAt: 0, inFlight: false, missing: false };
-  let channel = null;
-  let channelKey = '';
 
   function client() {
     try { return sb; } catch (_) { return w.sb || null; }
@@ -114,7 +113,6 @@
     state.mineAt = null;
     state.lastTriedAt = 0;
     state.inFlight = false;
-    unsubscribe();
   }
 
   // Only beside a real distance (ready, or the last known one): next to
@@ -172,7 +170,6 @@
     state.mineAt = rows.find((r) => r.user_id === profile.id)?.updated_at || null;
     state.partner = rows.find((r) => r.user_id !== profile.id) || null;
     state.loaded = true;
-    subscribe(profile);
     render();
     return state.partner;
   }
@@ -211,32 +208,14 @@
     }
   }
 
-  // A row of the couple changed: the partner's is shown as it arrives.
-  function onRealtime(payload) {
+  // A row of the couple changed (app.js startUsRealtime): the partner's is
+  // shown as it arrives.
+  function onChange(payload) {
     const me = w.usProfile?.id;
     const row = payload?.new;
     if (row?.user_id && row.user_id === me) { state.mineAt = row.updated_at || state.mineAt; return; }
     if (row?.user_id && payload.eventType !== 'DELETE') { state.partner = row; render(); return; }
     refresh().catch(() => {});
-  }
-
-  function subscribe(profile) {
-    const key = identityKey(profile);
-    const db = client();
-    if (!key || channelKey === key || !db?.channel) return;
-    unsubscribe();
-    channelKey = key;
-    channel = db.channel(`us-battery-${profile.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'couple_batteries', filter: `couple_id=eq.${profile.couple_id}` }, onRealtime)
-      .subscribe();
-  }
-
-  function unsubscribe() {
-    if (channel) {
-      try { client()?.removeChannel?.(channel); } catch (_) {}
-    }
-    channel = null;
-    channelKey = '';
   }
 
   // undefined until the rows are read: the widget keeps what it shows.
@@ -256,5 +235,5 @@
   // A reading turns a day old while the page stays open; no network.
   setInterval(() => { if (!w.document?.hidden && state.partner) render(); }, 60000);
 
-  return { shouldReport, glyph, ago, model, line, readDevice, refresh, onForeground, onRealtime, sheetLine, widgetState, REPORT_GAP_MS, VISIBLE_MS };
+  return { shouldReport, glyph, ago, model, line, readDevice, refresh, onForeground, onChange, sheetLine, widgetState, REPORT_GAP_MS, VISIBLE_MS };
 });

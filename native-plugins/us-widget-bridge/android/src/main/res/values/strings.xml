@@ -12,12 +12,11 @@
     <string name="us_widget_countdown_description">Lo stesso Countdown che hai scelto su Oggi</string>
     <string name="us_widget_countdown_empty">Scegli un Countdown su Oggi</string>
 
-    <string name="us_widget_noi_name">Noi</string>
+    <string name="us_widget_noi_name">Distanza e batteria</string>
+    <string name="us_widget_noi_me">Tu</string>
     <string name="us_widget_noi_unknown">Distanza non nota</string>
-    <string name="us_widget_noi_open">apri Noi</string>
-    <string name="us_widget_noi_between">tra voi</string>
-    <string name="us_widget_noi_last">ultima nota</string>
     <string name="us_widget_daily_name">La domanda di oggi</string>
+    <string name="us_widget_daily_pill">Oggi</string>
     <string name="us_widget_daily_description">La domanda di oggi e a chi tocca rispondere. Mai le risposte.</string>
     <string name="us_widget_daily_open">La domanda di oggi vi aspetta in US</string>
     <string name="us_widget_daily_new">Apri US per la domanda nuova</string>
@@ -28,31 +27,30 @@
     <string name="us_widget_daily_waiting_plain">Hai risposto. Aspettiamo la sua risposta</string>
     <string name="us_widget_daily_ready">Le vostre risposte sono pronte</string>
     <string name="us_widget_daily_preview_question">Quale piccolo momento vorresti rivivere insieme?</string>
-    <string name="us_widget_noi_description">Le vostre foto, la distanza tra voi, i Ti penso e la batteria di chi ami.</string>
+    <string name="us_widget_noi_description">La distanza tra voi e la batteria di chi ami. Mai dove siete.</string>
 
-    <string name="us_widget_message_name">Messaggio</string>
-    <string name="us_widget_message_description">L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso</string>
-    <string name="us_widget_message_empty">Il suo prossimo pensiero arriverà qui</string>
+    <string name="us_widget_message_name">Lasciato per te</string>
+    <string name="us_widget_message_description">Il Lasciato per te ancora chiuso: solo che cosa è e quando</string>
+    <string name="us_widget_message_empty">Il prossimo Lasciato per te arriverà qui</string>
+    <string name="us_widget_message_open">Apri</string>
 
     <string name="us_widget_days_name">Giorni insieme</string>
-    <string name="us_widget_days_description">Le vostre foto e i giorni insieme, che crescono ogni mezzanotte</string>
-    <string name="us_widget_days_empty">I vostri giorni insieme</string>
 
-    <string name="us_widget_photo_name">Foto &amp; Noi</string>
-    <string name="us_widget_photo_description">La foto di Oggi e i giorni insieme</string>
+    <string name="us_widget_photo_name">Foto &amp; giorni</string>
+    <string name="us_widget_photo_description">La foto di Oggi, che cambia ogni ora, e i giorni insieme</string>
     <string name="us_widget_photo_empty">La foto di Oggi apparirà qui</string>
 
     <!-- Widget picker previews: the same for every user, never a real name or photo. -->
-    <string name="us_widget_preview_think">Ti sta pensando</string>
+    <string name="us_widget_preview_think">Ti ha pensato</string>
+    <string name="us_widget_preview_think_when">2 min fa</string>
     <string name="us_widget_preview_think_cta">Ricambia</string>
     <string name="us_widget_preview_noi">12 km</string>
-    <string name="us_widget_preview_bubble">ti ha pensato · 10 min fa</string>
-    <string name="us_widget_preview_battery" formatted="false">64%</string>
+    <string name="us_widget_preview_battery" formatted="false">78%</string>
     <string name="us_widget_preview_days">365</string>
     <string name="us_widget_preview_days_unit">giorni insieme</string>
-    <string name="us_widget_preview_message">Ti ha pensato</string>
+    <string name="us_widget_preview_message">Ti ha lasciato una foto</string>
     <string name="us_widget_preview_message_when">10 min fa</string>
-    <string name="us_widget_preview_countdown">Il prossimo viaggio</string>
+    <string name="us_widget_preview_countdown">Mancano</string>
     <string name="us_widget_preview_countdown_value">12</string>
-    <string name="us_widget_preview_countdown_unit">giorni</string>
+    <string name="us_widget_preview_countdown_unit">giorni · Il prossimo viaggio</string>
 </resources>

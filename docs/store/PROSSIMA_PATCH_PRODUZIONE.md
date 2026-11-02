@@ -297,12 +297,12 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 **Fonte:** founder, grill del 31/10/2026 (dopo lo studio di Love8: posizione rispettosa, niente tracciamento continuo). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; niente su staging né in produzione.
 
 - **Cosa fa:** quando US è aperta (all'avvio e al ritorno in primo piano) il telefono manda il proprio livello di batteria e se è in carica, al massimo ogni 15 minuti. Niente lavori in background, nessuna notifica. L'altra persona vede l'ultimo livello e da quanto tempo; dopo un giorno non si vede più. Senza dato non compare niente.
-- **Oggi (scelta del founder del 31/10, in `DECISIONS.md`):** nella pillola della distanza, dopo i chilometri, l'icona Phosphor della batteria (bassa, media, alta, in carica) e la percentuale: «12 km · 🔋 18%». Sotto il 20% e non in carica l'icona è corallo. Si vede solo accanto a una distanza (anche l'ultima nota): con «Attiva posizione» o «In attesa» non compare. Si aggiorna col tempo reale (canale Realtime a parte, aperto solo dopo che la tabella ha risposto).
+- **Oggi (scelta del founder del 31/10, in `DECISIONS.md`):** nella pillola della distanza, dopo i chilometri, l'icona Phosphor della batteria (bassa, media, alta, in carica) e la percentuale: «12 km · 🔋 18%». Sotto il 20% e non in carica l'icona è corallo. Si vede solo accanto a una distanza (anche l'ultima nota): con «Attiva posizione» o «In attesa» non compare. Si aggiorna col tempo reale, dal canale unico dell'app (`startUsRealtime`), come le Note: niente canali paralleli. Per questo l'SQL va su prima del web.
 - **Scheda «Distanza»** (tocco sulla pillola): sotto la distanza la riga «Bea · 18% · 2 ore fa» (con «in carica» se serve). Per questa riga la scheda di conferma (`UsUiFoundation.notice`) ha una nuova opzione `note`.
 - **Noi:** invariato, nessuna riga della batteria.
 - **Widget Android «Noi»:** accanto a «NOI», in alto a destra, l'icona e la percentuale. Dopo un'ora più tenue, dopo un giorno sparisce (il widget si ridisegna da solo a quelle ore). La riga in corsivo sotto la distanza resta libera per «a casa / fuori» (lavoro successivo, con i recinti).
 - **Database:** migrazione `20261031134410_couple_battery_v1.sql`: tabella `couple_batteries` (una riga per persona, FK verso `profiles` con cascade), RLS «stessa coppia» finché il proprietario ne fa parte, scrittura solo con `report_battery(p_level, p_charging)` (orario del server; lo stesso invio entro un minuto non scrive niente), pubblicazione `supabase_realtime`. Test: `tests/couple-battery-v1-db.test.js`.
-  - **Ordine:** prima l'SQL, poi il web. Un web arrivato prima non rompe niente: vede che la tabella manca e smette di chiedere.
+  - **Ordine:** prima l'SQL, poi il web. La tabella è nel canale Realtime unico dell'app, quindi un web arrivato prima dell'SQL potrebbe fermare il tempo reale di tutta l'app finché la tabella non c'è (vale anche per le Note). Le letture della batteria invece, senza tabella, smettono di chiedere da sole.
   - **Export dei dati:** la batteria entra nell'export (`s3-2-export-core.mjs`); la Edge `export-my-data` va pubblicata **dopo** l'SQL.
 - **Android:** nuovo metodo `getBatteryStatus` nel plugin `us-widget-bridge` (`BatteryManager`, nessun permesso). Serve un APK nuovo; l'APK vecchio usa la Battery API del WebView, se c'è. Sul web vale la Battery API del browser (Chrome sì; Safari e Firefox no: lì non si manda niente). Un computer senza batteria non manda niente.
 - **Icone:** Phosphor `battery-low`, `battery-medium`, `battery-high`, `battery-charging` (regular, `@phosphor-icons/core` 2.1.1), registrate in `assets/ICON_REGISTRY.json`; nel widget gli stessi tracciati come vector drawable.
@@ -392,3 +392,40 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 - **Chi ha già il widget in produzione:** la credenziale salvata prima non ha l'indirizzo, quindi va alla produzione come oggi. Non serve fare niente.
 - **Test:** `UsWidgetEndpointsTest` (JVM), `tests/w1-3-silent-send.test.js`, `tests/widget-system.test.js`.
 - **Da provare dall'APK di staging:** il cuore del widget Ti penso manda davvero il pensiero; l'altro telefono lo riceve.
+
+## 2026-11-02 — Widget «Pastello» (solo Android)
+
+**Fonte:** founder, 02/11/2026, tavola approvata (`docs/DECISIONS.md`, «Widget: la famiglia Pastello»). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; serve un APK nuovo. Il widget «Nota» è tolto (revert di `1e0d8e9a`): niente migrazione `widget_note_v1` né Edge `widget-note`.
+
+- **2 · Ti penso:**
+  - nuova carta chiara, Fraunces e Figtree, avatar con la foto o l'iniziale e il colore della persona;
+  - «Bea ti ha pensato · 2 min fa» e «Ricambia»;
+  - al tocco il widget passa subito a «Ricambiato · adesso» (o «Inviato» se non era una risposta) e invia in sottofondo; «Ancora» manda di nuovo. Se non parte: «Non è partito · Riprova»;
+  - il cuore fa la stessa animazione dell'app (1→0,72→1,3→0,96→1 in 440 ms, onda da rosa a lilla), in una finestrella trasparente di un attimo sopra la Home (`UsThinkHeartActivity`, non esportata); con le animazioni spente invia e basta;
+  - nel medio (4×2): «12 volte che vi siete pensati oggi», i Ti penso di tutti e due di oggi (giorno di Roma), contati dall'app più quelli mandati dal widget dopo.
+  - **Font:** Fraunces e Figtree dell'app, decompressi da WOFF2 a TTF (`res/font`, circa 290 KB).
+  - **Da provare:** il cuore sul widget, che diventa subito rosa con «Ricambiato · adesso» e fa l'animazione dell'app; il medio con il contatore; la foto dell'altro nell'avatar, o la sua iniziale sul suo colore.
+- **1 · Foto & giorni** (rifà «Foto & Noi»; «Giorni insieme» confluisce qui):
+  - la foto di Oggi di quest'ora e quelle delle due ore successive, scelte con lo stesso calcolo di Oggi (`homeRotationPick`). Il widget le cambia da solo ogni ora anche a US chiusa, e i tre trattini in alto dicono quale delle tre è; dopo la terza resta sull'ultima finché US non si riapre;
+  - sotto, i giorni insieme in Fraunces («195 giorni insieme»); nel 4×2 anche le vostre due foto e «dal 21 aprile · Lisbona, 12 ottobre» (da quando, e il posto o la didascalia e la data della foto);
+  - sul telefono restano al massimo tre foto, solo quelle che il widget nomina; le altre si cancellano;
+  - i widget «Giorni insieme» già messi mostrano Foto & giorni, che in Impostazioni non c'è più come voce a sé.
+  - **Da provare:** mettere Foto & giorni, chiudere US e tornare dopo un'ora: la foto è cambiata ed è la stessa di Oggi; il 4×2 con le due foto e la riga del posto.
+- **3 · La domanda di oggi:** carta lilla-pesca; l'etichetta bianca «Oggi» (nel 4×2 «La domanda di oggi»); la domanda in Figtree extra grassetto; chi ha risposto, con il pallino del suo colore. Nel 4×2 anche le vostre due foto con un cuore e una barretta a testa, che si colora quando quella persona ha risposto, e «Bea ha risposto · **tocca a te**». Mai le risposte.
+  - **Colori:** ora il widget conosce il colore che ognuno mostra nell'app (rosa, lilla o quello scelto), per pallini, barrette e avatar senza foto.
+  - **Da provare:** rispondere da un telefono: sull'altro, aperta US, il widget dice «Bea ha risposto · tocca a te» e colora la barretta di Bea.
+- **4 · Distanza e batteria** (sostituisce «Noi» e la sua mappa): carta pesca-rosa-lilla; le vostre due foto; la distanza in Fraunces («12 km», «vicini» o «Distanza non nota») e la batteria di chi ami. Nel 4×2 «Tu» a sinistra e il partner a destra con la sua batteria, un arco a puntini con il cuore in mezzo, e sotto la distanza «aggiornato 10 min fa» (dopo una settimana sparisce). Il «Noi» già messo come 2×1 diventa una riga sola con le stesse cose.
+  - **Niente mappa:** tolti lo sfondo `us_widget_noi_map_v1.webp` (era `DRAFT`, non più nel manifest), le nuvolette dei Ti penso e la doppia foto del vecchio 2×1. Nella privacy resta l'attribuzione di OpenStreetMap per la Mappa dei Ricordi; via la frase sullo sfondo del widget, e il widget si chiama «Distanza e batteria» (italiano e inglese).
+  - **Dati:** nessuno nuovo. Al widget arrivano anche «vicini» (prima si perdeva) e l'ora della lettura più vecchia delle due, già calcolate dall'app; mai le coordinate.
+  - **Da provare:** mettere il widget nel 2×2 e nel 4×2; con la posizione condivisa la distanza e «aggiornato …», vicini sotto i 3 km; la batteria del partner; il tocco apre Noi.
+- **9 · Countdown** (sostituisce l'attuale): lo stesso Countdown scelto su Oggi.
+  - 2×2: carta azzurro-lilla-rosa, l'etichetta bianca «Mancano» («Ci siamo» il giorno stesso, «Insieme da» per i giorni insieme), il numero in Fraunces prugna, «giorni · Lisbona» in corsivo e la barra rosa-lilla;
+  - 4×2: un cielo con la sera a sinistra, «Lisbona · 14 novembre», il numero con «giorni» e le ore («4 ore»), 14 tacche;
+  - barra e tacche sono le ultime due settimane: a 12 giorni se ne accendono 2, il giorno stesso tutte. Per «Insieme da» l'anno verso il prossimo anniversario;
+  - l'ultimo giorno di un Countdown con l'ora il numero diventa il conto alla rovescia che va da solo, come prima;
+  - **differenze dalla tavola:** le ore senza i minuti («4 ore», non «4 ore · 21 minuti»), così il widget si ridisegna una volta all'ora e non ogni minuto; la riga «giorni a Lisbona» diventa «giorni · Lisbona» perché il titolo è libero («giorni a Il nostro momento» non va). Gli stili premio del Countdown (Aurora, Chrome, Orbit…) restano nell'app ma non cambiano più l'aspetto del widget.
+  - **Da provare:** un Countdown a una data e uno con l'ora, nel 2×2 e nel 4×2; l'ultimo giorno il conto alla rovescia; «Insieme da».
+- **7 · Lasciato per te** (sostituisce «Messaggio», che in Impostazioni ora si chiama così): carta lilla-rosa, la foto di chi ami (o la sua iniziale sul suo colore), una nuvoletta bianca «Ti ha lasciato una foto», sotto «10 min fa» e la busta rosa. Nel 4×2 anche «la scopri solo dentro US», «Bea · 10 min fa» e la pillola rosa «Apri». Il tocco apre il Lasciato per te.
+  - **Solo tipo e ora** (founder, 31/10): mai le parole, la foto o il link.
+  - **Cambia:** mostra solo il Lasciato per te ancora chiuso, non più l'ultimo Ti penso (per quello c'è il widget Ti penso). Senza niente da aprire: «Il prossimo Lasciato per te arriverà qui».
+  - **Da provare:** lasciare una foto da un telefono: sull'altro, aperta US, il widget dice «Ti ha lasciato una foto · ora»; aprirla: il widget torna vuoto; il 4×2 con «Apri».

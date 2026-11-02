@@ -24,6 +24,7 @@ final class UsWidgetContract {
     private static final Pattern CIVIL_DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
     private static final Pattern DAILY_STATE = Pattern.compile("^(todo|your_turn|waiting|ready)$");
     private static final Pattern LEFT_KIND = Pattern.compile("^(text|photo|audio|video|music)$");
+    private static final Pattern COLOR = Pattern.compile("^#[0-9a-fA-F]{6}$");
 
     private UsWidgetContract() {}
 
@@ -47,7 +48,10 @@ final class UsWidgetContract {
                 .put("lastReceivedAt", instantText(thinkIn.optString("lastReceivedAt", "")))
                 .put("lastSentAt", instantText(thinkIn.optString("lastSentAt", "")))
                 // A reaction to the partner's thought answers it as well as a thought does.
-                .put("lastAnsweredAt", instantText(thinkIn.optString("lastAnsweredAt", "")));
+                .put("lastAnsweredAt", instantText(thinkIn.optString("lastAnsweredAt", "")))
+                // How many times the two of them thought of each other that Rome day.
+                .put("todayCount", Math.max(0, Math.min(999, thinkIn.optInt("todayCount", 0))))
+                .put("todayDate", civilDate(thinkIn.optString("todayDate", "")));
 
             JSONObject coupleIn = optObject(input, "couple");
             JSONArray namesIn = coupleIn.optJSONArray("names");
@@ -66,12 +70,22 @@ final class UsWidgetContract {
                 .put("distanceText", DISTANCE.matcher(coupleIn.optString("distanceText", "")).matches()
                     ? coupleIn.optString("distanceText", "") : "")
                 .put("distanceState", "stale".equals(coupleIn.optString("distanceState", ""))
-                    ? "stale" : "ready");
+                    ? "stale" : "ready")
+                // Distanza e batteria: "vicini", and when the distance was read.
+                .put("distanceNear", coupleIn.optBoolean("distanceNear", false))
+                .put("distanceAt", instantText(coupleIn.optString("distanceAt", "")));
             // Batteria del partner: the level the partner last reported, whether
             // it was charging and when (server time). Unknown: level -1.
             int batteryLevel = coupleIn.optInt("batteryLevel", -1);
             String batteryAt = instantText(coupleIn.optString("batteryAt", ""));
             if (batteryLevel < 0 || batteryLevel > 100 || batteryAt.isEmpty()) { batteryLevel = -1; batteryAt = ""; }
+            // Pastello: each person's colour as the app shows it (rosa, lilla or the one chosen).
+            JSONObject colorsIn = optObject(coupleIn, "colors");
+            String meColor = colorsIn.optString("me", "");
+            String partnerColor = colorsIn.optString("partner", "");
+            couple.put("colors", new JSONObject()
+                .put("me", COLOR.matcher(meColor).matches() ? meColor.toLowerCase() : "")
+                .put("partner", COLOR.matcher(partnerColor).matches() ? partnerColor.toLowerCase() : ""));
             couple.put("batteryLevel", batteryLevel)
                 .put("batteryCharging", batteryLevel >= 0 && coupleIn.optBoolean("batteryCharging", false))
                 .put("batteryAt", batteryAt);
@@ -96,10 +110,26 @@ final class UsWidgetContract {
             String photoState = photoIn.optString("state", "none");
             String key = photoIn.optString("key", "");
             if (!photoState.equals("ready") || !MEDIA_KEY.matcher(key).matches()) { photoState = "none"; key = ""; }
+            boolean ready = photoState.equals("ready");
             JSONObject photo = new JSONObject()
                 .put("state", photoState)
                 .put("key", key)
-                .put("takenOn", photoState.equals("ready") ? civilDate(photoIn.optString("takenOn", "")) : "");
+                .put("takenOn", ready ? civilDate(photoIn.optString("takenOn", "")) : "")
+                // Foto & giorni (Pastello): the place or caption, the hour this
+                // photo is Oggi's, and Oggi's photos of the next two hours.
+                .put("label", ready ? text(photoIn.optString("label", ""), 60) : "")
+                .put("hour", ready ? instantText(photoIn.optString("hour", "")) : "");
+            JSONArray nextIn = photoIn.optJSONArray("next");
+            JSONArray next = new JSONArray();
+            for (int i = 0; ready && nextIn != null && i < nextIn.length() && next.length() < 2; i++) {
+                JSONObject item = nextIn.optJSONObject(i);
+                String nextKey = item == null ? "" : item.optString("key", "");
+                if (!MEDIA_KEY.matcher(nextKey).matches()) continue;
+                next.put(new JSONObject().put("key", nextKey)
+                    .put("takenOn", civilDate(item.optString("takenOn", "")))
+                    .put("label", text(item.optString("label", ""), 60)));
+            }
+            photo.put("next", next);
 
             // La domanda di oggi: the day, the question (shared content, never an
             // answer) and whose turn it is. Absent or malformed: no question.

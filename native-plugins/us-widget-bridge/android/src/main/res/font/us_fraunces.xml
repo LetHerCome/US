@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fraunces, the app's titles (assets/fonts/PROVENANCE.md): the same files,
+     WOFF2 decompressed to TTF without changes (SOFT 100, WONK 1 pinned). -->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android">
+    <font
+        android:font="@font/us_font_fraunces"
+        android:fontStyle="normal"
+        android:fontVariationSettings="'opsz' 72, 'wght' 400"
+        android:fontWeight="400" />
+    <font
+        android:font="@font/us_font_fraunces_italic"
+        android:fontStyle="italic"
+        android:fontVariationSettings="'opsz' 72, 'wght' 400"
+        android:fontWeight="400" />
+</font-family>

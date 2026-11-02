@@ -169,7 +169,7 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   assert.equal(sent.couple.frame, '');
   assert.equal(sent.countdown.style, 'editorial');
   assert.equal(sent.countdown.kind, 'clock');
-  assert.deepEqual({ ...sent.photo }, { state: 'none', key: '', takenOn: '' });
+  assert.deepEqual({ ...sent.photo, next: [...sent.photo.next] }, { state: 'none', key: '', takenOn: '', label: '', hour: '', next: [] });
   // La domanda di oggi and Messaggio travel too (31/10: daily was dropped
   // here, so the widget never got the question): meaning only, never content.
   assert.deepEqual({ ...sent.daily }, { date: '2026-10-31', question: 'Una domanda?', state: 'your_turn' });
@@ -399,7 +399,7 @@ test('Foto & Noi follows the painted Oggi hero, not an independent latest-Ricord
   assert.match(app, /window\.dispatchEvent\(new Event\('us:home-photo-changed'\)\)/);
   assert.match(read('widgets.js'), /addEventListener\('us:home-photo-changed'/);
   assert.doesNotMatch(read('widgets.js'), /addEventListener\('us:moments-updated'/);
-  assert.match(read('widget-hub.js'), /La fotografia che vedi su Oggi/);
+  assert.match(read('widget-hub.js'), /La foto di Oggi, che cambia ogni ora/);
 });
 
 test('Foto & Noi keeps a valid private cache until Oggi finishes painting', async () => {
@@ -425,7 +425,7 @@ test('Ti penso updates its own RemoteViews immediately before the network call',
   const widgets = read(`${JAVA}/UsWidgets.java`);
   const action = read(`${JAVA}/UsThinkWidgetActionReceiver.java`);
   assert.match(widgets, /static void refreshThink\(Context context\)/);
-  assert.match(action, /writeAction\("sending", actionId\);\s*\/\/[^\n]*\n\s*UsWidgets\.refreshThink\(app\);/);
+  assert.match(action, /store\.writeAction\("sending", actionId, UsWidgetModels\.unanswered\([^\n]*\);\s*\/\/[^\n]*\n\s*UsWidgets\.refreshThink\(app\);/);
   assert.match(action, /UsWidgets\.refreshAll\(app\);\s*pending\.finish\(\)/);
 });
 
@@ -473,7 +473,7 @@ test('Widget Hub vive in Impostazioni, nascosto fuori dall’app native, niente 
   assert.doesNotMatch(oggi, /usWidgetHub|data-widget-add/);
 });
 
-test('Noi 2x1 is a light photo-distance widget with one action only', () => {
+test('Distanza e batteria opens Noi, its one action', () => {
   const provider = read(`${JAVA}/UsNoiWidgetProvider.java`);
   const layout = read(`${PLUGIN}/res/layout/us_widget_noi.xml`);
   const store = read(`${JAVA}/UsWidgetStore.java`);
@@ -481,7 +481,7 @@ test('Noi 2x1 is a light photo-distance widget with one action only', () => {
   const app = read('app.js');
   assert.match(provider, /UsWidgets\.open\(context, "noi", 4401\)/);
   assert.doesNotMatch(provider, /"noi\/play"|us_noi_cta/);
-  assert.match(layout, /@\+id\/us_noi_portrait/);
+  assert.match(layout, /@\+id\/us_noi_me"/);
   assert.match(layout, /@\+id\/us_noi_distance/);
   assert.doesNotMatch(layout, /us_noi_cta|GIOCA/);
   assert.match(store, /writeNoiPortrait/);
@@ -490,29 +490,32 @@ test('Noi 2x1 is a light photo-distance widget with one action only', () => {
   assert.match(app, /noiAvatarSources/);
   assert.match(app, /noiDistance\(\)/);
   assert.match(read('widget-hub.js'), /us-wp-noi-light/);
-  assert.match(read('widgets.js'), /composeNoiPortrait/);
+  assert.match(read('widgets.js'), /composeRoundPortrait/);
   assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(/i);
 });
 
-// 1.0 (O12): the widget no longer shows an "N inviati · 24h" counter; the
-// store keeps its confirmed-send history (dedupe), the provider hides the line.
-test('Ti penso shows "Inviato" for a readable moment; no sent counter on the widget', () => {
+// Pastello (02/11/2026): "Ricambiato · adesso" for a minute, the 4x2 counts
+// today's thoughts of both (the app's count plus the widget's sends after it).
+test('Ti penso: done at once for a minute, today\'s count on the 4x2', () => {
   const model = read(`${JAVA}/UsWidgetModels.java`);
   const store = read(`${JAVA}/UsWidgetStore.java`);
   const receiver = read(`${JAVA}/UsThinkWidgetActionReceiver.java`);
   const provider = read(`${JAVA}/UsThinkWidgetProvider.java`);
-  // 16/10: without the counter, "Inviato a …" is the only success feedback.
-  assert.match(model, /SENT_VISIBLE_MS = 5_000L/);
-  assert.doesNotMatch(receiver, /store.writeAction("idle", actionId)/);
+  assert.match(model, /SENT_VISIBLE_MS = 60_000L/);
   assert.match(model, /SEND_COOLDOWN_MS = 1_800L/);
+  assert.doesNotMatch(receiver, /store.writeAction("idle", actionId)/);
   assert.match(store, /recentThinkEvents/);
   assert.match(store, /now\.minusSeconds\(86400\)/);
   assert.match(store, /actionId\.equals\(/);
   assert.match(store, /thinkHistoryFile\.delete\(\)/);
   assert.match(receiver, /UsWidgetActionClient\.SENT\.equals\(result\)/);
-  assert.doesNotMatch(provider, /countThinkSent24h|inviati/);
-  assert.match(provider, /views\.setViewVisibility\(R\.id\.us_widget_count_24h, View\.GONE\);/);
-  assert.match(read(`${PLUGIN}/res/layout/us_widget_think.xml`), /us_widget_count_24h/);
+  assert.match(provider, /UsWidgetModels\.thinkCount\(state\.snapshot, state\.store\.countThinkSentSince\(countSince\(state\), state\.now\), state\.now\)/);
+  assert.match(provider, /return UsWidgets\.sized\(options, small, medium\);/);
+  assert.match(read(`${PLUGIN}/res/layout/us_widget_think_medium.xml`), /@\+id\/us_think_count_row/);
+  assert.doesNotMatch(read(`${PLUGIN}/res/layout/us_widget_think.xml`), /us_think_count/, 'the 2x2 has no count');
+  // The app counts both people's Ti penso of this Rome day.
+  assert.match(read('app.js'), /const todayCount=\(rows\|\|\[\]\)\.filter\(row=>romeDay\(row\.created_at\)===todayDate\)\.length;/);
+  assert.match(read('platform.js'), /todayDate: safeCivilDate\(think\.todayDate\)/);
 });
 
 // ---------- Android plugin (static: Gradle is not available in every CI) ----------
@@ -533,7 +536,7 @@ test('manifest dichiara 4 provider e i receiver interni, tutti non esportati', (
     assert.match(xml, /android:updatePeriodMillis="3600000"/);
     assert.match(xml, /android:widgetCategory="home_screen"/);
   }
-  // Noi stile mappa (31/10): 4x2 by default; the 2x1 placed before keeps the compact card.
+  // Distanza e batteria: 4x2 by default; the 2x1 placed before gets a one-row card.
   assert.match(read(`${PLUGIN}/res/xml/us_widget_noi_info.xml`), /android:targetCellWidth="4"[\s\S]*android:targetCellHeight="2"/);
   assert.match(read(`${PLUGIN}/res/xml/us_widget_think_info.xml`), /android:targetCellHeight="2"/);
 });

@@ -136,7 +136,10 @@
         partnerName: safeText(think.partnerName, 40),
         lastReceivedAt: safeInstant(think.lastReceivedAt),
         lastSentAt: safeInstant(think.lastSentAt),
-        lastAnsweredAt: safeInstant(think.lastAnsweredAt)
+        lastAnsweredAt: safeInstant(think.lastAnsweredAt),
+        // Ti penso of both that Rome day (UsWidgetContract.java).
+        todayCount: Number.isInteger(think.todayCount) ? Math.max(0, Math.min(999, think.todayCount)) : 0,
+        todayDate: safeCivilDate(think.todayDate)
       },
       couple: {
         names: (Array.isArray(couple.names) ? couple.names : []).map((name) => safeText(name, 40)).filter(Boolean).slice(0, 2),
@@ -144,8 +147,16 @@
         frame: typeof couple.frame === 'string' && /^[a-z0-9_]{1,24}$/.test(couple.frame) ? couple.frame : '',
         distanceText: typeof couple.distanceText === 'string' && /^[0-9., ]{1,16} ?(km|m|mi|ft)$/.test(couple.distanceText) ? couple.distanceText : '',
         distanceState: couple.distanceState === 'stale' ? 'stale' : 'ready',
+        // Distanza e batteria: "vicini", and when the distance was read.
+        distanceNear: couple.distanceNear === true,
+        distanceAt: safeInstant(couple.distanceAt),
         // Batteria del partner (UsWidgetContract.java): -1 when unknown.
-        ...widgetBattery(couple)
+        ...widgetBattery(couple),
+        // Pastello: each person's colour, #rrggbb or nothing.
+        colors: {
+          me: /^#[0-9a-f]{6}$/i.test(couple.colors?.me || '') ? couple.colors.me.toLowerCase() : '',
+          partner: /^#[0-9a-f]{6}$/i.test(couple.colors?.partner || '') ? couple.colors.partner.toLowerCase() : ''
+        }
       },
       countdown: {
         active,
@@ -157,7 +168,15 @@
       photo: {
         state: photoReady ? 'ready' : 'none',
         key: photoReady ? photoKey : '',
-        takenOn: photoReady ? safeCivilDate(photo.takenOn) : ''
+        takenOn: photoReady ? safeCivilDate(photo.takenOn) : '',
+        // Foto & giorni (UsWidgetContract.java): place or caption, the hour,
+        // and Oggi's photos of the next two hours.
+        label: photoReady ? safeText(photo.label, 60) : '',
+        hour: photoReady ? safeInstant(photo.hour) : '',
+        next: photoReady ? (Array.isArray(photo.next) ? photo.next : [])
+          .filter((item) => typeof item?.key === 'string' && /^[a-f0-9]{32}$/.test(item.key))
+          .slice(0, 2)
+          .map((item) => ({ key: item.key, takenOn: safeCivilDate(item.takenOn), label: safeText(item.label, 60) })) : []
       },
       daily: widgetDaily(input?.daily),
       left: widgetLeft(input?.left)

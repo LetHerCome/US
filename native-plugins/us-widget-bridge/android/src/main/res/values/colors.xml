@@ -17,4 +17,8 @@
     <!-- Kept for the Countdown reward styles and older references. -->
     <color name="us_widget_accent">#FFFF7C96</color>
     <color name="us_widget_heart">#FFFF7C96</color>
+    <!-- Pastello (founder, 02/11/2026; the approved widget board): ink and quieter ink on the light cards. -->
+    <color name="us_widget_pastel_ink">#FF1A1020</color>
+    <color name="us_widget_pastel_sub">#FF5B4A63</color>
+    <color name="us_widget_pastel_plum">#FF3B1F5C</color>
 </resources>

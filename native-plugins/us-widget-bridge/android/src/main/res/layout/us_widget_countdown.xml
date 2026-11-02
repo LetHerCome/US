@@ -1,212 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Countdown. One layout, styled per US Countdown style at render time
-     (UsCountdownWidgetProvider.look): background, decoration, face, colours. -->
+<!-- Countdown 2x2, Pastello (approved board, 02/11/2026): the white label
+     "Mancano", the number in Fraunces plum, "giorni · Lisbona" in italic and
+     the rosa-to-lilla bar of the last two weeks. The same Countdown chosen on
+     Oggi; in its final day the number is a native count-down. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_cd_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_background"
-    android:contentDescription="@string/us_widget_countdown_name">
-
-    <ImageView
-        android:id="@+id/us_cd_deco"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="8dp"
-        android:importantForAccessibility="no"
-        android:scaleType="fitCenter"
-        android:visibility="gone" />
+    android:background="@drawable/us_widget_pastel_countdown"
+    android:contentDescription="@string/us_widget_countdown_name"
+    android:padding="16dp">
 
     <LinearLayout
+        android:id="@+id/us_cd_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="14dp">
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/us_cd_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/us_widget_pastel_pill"
             android:ellipsize="end"
-            android:fontFamily="sans-serif-medium"
-            android:gravity="center"
+            android:fontFamily="@font/us_figtree"
+            android:importantForAccessibility="no"
             android:includeFontPadding="false"
-            android:letterSpacing="0.14"
             android:maxLines="1"
-            android:textAllCaps="true"
-            android:textColor="@color/us_widget_text"
+            android:paddingStart="9dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="9dp"
+            android:paddingBottom="3dp"
+            android:textColor="@color/us_widget_pastel_ink"
+            android:textFontWeight="800"
             android:textSize="11sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/us_cd_value_light"
+            android:id="@+id/us_cd_value"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:autoSizeMaxTextSize="46sp"
-            android:autoSizeMinTextSize="14sp"
+            android:autoSizeMaxTextSize="64sp"
+            android:autoSizeMinTextSize="28sp"
             android:autoSizeTextType="uniform"
-            android:fontFamily="sans-serif-light"
-            android:gravity="center"
+            android:fontFamily="@font/us_fraunces"
+            android:gravity="bottom|start"
+            android:importantForAccessibility="no"
             android:includeFontPadding="false"
             android:maxLines="1"
-            android:textColor="@color/us_widget_text"
-            android:textStyle="normal"
-            android:visibility="gone" />
-        <TextView
-            android:id="@+id/us_cd_value_serif"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:autoSizeMaxTextSize="46sp"
-            android:autoSizeMinTextSize="14sp"
-            android:autoSizeTextType="uniform"
-            android:fontFamily="serif"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:textColor="@color/us_widget_text"
-            android:textStyle="italic"
-            android:visibility="gone" />
-        <TextView
-            android:id="@+id/us_cd_value_bold"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:autoSizeMaxTextSize="46sp"
-            android:autoSizeMinTextSize="14sp"
-            android:autoSizeTextType="uniform"
-            android:fontFamily="sans-serif-black"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:textColor="@color/us_widget_text"
-            android:textStyle="normal"
-            android:visibility="gone" />
-        <!-- US 1.0 base style: the upright serif number of Oggi. -->
-        <TextView
-            android:id="@+id/us_cd_value_display"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:autoSizeMaxTextSize="58sp"
-            android:autoSizeMinTextSize="16sp"
-            android:autoSizeTextType="uniform"
-            android:fontFamily="serif"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:textColor="@color/us_widget_text"
-            android:textStyle="normal"
-            android:visibility="gone" />
-        <Chronometer
-            android:id="@+id/us_cd_clock_light"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:autoSizeMaxTextSize="30sp"
-            android:autoSizeMinTextSize="14sp"
-            android:autoSizeTextType="uniform"
-            android:fontFamily="sans-serif-light"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:textColor="@color/us_widget_text"
-            android:textStyle="normal"
-            android:visibility="gone" />
-        <Chronometer
-            android:id="@+id/us_cd_clock_serif"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:autoSizeMaxTextSize="30sp"
-            android:autoSizeMinTextSize="14sp"
-            android:autoSizeTextType="uniform"
-            android:fontFamily="serif"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:textColor="@color/us_widget_text"
-            android:textStyle="italic"
-            android:visibility="gone" />
-        <Chronometer
-            android:id="@+id/us_cd_clock_bold"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:autoSizeMaxTextSize="30sp"
-            android:autoSizeMinTextSize="14sp"
-            android:autoSizeTextType="uniform"
-            android:fontFamily="sans-serif-black"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:textColor="@color/us_widget_text"
-            android:textStyle="normal"
-            android:visibility="gone" />
+            android:textColor="@color/us_widget_pastel_plum"
+            android:textSize="64sp" />
 
         <Chronometer
-            android:id="@+id/us_cd_clock_display"
+            android:id="@+id/us_cd_clock"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:autoSizeMaxTextSize="32sp"
-            android:autoSizeMinTextSize="14sp"
+            android:autoSizeMaxTextSize="34sp"
+            android:autoSizeMinTextSize="18sp"
             android:autoSizeTextType="uniform"
-            android:fontFamily="serif"
-            android:gravity="center"
+            android:fontFamily="@font/us_fraunces"
+            android:gravity="bottom|start"
+            android:importantForAccessibility="no"
             android:includeFontPadding="false"
             android:maxLines="1"
-            android:textColor="@color/us_widget_text"
-            android:textStyle="normal"
+            android:textColor="@color/us_widget_pastel_plum"
             android:visibility="gone" />
 
         <TextView
-            android:id="@+id/us_cd_unit_serif"
-            android:layout_width="wrap_content"
+            android:id="@+id/us_cd_line"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="serif"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/us_fraunces"
+            android:importantForAccessibility="no"
             android:includeFontPadding="false"
-            android:textColor="@color/us_widget_text"
-            android:textSize="16sp"
+            android:maxLines="1"
+            android:textColor="@color/us_widget_pastel_ink"
+            android:textSize="15sp"
             android:textStyle="italic" />
 
-        <TextView
-            android:id="@+id/us_cd_unit_caps"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:includeFontPadding="false"
-            android:letterSpacing="0.3"
-            android:textAllCaps="true"
-            android:textColor="@color/us_widget_text"
-            android:textSize="9sp"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/us_cd_sub"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:fontFamily="serif"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:textColor="@color/us_widget_accent"
-            android:textSize="12sp"
-            android:textStyle="italic"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/us_cd_empty"
+        <ProgressBar
+            android:id="@+id/us_cd_progress"
+            style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:maxLines="3"
-            android:text="@string/us_widget_countdown_empty"
-            android:textColor="@color/us_widget_text_2"
-            android:textSize="14sp"
-            android:visibility="gone" />
+            android:layout_height="6dp"
+            android:layout_marginTop="12dp"
+            android:importantForAccessibility="no"
+            android:indeterminate="false"
+            android:max="1000"
+            android:progressDrawable="@drawable/us_widget_pastel_progress" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/us_cd_empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fontFamily="@font/us_fraunces"
+        android:gravity="center"
+        android:importantForAccessibility="no"
+        android:textColor="@color/us_widget_pastel_ink"
+        android:textSize="15sp"
+        android:textStyle="italic"
+        android:visibility="gone" />
 </FrameLayout>

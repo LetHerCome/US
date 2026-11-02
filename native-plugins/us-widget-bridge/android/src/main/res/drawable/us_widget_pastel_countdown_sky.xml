@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Countdown 4x2, Pastello: the board's sky (#bfe3ff, #6d8fd6, #3b2a66 from
+     the top right) under a night scrim from the left, for the latte text. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:centerColor="#FF6D8FD6"
+                android:centerX="0.8"
+                android:centerY="0.2"
+                android:endColor="#FF3B2A66"
+                android:gradientRadius="190%"
+                android:startColor="#FFBFE3FF"
+                android:type="radial" />
+            <corners android:radius="26dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="0"
+                android:centerColor="#400F0B13"
+                android:centerX="0.6"
+                android:endColor="#000F0B13"
+                android:startColor="#B30F0B13" />
+            <corners android:radius="26dp" />
+        </shape>
+    </item>
+</layer-list>

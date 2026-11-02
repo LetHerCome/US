@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- La domanda di oggi, Pastello: #e4d9ff to #ffe0d4 (the board's 140deg). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:endColor="#FFFFE0D4"
+        android:startColor="#FFE4D9FF" />
+    <corners android:radius="26dp" />
+</shape>
