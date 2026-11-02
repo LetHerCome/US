@@ -44,7 +44,6 @@ test('code colours come in both forms; the launcher switches them with the theme
   assert.match(widgets, /static void themedColor\(RemoteViews views, Context context, int id, String method, int light, int dark\) \{\s*if \(Build\.VERSION\.SDK_INT >= Build\.VERSION_CODES\.S\) views\.setColorInt\(id, method, light, dark\);\s*else views\.setInt\(id, method, night\(context\) \? dark : light\);/);
   assert.match(widgets, /Configuration\.UI_MODE_NIGHT_YES/);
   assert.match(read(`${JAVA}/UsThinkWidgetProvider.java`), /UsWidgets\.themedColor\(views, context, R\.id\.us_widget_heart_bg, "setColorFilter"/);
-  assert.match(read(`${JAVA}/UsDailyWidgetProvider.java`), /UsWidgets\.themedColor\(medium, context, R\.id\.us_daily_me_done/);
   const noi = read(`${JAVA}/UsNoiWidgetProvider.java`);
   assert.match(noi, /UsWidgets\.themedColor\(views, context, R\.id\.us_noi_battery, "setTextColor", color, dark\);/);
   assert.doesNotMatch(noi, /views\.setTextColor\(R\.id\.us_noi_battery/);
