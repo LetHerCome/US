@@ -459,3 +459,5 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Da provare:** scegliere uno stato: compare sulla foto; senza foto l'iniziale; tema chiaro e scuro.
 - **Foto & Noi** (foto a tutto widget, segue il tema): la foto di Oggi con la grana leggera che in basso sfuma nella carta del tema (crema col tema chiaro, notte col tema scuro, come prima), «195» in Fraunces e «giorni insieme» in corsivo. Senza foto: illustrazione col sole e la luna e «La foto di Oggi apparirà qui». Resta la foto che cambia ogni ora.
   - **Da provare:** con la foto, tema chiaro e scuro; senza foto.
+- **Ricordi a pila** (foto a tutto widget): nel 2×2 il ricordo più recente riempie il widget e gli altri due spuntano dal bordo in alto; la data va su una riga sua («2 nov · un anno fa») e il titolo in Fraunces sotto, così «Weekend a Firenze» non si taglia più. Nel 4×2 un ventaglio di tre foto su un fondo sfumato, «Un anno fa», il titolo e «2 novembre · 8 foto». Senza ricordi: polaroid vuote disegnate. Le immagini le disegna US (`widgets.js`), quindi serve anche il web nuovo.
+  - **Da provare:** con un ricordo di oggi un anno fa e senza; un titolo lungo.

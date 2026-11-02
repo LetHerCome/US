@@ -1,13 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ricordi a pila 4x2, Pastello: the stack on the left; on the right "Un
-     anno fa", the place in Fraunces, "12 ottobre · 8 foto" and one dash for
-     each print, the one on top in rosa. -->
+<!-- Ricordi a pila 4x2, Foto protagonista: a fan of your three prints (drawn
+     by US) on a soft field, and beside it "Un anno fa", the title in Fraunces
+     and "2 novembre · 8 foto". Without memories, empty prints drawn by hand. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_mem_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_pastel_memories"
-    android:contentDescription="@string/us_widget_memories_name">
+    android:background="@drawable/us_widget_card"
+    android:clipToOutline="true">
+
+    <ImageView
+        android:id="@+id/us_mem_art"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:src="@drawable/us_widget_art_memories_back" />
+
+    <FrameLayout
+        android:id="@+id/us_mem_grain"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/us_widget_grain" />
 
     <LinearLayout
         android:id="@+id/us_mem_content"
@@ -17,9 +32,8 @@
 
         <ImageView
             android:id="@+id/us_mem_stack"
-            android:layout_width="0dp"
+            android:layout_width="200dp"
             android:layout_height="match_parent"
-            android:layout_weight="1.6"
             android:contentDescription="@null"
             android:importantForAccessibility="no"
             android:scaleType="fitCenter" />
@@ -29,7 +43,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:paddingTop="20dp"
+            android:paddingTop="18dp"
             android:paddingEnd="18dp"
             android:paddingBottom="18dp">
 
@@ -37,18 +51,17 @@
                 android:id="@+id/us_mem_pill"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/us_widget_pastel_pill_blush"
+                android:background="@drawable/us_widget_glass_pill"
                 android:ellipsize="end"
                 android:fontFamily="@font/us_figtree"
                 android:importantForAccessibility="no"
                 android:includeFontPadding="false"
                 android:maxLines="1"
-                android:paddingStart="9dp"
-                android:paddingTop="3dp"
-                android:paddingEnd="9dp"
-                android:paddingBottom="3dp"
+                android:paddingStart="10dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="4dp"
                 android:textColor="@color/us_widget_pastel_ink"
-                android:textFontWeight="800"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
@@ -57,80 +70,39 @@
                 android:layout_height="0dp"
                 android:layout_weight="1" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/us_mem_title"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:fontFamily="@font/us_fraunces"
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
                 android:importantForAccessibility="no"
-                android:includeFontPadding="false"
-                android:maxLines="2"
-                android:textColor="@color/us_widget_pastel_ink"
-                android:textSize="24sp" />
+                android:scaleType="fitStart" />
 
             <TextView
                 android:id="@+id/us_mem_line"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="5dp"
                 android:ellipsize="end"
                 android:fontFamily="@font/us_figtree"
                 android:importantForAccessibility="no"
                 android:includeFontPadding="false"
                 android:maxLines="1"
                 android:textColor="@color/us_widget_pastel_sub"
-                android:textSize="12sp" />
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/us_mem_dot_0"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@null"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/us_widget_pastel_dash_on" />
-
-                <ImageView
-                    android:id="@+id/us_mem_dot_1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:contentDescription="@null"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/us_widget_pastel_dash_off" />
-
-                <ImageView
-                    android:id="@+id/us_mem_dot_2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:contentDescription="@null"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/us_widget_pastel_dash_off" />
-            </LinearLayout>
+                android:textSize="11.5sp" />
         </LinearLayout>
     </LinearLayout>
 
-    <TextView
+    <ImageView
         android:id="@+id/us_mem_empty"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fontFamily="@font/us_fraunces"
-        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|center_vertical"
+        android:layout_marginEnd="22dp"
+        android:adjustViewBounds="true"
+        android:contentDescription="@null"
         android:importantForAccessibility="no"
-        android:padding="16dp"
-        android:textColor="@color/us_widget_pastel_ink"
-        android:textSize="16sp"
-        android:textStyle="italic"
+        android:scaleType="fitCenter"
         android:visibility="gone" />
 </FrameLayout>

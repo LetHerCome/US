@@ -442,12 +442,13 @@
     };
   }
 
-  // The board's stack: up to three prints, the back ones turned, the top one
-  // with a white border, all with a soft shadow; transparent around them.
-  // 2x2: 176 x 148 dp; 4x2: 220 x 176 dp; drawn at 3x.
-  const STACK_SMALL = { width: 176, height: 148, radius: 14, cards: [
-    { x: 88, y: 80, w: 116, h: 120, turn: 0 }, { x: 88, y: 80, w: 116, h: 120, turn: 7 }, { x: 88, y: 80, w: 116, h: 120, turn: -9 }] };
-  const STACK_WIDE = { width: 220, height: 176, radius: 12, cards: [
+  // Foto protagonista (02/11/2026): up to three prints with a soft shadow,
+  // transparent around them. 2x2 (176 x 176 dp): the newest memory fills the
+  // widget and the other two peek from the top edge. 4x2 (220 x 176 dp): a
+  // fan, the back ones turned, the top one with a white border. Drawn at 3x.
+  const STACK_SMALL = { width: 176, height: 176, radius: 18, border: 0, cards: [
+    { x: 88, y: 97, w: 176, h: 166, turn: 0 }, { x: 88, y: 44, w: 150, h: 80, turn: 3 }, { x: 88, y: 40, w: 130, h: 80, turn: -4 }] };
+  const STACK_WIDE = { width: 220, height: 176, radius: 12, border: 3, cards: [
     { x: 112, y: 90, w: 112, h: 132, turn: 0 }, { x: 148, y: 84, w: 112, h: 132, turn: 5 }, { x: 78, y: 88, w: 112, h: 132, turn: -8 }] };
   const PRINT_FALLBACK = [['#ffd3a8', '#ff7c96', '#5a2f63'], ['#ffe0b0', '#f3b76e', '#8a4b3a'], ['#bfe3ff', '#6d8fd6', '#2e2a5a']];
 
@@ -496,8 +497,8 @@
       ctx.fillStyle = '#ffffff';
       ctx.fill();
       ctx.shadowColor = 'transparent';
-      // The top print has the board's white border.
-      const inset = i === 0 ? 4 * S : 0;
+      // The top print of the fan has a white border; the 2x2 photo has none.
+      const inset = i === 0 ? layout.border * S : 0;
       ctx.save();
       rounded(w - inset * 2, h - inset * 2, Math.max(0, r - inset));
       ctx.clip();
