@@ -615,7 +615,8 @@ final class UsWidgetModels {
     static Message message(JSONObject snapshot, Instant now) {
         Message out = new Message();
         if (snapshot == null) {
-            out.text = "Apri US per collegare il widget";
+            // Short enough for the 2x2 bubble (two lines), never cut.
+            out.text = "Apri US per collegarlo";
             return out;
         }
         JSONObject left = UsWidgetContract.optObject(snapshot, "left");

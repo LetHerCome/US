@@ -480,6 +480,8 @@ public class UsWidgetModelsTest {
         assertEquals("message", quiet.destination);
         assertEquals("unknown kind", "", UsWidgetContract.normalize(snapshot(null).put("left", new JSONObject().put("kind", "secret").put("at", "2026-10-31T09:00:00Z"))).getJSONObject("left").getString("kind"));
         assertTrue(UsWidgetModels.message(null, now).empty);
+        // Without an account: a short line that fits the 2x2 bubble.
+        assertEquals("Apri US per collegarlo", UsWidgetModels.message(null, now).text);
     }
 
     // ---------- Come stai ----------
