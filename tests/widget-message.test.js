@@ -33,7 +33,7 @@ test('layouts: illustration and grain, the portrait, the sealed note in Fraunces
   for (const id of ['us_message_hint', 'us_message_who']) assert.ok(medium.includes(`@+id/${id}"`), id);
   const preview = res('layout/us_widget_preview_message.xml');
   assert.doesNotMatch(preview, /android:text="[^@]/, 'preview text from strings.xml');
-  assert.match(preview, /@color\/us_widget_lilla/, 'no face in the picker');
+  assert.match(preview, /@drawable\/us_widget_preview_message"/, 'a generic picture, no face in the picker');
   const info = res('xml/us_widget_message_info.xml');
   assert.match(info, /android:targetCellWidth="2"[\s\S]*android:targetCellHeight="2"/);
   assert.match(info, /android:previewLayout="@layout\/us_widget_preview_message"/);

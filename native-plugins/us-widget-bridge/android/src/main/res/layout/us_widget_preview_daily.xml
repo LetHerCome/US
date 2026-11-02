@@ -1,48 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget picker preview (Android 12+), La domanda di oggi in Pastello. Generic, every text from strings.xml. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Widget picker preview (Android 12+), Foto protagonista (founder, 02/11/2026):
+     the same picture as previewImage, Pastello or Midnight with the phone's
+     theme. Generic: no name, no face, no photo. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_pastel_daily"
-    android:orientation="vertical"
-    android:paddingStart="15dp"
-    android:paddingTop="14dp"
-    android:paddingEnd="15dp"
-    android:paddingBottom="14dp">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/us_widget_pastel_pill"
-        android:fontFamily="@font/us_figtree"
-        android:includeFontPadding="false"
-        android:paddingStart="8dp"
-        android:paddingTop="3dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="3dp"
-        android:text="@string/us_widget_daily_pill"
-        android:textColor="@color/us_widget_pastel_plum"
-        android:textSize="11sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        android:layout_weight="1"
-        android:fontFamily="@font/us_figtree"
-        android:includeFontPadding="false"
-        android:text="@string/us_widget_daily_preview_question"
-        android:textColor="@color/us_widget_pastel_plum"
-        android:textSize="15.5sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/us_figtree"
-        android:includeFontPadding="false"
-        android:text="@string/us_widget_daily_your_turn_plain"
-        android:textColor="@color/us_widget_pastel_sub"
-        android:textSize="11sp" />
-</LinearLayout>
+    android:contentDescription="@null"
+    android:importantForAccessibility="no"
+    android:scaleType="fitCenter"
+    android:src="@drawable/us_widget_preview_daily" />

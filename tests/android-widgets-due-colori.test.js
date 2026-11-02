@@ -35,7 +35,8 @@ test('widgets: picker previews are generic, never a real name, face or photo', (
   assert.doesNotMatch(previews, /android:text="[^@]/, 'preview text comes from strings.xml');
   assert.doesNotMatch(previews, /us_widget_background"/, 'no night card left in a preview');
   // Foto & Noi keeps the look it had before Pastello (founder, 02/11/2026): an abstract photo.
-  assert.match(res('layout/us_widget_preview_photo.xml'), /@drawable\/us_widget_preview_photo_art/);
+  // Foto protagonista: each preview layout shows the same generic picture as previewImage.
+  for (const k of KINDS) assert.ok(res(`layout/us_widget_preview_${k}.xml`).includes(`@drawable/us_widget_preview_${k}"`), k);
   for (const info of KINDS) {
     const xml = res(`xml/us_widget_${info}_info.xml`);
     assert.match(xml, new RegExp(`android:previewLayout="@layout/us_widget_preview_${info}"`), info);
@@ -68,9 +69,10 @@ test('widgets: after an app update every widget redraws at once from the saved s
   assert.match(widgets, /static synchronized void refreshAll\(Context context\)/);
 });
 
-test('Impostazioni › Widget: each tile is the Pastello card of its widget', () => {
+test('Impostazioni › Widget: each tile is its widget, a soft field of colour, never a flat one', () => {
   const css = read('dc-settings.css');
-  for (const rule of ['.us-wp-think{background:linear-gradient(140deg,#ffe3ea,#efe4ff)', '.us-wp-countdown{background:linear-gradient(160deg,#dbeaff', '.us-wp-daily{display:grid', '.us-wp-message{background:linear-gradient(150deg,#d9ccff,#f6d3f0)', '.us-wp-memories{position:relative', '.us-wp-status{display:grid']) {
+  assert.ok(css.includes('#usWidgetHub .us-widget-hub-preview>*{--us-wp-aurora:radial-gradient('));
+  for (const rule of ['.us-wp-think{background:var(--us-wp-aurora)', '.us-wp-countdown{background:var(--us-wp-aurora)', '.us-wp-daily{display:grid', '.us-wp-message{background:var(--us-wp-aurora)', '.us-wp-memories{position:relative;background:var(--us-wp-aurora)', '.us-wp-status{display:grid', '.us-wp-photo:not(.has-photo){background:var(--us-wp-aurora)']) {
     assert.ok(css.includes(`#usWidgetHub ${rule}`), rule);
   }
   const hub = read('widget-hub.js');

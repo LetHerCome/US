@@ -56,8 +56,7 @@ test('provider: 2x2 and 4x2 by size; the model\'s labels; native count-down in t
 
 test('picker preview: Pastello, generic, every text from strings.xml', () => {
   const preview = res('layout/us_widget_preview_countdown.xml');
-  assert.match(preview, /@drawable\/us_widget_pastel_countdown"/);
-  assert.match(preview, /@drawable\/us_widget_pastel_progress"/);
+  assert.match(preview, /@drawable\/us_widget_preview_countdown"/);
   assert.doesNotMatch(preview, /android:text="[^@]/);
   const strings = res('values/strings.xml');
   assert.match(strings, /<string name="us_widget_preview_countdown">Mancano<\/string>/);

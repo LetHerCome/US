@@ -111,9 +111,7 @@ test('portraits: one per person, by owner and slot, all wiped with the account',
 
 test('picker preview and Impostazioni: generic, the new name', () => {
   const preview = res('layout/us_widget_preview_noi.xml');
-  assert.match(preview, /@drawable\/us_widget_pastel_distance/);
-  assert.match(preview, /@color\/us_widget_rosa/);
-  assert.match(preview, /@color\/us_widget_lilla/);
+  assert.match(preview, /@drawable\/us_widget_preview_noi"/);
   assert.doesNotMatch(preview, /android:text="[^@]/);
   assert.match(res('values/strings.xml'), /<string name="us_widget_preview_battery" formatted="false">78%<\/string>/);
   const hub = read('widget-hub.js');

@@ -116,7 +116,7 @@ test('native: a new provider, 2x2 and 4x2, the label only on the day', () => {
   assert.match(widgets, /const inset = i === 0 \? layout\.border \* S : 0;/);
   const preview = res('layout/us_widget_preview_memories.xml');
   assert.doesNotMatch(preview, /android:text="[^@]/);
-  assert.match(preview, /android:rotation="-9"/);
+  assert.match(preview, /@drawable\/us_widget_preview_memories"/);
   assert.match(res('values/strings.xml'), /<string name="us_widget_memories_name">Ricordi a pila<\/string>/);
 });
 

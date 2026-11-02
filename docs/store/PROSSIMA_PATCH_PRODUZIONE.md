@@ -461,3 +461,5 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Da provare:** con la foto, tema chiaro e scuro; senza foto.
 - **Ricordi a pila** (foto a tutto widget): nel 2×2 il ricordo più recente riempie il widget e gli altri due spuntano dal bordo in alto; la data va su una riga sua («2 nov · un anno fa») e il titolo in Fraunces sotto, così «Weekend a Firenze» non si taglia più. Nel 4×2 un ventaglio di tre foto su un fondo sfumato, «Un anno fa», il titolo e «2 novembre · 8 foto». Senza ricordi: polaroid vuote disegnate. Le immagini le disegna US (`widgets.js`), quindi serve anche il web nuovo.
   - **Da provare:** con un ricordo di oggi un anno fa e senza; un titolo lungo.
+- **Anteprime:** nella lista dei widget del telefono ogni widget ha la sua immagine Foto protagonista, generica (nessun nome, viso o foto vera), chiara col tema chiaro e scura col tema scuro, anche Foto & Noi; da Android 12 il layout d'anteprima mostra la stessa immagine. In Impostazioni › Widget le tessere hanno fondi sfumati al posto dei colori pieni.
+  - **Da provare:** la lista dei widget del telefono in chiaro e in scuro; Impostazioni › Widget.
