@@ -451,3 +451,5 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Da provare:** rispondere da un telefono: sull'altro, aperta US, compare la foto di chi ha risposto; tema chiaro e scuro.
 - **Distanza e batteria:** illustrazione col sentiero a puntini e il cuore, la distanza in Fraunces e «aggiornato 10 min fa»; le vostre foto piccole e tonde (nel 2×2 in basso accanto a «Tu» e a «Bea 78%», nel 4×2 negli angoli in alto); il 2×1 già messo con la stessa illustrazione.
   - **Da provare:** 2×1, 2×2 e 4×2; senza distanza «Distanza non ancora nota» piccola; tema chiaro e scuro.
+- **Countdown:** sempre illustrato (il sole sull'orizzonte), l'etichetta di vetro «Mancano», il numero in Fraunces con «giorni / Lisbona» in corsivo, 14 tacche (rosa i giorni passati) anche nel 2×2 al posto della barra; nel 4×2 «Lisbona · 14 novembre · 4 ore» sotto le tacche. L'ultimo giorno resta il conto alla rovescia.
+  - **Da provare:** un Countdown a una data e uno con l'ora, 2×2 e 4×2, tema chiaro e scuro.

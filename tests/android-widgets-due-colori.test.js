@@ -123,11 +123,11 @@ test('Distanza e batteria 2x1: the illustrated card, the same round portraits', 
 });
 
 // Countdown Pastello (02/11): one look for every style; tests/widget-countdown.test.js.
-test('Countdown: the board\'s card replaces the night card and the reward looks', () => {
+test('Countdown: one illustrated look replaces the night card and the reward looks', () => {
   const provider = read(`${JAVA}/UsCountdownWidgetProvider.java`);
   const layout = res('layout/us_widget_countdown.xml');
-  assert.match(layout, /android:background="@drawable\/us_widget_pastel_countdown"/);
-  assert.match(layout, /android:id="@\+id\/us_cd_value"[\s\S]*?android:fontFamily="@font\/us_fraunces"/);
+  assert.match(layout, /@drawable\/us_widget_art_countdown_s"/);
+  assert.ok(provider.includes('UsWidgetArt.serif(views, context, R.id.us_cd_value, model.value'));
   assert.doesNotMatch(provider, /rewardBase|us_widget_cd_|Look look/);
   for (const name of ['aurora_bg', 'aurora_glow', 'chrome_tag', 'glass_bg', 'orbit_ring', 'signal_bg', 'signal_tag']) {
     assert.equal(fs.existsSync(path.join(ROOT, PLUGIN, `res/drawable/us_widget_cd_${name}.xml`)), false, name);
