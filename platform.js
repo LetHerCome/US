@@ -340,7 +340,7 @@
     return true;
   }
 
-  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days', 'memories', 'status'];
+  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'memories', 'status'];
 
   async function getInstalledWidgets() {
     const plugin = widgetBridge();

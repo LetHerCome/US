@@ -393,6 +393,7 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Font:** Fraunces e Figtree dell'app, decompressi da WOFF2 a TTF (`res/font`, circa 290 KB).
   - **Da provare:** il cuore sul widget, che diventa subito rosa con «Ricambiato · adesso» e fa l'animazione dell'app; il medio con il contatore; la foto dell'altro nell'avatar, o la sua iniziale sul suo colore.
 - **1 · Foto & giorni** (rifà «Foto & Noi»; «Giorni insieme» confluisce qui):
+  - **Giorni insieme** non c'è più: chi l'aveva sulla Home vede Foto & Noi (stessa classe, nascosta dalla lista dei widget, col nome Foto & Noi).
   - **Dopo la prova dell'APK (founder, 02/11):** torna lo **stile di prima** e il nome «Foto & Noi» (foto a tutto riquadro, velo scuro in basso, giorni in serif, un solo layout per ogni misura). Resta la foto che cambia ogni ora; via trattini, foto rotonde e riga del posto del Pastello.
   - la foto di Oggi di quest'ora e quelle delle due ore successive, scelte con lo stesso calcolo di Oggi (`homeRotationPick`). Il widget le cambia da solo ogni ora anche a US chiusa, e i tre trattini in alto dicono quale delle tre è; dopo la terza resta sull'ultima finché US non si riapre;
   - sotto, i giorni insieme in Fraunces («195 giorni insieme»); nel 4×2 anche le vostre due foto e «dal 21 aprile · Lisbona, 12 ottobre» (da quando, e il posto o la didascalia e la data della foto);

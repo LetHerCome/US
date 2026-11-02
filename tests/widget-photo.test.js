@@ -35,6 +35,13 @@ test('provider: the slot of this hour, redrawn at the next hour and at Rome midn
   assert.match(read(`${JAVA}/UsDaysWidgetProvider.java`), /return UsPhotoWidgetProvider\.render\(context, state, options\);/);
   assert.match(res('xml/us_widget_days_info.xml'), /android:initialLayout="@layout\/us_widget_photo"/);
   assert.doesNotMatch(read('widget-hub.js'), /kind: 'days'/);
+  // One widget only (founder, 02/11/2026): the app never offers Giorni insieme again;
+  // the class stays, hidden and named Foto & Noi, for the ones already placed.
+  assert.doesNotMatch(read('widgets.js'), /'days', 'memories'|days: 'bond'/);
+  assert.doesNotMatch(read('platform.js'), /'message', 'days'/);
+  assert.match(read(`${PLUGIN}/AndroidManifest.xml`), /UsDaysWidgetProvider"\s+android:exported="false"\s+android:label="@string\/us_widget_photo_name"/);
+  assert.match(res('xml/us_widget_days_info.xml'), /android:widgetFeatures="hide_from_picker"/);
+  assert.doesNotMatch(res('values/strings.xml'), /Giorni insieme</);
   assert.match(read('widget-hub.js'), /\{ kind: 'photo', name: 'Foto & Noi', copy: '[^']+', shape: 'square' \}/);
 });
 

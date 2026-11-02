@@ -7,9 +7,11 @@ import android.os.Bundle;
 import android.widget.RemoteViews;
 
 /**
- * Giorni insieme (31/10/2026) joined Foto & giorni in the Pastello family
- * (founder, 02/11/2026). The class stays, so a widget already on a Home
- * screen keeps working: it renders Foto & giorni.
+ * Giorni insieme (31/10/2026) was the same as Foto & Noi (founder, 02/11/2026:
+ * "lasciamone uno solo"). Only Foto & Noi is offered; this class stays, out of
+ * the widget list (hide_from_picker) and named Foto & Noi, because removing a
+ * provider turns the widgets already on a Home screen into "Impossibile
+ * caricare il widget". They render Foto & Noi.
  */
 public final class UsDaysWidgetProvider extends AppWidgetProvider {
     @Override public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
