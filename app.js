@@ -315,6 +315,25 @@ window.UsWidgetDataApi=Object.freeze({
   // Same source of truth as Oggi's painted hero, NOT the latest Ricordo.
   // undefined = Home is still loading; do not erase the native cached photo.
   // null = Home resolved with no photo; clear the widget only then.
+  // Foto & giorni: Oggi's photos of the next two hours, as Oggi will pick them.
+  async upcomingPhotos(){
+    if(!window.UsPlatform?.isNative||!window.usProfile||!homePhotoPath||!homePhotoHasPainted)return [];
+    const viewer=window.usProfile,epoch=usAuthEpoch;
+    const {data:rows,error}=await sb.from('moments').select('id,storage_path,moment_date,caption,place_label')
+      .eq('couple_id',viewer.couple_id).order('moment_date',{ascending:false}).order('created_at',{ascending:false}).limit(120);
+    if(window.usProfile!==viewer||epoch!==usAuthEpoch||error||!rows?.length)return [];
+    const out=[];
+    let avoid=homePhotoPath;
+    for(let hour=1;hour<=2;hour++){
+      const row=homeRotationPick(rows,homeRotationKey(new Date(Date.now()+hour*3600e3)),avoid);
+      if(!row?.storage_path)break;
+      const url=await usGetSignedUrl(row.storage_path,3600);
+      if(window.usProfile!==viewer||epoch!==usAuthEpoch||!url)return out;
+      out.push({id:row.id,path:row.storage_path,url,takenOn:row.moment_date||'',label:row.place_label||row.caption||''});
+      avoid=row.storage_path;
+    }
+    return out;
+  },
   async latestPhoto(){
     if(!window.UsPlatform?.isNative||!window.usProfile)return undefined;
     if(!homePhotoHasPainted||!homePhotoPath){
@@ -325,7 +344,10 @@ window.UsWidgetDataApi=Object.freeze({
     const url=await usGetSignedUrl(path,3600);
     if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
     if(!url)throw new Error('widget_photo_unavailable');
-    return {id:'oggi',path,sourcePath:path,takenOn:'',url};
+    // The hour it is Oggi's photo ("2026-10-31T10" in UTC), its place or caption, its day.
+    const meta=typeof usHomePhotoMeta!=='undefined'&&usHomePhotoMeta?.path===path?usHomePhotoMeta:null;
+    const hour=/^\d{4}-\d{2}-\d{2}T\d{2}$/.test(homePhotoHourKey)?`${homePhotoHourKey}:00:00.000Z`:'';
+    return {id:'oggi',path,sourcePath:path,takenOn:meta?.date||'',label:meta?.place||meta?.caption||'',hour,url};
   }
 });
 
@@ -1849,8 +1871,7 @@ function writeHomeBootCache(hourKey,path,url){
   }catch(_e){}
 }
 
-function homeRotationKey(){
-  const d=new Date();
+function homeRotationKey(d=new Date()){
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}T${String(d.getUTCHours()).padStart(2,'0')}`;
 }
 
@@ -1860,11 +1881,19 @@ function homeStableIndex(seed,count){
   return count?((h>>>0)%count):0;
 }
 
+// The hour's Ricordo, never the one just shown. Foto & giorni (widget) asks
+// the same for the next two hours, so it changes with Oggi while US is closed.
+function homeRotationPick(rows,key,avoid){
+  let idx=homeStableIndex(`${window.usProfile.couple_id}|${key}|home`,rows.length);
+  if(rows.length>1&&rows[idx]?.storage_path===avoid)idx=(idx+1)%rows.length;
+  return rows[idx]||null;
+}
+
 async function getHomeRotationPath(){
   if(!window.usProfile)return null;
   const viewer=window.usProfile,epoch=usAuthEpoch;
   const {data:rows,error}=await sb.from('moments')
-    .select('id,storage_path,moment_date,created_at,caption,created_by')
+    .select('id,storage_path,moment_date,created_at,caption,created_by,place_label')
     .eq('couple_id',window.usProfile.couple_id)
     .order('moment_date',{ascending:false})
     .order('created_at',{ascending:false})
@@ -1872,11 +1901,9 @@ async function getHomeRotationPath(){
   if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
   if(error){console.warn(error);return undefined;}
   if(rows?.length){
-    const key=homeRotationKey();
-    let idx=homeStableIndex(`${window.usProfile.couple_id}|${key}|home`,rows.length);
-    if(rows.length>1&&rows[idx]?.storage_path===homePhotoPath)idx=(idx+1)%rows.length;
-    usHomePhotoMeta=rows[idx]?.storage_path?{path:rows[idx].storage_path,caption:rows[idx].caption||'',date:rows[idx].moment_date||'',author:rows[idx].created_by||''}:null;
-    return rows[idx]?.storage_path||null;
+    const row=homeRotationPick(rows,homeRotationKey(),homePhotoPath);
+    usHomePhotoMeta=row?.storage_path?{path:row.storage_path,caption:row.caption||'',date:row.moment_date||'',author:row.created_by||'',place:row.place_label||''}:null;
+    return row?.storage_path||null;
   }
   const {data:couple,error:coupleError}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
   if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;

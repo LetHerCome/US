@@ -160,7 +160,15 @@
       photo: {
         state: photoReady ? 'ready' : 'none',
         key: photoReady ? photoKey : '',
-        takenOn: photoReady ? safeCivilDate(photo.takenOn) : ''
+        takenOn: photoReady ? safeCivilDate(photo.takenOn) : '',
+        // Foto & giorni (UsWidgetContract.java): place or caption, the hour,
+        // and Oggi's photos of the next two hours.
+        label: photoReady ? safeText(photo.label, 60) : '',
+        hour: photoReady ? safeInstant(photo.hour) : '',
+        next: photoReady ? (Array.isArray(photo.next) ? photo.next : [])
+          .filter((item) => typeof item?.key === 'string' && /^[a-f0-9]{32}$/.test(item.key))
+          .slice(0, 2)
+          .map((item) => ({ key: item.key, takenOn: safeCivilDate(item.takenOn), label: safeText(item.label, 60) })) : []
       },
       daily: widgetDaily(input?.daily),
       left: widgetLeft(input?.left)

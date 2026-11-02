@@ -28,8 +28,9 @@ test('widgets: picker previews are generic, never a real name, face or photo', (
   const strings = res('values/strings.xml');
   for (const text of [previews, strings]) assert.doesNotMatch(text, /Beatrice|Francesco|\bBea\b|\bFra\b/);
   assert.doesNotMatch(previews, /android:text="[^@]/, 'preview text comes from strings.xml');
-  assert.match(res('layout/us_widget_preview_photo.xml'), /@drawable\/us_widget_preview_photo_art/);
-  assert.match(res('drawable/us_widget_preview_photo_art.xml'), /<gradient/);
+  // Pastello: the board's sunset instead of a photo.
+  assert.match(res('layout/us_widget_preview_photo.xml'), /@drawable\/us_widget_pastel_photo_empty/);
+  assert.match(res('drawable/us_widget_pastel_photo_empty.xml'), /<gradient/);
   for (const info of ['think', 'noi', 'photo', 'countdown']) {
     const xml = res(`xml/us_widget_${info}_info.xml`);
     assert.match(xml, new RegExp(`android:previewLayout="@layout/us_widget_preview_${info}"`));

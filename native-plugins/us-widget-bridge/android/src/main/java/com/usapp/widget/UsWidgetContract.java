@@ -99,10 +99,26 @@ final class UsWidgetContract {
             String photoState = photoIn.optString("state", "none");
             String key = photoIn.optString("key", "");
             if (!photoState.equals("ready") || !MEDIA_KEY.matcher(key).matches()) { photoState = "none"; key = ""; }
+            boolean ready = photoState.equals("ready");
             JSONObject photo = new JSONObject()
                 .put("state", photoState)
                 .put("key", key)
-                .put("takenOn", photoState.equals("ready") ? civilDate(photoIn.optString("takenOn", "")) : "");
+                .put("takenOn", ready ? civilDate(photoIn.optString("takenOn", "")) : "")
+                // Foto & giorni (Pastello): the place or caption, the hour this
+                // photo is Oggi's, and Oggi's photos of the next two hours.
+                .put("label", ready ? text(photoIn.optString("label", ""), 60) : "")
+                .put("hour", ready ? instantText(photoIn.optString("hour", "")) : "");
+            JSONArray nextIn = photoIn.optJSONArray("next");
+            JSONArray next = new JSONArray();
+            for (int i = 0; ready && nextIn != null && i < nextIn.length() && next.length() < 2; i++) {
+                JSONObject item = nextIn.optJSONObject(i);
+                String nextKey = item == null ? "" : item.optString("key", "");
+                if (!MEDIA_KEY.matcher(nextKey).matches()) continue;
+                next.put(new JSONObject().put("key", nextKey)
+                    .put("takenOn", civilDate(item.optString("takenOn", "")))
+                    .put("label", text(item.optString("label", ""), 60)));
+            }
+            photo.put("next", next);
 
             // La domanda di oggi: the day, the question (shared content, never an
             // answer) and whose turn it is. Absent or malformed: no question.

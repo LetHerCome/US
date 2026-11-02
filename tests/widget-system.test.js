@@ -169,7 +169,7 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   assert.equal(sent.couple.frame, '');
   assert.equal(sent.countdown.style, 'editorial');
   assert.equal(sent.countdown.kind, 'clock');
-  assert.deepEqual({ ...sent.photo }, { state: 'none', key: '', takenOn: '' });
+  assert.deepEqual({ ...sent.photo, next: [...sent.photo.next] }, { state: 'none', key: '', takenOn: '', label: '', hour: '', next: [] });
   // La domanda di oggi and Messaggio travel too (31/10: daily was dropped
   // here, so the widget never got the question): meaning only, never content.
   assert.deepEqual({ ...sent.daily }, { date: '2026-10-31', question: 'Una domanda?', state: 'your_turn' });
@@ -399,7 +399,7 @@ test('Foto & Noi follows the painted Oggi hero, not an independent latest-Ricord
   assert.match(app, /window\.dispatchEvent\(new Event\('us:home-photo-changed'\)\)/);
   assert.match(read('widgets.js'), /addEventListener\('us:home-photo-changed'/);
   assert.doesNotMatch(read('widgets.js'), /addEventListener\('us:moments-updated'/);
-  assert.match(read('widget-hub.js'), /La fotografia che vedi su Oggi/);
+  assert.match(read('widget-hub.js'), /La foto di Oggi, che cambia ogni ora/);
 });
 
 test('Foto & Noi keeps a valid private cache until Oggi finishes painting', async () => {

@@ -12,7 +12,7 @@ test('widget and premium-motion features are preserved in integration', () => {
   assert.ok(widget.includes("'noi-play': 'quiz', photo: 'home'"));
   assert.ok(widget.includes('us:home-photo-changed'));
   assert.ok(hub.includes('us-wp-noi-light'));
-  assert.ok(hub.includes('La fotografia che vedi su Oggi'));
+  assert.ok(hub.includes('La foto di Oggi, che cambia ogni ora'));
   assert.ok(app.includes('homePhotoHasPainted'));
   assert.ok(app.includes('const usEntryTimers = new WeakMap()'));
   assert.ok(!read('index.html').includes('id="usWidgetHubGuide"'));

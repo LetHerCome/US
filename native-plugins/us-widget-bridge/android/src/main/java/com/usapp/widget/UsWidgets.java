@@ -130,7 +130,7 @@ final class UsWidgets {
             case NOI: return UsNoiWidgetProvider.render(context, state, options);
             case DAILY: return UsDailyWidgetProvider.render(context, state);
             case MESSAGE: return UsMessageWidgetProvider.render(context, state);
-            case DAYS: return UsDaysWidgetProvider.render(context, state);
+            case DAYS: return UsDaysWidgetProvider.render(context, state, options);
             default: return UsPhotoWidgetProvider.render(context, state, options);
         }
     }

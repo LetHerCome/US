@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Foto & giorni before a photo arrives: the board's warm sunset, as on the approved card. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:centerColor="#FFFF7C96"
+        android:endColor="#FF6B3A72"
+        android:startColor="#FFFFD3A8" />
+    <corners android:radius="26dp" />
+</shape>

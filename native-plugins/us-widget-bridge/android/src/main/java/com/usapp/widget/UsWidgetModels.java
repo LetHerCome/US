@@ -415,32 +415,54 @@ final class UsWidgetModels {
         return a.isBefore(b) ? a : b;
     }
 
-    // ---------- Giorni insieme ----------
+    // ---------- Foto & giorni (Pastello) ----------
 
-    /** The big number of days together (Rome civil days, as in the app), or a quiet line. */
-    static final class Days {
-        boolean empty = true;
-        String value = "";
-        String unit = "";
+    /** The photo shown now: Oggi's of this hour, then of the next two, with US closed. */
+    static final class PhotoSlot {
+        String key = "";
+        String takenOn = "";
+        String label = "";
+        int index = 0;
+        int count = 0;
         Instant nextChange = null;
+        boolean ready() { return !key.isEmpty(); }
     }
 
-    static Days days(JSONObject snapshot, Instant now) {
-        Days out = new Days();
-        if (snapshot == null) {
-            out.unit = "Apri US per collegare il widget";
-            return out;
-        }
-        long days = daysTogether(UsWidgetContract.optObject(snapshot, "couple").optString("startedOn", ""), now);
-        if (days < 0) {
-            out.unit = "I vostri giorni insieme";
-            return out;
-        }
-        out.empty = false;
-        out.value = Long.toString(days);
-        out.unit = days == 1 ? "giorno insieme" : "giorni insieme";
-        out.nextChange = nextRomeMidnight(now);
+    static PhotoSlot photoSlot(JSONObject snapshot, Instant now) {
+        PhotoSlot out = new PhotoSlot();
+        JSONObject photo = UsWidgetContract.optObject(snapshot, "photo");
+        if (!"ready".equals(photo.optString("state")) || photo.optString("key", "").isEmpty()) return out;
+        JSONArray next = photo.optJSONArray("next");
+        out.count = 1 + (next == null ? 0 : next.length());
+        Instant hour = UsWidgetContract.instant(photo.optString("hour", ""));
+        long elapsed = hour == null ? 0 : Math.floorDiv(now.toEpochMilli() - hour.toEpochMilli(), 3_600_000L);
+        out.index = (int) Math.max(0, Math.min(out.count - 1, elapsed));
+        JSONObject current = out.index == 0 ? photo : next.optJSONObject(out.index - 1);
+        out.key = current.optString("key", "");
+        out.takenOn = current.optString("takenOn", "");
+        out.label = current.optString("label", "");
+        if (hour != null && out.index < out.count - 1) out.nextChange = hour.plusSeconds(3600L * (out.index + 1));
         return out;
+    }
+
+    private static final String[] MONTHS = { "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+        "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre" };
+
+    /** "21 aprile"; "" for anything that is not a civil date. */
+    static String italianDay(String civil) {
+        String clean = UsWidgetContract.civilDate(civil);
+        if (clean.isEmpty()) return "";
+        LocalDate day = LocalDate.parse(clean);
+        return day.getDayOfMonth() + " " + MONTHS[day.getMonthValue() - 1];
+    }
+
+    /** "dal 21 aprile · Lisbona, 12 ottobre": since when, and where and when the photo is. */
+    static String photoLine(JSONObject snapshot, PhotoSlot slot) {
+        String since = italianDay(UsWidgetContract.optObject(snapshot, "couple").optString("startedOn", ""));
+        String when = italianDay(slot.takenOn);
+        String photo = slot.label.isEmpty() ? when : when.isEmpty() ? slot.label : slot.label + ", " + when;
+        String head = since.isEmpty() ? "" : "dal " + since;
+        return head.isEmpty() ? photo : photo.isEmpty() ? head : head + " · " + photo;
     }
 
     // ---------- Messaggio ----------

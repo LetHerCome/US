@@ -47,7 +47,8 @@
   // Batteria del partner: level -1 = unknown (UsWidgetContract.java).
   const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready', batteryLevel: -1, batteryCharging: false, batteryAt: '' });
   const emptyCountdown = () => ({ active: false, kind: '', title: '', target: '', style: 'editorial' });
-  const emptyPhoto = () => ({ state: 'none', key: '', takenOn: '' });
+  // Foto & giorni: Oggi's photo of this hour, then of the next two (next).
+  const emptyPhoto = () => ({ state: 'none', key: '', takenOn: '', label: '', hour: '', next: [] });
   // La domanda di oggi: the day, the shared question and whose turn it is. Never an answer.
   const emptyDaily = () => ({ date: '', question: '', state: 'none' });
   // Messaggio: the newest Lasciato per te still closed for me, kind and time only.
@@ -83,7 +84,7 @@
       think: { ...think },
       couple: { ...couple, names: [...couple.names] },
       countdown: { ...countdown },
-      photo: { ...photo },
+      photo: { ...photo, next: photo.next.map((item) => ({ ...item })) },
       daily: { ...daily },
       left: { ...left }
     };
@@ -496,17 +497,37 @@
           setPreview('');
           return scheduleWrite();
         }
-        const key = (await sha256Hex(`${owner}:${latest.id}:${latest.path}`)).slice(0, 32);
-        if (key === photo.key && photo.state === 'ready' && photoPreviewUrl) return false;
+        const keyOf = async (item) => (await sha256Hex(`${owner}:${item.id}:${item.path}`)).slice(0, 32);
+        const key = await keyOf(latest);
+        const upcoming = await Promise.resolve(window.UsWidgetDataApi?.upcomingPhotos?.()).catch(() => []) || [];
+        if (token !== generation) return false;
+        const next = [];
+        for (const item of upcoming.slice(0, 2)) {
+          const nextKey = await keyOf(item);
+          // A photo the widget already holds is not downloaded again.
+          if (!photo.next.some((cached) => cached.key === nextKey) && nextKey !== photo.key) {
+            try {
+              const image = await encodePhoto(item.url);
+              URL.revokeObjectURL(image.preview);
+              if (token !== generation) return false;
+              await platform.writeWidgetPhoto(owner, nextKey, image.base64);
+            } catch (error) { console.warn('[US Widget] next photo', error); break; }
+          }
+          next.push({ key: nextKey, takenOn: civilDate(item.takenOn), label: cleanText(item.label, 60) });
+        }
+        const same = key === photo.key && photo.state === 'ready' && photoPreviewUrl
+          && JSON.stringify(next.map((item) => item.key)) === JSON.stringify(photo.next.map((item) => item.key));
+        if (same) return false;
         const encoded = await encodePhoto(latest.url);
         if (token !== generation) { URL.revokeObjectURL(encoded.preview); return false; }
-        // Native already holds the private bytes after a process restart.
+        // Native already holds the private bytes after a process restart. The
+        // photo of this hour is written last: it is the one Oggi shows now.
         if (key !== photo.key || photo.state !== 'ready') {
           await platform.writeWidgetPhoto(owner, key, encoded.base64);
         }
         if (token !== generation) { URL.revokeObjectURL(encoded.preview); return false; }
         setPreview(encoded.preview);
-        photo = { state: 'ready', key, takenOn: civilDate(latest.takenOn) };
+        photo = { state: 'ready', key, takenOn: civilDate(latest.takenOn), label: cleanText(latest.label, 60), hour: isoInstant(latest.hour), next };
         return scheduleWrite();
       } catch (error) {
         console.warn('[US Widget] photo', error);
@@ -584,7 +605,7 @@
       couple = { ...emptyCouple(), ...native.couple, names: [] };
       countdown = { ...emptyCountdown(), ...native.countdown };
       daily = { ...emptyDaily(), ...native.daily };
-      photo = native.photo?.state === 'ready' && native.photo.key === seed.photoKey ? { ...native.photo } : emptyPhoto();
+      photo = native.photo?.state === 'ready' && native.photo.key === seed.photoKey ? { ...emptyPhoto(), ...native.photo, next: Array.isArray(native.photo.next) ? native.photo.next : [] } : emptyPhoto();
       return true;
     } catch (_) {
       return false;

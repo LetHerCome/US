@@ -392,3 +392,9 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - nel medio (4×2): «12 volte che vi siete pensati oggi», i Ti penso di tutti e due di oggi (giorno di Roma), contati dall'app più quelli mandati dal widget dopo.
   - **Font:** Fraunces e Figtree dell'app, decompressi da WOFF2 a TTF (`res/font`, circa 290 KB).
   - **Da provare:** il cuore sul widget, che diventa subito rosa con «Ricambiato · adesso» e fa l'animazione dell'app; il medio con il contatore; la foto dell'altro nell'avatar, o la sua iniziale sul suo colore.
+- **1 · Foto & giorni** (rifà «Foto & Noi»; «Giorni insieme» confluisce qui):
+  - la foto di Oggi di quest'ora e quelle delle due ore successive, scelte con lo stesso calcolo di Oggi (`homeRotationPick`). Il widget le cambia da solo ogni ora anche a US chiusa, e i tre trattini in alto dicono quale delle tre è; dopo la terza resta sull'ultima finché US non si riapre;
+  - sotto, i giorni insieme in Fraunces («195 giorni insieme»); nel 4×2 anche le vostre due foto e «dal 21 aprile · Lisbona, 12 ottobre» (da quando, e il posto o la didascalia e la data della foto);
+  - sul telefono restano al massimo tre foto, solo quelle che il widget nomina; le altre si cancellano;
+  - i widget «Giorni insieme» già messi mostrano Foto & giorni, che in Impostazioni non c'è più come voce a sé.
+  - **Da provare:** mettere Foto & giorni, chiudere US e tornare dopo un'ora: la foto è cambiata ed è la stessa di Oggi; il 4×2 con le due foto e la riga del posto.
