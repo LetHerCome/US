@@ -5,24 +5,23 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.text.Layout;
 import android.view.View;
 import android.widget.RemoteViews;
 import java.time.Instant;
 
 /**
- * Ti penso, Pastello (founder, 02/11/2026: "Beatrice ti ha pensato e sotto
- * ricambia, più veloce, toccando il cuore con la stessa animazione del Ti
- * penso dentro l'app"). The heart opens UsThinkHeartActivity: the send goes
- * at once and the app's heart plays over the Home screen; the widget turns
- * into "Ricambiato · adesso" without waiting for the server. 2x2 and 4x2
- * (with today's count). The class name is stable: placed widgets keep working.
+ * Ti penso, Foto protagonista (founder, 02/11/2026): an illustration, the
+ * partner's round portrait (or the initial on a soft field), "Bea ti ha
+ * pensato" in Fraunces and only the heart to answer, no "Ricambia". The heart
+ * opens UsThinkHeartActivity: the send goes at once and the app's heart plays
+ * over the Home screen; the widget turns into "Ricambiato · adesso" without
+ * waiting for the server. 2x2 and 4x2 (with today's count). The class name is
+ * stable: placed widgets keep working.
  */
 public class UsThinkWidgetProvider extends AppWidgetProvider {
     private static final int ROSA = 0xFFFF7C96;
-    private static final int LILLA = 0xFFA98BFF;
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
@@ -42,50 +41,45 @@ public class UsThinkWidgetProvider extends AppWidgetProvider {
     static RemoteViews render(Context context, UsWidgets.State state, Bundle options) {
         UsWidgetModels.Think model = UsWidgetModels.think(state.snapshot, state.action, state.hasCredential, state.now);
         state.needsUpdateAt(model.nextChange);
-        Bitmap avatar = decode(state.store.readNoiPortrait("partner"));
-        RemoteViews small = fill(context, new RemoteViews(context.getPackageName(), R.layout.us_widget_think), model, avatar);
-        RemoteViews medium = fill(context, new RemoteViews(context.getPackageName(), R.layout.us_widget_think_medium), model, avatar);
+        byte[] avatar = state.store.readNoiPortrait("partner");
+        RemoteViews small = fill(context, new RemoteViews(context.getPackageName(), R.layout.us_widget_think), model, avatar, options, false);
+        RemoteViews medium = fill(context, new RemoteViews(context.getPackageName(), R.layout.us_widget_think_medium), model, avatar, options, true);
+        UsWidgetArt.serif(small, context, R.id.us_think_line, model.line, 19f, 96, 3, false, Layout.Alignment.ALIGN_NORMAL);
+        UsWidgetArt.serif(medium, context, R.id.us_think_line, model.line, 23f, 170, 2, false, Layout.Alignment.ALIGN_NORMAL);
         int count = UsWidgetModels.thinkCount(state.snapshot, state.store.countThinkSentSince(countSince(state), state.now), state.now);
-        renderCount(medium, count);
+        renderCount(context, medium, count);
         // The count turns at Rome midnight.
         state.needsUpdateAt(UsWidgetModels.nextRomeMidnight(state.now));
         return UsWidgets.sized(options, small, medium);
     }
 
-    private static RemoteViews fill(Context context, RemoteViews views, UsWidgetModels.Think model, Bitmap avatar) {
-        views.setTextViewText(R.id.us_widget_message, model.line);
+    private static RemoteViews fill(Context context, RemoteViews views, UsWidgetModels.Think model, byte[] avatar, Bundle options, boolean wide) {
+        UsWidgetArt.art(views, context, R.id.us_think_art, R.id.us_think_grain, wide ? R.drawable.us_widget_art_think_m : R.drawable.us_widget_art_think_s, options, wide);
+        UsWidgetArt.avatar(views, context, avatar, R.id.us_think_avatar, R.id.us_think_initial, model.partner, wide ? 44 : 34);
         views.setTextViewText(R.id.us_think_when, model.when);
         views.setViewVisibility(R.id.us_think_when, model.when.isEmpty() ? View.INVISIBLE : View.VISIBLE);
-        views.setTextViewText(R.id.us_widget_cta, model.cta);
-        if (avatar != null) {
-            views.setImageViewBitmap(R.id.us_think_avatar, avatar);
-            views.setInt(R.id.us_think_avatar, "setColorFilter", 0);
-        } else {
-            views.setImageViewResource(R.id.us_think_avatar, R.drawable.us_widget_pastel_circle);
-            views.setInt(R.id.us_think_avatar, "setColorFilter", LILLA);
-        }
-        // White with a rosa heart; full rosa with a white heart the moment it is tapped.
-        // White with a rosa heart (Midnight: an opaque night circle; a filter keeps white under a translucent colour); full rosa with a white heart once tapped.
-        UsWidgets.themedColor(views, context, R.id.us_widget_heart_bg, "setColorFilter", model.done ? ROSA : 0xFFFFFFFF, model.done ? ROSA : 0xFF3B2F3F);
+        views.setTextViewText(R.id.us_think_hint, model.hint);
+        views.setViewVisibility(R.id.us_think_hint, model.hint.isEmpty() ? View.GONE : View.VISIBLE);
+        // Only the heart answers (founder, 02/11/2026: no "Ricambia"): frosted glass with a rosa
+        // heart; full rosa with a white heart the moment it is tapped; quieter when it only opens US.
+        UsWidgets.themedColor(views, context, R.id.us_widget_heart_bg, "setColorFilter", model.done ? ROSA : 0, model.done ? ROSA : 0);
         views.setInt(R.id.us_widget_heart, "setColorFilter", model.done ? 0xFFFFFFFF : ROSA);
-        views.setInt(R.id.us_widget_heart, "setImageAlpha", model.busy && !model.done ? 140 : 255);
+        views.setInt(R.id.us_widget_heart, "setImageAlpha", !model.canSend || (model.busy && !model.done) ? 140 : 255);
         views.setContentDescription(R.id.us_widget_heart_button, model.canSend ? context.getString(R.string.us_widget_send) : context.getString(R.string.us_widget_open));
         views.setContentDescription(R.id.us_widget_root, model.line + (model.when.isEmpty() ? "" : ", " + model.when));
         views.setOnClickPendingIntent(R.id.us_widget_root, UsWidgets.open(context, "think", 4101));
         // Busy: the tap reaches the receiver, which ignores it, without a second animation.
         PendingIntent heart = !model.canSend ? UsWidgets.open(context, "think", 4101) : model.busy ? sendIntent(context) : heartIntent(context);
         views.setOnClickPendingIntent(R.id.us_widget_heart_button, heart);
-        views.setOnClickPendingIntent(R.id.us_widget_cta, heart);
         return views;
     }
 
-    /** "12 volte che vi siete pensati oggi" (4x2 only); nothing when no one knows yet. */
-    private static void renderCount(RemoteViews views, int count) {
+    /** "12 volte oggi" in rosa Fraunces beside the heart (4x2 only); nothing when no one knows yet. */
+    private static void renderCount(Context context, RemoteViews views, int count) {
         views.setViewVisibility(R.id.us_think_count_row, count < 0 ? View.GONE : View.VISIBLE);
-        views.setViewVisibility(R.id.us_think_count, count > 0 ? View.VISIBLE : View.GONE);
-        views.setTextViewText(R.id.us_think_count, Integer.toString(Math.max(0, count)));
-        views.setTextViewText(R.id.us_think_count_label, count == 0 ? "Oggi ancora nessun Ti penso"
-            : count == 1 ? "volta che vi siete pensati oggi" : "volte che vi siete pensati oggi");
+        if (count > 0) UsWidgetArt.serif(views, context, R.id.us_think_count, Integer.toString(count), 30f, 90, 1, false, Layout.Alignment.ALIGN_NORMAL, ROSA, ROSA);
+        else views.setViewVisibility(R.id.us_think_count, View.GONE);
+        views.setTextViewText(R.id.us_think_count_label, count == 0 ? "Ancora nessuno oggi" : count == 1 ? "volta oggi" : "volte oggi");
     }
 
     /** The widget's own sends after the app last counted, and only today's. */
@@ -93,12 +87,6 @@ public class UsThinkWidgetProvider extends AppWidgetProvider {
         Instant midnight = UsWidgetModels.romeToday(state.now).atStartOfDay(UsWidgetModels.ROME).toInstant();
         Instant counted = state.snapshot == null ? null : UsWidgetContract.instant(state.snapshot.optString("updatedAt", ""));
         return counted != null && counted.isAfter(midnight) ? counted : midnight;
-    }
-
-    private static Bitmap decode(byte[] raw) {
-        if (raw == null) return null;
-        try { return BitmapFactory.decodeByteArray(raw, 0, raw.length); }
-        catch (RuntimeException ignored) { return null; }
     }
 
     /** The heart: the app's animation over the Home screen, the send at once. */

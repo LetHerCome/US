@@ -203,6 +203,11 @@ public class UsWidgetModelsTest {
         UsWidgetModels.Think noCredential = UsWidgetModels.think(snapshot(null), null, false, now);
         assertFalse(noCredential.canSend);
         assertEquals("Apri", noCredential.cta);
+        // Foto protagonista: a short line that is never cut, the reason under it.
+        assertEquals("Apri US", noCredential.line);
+        assertEquals("per riattivare l’invio", noCredential.hint);
+        assertEquals("Apri US", none.line);
+        assertEquals("per collegarlo", none.hint);
     }
 
     // Pastello (founder, 02/11/2026): the tap turns the widget at once into

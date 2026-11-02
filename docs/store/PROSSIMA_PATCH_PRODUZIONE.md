@@ -439,3 +439,11 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **SQL:** `20261102170000_member_status_v1.sql` (tabella `member_status`, RLS di coppia, ore del server, Realtime). Va su staging **prima** del web, col workflow «Supabase SQL (manual)» approvato dal founder; senza tabella l'app non mostra la pillola.
   - **Privacy:** aggiunte la riga dei dati e una frase («Come stai»), italiano e inglese.
   - **Da provare:** scegliere uno stato su un telefono: sull'altro compare subito in Oggi e nel widget; cambiare la forma in Impostazioni; dopo 12 ore sparisce.
+
+## 2026-11-02 — Widget «Foto protagonista» (solo Android)
+
+**Fonte:** founder, 02/11/2026 (`docs/DECISIONS.md`, «Widget: "Foto protagonista"»). **Branch:** `claude/gallant-ardinghelli-bb2acf`. **Stato:** solo nel branch; serve un APK nuovo. Nessun SQL, nessun dato nuovo.
+
+- **Base comune:** 17 illustrazioni morbide (chiaro e scuro, WebP, circa 180 KB in tutto) e una grana leggera; i titoli e i numeri in Fraunces disegnati dal widget, perché il launcher non usa i caratteri dell'app; le iniziali su un fondo sfumato al posto dei dischi di colore.
+- **Ti penso:** illustrazione col cuore disegnato, la foto di chi ami piccola e tonda (o l'iniziale), «Bea ti ha pensato» in Fraunces, solo il cuore di vetro: niente «Ricambia», anche nel 4×2. Nel 4×2 «12 volte oggi» in rosa accanto al cuore. Non collegato: «Apri US» e sotto «per riattivare l'invio» (prima «Apri US per riattivare…» tagliato).
+  - **Da provare:** il cuore diventa rosa al tocco; «Apri US» non si taglia; tema chiaro e scuro.

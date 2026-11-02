@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Foto protagonista (founder, 02/11/2026): the paper under every widget,
+     cream in Pastello; the illustration or the photo covers it, the corners
+     clip both (clipToOutline). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FFFFF6EE" />
+    <corners android:radius="24dp" />
+</shape>

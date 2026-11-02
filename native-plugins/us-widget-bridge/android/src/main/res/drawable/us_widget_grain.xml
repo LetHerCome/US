@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The light film grain over illustrations and photos: one small tile, repeated. -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/us_widget_grain_tile"
+    android:tileMode="repeat" />

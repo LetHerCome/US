@@ -79,21 +79,27 @@ test('Impostazioni › Widget: each tile is the Pastello card of its widget', ()
 });
 
 // Pastello (founder, 02/11/2026): the light theme of the approved board.
-test('Ti penso Pastello: the board\'s card, Fraunces and Figtree, the heart button that fills', () => {
+test('Ti penso, Foto protagonista: illustration and grain, Fraunces drawn as a picture, only the heart', () => {
   const small = res('layout/us_widget_think.xml');
   const medium = res('layout/us_widget_think_medium.xml');
   const provider = read(`${JAVA}/UsThinkWidgetProvider.java`);
-  for (const layout of [small, medium]) {
-    assert.match(layout, /android:background="@drawable\/us_widget_pastel_think"/);
-    assert.match(layout, /android:id="@\+id\/us_widget_message"[\s\S]*?android:fontFamily="@font\/us_fraunces"/);
+  for (const [layout, art] of [[small, 'think_s'], [medium, 'think_m']]) {
+    assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/);
+    assert.match(layout, /android:id="@\+id\/us_think_art"[\s\S]*?android:scaleType="centerCrop"/);
+    assert.ok(layout.includes(`@drawable/us_widget_art_${art}"`), art);
+    assert.match(layout, /android:id="@\+id\/us_think_grain"[\s\S]*?@drawable\/us_widget_grain"/);
+    assert.match(layout, /android:id="@\+id\/us_think_line"[\s\S]*?android:scaleType="fitStart"/);
     assert.match(layout, /android:fontFamily="@font\/us_figtree"/);
-    assert.match(layout, /@drawable\/us_widget_pastel_heart/);
+    assert.match(layout, /@drawable\/us_widget_glass"[\s\S]*@drawable\/us_widget_pastel_heart/);
+    assert.doesNotMatch(layout.replace(/<!--[\s\S]*?-->/g, ''), /us_widget_cta|Ricambia/, 'only the heart answers (founder, 02/11/2026)');
     assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, 'nothing under 11sp');
   }
-  assert.match(res('drawable/us_widget_pastel_think.xml'), /android:endColor="#FFEFE4FF"[\s\S]*android:startColor="#FFFFE3EA"/);
   assert.match(res('values/colors.xml'), /<color name="us_widget_pastel_ink">#FF1A1020<\/color>/);
-  assert.match(provider, /UsWidgets\.themedColor\(views, context, R\.id\.us_widget_heart_bg, "setColorFilter", model\.done \? ROSA : 0xFFFFFFFF, model\.done \? ROSA : 0xFF3B2F3F\);/);
-  assert.match(provider, /views\.setInt\(R\.id\.us_widget_heart, "setColorFilter", model\.done \? 0xFFFFFFFF : ROSA\);/);
+  assert.ok(provider.includes('UsWidgetArt.serif(small, context, R.id.us_think_line, model.line, 19f'));
+  assert.ok(provider.includes('UsWidgetArt.avatar(views, context, avatar, R.id.us_think_avatar, R.id.us_think_initial, model.partner'));
+  assert.ok(provider.includes('UsWidgets.themedColor(views, context, R.id.us_widget_heart_bg, "setColorFilter", model.done ? ROSA : 0, model.done ? ROSA : 0);'));
+  assert.ok(provider.includes('views.setInt(R.id.us_widget_heart, "setColorFilter", model.done ? 0xFFFFFFFF : ROSA);'));
+  assert.doesNotMatch(provider, /us_widget_cta/);
   // The fonts are the app's own, decompressed to TTF for Android.
   for (const font of ['us_font_fraunces.ttf', 'us_font_fraunces_italic.ttf', 'us_font_figtree.ttf']) {
     const bytes = fs.readFileSync(path.join(ROOT, PLUGIN, 'res/font', font));
