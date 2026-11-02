@@ -45,7 +45,7 @@
                 android:textSize="11.5sp" />
         </LinearLayout>
 
-        <Space
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
@@ -71,9 +71,7 @@
         android:id="@+id/us_widget_heart_button"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="-4dp"
-        android:layout_marginBottom="-4dp">
+        android:layout_gravity="bottom|end">
 
         <ImageView
             android:id="@+id/us_widget_heart_bg"

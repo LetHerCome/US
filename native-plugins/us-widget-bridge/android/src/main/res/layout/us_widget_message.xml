@@ -18,7 +18,7 @@
         android:importantForAccessibility="no"
         android:src="@drawable/us_widget_pastel_circle" />
 
-    <Space
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
@@ -40,7 +40,7 @@
         android:textColor="@color/us_widget_pastel_ink"
         android:textSize="16sp" />
 
-    <Space
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
