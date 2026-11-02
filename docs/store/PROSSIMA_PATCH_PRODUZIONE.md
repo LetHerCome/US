@@ -426,6 +426,12 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 - **Anteprime Pastello:** nella lista dei widget del telefono ogni widget ha la sua carta Pastello, sia come layout (Android 12+) sia come immagine PNG, che molti launcher (Xiaomi compreso) mostrano al posto del layout. In Impostazioni › Widget ogni tessera è la carta del suo widget. «Giorni insieme» non compare più nella lista (è dentro Foto & giorni); quelli già sulla Home continuano a funzionare.
   - **Dopo un aggiornamento** i widget già sulla Home si ridisegnano da soli col layout nuovo (`MY_PACKAGE_REPLACED`, c'era già dalla V1; ora ha un test). Su Xiaomi, se l'avvio automatico di US è spento, il sistema può bloccare questo segnale: allora si ridisegnano alla prima apertura di US o al giro dell'ora.
   - **Da provare:** aprire la lista dei widget del telefono: tutte carte chiare, nessuna scura; Impostazioni › Widget in US.
+- **Correzioni dopo la prova dell'APK (founder, 02/11):**
+  - **Ti penso e la Domanda «non si vedevano»:** il launcher scriveva «Impossibile caricare il widget» per un elemento (`Space`) che i widget Android non accettano. Tolto ovunque; un test ora accetta solo gli elementi ammessi. Visti sull'emulatore uno per uno, in chiaro e in scuro.
+  - **Ti penso:** il cuore usciva dal bordo, ora sta dentro. **Distanza e batteria:** senza distanza «Distanza non nota» copriva le foto, ora è piccola.
+  - **Tema del telefono:** chiaro = Pastello, scuro = «Midnight» (i colori notte di US); cambia da solo appena cambia il tema, anteprime comprese. Su Android 11 e precedenti i colori del cuore e della batteria si aggiornano al giro successivo.
+  - **Da provare:** cambiare il tema del telefono con i widget sulla Home.
+  - **Limite noto:** i launcher non applicano i caratteri Fraunces e Figtree nei widget: si vede il carattere del sistema.
 - **5 · Come stai** (funzione nuova, app e widget; `docs/missions/widget-come-stai-v1.md`):
   - **In Oggi** una pillola accanto alla distanza: l'emoji di chi ami e la tua, o «Come stai?». Il tocco apre i 12 stati (🥰 😊 😴 😔 😤 🤒 🥳 💼 📚 🏋️ 🚗 🍝); un tocco salva, «Togli» lo toglie. Dura 12 ore. Niente notifica.
   - **In Impostazioni › Tu › «Come stai»** ognuno sceglie le sue parole al maschile o al femminile; senza scelta, parole che non cambiano («in amore», «senza energie»).

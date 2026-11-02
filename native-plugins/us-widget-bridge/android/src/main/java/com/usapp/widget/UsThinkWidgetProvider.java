@@ -65,7 +65,8 @@ public class UsThinkWidgetProvider extends AppWidgetProvider {
             views.setInt(R.id.us_think_avatar, "setColorFilter", LILLA);
         }
         // White with a rosa heart; full rosa with a white heart the moment it is tapped.
-        views.setInt(R.id.us_widget_heart_bg, "setColorFilter", model.done ? ROSA : 0xFFFFFFFF);
+        // White with a rosa heart (Midnight: an opaque night circle; a filter keeps white under a translucent colour); full rosa with a white heart once tapped.
+        UsWidgets.themedColor(views, context, R.id.us_widget_heart_bg, "setColorFilter", model.done ? ROSA : 0xFFFFFFFF, model.done ? ROSA : 0xFF3B2F3F);
         views.setInt(R.id.us_widget_heart, "setColorFilter", model.done ? 0xFFFFFFFF : ROSA);
         views.setInt(R.id.us_widget_heart, "setImageAlpha", model.busy && !model.done ? 140 : 255);
         views.setContentDescription(R.id.us_widget_heart_button, model.canSend ? context.getString(R.string.us_widget_send) : context.getString(R.string.us_widget_open));

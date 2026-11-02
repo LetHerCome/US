@@ -92,7 +92,7 @@ test('Ti penso Pastello: the board\'s card, Fraunces and Figtree, the heart butt
   }
   assert.match(res('drawable/us_widget_pastel_think.xml'), /android:endColor="#FFEFE4FF"[\s\S]*android:startColor="#FFFFE3EA"/);
   assert.match(res('values/colors.xml'), /<color name="us_widget_pastel_ink">#FF1A1020<\/color>/);
-  assert.match(provider, /views\.setInt\(R\.id\.us_widget_heart_bg, "setColorFilter", model\.done \? ROSA : 0xFFFFFFFF\);/);
+  assert.match(provider, /UsWidgets\.themedColor\(views, context, R\.id\.us_widget_heart_bg, "setColorFilter", model\.done \? ROSA : 0xFFFFFFFF, model\.done \? ROSA : 0xFF3B2F3F\);/);
   assert.match(provider, /views\.setInt\(R\.id\.us_widget_heart, "setColorFilter", model\.done \? 0xFFFFFFFF : ROSA\);/);
   // The fonts are the app's own, decompressed to TTF for Android.
   for (const font of ['us_font_fraunces.ttf', 'us_font_fraunces_italic.ttf', 'us_font_figtree.ttf']) {

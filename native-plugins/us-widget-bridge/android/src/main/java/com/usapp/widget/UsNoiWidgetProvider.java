@@ -65,7 +65,7 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
         UsWidgets.avatar(views, state.store.readNoiPortrait("me"), R.id.us_noi_me, UsWidgetModels.personColor(state.snapshot, true));
         UsWidgets.avatar(views, state.store.readNoiPortrait("partner"), R.id.us_noi_partner, UsWidgetModels.personColor(state.snapshot, false));
         views.setTextViewText(R.id.us_noi_distance, distance(context, couple));
-        renderBattery(views, couple);
+        renderBattery(context, views, couple);
         views.setContentDescription(R.id.us_noi_root, description(couple, partner));
         return views;
     }
@@ -73,7 +73,12 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
     /** "12 km" with a smaller unit, as on the board; "vicini"; or "Distanza non nota". */
     static CharSequence distance(Context context, UsWidgetModels.Couple couple) {
         if (couple.distanceNear) return "vicini";
-        if (couple.distanceText.isEmpty()) return context.getString(R.string.us_widget_noi_unknown);
+        if (couple.distanceText.isEmpty()) {
+            // A sentence, not a number: at the size of the unit, so it never covers the portraits.
+            SpannableString unknown = new SpannableString(context.getString(R.string.us_widget_noi_unknown));
+            unknown.setSpan(new RelativeSizeSpan(0.47f), 0, unknown.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            return unknown;
+        }
         SpannableString text = new SpannableString(couple.distanceText);
         int space = couple.distanceText.lastIndexOf(' ');
         if (space > 0) text.setSpan(new RelativeSizeSpan(0.47f), space + 1, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -82,12 +87,13 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
 
     // Batteria del partner: the glyph and the percentage. Older than an hour it
     // is quieter; low and not charging, corallo.
-    private static void renderBattery(RemoteViews views, UsWidgetModels.Couple couple) {
+    private static void renderBattery(Context context, RemoteViews views, UsWidgetModels.Couple couple) {
         int visibility = couple.batteryShown() ? View.VISIBLE : View.GONE;
         views.setViewVisibility(R.id.us_noi_battery_icon, visibility);
         views.setViewVisibility(R.id.us_noi_battery, visibility);
         if (!couple.batteryShown()) return;
         int color = couple.batteryOld ? 0x995B4A63 : couple.batteryLow() ? 0xFFE5484D : 0xFF5B4A63;
+        int dark = couple.batteryOld ? 0x66F7EFE9 : couple.batteryLow() ? 0xFFFF8B7B : 0xB8F7EFE9;
         int glyph;
         switch (couple.batteryGlyph()) {
             case "charging": glyph = R.drawable.us_widget_battery_charging; break;
@@ -96,9 +102,9 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
             default: glyph = R.drawable.us_widget_battery_high;
         }
         views.setImageViewResource(R.id.us_noi_battery_icon, glyph);
-        views.setInt(R.id.us_noi_battery_icon, "setColorFilter", color);
+        UsWidgets.themedColor(views, context, R.id.us_noi_battery_icon, "setColorFilter", color, dark);
         views.setTextViewText(R.id.us_noi_battery, couple.batteryLevel + "%");
-        views.setTextColor(R.id.us_noi_battery, color);
+        UsWidgets.themedColor(views, context, R.id.us_noi_battery, "setTextColor", color, dark);
     }
 
     static String description(UsWidgetModels.Couple couple, String partner) {

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ti penso, Midnight: night rosa #3a1f2c to #24161f. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:endColor="#FF24161F"
+        android:startColor="#FF3A1F2C" />
+    <corners android:radius="26dp" />
+</shape>

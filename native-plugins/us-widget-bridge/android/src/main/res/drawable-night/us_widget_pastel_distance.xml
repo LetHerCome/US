@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Distanza e batteria, Midnight: #2a2232 to #17111c. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:endColor="#FF17111C"
+        android:startColor="#FF2A2232" />
+    <corners android:radius="26dp" />
+</shape>

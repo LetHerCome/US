@@ -35,7 +35,7 @@
             android:contentDescription="@null"
             android:importantForAccessibility="no"
             android:src="@drawable/us_widget_pastel_circle"
-            android:tint="#FFFFF1F0" />
+            android:tint="@color/us_widget_pastel_heart_bg" />
 
         <ImageView
             android:layout_width="16dp"

@@ -200,6 +200,22 @@ final class UsWidgets {
         return PendingIntent.getActivity(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
+    /** The phone's dark theme: the widgets take Midnight, the night colours of US. */
+    static boolean night(Context context) {
+        int mode = context.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        return mode == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    /**
+     * A colour set from code in its light (Pastello) and dark (Midnight) form.
+     * From Android 12 the launcher switches by itself when the theme changes;
+     * before, the colour of the theme at render time (redrawn at the next tick).
+     */
+    static void themedColor(RemoteViews views, Context context, int id, String method, int light, int dark) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) views.setColorInt(id, method, light, dark);
+        else views.setInt(id, method, night(context) ? dark : light);
+    }
+
     static float density(Context context) {
         return context.getResources().getDisplayMetrics().density;
     }

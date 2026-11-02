@@ -25,8 +25,8 @@ test('layouts: the board\'s card, the white label, the question in Figtree 800',
 
 test('provider: who answered in that person\'s colour; never an answer; 2x2 and 4x2', () => {
   const provider = read(`${JAVA}/UsDailyWidgetProvider.java`);
-  assert.match(provider, /medium\.setInt\(R\.id\.us_daily_me_done, "setColorFilter", daily\.meAnswered\(\) \? me : TRACK\);/);
-  assert.match(provider, /medium\.setInt\(R\.id\.us_daily_partner_done, "setColorFilter", daily\.partnerAnswered\(\) \? them : TRACK\);/);
+  assert.match(provider, /UsWidgets\.themedColor\(medium, context, R\.id\.us_daily_me_done, "setColorFilter", daily\.meAnswered\(\) \? me : TRACK, daily\.meAnswered\(\) \? me : TRACK_NIGHT\);/);
+  assert.match(provider, /UsWidgets\.themedColor\(medium, context, R\.id\.us_daily_partner_done, "setColorFilter", daily\.partnerAnswered\(\) \? them : TRACK, daily\.partnerAnswered\(\) \? them : TRACK_NIGHT\);/);
   assert.match(provider, /case "your_turn": plain = who \+ " ha risposto · "; bold = "tocca a te"; break;/);
   assert.match(provider, /return UsWidgets\.sized\(options, small, medium\);/);
   assert.doesNotMatch(provider, /optString\("(?:answer|partnerAnswer)|HttpURLConnection/);
