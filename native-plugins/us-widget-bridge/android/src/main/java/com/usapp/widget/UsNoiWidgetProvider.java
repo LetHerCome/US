@@ -70,13 +70,13 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
         return views;
     }
 
-    /** "12 km" with a smaller unit, as on the board; "vicini"; or "Distanza non nota". */
+    /** "12 km" with a smaller unit, as on the board; "vicini"; or "Distanza non ancora nota". */
     static CharSequence distance(Context context, UsWidgetModels.Couple couple) {
         if (couple.distanceNear) return "vicini";
         if (couple.distanceText.isEmpty()) {
-            // A sentence, not a number: at the size of the unit, so it never covers the portraits.
+            // A sentence, not a number: small, so it never covers the portraits.
             SpannableString unknown = new SpannableString(context.getString(R.string.us_widget_noi_unknown));
-            unknown.setSpan(new RelativeSizeSpan(0.47f), 0, unknown.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            unknown.setSpan(new RelativeSizeSpan(0.36f), 0, unknown.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             return unknown;
         }
         SpannableString text = new SpannableString(couple.distanceText);
@@ -109,7 +109,7 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
 
     static String description(UsWidgetModels.Couple couple, String partner) {
         String distance = couple.distanceNear ? "Siete vicini"
-            : couple.distanceText.isEmpty() ? "Distanza non nota" : "Distanza tra voi " + couple.distanceText;
+            : couple.distanceText.isEmpty() ? "Distanza non ancora nota" : "Distanza tra voi " + couple.distanceText;
         return distance + (couple.distanceAgo.isEmpty() ? "" : ", " + couple.distanceAgo)
             + batteryDescription(couple, partner) + ". Apri Noi";
     }

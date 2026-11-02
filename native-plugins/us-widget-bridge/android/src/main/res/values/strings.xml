@@ -14,7 +14,7 @@
 
     <string name="us_widget_noi_name">Distanza e batteria</string>
     <string name="us_widget_noi_me">Tu</string>
-    <string name="us_widget_noi_unknown">Distanza non nota</string>
+    <string name="us_widget_noi_unknown">Distanza non ancora nota</string>
     <string name="us_widget_daily_name">La domanda di oggi</string>
     <string name="us_widget_daily_pill">Oggi</string>
     <string name="us_widget_daily_description">La domanda di oggi e a chi tocca rispondere. Mai le risposte.</string>
