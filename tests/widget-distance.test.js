@@ -1,5 +1,5 @@
-// Widget 4 · Distanza e batteria, Pastello (founder, 02/11/2026, approved
-// board): your two round portraits, the distance the app already computed,
+// Widget 4 · Distanza e batteria, Foto protagonista (founder, 02/11/2026): an
+// illustration with a dotted path, your two small round portraits, the distance the app already computed,
 // how old it is and the partner's battery. It replaces Noi and its map: no
 // map, never where you are. 2x2 and 4x2; a Noi placed before as 2x1 gets a
 // one-row card.
@@ -15,26 +15,24 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const res = (file) => read(`${PLUGIN}/res/${file}`);
 const exists = (file) => fs.existsSync(path.join(ROOT, file));
 
-test('layouts: the board\'s card, two portraits, the distance in Fraunces, the battery', () => {
+test('layouts: illustration and grain, two portraits, the distance in Fraunces, the battery', () => {
   for (const name of ['us_widget_noi', 'us_widget_noi_small', 'us_widget_noi_medium']) {
     const layout = res(`layout/${name}.xml`);
-    assert.match(layout, /android:background="@drawable\/us_widget_pastel_distance"/, name);
-    for (const id of ['us_noi_root', 'us_noi_me', 'us_noi_partner', 'us_noi_distance', 'us_noi_battery_icon', 'us_noi_battery']) {
+    assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/, name);
+    assert.match(layout, /@drawable\/us_widget_art_noi_[sm]"/, name);
+    for (const id of ['us_noi_root', 'us_noi_art', 'us_noi_grain', 'us_noi_me', 'us_noi_me_initial', 'us_noi_partner', 'us_noi_partner_initial', 'us_noi_distance', 'us_noi_battery_icon', 'us_noi_battery']) {
       assert.match(layout, new RegExp(`@\\+id/${id}"`), `${name} ${id}`);
     }
-    assert.match(layout, /android:id="@\+id\/us_noi_distance"[\s\S]*?android:fontFamily="@font\/us_fraunces"/, name);
+    assert.match(layout, /<ImageView\s+android:id="@\+id\/us_noi_distance"/, name);
     assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, `${name}: nothing under 11sp`);
     assert.doesNotMatch(layout, /android:text="[^@]/, `${name}: text from strings.xml`);
   }
   const medium = res('layout/us_widget_noi_medium.xml');
-  // Me on the left, the partner on the right; the dotted arc and the heart between.
+  // Me on the left, the partner on the right; the dotted path and the heart are in the illustration.
   assert.ok(medium.indexOf('us_noi_me"') < medium.indexOf('us_noi_partner"'));
-  assert.match(medium, /@drawable\/us_widget_pastel_arc/);
-  assert.match(medium, /@drawable\/us_widget_pastel_heart/);
   assert.match(medium, /@string\/us_widget_noi_me/);
   for (const id of ['us_noi_partner_name', 'us_noi_caption']) assert.match(medium, new RegExp(`@\\+id/${id}"`), id);
   assert.match(res('layout/us_widget_noi_small.xml'), /@\+id\/us_noi_battery_row"/);
-  assert.match(res('drawable/us_widget_pastel_distance.xml'), /android:startColor="#FFFFF4DD"[\s\S]*<corners android:radius="26dp"/);
   assert.match(res('values/strings.xml'), /<string name="us_widget_noi_name">Distanza e batteria<\/string>/);
 });
 
@@ -66,7 +64,8 @@ test('provider: 2x1, 2x2 and 4x2 by size; older phones by the reported size', ()
   assert.match(provider, /state\.needsUpdateAt\(couple\.batteryNextChange\);/);
   for (const slot of ['me', 'partner']) assert.match(provider, new RegExp(`readNoiPortrait\\("${slot}"\\)`), slot);
   assert.doesNotMatch(provider, /readNoiPortrait\("pair"\)/);
-  assert.match(provider, /UsWidgetModels\.personColor\(state\.snapshot, true\)/);
+  assert.ok(provider.includes('UsWidgetArt.avatar(views, context, state.store.readNoiPortrait("partner"), R.id.us_noi_partner, R.id.us_noi_partner_initial, partner, portraitDp);'));
+  assert.ok(provider.includes('UsWidgetArt.serif(views, context, R.id.us_noi_distance, distance(context, couple)'));
   assert.match(provider, /UsWidgets\.open\(context, "noi", 4401\)/);
   // "12 km" with a smaller unit, as on the board.
   assert.match(provider, /new RelativeSizeSpan\(0\.47f\)/);

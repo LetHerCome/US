@@ -110,10 +110,11 @@ test('Ti penso, Foto protagonista: illustration and grain, Fraunces drawn as a p
 
 // Distanza e batteria (Pastello, 02/11): the round portraits come from the
 // HTTP cache like every avatar; tests/widget-distance.test.js has the rest.
-test('Distanza e batteria 2x1: the board\'s card, the same round portraits', () => {
+test('Distanza e batteria 2x1: the illustrated card, the same round portraits', () => {
   const layout = res('layout/us_widget_noi.xml');
   const widgets = read('widgets.js');
-  assert.match(layout, /android:background="@drawable\/us_widget_pastel_distance"/);
+  assert.match(layout, /android:background="@drawable\/us_widget_card"/);
+  assert.match(layout, /@drawable\/us_widget_art_noi_m"/);
   assert.doesNotMatch(layout, /us_widget_background|us_widget_two_dots|♡/);
   assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)sp"/);
   const round = widgets.slice(widgets.indexOf('async function composeRoundPortrait'), widgets.indexOf('function clearRoundPreviews'));

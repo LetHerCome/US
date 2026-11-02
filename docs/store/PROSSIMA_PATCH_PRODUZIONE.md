@@ -449,3 +449,5 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Da provare:** il cuore diventa rosa al tocco; «Apri US» non si taglia; tema chiaro e scuro.
 - **La domanda di oggi:** illustrazione con due nuvolette, l'etichetta di vetro «Domanda di oggi», la domanda in Fraunces; sotto la piccola foto di chi ha risposto e «ha risposto · tocca a te». Nel 4×2 le vostre due foto (quella di chi non ha ancora risposto più tenue) e «Bea ha risposto · **tocca a te**». Il vuoto sotto la domanda non c'è più. Via pallini e barrette colorate.
   - **Da provare:** rispondere da un telefono: sull'altro, aperta US, compare la foto di chi ha risposto; tema chiaro e scuro.
+- **Distanza e batteria:** illustrazione col sentiero a puntini e il cuore, la distanza in Fraunces e «aggiornato 10 min fa»; le vostre foto piccole e tonde (nel 2×2 in basso accanto a «Tu» e a «Bea 78%», nel 4×2 negli angoli in alto); il 2×1 già messo con la stessa illustrazione.
+  - **Da provare:** 2×1, 2×2 e 4×2; senza distanza «Distanza non ancora nota» piccola; tema chiaro e scuro.
