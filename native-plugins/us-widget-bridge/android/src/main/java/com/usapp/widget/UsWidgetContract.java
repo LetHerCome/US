@@ -70,7 +70,10 @@ final class UsWidgetContract {
                 .put("distanceText", DISTANCE.matcher(coupleIn.optString("distanceText", "")).matches()
                     ? coupleIn.optString("distanceText", "") : "")
                 .put("distanceState", "stale".equals(coupleIn.optString("distanceState", ""))
-                    ? "stale" : "ready");
+                    ? "stale" : "ready")
+                // Distanza e batteria: "vicini", and when the distance was read.
+                .put("distanceNear", coupleIn.optBoolean("distanceNear", false))
+                .put("distanceAt", instantText(coupleIn.optString("distanceAt", "")));
             // Batteria del partner: the level the partner last reported, whether
             // it was charging and when (server time). Unknown: level -1.
             int batteryLevel = coupleIn.optInt("batteryLevel", -1);

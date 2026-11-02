@@ -147,6 +147,9 @@
         frame: typeof couple.frame === 'string' && /^[a-z0-9_]{1,24}$/.test(couple.frame) ? couple.frame : '',
         distanceText: typeof couple.distanceText === 'string' && /^[0-9., ]{1,16} ?(km|m|mi|ft)$/.test(couple.distanceText) ? couple.distanceText : '',
         distanceState: couple.distanceState === 'stale' ? 'stale' : 'ready',
+        // Distanza e batteria: "vicini", and when the distance was read.
+        distanceNear: couple.distanceNear === true,
+        distanceAt: safeInstant(couple.distanceAt),
         // Batteria del partner (UsWidgetContract.java): -1 when unknown.
         ...widgetBattery(couple),
         // Pastello: each person's colour, #rrggbb or nothing.

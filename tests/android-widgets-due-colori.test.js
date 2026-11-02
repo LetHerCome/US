@@ -70,21 +70,17 @@ test('Ti penso Pastello: the board\'s card, Fraunces and Figtree, the heart butt
   assert.match(res('font/us_fraunces.xml'), /@font\/us_font_fraunces_italic/);
 });
 
-test('Noi 2x1: night card, orchid label, serif distance, italic line, two-colour portrait', () => {
+// Distanza e batteria (Pastello, 02/11): the round portraits come from the
+// HTTP cache like every avatar; tests/widget-distance.test.js has the rest.
+test('Distanza e batteria 2x1: the board\'s card, the same round portraits', () => {
   const layout = res('layout/us_widget_noi.xml');
-  const provider = read(`${JAVA}/UsNoiWidgetProvider.java`);
   const widgets = read('widgets.js');
-  assert.match(layout, /android:background="@drawable\/us_widget_background"/);
-  assert.doesNotMatch(layout, /us_widget_noi_light_background|#43303D|♡/);
+  assert.match(layout, /android:background="@drawable\/us_widget_pastel_distance"/);
+  assert.doesNotMatch(layout, /us_widget_background|us_widget_two_dots|♡/);
   assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)sp"/);
-  assert.match(layout, /@drawable\/us_widget_two_dots/);
-  assert.match(provider, /R\.string\.us_widget_noi_between/);
-  assert.doesNotMatch(provider, /"APRI NOI"|"TRA VOI"|"ULTIMA DISTANZA"/);
-  const compose = widgets.slice(widgets.indexOf('async function composeNoiPortrait'), widgets.indexOf('function syncNoiPortrait'));
-  assert.match(compose, /const colours = \['#ff7c96', '#a98bff'\];/);
-  assert.match(compose, /canvas\.toBlob\(resolve, 'image\/png'\)/, 'transparent, sits on the card');
-  assert.match(compose, /globalCompositeOperation = 'destination-out'/);
-  assert.doesNotMatch(compose, /no-store/, 'a reused signed URL comes from the HTTP cache');
+  const round = widgets.slice(widgets.indexOf('async function composeRoundPortrait'), widgets.indexOf('function clearRoundPreviews'));
+  assert.match(round, /canvas\.toBlob\(resolve, 'image\/png'\)/, 'transparent, sits on the card');
+  assert.doesNotMatch(round, /no-store/, 'a reused signed URL comes from the HTTP cache');
 });
 
 test('Countdown: the base style is the upright serif of Oggi; reward styles keep their look', () => {

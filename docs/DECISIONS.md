@@ -395,6 +395,8 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 
 **Fonte:** founder, 31/10/2026. Per la mappa ha risposto «li deve prendere da maps», poi, alla domanda di chiarimento, «Vera, ma solo sfondo». Per «Messaggio» ha scelto «Solo tipo e ora». Completa «Posizione, widget e Note condivise» del 31/10.
 
+**Superata il 02/11/2026** dalla famiglia «Pastello» (sotto): niente più mappa, l'asset `us_widget_noi_map_v1` è tolto. Resta valido «Solo tipo e ora» per il Lasciato per te.
+
 - **Mappa del widget «Noi»:** decorativa e fissa, **mai la posizione della coppia**. È un pezzo vero di città, scuro e sempre lo stesso: Torino, il Po. Si disegna una volta con lo stile scuro di OpenFreeMap della Mappa dei Ricordi, senza scritte, e sta dentro l'app. Il widget non si collega a nessun servizio di mappe.
   - Niente Google Maps: le sue condizioni vietano di salvare le immagini, e la Static API chiede una chiave a pagamento.
   - Dati © OpenStreetMap contributors (ODbL), stile OpenFreeMap / OpenMapTiles, citati nella privacy.

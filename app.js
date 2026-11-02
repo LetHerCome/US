@@ -298,11 +298,16 @@ window.UsWidgetDataApi=Object.freeze({
     if(coupleRes.error||profilesRes.error)throw coupleRes.error||profilesRes.error;
     return {startedOn:coupleRes.data?.started_on||'',names:(profilesRes.data||[]).map(p=>p.display_name).filter(Boolean)};
   },
-  // A last-known, already-rendered distance label, never coordinates.
+  // A last-known, already-rendered distance label, never coordinates: the
+  // text ("12 km"), "vicini", and when the older of the two readings was taken.
   noiDistance(){
-    const line=noiDistanceLine(usLocationRuntime.snapshot);
-    return {distanceText:line.state==='unknown'?'':line.text,
-      distanceState:line.state==='stale'?'stale':'ready'};
+    const model=usLocationRuntime.snapshot;
+    const line=noiDistanceLine(model);
+    const known=line.state!=='unknown';
+    return {distanceText:known&&!model.near?line.text:'',
+      distanceState:line.state==='stale'?'stale':'ready',
+      distanceNear:known&&Boolean(model.near),
+      distanceAt:known&&typeof model.age==='string'?model.age:''};
   },
   // The exact two profile portraits displayed in Noi; signed URLs stay inside the WebView.
   noiAvatarSources(){

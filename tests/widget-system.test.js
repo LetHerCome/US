@@ -473,7 +473,7 @@ test('Widget Hub vive in Impostazioni, nascosto fuori dall’app native, niente 
   assert.doesNotMatch(oggi, /usWidgetHub|data-widget-add/);
 });
 
-test('Noi 2x1 is a light photo-distance widget with one action only', () => {
+test('Distanza e batteria opens Noi, its one action', () => {
   const provider = read(`${JAVA}/UsNoiWidgetProvider.java`);
   const layout = read(`${PLUGIN}/res/layout/us_widget_noi.xml`);
   const store = read(`${JAVA}/UsWidgetStore.java`);
@@ -481,7 +481,7 @@ test('Noi 2x1 is a light photo-distance widget with one action only', () => {
   const app = read('app.js');
   assert.match(provider, /UsWidgets\.open\(context, "noi", 4401\)/);
   assert.doesNotMatch(provider, /"noi\/play"|us_noi_cta/);
-  assert.match(layout, /@\+id\/us_noi_portrait/);
+  assert.match(layout, /@\+id\/us_noi_me"/);
   assert.match(layout, /@\+id\/us_noi_distance/);
   assert.doesNotMatch(layout, /us_noi_cta|GIOCA/);
   assert.match(store, /writeNoiPortrait/);
@@ -490,7 +490,7 @@ test('Noi 2x1 is a light photo-distance widget with one action only', () => {
   assert.match(app, /noiAvatarSources/);
   assert.match(app, /noiDistance\(\)/);
   assert.match(read('widget-hub.js'), /us-wp-noi-light/);
-  assert.match(read('widgets.js'), /composeNoiPortrait/);
+  assert.match(read('widgets.js'), /composeRoundPortrait/);
   assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(/i);
 });
 
@@ -536,7 +536,7 @@ test('manifest dichiara 4 provider e i receiver interni, tutti non esportati', (
     assert.match(xml, /android:updatePeriodMillis="3600000"/);
     assert.match(xml, /android:widgetCategory="home_screen"/);
   }
-  // Noi stile mappa (31/10): 4x2 by default; the 2x1 placed before keeps the compact card.
+  // Distanza e batteria: 4x2 by default; the 2x1 placed before gets a one-row card.
   assert.match(read(`${PLUGIN}/res/xml/us_widget_noi_info.xml`), /android:targetCellWidth="4"[\s\S]*android:targetCellHeight="2"/);
   assert.match(read(`${PLUGIN}/res/xml/us_widget_think_info.xml`), /android:targetCellHeight="2"/);
 });

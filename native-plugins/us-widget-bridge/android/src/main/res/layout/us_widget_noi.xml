@@ -1,76 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Noi 2x1: the two portraits (rosa and lilla rings, drawn by the app as a
-     transparent PNG), the label in Noi's orchid with the partner's battery on
-     its right, the distance in serif and one italic line. Sizes hold at the
-     2x1 minimum (110dp wide). The italic line is the partner's status line:
-     today it says "tra voi"; "a casa / fuori" (later) goes there too. -->
+<!-- Distanza e batteria 2x1 (the Noi placed before as 2x1), Pastello: your two
+     portraits, the distance in Fraunces, the partner's battery or how old the
+     reading is. Ids are stable: widgets already on a Home screen keep working. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_noi_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_background"
+    android:background="@drawable/us_widget_pastel_distance"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="10dp"
+    android:paddingStart="12dp"
     android:paddingTop="8dp"
-    android:paddingEnd="12dp"
+    android:paddingEnd="14dp"
     android:paddingBottom="8dp">
 
     <FrameLayout
-        android:layout_width="64dp"
+        android:layout_width="72dp"
         android:layout_height="44dp"
-        android:layout_marginEnd="8dp">
+        android:layout_marginEnd="10dp">
 
         <ImageView
-            android:id="@+id/us_noi_portrait"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:id="@+id/us_noi_me"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:contentDescription="@null"
-            android:scaleType="fitCenter"
-            android:visibility="gone" />
+            android:importantForAccessibility="no"
+            android:src="@drawable/us_widget_pastel_circle" />
 
         <ImageView
-            android:id="@+id/us_noi_fallback"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:id="@+id/us_noi_partner"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_gravity="end"
             android:contentDescription="@null"
-            android:scaleType="center"
-            android:src="@drawable/us_widget_two_dots" />
+            android:importantForAccessibility="no"
+            android:src="@drawable/us_widget_pastel_circle" />
     </FrameLayout>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:gravity="center_vertical"
         android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/us_noi_distance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autoSizeMaxTextSize="24sp"
+            android:autoSizeMinTextSize="14sp"
+            android:autoSizeTextType="uniform"
+            android:ellipsize="end"
+            android:fontFamily="@font/us_fraunces"
+            android:importantForAccessibility="no"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="@color/us_widget_pastel_ink"
+            android:textSize="24sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:fontFamily="sans-serif-medium"
-                android:includeFontPadding="false"
-                android:letterSpacing="0.14"
-                android:maxLines="1"
-                android:text="@string/us_widget_noi_name"
-                android:textAllCaps="true"
-                android:textColor="@color/us_widget_orchidea"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-
-            <!-- Batteria del partner: Phosphor glyph and percentage, hidden when unknown. -->
             <ImageView
                 android:id="@+id/us_noi_battery_icon"
                 android:layout_width="14dp"
                 android:layout_height="14dp"
-                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
                 android:contentDescription="@null"
                 android:importantForAccessibility="no"
                 android:src="@drawable/us_widget_battery_high"
@@ -78,47 +77,17 @@
 
             <TextView
                 android:id="@+id/us_noi_battery"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="2dp"
-                android:fontFamily="sans-serif-medium"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="@font/us_figtree"
                 android:fontFeatureSettings="tnum"
                 android:importantForAccessibility="no"
                 android:includeFontPadding="false"
                 android:maxLines="1"
-                android:textColor="@color/us_widget_text_2"
-                android:textSize="11sp"
-                android:visibility="gone" />
+                android:textColor="@color/us_widget_pastel_sub"
+                android:textSize="11sp" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/us_noi_distance"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:autoSizeMaxTextSize="21sp"
-            android:autoSizeMinTextSize="14sp"
-            android:autoSizeTextType="uniform"
-            android:ellipsize="end"
-            android:fontFamily="serif"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:text="@string/us_widget_noi_unknown"
-            android:textColor="@color/us_widget_text"
-            android:textSize="21sp" />
-
-        <TextView
-            android:id="@+id/us_noi_caption"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:ellipsize="end"
-            android:fontFamily="serif"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:text="@string/us_widget_noi_open"
-            android:textColor="@color/us_widget_text_2"
-            android:textSize="12sp"
-            android:textStyle="italic" />
     </LinearLayout>
 </LinearLayout>

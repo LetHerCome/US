@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Distanza e batteria 2x2, Pastello (approved board, 02/11/2026): your two
+     portraits side by side, the distance in Fraunces, the partner's battery.
+     Never a map, never where you are: only the distance the app computed. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/us_noi_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/us_widget_pastel_distance"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <FrameLayout
+        android:layout_width="96dp"
+        android:layout_height="56dp">
+
+        <ImageView
+            android:id="@+id/us_noi_me"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:src="@drawable/us_widget_pastel_circle" />
+
+        <ImageView
+            android:id="@+id/us_noi_partner"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="end"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:src="@drawable/us_widget_pastel_circle" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/us_noi_distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/us_fraunces"
+        android:importantForAccessibility="no"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textColor="@color/us_widget_pastel_ink"
+        android:textSize="34sp" />
+
+    <LinearLayout
+        android:id="@+id/us_noi_battery_row"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/us_noi_battery_icon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:src="@drawable/us_widget_battery_high" />
+
+        <TextView
+            android:id="@+id/us_noi_battery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:fontFamily="@font/us_figtree"
+            android:fontFeatureSettings="tnum"
+            android:importantForAccessibility="no"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="@color/us_widget_pastel_sub"
+            android:textSize="11sp" />
+    </LinearLayout>
+</LinearLayout>

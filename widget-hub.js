@@ -15,7 +15,7 @@
   const CATALOG = Object.freeze([
     { kind: 'think', name: 'Ti penso', copy: 'Un pensiero con un tocco, anche con US chiusa.', shape: 'square' },
     { kind: 'countdown', name: 'Countdown', copy: 'Lo stesso Countdown che hai scelto su Oggi.', shape: 'square' },
-    { kind: 'noi', name: 'Noi', copy: 'Le vostre foto, la distanza tra voi, i Ti penso e la batteria di chi ami.', shape: 'wide' },
+    { kind: 'noi', name: 'Distanza e batteria', copy: 'La distanza tra voi e la batteria di chi ami. Mai dove siete.', shape: 'wide' },
     { kind: 'photo', name: 'Foto & giorni', copy: 'La foto di Oggi, che cambia ogni ora, con i giorni insieme.', shape: 'square' },
     { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda del giorno e a chi tocca rispondere. Mai le risposte.', shape: 'wide' },
     { kind: 'message', name: 'Messaggio', copy: 'L’ultimo Ti penso di chi ami, o il suo Lasciato per te ancora chiuso.', shape: 'square' }
@@ -68,13 +68,15 @@
     return view ? { value: view.value, unit: Number(view.value) === 1 ? 'giorno insieme' : 'giorni insieme' } : null;
   }
 
-  function noiPreview(snapshot, portraitUrl) {
-    const distance=snapshot.couple?.distanceText || 'Distanza non nota';
-    const sub=snapshot.couple?.distanceText
+  // Distanza e batteria: the two colours, the distance, never a map.
+  function noiPreview(snapshot) {
+    const known=snapshot.couple?.distanceNear || snapshot.couple?.distanceText;
+    const distance=snapshot.couple?.distanceNear ? 'vicini' : snapshot.couple?.distanceText || 'Distanza non nota';
+    const sub=known
       ? (snapshot.couple?.distanceState === 'stale' ? 'ULTIMA DISTANZA' : 'TRA VOI')
       : 'APRI NOI';
     return `<div class="us-wp-noi us-wp-noi-light">
-      <span class="us-wp-noi-portrait">${portraitUrl ? `<img src="${esc(portraitUrl)}" alt="">` : '♡ ♡'}</span>
+      <span class="us-wp-noi-portrait">♡ ♡</span>
       <span class="us-wp-noi-info"><small>US · NOI</small><b>${esc(distance)}</b><small>${esc(sub)}</small></span>
     </div>`;
   }
@@ -104,7 +106,7 @@
     const snapshot = view.snapshot || {};
     if (kind === 'think') return thinkPreview(snapshot);
     if (kind === 'countdown') return countdownPreview(snapshot);
-    if (kind === 'noi') return noiPreview(snapshot, view.noiPortraitPreviewUrl);
+    if (kind === 'noi') return noiPreview(snapshot);
     if (kind === 'daily') return dailyPreview(snapshot);
     if (kind === 'message') return messagePreview();
     return photoPreview(snapshot, view.photoPreviewUrl);

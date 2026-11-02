@@ -362,22 +362,10 @@ public class UsWidgetModelsTest {
         assertFalse(UsWidgetModels.couple(snapshot(null), now).batteryShown());
     }
 
-    // ---------- Noi stile mappa: the Ti penso bubbles ----------
+    // ---------- Relative times ("10 min fa"), shared by the widgets ----------
 
     @Test
-    public void noiBubblesSayEachPersonsLastTiPensoWithTheTime() throws Exception {
-        JSONObject snap = snapshot(null);
-        snap.getJSONObject("think").put("lastReceivedAt", "2026-10-31T10:50:00Z").put("lastSentAt", "2026-10-31T08:00:00Z");
-        Instant now = Instant.parse("2026-10-31T11:00:00Z");
-        UsWidgetModels.Bubbles bubbles = UsWidgetModels.noiBubbles(UsWidgetContract.normalize(snap), null, now);
-        assertEquals("ti ha pensato · 10 min fa", bubbles.partner);
-        assertEquals("hai pensato a Beatrice · 3 ore fa", bubbles.me);
-        // "10 min fa" moves to "15 min fa" at 11:05; nothing ticks every minute.
-        assertEquals(Instant.parse("2026-10-31T11:05:00Z"), bubbles.nextChange);
-    }
-
-    @Test
-    public void noiBubblesRoundTheFirstHourAndHideAfterAWeek() throws Exception {
+    public void relativeTimesRoundTheFirstHourAndStopAfterAWeek() throws Exception {
         Instant at = Instant.parse("2026-10-31T10:00:00Z");
         assertEquals("proprio ora", UsWidgetModels.bubbleAgo(at, at.plusSeconds(4 * 60)));
         assertEquals("5 min fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(9 * 60)));
@@ -386,25 +374,31 @@ public class UsWidgetModelsTest {
         assertEquals("2 ore fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(120 * 60)));
         assertEquals("ieri", UsWidgetModels.bubbleAgo(at, at.plusSeconds(30 * 3600)));
         assertEquals("6 giorni fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(6 * 86400 + 60)));
-        assertEquals("a week old: no bubble", "", UsWidgetModels.bubbleAgo(at, at.plusSeconds(7 * 86400)));
-        assertEquals("from the future: no bubble", "", UsWidgetModels.bubbleAgo(at, at.minusSeconds(3600)));
+        assertEquals("a week old: nothing", "", UsWidgetModels.bubbleAgo(at, at.plusSeconds(7 * 86400)));
+        assertEquals("from the future: nothing", "", UsWidgetModels.bubbleAgo(at, at.minusSeconds(3600)));
         assertEquals("", UsWidgetModels.bubbleAgo(null, at));
+        assertEquals(at.plusSeconds(10 * 60), UsWidgetModels.bubbleNextChange(at, at.plusSeconds(7 * 60)));
     }
 
+    // ---------- Distanza e batteria (Pastello) ----------
+
     @Test
-    public void noiBubblesWithoutThoughtsOrNamesAndWithTheWidgetSend() throws Exception {
+    public void distanceSaysCloseAndHowOldTheReadingIs() throws Exception {
         Instant now = Instant.parse("2026-10-31T11:00:00Z");
-        UsWidgetModels.Bubbles empty = UsWidgetModels.noiBubbles(snapshot(null), null, now);
-        assertEquals("", empty.partner);
-        assertEquals("", empty.me);
-        assertNull(empty.nextChange);
         JSONObject snap = snapshot(null);
-        snap.getJSONObject("think").put("partnerName", "").put("lastSentAt", "2026-10-31T08:00:00Z");
-        // A Ti penso sent from the widget a moment ago is newer than the app's last read.
-        JSONObject action = new JSONObject().put("status", "sent").put("sentAt", "2026-10-31T10:58:00Z");
-        UsWidgetModels.Bubbles mine = UsWidgetModels.noiBubbles(UsWidgetContract.normalize(snap), action, now);
-        assertEquals("Ti penso · proprio ora", mine.me);
-        assertNull(UsWidgetModels.noiBubbles(null, null, now).nextChange);
+        snap.getJSONObject("couple").put("distanceText", "12 km").put("distanceAt", "2026-10-31T10:50:00Z");
+        UsWidgetModels.Couple couple = UsWidgetModels.couple(UsWidgetContract.normalize(snap), now);
+        assertEquals("12 km", couple.distanceText);
+        assertEquals("aggiornato 10 min fa", couple.distanceAgo);
+        assertEquals(Instant.parse("2026-10-31T11:05:00Z"), couple.distanceNextChange);
+        snap.getJSONObject("couple").put("distanceText", "").put("distanceNear", true).put("distanceAt", "2026-10-31T10:58:00Z");
+        UsWidgetModels.Couple near = UsWidgetModels.couple(UsWidgetContract.normalize(snap), now);
+        assertTrue(near.distanceNear);
+        assertEquals("aggiornato ora", near.distanceAgo);
+        // A reading of last month says nothing about when.
+        snap.getJSONObject("couple").put("distanceAt", "2026-10-01T10:00:00Z");
+        assertEquals("", UsWidgetModels.couple(UsWidgetContract.normalize(snap), now).distanceAgo);
+        assertFalse(UsWidgetModels.couple(snapshot(null), now).distanceNear);
     }
 
     // ---------- Messaggio: the partner's last Ti penso or Lasciato per te ----------

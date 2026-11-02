@@ -1629,7 +1629,8 @@
     // Widgets
     'Un pensiero con un tocco, anche con US chiusa.': 'A thought in one tap, even when US is closed.',
     'Lo stesso Countdown che hai scelto su Oggi.': 'The same Countdown you chose on Today.',
-    'Le vostre foto, la distanza tra voi, i Ti penso e la batteria di chi ami.': 'Your photos, the distance between you, your Ti penso and your partner’s battery.',
+    'Distanza e batteria': 'Distance and battery',
+    'La distanza tra voi e la batteria di chi ami. Mai dove siete.': 'The distance between you and your partner’s battery. Never where you are.',
     'Foto & Noi': 'Photo & Us',
     'La foto di Oggi, che cambia ogni ora, con i giorni insieme.': 'Today’s photo, changing every hour, with your days together.',
     'Foto & giorni': 'Photo & days',

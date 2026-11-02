@@ -35,7 +35,6 @@
   let photoSync = null;
   let photoResyncRequested = false;
   let photoPreviewUrl = '';
-  let noiPortraitPreviewUrl = '';
   let noiPortraitSignature = '';
   let noiPortraitSync = null;
   let noiRoundPreviewUrls = { me: '', partner: '' };
@@ -46,7 +45,7 @@
   const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastSentAt: '', lastAnsweredAt: '', todayCount: 0, todayDate: '' });
   // Batteria del partner: level -1 = unknown (UsWidgetContract.java).
   // colors: each person's colour as the app shows it (Pastello widgets).
-  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready', batteryLevel: -1, batteryCharging: false, batteryAt: '', colors: { me: '', partner: '' } });
+  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready', distanceNear: false, distanceAt: '', batteryLevel: -1, batteryCharging: false, batteryAt: '', colors: { me: '', partner: '' } });
   const emptyCountdown = () => ({ active: false, kind: '', title: '', target: '', style: 'editorial' });
   // Foto & giorni: Oggi's photo of this hour, then of the next two (next).
   const emptyPhoto = () => ({ state: 'none', key: '', takenOn: '', label: '', hour: '', next: [] });
@@ -218,6 +217,8 @@
         frame,
         distanceText: couple.distanceText,
         distanceState: couple.distanceState,
+        distanceNear: couple.distanceNear,
+        distanceAt: couple.distanceAt,
         batteryLevel: couple.batteryLevel,
         batteryCharging: couple.batteryCharging,
         batteryAt: couple.batteryAt,
@@ -238,8 +239,12 @@
     const next = window.UsWidgetDataApi?.noiDistance?.();
     const distanceText = cleanText(next?.distanceText || '', 24);
     const distanceState = next?.distanceState === 'stale' ? 'stale' : 'ready';
-    if (couple.distanceText === distanceText && couple.distanceState === distanceState) return Promise.resolve(false);
-    couple = { ...couple, distanceText, distanceState };
+    // Distanza e batteria: "vicini" and how old the reading is.
+    const distanceNear = next?.distanceNear === true;
+    const distanceAt = isoInstant(next?.distanceAt);
+    if (couple.distanceText === distanceText && couple.distanceState === distanceState
+      && couple.distanceNear === distanceNear && couple.distanceAt === distanceAt) return Promise.resolve(false);
+    couple = { ...couple, distanceText, distanceState, distanceNear, distanceAt };
     return scheduleWrite();
   }
 
@@ -259,64 +264,6 @@
     return scheduleWrite();
   }
 
-  // "Due colori": the creator's portrait ringed in rosa, the partner's in
-  // lilla, overlapping like the US mark, on a transparent PNG so it sits on
-  // the widget's night card. 64x44dp at 4.5x; rings 2.5dp; the second
-  // portrait is cut out of the first by a ring of the card colour.
-  async function composeNoiPortrait(urls) {
-    const S = 4.5, W = Math.round(64 * S), H = Math.round(44 * S);
-    const ring = 2.5 * S, gap = 2.5 * S, cy = H / 2, radius = cy - ring;
-    const centers = [radius + ring, W - radius - ring];
-    const colours = ['#ff7c96', '#a98bff'];
-    const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('noi_portrait_canvas');
-    ctx.clearRect(0, 0, W, H);
-    for (let i = 0; i < 2; i++) {
-      const cx = centers[i];
-      if (i === 1) {
-        // Cut the first portrait where the second overlaps it.
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.beginPath(); ctx.arc(cx, cy, radius + ring + gap, 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
-      }
-      ctx.save();
-      ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.clip();
-      ctx.fillStyle = '#2a2232';
-      ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
-      if (urls[i]) {
-        let bitmap;
-        try {
-          const response = await fetch(urls[i], { credentials: 'omit' });
-          if (!response.ok) throw new Error('avatar_download');
-          const blob = await response.blob();
-          if (!/^image\//.test(blob.type || 'image/')) throw new Error('avatar_type');
-          bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
-          const scale = Math.max(radius * 2 / bitmap.width, radius * 2 / bitmap.height);
-          const w = bitmap.width * scale, h = bitmap.height * scale;
-          ctx.drawImage(bitmap, cx - w / 2, cy - h / 2, w, h);
-        } catch (error) { console.warn('[US Widget] avatar paint', error); }
-        finally { bitmap?.close?.(); }
-      }
-      ctx.restore();
-      ctx.beginPath(); ctx.arc(cx, cy, radius + ring / 2, 0, Math.PI * 2);
-      ctx.strokeStyle = colours[i]; ctx.lineWidth = ring; ctx.stroke();
-    }
-    const png = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    if (!png) throw new Error('noi_portrait_encode');
-    const base64 = await new Promise((resolve,reject)=>{
-      const reader=new FileReader();
-      reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');
-      reader.onerror=reject;
-      reader.readAsDataURL(png);
-    });
-    return {base64, preview: URL.createObjectURL(png)};
-  }
-
-  // Noi stile mappa: one round portrait per person (same ring colours), 56dp
-  // at 3x, transparent. The widget puts me on the left, the partner on the right.
   // Pastello (approved board, 02/11/2026): the real profile photo, round,
   // a see-through gap, then a ring in the person's colour. Without a photo,
   // the initial on that colour. Transparent, 192 px, so every widget scales it.
@@ -415,30 +362,18 @@
     if (!force && signature === noiPortraitSignature) return Promise.resolve(false);
     const token=generation, owner=ownerHash;
     noiPortraitSync=(async()=>{
-      let image=null;
       try {
-        if(urls.some(Boolean)){
-          image=await composeNoiPortrait(urls);
-          if(token!==generation){URL.revokeObjectURL(image.preview);return false;}
-          const ok=await platform.writeWidgetNoiPortrait(owner,image.base64,'pair');
-          if(token!==generation || !ok){URL.revokeObjectURL(image.preview);return false;}
-        }
         await writeRoundPortraits(urls,people,owner,token);
         // The same colours for the widgets' dots and bars.
         const mine=window.usProfile?.role==='beatrice'?1:0;
         const hex=(value)=>(/^#[0-9a-f]{6}$/i.test(value)?value.toLowerCase():'');
         const colors={me:hex(people[mine].colour),partner:hex(people[1-mine].colour)};
         if(token===generation&&JSON.stringify(colors)!==JSON.stringify(couple.colors)){couple={...couple,colors};scheduleWrite();}
-        if(token!==generation){if(image)URL.revokeObjectURL(image.preview);return false;}
-        if(image){
-          if(noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
-          noiPortraitPreviewUrl=image.preview;
-        }
+        if(token!==generation)return false;
         noiPortraitSignature=signature;
         window.dispatchEvent(new Event('us:noi-widget-photo-updated'));
         return true;
       }catch(error){
-        if(image?.preview)URL.revokeObjectURL(image.preview);
         console.warn('[US Widget] Noi portrait',error);
         return false;
       }finally{noiPortraitSync=null;}
@@ -636,8 +571,6 @@
       photoSyncedAt = 0;
       photoResyncRequested = false;
       noiPortraitSignature = '';
-      if (noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
-      noiPortraitPreviewUrl = '';
       clearRoundPreviews();
       setPreview('');
     }
@@ -671,8 +604,6 @@
     photoSyncedAt = 0;
     photoResyncRequested = false;
     noiPortraitSignature = '';
-    if (noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
-    noiPortraitPreviewUrl = '';
     clearRoundPreviews();
     think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();left = emptyLeft();
     setPreview('');
@@ -741,7 +672,7 @@
   // ---------- Widget Hub support ----------
 
   function view() {
-    return { snapshot: snapshot(), photoPreviewUrl, noiPortraitPreviewUrl, noiRoundPreviewUrls: { ...noiRoundPreviewUrls }, ready: Boolean(ownerHash) };
+    return { snapshot: snapshot(), photoPreviewUrl, noiRoundPreviewUrls: { ...noiRoundPreviewUrls }, ready: Boolean(ownerHash) };
   }
 
   async function installed() {

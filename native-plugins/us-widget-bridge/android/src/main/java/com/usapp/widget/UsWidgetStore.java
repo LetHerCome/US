@@ -212,8 +212,9 @@ final class UsWidgetStore {
         return next;
     }
 
-    // WebView-prepared portraits, never a signed URL: "pair" is the two-person
-    // portrait of Noi 2x1, "me" and "partner" the round ones of Noi stile mappa.
+    // WebView-prepared portraits, never a signed URL: "me" and "partner" are
+    // the round ones of every Pastello widget. "pair", the two-person portrait
+    // of the old Noi 2x1, is no longer written; it stays so the wipe removes it.
     static final String[] PORTRAIT_SLOTS = { "pair", "me", "partner" };
 
     static boolean validPortraitSlot(String slot) {
