@@ -157,6 +157,7 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
     photo: { state: 'ready', key: 'https://example.test/a.jpg', url: 'https://example.test/a.jpg', takenOn: '2026-10-01' },
     daily: { date: '2026-10-31', question: 'Una domanda?', state: 'your_turn', answer: 'secret' },
     left: { kind: 'photo', at: '2026-10-31T09:00:00.000Z', body: 'secret', media_path: 'https://example.test/p.jpg' },
+    memories: { state: 'ready', label: 'Un anno fa', anniversary: true, day: '2026-10-31', date: '2025-10-31', title: 'Lisbona', count: 8, stack: 9, path: 'secret/a.jpg', url: 'https://example.test/m.jpg' },
     accessToken: 'secret', refreshToken: 'secret', supabaseUrl: 'secret', supabaseKey: 'secret'
   });
   const sent = calls[0].snapshot;
@@ -174,7 +175,9 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   // here, so the widget never got the question): meaning only, never content.
   assert.deepEqual({ ...sent.daily }, { date: '2026-10-31', question: 'Una domanda?', state: 'your_turn' });
   assert.deepEqual({ ...sent.left }, { kind: 'photo', at: '2026-10-31T09:00:00.000Z' });
-  assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'left', 'ownerHash', 'photo', 'schemaVersion', 'think', 'updatedAt']);
+  // Ricordi a pila: which memory, never its path or URL (the stack is a separate picture).
+  assert.deepEqual({ ...sent.memories }, { state: 'ready', label: 'Un anno fa', anniversary: true, day: '2026-10-31', date: '2025-10-31', title: 'Lisbona', count: 8, stack: 3 });
+  assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'left', 'memories', 'ownerHash', 'photo', 'schemaVersion', 'think', 'updatedAt']);
 
   assert.equal(await platform.writeWidgetSnapshot({ schemaVersion: 2, ownerHash: 'raw-user-id' }), false, 'owner non hash rifiutato');
 });
@@ -398,7 +401,9 @@ test('Foto & Noi follows the painted Oggi hero, not an independent latest-Ricord
   assert.doesNotMatch(provider, /sb\.from\('moments'\)/);
   assert.match(app, /window\.dispatchEvent\(new Event\('us:home-photo-changed'\)\)/);
   assert.match(read('widgets.js'), /addEventListener\('us:home-photo-changed'/);
-  assert.doesNotMatch(read('widgets.js'), /addEventListener\('us:moments-updated'/);
+  // Ricordi changes redraw only the stack of Ricordi a pila, never this photo.
+  assert.doesNotMatch(read('widgets.js'), /addEventListener\('us:moments-updated'[^\n]*syncPhoto/);
+  assert.match(read('widgets.js'), /addEventListener\('us:moments-updated', \(\) => \{ syncMemories\(\{ force: true \}\)\.catch\(\(\) => \{\}\); \}\);/);
   assert.match(read('widget-hub.js'), /La foto di Oggi, che cambia ogni ora/);
 });
 

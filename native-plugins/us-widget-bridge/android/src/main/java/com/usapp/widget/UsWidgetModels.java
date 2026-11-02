@@ -475,6 +475,51 @@ final class UsWidgetModels {
     private static final String[] MONTHS = { "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
         "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre" };
 
+    // ---------- Ricordi a pila ----------
+
+    static final class Memories {
+        boolean shown = false;
+        /** "Un anno fa" on the very day, "I più recenti"; "" once that day is over. */
+        String pill = "";
+        /** The place or the caption; the day when there is neither. */
+        String title = "";
+        /** 4x2: "12 ottobre · 8 foto". */
+        String line = "";
+        /** 2x2: "12 ott", beside the title. */
+        String shortDate = "";
+        int stack = 0;
+        Instant nextChange = null;
+    }
+
+    private static final String[] SHORT_MONTHS = { "gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic" };
+
+    static Memories memories(JSONObject snapshot, Instant now) {
+        Memories out = new Memories();
+        JSONObject in = UsWidgetContract.optObject(snapshot, "memories");
+        String date = UsWidgetContract.civilDate(in.optString("date", ""));
+        if (!"ready".equals(in.optString("state", "")) || date.isEmpty()) return out;
+        out.shown = true;
+        out.stack = Math.max(1, Math.min(3, in.optInt("stack", 1)));
+        String label = in.optString("label", "");
+        if (in.optBoolean("anniversary", false)) {
+            // "Un anno fa" is true only on that day: at midnight the label goes.
+            boolean today = in.optString("day", "").equals(romeToday(now).toString());
+            out.pill = today ? label : "";
+            if (today) out.nextChange = nextRomeMidnight(now);
+        } else {
+            out.pill = label;
+        }
+        String day = italianDay(date);
+        String title = in.optString("title", "").trim();
+        int count = in.optInt("count", 0);
+        String photos = count <= 0 ? "" : count + " foto";
+        out.title = title.isEmpty() ? day : title;
+        out.line = title.isEmpty() ? photos : photos.isEmpty() ? day : day + " · " + photos;
+        LocalDate parsed = LocalDate.parse(date);
+        out.shortDate = title.isEmpty() ? "" : parsed.getDayOfMonth() + " " + SHORT_MONTHS[parsed.getMonthValue() - 1];
+        return out;
+    }
+
     /** "21 aprile"; "" for anything that is not a civil date. */
     static String italianDay(String civil) {
         String clean = UsWidgetContract.civilDate(civil);

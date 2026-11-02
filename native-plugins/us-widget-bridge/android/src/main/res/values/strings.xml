@@ -33,6 +33,11 @@
     <string name="us_widget_message_description">Il Lasciato per te ancora chiuso: solo che cosa è e quando</string>
     <string name="us_widget_message_empty">Il prossimo Lasciato per te arriverà qui</string>
     <string name="us_widget_message_open">Apri</string>
+    <string name="us_widget_memories_name">Ricordi a pila</string>
+    <string name="us_widget_memories_description">Le vostre foto di questo giorno, un anno fa. Altrimenti le più recenti</string>
+    <string name="us_widget_memories_empty">I vostri ricordi appariranno qui</string>
+    <string name="us_widget_preview_memories">Un ricordo</string>
+    <string name="us_widget_preview_memories_date">12 ott</string>
 
     <string name="us_widget_days_name">Giorni insieme</string>
 

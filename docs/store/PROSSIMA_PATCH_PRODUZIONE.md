@@ -416,3 +416,8 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Solo tipo e ora** (founder, 31/10): mai le parole, la foto o il link.
   - **Cambia:** mostra solo il Lasciato per te ancora chiuso, non più l'ultimo Ti penso (per quello c'è il widget Ti penso). Senza niente da aprire: «Il prossimo Lasciato per te arriverà qui».
   - **Da provare:** lasciare una foto da un telefono: sull'altro, aperta US, il widget dice «Ti ha lasciato una foto · ora»; aprirla: il widget torna vuoto; il 4×2 con «Apri».
+- **6 · Ricordi a pila** (widget nuovo): carta crema-lilla con una pila di tre foto, quelle dietro girate, quella sopra col bordo bianco. Sotto il posto in Fraunces e il giorno («Lisbona · 12 ott»); nel 4×2 a destra «Un anno fa», il posto, «12 ottobre · 8 foto» e un trattino per ogni foto della pila.
+  - **Quali foto:** le foto di questo giorno in un anno passato («Un anno fa», «2 anni fa»: vince l'anno più lontano, come Rivivi); altrimenti le tre più recenti, con «I più recenti». «Un anno fa» vale solo quel giorno: a mezzanotte l'etichetta sparisce, la pila resta finché US non si riapre.
+  - **Come:** la pila la disegna US mentre è aperta (all'avvio, ogni 6 ore, quando cambia Ricordi), dalle anteprime che Ricordi già usa, e passa al widget due immagini (2×2 e 4×2). Nella fotografia del widget c'è solo quale ricordo è, mai un percorso o un link. Le immagini stanno nella memoria privata del widget e si cancellano con l'account.
+  - **Dati:** nessuno nuovo; legge i Ricordi come la pagina Ricordi. Il tocco apre Ricordi.
+  - **Da provare:** mettere il widget; con una foto di oggi un anno fa compare «Un anno fa»; senza, le tre più recenti; aggiungere una foto in Ricordi: la pila cambia.

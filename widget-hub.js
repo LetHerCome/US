@@ -18,7 +18,8 @@
     { kind: 'noi', name: 'Distanza e batteria', copy: 'La distanza tra voi e la batteria di chi ami. Mai dove siete.', shape: 'wide' },
     { kind: 'photo', name: 'Foto & giorni', copy: 'La foto di Oggi, che cambia ogni ora, con i giorni insieme.', shape: 'square' },
     { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda del giorno e a chi tocca rispondere. Mai le risposte.', shape: 'wide' },
-    { kind: 'message', name: 'Lasciato per te', copy: 'Il Lasciato per te ancora chiuso: solo che cosa è e quando.', shape: 'square' }
+    { kind: 'message', name: 'Lasciato per te', copy: 'Il Lasciato per te ancora chiuso: solo che cosa è e quando.', shape: 'square' },
+    { kind: 'memories', name: 'Ricordi a pila', copy: 'Le vostre foto di questo giorno, un anno fa. Altrimenti le più recenti.', shape: 'square' }
   ]);
   window.UsWidgetCatalog = CATALOG;
 
@@ -102,6 +103,13 @@
     return `<div class="us-wp-photo"><p>${IMAGE}<span>La foto di Oggi apparirà qui</span></p>${line}</div>`;
   }
 
+  // Ricordi a pila: the memory it shows now, never the photos here.
+  function memoriesPreview(snapshot) {
+    const m = snapshot.memories || {};
+    const text = m.state === 'ready' ? [m.label, m.title].filter(Boolean).join(' · ') : 'I vostri ricordi appariranno qui';
+    return `<div class="us-wp-photo"><p>${IMAGE}<span>${esc(text)}</span></p></div>`;
+  }
+
   function preview(kind, view) {
     const snapshot = view.snapshot || {};
     if (kind === 'think') return thinkPreview(snapshot);
@@ -109,6 +117,7 @@
     if (kind === 'noi') return noiPreview(snapshot);
     if (kind === 'daily') return dailyPreview(snapshot);
     if (kind === 'message') return messagePreview();
+    if (kind === 'memories') return memoriesPreview(snapshot);
     return photoPreview(snapshot, view.photoPreviewUrl);
   }
 

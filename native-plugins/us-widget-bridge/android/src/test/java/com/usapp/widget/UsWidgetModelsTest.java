@@ -482,6 +482,49 @@ public class UsWidgetModelsTest {
         assertTrue(UsWidgetModels.message(null, now).empty);
     }
 
+    // ---------- Ricordi a pila ----------
+
+    private static JSONObject memories(JSONObject memories) throws Exception {
+        return UsWidgetContract.normalize(snapshot(null).put("memories", memories));
+    }
+
+    @Test
+    public void memoriesSayUnAnnoFaOnlyOnTheDay() throws Exception {
+        Instant now = Instant.parse("2026-10-12T09:00:00Z");
+        JSONObject in = new JSONObject().put("state", "ready").put("label", "Un anno fa").put("anniversary", true)
+            .put("day", "2026-10-12").put("date", "2025-10-12").put("title", "Lisbona").put("count", 8).put("stack", 3)
+            .put("path", "secret/a.jpg");
+        JSONObject clean = memories(in);
+        assertFalse("never a path", clean.toString().contains("secret"));
+        UsWidgetModels.Memories view = UsWidgetModels.memories(clean, now);
+        assertTrue(view.shown);
+        assertEquals("Un anno fa", view.pill);
+        assertEquals("Lisbona", view.title);
+        assertEquals("12 ottobre · 8 foto", view.line);
+        assertEquals("12 ott", view.shortDate);
+        assertEquals(3, view.stack);
+        assertEquals(Instant.parse("2026-10-12T22:00:30Z"), view.nextChange);
+        // The next day the stack stays, the label goes.
+        assertEquals("", UsWidgetModels.memories(clean, Instant.parse("2026-10-13T09:00:00Z")).pill);
+    }
+
+    @Test
+    public void memoriesNewestAndUntitledAndEmpty() throws Exception {
+        Instant now = Instant.parse("2026-11-02T09:00:00Z");
+        JSONObject in = new JSONObject().put("state", "ready").put("label", "I più recenti").put("anniversary", false)
+            .put("day", "2026-10-30").put("date", "2026-10-28").put("title", "").put("count", 1).put("stack", 7);
+        UsWidgetModels.Memories view = UsWidgetModels.memories(memories(in), now);
+        assertEquals("I più recenti", view.pill);
+        assertEquals("28 ottobre", view.title);
+        assertEquals("1 foto", view.line);
+        assertEquals("", view.shortDate);
+        assertEquals(3, view.stack);
+        assertNull(view.nextChange);
+        assertFalse(UsWidgetModels.memories(memories(new JSONObject().put("state", "ready").put("date", "ieri")), now).shown);
+        assertFalse(UsWidgetModels.memories(snapshot(null), now).shown);
+        assertFalse(UsWidgetModels.memories(null, now).shown);
+    }
+
     // ---------- Foto & giorni (Pastello) ----------
 
     private static JSONObject photos(String hour) throws Exception {

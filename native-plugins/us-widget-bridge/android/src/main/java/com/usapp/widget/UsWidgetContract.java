@@ -153,6 +153,21 @@ final class UsWidgetContract {
             if (!LEFT_KIND.matcher(leftKind).matches() || leftAt.isEmpty()) { leftKind = ""; leftAt = ""; }
             JSONObject left = new JSONObject().put("kind", leftKind).put("at", leftAt);
 
+            // Ricordi a pila: which memory the stack shows (the pictures are
+            // separate files). Never a path, a URL or a photo.
+            JSONObject memoriesIn = optObject(input, "memories");
+            String memoriesDate = civilDate(memoriesIn.optString("date", ""));
+            boolean memoriesReady = "ready".equals(memoriesIn.optString("state", "")) && !memoriesDate.isEmpty();
+            JSONObject memories = new JSONObject()
+                .put("state", memoriesReady ? "ready" : "none")
+                .put("label", memoriesReady ? text(memoriesIn.optString("label", ""), 24) : "")
+                .put("anniversary", memoriesReady && memoriesIn.optBoolean("anniversary", false))
+                .put("day", memoriesReady ? civilDate(memoriesIn.optString("day", "")) : "")
+                .put("date", memoriesReady ? memoriesDate : "")
+                .put("title", memoriesReady ? text(memoriesIn.optString("title", ""), 60) : "")
+                .put("count", memoriesReady ? Math.max(0, Math.min(9999, memoriesIn.optInt("count", 0))) : 0)
+                .put("stack", memoriesReady ? Math.max(1, Math.min(3, memoriesIn.optInt("stack", 1))) : 0);
+
             return new JSONObject()
                 .put("schemaVersion", SCHEMA_VERSION)
                 .put("ownerHash", ownerHash)
@@ -162,7 +177,8 @@ final class UsWidgetContract {
                 .put("countdown", countdown)
                 .put("photo", photo)
                 .put("daily", daily)
-                .put("left", left);
+                .put("left", left)
+                .put("memories", memories);
         } catch (Exception ignored) {
             return null;
         }

@@ -309,6 +309,23 @@ window.UsWidgetDataApi=Object.freeze({
       distanceNear:known&&Boolean(model.near),
       distanceAt:known&&typeof model.age==='string'?model.age:''};
   },
+  // Ricordi a pila: each Ricordo's day, place, caption and preview path,
+  // newest first (as Ricordi reads them). No URL yet, never sent anywhere.
+  async memories(){
+    const profile=window.usProfile;
+    if(!profile?.couple_id)return null;
+    const query=columns=>sb.from('moments').select(columns).order('moment_date',{ascending:false}).order('created_at',{ascending:false}).limit(1000);
+    const result=await query(`${US_MOMENT_COLUMNS},${US_MOMENT_PLACE_COLUMNS}`).then(res=>res?.error?query(US_MOMENT_COLUMNS):res);
+    if(window.usProfile!==profile)return null;
+    if(result?.error)throw result.error;
+    return {today:localDateISO(),rows:(result?.data||[]).map(row=>({id:String(row.id),date:row.moment_date||'',path:ricordiPreviewPath(row),place:row.place_label||'',caption:row.caption||''}))};
+  },
+  // Signed URLs for the stack's previews; they stay inside the WebView.
+  async memoryUrls(paths){
+    const list=(Array.isArray(paths)?paths:[]).filter(path=>typeof path==='string'&&path).slice(0,3);
+    const urls=await usGetSignedUrls(list,US_MEDIA_URL_TTL_S);
+    return list.map(path=>urls.get(path)||'');
+  },
   // The exact two profile portraits displayed in Noi; signed URLs stay inside the WebView.
   noiAvatarSources(){
     return ['pairAvatarFrancesco','pairAvatarBeatrice'].map(id=>{
