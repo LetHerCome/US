@@ -12,7 +12,7 @@ function slice(from,to){const a=app.indexOf(from),b=app.indexOf(to,a);assert.ok(
 function api(){
   const window={};
   const context=vm.createContext({window,document:{getElementById:()=>null},console,escapeHtml:String});
-  vm.runInContext(`${slice('const RESONANCE_HISTORY_LIMIT=6;','function hashSeed(text){')}\nwindow.api=window.UsResonance;`,context);
+  vm.runInContext(`${slice('const RESONANCE_HISTORY_LIMIT=6;','// ===== M7B — Da vivere')}\nwindow.api=window.UsResonance;`,context);
   return window.api;
 }
 const q=(id,at,xp=40,extra={})=>({id,title:'Quest '+id,xp,completed_at:at,...extra});
@@ -46,7 +46,7 @@ test('M12C: UI explains XP history, never relationship quality or a second score
   assert.match(app,/<b class="noi-resonance-history-xp">\+\$\{entry\.xp\} XP<\/b>/);
   assert.doesNotMatch(section,/qualit[àa]|compatibilit|salute|score|punteggio|valutazione/i);
   assert.match(app,/sb\.from\('couples'\)\.select\('bond_xp'\)/);
-  assert.doesNotMatch(slice('const RESONANCE_HISTORY_LIMIT=6;','function hashSeed(text){'),/\.insert\(|\.update\(|\.upsert\(|\.delete\(|\.rpc\(/);
+  assert.doesNotMatch(slice('const RESONANCE_HISTORY_LIMIT=6;','// ===== M7B — Da vivere'),/\.insert\(|\.update\(|\.upsert\(|\.delete\(|\.rpc\(/);
 });
 
 test('M12C: hydration reads same-couple authorities and guards identity switches',()=>{
@@ -75,5 +75,5 @@ test('M12C: no M12C migration/backfill and Game V2 untouched',()=>{
   const migrations=fs.readdirSync(path.join(ROOT,'supabase/migrations_history')).sort();
   assert.ok(migrations.includes('20261001093123_m12b_4_daily_question_keepsakes.sql'));
   assert.equal(migrations.filter((file)=>/m12c/i.test(file)).length,0);
-  assert.doesNotMatch(slice('const RESONANCE_HISTORY_LIMIT=6;','function hashSeed(text){'),/game_v2|backfill/i);
+  assert.doesNotMatch(slice('const RESONANCE_HISTORY_LIMIT=6;','// ===== M7B — Da vivere'),/game_v2|backfill/i);
 });

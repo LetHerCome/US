@@ -243,7 +243,7 @@ test('M7B runtime: hydrateNoiIdeas è collegato alla navigazione verso Noi senza
   assert.notEqual(goBlock, '');
   // go() schedules hydrateActivePage, which opens Noi with both hydrations.
   assert.match(goBlock, /schedulePageHydration\(id\)/);
-  assert.match(app(), /if\(id==='bond'\)\{work\.push\(Promise\.resolve\(hydrateBond\(\)\)\);work\.push\(Promise\.resolve\(hydrateNoiIdeas\(\)\)\);\}/);
+  assert.match(app(), /if\(id==='bond'\)\{work\.push\(Promise\.resolve\(hydrateBondSummary\(\)\)\);work\.push\(Promise\.resolve\(hydrateNoiIdeas\(\)\)\);\}/);
   assert.doesNotMatch(goBlock, /openCalendarSurface|closeCalendarSurface/);
 });
 
@@ -255,17 +255,12 @@ test('M7B runtime: hydrateNoiIdeas è collegato alla navigazione verso Noi senza
 const bondMain = () => html().match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
 const livingSection = () => bondMain().match(/<section class="noi-living-section"[\s\S]*?<\/section>/)?.[0] || '';
 
-test('M7B fix: la Quest settimanale non si presenta più come una seconda "Da vivere" — è etichettata come compagna distinta e preserva confirm/reroll', () => {
+test('M7B fix → Sfida della settimana (03/11/2026): le missioni settimanali se ne vanno, il foglio tiene solo «Le vostre idee»', () => {
   const living = livingSection();
   assert.notEqual(living, '');
-  assert.doesNotMatch(living, /da vivere/i, 'the weekly Quest section must never carry the "Da vivere" label — that is bucket_items\' exclusive surface');
-  assert.match(living, /missioni di coppia|quest di coppia|spunto della settimana/i, 'the Quest section must be relabeled as a distinct "Missioni di coppia" (formerly "Quest di coppia") companion');
-  // Runtime/IDs/confirm/reroll logic for Quest must be fully preserved.
-  assert.match(living, /id="bondQuestList"/);
-  assert.match(app(), /function confirmBondQuest\(id\)\{/);
-  assert.match(app(), /function rerollBondQuest\(id\)\{/);
-  assert.match(app(), /window\.confirmBondQuest=confirmBondQuest/);
-  assert.match(app(), /window\.rerollBondQuest=rerollBondQuest/);
+  assert.match(living, /Le vostre idee/);
+  assert.doesNotMatch(living, /id="bondQuestList"|id="questWeekBoard"|Missioni di coppia/);
+  for (const name of ['function confirmBondQuest(', 'function rerollBondQuest(', 'window.confirmBondQuest=', 'window.rerollBondQuest=']) assert.ok(!app().includes(name), name);
 });
 
 test('M7B fix (M9D): Da vivere è una superficie focalizzata del hub Noi, senza scroll di pagina — scorre solo la lista idee', () => {

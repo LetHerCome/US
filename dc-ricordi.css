@@ -587,3 +587,6 @@
   #usAlbumOverlay[data-us-galleria] .us-album-title{font-size:32px}
   #usAlbumOverlay[data-us-galleria] .us-album-floating-add b{display:inline}
 }
+
+/* La sfida della settimana (03/11/2026): the «Sfida» sign on the Ricordo a challenge photo went into (weekly-challenge.js). */
+#moments #momentsGrid .moment-card>.us-wc-mark{position:absolute;z-index:4;top:10px;left:10px;padding:3px 9px;border-radius:999px;background:var(--us-ambra);color:var(--us-inchiostro);font:700 11px/1.5 var(--us-font-ui);letter-spacing:.06em;text-transform:uppercase;pointer-events:none}

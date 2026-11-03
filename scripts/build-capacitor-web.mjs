@@ -45,6 +45,7 @@ const RUNTIME_FILES = [
   'ricordi-place.js',
   'partner-battery.js',
   'member-status.js',
+  'weekly-challenge.js',
   'navigation.js',
   'games.css',
   'games.js',

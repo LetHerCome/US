@@ -279,12 +279,10 @@ test('Noi density: the one calendar comes first, then the three links; no second
   assert.doesNotMatch(bond, /class="noi-week-board"|noi-hub-card--resonance/);
 });
 
-test('Quest: action paths are untouched (server-authoritative confirm / reroll)', () => {
-  assert.match(app, /sb\.rpc\('confirm_bond_quest'/);
-  assert.match(app, /sb\.rpc\('reroll_bond_quest'/);
+test('Quest → Sfida della settimana (03/11/2026): the weekly board and its actions are gone from the app', () => {
+  assert.doesNotMatch(app, /sb\.rpc\('confirm_bond_quest'|sb\.rpc\('reroll_bond_quest'|sb\.rpc\('ensure_bond_week'/);
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.match(bond, /<div id="questWeekBoard" class="quest-week" hidden><\/div>/);
-  assert.match(bond, /<div id="bondQuestList" class="bond-quest-list noi-living-list" aria-live="polite">/);
+  assert.doesNotMatch(bond, /id="questWeekBoard"|id="bondQuestList"/);
 });
 
 // ---------------------------------------------------------------- Settings

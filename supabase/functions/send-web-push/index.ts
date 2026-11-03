@@ -11,8 +11,8 @@ import { nativeTransport } from "../_shared/native-push-env.ts";
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,x-client-info,apikey,content-type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Content-Type": "application/json" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
-type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined";
-const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined"];
+type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "challenge_photo";
+const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "challenge_photo"];
 // US 1.0 (A2): a join older than this is not "just joined" (legacy couples, stale retries).
 const PARTNER_JOINED_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -173,6 +173,24 @@ Deno.serve(async (request) => {
         return buildNotification("quest_confirmed", { questId, senderName: sender.display_name, questTitle, locale });
       };
       dedupeKey = `quest-confirmed:${questId}:${sender.id}`;
+      prefKey = "bond";
+    }
+    if (type === "challenge_photo") {
+      // La sfida della settimana (03/11/2026): a couple apart, the caller just
+      // sent their photo and the other one has not. Read back from the server.
+      if (!partner || typeof body.reference_id !== "string" || !UUID.test(body.reference_id)) return json({ error: "Missing challenge reference" }, 400);
+      const challengeId = body.reference_id;
+      const { data: challenge, error: challengeError } = await admin.from("couple_weekly_challenges").select("id,couple_id,two_places,completed_at").eq("id", challengeId).maybeSingle();
+      if (challengeError) throw challengeError;
+      if (!challenge || challenge.couple_id !== sender.couple_id) return json({ error: "Challenge not found" }, 409);
+      const { data: photos, error: photosError } = await admin.from("couple_weekly_challenge_photos").select("user_id").eq("challenge_id", challengeId);
+      if (photosError) throw photosError;
+      const posted = new Set((photos || []).map((row: { user_id: string }) => row.user_id));
+      if (!posted.has(sender.id)) return json({ error: "Photo not saved" }, 409);
+      if (!challenge.two_places || challenge.completed_at || posted.has(partner.id)) return json({ delivered: 0, reason: "not-waiting" });
+      recipientIds = [partner.id];
+      compose = async (locale) => buildNotification("challenge_photo", { challengeId, senderName: sender.display_name, locale });
+      dedupeKey = `challenge-photo:${challengeId}:${sender.id}`;
       prefKey = "bond";
     }
     if (type === "partner_joined") {

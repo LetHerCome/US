@@ -374,6 +374,7 @@ function renderHub() {
  root.innerHTML=`
   <h2 class="us-gv2-sr">Gioca</h2>
   <div class="us-gv2-daily-slot" data-gv4-daily-slot data-s aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Sfida di oggi</span><small>Preparo la domanda di oggi…</small></div></div>
+  <div class="us-wc-slot" data-wc-slot></div>
   ${weekStrip()}
   <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">
    <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3><small>${esc(dayHint())}</small></div>
@@ -390,6 +391,7 @@ function renderHub() {
   ${continueSection(home,onTiles)}
   ${doneSection(home)}`;
  window.UsDailyQuestionHub?.paintCard?.();
+ window.UsWeeklyChallenge?.paint?.();
 }
 
 function renderHubError() {

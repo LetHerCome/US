@@ -350,7 +350,7 @@ async function locationAction(){
 
 function preferenceToggle(key,label,checked){
   return `<button type="button" class="us-settings2-toggle-row" data-pref="${key}" aria-pressed="${checked?'true':'false'}">
-    <span><b>${label}</b><small>${key==='think'?'Quando la tua persona ti pensa':key==='today'?'Quando arriva e quando le risposte sono pronte':key==='bond'?'Missioni, nuovi livelli e sblocchi':key==='left_for_you'?'Quando trovi qualcosa nella busta':key==='games'?'Quando tocca a te':'Mesiversario, anniversario ed eventi'}</small></span>
+    <span><b>${label}</b><small>${key==='think'?'Quando la tua persona ti pensa':key==='today'?'Quando arriva e quando le risposte sono pronte':key==='bond'?'Il lunedì la nuova, il sabato un promemoria':key==='left_for_you'?'Quando trovi qualcosa nella busta':key==='games'?'Quando tocca a te':'Mesiversario, anniversario ed eventi'}</small></span>
     <i class="${checked?'on':''}"><u></u></i>
   </button>`;
 }
@@ -598,7 +598,7 @@ async function notificationsModal(){
     <div class="us-settings2-toggle-list">
       ${preferenceToggle('think','Ti penso',p.think!==false)}
       ${preferenceToggle('today','Domanda di oggi',p.today!==false)}
-      ${preferenceToggle('bond','Sintonia',p.bond!==false)}
+      ${preferenceToggle('bond','La sfida della settimana',p.bond!==false)}
       ${preferenceToggle('relationship','Ricorrenze',p.relationship!==false)}
       ${preferenceToggle('left_for_you','Lasciato per te',p.left_for_you!==false)}
       ${preferenceToggle('games','Gioca',p.games!==false)}
