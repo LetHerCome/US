@@ -41,7 +41,8 @@
     "20261031132258_couple_notes_v1.sql",
     "20261031134410_couple_battery_v1.sql",
     "20261102170000_member_status_v1.sql",
-    "20261103010817_s32_export_notes_battery_status.sql"
+    "20261103010817_s32_export_notes_battery_status.sql",
+    "20261103204751_couple_notes_color.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
@@ -78,7 +79,8 @@
     "20261031132258_couple_notes_v1.sql",
     "20261031134410_couple_battery_v1.sql",
     "20261102170000_member_status_v1.sql",
-    "20261103010817_s32_export_notes_battery_status.sql"
+    "20261103010817_s32_export_notes_battery_status.sql",
+    "20261103204751_couple_notes_color.sql"
   ],
   "counts": {
     "repo_files": 47,

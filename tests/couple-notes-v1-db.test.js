@@ -35,7 +35,7 @@ test('migration is listed, in the realtime publication and in the data export', 
   const pub = await q("select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'couple_notes'");
   assert.equal(pub.length, 1);
   const core = fs.readFileSync(path.join(__dirname, '../supabase/functions/_shared/s3-2-export-core.mjs'), 'utf8');
-  assert.match(core, /\['couple_notes','created_by','id,couple_id,created_by,updated_by,title,body,items,created_at,updated_at',true\]/);
+  assert.match(core, /\['couple_notes','created_by','id,couple_id,created_by,updated_by,title,body,items,color,created_at,updated_at',true\]/);
 });
 
 test('both write, tick and delete the notes of the couple; the server says who and when', async () => {
