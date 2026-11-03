@@ -190,8 +190,9 @@ function itemMarkup(day,item) {
   </button>`;
   }
   const clock=clockOf(item.time);
+  // A hundred days: «4100 giorni ♡» says it all, its line would repeat it.
   if(item.kind==='relationship')return `<button type="button" class="us-noi-v2-item" data-noi-item="${action}" data-day="${esc(day)}" data-id="" data-months="${item.months}" data-owner="noi">
-    <span class="us-noi-v2-item-time" aria-hidden="true">—</span><span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small class="us-noi-v2-item-meta"><span>${esc(item.time)}</span><span class="us-noi-v2-owner" data-owner-type="relationship">${esc(ownerLabel(item))}</span></small></span>${whoChip(item)}
+    <span class="us-noi-v2-item-time" aria-hidden="true">—</span><span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small class="us-noi-v2-item-meta">${item.days?'':`<span>${esc(item.time)}</span>`}<span class="us-noi-v2-owner" data-owner-type="relationship">${esc(ownerLabel(item))}</span></small></span>${whoChip(item)}
   </button>`;
   return `<button type="button" class="us-noi-v2-item" data-noi-item="${action}" data-day="${esc(day)}" data-id="${esc(item.id||'')}" data-owner="${ownerOf(item)}">
     <span class="us-noi-v2-item-time"${clock?'':' aria-hidden="true"'}>${clock||'—'}</span><span class="us-noi-v2-item-copy"><b translate="no">${esc(item.title)}</b><small class="us-noi-v2-item-meta">${clock?'':`<span>${esc(item.time)}</span>`}<span class="us-noi-v2-owner" data-owner-type="${esc(item.entryType||item.kind)}">${esc(ownerLabel(item))}</span></small></span>${whoChip(item)}
@@ -212,6 +213,15 @@ function ricordiByDay(data=snapshot){
   }
   return map;
 }
+// In a square the couple's dates say how much, on two lines if needed
+// (staging, 04/11/2026: «Mesiversario» became «Mesi…»); the agenda says the rest.
+function cellLabel(item){
+  if(item.kind!=='relationship')return item.title;
+  if(item.days)return `${item.days} giorni`;
+  if(item.months===0)return 'Inizio';
+  if(item.months%12===0){const years=item.months/12;return years===1?'1 anno':`${years} anni`;}
+  return item.months===1?'1 mese':`${item.months} mesi`;
+}
 // Only the weeks this month actually spans: 4–6 rows, never an empty sixth row.
 // A day is a square: its number, then a label per commitment (at most two,
 // then "+n") in the colour of whoever put it; a day with a Ricordo is its photo.
@@ -228,7 +238,7 @@ function calendarMarkup(index) {
     const day=iso(year,month,n),todayFlag=day===now,active=day===selected;
     const items=index.get(day)||[];
     const photo=(ricordi.get(day)||[]).find(m=>m.thumb);
-    const bars=items.slice(0,BAR_MAX).map(item=>`<span class="us-noi-v2-bar" data-owner="${ownerOf(item)}"${item.kind==='relationship'?'':' translate="no"'}>${esc(item.title)}</span>`).join('');
+    const bars=items.slice(0,BAR_MAX).map(item=>`<span class="us-noi-v2-bar${item.kind==='relationship'?' is-milestone':''}" data-owner="${ownerOf(item)}"${item.kind==='relationship'?'':' translate="no"'}>${esc(cellLabel(item))}</span>`).join('');
     const more=items.length>BAR_MAX?`<span class="us-noi-v2-more">+${items.length-BAR_MAX}</span>`:'';
     const plans=items.length===1?'1 impegno':items.length?`${items.length} impegni`:'niente in programma';
     return `<button type="button" class="us-noi-v2-day${active?' is-selected':''}${photo?' has-photo':''}${todayFlag?' is-today':''}${day<now?' is-past':''}" data-noi-day="${day}" aria-pressed="${active}" ${todayFlag?'aria-current="date"':''} aria-label="${esc(dayLabel(day))}${todayFlag?', oggi':''}${photo?', con un Ricordo':''}, ${plans}">
