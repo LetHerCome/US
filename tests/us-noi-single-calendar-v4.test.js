@@ -36,8 +36,9 @@ test('Noi add uses existing date-aware editor directly, preserving all-day, star
 });
 test('La nostra settimana is in Noi and restores month, linked-idea picker remains date-authoritative',()=>{
   assert.match(noi,/function weekMarkup\(index\)/);
-  assert.match(noi,/if\(link==='lavagna'\)\{mode='week';render\(\)/);
-  assert.match(html,/data-noi-open-link="lavagna"[\s\S]*?<b>Lavagna<\/b>/);
+  // Noi nuova (03/11/2026): no Lavagna tile; the week opens through openCalendar.
+  assert.match(noi,/mode=requestedMode==='week'\?'week':'calendar';/);
+  assert.doesNotMatch(html,/data-noi-open-link/);
   assert.match(html,/id="usNoiV2WeekBack" hidden/);
   assert.match(noi,/window\.UsCalendarLinks\?\.createForIdeaDate/);
   assert.match(calendar,/async function createCalendarEntryForIdeaDate\(dateISO\)/);
@@ -45,7 +46,7 @@ test('La nostra settimana is in Noi and restores month, linked-idea picker remai
   assert.match(html,/id="usNoiV2IdeaCancel"/);
 });
 test('Noi Phosphor icons are centered in their approved circular and square controls',()=>{
-  for(const selector of ['us-noi-v2-settings','us-noi-v2-nav','us-noi-v2-add','us-noi-v2-item-icon','us-noi-v2-link-icon'])assert.ok(css.includes('.'+selector),selector);
+  for(const selector of ['us-noi-v2-settings','us-noi-v2-nav','us-noi-v2-add','us-noi-v2-item-icon'])assert.ok(css.includes('.'+selector),selector);
   assert.match(css,/#bond \.us-noi-v2 \.us-noi-v2-add,[\s\S]*?display:grid;\s*place-items:center;/);
   assert.match(css,/#bond \.us-noi-v2 \.us-icon\{[\s\S]*?display:block;/);
   assert.match(html,/data-us-icon="plus"/);

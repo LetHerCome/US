@@ -669,6 +669,34 @@ async function readNoiMonth(year, month) {
   const range=monthGridRange(year,month);
   const start=isoDate(range.gridStart.getFullYear(),range.gridStart.getMonth(),range.gridStart.getDate());
   const end=isoDate(range.gridEnd.getFullYear(),range.gridEnd.getMonth(),range.gridEnd.getDate());
+  const [base,moments]=await Promise.all([readNoiRange(start,end),readNoiRicordi(viewer,start,end)]);
+  return base?{...base,moments}:null;
+}
+
+// Noi nuova (03/11/2026): a day with a Ricordo shows its photo. The Ricordi
+// of the days on screen, each with the thumbnail Ricordi already uses
+// (thumbnail_path, else the photo) through the shared signed-URL cache.
+// A failed read only leaves the squares without photos.
+async function readNoiRicordi(viewer, start, end) {
+  try {
+    const {data,error}=await sb.from('moments').select('id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at')
+      .eq('couple_id',viewer.couple_id).gte('moment_date',start).lt('moment_date',end)
+      .order('moment_date',{ascending:true}).order('created_at',{ascending:false});
+    if(error){console.warn('[US Noi] ricordi',error);return [];}
+    if(window.usProfile!==viewer)return [];
+    const rows=data||[];
+    const path=row=>row.thumbnail_path||row.storage_path||'';
+    const urls=typeof window.usGetSignedUrls==='function'&&rows.length?await window.usGetSignedUrls(rows.map(path)):new Map();
+    return rows.map(row=>({id:row.id,day:String(row.moment_date||'').slice(0,10),caption:row.caption||'',created_by:row.created_by||null,storage_path:row.storage_path||'',thumb:urls.get(path(row))||null}));
+  }catch(error){console.warn('[US Noi] ricordi',error);return [];}
+}
+
+// The commitments, the Eventi dates and the couple's first day for any span
+// of days (start included, end excluded): the month grid, or «Prossimi»
+// (from today to the same day next year).
+async function readNoiRange(start, end) {
+  const viewer=window.usProfile;
+  if(!viewer||!/^\d{4}-\d{2}-\d{2}$/.test(String(start||''))||!/^\d{4}-\d{2}-\d{2}$/.test(String(end||''))||end<=start)return null;
   // Profile labels come only from this couple. Missing profile metadata must
   // never hide calendar entries; use a neutral fallback instead of a fake name.
   const profileRead=async()=>{
@@ -1309,7 +1337,7 @@ async function openCalendarEntry(entryId, { inPlace = false } = {}) {
 }
 
 window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, createForIdeaDate: createCalendarEntryForIdeaDate, cancelIdeaPick: clearIdeaPick, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
-window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth,freeEvenings:noiFreeEvenings});
+window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth,readRange:readNoiRange,freeEvenings:noiFreeEvenings});
 window.openCalendarSurface = openCalendarSurface;
 window.closeCalendarDetailSheet = closeCalendarDetailSheet;
 window.closeCalendarFormSheet = closeCalendarFormSheet;

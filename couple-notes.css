@@ -1,72 +1,119 @@
-/* Note condivise V1: a Foglio over Noi (chrome from dc-popup.css .us-foglio)
-   with the notes as squares (founder, 31/10/2026): read without opening,
-   ticked on the spot, written on in place (the square widens). Foundation
-   tokens and Phosphor icons only. */
-.us-notes-overlay [hidden]{display:none!important}
+/* Note condivise → Bacheca (Noi nuova, founder 03/11/2026; tavole Main.dc.html
+   e Bacheca.dc.html). The notes are post-its: on the Noi page under the
+   calendar (#usNoiBoard) and on the whole board, a Foglio over Noi
+   (#usNotesSheet, chrome from dc-popup.css .us-foglio). Read without opening,
+   ticked on the spot, written on in place (the post-it widens). Four papers,
+   the ink always dark on them; foundation tokens and Phosphor icons only. */
+.us-notes-overlay [hidden],.us-noi-board [hidden]{display:none!important}
 .us-notes-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;--us-sheet-k:var(--us-noi)}
 .us-notes-overlay.open{display:flex}
 .us-notes-scrim{position:absolute;inset:0}
-.us-notes-overlay>.us-notes-panel{display:flex;flex-direction:column;gap:14px;min-height:min(calc(var(--us-viewport-height,100dvh) * .86),calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 8px));padding:29px 20px calc(24px + var(--us-safe-bottom))}
+.us-notes-overlay>.us-notes-panel{display:flex;flex-direction:column;gap:16px;min-height:min(calc(var(--us-viewport-height,100dvh) * .86),calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 8px));padding:29px 16px calc(24px + var(--us-safe-bottom))}
 .us-notes-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.us-notes-head .tiny{display:block;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--us-noi)}
-.us-notes-head h3{margin:2px 0 0;font:400 30px/1.08 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text)}
-#usNotesBody{display:flex;flex-direction:column;gap:12px;min-height:0}
+.us-notes-head h3{margin:0;font:400 28px/1 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text)}
+.us-notes-head small{display:block;margin-top:6px;font-size:13px;color:var(--us-color-text-2)}
+#usNotesBody{display:flex;flex-direction:column;gap:16px;min-height:0}
 .us-notes-intro{margin:0;font-size:14px;line-height:1.45;color:var(--us-color-text-2)}
-.us-notes-empty{display:grid;gap:8px;padding:18px;border:1px dashed var(--us-color-line-strong);border-radius:18px}
+.us-notes-empty{display:grid;gap:8px;padding:18px;border:1px dashed var(--us-color-line-strong);border-radius:18px;list-style:none}
 .us-notes-empty b{font:400 20px/1.2 var(--us-font-display);color:var(--us-color-text)}
 .us-notes-empty .ghost{justify-self:start}
 
-/* The squares. */
-.us-notes-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0;padding:0;list-style:none}
-.us-notes-tile{--k:var(--us-partner);position:relative;display:flex;flex-direction:column;gap:4px;aspect-ratio:1/1;min-width:0;padding:14px 14px 12px;overflow:hidden;border:1px solid var(--us-color-line);border-radius:20px;background:linear-gradient(180deg,color-mix(in srgb,var(--k) 12%,var(--us-color-elevated)),var(--us-color-elevated) 46%);color:var(--us-color-text);cursor:text;-webkit-tap-highlight-color:transparent}
-.us-notes-tile[data-who="tu"]{--k:var(--us-tu)}
-.us-notes-tile::before{content:"";position:absolute;left:14px;right:14px;top:0;height:3px;border-radius:0 0 3px 3px;background:var(--k);opacity:.85}
-.us-notes-tile-title{display:block;width:100%;min-height:0;margin:0;padding:0;border:0;background:transparent;box-shadow:none;color:var(--us-color-text);text-align:left;font:600 15px/1.25 var(--us-font-ui);cursor:text}
-.us-notes-tile-title span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.us-notes-tile-text{flex:1;min-height:0;margin:0;overflow:hidden;font-size:13.5px;line-height:1.4;color:var(--us-color-text-2);white-space:pre-line;-webkit-mask:linear-gradient(180deg,#000 70%,transparent);mask:linear-gradient(180deg,#000 70%,transparent)}
-.us-notes-tile-items{display:grid;gap:0;margin:0 0 0 -8px;padding:0;list-style:none;overflow:hidden}
-.us-notes-tile-items li{display:flex;align-items:center;gap:2px;min-width:0;min-height:26px}
-.us-notes-tile-item{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;line-height:1.3;color:var(--us-color-text)}
-.us-notes-tile-items li.is-done .us-notes-tile-item{color:var(--us-color-text-3);text-decoration:line-through}
-.us-notes-tile .us-notes-by{margin-top:auto}
-.us-notes-by{display:flex;align-items:center;gap:6px;min-width:0;font-size:11.5px;color:var(--us-color-text-3)}
-.us-notes-by span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.us-notes-by b{margin-left:auto;flex:none;font-weight:600;font-variant-numeric:tabular-nums;color:var(--us-noi)}
-.us-notes-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--us-partner)}
-.us-notes-dot[data-who="tu"]{background:var(--us-tu)}
-.us-notes-tile-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;aspect-ratio:1/1;margin:0;padding:0;border:1.5px dashed var(--us-color-line-strong);border-radius:20px;background:transparent;box-shadow:none;color:var(--us-noi);font:600 14px/1 var(--us-font-ui);--us-icon-size:26px}
-.us-notes-tile-add:active{background:color-mix(in srgb,var(--us-noi) 10%,transparent)}
+/* ---------- The board on Noi: title, the Lavagna slot (phase 2), the post-its ---------- */
+#bond .us-noi-board{display:flex;flex-direction:column;gap:14px;margin-top:28px;padding:0 2px}
+#bond .noi-canonical-page:not([data-noi-view="hub"]):not([data-noi-view="quest"])>.us-noi-board{display:none!important}
+.us-noi-board-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.us-noi-board-head h2{margin:0;font:400 28px/1 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text)}
+.us-noi-board-head small{display:block;margin-top:4px;font-size:13px;line-height:1.35;color:var(--us-color-text-2)}
+#bond .us-noi-board .us-noi-board-new{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--us-color-text);color:var(--us-inchiostro);font:700 14px/1 var(--us-font-ui);box-shadow:none;--us-icon-size:16px}
+#usNoiLavagnaSlot:empty{display:none}
+#bond .us-noi-board .us-noi-board-all{align-self:center;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text);font:600 14px/1 var(--us-font-ui);box-shadow:none;--us-icon-size:16px}
 
-/* A square being written on: full width, as tall as it needs. */
-.us-notes-tile.is-editing{grid-column:1/-1;aspect-ratio:auto;padding:16px 16px 12px;cursor:auto;border-color:color-mix(in srgb,var(--k) 46%,var(--us-color-line))}
+/* ---------- Filters of the whole board ---------- */
+.us-board-filters{display:flex;flex-wrap:wrap;gap:8px}
+.us-board-filters button{display:inline-flex;align-items:center;gap:6px;min-height:40px;margin:0;padding:0 13px;border:1px solid var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text);font:600 13px/1 var(--us-font-ui);box-shadow:none}
+.us-board-filters button[aria-pressed="true"]{border-color:transparent;background:var(--us-color-text);color:var(--us-inchiostro);font-weight:700}
+.us-board-swatch{width:12px;height:12px;border-radius:3px;background:var(--postit-paper)}
+
+/* ---------- Paper ---------- */
+.us-postit[data-color="yellow"],.us-board-swatch[data-color="yellow"],.us-postit-papers i[data-color="yellow"]{--postit-paper:#f6e27a}
+.us-postit[data-color="pink"],.us-board-swatch[data-color="pink"],.us-postit-papers i[data-color="pink"]{--postit-paper:#ffc2cf}
+.us-postit[data-color="blue"],.us-board-swatch[data-color="blue"],.us-postit-papers i[data-color="blue"]{--postit-paper:#bfe3f5}
+.us-postit[data-color="green"],.us-board-swatch[data-color="green"],.us-postit-papers i[data-color="green"]{--postit-paper:#c9ecc0}
+.us-postit[data-color="lilac"],.us-board-swatch[data-color="lilac"],.us-postit-papers i[data-color="lilac"]{--postit-paper:#f2d4f5}
+
+/* ---------- The post-its ---------- */
+.us-postits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:row dense;gap:16px 14px;margin:0;padding:4px 2px;list-style:none}
+.us-postits>li{min-width:0}
+.us-postits-loading{grid-column:1/-1}
+.us-postit{--postit-ink:#1a1020;--postit-ink-2:rgba(26,16,32,.72);--postit-line:rgba(26,16,32,.35);position:relative;display:flex;flex-direction:column;gap:7px;min-width:0;min-height:156px;padding:13px 12px 11px;overflow:hidden;border-radius:4px 4px 14px 4px;background:var(--postit-paper,#f6e27a);box-shadow:0 12px 26px rgba(0,0,0,.42);color:var(--postit-ink);transform:rotate(var(--tilt,0deg));cursor:text;-webkit-tap-highlight-color:transparent}
+.us-postit.is-pinned{cursor:auto}
+.us-postit-heading,.us-postit-title{display:block;width:100%;min-height:0;margin:0;padding:0;border:0;background:transparent;box-shadow:none;color:var(--postit-ink);text-align:left;font:600 16.5px/1.15 var(--us-font-display);cursor:text}
+.us-postit-title span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.us-postit .us-postit-text{flex:1;min-height:0;margin:0;overflow:hidden;font-size:13.5px;line-height:1.4;color:var(--postit-ink);white-space:pre-line;-webkit-mask:linear-gradient(180deg,#000 70%,transparent);mask:linear-gradient(180deg,#000 70%,transparent)}
+.us-postit-items{display:grid;gap:0;margin:0 0 0 -6px;padding:0;list-style:none;overflow:hidden}
+.us-postit-items li{display:flex;align-items:flex-start;gap:0;min-width:0;min-height:30px}
+.us-postit .us-postit-item{flex:1;min-width:0;margin:0;padding:6px 0 0;border:0;background:transparent;box-shadow:none;color:var(--postit-ink);text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:400 13.5px/1.3 var(--us-font-ui);min-height:0}
+.us-postit-idea{display:flex;flex-direction:column;flex:1;min-width:0}
+.us-postit .us-postit-idea small{font-size:11px;line-height:1.3;color:var(--postit-ink-2)}
+.us-postit-items li.is-done .us-postit-item,.us-postit-items li.is-lived .us-postit-item{text-decoration:line-through;opacity:.55}
+/* The box on paper: dark ink, ticked dark. Waiting for the partner: half. */
+.us-postit .us-notes-check span{border-color:var(--postit-ink)}
+.us-postit .us-notes-check input:checked+span{border-color:var(--postit-ink);background:var(--postit-ink)}
+.us-postit .us-notes-check input:checked+span::after{background:var(--postit-paper,#f6e27a)}
+.us-postit .is-mine .us-notes-check span::after{content:"";position:absolute;left:3px;right:3px;top:50%;height:2px;margin-top:-1px;border-radius:2px;background:var(--postit-ink)}
+.us-postit .is-partner .us-notes-check span{box-shadow:0 0 0 2px color-mix(in srgb,var(--postit-ink) 25%,transparent)}
+.us-postit .us-notes-check input:disabled{cursor:default}
+.us-postit .us-postit-add{width:100%;min-width:0;min-height:30px;margin:0;padding:2px 0!important;border:0!important;border-bottom:1px dashed var(--postit-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:var(--postit-ink);font:400 13.5px/1.3 var(--us-font-ui);outline:none}
+.us-postit .us-postit-add::placeholder{color:rgba(26,16,32,.55)}
+.us-postit .us-postit-add:focus-visible{border-bottom-style:solid!important;border-bottom-color:var(--postit-ink)!important}
+.us-postit .us-postit-more{align-self:flex-start;min-height:30px;margin:0;padding:0;border:0;background:transparent;box-shadow:none;color:var(--postit-ink);font:700 12.5px/1 var(--us-font-ui);text-decoration:underline}
+.us-postit-by{display:flex;align-items:center;gap:6px;min-width:0;margin-top:auto;font-size:12px;font-weight:600;color:var(--postit-ink-2)}
+.us-postit-by span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.us-postit-by b{margin-left:auto;flex:none;font-weight:700;font-variant-numeric:tabular-nums}
+.us-notes-dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--us-partner)}
+.us-notes-dot[data-who="tu"]{background:var(--us-tu)}
+.us-notes-dot[data-who="noi"]{background:var(--us-noi)}
+.us-postit-new{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;min-height:156px;margin:0;padding:0;border:1.5px dashed var(--us-color-line-strong);border-radius:6px;background:transparent;box-shadow:none;color:var(--us-color-text-2);font:600 14px/1 var(--us-font-ui);--us-icon-size:22px}
+.us-postit-new:active{background:color-mix(in srgb,var(--us-noi) 10%,transparent)}
+:is(#usNoiBoard,#usNotesSheet) button:focus-visible,:is(#usNoiBoard,#usNotesSheet) input:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
+
+/* ---------- A post-it being written on: full width, straight, as tall as it needs ---------- */
+.us-postit.is-editing{grid-column:1/-1;min-height:0;padding:16px 15px 14px;transform:none;cursor:auto;box-shadow:0 16px 34px rgba(0,0,0,.5)}
 .us-notes-editor{display:flex;flex-direction:column;gap:8px}
-.us-notes-notice{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0;padding:10px 14px;border-radius:14px;background:color-mix(in srgb,var(--us-noi) 14%,transparent);color:var(--us-color-text);font-size:14px;line-height:1.4}
+.us-notes-notice{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0;padding:10px 14px;border-radius:12px;background:rgba(26,16,32,.1);color:var(--postit-ink);font-size:14px;line-height:1.4}
 .us-notes-notice .ghost{min-height:36px;padding:0 12px;font-size:13px}
 /* Plain paper: the app's filled field style does not apply here. */
-#usNotesSheet :is(.us-notes-title,.us-notes-text,.us-notes-item-text){width:100%;margin:0;border:0!important;border-radius:0!important;background:transparent!important;color:var(--us-color-text);box-shadow:none!important;outline:none}
-#usNotesSheet .us-notes-title{min-height:40px;padding:2px 0!important;font:400 24px/1.2 var(--us-font-display)}
-#usNotesSheet .us-notes-text{min-height:48px;padding:2px 0!important;resize:none;field-sizing:content;font:400 16px/1.5 var(--us-font-ui)}
-#usNotesSheet :is(.us-notes-title,.us-notes-text,.us-notes-item-text)::placeholder{color:var(--us-color-text-3)}
-#usNotesSheet :is(.us-notes-title,.us-notes-text):focus-visible{box-shadow:inset 0 -1px 0 var(--us-noi)!important}
+.us-postit :is(.us-notes-title,.us-notes-text,.us-notes-item-text){width:100%;margin:0;border:0!important;border-radius:0!important;background:transparent!important;color:var(--postit-ink);box-shadow:none!important;outline:none}
+.us-postit .us-notes-title{min-height:40px;padding:2px 0!important;font:600 20px/1.2 var(--us-font-display)}
+.us-postit .us-notes-text{min-height:48px;padding:2px 0!important;resize:none;field-sizing:content;font:400 15px/1.45 var(--us-font-ui)}
+.us-postit :is(.us-notes-title,.us-notes-text,.us-notes-item-text)::placeholder{color:rgba(26,16,32,.55)}
+.us-postit :is(.us-notes-title,.us-notes-text):focus-visible{box-shadow:inset 0 -1px 0 var(--postit-ink)!important}
 .us-notes-items{display:grid;margin:0;padding:0;list-style:none}
-.us-notes-item{display:flex;align-items:center;gap:10px;min-height:46px;border-top:1px solid var(--us-color-line)}
-.us-notes-item:last-child{border-bottom:1px solid var(--us-color-line)}
+.us-notes-item{display:flex;align-items:center;gap:10px;min-height:46px;border-top:1px solid var(--postit-line)}
+.us-notes-item:last-child{border-bottom:1px solid var(--postit-line)}
 .us-notes-check{position:relative;flex:none;display:grid;place-items:center;width:44px;height:44px;margin-left:-10px;cursor:pointer}
-.us-notes-check.is-small{width:30px;height:26px;margin-left:0}
+.us-notes-check.is-small{width:30px;height:30px;margin-left:0}
 .us-notes-check input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
-.us-notes-check span{position:relative;width:22px;height:22px;border:1.5px solid var(--us-color-line-strong);border-radius:7px;background:transparent;transition:background-color .16s ease,border-color .16s ease}
-.us-notes-check.is-small span{width:17px;height:17px;border-radius:5px}
-.us-notes-check input:checked+span{border-color:var(--us-noi);background:var(--us-noi)}
-.us-notes-check input:checked+span::after{content:"";position:absolute;inset:3px;background:var(--us-inchiostro);-webkit-mask:url("/assets/icons/phosphor/check-bold.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/check-bold.svg") center/contain no-repeat}
+.us-notes-check span{position:relative;width:20px;height:20px;border:1.6px solid var(--postit-ink,var(--us-color-line-strong));border-radius:5px;background:transparent;transition:background-color .16s ease,border-color .16s ease}
+.us-notes-check.is-small span{width:16px;height:16px;border-radius:4px}
+.us-notes-check input:checked+span{border-color:var(--postit-ink,var(--us-noi));background:var(--postit-ink,var(--us-noi))}
+.us-notes-check input:checked+span::after{content:"";position:absolute;inset:3px;background:var(--postit-paper,var(--us-inchiostro));-webkit-mask:url("/assets/icons/phosphor/check-bold.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/check-bold.svg") center/contain no-repeat}
 .us-notes-check.is-small input:checked+span::after{inset:2px}
 .us-notes-check input:focus-visible+span{outline:2px solid var(--us-noi);outline-offset:2px}
-#usNotesSheet .us-notes-item-text{flex:1;min-width:0;min-height:44px;padding:0!important;font:400 16px/1.3 var(--us-font-ui)}
-.us-notes-item.is-done .us-notes-item-text{color:var(--us-color-text-3);text-decoration:line-through}
-.us-notes-item-x{flex:none;display:grid;place-items:center;width:40px;height:40px;margin-right:-8px;border:0;border-radius:50%;background:transparent;color:var(--us-color-text-3);--us-icon-size:16px}
-.us-notes-add-item{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0;border:0;background:transparent;color:var(--us-noi);font:600 15px/1 var(--us-font-ui);--us-icon-size:18px}
+.us-postit .us-notes-item-text{flex:1;min-width:0;min-height:44px;padding:0!important;font:400 15px/1.3 var(--us-font-ui)}
+.us-notes-item.is-done .us-notes-item-text{opacity:.55;text-decoration:line-through}
+.us-notes-item-x{flex:none;display:grid;place-items:center;width:40px;height:40px;margin-right:-8px;border:0;border-radius:50%;background:transparent;color:var(--postit-ink-2);--us-icon-size:16px}
+.us-postit .us-notes-add-item{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0;border:0;background:transparent;box-shadow:none;color:var(--postit-ink);font:600 14px/1 var(--us-font-ui);--us-icon-size:18px}
+/* «Carta»: the four papers, the chosen one ringed in ink. */
+.us-postit-papers{display:flex;align-items:center;gap:2px}
+.us-postit-papers>span{margin-right:4px;font-size:12px;font-weight:700;color:var(--postit-ink-2)}
+.us-postit .us-postit-papers button{display:grid;place-items:center;width:40px;height:40px;min-height:0;margin:0;padding:0;border:0;background:transparent;box-shadow:none}
+.us-postit-papers i{display:block;width:24px;height:24px;border-radius:6px;background:var(--postit-paper);box-shadow:inset 0 0 0 1px rgba(26,16,32,.2)}
+.us-postit-papers button[aria-pressed="true"] i{box-shadow:0 0 0 2px var(--postit-paper),0 0 0 4px var(--postit-ink)}
 .us-notes-foot{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.us-notes-meta,.us-notes-status{font-size:12px;color:var(--us-color-text-3)}
+.us-notes-meta,.us-notes-status{font-size:12px;color:var(--postit-ink-2)}
 .us-notes-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:4px}
-.us-notes-delete{display:inline-flex;align-items:center;gap:6px;min-height:40px;margin-left:-10px;padding:0 10px;border:0;border-radius:999px;background:transparent;color:var(--us-color-danger,#e8837a);font:600 14px/1 var(--us-font-ui);--us-icon-size:16px}
-.us-notes-done{min-height:40px;margin-left:auto;padding:0 20px;border:0;border-radius:999px;background:var(--us-noi);color:var(--us-inchiostro);font:600 15px/1 var(--us-font-ui)}
+.us-postit .us-notes-delete{display:inline-flex;align-items:center;gap:6px;min-height:40px;margin-left:-10px;padding:0 10px;border:0;border-radius:999px;background:transparent;box-shadow:none;color:#8a1f2b;font:600 14px/1 var(--us-font-ui);--us-icon-size:16px}
+.us-postit .us-notes-done{min-height:40px;margin-left:auto;padding:0 20px;border:0;border-radius:999px;background:var(--postit-ink);color:var(--postit-paper);box-shadow:none;font:600 15px/1 var(--us-font-ui)}
+@media (max-width:340px){.us-postits{gap:14px 10px}.us-postit{padding:11px 10px 10px}.us-postit-papers button{width:36px;height:36px}}
 @media (prefers-reduced-motion:reduce){.us-notes-check span{transition:none}}

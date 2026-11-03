@@ -4,14 +4,25 @@
 // saves the note you have open (D8). The editor's fields are built once and
 // never rebuilt while typing, so the keyboard keeps its state.
 // Spec: docs/missions/note-condivise-v1.md.
+//
+// Noi nuova (founder, 03/11/2026, docs/DECISIONS.md; tavole Main.dc.html e
+// Bacheca.dc.html): the notes are post-its. On the Noi page, under the
+// calendar, the fixed «Da vivere» post-it (the couple's ideas, app.js) and at
+// most six post-its, written and ticked on the spot; «Tutti i post-it (n)»
+// opens the whole board (the Foglio #usNotesSheet) with the colour filters.
+// Every post-it has its paper (yellow, pink, blue, green) and its author.
 (function(global,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports){module.exports=api;return;}
   global.UsCoupleNotes=api;api.install(global);
 })(typeof window!=='undefined'?window:globalThis,function(){
 'use strict';
-const COLS='id,couple_id,title,body,items,created_by,updated_by,created_at,updated_at,revision';
+const COLS='id,couple_id,title,body,items,color,created_by,updated_by,created_at,updated_at,revision';
 const LIMITS=Object.freeze({title:80,body:4000,items:100,item:200});
+const COLORS=Object.freeze(['yellow','pink','blue','green']);
+// The paper in the filters, and on the swatches of the post-it being written.
+const PAPER=Object.freeze({yellow:['Giallo','Carta gialla'],pink:['Rosa','Carta rosa'],blue:['Azzurro','Carta azzurra'],green:['Verde','Carta verde']});
+const ON_NOI=6;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const romeDay=at=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome'}).format(new Date(at));}catch(_){return '';}};
 
@@ -40,25 +51,51 @@ function summary(n){
   const preview=line||list.filter(i=>!i.done).map(i=>i.text.trim()).join(', ')||list.map(i=>i.text.trim()).join(', ');
   return {preview:preview.length>90?`${preview.slice(0,89)}…`:preview,progress:list.length?`${done} di ${list.length}`:''};
 }
+// A paper the table knows, yellow otherwise (the default of the column).
+const colorOf=n=>COLORS.includes(n?.color)?n.color:'yellow';
 // What goes to the server: the lengths the table accepts; empty list items
 // are dropped when the note is closed (keep:false).
 function payload(n,{keep=true}={}){
   const list=items(n).slice(0,LIMITS.items).map(i=>({id:String(i.id||newId()).slice(0,40),text:i.text.slice(0,LIMITS.item),done:Boolean(i.done)}));
-  return {title:String(n?.title||'').slice(0,LIMITS.title),body:String(n?.body||'').slice(0,LIMITS.body),items:keep?list:list.filter(i=>i.text.trim())};
+  return {title:String(n?.title||'').slice(0,LIMITS.title),body:String(n?.body||'').slice(0,LIMITS.body),items:keep?list:list.filter(i=>i.text.trim()),color:colorOf(n)};
 }
 function newId(){return Math.random().toString(36).slice(2,10)||'i';}
 function sortNotes(list){return [...list].sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));}
+// On Noi: the most recent post-its, at most six; the others on the board.
+function boardNotes(list,{max=ON_NOI}={}){
+  const sorted=sortNotes(list||[]);
+  return {shown:sorted.slice(0,max),total:sorted.length,more:sorted.length>max};
+}
+function byColor(list,color){return color&&color!=='all'?(list||[]).filter(n=>colorOf(n)===color):[...(list||[])];}
+// Each post-it leans a little (-2°…2°), always the same way for the same note.
+function tilt(id){
+  let h=0;
+  for(const c of String(id||''))h=(h*31+c.charCodeAt(0))>>>0;
+  return (h%9-4)/2;
+}
+// «Da vivere»: the ideas still to live, each with who said it was lived
+// (todo, mine: I said it, partner: they said it), then the last ones lived.
+function ideaLines(snap,me,{limit=Infinity,lived=2}={}){
+  if(!snap?.loaded)return {lines:[],hidden:0};
+  const state=i=>i.status==='lived'?'lived':!i.lived_proposed_by?'todo':i.lived_proposed_by===me?'mine':'partner';
+  const active=(snap.active||[]).map(i=>({id:i.id,title:i.title,state:state(i)}));
+  const all=snap.lived||[];
+  const done=[...all].sort((a,b)=>String(b.completed_at||'').localeCompare(String(a.completed_at||''))).slice(0,lived).map(i=>({id:i.id,title:i.title,state:'lived'}));
+  const lines=[...active,...done].slice(0,limit);
+  return {lines,hidden:active.length+all.length-lines.length};
+}
 
 function install(w){
-  const d=w.document,$=id=>d.getElementById(id),root=$('usNotesSheet');
-  if(!root)return;
-  const body=$('usNotesBody');
-  let notes=[],loaded=false,owner='',token=0,view='list';
-  let editing=null,dirty=false,saving=false,again=false,timer=0,remote=null,noticeTimer=0,fields=null;
+  const d=w.document,$=id=>d.getElementById(id),root=$('usNotesSheet'),page=$('usNoiBoard');
+  if(!root&&!page)return;
+  const body=$('usNotesBody'),grid=$('usNoiBoardGrid'),allButton=$('usNoiBoardAll');
+  let notes=[],loaded=false,loadedAt=0,owner='',token=0,filter='all';
+  let editing=null,editHost='page',dirty=false,saving=false,again=false,timer=0,remote=null,noticeTimer=0,fields=null;
   const me=()=>w.usProfile?.id||'';
   const key=()=>w.usProfile?`${w.usProfile.id}:${w.usProfile.couple_id}`:'';
-  const opened=()=>root.classList.contains('open');
+  const opened=()=>Boolean(root?.classList.contains('open'));
   const db=()=>typeof sb!=='undefined'?sb:null;
+  const hostEl=h=>h==='sheet'?body:grid;
   const nameOf=id=>{
     if(!id)return '';
     if(id===me())return 'Tu';
@@ -67,43 +104,115 @@ function install(w){
       return p?(w.usIdentity?.()?.nameForRole?.(p.role)||'La tua persona'):'';
     }catch(_){return '';}
   };
-  const byLine=n=>[nameOf(n.updated_by),when(n.updated_at)].filter(Boolean).join(' · ');
+  const partnerName=()=>{try{return w.usIdentity?.()?.partnerName||'La tua persona';}catch(_){return 'La tua persona';}};
+  // The author at the bottom of the post-it, and when it last changed.
+  const authorOf=n=>n.created_by||n.updated_by||'';
+  const byLine=n=>[nameOf(authorOf(n)),when(n.updated_at)].filter(Boolean).join(' · ');
 
-  // ---------------------------------------------------------------- grid
-  // Founder, 31/10/2026: every note is a square you read without opening it,
-  // tick on the spot and write on by tapping it (it widens in place).
-  // What fits in a square: three items, the ones still to do first; the
-  // count at the foot ("1 di 7") says there are more.
-  const SHOWN=3;
+  // ---------------------------------------------------------------- post-its
+  // Founder, 31/10/2026: every note is read without opening it, ticked on
+  // the spot and written on by tapping it (it widens in place). What fits on
+  // a post-it: four items, the ones still to do first; the count at the foot
+  // ("1 di 7") says there are more. A list also takes a new item at the foot.
+  const SHOWN=4;
   function tile(n){
-    const s=summary(n),who=n.updated_by===me()?'tu':'partner',title=String(n.title||'').trim();
+    const s=summary(n),author=authorOf(n),who=author&&author===me()?'tu':'partner',title=String(n.title||'').trim();
     const list=items(n).filter(i=>i.text.trim()),shown=[...list.filter(i=>!i.done),...list.filter(i=>i.done)].slice(0,SHOWN);
     const content=list.length
-      ?`<ul class="us-notes-tile-items">${shown.map(i=>`<li class="${i.done?'is-done':''}"><label class="us-notes-check is-small"><input type="checkbox" data-tick="${esc(i.id)}"${i.done?' checked':''} aria-label="${esc(i.text)}"><span aria-hidden="true"></span></label><span class="us-notes-tile-item" data-focus="item:${esc(i.id)}" translate="no">${esc(i.text)}</span></li>`).join('')}</ul>`
-      :`<p class="us-notes-tile-text" data-focus="text" translate="no">${esc(String(n.body||'').trim())}</p>`;
-    return `<li class="us-notes-tile" data-note-id="${esc(n.id)}" data-who="${who}">
-      <button type="button" class="us-notes-tile-title" data-focus="title" aria-label="Scrivi sulla nota ${esc(title||s.preview||'senza titolo')}"><span translate="no">${esc(title||'Nota')}</span></button>
+      ?`<ul class="us-postit-items">${shown.map(i=>`<li class="${i.done?'is-done':''}"><label class="us-notes-check is-small"><input type="checkbox" data-tick="${esc(i.id)}"${i.done?' checked':''} aria-label="${esc(i.text)}"><span aria-hidden="true"></span></label><span class="us-postit-item" data-focus="item:${esc(i.id)}" translate="no">${esc(i.text)}</span></li>`).join('')}</ul>
+        <input type="text" class="us-postit-add" data-add-item maxlength="${LIMITS.item}" placeholder="Aggiungi…" aria-label="Aggiungi a ${esc(title||'questo post-it')}" enterkeyhint="done">`
+      :`<p class="us-postit-text" data-focus="text" translate="no">${esc(String(n.body||'').trim())}</p>`;
+    return `<li class="us-postit" data-note-id="${esc(n.id)}" data-color="${colorOf(n)}" data-who="${who}" style="--tilt:${tilt(n.id)}deg">
+      ${title?`<button type="button" class="us-postit-title" data-focus="title" aria-label="Scrivi sul post-it ${esc(title)}"><span translate="no">${esc(title)}</span></button>`:''}
       ${content}
-      <small class="us-notes-by"><i class="us-notes-dot" data-who="${who}" aria-hidden="true"></i><span>${esc(byLine(n))}</span>${s.progress?`<b>${esc(s.progress)}</b>`:''}</small>
+      <small class="us-postit-by"><i class="us-notes-dot" data-who="${who}" aria-hidden="true"></i><span>${esc(byLine(n))}</span>${s.progress?`<b>${esc(s.progress)}</b>`:''}</small>
     </li>`;
   }
-  function paintList(){
-    view=editing?'editor':'list';
-    if(!loaded){body.innerHTML='<div class="us-skeleton-rows" role="status"><span class="us-sr">Carico le note…</span><i class="us-skeleton"></i><i class="us-skeleton"></i></div>';return;}
-    const add='<li><button type="button" class="us-notes-tile-add" data-notes-new><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Nuova nota</span></button></li>';
-    const slot='<li class="us-notes-tile is-editing" data-editor></li>';
-    const intro=notes.length||editing?'':'<p class="us-notes-intro">Spesa, valigia, film da vedere: scrivetele qui, le vedete tutti e due.</p>';
-    body.innerHTML=`${intro}<ul class="us-notes-grid">${editing&&!editing.id?slot:add}${sortNotes(notes).map(n=>editing?.id===n.id?slot:tile(n)).join('')}</ul>`;
-    fields=null;
+  // «Da vivere», fixed on top: the ideas (app.js, UsDaVivere), ticked when
+  // lived; a new idea at the foot. Tapping an idea opens its detail.
+  function ideaLine(l){
+    const note=l.state==='mine'?`aspetta ${partnerName()}`:l.state==='partner'?`${partnerName()} dice che l’avete vissuta`:'';
+    return `<li class="is-${l.state}"><label class="us-notes-check is-small"><input type="checkbox" data-idea="${esc(l.id)}" data-state="${l.state}"${l.state==='lived'?' checked disabled':''} aria-label="${esc(l.title)}: vissuta"><span aria-hidden="true"></span></label><span class="us-postit-idea"><button type="button" class="us-postit-item" data-idea-open="${esc(l.id)}" translate="no">${esc(l.title)}</button>${note?`<small>${esc(note)}</small>`:''}</span></li>`;
+  }
+  function daVivere(host){
+    const snap=w.UsDaVivere?.snapshot?.();
+    if(!snap)return '';
+    const onNoi=host==='page';
+    const {lines,hidden}=ideaLines(snap,me(),onNoi?{limit:5,lived:1}:{lived:Infinity});
+    const list=!snap.loaded
+      ?`<p class="us-postit-text">${snap.error?'Non riesco a caricare le idee.':'Carico…'}</p>`
+      :lines.length?`<ul class="us-postit-items">${lines.map(ideaLine).join('')}</ul>`:'<p class="us-postit-text">Le cose da fare insieme, un giorno.</p>';
+    const more=onNoi&&hidden?`<button type="button" class="us-postit-more" data-board-all>e altre ${hidden}</button>`:'';
+    return `<li class="us-postit is-pinned" data-davivere data-color="lilac">
+      <h3 class="us-postit-heading">Da vivere</h3>
+      ${list}${more}
+      <input type="text" class="us-postit-add" data-davivere-add maxlength="120" placeholder="Aggiungi…" aria-label="Aggiungi a Da vivere" enterkeyhint="done">
+      <small class="us-postit-by"><i class="us-notes-dot" data-who="noi" aria-hidden="true"></i><span>Insieme · fisso in cima</span></small>
+    </li>`;
+  }
+  const addTile='<li><button type="button" class="us-postit-new" data-notes-new><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Nuovo post-it</span></button></li>';
+  const slot=()=>`<li class="us-postit is-editing" data-editor data-color="${colorOf(editing)}"></li>`;
+  const skeleton='<li class="us-postits-loading"><div class="us-skeleton-rows" role="status"><span class="us-sr">Carico la bacheca…</span><i class="us-skeleton"></i><i class="us-skeleton"></i></div></li>';
+  // A repaint keeps the field you were typing in (a new item, a new idea).
+  function keepTyping(paint){
+    const a=d.activeElement,kind=a?.matches?.('[data-add-item]')?'item':a?.matches?.('[data-davivere-add]')?'idea':'';
+    const id=kind==='item'?a.closest('[data-note-id]')?.dataset.noteId:'',value=kind?a.value:'',inSheet=Boolean(kind&&root?.contains(a));
+    paint();
+    if(!kind)return;
+    const scope=inSheet?body:grid;
+    const next=kind==='idea'?scope?.querySelector('[data-davivere-add]'):scope?.querySelector(`.us-postit[data-note-id="${CSS.escape(id)}"] [data-add-item]`);
+    if(next){next.value=value;next.focus({preventScroll:true});}
+  }
+  function paintPage(){
+    if(!grid)return;
+    if(!loaded){grid.innerHTML=daVivere('page')+skeleton;if(allButton)allButton.hidden=true;return;}
+    const writingNew=editHost==='page'&&editing&&!editing.id;
+    const board=boardNotes(notes,{max:ON_NOI-(writingNew?1:0)});
+    grid.innerHTML=daVivere('page')+(writingNew?slot():'')+board.shown.map(n=>editHost==='page'&&editing?.id===n.id?slot():tile(n)).join('')+addTile;
+    countAll();
+    const host=grid.querySelector('[data-editor]');
+    if(host)mountEditor(host);
+  }
+  function countAll(){
+    if(!allButton)return;
+    allButton.hidden=!(loaded&&notes.length>ON_NOI);
+    const label=allButton.querySelector('span');
+    if(label)label.textContent=`Tutti i post-it (${notes.length})`;
+  }
+  function paintSheet(){
+    if(!body)return;
+    const count=$('usNotesCount');
+    if(count)count.textContent=loaded?`${notes.length} post-it · i più recenti in alto`:'';
+    if(!loaded){body.innerHTML=`<ul class="us-postits">${skeleton}</ul>`;return;}
+    const writingNew=editHost==='sheet'&&editing&&!editing.id;
+    const list=sortNotes(byColor(notes,filter));
+    const filters=`<div class="us-board-filters" role="group" aria-label="Filtra per colore">${['all',...COLORS].map(c=>`<button type="button" data-board-filter="${c}" aria-pressed="${filter===c}">${c==='all'?'Tutti':`<span class="us-board-swatch" data-color="${c}" aria-hidden="true"></span>${PAPER[c][0]}`}</button>`).join('')}</div>`;
+    const empty=!list.length&&filter!=='all'?'<p class="us-notes-intro">Nessun post-it di questa carta.</p>':'';
+    body.innerHTML=`${filters}<ul class="us-postits is-all">${filter==='all'?daVivere('sheet'):''}${writingNew?slot():addTile}${list.map(n=>editHost==='sheet'&&editing?.id===n.id?slot():tile(n)).join('')}</ul>${empty}`;
     const host=body.querySelector('[data-editor]');
     if(host)mountEditor(host);
   }
-  // Another note changed while one is open: only its square is redrawn.
-  function repaintTile(id){
-    const li=body.querySelector(`.us-notes-tile[data-note-id="${CSS.escape(id)}"]`),n=notes.find(x=>x.id===id);
-    if(li&&!li.classList.contains('is-editing'))n?li.outerHTML=tile(n):li.remove();
+  // A host being written on is never rebuilt: only its other post-its are.
+  function paint(){
+    fields=editing?fields:null;
+    if(!(editing&&editHost==='page'))keepTyping(paintPage);
+    if(opened()&&!(editing&&editHost==='sheet'))keepTyping(paintSheet);
+    countAll();
   }
-  // Ticked on the square, saved at once.
+  function repaintTile(id){
+    const n=notes.find(x=>x.id===id);
+    for(const scope of [grid,body]){
+      const li=scope?.querySelector(`.us-postit[data-note-id="${CSS.escape(id)}"]`);
+      if(li&&!li.classList.contains('is-editing'))keepTyping(()=>{n?li.outerHTML=tile(n):li.remove();});
+    }
+  }
+  function repaintIdeas(){
+    for(const [scope,host] of [[grid,'page'],[body,'sheet']]){
+      const li=scope?.querySelector('[data-davivere]');
+      if(li)keepTyping(()=>{li.outerHTML=daVivere(host)||'';});
+    }
+  }
+  // Ticked on the post-it, saved at once.
   async function tick(noteId,itemId,done){
     const n=notes.find(x=>x.id===noteId),client=db();
     const item=n&&items(n).find(i=>i.id===itemId);
@@ -111,6 +220,16 @@ function install(w){
     item.done=done;repaintTile(noteId);
     const {data,error}=await client.from('couple_notes').update({items:payload(n).items}).eq('id',noteId).select(COLS).maybeSingle();
     if(error||!data){console.warn('[US Note] tick',error);item.done=!done;repaintTile(noteId);return;}
+    notes=notes.map(x=>x.id===data.id?data:x);repaintTile(noteId);
+  }
+  // A new item written at the foot of a list, saved at once.
+  async function addItem(noteId,text){
+    const n=notes.find(x=>x.id===noteId),client=db(),clean=String(text||'').trim().slice(0,LIMITS.item);
+    if(!n||!clean||!client||items(n).length>=LIMITS.items)return;
+    const next={...n,items:[...items(n),{id:newId(),text:clean,done:false}]};
+    notes=notes.map(x=>x.id===noteId?next:x);repaintTile(noteId);
+    const {data,error}=await client.from('couple_notes').update({items:payload(next).items}).eq('id',noteId).select(COLS).maybeSingle();
+    if(error||!data){console.warn('[US Note] add item',error);notes=notes.map(x=>x.id===noteId?n:x);repaintTile(noteId);w.toast?.('Non salvato. Riprova.');return;}
     notes=notes.map(x=>x.id===data.id?data:x);repaintTile(noteId);
   }
   async function load(){
@@ -121,12 +240,25 @@ function install(w){
     if(mine!==token||key()!==k)return;
     if(error){
       console.warn('[US Note]',error);
-      if(!loaded&&view==='list')body.innerHTML='<div class="us-notes-empty"><b>Non riesco a caricare le note</b><button type="button" class="ghost" data-notes-retry>Riprova</button></div>';
+      if(!loaded){
+        const failed='<li class="us-notes-empty"><b>Non riesco a caricare la bacheca</b><button type="button" class="ghost" data-notes-retry>Riprova</button></li>';
+        if(grid)grid.innerHTML=daVivere('page')+failed;
+        if(body&&opened())body.innerHTML=`<ul class="us-postits">${failed}</ul>`;
+      }
       return;
     }
-    notes=data||[];loaded=true;owner=k;
-    if(view==='list')paintList();
-    else notes.forEach(n=>repaintTile(n.id));
+    notes=data||[];loaded=true;loadedAt=Date.now();owner=k;
+    if(!editing)paint();
+    else{paint();notes.forEach(n=>repaintTile(n.id));}
+  }
+  // Noi open: the board is read once a minute at most (Realtime keeps it
+  // fresh meanwhile), and the ideas once.
+  function ensure({force=false}={}){
+    if(!key())return;
+    if(owner&&owner!==key())reset();
+    if(force||!loaded||Date.now()-loadedAt>60000)load();
+    const ideas=w.UsDaVivere?.snapshot?.();
+    if(ideas&&!ideas.loaded)w.UsDaVivere?.hydrate?.();
   }
 
   // ---------------------------------------------------------------- editor
@@ -138,43 +270,52 @@ function install(w){
     </li>`;
   }
   function paintItems(){if(fields)fields.list.innerHTML=editing.items.map(itemRow).join('');}
-  // The open note: its square widens in place and takes the fields. Built
-  // once per opening, never while typing.
+  function paintPaper(){
+    if(!fields)return;
+    const c=colorOf(editing);
+    fields.host.dataset.color=c;
+    fields.papers.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.paper===c)));
+  }
+  // The open post-it: it widens in place and takes the fields. Built once
+  // per opening, never while typing.
   function mountEditor(host){
     host.dataset.noteId=editing.id||'';
     host.innerHTML=`<div class="us-notes-editor">
       <p class="us-notes-notice" hidden><span></span><button type="button" class="ghost" data-notes-take hidden>Carica la sua versione</button></p>
       <input type="text" class="us-notes-title" maxlength="${LIMITS.title}" placeholder="Titolo" aria-label="Titolo" enterkeyhint="next">
-      <textarea class="us-notes-text" maxlength="${LIMITS.body}" rows="2" placeholder="Scrivi qualcosa…" aria-label="Testo della nota"></textarea>
+      <textarea class="us-notes-text" maxlength="${LIMITS.body}" rows="2" placeholder="Scrivi qualcosa…" aria-label="Testo del post-it"></textarea>
       <ul class="us-notes-items" aria-label="Lista"></ul>
       <button type="button" class="us-notes-add-item" data-notes-add-item><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Aggiungi una voce</span></button>
+      <div class="us-postit-papers" role="group" aria-label="Carta"><span>Carta</span>${COLORS.map(c=>`<button type="button" data-paper="${c}" aria-label="${PAPER[c][1]}" aria-pressed="false"><i data-color="${c}"></i></button>`).join('')}</div>
       <div class="us-notes-foot"><small class="us-notes-meta"></small><small class="us-notes-status" role="status" aria-live="polite"></small></div>
       <div class="us-notes-actions"><button type="button" class="us-notes-delete" data-notes-delete hidden><span class="us-icon" data-us-icon="trash" aria-hidden="true"></span><span>Elimina</span></button><button type="button" class="us-notes-done" data-notes-done>Fatto</button></div>
     </div>`;
     const ed=host.firstElementChild;
-    fields={title:ed.querySelector('.us-notes-title'),text:ed.querySelector('.us-notes-text'),list:ed.querySelector('.us-notes-items'),
+    fields={host,title:ed.querySelector('.us-notes-title'),text:ed.querySelector('.us-notes-text'),list:ed.querySelector('.us-notes-items'),papers:[...ed.querySelectorAll('[data-paper]')],
       status:ed.querySelector('.us-notes-status'),notice:ed.querySelector('.us-notes-notice'),meta:ed.querySelector('.us-notes-meta'),del:ed.querySelector('[data-notes-delete]')};
     fields.title.value=editing.title||'';fields.text.value=editing.body||'';
-    paintItems();paintMeta();
+    paintItems();paintMeta();paintPaper();
   }
-  // focus: "title", "text" or "item:<id>", where the square was touched.
-  async function openEditor(note,focus='title'){
+  // focus: "title", "text" or "item:<id>", where the post-it was touched;
+  // host: the page or the whole board, where it was touched.
+  async function openEditor(note,focus='title',host='page'){
     if(editing&&!await closeEditor({repaint:false}))return;
     clearTimeout(timer);dirty=false;remote=null;
-    editing=note?{...note,items:items(note).map(i=>({...i}))}:{id:null,title:'',body:'',items:[],revision:0,updated_by:me()};
-    paintList();
+    editing=note?{...note,items:items(note).map(i=>({...i}))}:{id:null,title:'',body:'',items:[],color:'yellow',revision:0,updated_by:me()};
+    editHost=host;fields=null;
+    if(host==='sheet')paintSheet();else paintPage();
     if(!fields)return;
     const target=focus.startsWith('item:')?fields.list.querySelector(`[data-item-id="${CSS.escape(focus.slice(5))}"] .us-notes-item-text`):focus==='text'?fields.text:fields.title;
     const el=target||fields.title;
     el.focus({preventScroll:true});
     if(typeof el.setSelectionRange==='function'){const end=el.value.length;try{el.setSelectionRange(end,end);}catch(_){}}
-    el.closest('.us-notes-tile')?.scrollIntoView?.({block:'nearest',behavior:w.UsUiFoundation?.isReducedMotion?.()?'auto':'smooth'});
+    el.closest('.us-postit')?.scrollIntoView?.({block:'nearest',behavior:w.UsUiFoundation?.isReducedMotion?.()?'auto':'smooth'});
   }
   function paintMeta(){
     if(!fields)return;
     fields.del.hidden=!editing.id;
     const who=nameOf(editing.updated_by),at=when(editing.updated_at);
-    fields.meta.textContent=!editing.id||!at?'':who?`Modificata da ${who==='Tu'?'te':who} · ${at}`:`Modificata ${at}`;
+    fields.meta.textContent=!editing.id||!at?'':who?`Modificato da ${who==='Tu'?'te':who} · ${at}`:`Modificato ${at}`;
   }
   const status=t=>{if(fields)fields.status.textContent=t;};
   function notice(text,{take=false,ttl=0}={}){
@@ -205,11 +346,12 @@ function install(w){
       if(!res)res=await client.from('couple_notes').insert({...data,couple_id:w.usProfile.couple_id}).select(COLS).single();
       if(res.error)throw res.error;
       const row=res.data;
-      if(editing===target){Object.assign(editing,{id:row.id,revision:row.revision,updated_by:row.updated_by,updated_at:row.updated_at,created_by:row.created_by});paintMeta();status('Salvata');}
+      if(editing===target){Object.assign(editing,{id:row.id,revision:row.revision,updated_by:row.updated_by,updated_at:row.updated_at,created_by:row.created_by});if(fields)fields.host.dataset.noteId=row.id;paintMeta();status('Salvato');}
       notes=[row,...notes.filter(n=>n.id!==row.id)];
+      countAll();
     }catch(error){
       console.warn('[US Note] save',error);
-      dirty=true;status('Non salvata, riprovo…');
+      dirty=true;status('Non salvato, riprovo…');
       timer=setTimeout(save,4000);
     }finally{
       saving=false;
@@ -225,11 +367,11 @@ function install(w){
     dirty=false;remote=null;clearTimeout(timer);
     if(!fields)return;
     fields.title.value=row.title||'';fields.text.value=row.body||'';
-    paintItems();paintMeta();
+    paintItems();paintMeta();paintPaper();
   }
   // Closing waits for the save; offline the note stays open, nothing lost.
   async function closeEditor({repaint=true}={}){
-    if(!editing){if(repaint)paintList();return true;}
+    if(!editing){if(repaint)paint();return true;}
     syncFields();
     const target=editing;
     // Empty list items go when the note is closed.
@@ -237,22 +379,45 @@ function install(w){
     if(kept.length!==items(target).length){target.items=kept;dirty=true;}
     for(let i=0;saving&&i<100;i++)await new Promise(r=>setTimeout(r,50));
     if(isEmpty(target)&&target.id){if(!await removeNote(target.id,{ask:false}))return false;}
-    else{await save({keep:false});if(dirty){status('Non salvata: controlla la connessione');return false;}}
-    editing=null;fields=null;view='list';
-    if(repaint)paintList();
+    else{await save({keep:false});if(dirty){status('Non salvato: controlla la connessione');return false;}}
+    editing=null;fields=null;
+    if(repaint)paint();
     return true;
   }
   async function removeNote(id,{ask=true}={}){
     if(ask){
-      const ok=await w.UsUiFoundation?.confirm?.({title:'Eliminare la nota?',body:'Sparisce per voi due.',confirmLabel:'Elimina',tone:'danger'});
+      const ok=await w.UsUiFoundation?.confirm?.({title:'Staccare il post-it?',body:'Sparisce per voi due.',confirmLabel:'Elimina',tone:'danger'});
       if(!ok)return false;
     }
     const client=db();if(!client)return false;
     clearTimeout(timer);dirty=false;
     const {error}=await client.from('couple_notes').delete().eq('id',id);
-    if(error){console.warn('[US Note] delete',error);status('Non riesco a eliminarla');return false;}
+    if(error){console.warn('[US Note] delete',error);status('Non riesco a eliminarlo');return false;}
     notes=notes.filter(n=>n.id!==id);
     return true;
+  }
+
+  // ---------------------------------------------------------------- ideas
+  // Ticking an idea means «vissuta»: the first tap proposes, the partner's
+  // confirms (app.js); the confirmation that closes it asks once more.
+  async function tickIdea(box){
+    const id=box.dataset.idea,state=box.dataset.state;
+    box.checked=state==='lived';
+    if(state==='partner'){
+      const ok=await w.UsUiFoundation?.confirm?.({title:'L’avete vissuta?',body:`${partnerName()} dice di sì. Poi resta tra le idee vissute.`,confirmLabel:'Sì, vissuta'});
+      if(ok===false)return;
+    }
+    await w.UsDaVivere?.markLived?.(id);
+  }
+  async function addIdea(input){
+    const text=input.value.trim();
+    if(!text)return;
+    input.value='';
+    if(!await w.UsDaVivere?.add?.(text))input.value=text;
+  }
+  async function openIdea(id){
+    if(opened())await close();
+    w.openNoiIdeaDetail?.(id);
   }
 
   // ---------------------------------------------------------------- live
@@ -264,57 +429,70 @@ function install(w){
     if(row&&row.couple_id!==w.usProfile.couple_id)return;
     if(gone){
       notes=notes.filter(n=>n.id!==gone);
-      if(editing?.id===gone){editing.id=null;paintMeta();notice('L’altra persona ha eliminato questa nota. Se continui a scrivere, la salvo di nuovo.');}
+      if(editing?.id===gone){editing.id=null;paintMeta();notice('L’altra persona ha staccato questo post-it. Se continui a scrivere, lo salvo di nuovo.');}
     }
     if(row){
       notes=[row,...notes.filter(n=>n.id!==row.id)];
       if(editing?.id===row.id&&row.updated_by!==me()&&Number(row.revision)>Number(editing.revision)){
         const who=nameOf(row.updated_by)||'La tua persona';
-        if(dirty||saving){remote=row;notice(`${who} l’ha appena modificata.`,{take:true});}
-        else{take(row);notice(`Aggiornata da ${who}.`,{ttl:4000});}
+        if(dirty||saving){remote=row;notice(`${who} l’ha appena modificato.`,{take:true});}
+        else{take(row);notice(`Aggiornato da ${who}.`,{ttl:4000});}
       }
     }
-    if(!opened())return;
-    if(view==='list')paintList();
-    else for(const id of [gone,row?.id])if(id&&id!==editing?.id)repaintTile(id);
+    if(!editing)paint();
+    else{for(const id of [gone,row?.id])if(id&&id!==editing.id)repaintTile(id);countAll();}
   }
 
   // ---------------------------------------------------------------- shell
-  function open(){
-    if(!key())return;
+  // The whole board: a Foglio over Noi.
+  async function open(){
+    if(!key()||!root)return;
     if(owner&&owner!==key())reset();
+    if(editing&&editHost==='page'&&!await closeEditor())return;
     w.UsUiFoundation?.cancelSurfaceExit?.(root);
     root.classList.add('open');root.setAttribute('aria-hidden','false');
-    paintList();load();
+    paintSheet();ensure();
   }
   async function close(){
     if(!opened())return;
-    if(view==='editor'&&!await closeEditor())return;
+    if(editing&&editHost==='sheet'&&!await closeEditor({repaint:false}))return;
     const finish=()=>{root.classList.remove('open');root.setAttribute('aria-hidden','true');};
     root.classList.remove('open');
     if(!w.UsUiFoundation?.exitSurface?.(root,finish))finish();
+    paintPage();
   }
-  function reset(){token++;notes=[];loaded=false;owner='';editing=null;fields=null;dirty=false;remote=null;clearTimeout(timer);
-    if(opened()){root.classList.remove('open');root.setAttribute('aria-hidden','true');}}
+  function reset(){
+    token++;notes=[];loaded=false;loadedAt=0;owner='';editing=null;fields=null;dirty=false;remote=null;filter='all';clearTimeout(timer);
+    if(opened()){root.classList.remove('open');root.setAttribute('aria-hidden','true');}
+    paintPage();
+  }
 
-  root.addEventListener('click',event=>{
+  function onClick(event,host){
     const t=event.target;
-    if(t.closest('[data-notes-close]'))return close();
+    if(host==='sheet'&&t.closest('[data-notes-close]'))return close();
     if(t.closest('[data-notes-retry]'))return load();
-    if(t.closest('[data-notes-new]'))return openEditor(null);
-    const square=t.closest('.us-notes-tile:not(.is-editing)');
+    if(t.closest('[data-board-all]'))return open();
+    if(t.closest('[data-board-new],[data-notes-new]'))return openEditor(null,'title',host);
+    const paper=t.closest('[data-board-filter]');
+    if(paper){filter=paper.dataset.boardFilter;paintSheet();return;}
+    const idea=t.closest('[data-idea-open]');
+    if(idea)return openIdea(idea.dataset.ideaOpen);
+    const square=t.closest('.us-postit[data-note-id]:not(.is-editing)');
     if(square){
-      // The box ticks (change event below); anywhere else you write there.
-      if(t.closest('.us-notes-check'))return;
+      // The box ticks and the foot takes a new item; anywhere else you write there.
+      if(t.closest('.us-notes-check,[data-add-item]'))return;
       const n=notes.find(x=>x.id===square.dataset.noteId);
-      if(n)openEditor(n,t.closest('[data-focus]')?.dataset.focus||'text');
+      if(n)openEditor(n,t.closest('[data-focus]')?.dataset.focus||'text',host);
       return;
     }
+    if(!fields||host!==editHost)return;
+    const swatch=t.closest('[data-paper]');
+    if(swatch){editing.color=swatch.dataset.paper;paintPaper();changed(250);return;}
     if(t.closest('[data-notes-done]'))return closeEditor();
     if(t.closest('[data-notes-take]')){if(remote)take(remote);notice('');return;}
     if(t.closest('[data-notes-delete]')){
       const id=editing?.id;
-      if(id)removeNote(id).then(ok=>{if(ok){editing=null;fields=null;paintList();}});
+      if(id)removeNote(id).then(ok=>{if(ok){editing=null;fields=null;paint();}});
       return;
     }
     if(t.closest('[data-notes-add-item]')){
@@ -329,13 +507,18 @@ function install(w){
       const id=remove.closest('[data-item-id]')?.dataset.itemId;
       editing.items=editing.items.filter(i=>i.id!==id);paintItems();changed();
     }
-  });
-  root.addEventListener('change',event=>{
-    const box=event.target.closest?.('[data-tick]');
-    const square=box?.closest('.us-notes-tile:not(.is-editing)');
-    if(square)tick(square.dataset.noteId,box.dataset.tick,box.checked);
-  });
-  root.addEventListener('input',event=>{
+  }
+  function onChangeEvent(event){
+    const t=event.target;
+    const box=t.closest?.('[data-tick]');
+    const square=box?.closest('.us-postit[data-note-id]:not(.is-editing)');
+    if(square){tick(square.dataset.noteId,box.dataset.tick,box.checked);return;}
+    if(t.matches?.('[data-idea]')){tickIdea(t);return;}
+    // A new item or idea: Enter or leaving the field (both fire "change").
+    if(t.matches?.('[data-add-item]')){const id=t.closest('[data-note-id]')?.dataset.noteId,text=t.value;t.value='';addItem(id,text);return;}
+    if(t.matches?.('[data-davivere-add]'))addIdea(t);
+  }
+  function onInput(event){
     if(!fields||!editing)return;
     const t=event.target;
     if(t===fields.title||t===fields.text){syncFields();changed();return;}
@@ -344,8 +527,8 @@ function install(w){
     if(!item)return;
     if(t.type==='checkbox'){item.done=t.checked;row.classList.toggle('is-done',t.checked);changed(250);return;}
     item.text=t.value;changed();
-  });
-  root.addEventListener('keydown',event=>{
+  }
+  function onKeydown(event){
     if(!fields||!editing)return;
     const t=event.target;
     if(t===fields.title&&event.key==='Enter'){event.preventDefault();fields.text.focus();return;}
@@ -364,13 +547,34 @@ function install(w){
       const inputs=fields.list.querySelectorAll('.us-notes-item-text');
       (inputs[Math.max(0,at-1)]||fields.text).focus();
     }
+  }
+  for(const [el,host] of [[root,'sheet'],[page,'page']]){
+    if(!el)continue;
+    el.addEventListener('click',event=>onClick(event,host));
+    el.addEventListener('change',onChangeEvent);
+    el.addEventListener('input',onInput);
+    el.addEventListener('keydown',onKeydown);
+  }
+  w.addEventListener('us-ideas-change',repaintIdeas);
+  // Noi open, coming back to the app: read what changed meanwhile.
+  const bond=$('bond');
+  if(bond&&typeof w.MutationObserver==='function'){
+    new w.MutationObserver(()=>{
+      if(bond.classList.contains('active'))ensure();
+      else if(dirty){syncFields();save();}
+    }).observe(bond,{attributes:true,attributeFilter:['class']});
+  }
+  d.addEventListener('visibilitychange',()=>{
+    // Leaving the app: what is typed is saved now.
+    if(d.hidden){if(dirty){syncFields();save();}return;}
+    if(bond?.classList.contains('active'))ensure();
   });
-  // Leaving the app: what is typed is saved now.
-  d.addEventListener('visibilitychange',()=>{if(d.hidden&&dirty){syncFields();save();}});
   w.setInterval(()=>{if(owner&&key()!==owner)reset();},2000);
-  // Back (navigation.js): from a note to the list, from the list out.
-  const back=()=>view==='editor'?closeEditor():close();
-  const api=w.UsCoupleNotes;api.open=open;api.close=close;api.back=back;api.reset=reset;api.onChange=onChange;
+  paintPage();
+  if(bond?.classList.contains('active'))ensure();
+  // Back (navigation.js): from a post-it to the board, from the board out.
+  const back=()=>editing&&editHost==='sheet'?closeEditor():close();
+  const api=w.UsCoupleNotes;api.open=open;api.close=close;api.back=back;api.reset=reset;api.onChange=onChange;api.refresh=()=>ensure({force:true});
 }
-return {when,isEmpty,summary,payload,sortNotes,LIMITS,install};
+return {when,isEmpty,summary,payload,sortNotes,boardNotes,byColor,tilt,ideaLines,colorOf,COLORS,LIMITS,install};
 });

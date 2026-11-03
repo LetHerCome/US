@@ -50,7 +50,8 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   // (US 1.0: il vecchio calendario a schermo intero non c'è più, Eventi è il link sotto il calendario di Noi).
   assert.doesNotMatch(html, /id="usEventsTopEntry"/);
   assert.match(html, /class="us-top-brand"[^>]*role="img" aria-label="US"/);
-  assert.match(html, /data-noi-open-link="eventi"[\s\S]{0,200}Eventi/);
+  // Noi nuova (03/11/2026): Eventi si apre dalle date del calendario di Noi.
+  assert.match(read('noi-v2.js'), /window\.openNoiSection\?\.\('eventi'\)/);
   assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);
   assert.match(read('settings.js'), /window\.pickProfilePhoto\?\.\(\)/);
 });

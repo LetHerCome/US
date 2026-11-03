@@ -64,10 +64,14 @@ test('aurora: reduced motion and hidden document behaviour is intact', () => {
 
 const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
 
-// US 1.0 (N10): the old hidden hub is gone; Eventi is one of the three Noi links under the calendar.
-test('Noi: Eventi is a real tile of Noi, using the existing link row and Phosphor icon', () => {
-  const links = bond.match(/<nav class="us-noi-v2-links"[\s\S]*?<\/nav>/)?.[0] || '';
-  assert.match(links, /<button type="button" data-noi-open-link="eventi"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-blank"><\/span><\/span><span class="us-noi-v2-link-copy"><b>Eventi<\/b>/);
+// Noi nuova (founder, 03/11/2026): events, recurring dates and anniversaries
+// live in the calendar; the Eventi tile is gone. An Eventi date opens its
+// editor, a mesiversario or an anniversary opens Eventi.
+test('Noi: Eventi lives in the calendar — its dates open the editor, the anniversaries open Eventi', () => {
+  const noi = read('noi-v2.js');
+  assert.doesNotMatch(bond, /data-noi-open-link|us-noi-v2-links/);
+  assert.match(noi, /if\(kind==='event'&&item\.dataset\.id\)\{window\.openEventEditor\?\.\(item\.dataset\.id,item\.dataset\.day,\{from:'calendar'\}\);return;\}/);
+  assert.match(noi, /if\(kind==='anniversary'&&item\.dataset\.months!=='0'\)\{window\.openNoiSection\?\.\('eventi'\);return;\}/);
   assert.doesNotMatch(bond, /id="noiHub"|noi-hub-card--events/);
   assert.ok(fs.existsSync(path.join(ROOT, 'assets/icons/phosphor/calendar-heart-regular.svg')));
 });
@@ -85,8 +89,8 @@ test('Noi: Eventi opens inside the Noi page through the shared section + history
   assert.match(bond, /id="noiEventsAdd" aria-label="Aggiungi un evento"/);
 });
 
-test('Calendar stays the planning authority; Noi keeps its Eventi shortcut; the shell has no events control', () => {
-  assert.match(read('noi-v2.js'), /if\(link==='quest'\|\|link==='eventi'\)window\.openNoiSection\?\.\(link\);/);
+test('Calendar stays the planning authority; Noi reaches Eventi from its dates; the shell has no events control', () => {
+  assert.match(read('noi-v2.js'), /window\.openNoiSection\?\.\('eventi'\)/);
   for (const file of ['calendar.js', 'calendar-domain.js', 'calendar.css']) {
     assert.doesNotMatch(read(file), /noiEvents|hydrateNoiEvents|openEventEditor/, `${file} does not know about the events surface`);
   }

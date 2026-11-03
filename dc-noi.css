@@ -24,18 +24,19 @@
 #bond .us-noi-v2{--noi-gap:0px;--noi-control:44px;--noi-line:var(--us-color-line);--noi-day-h:46px;gap:0;padding:0 2px}
 #bond .us-noi-v2-top{align-items:flex-end;min-height:0;margin:22px 0 18px}
 #bond .us-noi-v2-top h2{font-family:var(--us-font-display);font-weight:400;font-size:28px;line-height:.95;letter-spacing:-.02em;color:var(--us-color-text)}
-#bond .us-noi-v2-tools{gap:8px}
-#bond .us-noi-v2-toggle{gap:0;padding:3px;border-radius:999px;background:var(--us-color-surface);border:1px solid var(--us-color-line)}
-#bond .us-noi-v2 .us-noi-v2-toggle button{width:44px;height:38px;min-width:44px;min-height:38px;border-radius:999px;color:var(--us-color-text-3);background:transparent}
-#bond .us-noi-v2 .us-noi-v2-toggle button.is-active{background:var(--us-color-elevated);color:var(--us-color-text)}
-#bond .us-noi-v2-toggle .us-icon{--us-icon-size:20px}
+#bond .us-noi-v2-tools{gap:10px}
+/* Noi nuova (03/11/2026, Main.dc.html): «Mese» and «Prossimi», two words on one pill. */
+#bond .us-noi-v2-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:0 0 16px;padding:4px;border-radius:999px;background:var(--us-color-surface);border:1px solid var(--us-color-line)}
+#bond .us-noi-v2 .us-noi-v2-toggle button{width:auto;min-width:0;height:40px;min-height:40px;border:0;border-radius:999px;color:var(--us-color-text-2);background:transparent;font-size:14px;font-weight:600}
+#bond .us-noi-v2 .us-noi-v2-toggle button.is-active{background:var(--us-color-text);color:var(--us-inchiostro);font-weight:700}
 #bond .us-noi-v2 .us-noi-v2-settings{width:44px;height:44px;border-radius:50%;background:var(--us-color-surface);border:1px solid var(--us-color-line)}
 /* The approved settings glyph, drawn in the ink of the other icons. */
 #bond .us-noi-v2 .us-noi-v2-settings img{width:22px;height:22px;filter:brightness(0) invert(.95) sepia(.12)}
 
 /* ---------- Month line: "Ottobre 2026", arrows, the + in our colour ---------- */
-#bond .us-noi-v2-monthbar{gap:8px;margin:0 0 12px}
-#bond .us-noi-v2-monthbar h3{flex:1 1 auto;min-width:0;font-family:var(--us-font-display);font-weight:400;font-size:19px;line-height:1.5;letter-spacing:0;color:var(--us-color-text)}
+#bond .us-noi-v2-monthbar{gap:8px;margin:0 0 8px}
+#bond .us-noi-v2[data-mode="list"] .us-noi-v2-monthbar{display:none}
+#bond .us-noi-v2-monthbar h3{flex:1 1 auto;min-width:0;font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1.3;letter-spacing:0;color:var(--us-color-text)}
 #bond .us-noi-v2-year{font-size:.72em;color:var(--us-color-text-3);letter-spacing:0}
 #bond .us-noi-v2-month-nav{gap:8px}
 #bond .us-noi-v2 .us-noi-v2-nav{width:40px;height:40px;border-radius:50%;background:var(--us-color-surface);border:1px solid var(--us-color-line);color:var(--us-color-text)}
@@ -43,8 +44,9 @@
 #bond .us-noi-v2 .us-noi-v2-add{width:44px;height:44px;border-radius:50%;background:var(--us-noi);color:var(--us-inchiostro);box-shadow:none}
 #bond .us-noi-v2 .us-noi-v2-add .us-icon{--us-icon-size:22px}
 
-/* ---------- The chip: "Il nostro giorno" here, "Torna a oggi" elsewhere ---------- */
-#bond .us-noi-v2-shortcuts{flex-wrap:wrap;gap:8px;margin:0 0 14px;min-height:40px}
+/* ---------- The chip: "Torna a oggi" in another month ---------- */
+#bond .us-noi-v2-shortcuts{flex-wrap:wrap;gap:8px;margin:0 0 10px;min-height:0}
+#bond .us-noi-v2-shortcuts:not(:has(>:not([hidden]):not(:empty))){display:none}
 #bond .us-noi-v2 .us-noi-v2-shortcuts button{position:relative;gap:8px;min-height:34px;padding:0 14px 0 12px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text);font-size:13px;font-weight:500}
 #bond .us-noi-v2 .us-noi-v2-shortcuts button::after{content:"";position:absolute;inset:-2px 0}
 #bond .us-noi-v2-shortcuts .us-icon{--us-icon-size:18px;color:var(--us-noi)}
@@ -64,41 +66,58 @@
 #bond .us-noi-v2-weekdays{margin:0}
 #bond .us-noi-v2-weekday{padding:6px 0;font-size:11px;font-weight:700;letter-spacing:.1em;line-height:17px;color:var(--us-color-text-3)}
 #bond .us-noi-v2-weekday:nth-child(n+6){color:var(--us-color-text-3)}
-#bond .us-noi-v2-grid{position:relative;row-gap:2px}
-#bond .us-noi-v2-day,#bond .us-noi-v2-blank{height:40px}
-#bond .us-noi-v2 .us-noi-v2-day{position:relative;z-index:1;display:grid;place-items:center;justify-content:stretch;align-content:stretch;gap:0;padding:0;color:var(--us-color-text);transition:color .2s}
+/* Noi nuova (03/11/2026, Main.dc.html): big squares, no circles, dots or key.
+   The number on top, then a label per commitment in the colour of whoever
+   put it (two at most, then +n). A day with a Ricordo is its photo. Today is
+   bold; the chosen day has a frame. */
+#bond .us-noi-v2-grid{position:relative;gap:4px}
+#bond .us-noi-v2-day,#bond .us-noi-v2-blank{height:clamp(72px,20vw,84px)}
+#bond .us-noi-v2 .us-noi-v2-day{position:relative;z-index:1;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:2px;min-width:0;padding:5px 3px 4px;overflow:hidden;border:1px solid var(--us-color-line);border-radius:12px;background:var(--us-color-surface);color:var(--us-color-text);text-align:left;transition:border-color .2s}
 #bond .us-noi-v2-day.is-past{color:var(--us-color-text-3)}
-#bond .us-noi-v2-day-number{width:38px;height:38px;font-size:15px;font-weight:500;letter-spacing:0;background:transparent!important;box-shadow:none;transition:none}
+#bond .us-noi-v2-day-number{position:relative;display:block;width:auto;height:auto;padding-left:3px;font-size:14px;font-weight:600;line-height:1;letter-spacing:0;text-align:left;background:transparent!important;border-radius:0;box-shadow:none;transition:none}
 #bond .us-noi-v2-day:active .us-noi-v2-day-number{transform:none}
-/* Today: a thin ring in my colour. The chosen day: the disc of ours, which
-   moves from day to day (.us-noi-v2-sel), with dark ink on it. */
-#bond .us-noi-v2-day.is-today .us-noi-v2-day-number{box-shadow:inset 0 0 0 1.5px var(--us-tu);color:inherit;font-weight:500}
-#bond .us-noi-v2-day.is-selected{color:var(--us-inchiostro)}
-#bond .us-noi-v2-day.is-selected .us-noi-v2-day-number{color:var(--us-inchiostro);font-weight:700}
-#bond .us-noi-v2-sel{position:absolute;left:0;top:0;z-index:0;width:40px;height:40px;border-radius:50%;background:var(--us-noi);pointer-events:none}
-#bond .us-noi-v2-sel[hidden]{display:none}
-#bond .us-noi-v2-day-marks{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);gap:3px;height:5px}
-#bond .us-noi-v2-day-marks i{width:5px;height:5px;border-radius:50%;background:var(--dc-who);-webkit-mask:none;mask:none}
-#bond .us-noi-v2-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 2px 0;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
-#bond .us-noi-v2-legend span{display:inline-flex;align-items:center;gap:6px}
-#bond .us-noi-v2-legend i{width:9px;height:9px;border-radius:50%;background:var(--dc-who)}
-#bond .us-noi-v2-content[data-state="loading"] .us-noi-v2-legend{opacity:.5}
+#bond .us-noi-v2-day.is-today{background:var(--us-color-elevated)}
+#bond .us-noi-v2-day.is-today .us-noi-v2-day-number{color:var(--us-color-text);font-weight:800;box-shadow:none}
+#bond .us-noi-v2-day.is-selected{border:2px solid var(--us-color-text);padding:4px 2px 3px}
+#bond .us-noi-v2-day.is-selected .us-noi-v2-day-number{color:inherit}
+#bond .us-noi-v2-day.is-today.is-selected .us-noi-v2-day-number{font-weight:800}
+#bond .us-noi-v2-day-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none}
+#bond .us-noi-v2-day.has-photo{color:#fff}
+#bond .us-noi-v2-day.has-photo::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,rgba(0,0,0,.42),transparent 40%,transparent 60%,rgba(0,0,0,.34));pointer-events:none}
+#bond .us-noi-v2-day.has-photo .us-noi-v2-day-number{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+#bond .us-noi-v2-day-bars{position:relative;z-index:1;display:flex;flex-direction:column;gap:2px;width:100%;margin-top:auto;min-width:0}
+#bond .us-noi-v2-bar{display:block;min-width:0;padding:2px 4px;border-radius:5px;background:var(--dc-who);color:var(--us-inchiostro);font-size:9.5px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bond .us-noi-v2-more{padding-left:3px;font-size:9.5px;font-weight:700;line-height:1.2;color:inherit;opacity:.8}
+#bond .us-noi-v2-content[data-state="loading"] .us-noi-v2-day-bars{opacity:0}
 #bond .us-noi-v2-notice{border-radius:18px;background:color-mix(in srgb,var(--us-ambra) 10%,var(--us-color-surface));border-color:color-mix(in srgb,var(--us-ambra) 30%,transparent);font-size:13px}
 #bond .us-noi-v2-notice .us-icon{color:var(--us-ambra)}
 #bond .us-noi-v2 .us-noi-v2-notice button,#bond .us-noi-v2 .us-noi-v2-text-action{min-height:44px;padding:0 12px;color:var(--us-noi);font-size:14px;font-weight:700}
 
-/* ---------- The chosen day ---------- */
-#bond .us-noi-v2-detail{margin-top:22px;padding-top:18px;border-top:1px solid var(--us-color-line)}
-#bond .us-noi-v2-detail-head small{display:block;font-size:11px;font-weight:700;line-height:16px;letter-spacing:.14em;text-transform:uppercase;color:var(--us-noi)}
-#bond .us-noi-v2-detail-head h3{margin:4px 0 12px;font-family:var(--us-font-display);font-weight:400;font-size:20px;line-height:1.5;letter-spacing:0;text-transform:none}
+/* ---------- The chosen day: a card under the month (Main.dc.html) ---------- */
+#bond .us-noi-v2-detail{display:flex;flex-direction:column;gap:12px;margin-top:18px;padding:16px;border:1px solid var(--us-color-line);border-radius:20px;background:var(--us-color-surface)}
+#bond .us-noi-v2-detail[hidden]{display:none}
+#bond .us-noi-v2-detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#bond .us-noi-v2-detail-head h3{margin:0;font-family:var(--us-font-display);font-weight:400;font-size:21px;line-height:1.2;letter-spacing:0;text-transform:none}
 #bond .us-noi-v2-detail-head h3::first-letter{text-transform:uppercase}
+#bond .us-noi-v2-today-pill{flex:none;padding:5px 10px;border-radius:999px;background:color-mix(in srgb,var(--us-noi) 18%,transparent);color:var(--us-noi);font-size:12px;font-weight:700}
+/* Whose it is, at the end of a row: the name in that person's colour. */
+#bond .us-noi-v2-who{flex:none;max-width:92px;padding:5px 10px;border-radius:999px;background:var(--dc-who);color:var(--us-inchiostro);font-size:12px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* A Ricordo of the day: its photo and its words; it opens in its album. */
+#bond .us-noi-v2 .us-noi-v2-ricordo{display:flex;align-items:center;gap:12px;width:100%;min-height:0;padding:8px;border:0;border-radius:15px;background:var(--us-color-elevated);color:var(--us-color-text);text-align:left}
+#bond .us-noi-v2-ricordo img,#bond .us-noi-v2-ricordo-blank{flex:none;width:52px;height:52px;border-radius:12px;object-fit:cover;background:color-mix(in srgb,var(--us-ambra) 30%,var(--us-color-surface))}
+#bond .us-noi-v2-ricordo-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+#bond .us-noi-v2-ricordo-copy small{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--us-ambra)}
+#bond .us-noi-v2-ricordo-copy b{font-family:var(--us-font-display);font-size:17px;font-weight:400;line-height:1.25;overflow-wrap:anywhere}
+#bond .us-noi-v2-ricordo-copy span{font-size:13px;color:var(--us-color-text-2)}
+/* «Aggiungi a questo giorno»: the calendar editor, on that day. */
+#bond .us-noi-v2 .us-noi-v2-add-day{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border:1px dashed var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text);font-size:14px;font-weight:600;--us-icon-size:16px}
 #bond .us-noi-v2-empty-day{margin:0}
 #bond .us-noi-v2-empty{margin:0 0 4px}
 #bond .us-noi-v2-empty-day,#bond .us-noi-v2-empty{font-size:16px;line-height:1.4;color:var(--us-color-text-2)}
 #bond .us-noi-v2-day-items{gap:8px;margin-top:0}
 
-/* A moment of the day: time · what · whose dot. */
-#bond .us-noi-v2 .us-noi-v2-item{display:grid;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:0;padding:12px 14px;border-radius:18px;background:var(--us-color-surface);border:1px solid var(--us-color-line);color:var(--us-color-text);text-align:left}
+/* A commitment of the day: time · what · whose name. */
+#bond .us-noi-v2 .us-noi-v2-item{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:0;padding:10px 12px;border-radius:16px;background:var(--us-color-elevated);border:1px solid var(--us-color-line);color:var(--us-color-text);text-align:left}
 #bond .us-noi-v2 .us-noi-v2-item:active{background:var(--us-color-surface-2)}
 #bond .us-noi-v2-item-time{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;line-height:21px;color:var(--us-color-text)}
 #bond .us-noi-v2-item-copy{gap:0}
@@ -108,7 +127,6 @@
 #bond .us-noi-v2-item-meta>span+span::before{content:"·";margin:0 5px}
 #bond .us-noi-v2-item-meta>span[hidden]{display:none}
 #bond .us-noi-v2-owner,#bond .us-noi-v2-owner[data-owner-type]{display:inline;min-height:0;padding:0;border:0;border-radius:0;background:none;color:inherit;font-size:inherit;font-weight:400}
-#bond .us-noi-v2-item-dot{width:9px;height:9px;border-radius:50%;background:var(--dc-who)}
 
 /* Il nostro giorno: the couple mark, our colour. */
 #bond .us-noi-v2 .us-noi-v2-ourday{display:flex;align-items:center;gap:14px;padding:14px;border-radius:20px;background:radial-gradient(90% 120% at 0% 0%,color-mix(in srgb,var(--us-noi) 22%,transparent),transparent 70%),var(--us-color-surface);border:1px solid color-mix(in srgb,var(--us-noi) 40%,transparent)}
@@ -135,9 +153,6 @@
 #usNoiLavagna [data-owner="partner"]{--dc-who:var(--us-partner)}
 #usNoiLavagna.us-foglio>.us-noi-lavagna-sheet{display:grid;align-content:start;gap:12px;min-height:min(calc(var(--us-viewport-height,100dvh) * .86),calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 8px));padding:0 20px calc(24px + var(--us-safe-bottom))}
 #usNoiLavagna .us-noi-lavagna-body{display:grid;gap:12px;min-width:0;touch-action:pan-y}
-#usNoiLavagna .us-noi-v2-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
-#usNoiLavagna .us-noi-v2-legend span{display:inline-flex;align-items:center;gap:6px}
-#usNoiLavagna .us-noi-v2-legend i{width:9px;height:9px;border-radius:50%;background:var(--dc-who)}
 #usNoiLavagna .us-noi-v2-week-list{display:grid;gap:6px}
 #usNoiLavagna .us-noi-v2-week-row{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:10px;min-height:54px;padding:8px 12px;border:0;border-radius:16px;background:var(--us-color-surface-2)}
 #usNoiLavagna .us-noi-v2-week-row.is-today{box-shadow:inset 0 0 0 1.5px var(--us-tu)}
@@ -159,14 +174,6 @@
 #usNoiLavagna .us-noi-v2-week-summary+.us-noi-v2-week-note{margin-top:-10px}
 
 /* ---------- Lavagna · Missioni · Eventi tiles ---------- */
-#bond .us-noi-v2 .us-noi-v2-links{gap:8px;margin-top:18px;padding:0}
-#bond .us-noi-v2 .us-noi-v2-links button{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;justify-content:stretch;justify-items:start;align-items:start;gap:10px;min-height:0;padding:14px 12px;border-radius:20px;background:var(--us-color-surface);border:1px solid var(--us-color-line);color:var(--us-color-text);text-align:left}
-#bond .us-noi-v2 .us-noi-v2-links button:active{background:var(--us-color-surface)}
-#bond .us-noi-v2 .us-noi-v2-link-icon{width:38px;height:38px;border-radius:12px;background:color-mix(in srgb,var(--us-noi) 16%,transparent);color:var(--us-noi)}
-#bond .us-noi-v2 .us-noi-v2-link-icon .us-icon{--us-icon-size:20px}
-#bond .us-noi-v2 .us-noi-v2-links .us-icon{margin:0}
-#bond .us-noi-v2 .us-noi-v2-link-copy{display:block;text-align:left}
-#bond .us-noi-v2 .us-noi-v2-link-copy b{display:block;font-size:14px;font-weight:600;line-height:1.5}
 
 /* ==========================================================================
    Missioni (with Le vostre idee) — a Foglio over the month (mockup 049/053).
@@ -563,8 +570,6 @@
   #bond .us-noi-v2-top h2{font-size:26px}
   #bond .us-noi-v2-monthbar h3{font-size:18px}
   #bond .us-noi-v2 .us-noi-v2-nav{width:38px;height:38px}
-  #bond .us-noi-v2-day-number{width:36px;height:36px;font-size:14px}
+  #bond .us-noi-v2-day-number{font-size:13px}
   #bond .us-noi-v2 .us-noi-v2-item{grid-template-columns:46px minmax(0,1fr) auto;gap:10px;padding:12px}
-  #bond .us-noi-v2 .us-noi-v2-links button{min-height:84px;padding:12px 10px}
-  #bond .us-noi-v2 .us-noi-v2-link-copy b{font-size:13px}
 }

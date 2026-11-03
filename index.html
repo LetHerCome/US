@@ -566,11 +566,11 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     </div>
   </div>
 
-  <!-- Note condivise (couple-notes.js): a Foglio over Noi. -->
+  <!-- Bacheca intera (couple-notes.js): every post-it with the colour filters, a Foglio over Noi. -->
   <div id="usNotesSheet" class="us-notes-overlay us-foglio" aria-hidden="true" data-us-modal data-us-motion-surface>
     <div class="us-notes-scrim us-modal-backdrop" data-notes-close></div>
     <section class="us-notes-panel" role="dialog" aria-modal="true" aria-labelledby="usNotesTitle" data-us-modal-panel>
-      <header class="us-notes-head"><div><span class="tiny">Insieme</span><h3 id="usNotesTitle">Note</h3></div><button type="button" class="us-modal-close" data-us-modal-close data-notes-close aria-label="Chiudi le note"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+      <header class="us-notes-head"><div><h3 id="usNotesTitle">Bacheca</h3><small id="usNotesCount"></small></div><button type="button" class="us-modal-close" data-us-modal-close data-notes-close aria-label="Chiudi la bacheca"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
       <div id="usNotesBody" aria-live="polite"></div>
     </section>
   </div>
@@ -681,19 +681,19 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         <header class="us-noi-v2-top">
           <h2>Noi</h2>
           <div class="us-noi-v2-tools">
-            <div class="us-noi-v2-toggle" role="group" aria-label="Visualizzazione del calendario">
-              <button type="button" id="usNoiV2ModeCalendar" class="is-active" aria-label="Calendario" aria-pressed="true"><span class="us-icon" data-us-icon="calendar-dots" aria-hidden="true"></span></button>
-              <button type="button" id="usNoiV2ModeList" aria-label="Elenco" aria-pressed="false"><span class="us-icon" data-us-icon="list-bullets" aria-hidden="true"></span></button>
-            </div>
+            <button type="button" class="us-noi-v2-add" id="usNoiV2AddTop" data-noi-add aria-label="Aggiungi un impegno nel giorno selezionato" title="Aggiungi impegno"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
             <button type="button" class="us-noi-v2-settings" onclick="go('settings',{nav:true})" aria-label="Impostazioni"><img class="us-approved-custom-icon" src="/assets/derived/runtime/us-icon-settings-128-v1.png" alt="" width="22" height="22" decoding="async"></button>
           </div>
         </header>
+        <div class="us-noi-v2-toggle" role="group" aria-label="Vista del calendario">
+          <button type="button" id="usNoiV2ModeCalendar" class="is-active" aria-pressed="true">Mese</button>
+          <button type="button" id="usNoiV2ModeList" aria-pressed="false">Prossimi</button>
+        </div>
         <div class="us-noi-v2-monthbar">
           <h3 id="usNoiV2Month" aria-live="polite">—</h3>
           <div class="us-noi-v2-month-nav">
             <button type="button" id="usNoiV2Prev" class="us-noi-v2-nav" aria-label="Mese precedente"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
             <button type="button" id="usNoiV2Next" class="us-noi-v2-nav" aria-label="Mese successivo"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></button>
-            <button type="button" class="us-noi-v2-add" id="usNoiV2AddTop" data-noi-add aria-label="Aggiungi un impegno nel giorno selezionato" title="Aggiungi impegno"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
           </div>
         </div>
         <div class="us-noi-v2-picker" id="usNoiV2IdeaPick" role="status" hidden>
@@ -702,18 +702,22 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <button type="button" id="usNoiV2IdeaCancel" aria-label="Annulla collegamento">Annulla</button>
         </div>
         <div class="us-noi-v2-shortcuts">
-          <button type="button" id="usNoiV2First"><span class="us-icon" data-us-icon="heart" aria-hidden="true"></span><span>Il nostro giorno</span></button>
           <button type="button" class="us-noi-v2-today" id="usNoiV2Today"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span><span>Torna a oggi</span></button>
           <span class="us-noi-v2-sync" id="usNoiV2Sync" role="status" aria-live="polite"></span>
         </div>
         <div id="usNoiV2Content" class="us-noi-v2-content"><div class="us-skeleton-calendar" role="status"><span class="us-sr">Carico il calendario…</span><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i></div></div>
         <section id="usNoiV2Detail" class="us-noi-v2-detail" aria-label="Giorno selezionato" aria-live="polite"></section>
-        <nav class="us-noi-v2-links" aria-label="Altre sezioni di Noi">
-          <button type="button" data-noi-open-link="lavagna"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="monitor"></span></span><span class="us-noi-v2-link-copy"><b>Lavagna</b></span></button>
-          <button type="button" data-noi-open-link="quest"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="flag"></span></span><span class="us-noi-v2-link-copy"><b>Missioni</b></span></button>
-          <button type="button" data-noi-open-link="eventi"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-blank"></span></span><span class="us-noi-v2-link-copy"><b>Eventi</b></span></button>
-          <button type="button" data-noi-open-link="note"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="pencil"></span></span><span class="us-noi-v2-link-copy"><b>Note</b></span></button>
-        </nav>
+      </section>
+
+      <!-- Bacheca (couple-notes.js): the Lavagna on top (phase 2 hooks it in the slot), then the post-its. -->
+      <section class="us-noi-board" id="usNoiBoard" aria-labelledby="usNoiBoardTitle">
+        <header class="us-noi-board-head">
+          <div><h2 id="usNoiBoardTitle">Bacheca</h2><small>Le cose senza data: si scrive qui sopra</small></div>
+          <button type="button" class="us-noi-board-new" data-board-new><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Post-it</span></button>
+        </header>
+        <div id="usNoiLavagnaSlot"></div>
+        <ul class="us-postits" id="usNoiBoardGrid" aria-label="Post-it" aria-live="polite"></ul>
+        <button type="button" class="us-noi-board-all" id="usNoiBoardAll" data-board-all hidden><span>Tutti i post-it</span><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></button>
       </section>
 
       <article class="noi-resonance" aria-label="Sintonia attuale" data-s>
