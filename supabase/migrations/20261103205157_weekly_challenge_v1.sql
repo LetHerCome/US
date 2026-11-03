@@ -742,6 +742,8 @@ begin
       'events', (select coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(x) - strip order by x.created_at), '[]') from public.shared_events x where x.couple_id = cid and x.created_by = p_user),
       'wishes', (select coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(x) - strip - 'lived_proposed_by' order by x.created_at), '[]') from public.bucket_items x where x.couple_id = cid and x.created_by = p_user),
       'couple_notes', (select coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(x) - strip - 'updated_by' order by x.created_at), '[]') from public.couple_notes x where x.couple_id = cid and (x.created_by = p_user or x.updated_by = p_user)),
+      -- Lavagna V1 (20261103205050) runs before this file: its strokes stay in the export.
+      'lavagna_strokes', (select coalesce(pg_catalog.jsonb_agg(pg_catalog.to_jsonb(x) - strip order by x.created_at, x.id), '[]') from public.lavagna_strokes x where x.couple_id = cid and x.author_id = p_user),
       'weekly_challenge_photos', (select coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
           'week_start', c.week_start, 'challenge', c.short_title, 'moment_id', x.moment_id, 'photo_id', x.photo_id, 'created_at', x.created_at) order by x.created_at), '[]')
         from public.couple_weekly_challenge_photos x join public.couple_weekly_challenges c on c.id = x.challenge_id where x.couple_id = cid and x.user_id = p_user)
