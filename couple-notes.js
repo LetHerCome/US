@@ -44,11 +44,12 @@ function isEmpty(n){
   return !String(n?.title||'').trim()&&!String(n?.body||'').trim()&&!items(n).some(i=>i.text.trim());
 }
 // Closing a post-it (04/11/2026, the «ciao» that vanished on staging): with
-// something written it is saved; empty, it goes by itself only if it was born
-// in this opening; one that was already on the board asks first.
-function closeVerdict(n,{born=false}={}){
+// something written it is saved; empty, it goes by itself only if it was
+// never filled (new in this opening, never on the server); one on the board
+// asks first, even one written a moment ago.
+function closeVerdict(n){
   if(!isEmpty(n))return 'save';
-  return !n?.id||born?'drop':'ask';
+  return n?.id?'ask':'drop';
 }
 // A Realtime row is a note only with its title, text and list: Supabase
 // leaves out the values over 64 bytes when a change is too big to send.
@@ -314,7 +315,7 @@ function install(w){
   async function openEditor(note,focus='title',host='page'){
     if(editing&&!await closeEditor({repaint:false}))return;
     clearTimeout(timer);dirty=false;remote=null;
-    editing=note?{...note,items:items(note).map(i=>({...i}))}:{id:null,title:'',body:'',items:[],color:'yellow',revision:0,updated_by:me(),born:true};
+    editing=note?{...note,items:items(note).map(i=>({...i}))}:{id:null,title:'',body:'',items:[],color:'yellow',revision:0,updated_by:me()};
     editHost=host;fields=null;
     if(host==='sheet')paintSheet();else paintPage();
     if(!fields)return;
@@ -383,8 +384,8 @@ function install(w){
     paintItems();paintMeta();paintPaper();
   }
   // Closing waits for the save; offline the note stays open, nothing lost.
-  // An empty post-it already on the board goes only on «Stacca»; «Tienilo»
-  // leaves it as it was (an empty post-it is never saved).
+  // An empty post-it on the board goes only on «Stacca»; «Tienilo» leaves it
+  // as it was (an empty post-it is never saved). One never filled just closes.
   async function closeEditor({repaint=true}={}){
     if(!editing){if(repaint)paint();return true;}
     syncFields();
@@ -393,13 +394,13 @@ function install(w){
     const kept=items(target).filter(i=>i.text.trim());
     if(kept.length!==items(target).length){target.items=kept;dirty=true;}
     for(let i=0;saving&&i<100;i++)await new Promise(r=>setTimeout(r,50));
-    const verdict=closeVerdict(target,{born:Boolean(target.born)});
+    const verdict=closeVerdict(target);
     if(verdict==='ask'){
       const ok=await w.UsUiFoundation?.confirm?.({title:'Staccare il post-it?',body:'L’hai svuotato: se lo stacchi, sparisce per voi due.',confirmLabel:'Stacca',cancelLabel:'Tienilo',tone:'danger'});
       if(ok===true){if(!await removeNote(target.id,{ask:false}))return false;}
       else{clearTimeout(timer);dirty=false;}
     }
-    else if(verdict==='drop'){if(target.id&&!await removeNote(target.id,{ask:false}))return false;}
+    else if(verdict==='drop'){clearTimeout(timer);dirty=false;}
     else{await save({keep:false});if(dirty){status('Non salvato: controlla la connessione');return false;}}
     editing=null;fields=null;
     if(repaint)paint();

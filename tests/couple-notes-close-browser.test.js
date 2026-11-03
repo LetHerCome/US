@@ -1,7 +1,8 @@
 // Post-it che sparisce (staging, 04/11/2026): every way the open post-it
 // «ciao» can be closed, in the real app with the fake Supabase. None takes it
 // away unless someone empties it by hand and says yes to «Staccare il
-// post-it?». The rules themselves: couple-notes-close.test.js.
+// post-it?»; only a new post-it never filled goes by itself. The rules
+// themselves: couple-notes-close.test.js.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadChromium, startServer, FAKE_SUPABASE } = require('./helpers/oggi-browser');
@@ -110,18 +111,30 @@ test('no way of closing the post-it «ciao» takes it away', async (t) => {
     assert.equal(s.ciao, null, '«Stacca»: gone for both');
     assert.deepEqual(s.deletes, ['couple_notes']);
 
-    // Born in this opening, written, saved and emptied again: it goes by itself.
+    // A new post-it never filled: it goes by itself, nothing reached the server.
+    const notes = () => p.evaluate(() => window.__QA.tables.couple_notes.length);
+    const before = await notes();
+    await p.locator('#usNoiBoardGrid [data-notes-new]').tap();
+    await p.waitForSelector(`${EDITOR} .us-notes-title`);
+    await done(p);
+    await p.waitForTimeout(400);
+    s = await server_(p);
+    assert.equal(s.asking, false, 'nothing to ask');
+    assert.equal(await notes(), before, 'nothing written');
+    assert.equal(await p.locator(EDITOR).count(), 0);
+
+    // Written a moment ago in this opening (so on the server), then emptied: it asks too.
     await p.locator('#usNoiBoardGrid [data-notes-new]').tap();
     await p.locator(`${EDITOR} .us-notes-title`).fill('Prova');
     await p.waitForFunction(() => window.__QA.tables.couple_notes.some((n) => n.title === 'Prova'));
     await p.waitForTimeout(100);
     await p.locator(`${EDITOR} .us-notes-title`).fill('');
     await done(p);
+    await p.waitForSelector('.us-confirm [data-us-confirm="ok"]');
+    await p.locator('.us-confirm button[data-us-confirm="cancel"]').tap();
     await p.waitForTimeout(400);
-    s = await server_(p);
-    assert.equal(s.asking, false, 'nothing to ask');
-    assert.deepEqual(s.deletes, ['couple_notes', 'couple_notes']);
-    assert.equal(await p.evaluate(() => window.__QA.tables.couple_notes.some((n) => n.title === 'Prova')), false);
+    assert.equal(await p.evaluate(() => window.__QA.tables.couple_notes.some((n) => n.title === 'Prova')), true, '«Tienilo»: it stays');
+    assert.deepEqual((await server_(p)).deletes, ['couple_notes'], 'only the «Stacca» on «ciao»');
     assert.deepEqual(errors, []);
     await ctx.close();
   } finally {
