@@ -580,6 +580,38 @@ final class UsWidgetModels {
         return out;
     }
 
+    // ---------- Lavagna ----------
+
+    /** The last drawing on the couple's board: who drew last and how long ago. */
+    static final class Lavagna {
+        /** There is a drawing (its two pictures come from US). */
+        boolean shown = false;
+        /** Connected, nothing on the board yet. */
+        boolean empty = false;
+        /** "Bea · 5 min fa"; only the time when the author left the couple. */
+        String line = "";
+        Instant nextChange = null;
+    }
+
+    static Lavagna lavagna(JSONObject snapshot, Instant now) {
+        Lavagna out = new Lavagna();
+        if (snapshot == null) return out;
+        JSONObject in = UsWidgetContract.optObject(snapshot, "lavagna");
+        if (!"ready".equals(in.optString("state", ""))) {
+            out.empty = true;
+            return out;
+        }
+        out.shown = true;
+        String by = in.optString("by", "");
+        String partner = UsWidgetContract.optObject(snapshot, "think").optString("partnerName", "").trim();
+        String who = by.equals("me") ? "Tu" : by.equals("partner") ? (partner.isEmpty() ? "La tua persona" : partner) : "";
+        Instant at = UsWidgetContract.instant(in.optString("at", ""));
+        String when = bubbleAgo(at, now);
+        out.line = who.isEmpty() ? when : when.isEmpty() ? who : who + " · " + when;
+        if (!when.isEmpty()) out.nextChange = bubbleNextChange(at, now);
+        return out;
+    }
+
     /** "21 aprile"; "" for anything that is not a civil date. */
     static String italianDay(String civil) {
         String clean = UsWidgetContract.civilDate(civil);

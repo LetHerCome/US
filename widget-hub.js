@@ -20,7 +20,8 @@
     { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda del giorno e a chi tocca rispondere. Mai le risposte.', shape: 'wide' },
     { kind: 'message', name: 'Lasciato per te', copy: 'Il Lasciato per te ancora chiuso: solo che cosa è e quando.', shape: 'square' },
     { kind: 'memories', name: 'Ricordi a pila', copy: 'Le vostre foto di questo giorno, un anno fa. Altrimenti le più recenti.', shape: 'square' },
-    { kind: 'status', name: 'Come stai', copy: 'Come state tu e chi ami, con un’emoji. Dura 12 ore.', shape: 'wide' }
+    { kind: 'status', name: 'Come stai', copy: 'Come state tu e chi ami, con un’emoji. Dura 12 ore.', shape: 'wide' },
+    { kind: 'lavagna', name: 'Lavagna', copy: 'L’ultimo disegno sulla vostra lavagna. Toccalo per disegnare.', shape: 'square' }
   ]);
   window.UsWidgetCatalog = CATALOG;
 
@@ -111,6 +112,13 @@
     return `<div class="us-wp-memories" aria-label="${esc(text)}"><i></i><i></i><i></i></div>`;
   }
 
+  // Lavagna: the drawing as the board shows it now, or the empty board.
+  function lavagnaPreview(snapshot) {
+    const url = window.UsLavagna?.preview?.() || '';
+    const label = url || snapshot.lavagna?.state === 'ready' ? 'La vostra lavagna' : 'La lavagna è vuota';
+    return `<div class="us-wp-lavagna" aria-label="${esc(label)}">${url ? `<img src="${esc(url)}" alt="">` : ''}</div>`;
+  }
+
   // Come stai: the two emoji as the app shows them now.
   function statusPreview() {
     const s = window.UsMemberStatus;
@@ -128,6 +136,7 @@
     if (kind === 'message') return messagePreview();
     if (kind === 'memories') return memoriesPreview(snapshot);
     if (kind === 'status') return statusPreview();
+    if (kind === 'lavagna') return lavagnaPreview(snapshot);
     return photoPreview(snapshot, view.photoPreviewUrl);
   }
 

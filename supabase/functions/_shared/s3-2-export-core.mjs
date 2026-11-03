@@ -15,6 +15,13 @@ export const MAX_RESPONSE_BYTES = 1024 * 1024;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const IDENTIFIER = /^(?:[a-z][a-z0-9_]{0,64})$/;
 const PRIVATE_MEDIA_FIELDS = new Set(['storage_path','thumbnail_path','media_path','avatar_path']);
+// The only fields that hold a list: the points of a lavagna stroke (numbers)
+// and the checklist of a note ({id,text,done}). Plain values, one level.
+const LIST_FIELDS = Object.freeze({'lavagna_strokes.points':'numbers','couple_notes.items':'records'});
+const plain=value=>value===null||['string','number','boolean'].includes(typeof value);
+const plainList=(value,kind)=>Array.isArray(value)&&value.every(item=>kind==='numbers'
+  ? typeof item==='number'&&Number.isFinite(item)
+  : item&&typeof item==='object'&&!Array.isArray(item)&&Object.values(item).every(plain));
 
 // All entries require owner proof and couple equality unless tenant=false.
 // Tokens, password hashes, invitations and partner-only contributions never
@@ -38,6 +45,8 @@ const definitions = [
  ['couple_batteries','user_id','user_id,couple_id,level,charging,updated_at',true],
  // Come stai (02/11/2026): the state this person chose and how its words are said.
  ['member_status','user_id','user_id,couple_id,status,form,set_at,expires_at,updated_at',true],
+ // Lavagna V1 (03/11/2026): the strokes this person drew on the couple's board.
+ ['lavagna_strokes','author_id','id,couple_id,author_id,tool,color,width,points,created_at',true],
 ];
 export const EXPORT_DOMAINS = Object.freeze(definitions.map(([table,owner,cols,tenant])=>{
  const fields=Object.freeze(cols.split(','));
@@ -69,7 +78,8 @@ const asSafeRecord=(row,def,ownerId,coupleId)=>{
    if(!Object.prototype.hasOwnProperty.call(row,key))throw fail('export_missing_required_field');
    const value=ownOrSharedAvatar(key,row[key]);
    // primitive/nullable values only; no opaque nested metadata/credentials
-   if(value!==null&&!['string','number','boolean'].includes(typeof value))throw fail('export_unexpected_field_type');
+   const list=LIST_FIELDS[def.table+'.'+key];
+   if(!plain(value)&&!(list&&plainList(value,list)))throw fail('export_unexpected_field_type');
    out[key]=value;
  }
  return out;

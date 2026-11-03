@@ -13,8 +13,8 @@
 
   const platform = window.UsPlatform;
   const nativeEnabled = Boolean(platform?.isNative && platform?.hasWidgetBridge?.() !== false);
-  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'memories', 'status']);
-  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', memories: 'moments', status: 'home' });
+  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'memories', 'status', 'lavagna']);
+  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', memories: 'moments', status: 'home', lavagna: 'bond' });
   // Messaggio opens the message itself: the Ti penso or the closed envelope.
   const MESSAGE_TARGETS = Object.freeze({ think: 'think', left: 'left_for_you' });
   const COUPLE_TTL_MS = 30 * 60 * 1000;
@@ -60,6 +60,8 @@
   const emptyStatusPerson = () => ({ status: '', form: '', at: '', until: '' });
   const emptyStatus = () => ({ me: emptyStatusPerson(), partner: emptyStatusPerson() });
   const emptyMemories = () => ({ state: 'none', label: '', anniversary: false, day: '', date: '', title: '', count: 0, stack: 0 });
+  // Lavagna: whether there is a drawing, who drew last and when; the pictures are separate files.
+  const emptyLavagna = () => ({ state: 'none', by: '', at: '' });
   let think = emptyThink();
   let couple = emptyCouple();
   let countdown = emptyCountdown();
@@ -68,6 +70,7 @@
   let left = emptyLeft();
   let memories = emptyMemories();
   let comeStai = emptyStatus();
+  let lavagna = emptyLavagna();
   let memoriesSyncedAt = 0;
   let memoriesSignature = '';
   let memoriesSync = null;
@@ -99,6 +102,7 @@
       daily: { ...daily },
       left: { ...left },
       memories: { ...memories },
+      lavagna: { ...lavagna },
       status: { me: { ...comeStai.me }, partner: { ...comeStai.partner } }
     };
   }
@@ -579,6 +583,27 @@
     return memoriesSync;
   }
 
+  // Lavagna: the drawing as US paints it, in Pastello and Midnight ink (two
+  // transparent pictures), and who drew last, when. Never the strokes.
+  async function syncLavagna(input = {}) {
+    if (!nativeEnabled || !ownerHash || !platform?.writeWidgetNoiPortrait) return false;
+    const token = generation, owner = ownerHash;
+    const next = { state: input.state === 'ready' ? 'ready' : 'empty', by: ['me', 'partner'].includes(input.by) ? input.by : '', at: typeof input.at === 'string' ? input.at : '' };
+    try {
+      if (next.state === 'ready') {
+        const ok = await platform.writeWidgetNoiPortrait(owner, input.light, 'lavagna')
+          && await platform.writeWidgetNoiPortrait(owner, input.dark, 'lavagna_night');
+        if (token !== generation || !ok) return false;
+      }
+      if (token !== generation) return false;
+      lavagna = next;
+      return scheduleWrite();
+    } catch (error) {
+      console.warn('[US Widget] lavagna', error);
+      return false;
+    }
+  }
+
   function localDay() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -752,6 +777,7 @@
       daily = { ...emptyDaily(), ...native.daily };
       comeStai = { me: { ...emptyStatusPerson(), ...native.status?.me }, partner: { ...emptyStatusPerson(), ...native.status?.partner } };
       memories = native.memories?.state === 'ready' ? { ...emptyMemories(), ...native.memories } : emptyMemories();
+      lavagna = ['ready', 'empty'].includes(native.lavagna?.state) ? { ...emptyLavagna(), ...native.lavagna } : emptyLavagna();
       photo = native.photo?.state === 'ready' && native.photo.key === seed.photoKey ? { ...emptyPhoto(), ...native.photo, next: Array.isArray(native.photo.next) ? native.photo.next : [] } : emptyPhoto();
       return true;
     } catch (_) {
@@ -815,7 +841,7 @@
     photoResyncRequested = false;
     noiPortraitSignature = '';
     clearRoundPreviews();
-    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();left = emptyLeft();comeStai = emptyStatus();memories = emptyMemories();memoriesSyncedAt = 0;memoriesSignature = '';
+    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();left = emptyLeft();comeStai = emptyStatus();memories = emptyMemories();memoriesSyncedAt = 0;memoriesSignature = '';lavagna = emptyLavagna();
     setPreview('');
     const provisioning = credentialProvisionInFlight;
     if (provisioning) try { await provisioning; } catch (_) {}
@@ -840,6 +866,8 @@
       if (url.protocol !== 'us:' || url.hostname !== 'widget') return null;
       const path = url.pathname.replace(/^\/+/, '');
       if (path === 'noi/play') return { kind: 'noi-play', url: urlValue };
+      // Lavagna opens the board itself, through the path of its notification.
+      if (path === 'lavagna') return { kind: 'lavagna', target: 'lavagna', url: urlValue };
       const message = path.match(/^message\/(think|left)$/);
       if (message) return { kind: 'message', target: MESSAGE_TARGETS[message[1]], url: urlValue };
       const kind = path.split('/')[0];
@@ -902,6 +930,7 @@
     if (kind === 'photo') await syncPhoto({ force: true });
     if (kind === 'noi') await syncNoiPortrait({ force: true });
     if (kind === 'memories') await syncMemories({ force: true });
+    if (kind === 'lavagna') await window.UsLavagna?.syncWidget?.({ force: true });
     return platform.requestWidgetPin(kind);
   }
 
@@ -913,6 +942,7 @@
     syncStatus,
     memoriesPick,
     syncMemories,
+    syncLavagna,
     syncCountdown,
     syncDaily,
     syncCouple,

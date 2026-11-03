@@ -1,5 +1,15 @@
 # Prossima patch in produzione
 
+## Lavagna in Noi e widget «Lavagna» (03/11/2026, fase 2 della Noi nuova)
+
+**Stato:** in branch (`claude/lavagna-ad3ef8`), non ancora su staging. Va in produzione insieme a tutta la Noi nuova, solo con il via del founder. Missione: `docs/missions/lavagna-v1.md`.
+
+- **Lavagna:** in cima alla bacheca di Noi una tessera con l'ultimo disegno («Lavagna · Bea, 5 min fa», «Disegna»); toccandola si apre la lavagna a tutto schermo. Si disegna col dito in due: quattro colori, due spessori, gomma, «Annulla» dell'ultimo tratto proprio, «Pulisci» con conferma per tutti e due. Ogni tratto si salva quando si alza il dito; l'altra persona lo vede in un paio di secondi.
+- **Notifica:** «Bea ha disegnato sulla lavagna», al massimo una volta ogni 2 ore per chi la riceve; si spegne in Impostazioni › Notifiche › Lavagna.
+- **Widget Android «Lavagna» 2×2:** l'ultimo disegno, Pastello con il tema chiaro e Midnight con quello scuro; toccandolo apre US sulla lavagna. Si aggiorna quando US è aperta (come «Ricordi a pila»).
+- **Database:** migrazione `20261103205050_lavagna_v1.sql` (tabelle `lavagna_strokes` e `lavagna_boards`, RLS di coppia, tempo reale, export dei dati, autori staccati quando qualcuno lascia la coppia o elimina l'account, preferenza `lavagna`). Ordine: SQL, poi Edge `send-web-push` ed `export-my-data`, poi web, poi APK/AAB.
+- **Privacy:** i disegni sono contenuto della coppia come le note; entrano nell'export dei dati. Nessun nuovo tipo di dato per Google Play.
+
 ## Note condivise in Noi (31/10/2026)
 
 **Stato:** su staging, non in produzione. **Branch:** `claude/note-condivise`. **Build:** `us-note-condivise-20261031-76`. Missione: `docs/missions/note-condivise-v1.md`.

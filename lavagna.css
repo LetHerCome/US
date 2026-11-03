@@ -1,0 +1,77 @@
+/* Lavagna V1 (founder, 03/11/2026; boards Main and LavagnaAperta): the tile
+   at the top of the Noi bacheca and the board full screen over Noi. The board
+   is the plum of the canvas (#241431 in a #1b0f25 frame) in every theme: its
+   four inks are made for it. Foundation tokens and Phosphor icons only. */
+.us-lav-overlay [hidden],.us-lav-slot [hidden]{display:none!important}
+
+/* ---------- The tile (Main.dc.html): opens the board, never drawn on ---------- */
+.us-lav-slot{margin:6px 0 4px}
+.us-lav-tile{position:relative;display:block;width:100%;height:196px;min-height:0;margin:0;padding:0;overflow:hidden;border:1px solid var(--us-color-line);border-radius:20px;background:#241431;box-shadow:inset 0 0 0 5px #1b0f25,0 12px 26px rgba(0,0,0,.4);color:var(--us-color-text);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.us-lav-tile:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
+.us-lav-tile-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.us-lav-tile-label{position:absolute;left:12px;top:10px;display:inline-flex;align-items:center;max-width:calc(100% - 24px);padding:5px 10px;border-radius:999px;background:rgba(15,11,19,.62);font:700 12px/1.3 var(--us-font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.us-lav-tile-label b{font-weight:700}
+.us-lav-tile-by:not(:empty)::before{content:"·";margin:0 5px}
+.us-lav-tile-by span+span::before{content:", "}
+.us-lav-tile-empty{position:absolute;left:18px;right:18px;top:50%;transform:translateY(-50%);font:italic 400 19px/1.3 var(--us-font-display);text-align:center;color:var(--us-color-text-2)}
+.us-lav-tile-go{position:absolute;right:12px;bottom:10px;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border-radius:999px;background:var(--us-latte);color:var(--us-inchiostro);font:700 13px/1 var(--us-font-ui)}
+.us-lav-tile-go .us-icon{width:14px;height:14px}
+
+/* ---------- Full screen (LavagnaAperta.dc.html) ---------- */
+.us-lav-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;background:var(--us-color-bg);color:var(--us-color-text)}
+.us-lav-overlay.open{display:flex}
+.us-lav-sheet{display:flex;flex-direction:column;gap:12px;width:100%;max-width:560px;height:var(--us-viewport-height,100dvh);margin:0 auto;padding:calc(18px + var(--us-safe-top,0px)) 12px calc(14px + var(--us-safe-bottom,0px));box-sizing:border-box}
+.us-lav-head{display:flex;align-items:center;gap:10px;padding:0 4px}
+.us-lav-back{display:grid;place-items:center;flex:none;width:44px;height:44px;min-height:44px;padding:0;border:1px solid var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text)}
+.us-lav-back .us-icon{width:18px;height:18px}
+.us-lav-titles{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.us-lav-titles h2{margin:0;font:400 24px/1 var(--us-font-display);color:var(--us-color-text)}
+.us-lav-last{font-size:12.5px;line-height:1.3;color:var(--us-color-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.us-lav-last span:first-child::after{content:":"}
+.us-lav-last span:last-child:not(:first-child)::before{content:", "}
+.us-lav-clear{flex:none;min-height:44px;padding:0 14px;border:1px solid var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text);font:600 14px/1 var(--us-font-ui)}
+.us-lav-clear:disabled{opacity:.45}
+.us-lav-stage{position:relative;display:grid;place-items:center;flex:1;min-height:0}
+.us-lav-board{position:relative;overflow:hidden;border:1px solid var(--us-color-line);border-radius:24px;background:#241431;box-shadow:inset 0 0 0 6px #1b0f25}
+.us-lav-canvas{display:block;width:100%;height:100%;touch-action:none;-webkit-user-select:none;user-select:none;cursor:crosshair}
+.us-lav-hint{position:absolute;left:24px;right:24px;top:50%;display:grid;gap:6px;margin:0;transform:translateY(-50%);text-align:center;pointer-events:none}
+.us-lav-hint b{font:italic 400 24px/1.2 var(--us-font-display)}
+.us-lav-hint span{font-size:13px;line-height:1.4;color:var(--us-color-text-2)}
+.us-lav-who{position:absolute;left:14px;bottom:12px;display:flex;flex-wrap:wrap;gap:8px;pointer-events:none}
+.us-lav-who>span{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:rgba(15,11,19,.62);font:700 12px/1.3 var(--us-font-ui)}
+.us-lav-who i{width:9px;height:9px;border-radius:999px;background:var(--us-partner)}
+.us-lav-who [data-who="tu"] i{background:var(--us-tu)}
+
+.us-lav-tools{display:flex;align-items:center;gap:0;padding:4px;border:1px solid var(--us-color-line);border-radius:999px;background:var(--us-color-surface)}
+.us-lav-tools button{display:grid;place-items:center;flex:none;width:40px;height:44px;min-height:44px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--us-color-text);box-shadow:none}
+.us-lav-tools button:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
+.us-lav-swatch span{width:24px;height:24px;border-radius:999px;background:var(--c)}
+.us-lav-swatch[aria-pressed="true"] span{box-shadow:0 0 0 2px var(--us-color-surface),0 0 0 4px var(--us-latte)}
+.us-lav-sep{flex:none;width:1px;height:24px;margin:0 3px;background:var(--us-color-line-strong)}
+.us-lav-tools .us-lav-size{width:36px}
+.us-lav-size span{width:6px;height:6px;border-radius:999px;background:var(--us-latte)}
+.us-lav-size.is-thick span{width:12px;height:12px}
+.us-lav-tools [aria-pressed="true"].us-lav-size,.us-lav-tools [aria-pressed="true"].us-lav-eraser{background:rgba(247,239,233,.12)}
+.us-lav-eraser{margin-left:auto}
+.us-lav-tool .us-icon{width:20px;height:20px}
+.us-lav-tools button:disabled{opacity:.4}
+.us-lav-status{min-height:0;margin:0;font-size:13px;line-height:1.4;text-align:center;color:var(--us-color-text-2)}
+.us-lav-status:empty{display:none}
+
+/* Every tool on one line: 40 px targets on a phone (375 px), the board's 44
+   from 400 px, 34 on the narrowest (320 px). */
+@media (min-width:400px){
+  .us-lav-tools{gap:2px;padding:4px 6px}
+  .us-lav-tools button{width:44px}
+  .us-lav-tools .us-lav-size{width:40px}
+}
+@media (max-width:359px){
+  .us-lav-tools{padding:4px 2px}
+  .us-lav-tools button{width:34px}
+  .us-lav-tools .us-lav-size{width:30px}
+  .us-lav-sep{margin:0 2px}
+}
+
+/* Impostazioni › Widget: the board as the dark widget shows it. */
+#usWidgetHub .us-wp-lavagna{display:grid;place-items:center;width:100%;height:100%;box-sizing:border-box;padding:8px;border-radius:inherit;background:#241431}
+#usWidgetHub .us-wp-lavagna img{display:block;width:100%;height:100%;object-fit:contain}

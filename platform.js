@@ -181,6 +181,7 @@
       daily: widgetDaily(input?.daily),
       left: widgetLeft(input?.left),
       memories: widgetMemories(input?.memories),
+      lavagna: widgetLavagna(input?.lavagna),
       status: { me: widgetStatusPerson(input?.status?.me), partner: widgetStatusPerson(input?.status?.partner) }
     };
   }
@@ -203,6 +204,12 @@
 
   // Ricordi a pila (UsWidgetContract.java): which memory the stack shows.
   // Never a path, a URL or a photo.
+  // Lavagna: a drawing or not, who drew last (me or partner) and when. Never a stroke.
+  function widgetLavagna(lavagna = {}) {
+    const state = ['ready', 'empty'].includes(lavagna?.state) ? lavagna.state : 'none';
+    return { state, by: state === 'ready' && ['me', 'partner'].includes(lavagna?.by) ? lavagna.by : '', at: state === 'ready' ? safeInstant(lavagna?.at) : '' };
+  }
+
   function widgetMemories(memories = {}) {
     const date = safeCivilDate(memories?.date);
     if (memories?.state !== 'ready' || !date) return { state: 'none', label: '', anniversary: false, day: '', date: '', title: '', count: 0, stack: 0 };
@@ -292,12 +299,13 @@
 
   // A private JPEG composite of the two avatars, never remote URLs.
   // slot: "pair" (old Noi 2x1), "me" or "partner" (the round avatars),
-  // "memories" and "memories_wide" (the stack of Ricordi a pila).
+  // "memories" and "memories_wide" (the stack of Ricordi a pila),
+  // "lavagna" and "lavagna_night" (the drawing, Pastello and Midnight ink).
   async function writeWidgetNoiPortrait(ownerHash, base64, slot = 'pair') {
     const plugin = widgetBridge();
     const safeHash = validOwnerHash(ownerHash);
     const data = typeof base64 === 'string' && /^[A-Za-z0-9+/=]+$/.test(base64) && base64.length <= 2_800_000 ? base64 : '';
-    if (!plugin || !safeHash || !data || !['pair', 'me', 'partner', 'memories', 'memories_wide'].includes(slot) || typeof plugin.writeNoiPortrait !== 'function') return false;
+    if (!plugin || !safeHash || !data || !['pair', 'me', 'partner', 'memories', 'memories_wide', 'lavagna', 'lavagna_night'].includes(slot) || typeof plugin.writeNoiPortrait !== 'function') return false;
     await plugin.writeNoiPortrait({ ownerHash: safeHash, data, slot });
     return true;
   }
@@ -340,7 +348,7 @@
     return true;
   }
 
-  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'memories', 'status'];
+  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'memories', 'status', 'lavagna'];
 
   async function getInstalledWidgets() {
     const plugin = widgetBridge();

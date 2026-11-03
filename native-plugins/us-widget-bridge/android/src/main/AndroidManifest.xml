@@ -106,6 +106,17 @@
                 android:resource="@xml/us_widget_days_info" />
         </receiver>
         <receiver
+            android:name="com.usapp.widget.UsLavagnaWidgetProvider"
+            android:exported="false"
+            android:label="@string/us_widget_lavagna_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/us_widget_lavagna_info" />
+        </receiver>
+        <receiver
             android:name="com.usapp.widget.UsThinkWidgetActionReceiver"
             android:exported="false" />
         <!-- Ti penso (Pastello): the app's heart for a moment over the Home screen,
