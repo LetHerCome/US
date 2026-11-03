@@ -63,6 +63,8 @@ const APP_SHELL = [
   versioned("/year-recap.js"),
   versioned("/couple-notes.css"),
   versioned("/couple-notes.js"),
+  versioned("/lavagna.css"),
+  versioned("/lavagna.js"),
   versioned("/companions.css"),
   versioned("/companions.js"),
   versioned("/distance.css"),
@@ -164,6 +166,8 @@ const APP_SHELL = [
   "/assets/icons/phosphor/pencil-simple-regular.svg",
   "/assets/icons/phosphor/list-bullets-regular.svg",
   "/assets/icons/phosphor/chalkboard-simple-regular.svg",
+  "/assets/icons/phosphor/eraser-regular.svg",
+  "/assets/icons/phosphor/arrow-counter-clockwise-regular.svg",
   "/assets/icons/phosphor/palette-regular.svg",
   "/assets/icons/phosphor/trash-regular.svg",
   "/assets/icons/phosphor/info-regular.svg",
@@ -251,7 +255,7 @@ self.addEventListener("activate", (event) => {
 
 // Native Notifications V1: a notification can only name an allow-listed US
 // surface. Its URL is always rebuilt here, same-origin; a payload URL is never opened.
-const US_PUSH_TARGETS = ["home", "today", "think", "left_for_you", "quiz", "bond", "calendar", "events"];
+const US_PUSH_TARGETS = ["home", "today", "think", "left_for_you", "quiz", "bond", "calendar", "events", "lavagna"];
 const usPushTarget = (value) => (US_PUSH_TARGETS.includes(value) ? value : "home");
 const usPushUrl = (target) => `/?open=${encodeURIComponent(usPushTarget(target))}&from=push`;
 

@@ -158,6 +158,7 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
     daily: { date: '2026-10-31', question: 'Una domanda?', state: 'your_turn', answer: 'secret' },
     left: { kind: 'photo', at: '2026-10-31T09:00:00.000Z', body: 'secret', media_path: 'https://example.test/p.jpg' },
     memories: { state: 'ready', label: 'Un anno fa', anniversary: true, day: '2026-10-31', date: '2025-10-31', title: 'Lisbona', count: 8, stack: 9, path: 'secret/a.jpg', url: 'https://example.test/m.jpg' },
+    lavagna: { state: 'ready', by: 'partner', at: '2026-11-03T10:00:00.000Z', points: [1, 2], color: 'secret', author_id: 'raw' },
     accessToken: 'secret', refreshToken: 'secret', supabaseUrl: 'secret', supabaseKey: 'secret'
   });
   const sent = calls[0].snapshot;
@@ -177,7 +178,9 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   assert.deepEqual({ ...sent.left }, { kind: 'photo', at: '2026-10-31T09:00:00.000Z' });
   // Ricordi a pila: which memory, never its path or URL (the stack is a separate picture).
   assert.deepEqual({ ...sent.memories }, { state: 'ready', label: 'Un anno fa', anniversary: true, day: '2026-10-31', date: '2025-10-31', title: 'Lisbona', count: 8, stack: 3 });
-  assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'left', 'memories', 'ownerHash', 'photo', 'schemaVersion', 'status', 'think', 'updatedAt']);
+  // Lavagna (03/11/2026): whether there is a drawing, who drew last and when; never a stroke.
+  assert.deepEqual({ ...sent.lavagna }, { state: 'ready', by: 'partner', at: '2026-11-03T10:00:00.000Z' });
+  assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'lavagna', 'left', 'memories', 'ownerHash', 'photo', 'schemaVersion', 'status', 'think', 'updatedAt']);
 
   assert.equal(await platform.writeWidgetSnapshot({ schemaVersion: 2, ownerHash: 'raw-user-id' }), false, 'owner non hash rifiutato');
 });

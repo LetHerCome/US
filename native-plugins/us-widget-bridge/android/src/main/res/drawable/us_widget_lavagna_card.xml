@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lavagna (03/11/2026): the board's paper in Pastello, the cream of the board
+     Lavagna.dc.html; the drawing sits on it in Pastello ink. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FFFBF3EC" />
+    <corners android:radius="24dp" />
+</shape>

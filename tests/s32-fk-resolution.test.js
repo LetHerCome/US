@@ -35,6 +35,8 @@ const SHARED_FAIL_CLOSED=new Set([
   'profiles>left_for_you.sender_id','profiles>left_for_you.recipient_id','profiles>conserva_contributions.source_sender_id',
   // Note condivise V1 (31/10/2026): detached by s32_close_membership.
   'profiles>couple_notes.created_by','profiles>couple_notes.updated_by',
+  // Lavagna V1 (03/11/2026): the drawing stays with the partner, detached by s32_close_membership.
+  'profiles>lavagna_strokes.author_id',
 ]);
 
 test('every user reference is classified, and shared content fails closed',async()=>{
@@ -59,7 +61,7 @@ test('every user reference is classified, and shared content fails closed',async
       else assert.fail('unclassified user reference: '+key+' — decide what account deletion does with it');
     }
     for(const key of [...PERSONAL_CASCADE,...OPERATIONAL_SET_NULL,...SHARED_FAIL_CLOSED])assert.ok(seen.has(key),'stale classification '+key);
-    assert.equal(seen.size,43);
+    assert.equal(seen.size,44);
   }finally{await db.close();}
 });
 

@@ -572,6 +572,47 @@ public class UsWidgetModelsTest {
         assertFalse(UsWidgetModels.memories(null, now).shown);
     }
 
+    // ---------- Lavagna ----------
+
+    private static JSONObject lavagna(JSONObject lavagna) throws Exception {
+        return UsWidgetContract.normalize(snapshot(null).put("lavagna", lavagna));
+    }
+
+    @Test
+    public void lavagnaSaysWhoDrewLastAndWhen() throws Exception {
+        Instant now = Instant.parse("2026-11-03T10:07:00Z");
+        JSONObject in = new JSONObject().put("state", "ready").put("by", "partner").put("at", "2026-11-03T10:00:00Z")
+            .put("points", new JSONArray().put(1).put(2));
+        JSONObject clean = lavagna(in);
+        assertFalse("never the strokes", clean.getJSONObject("lavagna").has("points"));
+        UsWidgetModels.Lavagna view = UsWidgetModels.lavagna(clean, now);
+        assertTrue(view.shown);
+        assertFalse(view.empty);
+        assertEquals("Beatrice · 5 min fa", view.line);
+        assertEquals(Instant.parse("2026-11-03T10:10:00Z"), view.nextChange);
+        JSONObject mine = lavagna(new JSONObject().put("state", "ready").put("by", "me").put("at", "2026-11-03T10:06:00Z"));
+        assertEquals("Tu · proprio ora", UsWidgetModels.lavagna(mine, now).line);
+        // An author who left the couple: only when.
+        JSONObject nobody = lavagna(new JSONObject().put("state", "ready").put("by", "chi").put("at", "2026-11-03T08:00:00Z"));
+        assertEquals("", nobody.getJSONObject("lavagna").getString("by"));
+        assertEquals("2 ore fa", UsWidgetModels.lavagna(nobody, now).line);
+    }
+
+    @Test
+    public void lavagnaEmptyOrNotConnected() throws Exception {
+        Instant now = Instant.parse("2026-11-03T10:07:00Z");
+        UsWidgetModels.Lavagna empty = UsWidgetModels.lavagna(lavagna(new JSONObject().put("state", "empty").put("by", "me").put("at", "2026-11-03T10:00:00Z")), now);
+        assertFalse(empty.shown);
+        assertTrue(empty.empty);
+        assertEquals("", empty.line);
+        assertNull(empty.nextChange);
+        assertEquals("none", lavagna(new JSONObject().put("state", "piena")).getJSONObject("lavagna").getString("state"));
+        assertTrue("before the first drawing", UsWidgetModels.lavagna(snapshot(null), now).empty);
+        UsWidgetModels.Lavagna unlinked = UsWidgetModels.lavagna(null, now);
+        assertFalse(unlinked.shown);
+        assertFalse(unlinked.empty);
+    }
+
     // ---------- Foto & giorni (Pastello) ----------
 
     private static JSONObject photos(String hour) throws Exception {

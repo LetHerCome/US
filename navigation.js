@@ -85,6 +85,13 @@ const layers=[
     close:()=>window.UsDistance?.close?.()
   },
   {
+    // Lavagna: back closes the board, over Noi.
+    name:'lavagna',
+    find:()=>document.getElementById('usLavagna'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsLavagna?.close?.()
+  },
+  {
     // Note condivise: back goes from a note to the list, then out.
     name:'notes',
     find:()=>document.getElementById('usNotesSheet'),

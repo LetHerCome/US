@@ -56,6 +56,8 @@ const RUNTIME_FILES = [
   'year-recap.css',
   'couple-notes.js',
   'couple-notes.css',
+  'lavagna.js',
+  'lavagna.css',
   'companions.js',
   'companions.css',
   'distance.js',

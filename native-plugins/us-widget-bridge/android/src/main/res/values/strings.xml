@@ -44,6 +44,9 @@
     <string name="us_widget_memories_empty">I vostri ricordi appariranno qui</string>
     <string name="us_widget_preview_memories">Un ricordo</string>
     <string name="us_widget_preview_memories_date">12 ott</string>
+    <string name="us_widget_lavagna_name">Lavagna</string>
+    <string name="us_widget_lavagna_description">L’ultimo disegno sulla vostra lavagna. Toccalo per disegnare</string>
+    <string name="us_widget_lavagna_empty">Disegnate qualcosa sulla lavagna</string>
 
 
     <string name="us_widget_photo_name">Foto &amp; Noi</string>

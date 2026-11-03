@@ -78,8 +78,8 @@ test('widget: a new kind, both halves, the tap opens the twelve, never a write',
   assert.match(provider, /UsWidgets\.open\(context, "status", 4801\)/);
   assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(|Credential/i);
   const widgets = read('widgets.js');
-  assert.match(widgets, /'memories', 'status'\]\);/);
-  assert.match(widgets, /status: 'home' \}\);/);
+  assert.match(widgets, /'memories', 'status'(?:, '[a-z]+')*\]\);/);
+  assert.match(widgets, /status: 'home'(?:, [a-z]+: '[a-z]+')* \}\);/);
   assert.match(widgets, /if \(link\.kind === 'status' && window\.usProfile\) setTimeout\(\(\) => window\.UsMemberStatus\?\.open\?\.\('status'\), 400\);/);
   assert.match(widgets, /addEventListener\('us:member-status-changed', \(\) => \{ syncStatus\(\)/);
   const manifest = read(`${PLUGIN}/AndroidManifest.xml`);

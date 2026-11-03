@@ -4,6 +4,7 @@ import webpush from "npm:web-push@3.6.7";
 import { vapidSubject } from "../_shared/web-push-vapid.mjs";
 import { dispatchThinkReactionWebPush, dispatchThinkWebPush } from "../_shared/think-web-push.ts";
 import { dispatchLeftForYouPush } from "../_shared/left-for-you-push-core.mjs";
+import { dispatchLavagnaPush } from "../_shared/lavagna-push-core.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 import { buildNotification, deliverNotification, recipientLocale } from "../_shared/notification-core.mjs";
 import { nativeTransport } from "../_shared/native-push-env.ts";
@@ -11,8 +12,8 @@ import { nativeTransport } from "../_shared/native-push-env.ts";
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,x-client-info,apikey,content-type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Content-Type": "application/json" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
-type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined";
-const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined"];
+type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "lavagna";
+const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna"];
 // US 1.0 (A2): a join older than this is not "just joined" (legacy couples, stale retries).
 const PARTNER_JOINED_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -98,6 +99,33 @@ Deno.serve(async (request) => {
         sendNotification: (subscription: unknown, payload: string, options: unknown) => webpush.sendNotification(subscription as any, payload, options as any),
         native: nativeTransport(),
       }));
+    }
+
+    if (type === "lavagna") {
+      // Lavagna V1 (03/11/2026): reference_id = the stroke the caller just
+      // saved. At most one push every 2 hours for the partner (lavagna-push-core).
+      if (!partner || typeof body.reference_id !== "string" || !UUID.test(body.reference_id)) return json({ error: "Missing lavagna reference" }, 400);
+      try {
+        const result = await dispatchLavagnaPush(admin, {
+          strokeId: body.reference_id,
+          sender,
+          partnerId: partner.id,
+          web: {
+            ensure: async () => {
+              const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
+              if (vapidError || !vapidPrivate) throw new Error("push_configuration_unavailable");
+              webpush.setVapidDetails(vapidSubject(), VAPID_PUBLIC_KEY, vapidPrivate as string);
+            },
+            send: (subscription: unknown, payload: string, options: unknown) => webpush.sendNotification(subscription as any, payload, options as any),
+          },
+          native: nativeTransport(),
+        });
+        if ("forbidden" in result) return json({ error: "Invalid lavagna event" }, 403);
+        return json(result);
+      } catch (error) {
+        if (error instanceof Error && error.message === "push_configuration_unavailable") return json({ error: "Push configuration unavailable" }, 500);
+        throw error;
+      }
     }
 
     // Native Notifications V1: one canonical notification per logical event,

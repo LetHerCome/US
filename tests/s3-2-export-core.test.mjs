@@ -30,8 +30,8 @@ const expectBlocked=(fn,match)=>assert.throws(fn,e=>e instanceof Error&&
   (typeof match==='string'?e.code===match:true));
 const read=(file)=>fs.readFileSync(new URL(file,import.meta.url),'utf8');
 
-test('strict owner-only export contains 16 domains without partner secrets',()=>{
-  assert.equal(EXPORT_DOMAINS.length,16);
+test('strict owner-only export contains 17 domains without partner secrets',()=>{
+  assert.equal(EXPORT_DOMAINS.length,17);
   const data=baseData();
   data.moments[0].caption='Own lovely memory';
   data.moments[0].storage_path=forbiddenSecret;
@@ -80,6 +80,28 @@ test('missing or corrupt fields reject rather than export a truncated dataset',(
   data.moods=[fakeRow(EXPORT_DOMAINS.find(x=>x.table==='moods'))];
   delete data.calendar_entries;
   expectBlocked(()=>generate(data),'export_domain_missing');
+});
+
+// Lavagna V1 (03/11/2026): a stroke's points are a list of numbers, and a
+// note's checklist a list of {id,text,done}; only those two fields may hold a
+// list, of plain values, never anything deeper.
+test('lists of plain values: the points of a stroke and the checklist of a note',()=>{
+  const data=baseData();
+  data.lavagna_strokes[0].points=[10,20,30,40];
+  data.couple_notes[0].items=[{id:'a',text:'Latte',done:false}];
+  const out=generate(data);
+  assert.deepEqual(out.data.lavagna_strokes[0].points,[10,20,30,40]);
+  assert.deepEqual(out.data.couple_notes[0].items,[{id:'a',text:'Latte',done:false}]);
+  for(const bad of [[[1,2]],[{x:1}],[1,'2'],{0:1}]){
+    const again=baseData();again.lavagna_strokes[0].points=bad;
+    expectBlocked(()=>generate(again),'export_unexpected_field_type');
+  }
+  for(const bad of [[{id:'a',text:{t:1},done:false}],[[1]],['testo']]){
+    const again=baseData();again.couple_notes[0].items=bad;
+    expectBlocked(()=>generate(again),'export_unexpected_field_type');
+  }
+  const elsewhere=baseData();elsewhere.moods[0].note=['no'];
+  expectBlocked(()=>generate(elsewhere),'export_unexpected_field_type');
 });
 
 test('rejects large row sets and data payloads; never silently returns first page',()=>{

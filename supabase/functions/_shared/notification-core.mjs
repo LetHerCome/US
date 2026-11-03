@@ -22,7 +22,8 @@ export const NOTIFICATION_SCHEMA_VERSION = 1;
 // Allow-listed navigation targets. A payload can only name one of these; the
 // app maps each to a surface. There is no URL in the contract.
 // US 1.0: 'events' opens Eventi (mesiversario / anniversario).
-export const NOTIFICATION_TARGETS = Object.freeze(['home', 'today', 'think', 'left_for_you', 'quiz', 'bond', 'calendar', 'events']);
+// Lavagna V1 (03/11/2026): 'lavagna' opens the board in Noi.
+export const NOTIFICATION_TARGETS = Object.freeze(['home', 'today', 'think', 'left_for_you', 'quiz', 'bond', 'calendar', 'events', 'lavagna']);
 export const NOTIFICATION_CHANNELS = Object.freeze(['partner', 'reminders']);
 export const NOTIFICATION_CATEGORIES = Object.freeze(['think']);
 // US 1.0: the copy follows the RECIPIENT's profiles.locale; anything but 'en'
@@ -104,6 +105,8 @@ const CATALOGUE = Object.freeze({
   calendar_reminder: (a) => ({ title: 'US. · Calendar', body: a.body, target: 'calendar', ref: a.entryId, tag: `calendar-reminder-${a.reminderId}`, channel: 'reminders', urgency: 'high' }),
   // A11/N7: mesiversario / anniversario, no points in the text, opens Eventi.
   relationship: (a, en) => ({ ...relationshipCopy(a, en), target: a.kind ? 'events' : 'home', tag: a.tag, channel: 'reminders', urgency: 'normal', ttl: 60 * 60 * 24 }),
+  // Lavagna V1: the partner drew; one tag, so a newer line replaces the older.
+  lavagna: (a, en) => ({ title: pick(en, 'US. · Lavagna', 'US. · Board'), body: pick(en, `${name(a.senderName)} ha disegnato sulla lavagna`, `${name(a.senderName, true)} drew on the board`), target: 'lavagna', ref: a.strokeId, tag: 'us-lavagna', channel: 'partner', urgency: 'normal' }),
   // A2: the partner accepted the invite; sent once, to the creator.
   partner_joined: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} ha accettato l’invito: il vostro spazio è pronto`, `${name(a.senderName, true)} joined: your space is ready`), target: 'home', tag: 'us-partner-joined', channel: 'partner', urgency: 'normal' }),
 });

@@ -29,6 +29,16 @@ public class UsPushNoticesTest {
     }
 
     @Test
+    public void theBoardSaysWhoDrewAndOpensNoi() {
+        UsPushNotices.Notice it = UsPushNotices.forKind("lavagna", "Bea", IT);
+        assertEquals("US. · Lavagna", it.title);
+        assertEquals("Bea ha disegnato sulla lavagna", it.body);
+        assertEquals("noi", it.page);
+        assertEquals("Bea drew on the board", UsPushNotices.forKind("lavagna", "Bea", EN).body);
+        assertEquals("La tua persona ha disegnato sulla lavagna", UsPushNotices.forKind("lavagna", null, IT).body);
+    }
+
+    @Test
     public void unknownOrMissingKindIsTheGenericNotice() {
         for (String kind : new String[] { null, "", "drop_table", "THINK" }) {
             UsPushNotices.Notice notice = UsPushNotices.forKind(kind, "Bea", IT);

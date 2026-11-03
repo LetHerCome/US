@@ -76,7 +76,7 @@ test('sync: drawn in the WebView, two pictures to native, Ricordi changes redraw
   assert.match(api, /usGetSignedUrls\(list,US_MEDIA_URL_TTL_S\)/);
   assert.match(api, /\.slice\(0,3\)/);
   const platform = read('platform.js');
-  assert.match(platform, /\['pair', 'me', 'partner', 'memories', 'memories_wide'\]\.includes\(slot\)/);
+  assert.match(platform, /\['pair', 'me', 'partner', 'memories', 'memories_wide'(?:, '[a-z_]+')*\]\.includes\(slot\)/);
   assert.match(platform, /const WIDGET_KINDS = \[[^\]]*'memories'[^\]]*\];/);
   assert.match(platform, /memories: widgetMemories\(input\?\.memories\)/);
 });
@@ -90,7 +90,7 @@ test('native: a new provider, 2x2 and 4x2, the label only on the day', () => {
   const widgetsJava = read(`${JAVA}/UsWidgets.java`);
   assert.match(widgetsJava, /static final String\[\] KINDS = \{[^}]*\bMEMORIES\b[^}]*\};/);
   assert.match(widgetsJava, /case MEMORIES: return UsMemoriesWidgetProvider\.render\(context, state, options\);/);
-  assert.match(read(`${JAVA}/UsWidgetStore.java`), /PORTRAIT_SLOTS = \{ "pair", "me", "partner", "memories", "memories_wide" \};/);
+  assert.match(read(`${JAVA}/UsWidgetStore.java`), /PORTRAIT_SLOTS = \{ "pair", "me", "partner", "memories", "memories_wide"(?:, "[a-z_]+")* \};/);
   const model = read(`${JAVA}/UsWidgetModels.java`);
   assert.match(model, /out\.pill = today \? label : "";/);
   const manifest = read(`${PLUGIN}/AndroidManifest.xml`);

@@ -170,6 +170,18 @@ final class UsWidgetContract {
                 .put("count", memoriesReady ? Math.max(0, Math.min(9999, memoriesIn.optInt("count", 0))) : 0)
                 .put("stack", memoriesReady ? Math.max(1, Math.min(3, memoriesIn.optInt("stack", 1))) : 0);
 
+            // Lavagna: a drawing or not, who drew last (me or partner) and when
+            // (server time). The drawing itself is two separate pictures.
+            JSONObject lavagnaIn = optObject(input, "lavagna");
+            String lavagnaState = lavagnaIn.optString("state", "");
+            if (!lavagnaState.equals("ready") && !lavagnaState.equals("empty")) lavagnaState = "none";
+            boolean drawn = lavagnaState.equals("ready");
+            String lavagnaBy = lavagnaIn.optString("by", "");
+            JSONObject lavagna = new JSONObject()
+                .put("state", lavagnaState)
+                .put("by", drawn && (lavagnaBy.equals("me") || lavagnaBy.equals("partner")) ? lavagnaBy : "")
+                .put("at", drawn ? instantText(lavagnaIn.optString("at", "")) : "");
+
             return new JSONObject()
                 .put("schemaVersion", SCHEMA_VERSION)
                 .put("ownerHash", ownerHash)
@@ -181,6 +193,7 @@ final class UsWidgetContract {
                 .put("daily", daily)
                 .put("left", left)
                 .put("memories", memories)
+                .put("lavagna", lavagna)
                 .put("status", new JSONObject()
                     .put("me", statusPerson(optObject(optObject(input, "status"), "me")))
                     .put("partner", statusPerson(optObject(optObject(input, "status"), "partner"))));

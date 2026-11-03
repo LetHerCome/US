@@ -101,5 +101,7 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // offline too (couple-notes.js/css, ~29 KB): 2.95 -> 3.0 MB.
   // Widget Pastello and Come stai (02/11/2026): the twelve states in Oggi
   // (member-status.js/css, ~16 KB) and the widgets' sync: 3.0 -> 3.05 MB.
-  assert.ok(total <= 3.05 * 1024 * 1024, `precache is ${total} bytes: stays under 3.05 MB`);
+  // Lavagna (03/11/2026): the board in Noi, drawn offline too (lavagna.js/css
+  // and two Phosphor icons, ~36 KB): 3.05 -> 3.1 MB.
+  assert.ok(total <= 3.1 * 1024 * 1024, `precache is ${total} bytes: stays under 3.1 MB`);
 });

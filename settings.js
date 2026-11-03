@@ -125,7 +125,7 @@ async function hydrateUsSettings(){
   if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==cid)return;
   const couple=coupleRes.data||{};
   const profiles=profilesRes.data||[];
-  settingsSnapshot={couple,profiles,loc,push,prefs:prefsRes.data||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true}};
+  settingsSnapshot={couple,profiles,loc,push,prefs:prefsRes.data||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true,lavagna:true}};
   // Colori a scelta (founder, 29/10): with Plus the colour; without it the
   // row stays, locked, to show that Plus unlocks it.
   const plusActive=plusRes?.data?.active===true;
@@ -350,7 +350,7 @@ async function locationAction(){
 
 function preferenceToggle(key,label,checked){
   return `<button type="button" class="us-settings2-toggle-row" data-pref="${key}" aria-pressed="${checked?'true':'false'}">
-    <span><b>${label}</b><small>${key==='think'?'Quando la tua persona ti pensa':key==='today'?'Quando arriva e quando le risposte sono pronte':key==='bond'?'Missioni, nuovi livelli e sblocchi':key==='left_for_you'?'Quando trovi qualcosa nella busta':key==='games'?'Quando tocca a te':'Mesiversario, anniversario ed eventi'}</small></span>
+    <span><b>${label}</b><small>${key==='think'?'Quando la tua persona ti pensa':key==='today'?'Quando arriva e quando le risposte sono pronte':key==='bond'?'Missioni, nuovi livelli e sblocchi':key==='left_for_you'?'Quando trovi qualcosa nella busta':key==='games'?'Quando tocca a te':key==='lavagna'?'Quando la tua persona disegna sulla lavagna':'Mesiversario, anniversario ed eventi'}</small></span>
     <i class="${checked?'on':''}"><u></u></i>
   </button>`;
 }
@@ -591,7 +591,7 @@ async function nativePushAction(state){
 async function notificationsModal(){
   const state=await pushState();
   const {data:prefs}=await sb.rpc('get_notification_preferences');
-  const p=prefs||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true};
+  const p=prefs||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true,lavagna:true};
   openModal('Notifiche',`
     ${pushMasterMarkup(state)}
     <p class="us-settings2-group-label">Cosa ricevere</p>
@@ -602,6 +602,7 @@ async function notificationsModal(){
       ${preferenceToggle('relationship','Ricorrenze',p.relationship!==false)}
       ${preferenceToggle('left_for_you','Lasciato per te',p.left_for_you!==false)}
       ${preferenceToggle('games','Gioca',p.games!==false)}
+      ${preferenceToggle('lavagna','Lavagna',p.lavagna!==false)}
     </div>
     <p class="us-settings2-note">Valgono per il tuo account, su ogni telefono.</p>
   `,state.native?(state.kind==='denied'||state.kind==='settings'?'PERMESSO':'NOTIFICHE'):state.permission==='denied'?'PERMESSO':'NOTIFICHE');

@@ -829,7 +829,7 @@ window.disableWebPush=disableWebPush;
 // Native Notifications V1: one allow-listed target per notification (Web Push
 // and native alike), never a URL. `ref` (a UUID, native only) narrows the
 // surface; every surface re-reads its data through the normal RLS/RPC paths.
-const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar','events']);
+const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar','events','lavagna']);
 async function performPushNavigation(target,intent={}){
   if(!US_PUSH_TARGETS.includes(target))return;
   if(!window.usProfile){usPendingPushTarget=target;return;}
@@ -863,6 +863,12 @@ async function performPushNavigation(target,intent={}){
     setTimeout(()=>window.openNoiSection?.('quest'),120);
     return;
   }
+  // Lavagna (push and widget): the board, open over Noi.
+  if(target==='lavagna'){
+    if(document.querySelector('.page.active')?.id!=='bond')go('bond',{motionCommit:true});
+    setTimeout(()=>window.UsLavagna?.open?.(),120);
+    return;
+  }
   // Mesiversario and anniversary pushes: Eventi on Noi.
   if(target==='events'){
     if(document.querySelector('.page.active')?.id!=='bond')go('bond',{motionCommit:true});
@@ -892,6 +898,7 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.USCountdown?.reset?.();
   window.UsYearRecap?.reset?.();
   window.UsCoupleNotes?.reset?.();
+  window.UsLavagna?.reset?.();
   window.UsCompanions?.reset?.();
   window.UsDistance?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
@@ -6219,6 +6226,8 @@ function startUsRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'couple_notes',filter:`couple_id=eq.${coupleId}`},payload=>window.UsCoupleNotes?.onChange?.(payload))
     .on('postgres_changes',{event:'*',schema:'public',table:'couple_batteries',filter:`couple_id=eq.${coupleId}`},payload=>window.UsPartnerBattery?.onChange?.(payload))
     .on('postgres_changes',{event:'*',schema:'public',table:'member_status',filter:`couple_id=eq.${coupleId}`},payload=>window.UsMemberStatus?.onChange?.(payload))
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'lavagna_strokes',filter:`couple_id=eq.${coupleId}`},payload=>window.UsLavagna?.onStroke?.(payload))
+    .on('postgres_changes',{event:'*',schema:'public',table:'lavagna_boards',filter:`couple_id=eq.${coupleId}`},payload=>window.UsLavagna?.onBoard?.(payload))
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'couples',filter:`id=eq.${coupleId}`},payload=>{renderBondProgress(payload.new?.bond_xp||0);window.USProgression?.refreshAfterAction?.();})
     .subscribe();
 }
