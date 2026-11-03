@@ -168,3 +168,17 @@ test('one place alone opens with the town and its surroundings; more places fit 
   assert.deepEqual(P.viewFor([{ lat: 45.6, lon: 10.65 }, { lat: 45.6, lon: 10.65 }]), { center: [10.65, 45.6], zoom: 9 }, 'two Ricordi in the same place are one place');
   assert.deepEqual(P.viewFor([{ lat: 45.6, lon: 10.65 }, { lat: 44.5, lon: 11.34 }]), { bounds: [[10.65, 44.5], [11.34, 45.6]], maxZoom: 12 });
 });
+
+test('the map writes its names in Italian: name:it, then the local name in Latin letters', () => {
+  const english = ['case', ['has', 'name:nonlatin'], ['concat', ['get', 'name:latin'], '\n', ['get', 'name:nonlatin']], ['coalesce', ['get', 'name_en'], ['get', 'name']]];
+  assert.deepEqual(P.italianLabel(english), ['coalesce', ['get', 'name:it'], ['get', 'name:latin'], ['get', 'name']]);
+  assert.equal(P.italianLabel(['to-string', ['get', 'ref']]), null, 'road numbers stay as they are');
+  assert.equal(P.italianLabel(undefined), null);
+});
+
+test('the map refits when the Ricordi arrive after it opened, and fills the missing icons of the style', () => {
+  const src = read('ricordi-place.js');
+  assert.match(src, /if \(!before\.length && mapPoints\.length\) fit\(mapPoints, true\);/);
+  assert.match(src, /map\.on\('styleimagemissing'/);
+  assert.match(src, /map\.setLayoutProperty\(layer\.id, 'text-field', label\)/);
+});
