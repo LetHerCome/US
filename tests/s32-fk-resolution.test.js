@@ -19,6 +19,8 @@ const PERSONAL_CASCADE=new Set([
   'profiles>couple_batteries.user_id','profiles>device_push_tokens.user_id',
   // Come stai (02/11/2026): the state and its form go with the person.
   'profiles>member_status.user_id',
+  // La sfida della settimana (03/11/2026): who sent which photo goes with the person (the Ricordo follows its own rule).
+  'profiles>couple_weekly_challenge_photos.user_id',
   'profiles>notification_preferences.user_id','profiles>partner_knowledge_attempts.user_id','profiles>progression_reward_views.profile_id',
   'profiles>push_event_log.sender_id','profiles>push_subscriptions.user_id','profiles>stories.author_id','profiles>story_views.viewer_id',
   'profiles>widget_action_tokens.profile_id','profiles>widget_scriptable_installations.profile_id',

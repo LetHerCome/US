@@ -43,6 +43,7 @@ const own = (map, key) => (typeof key === 'string' && Object.hasOwn(map, key) ? 
 // the day, Missions, Sync, This or that). Android shows its own generic text
 // (FCM data-only, #187): this copy reaches Web Push and iOS only.
 const DAILY_TITLE = (en) => pick(en, 'US. · La domanda di oggi', 'US. · Question of the day');
+const CHALLENGE_TITLE = (en) => pick(en, 'US. · La sfida della settimana', 'US. · This week’s challenge');
 const THINK_REACTION_COPY = Object.freeze({
   heart: (n, en) => pick(en, `${n} ti manda un cuore ♥`, `${n} sends you a heart ♥`),
   hug: (n, en) => pick(en, `${n} ti manda un abbraccio`, `${n} sends you a hug`),
@@ -107,6 +108,11 @@ const CATALOGUE = Object.freeze({
   relationship: (a, en) => ({ ...relationshipCopy(a, en), target: a.kind ? 'events' : 'home', tag: a.tag, channel: 'reminders', urgency: 'normal', ttl: 60 * 60 * 24 }),
   // Lavagna V1: the partner drew; one tag, so a newer line replaces the older.
   lavagna: (a, en) => ({ title: pick(en, 'US. · Lavagna', 'US. · Board'), body: pick(en, `${name(a.senderName)} ha disegnato sulla lavagna`, `${name(a.senderName, true)} drew on the board`), target: 'lavagna', ref: a.strokeId, tag: 'us-lavagna', channel: 'partner', urgency: 'normal' }),
+  // La sfida della settimana (03/11/2026): Monday its title, Saturday a
+  // reminder, and for a couple apart the other one's photo. They open Gioca.
+  challenge_new: (a, en) => ({ title: CHALLENGE_TITLE(en), body: a.title || pick(en, 'C’è una nuova sfida per voi ♡', 'There is a new challenge for you two ♡'), target: 'quiz', ref: a.challengeId, tag: `challenge-new-${a.challengeId}`, channel: 'reminders', urgency: 'normal' }),
+  challenge_reminder: (a, en) => ({ title: CHALLENGE_TITLE(en), body: a.shortTitle ? pick(en, `Domani è l’ultimo giorno per «${a.shortTitle}» ♡`, `Tomorrow is the last day for “${a.shortTitle}” ♡`) : pick(en, 'Domani è l’ultimo giorno per la sfida ♡', 'Tomorrow is the last day for the challenge ♡'), target: 'quiz', ref: a.challengeId, tag: `challenge-reminder-${a.challengeId}`, channel: 'reminders', urgency: 'normal' }),
+  challenge_photo: (a, en) => ({ title: CHALLENGE_TITLE(en), body: pick(en, `${name(a.senderName)} ha messo la sua foto: manca solo la tua`, `${name(a.senderName, true)} added their photo: only yours is missing`), target: 'quiz', ref: a.challengeId, tag: `challenge-photo-${a.challengeId}`, channel: 'partner', urgency: 'normal' }),
   // A2: the partner accepted the invite; sent once, to the creator.
   partner_joined: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} ha accettato l’invito: il vostro spazio è pronto`, `${name(a.senderName, true)} joined: your space is ready`), target: 'home', tag: 'us-partner-joined', channel: 'partner', urgency: 'normal' }),
 });

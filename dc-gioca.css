@@ -595,3 +595,63 @@ body.us-gv2-sheet-open{overflow:hidden}
   #quiz .us-gv2-panel.us-content-enter::before,#quiz .us-gv2-panel.us-content-enter>article{animation:dcg-fade 200ms ease-out both}
   #quiz .us-gv2-choice:active{transform:none}
 }
+
+/* ---------- La sfida della settimana (boards SfidaGioca, SfidaDistanza, 03/11/2026) ----------
+   Amber is the challenge's colour; my photo is --us-tu, the other one's --us-partner. */
+#quiz .us-wc-slot{display:block;margin:12px 0 0}
+#quiz .us-wc-slot[hidden]{display:none}
+#quiz .us-wc{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:18px;border-radius:24px;background:var(--us-color-surface-2);border:1px solid color-mix(in srgb,var(--us-ambra) 35%,transparent);color:var(--us-color-text)}
+#quiz .us-wc-head{display:flex;align-items:center;justify-content:space-between;gap:8px 10px;flex-wrap:wrap}
+#quiz .us-wc-kicker{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--us-ambra)}
+#quiz .us-wc-chip{padding:4px 10px;border-radius:999px;background:color-mix(in srgb,var(--us-ambra) 16%,transparent);color:color-mix(in srgb,var(--us-ambra) 72%,var(--us-latte));font:700 12px/1.4 var(--us-font-ui)}
+#quiz .us-wc-chip.is-apart{background:color-mix(in srgb,var(--us-lilla) 18%,transparent);color:color-mix(in srgb,var(--us-lilla) 55%,var(--us-latte))}
+#quiz .us-wc-title{margin:0;font:400 24px/1.2 var(--us-font-display);color:var(--us-color-text);overflow-wrap:anywhere}
+#quiz .us-wc.is-apart .us-wc-title{font-size:23px}
+#quiz .us-wc-when{display:flex;align-items:center;gap:8px;margin:0;font-size:13.5px;line-height:1.4;color:var(--us-color-text-2)}
+#quiz .us-wc-when .us-icon{flex:none;width:16px;height:16px}
+#quiz .us-wc-actions{display:flex;gap:10px}
+#quiz .us-wc-actions button{min-height:48px;border-radius:999px;font:600 14px/1.2 var(--us-font-ui);cursor:pointer;transition:transform 160ms var(--us-ease-out,ease-out)}
+#quiz .us-wc-actions button:active{transform:scale(.97)}
+#quiz .us-wc-photo{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;white-space:nowrap;border:0;background:var(--us-ambra);color:var(--us-inchiostro);font-size:15px!important;font-weight:700!important}
+#quiz .us-wc-photo .us-icon{width:18px;height:18px}
+#quiz .us-wc-change{flex:none;padding:0 14px;white-space:nowrap;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text)}
+@media (max-width:389px){#quiz .us-wc-photo{font-size:14px!important;gap:6px}}
+#quiz .us-wc :is(button):focus-visible{outline:2px solid var(--us-ambra);outline-offset:2px}
+#quiz .us-wc-streak{display:grid;gap:8px;padding-top:12px;border-top:1px solid var(--us-color-line)}
+#quiz .us-wc-bars{display:flex;gap:6px}
+#quiz .us-wc-bars i{flex:1;height:8px;border-radius:999px;background:color-mix(in srgb,var(--us-latte) 14%,transparent)}
+#quiz .us-wc-bars i[data-on="true"]{background:var(--us-ambra)}
+#quiz .us-wc-streak p{margin:0;font-size:13px;line-height:1.45;color:var(--us-color-text-2)}
+#quiz .us-wc-streak b{font-weight:700;color:var(--us-color-text)}
+#quiz .us-wc-img{display:block;width:100%;height:100%;object-fit:cover}
+/* Done: the photo, who did it and when, the points. */
+#quiz .us-wc.is-done{grid-template-columns:84px minmax(0,1fr);align-items:center;gap:14px;padding:14px;background:var(--us-color-surface);border-color:var(--us-color-line)}
+#quiz .us-wc-thumb{width:84px;height:84px;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#f3d2a8 0%,#c46a72 55%,#3a2140 100%)}
+#quiz .us-wc-done-copy,#quiz .us-wc-born-copy{display:grid;gap:4px;min-width:0}
+#quiz .us-wc-by{display:flex;align-items:center;gap:6px;font:700 12px/1.4 var(--us-font-ui);color:var(--us-menta)}
+#quiz .us-wc-by .us-icon{width:14px;height:14px}
+#quiz .us-wc-done-title{font:400 17px/1.2 var(--us-font-display);color:var(--us-color-text)}
+#quiz .us-wc-done-copy small,#quiz .us-wc-born-copy small{font-size:13px;line-height:1.4;color:var(--us-color-text-2)}
+/* Apart: the two photos side by side. */
+#quiz .us-wc-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#quiz .us-wc-pair-cell{display:grid;gap:6px;min-width:0}
+#quiz .us-wc-pair-photo,#quiz .us-wc-pair-wait,#quiz .us-wc-pair-add{display:block;height:190px;border-radius:16px;overflow:hidden;box-sizing:border-box}
+#quiz .us-wc-pair-photo{background:linear-gradient(180deg,#1c2a5a 0%,#4b3f86 45%,#c77d8f 100%)}
+#quiz .us-wc-pair-wait{border:1.5px dashed var(--us-color-line-strong);background:color-mix(in srgb,var(--us-partner) 6%,transparent)}
+#quiz .us-wc-pair-add{width:100%;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px;border:1.5px dashed color-mix(in srgb,var(--us-latte) 35%,transparent);background:color-mix(in srgb,var(--us-tu) 6%,transparent);color:var(--us-color-text);font:700 14px/1.3 var(--us-font-ui);cursor:pointer}
+#quiz .us-wc-pair-add .us-icon{width:26px;height:26px}
+#quiz .us-wc-pair-label{display:flex;align-items:center;gap:6px;min-width:0;font:700 13px/1.3 var(--us-font-ui);color:var(--us-color-text)}
+#quiz .us-wc-pair-label>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#quiz .us-wc-pair-label i{flex:none;width:9px;height:9px;border-radius:999px;background:var(--us-partner)}
+#quiz .us-wc-pair-cell[data-who="me"] .us-wc-pair-label i{background:var(--us-tu)}
+#quiz .us-wc-rule{margin:0;font-size:13.5px;line-height:1.45;color:var(--us-color-text-2)}
+#quiz .us-wc-actions.is-change{justify-content:flex-start}
+/* The Ricordo that is born: the two photos, then its name. */
+#quiz .us-wc.is-born{gap:0;padding:0;overflow:hidden;background:var(--us-color-surface);border-color:var(--us-color-line)}
+#quiz .us-wc-born-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;height:230px}
+#quiz .us-wc-born-pair>span{overflow:hidden;background:linear-gradient(180deg,#23304f 0%,#5a4a7c 50%,#e0a37a 100%)}
+#quiz .us-wc-born-copy{padding:14px 16px 16px}
+#quiz .us-wc.is-born .us-wc-done-title{font-size:20px}
+:root[data-us-motion="reduced"] #quiz .us-wc-actions button{transition:none}
+:root[data-us-motion="reduced"] #quiz .us-wc-actions button:active{transform:none}
+@media (prefers-reduced-motion:reduce){#quiz .us-wc-actions button{transition:none}#quiz .us-wc-actions button:active{transform:none}}

@@ -52,6 +52,7 @@ const APP_SHELL = [
   versioned("/ricordi-place.js"),
   versioned("/partner-battery.js"),
   versioned("/member-status.js"),
+  versioned("/weekly-challenge.js"),
   versioned("/navigation.js"),
   versioned("/games.css"),
   versioned("/games.js"),

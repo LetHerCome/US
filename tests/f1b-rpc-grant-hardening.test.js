@@ -110,6 +110,9 @@ const byName = new Map(MATRIX.map((row) => [row.name, row]));
 // 1.0 O2 brings the one-tap reaction back, so set_daily_answer_reaction is
 // called again by the client (it never lost its authenticated grant).
 const RETIRED_DAILY_UI = new Set(['save_daily_question_outcome', 'delete_daily_question_outcome']);
+// La sfida della settimana (03/11/2026) replaces the weekly missions: the app
+// no longer calls them, the server keeps them (and their grants) for old apps.
+const RETIRED_MISSIONS_UI = new Set(['confirm_bond_quest', 'reroll_bond_quest', 'ensure_bond_week']);
 
 function rpcNames(files) {
   const names = new Set();
@@ -186,6 +189,7 @@ test('F1B parity: every RPC the shipped client calls is CLIENT_REQUIRED or a ver
   const declared = MATRIX.filter((r) => r.cls === 'CLIENT_REQUIRED').map((r) => r.name);
   for (const name of declared) {
     if (RETIRED_DAILY_UI.has(name)) assert.ok(!called.has(name), `${name}: retired Daily UI must not call it`);
+    else if (RETIRED_MISSIONS_UI.has(name)) assert.ok(!called.has(name), `${name}: the retired missions must not be called`);
     else assert.ok(called.has(name), `${name} is CLIENT_REQUIRED but the client no longer calls it`);
   }
   // Preserve F1B's historical matrix. Like later Edge RPCs below, new client

@@ -88,7 +88,6 @@ test('M9D runtime: sections open and close; Le vostre idee open inside Missioni'
     document: { getElementById: el, querySelector: (sel) => (sel === '#bond .noi-canonical-page' ? page : null) },
     scrollTo() {},
     noiIdeaState: { loaded: false, error: false, activeItems: [] },
-    hydrateBond: () => calls.push('quests'),
     hydrateNoiIdeas: () => calls.push('ideas'),
     closeNoiIdeaDetail: () => calls.push('closeDetail'),
     toggleNoiIdeaQuickForm: (open) => calls.push(`quick:${open}`)
@@ -101,11 +100,12 @@ test('M9D runtime: sections open and close; Le vostre idee open inside Missioni'
   window.openNoiSection('da-vivere');
   assert.equal(page.dataset.noiView, 'quest', 'the old Da vivere route opens Missioni');
   assert.equal(el('noiSectionBar').hidden, false);
-  assert.deepEqual(calls, ['quests', 'ideas'], 'Missioni loads its missions and your ideas');
+  // Sfida della settimana (03/11/2026): no missions left to load, only your ideas.
+  assert.deepEqual(calls, ['ideas'], 'the sheet loads your ideas');
   window.closeNoiSection();
   assert.equal(page.dataset.noiView, 'hub');
   assert.equal(el('noiSectionBar').hidden, true);
-  assert.deepEqual(calls, ['quests', 'ideas', 'closeDetail', 'quick:false'], 'leaving Missioni closes an open idea and the quick form');
+  assert.deepEqual(calls, ['ideas', 'closeDetail', 'quick:false'], 'leaving the sheet closes an open idea and the quick form');
   window.closeNoiSection();
-  assert.equal(calls.length, 4, 'closing the hub is a no-op');
+  assert.equal(calls.length, 3, 'closing the hub is a no-op');
 });

@@ -394,6 +394,8 @@ test('F2C VAPID_SUBJECT: every Web Push producer reads it through the one helper
     'supabase/functions/left-for-you-push-worker/index.ts',
     'supabase/functions/monthiversary-job/index.ts',
     'supabase/functions/send-web-push/index.ts',
+    // La sfida della settimana (03/11/2026).
+    'supabase/functions/weekly-challenge-job/index.ts',
   ]);
   for (const file of producers) {
     const source = sources[file];

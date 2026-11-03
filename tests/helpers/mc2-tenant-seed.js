@@ -44,6 +44,15 @@ async function seedTenant(db,cid,u,v,n){
     insert into public.think_reactions(message_id,reaction) values('${id(8)}','heart');
     insert into public.weekly_quiz_rewards(couple_id,set_id,week_start,score,xp_awarded) values('${cid}','${setid}','2026-01-05',0,0);
   `);
-  await h.as(db,u,'select public.ensure_bond_week() r');
+  // The old weekly missions are no longer created (Sfida della settimana,
+  // 03/11/2026): their history rows are seeded directly, next to a challenge.
+  await db.exec(`
+    insert into public.bond_weekly_state(couple_id,week_start,rerolls_used) values('${cid}','2026-01-05',0);
+    insert into public.bond_weekly_quests(couple_id,week_start,slot,template_key,title,category,rarity,xp)
+      values('${cid}','2026-01-05',1,'near-sunset','Private quest ${n}','adventure','rare',60);
+    insert into public.couple_weekly_challenges(id,couple_id,week_start,template_key,title,short_title,two_places)
+      values('${id(11)}','${cid}','2026-01-05','near-sunset','Private challenge ${n}','Private ${n}',false);
+    insert into public.couple_weekly_challenge_photos(challenge_id,couple_id,user_id,moment_id) values('${id(11)}','${cid}','${u}','${id(5)}');
+  `);
 }
 module.exports={seedTenant};

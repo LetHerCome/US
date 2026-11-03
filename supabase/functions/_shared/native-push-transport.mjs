@@ -136,6 +136,9 @@ export const ANDROID_NOTICE_KINDS = Object.freeze({
   relationship: 'anniversary',
   partner_joined: 'partner_joined',
   lavagna: 'lavagna',
+  challenge_new: 'challenge',
+  challenge_reminder: 'challenge_reminder',
+  challenge_photo: 'challenge_photo',
 });
 const INSTALLATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

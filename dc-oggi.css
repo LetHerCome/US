@@ -1050,3 +1050,9 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
   #home .home-photo-shade{transition:none}
 }
 @keyframes dc-oggi-fade{from{opacity:0}to{opacity:1}}
+
+/* La sfida della settimana on Oggi (board SfidaOggi, 03/11/2026): the challenge's amber. */
+#home #usTodayPriorityRegion .us-today-priority-card[data-us-arrival-type="challenge"]{border-color:color-mix(in srgb,var(--us-ambra) 40%,transparent);background:color-mix(in srgb,var(--us-ambra) 10%,color-mix(in srgb,var(--us-color-surface) 90%,transparent))}
+#home #usTodayPriorityRegion .us-today-priority-card[data-us-arrival-type="challenge"]::before{background:var(--us-ambra)}
+#home #usTodayPriorityRegion .us-today-priority-card[data-us-arrival-type="challenge"] .us-today-priority-kind{color:var(--us-ambra)}
+#home #usTodayPriorityRegion .us-today-priority-card[data-us-arrival-type="challenge"] .us-today-priority-action{background:var(--us-ambra)}

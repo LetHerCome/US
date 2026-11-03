@@ -64,6 +64,14 @@ public class UsPushNoticesTest {
     }
 
     @Test
+    public void theWeeklyChallengeOpensGioca() {
+        assertEquals("gioca", UsPushNotices.forKind("challenge", "Bea", IT).page);
+        assertEquals("US. · La sfida della settimana", UsPushNotices.forKind("challenge_reminder", "Bea", IT).title);
+        assertEquals("Bea ha messo la sua foto: manca solo la tua", UsPushNotices.forKind("challenge_photo", "Bea", IT).body);
+        assertEquals("Bea added their photo: only yours is missing", UsPushNotices.forKind("challenge_photo", "Bea", EN).body);
+    }
+
+    @Test
     public void namesAreCleanedAndBounded() {
         assertEquals("Bea trice", UsPushNotices.cleanName("Bea\ntrice"));
         StringBuilder longName = new StringBuilder();

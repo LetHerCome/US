@@ -266,7 +266,11 @@ test('language per caller: Italian unchanged, English for Daily, Game V2 with na
     assert.ok(waitingState.items.some((i) => i.my_item_role === 'predictor' && /\bPartner 2\b/.test(i.my_prompt)));
 
     // Weekly quests: Italian snapshot, translated at read time from the template.
-    await as(db, F, 'select public.ensure_bond_week() r');
+    // No new boards since the Sfida della settimana (03/11/2026): the history
+    // rows are written as ensure_bond_week used to.
+    await db.query(`insert into public.bond_weekly_quests(couple_id, week_start, slot, template_key, title, category, rarity, xp)
+      select $1, date '2026-11-02', row_number() over (order by key), key, title, category, rarity, xp
+      from public.bond_quest_templates where key in ('near-sunset', 'any-appreciate', 'far-playlist')`, [C1]);
     const quests = (who) => as(db, who, `select q.id, q.slot, q.title, q.template_key, public.title_localized(q) shown
       from public.bond_weekly_quests q order by q.slot`);
     const titles = new Map((await rows(db, 'select key, title, title_en from public.bond_quest_templates')).map((r) => [r.key, r]));

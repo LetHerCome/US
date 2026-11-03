@@ -77,6 +77,10 @@ verify_jwt = true
 verify_jwt = false
 
 # Recovered in F2A.1 from the deployed v4 (never deployed from the repo yet).
+# Called only by cron `us-weekly-challenge-hourly`, authenticated by x-us-cron-key.
+[functions.weekly-challenge-job]
+verify_jwt = false
+
 # Called only by cron `us-monthiversary-hourly`, authenticated by x-us-cron-key.
 [functions.monthiversary-job]
 verify_jwt = false

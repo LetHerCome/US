@@ -551,7 +551,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     <div class="us-modal-backdrop" data-distance-close></div>
     <section class="us-sheet is-bottom us-distance-sheet" role="dialog" aria-modal="true" aria-labelledby="usDistanceHeading" data-us-modal-panel>
       <header class="us-distance-head"><div><span class="tiny">UNA DOMANDA PER VOI</span><h2 id="usDistanceHeading">Come vi vedete?</h2></div><button type="button" class="us-modal-close" data-us-modal-close data-distance-close aria-label="Chiudi la domanda"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
-      <p class="us-distance-lead">Ci serve solo per scegliere le missioni giuste per voi.</p>
+      <p class="us-distance-lead">Ci serve solo per scegliere la sfida giusta per voi.</p>
       <div class="us-distance-choices" role="group" aria-label="Come vi vedete">
         <button type="button" class="us-distance-choice" data-distance="near" aria-pressed="false"><b>Ci vediamo spesso</b><small>Stessa casa o stessa città</small></button>
         <button type="button" class="us-distance-choice" data-distance="far" aria-pressed="false"><b>Viviamo lontani</b><small>Città diverse, a distanza</small></button>
@@ -767,14 +767,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <div class="noi-sheet us-foglio" id="noiQuestSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
       <div class="noi-sheet-scrim us-modal-backdrop" data-noi-sheet-close></div>
       <section class="noi-living-section" role="dialog" aria-modal="true" aria-labelledby="noiLivingTitle" data-us-modal-panel>
-        <header class="noi-sheet-head"><div><span class="tiny" id="noiQuestKicker">Questa settimana</span><h3 id="noiLivingTitle">Missioni di coppia</h3></div><button type="button" class="us-modal-close noi-sheet-x" id="noiQuestClose" data-us-modal-close data-noi-sheet-close aria-label="Chiudi le missioni"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
-        <div id="questWeekBoard" class="quest-week" hidden></div>
-        <div id="bondQuestList" class="bond-quest-list noi-living-list" aria-live="polite"><div class="noi-quiet-state"><b>La prossima missione</b></div></div>
-        <section class="quest-recent" id="questRecent" aria-labelledby="questRecentTitle" hidden data-open="false">
-          <button type="button" class="quest-recent-toggle" id="questRecentToggle" aria-expanded="false" aria-controls="questRecentList"><span class="quest-recent-mark" aria-hidden="true"><span class="us-icon" data-us-icon="clock-counter-clockwise"></span></span><b id="questRecentTitle">Settimane passate<small>Le missioni che avete fatto</small></b><span class="us-icon quest-recent-caret" data-us-icon="caret-right" aria-hidden="true"></span></button>
-          <ul class="quest-recent-list" id="questRecentList"></ul>
-        </section>
-        <div class="bond-week-note" aria-hidden="true"><span id="bondWeekReset"></span><span></span></div>
+        <header class="noi-sheet-head"><div><span class="tiny" id="noiQuestKicker">Insieme</span><h3 id="noiLivingTitle">Le vostre idee</h3></div><button type="button" class="us-modal-close noi-sheet-x" id="noiQuestClose" data-us-modal-close data-noi-sheet-close aria-label="Chiudi le vostre idee"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
         <section class="noi-idea-section" aria-labelledby="noiIdeaTitle" hidden>
           <div class="noi-idea-browse" id="noiIdeaBrowse">
             <div class="noi-section-title-row">
@@ -966,7 +959,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="together-mode">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="map-pin"></span></span>
-          <span class="us-setting-main"><b>Come vi vedete</b><small>Sceglie le missioni giuste per voi</small></span>
+          <span class="us-setting-main"><b>Come vi vedete</b><small>Sceglie la sfida della settimana</small></span>
           <span class="us-setting-value" id="usDistanceValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="story-archive">
@@ -1363,6 +1356,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 <script defer src="/ricordi-place.js?v=us-staging-20261103-93"></script>
 <script defer src="/partner-battery.js?v=us-staging-20261103-93"></script>
 <script defer src="/member-status.js?v=us-staging-20261103-93"></script>
+<script defer src="/weekly-challenge.js?v=us-staging-20261103-93"></script>
 <script defer src="/ricordi-inline-carousel.js?v=us-staging-20261103-93"></script>
 <script defer src="/calendar-domain.js?v=us-staging-20261103-93"></script>
 <script defer src="/calendar.js?v=us-staging-20261103-93"></script>

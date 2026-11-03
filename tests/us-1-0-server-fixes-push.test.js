@@ -37,7 +37,9 @@ test('catalogue: Italian copy never says Today, Bond, XP or quest; English follo
     const en = core.buildNotification(type, { ...args, locale: 'en' });
     assert.equal(en.target, it.target, type);
     assert.equal(en.tag, it.tag, type);
-    if (!['calendar_reminder'].includes(type) && it.body !== 'Cena') assert.notEqual(en.body, it.body, `${type}: English copy exists`);
+    // challenge_new's body is the challenge's own title, already in the reader's language (weekly-challenge-job).
+    if (!['calendar_reminder', 'challenge_new'].includes(type) && it.body !== 'Cena') assert.notEqual(en.body, it.body, `${type}: English copy exists`);
+    if (type === 'challenge_new') assert.notEqual(en.title, it.title, `${type}: English title exists`);
   }
   const en = (type, extra = {}) => core.buildNotification(type, { ...args, ...extra, locale: 'en' });
   assert.equal(en('daily_question').title, 'US. · Question of the day');
