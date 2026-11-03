@@ -23,6 +23,7 @@ function build(state) {
   const sandbox = {
     document: { getElementById: (id) => elements[id] || null },
     usTodayPriorityQueue: state.priority ? [{ category: state.priority }] : [],
+    usTodayPrioritiesKnown: state.known ?? true,
     String, Number, Array, Object
   };
   vm.runInNewContext(`${source}\nthis.api={arbitrateOggi,applyOggiArbitration,collectOggiCandidates};`, sandbox);
@@ -102,4 +103,16 @@ test('arbitration is wired to the hero, suppressed surfaces are only hidden, dis
   assert.match(read('styles.css'), /\[data-us-oggi-slot="suppressed"\]\{display:none!important\}/);
   assert.doesNotMatch(source, /distanceWidget/);
   assert.match(source, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink'\]\)/);
+});
+
+// Revisione di staging (founder, 03/11/2026): «Notifiche disattivate» flashed on
+// Oggi and went away a moment later, when the cards that wait for me arrived.
+test('arbitration: the notifications invite waits until the first load of what waits for me', () => {
+  const early = build({ daily: 'answer', push: true, known: false });
+  early.api.applyOggiArbitration();
+  assert.equal(slotOf(early.elements).pushOptInCard, 'suppressed', 'not before the first load');
+  const later = build({ daily: 'answer', push: true, known: true });
+  later.api.applyOggiArbitration();
+  assert.equal(slotOf(later.elements).pushOptInCard, 'evidence', 'nothing waits for me: the invite shows');
+  assert.match(app, /function renderTodayPriorities\(priorities=\[\]\)\{[\s\S]*?usTodayPrioritiesKnown=true;[\s\S]*?applyOggiArbitration\(\)/);
 });

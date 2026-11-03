@@ -319,6 +319,8 @@
 
 /* .ver */
 #settings .us-settings2-page .us-settings2-version{margin:20px 0 0;text-align:center;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
+/* The build under «US 1.0»: which version this phone runs (03/11/2026). */
+#settings .us-settings2-page .us-settings2-version small{display:block;font-size:11px;opacity:.8}
 
 /* ==========================================================================
    Sheets (082–095): the mockup's Foglio body. Header chrome, scrim and the

@@ -5,6 +5,8 @@
    pointer-transparent; only the hit target on the cat takes a tap. */
 .us-pet-layer{position:fixed;z-index:var(--us-layer-ambient);right:calc((100% - min(456px,calc(100% - 24px))) / 2 + 10px);bottom:calc(max(12px,var(--us-safe-bottom)) + var(--us-nav-height) - 4px);width:54px;height:48px;pointer-events:none;transition:opacity .3s,translate .45s var(--us-ease-standard)}
 .us-pet-layer[hidden]{display:none!important}
+/* A page scrolling under the cat: it steps back so the text shows (03/11/2026). */
+.us-pet-layer[data-pet-scrolling]{opacity:.2}
 .us-pet-layer,.us-pet-layer *{pointer-events:none!important;user-select:none;-webkit-user-select:none}
 .us-pet-actor{position:absolute;inset:0;display:block;touch-action:manipulation}
 .us-pet-layer .us-pet-hit{position:absolute;inset:0;z-index:1;pointer-events:auto!important;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;cursor:pointer}

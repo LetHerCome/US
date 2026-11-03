@@ -148,3 +148,23 @@ test('saving a place uses the app client, the global sb', async () => {
     assert.deepEqual(calls[1][1], { p_moment: 'm1', p_lat: null, p_lon: null, p_label: null, p_source: null }, 'clearing the place');
   } finally { delete globalThis.sb; }
 });
+
+// Revisione di staging (founder, 03/11/2026): «Lake Garda» on a phone set to English,
+// and one Ricordo alone opened the map so close that nothing around it showed.
+test('place names are asked in Italian, whatever the language of the phone', async () => {
+  const original = global.fetch;
+  const asked = [];
+  global.fetch = async (url, init) => { asked.push(init?.headers?.['Accept-Language']); return { ok: true, json: async () => ({ features: [] }) }; };
+  try {
+    await P.search('Garda');
+    await P.nameOf(45.47, 10.54);
+    assert.deepEqual(asked, ['it', 'it']);
+  } finally { global.fetch = original; }
+});
+
+test('one place alone opens with the town and its surroundings; more places fit together', () => {
+  assert.deepEqual(P.viewFor([]), { center: [12.5, 42.5], zoom: 4.3 });
+  assert.deepEqual(P.viewFor([{ lat: 45.6, lon: 10.65 }]), { center: [10.65, 45.6], zoom: 9 });
+  assert.deepEqual(P.viewFor([{ lat: 45.6, lon: 10.65 }, { lat: 45.6, lon: 10.65 }]), { center: [10.65, 45.6], zoom: 9 }, 'two Ricordi in the same place are one place');
+  assert.deepEqual(P.viewFor([{ lat: 45.6, lon: 10.65 }, { lat: 44.5, lon: 11.34 }]), { bounds: [[10.65, 44.5], [11.34, 45.6]], maxZoom: 12 });
+});

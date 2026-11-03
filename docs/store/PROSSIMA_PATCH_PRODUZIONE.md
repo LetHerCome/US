@@ -17,6 +17,11 @@
 - **Controllo ortografico di tutte le domande (31/10):** migrazione `20261031120000_ortografia_domande.sql` (solo testi, test in `tests/ortografia-domande-db.test.js`). Su staging serve il run del workflow «Supabase SQL (manual)» con l'approvazione del founder; in produzione lo stesso file, con il suo via.
 - **Oggi, riga di distanza (e su staging batteria e «Come stai»):** con la scheda «Tocca a te» o l'avviso delle notifiche la riga spariva del tutto, per la regola del mockup di ottobre in `dc-oggi.css`. Ora resta sempre (founder, 03/11, dalla revisione di staging; test in `tests/oggi-riga-sempre-visibile.test.js`).
 - **Oggi, domanda del giorno sui telefoni bassi:** sotto i 700 px d'altezza restava una riga sola («Quale canzone ti mette di…»), sotto i 600 px spariva. Ora due righe in tutti e due i casi.
+- **Revisione di staging, problemi minori (03/11):**
+  - **Mappa dei Ricordi:** i nomi dei posti arrivano sempre in italiano, anche con il telefono in inglese (prima «Lake Garda»); con un posto solo la mappa apre su città e dintorni (zoom 9), non su una strada al buio (`ricordi-place.js`, test in `tests/ricordi-place-client.test.js`).
+  - **Gattino:** mentre una pagina scorre si fa quasi trasparente e lascia leggere il testo, poi torna (`pet.js`, `pet.css`).
+  - **Avvio:** la barra in alto (cuore, logo, busta) non compare più da sola prima della presentazione (`top-chrome.css`); «Notifiche disattivate» non lampeggia più in Oggi, perché aspetta il primo caricamento delle schede in attesa (`app.js`).
+  - **Impostazioni:** sotto «US 1.0» si vede la build, per sapere quale versione c'è sul telefono.
 - **Emoji di Gboard nella risposta alla domanda del giorno:** ancora aperto. Il campo non ha `autocomplete="off"` (la causa trovata il 29/10 per gli altri campi), quindi la causa è un'altra. Il 31/10, nell'emulatore con Gboard e un APK di debug, il campo passa a Gboard testo normale a più righe (`inputType=0x2c001`): tastiera completa, tasto emoji e pannello emoji funzionanti. Serve una registrazione dal telefono del founder per vedere quando cambia la tastiera.
 
 ## Patch 1.3.0 (in produzione dal 30/10/2026)

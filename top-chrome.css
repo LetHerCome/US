@@ -3,9 +3,10 @@
    entire reserved height: no pill, logo or invisible spacer. The existing
    .page.active drives state for taps, swipes and browser history. */
 
+/* inherit, not visible: before sign-in the hidden app hides the bar too (03/11/2026). */
 .top.us-premium-top {
   opacity: 1;
-  visibility: visible;
+  visibility: inherit;
   transform: translateY(0) scale(1);
   transition:
     opacity 190ms var(--us-ease-standard, ease),
