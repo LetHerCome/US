@@ -2,6 +2,12 @@
 **Checked:** 2026-10-22 (read-only schema and Edge comparison with production) · earlier full database gate 2026-10-10
 **State:** AT PRODUCTION LEVEL except the documented differences below / S2 ON STAGING ONLY / ALL CRONS OFF
 
+## Update 2026-11-03 — revisione di staging
+
+- **Edge `widget-device-token` installata su staging** (run 41554946616, da `main`, approvata dal founder). Prima mancava: l'app non riceveva la chiave dei widget e Ti penso dal widget restava su «Apri US per riattivare l'invio». Verificata con la sessione del founder: `revoke` su un dispositivo inventato risponde 200 `{"revoked":true}`.
+- **Ancora solo in produzione:** `spotify-search` (la ricerca delle canzoni in Lasciato per te su staging non funziona; servono anche i secret di Spotify), `cleanup-left-for-you`, `us-widget-state`.
+- **`export-user-data` su staging è quella di `main`:** non esporta Note, Batteria e Come stai finché non si pubblica dal branch di staging.
+
 ## Update 2026-10-29 — patch unica in prova (PR #232–#237)
 
 - **SQL applicato su staging** (workflow «Supabase SQL (manual)», approvato dal founder): `20261028201759_gioca_daily_limit_v1`, `20261028232743_days_together_milestones_v1`, `20261029012149_app_min_version_v1`, `20261029014653_person_colors_plus_v1`.
