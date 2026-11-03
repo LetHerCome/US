@@ -5460,6 +5460,8 @@ function noiIdeaCardHtml(item,{lived=false}={}){
   return `<button type="button" class="noi-idea-card" data-id="${escapeHtml(item.id)}"><span class="noi-idea-card-copy"><b translate="no">${escapeHtml(item.title)}</b>${noteHtml}</span>${label?`<span class="noi-idea-state">${escapeHtml(label)}</span>`:''}</button>`;
 }
 function renderNoiIdeaActiveList(){
+  // Noi nuova (03/11/2026): the «Da vivere» post-it repaints with the list.
+  window.dispatchEvent?.(new CustomEvent('us-ideas-change'));
   const root=document.getElementById('noiIdeaList');
   if(!root)return;
   root.setAttribute('aria-busy','false');
@@ -5676,6 +5678,16 @@ function closeNoiIdeaDetail(){
   const living=document.querySelector('#bond .noi-living-section');
   if(living?.dataset)delete living.dataset.ideaDetail;
 }
+// A new idea: the quick add of Missioni and the «Da vivere» post-it of the
+// Noi board (03/11/2026) write it the same way.
+function insertNoiIdea({title,note=null,link=null},userId,coupleId){
+  return sb.from('bucket_items').insert({
+      title,note,link_url:link,
+      created_by:userId,
+      couple_id:coupleId,
+      status:'idea',completed:false
+    }).select('id,title,note,link_url,status,calendar_entry_id,completed_at,created_at');
+}
 async function submitNoiIdeaQuickAdd(event){
   event.preventDefault();
   if(noiIdeaState.busy||!window.usProfile)return;
@@ -5695,12 +5707,7 @@ async function submitNoiIdeaQuickAdd(event){
   if(saveBtn)saveBtn.disabled=true;
   if(status)status.textContent='Salvo…';
   try{
-    const {data,error}=await sb.from('bucket_items').insert({
-      title,note,link_url:link,
-      created_by:userId,
-      couple_id:coupleId,
-      status:'idea',completed:false
-    }).select('id,title,note,link_url,status,calendar_entry_id,completed_at,created_at');
+    const {data,error}=await insertNoiIdea({title,note,link},userId,coupleId);
     if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     if(error)throw error;
     const row=Array.isArray(data)&&data[0]?data[0]:null;
@@ -5820,7 +5827,51 @@ async function linkNoiIdeaToCalendar(id,entryId){
   refreshNoiIdeaCalendarLinks([entryId],null,userId,coupleId);
   return {ok:true};
 }
-window.UsDaVivere=Object.freeze({linkCalendarEntry:linkNoiIdeaToCalendar});
+// Noi nuova (03/11/2026): the «Da vivere» post-it of the Noi board
+// (couple-notes.js) shows these ideas and writes them through the same
+// functions: a new idea, and ticking one means «vissuta» (the reciprocal
+// step: the first tap proposes, the partner's tap confirms).
+function noiIdeaSnapshot(){
+  return {loaded:noiIdeaState.loaded,error:noiIdeaState.error,active:noiIdeaState.activeItems.slice(),lived:noiIdeaState.livedItems.slice()};
+}
+async function addNoiIdeaFromBoard(title){
+  const clean=String(title||'').trim().slice(0,120);
+  if(!clean||!window.usProfile)return false;
+  const userId=window.usProfile.id,coupleId=window.usProfile.couple_id,identityGen=noiIdeaIdentityGen;
+  try{
+    const {data,error}=await insertNoiIdea({title:clean},userId,coupleId);
+    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return false;
+    if(error)throw error;
+    const row=Array.isArray(data)&&data[0]?data[0]:null;
+    if(row&&!noiIdeaFindItem(row.id))noiIdeaState.activeItems.unshift(row);
+    renderNoiIdeaActiveList();
+    return true;
+  }catch(e){
+    console.warn(e);
+    if(noiIdeaOperationIsCurrent(userId,coupleId,identityGen))toast('Non riesco a salvarla. Riprova.');
+    return false;
+  }
+}
+async function markNoiIdeaLivedFromBoard(id){
+  const item=noiIdeaFindItem(id);
+  const phase=item?noiIdeaLivedPhase(item):'lived';
+  if(!window.usProfile||noiIdeaState.busy)return false;
+  if(phase==='mine'){toast(`In attesa della conferma di ${noiIdeaPartnerName()}`);return false;}
+  if(phase!=='none'&&phase!=='partner')return false;
+  noiIdeaState.busy=true;
+  try{
+    const res=await confirmNoiIdeaLived(id);
+    if(res===null){toast('È già cambiata: aggiorno la lista.');hydrateNoiIdeas();}
+    return Boolean(res);
+  }catch(e){
+    console.warn(e);
+    toast('Non riesco a salvarla. Riprova.');
+    return false;
+  }finally{
+    noiIdeaState.busy=false;
+  }
+}
+window.UsDaVivere=Object.freeze({linkCalendarEntry:linkNoiIdeaToCalendar,snapshot:noiIdeaSnapshot,hydrate:hydrateNoiIdeas,add:addNoiIdeaFromBoard,markLived:markNoiIdeaLivedFromBoard});
 function scheduleNoiIdea(){
   const item=noiIdeaState.selectedId?noiIdeaFindItem(noiIdeaState.selectedId):null;
   if(!item||item.status!=='idea'||noiIdeaState.busy)return;
@@ -5838,6 +5889,31 @@ function openNoiIdeaCalendarEntry(){
 // nessuna scrittura diretta di status/completed). Non tocca calendar_entry_id
 // (il link al giorno vero resta com'era) né crea un Moment: il ricordo, se c'è,
 // lo aggiunge la coppia con una foto vera dall'azione discreta successiva.
+// The reciprocal step itself, shared by the detail and the «Da vivere»
+// post-it of the Noi board (03/11/2026): the server decides, the lists
+// follow. Undefined when the identity moved on meanwhile; null when the idea
+// had already changed (an empty answer is not a success).
+async function confirmNoiIdeaLived(id){
+  const userId=window.usProfile.id,coupleId=window.usProfile.couple_id,identityGen=noiIdeaIdentityGen;
+  const item=noiIdeaFindItem(id);
+  const {data:res,error}=await sb.rpc('confirm_bucket_item_lived',{p_item_id:id});
+  if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return undefined;
+  if(error)throw error;
+  if(!res)return null;
+  if(res.status==='lived'){
+    const current=noiIdeaPatchItem(id,{status:'lived',completed_at:res.completed_at||new Date().toISOString(),calendar_entry_id:res.calendar_entry_id??item?.calendar_entry_id,lived_proposed_by:res.lived_proposed_by});
+    noiIdeaState.activeItems=noiIdeaState.activeItems.filter(i=>i.id!==id);
+    if(current&&!noiIdeaState.livedItems.some(i=>i.id===id))noiIdeaState.livedItems.unshift(current);
+    renderNoiIdeaActiveList();
+    renderNoiIdeaLivedList();
+    toast('Vissuta insieme ♡');
+  }else{
+    noiIdeaPatchItem(id,{lived_proposed_by:res.lived_proposed_by});
+    renderNoiIdeaActiveList();
+    toast(`Ora manca ${noiIdeaPartnerName()} ♡`);
+  }
+  return res;
+}
 async function markNoiIdeaLived(){
   if(noiIdeaState.busy||!window.usProfile)return;
   const id=noiIdeaState.selectedId;
@@ -5858,28 +5934,15 @@ async function markNoiIdeaLived(){
   if(btn)btn.disabled=true;
   if(statusEl)statusEl.textContent='Salvo…';
   try{
-    const {data:res,error}=await sb.rpc('confirm_bucket_item_lived',{p_item_id:id});
-    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
-    if(error)throw error;
+    const res=await confirmNoiIdeaLived(id);
+    if(res===undefined)return;
     if(!res){
       if(statusEl)statusEl.textContent='È già cambiata: aggiorno la lista.';
       hydrateNoiIdeas();
       return;
     }
     if(statusEl)statusEl.textContent='';
-    if(res.status==='lived'){
-      const current=noiIdeaPatchItem(id,{status:'lived',completed_at:res.completed_at||new Date().toISOString(),calendar_entry_id:res.calendar_entry_id??item.calendar_entry_id,lived_proposed_by:res.lived_proposed_by});
-      noiIdeaState.activeItems=noiIdeaState.activeItems.filter(i=>i.id!==id);
-      if(current&&!noiIdeaState.livedItems.some(i=>i.id===id))noiIdeaState.livedItems.unshift(current);
-      renderNoiIdeaActiveList();
-      renderNoiIdeaLivedList();
-      renderNoiIdeaDetailState(noiIdeaFindItem(id));
-      toast('Vissuta insieme ♡');
-    }else{
-      noiIdeaPatchItem(id,{lived_proposed_by:res.lived_proposed_by});
-      renderNoiIdeaDetailState(noiIdeaFindItem(id));
-      toast(`Ora manca ${noiIdeaPartnerName()} ♡`);
-    }
+    renderNoiIdeaDetailState(noiIdeaFindItem(id));
   }catch(e){
     if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     console.warn(e);

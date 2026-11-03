@@ -31,17 +31,20 @@ test('a note with nothing written is empty; empty items go when it is closed', (
   assert.ok(N.isEmpty({ title: ' ', body: '\n', items: [{ id: 'a', text: '  ', done: false }] }));
   assert.ok(!N.isEmpty({ title: '', body: '', items: [{ id: 'a', text: 'Latte', done: false }] }));
   const note = { title: 't'.repeat(90), body: 'b', items: [{ id: 'a', text: 'Latte', done: 1 }, { id: 'b', text: '', done: false }] };
-  assert.deepEqual(N.payload(note, { keep: false }), { title: 't'.repeat(80), body: 'b', items: [{ id: 'a', text: 'Latte', done: true }] });
+  assert.deepEqual(N.payload(note, { keep: false }), { title: 't'.repeat(80), body: 'b', items: [{ id: 'a', text: 'Latte', done: true }], color: 'yellow' });
   assert.equal(N.payload(note).items.length, 2, 'while writing, the new empty item stays');
 });
 
-test('wired into Noi: link, Foglio, back, realtime, reset, cache and builds', () => {
+test('wired into Noi: board, Foglio, back, realtime, reset, cache and builds', () => {
   const html = read('index.html');
   assert.match(html, /<script defer src="\/couple-notes\.js\?v=[^"]+"/);
   assert.match(html, /<link rel="stylesheet" href="\/couple-notes\.css\?v=[^"]+"/);
   assert.match(html, /id="usNotesSheet" class="us-notes-overlay us-foglio"[^>]*data-us-modal/);
-  assert.match(html, /data-noi-open-link="note"[\s\S]{0,200}<b>Note<\/b>/);
-  assert.match(read('noi-v2.js'), /link==='note'\)window\.UsCoupleNotes\?\.open\?\.\(\)/);
+  // Noi nuova (03/11/2026): the notes are post-its on the Noi page; the whole
+  // board opens from «Tutti i post-it (n)».
+  assert.match(html, /<ul class="us-postits" id="usNoiBoardGrid"/);
+  assert.match(html, /id="usNoiBoardAll" data-board-all hidden/);
+  assert.match(read('couple-notes.js'), /if\(t\.closest\('\[data-board-all\]'\)\)return open\(\);/);
   assert.match(read('navigation.js'), /name:'notes'[\s\S]{0,200}usNotesSheet[\s\S]{0,200}UsCoupleNotes\?\.back/);
   const app = read('app.js');
   assert.match(app, /table:'couple_notes',filter:`couple_id=eq\.\$\{coupleId\}`\},payload=>window\.UsCoupleNotes\?\.onChange\?\.\(payload\)\)/, 'the one realtime channel of the app');
@@ -52,11 +55,11 @@ test('wired into Noi: link, Foglio, back, realtime, reset, cache and builds', ()
     assert.ok(read(f).includes("'couple-notes.js'") && read(f).includes("'couple-notes.css'"), f);
   }
   const js = read('couple-notes.js');
-  // Founder, 31/10/2026: squares you read, tick and write on in place.
-  assert.match(js, /class="us-notes-grid"/);
-  assert.match(js, /data-tick="\$\{esc\(i\.id\)\}"/, 'items tick on the square');
-  assert.match(js, /class="us-notes-tile is-editing" data-editor/, 'the square widens to be written on');
-  assert.match(read('couple-notes.css'), /\.us-notes-tile\.is-editing\{grid-column:1\/-1;/);
+  // Founder, 31/10/2026: squares you read, tick and write on in place (post-its since 03/11/2026).
+  assert.match(js, /class="us-postits is-all"/);
+  assert.match(js, /data-tick="\$\{esc\(i\.id\)\}"/, 'items tick on the post-it');
+  assert.match(js, /class="us-postit is-editing" data-editor/, 'the post-it widens to be written on');
+  assert.match(read('couple-notes.css'), /\.us-postit\.is-editing\{grid-column:1\/-1;/);
   assert.doesNotMatch(js, /autocomplete=/, 'the keyboard keeps suggestions and emoji');
   assert.doesNotMatch(js, /\.channel\(/, 'no second realtime channel');
   assert.ok(read('i18n-en.js').includes("'Nuova nota': 'New note'"));

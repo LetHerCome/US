@@ -28,10 +28,11 @@ test('shell: Ti penso left, the US mark at the centre, Left for You right', () =
 test('shell: Events no longer owns the global centre slot but stays reachable', () => {
   assert.doesNotMatch(topBar, /usEventsTopEntry|us-events-top-control|I nostri eventi/);
   assert.doesNotMatch(identityCss, /us-events-top/);
-  // Contextual homes: the Eventi link under the Noi calendar (US 1.0: the old
-  // calendar overlay and its head link are gone) and the Oggi event priority card.
-  assert.match(html, /<button type="button" data-noi-open-link="eventi">/);
-  assert.match(read('noi-v2.js'), /if\(link==='quest'\|\|link==='eventi'\)window\.openNoiSection\?\.\(link\);/);
+  // Contextual homes: the dates of the Noi calendar (Noi nuova, 03/11/2026: no
+  // Eventi tile; an event opens its editor, a mesiversario opens Eventi) and
+  // the Oggi event priority card.
+  assert.doesNotMatch(html, /data-noi-open-link/);
+  assert.match(read('noi-v2.js'), /if\(kind==='anniversary'&&item\.dataset\.months!=='0'\)\{window\.openNoiSection\?\.\('eventi'\);return;\}/);
   assert.doesNotMatch(html, /id="usCalendarEventsLink"/);
   assert.match(read('app.js'), /if\(action==='events'\)window\.openEvents\?\.\(\)/);
 });

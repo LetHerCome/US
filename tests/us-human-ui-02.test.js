@@ -264,18 +264,17 @@ test('Noi: the couple row stays centered, "La nostra settimana" owns the week, a
   assert.match(app, /if\(profile\.role==='beatrice'\)setAvatarSlot\('pairAvatarBeatrice',url\);/);
   assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"|id="usCalendarEntry"|noi-hub-card/);
   const targets = [...bond.matchAll(/data-noi-open-link="([a-z-]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(targets, ['lavagna', 'quest', 'eventi', 'note'], 'Note condivise (31/10/2026) are the fourth');
+  assert.deepEqual(targets, [], 'Noi nuova (03/11/2026): no tiles, the calendar and the board');
   assert.match(app, /document\.querySelector\(`#usNoiV2 \[data-noi-open-link="\$\{from\}"\]`\)\?\.focus\(\{preventScroll:true\}\)/, 'closing a section focuses its link again');
 });
 
 
 
-test('Noi density: the one calendar comes first, then the three links; no second hero', () => {
+test('Noi density: the one calendar comes first, then the board; no second hero', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.ok(bond.indexOf('id="usNoiV2Content"') < bond.indexOf('data-noi-open-link="lavagna"'), 'the calendar sits above the links');
-  assert.match(bond, /<b>Lavagna<\/b>/);
-  assert.match(bond, /<b>Missioni<\/b>/);
-  assert.match(bond, /<b>Eventi<\/b>/);
+  assert.ok(bond.indexOf('id="usNoiV2Content"') < bond.indexOf('id="usNoiBoard"'), 'the calendar sits above the board');
+  assert.match(bond, /<h2 id="usNoiBoardTitle">Bacheca<\/h2>/);
+  assert.doesNotMatch(bond, /data-noi-open-link/);
   assert.doesNotMatch(bond, /class="noi-week-board"|noi-hub-card--resonance/);
 });
 

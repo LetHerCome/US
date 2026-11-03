@@ -48,7 +48,7 @@ test('copy: empty, loading and error states are a title, not a paragraph', () =>
   assert.match(html, /<b>Carico…<\/b>/);
   // 1.0 (N10): the old full-screen calendar and its empty state are gone; Noi's
   // month says it with a title (noi-v2.js).
-  assert.match(read('noi-v2.js'), /<b>Un mese ancora da scrivere<\/b>/);
+  assert.match(read('noi-v2.js'), /<b>Niente in arrivo<\/b>/);
   assert.match(html, /<h3>Non riesco ad aprirlo<\/h3><button/);
   assert.doesNotMatch(html, /Preparo i vostri Conservati|Preparo qualcosa per te|Preparo Gioca/);
   assert.match(read('app.js'), /<b>La vostra storia parte da qui<\/b><\/div>/);
@@ -60,6 +60,7 @@ test('copy: Noi and Settings rows carry a label, not a description', () => {
   assert.match(html, /<b>Notifiche<\/b><\/span>/);
   assert.match(html, /<b>Sincronizzazione<\/b><\/span>/);
   assert.match(html, /<b>Distanza<\/b><\/span>/);
-  // 1.0 (N3/N10): the old Lavagna and hub are gone; the week is a labelled tile.
-  assert.match(html, /<b>Lavagna<\/b>/);
+  // Noi nuova (03/11/2026): no tiles; the board under the calendar has a title.
+  assert.doesNotMatch(html, /data-noi-open-link/);
+  assert.match(html, /<h2 id="usNoiBoardTitle">Bacheca<\/h2><small>Le cose senza data: si scrive qui sopra<\/small>/);
 });

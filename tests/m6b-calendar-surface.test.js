@@ -23,11 +23,14 @@ const noi = () => read('noi-v2.js');
 // same promise on the Noi calendar.
 
 // (1) US 1.0: "La nostra settimana" (the old Lavagna) is the week view of the one Noi calendar.
+// Noi nuova (founder, 03/11/2026): the Lavagna tile is gone (the new Lavagna
+// is a drawing board, phase 2); the week view stays reachable through
+// USNoiV2.openCalendar({mode:'week'}).
 test('M6B (1): "La nostra settimana" opens the one Noi calendar in its week view', () => {
   const bond = html().match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.match(bond, /data-noi-open-link="lavagna"[^>]*>[\s\S]*?<b>Lavagna<\/b>/);
+  assert.doesNotMatch(bond, /data-noi-open-link/);
   assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"|id="usCalendarEntry"|noi-hub-card--calendar/);
-  assert.match(noi(), /if\(link==='lavagna'\)\{mode='week';render\(\);/);
+  assert.match(noi(), /mode=requestedMode==='week'\?'week':'calendar';/);
   assert.doesNotMatch(html(), /data-page="calendar"/, 'must not become a bottom-nav destination');
 });
 
@@ -128,7 +131,7 @@ test('M6B (12): tapping a day selects it; the selected-day detail replaces the d
 test('M6B (13): the selected day lists its items with their owner; an empty day says so once', () => {
   assert.match(noi(), /function detailMarkup\(index\)[\s\S]*?active\.map\(item=>itemMarkup\(selected,item\)\)/);
   assert.match(noi(), /us-noi-v2-owner[^`]*\$\{esc\(ownerLabel\(item\)\)\}/);
-  assert.match(noi(), /Nessun momento in questo giorno\./, 'an empty day says so once, without empty lane scaffolding');
+  assert.match(noi(), /Niente in programma\. Un giorno libero, tutto vostro\./, 'an empty day says so once, without empty lane scaffolding');
 });
 
 // (14) personal detail is read-only for the non-owner partner.
@@ -270,7 +273,8 @@ test('M6B (27): the interval read is bounded to the visible grid window, built v
 // (28) loading state is restrained, not a blocking spinner.
 test('M6B (28): a restrained loading state, not a blocking full-screen spinner', () => {
   assert.match(noi(), /container\.dataset\.state=pending&&!snapshot\?'loading'/);
-  assert.match(read('noi-v2.css'), /\.us-noi-v2-content\[data-state="loading"\] \.us-noi-v2-day-marks\{opacity:0\}/);
+  // Noi nuova (03/11/2026): the labels of the squares wait for the read, the squares stay.
+  assert.match(read('dc-noi.css'), /#bond \.us-noi-v2-content\[data-state="loading"\] \.us-noi-v2-day-bars\{opacity:0\}/);
 });
 
 // (29) an empty day has a short line, no duplicate CTA; the "+" is the create action.
@@ -304,7 +308,11 @@ test('M6B (32): native back reuses the same layer registry, no separate native-o
 test('M6B (33): Ricordi/Conservati are untouched by the calendar feature', () => {
   assert.match(html(), /id="momentsGrid"/);
   assert.match(html(), /id="conservatiOverlay"/);
-  assert.doesNotMatch(js(), /moments|conservati/i);
+  // Noi nuova (03/11/2026): a day with a Ricordo shows its photo, so the
+  // calendar reads the Ricordi of the days on screen; it never writes them.
+  assert.equal((js().match(/sb\.from\('moments'\)/g) || []).length, 1);
+  assert.match(js(), /sb\.from\('moments'\)\.select\(/);
+  assert.doesNotMatch(js(), /from\('moments'\)\.(insert|update|upsert|delete)|moment_photos|conservati/i);
 });
 
 // (34) Left for You unaffected.
