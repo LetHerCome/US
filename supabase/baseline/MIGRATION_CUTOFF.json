@@ -40,7 +40,8 @@
     "20261031120000_ortografia_domande.sql",
     "20261031132258_couple_notes_v1.sql",
     "20261031134410_couple_battery_v1.sql",
-    "20261102170000_member_status_v1.sql"
+    "20261102170000_member_status_v1.sql",
+    "20261103010817_s32_export_notes_battery_status.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
@@ -76,7 +77,8 @@
     "20261031120000_ortografia_domande.sql",
     "20261031132258_couple_notes_v1.sql",
     "20261031134410_couple_battery_v1.sql",
-    "20261102170000_member_status_v1.sql"
+    "20261102170000_member_status_v1.sql",
+    "20261103010817_s32_export_notes_battery_status.sql"
   ],
   "counts": {
     "repo_files": 47,

@@ -483,3 +483,14 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Da provare:** con un ricordo di oggi un anno fa e senza; un titolo lungo.
 - **Anteprime:** nella lista dei widget del telefono ogni widget ha la sua immagine Foto protagonista, generica (nessun nome, viso o foto vera), chiara col tema chiaro e scura col tema scuro, anche Foto & Noi; da Android 12 il layout d'anteprima mostra la stessa immagine. In Impostazioni › Widget le tessere hanno fondi sfumati al posto dei colori pieni.
   - **Da provare:** la lista dei widget del telefono in chiaro e in scuro; Impostazioni › Widget.
+
+## 2026-11-03 — Copia dei dati: note, batteria e Come stai
+
+- **Database:** migrazione `20261103010817_s32_export_notes_battery_status.sql`. Ridefinisce `s32_export_user_data`, la funzione che legge l'Edge `export-user-data` (la copia preparata dal supporto su richiesta, D-7). Aggiunge:
+  - le note condivise scritte o modificate per ultima da quella persona;
+  - la sua lettura della batteria;
+  - il suo «Come stai».
+
+  Gli id del partner restano esclusi, anche `updated_by`. Resta riservata a service_role. Test: `tests/s32-export-notes-battery-status-db.test.js`.
+  - **Ordine:** dopo le migrazioni delle Note (`20261031132258`), della Batteria (`20261031134410`) e di Come stai (`20261102170000`), perché legge le loro tabelle. Su staging e poi in produzione solo con il workflow «Supabase SQL (manual)» e il via del founder.
+- **Uscita dalla coppia:** batteria e Come stai di chi esce spariscono già. `s32_close_membership` cancella il suo profilo e le due tabelle vanno in cascata. Nessuna migrazione: lo copre `tests/leave-couple-personal-rows-db.test.js`.
