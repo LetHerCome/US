@@ -212,7 +212,7 @@ test('the page: «Mese» and «Prossimi», no tiles, no «Il nostro giorno», th
   const board = bond.match(/<section class="us-noi-board" id="usNoiBoard"[\s\S]*?<\/section>/)?.[0] || '';
   assert.ok(board, 'the board is on the Noi page');
   assert.ok(bond.indexOf('id="usNoiV2Detail"') < bond.indexOf('id="usNoiBoard"'), 'under the calendar');
-  assert.match(board, /<div id="usNoiLavagnaSlot"><\/div>/, 'phase 2 hooks the Lavagna here');
+  assert.match(board, /<div id="usNoiLavagnaSlot"( class="us-lav-slot")?><\/div>/, 'phase 2 hooks the Lavagna here');
   assert.ok(board.indexOf('usNoiLavagnaSlot') < board.indexOf('id="usNoiBoardGrid"'), 'the Lavagna on top of the post-its');
   const js = read('noi-v2.js');
   assert.doesNotMatch(js, /function legendMarkup|us-noi-v2-day-marks|us-noi-v2-sel/);
