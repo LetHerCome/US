@@ -2,7 +2,7 @@
 
 ## Lavagna in Noi e widget «Lavagna» (03/11/2026, fase 2 della Noi nuova)
 
-**Stato:** in branch (`claude/lavagna-ad3ef8`), non ancora su staging. Va in produzione insieme a tutta la Noi nuova, solo con il via del founder. Missione: `docs/missions/lavagna-v1.md`.
+**Stato:** su staging dal 03/11 (SQL e `send-web-push` applicati con il via del founder), non in produzione. Va in produzione insieme a tutta la Noi nuova, solo con il via del founder. Missione: `docs/missions/lavagna-v1.md`.
 
 - **Lavagna:** in cima alla bacheca di Noi una tessera con l'ultimo disegno («Lavagna · Bea, 5 min fa», «Disegna»); toccandola si apre la lavagna a tutto schermo. Si disegna col dito in due: quattro colori, due spessori, gomma, «Annulla» dell'ultimo tratto proprio, «Pulisci» con conferma per tutti e due. Ogni tratto si salva quando si alza il dito; l'altra persona lo vede in un paio di secondi.
 - **Notifica:** «Bea ha disegnato sulla lavagna», al massimo una volta ogni 2 ore per chi la riceve; si spegne in Impostazioni › Notifiche › Lavagna.
@@ -505,9 +505,21 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Ordine:** dopo le migrazioni delle Note (`20261031132258`), della Batteria (`20261031134410`) e di Come stai (`20261102170000`), perché legge le loro tabelle. Su staging e poi in produzione solo con il workflow «Supabase SQL (manual)» e il via del founder.
 - **Uscita dalla coppia:** batteria e Come stai di chi esce spariscono già. `s32_close_membership` cancella il suo profilo e le due tabelle vanno in cascata. Nessuna migrazione: lo copre `tests/leave-couple-personal-rows-db.test.js`.
 
+## 2026-11-03 — La sfida della settimana al posto delle missioni (fase 3 della Noi nuova)
+
+**Stato:** su staging dal 03/11 (due migrazioni e due Edge applicate con il via del founder), non in produzione. Missione: `docs/missions/sfida-settimana-v1.md`.
+
+- **Una sfida a settimana per coppia**, scelta dal server secondo «Come vi vedete», con un solo cambio; in Gioca › Giochi sotto la domanda del giorno, su Oggi da venerdì se non è fatta.
+- **Si chiude con una foto**, che diventa un Ricordo segnato «Sfida». Coppie a distanza: due foto affiancate, e con una sola a fine settimana valgono 30 punti invece di 60. Serie di settimane di fila: 100 punti in più ogni 4.
+- **Notifiche:** lunedì alle 9 la sfida nuova, sabato alle 10 il promemoria se non è fatta, e «manca solo la tua foto» per chi è a distanza. Interruttore in Impostazioni › Notifiche › La sfida della settimana (colonna `bond` già esistente).
+- **Missioni vecchie:** tabelle e storico restano; non si creano più bacheche settimanali.
+- **Database:** `20261103205157_weekly_challenge_v1.sql` (catalogo, `couple_weekly_challenges`, `couple_weekly_challenge_photos`, RPC, export con anche i tratti della lavagna) e `20261103205200_weekly_challenge_job_cron.sql` (cron orario solo dove c'è `us_project_url`: su staging non pianifica nulla). Edge nuova `weekly-challenge-job`; `send-web-push` con `challenge_photo`.
+- **Android:** tre tipi di notifica nuovi in `UsPushNotices.java`: serve l'APK nuovo.
+- **Ordine in produzione:** le quattro migrazioni della Noi nuova in ordine di nome (`…204751_couple_notes_color`, `…205050_lavagna_v1`, `…205157_weekly_challenge_v1`, `…205200_weekly_challenge_job_cron`), poi le Edge `send-web-push` e `weekly-challenge-job`, poi web e AAB. Su produzione il cron parte davvero: controllare il primo lunedì.
+
 ## 2026-11-03 — Noi nuova, fase 1: calendario protagonista e bacheca
 
-**Stato:** branch `claude/noi-bacheca-6c8049`, da unire su staging dalla sessione coordinatrice. Decisione in `docs/DECISIONS.md` («Noi nuova, lavagna e sfida della settimana»); tavole `Main.dc.html` e `Bacheca.dc.html` del canvas «Noi · rework». In produzione solo insieme alle fasi 2 e 3, con il via del founder.
+**Stato:** su staging dal 03/11 (migrazione applicata con il via del founder), non in produzione. Decisione in `docs/DECISIONS.md` («Noi nuova, lavagna e sfida della settimana»); tavole `Main.dc.html` e `Bacheca.dc.html` del canvas «Noi · rework». In produzione solo insieme alle fasi 2 e 3, con il via del founder.
 
 - **Calendario:** caselle grandi, niente cerchi, pallini né legenda. Ogni impegno è un'etichetta col suo nome nel colore di chi l'ha messo (due al massimo, poi «+n»); un giorno con un Ricordo mostra la sua foto. Oggi in grassetto, il giorno scelto con una cornice. Sotto, l'agenda del giorno: il Ricordo (si apre nel suo album), gli impegni con orario e di chi, «Aggiungi a questo giorno» (l'editor che c'era). Viste «Mese» e «Prossimi»: da oggi a un anno, con compleanni, mesiversari, anniversario e traguardi dei giorni (al massimo 30 voci).
 - **Via da Noi:** le tessere Lavagna, Missioni, Eventi e Note e il pulsante «Il nostro giorno» (la data resta in Impostazioni). Eventi e anniversari si aprono dalle loro date nel calendario. Il codice delle missioni resta: lo sostituisce la fase 3.
@@ -517,7 +529,7 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 
 ## 2026-11-04 — Bacheca: un post-it non sparisce più da solo
 
-**Stato:** branch `claude/noi-postit-sicuri`, sopra `claude/staging-noi-fasi-2-3`; da unire su staging dalla sessione coordinatrice. Va in produzione con la Noi nuova.
+**Stato:** su staging dal 04/11 (build 95), non in produzione. Va in produzione con la Noi nuova.
 
 - **Post-it sicuri:** chiudere un post-it vuoto lo cancellava senza chiedere. Ora se ne va da solo solo un post-it nato in quella stessa apertura; uno che era già sulla bacheca, svuotato a mano, chiede «Staccare il post-it?» («Stacca» o «Tienilo»: in quel caso resta com'era). Un evento Realtime che arriva senza il testo del post-it (Supabase toglie i valori oltre 64 byte quando una modifica è troppo grande) non lo svuota più: la bacheca si rilegge. Test: `tests/couple-notes-close.test.js` e `tests/couple-notes-close-browser.test.js` (tutti i modi di chiudere un post-it, nel browser).
 - **Calendario:** nelle caselle le date di coppia dicono quanto, anche su due righe («34 mesi», «3 anni», «4100 giorni») invece di «Mesi…». In «Prossimi» e nell'agenda il traguardo dei cento giorni non ripete più il numero sotto il titolo.
