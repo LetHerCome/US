@@ -335,6 +335,8 @@ function install(w){
     on(hit,'click',()=>{if(!blockers(d,layer,{pageHidden}).length)pet.caress();});
     on(hit,'contextmenu',event=>event.preventDefault());
     on(d,'pointerdown',event=>{if(!hit.contains?.(event?.target))pet.touch();},{capture:true,passive:true});
+    // A page scrolling under it: the cat steps back so the text shows, then returns (03/11/2026).
+    on(d,'scroll',()=>{layer.dataset.petScrolling='';later('scrolling',()=>{delete layer.dataset.petScrolling;},700);},{capture:true,passive:true});
 
     // Glance: the pupils turn towards a tapped tab for a moment.
     function glance(x){

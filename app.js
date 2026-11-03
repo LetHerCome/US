@@ -2400,6 +2400,9 @@ const US_TODAY_PRIORITY_LABELS=Object.freeze({
 const US_TODAY_PRIORITY_LIMIT=5;
 let usTodayPriorityRefreshId=0;
 let usTodayPriorityQueue=[];
+// The notifications invite waits for the first load of what waits for me:
+// before it, it flashed on Oggi and gave way a moment later (03/11/2026).
+let usTodayPrioritiesKnown=false;
 const usTodayConsumedFacts=new Set();
 
 function usTodayPriorityNumber(value,fallback){
@@ -2500,6 +2503,8 @@ function renderTodayPriorities(priorities=[]){
   // live in Noi/Lavagna after the Home cleanup.
   usTodayPriorityQueue=(Array.isArray(priorities)?priorities:[]).filter(item=>item?.attention).slice();
   renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
+  usTodayPrioritiesKnown=true;
+  applyOggiArbitration();
 }
 // The partner's name for Oggi copy. Defensive: the Oggi runtime is also
 // exercised on its own, without the identity resolver.
@@ -3013,7 +3018,7 @@ function collectOggiCandidates(){
     const head=usTodayPriorityQueue[0];
     candidates.push({id:'usTodayPriorityRegion',slot:'evidence',rank:US_OGGI_PRIMARY_RANK[head?.category]||US_OGGI_PUSH_RANK-1});
   }
-  if(live('pushOptInCard'))candidates.push({id:'pushOptInCard',slot:'evidence',rank:US_OGGI_PUSH_RANK});
+  if(usTodayPrioritiesKnown&&live('pushOptInCard'))candidates.push({id:'pushOptInCard',slot:'evidence',rank:US_OGGI_PUSH_RANK});
   if(live('usDailyRitual'))candidates.push({id:'usDailyRitual',slot:'daily',rank:0});
   return candidates;
 }

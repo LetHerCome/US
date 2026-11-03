@@ -69,8 +69,10 @@
     return out;
   }
 
+  // Photon answers in the language of the request: Italian names on every phone
+  // (its lang= parameter has no Italian; Accept-Language needs no preflight).
   async function photon(path, signal) {
-    const response = await fetch(`${PHOTON}${path}`, { signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
+    const response = await fetch(`${PHOTON}${path}`, { signal, credentials: 'omit', referrerPolicy: 'no-referrer', headers: { 'Accept-Language': 'it' } });
     if (!response.ok) throw new Error(`photon ${response.status}`);
     return response.json();
   }
@@ -358,10 +360,20 @@
     };
   }
 
-  function fit(points, animate) {
-    if (!points.length) { map.jumpTo({ center: [12.5, 42.5], zoom: 4.3 }); return; }
+  // Italy when there is nothing yet; one place with its town and surroundings
+  // (zoom 9: closer, the dark map is a road and nothing else); more places together.
+  function viewFor(points) {
+    if (!points.length) return { center: [12.5, 42.5], zoom: 4.3 };
     const lons = points.map((p) => p.lon), lats = points.map((p) => p.lat);
-    map.fitBounds([[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]], { padding: 56, maxZoom: 13, animate });
+    const west = Math.min(...lons), south = Math.min(...lats), east = Math.max(...lons), north = Math.max(...lats);
+    if (west === east && south === north) return { center: [west, south], zoom: 9 };
+    return { bounds: [[west, south], [east, north]], maxZoom: 12 };
+  }
+
+  function fit(points, animate) {
+    const view = viewFor(points);
+    if (!view.bounds) { map.jumpTo(view); return; }
+    map.fitBounds(view.bounds, { padding: 56, maxZoom: view.maxZoom, animate });
   }
 
   function renderEmpty(box, empty) {
@@ -449,7 +461,7 @@
   }
 
   return Object.freeze({
-    normalize, labelFrom, placesFrom, pointsFrom, search, nameOf, fromCoords, fromCard,
+    normalize, labelFrom, placesFrom, pointsFrom, viewFor, search, nameOf, fromCoords, fromCard,
     pickWithPlaces, photoConsent, choose, save, setView, toggleMap,
   });
 });

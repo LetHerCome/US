@@ -6,7 +6,7 @@
 
 - **Edge `widget-device-token` installata su staging** (run 41554946616, da `main`, approvata dal founder). Prima mancava: l'app non riceveva la chiave dei widget e Ti penso dal widget restava su «Apri US per riattivare l'invio». Verificata con la sessione del founder: `revoke` su un dispositivo inventato risponde 200 `{"revoked":true}`.
 - **Ancora solo in produzione:** `spotify-search` (la ricerca delle canzoni in Lasciato per te su staging non funziona; servono anche i secret di Spotify), `cleanup-left-for-you`, `us-widget-state`.
-- **`export-user-data` su staging è quella di `main`:** non esporta Note, Batteria e Come stai finché non si pubblica dal branch di staging.
+- **Copia dei dati:** `export-user-data` legge tutto da `public.s32_export_user_data`, che non conosce ancora Note, Batteria e Come stai: serve una migrazione (in lavorazione sul branch dei widget, 03/11). `export-my-data` su staging non c'è ed è disattivata per scelta (D-7).
 
 ## Update 2026-10-29 — patch unica in prova (PR #232–#237)
 

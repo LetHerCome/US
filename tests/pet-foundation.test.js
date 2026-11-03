@@ -608,3 +608,17 @@ test('Compagni V1: before the first unlock nothing sits above the bar; the first
   assert.equal(off.get('us:pet:v1:companion'), 'owl');
   assert.equal(Pet.NO_COMPANION, 'none');
 });
+
+// Revisione di staging (founder, 03/11/2026): the cat sat over the text of the
+// cards while a page scrolled under it. While scrolling it steps back, then returns.
+test('PET: while a page scrolls the cat steps aside, and comes back when it stops', () => {
+  const f = fakeWindow('https://us.example/');
+  Pet.install(f.w);
+  assert.ok(f.listeners['d:scroll'], 'listens to scrolling anywhere in the page');
+  f.listeners['d:scroll'].forEach((fn) => fn({}));
+  assert.equal(f.layer.dataset.petScrolling, '');
+  for (let i = 0; i < 5 && 'petScrolling' in f.layer.dataset; i += 1) f.tick();
+  assert.equal('petScrolling' in f.layer.dataset, false);
+  const css = fs.readFileSync(path.join(__dirname, '..', 'pet.css'), 'utf8');
+  assert.match(css, /\.us-pet-layer\[data-pet-scrolling\]\{[^}]*opacity:\.2/);
+});
