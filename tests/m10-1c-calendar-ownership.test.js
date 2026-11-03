@@ -128,7 +128,7 @@ test('M10.1C: assistive text names the owner, never only the initial', () => {
 test('M10.1C / Noi nuova: the month cell is the day number and a label per commitment, in its owner colour', () => {
   const cell = noi.match(/const days=Array\.from\(\{length:slots\}[\s\S]*?return `<div class="us-noi-v2-calendar"/)?.[0] || '';
   assert.match(cell, /<span class="us-noi-v2-day-number">\$\{n\}<\/span><span class="us-noi-v2-day-bars" aria-hidden="true">\$\{bars\}\$\{more\}<\/span>/);
-  assert.match(cell, /items\.slice\(0,BAR_MAX\)\.map\(item=>`<span class="us-noi-v2-bar" data-owner="\$\{ownerOf\(item\)\}"/, 'each label in the colour of whose it is');
+  assert.match(cell, /items\.slice\(0,BAR_MAX\)\.map\(item=>`<span class="us-noi-v2-bar\$\{item\.kind==='relationship'\?' is-milestone':''\}" data-owner="\$\{ownerOf\(item\)\}"/, 'each label in the colour of whose it is');
   assert.doesNotMatch(cell, /us-noi-v2-day-marks|<i data-owner/, 'no dots');
   assert.equal(cal.monthCellMarks([]).chips.length, 0);
   assert.deepEqual(cal.monthCellMarks(['B', 'Noi', 'F']), { chips: ['B', 'F', 'Noi'], more: 0 }, 'fixed marker order');

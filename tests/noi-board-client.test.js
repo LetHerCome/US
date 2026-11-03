@@ -46,10 +46,15 @@ test('the whole board filters by paper', () => {
 test('each post-it leans a little, always the same way', () => {
   const a = N.tilt('0b7c2a4e-1111-4111-8111-111111111111');
   assert.equal(a, N.tilt('0b7c2a4e-1111-4111-8111-111111111111'));
-  for (const id of ['a', 'b', 'c', 'd', 'e', 'f', 'g', '123', 'xyz']) {
+  // Staging, 04/11/2026: at 0° or half a degree they looked straight; the
+  // tavola leans them between 1° and 2°, left and right.
+  const ids = ['a', 'b', 'c', 'd', 'e', 'f', 'g', '123', 'xyz', 'ciao', 'spesa', '0b7c2a4e-2222-4222-8222-222222222222'];
+  for (const id of ids) {
     const t = N.tilt(id);
-    assert.ok(t >= -2 && t <= 2, `${id}: ${t}`);
+    assert.ok(Math.abs(t) >= 1 && Math.abs(t) <= 2, `${id}: ${t}`);
+    assert.match(String(t), /^-?\d(\.\d)?$/, `${id}: ${t} is a clean number of degrees`);
   }
+  assert.ok(ids.some((id) => N.tilt(id) < 0) && ids.some((id) => N.tilt(id) > 0), 'left and right');
 });
 
 test('«Da vivere»: ideas to live first, each saying who said it was lived; then the last ones lived', () => {

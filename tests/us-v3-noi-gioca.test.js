@@ -119,7 +119,8 @@ test('Noi calendar: only the weeks the month spans, today selected, a label per 
   assert.match(today, /aria-current="date"/);
   // Noi nuova (03/11/2026): a label per commitment with its name, in the
   // colour of whose it is (mine, theirs, ours); two at most, then +n.
-  assert.match(today, /<span class="us-noi-v2-bar" data-owner="noi">Anniversario<\/span><span class="us-noi-v2-bar" data-owner="tu" translate="no">Palestra<\/span><span class="us-noi-v2-more">\+1<\/span>/, 'labels in the owner colour');
+  // In a square the anniversary says how much («6 anni», 04/11/2026).
+  assert.match(today, new RegExp(`<span class="us-noi-v2-bar is-milestone" data-owner="noi">${now.getFullYear() - 2020} anni</span><span class="us-noi-v2-bar" data-owner="tu" translate="no">Palestra</span><span class="us-noi-v2-more">\\+1</span>`), 'labels in the owner colour');
   if (ymd(later) !== todayIso) {
     const next = grid.match(new RegExp(`<button[^>]*data-noi-day="${ymd(later)}"[\\s\\S]*?<\\/button>`))?.[0] || '';
     assert.match(next, /data-owner="partner" translate="no">Lago</, 'the other person\'s commitment takes their colour');

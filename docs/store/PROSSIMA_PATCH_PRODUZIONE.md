@@ -514,3 +514,12 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 - **Bacheca:** sotto il calendario i post-it, scritti e spuntati sulla pagina, carta gialla, rosa, azzurra o verde, autore in basso. Su Noi al massimo 6; «Tutti i post-it (n)» apre la bacheca intera con i filtri per colore. In cima il post-it fisso «Da vivere» con le idee di prima: spuntarne una vuol dire «vissuta» (la prima persona propone, l'altra conferma, come prima). Sopra i post-it c'è il posto vuoto per la Lavagna (fase 2).
 - **Database:** migrazione `20261103204751_couple_notes_color.sql`: colonna `color` in `couple_notes` (yellow, pink, blue, green; giallo di default; nessun dato cancellato). Stessa RLS e stessa guardia. L'export SQL la include già; l'Edge `export-user-data` la elenca (`s3-2-export-core.mjs`), quindi va ridistribuita **dopo** la migrazione. Ordine: SQL, poi Edge, poi sito/APK. Test: `tests/couple-notes-color-db.test.js`.
 - **Privacy:** nessun dato nuovo oltre al colore del post-it.
+
+## 2026-11-04 — Bacheca: un post-it non sparisce più da solo
+
+**Stato:** branch `claude/noi-postit-sicuri`, sopra `claude/staging-noi-fasi-2-3`; da unire su staging dalla sessione coordinatrice. Va in produzione con la Noi nuova.
+
+- **Post-it sicuri:** chiudere un post-it vuoto lo cancellava senza chiedere. Ora se ne va da solo solo un post-it nato in quella stessa apertura; uno che era già sulla bacheca, svuotato a mano, chiede «Staccare il post-it?» («Stacca» o «Tienilo»: in quel caso resta com'era). Un evento Realtime che arriva senza il testo del post-it (Supabase toglie i valori oltre 64 byte quando una modifica è troppo grande) non lo svuota più: la bacheca si rilegge. Test: `tests/couple-notes-close.test.js` e `tests/couple-notes-close-browser.test.js` (tutti i modi di chiudere un post-it, nel browser).
+- **Calendario:** nelle caselle le date di coppia dicono quanto, anche su due righe («34 mesi», «3 anni», «4100 giorni») invece di «Mesi…». In «Prossimi» e nell'agenda il traguardo dei cento giorni non ripete più il numero sotto il titolo.
+- **Post-it storti:** inclinati tra 1° e 2°, a destra o a sinistra, come nella tavola (prima molti erano a 0° o mezzo grado e sembravano dritti).
+- **Database:** niente.

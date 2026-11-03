@@ -87,6 +87,7 @@
 #bond .us-noi-v2-day.has-photo .us-noi-v2-day-number{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6)}
 #bond .us-noi-v2-day-bars{position:relative;z-index:1;display:flex;flex-direction:column;gap:2px;width:100%;margin-top:auto;min-width:0}
 #bond .us-noi-v2-bar{display:block;min-width:0;padding:2px 4px;border-radius:5px;background:var(--dc-who);color:var(--us-inchiostro);font-size:9.5px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bond .us-noi-v2-bar.is-milestone{display:-webkit-box;padding:2px;white-space:normal;overflow-wrap:normal;text-overflow:clip;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 #bond .us-noi-v2-more{padding-left:3px;font-size:9.5px;font-weight:700;line-height:1.2;color:inherit;opacity:.8}
 #bond .us-noi-v2-content[data-state="loading"] .us-noi-v2-day-bars{opacity:0}
 #bond .us-noi-v2-notice{border-radius:18px;background:color-mix(in srgb,var(--us-ambra) 10%,var(--us-color-surface));border-color:color-mix(in srgb,var(--us-ambra) 30%,transparent);font-size:13px}

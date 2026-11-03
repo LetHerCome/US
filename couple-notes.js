@@ -43,6 +43,16 @@ const items=n=>Array.isArray(n?.items)?n.items.filter(i=>i&&typeof i.text==='str
 function isEmpty(n){
   return !String(n?.title||'').trim()&&!String(n?.body||'').trim()&&!items(n).some(i=>i.text.trim());
 }
+// Closing a post-it (04/11/2026, the «ciao» that vanished on staging): with
+// something written it is saved; empty, it goes by itself only if it was born
+// in this opening; one that was already on the board asks first.
+function closeVerdict(n,{born=false}={}){
+  if(!isEmpty(n))return 'save';
+  return !n?.id||born?'drop':'ask';
+}
+// A Realtime row is a note only with its title, text and list: Supabase
+// leaves out the values over 64 bytes when a change is too big to send.
+const fullRow=r=>Boolean(r)&&['title','body','items'].every(k=>r[k]!=null);
 // The card under the title: the first line of the text, or the list.
 function summary(n){
   const list=items(n).filter(i=>i.text.trim());
@@ -67,11 +77,14 @@ function boardNotes(list,{max=ON_NOI}={}){
   return {shown:sorted.slice(0,max),total:sorted.length,more:sorted.length>max};
 }
 function byColor(list,color){return color&&color!=='all'?(list||[]).filter(n=>colorOf(n)===color):[...(list||[])];}
-// Each post-it leans a little (-2°…2°), always the same way for the same note.
+// Each post-it leans a little, left or right by 1°…2° as in the tavola (at
+// 0° or half a degree they looked straight), always the same way for the
+// same note.
 function tilt(id){
   let h=0;
   for(const c of String(id||''))h=(h*31+c.charCodeAt(0))>>>0;
-  return (h%9-4)/2;
+  const lean=1+(h>>>1)%6/5;
+  return h&1?-lean:lean;
 }
 // «Da vivere»: the ideas still to live, each with who said it was lived
 // (todo, mine: I said it, partner: they said it), then the last ones lived.
@@ -301,7 +314,7 @@ function install(w){
   async function openEditor(note,focus='title',host='page'){
     if(editing&&!await closeEditor({repaint:false}))return;
     clearTimeout(timer);dirty=false;remote=null;
-    editing=note?{...note,items:items(note).map(i=>({...i}))}:{id:null,title:'',body:'',items:[],color:'yellow',revision:0,updated_by:me()};
+    editing=note?{...note,items:items(note).map(i=>({...i}))}:{id:null,title:'',body:'',items:[],color:'yellow',revision:0,updated_by:me(),born:true};
     editHost=host;fields=null;
     if(host==='sheet')paintSheet();else paintPage();
     if(!fields)return;
@@ -370,6 +383,8 @@ function install(w){
     paintItems();paintMeta();paintPaper();
   }
   // Closing waits for the save; offline the note stays open, nothing lost.
+  // An empty post-it already on the board goes only on «Stacca»; «Tienilo»
+  // leaves it as it was (an empty post-it is never saved).
   async function closeEditor({repaint=true}={}){
     if(!editing){if(repaint)paint();return true;}
     syncFields();
@@ -378,7 +393,13 @@ function install(w){
     const kept=items(target).filter(i=>i.text.trim());
     if(kept.length!==items(target).length){target.items=kept;dirty=true;}
     for(let i=0;saving&&i<100;i++)await new Promise(r=>setTimeout(r,50));
-    if(isEmpty(target)&&target.id){if(!await removeNote(target.id,{ask:false}))return false;}
+    const verdict=closeVerdict(target,{born:Boolean(target.born)});
+    if(verdict==='ask'){
+      const ok=await w.UsUiFoundation?.confirm?.({title:'Staccare il post-it?',body:'L’hai svuotato: se lo stacchi, sparisce per voi due.',confirmLabel:'Stacca',cancelLabel:'Tienilo',tone:'danger'});
+      if(ok===true){if(!await removeNote(target.id,{ask:false}))return false;}
+      else{clearTimeout(timer);dirty=false;}
+    }
+    else if(verdict==='drop'){if(target.id&&!await removeNote(target.id,{ask:false}))return false;}
     else{await save({keep:false});if(dirty){status('Non salvato: controlla la connessione');return false;}}
     editing=null;fields=null;
     if(repaint)paint();
@@ -427,6 +448,8 @@ function install(w){
     const row=event?.new&&event.new.id?event.new:null;
     const gone=event?.eventType==='DELETE'?event.old?.id:null;
     if(row&&row.couple_id!==w.usProfile.couple_id)return;
+    // Without its text the row is not the note: the board is read again.
+    if(row&&!fullRow(row)){load();return;}
     if(gone){
       notes=notes.filter(n=>n.id!==gone);
       if(editing?.id===gone){editing.id=null;paintMeta();notice('L’altra persona ha staccato questo post-it. Se continui a scrivere, lo salvo di nuovo.');}
@@ -576,5 +599,5 @@ function install(w){
   const back=()=>editing&&editHost==='sheet'?closeEditor():close();
   const api=w.UsCoupleNotes;api.open=open;api.close=close;api.back=back;api.reset=reset;api.onChange=onChange;api.refresh=()=>ensure({force:true});
 }
-return {when,isEmpty,summary,payload,sortNotes,boardNotes,byColor,tilt,ideaLines,colorOf,COLORS,LIMITS,install};
+return {when,isEmpty,closeVerdict,fullRow,summary,payload,sortNotes,boardNotes,byColor,tilt,ideaLines,colorOf,COLORS,LIMITS,install};
 });

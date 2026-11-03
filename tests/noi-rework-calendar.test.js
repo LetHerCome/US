@@ -38,7 +38,7 @@ function makeEl(id) {
   };
 }
 
-function load({ now, month = () => null, range = () => null }) {
+function load({ now, month = () => null, range = () => null, domain = null }) {
   const els = new Map();
   const $ = (id) => { if (!els.has(id)) els.set(id, makeEl(id)); return els.get(id); };
   const calls = [];
@@ -53,6 +53,7 @@ function load({ now, month = () => null, range = () => null }) {
     openEventEditor: (...args) => calls.push(['openEventEditor', ...args]),
     openMomentViewer: (card) => calls.push(['openMomentViewer', card.dataset.momentId]),
     UsCalendarLinks: { openEntry: (...args) => calls.push(['openEntry', ...args]), createForDate: (day) => calls.push(['createForDate', day]) },
+    ...(domain ? { UsCalendarDomain: domain } : {}),
     USNoiCalendarRead: {
       readMonth: async (year, m) => { reads.push(['month', year, m]); return month(year, m); },
       readRange: async (from, to) => { reads.push(['range', from, to]); return range(from, to); },
@@ -105,8 +106,35 @@ test('a day is a big square: each commitment a label with its name, in the colou
   assert.equal((busy.match(/class="us-noi-v2-bar"/g) || []).length, 2, 'two labels fit in a square');
   assert.match(busy, /<span class="us-noi-v2-more">\+1<\/span>/);
   assert.match(busy, /aria-label="[^"]*3 impegni"/);
-  assert.match(cell(grid, '2026-11-10'), /data-owner="noi">Mesiversario</, 'the mesiversario is a label too (translated)');
+  // Staging, 04/11/2026: «Mesiversario» became «Mesi…»; in a square the
+  // couple's dates say how much, on two lines if needed.
+  assert.match(cell(grid, '2026-11-10'), /<span class="us-noi-v2-bar is-milestone" data-owner="noi">34 mesi<\/span>/, 'the mesiversario is a short label (translated)');
   for (const gone of ['us-noi-v2-day-marks', 'us-noi-v2-legend', 'us-noi-v2-sel', '<i data-owner']) assert.ok(!grid.includes(gone), `no ${gone}`);
+});
+
+test('the couple\'s dates in a square say how much; a hundred-days milestone does not repeat itself in the agenda', async () => {
+  // 4100 days on 20 November 2026, the mesiversario on the 30th.
+  const data = { appointments: [], events: [], profiles: PROFILES, startedOn: '2015-08-30', moments: [] };
+  const h = load({ now: '2026-11-04T10:00:00', month: () => data, range: () => data, domain: require('../calendar-domain.js') });
+  h.api.openCalendar({ date: '2026-11-20' });
+  await settle();
+  const grid = h.$('usNoiV2Content').innerHTML;
+  assert.match(cell(grid, '2026-11-20'), /<span class="us-noi-v2-bar is-milestone" data-owner="noi">4100 giorni<\/span>/);
+  assert.match(cell(grid, '2026-11-30'), /<span class="us-noi-v2-bar is-milestone" data-owner="noi">135 mesi<\/span>/);
+  const detail = h.$('usNoiV2Detail').innerHTML;
+  assert.match(detail, /<b>4100 giorni ♡<\/b>/);
+  assert.doesNotMatch(detail, /4100 giorni insieme/, 'the title says it once');
+
+  h.tap('usNoiV2ModeList');
+  await settle();
+  const list = h.$('usNoiV2Content').innerHTML;
+  assert.equal((list.match(/4100 giorni/g) || []).length, 1, '«Prossimi»: «4100 giorni ♡» and nothing else about it');
+  assert.match(list, /<b>Mesiversario<\/b>[\s\S]*?135 mesi insieme/, 'a mesiversario keeps its line');
+
+  const css = read('dc-noi.css');
+  assert.match(css, /#bond \.us-noi-v2-bar\.is-milestone\{[^}]*white-space:normal[^}]*-webkit-line-clamp:2/);
+  const en = read('i18n-en.js');
+  for (const it of ['{n} mesi', '{n} anni', '1 mese', '1 anno', '{n} giorni', 'Inizio']) assert.ok(en.includes(`'${it}':`) || en.includes(`\n    ${it}:`), it);
 });
 
 test('today is bold, the chosen day is framed; a day with a Ricordo shows its photo', async () => {
