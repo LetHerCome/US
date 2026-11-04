@@ -2,6 +2,24 @@
 **Checked:** 2026-10-22 (read-only schema and Edge comparison with production) · earlier full database gate 2026-10-10
 **State:** AT PRODUCTION LEVEL except the documented differences below / S2 ON STAGING ONLY / ALL CRONS OFF
 
+## Update 2026-11-04 (pomeriggio) — Widget nuovi, Atmosfere, Ricordi album
+
+- Web: build `us-staging-20261104-97` (staging 67b0ba1b). APK di prova: run 41843156748, versione 1793800862.
+- SQL: `20261104140000_atmosfere_gradienti.sql` applicata con il via del founder (run 41854696874). Nessuna Edge da distribuire.
+- Da decidere: Conservati non ha più un ingresso nell'app.
+
+## Update 2026-11-04 — Noi nuova su staging
+
+- **SQL applicato su staging** (workflow «Supabase SQL (manual)», ognuno approvato dal founder): `20261031120000_ortografia_domande`, `20261031132258_couple_notes_v1`, `20261031134410_couple_battery_v1`, `20261102170000_member_status_v1`, `20261103010817_s32_export_notes_battery_status`, `20261103204751_couple_notes_color`, `20261103205050_lavagna_v1`, `20261103205157_weekly_challenge_v1` (dal branch d'integrazione, con i tratti della lavagna nella copia dei dati), `20261103205200_weekly_challenge_job_cron` (su staging non pianifica nulla).
+- **Edge su staging:** `widget-device-token` (da main), `send-web-push` (lavagna e `challenge_photo`) e la nuova `weekly-challenge-job`, dal branch `claude/staging-noi-fasi-2-3`.
+- **Web:** build `us-staging-20261104-95`.
+
+## Update 2026-11-03 — revisione di staging
+
+- **Edge `widget-device-token` installata su staging** (run 41554946616, da `main`, approvata dal founder). Prima mancava: l'app non riceveva la chiave dei widget e Ti penso dal widget restava su «Apri US per riattivare l'invio». Verificata con la sessione del founder: `revoke` su un dispositivo inventato risponde 200 `{"revoked":true}`.
+- **Ancora solo in produzione:** `spotify-search` (la ricerca delle canzoni in Lasciato per te su staging non funziona; servono anche i secret di Spotify), `cleanup-left-for-you`, `us-widget-state`.
+- **Copia dei dati:** `export-user-data` legge tutto da `public.s32_export_user_data`, che non conosce ancora Note, Batteria e Come stai: serve una migrazione (in lavorazione sul branch dei widget, 03/11). `export-my-data` su staging non c'è ed è disattivata per scelta (D-7).
+
 ## Update 2026-10-29 — patch unica in prova (PR #232–#237)
 
 - **SQL applicato su staging** (workflow «Supabase SQL (manual)», approvato dal founder): `20261028201759_gioca_daily_limit_v1`, `20261028232743_days_together_milestones_v1`, `20261029012149_app_min_version_v1`, `20261029014653_person_colors_plus_v1`.

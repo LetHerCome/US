@@ -58,7 +58,8 @@ test('N3.5 Android uses normal text IME hints and ships no in-app emoji substitu
 test('N3.5 Ricordi prioritizes above-fold media and quick tab revisits avoid redundant heavy hydration', () => {
   const app = read('app.js');
   assert.match(app, /US_HEAVY_PAGE_HYDRATION_FRESH_MS=15000/);
-  assert.match(app, /visiblePhotoIndex\+\+<2/);
+  // The album (04/11/2026): three photos a row, the first two rows come first.
+  assert.match(app, /visiblePhotoIndex\+\+<6/);
   assert.match(app, /fetchpriority="high"/);
   assert.match(app, /loading="\$\{priority\?'eager':'lazy'\}"/);
 });

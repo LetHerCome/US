@@ -72,10 +72,31 @@ const layers=[
     close:()=>window.closeNoiSection?.()
   },
   {
+    // Come stai: back closes the sheet.
+    name:'status',
+    find:()=>document.getElementById('usStatusSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsMemberStatus?.close?.()
+  },
+  {
     name:'distance',
     find:()=>document.getElementById('usDistanceSheet'),
     open:el=>el?.classList.contains('open'),
     close:()=>window.UsDistance?.close?.()
+  },
+  {
+    // Lavagna: back closes the board, over Noi.
+    name:'lavagna',
+    find:()=>document.getElementById('usLavagna'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsLavagna?.close?.()
+  },
+  {
+    // Note condivise: back goes from a note to the list, then out.
+    name:'notes',
+    find:()=>document.getElementById('usNotesSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsCoupleNotes?.back?.()
   },
   {
     name:'year-recap',

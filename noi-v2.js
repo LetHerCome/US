@@ -1,5 +1,8 @@
 // US Noi V2 — visual calendar hub and Gioca/Sintonia tabs.
 // Read-only month display: the shared Calendar/Events surfaces remain write authorities.
+// Noi nuova (founder, 03/11/2026, tavola Main.dc.html): the calendar is the
+// protagonist. Big squares, every commitment a label in the colour of whoever
+// put it, a day with a Ricordo is its photo; the views «Mese» and «Prossimi».
 (() => {
 'use strict';
 if (window.__usNoiV2Installed) return;
@@ -32,6 +35,15 @@ let refreshedAt = 0;
 let identity = null;
 let giocaTab = 'giochi';
 let enterDirection = 0;
+// «Prossimi»: its own read, from today to the same day next year.
+let upcoming = null;
+let upcomingAt = 0;
+let upcomingKey = '';
+let upcomingSeq = 0;
+let upcomingPending = false;
+let upcomingError = '';
+const UPCOMING_MAX = 30;
+const BAR_MAX = 2;
 
 function identityKey() {
   const p=window.usProfile;
@@ -46,28 +58,39 @@ function monthMatch(dateString) {
 function nearMonths(){
   return [-1,0,1].map(delta=>{const d=new Date(year,month+delta,1,12);return [d.getFullYear(),d.getMonth()];});
 }
+// «Prossimi»: from today (included) to the same day next year (excluded),
+// and the months those days fall in.
+function yearAhead(){
+  const d=dateOf(today()),end=new Date(d.getFullYear()+1,d.getMonth(),d.getDate()+1,12);
+  return iso(end.getFullYear(),end.getMonth(),end.getDate());
+}
+function monthsBetween(from,to){
+  const out=[],a=dateOf(from),b=dateOf(to);
+  for(let d=new Date(a.getFullYear(),a.getMonth(),1,12);d<=b;d=new Date(d.getFullYear(),d.getMonth()+1,1,12))out.push([d.getFullYear(),d.getMonth()]);
+  return out;
+}
 // A 29th, 30th or 31st counts on the last day of a shorter month (as in Eventi).
 const clampedDay=(y,m,day)=>iso(y,m,Math.min(day,new Date(y,m+1,0).getDate()));
 const dateParts=value=>{const parts=String(value||'').split('-').map(Number);return parts.length===3&&parts.every(Number.isInteger)?parts:null;};
-function eventDates(event){
+function eventDates(event,span=nearMonths()){
   const parts=dateParts(event.event_date);
   if(!parts)return [];
   if(!event.recurs_yearly)return [String(event.event_date)];
-  return nearMonths().filter(([y,m])=>m===parts[1]-1&&y>=parts[0]).map(([y,m])=>clampedDay(y,m,parts[2]));
+  return span.filter(([y,m])=>m===parts[1]-1&&y>=parts[0]).map(([y,m])=>clampedDay(y,m,parts[2]));
 }
 // Il nostro giorno, then every mesiversario and anniversario after it.
-function relationshipDates(){
-  const parts=dateParts(snapshot?.startedOn);
+function relationshipDates(data=snapshot,span=nearMonths()){
+  const parts=dateParts(data?.startedOn);
   if(!parts)return [];
   const [sy,sm,sd]=parts;
-  return nearMonths().map(([y,m])=>({y,m,months:(y-sy)*12+m-(sm-1)})).filter(x=>x.months>=0).map(({y,m,months})=>({day:clampedDay(y,m,sd),months}));
+  return span.map(([y,m])=>({y,m,months:(y-sy)*12+m-(sm-1)})).filter(x=>x.months>=0).map(({y,m,months})=>({day:clampedDay(y,m,sd),months}));
 }
 // Traguardi dei giorni (29/10/2026): every 100 days together in the months on
 // screen, as Eventi has them (they open Eventi, like a mesiversario).
-function daysMilestoneItems(){
-  const D=window.UsCalendarDomain,start=snapshot?.startedOn;
+function daysMilestoneItems(data=snapshot,span=nearMonths()){
+  const D=window.UsCalendarDomain,start=data?.startedOn;
   if(!D?.daysTogether||!dateParts(start))return [];
-  const [first,,last]=nearMonths();
+  const first=span[0],last=span[span.length-1];
   const from=D.daysTogether(start,iso(first[0],first[1],1)),to=D.daysTogether(start,iso(last[0],last[1],new Date(last[0],last[1]+1,0).getDate()));
   if(from===null||to===null||to<100)return [];
   const [sy,sm,sd]=dateParts(start),out=[];
@@ -92,22 +115,36 @@ function ownerLabel(entry){
   if(entry.entryType==='shared')return together;
   if(!entry.ownerId)return 'Impegno personale';
   const owner=profiles.find(p=>p.id===entry.ownerId);
-  return owner?.display_name?.trim()||'Impegno personale';
+  const name=owner?.display_name?.trim();
+  return name?`Solo ${name}`:'Impegno personale';
 }
-function itemsByDate() {
+// The name on an agenda row and under a Ricordo: you, your person, or both.
+function personName(id){
+  const profiles=Array.isArray(snapshot?.profiles)?snapshot.profiles:[];
+  const me=window.usProfile?.id,known=window.UsIdentity?.current?.();
+  const own=id===me;
+  return String(profiles.find(p=>p.id===id)?.display_name||'').trim()||(own?known?.ownName:known?.partnerName)||(own?'Tu':'La tua persona');
+}
+function whoName(owner){
+  if(owner==='noi')return 'Insieme';
+  const profiles=Array.isArray(snapshot?.profiles)?snapshot.profiles:[];
+  const me=window.usProfile?.id;
+  return personName(owner==='tu'?me:profiles.find(p=>p.id&&p.id!==me)?.id);
+}
+function itemsByDate(data=snapshot,span=nearMonths()) {
   const map=new Map();
   const push=(day,item)=>{
     if(!day)return;
     if(!map.has(day))map.set(day,[]);
     map.get(day).push(item);
   };
-  for(const {day,months} of relationshipDates())push(day,relationshipItem(months));
-  for(const {day,item} of daysMilestoneItems())push(day,item);
-  for(const e of snapshot?.events||[]){
+  for(const {day,months} of relationshipDates(data,span))push(day,relationshipItem(months));
+  for(const {day,item} of daysMilestoneItems(data,span))push(day,item);
+  for(const e of data?.events||[]){
     const time=e.event_time?String(e.event_time).slice(0,5):'';
-    for(const day of eventDates(e))push(day,{kind:'event',id:e.id,title:e.title||'Evento',time:time||(e.recurs_yearly?'Ogni anno':'Una data speciale'),sort:time||'00:01'});
+    for(const day of eventDates(e,span))push(day,{kind:'event',id:e.id,title:e.title||'Evento',time:time||(e.recurs_yearly?'Ogni anno':'Una data speciale'),sort:time||'00:01'});
   }
-  for(const e of snapshot?.appointments||[]){
+  for(const e of data?.appointments||[]){
     const time=e.is_all_day?'':new Date(e.starts_at).toLocaleTimeString((globalThis.UsI18n?.tag||'it-IT'),{hour:'2-digit',minute:'2-digit'});
     for(const date of e.dates||[])push(date,{kind:'calendar',id:e.id,title:e.title||'Impegno',entryType:e.entry_type,ownerId:e.owner_id,time:time||'Tutto il giorno',sort:time||'00:02'});
   }
@@ -120,15 +157,10 @@ function dayTitle(day){
   const d=dateOf(day);
   return d.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{weekday:'long',day:'numeric',month:'long',...(d.getFullYear()!==dateOf(today()).getFullYear()?{year:'numeric'}:{})});
 }
-// Oggi, Domani, Ieri; a day of yours (Il nostro giorno, a mesiversario) is
-// "I vostri momenti"; any other day is named by its month, as in the mockup.
-function relativeLabel(day,items=[]){
-  const delta=Math.round((dateOf(day)-dateOf(today()))/86400000);
-  if(delta===0)return 'OGGI';
-  if(delta===1)return 'DOMANI';
-  if(delta===-1)return 'IERI';
-  if(items.some(item=>item.kind==='relationship'))return 'I VOSTRI MOMENTI';
-  return months[dateOf(day).getMonth()].toUpperCase();
+// «Prossimi»: a day far ahead says its month, and its year outside this one.
+function upcomingDayLabel(day){
+  const d=dateOf(day);
+  return d.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{weekday:'long',day:'numeric',month:'long',...(d.getFullYear()!==dateOf(today()).getFullYear()?{year:'numeric'}:{})});
 }
 // Due colori: whose it is, as a colour. Mine --us-tu, theirs --us-partner,
 // shared entries, couple Events and Il nostro giorno --us-noi. Presentation
@@ -142,6 +174,11 @@ function ownerOf(item){
 const VENN='<svg class="us-noi-v2-venn" viewBox="0 0 58 36" width="58" height="36" aria-hidden="true" focusable="false"><circle cx="20" cy="18" r="15" style="fill:var(--us-rosa)"/><circle cx="38" cy="18" r="15" style="fill:var(--us-lilla)"/><path d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z" style="fill:var(--us-noi)"/></svg>';
 const clockOf=value=>/^\d{2}:\d{2}$/.test(String(value||''))?String(value):'';
 function itemAction(item){return item.kind==='calendar'?'entry':item.kind==='event'?'event':'anniversary';}
+// Whose it is, at the end of an agenda row: the name in that person's colour.
+function whoChip(item){
+  const owner=ownerOf(item);
+  return `<span class="us-noi-v2-who" data-owner="${owner}"${owner==='noi'?'':' translate="no"'}>${esc(whoName(owner))}</span>`;
+}
 function itemMarkup(day,item) {
   const action=itemAction(item);
   // Il nostro giorno: the couple mark and how long ago it all began.
@@ -153,11 +190,14 @@ function itemMarkup(day,item) {
   </button>`;
   }
   const clock=clockOf(item.time);
+  // A hundred days: «4100 giorni ♡» says it all, its line would repeat it.
+  // No hour: a mark, never a dash (founder, 04/11/2026). A heart for our
+  // dates, the calendar for a whole-day plan.
   if(item.kind==='relationship')return `<button type="button" class="us-noi-v2-item" data-noi-item="${action}" data-day="${esc(day)}" data-id="" data-months="${item.months}" data-owner="noi">
-    <span class="us-noi-v2-item-time" aria-hidden="true">—</span><span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small class="us-noi-v2-item-meta"><span>${esc(item.time)}</span><span class="us-noi-v2-owner" data-owner-type="relationship">${esc(ownerLabel(item))}</span></small></span><i class="us-noi-v2-item-dot" aria-hidden="true"></i>
+    <span class="us-noi-v2-item-time is-mark" aria-hidden="true">${icon('heart')}</span><span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small class="us-noi-v2-item-meta">${item.days?'':`<span>${esc(item.time)}</span>`}<span class="us-noi-v2-owner" data-owner-type="relationship">${esc(ownerLabel(item))}</span></small></span>${whoChip(item)}
   </button>`;
   return `<button type="button" class="us-noi-v2-item" data-noi-item="${action}" data-day="${esc(day)}" data-id="${esc(item.id||'')}" data-owner="${ownerOf(item)}">
-    <span class="us-noi-v2-item-time"${clock?'':' aria-hidden="true"'}>${clock||'—'}</span><span class="us-noi-v2-item-copy"><b translate="no">${esc(item.title)}</b><small class="us-noi-v2-item-meta">${clock?'':`<span>${esc(item.time)}</span>`}<span class="us-noi-v2-owner" data-owner-type="${esc(item.entryType||item.kind)}">${esc(ownerLabel(item))}</span></small></span><i class="us-noi-v2-item-dot" aria-hidden="true"></i>
+    <span class="us-noi-v2-item-time${clock?'':' is-mark'}"${clock?'':' aria-hidden="true"'}>${clock||icon('calendar-blank')}</span><span class="us-noi-v2-item-copy"><b translate="no">${esc(item.title)}</b><small class="us-noi-v2-item-meta">${clock?'':`<span>${esc(item.time)}</span>`}<span class="us-noi-v2-owner" data-owner-type="${esc(item.entryType||item.kind)}">${esc(ownerLabel(item))}</span></small></span>${whoChip(item)}
   </button>`;
 }
 // La nostra settimana: one chip per commitment, in the colour of whose it is.
@@ -165,49 +205,70 @@ function chipMarkup(day,item){
   const label=item.kind==='relationship'?esc(item.title):`<span translate="no">${esc(item.title)} · </span>${esc(item.time)}`;
   return `<button type="button" class="us-noi-v2-chip" data-noi-item="${itemAction(item)}" data-day="${esc(day)}" data-id="${esc(item.id||'')}"${item.kind==='relationship'?` data-months="${item.months}"`:''} data-owner="${ownerOf(item)}" aria-label="${esc(item.title)}, ${esc(ownerLabel(item))}, ${esc(item.time)}">${label}</button>`;
 }
-// The small key under the month: the real names, never hardcoded.
-function legendMarkup(){
-  const profiles=Array.isArray(snapshot?.profiles)?snapshot.profiles:[];
-  const me=window.usProfile?.id;
-  const name=p=>String(p?.display_name||'').trim();
-  const known=window.UsIdentity?.current?.();
-  const own=name(profiles.find(p=>p.id===me))||known?.ownName||'Tu';
-  const partner=name(profiles.find(p=>p.id&&p.id!==me))||known?.partnerName||'La tua persona';
-  const people=[['tu',own],['partner',partner]];
-  if(window.usProfile?.role==='beatrice')people.reverse();
-  people.push(['noi','Insieme']);
-  return `<p class="us-noi-v2-legend" aria-hidden="true">${people.map(([owner,label])=>`<span${owner==='noi'?'':' translate="no"'}><i data-owner="${owner}"></i>${esc(label)}</span>`).join('')}</p>`;
+// The Ricordi of the month (calendar.js readNoiMonth), by day.
+function ricordiByDay(data=snapshot){
+  const map=new Map();
+  for(const m of Array.isArray(data?.moments)?data.moments:[]){
+    if(!m?.id||!/^\d{4}-\d{2}-\d{2}$/.test(String(m.day||'')))continue;
+    if(!map.has(m.day))map.set(m.day,[]);
+    map.get(m.day).push(m);
+  }
+  return map;
+}
+// In a square the couple's dates say how much, on two lines if needed
+// (staging, 04/11/2026: «Mesiversario» became «Mesi…»); the agenda says the rest.
+function cellLabel(item){
+  if(item.kind!=='relationship')return item.title;
+  if(item.days)return `${item.days} giorni`;
+  if(item.months===0)return 'Inizio';
+  if(item.months%12===0){const years=item.months/12;return years===1?'1 anno':`${years} anni`;}
+  return item.months===1?'1 mese':`${item.months} mesi`;
 }
 // Only the weeks this month actually spans: 4–6 rows, never an empty sixth row.
+// A day is a square: its number, then a label per commitment (at most two,
+// then "+n") in the colour of whoever put it; a day with a Ricordo is its photo.
 function calendarMarkup(index) {
   const first=new Date(year,month,1,12);
   const offset=(first.getDay()+6)%7;
   const count=new Date(year,month+1,0).getDate();
   const slots=Math.ceil((offset+count)/7)*7;
-  const now=today();
+  const now=today(),ricordi=ricordiByDay();
   const header=weekdays.map(([short,long])=>`<abbr class="us-noi-v2-weekday" title="${long}">${short}</abbr>`).join('');
   const days=Array.from({length:slots},(_,i)=>{
     const n=i-offset+1,valid=n>0&&n<=count;
     if(!valid)return '<span class="us-noi-v2-blank" aria-hidden="true"></span>';
     const day=iso(year,month,n),todayFlag=day===now,active=day===selected;
-    const marks=index.get(day)||[];
-    const owners=['tu','partner','noi'].filter(owner=>marks.some(x=>ownerOf(x)===owner));
-    const dots=owners.map(owner=>`<i data-owner="${owner}"></i>`).join('');
-    const moments=marks.length===1?'1 momento':marks.length?`${marks.length} momenti`:'nessun momento';
-    return `<button type="button" class="us-noi-v2-day${active?' is-selected':''}${todayFlag?' is-today':''}${day<now?' is-past':''}" data-noi-day="${day}" aria-pressed="${active}" ${todayFlag?'aria-current="date"':''} aria-label="${esc(dayLabel(day))}${todayFlag?', oggi':''}, ${moments}">
-      <span class="us-noi-v2-day-number">${n}</span><span class="us-noi-v2-day-marks" aria-hidden="true">${dots}</span>
+    const items=index.get(day)||[];
+    const photo=(ricordi.get(day)||[]).find(m=>m.thumb);
+    const bars=items.slice(0,BAR_MAX).map(item=>`<span class="us-noi-v2-bar${item.kind==='relationship'?' is-milestone':''}" data-owner="${ownerOf(item)}"${item.kind==='relationship'?'':' translate="no"'}>${esc(cellLabel(item))}</span>`).join('');
+    const more=items.length>BAR_MAX?`<span class="us-noi-v2-more">+${items.length-BAR_MAX}</span>`:'';
+    const plans=items.length===1?'1 impegno':items.length?`${items.length} impegni`:'niente in programma';
+    return `<button type="button" class="us-noi-v2-day${active?' is-selected':''}${photo?' has-photo':''}${todayFlag?' is-today':''}${day<now?' is-past':''}" data-noi-day="${day}" aria-pressed="${active}" ${todayFlag?'aria-current="date"':''} aria-label="${esc(dayLabel(day))}${todayFlag?', oggi':''}${photo?', con un Ricordo':''}, ${plans}">
+      ${photo?`<img class="us-noi-v2-day-photo" src="${esc(photo.thumb)}" alt="" loading="lazy" decoding="async">`:''}<span class="us-noi-v2-day-number">${n}</span><span class="us-noi-v2-day-bars" aria-hidden="true">${bars}${more}</span>
     </button>`;
   }).join('');
-  return `<div class="us-noi-v2-calendar" role="group" aria-label="Calendario di ${months[month]} ${year}"><div class="us-noi-v2-weekdays" aria-hidden="true">${header}</div><div class="us-noi-v2-grid" data-weeks="${slots/7}"><span class="us-noi-v2-sel" aria-hidden="true" hidden></span>${days}</div>${legendMarkup()}</div>`;
+  return `<div class="us-noi-v2-calendar" role="group" aria-label="Calendario di ${months[month]} ${year}"><div class="us-noi-v2-weekdays" aria-hidden="true">${header}</div><div class="us-noi-v2-grid" data-weeks="${slots/7}">${days}</div></div>`;
 }
-// Elenco: what is still to come this month (a whole other month as it is),
-// each day as "Mercoledì 14".
-function listDayLabel(day){return dateOf(day).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{weekday:'long',day:'numeric'});}
-function listMarkup(index) {
-  const now=today();
-  const days=[...index.keys()].filter(monthMatch).filter(day=>!monthMatch(now)||day>=now).sort();
-  if(!days.length)return `<div class="us-noi-v2-empty-month">${VENN.replace('class="us-noi-v2-venn"','class="us-noi-v2-venn is-big"')}<b>Un mese ancora da scrivere</b><button type="button" class="us-noi-v2-text-action" data-noi-add>Aggiungi un impegno</button></div>`;
-  return `<div class="us-noi-v2-month-list">${days.map(day=>`<section class="us-noi-v2-month-day${day===today()?' is-today':''}" aria-label="${esc(dayLabel(day))}"><button type="button" class="us-noi-v2-list-date" data-noi-day="${day}" data-noi-focus-list aria-label="${esc(dayLabel(day))}"><span>${esc(listDayLabel(day))}</span>${day===today()?'<em>Oggi</em>':''}</button>${index.get(day).map(item=>itemMarkup(day,item)).join('')}</section>`).join('')}</div>`;
+// «Prossimi»: what is coming from today, a year ahead, with the dates that
+// come back every year (birthdays, mesiversari, the anniversary); the first
+// UPCOMING_MAX commitments, day by day.
+function upcomingMarkup() {
+  if(!upcoming){
+    if(upcomingError)return `<p class="us-noi-v2-notice" role="alert">${icon('arrows-clockwise')}<span>Calendario non raggiungibile.</span><button type="button" data-noi-retry>Riprova</button></p>`;
+    return '<div class="us-skeleton-rows" role="status"><span class="us-sr">Carico i prossimi impegni…</span><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i></div>';
+  }
+  const from=today(),to=yearAhead();
+  const index=itemsByDate(upcoming,monthsBetween(from,to));
+  const days=[...index.keys()].filter(day=>day>=from&&day<to).sort();
+  let left=UPCOMING_MAX;
+  const sections=[];
+  for(const day of days){
+    if(left<=0)break;
+    const items=index.get(day).slice(0,left);left-=items.length;
+    sections.push(`<section class="us-noi-v2-month-day${day===from?' is-today':''}" aria-label="${esc(upcomingDayLabel(day))}"><button type="button" class="us-noi-v2-list-date" data-noi-day="${day}" data-noi-focus-list aria-label="${esc(upcomingDayLabel(day))}"><span>${esc(upcomingDayLabel(day))}</span>${day===from?'<em>Oggi</em>':''}</button>${items.map(item=>itemMarkup(day,item)).join('')}</section>`);
+  }
+  if(!sections.length)return `<div class="us-noi-v2-empty-month">${VENN.replace('class="us-noi-v2-venn"','class="us-noi-v2-venn is-big"')}<b>Niente in arrivo</b><button type="button" class="us-noi-v2-text-action" data-noi-add>Aggiungi un impegno</button></div>`;
+  return `<div class="us-noi-v2-month-list">${sections.join('')}</div>`;
 }
 function weekDays(){
   const date=dateOf(selected);
@@ -245,9 +306,9 @@ function weekMarkup(index) {
       <div class="us-noi-v2-week-lane">${lane}</div>
     </section>`;
   }).join('');
-  // Lavagna (the mockup's Foglio): the key, the days, then the free evenings
-  // of both of you and how to see a day.
-  return `${legendMarkup()}<div class="us-noi-v2-week-list" role="group" aria-label="La nostra settimana">${rows}</div>${weekSummary(days.some(d=>d.day>=today())?free.size:-1)}<p class="us-noi-v2-week-note">Tocca un giorno nel calendario per vedere i dettagli.</p>`;
+  // Lavagna (the mockup's Foglio): the days, then the free evenings of both
+  // of you and how to see a day. No key: the names say whose (03/11/2026).
+  return `<div class="us-noi-v2-week-list" role="group" aria-label="La nostra settimana">${rows}</div>${weekSummary(days.some(d=>d.day>=today())?free.size:-1)}<p class="us-noi-v2-week-note">Tocca un giorno nel calendario per vedere i dettagli.</p>`;
 }
 function weekTitle(){
   const days=weekDays(),now=today();
@@ -276,12 +337,24 @@ function renderWeekSheet(index){
   const done=()=>{sheet.classList.remove('open');sheet.setAttribute('aria-hidden','true');};
   if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(sheet,done);else done();
 }
+// A Ricordo of the chosen day: its photo, its words and who took it. It opens
+// in its album (moments-albums.js) like a card of Ricordi.
+function ricordoMarkup(m){
+  const author=m.created_by?personName(m.created_by):'';
+  const title=String(m.caption||'').trim()||'Un ricordo';
+  const date=dateOf(m.day).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long',year:'numeric'});
+  return `<button type="button" class="us-noi-v2-ricordo" data-noi-ricordo data-moment-id="${esc(m.id)}" data-storage-path="${esc(m.storage_path||'')}" data-moment-iso="${esc(m.day)}" data-moment-owner="${esc(m.created_by||'')}" data-caption="${esc(m.caption||'')}" data-author="${esc(author)}" data-date="${esc(date)}">${m.thumb?`<img src="${esc(m.thumb)}" alt="" loading="lazy" decoding="async">`:'<span class="us-noi-v2-ricordo-blank" aria-hidden="true"></span>'}<span class="us-noi-v2-ricordo-copy"><small>Ricordo</small><b translate="no">${esc(title)}</b>${author?`<span>di ${esc(author)}</span>`:''}</span></button>`;
+}
+// The chosen day: its Ricordi, its commitments with time and whose, and the
+// one way to add to it (the calendar editor, which also offers Eventi).
 function detailMarkup(index) {
   const active=index.get(selected)||[];
-  const head=`<div class="us-noi-v2-detail-head"><div><small>${relativeLabel(selected,active)}</small><h3>${esc(dayTitle(selected))}</h3></div></div>`;
-  if(active.length)return `${head}<div class="us-noi-v2-day-items">${active.map(item=>itemMarkup(selected,item)).join('')}</div>`;
+  const ricordi=ricordiByDay().get(selected)||[];
+  const head=`<div class="us-noi-v2-detail-head"><h3>${esc(dayTitle(selected))}</h3>${selected===today()?'<span class="us-noi-v2-today-pill">Oggi</span>':''}</div>`;
+  const add='<button type="button" class="us-noi-v2-add-day" data-noi-add><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Aggiungi a questo giorno</span></button>';
+  if(active.length||ricordi.length)return `${head}<div class="us-noi-v2-day-items">${ricordi.map(ricordoMarkup).join('')}${active.map(item=>itemMarkup(selected,item)).join('')}</div>${add}`;
   if(pending&&!snapshot)return `${head}<div class="us-skeleton-rows" role="status"><span class="us-sr">Carico i vostri momenti…</span><i class="us-skeleton"></i><i class="us-skeleton"></i></div>`;
-  return `${head}<p class="us-noi-v2-empty-day">Nessun momento in questo giorno. Lo spazio è vostro.</p>`;
+  return `${head}<p class="us-noi-v2-empty-day">Niente in programma. Un giorno libero, tutto vostro.</p>${add}`;
 }
 function syncStatus(){
   const status=$('usNoiV2Sync');
@@ -291,10 +364,10 @@ function syncStatus(){
   status.dataset.state=pending?'loading':error?'error':'idle';
 }
 // Motion, from the mockup (noi.js): the month slides 30px out (200ms, in)
-// and the next one in (320ms, out); the selected day's disc springs to the
-// new day; the day's title and moments rise 8px one after the other.
-const EASE_OUT='cubic-bezier(.2,.8,.2,1)',EASE_IN='cubic-bezier(.4,0,1,1)',EASE_SPRING='cubic-bezier(.34,1.56,.64,1)';
-let entering=null,leaving=null,selFrom=null;
+// and the next one in (320ms, out); the day's title and moments rise 8px one
+// after the other. The chosen day is framed in place (no moving disc).
+const EASE_OUT='cubic-bezier(.2,.8,.2,1)',EASE_IN='cubic-bezier(.4,0,1,1)';
+let entering=null,leaving=null;
 function playEnter(container,direction){
   if(!direction||reducedMotion())return;
   entering={direction,start:performance.now()};
@@ -313,22 +386,6 @@ function flushLeaving(){
   if(!leaving)return;
   const {anim,apply}=leaving;leaving=null;anim.cancel();apply();
 }
-function selectionPos(){
-  const grid=$('usNoiV2Content')?.querySelector('.us-noi-v2-grid');
-  const disc=grid?.querySelector('.us-noi-v2-sel');
-  return disc&&!disc.hidden?disc.style.translate:null;
-}
-function placeSelection(){
-  const grid=$('usNoiV2Content')?.querySelector('.us-noi-v2-grid');
-  const disc=grid?.querySelector('.us-noi-v2-sel');
-  if(!disc)return;
-  const day=grid.querySelector(`[data-noi-day="${selected}"]`);
-  const from=selFrom;selFrom=null;
-  if(!day){disc.hidden=true;return;}
-  const to=`${day.offsetLeft+day.offsetWidth/2-20}px ${day.offsetTop+day.offsetHeight/2-20}px`;
-  disc.hidden=false;disc.style.translate=to;
-  if(from&&from!==to&&!reducedMotion())disc.animate?.([{translate:from,scale:1},{scale:.86,offset:.4},{translate:to,scale:1}],{duration:520,easing:EASE_SPRING});
-}
 function riseDetail(){
   if(reducedMotion())return;
   const detail=$('usNoiV2Detail');
@@ -338,7 +395,8 @@ function riseDetail(){
 function setMode(next){
   if(mode===next)return;
   mode=next;render();
-  const shown=$('usNoiV2Content')?.querySelector(next==='list'?'.us-noi-v2-month-list,.us-noi-v2-empty-month':'.us-noi-v2-calendar');
+  if(next==='list')refreshUpcoming();
+  const shown=$('usNoiV2Content')?.querySelector(next==='list'?'.us-noi-v2-month-list,.us-noi-v2-empty-month,.us-skeleton-rows':'.us-noi-v2-calendar');
   if(shown&&!reducedMotion())shown.animate?.([{opacity:0,translate:'0 10px'},{opacity:1,translate:'0 0'}],{duration:320,easing:EASE_OUT});
 }
 function render(){
@@ -355,33 +413,57 @@ function render(){
     const btn=$(`usNoiV2Mode${type==='calendar'?'Calendar':'List'}`);
     if(btn){btn.setAttribute('aria-pressed',String(mode===type));btn.classList.toggle('is-active',mode===type);}
   }
-  // One chip, as in the mockup: "Il nostro giorno" in this month, "Torna a
-  // oggi" in any other month.
+  // "Torna a oggi" in any other month (Il nostro giorno lives in Impostazioni).
   const [nowYear,nowMonth]=currentMonth();
   const thisMonth=year===nowYear&&month===nowMonth;
   const todayButton=$('usNoiV2Today');
-  if(todayButton)todayButton.hidden=thisMonth;
-  const first=$('usNoiV2First');
-  if(first)first.hidden=!snapshot?.startedOn||!thisMonth;
+  if(todayButton)todayButton.hidden=thisMonth||mode==='list';
   syncStatus();
   const container=$('usNoiV2Content'),detail=$('usNoiV2Detail');
   if(!container||!detail)return;
   const index=itemsByDate();
   const direction=enterDirection;
   enterDirection=0;
-  const notice=error&&!snapshot?`<p class="us-noi-v2-notice" role="alert">${icon('arrows-clockwise')}<span>Calendario non raggiungibile.</span><button type="button" data-noi-retry>Riprova</button></p>`:'';
-  container.dataset.state=pending&&!snapshot?'loading':error&&!snapshot?'error':'ready';
-  container.innerHTML=notice+(mode==='list'?listMarkup(index):calendarMarkup(index));
-  placeSelection();
+  if(mode==='list'){
+    container.dataset.state=upcoming?'ready':upcomingError?'error':'loading';
+    container.innerHTML=upcomingMarkup();
+  }else{
+    const notice=error&&!snapshot?`<p class="us-noi-v2-notice" role="alert">${icon('arrows-clockwise')}<span>Calendario non raggiungibile.</span><button type="button" data-noi-retry>Riprova</button></p>`:'';
+    container.dataset.state=pending&&!snapshot?'loading':error&&!snapshot?'error':'ready';
+    container.innerHTML=notice+calendarMarkup(index);
+  }
   if(direction&&mode!=='week')playEnter(container,direction);else continueEnter(container);
   renderWeekSheet(index);
   detail.hidden=mode==='list';
   detail.innerHTML=mode==='list'?'':detailMarkup(index);
 }
+// «Prossimi» reads a year from today (calendar.js readNoiRange), once a
+// minute at most; a change in Eventi or the editor forces it like the month.
+async function refreshUpcoming({force=false}={}){
+  const key=identityKey();
+  if(!key){upcoming=null;upcomingKey='';return;}
+  if(key!==upcomingKey){upcoming=null;upcomingAt=0;upcomingError='';upcomingKey=key;}
+  if(upcomingPending&&!force)return;
+  if(!force&&upcoming&&Date.now()-upcomingAt<60000)return;
+  const source=window.USNoiCalendarRead?.readRange;
+  if(typeof source!=='function')return;
+  const token=++upcomingSeq;
+  upcomingPending=true;upcomingError='';
+  try{
+    const data=await source(today(),yearAhead());
+    if(token!==upcomingSeq||key!==identityKey())return;
+    if(data){upcoming=data;upcomingAt=Date.now();}
+  }catch(e){
+    if(token===upcomingSeq&&key===identityKey()){upcomingError='Non disponibile';console.warn('[US Noi V2] upcoming read',e);}
+  }finally{
+    if(token===upcomingSeq){upcomingPending=false;if(mode==='list')render();}
+  }
+}
 async function refresh({force=false}={}){
   const key=identityKey();
   if(!key){identity=null;snapshot=null;error='';render();return;}
   if(key!==identity){snapshot=null;refreshedAt=0;identity=key;}
+  if(mode==='list')refreshUpcoming({force});
   if(pending&&!force)return;
   if(!force&&snapshot&&Date.now()-refreshedAt<60000){render();return;}
   const source=window.USNoiCalendarRead?.readMonth;
@@ -433,7 +515,8 @@ function chooseDay(day,{fromList=false,fromWeek=false}={}) {
   if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return;
   const d=dateOf(day);
   const differentMonth=d.getFullYear()!==year||d.getMonth()!==month;
-  if(differentMonth&&mode!=='week')return;
+  // The grid only picks its own month; «Prossimi» and the week reach any.
+  if(differentMonth&&mode==='calendar')return;
   selected=day;
   if(fromWeek&&!ideaPick)mode='calendar';
   if(ideaPick){
@@ -441,9 +524,8 @@ function chooseDay(day,{fromList=false,fromWeek=false}={}) {
     if(picker)Promise.resolve(picker(day)).then(ok=>{if(ok){ideaPick=null;render();}});
     return;
   }
-  if(differentMonth){goToMonth(d.getFullYear(),d.getMonth(),day,Math.sign(d.getFullYear()*12+d.getMonth()-(year*12+month)));return;}
   if(fromList)mode='calendar';
-  else if(mode==='calendar')selFrom=selectionPos();
+  if(differentMonth){goToMonth(d.getFullYear(),d.getMonth(),day,Math.sign(d.getFullYear()*12+d.getMonth()-(year*12+month)));return;}
   render();
   riseDetail();
   window.UsFeedback?.selection?.();
@@ -484,12 +566,6 @@ function moveSintonia(){
     if(element)target.appendChild(element);
   }
   target.dataset.ready='1';
-}
-function openLink(link){
-  // Lavagna is the Noi calendar in its week view, both of you side by side,
-  // shown as a Foglio over the month. Missioni and Eventi open their sheets.
-  if(link==='lavagna'){mode='week';render();}
-  if(link==='quest'||link==='eventi')window.openNoiSection?.(link);
 }
 // Back (navigation.js) and leaving Noi bring the week view back to the month.
 function closeWeek(){
@@ -534,18 +610,15 @@ function boot(){
   $('usNoiV2Today')?.addEventListener('click',()=>{
     const [y,m]=currentMonth();
     const direction=y*12+m-(year*12+month);
-    if(direction===0){selFrom=mode==='calendar'?selectionPos():null;selected=today();render();riseDetail();return;}
+    if(direction===0){selected=today();render();riseDetail();return;}
     goToMonth(y,m,today(),Math.sign(direction));
-  });
-  $('usNoiV2First')?.addEventListener('click',()=>{
-    const start=snapshot?.startedOn;
-    if(!start)return;
-    const d=dateOf(start);
-    goToMonth(d.getFullYear(),d.getMonth(),start,-1);
   });
   $('usNoiV2')?.addEventListener('click',e=>{
     const day=e.target.closest('[data-noi-day]');if(day){chooseDay(day.dataset.noiDay,{fromList:day.hasAttribute('data-noi-focus-list')});return;}
     if(e.target.closest('[data-noi-retry]')){refresh({force:true});return;}
+    // A Ricordo of the day opens in its album, like a card of Ricordi.
+    const ricordo=e.target.closest('[data-noi-ricordo]');
+    if(ricordo){window.openMomentViewer?.(ricordo);return;}
     if(e.target.closest('[data-noi-add]')){
       if(ideaPick){
         Promise.resolve(window.UsCalendarLinks?.createForIdeaDate?.(selected)).then(ok=>{if(ok){ideaPick=null;render();}});
@@ -555,11 +628,8 @@ function boot(){
       return;
     }
     const item=e.target.closest('[data-noi-item]');
-    if(item){openItem(item);return;}
-    const link=e.target.closest('[data-noi-open-link]');
-    if(link)openLink(link.dataset.noiOpenLink);
+    if(item)openItem(item);
   });
-  if(typeof ResizeObserver==='function'&&$('usNoiV2Content'))new ResizeObserver(()=>placeSelection()).observe($('usNoiV2Content'));
   const lavagna=$('usNoiLavagna');
   lavagna?.addEventListener('click',e=>{
     if(e.target.closest('[data-noi-week-close]')){closeWeek();return;}
@@ -595,6 +665,7 @@ function boot(){
   if(events)new MutationObserver(()=>{if(events.getAttribute('aria-hidden')==='true'&&$('bond')?.classList.contains('active'))refresh({force:true});}).observe(events,{attributes:true,attributeFilter:['aria-hidden']});
   window.addEventListener('us-identity-change',()=>{
     requestSeq++;pending=false;identity=null;snapshot=null;refreshedAt=0;error='';
+    upcomingSeq++;upcomingPending=false;upcoming=null;upcomingAt=0;upcomingKey='';upcomingError='';
     [year,month]=currentMonth();selected=today();ideaPick=null;
     if($('bond')?.classList.contains('active'))refresh();else render();
   });

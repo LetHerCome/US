@@ -32,8 +32,6 @@ final class UsWidgetStore {
     private final AtomicFile thinkHistoryFile;
     private final AtomicFile photoFile;
     private final AtomicFile photoMetaFile;
-    private final AtomicFile noiPortraitFile;
-    private final AtomicFile noiPortraitMetaFile;
 
     UsWidgetStore(Context context) {
         directory = new File(context.getNoBackupFilesDir(), "us-widget");
@@ -45,8 +43,6 @@ final class UsWidgetStore {
         thinkHistoryFile = new AtomicFile(new File(directory, "think-history-v1.json"));
         photoFile = new AtomicFile(new File(mediaDirectory, "photo.jpg"));
         photoMetaFile = new AtomicFile(new File(mediaDirectory, "photo-meta.json"));
-        noiPortraitFile = new AtomicFile(new File(mediaDirectory, "noi-portrait.jpg"));
-        noiPortraitMetaFile = new AtomicFile(new File(mediaDirectory, "noi-portrait-meta.json"));
         // V1 kept the action status inside the shared snapshot. It is superseded.
         new File(directory, "snapshot-v1.json").delete();
     }
@@ -76,8 +72,13 @@ final class UsWidgetStore {
         thinkHistoryFile.delete();
         photoFile.delete();
         photoMetaFile.delete();
-        noiPortraitFile.delete();
-        noiPortraitMetaFile.delete();
+        // Every hourly photo, whoever's they were.
+        File[] photos = mediaDirectory.listFiles((dir, name) -> name.startsWith("photo-") && name.endsWith(".jpg"));
+        if (photos != null) for (File file : photos) file.delete();
+        for (String slot : PORTRAIT_SLOTS) {
+            portraitFile(slot).delete();
+            portraitMetaFile(slot).delete();
+        }
     }
 
     // ---------- semantic snapshot ----------
@@ -88,12 +89,8 @@ final class UsWidgetStore {
         String owner = owner();
         if (owner.isEmpty() || !owner.equals(normalized.optString("ownerHash", ""))) return false;
         if (!writeAtomic(snapshotFile, normalized.toString())) return false;
-        // The photo cache follows the snapshot: no current photo, no cached photo.
-        JSONObject photo = normalized.optJSONObject("photo");
-        if (photo == null || !"ready".equals(photo.optString("state"))) {
-            photoFile.delete();
-            photoMetaFile.delete();
-        }
+        // The photo cache follows the snapshot: only the photos it names stay.
+        prunePhotos(normalized.optJSONObject("photo"));
         return true;
     }
 
@@ -125,6 +122,12 @@ final class UsWidgetStore {
 
     /** Records the action status; keeps the pending action id for idempotent retries. */
     synchronized boolean writeAction(String status, String actionId) {
+        JSONObject previous = readAction();
+        return writeAction(status, actionId, previous != null && previous.optBoolean("reply", false));
+    }
+
+    /** reply: the tap answered the partner's thought ("Ricambiato", not "Inviato"). */
+    synchronized boolean writeAction(String status, String actionId, boolean reply) {
         String owner = owner();
         if (owner.isEmpty()) return false;
         JSONObject previous = readAction();
@@ -135,7 +138,8 @@ final class UsWidgetStore {
                 .put("status", status)
                 .put("at", now)
                 .put("actionId", actionId == null ? "" : actionId)
-                .put("sentAt", status.equals("sent") ? now : previous == null ? "" : previous.optString("sentAt", ""));
+                .put("sentAt", status.equals("sent") ? now : previous == null ? "" : previous.optString("sentAt", ""))
+                .put("reply", reply);
             return writeAtomic(actionFile, next.toString());
         } catch (Exception ignored) {
             return false;
@@ -185,6 +189,17 @@ final class UsWidgetStore {
         return recentThinkEvents(now).length();
     }
 
+    /** The widget's own sends after {@code since} (the app's count covers the ones before). */
+    synchronized int countThinkSentSince(Instant since, Instant now) {
+        JSONArray events = recentThinkEvents(now);
+        int count = 0;
+        for (int i = 0; i < events.length(); i++) {
+            Instant at = UsWidgetContract.instant(events.optJSONObject(i).optString("at", ""));
+            if (at != null && at.isAfter(since)) count++;
+        }
+        return count;
+    }
+
     synchronized Instant nextThinkExpiry(Instant now) {
         JSONArray events = recentThinkEvents(now);
         Instant next = null;
@@ -197,79 +212,141 @@ final class UsWidgetStore {
         return next;
     }
 
-    // WebView-prepared two-person portrait, never a signed URL.
-    synchronized boolean writeNoiPortrait(String ownerHash, byte[] bytes) {
-        if (!owner().equals(ownerHash) || ownerHash.isEmpty() || bytes == null ||
+    // WebView-prepared portraits, never a signed URL: "me" and "partner" are
+    // the round ones of every Pastello widget. "pair", the two-person portrait
+    // of the old Noi 2x1, is no longer written; it stays so the wipe removes it.
+    // "memories" and "memories_wide": the stack of Ricordi a pila, drawn by US
+    // as one picture for the 2x2 and one for the 4x2. "lavagna" and
+    // "lavagna_night": the couple's drawing in Pastello and Midnight ink.
+    static final String[] PORTRAIT_SLOTS = { "pair", "me", "partner", "memories", "memories_wide", "lavagna", "lavagna_night" };
+
+    static boolean validPortraitSlot(String slot) {
+        for (String known : PORTRAIT_SLOTS) if (known.equals(slot)) return true;
+        return false;
+    }
+
+    private AtomicFile portraitFile(String slot) {
+        return new AtomicFile(new File(mediaDirectory, "pair".equals(slot) ? "noi-portrait.jpg" : "noi-portrait-" + slot + ".png"));
+    }
+
+    private AtomicFile portraitMetaFile(String slot) {
+        return new AtomicFile(new File(mediaDirectory, "pair".equals(slot) ? "noi-portrait-meta.json" : "noi-portrait-" + slot + "-meta.json"));
+    }
+
+    synchronized boolean writeNoiPortrait(String ownerHash, String slot, byte[] bytes) {
+        if (!validPortraitSlot(slot) || !owner().equals(ownerHash) || ownerHash.isEmpty() || bytes == null ||
             bytes.length < 64 || bytes.length > MAX_PHOTO_BYTES || !isImage(bytes)) return false;
+        AtomicFile file = portraitFile(slot);
         FileOutputStream output = null;
         try {
-            output = noiPortraitFile.startWrite();
+            output = file.startWrite();
             output.write(bytes);
             output.flush();
-            noiPortraitFile.finishWrite(output);
-            return writeAtomic(noiPortraitMetaFile,
+            file.finishWrite(output);
+            return writeAtomic(portraitMetaFile(slot),
                 new JSONObject().put("ownerHash", ownerHash).toString());
         } catch (Exception ignored) {
-            if (output != null) noiPortraitFile.failWrite(output);
+            if (output != null) file.failWrite(output);
             return false;
         }
     }
 
-    synchronized byte[] readNoiPortrait() {
+    synchronized byte[] readNoiPortrait(String slot) {
         String activeOwner = owner();
-        if (activeOwner.isEmpty()) return null;
+        if (activeOwner.isEmpty() || !validPortraitSlot(slot)) return null;
         try {
-            JSONObject meta = new JSONObject(readAtomic(noiPortraitMetaFile));
+            JSONObject meta = new JSONObject(readAtomic(portraitMetaFile(slot)));
             if (!activeOwner.equals(meta.optString("ownerHash", ""))) return null;
-            return noiPortraitFile.readFully();
+            return portraitFile(slot).readFully();
         } catch (Exception ignored) { return null; }
     }
 
     // ---------- cached private photo ----------
 
+    /**
+     * Foto & giorni: Oggi's photo of this hour and of the next two, one file
+     * each (media/photo-<key>.jpg), listed in photo-meta.json for this account.
+     * The first key is the one Oggi shows now.
+     */
+    static final int MAX_PHOTOS = 3;
+
+    private AtomicFile photoFile(String key) {
+        return new AtomicFile(new File(mediaDirectory, "photo-" + key + ".jpg"));
+    }
+
     synchronized boolean writePhoto(String ownerHash, String key, byte[] bytes) {
         String owner = owner();
         if (owner.isEmpty() || !owner.equals(ownerHash) || key == null || !UsWidgetContract.MEDIA_KEY.matcher(key).matches()) return false;
         if (bytes == null || bytes.length < 64 || bytes.length > MAX_PHOTO_BYTES || !isImage(bytes)) return false;
+        AtomicFile file = photoFile(key);
         FileOutputStream output = null;
         try {
-            output = photoFile.startWrite();
+            output = file.startWrite();
             output.write(bytes);
             output.flush();
-            photoFile.finishWrite(output);
+            file.finishWrite(output);
         } catch (Exception ignored) {
-            if (output != null) photoFile.failWrite(output);
+            if (output != null) file.failWrite(output);
             return false;
         }
         try {
-            return writeAtomic(photoMetaFile, new JSONObject().put("ownerHash", owner).put("key", key).toString());
+            JSONArray keys = new JSONArray().put(key);
+            for (String other : photoKeys()) if (!other.equals(key) && keys.length() < MAX_PHOTOS + 1) keys.put(other);
+            // The single photo.jpg of before Pastello is not needed any more.
+            photoFile.delete();
+            return writeAtomic(photoMetaFile, new JSONObject().put("ownerHash", owner).put("keys", keys).toString());
         } catch (Exception ignored) {
             return false;
         }
     }
 
-    /** The cached photo bytes, only when they belong to this account and match the snapshot key. */
+    /** The cached photo bytes, only when they belong to this account. */
     synchronized byte[] readPhoto(String expectedKey) {
-        try {
-            JSONObject meta = new JSONObject(readAtomic(photoMetaFile));
-            String owner = owner();
-            if (owner.isEmpty() || !owner.equals(meta.optString("ownerHash")) || !meta.optString("key").equals(expectedKey)) return null;
-            return photoFile.readFully();
-        } catch (Exception ignored) {
-            return null;
-        }
+        if (expectedKey == null || !photoKeys().contains(expectedKey)) return null;
+        try { return photoFile(expectedKey).readFully(); }
+        catch (Exception ignored) { return null; }
     }
 
     synchronized String photoKey() {
+        java.util.List<String> keys = photoKeys();
+        return keys.isEmpty() ? "" : keys.get(0);
+    }
+
+    private java.util.List<String> photoKeys() {
+        java.util.List<String> keys = new java.util.ArrayList<>();
         try {
             JSONObject meta = new JSONObject(readAtomic(photoMetaFile));
-            return owner().equals(meta.optString("ownerHash")) ? meta.optString("key", "") : "";
-        } catch (Exception ignored) {
-            return "";
+            if (owner().isEmpty() || !owner().equals(meta.optString("ownerHash"))) return keys;
+            JSONArray list = meta.optJSONArray("keys");
+            for (int i = 0; list != null && i < list.length(); i++) {
+                String key = list.optString(i, "");
+                if (UsWidgetContract.MEDIA_KEY.matcher(key).matches()) keys.add(key);
+            }
+        } catch (Exception ignored) {}
+        return keys;
+    }
+
+    /** Only the photos the snapshot names stay on the phone. */
+    private void prunePhotos(JSONObject photo) {
+        HashSet<String> keep = new HashSet<>();
+        if (photo != null && "ready".equals(photo.optString("state"))) {
+            keep.add(photo.optString("key", ""));
+            JSONArray next = photo.optJSONArray("next");
+            for (int i = 0; next != null && i < next.length(); i++) keep.add(next.optJSONObject(i).optString("key", ""));
         }
+        try {
+            JSONArray kept = new JSONArray();
+            for (String key : photoKeys()) {
+                if (keep.contains(key)) kept.put(key);
+                else photoFile(key).delete();
+            }
+            if (kept.length() == 0) photoMetaFile.delete();
+            else writeAtomic(photoMetaFile, new JSONObject().put("ownerHash", owner()).put("keys", kept).toString());
+        } catch (Exception ignored) {}
     }
 
     synchronized void clearPhoto() {
+        for (String key : photoKeys()) photoFile(key).delete();
         photoFile.delete();
         photoMetaFile.delete();
     }

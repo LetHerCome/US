@@ -21,6 +21,9 @@ function installPriorityRuntime({ eventSource } = {}) {
     hidden: true,
     innerHTML: '',
     addEventListener(type, listener) { listeners.set(type, listener); },
+    // Oggi's arbitration marks its slot after every render (03/11/2026).
+    setAttribute() {},
+    removeAttribute() {},
   };
   const calls = [];
   const window = {

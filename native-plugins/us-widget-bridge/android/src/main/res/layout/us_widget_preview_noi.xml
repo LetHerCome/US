@@ -1,63 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget picker preview (Android 12+). Generic: the two colours, no faces, no names. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Widget picker preview (Android 12+), Foto protagonista (founder, 02/11/2026):
+     the same picture as previewImage, Pastello or Midnight with the phone's
+     theme. Generic: no name, no face, no photo. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_background"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingStart="10dp"
-    android:paddingTop="8dp"
-    android:paddingEnd="12dp"
-    android:paddingBottom="8dp">
-
-    <ImageView
-        android:layout_width="64dp"
-        android:layout_height="44dp"
-        android:layout_marginEnd="8dp"
-        android:importantForAccessibility="no"
-        android:scaleType="center"
-        android:src="@drawable/us_widget_two_dots" />
-
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:includeFontPadding="false"
-            android:letterSpacing="0.14"
-            android:text="@string/us_widget_noi_name"
-            android:textAllCaps="true"
-            android:textColor="@color/us_widget_orchidea"
-            android:textSize="11sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:fontFamily="serif"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:text="@string/us_widget_preview_noi"
-            android:textColor="@color/us_widget_text"
-            android:textSize="21sp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:fontFamily="serif"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:text="@string/us_widget_noi_between"
-            android:textColor="@color/us_widget_text_2"
-            android:textSize="12sp"
-            android:textStyle="italic" />
-    </LinearLayout>
-</LinearLayout>
+    android:contentDescription="@null"
+    android:importantForAccessibility="no"
+    android:scaleType="fitCenter"
+    android:src="@drawable/us_widget_preview_noi" />

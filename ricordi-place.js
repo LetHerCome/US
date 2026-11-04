@@ -69,8 +69,10 @@
     return out;
   }
 
+  // Photon answers in the language of the request: Italian names on every phone
+  // (its lang= parameter has no Italian; Accept-Language needs no preflight).
   async function photon(path, signal) {
-    const response = await fetch(`${PHOTON}${path}`, { signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
+    const response = await fetch(`${PHOTON}${path}`, { signal, credentials: 'omit', referrerPolicy: 'no-referrer', headers: { 'Accept-Language': 'it' } });
     if (!response.ok) throw new Error(`photon ${response.status}`);
     return response.json();
   }
@@ -243,10 +245,16 @@
     });
   }
 
+  // The app's client is the global `sb` of app.js, a const: never window.sb.
+  // eslint-disable-next-line no-undef
+  const client = () => { try { return sb; } catch (_) { return w?.sb || null; } };
+
   // Either member places, moves or clears a saved Ricordo (set_moment_place).
   async function save(momentId, place) {
     const p = place ? normalize(place) : null;
-    const { data, error } = await w.sb.rpc('set_moment_place', {
+    const db = client();
+    if (!db) throw new Error('supabase_unavailable');
+    const { data, error } = await db.rpc('set_moment_place', {
       p_moment: momentId, p_lat: p?.lat ?? null, p_lon: p?.lon ?? null, p_label: p?.label ?? null, p_source: p?.source ?? null,
     });
     if (error) throw error;
@@ -352,10 +360,27 @@
     };
   }
 
-  function fit(points, animate) {
-    if (!points.length) { map.jumpTo({ center: [12.5, 42.5], zoom: 4.3 }); return; }
+  // Italy when there is nothing yet; one place with its town and surroundings
+  // (zoom 9: closer, the dark map is a road and nothing else); more places together.
+  function viewFor(points) {
+    if (!points.length) return { center: [12.5, 42.5], zoom: 4.3 };
     const lons = points.map((p) => p.lon), lats = points.map((p) => p.lat);
-    map.fitBounds([[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]], { padding: 56, maxZoom: 13, animate });
+    const west = Math.min(...lons), south = Math.min(...lats), east = Math.max(...lons), north = Math.max(...lats);
+    if (west === east && south === north) return { center: [west, south], zoom: 9 };
+    return { bounds: [[west, south], [east, north]], maxZoom: 12 };
+  }
+
+  // OpenFreeMap writes its names in English («ITALY», «MUNICH»): the label
+  // layers that read name_en read the Italian name, then the local one (03/11/2026).
+  function italianLabel(field) {
+    if (!field || !JSON.stringify(field).includes('"name_en"')) return null;
+    return ['coalesce', ['get', 'name:it'], ['get', 'name:latin'], ['get', 'name']];
+  }
+
+  function fit(points, animate) {
+    const view = viewFor(points);
+    if (!view.bounds) { map.jumpTo(view); return; }
+    map.fitBounds(view.bounds, { padding: 56, maxZoom: view.maxZoom, animate });
   }
 
   function renderEmpty(box, empty) {
@@ -371,6 +396,7 @@
   async function drawMap() {
     const box = w.document.getElementById('ricordiMap');
     if (!box) return;
+    const before = mapPoints;
     mapPoints = pointsFrom(cards());
     if (box.dataset.error) { box.querySelectorAll('.ricordi-map-empty').forEach((note) => note.remove()); delete box.dataset.error; }
     renderEmpty(box, !mapPoints.length);
@@ -380,6 +406,8 @@
       markers = new Map();
       map.getSource('ricordi')?.setData(geojson(mapPoints));
       map.resize();
+      // The map opened before the Ricordi arrived: it showed Italy, now it goes to them.
+      if (!before.length && mapPoints.length) fit(mapPoints, true);
       return;
     }
     box.classList.add('is-loading');
@@ -398,8 +426,14 @@
     box.prepend(canvas);
     map = new gl.Map({ container: canvas, style: MAP_STYLE, center: [12.5, 42.5], zoom: 4.3, attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, touchPitch: false });
     map.touchZoomRotate?.disableRotation?.();
+    // The dark style asks for icons its sprite lacks («circle-11», «wood-pattern»): an empty one each.
+    map.on('styleimagemissing', (event) => { if (!map.hasImage(event.id)) map.addImage(event.id, { width: 1, height: 1, data: new Uint8Array(4) }); });
     map.on('load', () => {
       box.classList.remove('is-loading');
+      for (const layer of map.getStyle()?.layers || []) {
+        const label = layer.type === 'symbol' ? italianLabel(layer.layout?.['text-field']) : null;
+        if (label) map.setLayoutProperty(layer.id, 'text-field', label);
+      }
       map.addSource('ricordi', { type: 'geojson', data: geojson(mapPoints), cluster: true, clusterRadius: 52, clusterMaxZoom: 15 });
       // An invisible layer keeps the source's tiles alive for querySourceFeatures.
       map.addLayer({ id: 'ricordi-hit', type: 'circle', source: 'ricordi', paint: { 'circle-radius': 1, 'circle-opacity': 0 } });
@@ -443,7 +477,7 @@
   }
 
   return Object.freeze({
-    normalize, labelFrom, placesFrom, pointsFrom, search, nameOf, fromCoords, fromCard,
+    normalize, labelFrom, placesFrom, pointsFrom, viewFor, italianLabel, search, nameOf, fromCoords, fromCard,
     pickWithPlaces, photoConsent, choose, save, setView, toggleMap,
   });
 });

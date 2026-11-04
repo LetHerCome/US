@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ricordi a pila: a print underneath (6 x 4 dp, ink 18%). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#2E1A1020" />
+    <corners android:radius="2dp" />
+    <size android:width="6dp" android:height="4dp" />
+</shape>

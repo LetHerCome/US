@@ -288,7 +288,8 @@ test('M12B.5 wiring: Ricordi reads event history and provenance as optional, rea
   assert.match(CORE, /const provenanceRows=provenanceError\?\[\]:\(provenance\|\|\[\]\);/);
   // US 1.0 R7/R9/R11: every surface reads the same display URLs (local thumbnails on Android).
   assert.match(CORE, /renderRicordiRivivi\(ricordiPickRivivi\(timeline,today\),displayUrls,names\);/);
-  assert.match(CORE, /renderRicordiChapters\(ricordiChapters\(timeline\),displayUrls,today\);/);
+  // The year chapters left with the album (founder, 04/11/2026).
+  assert.match(CORE, /renderRicordiChapters\(\[\],displayUrls,today\);/);
   assert.doesNotMatch(CORE + ARCHIVE, /\.insert\(|\.update\(|\.delete\(|\.upsert\(|\.rpc\(|link_moment_to_source|conserva_contributions|left_for_you/);
   assert.doesNotMatch(ARCHIVE, /Math\.random|crypto\.|localStorage|sessionStorage/, 'deterministic, no new storage');
   assert.match(ARCHIVE, /if\(rivivi\)\{openMomentViewer\(rivivi\);return;\}/);

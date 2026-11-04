@@ -264,27 +264,24 @@ test('Noi: the couple row stays centered, "La nostra settimana" owns the week, a
   assert.match(app, /if\(profile\.role==='beatrice'\)setAvatarSlot\('pairAvatarBeatrice',url\);/);
   assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"|id="usCalendarEntry"|noi-hub-card/);
   const targets = [...bond.matchAll(/data-noi-open-link="([a-z-]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(targets, ['lavagna', 'quest', 'eventi']);
+  assert.deepEqual(targets, [], 'Noi nuova (03/11/2026): no tiles, the calendar and the board');
   assert.match(app, /document\.querySelector\(`#usNoiV2 \[data-noi-open-link="\$\{from\}"\]`\)\?\.focus\(\{preventScroll:true\}\)/, 'closing a section focuses its link again');
 });
 
 
 
-test('Noi density: the one calendar comes first, then the three links; no second hero', () => {
+test('Noi density: the one calendar comes first, then the board; no second hero', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.ok(bond.indexOf('id="usNoiV2Content"') < bond.indexOf('data-noi-open-link="lavagna"'), 'the calendar sits above the links');
-  assert.match(bond, /<b>Lavagna<\/b>/);
-  assert.match(bond, /<b>Missioni<\/b>/);
-  assert.match(bond, /<b>Eventi<\/b>/);
+  assert.ok(bond.indexOf('id="usNoiV2Content"') < bond.indexOf('id="usNoiBoard"'), 'the calendar sits above the board');
+  assert.match(bond, /<h2 id="usNoiBoardTitle">Bacheca<\/h2>/);
+  assert.doesNotMatch(bond, /data-noi-open-link/);
   assert.doesNotMatch(bond, /class="noi-week-board"|noi-hub-card--resonance/);
 });
 
-test('Quest: action paths are untouched (server-authoritative confirm / reroll)', () => {
-  assert.match(app, /sb\.rpc\('confirm_bond_quest'/);
-  assert.match(app, /sb\.rpc\('reroll_bond_quest'/);
+test('Quest → Sfida della settimana (03/11/2026): the weekly board and its actions are gone from the app', () => {
+  assert.doesNotMatch(app, /sb\.rpc\('confirm_bond_quest'|sb\.rpc\('reroll_bond_quest'|sb\.rpc\('ensure_bond_week'/);
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.match(bond, /<div id="questWeekBoard" class="quest-week" hidden><\/div>/);
-  assert.match(bond, /<div id="bondQuestList" class="bond-quest-list noi-living-list" aria-live="polite">/);
+  assert.doesNotMatch(bond, /id="questWeekBoard"|id="bondQuestList"/);
 });
 
 // ---------------------------------------------------------------- Settings
@@ -295,7 +292,7 @@ const settingsIn = (chunk) => [...chunk.matchAll(/data-us-setting="([a-z-]+)"/g)
 
 test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the couple shares', () => {
   // US V3 — Personalizza Oggi was this phone's own choice in TU; since 29/10/2026 (founder) it lives in Sintonia only.
-  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'person-color', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status', 'report']);
+  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'person-color', 'status-form', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status', 'report']);
   assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'together-mode', 'story-archive', 'leave-couple']);
   assert.match(scope('voi'), /<article class="us-couple-id-card" id="usCoupleIdCard"/, 'the couple card is shared state');
   assert.match(scope('tu'), /<h3 id="usSettingsTuTitle">Tu<\/h3>/);
@@ -305,7 +302,7 @@ test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the cou
 test('Settings: every control exists exactly once and keeps its existing action', () => {
   const all = settingsIn(settingsPage);
   assert.equal(new Set(all).size, all.length, 'no duplicated control');
-  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'leave-couple', 'location', 'logout', 'maudit', 'notifications', 'optimize-ricordi', 'person-color', 'privacy', 'profile-photo', 'relationship-date', 'report', 'story-archive', 'sync-status', 'together-mode', 'widgets']);
+  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'leave-couple', 'location', 'logout', 'maudit', 'notifications', 'optimize-ricordi', 'person-color', 'privacy', 'profile-photo', 'relationship-date', 'report', 'status-form', 'story-archive', 'sync-status', 'together-mode', 'widgets']);
   const settingsJs = read('settings.js');
   for (const name of all) assert.match(settingsJs, new RegExp(`if\\(name==='${name}'\\)`), `${name} is still handled`);
   for (const id of ['usRelationshipDateValue', 'usNotificationsValue', 'usDistanceUnitValue', 'usLocationState', 'usFeedbackValue', 'usSyncValue', 'usStoryArchiveValue', 'usSettingsBuild', 'usCoupleAvatars', 'usCoupleNames', 'usTogetherLine', 'usSettingsDeviceDot']) {
@@ -384,11 +381,11 @@ test('Settings density: utility rows, couple card and footer stay compact withou
 test('Oggi density: arbitration stays authoritative; the dock holds one evidence card and the daily card', () => {
   const dcOggi = read('dc-oggi.css');
   // Parity 2026-10 (mockup .og-bottom / .dq): a 12px column; the card is ring + kicker,
-  // the question across, then the status line and the button; short screens drop the question.
+  // the question across, then the status line and the button; short screens keep it smaller (03/11/2026).
   assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?display:grid;\s*gap:12px;/);
   assert.match(dcOggi, /#home #usDailyRitual\{[\s\S]*?grid-template-columns:auto minmax\(0,1fr\);[\s\S]*?padding:16px;[\s\S]*?border-radius:26px;/);
   assert.match(dcOggi, /#home #usDailyRitual \.dq-foot\{grid-column:1\/-1;display:flex;/);
-  assert.match(dcOggi, /@media\(max-height:600px\)\{\n  #home #usDailyRitual \.us-daily-ritual-question\{display:none\}/);
+  assert.match(dcOggi, /@media\(max-height:600px\)\{\n  #home #usDailyRitual \.us-daily-ritual-question\{font-size:15px\}/);
   const app = read('app.js');
   assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink'\]\)/);
   assert.match(app, /winner\.evidence===id\?'evidence':winner\.daily===id\?'daily':'suppressed'/);

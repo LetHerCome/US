@@ -81,3 +81,20 @@ test('staging QA CI has NO fallback to production Firebase or Android app identi
   assert.equal((workflow.match(/iiakdfsxpywdkxravqjh/g) || []).length, 1);
   assert.doesNotMatch(workflow, /https:\/\/iiakdfsxpywdkxravqjh/);
 });
+
+// The Play bundle must never name the staging project (validate-android-bundle,
+// no-staging-qa, 04/11/2026): the widget endpoints name production in the
+// source, and only the staging APK build points them at US-STAGING.
+test('widget endpoints: production in the source, US-STAGING only in the staging APK', async () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { isolateWidgetEndpoints, WIDGET_ENDPOINTS_PATH } = await import('../scripts/configure-s3-staging-qa.mjs');
+  const source = fs.readFileSync(path.join(__dirname, '..', WIDGET_ENDPOINTS_PATH), 'utf8');
+  assert.doesNotMatch(source, /dugmhngrfkuieeletatb/, 'the production source never names the staging project');
+  assert.match(source, /PROJECTS = \{ "iiakdfsxpywdkxravqjh" \};/);
+  const staged = isolateWidgetEndpoints(source);
+  assert.match(staged, /PRODUCTION = "https:\/\/dugmhngrfkuieeletatb\.supabase\.co\/functions\/v1";/);
+  assert.match(staged, /PROJECTS = \{ "dugmhngrfkuieeletatb" \};/);
+  assert.doesNotMatch(staged, /iiakdfsxpywdkxravqjh/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'scripts/configure-s3-staging-qa.mjs'), 'utf8'), /writeFile\(WIDGET_ENDPOINTS_PATH, widgetEndpoints\)/);
+});

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lasciato per te, Pastello: #d9ccff to #f6d3f0 (the board's 150deg). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:endColor="#FFF6D3F0"
+        android:startColor="#FFD9CCFF" />
+    <corners android:radius="26dp" />
+</shape>

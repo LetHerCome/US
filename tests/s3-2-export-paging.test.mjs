@@ -66,8 +66,9 @@ test('rejects bad paging configuration, schema keys and partial network failures
  ]) await assert.rejects(collectDomainRows(input),e=>e.code?.startsWith('export_paging_'));
  await assert.rejects(collectDomainRows({spec,fetchPage:async()=>{throw Error('network');}}),/network/);
 });
-test('notification preferences use unique user_id, other tables use their id',()=>{
+test('notification preferences and batteries use unique user_id, other tables use their id',()=>{
  assert.equal(sortKeyForExportDomain('notification_preferences'),'user_id');
+ assert.equal(sortKeyForExportDomain('couple_batteries'),'user_id');
  assert.equal(sortKeyForExportDomain('moments'),'id');
  assert.throws(()=>sortKeyForExportDomain('foo; delete from auth.users'),failCode('export_paging_bad_table'));
 });

@@ -7,9 +7,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.ArrayMap;
+import android.util.SizeF;
 import android.widget.RemoteViews;
 import java.time.Instant;
+import java.util.Map;
 import org.json.JSONObject;
 
 /**
@@ -20,11 +24,17 @@ import org.json.JSONObject;
  */
 final class UsWidgets {
     static final String THINK = "think";
-    static final String COUNTDOWN = "countdown";
+    static final String POSTIT = "postit";
     static final String NOI = "noi";
     static final String PHOTO = "photo";
     static final String DAILY = "daily";
-    static final String[] KINDS = { THINK, COUNTDOWN, NOI, PHOTO, DAILY };
+    static final String MESSAGE = "message";
+    static final String DAYS = "days";
+    static final String MEMORIES = "memories";
+    static final String STATUS = "status";
+    static final String LAVAGNA = "lavagna";
+    // 04/11/2026: the Countdown left the widgets; the Post-it took its place.
+    static final String[] KINDS = { THINK, POSTIT, NOI, PHOTO, DAILY, MESSAGE, DAYS, MEMORIES, STATUS, LAVAGNA };
     static final String ACTION_TICK = "com.usapp.us.WIDGET_TICK";
     static final String ACTION_PINNED = "com.usapp.us.WIDGET_PINNED";
     static final String EXTRA_KIND = "us_widget_kind";
@@ -34,10 +44,15 @@ final class UsWidgets {
     static Class<?> providerFor(String kind) {
         switch (kind) {
             case THINK: return UsThinkWidgetProvider.class;
-            case COUNTDOWN: return UsCountdownWidgetProvider.class;
+            case POSTIT: return UsPostitWidgetProvider.class;
             case NOI: return UsNoiWidgetProvider.class;
             case PHOTO: return UsPhotoWidgetProvider.class;
             case DAILY: return UsDailyWidgetProvider.class;
+            case MESSAGE: return UsMessageWidgetProvider.class;
+            case DAYS: return UsDaysWidgetProvider.class;
+            case MEMORIES: return UsMemoriesWidgetProvider.class;
+            case STATUS: return UsStatusWidgetProvider.class;
+            case LAVAGNA: return UsLavagnaWidgetProvider.class;
             default: return null;
         }
     }
@@ -102,9 +117,8 @@ final class UsWidgets {
         int[] placed = manager.getAppWidgetIds(new ComponentName(app, UsThinkWidgetProvider.class));
         if (placed.length == 0) return;
         State state = new State(app);
-        RemoteViews views = UsThinkWidgetProvider.render(app, state);
         for (int id : placed) {
-            try { manager.updateAppWidget(id, views); }
+            try { manager.updateAppWidget(id, UsThinkWidgetProvider.render(app, state, manager.getAppWidgetOptions(id))); }
             catch (RuntimeException ignored) { /* launcher cannot block widget send */ }
         }
     }
@@ -118,10 +132,15 @@ final class UsWidgets {
 
     static RemoteViews render(Context context, String kind, State state, Bundle options) {
         switch (kind) {
-            case THINK: return UsThinkWidgetProvider.render(context, state);
-            case COUNTDOWN: return UsCountdownWidgetProvider.render(context, state);
-            case NOI: return UsNoiWidgetProvider.render(context, state);
-            case DAILY: return UsDailyWidgetProvider.render(context, state);
+            case THINK: return UsThinkWidgetProvider.render(context, state, options);
+            case POSTIT: return UsPostitWidgetProvider.render(context, state, options);
+            case NOI: return UsNoiWidgetProvider.render(context, state, options);
+            case DAILY: return UsDailyWidgetProvider.render(context, state, options);
+            case MESSAGE: return UsMessageWidgetProvider.render(context, state, options);
+            case DAYS: return UsDaysWidgetProvider.render(context, state, options);
+            case MEMORIES: return UsMemoriesWidgetProvider.render(context, state, options);
+            case STATUS: return UsStatusWidgetProvider.render(context, state, options);
+            case LAVAGNA: return UsLavagnaWidgetProvider.render(context, state, options);
             default: return UsPhotoWidgetProvider.render(context, state, options);
         }
     }
@@ -141,6 +160,40 @@ final class UsWidgets {
         alarms.set(AlarmManager.RTC, at.toEpochMilli(), tick);
     }
 
+    /** Pastello: from this width (dp) the 4x2 layout instead of the 2x2. */
+    static final float MEDIUM_MIN_WIDTH_DP = 250f;
+
+    /** The 2x2 and the 4x2 layout: Android 12+ picks by size itself, before it the reported width decides. */
+    static RemoteViews sized(Bundle options, RemoteViews small, RemoteViews medium) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Map<SizeF, RemoteViews> sizes = new ArrayMap<>();
+            sizes.put(new SizeF(110f, 110f), small);
+            sizes.put(new SizeF(MEDIUM_MIN_WIDTH_DP, 110f), medium);
+            return new RemoteViews(sizes);
+        }
+        int width = options == null ? 0 : options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0);
+        return width >= MEDIUM_MIN_WIDTH_DP ? medium : small;
+    }
+
+    /**
+     * Pastello portrait: the round photo with its ring (prepared by US), or
+     * a plain circle in that person's colour until it arrives.
+     */
+    static void avatar(RemoteViews views, byte[] raw, int id, int colour) {
+        android.graphics.Bitmap bitmap = null;
+        if (raw != null) {
+            try { bitmap = android.graphics.BitmapFactory.decodeByteArray(raw, 0, raw.length); }
+            catch (RuntimeException ignored) {}
+        }
+        if (bitmap != null) {
+            views.setImageViewBitmap(id, bitmap);
+            views.setInt(id, "setColorFilter", 0);
+        } else {
+            views.setImageViewResource(id, R.drawable.us_widget_pastel_circle);
+            views.setInt(id, "setColorFilter", colour);
+        }
+    }
+
     /** Opens US on a destination. ACTION_VIEW so @capacitor/app emits appUrlOpen on a warm app too. */
     static PendingIntent open(Context context, String destination, int requestCode) {
         Intent launch = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
@@ -149,6 +202,22 @@ final class UsWidgets {
         if (launch != null && launch.getComponent() != null) intent.setComponent(launch.getComponent());
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         return PendingIntent.getActivity(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    /** The phone's dark theme: the widgets take Midnight, the night colours of US. */
+    static boolean night(Context context) {
+        int mode = context.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        return mode == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    /**
+     * A colour set from code in its light (Pastello) and dark (Midnight) form.
+     * From Android 12 the launcher switches by itself when the theme changes;
+     * before, the colour of the theme at render time (redrawn at the next tick).
+     */
+    static void themedColor(RemoteViews views, Context context, int id, String method, int light, int dark) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) views.setColorInt(id, method, light, dark);
+        else views.setInt(id, method, night(context) ? dark : light);
     }
 
     static float density(Context context) {

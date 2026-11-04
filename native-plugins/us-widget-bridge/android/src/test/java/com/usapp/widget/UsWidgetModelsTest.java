@@ -62,6 +62,26 @@ public class UsWidgetModelsTest {
         assertFalse(clean.getJSONObject("think").has("lastActionStatus"));
     }
 
+    // Post-it (04/11/2026): the newest post-it's words, its paper, who and how many others.
+    @Test
+    public void contractKeepsThePostitAndNothingElse() throws Exception {
+        JSONObject input = snapshot(null).put("postit", new JSONObject()
+            .put("state", "ready").put("text", "prenotare\nla cena").put("color", "purple").put("by", "partner")
+            .put("more", 400).put("at", "2026-11-04T10:00:00Z").put("id", "raw").put("items", new JSONArray().put("secret")));
+        JSONObject postit = UsWidgetContract.normalize(input).getJSONObject("postit");
+        assertEquals("ready", postit.getString("state"));
+        assertEquals("prenotare la cena", postit.getString("text"));
+        assertEquals("yellow", postit.getString("color"));
+        assertEquals("partner", postit.getString("by"));
+        assertEquals(99, postit.getInt("more"));
+        assertFalse(postit.has("id"));
+        assertFalse(postit.toString().contains("secret"));
+        JSONObject empty = UsWidgetContract.normalize(snapshot(null).put("postit", new JSONObject().put("state", "ready").put("text", " ")))
+            .getJSONObject("postit");
+        assertEquals("none", empty.getString("state"));
+        assertEquals("", empty.getString("color"));
+    }
+
     @Test
     public void contractDropsInvalidCountdownAndUnknownStyle() throws Exception {
         JSONObject bad = snapshot(countdown("clock", "domani", "neon"));
@@ -110,6 +130,37 @@ public class UsWidgetModelsTest {
         assertEquals("168", view.value);
         assertEquals("giorni", view.unit);
         assertEquals("aurora", view.style);
+        // Pastello: the year towards the next anniversary.
+        assertEquals("Insieme da", view.label);
+        assertEquals("Insieme dal 21 aprile", view.headline);
+        assertEquals("giorni insieme", view.line);
+        assertEquals(168 * 1000 / 365, view.progress);
+    }
+
+    @Test
+    public void countdownPastelLabelsAndTheLastTwoWeeks() throws Exception {
+        Instant now = Instant.parse("2026-11-02T10:00:00Z");
+        UsWidgetModels.Countdown view = UsWidgetModels.countdown(snapshot(countdown("days", "2026-11-14", "editorial").put("title", "Lisbona")), now);
+        assertEquals("12", view.value);
+        assertEquals("Mancano", view.label);
+        assertEquals("Lisbona · 14 novembre", view.headline);
+        assertEquals("giorni · Lisbona", view.line);
+        assertEquals(2, view.ticks());
+        // Far away: the ticks are all dark; on the day, all lit.
+        assertEquals(0, UsWidgetModels.countdown(snapshot(countdown("days", "2026-12-25", "editorial")), now).ticks());
+        UsWidgetModels.Countdown today = UsWidgetModels.countdown(snapshot(countdown("days", "2026-11-02", "editorial")), now);
+        assertEquals("Ci siamo", today.label);
+        assertEquals(14, today.ticks());
+        assertEquals(1000, UsWidgetModels.fortnight(-3));
+        // The clock: the day in Rome, the hours apart, the title alone in the final day.
+        UsWidgetModels.Countdown clock = UsWidgetModels.countdown(snapshot(countdown("clock", "2026-11-05T23:30:00Z", "editorial").put("title", "Concerto")), now);
+        assertEquals("Concerto · 6 novembre", clock.headline);
+        assertEquals("13 ore", clock.sub);
+        assertEquals(11, clock.ticks());
+        UsWidgetModels.Countdown last = UsWidgetModels.countdown(snapshot(countdown("clock", "2026-11-02T20:00:00Z", "editorial").put("title", "Concerto")), now);
+        assertTrue(last.ticking);
+        assertEquals("Concerto", last.line);
+        assertEquals(14, last.ticks());
     }
 
     @Test
@@ -131,7 +182,7 @@ public class UsWidgetModelsTest {
         UsWidgetModels.Countdown far = UsWidgetModels.countdown(snapshot(countdown("clock", "2026-10-09T15:30:00Z", "orbit")), now);
         assertFalse(far.ticking);
         assertEquals("3", far.value);
-        assertEquals("e 5 ore", far.sub);
+        assertEquals("5 ore", far.sub);
         assertNotNull(far.nextChange);
 
         UsWidgetModels.Countdown last = UsWidgetModels.countdown(snapshot(countdown("clock", "2026-10-06T20:00:00Z", "orbit")), now);
@@ -172,76 +223,94 @@ public class UsWidgetModelsTest {
         UsWidgetModels.Think noCredential = UsWidgetModels.think(snapshot(null), null, false, now);
         assertFalse(noCredential.canSend);
         assertEquals("Apri", noCredential.cta);
+        // Foto protagonista: a short line that is never cut, the reason under it.
+        assertEquals("Apri US", noCredential.line);
+        assertEquals("per riattivare l’invio", noCredential.hint);
+        assertEquals("Apri US", none.line);
+        assertEquals("per collegarlo", none.hint);
     }
 
+    // Pastello (founder, 02/11/2026): the tap turns the widget at once into
+    // "Ricambiato · adesso" and sends behind it; "Ancora" sends again.
     @Test
-    public void thinkSendingAndJustSentAreBusy() throws Exception {
-        Instant now = Instant.parse("2026-10-06T10:00:05Z");
-        UsWidgetModels.Think sending = UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, now);
-        assertTrue(sending.busy);
-        assertEquals("Invio…", sending.cta);
-        UsWidgetModels.Think sent = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, now);
-        assertTrue(sent.busy);
-        assertEquals("Inviato a Beatrice", sent.message);
-        // Past the cooldown the heart sends again, while "Inviato a …" is still readable.
-        UsWidgetModels.Think readable = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, Instant.parse("2026-10-06T10:00:07Z"));
-        assertFalse(readable.busy);
-        assertEquals("Inviato a Beatrice", readable.message);
-        UsWidgetModels.Think later = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, Instant.parse("2026-10-06T10:00:10Z"));
-        assertFalse(later.busy);
+    public void thinkTapIsDoneAtOnceAndSendsBehind() throws Exception {
+        JSONObject s = snapshot(null);
+        s.getJSONObject("think").put("lastReceivedAt", "2026-10-06T09:58:00Z");
+        Instant now = Instant.parse("2026-10-06T10:00:01Z");
+        UsWidgetModels.Think sending = UsWidgetModels.think(s, action("sending", "2026-10-06T10:00:00Z").put("reply", true), true, now);
+        assertTrue(sending.done);
+        assertTrue("in flight: a second tap waits", sending.busy);
+        assertEquals("Ricambiato", sending.line);
+        assertEquals("adesso", sending.when);
+        assertEquals("Ancora", sending.cta);
+        UsWidgetModels.Think sent = UsWidgetModels.think(s, action("sent", "2026-10-06T10:00:00Z").put("reply", true), true, Instant.parse("2026-10-06T10:00:30Z"));
+        assertTrue(sent.done);
+        assertFalse("past the cooldown the heart sends again", sent.busy);
+        assertEquals("Ricambiato", sent.line);
+        // Not a reply: "Inviato".
+        assertEquals("Inviato", UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:00:30Z")).line);
+        // After a minute the widget tells the day again.
+        UsWidgetModels.Think later = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:01:01Z"));
+        assertFalse(later.done);
+        assertEquals("Pensa a Beatrice", later.line);
         assertEquals("Ti penso", later.cta);
-        assertEquals("Pensa a Beatrice", later.message);
+        assertEquals(Instant.parse("2026-10-06T10:01:00Z"), sent.nextChange);
     }
 
     @Test
-    public void thinkInterruptedSendBecomesRetry() throws Exception {
+    public void thinkFailureAndPauseAskToRetry() throws Exception {
         UsWidgetModels.Think stale = UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:01:00Z"));
         assertFalse(stale.busy);
+        assertFalse(stale.done);
+        assertEquals("Non è partito", stale.line);
         assertEquals("Riprova", stale.cta);
-    }
-
-    @Test
-    public void thinkToneSaysWhoseMoveItIs() throws Exception {
-        // "Due colori": rosa for the other person's thought, lilla for mine, quiet otherwise.
-        Instant now = Instant.parse("2026-10-06T12:00:00Z");
-        JSONObject s = snapshot(null);
-        assertEquals(UsWidgetModels.TONE_QUIET, UsWidgetModels.think(s, null, true, now).tone);
-        assertEquals("Beatrice", UsWidgetModels.think(s, null, true, now).partner);
-        s.getJSONObject("think").put("lastReceivedAt", "2026-10-06T11:30:00Z");
-        assertEquals(UsWidgetModels.TONE_PARTNER, UsWidgetModels.think(s, null, true, now).tone);
-        Instant sentNow = Instant.parse("2026-10-06T10:00:05Z");
-        assertEquals(UsWidgetModels.TONE_ME, UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, sentNow).tone);
-        assertEquals(UsWidgetModels.TONE_ME, UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, sentNow).tone);
-        assertEquals(UsWidgetModels.TONE_QUIET, UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:01:00Z")).tone);
-        assertEquals(UsWidgetModels.TONE_QUIET, UsWidgetModels.think(null, null, false, now).tone);
+        assertEquals("Riprova", UsWidgetModels.think(snapshot(null), action("rate_limited", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:00:30Z")).cta);
+        UsWidgetModels.Think unauthorized = UsWidgetModels.think(snapshot(null), action("unauthorized", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:00:30Z"));
+        assertFalse(unauthorized.canSend);
+        assertEquals("Apri", unauthorized.cta);
     }
 
     @Test
     public void ricambiaOnlyWhileThePartnerThoughtIsUnanswered() throws Exception {
         Instant now = Instant.parse("2026-10-06T12:00:00Z");
         JSONObject s = snapshot(null);
-        s.getJSONObject("think").put("lastReceivedAt", "2026-10-06T11:30:00Z").put("lastSentAt", "2026-10-06T08:00:00Z");
+        s.getJSONObject("think").put("lastReceivedAt", "2026-10-06T11:50:00Z").put("lastSentAt", "2026-10-06T08:00:00Z");
         UsWidgetModels.Think unanswered = UsWidgetModels.think(s, null, true, now);
         assertEquals("Ricambia", unanswered.cta);
-        assertEquals("Beatrice ti sta pensando", unanswered.message);
+        assertEquals("Beatrice ti ha pensato", unanswered.line);
+        assertEquals("10 min fa", unanswered.when);
+        assertEquals("Beatrice", unanswered.partner);
 
-        s.getJSONObject("think").put("lastSentAt", "2026-10-06T11:45:00Z");
+        s.getJSONObject("think").put("lastSentAt", "2026-10-06T11:55:00Z");
         UsWidgetModels.Think answered = UsWidgetModels.think(s, null, true, now);
         assertEquals("Ti penso", answered.cta);
-        assertEquals("Pensa a Beatrice", answered.message);
+        assertEquals("Pensa a Beatrice", answered.line);
+        assertEquals("", answered.when);
 
         // A send made from the widget answers too, before the app has synced.
         s.getJSONObject("think").put("lastSentAt", "2026-10-06T08:00:00Z");
-        JSONObject nativeSent = action("sent", "2026-10-06T11:40:00Z").put("sentAt", "2026-10-06T11:40:00Z");
+        JSONObject nativeSent = action("sent", "2026-10-06T11:40:00Z").put("sentAt", "2026-10-06T11:52:00Z");
         assertEquals("Ti penso", UsWidgetModels.think(s, nativeSent, true, now).cta);
 
         // A reaction to the partner's thought answers it too.
-        s.getJSONObject("think").put("lastAnsweredAt", "2026-10-06T11:35:00Z");
+        s.getJSONObject("think").put("lastAnsweredAt", "2026-10-06T11:55:00Z");
         assertEquals("Ti penso", UsWidgetModels.think(s, null, true, now).cta);
+    }
 
-        UsWidgetModels.Think fresh = UsWidgetModels.think(snapshot(null), null, true, now);
-        assertEquals("Pensa a Beatrice", fresh.message);
-        assertEquals("Ti penso", fresh.cta);
+    @Test
+    public void thinkCountIsTodayInRomeFromTheAppPlusTheWidgetSends() throws Exception {
+        Instant now = Instant.parse("2026-10-06T12:00:00Z");
+        JSONObject s = snapshot(null);
+        assertEquals("an older app says nothing", -1, UsWidgetModels.thinkCount(UsWidgetContract.normalize(s), 0, now));
+        s.getJSONObject("think").put("todayCount", 11).put("todayDate", "2026-10-06");
+        JSONObject clean = UsWidgetContract.normalize(s);
+        assertEquals(11, UsWidgetModels.thinkCount(clean, 0, now));
+        assertEquals("plus the widget's own sends after the app's count", 12, UsWidgetModels.thinkCount(clean, 1, now));
+        // Midnight in Rome: yesterday's count is not today's.
+        assertEquals(0, UsWidgetModels.thinkCount(clean, 0, Instant.parse("2026-10-06T22:30:00Z")));
+        s.getJSONObject("think").put("todayCount", -4);
+        assertEquals(0, UsWidgetModels.thinkCount(UsWidgetContract.normalize(s), 0, now));
+        assertEquals(1, UsWidgetModels.thinkCount(null, 1, now));
     }
 
     @Test
@@ -295,6 +364,344 @@ public class UsWidgetModelsTest {
         assertEquals("12,5 km", UsWidgetModels.couple(clean, Instant.parse("2026-10-06T10:00:00Z")).distanceText);
         snap.getJSONObject("couple").put("distanceText", "42.4,14.2");
         assertEquals("", UsWidgetContract.normalize(snap).getJSONObject("couple").getString("distanceText"));
+    }
+
+    // ---------- Batteria del partner ----------
+
+    @Test
+    public void partnerBatteryIsShownForADayAndQuieterAfterAnHour() throws Exception {
+        JSONObject snap = snapshot(null);
+        snap.getJSONObject("couple").put("batteryLevel", 18).put("batteryCharging", false).put("batteryAt", "2026-10-31T10:00:00Z");
+        JSONObject clean = UsWidgetContract.normalize(snap);
+        assertEquals(18, clean.getJSONObject("couple").getInt("batteryLevel"));
+        assertEquals("2026-10-31T10:00:00Z", clean.getJSONObject("couple").getString("batteryAt"));
+
+        UsWidgetModels.Couple fresh = UsWidgetModels.couple(clean, Instant.parse("2026-10-31T10:20:00Z"));
+        assertTrue(fresh.batteryShown());
+        assertFalse(fresh.batteryOld);
+        assertTrue(fresh.batteryLow());
+        assertEquals("low", fresh.batteryGlyph());
+        assertEquals(Instant.parse("2026-10-31T11:00:00Z"), fresh.batteryNextChange);
+
+        UsWidgetModels.Couple old = UsWidgetModels.couple(clean, Instant.parse("2026-10-31T13:00:00Z"));
+        assertTrue(old.batteryOld);
+        assertEquals(Instant.parse("2026-11-01T10:00:00Z"), old.batteryNextChange);
+
+        UsWidgetModels.Couple gone = UsWidgetModels.couple(clean, Instant.parse("2026-11-01T10:00:00Z"));
+        assertFalse(gone.batteryShown());
+        assertNull(gone.batteryNextChange);
+    }
+
+    @Test
+    public void partnerBatteryGlyphsAndBadInputs() throws Exception {
+        JSONObject snap = snapshot(null);
+        JSONObject couple = snap.getJSONObject("couple").put("batteryAt", "2026-10-31T10:00:00Z");
+        Instant now = Instant.parse("2026-10-31T10:05:00Z");
+        couple.put("batteryLevel", 18).put("batteryCharging", true);
+        UsWidgetModels.Couple charging = UsWidgetModels.couple(UsWidgetContract.normalize(snap), now);
+        assertEquals("charging", charging.batteryGlyph());
+        assertFalse(charging.batteryLow());
+        couple.put("batteryLevel", 60).put("batteryCharging", false);
+        assertEquals("medium", UsWidgetModels.couple(UsWidgetContract.normalize(snap), now).batteryGlyph());
+        couple.put("batteryLevel", 61);
+        assertEquals("high", UsWidgetModels.couple(UsWidgetContract.normalize(snap), now).batteryGlyph());
+
+        for (Object level : new Object[] { 101, -5, "pieno" }) {
+            couple.put("batteryLevel", level);
+            JSONObject clean = UsWidgetContract.normalize(snap);
+            assertEquals(-1, clean.getJSONObject("couple").getInt("batteryLevel"));
+            assertFalse(UsWidgetModels.couple(clean, now).batteryShown());
+        }
+        couple.put("batteryLevel", 50).put("batteryAt", "ieri");
+        assertFalse(UsWidgetModels.couple(UsWidgetContract.normalize(snap), now).batteryShown());
+        // An older app writes no battery at all.
+        assertFalse(UsWidgetModels.couple(snapshot(null), now).batteryShown());
+    }
+
+    // ---------- Relative times ("10 min fa"), shared by the widgets ----------
+
+    @Test
+    public void relativeTimesRoundTheFirstHourAndStopAfterAWeek() throws Exception {
+        Instant at = Instant.parse("2026-10-31T10:00:00Z");
+        assertEquals("proprio ora", UsWidgetModels.bubbleAgo(at, at.plusSeconds(4 * 60)));
+        assertEquals("5 min fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(9 * 60)));
+        assertEquals("55 min fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(59 * 60)));
+        assertEquals("1 ora fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(119 * 60)));
+        assertEquals("2 ore fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(120 * 60)));
+        assertEquals("ieri", UsWidgetModels.bubbleAgo(at, at.plusSeconds(30 * 3600)));
+        assertEquals("6 giorni fa", UsWidgetModels.bubbleAgo(at, at.plusSeconds(6 * 86400 + 60)));
+        assertEquals("a week old: nothing", "", UsWidgetModels.bubbleAgo(at, at.plusSeconds(7 * 86400)));
+        assertEquals("from the future: nothing", "", UsWidgetModels.bubbleAgo(at, at.minusSeconds(3600)));
+        assertEquals("", UsWidgetModels.bubbleAgo(null, at));
+        assertEquals(at.plusSeconds(10 * 60), UsWidgetModels.bubbleNextChange(at, at.plusSeconds(7 * 60)));
+    }
+
+    // ---------- Distanza e batteria (Pastello) ----------
+
+    @Test
+    public void distanceSaysCloseAndHowOldTheReadingIs() throws Exception {
+        Instant now = Instant.parse("2026-10-31T11:00:00Z");
+        JSONObject snap = snapshot(null);
+        snap.getJSONObject("couple").put("distanceText", "12 km").put("distanceAt", "2026-10-31T10:50:00Z");
+        UsWidgetModels.Couple couple = UsWidgetModels.couple(UsWidgetContract.normalize(snap), now);
+        assertEquals("12 km", couple.distanceText);
+        assertEquals("aggiornato 10 min fa", couple.distanceAgo);
+        assertEquals(Instant.parse("2026-10-31T11:05:00Z"), couple.distanceNextChange);
+        snap.getJSONObject("couple").put("distanceText", "").put("distanceNear", true).put("distanceAt", "2026-10-31T10:58:00Z");
+        UsWidgetModels.Couple near = UsWidgetModels.couple(UsWidgetContract.normalize(snap), now);
+        assertTrue(near.distanceNear);
+        assertEquals("aggiornato ora", near.distanceAgo);
+        // A reading of last month says nothing about when.
+        snap.getJSONObject("couple").put("distanceAt", "2026-10-01T10:00:00Z");
+        assertEquals("", UsWidgetModels.couple(UsWidgetContract.normalize(snap), now).distanceAgo);
+        assertFalse(UsWidgetModels.couple(snapshot(null), now).distanceNear);
+    }
+
+    // ---------- Lasciato per te: only the kind and the time of the closed envelope ----------
+
+    @Test
+    public void messageShowsOnlyTheWaitingLasciatoPerTe() throws Exception {
+        Instant now = Instant.parse("2026-10-31T11:00:00Z");
+        JSONObject snap = snapshot(null);
+        // A Ti penso alone is for the Ti penso widget.
+        snap.getJSONObject("think").put("lastReceivedAt", "2026-10-31T10:58:00Z");
+        UsWidgetModels.Message none = UsWidgetModels.message(UsWidgetContract.normalize(snap), now);
+        assertTrue(none.empty);
+        assertEquals("Il prossimo Lasciato per te arriverà qui", none.text);
+        assertEquals("", none.hint);
+        assertEquals("message", none.destination);
+
+        snap.put("left", new JSONObject().put("kind", "photo").put("at", "2026-10-31T10:50:00Z").put("body", "SEGRETO"));
+        JSONObject clean = UsWidgetContract.normalize(snap);
+        assertFalse("never the content", clean.toString().contains("SEGRETO"));
+        UsWidgetModels.Message left = UsWidgetModels.message(clean, now);
+        assertEquals("Ti ha lasciato una foto", left.text);
+        assertEquals("la scopri solo dentro US", left.hint);
+        assertEquals("10 min fa", left.when);
+        assertEquals("message/left", left.destination);
+        assertEquals(Instant.parse("2026-10-31T11:05:00Z"), left.nextChange);
+    }
+
+    @Test
+    public void messageKindsOldEnvelopesAndEmptyStates() throws Exception {
+        Instant now = Instant.parse("2026-10-31T11:00:00Z");
+        String[][] kinds = { { "text", "un messaggio", "lo" }, { "audio", "un vocale", "lo" }, { "video", "un video", "lo" }, { "music", "una canzone", "la" } };
+        for (String[] kind : kinds) {
+            JSONObject snap = snapshot(null).put("left", new JSONObject().put("kind", kind[0]).put("at", "2026-10-31T09:00:00Z"));
+            UsWidgetModels.Message view = UsWidgetModels.message(UsWidgetContract.normalize(snap), now);
+            assertEquals("Ti ha lasciato " + kind[1], view.text);
+            assertEquals(kind[2] + " scopri solo dentro US", view.hint);
+        }
+        // An envelope still closed after ten days still waits; only the time goes.
+        JSONObject old = snapshot(null).put("left", new JSONObject().put("kind", "text").put("at", "2026-10-21T09:00:00Z"));
+        UsWidgetModels.Message waiting = UsWidgetModels.message(UsWidgetContract.normalize(old), now);
+        assertEquals("Ti ha lasciato un messaggio", waiting.text);
+        assertEquals("", waiting.when);
+        // A Ti penso of last month is not news.
+        JSONObject stale = snapshot(null);
+        stale.getJSONObject("think").put("lastReceivedAt", "2026-10-01T09:00:00Z");
+        UsWidgetModels.Message quiet = UsWidgetModels.message(UsWidgetContract.normalize(stale), now);
+        assertTrue(quiet.empty);
+        assertEquals("message", quiet.destination);
+        assertEquals("unknown kind", "", UsWidgetContract.normalize(snapshot(null).put("left", new JSONObject().put("kind", "secret").put("at", "2026-10-31T09:00:00Z"))).getJSONObject("left").getString("kind"));
+        assertTrue(UsWidgetModels.message(null, now).empty);
+        // Without an account: a short line that fits the 2x2 bubble.
+        assertEquals("Apri US per collegarlo", UsWidgetModels.message(null, now).text);
+    }
+
+    // ---------- Come stai ----------
+
+    private static JSONObject status(JSONObject me, JSONObject partner) throws Exception {
+        return UsWidgetContract.normalize(snapshot(null).put("status", new JSONObject().put("me", me).put("partner", partner)));
+    }
+
+    @Test
+    public void statusSaysTheWordInTheChosenFormAndHowLongAgo() throws Exception {
+        Instant now = Instant.parse("2026-11-02T12:00:00Z");
+        JSONObject clean = status(
+            new JSONObject().put("status", "stanco").put("form", "m").put("at", "2026-11-02T11:40:00Z").put("until", "2026-11-02T23:40:00Z"),
+            new JSONObject().put("status", "innamorato").put("form", "f").put("at", "2026-11-02T10:55:00Z").put("until", "2026-11-02T22:55:00Z").put("text", "SEGRETO"));
+        assertFalse("never free text", clean.toString().contains("SEGRETO"));
+        JSONObject in = clean.getJSONObject("status");
+        UsWidgetModels.StatusPerson me = UsWidgetModels.statusPerson(in.getJSONObject("me"), now);
+        UsWidgetModels.StatusPerson partner = UsWidgetModels.statusPerson(in.getJSONObject("partner"), now);
+        assertEquals("😴", me.emoji);
+        assertEquals("stanco · da 20 min", me.line);
+        assertEquals(Instant.parse("2026-11-02T12:05:00Z"), me.nextChange);
+        assertEquals("🥰", partner.emoji);
+        assertEquals("innamorata · da 1 ora", partner.line);
+        // Without a form, the undeclined word.
+        JSONObject plain = status(new JSONObject().put("status", "nervoso").put("at", "2026-11-02T11:58:00Z").put("until", "2026-11-02T23:58:00Z"), new JSONObject());
+        assertEquals("nervi tesi · proprio ora", UsWidgetModels.statusPerson(plain.getJSONObject("status").getJSONObject("me"), now).line);
+    }
+
+    @Test
+    public void statusGoesAfterTwelveHoursAndRefusesUnknownStates() throws Exception {
+        JSONObject in = status(
+            new JSONObject().put("status", "felice").put("at", "2026-11-02T00:00:00Z").put("until", "2026-11-02T12:00:00Z"),
+            new JSONObject().put("status", "arrabbiato").put("at", "2026-11-02T11:00:00Z").put("until", "2026-11-02T23:00:00Z")).getJSONObject("status");
+        UsWidgetModels.StatusPerson before = UsWidgetModels.statusPerson(in.getJSONObject("me"), Instant.parse("2026-11-02T11:30:00Z"));
+        assertTrue(before.shown);
+        assertEquals(Instant.parse("2026-11-02T12:00:00Z"), before.nextChange);
+        assertFalse(UsWidgetModels.statusPerson(in.getJSONObject("me"), Instant.parse("2026-11-02T12:00:00Z")).shown);
+        assertEquals("", in.getJSONObject("partner").getString("status"));
+        assertFalse(UsWidgetModels.statusPerson(in.getJSONObject("partner"), Instant.parse("2026-11-02T11:30:00Z")).shown);
+        assertEquals(12, UsWidgetModels.STATUSES.length);
+    }
+
+    // ---------- Ricordi a pila ----------
+
+    private static JSONObject memories(JSONObject memories) throws Exception {
+        return UsWidgetContract.normalize(snapshot(null).put("memories", memories));
+    }
+
+    @Test
+    public void memoriesSayUnAnnoFaOnlyOnTheDay() throws Exception {
+        Instant now = Instant.parse("2026-10-12T09:00:00Z");
+        JSONObject in = new JSONObject().put("state", "ready").put("label", "Un anno fa").put("anniversary", true)
+            .put("day", "2026-10-12").put("date", "2025-10-12").put("title", "Lisbona").put("count", 8).put("stack", 3)
+            .put("path", "secret/a.jpg");
+        JSONObject clean = memories(in);
+        assertFalse("never a path", clean.toString().contains("secret"));
+        UsWidgetModels.Memories view = UsWidgetModels.memories(clean, now);
+        assertTrue(view.shown);
+        assertEquals("Un anno fa", view.pill);
+        assertEquals("Lisbona", view.title);
+        assertEquals("12 ottobre · 8 foto", view.line);
+        assertEquals("12 ott", view.shortDate);
+        assertEquals(3, view.stack);
+        assertEquals(Instant.parse("2026-10-12T22:00:30Z"), view.nextChange);
+        // The next day the stack stays, the label goes.
+        assertEquals("", UsWidgetModels.memories(clean, Instant.parse("2026-10-13T09:00:00Z")).pill);
+    }
+
+    @Test
+    public void memoriesNewestAndUntitledAndEmpty() throws Exception {
+        Instant now = Instant.parse("2026-11-02T09:00:00Z");
+        JSONObject in = new JSONObject().put("state", "ready").put("label", "I più recenti").put("anniversary", false)
+            .put("day", "2026-10-30").put("date", "2026-10-28").put("title", "").put("count", 1).put("stack", 7);
+        UsWidgetModels.Memories view = UsWidgetModels.memories(memories(in), now);
+        assertEquals("I più recenti", view.pill);
+        assertEquals("28 ottobre", view.title);
+        assertEquals("1 foto", view.line);
+        assertEquals("", view.shortDate);
+        assertEquals(3, view.stack);
+        assertNull(view.nextChange);
+        assertFalse(UsWidgetModels.memories(memories(new JSONObject().put("state", "ready").put("date", "ieri")), now).shown);
+        assertFalse(UsWidgetModels.memories(snapshot(null), now).shown);
+        assertFalse(UsWidgetModels.memories(null, now).shown);
+    }
+
+    // ---------- Lavagna ----------
+
+    private static JSONObject lavagna(JSONObject lavagna) throws Exception {
+        return UsWidgetContract.normalize(snapshot(null).put("lavagna", lavagna));
+    }
+
+    @Test
+    public void lavagnaSaysWhoDrewLastAndWhen() throws Exception {
+        Instant now = Instant.parse("2026-11-03T10:07:00Z");
+        JSONObject in = new JSONObject().put("state", "ready").put("by", "partner").put("at", "2026-11-03T10:00:00Z")
+            .put("points", new JSONArray().put(1).put(2));
+        JSONObject clean = lavagna(in);
+        assertFalse("never the strokes", clean.getJSONObject("lavagna").has("points"));
+        UsWidgetModels.Lavagna view = UsWidgetModels.lavagna(clean, now);
+        assertTrue(view.shown);
+        assertFalse(view.empty);
+        assertEquals("Beatrice · 5 min fa", view.line);
+        assertEquals(Instant.parse("2026-11-03T10:10:00Z"), view.nextChange);
+        JSONObject mine = lavagna(new JSONObject().put("state", "ready").put("by", "me").put("at", "2026-11-03T10:06:00Z"));
+        assertEquals("Tu · proprio ora", UsWidgetModels.lavagna(mine, now).line);
+        // An author who left the couple: only when.
+        JSONObject nobody = lavagna(new JSONObject().put("state", "ready").put("by", "chi").put("at", "2026-11-03T08:00:00Z"));
+        assertEquals("", nobody.getJSONObject("lavagna").getString("by"));
+        assertEquals("2 ore fa", UsWidgetModels.lavagna(nobody, now).line);
+    }
+
+    @Test
+    public void lavagnaEmptyOrNotConnected() throws Exception {
+        Instant now = Instant.parse("2026-11-03T10:07:00Z");
+        UsWidgetModels.Lavagna empty = UsWidgetModels.lavagna(lavagna(new JSONObject().put("state", "empty").put("by", "me").put("at", "2026-11-03T10:00:00Z")), now);
+        assertFalse(empty.shown);
+        assertTrue(empty.empty);
+        assertEquals("", empty.line);
+        assertNull(empty.nextChange);
+        assertEquals("none", lavagna(new JSONObject().put("state", "piena")).getJSONObject("lavagna").getString("state"));
+        assertTrue("before the first drawing", UsWidgetModels.lavagna(snapshot(null), now).empty);
+        UsWidgetModels.Lavagna unlinked = UsWidgetModels.lavagna(null, now);
+        assertFalse(unlinked.shown);
+        assertFalse(unlinked.empty);
+    }
+
+    // ---------- Foto & giorni (Pastello) ----------
+
+    private static JSONObject photos(String hour) throws Exception {
+        JSONObject snap = snapshot(null);
+        snap.put("photo", new JSONObject().put("state", "ready").put("key", "a".repeat(32)).put("takenOn", "2026-10-12")
+            .put("label", "Lisbona").put("hour", hour)
+            .put("next", new JSONArray()
+                .put(new JSONObject().put("key", "b".repeat(32)).put("takenOn", "2026-09-01").put("label", "Ricordo al mare"))
+                .put(new JSONObject().put("key", "c".repeat(32)).put("takenOn", "").put("label", ""))));
+        return UsWidgetContract.normalize(snap);
+    }
+
+    @Test
+    public void thePhotoChangesEveryHourLikeOggiWithUsClosed() throws Exception {
+        JSONObject snap = photos("2026-10-31T10:00:00Z");
+        UsWidgetModels.PhotoSlot first = UsWidgetModels.photoSlot(snap, Instant.parse("2026-10-31T10:20:00Z"));
+        assertEquals("a".repeat(32), first.key);
+        assertEquals(0, first.index);
+        assertEquals(3, first.count);
+        assertEquals("Lisbona", first.label);
+        assertEquals(Instant.parse("2026-10-31T11:00:00Z"), first.nextChange);
+        UsWidgetModels.PhotoSlot second = UsWidgetModels.photoSlot(snap, Instant.parse("2026-10-31T11:05:00Z"));
+        assertEquals("b".repeat(32), second.key);
+        assertEquals(1, second.index);
+        // After the third hour it stays on the last one until US is opened again.
+        UsWidgetModels.PhotoSlot last = UsWidgetModels.photoSlot(snap, Instant.parse("2026-10-31T15:00:00Z"));
+        assertEquals("c".repeat(32), last.key);
+        assertNull(last.nextChange);
+        assertFalse(UsWidgetModels.photoSlot(snapshot(null), Instant.parse("2026-10-31T10:00:00Z")).ready());
+    }
+
+    @Test
+    public void thePhotoLineSaysSinceWhenAndWhereInItalian() throws Exception {
+        JSONObject snap = photos("2026-10-31T10:00:00Z");
+        Instant now = Instant.parse("2026-10-31T10:20:00Z");
+        assertEquals("dal 21 aprile · Lisbona, 12 ottobre", UsWidgetModels.photoLine(snap, UsWidgetModels.photoSlot(snap, now)));
+        assertEquals("dal 21 aprile · Ricordo al mare, 1 settembre", UsWidgetModels.photoLine(snap, UsWidgetModels.photoSlot(snap, Instant.parse("2026-10-31T11:00:00Z"))));
+        assertEquals("dal 21 aprile", UsWidgetModels.photoLine(snap, UsWidgetModels.photoSlot(snap, Instant.parse("2026-10-31T12:00:00Z"))));
+        assertEquals("21 aprile", UsWidgetModels.italianDay("2026-04-21"));
+        assertEquals("", UsWidgetModels.italianDay("ieri"));
+    }
+
+    // ---------- Colori delle persone (Pastello) ----------
+
+    @Test
+    public void eachPersonsColourOrTheUsualOne() throws Exception {
+        JSONObject snap = snapshot(null);
+        assertEquals(0xFFFF7C96, UsWidgetModels.personColor(UsWidgetContract.normalize(snap), true));
+        assertEquals(0xFFA98BFF, UsWidgetModels.personColor(UsWidgetContract.normalize(snap), false));
+        snap.getJSONObject("couple").put("colors", new JSONObject().put("me", "#a98bff").put("partner", "#6FB8FF"));
+        JSONObject clean = UsWidgetContract.normalize(snap);
+        assertEquals(0xFFA98BFF, UsWidgetModels.personColor(clean, true));
+        assertEquals(0xFF6FB8FF, UsWidgetModels.personColor(clean, false));
+        snap.getJSONObject("couple").put("colors", new JSONObject().put("me", "red").put("partner", "#12345"));
+        clean = UsWidgetContract.normalize(snap);
+        assertEquals("only #rrggbb", "", clean.getJSONObject("couple").getJSONObject("colors").getString("me"));
+        assertEquals(0xFFFF7C96, UsWidgetModels.personColor(clean, true));
+    }
+
+    @Test
+    public void dailyKnowsWhoHasAnswered() throws Exception {
+        JSONObject snap = snapshot(null);
+        snap.put("daily", new JSONObject().put("date", "2026-10-25").put("question", "Una domanda").put("state", "your_turn"));
+        UsWidgetModels.Daily daily = UsWidgetModels.daily(UsWidgetContract.normalize(snap), Instant.parse("2026-10-25T10:00:00Z"));
+        assertTrue(daily.partnerAnswered());
+        assertFalse(daily.meAnswered());
+        snap.getJSONObject("daily").put("state", "ready");
+        UsWidgetModels.Daily both = UsWidgetModels.daily(UsWidgetContract.normalize(snap), Instant.parse("2026-10-25T10:00:00Z"));
+        assertTrue(both.partnerAnswered() && both.meAnswered());
     }
 
     // ---------- La domanda di oggi ----------

@@ -64,5 +64,5 @@ test('mission titles use the English title when the server sends one', () => {
     [{ id: 1, title: 'Dinner', title_localized: 'Dinner' }, { id: 2, title: 'Gita' }]);
   const failed = { data: null, error: { code: 'x' } };
   assert.equal(usLocalizedTitles(failed), failed);
-  assert.equal((app.match(/\.then\(usLocalizedTitles\)/g) || []).length, 3, 'the board, the recent weeks and Sintonia history');
+  assert.equal((app.match(/\.then\(usLocalizedTitles\)/g) || []).length, 1, 'Sintonia history (the weekly board left with the missions, 03/11/2026)');
 });

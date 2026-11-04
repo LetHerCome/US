@@ -1,47 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget picker preview (Android 12+). An abstract "photo", never a real one. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Widget picker preview (Android 12+), Foto protagonista (founder, 02/11/2026):
+     the same picture as previewImage, Pastello or Midnight with the phone's
+     theme. Generic: no name, no face, no photo. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_preview_photo_art">
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:importantForAccessibility="no"
-        android:scaleType="fitXY"
-        android:src="@drawable/us_widget_photo_scrim" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:paddingBottom="12dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="serif"
-            android:includeFontPadding="false"
-            android:text="@string/us_widget_preview_days"
-            android:textColor="@color/us_widget_text"
-            android:textSize="34sp" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_weight="1"
-            android:fontFamily="serif"
-            android:includeFontPadding="false"
-            android:maxLines="2"
-            android:text="@string/us_widget_preview_days_unit"
-            android:textColor="@color/us_widget_text"
-            android:textSize="14sp"
-            android:textStyle="italic" />
-    </LinearLayout>
-</FrameLayout>
+    android:contentDescription="@null"
+    android:importantForAccessibility="no"
+    android:scaleType="fitCenter"
+    android:src="@drawable/us_widget_preview_photo" />

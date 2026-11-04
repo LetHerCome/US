@@ -22,8 +22,14 @@ test('M7D markup: one warm lived action, a quiet waiting line and a discreet mem
 test('M7D runtime: lived goes only through the reciprocal RPC — never a direct status/completed write', () => {
   const fn = block().match(/async function markNoiIdeaLived\([\s\S]*?\n\}/)?.[0] || '';
   assert.notEqual(fn, '');
-  assert.match(fn, /sb\.rpc\('confirm_bucket_item_lived',\{p_item_id:id\}\)/);
-  assert.doesNotMatch(fn, /\.update\(|calendar_entry_id:[^,}]*null|status:'lived'\}\)/);
+  // Noi nuova (03/11/2026): the RPC lives in confirmNoiIdeaLived, shared with
+  // the «Da vivere» post-it of the board; the detail calls it.
+  const step = block().match(/async function confirmNoiIdeaLived\([\s\S]*?\n\}/)?.[0] || '';
+  assert.match(step, /sb\.rpc\('confirm_bucket_item_lived',\{p_item_id:id\}\)/);
+  assert.match(fn, /const res=await confirmNoiIdeaLived\(id\);/);
+  const board = block().match(/async function markNoiIdeaLivedFromBoard\([\s\S]*?\n\}/)?.[0] || '';
+  assert.match(board, /await confirmNoiIdeaLived\(id\)/);
+  for (const body of [fn, step, board]) assert.doesNotMatch(body, /\.update\(|calendar_entry_id:[^,}]*null|status:'lived'\}\)/);
   assert.match(fn, /phase==='partner'&&btn&&btn\.dataset\.confirm!=='1'/, 'the irreversible final confirmation takes two taps');
   assert.match(fn, /if\(!res\)\{/, 'an empty answer is not a success');
   assert.doesNotMatch(block(), /update\(\{status:'lived'|completed:true/);

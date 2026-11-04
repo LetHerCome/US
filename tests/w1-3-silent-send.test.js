@@ -135,22 +135,28 @@ test('Web Push Think ha una sola implementation condivisa', () => {
   assert.doesNotMatch(widget, /webpush\.sendNotification|push_subscriptions|notification_preferences/);
 });
 
-test('heart usa receiver silent e body continua ad aprire Home', () => {
+test('heart: invio subito dal receiver, animazione in una finestrella non esportata, body apre Home', () => {
   const provider = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsThinkWidgetProvider.java');
   const widgets = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgets.java');
   const receiver = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsThinkWidgetActionReceiver.java');
+  const heart = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsThinkHeartActivity.java');
   const manifest = read('native-plugins/us-widget-bridge/android/src/main/AndroidManifest.xml');
-  assert.match(provider, /setOnClickPendingIntent\(R\.id\.us_widget_root,\s*UsWidgets\.open\(context,\s*"think"/);
-  assert.match(provider, /model\.canSend \? sendIntent\(context\)/);
-  assert.match(provider, /setOnClickPendingIntent\(R\.id\.us_widget_heart,\s*heart\)/);
+  // Pastello (02/11): the heart opens the app's heart animation over the Home
+  // screen; the send leaves at once from the receiver, never from the animation.
+  // 04/11/2026: the widget is only a heart, so the whole widget is the heart.
+  assert.match(provider, /!model\.canSend \? UsWidgets\.open\(context, "think", 4101\) : model\.busy \? sendIntent\(context\) : heartIntent\(context\)/);
+  assert.match(provider, /setOnClickPendingIntent\(R\.id\.us_widget_root,\s*heart\)/);
   assert.match(provider, /PendingIntent\.getBroadcast/);
+  assert.match(heart, /super\.onCreate\(savedInstanceState\);\s*\/\/[^\n]*\n\s*sendBroadcast\(new Intent\(this, UsThinkWidgetActionReceiver\.class\)\.setAction\(UsThinkWidgetActionReceiver\.ACTION_SEND_THINK\)\);/);
+  assert.doesNotMatch(heart, /HttpURLConnection|UsWidgetActionClient|token/i, 'the animation never sends by itself');
   assert.match(widgets, /PendingIntent\.getActivity/);
   assert.match(widgets, /Intent\.ACTION_VIEW,\s*Uri\.parse\("us:\/\/widget\/"/);
   assert.doesNotMatch(receiver, /startActivity|getLaunchIntentForPackage/);
   assert.match(receiver, /goAsync\(\)/);
   assert.match(receiver, /ACTION_SEND_THINK/);
   assert.match(manifest, /UsThinkWidgetActionReceiver/);
-  assert.match(manifest, /android:exported="false"/);
+  assert.match(manifest, /android:name="com\.usapp\.widget\.UsThinkHeartActivity"[\s\S]*?android:exported="false"/);
+  assert.equal((manifest.match(/android:exported="true"/g) || []).length, 0);
 });
 
 test('client Android usa header token, action id e nessun retry o Supabase client', () => {
@@ -166,6 +172,30 @@ test('client Android usa header token, action id e nessun retry o Supabase clien
   assert.ok(timeout > 0 && timeout <= 4000, 'il singolo tentativo deve terminare entro la finestra di goAsync del receiver');
 });
 
+// 31/10/2026: the widget sent Ti penso to production even from the staging
+// APK. Now it goes to the Edge of the build that issued the credential.
+test('Ti penso dal widget va all’Edge della build che ha emesso la credential, solo progetti US', () => {
+  const W = 'native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget';
+  const client = read(`${W}/UsWidgetActionClient.java`);
+  assert.match(client, /new URL\(UsWidgetEndpoints\.thinkSend\(functionsBase\)\)/);
+  assert.match(client, /connection\.setInstanceFollowRedirects\(false\);/);
+  assert.doesNotMatch(client, /supabase\.co/, 'no fixed address in the client');
+  const endpoints = read(`${W}/UsWidgetEndpoints.java`);
+  // 04/11/2026: the source names production only (the Play bundle never carries
+  // the staging project); the staging APK rewrites it for US-STAGING.
+  assert.match(endpoints, /PROJECTS = \{ "iiakdfsxpywdkxravqjh" \}/);
+  assert.doesNotMatch(endpoints, /dugmhngrfkuieeletatb/);
+  assert.match(endpoints, /return \(base\.isEmpty\(\) \? PRODUCTION : base\) \+ "\/widget-think-send";/);
+  assert.match(read(`${W}/UsThinkWidgetActionReceiver.java`), /new UsWidgetActionClient\(\)\.send\(credentials\.functionsBase\(owner\), token, actionId\)/);
+  assert.match(read(`${W}/UsWidgetCredentialStore.java`), /return UsWidgetEndpoints\.functionsBase\(payload\.optString\("functionsUrl", ""\)\);/);
+  const bridge = read(`${W}/UsWidgetBridgePlugin.java`);
+  assert.match(bridge, /boolean addressOk = functionsUrl\.isEmpty\(\) \|\| !UsWidgetEndpoints\.functionsBase\(functionsUrl\)\.isEmpty\(\);/);
+  // The app gives its own address: a staging build carries the staging SB_URL.
+  assert.match(read('app.js'), /window\.UsWidgetCredentialApi=Object\.freeze\(\{\n  functionsUrl:`\$\{SB_URL\}\/functions\/v1`,/);
+  assert.match(read('widgets.js'), /functionsUrl: window\.UsWidgetCredentialApi\.functionsUrl \|\| ''/);
+  assert.match(read('platform.js'), /\.\.\.\(safeUrl \? \{ functionsUrl: safeUrl \} : \{\}\)/);
+});
+
 test('credential native è Keystore encrypted, non-backup e account-isolated', () => {
   const store = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetCredentialStore.java');
   assert.match(store, /AndroidKeyStore/);
@@ -177,17 +207,21 @@ test('credential native è Keystore encrypted, non-backup e account-isolated', (
   assert.doesNotMatch(store, /accessToken|refreshToken|supabaseKey/i);
 });
 
-test('feedback widget distingue sending, sent e failed senza animazione fragile', () => {
+test('feedback widget: «Ricambiato · adesso» al tocco, Riprova se non parte; il widget non anima da solo', () => {
   const provider = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsThinkWidgetProvider.java');
   const models = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetModels.java');
-  const layout = read('native-plugins/us-widget-bridge/android/src/main/res/layout/us_widget_think.xml');
-  assert.match(layout, /us_widget_heart_pulse/);
+  const heart = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsThinkHeartActivity.java');
   assert.match(provider, /UsWidgetModels\.think\(/);
-  assert.match(models, /status\.equals\("sending"\)/);
-  assert.match(models, /Invio…/);
-  assert.match(models, /Inviato/);
+  assert.match(models, /out\.line = action\.optBoolean\("reply", false\) \? "Ricambiato" : "Inviato";\s*out\.when = "adesso";/);
   assert.match(models, /Riprova/);
   assert.doesNotMatch(provider + models, /AnimationDrawable|ObjectAnimator|ValueAnimator/);
+  // The app's heart (UsUiFoundation.heart): .72, 1.3, .96 in 440 ms; the wave in 420 ms.
+  assert.match(heart, /Keyframe\.ofFloat\(0\.14f, 0\.72f\)[\s\S]*Keyframe\.ofFloat\(0\.48f, 1\.3f\)[\s\S]*Keyframe\.ofFloat\(0\.74f, 0\.96f\)/);
+  assert.match(heart, /pop\.setDuration\(440\);/);
+  assert.match(heart, /opening\.setDuration\(420\);/);
+  assert.match(heart, /Settings\.Global\.ANIMATOR_DURATION_SCALE/, 'animations off: it only sends');
+  const app = read('ui-foundation.js');
+  assert.match(app, /\{ scale: 0\.72, offset: 0\.14,[\s\S]*\{ scale: big \? 1\.5 : 1\.3, offset: 0\.48,[\s\S]*\], \{ duration: big \? 620 : 440 \}\);/);
 });
 
 test('UsActivity (ex MainActivity) non tocca widget o credenziali e nessuna credential entra nello snapshot', () => {

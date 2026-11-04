@@ -689,6 +689,15 @@
       root.querySelector('h3').textContent = text(options.title);
       const body = root.querySelector('p');
       if (options.body) body.textContent = text(options.body); else body.remove();
+      // One short line under the title (the partner's battery under the distance).
+      if (options.note) {
+        const note = documentRef.createElement('p');
+        note.className = 'us-confirm-note';
+        note.id = `${id}N`;
+        note.textContent = text(options.note);
+        root.querySelector('h3').after(note);
+        root.querySelector('section').setAttribute('aria-describedby', options.body ? `${id}N ${id}B` : `${id}N`);
+      }
       // A list (the Novità after an update), each line as plain text.
       if (Array.isArray(options.items) && options.items.length) {
         const list = documentRef.createElement('ul');

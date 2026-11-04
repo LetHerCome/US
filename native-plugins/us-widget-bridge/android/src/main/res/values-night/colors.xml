@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Midnight (founder, 02/11/2026): with the phone's dark theme the widgets
+     take the night colours of US; the light theme keeps Pastello. -->
+<resources>
+    <color name="us_widget_pastel_ink">#FFF7EFE9</color>
+    <color name="us_widget_pastel_sub">#B8F7EFE9</color>
+    <color name="us_widget_pastel_plum">#FFF7EFE9</color>
+    <color name="us_widget_pastel_heart_bg">#FF3B2F3F</color>
+</resources>

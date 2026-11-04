@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The board's "Un anno fa" label (#ffe3ea). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FFFFE3EA" />
+    <corners android:radius="999dp" />
+</shape>

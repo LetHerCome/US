@@ -12,7 +12,7 @@ test('widget and premium-motion features are preserved in integration', () => {
   assert.ok(widget.includes("'noi-play': 'quiz', photo: 'home'"));
   assert.ok(widget.includes('us:home-photo-changed'));
   assert.ok(hub.includes('us-wp-noi-light'));
-  assert.ok(hub.includes('La fotografia che vedi su Oggi'));
+  assert.ok(hub.includes('La foto di Oggi, che cambia ogni ora'));
   assert.ok(app.includes('homePhotoHasPainted'));
   assert.ok(app.includes('const usEntryTimers = new WeakMap()'));
   assert.ok(!read('index.html').includes('id="usWidgetHubGuide"'));
@@ -20,7 +20,8 @@ test('widget and premium-motion features are preserved in integration', () => {
   assert.ok(!app.includes('let swipeGesture=null;'));
   assert.ok(widget.includes('syncNoiDistance'));
   assert.ok(read('modal-center.css').includes('opacity var(--us-motion-surface)'));
-  assert.ok(read('tests/widget-system.test.js').includes("['home', 'home', 'bond', 'quiz', 'home']"));
+  // 04/11/2026: the Post-it took the Countdown's place, and opens Noi.
+  assert.ok(read('tests/widget-system.test.js').includes("['home', 'bond', 'bond', 'quiz', 'home']"));
 });
 
 test('single build version across all web entry points', () => {

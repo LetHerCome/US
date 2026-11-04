@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- La domanda di oggi 4x2 (founder, 04/11/2026): the question in Fraunces, big,
+     who has answered and «Rispondi», which opens it in US. Never an answer. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/us_daily_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/us_widget_card"
+    android:clipToOutline="true">
+
+    <ImageView
+        android:id="@+id/us_daily_art"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:src="@drawable/us_widget_art_daily_m" />
+
+    <FrameLayout
+        android:id="@+id/us_daily_grain"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/us_widget_grain" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/us_figtree"
+            android:importantForAccessibility="no"
+            android:includeFontPadding="false"
+            android:letterSpacing="0.06"
+            android:maxLines="1"
+            android:text="@string/us_widget_daily_kicker"
+            android:textAllCaps="true"
+            android:textColor="@color/us_widget_pastel_sub"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="6dp"
+            android:layout_weight="1">
+
+            <ImageView
+                android:id="@+id/us_daily_question"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:scaleType="fitStart" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/us_daily_status"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="@font/us_figtree"
+                android:importantForAccessibility="no"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:textColor="@color/us_widget_pastel_sub"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/us_daily_answer"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:background="@drawable/us_widget_pastel_pill_rosa"
+                android:fontFamily="@font/us_figtree"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="@string/us_widget_daily_answer"
+                android:textColor="@color/us_widget_on_rosa"
+                android:textSize="13.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

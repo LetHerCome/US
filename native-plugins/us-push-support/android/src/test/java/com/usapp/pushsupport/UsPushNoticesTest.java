@@ -29,6 +29,16 @@ public class UsPushNoticesTest {
     }
 
     @Test
+    public void theBoardSaysWhoDrewAndOpensNoi() {
+        UsPushNotices.Notice it = UsPushNotices.forKind("lavagna", "Bea", IT);
+        assertEquals("US. · Lavagna", it.title);
+        assertEquals("Bea ha disegnato sulla lavagna", it.body);
+        assertEquals("noi", it.page);
+        assertEquals("Bea drew on the board", UsPushNotices.forKind("lavagna", "Bea", EN).body);
+        assertEquals("La tua persona ha disegnato sulla lavagna", UsPushNotices.forKind("lavagna", null, IT).body);
+    }
+
+    @Test
     public void unknownOrMissingKindIsTheGenericNotice() {
         for (String kind : new String[] { null, "", "drop_table", "THINK" }) {
             UsPushNotices.Notice notice = UsPushNotices.forKind(kind, "Bea", IT);
@@ -51,6 +61,14 @@ public class UsPushNoticesTest {
         assertEquals("noi", UsPushNotices.forKind("calendar", "Bea", IT).page);
         // A calendar reminder never repeats its private title: a generic line.
         assertEquals("Hai un promemoria in calendario", UsPushNotices.forKind("calendar", "Bea", IT).body);
+    }
+
+    @Test
+    public void theWeeklyChallengeOpensGioca() {
+        assertEquals("gioca", UsPushNotices.forKind("challenge", "Bea", IT).page);
+        assertEquals("US. · La sfida della settimana", UsPushNotices.forKind("challenge_reminder", "Bea", IT).title);
+        assertEquals("Bea ha messo la sua foto: manca solo la tua", UsPushNotices.forKind("challenge_photo", "Bea", IT).body);
+        assertEquals("Bea added their photo: only yours is missing", UsPushNotices.forKind("challenge_photo", "Bea", EN).body);
     }
 
     @Test

@@ -33,7 +33,7 @@ async function hydrateActivePage(id,{force=false}={}){
   if(heavy&&!force&&Date.now()-last<US_HEAVY_PAGE_HYDRATION_FRESH_MS)return;
   const work=[];
   if(id==='moments')work.push(Promise.resolve(hydrateMoments()));
-  if(id==='bond'){work.push(Promise.resolve(hydrateBond()));work.push(Promise.resolve(hydrateNoiIdeas()));}
+  if(id==='bond'){work.push(Promise.resolve(hydrateBondSummary()));work.push(Promise.resolve(hydrateNoiIdeas()));}
   if(id==='settings')work.push(Promise.resolve(window.hydrateUsSettings?.()));
   if(id==='home'){work.push(Promise.resolve(window.refreshOggiCalendarWidget?.()));work.push(Promise.resolve(window.UsOggiNext?.refresh?.({event:'read',calendar:'read'})));}
   if(!work.length)return;
@@ -266,7 +266,9 @@ window.addEventListener('us-identity-change',event=>{
   if(noiIdeaState.selectedId)renderNoiIdeaDetailState(noiIdeaFindItem(noiIdeaState.selectedId));
 });
 
+// functionsUrl: the widgets send to the Edge of this build (staging or production).
 window.UsWidgetCredentialApi=Object.freeze({
+  functionsUrl:`${SB_URL}/functions/v1`,
   async issue(deviceIdHash){
     if(!window.UsPlatform?.isNative||!/^[a-f0-9]{64}$/.test(String(deviceIdHash||'')))return null;
     const {data,error}=await sb.functions.invoke('widget-device-token',{body:{operation:'issue',deviceIdHash}});
@@ -296,11 +298,33 @@ window.UsWidgetDataApi=Object.freeze({
     if(coupleRes.error||profilesRes.error)throw coupleRes.error||profilesRes.error;
     return {startedOn:coupleRes.data?.started_on||'',names:(profilesRes.data||[]).map(p=>p.display_name).filter(Boolean)};
   },
-  // A last-known, already-rendered distance label, never coordinates.
+  // A last-known, already-rendered distance label, never coordinates: the
+  // text ("12 km"), "vicini", and when the older of the two readings was taken.
   noiDistance(){
-    const line=noiDistanceLine(usLocationRuntime.snapshot);
-    return {distanceText:line.state==='unknown'?'':line.text,
-      distanceState:line.state==='stale'?'stale':'ready'};
+    const model=usLocationRuntime.snapshot;
+    const line=noiDistanceLine(model);
+    const known=line.state!=='unknown';
+    return {distanceText:known&&!model.near?line.text:'',
+      distanceState:line.state==='stale'?'stale':'ready',
+      distanceNear:known&&Boolean(model.near),
+      distanceAt:known&&typeof model.age==='string'?model.age:''};
+  },
+  // Ricordi a pila: each Ricordo's day, place, caption and preview path,
+  // newest first (as Ricordi reads them). No URL yet, never sent anywhere.
+  async memories(){
+    const profile=window.usProfile;
+    if(!profile?.couple_id)return null;
+    const query=columns=>sb.from('moments').select(columns).order('moment_date',{ascending:false}).order('created_at',{ascending:false}).limit(1000);
+    const result=await query(`${US_MOMENT_COLUMNS},${US_MOMENT_PLACE_COLUMNS}`).then(res=>res?.error?query(US_MOMENT_COLUMNS):res);
+    if(window.usProfile!==profile)return null;
+    if(result?.error)throw result.error;
+    return {today:localDateISO(),rows:(result?.data||[]).map(row=>({id:String(row.id),date:row.moment_date||'',path:ricordiPreviewPath(row),place:row.place_label||'',caption:row.caption||''}))};
+  },
+  // Signed URLs for the stack's previews; they stay inside the WebView.
+  async memoryUrls(paths){
+    const list=(Array.isArray(paths)?paths:[]).filter(path=>typeof path==='string'&&path).slice(0,3);
+    const urls=await usGetSignedUrls(list,US_MEDIA_URL_TTL_S);
+    return list.map(path=>urls.get(path)||'');
   },
   // The exact two profile portraits displayed in Noi; signed URLs stay inside the WebView.
   noiAvatarSources(){
@@ -313,6 +337,25 @@ window.UsWidgetDataApi=Object.freeze({
   // Same source of truth as Oggi's painted hero, NOT the latest Ricordo.
   // undefined = Home is still loading; do not erase the native cached photo.
   // null = Home resolved with no photo; clear the widget only then.
+  // Foto & giorni: Oggi's photos of the next two hours, as Oggi will pick them.
+  async upcomingPhotos(){
+    if(!window.UsPlatform?.isNative||!window.usProfile||!homePhotoPath||!homePhotoHasPainted)return [];
+    const viewer=window.usProfile,epoch=usAuthEpoch;
+    const {data:rows,error}=await sb.from('moments').select('id,storage_path,moment_date,caption,place_label')
+      .eq('couple_id',viewer.couple_id).order('moment_date',{ascending:false}).order('created_at',{ascending:false}).limit(120);
+    if(window.usProfile!==viewer||epoch!==usAuthEpoch||error||!rows?.length)return [];
+    const out=[];
+    let avoid=homePhotoPath;
+    for(let hour=1;hour<=2;hour++){
+      const row=homeRotationPick(rows,homeRotationKey(new Date(Date.now()+hour*3600e3)),avoid);
+      if(!row?.storage_path)break;
+      const url=await usGetSignedUrl(row.storage_path,3600);
+      if(window.usProfile!==viewer||epoch!==usAuthEpoch||!url)return out;
+      out.push({id:row.id,path:row.storage_path,url,takenOn:row.moment_date||'',label:row.place_label||row.caption||''});
+      avoid=row.storage_path;
+    }
+    return out;
+  },
   async latestPhoto(){
     if(!window.UsPlatform?.isNative||!window.usProfile)return undefined;
     if(!homePhotoHasPainted||!homePhotoPath){
@@ -323,7 +366,10 @@ window.UsWidgetDataApi=Object.freeze({
     const url=await usGetSignedUrl(path,3600);
     if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
     if(!url)throw new Error('widget_photo_unavailable');
-    return {id:'oggi',path,sourcePath:path,takenOn:'',url};
+    // The hour it is Oggi's photo ("2026-10-31T10" in UTC), its place or caption, its day.
+    const meta=typeof usHomePhotoMeta!=='undefined'&&usHomePhotoMeta?.path===path?usHomePhotoMeta:null;
+    const hour=/^\d{4}-\d{2}-\d{2}T\d{2}$/.test(homePhotoHourKey)?`${homePhotoHourKey}:00:00.000Z`:'';
+    return {id:'oggi',path,sourcePath:path,takenOn:meta?.date||'',label:meta?.place||meta?.caption||'',hour,url};
   }
 });
 
@@ -783,7 +829,7 @@ window.disableWebPush=disableWebPush;
 // Native Notifications V1: one allow-listed target per notification (Web Push
 // and native alike), never a URL. `ref` (a UUID, native only) narrows the
 // surface; every surface re-reads its data through the normal RLS/RPC paths.
-const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar','events']);
+const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar','events','lavagna']);
 async function performPushNavigation(target,intent={}){
   if(!US_PUSH_TARGETS.includes(target))return;
   if(!window.usProfile){usPendingPushTarget=target;return;}
@@ -817,6 +863,12 @@ async function performPushNavigation(target,intent={}){
     setTimeout(()=>window.openNoiSection?.('quest'),120);
     return;
   }
+  // Lavagna (push and widget): the board, open over Noi.
+  if(target==='lavagna'){
+    if(document.querySelector('.page.active')?.id!=='bond')go('bond',{motionCommit:true});
+    setTimeout(()=>window.UsLavagna?.open?.(),120);
+    return;
+  }
   // Mesiversario and anniversary pushes: Eventi on Noi.
   if(target==='events'){
     if(document.querySelector('.page.active')?.id!=='bond')go('bond',{motionCommit:true});
@@ -826,6 +878,8 @@ async function performPushNavigation(target,intent={}){
   if(pages.includes(target))go(target);
 }
 window.UsNotifications?.onNavigate?.(intent=>performPushNavigation(intent.target,intent));
+// The Messaggio widget opens its Ti penso or envelope through the same path.
+window.UsPushNavigation=Object.freeze({open:(target)=>performPushNavigation(target)});
 function captureInitialPushTarget(){
   try{
     const url=new URL(location.href),target=url.searchParams.get('open');
@@ -843,6 +897,8 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.UsCoupleContext?.clear?.();
   window.USCountdown?.reset?.();
   window.UsYearRecap?.reset?.();
+  window.UsCoupleNotes?.reset?.();
+  window.UsLavagna?.reset?.();
   window.UsCompanions?.reset?.();
   window.UsDistance?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
@@ -1179,6 +1235,9 @@ async function initCloud(){
     usRunWhenIdle(()=>startLocationRefreshTimer(),650);
     usRunWhenIdle(()=>hydrateProfileAvatars(),520);
     usRunWhenIdle(()=>maybeAutoRefreshLocation('launch'),1400);
+    // Batteria del partner: read in Noi and the widget, reported only while US is in use.
+    usRunWhenIdle(()=>window.UsPartnerBattery?.onForeground?.('launch'),1600);
+    usRunWhenIdle(()=>window.UsMemberStatus?.onForeground?.('launch'),1700);
     usRunWhenIdle(()=>refreshWebPushUi(),1100);
     usRunWhenIdle(()=>hydrateThink(),900);
     // Native has no service-worker image cache. Prewarm only the first few
@@ -1608,7 +1667,9 @@ async function openDistanceDetail(){
     return;
   }
   const age=model.age?`Aggiornata ${relativeLocationAge(model.age)}. `:'';
-  await ui?.notice?.({kicker:'DISTANZA',icon:'map-pin',title:model.detail||'Posizione non disponibile',body:`${age}Puoi smettere di condividerla da Impostazioni › Posizione.`});
+  // Batteria del partner (partner-battery.js): under the distance, as in the capsule.
+  const battery=(model.state==='ready'||model.state==='stale')?window.UsPartnerBattery?.sheetLine?.():'';
+  await ui?.notice?.({kicker:'DISTANZA',icon:'map-pin',title:model.detail||'Posizione non disponibile',note:battery||undefined,body:`${age}Puoi smettere di condividerla da Impostazioni › Posizione.`});
 }
 window.openDistanceDetail=openDistanceDetail;
 
@@ -1840,8 +1901,7 @@ function writeHomeBootCache(hourKey,path,url){
   }catch(_e){}
 }
 
-function homeRotationKey(){
-  const d=new Date();
+function homeRotationKey(d=new Date()){
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}T${String(d.getUTCHours()).padStart(2,'0')}`;
 }
 
@@ -1851,11 +1911,19 @@ function homeStableIndex(seed,count){
   return count?((h>>>0)%count):0;
 }
 
+// The hour's Ricordo, never the one just shown. Foto & giorni (widget) asks
+// the same for the next two hours, so it changes with Oggi while US is closed.
+function homeRotationPick(rows,key,avoid){
+  let idx=homeStableIndex(`${window.usProfile.couple_id}|${key}|home`,rows.length);
+  if(rows.length>1&&rows[idx]?.storage_path===avoid)idx=(idx+1)%rows.length;
+  return rows[idx]||null;
+}
+
 async function getHomeRotationPath(){
   if(!window.usProfile)return null;
   const viewer=window.usProfile,epoch=usAuthEpoch;
   const {data:rows,error}=await sb.from('moments')
-    .select('id,storage_path,moment_date,created_at,caption,created_by')
+    .select('id,storage_path,moment_date,created_at,caption,created_by,place_label')
     .eq('couple_id',window.usProfile.couple_id)
     .order('moment_date',{ascending:false})
     .order('created_at',{ascending:false})
@@ -1863,11 +1931,9 @@ async function getHomeRotationPath(){
   if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
   if(error){console.warn(error);return undefined;}
   if(rows?.length){
-    const key=homeRotationKey();
-    let idx=homeStableIndex(`${window.usProfile.couple_id}|${key}|home`,rows.length);
-    if(rows.length>1&&rows[idx]?.storage_path===homePhotoPath)idx=(idx+1)%rows.length;
-    usHomePhotoMeta=rows[idx]?.storage_path?{path:rows[idx].storage_path,caption:rows[idx].caption||'',date:rows[idx].moment_date||'',author:rows[idx].created_by||''}:null;
-    return rows[idx]?.storage_path||null;
+    const row=homeRotationPick(rows,homeRotationKey(),homePhotoPath);
+    usHomePhotoMeta=row?.storage_path?{path:row.storage_path,caption:row.caption||'',date:row.moment_date||'',author:row.created_by||'',place:row.place_label||''}:null;
+    return row?.storage_path||null;
   }
   const {data:couple,error:coupleError}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
   if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
@@ -2065,8 +2131,8 @@ function oggiNearestNext(...sources){
 function syncOggiRow(){
   const row=document.getElementById('usOggiRow');
   if(!row)return;
-  const next=document.getElementById('usOggiNext'),pill=document.getElementById('distanceWidget');
-  row.hidden=Boolean((!next||next.hidden)&&(!pill||pill.hidden));
+  const next=document.getElementById('usOggiNext'),pill=document.getElementById('distanceWidget'),status=document.getElementById('usOggiStatus');
+  row.hidden=Boolean((!next||next.hidden)&&(!pill||pill.hidden)&&(!status||status.hidden));
 }
 function renderOggiNext(model){
   const button=document.getElementById('usOggiNext');
@@ -2386,20 +2452,25 @@ let usThinkKnownReactionSignature='';
 
 // 1.0 — what Oggi may put in its one priority card, in this order: something
 // that arrived for me (Ti penso, Lasciato per te), the answers ready, where
-// the other is waiting for me ("Tocca a te": a game round, a mission to
-// confirm), today's mesiversario, and (never shown on Oggi) passive events.
-const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,left_ready:2,answers_ready:3,waiting_for_me:4,celebration:5,couple_context:6});
+// the other is waiting for me ("Tocca a te": a game round, the other one's
+// photo of the challenge), today's mesiversario, from Friday the challenge of
+// the week not done yet, and (never shown on Oggi) passive events.
+const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,left_ready:2,answers_ready:3,waiting_for_me:4,celebration:5,challenge:6,couple_context:7});
 const US_TODAY_PRIORITY_LABELS=Object.freeze({
   received_ready:'Aspetta te',
   left_ready:'Lasciato per te',
   answers_ready:'Risposte pronte',
   waiting_for_me:'Tocca a te',
   celebration:'Tra voi oggi',
+  challenge:'Sfida · scade domenica',
   couple_context:'Tra voi oggi'
 });
 const US_TODAY_PRIORITY_LIMIT=5;
 let usTodayPriorityRefreshId=0;
 let usTodayPriorityQueue=[];
+// The notifications invite waits for the first load of what waits for me:
+// before it, it flashed on Oggi and gave way a moment later (03/11/2026).
+let usTodayPrioritiesKnown=false;
 const usTodayConsumedFacts=new Set();
 
 function usTodayPriorityNumber(value,fallback){
@@ -2500,6 +2571,8 @@ function renderTodayPriorities(priorities=[]){
   // live in Noi/Lavagna after the Home cleanup.
   usTodayPriorityQueue=(Array.isArray(priorities)?priorities:[]).filter(item=>item?.attention).slice();
   renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
+  usTodayPrioritiesKnown=true;
+  applyOggiArbitration();
 }
 // The partner's name for Oggi copy. Defensive: the Oggi runtime is also
 // exercised on its own, without the identity resolver.
@@ -2551,8 +2624,7 @@ function leftTodayPriorityViewModel(items=usOggiLeft.items){
   };
 }
 // F2 — "Tocca a te": a game round where the other is waiting for me (read
-// from the Gioca hub that games.js renders) and, from Friday, a mission the
-// other already confirmed.
+// from the Gioca hub that games.js renders).
 let usOggiGameTurn=null;
 function gameTurnTodayPriorityViewModel(turn=usOggiGameTurn){
   if(!turn?.game)return null;
@@ -2561,13 +2633,6 @@ function gameTurnTodayPriorityViewModel(turn=usOggiGameTurn){
     id:`game-turn:${key}`,factKey:`game:${key}`,arrivalType:'game-turn',category:'waiting_for_me',attention:true,
     title:`${oggiPartnerName()} ti aspetta`,detail:turn.game,action:'game',actionLabel:'Gioca',
     session:turn.session||'',perVoi:Boolean(turn.perVoi)
-  };
-}
-function missionTodayPriorityViewModel(mission){
-  if(!mission?.id)return null;
-  return {
-    id:`mission:${mission.id}`,factKey:`mission:${mission.id}`,arrivalType:'mission-confirm',category:'waiting_for_me',attention:true,
-    title:'Manca solo la tua conferma',detail:String(mission.title||''),action:'mission',actionLabel:'Apri'
   };
 }
 // O10 — the mesiversario, on the day. A start on the 29th, 30th or 31st counts
@@ -2611,11 +2676,11 @@ function oggiTodayISO(){
   return typeof usDailyQuestionDay==='function'?usDailyQuestionDay():new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome'}).format(new Date());
 }
 // F2 — a dot on the Oggi tab while the other is waiting for me: the Domanda di
-// oggi they already answered, a game round, a mission to confirm (from Friday).
-function renderToccaATe({daily=false,game=false,mission=false}={}){
+// oggi they already answered, a game round, the other one's photo of the challenge.
+function renderToccaATe({daily=false,game=false,challenge=false}={}){
   const tab=document.querySelector?.('.nav button[data-page="home"]');
   if(!tab)return false;
-  const on=Boolean(daily||game||mission);
+  const on=Boolean(daily||game||challenge);
   if(on)tab.setAttribute('data-us-tocca','on');else tab.removeAttribute('data-us-tocca');
   tab.setAttribute('aria-label',on?'Oggi, tocca a te':'Oggi');
   return on;
@@ -2845,7 +2910,7 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   if(distance)candidates.push(distance);
   const celebration=celebrationTodayPriorityViewModel(oggiStartedOn(),oggiTodayISO());
   if(celebration)candidates.push(celebration);
-  let mission=null;
+  let challenge=null;
   try{
     const eventSource=await window.getTodayEventPrioritySource?.({fresh:freshEvents});
     const eventPriority=eventTodayPriorityViewModel(eventSource);
@@ -2858,8 +2923,9 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
     // The calendar's next commitment still reaches the pill when Events fails.
     if(refreshId===usTodayPriorityRefreshId&&typeof refreshOggiNext==='function')refreshOggiNext({event:'failed'});
   }
-  try{mission=missionTodayPriorityViewModel(await window.oggiMissionToConfirm?.());}catch(_){mission=null;}
-  if(mission)candidates.push(mission);
+  // La sfida della settimana (weekly-challenge.js): from Friday if not done.
+  try{challenge=await window.UsWeeklyChallenge?.todayPriority?.();}catch(_){challenge=null;}
+  if(challenge)candidates.push(challenge);
   if(refreshId!==usTodayPriorityRefreshId)return [];
   const priorities=composeTodayPriorities(candidates);
   renderTodayPriorities(priorities);
@@ -2869,7 +2935,7 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   // Un solo ingresso: il link passivo compare solo quando l'avviso non è in coda.
   renderDailyRevealLink(priorities.some(item=>item.category==='answers_ready')?null:dailyRevealLinkViewModel(dailySource));
   const dailyState=dailySource?.state;
-  renderToccaATe({daily:Boolean(dailyState&&dailyState.my_answer==null&&dailyState.partner_has_answer),game:Boolean(gameTurn),mission:Boolean(mission)});
+  renderToccaATe({daily:Boolean(dailyState&&dailyState.my_answer==null&&dailyState.partner_has_answer),game:Boolean(gameTurn),challenge:challenge?.category==='waiting_for_me'});
   window.UsDailyQuestionHub?.paint?.();
   return priorities;
 }
@@ -2902,7 +2968,7 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
     if(current?.session)window.USGameV2?.openSession?.(current.session);
     else if(current?.perVoi)window.USGameV2?.openPerVoi?.();
   }
-  if(action==='mission')window.openOggiMission?.();
+  if(action==='challenge')window.UsWeeklyChallenge?.open?.();
   if(action==='recap')window.UsYearRecap?.open?.();
   if(action==='companion')window.UsCompanions?.open?.();
   if(action==='distance')window.UsDistance?.open?.();
@@ -2986,13 +3052,14 @@ window.UsTodayPriority=Object.freeze({
 //   10 Ti penso received                           the Domanda di oggi, until
 //   15 Lasciato per te                             both answered (O1), then
 //   20 "Risposte pronte" (reveal ready)            "Rivedi" until tomorrow
-//   30 Tocca a te (game round, mission)
+//   30 Tocca a te (game round, the challenge's other photo)
 //   35 Mesiversario / anniversario
+//   40 La sfida della settimana, from Friday
 //   90 notifications invite, until enabled (O5)
 //
 // The legacy calendar widget and reveal link stay mounted in the hidden
 // stack: they never take a slot.
-const US_OGGI_PRIMARY_RANK=Object.freeze({received_ready:10,left_ready:15,answers_ready:20,waiting_for_me:30,celebration:35});
+const US_OGGI_PRIMARY_RANK=Object.freeze({received_ready:10,left_ready:15,answers_ready:20,waiting_for_me:30,celebration:35,challenge:40});
 const US_OGGI_PUSH_RANK=90;
 function arbitrateOggi(candidates=[]){
   const best={evidence:null,daily:null};
@@ -3013,7 +3080,7 @@ function collectOggiCandidates(){
     const head=usTodayPriorityQueue[0];
     candidates.push({id:'usTodayPriorityRegion',slot:'evidence',rank:US_OGGI_PRIMARY_RANK[head?.category]||US_OGGI_PUSH_RANK-1});
   }
-  if(live('pushOptInCard'))candidates.push({id:'pushOptInCard',slot:'evidence',rank:US_OGGI_PUSH_RANK});
+  if(usTodayPrioritiesKnown&&live('pushOptInCard'))candidates.push({id:'pushOptInCard',slot:'evidence',rank:US_OGGI_PUSH_RANK});
   if(live('usDailyRitual'))candidates.push({id:'usDailyRitual',slot:'daily',rank:0});
   return candidates;
 }
@@ -3156,6 +3223,7 @@ async function loadOggiLeftItems(){
     }catch(error){console.warn('[US Oggi] Lasciato per te',error);return;}
   }
   if(before!==usOggiLeft.items.map(item=>item.id).join(','))refreshTodayPriorities();
+  window.UsWidgets?.publishLeft?.(usOggiLeft.items)?.catch?.(()=>{});
 }
 (()=>{
   const envelope=document.getElementById('leftForYouPartnerEntry');
@@ -3166,42 +3234,6 @@ async function loadOggiLeftItems(){
   }).observe(envelope,{attributes:true,attributeFilter:['class','aria-label','data-us-attention']});
 })();
 
-// F2/N5 — from Friday (Rome), a mission the other already confirmed and I did
-// not: "Manca solo la tua conferma" on Oggi. Read-only, cached for a minute.
-function oggiRomeWeekday(at=new Date()){
-  try{return new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Rome',weekday:'short'}).format(at);}catch(_){return '';}
-}
-const usOggiMission={key:'',at:0,item:null,loading:null};
-async function oggiMissionToConfirm(){
-  const me=window.usProfile;
-  if(!me?.id||!me.couple_id||typeof sb==='undefined'||typeof weekStartISO!=='function')return null;
-  if(!['Fri','Sat','Sun'].includes(oggiRomeWeekday()))return null;
-  const week=weekStartISO(),key=`${me.id}:${me.couple_id}:${week}`;
-  if(usOggiMission.key===key&&Date.now()-usOggiMission.at<60000)return usOggiMission.item;
-  if(usOggiMission.key===key&&usOggiMission.loading)return usOggiMission.loading;
-  if(usOggiMission.key!==key){usOggiMission.key=key;usOggiMission.item=null;usOggiMission.at=0;}
-  const task=(async()=>{
-    try{
-      const {data,error}=await sb.from('bond_weekly_quests').select('id,title,confirmed_by,completed_at').eq('couple_id',me.couple_id).eq('week_start',week).order('slot');
-      if(error)throw error;
-      const item=(data||[]).find(row=>{
-        const confirmed=(Array.isArray(row?.confirmed_by)?row.confirmed_by:[]).map(String);
-        return !row.completed_at&&confirmed.length>0&&!confirmed.includes(String(me.id));
-      })||null;
-      if(usOggiMission.key===key){usOggiMission.item=item?{id:item.id,title:item.title}:null;usOggiMission.at=Date.now();}
-    }catch(error){console.warn('[US Oggi] Missioni',error);}
-    return usOggiMission.key===key?usOggiMission.item:null;
-  })();
-  usOggiMission.loading=task;
-  try{return await task;}finally{if(usOggiMission.loading===task)usOggiMission.loading=null;}
-}
-window.oggiMissionToConfirm=oggiMissionToConfirm;
-// The Oggi card opens Missioni in Noi.
-function openOggiMission(){
-  go('bond',{nav:true});
-  openNoiSection('quest');
-}
-window.openOggiMission=openOggiMission;
 
 function thinkReactionLabel(reaction){return ({heart:'con un cuore',hug:'con un abbraccio',miss_you:'con un pensiero'})[reaction]||reaction||'';}
 function renderThinkReactionUi(){
@@ -3443,17 +3475,17 @@ function usHeartLike(button){const turn=window.UsUiFoundation?.heartTurn?.(windo
 // Novità (founder, 30/10/2026): the beta testers see once, after the update,
 // what changed. One id per release; a new install does not see it.
 const US_WHATS_NEW=Object.freeze({
-  id:'1.3',
+  id:'1.4',
   title:'US si è aggiornata',
   items:[
-    'Il tuo colore: scegline uno tra 8, anche da Impostazioni (gratis nella beta).',
-    'Il cuore nuovo, sulle risposte e sui Ti penso: ogni 3 cuori, uno più grande.',
-    'Mappa dei Ricordi: metti il posto ai Ricordi e ritrovateli sulla mappa.',
-    'Sintonia: nuovi premi, tra cui Il vostro cielo, Aurora, Stagioni, accessori per i Compagni e icone dell\'app.',
-    'Gioca: una partita al giorno, con il conto di quelle rimaste.',
-    'Traguardi ogni 100 giorni insieme, e Rivivi nel giorno esatto di un ricordo.',
-    'Inviti con un link che apre US, emoji in ogni campo e schermate più ariose.',
-    'Da ora US si aggiorna da sola.'
+    'Noi nuova: il calendario con le foto dei vostri ricordi, e «Prossimi» per quello che vi aspetta.',
+    'La bacheca: post-it colorati da scrivere e spuntare insieme, e la lavagna su cui disegnare in due.',
+    'La sfida della settimana in Gioca: una al lunedì, si chiude con una foto che diventa un ricordo.',
+    'Come stai: dite all’altra persona come state con un’emoji, per 12 ore.',
+    'La batteria di chi ami accanto alla distanza, su Oggi.',
+    'Ricordi diventa un album: solo le vostre foto, mese per mese.',
+    'Un nuovo sfondo, Vino, e in Sintonia le Atmosfere da sbloccare: Prugna, Notte blu, Grafite e altre.',
+    'Widget nuovi sulla Home: Ti penso con un tocco sul cuore, Post-it, Lavagna, Come stai e altri.'
   ]
 });
 function usShowWhatsNew(returning){
@@ -3844,7 +3876,8 @@ window.pickMomentPhoto=pickMomentPhoto;
 // The source of "Aggiungi la foto" (a lived Da vivere or Event): its day is the
 // memory's day, and once saved the photo is linked to it (link_moment_to_source).
 function setMomentComposerSource(source){
-  const kind=source?.kind==='da_vivere'||source?.kind==='shared_event_completion'?source.kind:'';
+  // La sfida della settimana: the photo closes the challenge (weekly-challenge.js).
+  const kind=source?.kind==='da_vivere'||source?.kind==='shared_event_completion'||source?.kind==='challenge'?source.kind:'';
   pendingMomentSourceNext=kind&&source?.ref?{kind,ref:String(source.ref),date:validMomentDate(source.date)}:null;
 }
 window.UsRicordiCompose=Object.freeze({setSource:setMomentComposerSource});
@@ -4006,8 +4039,11 @@ async function uploadMoment(){
     // is refused the memory still exists, as a memory of its own.
     if(created?.id&&source){
       try{
-        const {error:linkError}=await sb.rpc('link_moment_to_source',{target_moment_id:created.id,source_kind:source.kind,source_ref:source.ref});
-        if(linkError)throw linkError;
+        if(source.kind==='challenge')await window.UsWeeklyChallenge?.photoAdded?.({challengeId:source.ref,momentId:created.id,announce:false});
+        else{
+          const {error:linkError}=await sb.rpc('link_moment_to_source',{target_moment_id:created.id,source_kind:source.kind,source_ref:source.ref});
+          if(linkError)throw linkError;
+        }
       }catch(error){console.warn('[US Ricordi] link source',error);}
     }
     // R1 — the other photos join the memory's album, in the order they were picked.
@@ -4021,7 +4057,9 @@ async function uploadMoment(){
     }
     window.UsFeedback?.success?.();
     resetMomentComposer();
-    toast(failed?`Ricordo aggiunto. ${failed} foto non sono entrate: riprova dall’album`:total>1?`Ricordo aggiunto con ${total} foto ♡`:'Ricordo aggiunto ♡');
+    // La sfida della settimana: its own line (points, or who is missing) instead of ours.
+    const challengeNote=source?.kind==='challenge'&&!failed?window.UsWeeklyChallenge?.takeNote?.():'';
+    toast(challengeNote||(failed?`Ricordo aggiunto. ${failed} foto non sono entrate: riprova dall’album`:total>1?`Ricordo aggiunto con ${total} foto ♡`:'Ricordo aggiunto ♡'));
     await hydrateMoments();
     await hydrateHomeMemory();
     if(!homePhotoPath)await hydrateHomePhoto(true);
@@ -4567,14 +4605,16 @@ async function hydrateMomentsCore(){
   const freshIds=ricordiNewSync(rows||[]);
   const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.thumbnail_path||'',r.caption||'',r.moment_date,r.created_at,r.place_lat??'',r.place_lon??'',r.place_label||'']),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
   if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature&&!forceMedia)return;
-  if(!rows?.length&&!livedRows.length&&!keptRows.length&&!eventRows.length){
+  // Ricordi is the album (founder, 04/11/2026): only the photos, month by
+  // month. Ideas, Events and questions lived without a photo stay saved, not here.
+  if(!rows?.length){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
     renderRicordiChapters([],new Map(),today);
     grid.dataset.loaded='1';grid.dataset.signature=signature;window.dispatchEvent(new CustomEvent('us:moments-updated'));return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
-  const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows);
+  const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows).filter(item=>item.moment);
   // R11 — on Android the small images already kept on the phone are shown from there.
   const thumbPaths=(rows||[]).map(r=>r.thumbnail_path).filter(Boolean);
   const localMedia=await usRicordiCachedMedia(thumbPaths);
@@ -4582,23 +4622,15 @@ async function hydrateMomentsCore(){
   const displayUrls=localMedia.size?new Map([...signedUrls,...localMedia]):signedUrls;
   const html=[];
   let period='';
-  // Ritmo editoriale: la prima foto del mese è a tutta larghezza, le altre in
-  // coppia; una foto rimasta sola prima di una voce larga si allarga anch'essa.
-  let loneHalf=-1;
+  // Three photos a row, all the same size: an album, not a story.
   let visiblePhotoIndex=0;
-  const closeRow=()=>{if(loneHalf>=0){html[loneHalf]=html[loneHalf].replace('class="moment-card moment-postit"','class="moment-card moment-postit ricordi-wide"');loneHalf=-1;}};
   for(const item of timeline){
     const key=ricordiPeriodKey(item.date);
-    const opensPeriod=key!==period;
-    if(opensPeriod){
-      closeRow();
+    if(key!==period){
       period=key;
       const {month,year}=ricordiPeriodLabel(item.date);
       html.push(`<div class="ricordi-period" data-period="${key}" data-year="${year}"><b>${month}</b><span>${year}</span></div>`);
     }
-    if(item.kind==='experience'&&!item.moment){closeRow();html.push(ricordiLivedCard(ricordiExperienceCard(item.row,item.date),item));continue;}
-    if(item.kind==='event'&&!item.moment){closeRow();html.push(ricordiLivedCard(ricordiEventCard(item.row),item));continue;}
-    if(item.kind==='daily'){closeRow();html.push(ricordiDailyCard(item.row));continue;}
     // Un Moment, o la foto di un'esperienza/Evento vissuto: una sola voce.
     const row=item.moment;
     const own=row.created_by===profile.id;
@@ -4608,12 +4640,8 @@ async function hydrateMomentsCore(){
     // R2 — only who created a memory can delete it (the album asks first,
     // "per tutti e due"); the partner never sees Elimina on it.
     const source=item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date};
-    // R6 — "L'avete fatto" always takes the whole row.
-    if(source)closeRow();
-    html.push(ricordiMomentCard(row,displayUrls,author,canDelete,opensPeriod,source,visiblePhotoIndex++<2,freshIds.has(String(row.id))));
-    if(!opensPeriod&&!source)loneHalf=loneHalf>=0?-1:html.length-1;
+    html.push(ricordiMomentCard(row,displayUrls,author,canDelete,false,source,visiblePhotoIndex++<6,freshIds.has(String(row.id))));
   }
-  closeRow();
   if(timeline.length){
     grid.innerHTML=html.join('');grid.dataset.loaded='1';grid.dataset.signature=signature;
     consumeFreshRicordo(grid);
@@ -4621,7 +4649,8 @@ async function hydrateMomentsCore(){
     // R7 — Rivivi also brings back "X mesi fa", not only anniversaries.
     renderRicordiRivivi(ricordiPickRivivi(timeline,today),displayUrls,names);
     ricordiArchiveState={timeline,urls:displayUrls,names};
-    renderRicordiChapters(ricordiChapters(timeline),displayUrls,today);
+    // The year chapters left with the album (founder, 04/11/2026).
+    renderRicordiChapters([],displayUrls,today);
     usRicordiKeepMedia(thumbPaths.filter(path=>!localMedia.has(path)).map(path=>[path,signedUrls.get(path)]));
   }
   else if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
@@ -4900,6 +4929,9 @@ async function hydrateBondSummary(){
   window.hydrateNoiEvents?.();
 }
 window.hydrateBondSummary=hydrateBondSummary;
+// Sintonia (noi-v2.js) still asks for hydrateBond: since the weekly missions
+// left (Sfida della settimana, 03/11/2026) it is the progress alone.
+window.hydrateBond=hydrateBondSummary;
 
 // ===== M12C · Risonanza V2 — recent real growth, read-only =====
 // "Ultime crescite" (a fold under the collection, as in the mockup): missions,
@@ -5007,357 +5039,6 @@ async function hydrateResonanceHistory(){
 window.hydrateResonanceHistory=hydrateResonanceHistory;
 window.UsResonance=Object.freeze({historyEntries:resonanceHistoryEntries,renderHistory:renderResonanceHistory});
 
-function hashSeed(text){
-  let h=2166136261;
-  for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619);}
-  return h>>>0;
-}
-async function currentQuestMode(){
-  // Distance comes from couple_distance(); the partner's coordinates are not readable.
-  if(!Number.isFinite(window.usDistanceKm)){try{await window.hydrateDistance?.();}catch(_e){}}
-  if(!Number.isFinite(window.usDistanceKm))return 'any';
-  return window.usDistanceKm>50?'far':'near';
-}
-function selectInitialQuestTemplates(templates,mode,week,coupleId){
-  const eligible=templates.filter(t=>t.mode==='any'||t.mode===mode).sort((a,b)=>a.key.localeCompare(b.key));
-  const used=new Set();
-  const slots=[
-    eligible.filter(t=>['common','uncommon'].includes(t.rarity)),
-    eligible.filter(t=>['uncommon','rare'].includes(t.rarity)),
-    eligible.filter(t=>['rare','epic'].includes(t.rarity))
-  ];
-  return slots.map((pool,index)=>{
-    const candidates=(pool.length?pool:eligible).filter(t=>!used.has(t.key));
-    const seed=hashSeed(`${coupleId}|${week}|${index+1}|bond`);
-    const picked=candidates[seed%candidates.length];
-    if(picked)used.add(picked.key);
-    return picked;
-  }).filter(Boolean);
-}
-// M12D: a reroll proposes the same mode-eligible, not-already-on-the-board
-// templates as before, but picks deterministically (no Math.random): both
-// phones propose the same replacement and reroll_bond_quest stays the authority.
-function pickRerollQuestTemplate(templates,mode,usedKeys,seedText){
-  const used=usedKeys instanceof Set?usedKeys:new Set(usedKeys||[]);
-  const candidates=(templates||[]).filter(t=>(t.mode==='any'||t.mode===mode)&&!used.has(t.key)).sort((a,b)=>a.key.localeCompare(b.key));
-  return candidates.length?candidates[hashSeed(seedText)%candidates.length]:null;
-}
-async function ensureBondWeek(profile=window.usProfile){
-  if(!profile)return;
-  const {error}=await sb.rpc('ensure_bond_week');
-  if(error)console.warn(error);
-}
-
-// ===== M12D · Quest V2 — one weekly board over the existing Quest domain =====
-// Server authority is explicit: ensure_bond_week owns weekly creation,
-// confirm_bond_quest owns both-partner completion and the XP award, and
-// reroll_bond_quest owns the weekly reroll budget. The client only reads the
-// persisted bond_weekly_state / bond_weekly_quests rows and invokes those RPCs.
-const QUEST_SLOTS=3,QUEST_WEEKLY_REROLLS=3,QUEST_RECENT_WEEKS=3;
-const questActionsInFlight=new Set();
-let questBoardSeq=0,questBoardView=null;
-function questCategoryLabel(category){
-  return ({connection:'Connessione',fun:'Divertimento',adventure:'Avventura',discover:'Scoperta',memory:'Ricordo',surprise:'Sorpresa',chill:'Relax'})[category]||category||'Missione';
-}
-// The mockup's card says how rare a mission is ("Scoperta · Non comune").
-function questRarityLabel(rarity){
-  return ({common:'Comune',uncommon:'Non comune',rare:'Rara',epic:'Epica'})[rarity]||'';
-}
-// Missions that ask for a photo open "add a memory" (the Ricordi composer).
-const QUEST_PHOTO_KEYS=new Set(['any-week-photo','any-intentional-memory','any-old-photo','far-thought-photo','near-recreate-photo']);
-function questAsksPhoto(q){return QUEST_PHOTO_KEYS.has(String(q?.template_key||''));}
-function questRerollsLeft(state){
-  return Math.max(0,QUEST_WEEKLY_REROLLS-Math.max(0,Number(state?.rerolls_used)||0));
-}
-function questOwnerKey(profile){return profile?`${profile.couple_id}|${profile.id}`:'';}
-function questPartner(profiles,me){return (profiles||[]).find(p=>p&&p.id!==me)||null;}
-function questViewState(q,{me,partnerId,rerollsLeft}){
-  const confirmed=(Array.isArray(q?.confirmed_by)?q.confirmed_by:[]).map(String);
-  const mine=Boolean(me)&&confirmed.includes(String(me));
-  const partner=partnerId?confirmed.includes(String(partnerId)):confirmed.some(id=>id!==String(me));
-  const completed=Boolean(q?.completed_at);
-  const status=completed?'completed':mine?'you-confirmed':partner?'partner-confirmed':'available';
-  const lockReason=completed?'completed':confirmed.length?'confirmed':rerollsLeft<=0?'budget':null;
-  return {status,mine,partner,completed,rerollable:!lockReason,lockReason};
-}
-function questBoardSummary(quests,state){
-  const rows=Array.isArray(quests)?quests:[];
-  return {total:QUEST_SLOTS,present:rows.length,completed:rows.filter(q=>q?.completed_at).length,rerollsLeft:questRerollsLeft(state)};
-}
-function questRecentWeeks(rows,currentWeek,limit=QUEST_RECENT_WEEKS){
-  const byWeek=new Map();
-  for(const row of rows||[]){
-    if(!row?.week_start||row.week_start>=currentWeek)continue;
-    if(!byWeek.has(row.week_start))byWeek.set(row.week_start,[]);
-    byWeek.get(row.week_start).push(row);
-  }
-  return [...byWeek.entries()].sort((a,b)=>a[0]<b[0]?1:-1).slice(0,limit).map(([week,list])=>{
-    const done=list.filter(q=>q.completed_at).sort((a,b)=>(a.slot||0)-(b.slot||0));
-    return {week,completed:done.length,total:Math.max(QUEST_SLOTS,list.length),titles:done.map(q=>q.title||'Missione di coppia')};
-  });
-}
-function questIcon(name){return `<span class="us-icon" data-us-icon="${name}" aria-hidden="true"></span>`;}
-function questCountLabel(n,one,many){return `${n} ${n===1?one:many}`;}
-function renderQuestWeekHeader(summary,week,{stale=false}={}){
-  const marks=Array.from({length:summary.total},(_,i)=>`<i class="${i<summary.completed?'is-done':''}"></i>`).join('');
-  // The two numbers of the mockup: done this week, changes left.
-  const rerollText=summary.rerollsLeft>0?`<b>${summary.rerollsLeft}</b> ${summary.rerollsLeft===1?'cambio rimasto':'cambi rimasti'}`:'<b>0</b> Cambi finiti';
-  return `<div class="quest-week-top"><div class="quest-week-id"><span class="tiny">Questa settimana</span><b>${escapeHtml(questWeekRangeLabel(week))}</b></div><div class="quest-week-count"><b>${summary.completed}</b><span>/ ${summary.total}</span><small>completate</small></div></div>
-    <div class="quest-week-track" role="progressbar" aria-label="Missioni completate questa settimana" aria-valuemin="0" aria-valuemax="${summary.total}" aria-valuenow="${summary.completed}" aria-valuetext="${summary.completed} di ${summary.total} completate">${marks}</div>
-    <div class="quest-week-meta"><span class="quest-week-rerolls" data-quest-rerolls="${summary.rerollsLeft}">${rerollText}</span><span class="quest-week-reset">${questIcon('calendar-heart')}Nuove missioni ${escapeHtml(nextWeekLabel(week))}</span></div>
-    ${stale?`<div class="quest-week-stale" role="status"><span>Non aggiornato: controlla la connessione.</span><button type="button" class="quest-week-retry" data-quest-retry>Riprova</button></div>`:''}`;
-}
-function questStatusLine(view,partnerName){
-  if(view.status==='completed')return `${questIcon('check')}<span>Completata insieme</span>`;
-  if(view.status==='you-confirmed')return `<span>Hai confermato · aspettiamo ${escapeHtml(partnerName)}</span>`;
-  if(view.status==='partner-confirmed')return `<span>${escapeHtml(partnerName)} ha confermato · manca la tua conferma</span>`;
-  return '<span>Si completa quando confermate tutti e due</span>';
-}
-function renderBondQuest(q,ctx){
-  const me=ctx.me,partner=ctx.partner;
-  const view=questViewState(q,{me,partnerId:partner?.id,rerollsLeft:ctx.rerollsLeft});
-  const partnerName=partner?.display_name||'la tua persona';
-  const confirmBusy=questActionsInFlight.has(`confirm:${q.id}`);
-  const rerollBusy=questActionsInFlight.has(`reroll:${q.id}`);
-  const xp=Math.max(0,Math.round(Number(q.xp)||0));
-  // noi.js questHTML: "✓ Completata · +40 XP", "✓ Confermata da te".
-  const confirmText=confirmBusy?'Confermo…':view.completed?`${questIcon('check')}${xp?`Completata · +${xp} XP`:'Completata'}`:view.mine?`${questIcon('check')}Confermata da te`:view.partner?'Conferma anche tu':'Ho completato questa missione';
-  const confirmDisabled=view.completed||view.mine||confirmBusy;
-  const rarity=questRarityLabel(q.rarity);
-  const person=(name,done,label,own=false)=>`<li class="quest-person ${done?'checked':''}"><span class="quest-person-initial" aria-hidden="true">${escapeHtml((name||'?').slice(0,1).toUpperCase())}</span><span class="quest-person-name"${own?' translate="no"':''}>${escapeHtml(label)}</span><span class="quest-person-state">${done?`${questIcon('check')}<span class="sr-only">confermato</span>`:'in attesa'}</span></li>`;
-  const lockText=view.lockReason==='confirmed'?'Già confermata: non si può più cambiare':'Cambi finiti per questa settimana';
-  const reroll=view.completed?'':view.rerollable
-    ?`<button type="button" class="quest-reroll" data-quest-action="reroll" ${rerollBusy?'disabled aria-busy="true"':''} onclick="rerollBondQuest('${escapeHtml(q.id)}')" aria-label="Cambia questa missione (${questCountLabel(ctx.rerollsLeft,'cambio rimasto','cambi rimasti')})">${questIcon('arrows-clockwise')}<span class="quest-reroll-label" aria-hidden="true">Cambia</span></button>`
-    :`<button type="button" class="quest-reroll is-locked" data-quest-action="reroll" disabled aria-label="${lockText}" title="${lockText}">${questIcon('lock')}</button>`;
-  // Done together: keep it as a memory. The mockup's own door for this
-  // (noi.js, an idea lived together: mini-btn p "Aggiungi un ricordo"),
-  // set in the row where its cards keep their small action ("Cambia").
-  // A photo mission opens the same door before, so the photo can be added.
-  const memory=view.completed
-    ?`<button type="button" class="quest-memory is-mini" data-quest-action="memory" onclick="addQuestMemory('${escapeHtml(q.id)}')">Aggiungi un ricordo</button>`
-    :questAsksPhoto(q)?`<button type="button" class="quest-memory" data-quest-action="photo" onclick="addQuestMemory('${escapeHtml(q.id)}')">${questIcon('image')}<span>Aggiungi la foto</span></button>`:'';
-  return `<article class="bond-quest quest-v2 ${view.completed?'completed':''}" data-quest-id="${escapeHtml(q.id)}" data-quest-slot="${escapeHtml(q.slot)}" data-quest-state="${view.status}" data-quest-reroll="${view.rerollable?'rerollable':'locked'}">
-    <div class="quest-top"><div class="quest-head"><span class="quest-category"><span>${escapeHtml(questCategoryLabel(q.category))}</span>${rarity?` · <span>${rarity}</span>`:''}</span><h4>${escapeHtml(q.title)}</h4></div>${xp?`<span class="quest-xp">+${xp} XP</span>`:''}</div>
-    <p class="quest-status">${questStatusLine(view,partnerName)}</p>
-    <ul class="quest-confirmers" aria-label="Conferme">${person(ctx.myName,view.mine,'Tu')}${person(partnerName,view.partner,partnerName,Boolean(partner?.display_name))}</ul>
-    <div class="quest-actions">
-      <button type="button" class="quest-confirm ${confirmDisabled?'confirmed':''}" data-quest-action="confirm" ${confirmDisabled?'disabled':''} ${confirmBusy?'aria-busy="true"':''} onclick="confirmBondQuest('${escapeHtml(q.id)}')">${confirmText}</button>
-      ${reroll}
-    </div>
-    ${memory}
-  </article>`;
-}
-// The existing "add a memory" door, with the mission as its suggested note.
-// The couple still picks the photo; nothing is created on their behalf.
-function addQuestMemory(id){
-  const quest=(window.usBondQuests||[]).find(q=>q.id===id);
-  if(quest)openMemoryComposer(quest.title||'');
-}
-window.addQuestMemory=addQuestMemory;
-function renderQuestRecent(weeks){
-  const root=document.getElementById('questRecent');
-  const list=document.getElementById('questRecentList');
-  if(!root||!list)return;
-  if(!weeks?.length){root.hidden=true;list.innerHTML='';return;}
-  // The mockup's folder rows: the week, how many were done, which ones.
-  list.innerHTML=weeks.map(w=>`<li class="quest-recent-week" data-quest-week="${escapeHtml(w.week)}"><i class="quest-recent-icon" aria-hidden="true">${questIcon('flag-banner')}</i><span class="quest-recent-head"><b>${escapeHtml(questWeekRangeLabel(w.week,'long'))}</b><span>${w.completed} di ${w.total} completate</span><span class="quest-recent-titles">${w.titles.length?w.titles.map(escapeHtml).join(' · '):'Nessuna completata'}</span></span></li>`).join('');
-  root.hidden=false;
-}
-function paintQuestBoard(){
-  const v=questBoardView;
-  const list=document.getElementById('bondQuestList');
-  if(!v||!list||list.dataset.owner!==v.owner)return;
-  const summary=questBoardSummary(v.quests,v.state);
-  const header=document.getElementById('questWeekBoard');
-  if(header){header.innerHTML=renderQuestWeekHeader(summary,v.week,{stale:v.stale});header.hidden=false;}
-  const kicker=document.getElementById('noiQuestKicker');
-  if(kicker)kicker.textContent=`Questa settimana · ${questWeekRangeLabel(v.week)}`;
-  const ctx={me:v.me,partner:questPartner(v.profiles,v.me),rerollsLeft:summary.rerollsLeft,myName:v.myName};
-  const signature=JSON.stringify([v.week,summary.rerollsLeft,[...questActionsInFlight].sort(),v.quests.map(q=>[q.id,q.slot,q.template_key,q.title,q.category,q.rarity,q.xp,q.confirmed_by,Boolean(q.completed_at)]),(v.profiles||[]).map(p=>[p.id,p.display_name])]);
-  if(list.dataset.loaded==='1'&&list.dataset.signature===signature)return;
-  list.innerHTML=v.quests.map(q=>renderBondQuest(q,ctx)).join('')||'<div class="empty-state quest-empty"><b>Le missioni della settimana stanno arrivando</b><p>Riprova tra un momento.</p><button type="button" class="ghost quest-week-retry" data-quest-retry>Riprova</button></div>';
-  list.dataset.loaded='1';list.dataset.signature=signature;
-}
-function resetQuestBoard(list,owner){
-  list.dataset.owner=owner;list.dataset.loaded='';list.dataset.signature='';
-  questBoardView=null;questActionsInFlight.clear();
-  window.usBondQuests=[];window.usBondState=null;window.usBondProfiles=[];
-  const header=document.getElementById('questWeekBoard');if(header){header.innerHTML='';header.hidden=true;}
-  renderQuestRecent([]);
-}
-async function hydrateBond(){
-  const profile=window.usProfile;
-  if(!profile)return;
-  const list=document.getElementById('bondQuestList');
-  if(!list)return;
-  const owner=questOwnerKey(profile);
-  // Identity switch: never keep the previous actor's or couple's confirmations on screen.
-  if(list.dataset.owner!==owner)resetQuestBoard(list,owner);
-  const seq=++questBoardSeq;
-  const current=()=>seq===questBoardSeq&&questOwnerKey(window.usProfile)===owner;
-  if(list.dataset.loaded!=='1')list.innerHTML='<div class="empty-state" aria-busy="true"><div class="emoji">✦</div><b>Carico…</b></div>';
-  const week=weekStartISO(),coupleId=profile.couple_id;
-  await ensureBondWeek(profile);
-  if(!current())return;
-  const [{data:state,error:stateError},{data:quests,error:questError},{data:profiles,error:profilesError},{data:couple,error:coupleError},{count:completedCount,error:countError},{data:recent,error:recentError}]=await Promise.all([
-    sb.from('bond_weekly_state').select('rerolls_used').eq('couple_id',coupleId).eq('week_start',week).maybeSingle(),
-    usReadLocalized(columns=>sb.from('bond_weekly_quests').select(columns).eq('couple_id',coupleId).eq('week_start',week).order('slot'),'id,slot,template_key,title,category,rarity,xp,confirmed_by,completed_at','title_localized').then(usLocalizedTitles),
-    sb.from('profiles').select('id,display_name,role,couple_id').eq('couple_id',coupleId),
-    sb.from('couples').select('bond_xp').eq('id',coupleId).maybeSingle(),
-    sb.from('bond_weekly_quests').select('id',{count:'exact',head:true}).eq('couple_id',coupleId).not('completed_at','is',null),
-    usReadLocalized(columns=>sb.from('bond_weekly_quests').select(columns).eq('couple_id',coupleId).lt('week_start',week).order('week_start',{ascending:false}).order('slot').limit(QUEST_SLOTS*QUEST_RECENT_WEEKS),'id,week_start,slot,title,completed_at','title_localized').then(usLocalizedTitles)
-  ]);
-  if(!current())return;
-  if(stateError||questError||profilesError||coupleError){
-    console.warn(stateError||questError||profilesError||coupleError);
-    if(list.dataset.loaded==='1'&&questBoardView){questBoardView.stale=true;list.dataset.signature='';paintQuestBoard();}
-    else list.innerHTML='<div class="empty-state quest-error" role="status"><div class="emoji">!</div><b>Missioni non disponibili</b><p>Controlla la connessione e riprova.</p><button type="button" class="ghost quest-week-retry" data-quest-retry>Riprova</button></div>';
-    return;
-  }
-  if(countError)console.warn(countError);
-  if(recentError)console.warn(recentError);
-  window.usBondProfiles=profiles||[];
-  window.usBondState=state||{rerolls_used:0};
-  window.usBondQuests=quests||[];
-  renderBondProgress(couple?.bond_xp||0);
-  const countEl=document.getElementById('bondCompletedCount');if(countEl)countEl.textContent=`${Number(completedCount||0)} missioni completate`;
-  const rerollEl=document.getElementById('bondRerollsLeft');if(rerollEl)rerollEl.textContent=questRerollsLeft(state);
-  const resetEl=document.getElementById('bondWeekReset');if(resetEl)resetEl.textContent=`Nuove missioni ${nextWeekLabel(week)}`;
-  const me=profile.id;
-  questBoardView={owner,week,me,myName:profile.display_name||'Tu',profiles:profiles||[],state:state||{rerolls_used:0},quests:quests||[],stale:false};
-  paintQuestBoard();
-  renderQuestRecent(recentError?[]:questRecentWeeks(recent,week));
-}
-window.hydrateBond=hydrateBond;
-// The answer of confirm_bond_quest (its own confirmed_by and completed) is
-// shown at once; the board reads the persisted rows again right after.
-function applyQuestConfirm(id,data){
-  const row=(window.usBondQuests||[]).find(q=>q.id===id);
-  if(!row||!data)return;
-  if(Array.isArray(data.confirmed_by))row.confirmed_by=data.confirmed_by.map(String);
-  if(data.completed===true&&!row.completed_at)row.completed_at=new Date().toISOString();
-}
-const QUEST_EASE={out:'cubic-bezier(.2,.8,.2,1)',in:'cubic-bezier(.4,0,1,1)'};
-function questReducedMotion(){
-  try{return Boolean(window.UsUiFoundation?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);}catch(_){return false;}
-}
-// noi.js reroll: the card turns away (200ms, E.in) and the new one turns in (320ms, E.out).
-function flipQuestCard(id,dir){
-  const card=document.querySelector?.(`#bondQuestList [data-quest-id="${String(id).replace(/["\\]/g,'')}"]`);
-  if(!card||typeof card.animate!=='function'||questReducedMotion())return null;
-  return dir<0
-    ?card.animate([{transform:'rotateX(0)',opacity:1},{transform:'rotateX(90deg)',opacity:.3}],{duration:200,easing:QUEST_EASE.in,fill:'forwards'})
-    :card.animate([{transform:'rotateX(-90deg)',opacity:.3},{transform:'rotateX(0)',opacity:1}],{duration:320,easing:QUEST_EASE.out});
-}
-// noi.js F.show('m',0): the sheet is drawn again from its top and fades in (340ms).
-function redrawQuestSheet(){
-  const list=document.getElementById('bondQuestList');if(list)list.dataset.signature='';
-  paintQuestBoard();
-  const panel=document.querySelector?.('#noiQuestSheet [data-us-modal-panel]');if(panel)panel.scrollTop=0;
-  if(questReducedMotion())return;
-  for(const name of ['questWeekBoard','bondQuestList','questRecent']){
-    const el=document.getElementById(name);
-    if(el&&!el.hidden&&typeof el.animate==='function')el.animate([{opacity:0},{opacity:1}],{duration:340,easing:QUEST_EASE.out});
-  }
-}
-function setQuestAction(key,busy){
-  if(busy)questActionsInFlight.add(key);else questActionsInFlight.delete(key);
-  const list=document.getElementById('bondQuestList');if(list)list.dataset.signature='';
-  paintQuestBoard();
-}
-async function confirmBondQuest(id){
-  const profile=window.usProfile;
-  if(!profile||!id)return;
-  const key=`confirm:${id}`;
-  if(questActionsInFlight.has(key))return;
-  const current=(window.usBondQuests||[]).find(q=>q.id===id);
-  if(current&&(current.completed_at||(current.confirmed_by||[]).includes(profile.id)))return;
-  const owner=questOwnerKey(profile);
-  setQuestAction(key,true);
-  let result;
-  try{result=await sb.rpc('confirm_bond_quest',{target_quest_id:id});}
-  catch(error){result={data:null,error};}
-  finally{questActionsInFlight.delete(key);}
-  if(questOwnerKey(window.usProfile)!==owner)return;
-  let redrawn=false;
-  if(result.error){console.warn(result.error);toast('Conferma non riuscita. Riprova.');}
-  else{
-    sendWebPushEvent('quest_confirmed',id).catch(()=>{});
-    const awarded=Number(result.data?.xp_awarded)||0;
-    const partnerName=questPartner(window.usBondProfiles,profile.id)?.display_name||'';
-    // As the mockup (noi.js F.on): the server's answer is drawn at once, the
-    // sheet fades in again from the top, the card sparkles; a completed
-    // mission then closes the sheet and Sintonia shows the points growing.
-    applyQuestConfirm(id,result.data);
-    redrawQuestSheet();redrawn=true;
-    if(awarded>0){if(!window.USProgression?.missionCompleted?.({xp:awarded,questId:id})){toast('Missione completata insieme ♡');window.UsFeedback?.success?.();}}
-    else{
-      window.USProgression?.burst?.(document.querySelector?.(`#bondQuestList [data-quest-id="${String(id).replace(/["\\]/g,'')}"]`),5);
-      toast(partnerName?`Confermata. Ora tocca a ${partnerName} ♡`:'Confermata. Ora tocca alla tua persona ♡',{icon:'check'});
-    }
-  }
-  if(!redrawn)setQuestAction(key,false);
-  await hydrateBond();
-  await hydrateBondSummary();
-}
-window.confirmBondQuest=confirmBondQuest;
-async function rerollBondQuest(id){
-  const profile=window.usProfile;
-  if(!profile||!id)return;
-  const key=`reroll:${id}`;
-  // One reroll at a time per phone: the weekly budget is shared by the whole board.
-  if([...questActionsInFlight].some(k=>k.startsWith('reroll:')))return;
-  const state=window.usBondState;
-  const rerollsLeft=questRerollsLeft(state||{rerolls_used:QUEST_WEEKLY_REROLLS});
-  if(rerollsLeft<=0)return toast('Avete finito i cambi di questa settimana');
-  const current=(window.usBondQuests||[]).find(q=>q.id===id);
-  if(!current)return;
-  const view=questViewState(current,{me:profile.id,partnerId:questPartner(window.usBondProfiles,profile.id)?.id,rerollsLeft});
-  if(!view.rerollable)return toast(view.completed?'Questa missione è già completata':'Questa missione è già stata confermata');
-  const owner=questOwnerKey(profile);
-  setQuestAction(key,true);
-  const away=flipQuestCard(id,-1);
-  let result=null;
-  try{
-    const week=weekStartISO();
-    const [mode,{data:templates,error}]=await Promise.all([
-      currentQuestMode(),
-      sb.from('bond_quest_templates').select('key,title,category,rarity,xp,mode').eq('active',true)
-    ]);
-    if(error||!templates?.length){console.warn(error);result={skip:'Nessuna missione disponibile'};}
-    else{
-      const used=new Set((window.usBondQuests||[]).map(q=>q.template_key));
-      const pick=pickRerollQuestTemplate(templates,mode,used,`${profile.couple_id}|${week}|${current.slot}|reroll|${Number(state?.rerolls_used)||0}|${current.template_key}`);
-      result=pick?await sb.rpc('reroll_bond_quest',{target_quest_id:id,target_template_key:pick.key}):{skip:'Nessuna alternativa disponibile'};
-    }
-  }catch(error){result={error};}
-  finally{questActionsInFlight.delete(key);}
-  if(questOwnerKey(window.usProfile)!==owner)return;
-  if(result?.skip||result?.error){
-    if(result.skip)toast(result.skip);
-    else{console.warn(result.error);toast(String(result.error.message||'').includes('No rerolls')?'Avete finito i cambi di questa settimana':'Cambio non riuscito. Riprova.');}
-    away?.cancel?.();
-    setQuestAction(key,false);
-    await hydrateBond();
-    return;
-  }
-  // noi.js reroll: the new mission is drawn (the sheet fades in again, from
-  // its top) and turns in; the stats say how many changes are left.
-  await away?.finished?.catch?.(()=>{});
-  await hydrateBond();
-  if(questOwnerKey(window.usProfile)!==owner)return;
-  redrawQuestSheet();
-  flipQuestCard(id,1);
-}
-window.rerollBondQuest=rerollBondQuest;
-document.addEventListener('click',event=>{
-  if(!event.target?.closest?.('[data-quest-retry]'))return;
-  event.preventDefault();
-  hydrateBond();
-});
-window.addEventListener('online',()=>{if(document.getElementById('bond')?.classList.contains('active'))hydrateBond();});
-window.UsQuest=Object.freeze({viewState:questViewState,summary:questBoardSummary,recentWeeks:questRecentWeeks,pickReroll:pickRerollQuestTemplate,weekStart:weekStartISO,weekRange:questWeekRangeLabel,nextWeek:nextWeekLabel});
-
 // ===== M7B — Da vivere (bucket_items) =====
 // Solo bucket_items (M7A). Nessuna nuova tabella/RPC/persistenza locale.
 // Update: mai completed/completed_at/calendar_entry_id; solo title/note/link_url,
@@ -5395,6 +5076,8 @@ function noiIdeaCardHtml(item,{lived=false}={}){
   return `<button type="button" class="noi-idea-card" data-id="${escapeHtml(item.id)}"><span class="noi-idea-card-copy"><b translate="no">${escapeHtml(item.title)}</b>${noteHtml}</span>${label?`<span class="noi-idea-state">${escapeHtml(label)}</span>`:''}</button>`;
 }
 function renderNoiIdeaActiveList(){
+  // Noi nuova (03/11/2026): the «Da vivere» post-it repaints with the list.
+  window.dispatchEvent?.(new CustomEvent('us-ideas-change'));
   const root=document.getElementById('noiIdeaList');
   if(!root)return;
   root.setAttribute('aria-busy','false');
@@ -5611,6 +5294,16 @@ function closeNoiIdeaDetail(){
   const living=document.querySelector('#bond .noi-living-section');
   if(living?.dataset)delete living.dataset.ideaDetail;
 }
+// A new idea: the quick add of Missioni and the «Da vivere» post-it of the
+// Noi board (03/11/2026) write it the same way.
+function insertNoiIdea({title,note=null,link=null},userId,coupleId){
+  return sb.from('bucket_items').insert({
+      title,note,link_url:link,
+      created_by:userId,
+      couple_id:coupleId,
+      status:'idea',completed:false
+    }).select('id,title,note,link_url,status,calendar_entry_id,completed_at,created_at');
+}
 async function submitNoiIdeaQuickAdd(event){
   event.preventDefault();
   if(noiIdeaState.busy||!window.usProfile)return;
@@ -5630,12 +5323,7 @@ async function submitNoiIdeaQuickAdd(event){
   if(saveBtn)saveBtn.disabled=true;
   if(status)status.textContent='Salvo…';
   try{
-    const {data,error}=await sb.from('bucket_items').insert({
-      title,note,link_url:link,
-      created_by:userId,
-      couple_id:coupleId,
-      status:'idea',completed:false
-    }).select('id,title,note,link_url,status,calendar_entry_id,completed_at,created_at');
+    const {data,error}=await insertNoiIdea({title,note,link},userId,coupleId);
     if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     if(error)throw error;
     const row=Array.isArray(data)&&data[0]?data[0]:null;
@@ -5755,7 +5443,51 @@ async function linkNoiIdeaToCalendar(id,entryId){
   refreshNoiIdeaCalendarLinks([entryId],null,userId,coupleId);
   return {ok:true};
 }
-window.UsDaVivere=Object.freeze({linkCalendarEntry:linkNoiIdeaToCalendar});
+// Noi nuova (03/11/2026): the «Da vivere» post-it of the Noi board
+// (couple-notes.js) shows these ideas and writes them through the same
+// functions: a new idea, and ticking one means «vissuta» (the reciprocal
+// step: the first tap proposes, the partner's tap confirms).
+function noiIdeaSnapshot(){
+  return {loaded:noiIdeaState.loaded,error:noiIdeaState.error,active:noiIdeaState.activeItems.slice(),lived:noiIdeaState.livedItems.slice()};
+}
+async function addNoiIdeaFromBoard(title){
+  const clean=String(title||'').trim().slice(0,120);
+  if(!clean||!window.usProfile)return false;
+  const userId=window.usProfile.id,coupleId=window.usProfile.couple_id,identityGen=noiIdeaIdentityGen;
+  try{
+    const {data,error}=await insertNoiIdea({title:clean},userId,coupleId);
+    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return false;
+    if(error)throw error;
+    const row=Array.isArray(data)&&data[0]?data[0]:null;
+    if(row&&!noiIdeaFindItem(row.id))noiIdeaState.activeItems.unshift(row);
+    renderNoiIdeaActiveList();
+    return true;
+  }catch(e){
+    console.warn(e);
+    if(noiIdeaOperationIsCurrent(userId,coupleId,identityGen))toast('Non riesco a salvarla. Riprova.');
+    return false;
+  }
+}
+async function markNoiIdeaLivedFromBoard(id){
+  const item=noiIdeaFindItem(id);
+  const phase=item?noiIdeaLivedPhase(item):'lived';
+  if(!window.usProfile||noiIdeaState.busy)return false;
+  if(phase==='mine'){toast(`In attesa della conferma di ${noiIdeaPartnerName()}`);return false;}
+  if(phase!=='none'&&phase!=='partner')return false;
+  noiIdeaState.busy=true;
+  try{
+    const res=await confirmNoiIdeaLived(id);
+    if(res===null){toast('È già cambiata: aggiorno la lista.');hydrateNoiIdeas();}
+    return Boolean(res);
+  }catch(e){
+    console.warn(e);
+    toast('Non riesco a salvarla. Riprova.');
+    return false;
+  }finally{
+    noiIdeaState.busy=false;
+  }
+}
+window.UsDaVivere=Object.freeze({linkCalendarEntry:linkNoiIdeaToCalendar,snapshot:noiIdeaSnapshot,hydrate:hydrateNoiIdeas,add:addNoiIdeaFromBoard,markLived:markNoiIdeaLivedFromBoard});
 function scheduleNoiIdea(){
   const item=noiIdeaState.selectedId?noiIdeaFindItem(noiIdeaState.selectedId):null;
   if(!item||item.status!=='idea'||noiIdeaState.busy)return;
@@ -5773,6 +5505,31 @@ function openNoiIdeaCalendarEntry(){
 // nessuna scrittura diretta di status/completed). Non tocca calendar_entry_id
 // (il link al giorno vero resta com'era) né crea un Moment: il ricordo, se c'è,
 // lo aggiunge la coppia con una foto vera dall'azione discreta successiva.
+// The reciprocal step itself, shared by the detail and the «Da vivere»
+// post-it of the Noi board (03/11/2026): the server decides, the lists
+// follow. Undefined when the identity moved on meanwhile; null when the idea
+// had already changed (an empty answer is not a success).
+async function confirmNoiIdeaLived(id){
+  const userId=window.usProfile.id,coupleId=window.usProfile.couple_id,identityGen=noiIdeaIdentityGen;
+  const item=noiIdeaFindItem(id);
+  const {data:res,error}=await sb.rpc('confirm_bucket_item_lived',{p_item_id:id});
+  if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return undefined;
+  if(error)throw error;
+  if(!res)return null;
+  if(res.status==='lived'){
+    const current=noiIdeaPatchItem(id,{status:'lived',completed_at:res.completed_at||new Date().toISOString(),calendar_entry_id:res.calendar_entry_id??item?.calendar_entry_id,lived_proposed_by:res.lived_proposed_by});
+    noiIdeaState.activeItems=noiIdeaState.activeItems.filter(i=>i.id!==id);
+    if(current&&!noiIdeaState.livedItems.some(i=>i.id===id))noiIdeaState.livedItems.unshift(current);
+    renderNoiIdeaActiveList();
+    renderNoiIdeaLivedList();
+    toast('Vissuta insieme ♡');
+  }else{
+    noiIdeaPatchItem(id,{lived_proposed_by:res.lived_proposed_by});
+    renderNoiIdeaActiveList();
+    toast(`Ora manca ${noiIdeaPartnerName()} ♡`);
+  }
+  return res;
+}
 async function markNoiIdeaLived(){
   if(noiIdeaState.busy||!window.usProfile)return;
   const id=noiIdeaState.selectedId;
@@ -5793,28 +5550,15 @@ async function markNoiIdeaLived(){
   if(btn)btn.disabled=true;
   if(statusEl)statusEl.textContent='Salvo…';
   try{
-    const {data:res,error}=await sb.rpc('confirm_bucket_item_lived',{p_item_id:id});
-    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
-    if(error)throw error;
+    const res=await confirmNoiIdeaLived(id);
+    if(res===undefined)return;
     if(!res){
       if(statusEl)statusEl.textContent='È già cambiata: aggiorno la lista.';
       hydrateNoiIdeas();
       return;
     }
     if(statusEl)statusEl.textContent='';
-    if(res.status==='lived'){
-      const current=noiIdeaPatchItem(id,{status:'lived',completed_at:res.completed_at||new Date().toISOString(),calendar_entry_id:res.calendar_entry_id??item.calendar_entry_id,lived_proposed_by:res.lived_proposed_by});
-      noiIdeaState.activeItems=noiIdeaState.activeItems.filter(i=>i.id!==id);
-      if(current&&!noiIdeaState.livedItems.some(i=>i.id===id))noiIdeaState.livedItems.unshift(current);
-      renderNoiIdeaActiveList();
-      renderNoiIdeaLivedList();
-      renderNoiIdeaDetailState(noiIdeaFindItem(id));
-      toast('Vissuta insieme ♡');
-    }else{
-      noiIdeaPatchItem(id,{lived_proposed_by:res.lived_proposed_by});
-      renderNoiIdeaDetailState(noiIdeaFindItem(id));
-      toast(`Ora manca ${noiIdeaPartnerName()} ♡`);
-    }
+    renderNoiIdeaDetailState(noiIdeaFindItem(id));
   }catch(e){
     if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     console.warn(e);
@@ -5877,7 +5621,7 @@ function openNoiSection(view){
     document.getElementById('noiSectionBack')?.focus({preventScroll:true});
   }
   if(view==='resonance'){window.hydrateResonanceHistory?.();window.USProgression?.hydrate?.({showUnlocks:true,force:true});}
-  if(view==='quest'&&window.usProfile){hydrateBond();if(!noiIdeaState.loaded)hydrateNoiIdeas();}
+  if(view==='quest'&&window.usProfile&&!noiIdeaState.loaded)hydrateNoiIdeas();
 }
 function closeNoiSection(){
   const page=noiCanonicalPage();
@@ -5902,12 +5646,6 @@ window.openNoiSection=openNoiSection;
 window.closeNoiSection=closeNoiSection;
 document.getElementById('noiSectionBack')?.addEventListener('click',closeNoiSection);
 document.getElementById('noiQuestSheet')?.addEventListener('click',(event)=>{if(event.target.closest('[data-noi-sheet-close]'))closeNoiSection();});
-// "Settimane passate" folds open and closed, like the mockup's .fold.
-document.getElementById('questRecentToggle')?.addEventListener('click',(event)=>{
-  const root=document.getElementById('questRecent');if(!root)return;
-  const open=root.dataset.open!=='true';
-  root.dataset.open=String(open);event.currentTarget.setAttribute('aria-expanded',String(open));
-});
 document.addEventListener?.('keydown',(event)=>{if(event.key==='Escape'&&document.getElementById('noiQuestSheet')?.classList.contains('open')&&!document.querySelector('.us-cal-sheet-overlay.open,#usEventsOverlay.open,.us-confirm.open'))closeNoiSection();});
 document.getElementById('noiIdeaAddToggle')?.addEventListener('click',()=>{
   toggleNoiIdeaQuickForm(Boolean(document.getElementById('noiIdeaQuickForm')?.hidden));
@@ -5994,7 +5732,11 @@ async function hydrateThink(){
     usThinkKnownReactionSignature=signature;
   }
   window.UsTodayPriority?.refresh?.();
-  window.UsWidgets?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||'',lastAnsweredAt:receivedReaction?.updated_at||''}).catch(()=>{});
+  // The Ti penso widget counts both people's thoughts of this Rome day.
+  const romeDay=at=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(at));}catch(_){return '';}};
+  const todayDate=romeDay(Date.now());
+  const todayCount=(rows||[]).filter(row=>romeDay(row.created_at)===todayDate).length;
+  window.UsWidgets?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||'',lastAnsweredAt:receivedReaction?.updated_at||'',todayCount,todayDate}).catch(()=>{});
 }
 window.hydrateThink=hydrateThink;
 async function sendThinkSignal(){
@@ -6083,7 +5825,13 @@ function startUsRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'shared_events',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('events'))
     .on('postgres_changes',{event:'*',schema:'public',table:'shared_event_completions',filter:`couple_id=eq.${coupleId}`},()=>{scheduleUsRealtimeRefresh('events');hydrateBondSummary();})
     .on('postgres_changes',{event:'*',schema:'public',table:'relationship_milestones',filter:`couple_id=eq.${coupleId}`},()=>{scheduleUsRealtimeRefresh('events');hydrateBondSummary();})
-    .on('postgres_changes',{event:'*',schema:'public',table:'bond_weekly_quests',filter:`couple_id=eq.${coupleId}`},()=>{hydrateBondSummary();if(document.getElementById('bond')?.classList.contains('active'))hydrateBond();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'couple_weekly_challenges',filter:`couple_id=eq.${coupleId}`},()=>{hydrateBondSummary();window.UsWeeklyChallenge?.onChange?.();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'couple_weekly_challenge_photos',filter:`couple_id=eq.${coupleId}`},()=>window.UsWeeklyChallenge?.onChange?.())
+    .on('postgres_changes',{event:'*',schema:'public',table:'couple_notes',filter:`couple_id=eq.${coupleId}`},payload=>window.UsCoupleNotes?.onChange?.(payload))
+    .on('postgres_changes',{event:'*',schema:'public',table:'couple_batteries',filter:`couple_id=eq.${coupleId}`},payload=>window.UsPartnerBattery?.onChange?.(payload))
+    .on('postgres_changes',{event:'*',schema:'public',table:'member_status',filter:`couple_id=eq.${coupleId}`},payload=>window.UsMemberStatus?.onChange?.(payload))
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'lavagna_strokes',filter:`couple_id=eq.${coupleId}`},payload=>window.UsLavagna?.onStroke?.(payload))
+    .on('postgres_changes',{event:'*',schema:'public',table:'lavagna_boards',filter:`couple_id=eq.${coupleId}`},payload=>window.UsLavagna?.onBoard?.(payload))
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'couples',filter:`id=eq.${coupleId}`},payload=>{renderBondProgress(payload.new?.bond_xp||0);window.USProgression?.refreshAfterAction?.();})
     .subscribe();
 }
@@ -6099,7 +5847,7 @@ async function hydrateCloud(){
 
     // Only a directly-opened heavy page joins the critical lane.
     if(active==='moments')critical.push(hydrateMoments());
-    if(active==='bond'){critical.push(hydrateBond());critical.push(hydrateNoiIdeas());}
+    if(active==='bond'){critical.push(hydrateNoiIdeas());}
     if(active==='settings')critical.push(Promise.resolve(window.hydrateUsSettings?.()));
 
     // Today starts with the Home image, not after it: its two small reads
@@ -6173,6 +5921,8 @@ async function refreshVisibleState(options={}){
   // M12A — returning to the foreground re-checks the location wherever the user lands.
   if(options.foreground)usAfterForeground(()=>maybeAutoRefreshLocation('resume'),900);
   if(options.foreground)usAfterForeground(()=>hydrateProfileAvatars(),1500);
+  if(options.foreground)usAfterForeground(()=>window.UsPartnerBattery?.onForeground?.('resume'),1700);
+  if(options.foreground)usAfterForeground(()=>window.UsMemberStatus?.onForeground?.('resume'),1800);
   if(active==='home'||todayOpen){
     if(options.foreground)hydrateHomePhoto(false).catch(()=>{});
     await hydrateToday();

@@ -11,10 +11,12 @@ test('Noi V2: calendar-first overview, full-size day detail, list toggle and ret
   assert.match(bond, /id="usNoiV2"/);
   // 1.0 (N10): the old invisible Lavagna and hub are gone; Noi V2 is the page.
   assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"/);
-  for (const id of ['usNoiV2Month','usNoiV2ModeCalendar','usNoiV2ModeList','usNoiV2Content','usNoiV2Detail','usNoiV2First','usNoiV2Today']) {
+  for (const id of ['usNoiV2Month','usNoiV2ModeCalendar','usNoiV2ModeList','usNoiV2Content','usNoiV2Detail','usNoiV2Today','usNoiBoard']) {
     assert.match(bond,new RegExp(`id="${id}"`));
   }
-  for(const dest of ['lavagna','quest','eventi'])assert.match(bond,new RegExp(`data-noi-open-link="${dest}"`));
+  // Noi nuova (founder, 03/11/2026): no tiles and no «Il nostro giorno» (the
+  // date of the relationship stays in Impostazioni).
+  assert.doesNotMatch(bond,/data-noi-open-link|id="usNoiV2First"/);
   assert.match(bond,/id="noiCoupleDistance"/,'distance data hook is preserved');
   assert.match(bond,/id="noiSectionBar" hidden/,'legacy subview back/navigation still exists');
   assert.match(read('noi-v2.css'),/#bond \.noi-couple-link\{display:none!important\}/);
@@ -40,7 +42,7 @@ test('Noi calendar: reads through current calendar authority, bounded to request
   assert.match(js,/async function readNoiMonth\(year, month\)/);
   assert.match(js,/fetchEntriesForRange\(viewer\.couple_id,start,end\)/);
   assert.match(js,/window\.usProfile!==viewer/);
-  assert.match(js,/window\.USNoiCalendarRead = Object\.freeze\(\{readMonth:readNoiMonth,freeEvenings:noiFreeEvenings\}\)/);
+  assert.match(js,/window\.USNoiCalendarRead = Object\.freeze\(\{readMonth:readNoiMonth,readRange:readNoiRange,freeEvenings:noiFreeEvenings\}\)/);
   assert.doesNotMatch(read('noi-v2.js'),/\.insert\(|\.update\(|\.delete\(|sb\.rpc\(/,'new calendar display never writes');
   const ui=read('noi-v2.js');
   // 1.0: "+" is the one create door; a tapped Eventi date opens that event (N6).

@@ -13,11 +13,15 @@
 
   const platform = window.UsPlatform;
   const nativeEnabled = Boolean(platform?.isNative && platform?.hasWidgetBridge?.() !== false);
-  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily']);
-  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home' });
+  // Countdown left the widgets on 04/11/2026; the Post-it took its place.
+  const KINDS = Object.freeze(['think', 'postit', 'noi', 'photo', 'daily', 'message', 'memories', 'status', 'lavagna']);
+  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', memories: 'moments', status: 'home', lavagna: 'bond', postit: 'bond' });
+  // Messaggio opens the message itself: the Ti penso or the closed envelope.
+  const MESSAGE_TARGETS = Object.freeze({ think: 'think', left: 'left_for_you' });
   const COUPLE_TTL_MS = 30 * 60 * 1000;
   const PHOTO_TTL_MS = 10 * 60 * 1000;
   const PHOTO_MAX_EDGE = 720;
+  const MEMORIES_TTL_MS = 6 * 60 * 60 * 1000;
 
   let ownerHash = '';
   let deviceIdHash = '';
@@ -33,24 +37,47 @@
   let photoSync = null;
   let photoResyncRequested = false;
   let photoPreviewUrl = '';
-  let noiPortraitPreviewUrl = '';
   let noiPortraitSignature = '';
   let noiPortraitSync = null;
+  let noiRoundPreviewUrls = { me: '', partner: '' };
   let lastLink = { url: '', at: 0 };
   let pendingDestination = '';
   let pendingKind = '';
 
-  const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastSentAt: '', lastAnsweredAt: '' });
-  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready' });
+  const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastSentAt: '', lastAnsweredAt: '', todayCount: 0, todayDate: '' });
+  // Batteria del partner: level -1 = unknown (UsWidgetContract.java).
+  // colors: each person's colour as the app shows it (Pastello widgets).
+  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready', distanceNear: false, distanceAt: '', batteryLevel: -1, batteryCharging: false, batteryAt: '', colors: { me: '', partner: '' } });
   const emptyCountdown = () => ({ active: false, kind: '', title: '', target: '', style: 'editorial' });
-  const emptyPhoto = () => ({ state: 'none', key: '', takenOn: '' });
+  // Foto & giorni: Oggi's photo of this hour, then of the next two (next).
+  const emptyPhoto = () => ({ state: 'none', key: '', takenOn: '', label: '', hour: '', next: [] });
   // La domanda di oggi: the day, the shared question and whose turn it is. Never an answer.
   const emptyDaily = () => ({ date: '', question: '', state: 'none' });
+  // Messaggio: the newest Lasciato per te still closed for me, kind and time only.
+  const emptyLeft = () => ({ kind: '', at: '' });
+  const LEFT_KINDS = Object.freeze(['text', 'photo', 'audio', 'video', 'music']);
+  // Ricordi a pila: which memory the stack shows; the pictures are separate files.
+  // Come stai: each one's state (one of twelve), the words' form and the server's times.
+  const emptyStatusPerson = () => ({ status: '', form: '', at: '', until: '' });
+  const emptyStatus = () => ({ me: emptyStatusPerson(), partner: emptyStatusPerson() });
+  const emptyMemories = () => ({ state: 'none', label: '', anniversary: false, day: '', date: '', title: '', count: 0, stack: 0 });
+  // Lavagna: whether there is a drawing, who drew last and when; the pictures are separate files.
+  const emptyLavagna = () => ({ state: 'none', by: '', at: '' });
+  // Post-it: the newest post-it of the board, its paper, who wrote it, how many others.
+  const emptyPostit = () => ({ state: 'none', text: '', color: '', by: '', more: 0, at: '' });
   let think = emptyThink();
   let couple = emptyCouple();
   let countdown = emptyCountdown();
   let photo = emptyPhoto();
   let daily = emptyDaily();
+  let left = emptyLeft();
+  let memories = emptyMemories();
+  let comeStai = emptyStatus();
+  let lavagna = emptyLavagna();
+  let postit = emptyPostit();
+  let memoriesSyncedAt = 0;
+  let memoriesSignature = '';
+  let memoriesSync = null;
 
   async function sha256Hex(value) {
     const bytes = new TextEncoder().encode(String(value || ''));
@@ -73,10 +100,15 @@
       ownerHash,
       updatedAt: new Date().toISOString(),
       think: { ...think },
-      couple: { ...couple, names: [...couple.names] },
+      couple: { ...couple, names: [...couple.names], colors: { ...couple.colors } },
       countdown: { ...countdown },
-      photo: { ...photo },
-      daily: { ...daily }
+      photo: { ...photo, next: photo.next.map((item) => ({ ...item })) },
+      daily: { ...daily },
+      left: { ...left },
+      memories: { ...memories },
+      lavagna: { ...lavagna },
+      postit: { ...postit },
+      status: { me: { ...comeStai.me }, partner: { ...comeStai.partner } }
     };
   }
 
@@ -135,12 +167,28 @@
     return scheduleWrite();
   }
 
+  // Oggi's unseen Lasciato per te rows (app.js loadOggiLeftItems): never the
+  // words, the photo or the link, only what kind the newest is and when.
+  function publishLeft(items) {
+    if (!ownerHash || !Array.isArray(items)) return Promise.resolve(false);
+    const newest = items
+      .filter((item) => LEFT_KINDS.includes(item?.kind) && isoInstant(item?.created_at))
+      .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
+    const next = newest ? { kind: newest.kind, at: isoInstant(newest.created_at) } : emptyLeft();
+    if (next.kind === left.kind && next.at === left.at) return Promise.resolve(false);
+    left = next;
+    return scheduleWrite();
+  }
+
   async function publishThink(next = {}) {
     think = {
       partnerName: cleanText(next.partnerName || think.partnerName, 40),
       lastReceivedAt: isoInstant(next.lastReceivedAt),
       lastSentAt: isoInstant(next.lastSentAt),
-      lastAnsweredAt: isoInstant(next.lastAnsweredAt)
+      lastAnsweredAt: isoInstant(next.lastAnsweredAt),
+      // "12 volte che vi siete pensati oggi" on the Ti penso widget.
+      todayCount: Number.isInteger(next.todayCount) ? Math.max(0, Math.min(999, next.todayCount)) : 0,
+      todayDate: civilDate(next.todayDate)
     };
     return scheduleWrite();
   }
@@ -190,7 +238,13 @@
         startedOn: civilDate(data.startedOn),
         frame,
         distanceText: couple.distanceText,
-        distanceState: couple.distanceState
+        distanceState: couple.distanceState,
+        distanceNear: couple.distanceNear,
+        distanceAt: couple.distanceAt,
+        batteryLevel: couple.batteryLevel,
+        batteryCharging: couple.batteryCharging,
+        batteryAt: couple.batteryAt,
+        colors: couple.colors
       };
       coupleSyncedAt = Date.now();
       return scheduleWrite();
@@ -207,94 +261,370 @@
     const next = window.UsWidgetDataApi?.noiDistance?.();
     const distanceText = cleanText(next?.distanceText || '', 24);
     const distanceState = next?.distanceState === 'stale' ? 'stale' : 'ready';
-    if (couple.distanceText === distanceText && couple.distanceState === distanceState) return Promise.resolve(false);
-    couple = { ...couple, distanceText, distanceState };
+    // Distanza e batteria: "vicini" and how old the reading is.
+    const distanceNear = next?.distanceNear === true;
+    const distanceAt = isoInstant(next?.distanceAt);
+    if (couple.distanceText === distanceText && couple.distanceState === distanceState
+      && couple.distanceNear === distanceNear && couple.distanceAt === distanceAt) return Promise.resolve(false);
+    couple = { ...couple, distanceText, distanceState, distanceNear, distanceAt };
     return scheduleWrite();
   }
 
-  // "Due colori": the creator's portrait ringed in rosa, the partner's in
-  // lilla, overlapping like the US mark, on a transparent PNG so it sits on
-  // the widget's night card. 64x44dp at 4.5x; rings 2.5dp; the second
-  // portrait is cut out of the first by a ring of the card colour.
-  async function composeNoiPortrait(urls) {
-    const S = 4.5, W = Math.round(64 * S), H = Math.round(44 * S);
-    const ring = 2.5 * S, gap = 2.5 * S, cy = H / 2, radius = cy - ring;
-    const centers = [radius + ring, W - radius - ring];
-    const colours = ['#ff7c96', '#a98bff'];
+  // Batteria del partner: the last reading Noi shows (partner-battery.js). The
+  // widget itself makes it quieter after an hour and drops it after a day.
+  function syncNoiBattery() {
+    if (!ownerHash) return Promise.resolve(false);
+    const next = window.UsPartnerBattery?.widgetState?.();
+    if (next === undefined) return Promise.resolve(false);
+    const batteryLevel = Number.isInteger(next?.level) ? next.level : -1;
+    const batteryAt = batteryLevel >= 0 ? isoInstant(next.at) : '';
+    const battery = batteryAt
+      ? { batteryLevel, batteryCharging: next.charging === true, batteryAt }
+      : { batteryLevel: -1, batteryCharging: false, batteryAt: '' };
+    if (couple.batteryLevel === battery.batteryLevel && couple.batteryCharging === battery.batteryCharging && couple.batteryAt === battery.batteryAt) return Promise.resolve(false);
+    couple = { ...couple, ...battery };
+    return scheduleWrite();
+  }
+
+  // Pastello (approved board, 02/11/2026): the real profile photo, round,
+  // a see-through gap, then a ring in the person's colour. Without a photo,
+  // the initial on that colour. Transparent, 192 px, so every widget scales it.
+  async function composeRoundPortrait(url, colour, initial) {
+    const size = 192, ring = 10, gap = 8, c = size / 2, radius = c - ring - gap;
     const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
+    canvas.width = size; canvas.height = size;
     const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('noi_portrait_canvas');
-    ctx.clearRect(0, 0, W, H);
-    for (let i = 0; i < 2; i++) {
-      const cx = centers[i];
-      if (i === 1) {
-        // Cut the first portrait where the second overlaps it.
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.beginPath(); ctx.arc(cx, cy, radius + ring + gap, 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
-      }
-      ctx.save();
-      ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.clip();
-      ctx.fillStyle = '#2a2232';
-      ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
-      if (urls[i]) {
-        let bitmap;
-        try {
-          const response = await fetch(urls[i], { credentials: 'omit' });
-          if (!response.ok) throw new Error('avatar_download');
-          const blob = await response.blob();
-          if (!/^image\//.test(blob.type || 'image/')) throw new Error('avatar_type');
-          bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
-          const scale = Math.max(radius * 2 / bitmap.width, radius * 2 / bitmap.height);
-          const w = bitmap.width * scale, h = bitmap.height * scale;
-          ctx.drawImage(bitmap, cx - w / 2, cy - h / 2, w, h);
-        } catch (error) { console.warn('[US Widget] avatar paint', error); }
-        finally { bitmap?.close?.(); }
-      }
-      ctx.restore();
-      ctx.beginPath(); ctx.arc(cx, cy, radius + ring / 2, 0, Math.PI * 2);
-      ctx.strokeStyle = colours[i]; ctx.lineWidth = ring; ctx.stroke();
+    if (!ctx) throw new Error('noi_round_canvas');
+    ctx.save();
+    ctx.beginPath(); ctx.arc(c, c, radius, 0, Math.PI * 2); ctx.clip();
+    ctx.fillStyle = colour;
+    ctx.fillRect(0, 0, size, size);
+    let painted = false;
+    let bitmap;
+    if (url) {
+      try {
+        const response = await fetch(url, { credentials: 'omit' });
+        if (!response.ok) throw new Error('avatar_download');
+        const blob = await response.blob();
+        if (!/^image\//.test(blob.type || 'image/')) throw new Error('avatar_type');
+        bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+        const scale = Math.max(radius * 2 / bitmap.width, radius * 2 / bitmap.height);
+        const w = bitmap.width * scale, h = bitmap.height * scale;
+        ctx.drawImage(bitmap, c - w / 2, c - h / 2, w, h);
+        painted = true;
+      } catch (error) { console.warn('[US Widget] avatar photo', error); }
+      finally { bitmap?.close?.(); }
     }
+    if (!painted) {
+      ctx.fillStyle = '#1a1020';
+      ctx.font = `400 ${Math.round(radius * 0.92)}px Fraunces, Georgia, serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initial || '·', c, c + radius * 0.06);
+    }
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(c, c, c - ring / 2, 0, Math.PI * 2);
+    ctx.strokeStyle = colour; ctx.lineWidth = ring; ctx.stroke();
     const png = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    if (!png) throw new Error('noi_portrait_encode');
-    const base64 = await new Promise((resolve,reject)=>{
-      const reader=new FileReader();
-      reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');
-      reader.onerror=reject;
+    if (!png) throw new Error('noi_round_encode');
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+      reader.onerror = reject;
       reader.readAsDataURL(png);
     });
-    return {base64, preview: URL.createObjectURL(png)};
+    return { base64, preview: URL.createObjectURL(png) };
+  }
+
+  // The two people by role (creator, partner): the colour each one shows
+  // (rosa and lilla, or the one chosen: app tokens --us-rosa and --us-lilla)
+  // and the initial. null while the couple is not known yet.
+  function avatarPeople() {
+    const identity = window.UsIdentity?.current?.();
+    if (!identity?.initialForRole || !window.usProfile?.couple_id) return null;
+    const style = typeof getComputedStyle === 'function' ? getComputedStyle(document.documentElement) : null;
+    const colour = (token, fallback) => (style?.getPropertyValue(`--us-${token}`) || '').trim() || fallback;
+    return [
+      { colour: colour('rosa', '#ff7c96'), initial: identity.initialForRole('francesco') },
+      { colour: colour('lilla', '#a98bff'), initial: identity.initialForRole('beatrice') }
+    ];
+  }
+
+  // urls and people come by role (creator, partner); "me" is the viewer's own.
+  async function writeRoundPortraits(urls, people, owner, token) {
+    const mine = window.usProfile?.role === 'beatrice' ? 1 : 0;
+    const previews = {};
+    for (const [slot, index] of [['me', mine], ['partner', 1 - mine]]) {
+      try {
+        const image = await composeRoundPortrait(urls[index], people[index].colour, people[index].initial);
+        if (token !== generation || !(await platform.writeWidgetNoiPortrait(owner, image.base64, slot))) { URL.revokeObjectURL(image.preview); continue; }
+        previews[slot] = image.preview;
+      } catch (error) { console.warn('[US Widget] Noi round portrait', error); }
+    }
+    for (const slot of ['me', 'partner']) {
+      if (!previews[slot]) continue;
+      if (noiRoundPreviewUrls[slot]) URL.revokeObjectURL(noiRoundPreviewUrls[slot]);
+      noiRoundPreviewUrls[slot] = previews[slot];
+    }
+  }
+
+  function clearRoundPreviews() {
+    for (const slot of ['me', 'partner']) if (noiRoundPreviewUrls[slot]) URL.revokeObjectURL(noiRoundPreviewUrls[slot]);
+    noiRoundPreviewUrls = { me: '', partner: '' };
   }
 
   function syncNoiPortrait({ force = false } = {}) {
     if (!nativeEnabled || !ownerHash || !platform?.writeWidgetNoiPortrait) return Promise.resolve(false);
     if (noiPortraitSync) return noiPortraitSync;
     const urls = window.UsWidgetDataApi?.noiAvatarSources?.();
-    if (!Array.isArray(urls) || !urls.some(Boolean)) return Promise.resolve(false);
-    const signature = urls.join('|');
-    if (!force && signature === noiPortraitSignature && noiPortraitPreviewUrl) return Promise.resolve(false);
+    const people = avatarPeople();
+    // Without photos the avatars are the initials on each person's colour.
+    if (!Array.isArray(urls) || !people) return Promise.resolve(false);
+    const signature = [...urls, ...people.map((person) => `${person.colour}:${person.initial}`)].join('|');
+    if (!force && signature === noiPortraitSignature) return Promise.resolve(false);
     const token=generation, owner=ownerHash;
     noiPortraitSync=(async()=>{
-      let image=null;
       try {
-        image=await composeNoiPortrait(urls);
-        if(token!==generation){URL.revokeObjectURL(image.preview);return false;}
-        const ok=await platform.writeWidgetNoiPortrait(owner,image.base64);
-        if(token!==generation || !ok){URL.revokeObjectURL(image.preview);return false;}
-        if(noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
-        noiPortraitPreviewUrl=image.preview;
+        await writeRoundPortraits(urls,people,owner,token);
+        // The same colours for the widgets' dots and bars.
+        const mine=window.usProfile?.role==='beatrice'?1:0;
+        const hex=(value)=>(/^#[0-9a-f]{6}$/i.test(value)?value.toLowerCase():'');
+        const colors={me:hex(people[mine].colour),partner:hex(people[1-mine].colour)};
+        if(token===generation&&JSON.stringify(colors)!==JSON.stringify(couple.colors)){couple={...couple,colors};scheduleWrite();}
+        if(token!==generation)return false;
         noiPortraitSignature=signature;
         window.dispatchEvent(new Event('us:noi-widget-photo-updated'));
         return true;
       }catch(error){
-        if(image?.preview)URL.revokeObjectURL(image.preview);
         console.warn('[US Widget] Noi portrait',error);
         return false;
       }finally{noiPortraitSync=null;}
     })();
     return noiPortraitSync;
+  }
+
+  // Come stai (member-status.js): what the app shows, for the widget.
+  function syncStatus() {
+    if (!ownerHash) return Promise.resolve(false);
+    const next = window.UsMemberStatus?.widgetState?.();
+    if (!next) return Promise.resolve(false);
+    const clean = (person) => ({ status: cleanText(person?.status, 16), form: person?.form === 'm' || person?.form === 'f' ? person.form : '', at: isoInstant(person?.at), until: isoInstant(person?.until) });
+    const value = { me: clean(next.me), partner: clean(next.partner) };
+    if (JSON.stringify(value) === JSON.stringify(comeStai)) return Promise.resolve(false);
+    comeStai = value;
+    return scheduleWrite();
+  }
+
+  // Post-it (couple-notes.js): the newest post-it, for the widget.
+  function syncPostit() {
+    if (!ownerHash) return Promise.resolve(false);
+    const next = window.UsCoupleNotes?.widgetState?.();
+    if (!next) return Promise.resolve(false);
+    const value = next.state === 'ready' && cleanText(next.text, 120)
+      ? { state: 'ready', text: cleanText(next.text, 120), color: ['yellow', 'pink', 'blue', 'green'].includes(next.color) ? next.color : 'yellow', by: next.by === 'me' || next.by === 'partner' ? next.by : '', more: Math.max(0, Math.min(99, Math.trunc(Number(next.more) || 0))), at: isoInstant(next.at) }
+      : emptyPostit();
+    if (JSON.stringify(value) === JSON.stringify(postit)) return Promise.resolve(false);
+    postit = value;
+    return scheduleWrite();
+  }
+
+  // ---------- Ricordi a pila ----------
+
+  // The photos of this day in a past year ("Un anno fa", the oldest year
+  // first, as Rivivi), or else the newest three. rows: newest first.
+  function memoriesPick(rows, todayISO) {
+    const civil = /^\d{4}-\d{2}-\d{2}$/;
+    if (!civil.test(String(todayISO || ''))) return null;
+    const photos = (Array.isArray(rows) ? rows : [])
+      .filter((row) => row && civil.test(String(row.date || '')) && row.date <= todayISO && typeof row.path === 'string' && row.path)
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    if (!photos.length) return null;
+    const past = photos.filter((row) => row.date.slice(5) === todayISO.slice(5) && row.date < todayISO);
+    const anniversary = past.length > 0;
+    let stack;
+    let label;
+    if (anniversary) {
+      const day = past[past.length - 1].date;
+      const years = Number(todayISO.slice(0, 4)) - Number(day.slice(0, 4));
+      stack = photos.filter((row) => row.date === day).slice(0, 3);
+      label = years === 1 ? 'Un anno fa' : `${years} anni fa`;
+    } else {
+      stack = photos.slice(0, 3);
+      label = 'I più recenti';
+    }
+    const top = stack[0];
+    return {
+      label,
+      anniversary,
+      day: todayISO,
+      date: top.date,
+      title: cleanText(top.place || top.caption || '', 60),
+      count: photos.filter((row) => row.date === top.date).length,
+      rows: stack
+    };
+  }
+
+  // Foto protagonista (02/11/2026): up to three prints with a soft shadow,
+  // transparent around them. 2x2 (176 x 176 dp): the newest memory fills the
+  // widget and the other two peek from the top edge. 4x2 (220 x 176 dp): a
+  // fan, the back ones turned, the top one with a white border. Drawn at 3x.
+  const STACK_SMALL = { width: 176, height: 176, radius: 18, border: 0, cards: [
+    { x: 88, y: 97, w: 176, h: 166, turn: 0 }, { x: 88, y: 44, w: 150, h: 80, turn: 3 }, { x: 88, y: 40, w: 130, h: 80, turn: -4 }] };
+  const STACK_WIDE = { width: 220, height: 176, radius: 12, border: 3, cards: [
+    { x: 112, y: 90, w: 112, h: 132, turn: 0 }, { x: 148, y: 84, w: 112, h: 132, turn: 5 }, { x: 78, y: 88, w: 112, h: 132, turn: -8 }] };
+  const PRINT_FALLBACK = [['#ffd3a8', '#ff7c96', '#5a2f63'], ['#ffe0b0', '#f3b76e', '#8a4b3a'], ['#bfe3ff', '#6d8fd6', '#2e2a5a']];
+
+  async function loadBitmap(url) {
+    if (!url) return null;
+    try {
+      // The same signed URL Ricordi paints: the HTTP cache usually answers.
+      const response = await fetch(url, { credentials: 'omit' });
+      if (!response.ok) throw new Error(`memory_http_${response.status}`);
+      const blob = await response.blob();
+      if (!/^image\//.test(blob.type || 'image/')) throw new Error('memory_not_image');
+      return await createImageBitmap(blob, { imageOrientation: 'from-image' });
+    } catch (error) {
+      console.warn('[US Widget] memory photo', error);
+      return null;
+    }
+  }
+
+  async function composeStack(bitmaps, layout) {
+    const S = 3;
+    const canvas = document.createElement('canvas');
+    canvas.width = layout.width * S;
+    canvas.height = layout.height * S;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('memories_canvas');
+    const rounded = (w, h, r) => {
+      ctx.beginPath();
+      ctx.moveTo(-w / 2 + r, -h / 2);
+      ctx.arcTo(w / 2, -h / 2, w / 2, h / 2, r);
+      ctx.arcTo(w / 2, h / 2, -w / 2, h / 2, r);
+      ctx.arcTo(-w / 2, h / 2, -w / 2, -h / 2, r);
+      ctx.arcTo(-w / 2, -h / 2, w / 2, -h / 2, r);
+      ctx.closePath();
+    };
+    // Back to front: the third print, the second, then the top one.
+    for (let i = bitmaps.length - 1; i >= 0; i--) {
+      const card = layout.cards[i];
+      const w = card.w * S, h = card.h * S, r = layout.radius * S;
+      ctx.save();
+      ctx.translate(card.x * S, card.y * S);
+      ctx.rotate(card.turn * Math.PI / 180);
+      ctx.shadowColor = i === 0 ? 'rgba(26,16,32,.28)' : 'rgba(26,16,32,.22)';
+      ctx.shadowBlur = (i === 0 ? 20 : 16) * S;
+      ctx.shadowOffsetY = (i === 0 ? 8 : 6) * S;
+      rounded(w, h, r);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.shadowColor = 'transparent';
+      // The top print of the fan has a white border; the 2x2 photo has none.
+      const inset = i === 0 ? layout.border * S : 0;
+      ctx.save();
+      rounded(w - inset * 2, h - inset * 2, Math.max(0, r - inset));
+      ctx.clip();
+      const bitmap = bitmaps[i];
+      if (bitmap) {
+        const scale = Math.max((w - inset * 2) / bitmap.width, (h - inset * 2) / bitmap.height);
+        const bw = bitmap.width * scale, bh = bitmap.height * scale;
+        ctx.drawImage(bitmap, -bw / 2, -bh / 2, bw, bh);
+      } else {
+        const [a, b, c] = PRINT_FALLBACK[i];
+        const glow = ctx.createRadialGradient(-w * 0.25, -h * 0.3, 0, -w * 0.25, -h * 0.3, Math.max(w, h));
+        glow.addColorStop(0, a); glow.addColorStop(0.5, b); glow.addColorStop(1, c);
+        ctx.fillStyle = glow;
+        ctx.fillRect(-w / 2, -h / 2, w, h);
+      }
+      ctx.restore();
+      ctx.restore();
+    }
+    let blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.9));
+    if (!blob || blob.type !== 'image/webp') blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('memories_encode');
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+    return dataUrl.slice(dataUrl.indexOf(',') + 1);
+  }
+
+  // Ricordi a pila: every few hours, on a new day, or when Ricordi changes.
+  // The photos are drawn here; only the two pictures reach native.
+  function syncMemories({ force = false } = {}) {
+    if (!nativeEnabled || !ownerHash || !platform?.writeWidgetNoiPortrait) return Promise.resolve(false);
+    if (memoriesSync) return memoriesSync;
+    const api = window.UsWidgetDataApi;
+    if (typeof api?.memories !== 'function' || typeof api?.memoryUrls !== 'function') return Promise.resolve(false);
+    const fresh = Date.now() - memoriesSyncedAt < MEMORIES_TTL_MS;
+    const token = generation, owner = ownerHash;
+    memoriesSync = (async () => {
+      const bitmaps = [];
+      try {
+        if (!force && fresh && memories.day === localDay()) return false;
+        const data = await api.memories();
+        if (token !== generation || !data) return false;
+        const pick = memoriesPick(data.rows, data.today);
+        memoriesSyncedAt = Date.now();
+        if (!pick) {
+          if (memories.state === 'none') return false;
+          memories = emptyMemories();
+          memoriesSignature = '';
+          return scheduleWrite();
+        }
+        const next = { state: 'ready', label: pick.label, anniversary: pick.anniversary, day: pick.day, date: pick.date, title: pick.title, count: pick.count, stack: pick.rows.length };
+        const signature = JSON.stringify([pick.rows.map((row) => [row.id, row.path]), next]);
+        if (signature === memoriesSignature) return false;
+        const urls = await api.memoryUrls(pick.rows.map((row) => row.path));
+        if (token !== generation) return false;
+        for (const url of urls) bitmaps.push(await loadBitmap(url));
+        if (token !== generation) return false;
+        const small = await composeStack(bitmaps, STACK_SMALL);
+        const wide = await composeStack(bitmaps, STACK_WIDE);
+        if (token !== generation) return false;
+        const ok = await platform.writeWidgetNoiPortrait(owner, small, 'memories')
+          && await platform.writeWidgetNoiPortrait(owner, wide, 'memories_wide');
+        if (token !== generation || !ok) return false;
+        memories = next;
+        memoriesSignature = signature;
+        return scheduleWrite();
+      } catch (error) {
+        console.warn('[US Widget] memories', error);
+        return false;
+      } finally {
+        for (const bitmap of bitmaps) bitmap?.close?.();
+        memoriesSync = null;
+      }
+    })();
+    return memoriesSync;
+  }
+
+  // Lavagna: the drawing as US paints it, in Pastello and Midnight ink (two
+  // transparent pictures), and who drew last, when. Never the strokes.
+  async function syncLavagna(input = {}) {
+    if (!nativeEnabled || !ownerHash || !platform?.writeWidgetNoiPortrait) return false;
+    const token = generation, owner = ownerHash;
+    const next = { state: input.state === 'ready' ? 'ready' : 'empty', by: ['me', 'partner'].includes(input.by) ? input.by : '', at: typeof input.at === 'string' ? input.at : '' };
+    try {
+      if (next.state === 'ready') {
+        const ok = await platform.writeWidgetNoiPortrait(owner, input.light, 'lavagna')
+          && await platform.writeWidgetNoiPortrait(owner, input.dark, 'lavagna_night');
+        if (token !== generation || !ok) return false;
+      }
+      if (token !== generation) return false;
+      lavagna = next;
+      return scheduleWrite();
+    } catch (error) {
+      console.warn('[US Widget] lavagna', error);
+      return false;
+    }
+  }
+
+  function localDay() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   }
 
   // Oggi's currently visible hero photo, downscaled in the WebView and
@@ -355,17 +685,37 @@
           setPreview('');
           return scheduleWrite();
         }
-        const key = (await sha256Hex(`${owner}:${latest.id}:${latest.path}`)).slice(0, 32);
-        if (key === photo.key && photo.state === 'ready' && photoPreviewUrl) return false;
+        const keyOf = async (item) => (await sha256Hex(`${owner}:${item.id}:${item.path}`)).slice(0, 32);
+        const key = await keyOf(latest);
+        const upcoming = await Promise.resolve(window.UsWidgetDataApi?.upcomingPhotos?.()).catch(() => []) || [];
+        if (token !== generation) return false;
+        const next = [];
+        for (const item of upcoming.slice(0, 2)) {
+          const nextKey = await keyOf(item);
+          // A photo the widget already holds is not downloaded again.
+          if (!photo.next.some((cached) => cached.key === nextKey) && nextKey !== photo.key) {
+            try {
+              const image = await encodePhoto(item.url);
+              URL.revokeObjectURL(image.preview);
+              if (token !== generation) return false;
+              await platform.writeWidgetPhoto(owner, nextKey, image.base64);
+            } catch (error) { console.warn('[US Widget] next photo', error); break; }
+          }
+          next.push({ key: nextKey, takenOn: civilDate(item.takenOn), label: cleanText(item.label, 60) });
+        }
+        const same = key === photo.key && photo.state === 'ready' && photoPreviewUrl
+          && JSON.stringify(next.map((item) => item.key)) === JSON.stringify(photo.next.map((item) => item.key));
+        if (same) return false;
         const encoded = await encodePhoto(latest.url);
         if (token !== generation) { URL.revokeObjectURL(encoded.preview); return false; }
-        // Native already holds the private bytes after a process restart.
+        // Native already holds the private bytes after a process restart. The
+        // photo of this hour is written last: it is the one Oggi shows now.
         if (key !== photo.key || photo.state !== 'ready') {
           await platform.writeWidgetPhoto(owner, key, encoded.base64);
         }
         if (token !== generation) { URL.revokeObjectURL(encoded.preview); return false; }
         setPreview(encoded.preview);
-        photo = { state: 'ready', key, takenOn: civilDate(latest.takenOn) };
+        photo = { state: 'ready', key, takenOn: civilDate(latest.takenOn), label: cleanText(latest.label, 60), hour: isoInstant(latest.hour), next };
         return scheduleWrite();
       } catch (error) {
         console.warn('[US Widget] photo', error);
@@ -390,7 +740,10 @@
       const issued = await window.UsWidgetCredentialApi.issue(deviceIdHash);
       if (!issued?.token) throw new Error('credential_not_issued');
       if (token !== generation) throw new Error('account_changed');
-      const stored = await platform.storeWidgetActionCredential(targetOwnerHash, issued.token, issued.expiresAt || '');
+      // The widget sends to the Edge of this build (staging or production).
+      const stored = await platform.storeWidgetActionCredential(targetOwnerHash, issued.token, issued.expiresAt || '', {
+        functionsUrl: window.UsWidgetCredentialApi.functionsUrl || ''
+      });
       if (!stored) throw new Error('credential_not_stored');
       return true;
     } catch (error) {
@@ -440,7 +793,11 @@
       couple = { ...emptyCouple(), ...native.couple, names: [] };
       countdown = { ...emptyCountdown(), ...native.countdown };
       daily = { ...emptyDaily(), ...native.daily };
-      photo = native.photo?.state === 'ready' && native.photo.key === seed.photoKey ? { ...native.photo } : emptyPhoto();
+      comeStai = { me: { ...emptyStatusPerson(), ...native.status?.me }, partner: { ...emptyStatusPerson(), ...native.status?.partner } };
+      memories = native.memories?.state === 'ready' ? { ...emptyMemories(), ...native.memories } : emptyMemories();
+      lavagna = ['ready', 'empty'].includes(native.lavagna?.state) ? { ...emptyLavagna(), ...native.lavagna } : emptyLavagna();
+      postit = native.postit?.state === 'ready' ? { ...emptyPostit(), ...native.postit } : emptyPostit();
+      photo = native.photo?.state === 'ready' && native.photo.key === seed.photoKey ? { ...emptyPhoto(), ...native.photo, next: Array.isArray(native.photo.next) ? native.photo.next : [] } : emptyPhoto();
       return true;
     } catch (_) {
       return false;
@@ -455,6 +812,12 @@
     if (nextHash !== ownerHash || activeCoupleId !== (profile.couple_id || '')) {
       generation += 1;
       think = emptyThink();
+      left = emptyLeft();
+      memories = emptyMemories();
+      comeStai = emptyStatus();
+      postit = emptyPostit();
+      memoriesSyncedAt = 0;
+      memoriesSignature = '';
       couple = emptyCouple();
       countdown = emptyCountdown();
       photo = emptyPhoto();
@@ -463,8 +826,7 @@
       photoSyncedAt = 0;
       photoResyncRequested = false;
       noiPortraitSignature = '';
-      if (noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
-      noiPortraitPreviewUrl = '';
+      clearRoundPreviews();
       setPreview('');
     }
     activeCoupleId=profile.couple_id || '';
@@ -476,10 +838,14 @@
     countdown = countdownFromOggi() || countdown;
     await Promise.all([syncCouple({ force: true }), scheduleWrite(), ensureCredential(status)]);
     await syncNoiDistance();
+    await syncNoiBattery();
     // The portrait and Oggi photo only sync after first UI paint.
     setTimeout(() => {
       syncPhoto({ force: true }).catch(() => {});
       syncNoiPortrait({ force: true }).catch(() => {});
+      syncMemories().catch(() => {});
+      // The board is read once, so a placed Post-it widget is fresh without opening Noi.
+      installed().then((placed) => { if (placed?.installed?.postit) window.UsCoupleNotes?.refresh?.(); }).catch(() => {});
     }, 2500);
     return true;
   }
@@ -496,9 +862,8 @@
     photoSyncedAt = 0;
     photoResyncRequested = false;
     noiPortraitSignature = '';
-    if (noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
-    noiPortraitPreviewUrl = '';
-    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();
+    clearRoundPreviews();
+    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();left = emptyLeft();comeStai = emptyStatus();memories = emptyMemories();memoriesSyncedAt = 0;memoriesSignature = '';lavagna = emptyLavagna();postit = emptyPostit();
     setPreview('');
     const provisioning = credentialProvisionInFlight;
     if (provisioning) try { await provisioning; } catch (_) {}
@@ -523,6 +888,10 @@
       if (url.protocol !== 'us:' || url.hostname !== 'widget') return null;
       const path = url.pathname.replace(/^\/+/, '');
       if (path === 'noi/play') return { kind: 'noi-play', url: urlValue };
+      // Lavagna opens the board itself, through the path of its notification.
+      if (path === 'lavagna') return { kind: 'lavagna', target: 'lavagna', url: urlValue };
+      const message = path.match(/^message\/(think|left)$/);
+      if (message) return { kind: 'message', target: MESSAGE_TARGETS[message[1]], url: urlValue };
       const kind = path.split('/')[0];
       return KINDS.includes(kind) ? { kind, url: urlValue } : null;
     } catch (_) { return null; }
@@ -545,19 +914,27 @@
     const now = Date.now();
     if (lastLink.url === link.url && now - lastLink.at < 1500) return Promise.resolve(true);
     lastLink = { url: link.url, at: now };
+    // The Ti penso or the envelope: the same path as their notifications,
+    // which also waits for the sign-in on a cold start.
+    if (link.target && typeof window.UsPushNavigation?.open === 'function') {
+      window.UsPushNavigation.open(link.target);
+      return Promise.resolve(true);
+    }
     const page = DESTINATIONS[link.kind];
     pendingDestination = window.usProfile ? '' : page;
     pendingKind = window.usProfile ? '' : link.kind;
     openDestination(page);
     // La domanda di oggi opens the question itself.
     if (link.kind === 'daily' && window.usProfile) setTimeout(() => window.openToday?.(), 120);
+    // Come stai opens the twelve, in Oggi.
+    if (link.kind === 'status' && window.usProfile) setTimeout(() => window.UsMemberStatus?.open?.('status'), 400);
     return Promise.resolve(true);
   }
 
   // ---------- Widget Hub support ----------
 
   function view() {
-    return { snapshot: snapshot(), photoPreviewUrl, noiPortraitPreviewUrl, ready: Boolean(ownerHash) };
+    return { snapshot: snapshot(), photoPreviewUrl, noiRoundPreviewUrls: { ...noiRoundPreviewUrls }, ready: Boolean(ownerHash) };
   }
 
   async function installed() {
@@ -574,6 +951,9 @@
     await write;
     if (kind === 'photo') await syncPhoto({ force: true });
     if (kind === 'noi') await syncNoiPortrait({ force: true });
+    if (kind === 'memories') await syncMemories({ force: true });
+    if (kind === 'lavagna') await window.UsLavagna?.syncWidget?.({ force: true });
+    if (kind === 'postit') { window.UsCoupleNotes?.refresh?.(); await syncPostit(); }
     return platform.requestWidgetPin(kind);
   }
 
@@ -581,10 +961,17 @@
     KINDS,
     authReady,
     publishThink,
+    publishLeft,
+    syncStatus,
+    syncPostit,
+    memoriesPick,
+    syncMemories,
+    syncLavagna,
     syncCountdown,
     syncDaily,
     syncCouple,
     syncNoiDistance,
+    syncNoiBattery,
     syncNoiPortrait,
     syncPhoto,
     clear,
@@ -606,7 +993,7 @@
       if (pendingDestination && event?.detail?.paired) {
         const kind = pendingKind;
         const page = pendingDestination;
-        setTimeout(() => { openDestination(page); if (kind === 'daily') setTimeout(() => window.openToday?.(), 400); }, 60);
+        setTimeout(() => { openDestination(page); if (kind === 'daily') setTimeout(() => window.openToday?.(), 400); if (kind === 'status') setTimeout(() => window.UsMemberStatus?.open?.('status'), 1200); }, 60);
       }
       pendingDestination = '';
       pendingKind = '';
@@ -617,7 +1004,11 @@
     // painted Oggi event is authoritative for the widget photo.
     window.addEventListener('us:home-photo-changed', () => { syncPhoto({ force: true }).catch(() => {}); });
     window.addEventListener('us:distance-changed', () => { syncNoiDistance().catch(() => {}); });
+    window.addEventListener('us:partner-battery-changed', () => { syncNoiBattery().catch(() => {}); });
     window.addEventListener('us:noi-portraits-ready', () => { syncNoiPortrait().catch(() => {}); });
+    // Ricordi changed (a photo added, moved or deleted): the stack follows.
+    window.addEventListener('us:member-status-changed', () => { syncStatus().catch(() => {}); });
+    window.addEventListener('us:moments-updated', () => { syncMemories({ force: true }).catch(() => {}); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden || !ownerHash) return;
       // The phone's widgets are not on screen while US is: they refresh just
@@ -631,6 +1022,7 @@
         syncNoiDistance().catch(() => {});
         syncNoiPortrait().catch(() => {});
         syncPhoto().catch(() => {});
+        syncMemories().catch(() => {});
       }, 2000);
     });
   }

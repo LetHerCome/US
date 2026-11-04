@@ -97,5 +97,14 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // Mappa dei Ricordi (29/10/2026): «Dove», the place search and the map view
   // (ricordi-place.js/css, ~28 KB; MapLibre itself is fetched only when the
   // map opens): 2.9 -> 2.95 MB.
-  assert.ok(total <= 2.95 * 1024 * 1024, `precache is ${total} bytes: stays under 2.95 MB`);
+  // Note condivise (31/10/2026): the notes of the couple in Noi, needed
+  // offline too (couple-notes.js/css, ~29 KB): 2.95 -> 3.0 MB.
+  // Widget Pastello and Come stai (02/11/2026): the twelve states in Oggi
+  // (member-status.js/css, ~16 KB) and the widgets' sync: 3.0 -> 3.05 MB.
+  // Lavagna (03/11/2026): the board in Noi, drawn offline too (lavagna.js/css
+  // and two Phosphor icons, ~36 KB): 3.05 -> 3.1 MB.
+  // La sfida della settimana (03/11/2026) reached the line; the six Atmosfere,
+  // the Ricordi album and the Post-it widget sync (04/11/2026) cross it by
+  // ~4 KB: 3.1 -> 3.15 MB.
+  assert.ok(total <= 3.15 * 1024 * 1024, `precache is ${total} bytes: stays under 3.15 MB`);
 });

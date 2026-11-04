@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- "Due colori, un Noi" (US 1.0): the app's tokens from ui-foundation.css.
-     Notte canvas, latte text, rosa and lilla for the two people, the tab
+     Vino canvas (04/11/2026), latte text, rosa and lilla for the two people, the tab
      colour for each widget's label. -->
 <resources>
-    <color name="us_widget_bg">#FF0F0B13</color>
-    <color name="us_widget_surface">#FF17111C</color>
+    <color name="us_widget_bg">#FF140C14</color>
+    <color name="us_widget_surface">#FF1D1119</color>
     <color name="us_widget_line">#17F7EFE9</color>
     <color name="us_widget_line_strong">#2BF7EFE9</color>
     <color name="us_widget_text">#FFF7EFE9</color>
@@ -17,4 +17,13 @@
     <!-- Kept for the Countdown reward styles and older references. -->
     <color name="us_widget_accent">#FFFF7C96</color>
     <color name="us_widget_heart">#FFFF7C96</color>
+    <!-- Pastello (founder, 02/11/2026; the approved widget board): ink and quieter ink on the light cards. -->
+    <color name="us_widget_pastel_ink">#FF1A1020</color>
+    <color name="us_widget_pastel_sub">#FF5B4A63</color>
+    <color name="us_widget_pastel_plum">#FF3B1F5C</color>
+    <color name="us_widget_pastel_heart_bg">#FFFFF1F0</color>
+    <!-- Dark ink on the rosa «Rispondi» pill, in both themes (04/11/2026). -->
+    <color name="us_widget_on_rosa">#FF1A1020</color>
+    <!-- The ink on a post-it's paper, in both themes (04/11/2026). -->
+    <color name="us_widget_postit_ink">#FF3B2A10</color>
 </resources>

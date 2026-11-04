@@ -222,7 +222,8 @@ test('content 1.1: applies on the full schema, twice, and the next Daily Questio
     assert.equal(await n('select count(*) n from public.daily_question_templates where active'), 364);
     assert.equal(await n('select count(*) n from public.game_v2_catalog'), 212 + 84);
     assert.equal(await n('select count(*) n from private.game_swipe_v1_catalog where active'), 67 + 30);
-    assert.equal(await n('select count(*) n from public.bond_quest_templates where active'), 33 + 16);
+    // + 10 challenges for two places (Sfida della settimana, 03/11/2026).
+    assert.equal(await n('select count(*) n from public.bond_quest_templates where active'), 33 + 16 + 10);
     assert.equal(await n("select count(*) n from public.daily_question_templates where question_en is null or btrim(question_en) = ''"), 0);
     const fingerprint = async () => (await db.query(`select md5(string_agg(x, '|' order by x)) h from (
       select t::text x from public.daily_question_templates t union all select c::text from public.game_v2_catalog c

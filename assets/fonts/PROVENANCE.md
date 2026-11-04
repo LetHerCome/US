@@ -18,3 +18,7 @@ Design "Due colori, un Noi" (approved by the founder on 2026-10-14): titles in F
 - Copyright: The Figtree Project Authors.
 
 Downloaded from the npm registry on 2026-10-14. No runtime CDN or Google Fonts dependency is used.
+
+## Android widgets
+
+- `native-plugins/us-widget-bridge/android/src/main/res/font/`: `us_font_fraunces.ttf`, `us_font_fraunces_italic.ttf` and `us_font_figtree.ttf` are the files above, decompressed from WOFF2 to TTF without changes (Google's `woff2` decoder, `wawoff2` 2.0.1), because Android font resources do not read WOFF2. Same licences. Added on 2026-11-02 for the «Pastello» widgets.

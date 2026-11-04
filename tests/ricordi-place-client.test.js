@@ -121,3 +121,64 @@ test('Android: native picker with ACCESS_MEDIA_LOCATION, never READ_MEDIA_IMAGES
   assert.match(read('android/app/capacitor.build.gradle'), /implementation project\(':us-photo-place'\)/);
   assert.match(read('scripts/validate-android-bundle.mjs'), /'android\.permission\.ACCESS_MEDIA_LOCATION': 'Posizione delle foto/);
 });
+
+// Founder, 30/10/2026 (production): on a memory added before 1.3 «Aggiungi il
+// posto» fell below the full-screen photo, so it could not be tapped.
+test('in the full-screen photo «Dove» has its own row in the foot', () => {
+  const css = read('dc-ricordi.css');
+  const row = (cls) => Number(css.match(new RegExp(`\\[data-us-galleria\\] \\.${cls}\\{[^}]*?grid-row:(\\d+)`))?.[1]);
+  const place = row('us-album-place');
+  assert.ok(place > 1 && place < 10, 'the place button sits in the foot of the photo');
+  assert.match(css, /#usAlbumCarousel\.us-album-cover-stage\{grid-column:1;grid-row:1\/10;/);
+  assert.match(css, /grid-template-rows:minmax\(0,1fr\) repeat\(6,auto\) auto calc/);
+  for (const other of ['us-album-title', 'us-album-byline', 'us-album-caption-postit', 'us-album-ask', 'us-album-carousel-status', 'us-album-acts', 'us-album-section'])
+    assert.notEqual(row(other), place, other);
+});
+
+// Founder, 30/10/2026 (production): the place of a Ricordo added before 1.3
+// could not be saved. The app's client is the global `sb` of app.js (a
+// const, so never window.sb): set_moment_place must go through it.
+test('saving a place uses the app client, the global sb', async () => {
+  const calls = [];
+  globalThis.sb = { rpc: async (name, args) => { calls.push([name, args]); return { data: { id: 'm1' }, error: null }; } };
+  try {
+    assert.deepEqual(await P.save('m1', { lat: 44.494887, lon: 11.342616, label: 'Bologna', source: 'search' }), { id: 'm1' });
+    assert.deepEqual(calls, [['set_moment_place', { p_moment: 'm1', p_lat: 44.495, p_lon: 11.343, p_label: 'Bologna', p_source: 'search' }]]);
+    await P.save('m1', null);
+    assert.deepEqual(calls[1][1], { p_moment: 'm1', p_lat: null, p_lon: null, p_label: null, p_source: null }, 'clearing the place');
+  } finally { delete globalThis.sb; }
+});
+
+// Revisione di staging (founder, 03/11/2026): «Lake Garda» on a phone set to English,
+// and one Ricordo alone opened the map so close that nothing around it showed.
+test('place names are asked in Italian, whatever the language of the phone', async () => {
+  const original = global.fetch;
+  const asked = [];
+  global.fetch = async (url, init) => { asked.push(init?.headers?.['Accept-Language']); return { ok: true, json: async () => ({ features: [] }) }; };
+  try {
+    await P.search('Garda');
+    await P.nameOf(45.47, 10.54);
+    assert.deepEqual(asked, ['it', 'it']);
+  } finally { global.fetch = original; }
+});
+
+test('one place alone opens with the town and its surroundings; more places fit together', () => {
+  assert.deepEqual(P.viewFor([]), { center: [12.5, 42.5], zoom: 4.3 });
+  assert.deepEqual(P.viewFor([{ lat: 45.6, lon: 10.65 }]), { center: [10.65, 45.6], zoom: 9 });
+  assert.deepEqual(P.viewFor([{ lat: 45.6, lon: 10.65 }, { lat: 45.6, lon: 10.65 }]), { center: [10.65, 45.6], zoom: 9 }, 'two Ricordi in the same place are one place');
+  assert.deepEqual(P.viewFor([{ lat: 45.6, lon: 10.65 }, { lat: 44.5, lon: 11.34 }]), { bounds: [[10.65, 44.5], [11.34, 45.6]], maxZoom: 12 });
+});
+
+test('the map writes its names in Italian: name:it, then the local name in Latin letters', () => {
+  const english = ['case', ['has', 'name:nonlatin'], ['concat', ['get', 'name:latin'], '\n', ['get', 'name:nonlatin']], ['coalesce', ['get', 'name_en'], ['get', 'name']]];
+  assert.deepEqual(P.italianLabel(english), ['coalesce', ['get', 'name:it'], ['get', 'name:latin'], ['get', 'name']]);
+  assert.equal(P.italianLabel(['to-string', ['get', 'ref']]), null, 'road numbers stay as they are');
+  assert.equal(P.italianLabel(undefined), null);
+});
+
+test('the map refits when the Ricordi arrive after it opened, and fills the missing icons of the style', () => {
+  const src = read('ricordi-place.js');
+  assert.match(src, /if \(!before\.length && mapPoints\.length\) fit\(mapPoints, true\);/);
+  assert.match(src, /map\.on\('styleimagemissing'/);
+  assert.match(src, /map\.setLayoutProperty\(layer\.id, 'text-field', label\)/);
+});

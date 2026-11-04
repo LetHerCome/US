@@ -15,77 +15,125 @@ const res = (file) => read(`${PLUGIN}/res/${file}`);
 test('widgets: the palette is the app tokens (ui-foundation.css)', () => {
   const colors = res('values/colors.xml');
   const css = read('ui-foundation.css');
-  const pairs = { us_widget_bg: '0f0b13', us_widget_surface: '17111c', us_widget_text: 'f7efe9', us_widget_rosa: 'ff7c96', us_widget_lilla: 'a98bff', us_widget_orchidea: 'd98be0', us_widget_corallo: 'ff8b7b' };
+  const pairs = { us_widget_bg: '140c14', us_widget_surface: '1d1119', us_widget_text: 'f7efe9', us_widget_rosa: 'ff7c96', us_widget_lilla: 'a98bff', us_widget_orchidea: 'd98be0', us_widget_corallo: 'ff8b7b' };
   for (const [name, hex] of Object.entries(pairs)) {
     assert.match(colors, new RegExp(`<color name="${name}">#FF${hex}</color>`, 'i'), name);
     assert.match(css, new RegExp(`#${hex}`, 'i'), `${hex} is an app token`);
   }
-  assert.match(res('drawable/us_widget_background.xml'), /android:startColor="#FF17111C"[\s\S]*<stroke android:width="1dp" android:color="#17F7EFE9"/);
+  assert.match(res('drawable/us_widget_background.xml'), /android:startColor="#FF1D1119"[\s\S]*<stroke android:width="1dp" android:color="#17F7EFE9"/);
 });
 
+// Widget Pastello (02/11/2026): every widget's picker preview is its Pastello
+// card, both the layout (Android 12+) and the picture many launchers show
+// instead (Xiaomi among them). Generic: never a real name, face or photo.
+// 04/11/2026: the Countdown left the widgets; the Post-it took its place.
+const KINDS = ['think', 'noi', 'photo', 'postit', 'daily', 'message', 'memories', 'status'];
+
 test('widgets: picker previews are generic, never a real name, face or photo', () => {
-  const previews = ['think', 'noi', 'photo', 'countdown'].map((k) => res(`layout/us_widget_preview_${k}.xml`)).join('\n');
+  const previews = KINDS.map((k) => res(`layout/us_widget_preview_${k}.xml`)).join('\n');
   const strings = res('values/strings.xml');
   for (const text of [previews, strings]) assert.doesNotMatch(text, /Beatrice|Francesco|\bBea\b|\bFra\b/);
   assert.doesNotMatch(previews, /android:text="[^@]/, 'preview text comes from strings.xml');
-  assert.match(res('layout/us_widget_preview_photo.xml'), /@drawable\/us_widget_preview_photo_art/);
-  assert.match(res('drawable/us_widget_preview_photo_art.xml'), /<gradient/);
-  for (const info of ['think', 'noi', 'photo', 'countdown']) {
+  assert.doesNotMatch(previews, /us_widget_background"/, 'no night card left in a preview');
+  // Foto & Noi keeps the look it had before Pastello (founder, 02/11/2026): an abstract photo.
+  // Foto protagonista: each preview layout shows the same generic picture as previewImage.
+  for (const k of KINDS) assert.ok(res(`layout/us_widget_preview_${k}.xml`).includes(`@drawable/us_widget_preview_${k}"`), k);
+  for (const info of KINDS) {
     const xml = res(`xml/us_widget_${info}_info.xml`);
-    assert.match(xml, new RegExp(`android:previewLayout="@layout/us_widget_preview_${info}"`));
-    assert.match(xml, new RegExp(`android:previewImage="@drawable/us_widget_preview_${info}"`));
+    assert.match(xml, new RegExp(`android:previewLayout="@layout/us_widget_preview_${info}"`), info);
+    assert.match(xml, new RegExp(`android:previewImage="@drawable/us_widget_preview_${info}"`), info);
   }
+  // Giorni insieme is part of Foto & Noi: out of the list, still working where it is.
+  assert.match(res('xml/us_widget_days_info.xml'), /android:widgetFeatures="hide_from_picker"/);
 });
 
-test('widgets: preview PNGs keep their size (2x of 168dp, Noi 192x96dp) and are new', () => {
-  const size = (k) => { const b = fs.readFileSync(path.join(ROOT, PLUGIN, `res/drawable-nodpi/us_widget_preview_${k}.png`)); return [b.readUInt32BE(16), b.readUInt32BE(20)]; };
-  assert.deepEqual(size('think'), [336, 336]);
-  assert.deepEqual(size('photo'), [336, 336]);
-  assert.deepEqual(size('countdown'), [336, 336]);
+test('widgets: preview PNGs at 2x (168dp square, 192x96dp Noi, 240x120dp wide); Foto & Noi keeps its picture of before', () => {
+  const png = (k) => fs.readFileSync(path.join(ROOT, PLUGIN, `res/drawable-nodpi/us_widget_preview_${k}.png`));
+  const size = (k) => { const bytes = png(k); return [bytes.readUInt32BE(16), bytes.readUInt32BE(20)]; };
+  for (const k of ['think', 'photo', 'postit', 'message', 'memories']) assert.deepEqual(size(k), [336, 336], k);
   assert.deepEqual(size('noi'), [384, 192]);
-});
-
-test('Ti penso: the colour says whose move it is, the name is italic, no tiny type', () => {
-  const layout = res('layout/us_widget_think.xml');
-  const provider = read(`${JAVA}/UsThinkWidgetProvider.java`);
-  const models = read(`${JAVA}/UsWidgetModels.java`);
-  assert.match(layout, /@\+id\/us_widget_kicker/);
-  assert.match(layout, /android:id="@\+id\/us_widget_message"[\s\S]*?android:fontFamily="serif"[\s\S]*?android:textSize="18sp"/);
-  assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)sp"/, 'nothing under 11sp');
-  assert.match(models, /static final String TONE_PARTNER = "partner";/);
-  assert.match(provider, /if \(UsWidgetModels\.TONE_PARTNER\.equals\(tone\)\) return 0xFFFF7C96;/);
-  assert.match(provider, /if \(UsWidgetModels\.TONE_ME\.equals\(tone\)\) return 0xFFA98BFF;/);
-  assert.match(provider, /new StyleSpan\(Typeface\.ITALIC\)/);
-  assert.match(provider, /views\.setInt\(R\.id\.us_widget_heart, "setColorFilter", quiet \? 0xCCF7EFE9 : tone\);/);
-  assert.match(provider, /"setBackgroundResource", pillFor\(model\.tone\)/);
-});
-
-test('Noi 2x1: night card, orchid label, serif distance, italic line, two-colour portrait', () => {
-  const layout = res('layout/us_widget_noi.xml');
-  const provider = read(`${JAVA}/UsNoiWidgetProvider.java`);
-  const widgets = read('widgets.js');
-  assert.match(layout, /android:background="@drawable\/us_widget_background"/);
-  assert.doesNotMatch(layout, /us_widget_noi_light_background|#43303D|♡/);
-  assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)sp"/);
-  assert.match(layout, /@drawable\/us_widget_two_dots/);
-  assert.match(provider, /R\.string\.us_widget_noi_between/);
-  assert.doesNotMatch(provider, /"APRI NOI"|"TRA VOI"|"ULTIMA DISTANZA"/);
-  const compose = widgets.slice(widgets.indexOf('async function composeNoiPortrait'), widgets.indexOf('function syncNoiPortrait'));
-  assert.match(compose, /const colours = \['#ff7c96', '#a98bff'\];/);
-  assert.match(compose, /canvas\.toBlob\(resolve, 'image\/png'\)/, 'transparent, sits on the card');
-  assert.match(compose, /globalCompositeOperation = 'destination-out'/);
-  assert.doesNotMatch(compose, /no-store/, 'a reused signed URL comes from the HTTP cache');
-});
-
-test('Countdown: the base style is the upright serif of Oggi; reward styles keep their look', () => {
-  const provider = read(`${JAVA}/UsCountdownWidgetProvider.java`);
-  const layout = res('layout/us_widget_countdown.xml');
-  assert.match(layout, /@\+id\/us_cd_value_display/);
-  assert.match(layout, /@\+id\/us_cd_clock_display/);
-  assert.match(provider, /int titleColor = 0xFFFF8B7B;\s*int face = DISPLAY;/);
-  for (const style of ['glass', 'orbit']) {
-    const block = provider.slice(provider.indexOf(`case "${style}":`), provider.indexOf('break;', provider.indexOf(`case "${style}":`)));
-    assert.match(block, /rewardBase\(look\);/, `${style} keeps its pre-1.0 base`);
+  for (const k of ['daily', 'status']) assert.deepEqual(size(k), [480, 240], k);
+  for (const k of KINDS) {
+    const bytes = png(k);
+    assert.equal(bytes[25], 6, `${k}: RGBA, the rounded corners are transparent`);
+    assert.ok(bytes.length < 160 * 1024, `${k}: small`);
   }
-  assert.match(provider, /private static void rewardBase\(Look look\) \{\s*look\.titleColor = 0xE6FFF8FD;\s*look\.face = LIGHT;/);
+});
+
+test('widgets: after an app update every widget redraws at once from the saved snapshot', () => {
+  const manifest = read(`${PLUGIN}/AndroidManifest.xml`);
+  assert.match(manifest, /UsWidgetSystemReceiver"\s+android:exported="false">\s*<intent-filter>[\s\S]*?<action android:name="android\.intent\.action\.MY_PACKAGE_REPLACED" \/>[\s\S]*?<\/intent-filter>/);
+  const receiver = read(`${JAVA}/UsWidgetSystemReceiver.java`);
+  assert.match(receiver, /case Intent\.ACTION_MY_PACKAGE_REPLACED:[\s\S]*?UsWidgets\.refreshAll\(context\);/);
+  // refreshAll draws every kind from the stored snapshot, with the new layouts.
+  const widgets = read(`${JAVA}/UsWidgets.java`);
+  assert.match(widgets, /static synchronized void refreshAll\(Context context\)/);
+});
+
+test('Impostazioni › Widget: each tile is its widget, a soft field of colour, never a flat one', () => {
+  const css = read('dc-settings.css');
+  assert.ok(css.includes('#usWidgetHub .us-widget-hub-preview>*{--us-wp-aurora:radial-gradient('));
+  for (const rule of ['.us-wp-think{background:var(--us-wp-aurora)', '.us-wp-postit{position:relative;display:flex','.us-wp-daily{display:grid', '.us-wp-message{background:var(--us-wp-aurora)', '.us-wp-memories{position:relative;background:var(--us-wp-aurora)', '.us-wp-status{display:grid', '.us-wp-photo:not(.has-photo){background:var(--us-wp-aurora)']) {
+    assert.ok(css.includes(`#usWidgetHub ${rule}`), rule);
+  }
+  const hub = read('widget-hub.js');
+  // 04/11/2026: the Countdown left the widgets; the Post-it took its place.
+  assert.doesNotMatch(hub, /kind: 'countdown'|countdownPreview/);
+  assert.match(hub, /kind: 'postit', name: 'Post-it'/);
+});
+
+// Pastello (founder, 02/11/2026): the light theme of the approved board.
+// Ti penso (founder, 04/11/2026; tavole Main e TiPenso): only a heart. Empty
+// until tapped; the tap fills it with a pop (UsThinkHeartActivity) and sends.
+test('Ti penso: illustration and grain, only a heart, empty until the tap fills it', () => {
+  const small = res('layout/us_widget_think.xml');
+  const medium = res('layout/us_widget_think_medium.xml');
+  const provider = read(`${JAVA}/UsThinkWidgetProvider.java`);
+  for (const [layout, art] of [[small, 'think_s'], [medium, 'think_m']]) {
+    assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/);
+    assert.match(layout, /android:id="@\+id\/us_think_art"[\s\S]*?android:scaleType="centerCrop"/);
+    assert.ok(layout.includes(`@drawable/us_widget_art_${art}"`), art);
+    assert.match(layout, /android:id="@\+id\/us_think_grain"[\s\S]*?@drawable\/us_widget_grain"/);
+    assert.match(layout, /android:id="@\+id\/us_widget_heart"[\s\S]*?android:layout_gravity="center"[\s\S]*?@drawable\/us_widget_think_heart_empty"/);
+    const code = layout.replace(/<!--[\s\S]*?-->/g, '');
+    assert.doesNotMatch(code, /<TextView|us_think_line|us_think_avatar|us_widget_cta|Ricambia/, 'only the heart');
+  }
+  assert.match(res('drawable/us_widget_think_heart_empty.xml'), /android:strokeColor="#FFFF7C96"[\s\S]*android:fillColor="#00000000"/);
+  assert.match(res('values/colors.xml'), /<color name="us_widget_pastel_ink">#FF1A1020<\/color>/);
+  assert.ok(provider.includes('views.setImageViewResource(R.id.us_widget_heart, model.done ? R.drawable.us_widget_pastel_heart : R.drawable.us_widget_think_heart_empty);'));
+  assert.ok(provider.includes('views.setOnClickPendingIntent(R.id.us_widget_root, heart);'), 'the whole widget is the heart');
+  assert.doesNotMatch(provider, /us_widget_cta|us_think_line|readNoiPortrait/);
+  const pop = read(`${JAVA}/UsThinkHeartActivity.java`);
+  assert.ok(pop.includes('heart.setColorFilter(ROSA);'), 'the pop fills the heart in rosa');
+  assert.doesNotMatch(pop, /us_widget_pastel_circle/, 'no rosa button behind it any more');
+  // The fonts are the app's own, decompressed to TTF for Android.
+  for (const font of ['us_font_fraunces.ttf', 'us_font_fraunces_italic.ttf', 'us_font_figtree.ttf']) {
+    const bytes = fs.readFileSync(path.join(ROOT, PLUGIN, 'res/font', font));
+    assert.equal(bytes.readUInt32BE(0), 0x00010000, font);
+  }
+  assert.match(res('font/us_fraunces.xml'), /@font\/us_font_fraunces_italic/);
+});
+
+// Distanza e batteria (Pastello, 02/11): the round portraits come from the
+// HTTP cache like every avatar; tests/widget-distance.test.js has the rest.
+test('Distanza e batteria 2x1: the illustrated card, the same round portraits', () => {
+  const layout = res('layout/us_widget_noi.xml');
+  const widgets = read('widgets.js');
+  assert.match(layout, /android:background="@drawable\/us_widget_card"/);
+  assert.match(layout, /@drawable\/us_widget_art_noi_m"/);
+  assert.doesNotMatch(layout, /us_widget_background|us_widget_two_dots|♡/);
+  assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)sp"/);
+  const round = widgets.slice(widgets.indexOf('async function composeRoundPortrait'), widgets.indexOf('function clearRoundPreviews'));
+  assert.match(round, /canvas\.toBlob\(resolve, 'image\/png'\)/, 'transparent, sits on the card');
+  assert.doesNotMatch(round, /no-store/, 'a reused signed URL comes from the HTTP cache');
+});
+
+// Countdown Pastello (02/11): one look for every style; tests/widget-countdown.test.js.
+test('Countdown: gone from the widgets (founder, 04/11/2026); the Post-it took its place', () => {
+  assert.equal(fs.existsSync(path.join(ROOT, JAVA, 'UsCountdownWidgetProvider.java')), false);
+  for (const file of ['layout/us_widget_countdown.xml', 'layout/us_widget_countdown_medium.xml', 'xml/us_widget_countdown_info.xml']) {
+    assert.equal(fs.existsSync(path.join(ROOT, PLUGIN, 'res', file)), false, file);
+  }
+  assert.doesNotMatch(read(`${PLUGIN}/AndroidManifest.xml`), /UsCountdownWidgetProvider/);
+  assert.match(read(`${PLUGIN}/AndroidManifest.xml`), /android:name="com.usapp.widget.UsPostitWidgetProvider"/);
 });

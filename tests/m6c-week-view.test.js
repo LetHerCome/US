@@ -196,7 +196,8 @@ test('M6C (11): window labels read like 13:00 – 16:00 / dopo le 19:00 — neve
 test('M6C (12): the week view is a single vertical list at every width; the month view is untouched', () => {
   assert.match(noi(), /<div class="us-noi-v2-week-list" role="group" aria-label="La nostra settimana">/);
   // Parity: the week renders in the Lavagna sheet (#usNoiV2Week); the page keeps the month or the list.
-  assert.match(noi(), /mode==='list'\?listMarkup\(index\):calendarMarkup\(index\)/);
+  assert.match(noi(), /container\.innerHTML=upcomingMarkup\(\);/);
+  assert.match(noi(), /container\.innerHTML=notice\+calendarMarkup\(index\);/);
   assert.match(noi(), /body\.innerHTML=weekMarkup\(index\)/);
   assert.doesNotMatch(html(), /id="usCalendarWeekList"|id="usCalendarAddBtn"|class="us-cal-fab/);
   assert.doesNotMatch(css(), /\.us-cal-fab\{/);
@@ -220,7 +221,10 @@ test('M6C (14): the Noi read reuses buildRangeOverlapFilter + filterEntriesInWin
   assert.match(load, /sb\.from\('calendar_entries'\)/);
   const month = js().match(/async function readNoiMonth\([\s\S]*?\n\}/)?.[0] || '';
   assert.match(month, /monthGridRange\(year,month\)/);
-  assert.match(month, /fetchEntriesForRange\(viewer\.couple_id,start,end\)/);
+  // Noi nuova (03/11/2026): the month and «Prossimi» share one bounded read.
+  assert.match(month, /readNoiRange\(start,end\)/);
+  const range = js().match(/async function readNoiRange\([\s\S]*?\n\}/)?.[0] || '';
+  assert.match(range, /fetchEntriesForRange\(viewer\.couple_id,start,end\)/);
 });
 
 // (15) the header follows the mode.

@@ -85,7 +85,7 @@ test('N2: the month shows the mesiversario every month; a 31st counts on the las
   h.api.openCalendar({ date: '2026-02-28' });
   await settle();
   const grid = h.$('usNoiV2Content').innerHTML;
-  assert.match(grid, /data-noi-day="2026-02-28"[^>]*aria-label="[^"]*, 1 momento"/, 'February has its mesiversario on the 28th');
+  assert.match(grid, /data-noi-day="2026-02-28"[^>]*aria-label="[^"]*, 1 impegno"/, 'February has its mesiversario on the 28th');
   const detail = h.$('usNoiV2Detail').innerHTML;
   assert.match(detail, /<b>Mesiversario<\/b>/);
   assert.match(detail, /25 mesi insieme/);

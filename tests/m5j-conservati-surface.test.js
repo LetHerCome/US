@@ -171,10 +171,9 @@ test('M5J Ricordi exposes a Conservati entry with the required title, tagline an
   assert.ok(momentsMatch, 'Ricordi (moments page) must exist');
   const momentsBlock = momentsMatch[0];
 
-  // Ricordi must expose an actionable entry point into Conservati.
-  const entryMatch = momentsBlock.match(/<button[^>]*id="conservatiEntry"[^>]*>/);
-  assert.ok(entryMatch, 'Ricordi must expose a Conservati entry point (button)');
-  assert.match(entryMatch[0], /Conservati/, 'the Conservati entry must be labelled "Conservati"');
+  // Ricordi is only the album (founder, 04/11/2026): the Conservati door left
+  // the page. The surface and what was kept stay.
+  assert.doesNotMatch(momentsBlock, /id="conservatiEntry"/);
 
   // The Conservati surface itself must carry the exact required title.
   const titleMatch = html.match(/<h[1-4][^>]*>Conservati<\/h[1-4]>/);
@@ -348,6 +347,27 @@ test('M5J R8: the Conservati entry stays hidden while nothing is kept, and kept 
   assert.match(list, /<span class="conservati-card-mark conservati-card-thumb" aria-hidden="true"><img src="https:\/\/signed\.example\/couple-current\/profile-sender\/left\/photo\.bin" alt=""/);
   assert.equal((list.match(/conservati-card-thumb/g) || []).length, 1, 'only photos become thumbnails');
   const html = read('index.html');
-  assert.match(html, /<button[^>]*id="conservatiEntry"[^>]*hidden>/);
+  assert.doesNotMatch(html, /id="conservatiEntry"/, 'Ricordi is only the album (04/11/2026)');
   assert.match(html, /Quello che non conservate in Lasciato per te sparisce dopo 30 giorni\./);
+});
+
+// 04/11/2026 (founder): Ricordi is only the album; Conservati's door moved to
+// the bottom of Lasciato per te, in both its sheets, still hidden while
+// nothing is kept. It opens Conservati over Lasciato per te.
+test('Conservati: its door is at the bottom of Lasciato per te, both sheets', () => {
+  const html = read('index.html');
+  for (const id of ['leftForYouOverlay', 'leftForYouComposerOverlay']) {
+    const start = html.indexOf(`id="${id}"`);
+    const sheet = html.slice(start, html.indexOf('</section>', start));
+    assert.match(sheet, /<button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>[\s\S]*?<b>Conservati<\/b>[\s\S]*?data-conservati-count/, id);
+  }
+  const albums = read('moments-albums.js');
+  assert.match(albums, /const entries = \[document\.getElementById\('conservatiEntry'\), \.\.\.all\('\[data-conservati-entry\]'\)\]\.filter\(Boolean\);/);
+  assert.match(albums, /for \(const entry of entries\) entry\.hidden = total < 1;/);
+  assert.match(albums, /addEventListener\?\.\('us:left-for-you-opened', \(\) => \{ refreshConservatiEntry\(\); \}\);/);
+  assert.match(albums, /if \(event\.target\?\.closest\?\.\('\[data-conservati-entry\]'\)\) openConservati\(\);/);
+  const left = read('left-for-you.js');
+  assert.match(left, /new CustomEvent\('us:left-for-you-opened'\)/);
+  assert.equal((left.match(/announceOpened\(\);/g) || []).length, 3, 'opened, composer opened, something kept');
+  assert.match(read('dc-oggi.css'), /\.left-for-you-kept\.us-conservati-entry\[hidden\]\{display:none!important\}/);
 });

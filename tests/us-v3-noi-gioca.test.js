@@ -21,8 +21,9 @@ test('Noi icons: well-formed markup, the approved settings icon, a real list ico
   assert.ok(noi.length > 1000, 'Noi V2 markup found');
   assert.doesNotMatch(html, /<span class="us-icon"\s+<img/, 'no half-open icon tag (the old grey square)');
   assert.match(noi, /class="us-noi-v2-settings"[^>]*><img class="us-approved-custom-icon" src="\/assets\/derived\/runtime\/us-icon-settings-128-v1\.png"/);
-  assert.match(noi, /id="usNoiV2ModeList"[^>]*><span class="us-icon" data-us-icon="list-bullets"/, 'Elenco is a list, not a grid');
-  assert.match(noi, /data-noi-open-link="lavagna"[\s\S]*?data-us-icon="monitor"/);
+  // Noi nuova (03/11/2026): the two views are words, «Mese» and «Prossimi»; no tiles.
+  assert.match(noi, /id="usNoiV2ModeList"[^>]*>Prossimi<\/button>/);
+  assert.doesNotMatch(noi, /data-noi-open-link/);
 });
 
 test('Icons: every data-us-icon used by the shell is mapped to an official Phosphor SVG that is precached', () => {
@@ -46,9 +47,9 @@ test('Icons: every data-us-icon used by the shell is mapped to an official Phosp
 });
 
 // ------------------------------------------------------------------ Lavagna, add, Quest, Eventi
-test('Noi links: Lavagna opens the existing Calendar in its Week view; + opens the existing create form', () => {
-  assert.match(noiJs, /if\(link==='lavagna'\)\{mode='week';render\(\)/, 'La nostra settimana stays inside Noi');
-  assert.match(noiJs, /if\(link==='quest'\|\|link==='eventi'\)window\.openNoiSection\?\.\(link\)/);
+test('Noi: + and «Aggiungi a questo giorno» open the existing create form; the week stays inside Noi', () => {
+  assert.match(noiJs, /mode=requestedMode==='week'\?'week':'calendar';/, 'La nostra settimana stays inside Noi');
+  assert.doesNotMatch(noiJs, /data-noi-open-link|function openLink/, 'Noi nuova: no tiles to Missioni, Eventi, Note');
   assert.match(noiJs, /window\.UsCalendarLinks\.createForDate\(selected\)/);
   const cal = read('calendar.js');
   // The old full-screen calendar is gone: its entry point now opens Noi.
@@ -94,7 +95,7 @@ const now = new Date();
 const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const todayIso = ymd(now);
 
-test('Noi calendar: only the weeks the month spans, today selected, one dot per owner colour, items in time order', async () => {
+test('Noi calendar: only the weeks the month spans, today selected, a label per commitment in its owner colour, items in time order', async () => {
   // Another day of this month (tomorrow, or yesterday on the last day): never today.
   const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const later = new Date(now.getFullYear(), now.getMonth(), now.getDate() < last ? now.getDate() + 1 : now.getDate() - 1, 12);
@@ -116,15 +117,17 @@ test('Noi calendar: only the weeks the month spans, today selected, one dot per 
   const today = grid.match(new RegExp(`<button[^>]*data-noi-day="${todayIso}"[\\s\\S]*?<\\/button>`))?.[0] || '';
   assert.match(today, /is-selected/);
   assert.match(today, /aria-current="date"/);
-  // Due colori: dots say whose it is (mine, theirs, ours), in a stable order.
-  assert.match(today, /<span class="us-noi-v2-day-marks" aria-hidden="true"><i data-owner="tu"><\/i><i data-owner="noi"><\/i><\/span>/, 'one mark per owner colour');
+  // Noi nuova (03/11/2026): a label per commitment with its name, in the
+  // colour of whose it is (mine, theirs, ours); two at most, then +n.
+  // In a square the anniversary says how much («6 anni», 04/11/2026).
+  assert.match(today, new RegExp(`<span class="us-noi-v2-bar is-milestone" data-owner="noi">${now.getFullYear() - 2020} anni</span><span class="us-noi-v2-bar" data-owner="tu" translate="no">Palestra</span><span class="us-noi-v2-more">\\+1</span>`), 'labels in the owner colour');
   if (ymd(later) !== todayIso) {
     const next = grid.match(new RegExp(`<button[^>]*data-noi-day="${ymd(later)}"[\\s\\S]*?<\\/button>`))?.[0] || '';
-    assert.match(next, /<i data-owner="partner"><\/i>/, 'the other person\'s commitment takes their colour');
+    assert.match(next, /data-owner="partner" translate="no">Lago</, 'the other person\'s commitment takes their colour');
   }
-  assert.match(grid, /class="us-noi-v2-legend"/, 'a small legend names who is who');
+  assert.doesNotMatch(grid, /us-noi-v2-legend|us-noi-v2-day-marks/, 'no key, no dots');
   const detail = node('usNoiV2Detail').innerHTML;
-  assert.match(detail, /<small>OGGI<\/small>/);
+  assert.match(detail, /<span class="us-noi-v2-today-pill">Oggi<\/span>/);
   const titles = [...detail.matchAll(/<b(?: translate="no")?>([^<]+)<\/b>/g)].map((m) => m[1]);
   // 1.0 (N2): the yearly date is called Anniversario, as in Eventi.
   assert.deepEqual(titles, ['Anniversario', 'Palestra', 'Cena'], 'anniversary first, then by time');
@@ -137,8 +140,9 @@ test('Noi calendar: a failed read keeps the grid and offers Riprova; list mode h
   assert.match(content, /role="alert"[\s\S]*data-noi-retry/);
   assert.match(content, /class="us-noi-v2-grid"/, 'the month is still readable');
   assert.equal(node('usNoiV2Content').dataset.state, 'error');
+  // Noi nuova: «Prossimi» has its own read; without one it says it cannot load.
   node('usNoiV2ModeList').emit('click');
-  assert.match(node('usNoiV2Content').innerHTML, /Un mese ancora da scrivere[\s\S]*data-noi-add/);
+  assert.match(node('usNoiV2Content').innerHTML, /Carico i prossimi impegni…/);
   assert.equal(node('usNoiV2Detail').hidden, true, 'list mode does not repeat the day detail');
 });
 

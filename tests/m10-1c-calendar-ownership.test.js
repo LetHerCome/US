@@ -123,18 +123,20 @@ test('M10.1C: assistive text names the owner, never only the initial', () => {
 
 // --- Month grid -------------------------------------------------------------
 
-test('M10.1C: the month cell stays compact — day number and owner dots, never event titles', () => {
+// Noi nuova (founder, 03/11/2026): no dots any more; every commitment is a
+// label with its name in the colour of whoever put it, at most two, then +n.
+test('M10.1C / Noi nuova: the month cell is the day number and a label per commitment, in its owner colour', () => {
   const cell = noi.match(/const days=Array\.from\(\{length:slots\}[\s\S]*?return `<div class="us-noi-v2-calendar"/)?.[0] || '';
-  assert.match(cell, /<span class="us-noi-v2-day-number">\$\{n\}<\/span><span class="us-noi-v2-day-marks" aria-hidden="true">\$\{dots\}<\/span>/);
-  assert.match(cell, /\['tu','partner','noi'\]\.filter\(owner=>marks\.some\(x=>ownerOf\(x\)===owner\)\)/, 'one dot per owner, in a fixed order');
-  assert.doesNotMatch(cell, /\.title/, 'no titles inside a month cell');
+  assert.match(cell, /<span class="us-noi-v2-day-number">\$\{n\}<\/span><span class="us-noi-v2-day-bars" aria-hidden="true">\$\{bars\}\$\{more\}<\/span>/);
+  assert.match(cell, /items\.slice\(0,BAR_MAX\)\.map\(item=>`<span class="us-noi-v2-bar\$\{item\.kind==='relationship'\?' is-milestone':''\}" data-owner="\$\{ownerOf\(item\)\}"/, 'each label in the colour of whose it is');
+  assert.doesNotMatch(cell, /us-noi-v2-day-marks|<i data-owner/, 'no dots');
   assert.equal(cal.monthCellMarks([]).chips.length, 0);
   assert.deepEqual(cal.monthCellMarks(['B', 'Noi', 'F']), { chips: ['B', 'F', 'Noi'], more: 0 }, 'fixed marker order');
 });
 
-test('M10.1C: the month cell label says how many moments and marks the selected day', () => {
+test('M10.1C: the month cell label says how many commitments and marks the selected day', () => {
   const cell = noi.match(/const days=Array\.from\(\{length:slots\}[\s\S]*?return `<div class="us-noi-v2-calendar"/)?.[0] || '';
-  assert.match(cell, /const moments=marks\.length===1\?'1 momento':marks\.length\?`\$\{marks\.length\} momenti`:'nessun momento';/);
+  assert.match(cell, /const plans=items\.length===1\?'1 impegno':items\.length\?`\$\{items\.length\} impegni`:'niente in programma';/);
   assert.match(cell, /aria-pressed="\$\{active\}"/);
   assert.match(cell, /is-selected/);
 });
@@ -152,7 +154,7 @@ test('M10.1C: empty lanes are never fabricated; an empty day says so once', () =
   const h = load({ entries: [] });
   assert.equal(dayList(h), '');
   assert.equal(h.dom.get('usCalendarFormDayEntries').hidden, true);
-  assert.equal((noi.match(/Nessun momento in questo giorno\./g) || []).length, 1);
+  assert.equal((noi.match(/Niente in programma\. Un giorno libero, tutto vostro\./g) || []).length, 1);
 });
 
 test('M10.1C: several events stay readable — sorted all-day first then by time, titles kept whole', () => {
@@ -182,7 +184,8 @@ test('M10.1C: the Noi "+" is the one explicit create affordance; no floating +',
 test('M10.1C/US 1.0: quick create collects presets/title, all-day and explicit start/end; authority is unchanged', () => {
   const form = html.match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)[0];
   const inputs = [...form.matchAll(/<(?:input|textarea|select)[^>]*id="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(inputs, ['usCalendarTitleInput', 'usCalendarDateInput', 'usCalendarAllDayInput', 'usCalendarStartTimeInput', 'usCalendarEndTimeInput'], 'date input is edit-only; timed entries expose a compact range');
+  // 04/11/2026: «+» opens a field for a quick title of your own, among the presets.
+  assert.deepEqual(inputs, ['usCalendarPresetNewInput', 'usCalendarTitleInput', 'usCalendarDateInput', 'usCalendarAllDayInput', 'usCalendarStartTimeInput', 'usCalendarEndTimeInput'], 'date input is edit-only; timed entries expose a compact range');
   assert.doesNotMatch(form, /Durata|duration|Ricordamelo|reminder|<textarea|Nota/i);
   assert.match(calSrc, /setFormKind\(mode === 'edit' \? entry\.entry_type : 'personal'\);/);
   assert.match(calSrc, /const kind = ideaLink \? 'shared' : calendarKind;/);
@@ -201,7 +204,7 @@ test('M10.1C: Da vivere still picks the day on the calendar and opens the shared
 
 test('M10.1C: month mode always keeps a selected day inside the visible month (today, else the 1st)', () => {
   assert.match(noi, /selected=day\|\|\(monthMatch\(today\(\)\)\?today\(\):iso\(year,month,1\)\);/);
-  assert.match(noi, /if\(differentMonth&&mode!=='week'\)return;/, 'a day of another month never becomes the selection in month mode');
+  assert.match(noi, /if\(differentMonth&&mode==='calendar'\)return;/, 'a day of another month never becomes the selection in month mode');
 });
 
 // --- Week view + Tempo insieme ----------------------------------------------
@@ -218,11 +221,13 @@ test('M10.1C: free time together still comes from computeFreeTogether, unchanged
   assert.equal((calSrc.match(/function computeFreeTogether/g) || []).length, 0, 'the algorithm is not re-implemented in calendar.js');
 });
 
-test('M10.1C: the legend explains the colours in text, with the real names', () => {
-  const legend = noi.match(/function legendMarkup\(\)\{[\s\S]*?\n\}/)[0];
-  assert.match(legend, /people\.push\(\['noi','Insieme'\]\)/);
-  assert.match(legend, /'La tua persona'/);
-  assert.doesNotMatch(legend, /Francesco|Beatrice/);
+// Noi nuova (03/11/2026): no key under the month; the agenda names whose it is.
+test('M10.1C / Noi nuova: no legend; the agenda names whose it is, with the real names', () => {
+  assert.doesNotMatch(noi, /function legendMarkup|us-noi-v2-legend/);
+  const who = noi.match(/function whoName\(owner\)\{[\s\S]*?\n\}/)[0];
+  assert.match(who, /if\(owner==='noi'\)return 'Insieme';/);
+  assert.match(noi, /'La tua persona'/);
+  assert.doesNotMatch(who, /Francesco|Beatrice/);
 });
 
 test('M10.1C: no calendar backend change — same table, same read filter, no new migration', () => {

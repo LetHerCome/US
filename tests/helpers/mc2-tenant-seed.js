@@ -9,10 +9,15 @@ async function seedTenant(db,cid,u,v,n){
   await db.exec(`
     insert into public.activity(couple_id,actor_id,type) values('${cid}','${u}','mc2_test');
     insert into public.bucket_items(id,couple_id,created_by,title) values('${id(1)}','${cid}','${u}','Private idea ${n}');
+    insert into public.couple_notes(id,couple_id,created_by,updated_by,title) values('${id(10)}','${cid}','${u}','${u}','Private note ${n}');
     insert into public.calendar_entries(id,couple_id,entry_type,created_by,title,is_all_day,start_date,end_date)
       values('${id(2)}','${cid}','shared','${u}','Private calendar ${n}',true,'2026-01-01','2026-01-01');
     insert into public.calendar_reminders(couple_id,entry_id,recipient_id,offset_minutes,requested_by) values('${cid}','${id(2)}','${v}',1440,'${u}');
     insert into public.couple_locations(user_id,couple_id,latitude,longitude) values('${u}','${cid}',41,12),('${v}','${cid}',42,13);
+    insert into public.couple_batteries(user_id,couple_id,level,charging) values('${u}','${cid}',18,false),('${v}','${cid}',64,true);
+    insert into public.member_status(user_id,couple_id,status,form) values('${u}','${cid}','felice','m'),('${v}','${cid}','stanco',null);
+    insert into public.lavagna_strokes(id,couple_id,author_id,color,points) values('${id(11)}','${cid}','${u}','rosa','{100,200,300,400}');
+    insert into public.lavagna_boards(couple_id,revision,cleared_at) values('${cid}',${n},now());
     insert into public.daily_answers(question_id,user_id,couple_id,answer) values('${qid}','${u}','${cid}','PRIVATE-${n}-one'),('${qid}','${v}','${cid}','PRIVATE-${n}-two');
     insert into public.daily_question_keepsakes(couple_id,question_id,question_text,question_date,francesco_answer,beatrice_answer,revealed_at,kept_by_role)
       values('${cid}','${qid}','Private kept ${n}','2026-01-01','Private one','Private two',now(),'francesco');
@@ -39,6 +44,15 @@ async function seedTenant(db,cid,u,v,n){
     insert into public.think_reactions(message_id,reaction) values('${id(8)}','heart');
     insert into public.weekly_quiz_rewards(couple_id,set_id,week_start,score,xp_awarded) values('${cid}','${setid}','2026-01-05',0,0);
   `);
-  await h.as(db,u,'select public.ensure_bond_week() r');
+  // The old weekly missions are no longer created (Sfida della settimana,
+  // 03/11/2026): their history rows are seeded directly, next to a challenge.
+  await db.exec(`
+    insert into public.bond_weekly_state(couple_id,week_start,rerolls_used) values('${cid}','2026-01-05',0);
+    insert into public.bond_weekly_quests(couple_id,week_start,slot,template_key,title,category,rarity,xp)
+      values('${cid}','2026-01-05',1,'near-sunset','Private quest ${n}','adventure','rare',60);
+    insert into public.couple_weekly_challenges(id,couple_id,week_start,template_key,title,short_title,two_places)
+      values('${id(11)}','${cid}','2026-01-05','near-sunset','Private challenge ${n}','Private ${n}',false);
+    insert into public.couple_weekly_challenge_photos(challenge_id,couple_id,user_id,moment_id) values('${id(11)}','${cid}','${u}','${id(5)}');
+  `);
 }
 module.exports={seedTenant};

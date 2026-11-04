@@ -36,7 +36,7 @@ public final class UsPushNotices {
     public static final String[] KINDS = {
         "test", "think", "think_reply", "daily_turn", "daily_ready", "daily_reaction", "daily_new",
         "quest", "left_for_you", "game_turn", "game_ready", "game_weekly", "game_weekly_turn",
-        "calendar", "anniversary", "partner_joined",
+        "calendar", "anniversary", "partner_joined", "lavagna", "challenge", "challenge_reminder", "challenge_photo",
     };
 
     /** A display name: no control characters, trimmed, at most 40 characters. */
@@ -102,6 +102,18 @@ public final class UsPushNotices {
             case "partner_joined":
                 return notice(en, "US.", "US.",
                     who + " ha accettato l'invito: il vostro spazio è pronto", who + " joined: your space is ready", "oggi");
+            case "lavagna":
+                return notice(en, "US. · Lavagna", "US. · Board",
+                    who + " ha disegnato sulla lavagna", who + " drew on the board", "noi");
+            case "challenge":
+                return notice(en, "US. · La sfida della settimana", "US. · This week's challenge",
+                    "C'è una nuova sfida per voi ♡", "There is a new challenge for you two ♡", "gioca");
+            case "challenge_reminder":
+                return notice(en, "US. · La sfida della settimana", "US. · This week's challenge",
+                    "Domani è l'ultimo giorno per la sfida ♡", "Tomorrow is the last day for the challenge ♡", "gioca");
+            case "challenge_photo":
+                return notice(en, "US. · La sfida della settimana", "US. · This week's challenge",
+                    who + " ha messo la sua foto: manca solo la tua", who + " added their photo: only yours is missing", "gioca");
             default:
                 return new Notice(FALLBACK_TITLE, FALLBACK_BODY, "oggi");
         }

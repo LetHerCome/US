@@ -202,9 +202,12 @@ test('M12B.4 archive wiring: Ricordi reads the keepsakes as an optional enrichme
   assert.match(core, /usReadLocalized\(columns=>sb\.from\('daily_question_keepsakes'\)\.select\(columns\)\.order\('question_date',\{ascending:false\}\),'id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at','question_text_localized'\)/);
   assert.match(core, /const keptRows=keptError\?\[\]:\(kept\|\|\[\]\)\.map\(row=>row\.question_text_localized\?\{\.\.\.row,question_text:row\.question_text_localized\}:row\);/, 'an unreadable keepsake table never breaks Ricordi');
   assert.match(core, /ricordiTimeline\([^;]*livedRows,keptRows,eventRows,provenanceRows\)/);
-  assert.match(core, /if\(item\.kind==='daily'\)\{closeRow\(\);html\.push\(ricordiDailyCard\(item\.row\)\);continue;\}/);
+  // Ricordi is the album (founder, 04/11/2026): kept questions stay saved but
+  // only photos are drawn; with no photo at all the page is the empty album.
+  assert.match(core, /ricordiTimeline\([^;]*\)\.filter\(item=>item\.moment\);/);
+  assert.doesNotMatch(core, /ricordiDailyCard\(/);
   assert.match(core, /keptRows\.map\(r=>\[r\.id,r\.question_date\]\)/, 'a new keepsake re-renders the story');
-  assert.match(core, /if\(!rows\?\.length&&!livedRows\.length&&!keptRows\.length&&!eventRows\.length\)/);
+  assert.match(core, /if\(!rows\?\.length\)\{/);
   // The archive selector still sees kept Dailies; US 1.0 R7 paints Rivivi for anniversaries and "X mesi fa".
   assert.match(core, /renderRicordiRivivi\(ricordiPickRivivi\(timeline,today\),displayUrls,names\);/);
   const css = read('moments-albums.css');

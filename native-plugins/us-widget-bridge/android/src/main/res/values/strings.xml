@@ -8,16 +8,18 @@
     <string name="us_widget_think_name">Ti penso</string>
     <string name="us_widget_description">Un pensiero con un tocco, anche con US chiusa</string>
 
-    <string name="us_widget_countdown_name">Countdown</string>
-    <string name="us_widget_countdown_description">Lo stesso Countdown che hai scelto su Oggi</string>
-    <string name="us_widget_countdown_empty">Scegli un Countdown su Oggi</string>
 
-    <string name="us_widget_noi_name">Noi</string>
-    <string name="us_widget_noi_unknown">Distanza non nota</string>
-    <string name="us_widget_noi_open">apri Noi</string>
-    <string name="us_widget_noi_between">tra voi</string>
-    <string name="us_widget_noi_last">ultima nota</string>
+    <string name="us_widget_noi_name">Distanza e batteria</string>
+    <string name="us_widget_noi_me">Tu</string>
+    <string name="us_widget_noi_unknown">Distanza non ancora nota</string>
+    <string name="us_widget_postit_name">Post-it</string>
+    <string name="us_widget_postit_description">L’ultimo post-it della vostra bacheca</string>
+    <string name="us_widget_postit_empty">Scrivi il primo post-it</string>
+    <string name="us_widget_postit_preview">prenotare la cena di sabato</string>
     <string name="us_widget_daily_name">La domanda di oggi</string>
+    <string name="us_widget_daily_kicker">La domanda di oggi</string>
+    <string name="us_widget_daily_answer">Rispondi</string>
+    <string name="us_widget_daily_pill">Domanda di oggi</string>
     <string name="us_widget_daily_description">La domanda di oggi e a chi tocca rispondere. Mai le risposte.</string>
     <string name="us_widget_daily_open">La domanda di oggi vi aspetta in US</string>
     <string name="us_widget_daily_new">Apri US per la domanda nuova</string>
@@ -28,19 +30,40 @@
     <string name="us_widget_daily_waiting_plain">Hai risposto. Aspettiamo la sua risposta</string>
     <string name="us_widget_daily_ready">Le vostre risposte sono pronte</string>
     <string name="us_widget_daily_preview_question">Quale piccolo momento vorresti rivivere insieme?</string>
-    <string name="us_widget_noi_description">Le vostre foto profilo e la distanza mostrata in Noi.</string>
+    <string name="us_widget_noi_description">La distanza tra voi e la batteria di chi ami. Mai dove siete.</string>
+
+    <string name="us_widget_message_name">Lasciato per te</string>
+    <string name="us_widget_message_description">Il Lasciato per te ancora chiuso: solo che cosa è e quando</string>
+    <string name="us_widget_message_empty">Il prossimo Lasciato per te arriverà qui</string>
+    <string name="us_widget_message_open">Apri</string>
+    <string name="us_widget_memories_name">Ricordi a pila</string>
+    <string name="us_widget_status_name">Come stai</string>
+    <string name="us_widget_status_description">Come state tu e chi ami, con un’emoji. Dura 12 ore</string>
+    <string name="us_widget_status_me">Tu</string>
+    <string name="us_widget_preview_status_name">La tua persona</string>
+    <string name="us_widget_preview_status_emoji">🥰</string>
+    <string name="us_widget_preview_status_line">in amore · da 1 ora</string>
+    <string name="us_widget_memories_description">Le vostre foto di questo giorno, un anno fa. Altrimenti le più recenti</string>
+    <string name="us_widget_memories_empty">I vostri ricordi appariranno qui</string>
+    <string name="us_widget_preview_memories">Un ricordo</string>
+    <string name="us_widget_preview_memories_date">12 ott</string>
+    <string name="us_widget_lavagna_name">Lavagna</string>
+    <string name="us_widget_lavagna_description">L’ultimo disegno sulla vostra lavagna. Toccalo per disegnare</string>
+    <string name="us_widget_lavagna_empty">Disegnate qualcosa sulla lavagna</string>
+
 
     <string name="us_widget_photo_name">Foto &amp; Noi</string>
-    <string name="us_widget_photo_description">La foto di Oggi e i giorni insieme</string>
+    <string name="us_widget_photo_description">La foto di Oggi, che cambia ogni ora, e i giorni insieme</string>
     <string name="us_widget_photo_empty">La foto di Oggi apparirà qui</string>
 
     <!-- Widget picker previews: the same for every user, never a real name or photo. -->
-    <string name="us_widget_preview_think">Ti sta pensando</string>
+    <string name="us_widget_preview_think">Ti ha pensato</string>
+    <string name="us_widget_preview_think_when">2 min fa</string>
     <string name="us_widget_preview_think_cta">Ricambia</string>
     <string name="us_widget_preview_noi">12 km</string>
+    <string name="us_widget_preview_battery" formatted="false">78%</string>
     <string name="us_widget_preview_days">365</string>
     <string name="us_widget_preview_days_unit">giorni insieme</string>
-    <string name="us_widget_preview_countdown">Il prossimo viaggio</string>
-    <string name="us_widget_preview_countdown_value">12</string>
-    <string name="us_widget_preview_countdown_unit">giorni</string>
+    <string name="us_widget_preview_message">Ti ha lasciato una foto</string>
+    <string name="us_widget_preview_message_when">10 min fa</string>
 </resources>

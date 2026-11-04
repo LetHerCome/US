@@ -261,10 +261,11 @@ function previewMarkup(reward) {
 // (a canvas for the effects), the night and its light for Atmosfere, the two
 // circles for Colore di Noi, the US symbol for its effects, the digits for the
 // countdown styles. Presentation only: ids come from the real rewards.
-const ATM = Object.freeze({ us: ['#0F0B13', 'rgba(217,139,224,.5)'], rose: ['#13070F', 'rgba(255,94,146,.55)'], midnight: ['#060714', 'rgba(119,141,255,.55)'], film: ['#0E0A07', 'rgba(240,166,90,.5)'], blue_hour: ['#050913', 'rgba(91,124,240,.55)'], graphite: ['#0A0A0B', 'rgba(255,255,255,.22)'] });
+// 04/11/2026: Vino is the free look; Rosé became Prugna, Mezzanotte Notte blu.
+const ATM = Object.freeze({ us: ['#22101D', 'rgba(255,124,150,.5)'], rose: ['#1B1024', 'rgba(197,110,190,.55)'], midnight: ['#1A1431', 'rgba(150,140,255,.5)'], film: ['#1D140B', 'rgba(240,166,90,.5)'], blue_hour: ['#0D1734', 'rgba(91,124,240,.55)'], graphite: ['#1D1D21', 'rgba(232,226,240,.3)'] });
 // Each reward's own colour (the Momento fills the screen with it).
 const ITEM_COLOR = Object.freeze({
-  theme: { rose: '#FF5E92', midnight: '#778DFF', film: '#F0A65A', blue_hour: '#5B7CF0', graphite: '#C9C3D4' },
+  theme: { rose: '#C56EBE', midnight: '#968CFF', film: '#F0A65A', blue_hour: '#5B7CF0', graphite: '#C9C3D4' },
   accent: { orchidea: '#D98BE0', cherry: '#F0566C', champagne: '#E6C78E', ice: '#9FD2FF' },
   oggi_theme: { cinematic: '#C06A6A', moonlight: '#5B6CC8', seasonal: '#E0A050' },
   oggi_effect: { petals: '#FF8BA8', fireflies: '#F3B76E', bokeh: '#FF7C96', snow: '#CFE3FF' },
@@ -274,7 +275,7 @@ const ITEM_COLOR = Object.freeze({
 // The free look of the three device slots that have no reward row: choosing
 // it simply clears the slot on this phone.
 const SLOT_DEFAULT = Object.freeze({
-  theme: { id: 'us', title: 'Notte', description: 'La notte di US, com’è adesso.' },
+  theme: { id: 'us', title: 'Vino', description: 'Vino scuro che scende nella notte: l’atmosfera di US.' },
   accent: { id: 'orchidea', title: 'Orchidea', description: 'Il colore di Noi, dove i vostri due colori si incontrano.' },
   effect: { id: 'none', title: 'Fermo', description: 'Il simbolo US, senza movimento.' },
   ti_penso: { id: 'classic', title: 'Classico', description: 'Il Ti penso di sempre: un cuore e il vostro nome.' },

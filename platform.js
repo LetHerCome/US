@@ -136,14 +136,27 @@
         partnerName: safeText(think.partnerName, 40),
         lastReceivedAt: safeInstant(think.lastReceivedAt),
         lastSentAt: safeInstant(think.lastSentAt),
-        lastAnsweredAt: safeInstant(think.lastAnsweredAt)
+        lastAnsweredAt: safeInstant(think.lastAnsweredAt),
+        // Ti penso of both that Rome day (UsWidgetContract.java).
+        todayCount: Number.isInteger(think.todayCount) ? Math.max(0, Math.min(999, think.todayCount)) : 0,
+        todayDate: safeCivilDate(think.todayDate)
       },
       couple: {
         names: (Array.isArray(couple.names) ? couple.names : []).map((name) => safeText(name, 40)).filter(Boolean).slice(0, 2),
         startedOn: safeCivilDate(couple.startedOn),
         frame: typeof couple.frame === 'string' && /^[a-z0-9_]{1,24}$/.test(couple.frame) ? couple.frame : '',
         distanceText: typeof couple.distanceText === 'string' && /^[0-9., ]{1,16} ?(km|m|mi|ft)$/.test(couple.distanceText) ? couple.distanceText : '',
-        distanceState: couple.distanceState === 'stale' ? 'stale' : 'ready'
+        distanceState: couple.distanceState === 'stale' ? 'stale' : 'ready',
+        // Distanza e batteria: "vicini", and when the distance was read.
+        distanceNear: couple.distanceNear === true,
+        distanceAt: safeInstant(couple.distanceAt),
+        // Batteria del partner (UsWidgetContract.java): -1 when unknown.
+        ...widgetBattery(couple),
+        // Pastello: each person's colour, #rrggbb or nothing.
+        colors: {
+          me: /^#[0-9a-f]{6}$/i.test(couple.colors?.me || '') ? couple.colors.me.toLowerCase() : '',
+          partner: /^#[0-9a-f]{6}$/i.test(couple.colors?.partner || '') ? couple.colors.partner.toLowerCase() : ''
+        }
       },
       countdown: {
         active,
@@ -155,9 +168,110 @@
       photo: {
         state: photoReady ? 'ready' : 'none',
         key: photoReady ? photoKey : '',
-        takenOn: photoReady ? safeCivilDate(photo.takenOn) : ''
-      }
+        takenOn: photoReady ? safeCivilDate(photo.takenOn) : '',
+        // Foto & giorni (UsWidgetContract.java): place or caption, the hour,
+        // and Oggi's photos of the next two hours.
+        label: photoReady ? safeText(photo.label, 60) : '',
+        hour: photoReady ? safeInstant(photo.hour) : '',
+        next: photoReady ? (Array.isArray(photo.next) ? photo.next : [])
+          .filter((item) => typeof item?.key === 'string' && /^[a-f0-9]{32}$/.test(item.key))
+          .slice(0, 2)
+          .map((item) => ({ key: item.key, takenOn: safeCivilDate(item.takenOn), label: safeText(item.label, 60) })) : []
+      },
+      daily: widgetDaily(input?.daily),
+      left: widgetLeft(input?.left),
+      memories: widgetMemories(input?.memories),
+      lavagna: widgetLavagna(input?.lavagna),
+      postit: widgetPostit(input?.postit),
+      status: { me: widgetStatusPerson(input?.status?.me), partner: widgetStatusPerson(input?.status?.partner) }
     };
+  }
+
+  // La domanda di oggi (UsWidgetContract.java): the day, the shared question
+  // and whose turn it is. Never an answer.
+  function widgetDaily(daily = {}) {
+    const date = safeCivilDate(daily?.date);
+    const question = safeText(daily?.question, 240);
+    const state = /^(todo|your_turn|waiting|ready)$/.test(daily?.state || '') ? daily.state : '';
+    return date && question && state ? { date, question, state } : { date: '', question: '', state: 'none' };
+  }
+
+  // Messaggio: the newest Lasciato per te still closed, by kind and time only.
+  function widgetLeft(left = {}) {
+    const kind = /^(text|photo|audio|video|music)$/.test(left?.kind || '') ? left.kind : '';
+    const at = kind ? safeInstant(left?.at) : '';
+    return kind && at ? { kind, at } : { kind: '', at: '' };
+  }
+
+  // Ricordi a pila (UsWidgetContract.java): which memory the stack shows.
+  // Never a path, a URL or a photo.
+  // Lavagna: a drawing or not, who drew last (me or partner) and when. Never a stroke.
+  function widgetLavagna(lavagna = {}) {
+    const state = ['ready', 'empty'].includes(lavagna?.state) ? lavagna.state : 'none';
+    return { state, by: state === 'ready' && ['me', 'partner'].includes(lavagna?.by) ? lavagna.by : '', at: state === 'ready' ? safeInstant(lavagna?.at) : '' };
+  }
+
+  // Post-it (04/11/2026): the newest post-it of the board, its paper, who
+  // wrote it and how many others. The couple's own words, never an id or a URL.
+  function widgetPostit(postit = {}) {
+    const text = safeText(postit?.text, 120);
+    if (postit?.state !== 'ready' || !text) return { state: 'none', text: '', color: '', by: '', more: 0, at: '' };
+    return {
+      state: 'ready',
+      text,
+      color: ['yellow', 'pink', 'blue', 'green'].includes(postit?.color) ? postit.color : 'yellow',
+      by: ['me', 'partner'].includes(postit?.by) ? postit.by : '',
+      more: Math.max(0, Math.min(99, Math.trunc(Number(postit?.more) || 0))),
+      at: safeInstant(postit?.at)
+    };
+  }
+
+  function widgetMemories(memories = {}) {
+    const date = safeCivilDate(memories?.date);
+    if (memories?.state !== 'ready' || !date) return { state: 'none', label: '', anniversary: false, day: '', date: '', title: '', count: 0, stack: 0 };
+    return {
+      state: 'ready',
+      label: safeText(memories.label, 24),
+      anniversary: memories.anniversary === true,
+      day: safeCivilDate(memories.day),
+      date,
+      title: safeText(memories.title, 60),
+      count: Number.isInteger(memories.count) ? Math.max(0, Math.min(9999, memories.count)) : 0,
+      stack: Number.isInteger(memories.stack) ? Math.max(1, Math.min(3, memories.stack)) : 1
+    };
+  }
+
+  // Come stai (UsWidgetContract.java): one of the twelve keys, the words' form
+  // and the server's times. Never free text.
+  const STATUS_KEYS = ['innamorato', 'felice', 'stanco', 'giu', 'nervoso', 'malato', 'festa', 'lavoro', 'studio', 'palestra', 'viaggio', 'tavola'];
+  function widgetStatusPerson(person = {}) {
+    const at = safeInstant(person?.at), until = safeInstant(person?.until);
+    const shown = STATUS_KEYS.includes(person?.status) && Boolean(at && until);
+    const form = person?.form === 'm' || person?.form === 'f' ? person.form : '';
+    return { status: shown ? person.status : '', form, at: shown ? at : '', until: shown ? until : '' };
+  }
+
+  function widgetBattery(couple) {
+    const level = Number.isInteger(couple.batteryLevel) && couple.batteryLevel >= 0 && couple.batteryLevel <= 100 ? couple.batteryLevel : -1;
+    const at = level >= 0 ? safeInstant(couple.batteryAt) : '';
+    return at
+      ? { batteryLevel: level, batteryCharging: couple.batteryCharging === true, batteryAt: at }
+      : { batteryLevel: -1, batteryCharging: false, batteryAt: '' };
+  }
+
+  // Batteria del partner: this phone's own battery, asked only while US is
+  // open. null when the APK predates the method or the phone cannot tell.
+  async function readNativeBattery() {
+    const plugin = widgetBridge();
+    if (!plugin || typeof plugin.getBatteryStatus !== 'function') return null;
+    try {
+      const result = await plugin.getBatteryStatus();
+      const level = Number(result?.level);
+      if (result?.supported !== true || !Number.isInteger(level) || level < 0 || level > 100) return null;
+      return { level, charging: result.charging === true };
+    } catch (_) {
+      return null;
+    }
   }
 
   async function activateWidgetAccount(ownerHash) {
@@ -200,12 +314,15 @@
   }
 
   // A private JPEG composite of the two avatars, never remote URLs.
-  async function writeWidgetNoiPortrait(ownerHash, base64) {
+  // slot: "pair" (old Noi 2x1), "me" or "partner" (the round avatars),
+  // "memories" and "memories_wide" (the stack of Ricordi a pila),
+  // "lavagna" and "lavagna_night" (the drawing, Pastello and Midnight ink).
+  async function writeWidgetNoiPortrait(ownerHash, base64, slot = 'pair') {
     const plugin = widgetBridge();
     const safeHash = validOwnerHash(ownerHash);
     const data = typeof base64 === 'string' && /^[A-Za-z0-9+/=]+$/.test(base64) && base64.length <= 2_800_000 ? base64 : '';
-    if (!plugin || !safeHash || !data || typeof plugin.writeNoiPortrait !== 'function') return false;
-    await plugin.writeNoiPortrait({ ownerHash: safeHash, data });
+    if (!plugin || !safeHash || !data || !['pair', 'me', 'partner', 'memories', 'memories_wide', 'lavagna', 'lavagna_night'].includes(slot) || typeof plugin.writeNoiPortrait !== 'function') return false;
+    await plugin.writeNoiPortrait({ ownerHash: safeHash, data, slot });
     return true;
   }
 
@@ -227,12 +344,16 @@
     return /^[0-9a-f-]{36}$/i.test(deviceId) ? { deviceId } : null;
   }
 
-  async function storeWidgetActionCredential(ownerHash, token, expiresAt = '') {
+  // functionsUrl: the Edge address of this build (production or staging),
+  // so the widget sends to the server that issued the token. Native accepts
+  // only the two US projects (UsWidgetEndpoints).
+  async function storeWidgetActionCredential(ownerHash, token, expiresAt = '', { functionsUrl = '' } = {}) {
     const plugin = widgetBridge();
     const safeHash = validOwnerHash(ownerHash);
     const safeToken = typeof token === 'string' && /^[A-Za-z0-9_-]{43}$/.test(token) ? token : '';
+    const safeUrl = /^https:\/\/[a-z0-9]{20}\.supabase\.co\/functions\/v1$/.test(functionsUrl) ? functionsUrl : '';
     if (!plugin || !safeHash || !safeToken || typeof plugin.setActionCredential !== 'function') return false;
-    await plugin.setActionCredential({ ownerHash: safeHash, token: safeToken, expiresAt: safeInstant(expiresAt) });
+    await plugin.setActionCredential({ ownerHash: safeHash, token: safeToken, expiresAt: safeInstant(expiresAt), ...(safeUrl ? { functionsUrl: safeUrl } : {}) });
     return true;
   }
 
@@ -243,7 +364,8 @@
     return true;
   }
 
-  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo'];
+  // Countdown left the widgets on 04/11/2026; the Post-it took its place.
+  const WIDGET_KINDS = ['think', 'postit', 'noi', 'photo', 'daily', 'message', 'memories', 'status', 'lavagna'];
 
   async function getInstalledWidgets() {
     const plugin = widgetBridge();
@@ -332,6 +454,7 @@
     requestWidgetPin,
     openWidgetSettings,
     listenForWidgetPinned,
+    readNativeBattery,
     getNativeLaunchUrl,
     listenForNativeAppUrl
   });

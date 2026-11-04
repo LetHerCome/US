@@ -25,20 +25,19 @@ body{--us-tab:inherit}
 :root:has(#quiz.page.active){--us-tab:var(--us-menta)}
 :root:has(#settings.page.active){--us-tab:var(--us-color-text-3)}
 
-/* ---------- Canvas: the night, with a faint glow of the tab colour on top ---------- */
-html,body{
-  background:
-    radial-gradient(70% 300px at 50% -60px,color-mix(in srgb,var(--us-tab) 13%,transparent),transparent 72%),
-    var(--us-color-bg);
+/* ---------- Canvas: the Atmosfera, still on the screen, with a faint glow of the tab colour on top ----------
+   The gradient (--us-atmo) holds the viewport while the page scrolls over it.
+   !important: identity.css paints html and body the same way, with !important. */
+html,:root[data-us-theme]{
+  background:var(--us-atmo),var(--us-color-bg)!important;
+  background-attachment:fixed!important;
+  color:var(--us-color-text);
+}
+body,:root[data-us-theme] body{
+  background:radial-gradient(70% 300px at 50% -60px,color-mix(in srgb,var(--us-tab) 13%,transparent),transparent 72%)!important;
   color:var(--us-color-text);
 }
 body{font-family:var(--us-font-ui);font-size:15px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-:root[data-us-theme] body{
-  background:
-    radial-gradient(70% 300px at 50% -60px,color-mix(in srgb,var(--us-tab) 13%,transparent),transparent 72%),
-    radial-gradient(circle at 20% -10%,var(--us-theme-glow-a),transparent 35%),
-    var(--us-color-bg);
-}
 
 /* ---------- Type: Fraunces for titles, Figtree for everything else ---------- */
 h1,h2,h3,.us-editorial,.us-sheet-title{font-family:var(--us-font-display);font-weight:400;letter-spacing:-.01em}
@@ -206,7 +205,9 @@ body:has(#homeHero.us-oggi-focus) .us-nav.us-nav-premium{translate:0 120px}
 .page.us-slide-live.is-under{position:relative;z-index:1;animation:none!important}
 .page.us-slide-live.is-over{position:relative;z-index:3;isolation:isolate;animation:none!important}
 .page.us-slide-ghost.is-over{z-index:3;isolation:isolate}
-.page.us-slide-live.is-over::before,.page.us-slide-ghost.is-over::before{content:"";position:absolute;z-index:-1;inset:-100vh -32px;background:var(--us-color-bg);box-shadow:-30px 0 60px rgba(0,0,0,.45);pointer-events:none}
+/* The page sliding over carries the Atmosfera with it, lined up with the screen
+   (--us-slide-top: where the page starts on screen, due-colori.js), never a flat panel. */
+.page.us-slide-live.is-over::before,.page.us-slide-ghost.is-over::before{content:"";position:absolute;z-index:-1;inset:-100vh -32px;background:var(--us-atmo);background-color:var(--us-color-bg);background-size:100% 100vh;background-repeat:no-repeat;background-position:0 calc(100vh - var(--us-slide-top,0px));box-shadow:-30px 0 60px rgba(0,0,0,.45);pointer-events:none}
 .us-slide-veil{position:fixed;inset:0;z-index:2;background:#000;opacity:0;pointer-events:none}
 
 /* ---------- Focus Photo (mockup .screen.is-focus): the top bar fades away ---------- */

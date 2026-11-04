@@ -52,9 +52,10 @@ test('M8A capitoli: secondary collections by year, with real counts and the newe
   assert.deepEqual(ch, [{ year: '2026', moments: 2, experiences: 1, cover: 'm1' }, { year: '2024', moments: 1, experiences: 0, cover: 'm3' }]);
 });
 
-test('M8A page: Rivivi, Conservati, La vostra storia, Capitoli in this order inside Ricordi', () => {
+// Ricordi is only the album (founder, 04/11/2026): the Conservati door left the page.
+test('M8A page: Rivivi, La vostra storia, Capitoli in this order inside Ricordi', () => {
   const page = read('index.html').match(/<main id="moments" class="page">[\s\S]*?<\/main>/)?.[0] || '';
-  const order = ['id="ricordiRivivi"', 'id="conservatiEntry"', 'Mese per mese', 'id="momentsGrid"', 'id="ricordiChapters"'].map((s) => page.indexOf(s));
+  const order = ['id="ricordiRivivi"', 'Mese per mese', 'id="momentsGrid"', 'id="ricordiChapters"'].map((s) => page.indexOf(s));
   assert.ok(order.every((i) => i >= 0), 'all four surfaces exist');
   assert.deepEqual([...order].sort((a, b) => a - b), order);
 });
@@ -102,6 +103,6 @@ test('M8A density pass: Ricordi prioritizes memories over chrome without changin
   assert.match(css, /#moments \.ricordi-story \.moment-card\.moment-postit\.ricordi-feature img\{\s*aspect-ratio:16\/9!important;/);
   assert.match(css, /body:has\(#moments\.page\.active\) #thinkButton\{\s*display:none!important;/);
   const page = read('index.html').match(/<main id="moments" class="page">[\s\S]*?<\/main>/)?.[0] || '';
-  const order = ['id="ricordiRivivi"', 'id="conservatiEntry"', 'Mese per mese', 'id="momentsGrid"'].map((s) => page.indexOf(s));
+  const order = ['id="ricordiRivivi"', 'Mese per mese', 'id="momentsGrid"'].map((s) => page.indexOf(s));
   assert.deepEqual([...order].sort((a,b)=>a-b), order);
 });

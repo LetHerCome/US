@@ -1468,7 +1468,7 @@ console.info('[US] Moments Albums attivo');
         <span class="conservati-card-kind">${escapeConservati(kindLabel(entry.source.kind))}</span>
       </button>`;
     }).join('');
-    setConservatiHead('RICORDI', 'Conservati');
+    setConservatiHead('LASCIATO PER TE', 'Conservati');
     showConservatiState('list');
   }
 
@@ -1584,7 +1584,7 @@ console.info('[US] Moments Albums attivo');
       const detail = document.getElementById('conservatiDetail');
       if (list) list.replaceChildren();
       if (detail) detail.replaceChildren();
-      setConservatiHead('RICORDI', 'Conservati');
+      setConservatiHead('LASCIATO PER TE', 'Conservati');
       showConservatiState('loading');
     };
     if (window.UsUiFoundation?.exitSurface) window.UsUiFoundation.exitSurface(modal, finalize); else finalize();
@@ -1604,7 +1604,7 @@ console.info('[US] Moments Albums attivo');
   document.getElementById('conservatiDetail')?.addEventListener('click', event => {
     if (event.target.closest('[data-conservati-back]')) {
       releaseConservatiDetailMedia();
-      setConservatiHead('RICORDI', 'Conservati');
+      setConservatiHead('LASCIATO PER TE', 'Conservati');
       showConservatiState('list');
     }
   });
@@ -1613,11 +1613,14 @@ console.info('[US] Moments Albums attivo');
   });
 
   // R8: the Conservati door stays hidden until the couple has kept something.
+  // Since 04/11/2026 the door is at the bottom of Lasciato per te (both its
+  // sheets, [data-conservati-entry]): Ricordi is only the album.
   let entryRequestId = 0;
+  const all = (selector) => [...(document.querySelectorAll?.(selector) || [])];
   async function refreshConservatiEntry() {
-    const entry = document.getElementById('conservatiEntry');
+    const entries = [document.getElementById('conservatiEntry'), ...all('[data-conservati-entry]')].filter(Boolean);
     const coupleId = window.usProfile?.couple_id;
-    if (!entry || !coupleId) return;
+    if (!entries.length || !coupleId) return;
     let client;
     try { client = sb; } catch (_) { client = window.sb || null; }
     if (!client) return;
@@ -1629,15 +1632,19 @@ console.info('[US] Moments Albums attivo');
       if (error) throw error;
       if (requestId !== entryRequestId) return;
       const total = Number(count) || 0;
-      entry.hidden = total < 1;
-      const label = document.getElementById('conservatiCount');
-      if (label) label.textContent = total > 0 ? String(total) : '';
+      for (const entry of entries) entry.hidden = total < 1;
+      for (const label of [document.getElementById('conservatiCount'), ...all('[data-conservati-count]')].filter(Boolean)) label.textContent = total > 0 ? String(total) : '';
     } catch (error) {
       console.warn('[US Conservati] entry', error);
     }
   }
   window.addEventListener?.('us:moments-updated', () => { refreshConservatiEntry(); });
   window.addEventListener?.('us:ricordi-shown', () => { refreshConservatiEntry(); });
+  // Lasciato per te tells when it opens or something is kept; the door opens Conservati over it.
+  window.addEventListener?.('us:left-for-you-opened', () => { refreshConservatiEntry(); });
+  document.addEventListener?.('click', (event) => {
+    if (event.target?.closest?.('[data-conservati-entry]')) openConservati();
+  });
 
   window.openConservati = openConservati;
   window.closeConservati = closeConservati;

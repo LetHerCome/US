@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ti penso 4x2 (founder, 04/11/2026): only a heart, in the middle. Empty
+     until you tap it; the tap fills it with a pop and sends Ti penso. Class and
+     layout names are stable, so a widget already on a Home screen keeps working. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/us_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/us_widget_card"
+    android:clipToOutline="true">
+
+    <ImageView
+        android:id="@+id/us_think_art"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:src="@drawable/us_widget_art_think_m" />
+
+    <FrameLayout
+        android:id="@+id/us_think_grain"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/us_widget_grain" />
+
+    <ImageView
+        android:id="@+id/us_widget_heart"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:src="@drawable/us_widget_think_heart_empty" />
+</FrameLayout>

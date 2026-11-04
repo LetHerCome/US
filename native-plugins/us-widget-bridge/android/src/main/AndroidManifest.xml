@@ -17,16 +17,17 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/us_widget_think_info" />
         </receiver>
+        <!-- Post-it (04/11/2026): the newest post-it of the board; it took the Countdown's place. -->
         <receiver
-            android:name="com.usapp.widget.UsCountdownWidgetProvider"
+            android:name="com.usapp.widget.UsPostitWidgetProvider"
             android:exported="false"
-            android:label="@string/us_widget_countdown_name">
+            android:label="@string/us_widget_postit_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/us_widget_countdown_info" />
+                android:resource="@xml/us_widget_postit_info" />
         </receiver>
         <receiver
             android:name="com.usapp.widget.UsNoiWidgetProvider"
@@ -62,8 +63,72 @@
                 android:resource="@xml/us_widget_daily_info" />
         </receiver>
         <receiver
+            android:name="com.usapp.widget.UsMessageWidgetProvider"
+            android:exported="false"
+            android:label="@string/us_widget_message_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/us_widget_message_info" />
+        </receiver>
+        <receiver
+            android:name="com.usapp.widget.UsMemoriesWidgetProvider"
+            android:exported="false"
+            android:label="@string/us_widget_memories_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/us_widget_memories_info" />
+        </receiver>
+        <receiver
+            android:name="com.usapp.widget.UsStatusWidgetProvider"
+            android:exported="false"
+            android:label="@string/us_widget_status_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/us_widget_status_info" />
+        </receiver>
+        <receiver
+            android:name="com.usapp.widget.UsDaysWidgetProvider"
+            android:exported="false"
+            android:label="@string/us_widget_photo_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/us_widget_days_info" />
+        </receiver>
+        <receiver
+            android:name="com.usapp.widget.UsLavagnaWidgetProvider"
+            android:exported="false"
+            android:label="@string/us_widget_lavagna_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/us_widget_lavagna_info" />
+        </receiver>
+        <receiver
             android:name="com.usapp.widget.UsThinkWidgetActionReceiver"
             android:exported="false" />
+        <!-- Ti penso (Pastello): the app's heart for a moment over the Home screen,
+             opened only by the widget's own PendingIntent. -->
+        <activity
+            android:name="com.usapp.widget.UsThinkHeartActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <receiver
             android:name="com.usapp.widget.UsWidgetSystemReceiver"
             android:exported="false">

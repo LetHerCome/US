@@ -165,7 +165,7 @@ test('G9: La vostra domanda closes the Giochi panel, as in the mockup, and is si
 test('S6: Ultime crescite (the mockup fold) — what, detail · date and its points, mesiversari included', () => {
   const app = read('app.js');
   const from = app.indexOf('const RESONANCE_HISTORY_LIMIT=6;');
-  const block = app.slice(from, app.indexOf('function hashSeed(text){', from));
+  const block = app.slice(from, app.indexOf('// ===== M7B — Da vivere', from));
   const root = { innerHTML: '', setAttribute() {}, closest: () => null };
   const window = {};
   const context = vm.createContext({ window, document: { getElementById: (id) => (id === 'noiResonanceHistory' ? root : null) }, console, escapeHtml: String });

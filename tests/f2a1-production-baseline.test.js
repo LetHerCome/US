@@ -326,6 +326,7 @@ test('F2A.1 secrets manifest: every vault name and Edge env name, names only', (
     get_internal_game_v2_push_cron_key: 'us_game_v2_push_cron_key',
     get_internal_left_for_you_push_cron_key: 'us_left_for_you_push_cron_key',
     get_internal_left_for_you_cleanup_cron_key: 'us_left_for_you_cleanup_cron_key',
+    get_internal_weekly_challenge_cron_key: 'us_weekly_challenge_cron_key',
   };
   const shared = new Map();
   for (const f of fs.readdirSync(path.join(ROOT, 'supabase/functions/_shared'))) shared.set(f, read(`supabase/functions/_shared/${f}`));

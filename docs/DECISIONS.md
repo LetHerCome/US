@@ -370,3 +370,102 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 
 - In produzione l'icona predefinita resta quella con la cornice. Sostituisce la decisione «Icona dell'app senza cornice» del 29/10, che non va in produzione.
 - Le altre icone (Notte, Oro, Neon) si sbloccano in Sintonia, come premi.
+
+## 2026-10-31 — Posizione, widget e Note condivise (dopo lo studio di Love8)
+
+**Fonte:** founder, 31/10/2026: grill D1–D16 sullo studio dell'app Love8, riepilogo confermato («Sì, è giusto»).
+
+- **Posizione:** niente tracciamento continuo. Si aggiungono, in quest'ordine: la batteria del partner (aggiornata solo ad app aperta, con l'orario, senza notifiche); «a casa / fuori» in automatico con un solo recinto attorno alla Casa che ognuno mette sulla mappa (la posizione di casa non lascia il telefono, al server arriva solo lo stato; va attivato da tutti e due; serve «Consenti sempre» e la dichiarazione a Play); la notifica solo per l'arrivo a casa, che ognuno può spegnere; la condivisione a tempo (30 minuti o 1 ora, punto preciso, «Smetti», poi cancellata).
+- **Widget:** il primo è «Noi» con a casa / fuori, batteria e distanza; il widget del Compagno è tolto per ora; poi lo stato con emoji e il carosello di foto. Solo Android.
+- **Note condivise in Noi:** titolo, testo e lista a spunta, modificabili da tutti e due; vince l'ultimo salvataggio, con l'avviso quando l'altra persona salva la nota aperta. Missione: `docs/missions/note-condivise-v1.md`.
+- **Ordine:** Note condivise e widget «Noi» con batteria e distanza; poi «a casa»; poi la condivisione a tempo. Tutto prima su staging.
+
+## 2026-10-31 — Batteria del partner: accanto alla distanza su Oggi
+
+**Fonte:** founder, 31/10/2026: «Accanto alla distanza su Oggi» (scelta tra tre posti, con l'anteprima «( 12 km · 🔋 18% )»). Completa «Posizione, widget e Note condivise» del 31/10, per il posto della batteria nell'app.
+
+- **Oggi:** la batteria del partner sta nella pillola della distanza, dopo i chilometri: icona Phosphor e percentuale. Sotto il 20% e non in carica l'icona è corallo.
+- **Scheda «Distanza»** (si apre toccando la pillola): sotto la distanza, una riga con nome, percentuale e da quanto tempo: «Bea · 18% · 2 ore fa».
+- La batteria si vede solo accanto a una distanza (anche l'ultima nota). Con «Attiva posizione», «In attesa» o senza pillola, su Oggi non compare.
+- **Noi** resta com'è: niente riga della batteria, e la scheda della coppia con la distanza resta spenta.
+- **Widget «Noi»:** invariato, con icona e percentuale accanto a «NOI».
+- Dopo un giorno la batteria non si vede più, né su Oggi né nel widget.
+
+## 2026-10-31 — Widget: la mappa di «Noi» e il «Messaggio»
+
+**Fonte:** founder, 31/10/2026. Per la mappa ha risposto «li deve prendere da maps», poi, alla domanda di chiarimento, «Vera, ma solo sfondo». Per «Messaggio» ha scelto «Solo tipo e ora». Completa «Posizione, widget e Note condivise» del 31/10.
+
+**Superata il 02/11/2026** dalla famiglia «Pastello» (sotto): niente più mappa, l'asset `us_widget_noi_map_v1` è tolto. Resta valido «Solo tipo e ora» per il Lasciato per te.
+
+- **Mappa del widget «Noi»:** decorativa e fissa, **mai la posizione della coppia**. È un pezzo vero di città, scuro e sempre lo stesso: Torino, il Po. Si disegna una volta con lo stile scuro di OpenFreeMap della Mappa dei Ricordi, senza scritte, e sta dentro l'app. Il widget non si collega a nessun servizio di mappe.
+  - Niente Google Maps: le sue condizioni vietano di salvare le immagini, e la Static API chiede una chiave a pagamento.
+  - Dati © OpenStreetMap contributors (ODbL), stile OpenFreeMap / OpenMapTiles, citati nella privacy.
+  - È candidata (`DRAFT` in `assets/ASSET_MANIFEST.json`) finché il founder non la approva dall'APK di staging.
+- **«Messaggio»:** di un Lasciato per te il widget mostra solo il tipo e l'ora («Ti ha lasciato una foto · 10 min fa»), mai le parole, la foto o il link.
+
+## 2026-11-02 — Widget: la famiglia «Pastello»
+
+**Fonte:** founder, 02/11/2026: «mi fanno schifo un po tutti, quelli manterrei per ora sono i 195 giorni insieme con la foto che cambia e quello che dice il partner ''beatrice'' ti ha pensato e sotto ricambia, al massimo lo farei piu veloce e toccando il cuore con la stessa animazione del ti penso dentro l'app». Riferimenti: Love8 e Paired. Tavola approvata: https://claude.ai/artifact/PvmHiSaPhF27JhLr1DzBg4. Sostituisce l'aspetto dei widget del 16/10 («Due colori») e la mappa di «Noi» del 31/10.
+
+- **Stile:** «Pastello», il tema chiaro della tavola: carte chiare a sfumatura, Fraunces per titoli e numeri, Figtree per il testo, inchiostro `#1a1020`. Tutti in piccolo (2×2) e medio (4×2).
+- **Avatar:** le foto vere dei profili, tonde, con il colore della persona come bordo. Senza foto, l'iniziale sul colore (rosa per chi ha il ruolo francesco, lilla per beatrice, o il colore scelto).
+- **I widget:**
+  1. Foto & giorni (rifà «Foto & Noi»; «Giorni insieme» confluisce qui);
+  2. Ti penso, più veloce: al tocco passa subito a «Ricambiato · adesso» e invia in sottofondo; il cuore fa la stessa animazione dell'app, in una finestrella trasparente di un attimo sopra la Home; nel medio, quante volte vi siete pensati oggi;
+  3. La domanda di oggi;
+  4. Distanza e batteria, senza mappa (sostituisce «Noi»);
+  5. Come stai, con l'emoji di ognuno: funzione nuova anche nell'app, per ultima, dopo un disegno;
+  6. Ricordi a pila;
+  7. Lasciato per te (sostituisce «Messaggio»): solo tipo e ora;
+  9. Countdown.
+- **Non scelti:** il widget «Nota» (la 8). Tolto con un revert: niente migrazione `widget_note_v1`, niente Edge `widget-note`, niente scope `note:rw`. Le Note condivise restano.
+- Le classi dei widget che ne sostituiscono uno restano le stesse, così i widget già messi sulla Home non spariscono.
+
+## 2026-11-02 — «Come stai»: le risposte del founder
+
+**Fonte:** founder, 02/11/2026, risposte alle cinque domande di `docs/missions/widget-come-stai-v1.md`, tutte con la proposta.
+
+1. **Dove si sceglie:** nell'app, in Oggi, accanto alla distanza e alla batteria. Il tocco sul widget apre lì. Nessuna scrittura dal widget e nessun token nuovo.
+2. **Parole:** ognuno sceglie una volta in Impostazioni la forma maschile o femminile; app e widget usano quella. Senza scelta, la parola non declinata («in amore», «senza energie», «nervi tesi»).
+3. **Stati:** i 12 proposti (🥰 😊 😴 😔 😤 🤒 🥳 💼 📚 🏋️ 🚗 🍝). Niente testo libero.
+4. **Durata:** 12 ore, con l'ora del server.
+5. **Notifica:** nessuna; solo widget e app.
+
+**Dati:** `public.member_status`, una riga per persona, senza storico: stato, forma, `set_at` ed `expires_at` scritti dal server. RLS: la coppia legge, ognuno scrive solo il suo. Va con l'account e con l'uscita dalla coppia, entra nell'export, passa dal canale Realtime unico. Migrazione su staging solo col workflow approvato dal founder.
+
+## 2026-11-02 — Widget: correzioni dopo la prova dell'APK
+
+**Fonte:** founder, 02/11/2026, prova dell'APK di staging (run 41477230331, staging d80f4d57).
+
+- **Foto & Noi:** torna lo stile di prima del Pastello («è più carino») e il nome «Foto & Noi». Resta la foto che cambia ogni ora.
+- **Giorni insieme:** era uguale a Foto & Noi, ne resta uno solo, Foto & Noi. La classe resta, nascosta dalla lista dei widget (`hide_from_picker`) e con il nome Foto & Noi, e disegna Foto & Noi: togliere il provider farebbe diventare «Impossibile caricare il widget» quelli già sulla Home. L'app non lo offre e non lo conta più.
+- **Tema chiaro e scuro:** ogni widget segue il tema del telefono. Pastello col tema chiaro, «Midnight» (i colori notte di US, il ramo `notte` della tavola) col tema scuro. Niente widget in più: risorse `-night` (colori, sfondi, anteprime) e i colori messi dal codice in due forme (`setColorInt`), così da Android 12 il launcher cambia da solo quando cambia il tema. Le immagini disegnate da US (avatar, pila dei Ricordi) hanno lo sfondo trasparente e vanno bene in tutti e due. Foto & Noi resta com'era prima, scuro.
+
+## 2026-11-02 — Widget: «Foto protagonista»
+
+**Fonte:** founder, 02/11/2026 («dobbiamo pulire questi widget, sono troppo poco artistici»), proposte sul canvas (https://claude.ai/artifact/PvmHiSaPhF27JhLr1DzBg4, sezione «Rework»), poi «ha senso prendere la foto solo quando si tratta di riferimenti», «Segue il tema (B)» e «Sì, implementa».
+
+- **La foto solo dove è il contenuto:** a tutto widget in Foto & Noi (la foto di Oggi) e in Ricordi a pila (le foto del ricordo), sempre prese dall'app. Gli altri sei sono illustrati.
+- **Illustrazioni:** campi di colore sfocati e un disegno a tratto per widget, con una grana leggera sopra; mai dischi di colore piatto. Le foto profilo restano piccole e tonde, per dire chi è; senza foto, l'iniziale in Fraunces su un fondo sfumato. Sono risorse WebP con la forma Pastello e quella Midnight, così da Android 12 il launcher le cambia col tema; prima di Android 12 il codice le disegna con gli angoli arrotondati nel tema del momento, senza grana.
+- **Fraunces:** il launcher scrive i testi dei widget nel suo carattere. Titoli e numeri (la frase di Ti penso, la domanda, i km, i giorni) sono disegnati da `UsWidgetArt` come immagine bianca col carattere dell'app e colorati col tema; i testi piccoli restano testo vero nel carattere del sistema. Nessun WebView in più.
+- **Ti penso:** solo il cuore, nessuna scritta «Ricambia», anche nel 4×2. Non collegato: «Apri US» e sotto il perché, mai tagliato.
+- **Foto & Noi** segue il tema (scelta B): col tema chiaro la foto sfuma nella crema Pastello, col tema scuro come prima.
+- **Lasciato per te** resta una busta chiusa: la sorpresa non si vede nel widget.
+- **Countdown** sempre illustrato: nessun dato nuovo per una foto del viaggio.
+
+## 2026-11-04 — L'icona dell'app perde il riquadro, la stellina resta
+
+**Fonte:** founder, 04/11/2026: «lasciamo la stella di prima, togliamo solo il riquadro» (dopo aver scartato tre versioni con i cuori al posto della stellina).
+
+- Sostituisce «L'icona dell'app resta quella di sempre» del 30/10: l'icona predefinita del telefono è il logo senza cornice approvato il 29/10 (`assets/source/brand/app-icon/us-launcher-symbol-v2.png`), con la stellina com'era. Splash, notifiche e logo dentro l'app restano quelli di sempre.
+- Codice: lo stesso del 29/10 (`us_adaptive_foreground_v2`, `mipmap-*/ic_launcher*.png`, `scripts/build-android-brand-assets.ps1`, `android/brand-assets-manifest.json`, `tests/n3-android-brand-assets.test.js`).
+- Le icone premio di Sintonia (Notte, Oro, Neon) non cambiano. Su staging dal 04/11; in produzione con la patch, solo con il via del founder.
+
+## 2026-11-03 — Noi nuova, lavagna e sfida della settimana
+
+**Fonte:** founder, 03/11/2026, dopo la revisione di staging: «prima di portare tutto in produzione dobbiamo ripensare alla pagina noi» (missioni inutilizzate, calendario poco protagonista, cerchi e pallini che danno fastidio, Note che si apre in un'altra pagina, Lavagna che non fa da lavagna). Riferimenti: Between, TimeTree, Cupla, Couple Joy e le app per disegnare in due. Mockup approvato sul canvas «Noi · rework»; decisioni D1–D22 del grill-me, riepilogo confermato con «vai».
+
+- **Noi:** due parti. In alto il calendario protagonista (caselle grandi; niente cerchi, pallini né legenda; ogni impegno è un'etichetta col nome nel colore di chi l'ha messo, rosa tu, lilla l'altra persona, orchidea insieme; nei giorni con un Ricordo la casella è la sua foto), viste «Mese» e «Prossimi», e sotto l'agenda del giorno toccato. Eventi, ricorrenze e anniversari stanno nel calendario. Spariscono le tessere Lavagna, Missioni, Eventi e Note e il pulsante «Il nostro giorno» (la data della relazione resta in Impostazioni).
+- **Bacheca:** in cima la **lavagna** da disegnare in due (una sola; ogni tratto si salva quando si alza il dito e l'altro lo vede in 1-2 secondi; «Pulisci» chiede conferma; notifica al massimo ogni 2 ore, spegnibile; widget «Lavagna» con l'ultimo disegno, chiaro e scuro, che apre la lavagna). Sotto i **post-it**, scritti e spuntati sul posto, carta a scelta tra quattro colori con l'autore in basso, al massimo 6 su Noi più «Tutti i post-it». Un post-it fisso **«Da vivere»** prende il posto di «Le vostre idee», con le idee già scritte.
+- **Sfida della settimana** al posto delle missioni: una sola, scelta da US secondo «Come vi vedete», un cambio a settimana; in Gioca sotto la domanda del giorno, e su Oggi da venerdì se non è fatta. Si chiude con la foto di uno dei due (coppie a distanza: due foto affiancate; una sola a domenica vale 30 punti). La foto diventa un Ricordo segnato «Sfida». 60 punti fissi; scade domenica alle 23:59 di Roma senza penalità; 100 punti in più ogni 4 settimane di fila. Notifiche il lunedì mattina e il sabato se non è fatta, spegnibili.
+- **Come si procede:** prima le tavole che mancano (bacheca intera, lavagna aperta, sfida in Gioca e su Oggi, sfida a distanza); dopo l'ok del founder tre fasi su staging in tre sessioni parallele (Noi e bacheca; lavagna e widget; sfida). In produzione tutto insieme, solo dopo l'approvazione del founder; ogni migrazione e ogni passo con la sua approvazione.

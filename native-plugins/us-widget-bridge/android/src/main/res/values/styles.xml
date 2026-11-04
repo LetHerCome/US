@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Countdown 4x2: one of the 14 ticks of the last two weeks (5 dp, 5 dp apart). -->
+    <style name="UsWidgetTick">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginEnd">3dp</item>
+        <item name="android:scaleType">fitXY</item>
+        <item name="android:src">@drawable/us_widget_pastel_tick_off</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="android:contentDescription">@null</item>
+    </style>
+</resources>

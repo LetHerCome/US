@@ -1,4 +1,4 @@
-const BUILD_ID = "us-rilascio-20261030-74";
+const BUILD_ID = "us-rilascio-20261104-101";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -50,6 +50,9 @@ const APP_SHELL = [
   versioned("/moments-albums.js"),
   versioned("/ricordi-place.css"),
   versioned("/ricordi-place.js"),
+  versioned("/partner-battery.js"),
+  versioned("/member-status.js"),
+  versioned("/weekly-challenge.js"),
   versioned("/navigation.js"),
   versioned("/games.css"),
   versioned("/games.js"),
@@ -59,10 +62,15 @@ const APP_SHELL = [
   versioned("/countdown.js"),
   versioned("/year-recap.css"),
   versioned("/year-recap.js"),
+  versioned("/couple-notes.css"),
+  versioned("/couple-notes.js"),
+  versioned("/lavagna.css"),
+  versioned("/lavagna.js"),
   versioned("/companions.css"),
   versioned("/companions.js"),
   versioned("/distance.css"),
   versioned("/distance.js"),
+  versioned("/member-status.css"),
   versioned("/app-update.js"),
   versioned("/person-colors.js"),
   versioned("/pet.css"),
@@ -146,6 +154,10 @@ const APP_SHELL = [
   "/assets/icons/phosphor/bell-regular.svg",
   "/assets/icons/phosphor/squares-four-regular.svg",
   "/assets/icons/phosphor/map-pin-regular.svg",
+  "/assets/icons/phosphor/battery-low-regular.svg",
+  "/assets/icons/phosphor/battery-medium-regular.svg",
+  "/assets/icons/phosphor/battery-high-regular.svg",
+  "/assets/icons/phosphor/battery-charging-regular.svg",
   "/assets/icons/phosphor/arrows-clockwise-regular.svg",
   "/assets/icons/phosphor/user-circle-regular.svg",
   "/assets/icons/phosphor/image-regular.svg",
@@ -155,6 +167,8 @@ const APP_SHELL = [
   "/assets/icons/phosphor/pencil-simple-regular.svg",
   "/assets/icons/phosphor/list-bullets-regular.svg",
   "/assets/icons/phosphor/chalkboard-simple-regular.svg",
+  "/assets/icons/phosphor/eraser-regular.svg",
+  "/assets/icons/phosphor/arrow-counter-clockwise-regular.svg",
   "/assets/icons/phosphor/palette-regular.svg",
   "/assets/icons/phosphor/trash-regular.svg",
   "/assets/icons/phosphor/info-regular.svg",
@@ -242,7 +256,7 @@ self.addEventListener("activate", (event) => {
 
 // Native Notifications V1: a notification can only name an allow-listed US
 // surface. Its URL is always rebuilt here, same-origin; a payload URL is never opened.
-const US_PUSH_TARGETS = ["home", "today", "think", "left_for_you", "quiz", "bond", "calendar", "events"];
+const US_PUSH_TARGETS = ["home", "today", "think", "left_for_you", "quiz", "bond", "calendar", "events", "lavagna"];
 const usPushTarget = (value) => (US_PUSH_TARGETS.includes(value) ? value : "home");
 const usPushUrl = (target) => `/?open=${encodeURIComponent(usPushTarget(target))}&from=push`;
 

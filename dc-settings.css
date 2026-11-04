@@ -319,6 +319,8 @@
 
 /* .ver */
 #settings .us-settings2-page .us-settings2-version{margin:20px 0 0;text-align:center;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
+/* The build under «US 1.0»: which version this phone runs (03/11/2026). */
+#settings .us-settings2-page .us-settings2-version small{display:block;font-size:11px;opacity:.8}
 
 /* ==========================================================================
    Sheets (082–095): the mockup's Foglio body. Header chrome, scrim and the
@@ -747,6 +749,10 @@
 #usWidgetHub .us-wp-think>:not(i){display:none}
 #usWidgetHub .us-wp-think i{display:grid;place-items:center;width:30px;height:30px;margin:0}
 #usWidgetHub .us-wp-think svg{width:30px;height:30px;fill:currentColor}
+#usWidgetHub .us-wp-message{display:grid;place-items:center;background:var(--us-color-elevated)}
+#usWidgetHub .us-wp-message-bubble{display:grid;place-items:center;width:34px;height:24px;border-radius:9px;background:var(--us-color-text)}
+#usWidgetHub .us-wp-message i{display:grid;width:13px;height:13px}
+#usWidgetHub .us-wp-message svg{width:13px;height:13px;fill:var(--us-rosa)}
 #usWidgetHub .us-wp-countdown{display:grid;place-content:center;gap:1px;text-align:center;background:var(--us-color-elevated)}
 #usWidgetHub .us-wp-countdown>:not(b):not(.us-wp-cd-unit):not(p){display:none}
 #usWidgetHub .us-wp-countdown b{font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1;color:var(--us-color-text)}
@@ -766,6 +772,39 @@
 #usWidgetHub .us-wp-photo .us-wp-photo-days{position:relative;display:block;margin:0;padding:0;background:none}
 #usWidgetHub .us-wp-photo .us-wp-photo-days b{font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}
 #usWidgetHub .us-wp-photo .us-wp-photo-days small{display:none}
+/* Widget Foto protagonista (02/11/2026): each tile is its widget on the Home
+   screen, a soft field of colour (never a flat one), the photo only where it
+   is the content. */
+#usWidgetHub .us-widget-hub-preview>*{--us-wp-aurora:radial-gradient(circle at 22% 25%,#ffbfcd,transparent 62%),radial-gradient(circle at 80% 30%,#dccbff,transparent 60%),radial-gradient(circle at 55% 92%,#ffd8b5,transparent 62%),#fff1ea}
+#usWidgetHub .us-wp-think{background:var(--us-wp-aurora);color:#ff7c96}
+#usWidgetHub .us-wp-think i{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.8);box-shadow:0 0 0 1px rgba(255,255,255,.9)}
+#usWidgetHub .us-wp-think svg{width:17px;height:17px}
+#usWidgetHub .us-wp-countdown{background:var(--us-wp-aurora)}
+#usWidgetHub .us-wp-countdown b{font-family:var(--us-font-editorial);color:#1a1020}
+#usWidgetHub .us-wp-countdown :is(.us-wp-cd-unit,p){color:#5b4a63}
+#usWidgetHub .us-widget-hub-preview>.us-wp-noi{background:var(--us-wp-aurora)!important;color:#1a1020!important}
+#usWidgetHub .us-wp-noi .us-wp-noi-portrait::before,#usWidgetHub .us-wp-noi .us-wp-noi-portrait::after{width:16px;height:16px;box-shadow:0 0 0 2px #fff;background:radial-gradient(circle at 30% 25%,#ffd9b8,#ffbfcd 45%,#dccbff)}
+#usWidgetHub .us-wp-noi .us-wp-noi-portrait::after{background:radial-gradient(circle at 30% 25%,#dccbff,#ffbfcd 60%,#ffd9b8)}
+#usWidgetHub .us-wp-noi .us-wp-noi-info b{color:#5b4a63}
+#usWidgetHub .us-wp-daily{display:grid;place-items:center;background:var(--us-wp-aurora);color:#1a1020}
+#usWidgetHub .us-wp-daily>*{display:none}
+#usWidgetHub .us-wp-daily::after{content:"Oggi";padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.8);font:800 10px/1.2 var(--us-font-ui)}
+#usWidgetHub .us-wp-message{background:var(--us-wp-aurora)}
+#usWidgetHub .us-wp-message-bubble{border-radius:6px;background:#fff6ee;transform:rotate(-3deg);box-shadow:0 2px 6px rgba(26,16,32,.16)}
+#usWidgetHub .us-wp-memories{position:relative;background:var(--us-wp-aurora)}
+#usWidgetHub .us-wp-memories i{position:absolute;left:50%;top:50%;width:30px;height:32px;margin:-17px 0 0 -15px;border-radius:6px;box-shadow:0 3px 8px rgba(26,16,32,.22)}
+#usWidgetHub .us-wp-memories i:nth-child(1){background:linear-gradient(140deg,#bfe3ff,#6d8fd6 55%,#2e2a5a);transform:rotate(-9deg)}
+#usWidgetHub .us-wp-memories i:nth-child(2){background:linear-gradient(140deg,#ffe0b0,#f3b76e 45%,#8a4b3a);transform:rotate(7deg)}
+#usWidgetHub .us-wp-memories i:nth-child(3){box-sizing:border-box;border:2px solid #fff;background:linear-gradient(140deg,#ffd3a8,#ff7c96 52%,#5a2f63)}
+#usWidgetHub .us-wp-status{display:grid;grid-template-columns:1fr 1fr;place-items:center;background:var(--us-wp-aurora);font-size:20px;line-height:1}
+#usWidgetHub .us-wp-photo:not(.has-photo){background:var(--us-wp-aurora)}
+/* Post-it (04/11/2026): the newest post-it on its paper, as on the Home screen. */
+#usWidgetHub .us-wp-postit{position:relative;display:flex;align-items:center;padding:8px;box-sizing:border-box;background:#f6e27a;color:#3b2a10}
+#usWidgetHub .us-wp-postit[data-color="pink"]{background:#ffc2cf}
+#usWidgetHub .us-wp-postit[data-color="blue"]{background:#bfe3f5}
+#usWidgetHub .us-wp-postit[data-color="green"]{background:#c9ecc0}
+#usWidgetHub .us-wp-postit b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font:italic 400 11px/1.15 var(--us-font-display)}
+#usWidgetHub .us-wp-postit small{position:absolute;right:6px;bottom:5px;font:700 9px/1 var(--us-font-ui)}
 
 /* ==========================================================================
    While Settings is open the Noi tab stays marked (mockup PARENT:

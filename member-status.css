@@ -1,0 +1,43 @@
+/* Come stai (02/11/2026): the pill in Oggi beside the distance, and the sheet
+   with the twelve states (or the words' form, from Settings). */
+#home #homeHero .og-row .us-status-pill:not([hidden]){
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:40px;
+  padding:0 13px;
+  border:1px solid var(--us-color-line-strong);
+  border-radius:999px;
+  background:var(--dc-oggi-glass);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  color:var(--us-color-text);
+  font:600 13px/1 var(--us-font-ui);
+  white-space:nowrap;
+}
+#home #homeHero .og-row .us-status-pill [hidden]{display:none}
+#home #homeHero .og-row .us-status-pill [data-status-partner]:not([hidden])+[data-status-mine]::before{content:"·";content:"·" / "";margin-right:6px;color:var(--us-color-text-2)}
+#home #homeHero .og-row .us-status-pill[data-mine="none"] [data-status-mine]{color:var(--us-color-text-2)}
+
+.us-status-overlay [hidden]{display:none!important}
+.us-status-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:end;justify-content:center}
+.us-status-overlay[aria-hidden="false"]{display:flex}
+.us-status-sheet{position:relative;width:min(100%,540px);max-height:90vh;overflow:auto;padding:22px 20px calc(22px + var(--us-safe-bottom));border-radius:30px 30px 0 0;background:var(--us-color-surface);color:var(--us-color-text)}
+.us-status-head{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.us-status-head .tiny{color:var(--us-noi,#d98be0);font-size:10px;font-weight:700;letter-spacing:.16em}
+.us-status-head h2{margin:6px 0 0;font:500 28px/1.1 var(--us-font-editorial)}
+.us-status-head .us-modal-close{min-width:44px;min-height:44px}
+.us-status-partner{margin:10px 0 0;color:var(--us-color-text-2);font-size:14px}
+.us-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
+.us-status-choice{display:grid;justify-items:center;gap:4px;min-height:84px;padding:10px 6px;border:1px solid var(--us-color-line);border-radius:20px;background:rgba(247,239,233,.04);color:var(--us-color-text);font:500 13px/1.2 var(--us-font-ui);text-align:center;cursor:pointer}
+.us-status-emoji{font-size:30px;line-height:1.1}
+.us-status-choice[aria-pressed="true"]{border-color:color-mix(in srgb,var(--us-rosa,#ff7c96) 70%,transparent);background:color-mix(in srgb,var(--us-rosa,#ff7c96) 14%,transparent)}
+.us-status-note{margin:14px 0 0;color:var(--us-color-text-3);font-size:12px;line-height:1.45}
+.us-status-clear{display:block;min-height:44px;margin:8px auto 0;padding:0 18px;border:0;background:none;color:var(--us-color-text-2);font:600 14px var(--us-font-ui);text-decoration:underline;cursor:pointer}
+.us-status-lead{margin:10px 0 16px;color:var(--us-color-text-2);font-size:15px;line-height:1.5}
+.us-status-forms{display:grid;gap:10px}
+.us-status-form{display:grid;gap:4px;width:100%;min-height:64px;padding:14px 18px;border:1px solid var(--us-color-line);border-radius:22px;background:rgba(247,239,233,.04);color:var(--us-color-text);text-align:left;font:inherit;cursor:pointer}
+.us-status-form b{font:400 18px/1.2 var(--us-font-display)}
+.us-status-form small{color:var(--us-color-text-2);font-size:13px}
+.us-status-form[aria-pressed="true"]{border-color:color-mix(in srgb,var(--us-noi,#d98be0) 70%,transparent);background:color-mix(in srgb,var(--us-noi,#d98be0) 12%,transparent)}
+@media (prefers-reduced-motion:reduce){.us-status-overlay *{animation:none!important;transition:none!important}}

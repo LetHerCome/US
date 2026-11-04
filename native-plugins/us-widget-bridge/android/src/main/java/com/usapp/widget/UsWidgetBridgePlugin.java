@@ -3,8 +3,10 @@ package com.usapp.widget;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.provider.Settings;
 import android.util.Base64;
@@ -65,7 +67,11 @@ public class UsWidgetBridgePlugin extends Plugin {
     @PluginMethod
     public void setActionCredential(PluginCall call) {
         String ownerHash = call.getString("ownerHash", "");
-        if (!ownerHash.equals(store.owner()) || !credentials.write(ownerHash, call.getString("token", ""), call.getString("expiresAt", ""))) {
+        // The Edge address of this build (staging or production); a wrong one is refused.
+        String functionsUrl = call.getString("functionsUrl", "");
+        boolean addressOk = functionsUrl.isEmpty() || !UsWidgetEndpoints.functionsBase(functionsUrl).isEmpty();
+        if (!ownerHash.equals(store.owner()) || !addressOk
+            || !credentials.write(ownerHash, call.getString("token", ""), call.getString("expiresAt", ""), functionsUrl)) {
             call.reject("Invalid widget action credential");
             return;
         }
@@ -125,11 +131,12 @@ public class UsWidgetBridgePlugin extends Plugin {
     @PluginMethod
     public void writeNoiPortrait(PluginCall call) {
         String ownerHash = call.getString("ownerHash", "");
+        String slot = call.getString("slot", "pair");
         String data = call.getString("data", "");
         byte[] bytes;
         try { bytes = data.length() > UsWidgetStore.MAX_PHOTO_BYTES * 2 ? null : Base64.decode(data, Base64.DEFAULT); }
         catch (IllegalArgumentException ignored) { bytes = null; }
-        if (!store.writeNoiPortrait(ownerHash, bytes)) {
+        if (!store.writeNoiPortrait(ownerHash, slot, bytes)) {
             call.reject("Invalid Noi portrait");
             return;
         }
@@ -187,6 +194,22 @@ public class UsWidgetBridgePlugin extends Plugin {
         } catch (RuntimeException error) {
             call.resolve(result.put("supported", true).put("requested", false));
         }
+    }
+
+    /**
+     * Batteria del partner: this phone's own level and whether it is charging,
+     * read only when the open app asks (launch, return to the foreground).
+     * No permission, no receiver, nothing runs in the background.
+     */
+    @PluginMethod
+    public void getBatteryStatus(PluginCall call) {
+        BatteryManager battery = (BatteryManager) getContext().getSystemService(Context.BATTERY_SERVICE);
+        int level = battery == null ? Integer.MIN_VALUE : battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        if (level < 0 || level > 100) {
+            call.resolve(new JSObject().put("supported", false));
+            return;
+        }
+        call.resolve(new JSObject().put("supported", true).put("level", level).put("charging", battery.isCharging()));
     }
 
     /** Opens the screen where Home-screen shortcut/widget permission lives (Xiaomi first). */

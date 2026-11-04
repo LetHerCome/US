@@ -302,6 +302,43 @@ function normalizeQuickTime(value) {
   return `${pad2(h)}:${pad2(m)}`;
 }
 
+// Inizio and Fine while typing (founder, 04/11/2026): the colon appears by
+// itself, so "9" is "09:", "18" is "18:", "2." is "02:", and the minutes follow.
+// A pasted "930" or "1845" reads like normalizeQuickTime. Blur still makes it
+// canonical; deleting is never re-masked (inputType decides, in the listener).
+function maskClockTyping(value) {
+  const raw = String(value ?? '');
+  const sep = raw.search(/[.:,h]/i);
+  if (sep >= 0) {
+    const hour = raw.slice(0, sep).replace(/\D/g, '').slice(-2);
+    const minute = raw.slice(sep + 1).replace(/\D/g, '').slice(0, 2);
+    return hour ? `${hour.padStart(2, '0')}:${minute}` : minute;
+  }
+  const digits = raw.replace(/\D/g, '').slice(0, 4);
+  if (!digits) return '';
+  if (digits.length === 1) return Number(digits) > 2 ? `0${digits}:` : digits;
+  if (digits.length === 2) return Number(digits) > 23 ? `0${digits[0]}:${digits[1]}` : `${digits}:`;
+  if (digits.length === 3) return `0${digits[0]}:${digits.slice(1)}`;
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+}
+
+// Nuovo impegno, the quick titles (founder, 04/11/2026): Lavoro, Università,
+// Uscita, and the ones each person adds with «+» (kept on this phone, at most
+// eight, 30 characters, never a copy of one already there).
+const CALENDAR_BUILTIN_PRESETS = Object.freeze(['Lavoro', 'Università', 'Uscita']);
+const CALENDAR_PRESET_LIMIT = 8;
+function addCalendarPreset(list, title) {
+  const own = Array.isArray(list) ? list.filter((item) => typeof item === 'string' && item.trim()) : [];
+  const clean = String(title ?? '').replace(/\s+/g, ' ').trim().slice(0, 30);
+  if (!clean) return own;
+  const same = (a) => a.toLocaleLowerCase('it-IT') === clean.toLocaleLowerCase('it-IT');
+  if (CALENDAR_BUILTIN_PRESETS.some(same) || own.some(same)) return own;
+  return [...own, clean].slice(-CALENDAR_PRESET_LIMIT);
+}
+function removeCalendarPreset(list, title) {
+  return (Array.isArray(list) ? list : []).filter((item) => item !== title);
+}
+
 function addClockMinutes(value, minutes = US_CALENDAR_DEFAULT_DURATION_MINUTES) {
   const normalized = normalizeQuickTime(value);
   if (!normalized) return '';
@@ -598,7 +635,7 @@ const pureApi = {
   formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
   shiftISODate, originalAllDaySpanDays,
   monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, US_FREE_EVENING, freeEveningFor, tempoWindowLabel,
-  normalizeQuickTime, addClockMinutes, durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor, reminderCopy,
+  normalizeQuickTime, maskClockTyping, addCalendarPreset, removeCalendarPreset, CALENDAR_BUILTIN_PRESETS, addClockMinutes, durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor, reminderCopy,
   buildEntryPayload, withCreateAuthority, canEditEntry,
   quickEntryError, quickEntryHiddenFields, classifyMutationResult,
   oggiEventLabel, composeOggiCalendarFact, oggiRemainingWindows, oggiNextCommitment,
@@ -669,6 +706,34 @@ async function readNoiMonth(year, month) {
   const range=monthGridRange(year,month);
   const start=isoDate(range.gridStart.getFullYear(),range.gridStart.getMonth(),range.gridStart.getDate());
   const end=isoDate(range.gridEnd.getFullYear(),range.gridEnd.getMonth(),range.gridEnd.getDate());
+  const [base,moments]=await Promise.all([readNoiRange(start,end),readNoiRicordi(viewer,start,end)]);
+  return base?{...base,moments}:null;
+}
+
+// Noi nuova (03/11/2026): a day with a Ricordo shows its photo. The Ricordi
+// of the days on screen, each with the thumbnail Ricordi already uses
+// (thumbnail_path, else the photo) through the shared signed-URL cache.
+// A failed read only leaves the squares without photos.
+async function readNoiRicordi(viewer, start, end) {
+  try {
+    const {data,error}=await sb.from('moments').select('id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at')
+      .eq('couple_id',viewer.couple_id).gte('moment_date',start).lt('moment_date',end)
+      .order('moment_date',{ascending:true}).order('created_at',{ascending:false});
+    if(error){console.warn('[US Noi] ricordi',error);return [];}
+    if(window.usProfile!==viewer)return [];
+    const rows=data||[];
+    const path=row=>row.thumbnail_path||row.storage_path||'';
+    const urls=typeof window.usGetSignedUrls==='function'&&rows.length?await window.usGetSignedUrls(rows.map(path)):new Map();
+    return rows.map(row=>({id:row.id,day:String(row.moment_date||'').slice(0,10),caption:row.caption||'',created_by:row.created_by||null,storage_path:row.storage_path||'',thumb:urls.get(path(row))||null}));
+  }catch(error){console.warn('[US Noi] ricordi',error);return [];}
+}
+
+// The commitments, the Eventi dates and the couple's first day for any span
+// of days (start included, end excluded): the month grid, or «Prossimi»
+// (from today to the same day next year).
+async function readNoiRange(start, end) {
+  const viewer=window.usProfile;
+  if(!viewer||!/^\d{4}-\d{2}-\d{2}$/.test(String(start||''))||!/^\d{4}-\d{2}-\d{2}$/.test(String(end||''))||end<=start)return null;
   // Profile labels come only from this couple. Missing profile metadata must
   // never hide calendar entries; use a neutral fallback instead of a fake name.
   const profileRead=async()=>{
@@ -952,17 +1017,64 @@ function renderFormDay(dateISO, mode) {
 }
 function setFormStatus(msg) { const el = $('usCalendarFormStatus'); if (el) el.textContent = msg; }
 
-const CALENDAR_TITLE_PRESETS = Object.freeze([
-  { id: 'usCalendarPresetWork', title: 'Lavoro' },
-  { id: 'usCalendarPresetUniversity', title: 'Università' },
-  { id: 'usCalendarPresetOut', title: 'Uscita' }
-]);
+// The quick titles: the three of US, then this person's own (added with «+»,
+// kept on this phone; a long press takes one away, after asking).
+const calendarPresetKey = () => (window.usProfile?.id ? `us:calendar:presets:v1:${window.usProfile.id}` : '');
+function ownCalendarPresets() {
+  try {
+    const key = calendarPresetKey();
+    const list = key ? JSON.parse(localStorage.getItem(key) || '[]') : [];
+    return addCalendarPreset(Array.isArray(list) ? list.slice(0, CALENDAR_PRESET_LIMIT) : [], '');
+  } catch (_) { return []; }
+}
+function saveOwnCalendarPresets(list) {
+  try { const key = calendarPresetKey(); if (key) localStorage.setItem(key, JSON.stringify(list)); } catch (_) {}
+}
+function renderOwnCalendarPresets() {
+  const box = $('usCalendarPresets');
+  const add = $('usCalendarPresetAdd');
+  if (!box || !add) return;
+  box.querySelectorAll?.('[data-us-calendar-preset-own]').forEach((button) => button.remove());
+  for (const title of ownCalendarPresets()) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = title;
+    button.setAttribute('translate', 'no');
+    button.setAttribute('aria-pressed', 'false');
+    button.dataset.usCalendarPreset = title;
+    button.dataset.usCalendarPresetOwn = '';
+    box.insertBefore(button, add);
+  }
+  syncCalendarPresetState();
+}
 function syncCalendarPresetState() {
   const title = $('usCalendarTitleInput')?.value.trim() || '';
-  for (const preset of CALENDAR_TITLE_PRESETS) {
-    const button = $(preset.id);
-    if (button) button.setAttribute('aria-pressed', String(preset.title === title));
-  }
+  document.querySelectorAll?.('[data-us-calendar-preset]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.usCalendarPreset === title)));
+}
+function showPresetComposer(open) {
+  const add = $('usCalendarPresetAdd');
+  const composer = $('usCalendarPresetNew');
+  const input = $('usCalendarPresetNewInput');
+  if (!add || !composer || !input) return;
+  add.hidden = open;
+  composer.hidden = !open;
+  if (open) { input.value = ''; input.focus({ preventScroll: true }); }
+}
+function saveNewPreset() {
+  const input = $('usCalendarPresetNewInput');
+  const before = ownCalendarPresets();
+  const next = addCalendarPreset(before, input?.value);
+  if (next.length !== before.length || next.some((item, i) => item !== before[i])) saveOwnCalendarPresets(next);
+  const title = String(input?.value || '').replace(/\s+/g, ' ').trim().slice(0, 30);
+  showPresetComposer(false);
+  renderOwnCalendarPresets();
+  // The new type is chosen at once, as a tap on it would.
+  if (title && $('usCalendarTitleInput')) { $('usCalendarTitleInput').value = title; syncCalendarPresetState(); }
+}
+async function forgetPreset(title) {
+  if (!(await usConfirm({ kicker: 'CALENDARIO', title: `Togliere «${title}»?`, body: 'Sparisce dai titoli rapidi. Gli impegni già salvati restano.', confirmLabel: 'Togli' }))) return;
+  saveOwnCalendarPresets(removeCalendarPreset(ownCalendarPresets(), title));
+  renderOwnCalendarPresets();
 }
 function normalizeTimeField(id) {
   const input = $(id);
@@ -971,10 +1083,15 @@ function normalizeTimeField(id) {
   if (normalized) input.value = normalized;
   return normalized;
 }
-function fillDefaultEndFromStart() {
-  const start = normalizeTimeField('usCalendarStartTimeInput');
-  const end = $('usCalendarEndTimeInput');
-  if (start && end && !String(end.value || '').trim()) end.value = addClockMinutes(start);
+// Typing a time: the colon appears by itself (maskClockTyping). Deleting is
+// left alone, or the colon would come straight back.
+function maskTimeField(event) {
+  const input = event.target;
+  if (!input || String(event.inputType || '').startsWith('delete')) return;
+  // Writing in the middle of a time is left as typed; blur makes it canonical.
+  if (typeof input.selectionStart === 'number' && input.selectionStart < input.value.length) return;
+  const masked = maskClockTyping(input.value);
+  if (masked !== input.value) input.value = masked;
 }
 
 function setFormKind(kind) {
@@ -1015,7 +1132,8 @@ function openForm(mode, entry, dateISO) {
   if (kindGroup) kindGroup.hidden = mode === 'edit';
 
   $('usCalendarTitleInput').value = entry?.title || '';
-  syncCalendarPresetState();
+  showPresetComposer(false);
+  renderOwnCalendarPresets();
   $('usCalendarAllDayInput').checked = Boolean(entry?.is_all_day);
   const startInput = $('usCalendarStartTimeInput');
   const endInput = $('usCalendarEndTimeInput');
@@ -1156,18 +1274,44 @@ $('usCalendarDetailDelete')?.addEventListener('click', deleteEntry);
 $('usCalendarFormClose')?.addEventListener('click', closeCalendarFormSheet);
 $('usCalendarFormBackdrop')?.addEventListener('click', closeCalendarFormSheet);
 $('usCalendarAllDayInput')?.addEventListener('change', toggleAllDayFields);
-for (const preset of CALENDAR_TITLE_PRESETS) {
-  $(preset.id)?.addEventListener('click', () => {
-    const input = $('usCalendarTitleInput');
-    if (!input) return;
-    input.value = preset.title;
-    syncCalendarPresetState();
-    input.focus({ preventScroll: true });
-  });
-}
+// One listener for every quick title, the three of US and this person's own.
+let presetPress = null;
+const presetBox = $('usCalendarPresets');
+presetBox?.addEventListener('click', (event) => {
+  const button = event.target?.closest?.('[data-us-calendar-preset]');
+  if (!button) return;
+  // Only the click that ends the long press itself is swallowed.
+  const longPress = presetPress?.fired && presetPress.button === button && Date.now() - presetPress.firedAt < 1000;
+  if (presetPress?.fired) presetPress = null;
+  if (longPress) return;
+  const input = $('usCalendarTitleInput');
+  if (!input) return;
+  input.value = button.dataset.usCalendarPreset;
+  syncCalendarPresetState();
+  input.focus({ preventScroll: true });
+});
+presetBox?.addEventListener('pointerdown', (event) => {
+  const button = event.target?.closest?.('[data-us-calendar-preset-own]');
+  if (!button) return;
+  const press = { fired: false, button };
+  press.timer = setTimeout(() => { press.fired = true; press.firedAt = Date.now(); forgetPreset(button.dataset.usCalendarPreset); }, 550);
+  presetPress = press;
+});
+for (const type of ['pointerup', 'pointercancel', 'pointerleave']) presetBox?.addEventListener(type, () => { if (presetPress && !presetPress.fired) { clearTimeout(presetPress.timer); presetPress = null; } });
+presetBox?.addEventListener('contextmenu', (event) => { if (event.target?.closest?.('[data-us-calendar-preset-own]')) event.preventDefault(); });
+$('usCalendarPresetAdd')?.addEventListener('click', () => showPresetComposer(true));
+$('usCalendarPresetNewSave')?.addEventListener('click', saveNewPreset);
+$('usCalendarPresetNewInput')?.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); saveNewPreset(); }
+  if (event.key === 'Escape') { event.preventDefault(); showPresetComposer(false); }
+});
 $('usCalendarTitleInput')?.addEventListener('input', syncCalendarPresetState);
-$('usCalendarStartTimeInput')?.addEventListener('blur', fillDefaultEndFromStart);
-$('usCalendarEndTimeInput')?.addEventListener('blur', () => normalizeTimeField('usCalendarEndTimeInput'));
+// No hour chosen for you any more (founder, 04/11/2026): Fine is not filled
+// with an hour after Inizio; each field is only made canonical when you leave it.
+for (const id of ['usCalendarStartTimeInput', 'usCalendarEndTimeInput']) {
+  $(id)?.addEventListener('input', maskTimeField);
+  $(id)?.addEventListener('blur', () => normalizeTimeField(id));
+}
 document.querySelectorAll?.('[data-us-calendar-kind]').forEach((btn) => btn.addEventListener('click', () => chooseFormKind(btn.dataset.usCalendarKind)));
 $('usCalendarForm')?.addEventListener('submit', saveEntry);
 
@@ -1309,7 +1453,7 @@ async function openCalendarEntry(entryId, { inPlace = false } = {}) {
 }
 
 window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, createForIdeaDate: createCalendarEntryForIdeaDate, cancelIdeaPick: clearIdeaPick, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
-window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth,freeEvenings:noiFreeEvenings});
+window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth,readRange:readNoiRange,freeEvenings:noiFreeEvenings});
 window.openCalendarSurface = openCalendarSurface;
 window.closeCalendarDetailSheet = closeCalendarDetailSheet;
 window.closeCalendarFormSheet = closeCalendarFormSheet;
