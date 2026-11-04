@@ -535,3 +535,21 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 - **Calendario:** nelle caselle le date di coppia dicono quanto, anche su due righe («34 mesi», «3 anni», «4100 giorni») invece di «Mesi…». In «Prossimi» e nell'agenda il traguardo dei cento giorni non ripete più il numero sotto il titolo.
 - **Post-it storti:** inclinati tra 1° e 2°, a destra o a sinistra, come nella tavola (prima molti erano a 0° o mezzo grado e sembravano dritti).
 - **Database:** niente.
+
+## 2026-11-04 — Widget nuovi, sei Atmosfere, Ricordi come album, Prossimi senza trattini
+
+**Stato:** su staging dal 04/11, non in produzione. Va in produzione con la Noi nuova, solo con il via del founder. Tavole nel canvas «Widget, sfondi e Ricordi» (https://claude.ai/artifact/PiHBn6bmN7G5JCYiTsQURg).
+
+- **Widget Android:**
+  - **Ti penso:** solo un cuore vuoto. Toccandolo si riempie con un pop sopra la Home e parte il Ti penso.
+  - **Distanza e batteria:** solo l'altra persona (foto, nome, distanza, batteria). La tua foto e «Tu» non ci sono più.
+  - **Come stai:** solo le due foto, ognuna con la sua faccina; niente nomi, righe e cuore in mezzo.
+  - **La domanda di oggi:** la domanda in grande su uno sfondo calmo, il tasto «Rispondi» («Leggi» quando avete risposto tutti e due) che apre la domanda in US.
+  - **Lasciato per te:** sfondo nuovo, una busta color crema con il sigillo; sopra «Ti ha lasciato una foto · da Bea · 10 min fa».
+  - **Countdown tolto.** Al suo posto il widget **Post-it**: l'ultimo post-it della bacheca sulla sua carta, chi l'ha scritto e «+2» se ce ne sono altri. Toccandolo apre Noi. Si aggiorna quando US è aperta.
+  - Anteprime nuove nel selettore dei widget. Serve l'APK nuovo.
+- **Sfondi (Atmosfere):** US parte su **Vino**, un gradiente vino scuro che resta fermo mentre la pagina scorre (prima: nero pieno). Le Atmosfere di Sintonia diventano gradienti: **Prugna** (livello 3, era Rosé), **Notte blu** (5, era Mezzanotte), Pellicola (7), Ora blu (9), **Grafite** (12, grafite e argento con un riflesso). Chi le aveva già sbloccate le ritrova: stessi id e livelli.
+- **Ricordi:** solo l'album. Le foto mese per mese, tre per riga, quadrate, senza scritte. Escono Conservati, i «Vissuto insieme» senza foto, le domande conservate, le idee e i capitoli per anno: i dati restano salvati, non si vedono più in Ricordi. Attenzione: Conservati (le cose tenute di Lasciato per te) ora non ha più un ingresso nell'app.
+- **Noi, Prossimi e agenda:** niente più «—» al posto dell'ora. Un mesiversario o un traguardo ha un cuore dorato, un impegno senza ora il calendario; i riquadri non hanno più il bordo.
+- **Database:** migrazione `20261104140000_atmosfere_gradienti.sql`, solo titoli e descrizioni di cinque premi (nessun dato cancellato). Ordine: SQL, poi web, poi APK/AAB.
+- **Privacy:** il widget Post-it mostra sulla Home le parole dell'ultimo post-it della coppia (come la domanda del giorno). Nessun nuovo tipo di dato per Google Play.
