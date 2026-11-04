@@ -21,7 +21,9 @@ import { fileURLToPath } from 'node:url';
 import {
   PRODUCTION_PROJECT_REF,
   STAGING_HOST,
-  isolateStagingBuild
+  WIDGET_ENDPOINTS_PATH,
+  isolateStagingBuild,
+  isolateWidgetEndpoints
 } from './configure-s3-staging-qa.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.US_LIVE_PORT || 5174);const OUT = path.join(ROOT, 'dist', 'android-live');
@@ -218,7 +220,12 @@ async function apk() {
   const restoreConfig = await moveAside('capacitor.config.json');
   const restorePublic = await moveAside('public');
   const restorePlugins = await moveAside('capacitor.plugins.json');
+  // The widgets' endpoints name production in the source; the live app, like
+  // the signed staging APK, sends them to US-STAGING for the build only.
+  const widgetEndpoints = path.join(ROOT, WIDGET_ENDPOINTS_PATH);
+  const widgetSource = await readFile(widgetEndpoints, 'utf8');
   try {
+    await writeFile(widgetEndpoints, isolateWidgetEndpoints(widgetSource), 'utf8');
     const sync = spawnSync('npx cap sync android', { cwd: ROOT, encoding: 'utf8', shell: true });
     if (sync.status !== 0) throw new Error(`cap sync fallito:\n${sync.stderr || sync.stdout}`);
     if (!dirtyBefore && gitDiff(wiring)) {
@@ -254,6 +261,7 @@ async function apk() {
   } finally {
     // The live config (server.url) must never stay where a later local build
     // could package it.
+    await writeFile(widgetEndpoints, widgetSource, 'utf8');
     await restoreConfig();
     await restorePublic();
     await restorePlugins();

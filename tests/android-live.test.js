@@ -33,6 +33,9 @@ test('the live script rewrites for US-STAGING only and puts the server config ba
   assert.doesNotMatch(script, /iiakdfsxpywdkxravqjh/);
   assert.match(script, /server: \{ url: `http:\/\/localhost:\$\{PORT\}`/);
   assert.match(script, /finally \{[\s\S]*restoreConfig\(\)/);
+  // Widget endpoints go to US-STAGING for the build only, then back to the source.
+  assert.match(script, /writeFile\(widgetEndpoints, isolateWidgetEndpoints\(widgetSource\)/);
+  assert.match(script, /finally \{\s*\n\s*\/\/[^\n]*\n\s*\/\/[^\n]*\n\s*await writeFile\(widgetEndpoints, widgetSource/);
   assert.match(script, /server\.listen\(PORT, '127\.0\.0\.1'/);
   assert.match(read('.gitignore'), /^\/dist\/android-live\/$/m);
 });
