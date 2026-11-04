@@ -2,3 +2,5 @@
 /dist/capacitor/
 /_handoff/
 /dist/cloudflare-pages/
+/dist/android-live/
+/native-plugins/*/android/build/
