@@ -117,19 +117,19 @@ test('navigation soak: repeated cycles through every primary surface leave one c
 // US 1.0 (N3/N10): the old calendar overlay is gone. The stack is now Noi →
 // "La nostra settimana" → the "+" form: Back closes the form, then returns
 // from the week to the month, then leaves Noi.
-test('navigation: Back unwinds a three-deep stack one level at a time (Noi → La nostra settimana → form)', async (t) => {
+test('navigation: Back unwinds a three-deep stack one level at a time (Noi → Lavagna → form)', async (t) => {
   const h = await start(); if (!h) return t.skip('Playwright unavailable');
   try {
     const { page, ctx, errors } = await pageFor(h, {});
     const state = () => page.evaluate(() => ({
       page: document.querySelector('.page.active')?.id,
-      week: document.getElementById('usNoiV2')?.dataset.mode === 'week',
+      week: Boolean(document.getElementById('usLavagna')?.classList.contains('open')),
       form: Boolean(document.getElementById('usCalendarFormSheet')?.classList.contains('open'))
     }));
     await page.click('.nav button[data-page="bond"]'); await page.waitForFunction(() => !window.UsDueColori?.isFlooding?.()); await settle(page);
-    // Parity: the Lavagna is a Foglio over the month (the "+" sits under it), so
-    // the stack is Noi → Lavagna, then Noi → form; Back unwinds each one level.
-    await page.click('[data-noi-open-link="lavagna"]'); await settle(page);
+    // Noi nuova (03/11/2026): the Lavagna opens full screen from its tile on the
+    // bacheca, so the stack is Noi → Lavagna, then Noi → form; Back unwinds each one level.
+    await page.click('[data-lav-open]'); await settle(page);
     assert.deepEqual(await state(), { page: 'bond', week: true, form: false });
     await page.goBack(); await settle(page, 600);
     assert.deepEqual(await state(), { page: 'bond', week: false, form: false }, 'Back closes only the Lavagna');

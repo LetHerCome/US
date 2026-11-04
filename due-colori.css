@@ -205,7 +205,9 @@ body:has(#homeHero.us-oggi-focus) .us-nav.us-nav-premium{translate:0 120px}
 .page.us-slide-live.is-under{position:relative;z-index:1;animation:none!important}
 .page.us-slide-live.is-over{position:relative;z-index:3;isolation:isolate;animation:none!important}
 .page.us-slide-ghost.is-over{z-index:3;isolation:isolate}
-.page.us-slide-live.is-over::before,.page.us-slide-ghost.is-over::before{content:"";position:absolute;z-index:-1;inset:-100vh -32px;background:var(--us-color-bg);box-shadow:-30px 0 60px rgba(0,0,0,.45);pointer-events:none}
+/* The page sliding over carries the Atmosfera with it, lined up with the screen
+   (--us-slide-top: where the page starts on screen, due-colori.js), never a flat panel. */
+.page.us-slide-live.is-over::before,.page.us-slide-ghost.is-over::before{content:"";position:absolute;z-index:-1;inset:-100vh -32px;background:var(--us-atmo);background-color:var(--us-color-bg);background-size:100% 100vh;background-repeat:no-repeat;background-position:0 calc(100vh - var(--us-slide-top,0px));box-shadow:-30px 0 60px rgba(0,0,0,.45);pointer-events:none}
 .us-slide-veil{position:fixed;inset:0;z-index:2;background:#000;opacity:0;pointer-events:none}
 
 /* ---------- Focus Photo (mockup .screen.is-focus): the top bar fades away ---------- */

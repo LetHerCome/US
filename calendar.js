@@ -1088,6 +1088,8 @@ function normalizeTimeField(id) {
 function maskTimeField(event) {
   const input = event.target;
   if (!input || String(event.inputType || '').startsWith('delete')) return;
+  // Writing in the middle of a time is left as typed; blur makes it canonical.
+  if (typeof input.selectionStart === 'number' && input.selectionStart < input.value.length) return;
   const masked = maskClockTyping(input.value);
   if (masked !== input.value) input.value = masked;
 }
@@ -1278,7 +1280,10 @@ const presetBox = $('usCalendarPresets');
 presetBox?.addEventListener('click', (event) => {
   const button = event.target?.closest?.('[data-us-calendar-preset]');
   if (!button) return;
-  if (presetPress?.fired) { presetPress = null; return; }
+  // Only the click that ends the long press itself is swallowed.
+  const longPress = presetPress?.fired && presetPress.button === button && Date.now() - presetPress.firedAt < 1000;
+  if (presetPress?.fired) presetPress = null;
+  if (longPress) return;
   const input = $('usCalendarTitleInput');
   if (!input) return;
   input.value = button.dataset.usCalendarPreset;
@@ -1288,8 +1293,8 @@ presetBox?.addEventListener('click', (event) => {
 presetBox?.addEventListener('pointerdown', (event) => {
   const button = event.target?.closest?.('[data-us-calendar-preset-own]');
   if (!button) return;
-  const press = { fired: false };
-  press.timer = setTimeout(() => { press.fired = true; forgetPreset(button.dataset.usCalendarPreset); }, 550);
+  const press = { fired: false, button };
+  press.timer = setTimeout(() => { press.fired = true; press.firedAt = Date.now(); forgetPreset(button.dataset.usCalendarPreset); }, 550);
   presetPress = press;
 });
 for (const type of ['pointerup', 'pointercancel', 'pointerleave']) presetBox?.addEventListener(type, () => { if (presetPress && !presetPress.fired) { clearTimeout(presetPress.timer); presetPress = null; } });

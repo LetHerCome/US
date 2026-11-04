@@ -40,6 +40,8 @@ test('the form: «+» and its field, 00:00 as the hint, no hour filled for you',
   assert.match(source, /\$\(id\)\?\.addEventListener\('input', maskTimeField\);/);
   assert.match(source, /if \(!input \|\| String\(event\.inputType \|\| ''\)\.startsWith\('delete'\)\) return;/, 'deleting is never re-masked');
   assert.match(source, /us:calendar:presets:v1:\$\{window\.usProfile\.id\}/, 'kept on this phone, per person');
-  assert.match(source, /press\.timer = setTimeout\(\(\) => \{ press\.fired = true; forgetPreset\(button\.dataset\.usCalendarPreset\); \}, 550\);/);
+  assert.match(source, /if \(typeof input\.selectionStart === 'number' && input\.selectionStart < input\.value\.length\) return;/, 'typing in the middle is not re-masked');
+  assert.match(source, /press\.timer = setTimeout\(\(\) => \{ press\.fired = true; press\.firedAt = Date\.now\(\); forgetPreset\(button\.dataset\.usCalendarPreset\); \}, 550\);/);
+  assert.match(source, /const longPress = presetPress\?\.fired && presetPress\.button === button && Date\.now\(\) - presetPress\.firedAt < 1000;/, 'only the click ending the long press is swallowed');
   assert.match(source, /title: `Togliere «\$\{title\}»\?`/);
 });

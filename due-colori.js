@@ -290,6 +290,8 @@ function finishSlide() {
   job.ghost.classList.remove('us-slide-ghost', 'is-under', 'is-over');
   ['--us-ghost-left', '--us-ghost-top', '--us-ghost-width'].forEach((name) => job.ghost.style.removeProperty(name));
   job.live?.classList.remove('us-slide-live', 'is-under', 'is-over');
+  job.ghost.style.removeProperty('--us-slide-top');
+  job.live?.style.removeProperty('--us-slide-top');
   job.veil.remove();
   busy = false;
   drainAfter();
@@ -322,6 +324,8 @@ async function slide(kind, self, id, options) {
   const timing = { duration: T, easing: IO, fill: 'forwards' };
   const over = push ? live : ghost;
   const under = push ? ghost : live;
+  // Its Atmosfera panel lines up with the screen's (due-colori.css).
+  over.style.setProperty('--us-slide-top', `${Math.round(over.getBoundingClientRect().top)}px`);
   if (push) stagger(live, PUSH_STAGGER);
   job.anims.push(
     over.animate([{ translate: push ? `${W}px 0` : '0 0' }, { translate: push ? '0 0' : `${W}px 0` }], timing),
