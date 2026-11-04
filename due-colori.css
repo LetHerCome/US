@@ -25,20 +25,18 @@ body{--us-tab:inherit}
 :root:has(#quiz.page.active){--us-tab:var(--us-menta)}
 :root:has(#settings.page.active){--us-tab:var(--us-color-text-3)}
 
-/* ---------- Canvas: the night, with a faint glow of the tab colour on top ---------- */
-html,body{
-  background:
-    radial-gradient(70% 300px at 50% -60px,color-mix(in srgb,var(--us-tab) 13%,transparent),transparent 72%),
-    var(--us-color-bg);
+/* ---------- Canvas: the Atmosfera, still on the screen, with a faint glow of the tab colour on top ----------
+   The gradient (--us-atmo) holds the viewport while the page scrolls over it. */
+html,:root[data-us-theme]{
+  background:var(--us-atmo),var(--us-color-bg);
+  background-attachment:fixed;
+  color:var(--us-color-text);
+}
+body,:root[data-us-theme] body{
+  background:radial-gradient(70% 300px at 50% -60px,color-mix(in srgb,var(--us-tab) 13%,transparent),transparent 72%);
   color:var(--us-color-text);
 }
 body{font-family:var(--us-font-ui);font-size:15px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-:root[data-us-theme] body{
-  background:
-    radial-gradient(70% 300px at 50% -60px,color-mix(in srgb,var(--us-tab) 13%,transparent),transparent 72%),
-    radial-gradient(circle at 20% -10%,var(--us-theme-glow-a),transparent 35%),
-    var(--us-color-bg);
-}
 
 /* ---------- Type: Fraunces for titles, Figtree for everything else ---------- */
 h1,h2,h3,.us-editorial,.us-sheet-title{font-family:var(--us-font-display);font-weight:400;letter-spacing:-.01em}

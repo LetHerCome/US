@@ -56,12 +56,14 @@
   --us-tab:var(--us-corallo);            /* tint of the current tab, set per page */
   --us-glow:rgba(217,139,224,.16);
 
-  /* Colour — the night canvas (Atmosfere rewards replace these five). */
-  --us-color-bg:#0f0b13;                 /* notte: brand canvas (manifest theme) */
-  --us-color-surface:#17111c;            /* notte 2: raised content */
-  --us-color-surface-2:#211a28;          /* notte 3 */
-  --us-color-elevated:#2a2232;           /* notte 4: controls on a surface */
-  --us-color-sheet:#17111c;              /* opaque sheets */
+  /* Colour — the night canvas (Atmosfere rewards replace these six).
+     Vino (founder, 04/11/2026): a dark wine gradient, never flat black. */
+  --us-color-bg:#140c14;                 /* vino: the bottom of the canvas */
+  --us-color-surface:#1d1119;            /* raised content */
+  --us-color-surface-2:#26161f;
+  --us-color-elevated:#301c27;           /* controls on a surface */
+  --us-color-sheet:#1d1119;              /* opaque sheets */
+  --us-atmo:radial-gradient(110% 45% at 50% 0%,rgba(255,124,150,.24),transparent 70%),linear-gradient(180deg,#3a1426 0%,#22101d 50%,#140c14 100%);
   --us-color-text:var(--us-latte);
   --us-color-text-2:rgba(247,239,233,.72);
   --us-color-text-3:rgba(247,239,233,.50);

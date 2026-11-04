@@ -268,8 +268,9 @@ test('Rewards V2 client: the unlock card previews the real cosmetic and "Usalo o
   await api.hydrate({ showUnlocks: true, force: true });
   assert.equal(el('usProgressionUnlockKicker').textContent, 'Nuova atmosfera');
   assert.equal(el('usProgressionUnlockCount').textContent, '1 di 2');
-  // Round 3 (mockup parity): the mockup's art — the night of Rosé with its light.
-  assert.match(el('usProgressionUnlockPreview').innerHTML, /swatch-pv atm" style="background:radial-gradient\(90% 60% at 50% 0%,rgba\(255,94,146,\.55\)/);
+  // Round 3 (mockup parity): the mockup's art — the night of theme_rose with its
+  // light; since 04/11/2026 that reward is Prugna.
+  assert.match(el('usProgressionUnlockPreview').innerHTML, /swatch-pv atm" style="background:radial-gradient\(90% 60% at 50% 0%,rgba\(197,110,190,\.55\)/);
   await el('usProgressionUnlockUse').emit('click');
   assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.theme_reward_id, 'theme_rose');
   assert.equal(el('usProgressionUnlockKicker').textContent, 'Nuovo colore di Noi');
