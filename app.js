@@ -3475,17 +3475,17 @@ function usHeartLike(button){const turn=window.UsUiFoundation?.heartTurn?.(windo
 // Novità (founder, 30/10/2026): the beta testers see once, after the update,
 // what changed. One id per release; a new install does not see it.
 const US_WHATS_NEW=Object.freeze({
-  id:'1.3',
+  id:'1.4',
   title:'US si è aggiornata',
   items:[
-    'Il tuo colore: scegline uno tra 8, anche da Impostazioni (gratis nella beta).',
-    'Il cuore nuovo, sulle risposte e sui Ti penso: ogni 3 cuori, uno più grande.',
-    'Mappa dei Ricordi: metti il posto ai Ricordi e ritrovateli sulla mappa.',
-    'Sintonia: nuovi premi, tra cui Il vostro cielo, Aurora, Stagioni, accessori per i Compagni e icone dell\'app.',
-    'Gioca: una partita al giorno, con il conto di quelle rimaste.',
-    'Traguardi ogni 100 giorni insieme, e Rivivi nel giorno esatto di un ricordo.',
-    'Inviti con un link che apre US, emoji in ogni campo e schermate più ariose.',
-    'Da ora US si aggiorna da sola.'
+    'Noi nuova: il calendario con le foto dei vostri ricordi, e «Prossimi» per quello che vi aspetta.',
+    'La bacheca: post-it colorati da scrivere e spuntare insieme, e la lavagna su cui disegnare in due.',
+    'La sfida della settimana in Gioca: una al lunedì, si chiude con una foto che diventa un ricordo.',
+    'Come stai: dite all’altra persona come state con un’emoji, per 12 ore.',
+    'La batteria di chi ami accanto alla distanza, su Oggi.',
+    'Ricordi diventa un album: solo le vostre foto, mese per mese.',
+    'Un nuovo sfondo, Vino, e in Sintonia le Atmosfere da sbloccare: Prugna, Notte blu, Grafite e altre.',
+    'Widget nuovi sulla Home: Ti penso con un tocco sul cuore, Post-it, Lavagna, Come stai e altri.'
   ]
 });
 function usShowWhatsNew(returning){
