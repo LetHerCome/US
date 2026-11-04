@@ -58,6 +58,19 @@ export function isolateStagingBuild({ appJs, indexHtml, capacitorJson, publishab
   return { appJs: stagedApp, indexHtml: stagedIndex2, capacitorJson: stagedConfig };
 }
 
+// The widgets send their device token only to the US project of the build
+// (UsWidgetEndpoints.java names production): the staging APK points them at
+// US-STAGING, so the Play bundle never needs the staging project in its code.
+export const WIDGET_ENDPOINTS_PATH = 'native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetEndpoints.java';
+export function isolateWidgetEndpoints(javaSource) {
+  const quoted = '"' + PRODUCTION_PROJECT_REF + '"';
+  const url = '"https://' + PRODUCTION_HOST + '/functions/v1"';
+  let staged = replaceExactlyOnce(javaSource, url, '"https://' + STAGING_HOST + '/functions/v1"', 'widget production endpoint');
+  staged = replaceExactlyOnce(staged, '{ ' + quoted + ' }', '{ "' + STAGING_PROJECT_REF + '" }', 'widget project list');
+  if (staged.includes(PRODUCTION_PROJECT_REF)) throw new Error('S3 staging QA: production Supabase project left in the widget endpoints');
+  return staged;
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.env.US_STAGING_QA !== 'true') {
     throw new Error('S3 staging QA mutation is disabled unless US_STAGING_QA=true');
@@ -66,10 +79,12 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const paths = ['app.js', 'index.html', 'capacitor.config.json'];
   const [appJs, indexHtml, capacitorJson] = await Promise.all(paths.map(p => readFile(p, 'utf8')));
   const out = isolateStagingBuild({ appJs, indexHtml, capacitorJson, publishableKey: key });
+  const widgetEndpoints = isolateWidgetEndpoints(await readFile(WIDGET_ENDPOINTS_PATH, 'utf8'));
   await Promise.all([
     writeFile(paths[0], out.appJs),
     writeFile(paths[1], out.indexHtml),
-    writeFile(paths[2], out.capacitorJson)
+    writeFile(paths[2], out.capacitorJson),
+    writeFile(WIDGET_ENDPOINTS_PATH, widgetEndpoints)
   ]);
   process.stdout.write('S3 staging inputs isolated: com.usapp.us.staging -> US-STAGING (no production Supabase host)\n');
 }
