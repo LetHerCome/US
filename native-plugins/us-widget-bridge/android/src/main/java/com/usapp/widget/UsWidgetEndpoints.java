@@ -4,17 +4,22 @@ import java.net.URI;
 
 /**
  * Where a widget may send its device token: the Edge functions of the US
- * build that issued it (production or staging), given by the app with the
- * credential. Only the two US projects over https; anything else is refused,
- * so a token can never be sent to another server. Pure Java: JVM-tested.
+ * project of this build, given by the app with the credential. Only that
+ * project over https; anything else is refused, so a token can never be sent
+ * to another server. Pure Java: JVM-tested.
+ *
+ * The source names production only, so the Play bundle never carries the
+ * staging project (scripts/validate-android-bundle.mjs, no-staging-qa). The
+ * staging APK rewrites this file for US-STAGING before it builds
+ * (scripts/configure-s3-staging-qa.mjs, isolateWidgetEndpoints).
  */
 final class UsWidgetEndpoints {
     static final String PRODUCTION = "https://iiakdfsxpywdkxravqjh.supabase.co/functions/v1";
-    private static final String[] PROJECTS = { "iiakdfsxpywdkxravqjh", "dugmhngrfkuieeletatb" };
+    private static final String[] PROJECTS = { "iiakdfsxpywdkxravqjh" };
 
     private UsWidgetEndpoints() {}
 
-    /** The normalised Edge address, or "" when it is not one of the two US projects. */
+    /** The normalised Edge address, or "" when it is not the US project of this build. */
     static String functionsBase(String url) {
         if (url == null) return "";
         try {

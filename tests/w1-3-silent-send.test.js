@@ -181,7 +181,10 @@ test('Ti penso dal widget va all’Edge della build che ha emesso la credential,
   assert.match(client, /connection\.setInstanceFollowRedirects\(false\);/);
   assert.doesNotMatch(client, /supabase\.co/, 'no fixed address in the client');
   const endpoints = read(`${W}/UsWidgetEndpoints.java`);
-  assert.match(endpoints, /PROJECTS = \{ "iiakdfsxpywdkxravqjh", "dugmhngrfkuieeletatb" \}/);
+  // 04/11/2026: the source names production only (the Play bundle never carries
+  // the staging project); the staging APK rewrites it for US-STAGING.
+  assert.match(endpoints, /PROJECTS = \{ "iiakdfsxpywdkxravqjh" \}/);
+  assert.doesNotMatch(endpoints, /dugmhngrfkuieeletatb/);
   assert.match(endpoints, /return \(base\.isEmpty\(\) \? PRODUCTION : base\) \+ "\/widget-think-send";/);
   assert.match(read(`${W}/UsThinkWidgetActionReceiver.java`), /new UsWidgetActionClient\(\)\.send\(credentials\.functionsBase\(owner\), token, actionId\)/);
   assert.match(read(`${W}/UsWidgetCredentialStore.java`), /return UsWidgetEndpoints\.functionsBase\(payload\.optString\("functionsUrl", ""\)\);/);
