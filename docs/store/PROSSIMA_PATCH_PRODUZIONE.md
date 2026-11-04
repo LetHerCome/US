@@ -1,5 +1,26 @@
 # Prossima patch in produzione
 
+## Uscita in produzione: l'ordine (preparato il 04/11/2026, ogni passo col via del founder)
+
+Controllo prima dell'uscita (04/11): revisione del codice main…staging (3 correzioni fatte, nessun errore aperto); suite completa 2537 passati e 0 falliti; test nel browser vero con gli stessi 15 fallimenti che ha già main (test vecchi, non errori nuovi); APK firmato costruito e widget provati sull'emulatore.
+
+1. **Database di produzione**, una migrazione per volta, in quest'ordine (workflow «Supabase SQL», target production, conferma PRODUZIONE):
+   1. `20261031120000_ortografia_domande.sql`
+   2. `20261031132258_couple_notes_v1.sql`
+   3. `20261031134410_couple_battery_v1.sql`
+   4. `20261102170000_member_status_v1.sql`
+   5. `20261103010817_s32_export_notes_battery_status.sql`
+   6. `20261103204751_couple_notes_color.sql`
+   7. `20261103205050_lavagna_v1.sql`
+   8. `20261103205157_weekly_challenge_v1.sql`
+2. **Funzioni del server in produzione:** `send-web-push` (lavagna, foto della sfida) e `weekly-challenge-job` (nuova). La funzione della sfida va **prima** della sua pianificazione.
+3. **Database, ultime due:** `20261103205200_weekly_challenge_job_cron.sql` (in produzione il cron parte davvero: primo invio il lunedì alle 9) e `20261104140000_atmosfere_gradienti.sql`.
+4. **Sito:** PR da staging a main e merge; Cloudflare pubblica la produzione da main. Prima del merge: build id di produzione al posto di quello di staging.
+5. **Android:** AAB nuovo su Play (test interno, poi chiuso), con versione più alta; poi Sicurezza dei dati su Play Console (il widget Post-it mostra il testo dei post-it sulla Home; nessun tipo di dato nuovo).
+6. **Dopo l'uscita:** staging riparte da main (nuovo branch di staging) e il branch lungo `mission/us-store-s3-1-public-auth-staging-20261011` si archivia.
+
+Note: `export-my-data` resta spenta (D-7), quindi le modifiche a `s3-2-export-core.mjs` non si distribuiscono. `notification-core.mjs` cambia solo con voci nuove: `calendar-reminders-worker` e `monthiversary-job` non vanno ridistribuite.
+
 ## Lavagna in Noi e widget «Lavagna» (03/11/2026, fase 2 della Noi nuova)
 
 **Stato:** su staging dal 03/11 (SQL e `send-web-push` applicati con il via del founder), non in produzione. Va in produzione insieme a tutta la Noi nuova, solo con il via del founder. Missione: `docs/missions/lavagna-v1.md`.
