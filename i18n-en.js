@@ -577,6 +577,8 @@
 
     // ------------------------------------------------------------ Lasciato per te
     'Lasciato per te': 'Left for you',
+    'LASCIATO PER TE': 'LEFT FOR YOU',
+    'Le cose che avete deciso di tenere': 'The things you chose to keep',
     'Chiudi Lasciato per te': 'Close Left for you',
     'Niente per ora.': 'Nothing for now.',
     'Non riesco ad aprirlo': 'Couldn’t open it',

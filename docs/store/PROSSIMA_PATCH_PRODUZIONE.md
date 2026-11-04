@@ -553,3 +553,4 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 - **Noi, Prossimi e agenda:** niente più «—» al posto dell'ora. Un mesiversario o un traguardo ha un cuore dorato, un impegno senza ora il calendario; i riquadri non hanno più il bordo.
 - **Database:** migrazione `20261104140000_atmosfere_gradienti.sql`, solo titoli e descrizioni di cinque premi (nessun dato cancellato). Ordine: SQL, poi web, poi APK/AAB.
 - **Privacy:** il widget Post-it mostra sulla Home le parole dell'ultimo post-it della coppia (come la domanda del giorno). Nessun nuovo tipo di dato per Google Play.
+- **Conservati in Lasciato per te** (founder, 04/11): la voce «Conservati» (con quante cose avete tenuto) è in fondo a Lasciato per te, sia quando lasci qualcosa sia quando apri; compare solo se avete conservato qualcosa e apre Conservati sopra. Il titolino in Conservati ora dice «LASCIATO PER TE».

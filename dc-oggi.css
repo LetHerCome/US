@@ -1056,3 +1056,10 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
 #home #usTodayPriorityRegion .us-today-priority-card[data-us-arrival-type="challenge"]::before{background:var(--us-ambra)}
 #home #usTodayPriorityRegion .us-today-priority-card[data-us-arrival-type="challenge"] .us-today-priority-kind{color:var(--us-ambra)}
 #home #usTodayPriorityRegion .us-today-priority-card[data-us-arrival-type="challenge"] .us-today-priority-action{background:var(--us-ambra)}
+
+/* Conservati's door at the bottom of Lasciato per te (04/11/2026): Ricordi is only the album. */
+.left-for-you-kept.us-conservati-entry{min-height:60px;margin:16px 0 0}
+.left-for-you-kept.us-conservati-entry[hidden]{display:none!important}
+.left-for-you-kept .us-conservati-entry-count{flex:none;font-size:13px;font-weight:600;color:var(--us-color-text-3)}
+.left-for-you-kept .us-conservati-entry-count:empty{display:none}
+.left-for-you-kept .us-conservati-entry-copy small{font-size:12px}

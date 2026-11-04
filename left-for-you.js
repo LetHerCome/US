@@ -566,10 +566,16 @@
     }
   }
 
+  // Conservati's door, at the bottom of both sheets (moments-albums.js), counts again.
+  function announceOpened() {
+    if (typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') window.dispatchEvent(new CustomEvent('us:left-for-you-opened'));
+  }
+
   async function open() {
     const modal = root();
     if (!modal) return;
     modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
+    announceOpened();
     await load();
     if (!items.length) {
       close();
@@ -598,6 +604,7 @@
       if (error) throw error;
       item.conserved = true;
       if (button) { button.classList.add('is-conserved'); button.textContent = data?.status === 'existing' ? '✓ Già conservato' : '✓ Conservato'; }
+      announceOpened();
       if (items[currentIndex] === item) updateViewerControls();
       setStatus('Conservato nei Ricordi.', 'success');
     } catch (error) {
@@ -812,6 +819,7 @@
     if (!overlay) return;
     applyComposerOptions(options);
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false');
+    announceOpened();
     refreshLastOutcome();
     setComposerStatus('');
     setPartnerAwareComposerLabels();

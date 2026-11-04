@@ -350,3 +350,24 @@ test('M5J R8: the Conservati entry stays hidden while nothing is kept, and kept 
   assert.doesNotMatch(html, /id="conservatiEntry"/, 'Ricordi is only the album (04/11/2026)');
   assert.match(html, /Quello che non conservate in Lasciato per te sparisce dopo 30 giorni\./);
 });
+
+// 04/11/2026 (founder): Ricordi is only the album; Conservati's door moved to
+// the bottom of Lasciato per te, in both its sheets, still hidden while
+// nothing is kept. It opens Conservati over Lasciato per te.
+test('Conservati: its door is at the bottom of Lasciato per te, both sheets', () => {
+  const html = read('index.html');
+  for (const id of ['leftForYouOverlay', 'leftForYouComposerOverlay']) {
+    const start = html.indexOf(`id="${id}"`);
+    const sheet = html.slice(start, html.indexOf('</section>', start));
+    assert.match(sheet, /<button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>[\s\S]*?<b>Conservati<\/b>[\s\S]*?data-conservati-count/, id);
+  }
+  const albums = read('moments-albums.js');
+  assert.match(albums, /const entries = \[document\.getElementById\('conservatiEntry'\), \.\.\.all\('\[data-conservati-entry\]'\)\]\.filter\(Boolean\);/);
+  assert.match(albums, /for \(const entry of entries\) entry\.hidden = total < 1;/);
+  assert.match(albums, /addEventListener\?\.\('us:left-for-you-opened', \(\) => \{ refreshConservatiEntry\(\); \}\);/);
+  assert.match(albums, /if \(event\.target\?\.closest\?\.\('\[data-conservati-entry\]'\)\) openConservati\(\);/);
+  const left = read('left-for-you.js');
+  assert.match(left, /new CustomEvent\('us:left-for-you-opened'\)/);
+  assert.equal((left.match(/announceOpened\(\);/g) || []).length, 3, 'opened, composer opened, something kept');
+  assert.match(read('dc-oggi.css'), /\.left-for-you-kept\.us-conservati-entry\[hidden\]\{display:none!important\}/);
+});
