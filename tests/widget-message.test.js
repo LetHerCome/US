@@ -15,22 +15,22 @@ const JAVA = `${PLUGIN}/java/com/usapp/widget`;
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const res = (file) => read(`${PLUGIN}/res/${file}`);
 
-test('layouts: illustration and grain, the portrait, the sealed note in Fraunces', () => {
+// 04/11/2026 (founder: «da rivedere lo sfondo»): a letter. The sealed envelope
+// is the art; the line in Fraunces and when sit on top of it.
+test('layouts: the letter art and grain, the line in Fraunces on top, no portrait, no note card', () => {
   for (const [name, art] of [['us_widget_message', 'message_s'], ['us_widget_message_medium', 'message_m']]) {
     const layout = res(`layout/${name}.xml`);
     assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/, name);
     assert.ok(layout.includes(`@drawable/us_widget_art_${art}"`), name);
-    for (const id of ['us_message_root', 'us_message_art', 'us_message_grain', 'us_message_photo', 'us_message_initial', 'us_message_text', 'us_message_seal']) assert.ok(layout.includes(`@+id/${id}"`), `${name} ${id}`);
-    assert.ok(layout.indexOf('us_message_photo') < layout.indexOf('us_message_text'), `${name}: the portrait first`);
-    assert.match(layout, /@drawable\/us_widget_note"/, name);
-    assert.match(layout, /@drawable\/us_widget_seal"/, name);
+    for (const id of ['us_message_root', 'us_message_art', 'us_message_grain', 'us_message_text', 'us_message_when', 'us_message_hint']) assert.ok(layout.includes(`@+id/${id}"`), `${name} ${id}`);
+    assert.doesNotMatch(layout, /us_message_photo|us_widget_note"|us_widget_seal"/, `${name}: the envelope is the art`);
     assert.match(layout, /<ImageView\s+android:id="@\+id\/us_message_text"/, name);
     assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, `${name}: nothing under 11sp`);
     assert.doesNotMatch(layout, /android:text="[^@]/, `${name}: text from strings.xml`);
   }
   assert.match(res('layout/us_widget_message.xml'), /@\+id\/us_message_when"/);
   const medium = res('layout/us_widget_message_medium.xml');
-  for (const id of ['us_message_hint', 'us_message_who']) assert.ok(medium.includes(`@+id/${id}"`), id);
+  assert.ok(medium.includes('@+id/us_message_hint"'));
   const preview = res('layout/us_widget_preview_message.xml');
   assert.doesNotMatch(preview, /android:text="[^@]/, 'preview text from strings.xml');
   assert.match(preview, /@drawable\/us_widget_preview_message"/, 'a generic picture, no face in the picker');
@@ -42,14 +42,14 @@ test('layouts: illustration and grain, the portrait, the sealed note in Fraunces
   }
 });
 
-test('provider: the envelope opens itself; 2x2 and 4x2; the partner portrait; no network', () => {
+test('provider: the envelope opens itself; 2x2 and 4x2; who and when under the line; no network', () => {
   const provider = read(`${JAVA}/UsMessageWidgetProvider.java`);
   assert.match(provider, /UsWidgetModels\.message\(state\.snapshot, state\.now\)/);
   assert.match(provider, /state\.needsUpdateAt\(message\.nextChange\)/);
   assert.match(provider, /UsWidgets\.open\(context, message\.destination, 4601\)/);
-  assert.ok(provider.includes('UsWidgetArt.avatar(views, context, state.store.readNoiPortrait("partner"), R.id.us_message_photo, R.id.us_message_initial, partner'));
+  assert.doesNotMatch(provider, /readNoiPortrait|us_message_photo|us_message_seal/);
+  assert.match(provider, /views\.setTextViewText\(R\.id\.us_message_when, who\);/);
   assert.match(provider, /return UsWidgets\.sized\(options, small, medium\);/);
-  assert.match(provider, /views\.setViewVisibility\(R\.id\.us_message_seal, message\.empty \? View\.GONE : View\.VISIBLE\);/);
   assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(/i);
   const models = read(`${JAVA}/UsWidgetModels.java`);
   // Only the envelope: the Ti penso has its own widget.

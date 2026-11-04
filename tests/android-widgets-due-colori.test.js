@@ -15,12 +15,12 @@ const res = (file) => read(`${PLUGIN}/res/${file}`);
 test('widgets: the palette is the app tokens (ui-foundation.css)', () => {
   const colors = res('values/colors.xml');
   const css = read('ui-foundation.css');
-  const pairs = { us_widget_bg: '0f0b13', us_widget_surface: '17111c', us_widget_text: 'f7efe9', us_widget_rosa: 'ff7c96', us_widget_lilla: 'a98bff', us_widget_orchidea: 'd98be0', us_widget_corallo: 'ff8b7b' };
+  const pairs = { us_widget_bg: '140c14', us_widget_surface: '1d1119', us_widget_text: 'f7efe9', us_widget_rosa: 'ff7c96', us_widget_lilla: 'a98bff', us_widget_orchidea: 'd98be0', us_widget_corallo: 'ff8b7b' };
   for (const [name, hex] of Object.entries(pairs)) {
     assert.match(colors, new RegExp(`<color name="${name}">#FF${hex}</color>`, 'i'), name);
     assert.match(css, new RegExp(`#${hex}`, 'i'), `${hex} is an app token`);
   }
-  assert.match(res('drawable/us_widget_background.xml'), /android:startColor="#FF17111C"[\s\S]*<stroke android:width="1dp" android:color="#17F7EFE9"/);
+  assert.match(res('drawable/us_widget_background.xml'), /android:startColor="#FF1D1119"[\s\S]*<stroke android:width="1dp" android:color="#17F7EFE9"/);
 });
 
 // Widget Pastello (02/11/2026): every widget's picker preview is its Pastello
@@ -81,7 +81,9 @@ test('Impostazioni › Widget: each tile is its widget, a soft field of colour, 
 });
 
 // Pastello (founder, 02/11/2026): the light theme of the approved board.
-test('Ti penso, Foto protagonista: illustration and grain, Fraunces drawn as a picture, only the heart', () => {
+// Ti penso (founder, 04/11/2026; tavole Main e TiPenso): only a heart. Empty
+// until tapped; the tap fills it with a pop (UsThinkHeartActivity) and sends.
+test('Ti penso: illustration and grain, only a heart, empty until the tap fills it', () => {
   const small = res('layout/us_widget_think.xml');
   const medium = res('layout/us_widget_think_medium.xml');
   const provider = read(`${JAVA}/UsThinkWidgetProvider.java`);
@@ -90,18 +92,18 @@ test('Ti penso, Foto protagonista: illustration and grain, Fraunces drawn as a p
     assert.match(layout, /android:id="@\+id\/us_think_art"[\s\S]*?android:scaleType="centerCrop"/);
     assert.ok(layout.includes(`@drawable/us_widget_art_${art}"`), art);
     assert.match(layout, /android:id="@\+id\/us_think_grain"[\s\S]*?@drawable\/us_widget_grain"/);
-    assert.match(layout, /android:id="@\+id\/us_think_line"[\s\S]*?android:scaleType="fitStart"/);
-    assert.match(layout, /android:fontFamily="@font\/us_figtree"/);
-    assert.match(layout, /@drawable\/us_widget_glass"[\s\S]*@drawable\/us_widget_pastel_heart/);
-    assert.doesNotMatch(layout.replace(/<!--[\s\S]*?-->/g, ''), /us_widget_cta|Ricambia/, 'only the heart answers (founder, 02/11/2026)');
-    assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, 'nothing under 11sp');
+    assert.match(layout, /android:id="@\+id\/us_widget_heart"[\s\S]*?android:layout_gravity="center"[\s\S]*?@drawable\/us_widget_think_heart_empty"/);
+    const code = layout.replace(/<!--[\s\S]*?-->/g, '');
+    assert.doesNotMatch(code, /<TextView|us_think_line|us_think_avatar|us_widget_cta|Ricambia/, 'only the heart');
   }
+  assert.match(res('drawable/us_widget_think_heart_empty.xml'), /android:strokeColor="#FFFF7C96"[\s\S]*android:fillColor="#00000000"/);
   assert.match(res('values/colors.xml'), /<color name="us_widget_pastel_ink">#FF1A1020<\/color>/);
-  assert.ok(provider.includes('UsWidgetArt.serif(small, context, R.id.us_think_line, model.line, 19f'));
-  assert.ok(provider.includes('UsWidgetArt.avatar(views, context, avatar, R.id.us_think_avatar, R.id.us_think_initial, model.partner'));
-  assert.ok(provider.includes('UsWidgets.themedColor(views, context, R.id.us_widget_heart_bg, "setColorFilter", model.done ? ROSA : 0, model.done ? ROSA : 0);'));
-  assert.ok(provider.includes('views.setInt(R.id.us_widget_heart, "setColorFilter", model.done ? 0xFFFFFFFF : ROSA);'));
-  assert.doesNotMatch(provider, /us_widget_cta/);
+  assert.ok(provider.includes('views.setImageViewResource(R.id.us_widget_heart, model.done ? R.drawable.us_widget_pastel_heart : R.drawable.us_widget_think_heart_empty);'));
+  assert.ok(provider.includes('views.setOnClickPendingIntent(R.id.us_widget_root, heart);'), 'the whole widget is the heart');
+  assert.doesNotMatch(provider, /us_widget_cta|us_think_line|readNoiPortrait/);
+  const pop = read(`${JAVA}/UsThinkHeartActivity.java`);
+  assert.ok(pop.includes('heart.setColorFilter(ROSA);'), 'the pop fills the heart in rosa');
+  assert.doesNotMatch(pop, /us_widget_pastel_circle/, 'no rosa button behind it any more');
   // The fonts are the app's own, decompressed to TTF for Android.
   for (const font of ['us_font_fraunces.ttf', 'us_font_fraunces_italic.ttf', 'us_font_figtree.ttf']) {
     const bytes = fs.readFileSync(path.join(ROOT, PLUGIN, 'res/font', font));

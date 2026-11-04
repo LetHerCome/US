@@ -31,5 +31,5 @@
         android:layout_gravity="center"
         android:contentDescription="@null"
         android:importantForAccessibility="no"
-        android:src="@drawable/us_widget_heart_outline" />
+        android:src="@drawable/us_widget_think_heart_empty" />
 </FrameLayout>

@@ -489,7 +489,8 @@ test('Distanza e batteria opens Noi, its one action', () => {
   const app = read('app.js');
   assert.match(provider, /UsWidgets\.open\(context, "noi", 4401\)/);
   assert.doesNotMatch(provider, /"noi\/play"|us_noi_cta/);
-  assert.match(layout, /@\+id\/us_noi_me"/);
+  assert.match(layout, /@\+id\/us_noi_partner"/);
+  assert.doesNotMatch(layout, /us_noi_me/, 'only the other person (04/11/2026)');
   assert.match(layout, /@\+id\/us_noi_distance/);
   assert.doesNotMatch(layout, /us_noi_cta|GIOCA/);
   assert.match(store, /writeNoiPortrait/);
@@ -502,9 +503,9 @@ test('Distanza e batteria opens Noi, its one action', () => {
   assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(/i);
 });
 
-// Pastello (02/11/2026): "Ricambiato · adesso" for a minute, the 4x2 counts
-// today's thoughts of both (the app's count plus the widget's sends after it).
-test('Ti penso: done at once for a minute, today\'s count on the 4x2', () => {
+// Pastello (02/11/2026): done at once for a minute. Since 04/11/2026 the
+// widget is only a heart: no count on it (the app still counts).
+test('Ti penso: done at once for a minute, only the heart', () => {
   const model = read(`${JAVA}/UsWidgetModels.java`);
   const store = read(`${JAVA}/UsWidgetStore.java`);
   const receiver = read(`${JAVA}/UsThinkWidgetActionReceiver.java`);
@@ -517,10 +518,8 @@ test('Ti penso: done at once for a minute, today\'s count on the 4x2', () => {
   assert.match(store, /actionId\.equals\(/);
   assert.match(store, /thinkHistoryFile\.delete\(\)/);
   assert.match(receiver, /UsWidgetActionClient\.SENT\.equals\(result\)/);
-  assert.match(provider, /UsWidgetModels\.thinkCount\(state\.snapshot, state\.store\.countThinkSentSince\(countSince\(state\), state\.now\), state\.now\)/);
   assert.match(provider, /return UsWidgets\.sized\(options, small, medium\);/);
-  assert.match(read(`${PLUGIN}/res/layout/us_widget_think_medium.xml`), /@\+id\/us_think_count_row/);
-  assert.doesNotMatch(read(`${PLUGIN}/res/layout/us_widget_think.xml`), /us_think_count/, 'the 2x2 has no count');
+  for (const layout of ['us_widget_think', 'us_widget_think_medium']) assert.doesNotMatch(read(`${PLUGIN}/res/layout/${layout}.xml`), /us_think_count/, `${layout}: only the heart`);
   // The app counts both people's Ti penso of this Rome day.
   assert.match(read('app.js'), /const todayCount=\(rows\|\|\[\]\)\.filter\(row=>romeDay\(row\.created_at\)===todayDate\)\.length;/);
   assert.match(read('platform.js'), /todayDate: safeCivilDate\(think\.todayDate\)/);

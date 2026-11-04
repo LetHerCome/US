@@ -44,7 +44,7 @@ public class UsThinkWidgetProvider extends AppWidgetProvider {
 
     private static RemoteViews fill(Context context, RemoteViews views, UsWidgetModels.Think model, Bundle options, boolean wide) {
         UsWidgetArt.art(views, context, R.id.us_think_art, R.id.us_think_grain, wide ? R.drawable.us_widget_art_think_m : R.drawable.us_widget_art_think_s, options, wide);
-        views.setImageViewResource(R.id.us_widget_heart, model.done ? R.drawable.us_widget_pastel_heart : R.drawable.us_widget_heart_outline);
+        views.setImageViewResource(R.id.us_widget_heart, model.done ? R.drawable.us_widget_pastel_heart : R.drawable.us_widget_think_heart_empty);
         views.setInt(R.id.us_widget_heart, "setColorFilter", ROSA);
         views.setInt(R.id.us_widget_heart, "setImageAlpha", !model.canSend || (model.busy && !model.done) ? 140 : 255);
         String said = model.canSend ? context.getString(R.string.us_widget_send) : context.getString(R.string.us_widget_open);

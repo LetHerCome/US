@@ -15,12 +15,14 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const res = (file) => read(`${PLUGIN}/res/${file}`);
 const exists = (file) => fs.existsSync(path.join(ROOT, file));
 
-test('layouts: illustration and grain, two portraits, the distance in Fraunces, the battery', () => {
+// 04/11/2026 (founder): only the other person, her distance and her battery.
+test('layouts: illustration and grain, her portrait, the distance in Fraunces, her battery', () => {
   for (const name of ['us_widget_noi', 'us_widget_noi_small', 'us_widget_noi_medium']) {
     const layout = res(`layout/${name}.xml`);
     assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/, name);
     assert.match(layout, /@drawable\/us_widget_art_noi_[sm]"/, name);
-    for (const id of ['us_noi_root', 'us_noi_art', 'us_noi_grain', 'us_noi_me', 'us_noi_me_initial', 'us_noi_partner', 'us_noi_partner_initial', 'us_noi_distance', 'us_noi_battery_icon', 'us_noi_battery']) {
+    assert.doesNotMatch(layout, /us_noi_me|@string\/us_widget_noi_me"/, `${name}: never my portrait`);
+    for (const id of ['us_noi_root', 'us_noi_art', 'us_noi_grain', 'us_noi_partner', 'us_noi_partner_initial', 'us_noi_distance', 'us_noi_battery_icon', 'us_noi_battery']) {
       assert.match(layout, new RegExp(`@\\+id/${id}"`), `${name} ${id}`);
     }
     assert.match(layout, /<ImageView\s+android:id="@\+id\/us_noi_distance"/, name);
@@ -28,11 +30,8 @@ test('layouts: illustration and grain, two portraits, the distance in Fraunces, 
     assert.doesNotMatch(layout, /android:text="[^@]/, `${name}: text from strings.xml`);
   }
   const medium = res('layout/us_widget_noi_medium.xml');
-  // Me on the left, the partner on the right; the dotted path and the heart are in the illustration.
-  assert.ok(medium.indexOf('us_noi_me"') < medium.indexOf('us_noi_partner"'));
-  assert.match(medium, /@string\/us_widget_noi_me/);
   for (const id of ['us_noi_partner_name', 'us_noi_caption']) assert.match(medium, new RegExp(`@\\+id/${id}"`), id);
-  assert.match(res('layout/us_widget_noi_small.xml'), /@\+id\/us_noi_battery_row"/);
+  assert.match(res('layout/us_widget_noi_small.xml'), /@\+id\/us_noi_partner"[\s\S]*@\+id\/us_noi_partner_name"[\s\S]*@\+id\/us_noi_battery_row"/);
   assert.match(res('values/strings.xml'), /<string name="us_widget_noi_name">Distanza e batteria<\/string>/);
 });
 
@@ -62,7 +61,8 @@ test('provider: 2x1, 2x2 and 4x2 by size; older phones by the reported size', ()
   // "aggiornato 10 min fa" and the battery redraw themselves with the shared alarm.
   assert.match(provider, /state\.needsUpdateAt\(couple\.distanceNextChange\);/);
   assert.match(provider, /state\.needsUpdateAt\(couple\.batteryNextChange\);/);
-  for (const slot of ['me', 'partner']) assert.match(provider, new RegExp(`readNoiPortrait\\("${slot}"\\)`), slot);
+  assert.match(provider, /readNoiPortrait\("partner"\)/);
+  assert.doesNotMatch(provider, /readNoiPortrait\("me"\)/, 'never my portrait');
   assert.doesNotMatch(provider, /readNoiPortrait\("pair"\)/);
   assert.ok(provider.includes('UsWidgetArt.avatar(views, context, state.store.readNoiPortrait("partner"), R.id.us_noi_partner, R.id.us_noi_partner_initial, partner, portraitDp);'));
   assert.ok(provider.includes('UsWidgetArt.serif(views, context, R.id.us_noi_distance, distance(context, couple)'));

@@ -12,22 +12,26 @@ const JAVA = `${PLUGIN}/java/com/usapp/widget`;
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const res = (file) => read(`${PLUGIN}/res/${file}`);
 
-test('layouts: illustration and grain, the frosted label, the question in Fraunces as a picture', () => {
+// 04/11/2026 (founder): the question first, as big as it fits, and the
+// «Rispondi» button that opens it in US.
+test('layouts: illustration and grain, the question in Fraunces as a picture, then «Rispondi»', () => {
   for (const [layout, art] of [[res('layout/us_widget_daily.xml'), 'daily_s'], [res('layout/us_widget_daily_medium.xml'), 'daily_m']]) {
     assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/);
     assert.ok(layout.includes('@drawable/us_widget_art_' + art + '"'), art);
-    assert.match(layout, /android:id="@\+id\/us_daily_pill"[\s\S]*?android:background="@drawable\/us_widget_glass_pill"/);
-    assert.match(layout, /<ImageView\s+android:id="@\+id\/us_daily_question"/);
+    assert.match(layout, /android:text="@string\/us_widget_daily_kicker"/);
+    assert.match(layout, /<ImageView\s+android:id="@\+id\/us_daily_question"[\s\S]*?android:id="@\+id\/us_daily_answer"[\s\S]*?android:background="@drawable\/us_widget_pastel_pill_rosa"[\s\S]*?android:text="@string\/us_widget_daily_answer"/);
     assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/);
+    assert.doesNotMatch(layout, /us_daily_partner|us_daily_me"|us_daily_who/, 'no portraits');
   }
-  assert.match(res('layout/us_widget_daily_medium.xml'), /@\+id\/us_daily_partner[\s\S]*@\+id\/us_daily_me"/);
+  assert.match(res('values/strings.xml'), /<string name="us_widget_daily_answer">Rispondi<\/string>/);
 });
 
-test('provider: who answered with their portrait, the other quieter; never an answer; 2x2 and 4x2', () => {
+test('provider: the question big, «Rispondi» opens it, never an answer; 2x2 and 4x2', () => {
   const provider = read(`${JAVA}/UsDailyWidgetProvider.java`);
-  assert.ok(provider.includes('UsWidgetArt.serif(small, context, R.id.us_daily_question, question, 15.5f'));
-  assert.ok(provider.includes('medium.setInt(R.id.us_daily_partner, "setImageAlpha", daily.partnerAnswered() ? 255 : QUIET);'));
-  assert.ok(provider.includes('medium.setInt(R.id.us_daily_me, "setImageAlpha", daily.meAnswered() ? 255 : QUIET);'));
+  assert.ok(provider.includes('UsWidgetArt.serif(small, context, R.id.us_daily_question, question, 18f'));
+  assert.ok(provider.includes('UsWidgetArt.serif(medium, context, R.id.us_daily_question, question, 23f'));
+  assert.ok(provider.includes('views.setOnClickPendingIntent(R.id.us_daily_answer, UsWidgets.open(context, "daily", 4502));'));
+  assert.match(provider, /case "todo": case "your_turn": return "Rispondi";/);
   assert.match(provider, /case "your_turn": plain = who \+ " ha risposto · "; bold = "tocca a te"; break;/);
   assert.match(provider, /return UsWidgets\.sized\(options, small, medium\);/);
   assert.doesNotMatch(provider, /optString\("(?:answer|partnerAnswer)|HttpURLConnection/);
