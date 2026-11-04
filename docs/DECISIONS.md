@@ -452,3 +452,11 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Foto & Noi** segue il tema (scelta B): col tema chiaro la foto sfuma nella crema Pastello, col tema scuro come prima.
 - **Lasciato per te** resta una busta chiusa: la sorpresa non si vede nel widget.
 - **Countdown** sempre illustrato: nessun dato nuovo per una foto del viaggio.
+
+## 2026-11-04 — L'icona dell'app perde il riquadro, la stellina resta
+
+**Fonte:** founder, 04/11/2026: «lasciamo la stella di prima, togliamo solo il riquadro» (dopo aver scartato tre versioni con i cuori al posto della stellina).
+
+- Sostituisce «L'icona dell'app resta quella di sempre» del 30/10: l'icona predefinita del telefono è il logo senza cornice approvato il 29/10 (`assets/source/brand/app-icon/us-launcher-symbol-v2.png`), con la stellina com'era. Splash, notifiche e logo dentro l'app restano quelli di sempre.
+- Codice: lo stesso del 29/10 (`us_adaptive_foreground_v2`, `mipmap-*/ic_launcher*.png`, `scripts/build-android-brand-assets.ps1`, `android/brand-assets-manifest.json`, `tests/n3-android-brand-assets.test.js`).
+- Le icone premio di Sintonia (Notte, Oro, Neon) non cambiano. Su staging dal 04/11; in produzione con la patch, solo con il via del founder.
