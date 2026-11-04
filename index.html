@@ -1324,18 +1324,20 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <p class="us-cal-form-context" id="usCalendarFormContext" hidden>Le vostre idee · per voi due</p>
       <p class="us-cal-form-day" id="usCalendarFormDay" hidden></p>
       <div class="us-cal-form-day-entries" id="usCalendarFormDayEntries" hidden></div>
-      <div class="us-cal-presets" role="group" aria-label="Titoli rapidi">
+      <div class="us-cal-presets" id="usCalendarPresets" role="group" aria-label="Titoli rapidi">
         <button type="button" id="usCalendarPresetWork" data-us-calendar-preset="Lavoro" aria-pressed="false">Lavoro</button>
         <button type="button" id="usCalendarPresetUniversity" data-us-calendar-preset="Università" aria-pressed="false">Università</button>
         <button type="button" id="usCalendarPresetOut" data-us-calendar-preset="Uscita" aria-pressed="false">Uscita</button>
+        <button type="button" class="us-cal-preset-add" id="usCalendarPresetAdd" aria-label="Aggiungi un titolo rapido"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
+        <span class="us-cal-preset-new" id="usCalendarPresetNew" hidden><input id="usCalendarPresetNewInput" type="text" maxlength="30" enterkeyhint="done" placeholder="Nuovo titolo" aria-label="Nuovo titolo rapido"><button type="button" id="usCalendarPresetNewSave">Aggiungi</button></span>
       </div>
       <label class="us-cal-field"><span>Che cosa fai?</span><input id="usCalendarTitleInput" type="text" maxlength="200" required placeholder="Che cosa fai?"></label>
       <label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno</span><input id="usCalendarDateInput" type="date"></label>
       <label class="us-cal-field us-cal-allday-field"><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
       <div class="us-cal-time-fields" id="usCalendarTimeFields">
-        <label class="us-cal-field"><span>Inizio</span><input id="usCalendarStartTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="next" maxlength="5" autocomplete="off" placeholder="09:00" aria-label="Ora di inizio"></label>
+        <label class="us-cal-field"><span>Inizio</span><input id="usCalendarStartTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="next" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di inizio"></label>
         <span class="us-cal-time-arrow" aria-hidden="true">→</span>
-        <label class="us-cal-field"><span>Fine</span><input id="usCalendarEndTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="10:00" aria-label="Ora di fine"></label>
+        <label class="us-cal-field"><span>Fine</span><input id="usCalendarEndTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di fine"></label>
       </div>
       <div class="us-cal-form-status" id="usCalendarFormStatus" role="status" aria-live="polite"></div>
       <button type="submit" class="primary us-cal-form-save" id="usCalendarFormSave">Salva impegno</button>

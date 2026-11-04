@@ -184,7 +184,8 @@ test('M10.1C: the Noi "+" is the one explicit create affordance; no floating +',
 test('M10.1C/US 1.0: quick create collects presets/title, all-day and explicit start/end; authority is unchanged', () => {
   const form = html.match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)[0];
   const inputs = [...form.matchAll(/<(?:input|textarea|select)[^>]*id="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(inputs, ['usCalendarTitleInput', 'usCalendarDateInput', 'usCalendarAllDayInput', 'usCalendarStartTimeInput', 'usCalendarEndTimeInput'], 'date input is edit-only; timed entries expose a compact range');
+  // 04/11/2026: «+» opens a field for a quick title of your own, among the presets.
+  assert.deepEqual(inputs, ['usCalendarPresetNewInput', 'usCalendarTitleInput', 'usCalendarDateInput', 'usCalendarAllDayInput', 'usCalendarStartTimeInput', 'usCalendarEndTimeInput'], 'date input is edit-only; timed entries expose a compact range');
   assert.doesNotMatch(form, /Durata|duration|Ricordamelo|reminder|<textarea|Nota/i);
   assert.match(calSrc, /setFormKind\(mode === 'edit' \? entry\.entry_type : 'personal'\);/);
   assert.match(calSrc, /const kind = ideaLink \? 'shared' : calendarKind;/);
