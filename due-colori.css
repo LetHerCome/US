@@ -26,14 +26,15 @@ body{--us-tab:inherit}
 :root:has(#settings.page.active){--us-tab:var(--us-color-text-3)}
 
 /* ---------- Canvas: the Atmosfera, still on the screen, with a faint glow of the tab colour on top ----------
-   The gradient (--us-atmo) holds the viewport while the page scrolls over it. */
+   The gradient (--us-atmo) holds the viewport while the page scrolls over it.
+   !important: identity.css paints html and body the same way, with !important. */
 html,:root[data-us-theme]{
-  background:var(--us-atmo),var(--us-color-bg);
-  background-attachment:fixed;
+  background:var(--us-atmo),var(--us-color-bg)!important;
+  background-attachment:fixed!important;
   color:var(--us-color-text);
 }
 body,:root[data-us-theme] body{
-  background:radial-gradient(70% 300px at 50% -60px,color-mix(in srgb,var(--us-tab) 13%,transparent),transparent 72%);
+  background:radial-gradient(70% 300px at 50% -60px,color-mix(in srgb,var(--us-tab) 13%,transparent),transparent 72%)!important;
   color:var(--us-color-text);
 }
 body{font-family:var(--us-font-ui);font-size:15px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}

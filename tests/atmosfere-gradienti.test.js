@@ -15,7 +15,8 @@ test('Vino is the canvas of US: a gradient that holds the screen while the page 
   assert.match(foundation, /--us-color-bg:#140c14;/);
   assert.match(foundation, /--us-atmo:radial-gradient\([^;]*rgba\(255,124,150,\.24\)[^;]*linear-gradient\(180deg,#3a1426 0%,#22101d 50%,#140c14 100%\);/);
   const canvas = read('due-colori.css');
-  assert.match(canvas, /html,:root\[data-us-theme\]\{\s*background:var\(--us-atmo\),var\(--us-color-bg\);\s*background-attachment:fixed;/);
+  // !important: identity.css paints html and body with !important too.
+  assert.match(canvas, /html,:root\[data-us-theme\]\{\s*background:var\(--us-atmo\),var\(--us-color-bg\)!important;\s*background-attachment:fixed!important;/);
   assert.doesNotMatch(canvas, /body,:root\[data-us-theme\] body\{\s*background:[^}]*var\(--us-color-bg\)/, 'the body lets the Atmosfera through');
 });
 

@@ -597,7 +597,7 @@
 #moments #momentsGrid.moment-grid.ricordi-story{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important}
 #moments #momentsGrid.ricordi-story .ricordi-period{margin:22px 0 6px}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit,
-#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide){grid-column:auto!important;border-radius:10px!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide){grid-column:auto!important;min-height:0!important;border-radius:10px!important}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit>img,
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide)>img{aspect-ratio:1/1!important}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit>.moment-meta{display:none!important}
