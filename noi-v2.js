@@ -191,11 +191,13 @@ function itemMarkup(day,item) {
   }
   const clock=clockOf(item.time);
   // A hundred days: «4100 giorni ♡» says it all, its line would repeat it.
+  // No hour: a mark, never a dash (founder, 04/11/2026). A heart for our
+  // dates, the calendar for a whole-day plan.
   if(item.kind==='relationship')return `<button type="button" class="us-noi-v2-item" data-noi-item="${action}" data-day="${esc(day)}" data-id="" data-months="${item.months}" data-owner="noi">
-    <span class="us-noi-v2-item-time" aria-hidden="true">—</span><span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small class="us-noi-v2-item-meta">${item.days?'':`<span>${esc(item.time)}</span>`}<span class="us-noi-v2-owner" data-owner-type="relationship">${esc(ownerLabel(item))}</span></small></span>${whoChip(item)}
+    <span class="us-noi-v2-item-time is-mark" aria-hidden="true">${icon('heart')}</span><span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small class="us-noi-v2-item-meta">${item.days?'':`<span>${esc(item.time)}</span>`}<span class="us-noi-v2-owner" data-owner-type="relationship">${esc(ownerLabel(item))}</span></small></span>${whoChip(item)}
   </button>`;
   return `<button type="button" class="us-noi-v2-item" data-noi-item="${action}" data-day="${esc(day)}" data-id="${esc(item.id||'')}" data-owner="${ownerOf(item)}">
-    <span class="us-noi-v2-item-time"${clock?'':' aria-hidden="true"'}>${clock||'—'}</span><span class="us-noi-v2-item-copy"><b translate="no">${esc(item.title)}</b><small class="us-noi-v2-item-meta">${clock?'':`<span>${esc(item.time)}</span>`}<span class="us-noi-v2-owner" data-owner-type="${esc(item.entryType||item.kind)}">${esc(ownerLabel(item))}</span></small></span>${whoChip(item)}
+    <span class="us-noi-v2-item-time${clock?'':' is-mark'}"${clock?'':' aria-hidden="true"'}>${clock||icon('calendar-blank')}</span><span class="us-noi-v2-item-copy"><b translate="no">${esc(item.title)}</b><small class="us-noi-v2-item-meta">${clock?'':`<span>${esc(item.time)}</span>`}<span class="us-noi-v2-owner" data-owner-type="${esc(item.entryType||item.kind)}">${esc(ownerLabel(item))}</span></small></span>${whoChip(item)}
   </button>`;
 }
 // La nostra settimana: one chip per commitment, in the colour of whose it is.

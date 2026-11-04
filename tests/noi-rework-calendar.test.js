@@ -206,6 +206,10 @@ test('«Prossimi»: from today, one year ahead, with birthdays, mesiversari and 
   assert.match(list, /<b>Anniversario<\/b>[\s\S]*?3 anni insieme/);
   assert.match(list, /lunedì 30 novembre/, 'the day says its month');
   assert.doesNotMatch(list, /Cena passata|>Ieri</);
+  // No dashes (founder, 04/11/2026): a date without an hour carries a mark.
+  assert.doesNotMatch(list, /—/);
+  assert.match(list, /us-noi-v2-item-time is-mark" aria-hidden="true"><span class="us-icon" data-us-icon="heart"/);
+  assert.match(list, /us-noi-v2-item-time">07:15</);
   assert.equal(h.$('usNoiV2Detail').hidden, true);
 
   h.tap('usNoiV2ModeCalendar');

@@ -118,9 +118,13 @@
 #bond .us-noi-v2-day-items{gap:8px;margin-top:0}
 
 /* A commitment of the day: time · what · whose name. */
-#bond .us-noi-v2 .us-noi-v2-item{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:0;padding:10px 12px;border-radius:16px;background:var(--us-color-elevated);border:1px solid var(--us-color-line);color:var(--us-color-text);text-align:left}
+#bond .us-noi-v2 .us-noi-v2-item{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:0;padding:10px 12px;border-radius:16px;background:var(--us-color-elevated);border:0;color:var(--us-color-text);text-align:left}
 #bond .us-noi-v2 .us-noi-v2-item:active{background:var(--us-color-surface-2)}
 #bond .us-noi-v2-item-time{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;line-height:21px;color:var(--us-color-text)}
+/* No hour: a mark in place of the old dash, gold for our dates. */
+#bond .us-noi-v2-item-time.is-mark{display:flex;align-items:center;justify-content:center;color:var(--us-color-text-3)}
+#bond .us-noi-v2-item[data-noi-item="anniversary"] .us-noi-v2-item-time.is-mark{color:#F3C27E}
+#bond .us-noi-v2-item-time.is-mark .us-icon{--us-icon-size:20px}
 #bond .us-noi-v2-item-copy{gap:0}
 #bond .us-noi-v2-item-copy b{font-size:15px;font-weight:600;line-height:22.5px;white-space:normal;overflow-wrap:anywhere}
 #bond .us-noi-v2-item-copy .us-noi-v2-item-meta{display:block;font-size:13px;line-height:1.5;color:var(--us-color-text-3)}
