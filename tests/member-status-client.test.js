@@ -85,16 +85,17 @@ test('widget: a new kind, both halves, the tap opens the twelve, never a write',
   const manifest = read(`${PLUGIN}/AndroidManifest.xml`);
   assert.match(manifest, /<receiver\s+android:name="com\.usapp\.widget\.UsStatusWidgetProvider"\s+android:exported="false"/);
   assert.match(read(`${PLUGIN}/res/xml/us_widget_status_info.xml`), /android:previewLayout="@layout\/us_widget_preview_status"/);
+  // 04/11/2026 (founder): only your two portraits, each with its state; no names, no lines.
   for (const name of ['us_widget_status', 'us_widget_status_medium']) {
     const layout = read(`${PLUGIN}/res/layout/${name}.xml`);
-    for (const id of ['us_status_root', 'us_status_partner_avatar', 'us_status_partner_name', 'us_status_partner_emoji', 'us_status_partner_line']) assert.match(layout, new RegExp(`@\\+id/${id}"`), `${name} ${id}`);
+    for (const id of ['us_status_root', 'us_status_me_avatar', 'us_status_me_initial', 'us_status_me_emoji', 'us_status_partner_avatar', 'us_status_partner_initial', 'us_status_partner_emoji']) assert.match(layout, new RegExp(`@\\+id/${id}"`), `${name} ${id}`);
+    assert.ok(layout.indexOf('us_status_me_avatar') < layout.indexOf('us_status_partner_avatar'), `${name}: you on the left`);
+    assert.doesNotMatch(layout, /us_status_(?:me|partner)_(?:name|line)|us_widget_pastel_heart"/, `${name}: only the two portraits`);
     assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, `${name}: nothing under 11sp`);
   }
-  const medium = read(`${PLUGIN}/res/layout/us_widget_status_medium.xml`);
-  for (const id of ['us_status_me_avatar', 'us_status_me_initial', 'us_status_me_name', 'us_status_me_emoji', 'us_status_me_line']) assert.match(medium, new RegExp(`@\\+id/${id}"`), id);
-  // Foto protagonista: two soft halves in one illustration, the heart between.
-  assert.match(medium, /@drawable\/us_widget_art_status_m"[\s\S]*@drawable\/us_widget_pastel_heart"/);
   assert.match(read(`${PLUGIN}/res/layout/us_widget_status.xml`), /@drawable\/us_widget_art_status_s"/);
-  assert.ok(provider.includes('UsWidgetArt.avatar(small, context, theirs, R.id.us_status_partner_avatar, R.id.us_status_partner_initial, partnerName, 74);'));
+  assert.match(read(`${PLUGIN}/res/layout/us_widget_status_medium.xml`), /@drawable\/us_widget_art_status_m"/);
+  assert.ok(provider.includes('UsWidgetArt.avatar(views, context, theirs, R.id.us_status_partner_avatar, R.id.us_status_partner_initial, partnerName, size);'));
+  assert.ok(provider.includes('UsWidgetArt.avatar(views, context, mine, R.id.us_status_me_avatar, R.id.us_status_me_initial, "Tu", size);'));
   assert.match(read('widget-hub.js'), /\{ kind: 'status', name: 'Come stai', copy: '[^']+', shape: 'wide' \}/);
 });

@@ -141,11 +141,11 @@ test('heart: invio subito dal receiver, animazione in una finestrella non esport
   const receiver = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsThinkWidgetActionReceiver.java');
   const heart = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsThinkHeartActivity.java');
   const manifest = read('native-plugins/us-widget-bridge/android/src/main/AndroidManifest.xml');
-  assert.match(provider, /setOnClickPendingIntent\(R\.id\.us_widget_root,\s*UsWidgets\.open\(context,\s*"think"/);
   // Pastello (02/11): the heart opens the app's heart animation over the Home
   // screen; the send leaves at once from the receiver, never from the animation.
+  // 04/11/2026: the widget is only a heart, so the whole widget is the heart.
   assert.match(provider, /!model\.canSend \? UsWidgets\.open\(context, "think", 4101\) : model\.busy \? sendIntent\(context\) : heartIntent\(context\)/);
-  assert.match(provider, /setOnClickPendingIntent\(R\.id\.us_widget_heart_button,\s*heart\)/);
+  assert.match(provider, /setOnClickPendingIntent\(R\.id\.us_widget_root,\s*heart\)/);
   assert.match(provider, /PendingIntent\.getBroadcast/);
   assert.match(heart, /super\.onCreate\(savedInstanceState\);\s*\/\/[^\n]*\n\s*sendBroadcast\(new Intent\(this, UsThinkWidgetActionReceiver\.class\)\.setAction\(UsThinkWidgetActionReceiver\.ACTION_SEND_THINK\)\);/);
   assert.doesNotMatch(heart, /HttpURLConnection|UsWidgetActionClient|token/i, 'the animation never sends by itself');
