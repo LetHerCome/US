@@ -13,8 +13,9 @@
 
   const platform = window.UsPlatform;
   const nativeEnabled = Boolean(platform?.isNative && platform?.hasWidgetBridge?.() !== false);
-  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'memories', 'status', 'lavagna']);
-  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', memories: 'moments', status: 'home', lavagna: 'bond' });
+  // Countdown left the widgets on 04/11/2026; the Post-it took its place.
+  const KINDS = Object.freeze(['think', 'postit', 'noi', 'photo', 'daily', 'message', 'memories', 'status', 'lavagna']);
+  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home', message: 'home', memories: 'moments', status: 'home', lavagna: 'bond', postit: 'bond' });
   // Messaggio opens the message itself: the Ti penso or the closed envelope.
   const MESSAGE_TARGETS = Object.freeze({ think: 'think', left: 'left_for_you' });
   const COUPLE_TTL_MS = 30 * 60 * 1000;
@@ -62,6 +63,8 @@
   const emptyMemories = () => ({ state: 'none', label: '', anniversary: false, day: '', date: '', title: '', count: 0, stack: 0 });
   // Lavagna: whether there is a drawing, who drew last and when; the pictures are separate files.
   const emptyLavagna = () => ({ state: 'none', by: '', at: '' });
+  // Post-it: the newest post-it of the board, its paper, who wrote it, how many others.
+  const emptyPostit = () => ({ state: 'none', text: '', color: '', by: '', more: 0, at: '' });
   let think = emptyThink();
   let couple = emptyCouple();
   let countdown = emptyCountdown();
@@ -71,6 +74,7 @@
   let memories = emptyMemories();
   let comeStai = emptyStatus();
   let lavagna = emptyLavagna();
+  let postit = emptyPostit();
   let memoriesSyncedAt = 0;
   let memoriesSignature = '';
   let memoriesSync = null;
@@ -103,6 +107,7 @@
       left: { ...left },
       memories: { ...memories },
       lavagna: { ...lavagna },
+      postit: { ...postit },
       status: { me: { ...comeStai.me }, partner: { ...comeStai.partner } }
     };
   }
@@ -407,6 +412,19 @@
     const value = { me: clean(next.me), partner: clean(next.partner) };
     if (JSON.stringify(value) === JSON.stringify(comeStai)) return Promise.resolve(false);
     comeStai = value;
+    return scheduleWrite();
+  }
+
+  // Post-it (couple-notes.js): the newest post-it, for the widget.
+  function syncPostit() {
+    if (!ownerHash) return Promise.resolve(false);
+    const next = window.UsCoupleNotes?.widgetState?.();
+    if (!next) return Promise.resolve(false);
+    const value = next.state === 'ready' && cleanText(next.text, 120)
+      ? { state: 'ready', text: cleanText(next.text, 120), color: ['yellow', 'pink', 'blue', 'green'].includes(next.color) ? next.color : 'yellow', by: next.by === 'me' || next.by === 'partner' ? next.by : '', more: Math.max(0, Math.min(99, Math.trunc(Number(next.more) || 0))), at: isoInstant(next.at) }
+      : emptyPostit();
+    if (JSON.stringify(value) === JSON.stringify(postit)) return Promise.resolve(false);
+    postit = value;
     return scheduleWrite();
   }
 
@@ -778,6 +796,7 @@
       comeStai = { me: { ...emptyStatusPerson(), ...native.status?.me }, partner: { ...emptyStatusPerson(), ...native.status?.partner } };
       memories = native.memories?.state === 'ready' ? { ...emptyMemories(), ...native.memories } : emptyMemories();
       lavagna = ['ready', 'empty'].includes(native.lavagna?.state) ? { ...emptyLavagna(), ...native.lavagna } : emptyLavagna();
+      postit = native.postit?.state === 'ready' ? { ...emptyPostit(), ...native.postit } : emptyPostit();
       photo = native.photo?.state === 'ready' && native.photo.key === seed.photoKey ? { ...emptyPhoto(), ...native.photo, next: Array.isArray(native.photo.next) ? native.photo.next : [] } : emptyPhoto();
       return true;
     } catch (_) {
@@ -796,6 +815,7 @@
       left = emptyLeft();
       memories = emptyMemories();
       comeStai = emptyStatus();
+      postit = emptyPostit();
       memoriesSyncedAt = 0;
       memoriesSignature = '';
       couple = emptyCouple();
@@ -824,6 +844,8 @@
       syncPhoto({ force: true }).catch(() => {});
       syncNoiPortrait({ force: true }).catch(() => {});
       syncMemories().catch(() => {});
+      // The board is read once, so a placed Post-it widget is fresh without opening Noi.
+      installed().then((placed) => { if (placed?.installed?.postit) window.UsCoupleNotes?.refresh?.(); }).catch(() => {});
     }, 2500);
     return true;
   }
@@ -841,7 +863,7 @@
     photoResyncRequested = false;
     noiPortraitSignature = '';
     clearRoundPreviews();
-    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();left = emptyLeft();comeStai = emptyStatus();memories = emptyMemories();memoriesSyncedAt = 0;memoriesSignature = '';lavagna = emptyLavagna();
+    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();left = emptyLeft();comeStai = emptyStatus();memories = emptyMemories();memoriesSyncedAt = 0;memoriesSignature = '';lavagna = emptyLavagna();postit = emptyPostit();
     setPreview('');
     const provisioning = credentialProvisionInFlight;
     if (provisioning) try { await provisioning; } catch (_) {}
@@ -931,6 +953,7 @@
     if (kind === 'noi') await syncNoiPortrait({ force: true });
     if (kind === 'memories') await syncMemories({ force: true });
     if (kind === 'lavagna') await window.UsLavagna?.syncWidget?.({ force: true });
+    if (kind === 'postit') { window.UsCoupleNotes?.refresh?.(); await syncPostit(); }
     return platform.requestWidgetPin(kind);
   }
 
@@ -940,6 +963,7 @@
     publishThink,
     publishLeft,
     syncStatus,
+    syncPostit,
     memoriesPick,
     syncMemories,
     syncLavagna,

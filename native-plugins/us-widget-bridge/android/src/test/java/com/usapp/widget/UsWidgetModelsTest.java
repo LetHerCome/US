@@ -62,6 +62,26 @@ public class UsWidgetModelsTest {
         assertFalse(clean.getJSONObject("think").has("lastActionStatus"));
     }
 
+    // Post-it (04/11/2026): the newest post-it's words, its paper, who and how many others.
+    @Test
+    public void contractKeepsThePostitAndNothingElse() throws Exception {
+        JSONObject input = snapshot(null).put("postit", new JSONObject()
+            .put("state", "ready").put("text", "prenotare\nla cena").put("color", "purple").put("by", "partner")
+            .put("more", 400).put("at", "2026-11-04T10:00:00Z").put("id", "raw").put("items", new JSONArray().put("secret")));
+        JSONObject postit = UsWidgetContract.normalize(input).getJSONObject("postit");
+        assertEquals("ready", postit.getString("state"));
+        assertEquals("prenotare la cena", postit.getString("text"));
+        assertEquals("yellow", postit.getString("color"));
+        assertEquals("partner", postit.getString("by"));
+        assertEquals(99, postit.getInt("more"));
+        assertFalse(postit.has("id"));
+        assertFalse(postit.toString().contains("secret"));
+        JSONObject empty = UsWidgetContract.normalize(snapshot(null).put("postit", new JSONObject().put("state", "ready").put("text", " ")))
+            .getJSONObject("postit");
+        assertEquals("none", empty.getString("state"));
+        assertEquals("", empty.getString("color"));
+    }
+
     @Test
     public void contractDropsInvalidCountdownAndUnknownStyle() throws Exception {
         JSONObject bad = snapshot(countdown("clock", "domani", "neon"));

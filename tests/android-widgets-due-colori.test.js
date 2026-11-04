@@ -26,7 +26,8 @@ test('widgets: the palette is the app tokens (ui-foundation.css)', () => {
 // Widget Pastello (02/11/2026): every widget's picker preview is its Pastello
 // card, both the layout (Android 12+) and the picture many launchers show
 // instead (Xiaomi among them). Generic: never a real name, face or photo.
-const KINDS = ['think', 'noi', 'photo', 'countdown', 'daily', 'message', 'memories', 'status'];
+// 04/11/2026: the Countdown left the widgets; the Post-it took its place.
+const KINDS = ['think', 'noi', 'photo', 'postit', 'daily', 'message', 'memories', 'status'];
 
 test('widgets: picker previews are generic, never a real name, face or photo', () => {
   const previews = KINDS.map((k) => res(`layout/us_widget_preview_${k}.xml`)).join('\n');
@@ -49,7 +50,7 @@ test('widgets: picker previews are generic, never a real name, face or photo', (
 test('widgets: preview PNGs at 2x (168dp square, 192x96dp Noi, 240x120dp wide); Foto & Noi keeps its picture of before', () => {
   const png = (k) => fs.readFileSync(path.join(ROOT, PLUGIN, `res/drawable-nodpi/us_widget_preview_${k}.png`));
   const size = (k) => { const bytes = png(k); return [bytes.readUInt32BE(16), bytes.readUInt32BE(20)]; };
-  for (const k of ['think', 'photo', 'countdown', 'message', 'memories']) assert.deepEqual(size(k), [336, 336], k);
+  for (const k of ['think', 'photo', 'postit', 'message', 'memories']) assert.deepEqual(size(k), [336, 336], k);
   assert.deepEqual(size('noi'), [384, 192]);
   for (const k of ['daily', 'status']) assert.deepEqual(size(k), [480, 240], k);
   for (const k of KINDS) {
@@ -72,12 +73,13 @@ test('widgets: after an app update every widget redraws at once from the saved s
 test('Impostazioni › Widget: each tile is its widget, a soft field of colour, never a flat one', () => {
   const css = read('dc-settings.css');
   assert.ok(css.includes('#usWidgetHub .us-widget-hub-preview>*{--us-wp-aurora:radial-gradient('));
-  for (const rule of ['.us-wp-think{background:var(--us-wp-aurora)', '.us-wp-countdown{background:var(--us-wp-aurora)', '.us-wp-daily{display:grid', '.us-wp-message{background:var(--us-wp-aurora)', '.us-wp-memories{position:relative;background:var(--us-wp-aurora)', '.us-wp-status{display:grid', '.us-wp-photo:not(.has-photo){background:var(--us-wp-aurora)']) {
+  for (const rule of ['.us-wp-think{background:var(--us-wp-aurora)', '.us-wp-postit{position:relative;display:flex','.us-wp-daily{display:grid', '.us-wp-message{background:var(--us-wp-aurora)', '.us-wp-memories{position:relative;background:var(--us-wp-aurora)', '.us-wp-status{display:grid', '.us-wp-photo:not(.has-photo){background:var(--us-wp-aurora)']) {
     assert.ok(css.includes(`#usWidgetHub ${rule}`), rule);
   }
   const hub = read('widget-hub.js');
-  assert.match(hub, /data-style="pastel"/);
-  assert.doesNotMatch(hub, /data-style="\$\{esc\(c\.style/);
+  // 04/11/2026: the Countdown left the widgets; the Post-it took its place.
+  assert.doesNotMatch(hub, /kind: 'countdown'|countdownPreview/);
+  assert.match(hub, /kind: 'postit', name: 'Post-it'/);
 });
 
 // Pastello (founder, 02/11/2026): the light theme of the approved board.
@@ -127,13 +129,11 @@ test('Distanza e batteria 2x1: the illustrated card, the same round portraits', 
 });
 
 // Countdown Pastello (02/11): one look for every style; tests/widget-countdown.test.js.
-test('Countdown: one illustrated look replaces the night card and the reward looks', () => {
-  const provider = read(`${JAVA}/UsCountdownWidgetProvider.java`);
-  const layout = res('layout/us_widget_countdown.xml');
-  assert.match(layout, /@drawable\/us_widget_art_countdown_s"/);
-  assert.ok(provider.includes('UsWidgetArt.serif(views, context, R.id.us_cd_value, model.value'));
-  assert.doesNotMatch(provider, /rewardBase|us_widget_cd_|Look look/);
-  for (const name of ['aurora_bg', 'aurora_glow', 'chrome_tag', 'glass_bg', 'orbit_ring', 'signal_bg', 'signal_tag']) {
-    assert.equal(fs.existsSync(path.join(ROOT, PLUGIN, `res/drawable/us_widget_cd_${name}.xml`)), false, name);
+test('Countdown: gone from the widgets (founder, 04/11/2026); the Post-it took its place', () => {
+  assert.equal(fs.existsSync(path.join(ROOT, JAVA, 'UsCountdownWidgetProvider.java')), false);
+  for (const file of ['layout/us_widget_countdown.xml', 'layout/us_widget_countdown_medium.xml', 'xml/us_widget_countdown_info.xml']) {
+    assert.equal(fs.existsSync(path.join(ROOT, PLUGIN, 'res', file)), false, file);
   }
+  assert.doesNotMatch(read(`${PLUGIN}/AndroidManifest.xml`), /UsCountdownWidgetProvider/);
+  assert.match(read(`${PLUGIN}/AndroidManifest.xml`), /android:name="com.usapp.widget.UsPostitWidgetProvider"/);
 });

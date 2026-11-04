@@ -24,7 +24,7 @@ import org.json.JSONObject;
  */
 final class UsWidgets {
     static final String THINK = "think";
-    static final String COUNTDOWN = "countdown";
+    static final String POSTIT = "postit";
     static final String NOI = "noi";
     static final String PHOTO = "photo";
     static final String DAILY = "daily";
@@ -33,7 +33,8 @@ final class UsWidgets {
     static final String MEMORIES = "memories";
     static final String STATUS = "status";
     static final String LAVAGNA = "lavagna";
-    static final String[] KINDS = { THINK, COUNTDOWN, NOI, PHOTO, DAILY, MESSAGE, DAYS, MEMORIES, STATUS, LAVAGNA };
+    // 04/11/2026: the Countdown left the widgets; the Post-it took its place.
+    static final String[] KINDS = { THINK, POSTIT, NOI, PHOTO, DAILY, MESSAGE, DAYS, MEMORIES, STATUS, LAVAGNA };
     static final String ACTION_TICK = "com.usapp.us.WIDGET_TICK";
     static final String ACTION_PINNED = "com.usapp.us.WIDGET_PINNED";
     static final String EXTRA_KIND = "us_widget_kind";
@@ -43,7 +44,7 @@ final class UsWidgets {
     static Class<?> providerFor(String kind) {
         switch (kind) {
             case THINK: return UsThinkWidgetProvider.class;
-            case COUNTDOWN: return UsCountdownWidgetProvider.class;
+            case POSTIT: return UsPostitWidgetProvider.class;
             case NOI: return UsNoiWidgetProvider.class;
             case PHOTO: return UsPhotoWidgetProvider.class;
             case DAILY: return UsDailyWidgetProvider.class;
@@ -132,7 +133,7 @@ final class UsWidgets {
     static RemoteViews render(Context context, String kind, State state, Bundle options) {
         switch (kind) {
             case THINK: return UsThinkWidgetProvider.render(context, state, options);
-            case COUNTDOWN: return UsCountdownWidgetProvider.render(context, state, options);
+            case POSTIT: return UsPostitWidgetProvider.render(context, state, options);
             case NOI: return UsNoiWidgetProvider.render(context, state, options);
             case DAILY: return UsDailyWidgetProvider.render(context, state, options);
             case MESSAGE: return UsMessageWidgetProvider.render(context, state, options);

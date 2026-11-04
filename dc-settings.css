@@ -798,6 +798,13 @@
 #usWidgetHub .us-wp-memories i:nth-child(3){box-sizing:border-box;border:2px solid #fff;background:linear-gradient(140deg,#ffd3a8,#ff7c96 52%,#5a2f63)}
 #usWidgetHub .us-wp-status{display:grid;grid-template-columns:1fr 1fr;place-items:center;background:var(--us-wp-aurora);font-size:20px;line-height:1}
 #usWidgetHub .us-wp-photo:not(.has-photo){background:var(--us-wp-aurora)}
+/* Post-it (04/11/2026): the newest post-it on its paper, as on the Home screen. */
+#usWidgetHub .us-wp-postit{position:relative;display:flex;align-items:center;padding:8px;box-sizing:border-box;background:#f6e27a;color:#3b2a10}
+#usWidgetHub .us-wp-postit[data-color="pink"]{background:#ffc2cf}
+#usWidgetHub .us-wp-postit[data-color="blue"]{background:#bfe3f5}
+#usWidgetHub .us-wp-postit[data-color="green"]{background:#c9ecc0}
+#usWidgetHub .us-wp-postit b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font:italic 400 11px/1.15 var(--us-font-display)}
+#usWidgetHub .us-wp-postit small{position:absolute;right:6px;bottom:5px;font:700 9px/1 var(--us-font-ui)}
 
 /* ==========================================================================
    While Settings is open the Noi tab stays marked (mockup PARENT:

@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget picker preview (Android 12+), Foto protagonista (founder, 02/11/2026):
-     the same picture as previewImage, Pastello or Midnight with the phone's
-     theme. Generic: no name, no face, no photo. -->
+<!-- Widget picker preview (Android 12+): the same picture as previewImage,
+     Pastello or Midnight with the phone's theme. Generic: no name. -->
 <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:contentDescription="@null"
     android:importantForAccessibility="no"
     android:scaleType="fitCenter"
-    android:src="@drawable/us_widget_preview_countdown" />
+    android:src="@drawable/us_widget_preview_postit" />

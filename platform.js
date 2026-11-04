@@ -182,6 +182,7 @@
       left: widgetLeft(input?.left),
       memories: widgetMemories(input?.memories),
       lavagna: widgetLavagna(input?.lavagna),
+      postit: widgetPostit(input?.postit),
       status: { me: widgetStatusPerson(input?.status?.me), partner: widgetStatusPerson(input?.status?.partner) }
     };
   }
@@ -208,6 +209,21 @@
   function widgetLavagna(lavagna = {}) {
     const state = ['ready', 'empty'].includes(lavagna?.state) ? lavagna.state : 'none';
     return { state, by: state === 'ready' && ['me', 'partner'].includes(lavagna?.by) ? lavagna.by : '', at: state === 'ready' ? safeInstant(lavagna?.at) : '' };
+  }
+
+  // Post-it (04/11/2026): the newest post-it of the board, its paper, who
+  // wrote it and how many others. The couple's own words, never an id or a URL.
+  function widgetPostit(postit = {}) {
+    const text = safeText(postit?.text, 120);
+    if (postit?.state !== 'ready' || !text) return { state: 'none', text: '', color: '', by: '', more: 0, at: '' };
+    return {
+      state: 'ready',
+      text,
+      color: ['yellow', 'pink', 'blue', 'green'].includes(postit?.color) ? postit.color : 'yellow',
+      by: ['me', 'partner'].includes(postit?.by) ? postit.by : '',
+      more: Math.max(0, Math.min(99, Math.trunc(Number(postit?.more) || 0))),
+      at: safeInstant(postit?.at)
+    };
   }
 
   function widgetMemories(memories = {}) {
@@ -348,7 +364,8 @@
     return true;
   }
 
-  const WIDGET_KINDS = ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'memories', 'status', 'lavagna'];
+  // Countdown left the widgets on 04/11/2026; the Post-it took its place.
+  const WIDGET_KINDS = ['think', 'postit', 'noi', 'photo', 'daily', 'message', 'memories', 'status', 'lavagna'];
 
   async function getInstalledWidgets() {
     const plugin = widgetBridge();

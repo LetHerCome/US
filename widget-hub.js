@@ -14,7 +14,8 @@
 
   const CATALOG = Object.freeze([
     { kind: 'think', name: 'Ti penso', copy: 'Un pensiero con un tocco, anche con US chiusa.', shape: 'square' },
-    { kind: 'countdown', name: 'Countdown', copy: 'Lo stesso Countdown che hai scelto su Oggi.', shape: 'square' },
+    // 04/11/2026: the Countdown left the widgets; the Post-it took its place.
+    { kind: 'postit', name: 'Post-it', copy: 'L’ultimo post-it della vostra bacheca. Toccalo per aprirla.', shape: 'square' },
     { kind: 'noi', name: 'Distanza e batteria', copy: 'La distanza tra voi e la batteria di chi ami. Mai dove siete.', shape: 'wide' },
     { kind: 'photo', name: 'Foto & Noi', copy: 'La foto di Oggi, che cambia ogni ora, con i giorni insieme.', shape: 'square' },
     { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda del giorno e a chi tocca rispondere. Mai le risposte.', shape: 'wide' },
@@ -53,17 +54,6 @@
     const ricambia = received && received > answered;
     const message = ricambia ? `${partner} ti sta pensando` : `Pensa a ${partner}`;
     return `<div class="us-wp-think"><b>${esc(message)}</b><i>${HEART}</i><small>${ricambia ? 'Ricambia' : 'Ti penso'}</small></div>`;
-  }
-
-  function countdownPreview(snapshot) {
-    const c = snapshot.countdown || {};
-    if (!c.active) return '<div class="us-wp-countdown" data-style="pastel"><p>Scegli un Countdown su Oggi</p></div>';
-    let view = null;
-    if (c.kind === 'together') view = together(c.target);
-    else view = window.USCountdown?.display?.({ mode: c.kind, target: c.target });
-    if (!view) view = { value: '12', unit: 'giorni', label: '' };
-    const clock = view.value.includes(':');
-    return `<div class="us-wp-countdown" data-style="pastel"><span class="us-wp-cd-title"${c.kind === 'together' ? '' : ' translate="no"'}>${esc(c.title)}</span><b${clock ? ' class="is-clock"' : ''}>${esc(view.value)}</b>${view.unit ? `<span class="us-wp-cd-unit">${esc(view.unit)}</span>` : ''}${view.label && !clock ? `<span class="us-wp-cd-sub">${esc(view.label)}</span>` : ''}</div>`;
   }
 
   function daysLine(snapshot) {
@@ -119,6 +109,13 @@
     return `<div class="us-wp-lavagna" aria-label="${esc(label)}">${url ? `<img src="${esc(url)}" alt="">` : ''}</div>`;
   }
 
+  // Post-it: the newest post-it of the board, on its paper.
+  function postitPreview(snapshot) {
+    const p = snapshot.postit || {};
+    const ready = p.state === 'ready' && p.text;
+    return `<div class="us-wp-postit" data-color="${esc(ready ? p.color || 'yellow' : 'yellow')}"><b translate="no">${esc(ready ? p.text : 'Scrivi il primo post-it')}</b>${ready && p.more ? `<small>+${esc(p.more)}</small>` : ''}</div>`;
+  }
+
   // Come stai: the two emoji as the app shows them now.
   function statusPreview() {
     const s = window.UsMemberStatus;
@@ -130,7 +127,7 @@
   function preview(kind, view) {
     const snapshot = view.snapshot || {};
     if (kind === 'think') return thinkPreview(snapshot);
-    if (kind === 'countdown') return countdownPreview(snapshot);
+    if (kind === 'postit') return postitPreview(snapshot);
     if (kind === 'noi') return noiPreview(snapshot);
     if (kind === 'daily') return dailyPreview(snapshot);
     if (kind === 'message') return messagePreview();

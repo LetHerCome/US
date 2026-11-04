@@ -15,7 +15,7 @@ const JAVA = 'native-plugins/us-widget-bridge/android/src/main/java/com/usapp/wi
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const exists = (file) => fs.existsSync(path.join(ROOT, file));
 
-const ART = ['think_s', 'think_m', 'photo', 'daily_s', 'daily_m', 'noi_s', 'noi_m', 'countdown_s', 'countdown_m',
+const ART = ['think_s', 'think_m', 'photo', 'daily_s', 'daily_m', 'noi_s', 'noi_m',
   'message_s', 'message_m', 'memories_s', 'memories_m', 'memories_back', 'status_s', 'status_m', 'field'];
 
 test('every illustration in Pastello and in Midnight, small WebP files', () => {

@@ -159,6 +159,7 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
     left: { kind: 'photo', at: '2026-10-31T09:00:00.000Z', body: 'secret', media_path: 'https://example.test/p.jpg' },
     memories: { state: 'ready', label: 'Un anno fa', anniversary: true, day: '2026-10-31', date: '2025-10-31', title: 'Lisbona', count: 8, stack: 9, path: 'secret/a.jpg', url: 'https://example.test/m.jpg' },
     lavagna: { state: 'ready', by: 'partner', at: '2026-11-03T10:00:00.000Z', points: [1, 2], color: 'secret', author_id: 'raw' },
+    postit: { state: 'ready', text: 'prenotare\u0000la cena', color: 'purple', by: 'partner', more: 400, at: '2026-11-04T10:00:00.000Z', id: 'raw', created_by: 'raw', items: ['secret'] },
     accessToken: 'secret', refreshToken: 'secret', supabaseUrl: 'secret', supabaseKey: 'secret'
   });
   const sent = calls[0].snapshot;
@@ -180,7 +181,9 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   assert.deepEqual({ ...sent.memories }, { state: 'ready', label: 'Un anno fa', anniversary: true, day: '2026-10-31', date: '2025-10-31', title: 'Lisbona', count: 8, stack: 3 });
   // Lavagna (03/11/2026): whether there is a drawing, who drew last and when; never a stroke.
   assert.deepEqual({ ...sent.lavagna }, { state: 'ready', by: 'partner', at: '2026-11-03T10:00:00.000Z' });
-  assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'lavagna', 'left', 'memories', 'ownerHash', 'photo', 'schemaVersion', 'status', 'think', 'updatedAt']);
+  // Post-it (04/11/2026): the newest post-it's words, its paper, who and how many others; never an id.
+  assert.deepEqual({ ...sent.postit }, { state: 'ready', text: 'prenotare la cena', color: 'yellow', by: 'partner', more: 99, at: '2026-11-04T10:00:00.000Z' });
+  assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'lavagna', 'left', 'memories', 'ownerHash', 'photo', 'postit', 'schemaVersion', 'status', 'think', 'updatedAt']);
 
   assert.equal(await platform.writeWidgetSnapshot({ schemaVersion: 2, ownerHash: 'raw-user-id' }), false, 'owner non hash rifiutato');
 });
@@ -348,11 +351,11 @@ test('deep link widget aprono la destinazione giusta una volta sola e non invian
   const go = () => harness.events.filter((event) => event[0] === 'go').map((event) => event[1]);
   await harness.emitUrl('us://widget/think');
   await harness.emitUrl('us://widget/think');
-  await harness.emitUrl('us://widget/countdown');
+  await harness.emitUrl('us://widget/postit');
   await harness.emitUrl('us://widget/noi');
   await harness.emitUrl('us://widget/noi/play');
   await harness.emitUrl('us://widget/photo');
-  assert.deepEqual(go(), ['home', 'home', 'bond', 'quiz', 'home']);
+  assert.deepEqual(go(), ['home', 'bond', 'bond', 'quiz', 'home']);
   assert.equal(await harness.emitUrl('us://widget/stories'), false);
   assert.equal(await harness.emitUrl('https://evil.test/widget/think'), false);
   await harness.emitUrl('us://widget/think/send');
@@ -475,7 +478,7 @@ test('Widget Hub vive in Impostazioni, nascosto fuori dall’app native, niente 
   assert.doesNotMatch(html, /id="usWidgetHubManual"|id="usWidgetHubGuide"/);
   assert.match(read('settings.js'), /name==='widgets'[\s\S]{0,80}UsWidgetHub/);
   assert.match(read('navigation.js'), /'widget-hub'/);
-  for (const kind of ['think', 'countdown', 'noi', 'photo']) assert.match(hub, new RegExp(`kind: '${kind}'`));
+  for (const kind of ['think', 'postit', 'noi', 'photo']) assert.match(hub, new RegExp(`kind: '${kind}'`));
   assert.match(hub, /Aggiungi alla Home/);
   const oggi = html.slice(html.indexOf('id="page-home"'), html.indexOf('id="page-bond"'));
   assert.doesNotMatch(oggi, /usWidgetHub|data-widget-add/);
@@ -529,7 +532,7 @@ test('Ti penso: done at once for a minute, only the heart', () => {
 
 test('manifest dichiara 4 provider e i receiver interni, tutti non esportati', () => {
   const manifest = read(`${PLUGIN}/AndroidManifest.xml`);
-  for (const provider of ['UsThinkWidgetProvider', 'UsCountdownWidgetProvider', 'UsNoiWidgetProvider', 'UsPhotoWidgetProvider', 'UsDailyWidgetProvider', 'UsMessageWidgetProvider', 'UsDaysWidgetProvider']) {
+  for (const provider of ['UsThinkWidgetProvider', 'UsPostitWidgetProvider', 'UsNoiWidgetProvider', 'UsPhotoWidgetProvider', 'UsDailyWidgetProvider', 'UsMessageWidgetProvider', 'UsDaysWidgetProvider']) {
     const block = manifest.match(new RegExp(`<receiver[^>]*${provider}"[\\s\\S]*?</receiver>`))?.[0] || '';
     assert.match(block, /android:exported="false"/, provider);
     assert.match(block, /APPWIDGET_UPDATE/, provider);
@@ -538,7 +541,7 @@ test('manifest dichiara 4 provider e i receiver interni, tutti non esportati', (
   }
   assert.equal((manifest.match(/android:exported="true"/g) || []).length, 0);
   assert.match(manifest, /UsWidgetSystemReceiver"\s+android:exported="false"/);
-  for (const info of ['think', 'countdown', 'noi', 'photo', 'daily', 'message', 'days']) {
+  for (const info of ['think', 'postit', 'noi', 'photo', 'daily', 'message', 'days']) {
     const xml = read(`${PLUGIN}/res/xml/us_widget_${info}_info.xml`);
     assert.match(xml, /android:updatePeriodMillis="3600000"/);
     assert.match(xml, /android:widgetCategory="home_screen"/);

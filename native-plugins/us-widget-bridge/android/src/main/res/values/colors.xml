@@ -24,4 +24,6 @@
     <color name="us_widget_pastel_heart_bg">#FFFFF1F0</color>
     <!-- Dark ink on the rosa «Rispondi» pill, in both themes (04/11/2026). -->
     <color name="us_widget_on_rosa">#FF1A1020</color>
+    <!-- The ink on a post-it's paper, in both themes (04/11/2026). -->
+    <color name="us_widget_postit_ink">#FF3B2A10</color>
 </resources>

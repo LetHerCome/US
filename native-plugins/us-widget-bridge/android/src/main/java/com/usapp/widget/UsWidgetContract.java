@@ -27,6 +27,7 @@ final class UsWidgetContract {
     // Come stai: the twelve keys of public.member_status.
     static final Pattern STATUS_KEY = Pattern.compile("^(innamorato|felice|stanco|giu|nervoso|malato|festa|lavoro|studio|palestra|viaggio|tavola)$");
     private static final Pattern COLOR = Pattern.compile("^#[0-9a-fA-F]{6}$");
+    private static final Pattern PAPER = Pattern.compile("^(yellow|pink|blue|green)$");
 
     private UsWidgetContract() {}
 
@@ -182,6 +183,22 @@ final class UsWidgetContract {
                 .put("by", drawn && (lavagnaBy.equals("me") || lavagnaBy.equals("partner")) ? lavagnaBy : "")
                 .put("at", drawn ? instantText(lavagnaIn.optString("at", "")) : "");
 
+            // Post-it (04/11/2026): the newest post-it of the board, its paper,
+            // who wrote it (me or partner) and how many others. The couple's own
+            // words, cut at 120; never an id or a URL.
+            JSONObject postitIn = optObject(input, "postit");
+            String postitText = text(postitIn.optString("text", ""), 120);
+            boolean written = "ready".equals(postitIn.optString("state", "")) && !postitText.isEmpty();
+            String paper = postitIn.optString("color", "");
+            String postitBy = postitIn.optString("by", "");
+            JSONObject postit = new JSONObject()
+                .put("state", written ? "ready" : "none")
+                .put("text", written ? postitText : "")
+                .put("color", written ? (PAPER.matcher(paper).matches() ? paper : "yellow") : "")
+                .put("by", written && (postitBy.equals("me") || postitBy.equals("partner")) ? postitBy : "")
+                .put("more", written ? Math.max(0, Math.min(99, postitIn.optInt("more", 0))) : 0)
+                .put("at", written ? instantText(postitIn.optString("at", "")) : "");
+
             return new JSONObject()
                 .put("schemaVersion", SCHEMA_VERSION)
                 .put("ownerHash", ownerHash)
@@ -194,6 +211,7 @@ final class UsWidgetContract {
                 .put("left", left)
                 .put("memories", memories)
                 .put("lavagna", lavagna)
+                .put("postit", postit)
                 .put("status", new JSONObject()
                     .put("me", statusPerson(optObject(optObject(input, "status"), "me")))
                     .put("partner", statusPerson(optObject(optObject(input, "status"), "partner"))));

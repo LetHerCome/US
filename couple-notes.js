@@ -212,6 +212,17 @@ function install(w){
     if(!(editing&&editHost==='page'))keepTyping(paintPage);
     if(opened()&&!(editing&&editHost==='sheet'))keepTyping(paintSheet);
     countAll();
+    w.UsWidgets?.syncPostit?.()?.catch?.(()=>{});
+  }
+  // The Post-it widget (04/11/2026): the newest post-it with words on it, its
+  // paper, who wrote it and how many others; null until the board is read.
+  function widgetState(){
+    if(!loaded||owner!==key())return null;
+    const written=sortNotes(notes).filter(n=>!isEmpty(n));
+    const n=written[0];
+    if(!n)return {state:'none'};
+    const title=String(n.title||'').trim();
+    return {state:'ready',text:title||summary(n).preview,color:colorOf(n),by:authorOf(n)===me()?'me':'partner',more:written.length-1,at:n.updated_at||''};
   }
   function repaintTile(id){
     const n=notes.find(x=>x.id===id);
@@ -598,7 +609,7 @@ function install(w){
   if(bond?.classList.contains('active'))ensure();
   // Back (navigation.js): from a post-it to the board, from the board out.
   const back=()=>editing&&editHost==='sheet'?closeEditor():close();
-  const api=w.UsCoupleNotes;api.open=open;api.close=close;api.back=back;api.reset=reset;api.onChange=onChange;api.refresh=()=>ensure({force:true});
+  const api=w.UsCoupleNotes;api.open=open;api.close=close;api.back=back;api.reset=reset;api.onChange=onChange;api.refresh=()=>ensure({force:true});api.widgetState=widgetState;
 }
 return {when,isEmpty,closeVerdict,fullRow,summary,payload,sortNotes,boardNotes,byColor,tilt,ideaLines,colorOf,COLORS,LIMITS,install};
 });
