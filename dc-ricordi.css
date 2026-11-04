@@ -590,3 +590,16 @@
 
 /* La sfida della settimana (03/11/2026): the «Sfida» sign on the Ricordo a challenge photo went into (weekly-challenge.js). */
 #moments #momentsGrid .moment-card>.us-wc-mark{position:absolute;z-index:4;top:10px;left:10px;padding:3px 9px;border-radius:999px;background:var(--us-ambra);color:var(--us-inchiostro);font:700 11px/1.5 var(--us-font-ui);letter-spacing:.06em;text-transform:uppercase;pointer-events:none}
+
+/* Ricordi is the album (founder, 04/11/2026; tavola Ricordi.dc.html): only the
+   photos, three a row, all square, month by month. Caption, day and author
+   stay on the card for the viewer, never drawn on the grid. */
+#moments #momentsGrid.moment-grid.ricordi-story{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important}
+#moments #momentsGrid.ricordi-story .ricordi-period{margin:22px 0 6px}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit,
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide){grid-column:auto!important;border-radius:10px!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit>img,
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide)>img{aspect-ratio:1/1!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit>.moment-meta{display:none!important}
+#moments #momentsGrid.ricordi-story .moment-card .ricordi-new-label{top:6px;left:6px;max-width:calc(100% - 12px);min-height:20px;padding:0 7px;font-size:10px}
+#moments #momentsGrid .moment-card>.us-wc-mark{top:auto;bottom:6px;left:6px;padding:2px 7px;font-size:10px}

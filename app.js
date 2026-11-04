@@ -4605,14 +4605,16 @@ async function hydrateMomentsCore(){
   const freshIds=ricordiNewSync(rows||[]);
   const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.thumbnail_path||'',r.caption||'',r.moment_date,r.created_at,r.place_lat??'',r.place_lon??'',r.place_label||'']),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
   if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature&&!forceMedia)return;
-  if(!rows?.length&&!livedRows.length&&!keptRows.length&&!eventRows.length){
+  // Ricordi is the album (founder, 04/11/2026): only the photos, month by
+  // month. Ideas, Events and questions lived without a photo stay saved, not here.
+  if(!rows?.length){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
     renderRicordiChapters([],new Map(),today);
     grid.dataset.loaded='1';grid.dataset.signature=signature;window.dispatchEvent(new CustomEvent('us:moments-updated'));return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
-  const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows);
+  const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows).filter(item=>item.moment);
   // R11 — on Android the small images already kept on the phone are shown from there.
   const thumbPaths=(rows||[]).map(r=>r.thumbnail_path).filter(Boolean);
   const localMedia=await usRicordiCachedMedia(thumbPaths);
@@ -4620,23 +4622,15 @@ async function hydrateMomentsCore(){
   const displayUrls=localMedia.size?new Map([...signedUrls,...localMedia]):signedUrls;
   const html=[];
   let period='';
-  // Ritmo editoriale: la prima foto del mese è a tutta larghezza, le altre in
-  // coppia; una foto rimasta sola prima di una voce larga si allarga anch'essa.
-  let loneHalf=-1;
+  // Three photos a row, all the same size: an album, not a story.
   let visiblePhotoIndex=0;
-  const closeRow=()=>{if(loneHalf>=0){html[loneHalf]=html[loneHalf].replace('class="moment-card moment-postit"','class="moment-card moment-postit ricordi-wide"');loneHalf=-1;}};
   for(const item of timeline){
     const key=ricordiPeriodKey(item.date);
-    const opensPeriod=key!==period;
-    if(opensPeriod){
-      closeRow();
+    if(key!==period){
       period=key;
       const {month,year}=ricordiPeriodLabel(item.date);
       html.push(`<div class="ricordi-period" data-period="${key}" data-year="${year}"><b>${month}</b><span>${year}</span></div>`);
     }
-    if(item.kind==='experience'&&!item.moment){closeRow();html.push(ricordiLivedCard(ricordiExperienceCard(item.row,item.date),item));continue;}
-    if(item.kind==='event'&&!item.moment){closeRow();html.push(ricordiLivedCard(ricordiEventCard(item.row),item));continue;}
-    if(item.kind==='daily'){closeRow();html.push(ricordiDailyCard(item.row));continue;}
     // Un Moment, o la foto di un'esperienza/Evento vissuto: una sola voce.
     const row=item.moment;
     const own=row.created_by===profile.id;
@@ -4646,12 +4640,8 @@ async function hydrateMomentsCore(){
     // R2 — only who created a memory can delete it (the album asks first,
     // "per tutti e due"); the partner never sees Elimina on it.
     const source=item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date};
-    // R6 — "L'avete fatto" always takes the whole row.
-    if(source)closeRow();
-    html.push(ricordiMomentCard(row,displayUrls,author,canDelete,opensPeriod,source,visiblePhotoIndex++<2,freshIds.has(String(row.id))));
-    if(!opensPeriod&&!source)loneHalf=loneHalf>=0?-1:html.length-1;
+    html.push(ricordiMomentCard(row,displayUrls,author,canDelete,false,source,visiblePhotoIndex++<6,freshIds.has(String(row.id))));
   }
-  closeRow();
   if(timeline.length){
     grid.innerHTML=html.join('');grid.dataset.loaded='1';grid.dataset.signature=signature;
     consumeFreshRicordo(grid);
@@ -4659,7 +4649,8 @@ async function hydrateMomentsCore(){
     // R7 — Rivivi also brings back "X mesi fa", not only anniversaries.
     renderRicordiRivivi(ricordiPickRivivi(timeline,today),displayUrls,names);
     ricordiArchiveState={timeline,urls:displayUrls,names};
-    renderRicordiChapters(ricordiChapters(timeline),displayUrls,today);
+    // The year chapters left with the album (founder, 04/11/2026).
+    renderRicordiChapters([],displayUrls,today);
     usRicordiKeepMedia(thumbPaths.filter(path=>!localMedia.has(path)).map(path=>[path,signedUrls.get(path)]));
   }
   else if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
