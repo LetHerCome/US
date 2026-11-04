@@ -1,12 +1,12 @@
 /* Lavagna V1 (founder, 03/11/2026; boards Main and LavagnaAperta): the tile
    at the top of the Noi bacheca and the board full screen over Noi. The board
-   is the plum of the canvas (#241431 in a #1b0f25 frame) in every theme: its
-   four inks are made for it. Foundation tokens and Phosphor icons only. */
+   is black, a real blackboard (founder, 04/11/2026: #141416 in a #0b0b0d
+   frame), in every theme: its four inks are made for it. Foundation tokens and Phosphor icons only. */
 .us-lav-overlay [hidden],.us-lav-slot [hidden]{display:none!important}
 
 /* ---------- The tile (Main.dc.html): opens the board, never drawn on ---------- */
 .us-lav-slot{margin:6px 0 4px}
-.us-lav-tile{position:relative;display:block;width:100%;height:196px;min-height:0;margin:0;padding:0;overflow:hidden;border:1px solid var(--us-color-line);border-radius:20px;background:#241431;box-shadow:inset 0 0 0 5px #1b0f25,0 12px 26px rgba(0,0,0,.4);color:var(--us-color-text);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.us-lav-tile{position:relative;display:block;width:100%;height:196px;min-height:0;margin:0;padding:0;overflow:hidden;border:1px solid var(--us-color-line);border-radius:20px;background:#141416;box-shadow:inset 0 0 0 5px #1b0f25,0 12px 26px rgba(0,0,0,.4);color:var(--us-color-text);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .us-lav-tile:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
 .us-lav-tile-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .us-lav-tile-label{position:absolute;left:12px;top:10px;display:inline-flex;align-items:center;max-width:calc(100% - 24px);padding:5px 10px;border-radius:999px;background:rgba(15,11,19,.62);font:700 12px/1.3 var(--us-font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -32,7 +32,7 @@
 .us-lav-clear{flex:none;min-height:44px;padding:0 14px;border:1px solid var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text);font:600 14px/1 var(--us-font-ui)}
 .us-lav-clear:disabled{opacity:.45}
 .us-lav-stage{position:relative;display:grid;place-items:center;flex:1;min-height:0}
-.us-lav-board{position:relative;overflow:hidden;border:1px solid var(--us-color-line);border-radius:24px;background:#241431;box-shadow:inset 0 0 0 6px #1b0f25}
+.us-lav-board{position:relative;overflow:hidden;border:1px solid var(--us-color-line);border-radius:24px;background:#141416;box-shadow:inset 0 0 0 6px #0b0b0d}
 .us-lav-canvas{display:block;width:100%;height:100%;touch-action:none;-webkit-user-select:none;user-select:none;cursor:crosshair}
 .us-lav-hint{position:absolute;left:24px;right:24px;top:50%;display:grid;gap:6px;margin:0;transform:translateY(-50%);text-align:center;pointer-events:none}
 .us-lav-hint b{font:italic 400 24px/1.2 var(--us-font-display)}
@@ -73,5 +73,5 @@
 }
 
 /* Impostazioni › Widget: the board as the dark widget shows it. */
-#usWidgetHub .us-wp-lavagna{display:grid;place-items:center;width:100%;height:100%;box-sizing:border-box;padding:8px;border-radius:inherit;background:#241431}
+#usWidgetHub .us-wp-lavagna{display:grid;place-items:center;width:100%;height:100%;box-sizing:border-box;padding:8px;border-radius:inherit;background:#141416}
 #usWidgetHub .us-wp-lavagna img{display:block;width:100%;height:100%;object-fit:contain}

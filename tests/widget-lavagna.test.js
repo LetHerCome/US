@@ -70,7 +70,9 @@ test('layout: Pastello and Midnight by resource, no Space, nothing under 11sp, n
   assert.doesNotMatch(layout, /android:(textColor|tint)="#/i, 'colours from the theme resources');
   assert.match(layout, /android:textColor="@color\/us_widget_pastel_sub"/);
   assert.match(res('drawable/us_widget_lavagna_card.xml'), /<solid android:color="#FFFBF3EC" \/>/);
-  assert.match(res('drawable-night/us_widget_lavagna_card.xml'), /<solid android:color="#FF241431" \/>/);
+  // A real blackboard (founder, 04/11/2026), like the board in the app.
+  assert.match(res('drawable-night/us_widget_lavagna_card.xml'), /<solid android:color="#FF141416" \/>/);
+  assert.match(read('lavagna.css'), /\.us-lav-board\{[^}]*background:#141416;box-shadow:inset 0 0 0 6px #0b0b0d/);
   const preview = res('layout/us_widget_preview_lavagna.xml');
   assert.doesNotMatch(preview, /android:text="[^@]/);
   assert.match(preview, /@drawable\/us_widget_preview_lavagna"/);
