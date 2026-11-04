@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- La domanda di oggi 2x2, Foto protagonista (founder, 02/11/2026): an
-     illustration with two speech bubbles, the frosted label, the question in
-     Fraunces and who answered with their small portrait. Never an answer. -->
+<!-- La domanda di oggi 2x2 (founder, 04/11/2026): the question in Fraunces,
+     as big as it fits, and «Rispondi», which opens it in US. Never an answer. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_daily_root"
     android:layout_width="match_parent"
@@ -31,81 +30,63 @@
         android:padding="14dp">
 
         <TextView
-            android:id="@+id/us_daily_pill"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/us_widget_glass_pill"
             android:fontFamily="@font/us_figtree"
             android:importantForAccessibility="no"
             android:includeFontPadding="false"
+            android:letterSpacing="0.06"
             android:maxLines="1"
-            android:paddingStart="10dp"
-            android:paddingTop="4dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="4dp"
-            android:text="@string/us_widget_daily_pill"
-            android:textColor="@color/us_widget_pastel_ink"
-            android:textSize="11sp"
+            android:text="@string/us_widget_daily_kicker"
+            android:textAllCaps="true"
+            android:textColor="@color/us_widget_pastel_sub"
+            android:textSize="9.5sp"
             android:textStyle="bold" />
 
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_marginTop="6dp"
+            android:layout_weight="1">
 
-        <ImageView
-            android:id="@+id/us_daily_question"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:adjustViewBounds="true"
-            android:contentDescription="@null"
-            android:importantForAccessibility="no"
-            android:scaleType="fitStart" />
+            <ImageView
+                android:id="@+id/us_daily_question"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:scaleType="fitStart" />
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <FrameLayout
-                android:id="@+id/us_daily_who_frame"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:layout_marginEnd="6dp">
-
-                <ImageView
-                    android:id="@+id/us_daily_who"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="@null"
-                    android:importantForAccessibility="no"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/us_widget_art_field" />
-
-                <ImageView
-                    android:id="@+id/us_daily_who_initial"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:contentDescription="@null"
-                    android:importantForAccessibility="no"
-                    android:visibility="gone" />
-            </FrameLayout>
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
 
             <TextView
-                android:id="@+id/us_daily_status"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:ellipsize="end"
+                android:id="@+id/us_daily_answer"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:background="@drawable/us_widget_pastel_pill_rosa"
                 android:fontFamily="@font/us_figtree"
-                android:importantForAccessibility="no"
+                android:gravity="center"
                 android:includeFontPadding="false"
                 android:maxLines="1"
-                android:textColor="@color/us_widget_pastel_sub"
-                android:textSize="11sp" />
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="@string/us_widget_daily_answer"
+                android:textColor="#FF1A1020"
+                android:textSize="12.5sp"
+                android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>

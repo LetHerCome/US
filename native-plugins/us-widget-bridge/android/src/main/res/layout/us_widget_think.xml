@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ti penso 2x2, Foto protagonista (founder, 02/11/2026): a soft
-     illustration under a light grain, the partner's round portrait and how
-     long ago, "Bea ti ha pensato" in Fraunces, only the heart to answer (no
-     "Ricambia"). Class and layout names are stable, so a widget already on
-     a Home screen keeps working. -->
+<!-- Ti penso 2x2 (founder, 04/11/2026): only a heart. Empty until you tap it;
+     the tap fills it with a pop (UsThinkHeartActivity) and sends Ti penso. Class and
+     layout names are stable, so a widget already on a Home screen keeps working. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_widget_root"
     android:layout_width="match_parent"
@@ -26,109 +24,12 @@
         android:layout_height="match_parent"
         android:background="@drawable/us_widget_grain" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <FrameLayout
-                android:layout_width="34dp"
-                android:layout_height="34dp">
-
-                <ImageView
-                    android:id="@+id/us_think_avatar"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="@null"
-                    android:importantForAccessibility="no"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/us_widget_art_field" />
-
-                <ImageView
-                    android:id="@+id/us_think_initial"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:contentDescription="@null"
-                    android:importantForAccessibility="no"
-                    android:visibility="gone" />
-            </FrameLayout>
-
-            <TextView
-                android:id="@+id/us_think_when"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:fontFamily="@font/us_figtree"
-                android:importantForAccessibility="no"
-                android:includeFontPadding="false"
-                android:maxLines="1"
-                android:textColor="@color/us_widget_pastel_sub"
-                android:textSize="11.5sp" />
-        </LinearLayout>
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <ImageView
-            android:id="@+id/us_think_line"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="54dp"
-            android:adjustViewBounds="true"
-            android:contentDescription="@null"
-            android:importantForAccessibility="no"
-            android:scaleType="fitStart" />
-
-        <TextView
-            android:id="@+id/us_think_hint"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:layout_marginEnd="54dp"
-            android:ellipsize="end"
-            android:fontFamily="@font/us_figtree"
-            android:importantForAccessibility="no"
-            android:includeFontPadding="false"
-            android:maxLines="2"
-            android:textColor="@color/us_widget_pastel_sub"
-            android:textSize="11.5sp"
-            android:visibility="gone" />
-    </LinearLayout>
-
-    <!-- The heart: frosted glass with a rosa heart; full rosa with a white heart once tapped. -->
-    <FrameLayout
-        android:id="@+id/us_widget_heart_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="12dp">
-
-        <ImageView
-            android:id="@+id/us_widget_heart_bg"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null"
-            android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_glass" />
-
-        <ImageView
-            android:id="@+id/us_widget_heart"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center"
-            android:contentDescription="@string/us_widget_send"
-            android:src="@drawable/us_widget_pastel_heart" />
-    </FrameLayout>
+    <ImageView
+        android:id="@+id/us_widget_heart"
+        android:layout_width="88dp"
+        android:layout_height="88dp"
+        android:layout_gravity="center"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:src="@drawable/us_widget_heart_outline" />
 </FrameLayout>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Distanza e batteria 2x2, Foto protagonista: a dotted path with a heart
-     between two pins, the distance in Fraunces and how old it is; at the
-     bottom your two small portraits, "Tu" and the partner with the battery. -->
+<!-- Distanza e batteria 2x2 (founder, 04/11/2026: only the other person):
+     the dotted path with a heart, the distance in Fraunces and how old it
+     is; at the bottom her small portrait, her name and her battery. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_noi_root"
     android:layout_width="match_parent"
@@ -77,12 +77,13 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
+
             <FrameLayout
                 android:layout_width="22dp"
                 android:layout_height="22dp">
 
                 <ImageView
-                    android:id="@+id/us_noi_me"
+                    android:id="@+id/us_noi_partner"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:contentDescription="@null"
@@ -91,7 +92,7 @@
                     android:src="@drawable/us_widget_art_field" />
 
                 <ImageView
-                    android:id="@+id/us_noi_me_initial"
+                    android:id="@+id/us_noi_partner_initial"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
@@ -101,15 +102,16 @@
             </FrameLayout>
 
             <TextView
+                android:id="@+id/us_noi_partner_name"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
+                android:layout_marginStart="6dp"
                 android:layout_weight="1"
+                android:ellipsize="end"
                 android:fontFamily="@font/us_figtree"
                 android:importantForAccessibility="no"
                 android:includeFontPadding="false"
                 android:maxLines="1"
-                android:text="@string/us_widget_noi_me"
                 android:textColor="@color/us_widget_pastel_ink"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -144,29 +146,6 @@
                     android:textSize="11sp" />
             </LinearLayout>
 
-            <FrameLayout
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_marginStart="5dp">
-
-                <ImageView
-                    android:id="@+id/us_noi_partner"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="@null"
-                    android:importantForAccessibility="no"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/us_widget_art_field" />
-
-                <ImageView
-                    android:id="@+id/us_noi_partner_initial"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:contentDescription="@null"
-                    android:importantForAccessibility="no"
-                    android:visibility="gone" />
-            </FrameLayout>
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>

@@ -35,28 +35,6 @@
         android:paddingEnd="14dp"
         android:paddingBottom="8dp">
 
-        <FrameLayout
-            android:layout_width="34dp"
-            android:layout_height="34dp">
-
-            <ImageView
-                android:id="@+id/us_noi_me"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@null"
-                android:importantForAccessibility="no"
-                android:scaleType="fitCenter"
-                android:src="@drawable/us_widget_art_field" />
-
-            <ImageView
-                android:id="@+id/us_noi_me_initial"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:contentDescription="@null"
-                android:importantForAccessibility="no"
-                android:visibility="gone" />
-        </FrameLayout>
 
         <FrameLayout
             android:layout_width="34dp"

@@ -25,12 +25,12 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 /**
- * Ti penso from the widget (Pastello, founder 02/11/2026): the tap sends at
- * once (UsThinkWidgetActionReceiver paints "Ricambiato · adesso") and this
- * transparent moment over the Home screen plays the app's heart
- * (UsUiFoundation.heart): squeezed to .72, past its size to 1.3, settled, in
- * 440 ms, with a rosa wave that opens out and turns lilla. A widget cannot
- * animate itself. With animations off it only sends. Not exported: only the
+ * Ti penso from the widget (founder, 04/11/2026: only a heart): the tap sends
+ * at once (UsThinkWidgetActionReceiver paints the full heart) and this
+ * transparent moment over the Home screen fills the widget's empty heart with
+ * a pop, the app's heart (UsUiFoundation.heart): squeezed to .72, past its
+ * size to 1.3, settled, in 440 ms, with a rosa wave that opens out and turns
+ * lilla. A widget cannot animate itself. With animations off it only sends. Not exported: only the
  * widget's own PendingIntent opens it.
  */
 public final class UsThinkHeartActivity extends Activity {
@@ -52,17 +52,9 @@ public final class UsThinkHeartActivity extends Activity {
         // Screen coordinates, like the widget's bounds.
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         FrameLayout root = new FrameLayout(this);
+        // The widget is the heart: drawn over its empty heart, at the middle of the widget.
         int button = Math.min(bounds.width(), bounds.height());
-        int left = bounds.centerX() - button / 2;
-        int top = bounds.centerY() - button / 2;
-
-        // The button as the widget now paints it: full rosa, the heart in white.
-        ImageView circle = new ImageView(this);
-        circle.setImageResource(R.drawable.us_widget_pastel_circle);
-        circle.setColorFilter(ROSA);
-        root.addView(circle, at(button, left, top));
-
-        int glyph = Math.round(button * 0.5f);
+        int glyph = Math.round(button * 0.52f);
         int size = Math.round(Math.max(20, glyph) * 1.6f);
         GradientDrawable ring = new GradientDrawable();
         ring.setShape(GradientDrawable.OVAL);
@@ -73,7 +65,7 @@ public final class UsThinkHeartActivity extends Activity {
 
         ImageView heart = new ImageView(this);
         heart.setImageResource(R.drawable.us_widget_pastel_heart);
-        heart.setColorFilter(Color.WHITE);
+        heart.setColorFilter(ROSA);
         root.addView(heart, at(glyph, bounds.centerX() - glyph / 2, bounds.centerY() - glyph / 2));
         setContentView(root);
         root.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
