@@ -2,7 +2,7 @@
 
 ## Patch 1.4.1: correzioni dell'audit della produzione (preparata il 05/11/2026)
 
-**Stato:** pronta sul branch `claude/ultracode-as-backend-frontend-ed496a`, non ancora su staging né in produzione. Prima staging, poi la patch, ogni passo col via del founder. Rapporto: [`docs/audit/2026-11-05-audit-produzione.md`](../audit/2026-11-05-audit-produzione.md).
+**Stato:** su staging dal 05/11, non in produzione. Unita nel branch di staging (merge `ff5e3159`, build `us-staging-20261105-102`); le tre migrazioni applicate su US-STAGING col workflow «Supabase SQL», approvate dal founder (run 42023293693, 42023355477, 42023675730). Sito di staging controllato: build nuova, minificato, integrità di supabase-js, nessun errore all'avvio. In produzione solo col via del founder. Rapporto: [`docs/audit/2026-11-05-audit-produzione.md`](../audit/2026-11-05-audit-produzione.md).
 
 **Controllo del 05/11:** `npm test` 2687 test, 0 falliti; `npm run build:cloudflare-pages` con la minificazione ok. Test nel browser, sul codice e sul sito minificato: gli stessi fallimenti che ha già `main` (test rimasti indietro), più due che cedono solo sotto carico (attese di 30 s) e passano se lanciati da soli. Integrità di supabase-js e MapLibre provata dal vivo sul CDN.
 
