@@ -15,7 +15,11 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { transform } from 'esbuild';
+
+// esbuild is a devDependency. If a build host skips devDependencies, the site
+// still ships, unminified, with a warning: a missing optimisation must never
+// block a release.
+const esbuild = await import('esbuild').catch(() => null);
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ALLOWED_OUTPUTS = ['dist/cloudflare-pages', 'dist/s31-staging-preview'].map((dir) => path.join(ROOT, ...dir.split('/')));
@@ -33,12 +37,13 @@ export async function minifyWebBundle(directory) {
   if (!files.includes('app.js') || !files.includes('styles.css')) {
     throw new Error(`minify-web: ${target} does not look like a US web bundle`);
   }
+  if (!esbuild) return { files: files.length, before: 0, after: 0, skipped: true };
   let before = 0;
   let after = 0;
   for (const name of files) {
     const file = path.join(target, name);
     const source = await readFile(file, 'utf8');
-    const { code } = await transform(source, {
+    const { code } = await esbuild.transform(source, {
       loader: name.endsWith('.css') ? 'css' : 'js',
       minify: true,
       legalComments: 'none',
@@ -57,7 +62,8 @@ export async function minifyWebBundle(directory) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const directory = process.argv[2];
   if (!directory) throw new Error('minify-web: pass the dist directory');
-  const { files, before, after } = await minifyWebBundle(path.resolve(ROOT, directory));
+  const { files, before, after, skipped } = await minifyWebBundle(path.resolve(ROOT, directory));
   const kb = (bytes) => `${Math.round(bytes / 1024)} KB`;
-  console.log(`Web bundle minified: ${files} files, ${kb(before)} -> ${kb(after)}`);
+  if (skipped) console.warn(`minify-web: esbuild is not installed, ${files} files ship unminified`);
+  else console.log(`Web bundle minified: ${files} files, ${kb(before)} -> ${kb(after)}`);
 }
