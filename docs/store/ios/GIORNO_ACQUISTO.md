@@ -36,7 +36,17 @@ Tempo: circa 1–2 ore il primo giorno, più l'attesa di Apple per l'iscrizione 
 [developer.apple.com/account](https://developer.apple.com/account) › Certificates, IDs & Profiles › Identifiers › **+** › App IDs › App:
 - Description: `US`
 - Bundle ID: **Explicit** `com.usapp.us`
-- Capabilities: **Push Notifications** e **Associated Domains**. (Sign in with Apple solo se scegli la strada A; App Groups più avanti, con i widget.)
+- Capabilities: **Push Notifications**, **Associated Domains** e **Sign in with Apple** (Enable as a primary App ID). App Groups più avanti, con i widget.
+
+## 4b. Accesso con Apple e Google (tu, poi Supabase con il tuo via)
+
+Il client Google per iPhone **si può creare anche oggi**, prima dell'acquisto: non chiede niente ad Apple.
+1. **Google Cloud** › progetto «US Play» › API e servizi › Credenziali › Crea credenziali › ID client OAuth › tipo **iOS**, bundle ID `com.usapp.us` (Team ID e App Store ID si aggiungono dopo, sono facoltativi). Mandami il client ID (`…apps.googleusercontent.com`, non è un segreto): lo metto in `ios/App/App/Info.plist`.
+2. **Chiave Sign in with Apple** (dopo l'acquisto): Certificates, IDs & Profiles › Keys › **+** › nome `US Accedi con Apple`, spunta **Sign in with Apple** › Configure › App ID primario `com.usapp.us` › Register. Scarica il `.p8` (**una volta sola**) e annota il Key ID. Serve al server per revocare il token quando qualcuno elimina l'account.
+3. **Supabase staging, poi produzione** (Authentication › Sign In / Providers), ogni passo col tuo via:
+   - **Apple:** acceso, **Client IDs** = `com.usapp.us`. Le impostazioni OAuth (Services ID, chiave segreta) restano vuote: servono solo al sito, non all'app.
+   - **Google:** in **Client IDs** aggiungi il client iOS dopo quello web: `<client web>,<client iOS>`. Il controllo del nonce resta acceso (US lo manda).
+   - Secret delle Edge Function (quando arriva la revoca): `APPLE_SIGN_IN_KEY_ID`, `APPLE_SIGN_IN_PRIVATE_KEY` (il `.p8`); il Team ID è già `APNS_TEAM_ID`.
 
 ## 5. Chiave delle notifiche APNs (tu, poi Supabase con il tuo via)
 

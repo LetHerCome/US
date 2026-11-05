@@ -165,7 +165,7 @@ test('manifesto privacy: nessun tracciamento, dati collegati all\'account solo p
 
 test('Universal Links: entitlement per /invito, file del sito scritto col Team ID, servito come JSON', async () => {
   const entitlements = read('ios/App/App/App.entitlements');
-  assert.deepEqual(plistKeys(entitlements), ['aps-environment', 'com.apple.developer.associated-domains']);
+  assert.deepEqual(plistKeys(entitlements), ['aps-environment', 'com.apple.developer.applesignin', 'com.apple.developer.associated-domains']);
   assert.deepEqual([...entitlements.matchAll(/<string>(applinks:[^<]+)<\/string>/g)].map((m) => m[1]), ['applinks:www.uscouple.app']);
   assert.doesNotMatch(entitlements, /application-groups|keychain-access-groups/, 'App Group e Keychain condiviso arrivano con i widget (W0)');
 

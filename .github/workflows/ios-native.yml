@@ -53,6 +53,11 @@ on:
       - 'scripts/write-apple-app-site-association.mjs'
       - 'cloudflare/_headers'
       - '.github/workflows/ios-testflight.yml'
+      - 'native-plugins/us-apple-signin/**'
+      - 'native-plugins/us-google-signin/**'
+      - 'google-auth.js'
+      - 'tests/google-auth-v1.test.js'
+      - 'tests/ios-sign-in-v1.test.js'
       - 'tests/native-performance-ux-v1.test.js'
       - 'tests/ricordi-thumbnails-v1.test.js'
       - '.github/workflows/ios-native.yml'
@@ -98,6 +103,11 @@ on:
       - 'scripts/write-apple-app-site-association.mjs'
       - 'cloudflare/_headers'
       - '.github/workflows/ios-testflight.yml'
+      - 'native-plugins/us-apple-signin/**'
+      - 'native-plugins/us-google-signin/**'
+      - 'google-auth.js'
+      - 'tests/google-auth-v1.test.js'
+      - 'tests/ios-sign-in-v1.test.js'
       - '.github/workflows/ios-native.yml'
 
 permissions:
@@ -131,7 +141,7 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/ricordi-inline-feed-v2.test.js tests/ricordi-carousel-v1.test.js tests/centered-popups-v1.test.js tests/native-frameless-v1.test.js tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js tests/sec-rls-hardening.test.js tests/ios-store-v1.test.js tests/app-update.test.js tests/app-icons.test.js
+        run: node --test tests/ricordi-inline-feed-v2.test.js tests/ricordi-carousel-v1.test.js tests/centered-popups-v1.test.js tests/native-frameless-v1.test.js tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js tests/sec-rls-hardening.test.js tests/ios-store-v1.test.js tests/app-update.test.js tests/app-icons.test.js tests/ios-sign-in-v1.test.js tests/google-auth-v1.test.js
 
       - name: App lock policy checks (host swiftc, no simulator)
         run: |
@@ -152,6 +162,17 @@ jobs:
         run: |
           swiftc native-plugins/us-app-icon/ios/Sources/UsAppIconPlugin/UsAppIconCatalog.swift             native-plugins/us-app-icon/ios/Tests/CatalogCheck/main.swift             -o build/us-app-icon-catalog-check
           build/us-app-icon-catalog-check
+
+      - name: Google and Apple sign-in checks (host swiftc, no simulator)
+        run: |
+          swiftc native-plugins/us-google-signin/ios/Sources/UsGoogleSignInPlugin/UsGoogleOAuth.swift \
+            native-plugins/us-google-signin/ios/Tests/OAuthCheck/main.swift \
+            -o build/us-google-oauth-check
+          build/us-google-oauth-check
+          swiftc native-plugins/us-apple-signin/ios/Sources/UsAppleSignInPlugin/UsAppleSignInPolicy.swift \
+            native-plugins/us-apple-signin/ios/Tests/PolicyCheck/main.swift \
+            -o build/us-apple-signin-policy-check
+          build/us-apple-signin-policy-check
 
       - name: npm run build:capacitor-web
         run: npm run build:capacitor-web
@@ -210,6 +231,8 @@ jobs:
           test -f "$APP/public/notifications.js"
           # iOS Store V1: Sintonia icons, permission prompts in it/en, iPhone only, privacy manifest.
           grep -q UsAppIconPlugin "$APP/capacitor.config.json"
+          grep -q UsAppleSignInPlugin "$APP/capacitor.config.json"
+          grep -q UsGoogleSignInPlugin "$APP/capacitor.config.json"
           ALTERNATE=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIcons:CFBundleAlternateIcons" "$APP/Info.plist")
           echo "$ALTERNATE"
           for icon in AppIcon-Night AppIcon-Gold AppIcon-Neon; do echo "$ALTERNATE" | grep -q "$icon"; done

@@ -32,7 +32,7 @@ Legenda: ✅ c'è · 🟡 c'è ma manca un pezzo · ❌ manca · — non esiste 
 | Posto delle foto (Mappa dei Ricordi) | `us-photo-place` (GPS dell'originale) | ❌ su iPhone il posto arriva solo se il file lo conserva | plugin iOS con PHPicker + posizione del `PHAsset`; serve anche una riga in `ricordi-place.js` (file del pacchetto di correzioni dell'audit) | fase 2 |
 | Batteria del partner | `UsWidgetBridge.getBatteryStatus` | ❌ (WKWebView non ha la Battery API) | arriva con il ponte widget iOS (fase W0 sotto) | fase W0 |
 | Widget (8) | `us-widget-bridge` | ❌ | piano a fasi (§4) | dopo l'ok del founder |
-| Accesso con Google | `us-google-signin` (Credential Manager) | — il pulsante resta nascosto da solo (manca il plugin) | decisione del founder (§3) | ora la scelta |
+| Accesso con Google e con Apple | `us-google-signin` (Credential Manager) | — il pulsante Google restava nascosto (mancava il plugin) | founder, 05/11: **Apple e Google** (§3). Plugin iOS Google (browser di sistema, PKCE) e Apple pronti; pulsanti e conferma da collegare | plugin ora; pulsanti col via sui file condivisi; Supabase e revoca **dopo** |
 | Lingue | italiano e inglese | 🟡 solo italiano dichiarato | `CFBundleLocalizations` it/en e frasi dei permessi in inglese | ora |
 | iPad | — | 🟡 il progetto dichiara iPhone e iPad | solo iPhone nel primo rilascio: niente screenshot iPad, l'app gira comunque su iPad | ora |
 | Manifesto privacy | Sicurezza dei dati di Play | 🟡 vuoto | dati raccolti (allineati a `privacy.html`) e API con motivazione | ora |
@@ -62,7 +62,24 @@ Apple chiede un accesso «equivalente e rispettoso della privacy» (in pratica S
 | Chi ha l'account Google su Android | entra anche su iPhone con Google | su iPhone deve impostare una password con «Password dimenticata» (da provare su staging prima del rilascio) |
 | Tempo | 2–3 giorni dopo l'acquisto, più la revisione | zero |
 
-**Consiglio: B per il primo rilascio, A nel primo aggiornamento.** Si arriva prima in TestFlight e in revisione; Apple e Google arrivano insieme dopo, provati su staging. Da decidere: founder.
+**Decisione del founder (05/11/2026): A, «Apple e Google».** (Il consiglio era B per il primo rilascio.)
+
+### 3.1 Strada A: cosa è pronto e cosa manca
+
+**Pronto sul branch (senza account):**
+- `native-plugins/us-apple-signin` (nuovo, solo iOS): il foglio di Apple (`ASAuthorizationController`), nome ed email, nonce come per Google; restituisce il token, il codice monouso per il server e il nome del primo accesso. Entitlement `com.apple.developer.applesignin`.
+- `native-plugins/us-google-signin` per iOS, **senza l'SDK di Google**: browser di sistema (`ASWebAuthenticationSession`), PKCE S256, `state`, lo stesso nonce; stessa interfaccia JS di Android. Il client ID iOS va in `Info.plist` (`UsGoogleIOSClientID`, vuoto finché non c'è).
+- `google-auth.js`: `UsAppleAuth` accanto a `UsGoogleAuth` (accesso, conferma con lo stesso account Apple per eliminare o uscire), 18+ e Termini anche per gli account Apple. Si mostra solo dove c'è il plugin: nessun controllo di piattaforma.
+- `supabase/functions/_shared/apple-sign-in.mjs`: segreto ES256, scambio del codice con il refresh token di Apple, revoca all'eliminazione (TN3194). Solo il modulo, con i test.
+- Il server accetta già la conferma con Apple: l'accesso con token è `amr` «oauth», come Google.
+
+**Manca, in quest'ordine:**
+1. **Pulsanti e conferma** nei file del pacchetto dell'audit: `index.html` (due pulsanti «Continua con Apple» accanto a quelli Google), `app.js` (montaggio, come `mountGoogleSignIn`, e il nome del primo accesso nell'onboarding), `settings.js` (`accountReauthMode`/`reauthField`: un account Apple conferma con Apple), `i18n-en.js`, stile in `public-auth.css`. Il pulsante segue le regole di Apple: bianco su fondo scuro, «Continua con Apple», logo Apple dal carattere di sistema dell'iPhone (nessun asset nuovo), non più piccolo di quello Google.
+2. **Google Cloud (founder, si può fare subito):** client OAuth di tipo iOS nel progetto «US Play», bundle `com.usapp.us`; il client ID va in `Info.plist`.
+3. **Supabase, prima staging poi produzione (con il via del founder):** provider Apple acceso con Client IDs `com.usapp.us` (per l'app nativa non serve il segreto); provider Google con Client IDs `<web>,<iOS>` (web per primo), controllo del nonce acceso.
+4. **Revoca del token (dopo l'acquisto):** chiave «Sign in with Apple» (.p8) nei secret, tabella solo service role per il refresh token (migrazione su staging), Edge che scambia il codice dopo l'accesso, `delete-account` che revoca prima di eliminare; se manca il token, il messaggio di fine eliminazione dice come togliere US da Impostazioni › Apple ID › Accedi con Apple.
+5. **Privacy:** `privacy.html` IT/EN con Apple (accesso e notifiche) e la scheda App Store.
+6. **Prove su TestFlight:** accesso nuovo, accesso di un account già esistente con la stessa email, «Nascondi la mia email», eliminazione dell'account (con revoca), uscita dalla coppia.
 
 ## 4. Widget iOS (WidgetKit) — piano a fasi
 

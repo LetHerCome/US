@@ -18,6 +18,8 @@ let package = Package(
         .package(name: "CapawesomeCapacitorAppUpdate", path: "../../../node_modules/@capawesome/capacitor-app-update"),
         .package(name: "UsAppIcon", path: "../../../native-plugins/us-app-icon"),
         .package(name: "UsAppLock", path: "../../../native-plugins/us-app-lock"),
+        .package(name: "UsAppleSignin", path: "../../../native-plugins/us-apple-signin"),
+        .package(name: "UsGoogleSignin", path: "../../../native-plugins/us-google-signin"),
         .package(name: "UsPushSupport", path: "../../../native-plugins/us-push-support")
     ],
     targets: [
@@ -32,6 +34,8 @@ let package = Package(
                 .product(name: "CapawesomeCapacitorAppUpdate", package: "CapawesomeCapacitorAppUpdate"),
                 .product(name: "UsAppIcon", package: "UsAppIcon"),
                 .product(name: "UsAppLock", package: "UsAppLock"),
+                .product(name: "UsAppleSignin", package: "UsAppleSignin"),
+                .product(name: "UsGoogleSignin", package: "UsGoogleSignin"),
                 .product(name: "UsPushSupport", package: "UsPushSupport")
             ]
         )

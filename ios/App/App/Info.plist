@@ -63,6 +63,11 @@
 	<string>US salva nella tua libreria le foto dei Ricordi che scegli di scaricare.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>US apre la tua libreria per scegliere le foto da condividere con il tuo partner.</string>
+	<!-- Accesso con Google on the iPhone (us-google-signin): the iOS OAuth client of the
+	     Google Cloud project «US Play» (<number>-<id>.apps.googleusercontent.com). Not a
+	     secret. Empty until the founder creates it: the plugin answers not_configured. -->
+	<key>UsGoogleIOSClientID</key>
+	<string></string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

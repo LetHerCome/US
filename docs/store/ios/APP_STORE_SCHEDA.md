@@ -113,7 +113,7 @@ Da incollare in «App Review Information» (in inglese, la lingua dei revisori).
 
 > US is a private app for couples: two people who invite each other share one space. The demo account below is already paired with a second demo account, so every part of the app is visible.
 >
-> Sign in: Accedi → email and password.
+> Sign in: Accedi → email and password. “Continua con Apple” (Sign in with Apple) and “Continua con Google” are also available on the same screen.
 > • Demo account A: [email] / [password]
 > • Demo account B (the partner, optional, to see things arrive on a second device): [email] / [password]
 >

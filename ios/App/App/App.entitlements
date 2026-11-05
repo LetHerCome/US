@@ -8,6 +8,11 @@
 	<!-- iOS Store V1 (05/11/2026): Universal Links for the shared invite
 	     https://www.uscouple.app/invito#CODE, vouched for by the site's
 	     /.well-known/apple-app-site-association (scripts/write-apple-app-site-association.mjs). -->
+	<!-- Accedi con Apple (us-apple-signin): App Store rule 4.8, next to Google. -->
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:www.uscouple.app</string>

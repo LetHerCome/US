@@ -34,5 +34,6 @@
 
 Non cambiate adesso (le pagine di produzione cambiano con il rilascio iOS, con il via del founder):
 - **Notifiche su iPhone:** passano dal servizio di Apple (Apple Push Notification service), non da Firebase. Testo proposto per «Fornitori»: «Apple (Apple Push Notification service), per le notifiche su iPhone» / «Apple (Apple Push Notification service), for notifications on iPhone».
-- **Sign in with Apple:** solo se il founder sceglie la strada A ([missione](../../missions/ios-store-v1.md), §3): email (anche nascosta da Apple) e identificativo dell'account Apple.
+- **Accedi con Apple** (scelta del founder del 05/11, [missione](../../missions/ios-store-v1.md) §3): l'email (anche quella nascosta da Apple), il nome se lo condividi la prima volta e l'identificativo del tuo account Apple, come oggi per Google. Fornitore nuovo: Apple, anche per l'accesso. Il server tiene un token di Apple solo per revocarlo quando elimini l'account. Nelle etichette di App Store Connect non cambia niente: nome, email e ID utente ci sono già.
+- **Google su iPhone:** passa dal browser di sistema dell'iPhone; i dati sono quelli di oggi (email, nome, immagine e identificativo Google).
 - La data «Ultimo aggiornamento» si cambia insieme.

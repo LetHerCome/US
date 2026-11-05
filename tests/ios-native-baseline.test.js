@@ -79,9 +79,10 @@ test('M15 iOS: Info.plist dichiara scheme, permessi reali e nessuna capability p
   const privacy = read('ios/App/App/PrivacyInfo.xcprivacy');
   assert.match(privacy, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
   assert.deepEqual(fs.readdirSync(IOS_APP).filter((name) => name.endsWith('.entitlements')), ['App.entitlements']);
-  // Push (Native Notifications V1) and, since iOS Store V1, Universal Links for
-  // /invito. No App Group, Keychain sharing or other capability yet (widgets: W0).
-  assert.deepEqual(plistKeys(read('ios/App/App/App.entitlements')), ['aps-environment', 'com.apple.developer.associated-domains']);
+  // Push (Native Notifications V1) and, since iOS Store V1, Sign in with Apple
+  // and Universal Links for /invito. No App Group, Keychain sharing or other
+  // capability yet (widgets: W0).
+  assert.deepEqual(plistKeys(read('ios/App/App/App.entitlements')), ['aps-environment', 'com.apple.developer.applesignin', 'com.apple.developer.associated-domains']);
 });
 
 test('M15 iOS: Back nativo = swipe dal bordo sinistro sulla stessa history di Android, mai uscita', () => {

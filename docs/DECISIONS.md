@@ -477,5 +477,6 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **D3 cambia:** Apple non aspetta più la fine di Android. Android resta com'è; l'app iOS si prepara adesso, senza account, e si pubblica dopo l'acquisto.
 - **Restano** le scelte iOS del 06/10 (iOS 16, SPM, `com.usapp.us`, App Group riservato, origine congelata, swipe Indietro, APNs diretto, Face ID/Touch ID).
 - **Proposte tecniche della missione, da confermare o cambiare dal founder:** stessa icona di Android 1.4 e stesse icone premio, con l'inquadratura del launcher Android (dagli asset APPROVED); schermata di lancio `#26142E` come la splash Android; solo iPhone nel primo rilascio; italiano e inglese; numero di build come il `versionCode` di Play; firma e caricamento su TestFlight solo dal CI (`ios-testflight.yml`, ambiente `ios-deploy`).
-- **Da decidere dal founder:** accesso su iPhone (Sign in with Apple subito, oppure solo email nel primo rilascio) e ordine delle fasi dei widget.
+- **Accesso su iPhone (founder, stesso giorno: «Apple e Google»):** Sign in with Apple e Google già nel primo rilascio iOS (strada A della missione, §3). Google su iPhone senza l'SDK di Google: browser di sistema con PKCE, come Credential Manager su Android non porta pacchetti di terzi. Quando si elimina un account Apple, US revoca il token di Apple dal server (regola 5.1.1(v), TN3194).
+- **Da decidere dal founder:** ordine delle fasi dei widget.
 - **Governance:** acquisto dell'account, push, workflow, merge, secret e pubblicazione hanno ciascuno il suo via esplicito.
