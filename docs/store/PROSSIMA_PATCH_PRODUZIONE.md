@@ -29,6 +29,7 @@ Quasi tutto sta in `ios/` e `native-plugins/us-app-icon/ios`, che Android e il s
 - **`app-update.js`:** se lo Store non risponde, la versione installata si legge dall'app (`App.getInfo`), così la versione minima vale lo stesso; «Aggiorna» passa l'ID dell'App Store, che Android ignora. Su Android cambia solo un caso: un'app non installata da Play e sotto la versione minima ora vede «Aggiorna US» (oggi le build fuori da Play hanno codici più alti del minimo, quindi niente di visibile).
 - **`cloudflare/_headers`:** una regola per `/.well-known/apple-app-site-association` (tipo JSON). Il file si pubblica solo quando c'è il Team ID.
 - **`capacitor.config.json`:** solo la voce `ios` (colore prima del primo disegno `#26142E`).
+- **Accedi con Apple (scelta del founder del 05/11):** i pulsanti «Continua con Apple» sono nella pagina ma restano nascosti su Android e sul sito (compaiono solo dove c'è il plugin, cioè sull'iPhone); `elimina-account.html` dice «con Google o con Apple»; per gli account Apple, Impostazioni chiede la conferma con Apple. Prima della produzione: provider Apple e client iOS di Google su Supabase (staging, poi produzione) e la revoca del token Apple (vedi la missione, §3.1).
 
 Ordine: merge su `main` con il via del founder, poi il primo TestFlight dal workflow `ios-testflight.yml` (ambiente `ios-deploy`, approvazione del founder). Nessun SQL e nessuna Edge Function; i secret APNs in produzione sono un passo a parte, col suo via.
 

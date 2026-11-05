@@ -158,3 +158,69 @@ test('CI compiles both plugins and runs their pure checks', () => {
     assert.equal(workflow.split(`- '${piece}'`).length - 1, 2, `${piece}: push e pull_request`);
   }
 });
+
+// ---- The shared UI (05/11/2026): buttons, confirmation, public deletion page.
+const Deletion = require('../account-deletion.js');
+
+test('UI: «Continua con Apple» right after Google, hidden until the iPhone plugin says so', () => {
+  const html = read('index.html');
+  for (const [apple, google] of [['usAppleSignIn', 'usGoogleSignIn'], ['usAppleSignUp', 'usGoogleSignUp']]) {
+    const button = html.match(new RegExp(`<button type="button" class="us-auth-apple" id="${apple}" hidden>[\\s\\S]*?</button>`))?.[0] || '';
+    assert.ok(button, `${apple} missing or not hidden`);
+    assert.match(button, /<span class="us-auth-apple-mark" aria-hidden="true">&#xF8FF;<\/span>/, 'the Apple logo of the system font, no asset');
+    assert.match(button, /<span class="us-auth-apple-label">Continua con Apple<\/span>/);
+    assert.ok(html.indexOf(`id="${google}"`) < html.indexOf(`id="${apple}"`), `${apple} after ${google}`);
+  }
+  const app = read('app.js');
+  assert.match(app, /window\.usAppleAuth = window\.usS31Auth && window\.UsAppleAuth\?\.create\?\.\(\{auth:sb\.auth\}\) \|\| null;/);
+  const mount = app.slice(app.indexOf('function mountAppleSignIn'), app.indexOf('(function mountGoogleTerms'));
+  assert.match(mount, /if\(!button\|\|!window\.usAppleAuth\?\.supported\?\.\(\)\)return;\s*button\.hidden=false;/);
+  assert.match(mount, /if\(result\.ok\|\|result\.kind==='cancelled'\)return;/, 'closing the sheet is a choice');
+  assert.match(mount, /sessionStorage\.setItem\('us:apple-name:v1',JSON\.stringify\(\{uid:result\.userId,name:result\.name\}\)\)/);
+  assert.match(mount, /await initCloud\(\);/);
+  const css = read('auth-first-run.css');
+  assert.match(css, /:is\(#usAppleSignIn,#usAppleSignUp\)\{[^}]*min-height:48px[^}]*background:#fff;color:#000/, 'Apple\'s white button on the dark card');
+  assert.match(css, /:is\(#usAppleSignIn,#usAppleSignUp\)\[hidden\]\{display:none\}/);
+});
+
+test('UI: the onboarding starts from the name Apple gave, still editable', () => {
+  const onboarding = read('onboarding.js');
+  assert.match(onboarding, /node\('mc3Name'\)\.value=me\.name\|\|appleName\(meFor\);/);
+  assert.match(onboarding, /saved\.uid===uid&&validName\(saved\.name\)/, 'only for this account, only a valid name');
+  assert.match(onboarding, /mode=state\.kind==='MEMBER_WAITING_PARTNER'&&justCreated\?'color':me\.name\?'choice':'me';/, 'the step with the birthday is not skipped');
+});
+
+test('deletion and leaving: an Apple account confirms with Apple, in Apple\'s words', async () => {
+  const settings = read('settings.js');
+  const mode = settings.slice(settings.indexOf('async function accountReauthMode'), settings.indexOf('async function accountDeletionModal'));
+  assert.match(mode, /const provider=noPassword&&auth\?\.usesGoogle\?\.\(user\)\?'google':noPassword&&auth\?\.usesApple\?\.\(user\)\?'apple':'';/);
+  assert.match(mode, /const client=provider==='apple'\?window\.usAppleAuth:provider==='google'\?window\.usGoogleAuth:null;/);
+  assert.match(mode, /Accedi con Apple: per confermare ti chiederemo di accedere di nuovo con il tuo account Apple\./);
+  assert.match(mode, /Accedi con Apple: per confermare usa US sull’iPhone, oppure scrivi a <b>\$\{support\}<\/b>\./);
+
+  const apple = (kind) => ({ provider: 'apple', reauthenticate: async () => (kind ? { ok: false, kind } : { ok: true, accessToken: 'fresh' }) });
+  const user = { id: 'u1' };
+  for (const [kind, expected] of [['cancelled', 'apple_cancelled'], ['other_account', 'apple_other_account'], ['failed', 'apple_failed']]) {
+    const result = await Deletion.reauthenticateAndDelete({ google: apple(kind), user });
+    assert.equal(result.kind, expected);
+    assert.match(Deletion.message(expected), /Apple/);
+    assert.doesNotMatch(Deletion.message(expected), /Google/);
+  }
+  const leave = await Deletion.reauthenticateAndLeave({ google: apple('cancelled'), user });
+  assert.equal(leave.kind, 'apple_cancelled');
+  const google = { provider: 'google', reauthenticate: async () => ({ ok: false, kind: 'cancelled' }) };
+  assert.equal((await Deletion.reauthenticateAndDelete({ google, user })).kind, 'google_cancelled', 'Google unchanged');
+  assert.equal(Auth.create({ auth: {}, platform: { isNative: false } }).provider, 'google');
+  assert.equal(Apple.create({ auth: {}, platform: { isNative: false } }).provider, 'apple');
+});
+
+test('English, and the public deletion page names Apple too', () => {
+  const en = read('i18n-en.js');
+  for (const it of ['Continua con Apple', 'Accesso con Apple non disponibile su questo telefono.', 'Non riesco ad accedere con Apple. Riprova.',
+    'Conferma con Apple annullata. Non è cambiato nulla.', 'Hai usato un altro account Apple: usa quello con cui accedi a US.',
+    'Non riesco a confermare con Apple. Riprova tra poco.', 'Accedi con Apple: per confermare ti chiederemo di accedere di nuovo con il tuo account Apple.',
+    'Accedi con Apple: per confermare usa US sull’iPhone, oppure scrivi a']) {
+    assert.ok(en.includes(`'${it}':`), `inglese mancante: ${it}`);
+  }
+  assert.match(read('elimina-account.html'), /Accedi a US con Google o con Apple\?/);
+});

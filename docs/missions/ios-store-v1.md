@@ -72,9 +72,10 @@ Apple chiede un accesso «equivalente e rispettoso della privacy» (in pratica S
 - `google-auth.js`: `UsAppleAuth` accanto a `UsGoogleAuth` (accesso, conferma con lo stesso account Apple per eliminare o uscire), 18+ e Termini anche per gli account Apple. Si mostra solo dove c'è il plugin: nessun controllo di piattaforma.
 - `supabase/functions/_shared/apple-sign-in.mjs`: segreto ES256, scambio del codice con il refresh token di Apple, revoca all'eliminazione (TN3194). Solo il modulo, con i test.
 - Il server accetta già la conferma con Apple: l'accesso con token è `amr` «oauth», come Google.
+- **Pulsanti e conferma (fatto il 05/11, col via della sessione dell'audit sui file condivisi):** «Continua con Apple» subito sotto «Continua con Google» nell'accesso e nella registrazione (`index.html`, `app.js`), bianco su fondo scuro con il logo del carattere di sistema dell'iPhone (`auth-first-run.css`, nessun asset nuovo); un account Apple conferma con Apple per eliminare o uscire (`settings.js`, `account-deletion.js`); il nome dato da Apple riempie il campo dell'onboarding (`onboarding.js`); frasi inglesi (`i18n-en.js`); la pagina pubblica di eliminazione nomina Apple (`elimina-account.html`). Il pulsante Google su iPhone compare già, ma finché manca il client iOS dice «non disponibile».
 
 **Manca, in quest'ordine:**
-1. **Pulsanti e conferma** nei file del pacchetto dell'audit: `index.html` (due pulsanti «Continua con Apple» accanto a quelli Google), `app.js` (montaggio, come `mountGoogleSignIn`, e il nome del primo accesso nell'onboarding), `settings.js` (`accountReauthMode`/`reauthField`: un account Apple conferma con Apple), `i18n-en.js`, stile in `public-auth.css`. Il pulsante segue le regole di Apple: bianco su fondo scuro, «Continua con Apple», logo Apple dal carattere di sistema dell'iPhone (nessun asset nuovo), non più piccolo di quello Google.
+1. ~~Pulsanti e conferma~~ fatto, vedi sopra.
 2. **Google Cloud (founder, si può fare subito):** client OAuth di tipo iOS nel progetto «US Play», bundle `com.usapp.us`; il client ID va in `Info.plist`.
 3. **Supabase, prima staging poi produzione (con il via del founder):** provider Apple acceso con Client IDs `com.usapp.us` (per l'app nativa non serve il segreto); provider Google con Client IDs `<web>,<iOS>` (web per primo), controllo del nonce acceso.
 4. **Revoca del token (dopo l'acquisto):** chiave «Sign in with Apple» (.p8) nei secret, tabella solo service role per il refresh token (migrazione su staging), Edge che scambia il codice dopo l'accesso, `delete-account` che revoca prima di eliminare; se manca il token, il messaggio di fine eliminazione dice come togliere US da Impostazioni › Apple ID › Accedi con Apple.
@@ -128,5 +129,8 @@ Lista passo passo: [`docs/store/ios/GIORNO_ACQUISTO.md`](../store/ios/GIORNO_ACQ
 | 2.1 (completezza) | il revisore non ha un partner | coppia demo già unita, credenziali nelle note |
 
 ## 8. Gate
+
+Prima di portare iOS su staging: unire o ribasare su `mission/us-store-s3-1-public-auth-staging-20261011`, dove c'è già il pacchetto dell'audit del 05/11 (sessione dell'audit, 05/11: meno conflitti in `index.html`, `app.js`, `settings.js`, `i18n-en.js`).
+
 
 Ogni push sul remoto, ogni lancio di workflow, merge, migrazione, secret, acquisto e pubblicazione ha il suo via esplicito del founder. Il JS condiviso resta neutrale per piattaforma (test `ios-native-baseline`).

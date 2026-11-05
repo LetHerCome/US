@@ -113,7 +113,7 @@
         return { ok: true, accessToken: result.session.access_token };
       } catch (error) { return failure(error); }
     }
-    return Object.freeze({ supported, signIn, reauthenticate, get native() { return native; } });
+    return Object.freeze({ supported, signIn, reauthenticate, provider: 'google', get native() { return native; } });
   }
 
   // ---------- Accedi con Apple (iPhone, 05/11/2026) ----------
@@ -166,7 +166,7 @@
         return { ok: true, accessToken: result.session.access_token };
       } catch (error) { return failure(error); }
     }
-    return Object.freeze({ supported, signIn, reauthenticate, get native() { return native; } });
+    return Object.freeze({ supported, signIn, reauthenticate, provider: 'apple', get native() { return native; } });
   }
   const apple = Object.freeze({ create: createApple, usesApple, appleSubject, PLUGIN: APPLE_PLUGIN });
 

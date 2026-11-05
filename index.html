@@ -262,6 +262,9 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <button id="loginBtn" type="button" class="primary us-auth-primary">Accedi</button>
       <!-- Accesso con Google (google-auth.js): shown only where it is configured. -->
       <button type="button" class="us-auth-google" id="usGoogleSignIn" hidden><span class="us-auth-google-mark" data-icon="/assets/icons/phosphor/google-logo-regular.svg" aria-hidden="true"></span><span class="us-auth-google-label">Continua con Google</span></button>
+      <!-- Accedi con Apple (iOS Store V1): only in the iPhone app, where the native plugin is
+           (google-auth.js UsAppleAuth). App Store rule 4.8; Apple's button rules: same size as Google's. -->
+      <button type="button" class="us-auth-apple" id="usAppleSignIn" hidden><span class="us-auth-apple-mark" aria-hidden="true">&#xF8FF;</span><span class="us-auth-apple-label">Continua con Apple</span></button>
       <nav class="us-auth-links" id="usPublicAuthActions" aria-label="Accesso e registrazione" hidden>
         <button type="button" class="us-auth-link" id="usShowSignup">Crea un account</button>
         <button type="button" class="us-auth-link" id="usShowForgot">Password dimenticata?</button>
@@ -280,6 +283,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <p class="auth-status" id="usSignupStatus" role="status" aria-live="polite"></p>
       <button class="primary us-auth-primary" id="usSignupSubmit" type="submit">Registrati</button>
       <button type="button" class="us-auth-google" id="usGoogleSignUp" hidden><span class="us-auth-google-mark" data-icon="/assets/icons/phosphor/google-logo-regular.svg" aria-hidden="true"></span><span class="us-auth-google-label">Continua con Google</span></button>
+      <button type="button" class="us-auth-apple" id="usAppleSignUp" hidden><span class="us-auth-apple-mark" aria-hidden="true">&#xF8FF;</span><span class="us-auth-apple-label">Continua con Apple</span></button>
       <button class="us-auth-link us-public-auth-back us-auth-foot" id="usSignupBack" type="button">Ho già un account</button>
     </form>
     <section class="auth-step us-public-auth-form" id="usVerifyEmail" aria-labelledby="usVerifyHeading">
