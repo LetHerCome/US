@@ -992,7 +992,7 @@ const usOnboarding=window.UsOnboarding.mount({
     usInvalidateAuth({revokePush:false});
     try{
       await revocation;
-      const result=await usWithDeadline(sb.auth.signOut(),5000);
+      const result=await usWithDeadline(sb.auth.signOut({scope:'local'}),5000);
       if(result?.error)throw result.error;
       window.UsAppLock?.reset?.();
       await initCloud();

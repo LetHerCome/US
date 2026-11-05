@@ -1007,7 +1007,7 @@ async function reportModal(){
 
 function logoutConfirmationModal(){
   openModal('Scollega questo telefono',`
-    <div class="us-settings2-modal-copy">Dovrai inserire di nuovo il codice privato per rientrare in US.</div>
+    <div class="us-settings2-modal-copy">Per rientrare in US userai la tua email o Google. Gli altri dispositivi restano collegati.</div>
     <div class="us-settings2-action-stack">
       <button type="button" class="ghost" id="usCancelLogout">Annulla</button>
       <button type="button" class="us-settings2-disconnect" id="usConfirmLogout">Scollega questo telefono</button>
@@ -1024,7 +1024,7 @@ async function logout(){
   if(btn){btn.disabled=true;btn.textContent='Scollego…';}
   try{await window.revokeCurrentDevice?.();}catch(error){console.warn('[US Logout] device cleanup',error);}
   try{
-    const {error}=await sb.auth.signOut();
+    const {error}=await sb.auth.signOut({scope:'local'});
     if(error)throw error;
     // Session gone: drop this phone's biometric protection record too.
     try{await window.UsAppLock?.reset?.();}catch(_e){}

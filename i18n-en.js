@@ -1635,7 +1635,7 @@
     '· scegli tu quali ricevere.': '· you choose which ones to get.',
     '· resta collegato finché non lo scolleghi.': '· stays connected until you disconnect it.',
     // Disconnect
-    'Dovrai inserire di nuovo il codice privato per rientrare in US.': 'You’ll need to enter your private code again to get back into US.',
+    'Per rientrare in US userai la tua email o Google. Gli altri dispositivi restano collegati.': 'To get back into US you’ll use your email or Google. Your other devices stay signed in.',
     'Non riesco a scollegarlo': 'Couldn’t disconnect it',
     // Widgets
     'Un pensiero con un tocco, anche con US chiusa.': 'A thought in one tap, even when US is closed.',
