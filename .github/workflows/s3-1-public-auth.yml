@@ -51,7 +51,8 @@ jobs:
             // Released by the founder on 25/10/2026 (Play closed test): production signs up.
             if(mod.PRODUCTION_SIGNUP_RELEASED!==true || !mod.publicAuthEnabled('https://iiakdfsxpywdkxravqjh.supabase.co')) process.exit(1);
             if(mod.publicAuthEnabled('https://evil.tld')) process.exit(1);
-            if(!js.includes("const SB_URL = 'https://iiakdfsxpywdkxravqjh.supabase.co';")) process.exit(1);
+            // The web bundle is minified since 05/11 (quotes and spaces change): match the value.
+            if(!/const SB_URL\s*=\s*["']https:\/\/iiakdfsxpywdkxravqjh\.supabase\.co["']/.test(js)) process.exit(1);
             for (const name of ['public-auth.js','public-auth.css']) {
               if (!fs.existsSync(dest+'/'+name)) process.exit(1);
             }
@@ -92,7 +93,9 @@ jobs:
           if (!fs.existsSync(dir+'/public-auth.js')) process.exit(1);
           if (!fs.existsSync(dir+'/public-auth.css')) process.exit(1);
           const auth=fs.readFileSync(dir+'/public-auth.js','utf8');
-          if (!auth.includes("const STAGING_ORIGIN = 'https://dugmhngrfkuieeletatb.supabase.co';")) process.exit(1);
+          // Minified since 05/11: STAGING_ORIGIN is local to public-auth.js and gets a short
+          // name, so the check looks for the value, which only this preview writes.
+          if (!auth.includes('https://dugmhngrfkuieeletatb.supabase.co')) process.exit(1);
           NODE
       - name: Archive staging-only PWA preview (never deploy)
         uses: actions/upload-artifact@v4

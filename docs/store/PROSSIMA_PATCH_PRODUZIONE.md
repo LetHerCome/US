@@ -1,6 +1,38 @@
 # Prossima patch in produzione
 
-## Uscita in produzione: l'ordine (preparato il 04/11/2026, ogni passo col via del founder)
+## Patch 1.4.1: correzioni dell'audit della produzione (preparata il 05/11/2026)
+
+**Stato:** pronta sul branch `claude/ultracode-as-backend-frontend-ed496a`, non ancora su staging né in produzione. Prima staging, poi la patch, ogni passo col via del founder. Rapporto: [`docs/audit/2026-11-05-audit-produzione.md`](../audit/2026-11-05-audit-produzione.md).
+
+**Controllo del 05/11:** `npm test` 2687 test, 0 falliti; `npm run build:cloudflare-pages` con la minificazione ok. Test nel browser, sul codice e sul sito minificato: gli stessi fallimenti che ha già `main` (test rimasti indietro), più due che cedono solo sotto carico (attese di 30 s) e passano se lanciati da soli. Integrità di supabase-js e MapLibre provata dal vivo sul CDN.
+
+**Novità per Play**
+- IT: «Piccole correzioni: se l'altra persona elimina un ricordo, un post-it o un impegno, lo vedi sparire subito; il calendario si aggiorna da solo; «Scollega questo telefono» scollega solo questo telefono.»
+- EN: «Small fixes: when your person deletes a memory, a sticky note or a plan, it disappears for you right away; the calendar updates by itself; “Disconnect this phone” only disconnects this phone.»
+
+**Cosa cambia**
+- **Uscita:** «Scollega questo telefono» chiudeva le sessioni dell'account su tutti i dispositivi (`signOut()` di supabase-js è globale). Ora solo questo telefono, anche nell'uscita dall'onboarding; il testo non parla più del «codice privato» (`settings.js`, `app.js`, `i18n-en.js`).
+- **Cancellazioni e calendario in tempo reale:** tabella `public.couple_sync` e trigger sulle cancellazioni di Ricordi, foto, post-it, eventi e storie, e su ogni cambio del calendario; l'app la ascolta su un canale Realtime suo, così se la migrazione mancasse fallirebbe solo quel canale e non Ti penso e il resto (`app.js`, `couple-notes.js`, `stories.js`). Se l'altra persona stacca il post-it aperto, compare di nuovo l'avviso.
+- **Codice esterno con controllo di integrità:** supabase-js (sito) e MapLibre (sito e app) da jsDelivr con `integrity`; la build Android sostituisce il tag intero con la copia locale (`index.html`, `ricordi-place.js`, `scripts/build-capacitor-web.mjs`).
+- **Anteprime dei link:** Open Graph e descrizione su `index.html` e `invito.html`, indirizzo canonico `www`, font della prima schermata precaricati.
+- **Sito minificato:** ultimo passo delle build web (`scripts/minify-web.mjs`, `package.json`): JS e CSS da 2,7 MB a 1,9 MB (compressi da 639 a 465 KB). Lo staging minifica dopo le sue sostituzioni. L'app Android resta com'è.
+- **Database:** regola di inserimento dei promemoria riscritta (non era sfruttabile); 81 regole RLS calcolano `auth.uid()` e la coppia una volta per richiesta; 50 indici sulle chiavi esterne.
+- **Test:** `tests/sri-third-party.test.js`, `tests/link-preview-meta.test.js`, `tests/couple-sync-v1-db.test.js`, `tests/couple-sync-client.test.js`, `tests/calendar-reminders-insert-rule-db.test.js`, `tests/rls-initplan-fk-indexes-db.test.js`; i test nel browser servono la pagina senza il pin di integrità (il finto supabase-js non può avere quell'impronta) e con `US_TEST_WEB_ROOT=dist/cloudflare-pages` girano anche sul sito minificato.
+
+**Ordine in produzione (dopo la prova su staging)**
+1. **Database prima del sito**, una migrazione per volta (workflow «Supabase SQL», target production, conferma PRODUZIONE): `20261105110941_couple_sync_v1.sql`, `20261105111516_calendar_reminders_insert_rule.sql`, `20261105112050_rls_initplan_fk_indexes.sql`.
+2. **Sito:** merge su `main`; Cloudflare pubblica con `npm run build:cloudflare-pages`, che ora minifica. Prima del merge, build id nuovo.
+3. **Android:** AAB nuovo (MapLibre con integrità, uscita solo da questo telefono, segnale delle cancellazioni). Nessun dato nuovo per la Sicurezza dei dati.
+
+**Non in questa patch, da decidere o da fare a mano** (dettagli nel rapporto):
+- protezione dalle password già rubate (Authentication, impostazione del founder);
+- reindirizzamento 301 da `uscouple.app` e `us-a33.pages.dev` verso `www` (Cloudflare);
+- widget Scriptable di Bea: ancora servito dalla produzione con codice che non è più nel repo, da tenere fino all'app iPhone o da spegnere;
+- registro delle migrazioni di produzione (9 su 41) da riallineare con `supabase migration repair`;
+- `supabase/config.toml` con il Site URL vecchio;
+- account anonimi rimasti, schermi da 320 px, test nel browser vecchi.
+
+## 1.4: l'uscita in produzione del 04/11/2026 (fatta)
 
 Controllo prima dell'uscita (04/11): revisione del codice main…staging (3 correzioni fatte, nessun errore aperto); suite completa 2537 passati e 0 falliti; test nel browser vero con gli stessi 15 fallimenti che ha già main (test vecchi, non errori nuovi); APK firmato costruito e widget provati sull'emulatore.
 

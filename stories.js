@@ -937,6 +937,9 @@
     // Le Stories hanno un solo punto di ingresso: il pallino del partner in alto.
   }
 
+  // Couple sync V1 (audit 05/11): app.js calls this when a story of the couple is deleted.
+  window.usRefreshStories = () => refreshStories();
+
   window.openOwnStories = function openOwnStories() {
     if (!window.usProfile?.id || uploadBusy) return;
     openStoriesFor(window.usProfile.id, true);

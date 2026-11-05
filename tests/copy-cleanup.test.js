@@ -14,6 +14,8 @@ const all = () => SURFACES.map(read).join('\n');
 
 test('copy: explanatory and duplicate lines removed in this pass stay removed', () => {
   const removed = [
+    // 05/11 audit: there is no private code any more (email or Google since Accesso V1).
+    'il codice privato per rientrare',
     'Quello che state costruendo insieme', 'Tocca un giorno per aggiungere', 'Tocca per scegliere una foto', 'Tocca per aggiornare',
     'Solo voi due potete vederlo', 'Scorri verso il basso per chiudere', 'Sto preparando la domanda di oggi',
     'Una domanda al giorno, uguale per entrambi', 'Un piccolo segnale, solo per voi due', 'Un piccolo invito a fare qualcosa insieme',
@@ -37,7 +39,7 @@ test('copy: text kept on purpose (destructive, reveal, privacy, irreversible) is
     // Fluidità 1 (22/10): «entrambi» about the two people became «voi due».
     'Eliminare questo impegno?', 'Sparirà dal vostro calendario.', 'Elimina questo ricordo per voi due', '>Eliminato<', '>Annulla<',
     'Sparirà per voi due.', 'Dopo la conferma le risposte non si cambiano più.', 'Le risposte si sbloccano quando avete risposto voi due.',
-    'Scollega questo telefono', 'Dovrai inserire di nuovo il codice privato per rientrare in US.',
+    'Scollega questo telefono', 'Per rientrare in US userai la tua email o Google. Gli altri dispositivi restano collegati.',
     'Sei offline.', 'Su di te · ',
   ]) assert.ok(text.includes(phrase), `"${phrase}" kept`);
   assert.match(text, /scoprirà giocando/);
