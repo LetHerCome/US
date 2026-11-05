@@ -23,7 +23,7 @@ for bad in [nil, "", String(repeating: "A1", count: 32), String(repeating: "a", 
 }
 
 // RFC 7636, appendix B.
-check(UsGoogleOAuth.codeChallenge(for: "dBjftJeZ4CVP-mJ92K27uhbUJU1p1r_wW1gFWFOEjXk") == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM", "PKCE S256")
+check(UsGoogleOAuth.codeChallenge(for: "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk") == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM", "PKCE S256")
 let verifier = UsGoogleOAuth.randomToken(bytes: 48)
 check(verifier.count == 64 && !verifier.contains("=") && !verifier.contains("+") && !verifier.contains("/"), "verifier 43-128 url-safe")
 check(UsGoogleOAuth.randomToken() != UsGoogleOAuth.randomToken(), "random state")
