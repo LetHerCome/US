@@ -172,9 +172,7 @@ test('la pulizia non introduce important nei nuovi target dei controlli', () => 
   const css = read('moments-albums.css');
   const targetRules = [
     css.match(/\.moment-card\.moment-postit \.moment-delete\{[^}]*\}/s)?.[0],
-    css.match(/\.us-overflow-icon\{[^}]*\}/s)?.[0],
-    css.match(/\.us-album-photo-delete\{[^}]*\}/s)?.[0],
-    css.match(/\.us-delete-icon\{[^}]*\}/s)?.[0]
+    css.match(/\.us-album-photo-delete\{[^}]*\}/s)?.[0]
   ];
   targetRules.forEach((rule) => assert.ok(rule, 'la regola target deve esistere'));
   assert.doesNotMatch(targetRules.join('\n'), /!important/);

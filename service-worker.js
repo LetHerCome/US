@@ -1,4 +1,4 @@
-const BUILD_ID = "us-staging-20261105-102";
+const BUILD_ID = "us-staging-20261105-103";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -182,8 +182,6 @@ const APP_SHELL = [
   "/assets/icons/phosphor/arrow-clockwise-regular.svg",
   "/assets/icons/phosphor/star-four-regular.svg",
   "/assets/icons/phosphor/star-regular.svg",
-  "/assets/icons/profile-off.svg",
-  "/assets/icons/profile-on.svg",
   "/assets/icons/think-off.svg",
   "/assets/icons/think-on.svg",
   "/version.json",

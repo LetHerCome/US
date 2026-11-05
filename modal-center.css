@@ -89,11 +89,6 @@
 #todaySyncStatus[hidden], #todayRetryBtn[hidden] { display: none !important; }
 
 /* Calendar month requires more horizontal space on tablet, not on phones. */
-@media (min-width: 680px) {
-  #usCalendarOverlay > .us-cal-surface {
-    width: min(100%, 700px) !important;
-  }
-}
 
 /* Large widget tutorials can scroll, but still open in the same floating shell. */
 #usWidgetHub > .us-widget-hub-sheet {

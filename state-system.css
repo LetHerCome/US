@@ -11,20 +11,6 @@
   --us-state-offline-bg:linear-gradient(135deg,rgba(242,184,114,.10),rgba(255,255,255,.025));
 }
 
-.us-state{
-  min-height:74px;padding:16px 14px;border-radius:18px;border:var(--us-state-border-soft);
-  background:var(--us-state-bg);color:var(--us-color-text-2);text-align:center;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px
-}
-.us-state>b,.us-state>h3{margin:0;font:500 18px/1.15 var(--us-font-editorial);color:var(--us-color-text)}
-.us-state>p,.us-state>small{margin:0;max-width:300px;color:var(--us-color-text-2);font-size:11.5px;line-height:1.4}
-.us-state--error{background:var(--us-state-error-bg);border:var(--us-state-error-border)}
-.us-state--loading{position:relative;overflow:hidden}
-.us-state--loading::after{
-  content:"";position:absolute;inset:0;transform:translateX(-110%);
-  background:linear-gradient(105deg,transparent 24%,rgba(255,255,255,.05) 48%,transparent 72%);
-  animation:us-state-sweep 1.55s ease-in-out infinite
-}
 @keyframes us-state-sweep{to{transform:translateX(110%)}}
 
 :is(
@@ -82,7 +68,7 @@
 :is(
   .us-gv2-empty,.us-gv2-error,.conservati-error,.left-for-you-error,.us-cal-empty,
   .noi-idea-error,.us-settings-empty
-) button,.quest-week-retry{
+) button{
   min-height:44px!important;margin-top:10px;padding:0 14px!important;border-radius:14px!important;
   border:1px solid rgba(255,255,255,.11)!important;background:rgba(255,255,255,.055)!important;
   color:var(--us-color-text)!important;box-shadow:none!important;font:650 11.5px/1 var(--us-font-ui)!important
@@ -121,7 +107,6 @@
 :is(.empty-state,.us-gv2-empty,.us-gv2-error,.us-settings-empty)>.emoji{display:none!important}
 
 @media(prefers-reduced-motion:reduce){
-  .us-state--loading::after,
   :is(
     .empty-state[aria-busy="true"],.us-gv2-empty[aria-busy="true"],.us-album-loading,
     .conservati-loading,.left-for-you-loading,.left-for-you-loading-inline,.moment-loading

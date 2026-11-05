@@ -3707,10 +3707,6 @@ const US_MOMENT_PLACE_COLUMNS='place_lat,place_lon,place_label,place_source';
 const US_MOMENT_MAX_PHOTOS=10;
 const US_MOMENT_TYPES=['image/jpeg','image/png','image/webp'];
 
-function formatMomentDetectedDate(value){
-  try{return new Date(value+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long',year:'numeric'});}catch(_){return value;}
-}
-
 function parseExifDateString(value){
   const m=String(value||'').match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
   if(!m)return null;
@@ -4825,21 +4821,6 @@ function weekStartISO(now=new Date()){
   const d=questRomeDay(now);
   d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));
   return d.toISOString().slice(0,10);
-}
-function questWeekDate(week,days=0){
-  const [y,m,d]=String(week).split('-').map(Number);
-  return new Date(Date.UTC(y,m-1,d+days));
-}
-function questDayLabel(date,options){return date.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{timeZone:'UTC',...options});}
-function nextWeekLabel(week=weekStartISO()){
-  return questDayLabel(questWeekDate(week,7),{weekday:'long',day:'numeric',month:'short'});
-}
-// "12–18 ott" inside one month, "28 set – 4 ott" across two (the mockup's
-// kicker); month:'long' for the past weeks ("5–11 ottobre").
-function questWeekRangeLabel(week,month='short'){
-  const from=questWeekDate(week),to=questWeekDate(week,6);
-  if(from.getUTCMonth()===to.getUTCMonth())return `${from.getUTCDate()}–${questDayLabel(to,{day:'numeric',month})}`;
-  return `${questDayLabel(from,{day:'numeric',month})} – ${questDayLabel(to,{day:'numeric',month})}`;
 }
 function bondLevelInfo(totalXp=0){
   const total=Math.max(0,Number(totalXp)||0);

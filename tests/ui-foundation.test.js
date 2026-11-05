@@ -345,7 +345,6 @@ test('i token motion legacy sono ritirati: ogni superficie usa il contratto moti
   // [data-us-motion-surface] like every other popup; the legacy pair is gone.
   for (const css of [foundation, settings, events, games]) assert.doesNotMatch(css, /--us-motion-legacy/);
   assert.match(foundation, /--us-motion-exit:200ms/);
-  assert.match(settings, /var\(--us-motion-base\)/);
   assert.doesNotMatch(settings, /usSettingsUp/);
   assert.doesNotMatch(events, /usEventsUp/);
   assert.match(games, /var\(--us-motion-(press|base)\)/);

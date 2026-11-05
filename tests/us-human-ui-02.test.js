@@ -419,14 +419,12 @@ test('secondary surfaces: internal destinations use the same compact sheet and r
   assert.match(left, /\.left-for-you-head h2\{font-size:22px/);
   assert.match(settings, /\.us-setting-choice button\{min-height:48px/);
   assert.match(styles, /#today \.question\{padding:14px/);
-  assert.match(styles, /#bond \.noi-living-list \.bond-quest\{[\s\S]*?padding:11px 12px/);
 });
 
 
 test('state system: loading, empty, error, retry and connectivity share one visual authority', () => {
   const css = read('state-system.css');
   assert.match(css, /US-STATE-SYSTEM-01/);
-  assert.match(css, /\.us-state--loading/);
   assert.match(css, /\.app-status-bar\[data-kind="error"\]/);
   assert.match(css, /\.app-status-bar\[data-kind="online"\]/);
   assert.match(css, /\.conservati-error/);

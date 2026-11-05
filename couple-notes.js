@@ -109,7 +109,6 @@ function install(w){
   const key=()=>w.usProfile?`${w.usProfile.id}:${w.usProfile.couple_id}`:'';
   const opened=()=>Boolean(root?.classList.contains('open'));
   const db=()=>typeof sb!=='undefined'?sb:null;
-  const hostEl=h=>h==='sheet'?body:grid;
   const nameOf=id=>{
     if(!id)return '';
     if(id===me())return 'Tu';

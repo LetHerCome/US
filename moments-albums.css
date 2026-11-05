@@ -133,14 +133,6 @@ body.us-album-open{overflow:hidden;touch-action:none}
   width:44px;height:44px;min-width:44px;min-height:44px;
   padding:0;border:0;background:transparent;display:grid;place-items:center
 }
-.us-delete-icon{
-  width:31px;height:31px;border-radius:50%;display:grid;place-items:center;
-  background:rgba(8,10,14,.58);border:1px solid rgba(255,255,255,.14);
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none
-}
-.us-delete-icon svg{
-  width:15px;height:15px;fill:none;stroke:#fff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round
-}
 
 /* Dedicated fullscreen gallery. */
 .us-album-lightbox{position:fixed;inset:0;z-index:10120;background:var(--us-color-bg);display:none;align-items:center;justify-content:center;touch-action:none;opacity:0;transition:opacity var(--us-motion-surface) var(--us-ease-standard)}
@@ -292,15 +284,7 @@ body.us-moment-compose-open{overflow:hidden}
   border:0;border-radius:0;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;
   font-size:0;box-shadow:none
 }
-.us-overflow-icon{
-  width:34px;height:28px;border-radius:999px;display:grid;place-items:center;
-  border:1px solid rgba(255,255,255,.16);background:rgba(7,9,13,.58);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  box-shadow:0 5px 15px rgba(0,0,0,.16);pointer-events:none
-}
-.us-overflow-icon svg{
-  width:18px;height:6px;fill:#fff
-}
+
 #moments .moment-album-count{
   top:10px!important;right:10px!important;bottom:auto!important;
   min-height:26px!important;padding:5px 9px!important;
@@ -324,7 +308,6 @@ body.us-moment-compose-open{overflow:hidden}
 .us-album-overlay.show .us-album-shell{animation:usAlbumVisualIn var(--us-motion-base) var(--us-ease-standard)}
 .us-album-overlay[data-us-motion-surface] .us-album-shell{animation:none!important}
 @keyframes usAlbumVisualIn{from{transform:translateY(14px);opacity:.68}to{transform:none;opacity:1}}
-
 
 /* Hero uses the same photo blurred behind the intact image */
 .us-album-cover-stage{
@@ -797,7 +780,6 @@ body.us-keyboard-open .us-album-floating-add,
 :root[data-us-motion="reduced"] #moments .moment-card.ricordi-new,:root[data-us-motion="reduced"] #moments .moment-card.ricordi-new::after{animation:none}
 @media(prefers-reduced-motion:reduce){#moments .ricordi-rivivi-card:active{transform:none}}
 
-
 /* ===== US-RICORDI-DENSITY-01 · show more memories, less chrome =====
    Presentation only. Archive semantics, upload flow and source truth stay unchanged. */
 
@@ -994,7 +976,6 @@ body:has(#moments.page.active) #thinkButton{
   #moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy b,
   #moments .ricordi-rivivi-text b{font-size:18px}
 }
-
 
 /* ===== US-SECONDARY-SURFACES-01 · Conservati + album utility density ===== */
 .conservati-head{padding:14px 16px 10px}

@@ -61,7 +61,7 @@ test('staging configuration CLI refuses to mutate sources without explicit QA op
 
 test('Android Gradle uses staging package ONLY under explicit QA flag; original signed workflow never builds S3', () => {
   const gradle = fs.readFileSync(path.join(ROOT, 'android/app/build.gradle'), 'utf8');
-  const productionWorkflow = fs.readFileSync(path.join(ROOT, '.github/workflows/android-ui-integration-signed.yml'), 'utf8');
+  const productionWorkflow = fs.readFileSync(path.join(ROOT, '.github/workflows/android-internal-release.yml'), 'utf8');
   assert.match(gradle, /applicationId "com\.usapp\.us"/);
   assert.match(gradle, /System\.getenv\('US_STAGING_QA'\) == 'true'/);
   assert.match(gradle, /applicationId "com\.usapp\.us\.staging"/);

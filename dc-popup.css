@@ -123,9 +123,6 @@
 :is(#leftForYouOverlay,#leftForYouComposerOverlay)>[data-us-modal-panel]{padding-bottom:var(--us-safe-bottom)}
 
 /* Tablet: the calendar month keeps its wider sheet. */
-@media (min-width:680px){
-  #usCalendarOverlay>.us-cal-surface{width:100%!important;max-width:760px}
-}
 
 /* Keyboard open: the overlay ends where the visible area ends, so the
    sheet's bottom (and its button) stays above the keyboard. */

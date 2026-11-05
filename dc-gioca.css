@@ -588,12 +588,11 @@ body.us-gv2-sheet-open{overflow:hidden}
 :root[data-us-motion="reduced"] #quiz .us-gioca-tab,
 :root[data-us-motion="reduced"] #quiz .us-gv2-choice,
 :root[data-us-motion="reduced"] #quiz .us-gv2-choice-key{transition:none}
-:root[data-us-motion="reduced"] #quiz .us-gv2-panel.us-content-enter::before,
-:root[data-us-motion="reduced"] #quiz .us-gv2-panel.us-content-enter>article{animation:dcg-fade 200ms ease-out both}
+
 :root[data-us-motion="reduced"] #quiz .us-gv2-choice:active{transform:none}
 @media (prefers-reduced-motion:reduce){
   #quiz .us-gioca-tabs::before,#quiz .us-gioca-tab,#quiz .us-gv2-choice,#quiz .us-gv2-choice-key{transition:none}
-  #quiz .us-gv2-panel.us-content-enter::before,#quiz .us-gv2-panel.us-content-enter>article{animation:dcg-fade 200ms ease-out both}
+
   #quiz .us-gv2-choice:active{transform:none}
 }
 

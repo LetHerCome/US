@@ -17,6 +17,7 @@
 - **Anteprime dei link:** Open Graph e descrizione su `index.html` e `invito.html`, indirizzo canonico `www`, font della prima schermata precaricati.
 - **Sito minificato:** ultimo passo delle build web (`scripts/minify-web.mjs`, `package.json`): JS e CSS da 2,7 MB a 1,9 MB (compressi da 639 a 465 KB). Lo staging minifica dopo le sue sostituzioni. L'app Android resta com'è.
 - **Database:** regola di inserimento dei promemoria riscritta (non era sfruttabile); 81 regole RLS calcolano `auth.uid()` e la coppia una volta per richiesta; 50 indici sulle chiavi esterne.
+- **Pulizia (05/11, nessun cambio visibile):** tolti circa 400 righe di CSS mai usato (soprattutto la vecchia Quest e Noi hub), 7 funzioni JS senza chiamate, 18 icone e il wordmark non usati, 3 workflow morti; il service worker non mette più in cache le due icone del profilo tolte. Elenco e motivi: [`docs/milestones/pulizia-20261105.md`](../milestones/pulizia-20261105.md). Niente SQL né Edge. Su staging con la build `us-staging-20261105-103`.
 - **Test:** `tests/sri-third-party.test.js`, `tests/link-preview-meta.test.js`, `tests/couple-sync-v1-db.test.js`, `tests/couple-sync-client.test.js`, `tests/calendar-reminders-insert-rule-db.test.js`, `tests/rls-initplan-fk-indexes-db.test.js`; i test nel browser servono la pagina senza il pin di integrità (il finto supabase-js non può avere quell'impronta) e con `US_TEST_WEB_ROOT=dist/cloudflare-pages` girano anche sul sito minificato.
 
 **Ordine in produzione (dopo la prova su staging)**
