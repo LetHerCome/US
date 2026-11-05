@@ -98,3 +98,13 @@ test('widget endpoints: production in the source, US-STAGING only in the staging
   assert.doesNotMatch(staged, /iiakdfsxpywdkxravqjh/);
   assert.match(fs.readFileSync(path.join(__dirname, '..', 'scripts/configure-s3-staging-qa.mjs'), 'utf8'), /writeFile\(WIDGET_ENDPOINTS_PATH, widgetEndpoints\)/);
 });
+
+test('widget endpoints unit test follows the staging rewrite (the APK workflow runs testDebugUnitTest)', async () => {
+  const { isolateWidgetEndpointsTest, WIDGET_ENDPOINTS_TEST_PATH } = await import('../scripts/configure-s3-staging-qa.mjs');
+  const source = fs.readFileSync(path.join(ROOT, WIDGET_ENDPOINTS_TEST_PATH), 'utf8');
+  assert.match(source, /iiakdfsxpywdkxravqjh/);
+  const staged = isolateWidgetEndpointsTest(source);
+  assert.doesNotMatch(staged, /iiakdfsxpywdkxravqjh/);
+  assert.match(staged, /"https:\/\/dugmhngrfkuieeletatb\.supabase\.co\/functions\/v1\/widget-think-send"/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'scripts/configure-s3-staging-qa.mjs'), 'utf8'), /writeFile\(WIDGET_ENDPOINTS_TEST_PATH, widgetEndpointsTest\)/);
+});
