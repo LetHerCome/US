@@ -120,3 +120,42 @@ test('wired once: native only, after the app starts and when it comes back', () 
   assert.equal(JSON.parse(read('package.json')).dependencies['@capawesome/capacitor-app-update'], '8.1.0');
   assert.match(read('android/capacitor.settings.gradle'), /include ':capawesome-capacitor-app-update'/);
 });
+
+// iOS Store V1 (05/11/2026): the same updater on the iPhone. The App Store has
+// no in-app update; below the minimum «Aggiorna» opens the App Store page.
+test('iPhone: the App Store page needs the app id, read only by iOS', () => {
+  assert.equal(U.storeOptions(''), undefined, 'no id yet: the plugin is called as before');
+  assert.equal(U.storeOptions('id6740000000'), undefined);
+  assert.equal(U.storeOptions('12'), undefined);
+  assert.deepEqual(U.storeOptions('6740000000'), { appId: '6740000000' });
+  assert.match(read('app-update.js'), /const APP_STORE_ID = '[0-9]*';/, 'the id lives in one place');
+});
+
+test('iPhone: no answer from the App Store, the installed build still meets the minimum', async () => {
+  const calls = [];
+  const ui = { blocked: [], block(options) { this.blocked.push(options); } };
+  const updater = U.createAppUpdater({
+    plugin: { getAppUpdateInfo: async () => { throw new Error('No app found'); }, openAppStore: async (options) => { calls.push(['store', options]); } },
+    platformName: 'ios', readMin: async (p) => { calls.push(['min', p]); return 450000; },
+    readInstalled: async () => ({ build: '440000', version: '1.4.0' }), appStoreId: '6740000000', ui, storage: null, now: () => 1 });
+  assert.deepEqual(await updater.check(), { kind: 'store', required: true });
+  assert.equal(ui.blocked.length, 1, '«Aggiorna US» covers the app');
+  await ui.blocked[0].onUpdate();
+  assert.deepEqual(calls, [['min', 'ios'], ['store', { appId: '6740000000' }]]);
+
+  const never = { block() { throw new Error('must not block'); } };
+  const failing = { getAppUpdateInfo: async () => { throw new Error('offline'); } };
+  const fine = U.createAppUpdater({ plugin: failing, platformName: 'ios', readMin: async () => 450000,
+    readInstalled: async () => ({ build: '450000' }), ui: never, storage: null, now: () => 1 });
+  assert.deepEqual(await fine.check(), { kind: 'none' }, 'at the minimum: nothing');
+  const unknown = U.createAppUpdater({ plugin: failing, platformName: 'ios', readMin: async () => 450000,
+    readInstalled: async () => { throw new Error('no bridge'); }, ui: never, storage: null, now: () => 1 });
+  assert.deepEqual(await unknown.check(), { kind: 'none' }, 'nothing readable: nothing blocks');
+});
+
+test('iPhone: the installed build comes from @capacitor/app, never from a platform check', () => {
+  const src = read('app-update.js');
+  assert.match(src, /platform\.getNativePlugin\?\.\('App'\)/);
+  assert.match(src, /readInstalled = typeof app\?\.getInfo === 'function' \? \(\) => app\.getInfo\(\) : null/);
+  assert.doesNotMatch(src, /platformName\s*===?\s*['"](ios|android)['"]/);
+});

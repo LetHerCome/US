@@ -2,10 +2,13 @@
   "name": "@us/app-icon",
   "version": "1.0.0",
   "private": true,
-  "description": "US: the couple picks the app icon (Premi Sintonia V2). Each icon is a launcher activity-alias of the app; exactly one is enabled.",
+  "description": "US: the couple picks the app icon (Premi Sintonia V2). Android: each icon is a launcher activity-alias, exactly one enabled. iOS: alternate icons of the asset catalog (setAlternateIconName).",
   "capacitor": {
     "android": {
       "src": "android"
+    },
+    "ios": {
+      "src": "ios"
     }
   },
   "peerDependencies": {

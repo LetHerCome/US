@@ -4,8 +4,16 @@
 <dict>
   <key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
+	<!-- iOS Store V1 (05/11/2026): Italian and English, like the app (i18n.js):
+	     Italian on Italian phones, English everywhere else, permission prompts
+	     and system pickers included (it.lproj / en.lproj InfoPlist.strings). -->
 	<key>CFBundleDevelopmentRegion</key>
-	<string>it</string>
+	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>it</string>
+		<string>en</string>
+	</array>
 	<key>CFBundleDisplayName</key>
         <string>US</string>
 	<key>CFBundleExecutable</key>
@@ -48,7 +56,11 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>US usa la posizione approssimativa di questo telefono solo mentre l'app è aperta, per calcolare la distanza tra voi due. L'altra persona vede solo la distanza, mai dove sei.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>US usa il microfono per registrare i messaggi vocali che lasci al tuo partner.</string>
+	<string>US usa il microfono per registrare le note vocali e l’audio dei video che lasci al tuo partner.</string>
+	<!-- «Salva immagine» in the share sheet (moments-albums.js savePhotoToPhone):
+	     without this key iOS terminates the app when the photo is saved. -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>US salva nella tua libreria le foto dei Ricordi che scegli di scaricare.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>US apre la tua libreria per scegliere le foto da condividere con il tuo partner.</string>
 	<key>UIApplicationSceneManifest</key>

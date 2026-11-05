@@ -16,6 +16,11 @@
   Content-Type: application/json
   Cache-Control: no-cache
 
+# iOS Universal Links (iOS Store V1): no extension, so the type is set here.
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+  Cache-Control: no-cache
+
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

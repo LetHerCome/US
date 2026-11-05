@@ -1,0 +1,185 @@
+name: iOS TestFlight (App Store Connect)
+
+# iOS Store V1 (05/11/2026): builds US for the iPhone, signs it and uploads it
+# to App Store Connect, where it appears in TestFlight. The founder works on
+# Windows: this macOS runner is the only place where US is signed.
+#
+# - Manual only, from main only, in the GitHub environment `ios-deploy`
+#   (required reviewer: the founder). Nothing runs on push.
+# - Signing: Xcode automatic signing with an App Store Connect API key
+#   (cloud-managed distribution certificate, profiles created by xcodebuild).
+#   No certificate, profile or Team ID is committed to the repository.
+# - The .ipa is never an artifact (the repository is public): xcodebuild
+#   uploads it straight to App Store Connect (ExportOptions destination=upload).
+# - Build number: minutes since 2026-01-01 UTC, like Play's versionCode, so the
+#   server minimum (get_app_min_version 'ios') reads the same way.
+#
+# Needed in the environment `ios-deploy` (docs/store/ios/GIORNO_ACQUISTO.md):
+#   secrets APP_STORE_CONNECT_KEY_ID, APP_STORE_CONNECT_ISSUER_ID,
+#           APP_STORE_CONNECT_KEY_P8_B64 (the .p8 file in base64)
+#   variable APPLE_TEAM_ID (10 characters, public: it is in the AASA file too)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Versione visibile su App Store e TestFlight (x.y.z), di solito uguale ad Android'
+        type: string
+        default: '1.4.0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    runs-on: macos-15
+    timeout-minutes: 60
+    environment: ios-deploy
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check branch, version and Apple credentials
+        env:
+          VERSION_NAME: ${{ inputs.version_name }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_KEY_P8_B64: ${{ secrets.APP_STORE_CONNECT_KEY_P8_B64 }}
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::TestFlight solo da main (ref attuale: $GITHUB_REF)."
+            exit 1
+          fi
+          if ! [[ "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::version_name deve essere nel formato x.y.z"
+            exit 1
+          fi
+          missing=""
+          [ -n "$ASC_KEY_ID" ] || missing="$missing APP_STORE_CONNECT_KEY_ID"
+          [ -n "$ASC_ISSUER_ID" ] || missing="$missing APP_STORE_CONNECT_ISSUER_ID"
+          [ -n "$ASC_KEY_P8_B64" ] || missing="$missing APP_STORE_CONNECT_KEY_P8_B64"
+          if [ -n "$missing" ]; then
+            echo "::error::Segreti mancanti nell'ambiente ios-deploy:$missing"
+            exit 1
+          fi
+          if ! [[ "$TEAM_ID" =~ ^[A-Z0-9]{10}$ ]]; then
+            echo "::error::La variabile APPLE_TEAM_ID deve avere 10 caratteri (lettere maiuscole e cifre)."
+            exit 1
+          fi
+          code="$(( ( $(date -u +%s) - 1767225600 ) / 60 ))"
+          {
+            echo "US_IOS_VERSION_NAME=$VERSION_NAME"
+            echo "US_IOS_BUILD_NUMBER=$code"
+          } >> "$GITHUB_ENV"
+          echo "Versione $VERSION_NAME · build $code"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Select newest installed Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -n 1)
+          sudo xcode-select -s "$XCODE/Contents/Developer"
+          xcodebuild -version
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Native contract tests
+        run: node --test tests/ios-native-baseline.test.js tests/ios-store-v1.test.js tests/app-update.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js
+
+      - name: Web bundle and cap sync ios
+        run: |
+          npm run build:capacitor-web
+          npx cap sync ios
+          git diff --exit-code -- ios
+
+      - name: Write the App Store Connect key (runner only)
+        env:
+          ASC_KEY_P8_B64: ${{ secrets.APP_STORE_CONNECT_KEY_P8_B64 }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/asc"
+          chmod 700 "$RUNNER_TEMP/asc"
+          printf '%s' "$ASC_KEY_P8_B64" | base64 --decode > "$RUNNER_TEMP/asc/AuthKey.p8"
+          chmod 600 "$RUNNER_TEMP/asc/AuthKey.p8"
+          grep -q "BEGIN PRIVATE KEY" "$RUNNER_TEMP/asc/AuthKey.p8" || { echo "::error::APP_STORE_CONNECT_KEY_P8_B64 non è una chiave .p8 in base64"; exit 1; }
+
+      - name: Archive (Release, signed by Xcode automatic signing)
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/US.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/asc/AuthKey.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            MARKETING_VERSION="$US_IOS_VERSION_NAME" \
+            CURRENT_PROJECT_VERSION="$US_IOS_BUILD_NUMBER" \
+            archive | tee build/xcodebuild-archive.log | grep -E "warning:|error:|ARCHIVE (SUCCEEDED|FAILED)" || true
+          grep -q "ARCHIVE SUCCEEDED" build/xcodebuild-archive.log
+
+      - name: Export and upload to App Store Connect (TestFlight)
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          set -o pipefail
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          EOF
+          plutil -lint "$RUNNER_TEMP/ExportOptions.plist"
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/US.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/asc/AuthKey.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            | tee build/xcodebuild-export.log | grep -E "warning:|error:|EXPORT (SUCCEEDED|FAILED)|Upload" || true
+          grep -q "EXPORT SUCCEEDED" build/xcodebuild-export.log
+          echo "Caricata la build $US_IOS_BUILD_NUMBER ($US_IOS_VERSION_NAME): compare in TestFlight dopo l'elaborazione di Apple (di solito 5–30 minuti)."
+
+      - name: Remove the key and the signed files
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/asc" "$RUNNER_TEMP/export" "$RUNNER_TEMP/US.xcarchive" "$RUNNER_TEMP/ExportOptions.plist"
+
+      # Logs only: never the archive or the .ipa (public repository).
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-testflight-logs
+          path: build/*.log
+          if-no-files-found: ignore

@@ -29,7 +29,9 @@ test('M15 iOS: identità Capacitor stabile com.usapp.us, edge-to-edge, nessun se
   assert.equal(config.webDir, 'dist/capacitor');
   assert.equal(config.server, undefined, 'la app carica il bundle locale, mai un URL remoto');
   assert.equal(config.ios.contentInset, 'never', 'safe area gestite dal CSS env(safe-area-inset-*)');
-  assert.equal(config.ios.backgroundColor, '#08040E');
+  // iOS Store V1 (05/11/2026): the default Android splash colour, where the
+  // opening animation starts (was #08040E, the Android splash before 18/10).
+  assert.equal(config.ios.backgroundColor, '#26142E');
   assert.equal(config.ios.limitsNavigationsToAppBoundDomains, false);
   // Keyboard: WebKit default (visualViewport shrinks) is what fix4.js measures.
   // A native resize mode would shrink innerHeight too and break that contract.
@@ -77,7 +79,9 @@ test('M15 iOS: Info.plist dichiara scheme, permessi reali e nessuna capability p
   const privacy = read('ios/App/App/PrivacyInfo.xcprivacy');
   assert.match(privacy, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
   assert.deepEqual(fs.readdirSync(IOS_APP).filter((name) => name.endsWith('.entitlements')), ['App.entitlements']);
-  assert.deepEqual(plistKeys(read('ios/App/App/App.entitlements')), ['aps-environment'], 'Native Notifications V1: Push only, no App Group or other capability yet');
+  // Push (Native Notifications V1) and, since iOS Store V1, Universal Links for
+  // /invito. No App Group, Keychain sharing or other capability yet (widgets: W0).
+  assert.deepEqual(plistKeys(read('ios/App/App/App.entitlements')), ['aps-environment', 'com.apple.developer.associated-domains']);
 });
 
 test('M15 iOS: Back nativo = swipe dal bordo sinistro sulla stessa history di Android, mai uscita', () => {
@@ -108,18 +112,22 @@ test('M15 iOS: sessione fuori dai backup e App Group riservato ma non attivato',
   assert.equal(fs.existsSync(path.join(ROOT, 'ios', 'App', 'UsWidgets')), false, 'nessuna WidgetKit extension in M15');
 });
 
-test('M15 iOS: icona 1024 opaca e launch screen derivate dagli asset APPROVED, verificate per hash', () => {
+test('M15 iOS: icone 1024 opache e launch screen derivate dagli asset APPROVED, verificate per hash', () => {
   const manifest = JSON.parse(read('ios/brand-assets-manifest.json'));
   const approved = JSON.parse(read('assets/ASSET_MANIFEST.json')).assets;
   const sha = (relative) => crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, relative))).digest('hex');
-  assert.equal(manifest.derivatives.length, 2);
+  // iOS Store V1: the default icon and the three Sintonia icons, plus the launch symbol.
+  assert.equal(manifest.derivatives.length, 5);
   for (const derivative of manifest.derivatives) {
     assert.equal(sha(derivative.path), derivative.sha256, `${derivative.path} modificato a mano`);
     for (const [source, hash] of Object.entries(derivative.sources)) assert.equal(sha(source), hash, `${source} cambiato`);
   }
-  const symbol = approved.find((asset) => asset.path === 'assets/source/brand/us-symbol-master-v1.png');
+  // The phone icon of 04/11/2026 (the frameless logo, like Android 1.4).
+  const symbol = approved.find((asset) => asset.path === 'assets/source/brand/app-icon/us-launcher-symbol-v2.png');
   assert.equal(symbol.status, 'APPROVED');
+  assert.equal(manifest.derivatives[0].path, 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png');
   assert.equal(manifest.derivatives[0].sources[symbol.path], symbol.sha256);
+  assert.equal(manifest.derivatives[0].background, '#FFFFFF');
 
   const icon = fs.readFileSync(path.join(IOS_APP, 'Assets.xcassets', 'AppIcon.appiconset', 'AppIcon-1024.png'));
   assert.equal(icon.readUInt32BE(16), 1024);
@@ -130,7 +138,8 @@ test('M15 iOS: icona 1024 opaca e launch screen derivate dagli asset APPROVED, v
 
   const launch = read('ios/App/App/Base.lproj/LaunchScreen.storyboard');
   assert.match(launch, /image="Splash"/);
-  assert.match(launch, /red="0\.031372549019607843" green="0\.015686274509803921" blue="0\.054901960784313725"/);
+  // #26142E: Android's us_splash_background, the first colour of the opening animation.
+  assert.match(launch, /red="0.14901960784313725" green="0.078431372549019607" blue="0.1803921568627451"/);
   assert.doesNotMatch(launch, /systemBackgroundColor/, 'niente flash bianco al lancio');
   const splashFiles = fs.readdirSync(path.join(IOS_APP, 'Assets.xcassets', 'Splash.imageset')).filter((name) => name.endsWith('.png'));
   assert.deepEqual(splashFiles, ['us-launch-symbol@3x.png']);
