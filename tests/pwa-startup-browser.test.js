@@ -10,7 +10,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { createHash } = require('node:crypto');
 const vm = require('node:vm');
-const { ROOT, loadChromium, FAKE_SUPABASE } = require('./helpers/oggi-browser');
+const { ROOT, loadChromium, FAKE_SUPABASE, stripThirdPartyIntegrity } = require('./helpers/oggi-browser');
 const { qaFixture } = require('./helpers/countdown-browser');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json',
@@ -48,7 +48,7 @@ function cloudflareLikeServer({ installedV5 = false } = {}) {
     const send = (error, body) => {
       if (error) { res.writeHead(404); res.end(); return; }
       const ext = path.extname(file);
-      if (file.endsWith('index.html')) state.documents += 1;
+      if (file.endsWith('index.html')) { state.documents += 1; body = Buffer.from(stripThirdPartyIntegrity(body)); }
       // A deploy only changes the build marker: rewrite it in the three files that carry it.
       if (!state.v5 && state.build !== BUILD_A && /(index\.html|service-worker\.js|version\.json)$/.test(file)) {
         body = Buffer.from(String(body).split(BUILD_A).join(state.build));

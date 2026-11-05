@@ -20,6 +20,10 @@
   const PHOTON = 'https://photon.komoot.io';
   const MAPLIBRE_JS = 'https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js';
   const MAPLIBRE_CSS = 'https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css';
+  // Subresource Integrity (audit 05/11): the CDN must serve exactly these files
+  // (hashes from data.jsdelivr.com for maplibre-gl 5.24.0, CSS re-checked by hand).
+  const MAPLIBRE_JS_SRI = 'sha256-RamwepGJzlYFTGIKlHzPQeKR5YyV6bYVM7dAqqZe5cs=';
+  const MAPLIBRE_CSS_SRI = 'sha256-qx5w1Z7EBGW65+cDDaLzzPKBM/1QLmK9WY7vut/XpzI=';
   const MAP_STYLE = 'https://tiles.openfreemap.org/styles/dark';
   const LABEL_MAX = 120;
   const SEARCH_MIN = 3;
@@ -275,10 +279,10 @@
     if (maplibrePromise) return maplibrePromise;
     maplibrePromise = new Promise((resolve, reject) => {
       const css = w.document.createElement('link');
-      css.rel = 'stylesheet'; css.href = MAPLIBRE_CSS; css.crossOrigin = 'anonymous';
+      css.rel = 'stylesheet'; css.href = MAPLIBRE_CSS; css.integrity = MAPLIBRE_CSS_SRI; css.crossOrigin = 'anonymous';
       w.document.head.appendChild(css);
       const script = w.document.createElement('script');
-      script.src = MAPLIBRE_JS; script.async = true; script.crossOrigin = 'anonymous';
+      script.src = MAPLIBRE_JS; script.integrity = MAPLIBRE_JS_SRI; script.async = true; script.crossOrigin = 'anonymous';
       script.onload = () => (w.maplibregl ? resolve(w.maplibregl) : reject(new Error('maplibre missing')));
       script.onerror = () => { maplibrePromise = null; script.remove(); reject(new Error('maplibre not loaded')); };
       w.document.head.appendChild(script);
