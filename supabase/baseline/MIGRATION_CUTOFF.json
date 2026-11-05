@@ -46,7 +46,10 @@
     "20261103205050_lavagna_v1.sql",
     "20261103205157_weekly_challenge_v1.sql",
     "20261103205200_weekly_challenge_job_cron.sql",
-    "20261104140000_atmosfere_gradienti.sql"
+    "20261104140000_atmosfere_gradienti.sql",
+    "20261105110941_couple_sync_v1.sql",
+    "20261105111516_calendar_reminders_insert_rule.sql",
+    "20261105112050_rls_initplan_fk_indexes.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
@@ -88,7 +91,10 @@
     "20261103205050_lavagna_v1.sql",
     "20261103205157_weekly_challenge_v1.sql",
     "20261103205200_weekly_challenge_job_cron.sql",
-    "20261104140000_atmosfere_gradienti.sql"
+    "20261104140000_atmosfere_gradienti.sql",
+    "20261105110941_couple_sync_v1.sql",
+    "20261105111516_calendar_reminders_insert_rule.sql",
+    "20261105112050_rls_initplan_fk_indexes.sql"
   ],
   "counts": {
     "repo_files": 47,
