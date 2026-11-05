@@ -74,12 +74,13 @@ async function stagingKey() {
   const response = await fetch(STAGING_SITE_APP, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Sito di staging non raggiungibile (${response.status})`);
   const source = await response.text();
-  if (!source.includes(`const SB_URL = 'https://${STAGING_HOST}';`) || source.includes(PRODUCTION_PROJECT_REF)) {
+  // The site may be minified (05/11/2026): only the literals are relied on.
+  if (!source.includes(`https://${STAGING_HOST}`) || source.includes(PRODUCTION_PROJECT_REF)) {
     throw new Error('Il sito di staging non punta a US-STAGING: chiave non letta');
   }
-  const key = source.match(/^const SB_KEY = '(sb_publishable_[A-Za-z0-9_-]+)';$/m)?.[1];
-  if (!key) throw new Error('Chiave pubblica di staging non trovata sul sito di staging');
-  return key;
+  const keys = [...new Set(source.match(/sb_publishable_[A-Za-z0-9_-]+/g) || [])];
+  if (keys.length !== 1) throw new Error(`Chiave pubblica di staging non chiara sul sito di staging (${keys.length} trovate)`);
+  return keys[0];
 }
 
 // The native web bundle (scripts/build-capacitor-web.mjs) rewritten for
