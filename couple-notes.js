@@ -272,7 +272,11 @@ function install(w){
       }
       return;
     }
+    const before=new Set(notes.map(n=>n.id));
     notes=data||[];loaded=true;loadedAt=Date.now();owner=k;
+    // Couple sync (05/11): the partner's deletion now arrives as a reload, not
+    // as a DELETE event; the post-it open here says so, as onChange does.
+    if(editing?.id&&before.has(editing.id)&&!notes.some(n=>n.id===editing.id)){editing.id=null;paintMeta();notice('L’altra persona ha staccato questo post-it. Se continui a scrivere, lo salvo di nuovo.');}
     if(!editing)paint();
     else{paint();notes.forEach(n=>repaintTile(n.id));}
   }

@@ -66,8 +66,9 @@ function createHarness(overrides = {}) {
         return { error: null };
       },
       auth: {
-        signOut: async () => {
+        signOut: async (options) => {
           events.push('signOut');
+          events.push(`signOut:scope:${options?.scope||'global'}`);
           await Promise.resolve();
           events.push('signOut:done');
           return { error: overrides.signOutError ? new Error('signOut failed') : null };
@@ -142,6 +143,12 @@ test('login simulato -> logout -> reload rispetta revoke -> cleanup -> signOut',
   assert.ok(events.indexOf('widget:clear') > -1 && events.indexOf('widget:clear') < signOutIndex);
   assert.deepEqual([...stored.keys()], ['us:push:subscription:user-2']);
   assert.ok(events.includes('cleanup:cache:us-private-media-v1'));
+});
+
+test('Scollega questo telefono chiude solo la sessione di questo telefono (05/11)', async () => {
+  const { context, events } = createHarness();
+  await context.logout();
+  assert.deepEqual(events.filter((event) => event.startsWith('signOut:scope:')), ['signOut:scope:local']);
 });
 
 test('cleanup best-effort: gli errori non bloccano signOut o reload', async () => {

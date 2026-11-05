@@ -1635,7 +1635,7 @@
     '· scegli tu quali ricevere.': '· you choose which ones to get.',
     '· resta collegato finché non lo scolleghi.': '· stays connected until you disconnect it.',
     // Disconnect
-    'Dovrai inserire di nuovo il codice privato per rientrare in US.': 'You’ll need to enter your private code again to get back into US.',
+    'Per rientrare in US userai la tua email o Google. Gli altri dispositivi restano collegati.': 'To get back into US you’ll use your email or Google. Your other devices stay signed in.',
     'Non riesco a scollegarlo': 'Couldn’t disconnect it',
     // Widgets
     'Un pensiero con un tocco, anche con US chiusa.': 'A thought in one tap, even when US is closed.',
@@ -2633,6 +2633,15 @@
     'Traguardi ogni 100 giorni insieme, e Rivivi nel giorno esatto di un ricordo.': 'Milestones every 100 days together, and Relive on the exact day of a memory.',
     'Inviti con un link che apre US, emoji in ogni campo e schermate più ariose.': 'Invites with a link that opens US, emoji in every field and airier screens.',
     'Da ora US si aggiorna da sola.': 'From now on US updates itself.',
+    // Novità 1.4 (04/11/2026)
+    'Noi nuova: il calendario con le foto dei vostri ricordi, e «Prossimi» per quello che vi aspetta.': 'The new Us: the calendar with the photos of your memories, and «Upcoming» for what is ahead.',
+    'La bacheca: post-it colorati da scrivere e spuntare insieme, e la lavagna su cui disegnare in due.': 'The board: coloured post-its to write and tick together, and a blackboard you both draw on.',
+    'La sfida della settimana in Gioca: una al lunedì, si chiude con una foto che diventa un ricordo.': 'The challenge of the week in Play: a new one on Monday, closed with a photo that becomes a memory.',
+    'Come stai: dite all’altra persona come state con un’emoji, per 12 ore.': 'How are you: tell the other person how you are with an emoji, for 12 hours.',
+    'La batteria di chi ami accanto alla distanza, su Oggi.': 'The battery of the one you love next to the distance, on Today.',
+    'Ricordi diventa un album: solo le vostre foto, mese per mese.': 'Memories becomes an album: only your photos, month by month.',
+    'Un nuovo sfondo, Vino, e in Sintonia le Atmosfere da sbloccare: Prugna, Notte blu, Grafite e altre.': 'A new background, Wine, and in Sintonia the Atmospheres to unlock: Plum, Night blue, Graphite and more.',
+    'Widget nuovi sulla Home: Ti penso con un tocco sul cuore, Post-it, Lavagna, Come stai e altri.': 'New widgets on the Home screen: Thinking of you with a tap on the heart, Post-it, Blackboard, How are you and more.',
     'Il vostro anno, finora': 'Your year, so far',
     'Il vostro primo anno': 'Your first year',
     'I vostri primi {n} mesi': 'Your first {n} months',

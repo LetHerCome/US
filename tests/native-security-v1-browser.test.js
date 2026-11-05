@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const { ROOT, loadChromium, startServer, FAKE_SUPABASE } = require('./helpers/oggi-browser');
+const { ROOT, loadChromium, startServer, FAKE_SUPABASE, stripThirdPartyIntegrity } = require('./helpers/oggi-browser');
 const { qaFixture } = require('./helpers/countdown-browser');
 
 const OWNER = crypto.createHash('sha256').update('f1').digest('hex');
@@ -62,7 +62,7 @@ async function harness(t) {
   const base = `http://127.0.0.1:${server.address().port}`;
   t.after(async () => { await browser.close(); await new Promise((resolve) => server.close(resolve)); });
   // Same transform scripts/build-capacitor-web.mjs applies to the native bundle.
-  const nativeIndex = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8')
+  const nativeIndex = stripThirdPartyIntegrity(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'))
     .replace('<html lang="it">', '<html lang="it" class="us-app-lock-pending">');
   return {
     async page({ enabled, width = 390, height = 844 }) {

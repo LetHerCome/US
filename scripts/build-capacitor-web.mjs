@@ -179,7 +179,9 @@ html = html
   .replace(/<button\b(?=[^>]*\bdata-us-setting=["']story-archive["'])[^>]*>[\s\S]*?<\/button>\s*/i, '')
   .replace(/<link\s+rel=["']preconnect["']\s+href=["']https:\/\/cdn\.jsdelivr\.net["'][^>]*>\s*/i, '')
   .replace(/<link\s+rel=["']dns-prefetch["']\s+href=["']\/\/cdn\.jsdelivr\.net["'][^>]*>\s*/i, '')
-  .replace(`${sourceCdn}"></script>`, '/vendor/supabase.js"></script>')
+  // The PWA tag carries the CDN path, integrity and crossorigin (audit 05/11):
+  // the native bundle swaps the whole tag for the local copy.
+  .replace(/<script defer src="https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@[^"]*"[^>]*><\/script>/, '<script defer src="/vendor/supabase.js"></script>')
   .replace(
     /(<script defer src="\/platform\.js(?:\?v=[^"]+)?"><\/script>)/,
     '<script defer src="/native-entry.js"></script>\n$1'
@@ -188,6 +190,8 @@ html = html
   // nothing private paints before app-lock.js has asked the native lock state.
   .replace(/<html lang="it">/, '<html lang="it" class="us-app-lock-pending">');
 if (
+  html.includes(sourceCdn) ||
+  !html.includes('src="/vendor/supabase.js"') ||
   !html.includes('src="/native-entry.js"') ||
   !html.includes('href="/native-frameless.css"') ||
   !html.includes('<html lang="it" class="us-app-lock-pending">') ||
