@@ -78,6 +78,11 @@ I widget sono la parte più vista nei video. Su iOS si fanno con un'estensione W
 
 Prima di W0 servono: l'account (App Group e Keychain condiviso si registrano sul profilo), la scelta del founder sull'ordine e un giro di disegni Pastello/Midnight in SwiftUI da approvare. Ogni fase si prova su staging prima della produzione.
 
+**Oggi su iPhone c'è già un widget (05/11/2026, dall'audit della produzione):** Bea usa un widget Scriptable servito dalla produzione, con le funzioni `us-widget-state` v9 e `widget-scriptable-setup` v6 del 25/09 e il cron `us-widget-scriptable-state-expiry`. C'è un'installazione attiva, con il token usato il 05/11.
+- Nel repository Scriptable è ritirato dal 06/10 (`tests/pre-native-cleanup.test.js`), ma il ritiro non è mai stato pubblicato. **Pubblicare `us-widget-state` dal repository spegnerebbe il widget di Bea.**
+- Piano: Scriptable resta com'è finché Foto & Noi e Ti penso (W1) non sono sull'iPhone di Bea. Poi si propone al founder di spegnerlo: funzioni, cron e token, ogni passo col suo via.
+- Fino ad allora nessuno tocca quelle funzioni né il cron (vale anche per il punto 7 dell'audit del 05/11).
+
 ## 5. Dopo l'acquisto dell'account
 
 Lista passo passo: [`docs/store/ios/GIORNO_ACQUISTO.md`](../store/ios/GIORNO_ACQUISTO.md). In breve: iscrizione come persona fisica (99 $ l'anno), Team ID, bundle `com.usapp.us`, chiave API di App Store Connect nei secret GitHub, chiave APNs `.p8` nei secret di Supabase (staging poi produzione), record dell'app, ID dell'App Store nel codice, AASA pubblicato, primo TestFlight, account demo per la revisione.

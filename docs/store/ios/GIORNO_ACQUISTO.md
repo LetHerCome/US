@@ -109,3 +109,4 @@ App Store Connect › la tua app › versione 1.4.0:
 - Versione minima iOS: `update public.app_min_version set min_version_code = <build> where platform = 'ios'` — produzione, con il tuo via, solo quando serve.
 - Widget, posto delle foto, Sign in with Apple: le fasi della [missione](../../missions/ios-store-v1.md).
 - Rinnovo dell'iscrizione: ogni anno; se scade, l'app sparisce dallo Store.
+- Widget Scriptable di Bea: resta acceso finché i widget WidgetKit Foto & Noi e Ti penso (fase W1) non sono sul suo iPhone. Poi si spegne, col tuo via: funzioni `us-widget-state` e `widget-scriptable-setup`, cron `us-widget-scriptable-state-expiry`, token rimasti. Prima di allora non si pubblica `us-widget-state` dal repository: spegnerebbe il widget di Bea.
