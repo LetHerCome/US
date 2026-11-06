@@ -2,7 +2,9 @@
 
 ## Patch 1.4.1: correzioni dell'audit della produzione (preparata il 05/11/2026)
 
-**Stato:** su staging dal 05/11, non in produzione. Unita nel branch di staging (merge `ff5e3159`, build `us-staging-20261105-102`); le tre migrazioni applicate su US-STAGING col workflow «Supabase SQL», approvate dal founder (run 42023293693, 42023355477, 42023675730). Sito di staging controllato: build nuova, minificato, integrità di supabase-js, nessun errore all'avvio. In produzione solo col via del founder. Rapporto: [`docs/audit/2026-11-05-audit-produzione.md`](../audit/2026-11-05-audit-produzione.md).
+**Uscita in produzione (06/11, col via del founder):** migrazioni applicate in produzione col workflow «Supabase SQL» dal commit di staging `0aa0fe96` (`couple_sync_v1` run 42295652661, controllata in sola lettura: tabella, 8 trigger, Realtime, RLS); sito dal branch `claude/rilascio-1-4-1` con la build `us-rilascio-20261106-105` (test 2567 passati, 0 falliti; build di produzione minificata). Novità alla prima apertura: resta l'id `1.4`, è una patch di correzioni.
+
+**Stato precedente:** su staging dal 05/11, non in produzione. Unita nel branch di staging (merge `ff5e3159`, build `us-staging-20261105-102`); le tre migrazioni applicate su US-STAGING col workflow «Supabase SQL», approvate dal founder (run 42023293693, 42023355477, 42023675730). Sito di staging controllato: build nuova, minificato, integrità di supabase-js, nessun errore all'avvio. In produzione solo col via del founder. Rapporto: [`docs/audit/2026-11-05-audit-produzione.md`](../audit/2026-11-05-audit-produzione.md).
 
 **Controllo del 05/11:** `npm test` 2687 test, 0 falliti; `npm run build:cloudflare-pages` con la minificazione ok. Test nel browser, sul codice e sul sito minificato: gli stessi fallimenti che ha già `main` (test rimasti indietro), più due che cedono solo sotto carico (attese di 30 s) e passano se lanciati da soli. Integrità di supabase-js e MapLibre provata dal vivo sul CDN.
 
