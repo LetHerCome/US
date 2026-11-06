@@ -109,7 +109,6 @@ function install(w){
   const key=()=>w.usProfile?`${w.usProfile.id}:${w.usProfile.couple_id}`:'';
   const opened=()=>Boolean(root?.classList.contains('open'));
   const db=()=>typeof sb!=='undefined'?sb:null;
-  const hostEl=h=>h==='sheet'?body:grid;
   const nameOf=id=>{
     if(!id)return '';
     if(id===me())return 'Tu';
@@ -272,7 +271,11 @@ function install(w){
       }
       return;
     }
+    const before=new Set(notes.map(n=>n.id));
     notes=data||[];loaded=true;loadedAt=Date.now();owner=k;
+    // Couple sync (05/11): the partner's deletion now arrives as a reload, not
+    // as a DELETE event; the post-it open here says so, as onChange does.
+    if(editing?.id&&before.has(editing.id)&&!notes.some(n=>n.id===editing.id)){editing.id=null;paintMeta();notice('L’altra persona ha staccato questo post-it. Se continui a scrivere, lo salvo di nuovo.');}
     if(!editing)paint();
     else{paint();notes.forEach(n=>repaintTile(n.id));}
   }

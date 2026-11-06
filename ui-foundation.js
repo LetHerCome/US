@@ -81,6 +81,15 @@
       documentRef.documentElement?.setAttribute('data-us-motion', reducedMotion ? 'reduced' : 'full');
       if (notify) motionSubscribers.forEach((listener) => listener(reducedMotion));
     };
+    // The page scrolled off its top: a band under the status bar keeps the
+    // clock readable over the content (styles.css, 06/11/2026).
+    const syncScrolled = () => {
+      const scrolled = (environment.scrollY ?? documentRef.documentElement?.scrollTop ?? 0) > 8;
+      if (scrolled) documentRef.documentElement?.setAttribute?.('data-us-scrolled', '');
+      else documentRef.documentElement?.removeAttribute?.('data-us-scrolled');
+    };
+    environment.addEventListener?.('scroll', syncScrolled, { passive: true });
+    syncScrolled();
     const onMotionChange = (event) => applyMotionPreference(event.matches);
     if (motionQuery?.addEventListener) motionQuery.addEventListener('change', onMotionChange);
     else motionQuery?.addListener?.(onMotionChange);

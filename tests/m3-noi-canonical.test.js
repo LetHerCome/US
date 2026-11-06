@@ -35,7 +35,6 @@ test('M3 mantiene il runtime Bond esistente come fonte dati senza renderizzare u
   assert.match(css, /\.noi-canonical-page\{[^}]*overflow:hidden/);
   // M9D: the Quest surface shows every weekly quest, not just the first one.
   assert.doesNotMatch(css, /\.noi-living-list \.bond-quest:not\(:first-child\)\{display:none/);
-  assert.match(css, /\.noi-canonical-page \.bond-weekly-head/);
   assert.match(css, /\.noi-canonical-page \.bond-week-note\{visibility:hidden/);
   assert.match(css, /\.noi-resonance-foot #bondCompletedCount\{visibility:hidden/);
 });

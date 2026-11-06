@@ -361,20 +361,9 @@
   justify-content:center;
 }
 
-.us-premium-glass {
-  background:
-    radial-gradient(120% 150% at 0% 0%,rgba(255,140,195,.07),transparent 47%),
-    radial-gradient(110% 140% at 100% 100%,rgba(156,113,255,.08),transparent 52%),
-    var(--us-premium-glass);
-  border:1px solid var(--us-premium-border);
-  box-shadow:var(--us-premium-shadow),var(--us-premium-inner-highlight);
-  backdrop-filter:blur(var(--us-premium-blur)) saturate(1.14);
-  -webkit-backdrop-filter:blur(var(--us-premium-blur)) saturate(1.14);
-}
-
 /* M1 typography applies only to the shared shell hierarchy. */
 body{font-family:var(--us-font-ui)}
-h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
+h1,h2,h3{font-family:var(--us-font-editorial)}
 
 .us-premium-control {
   border-radius:999px;
@@ -511,11 +500,11 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
    presentational: the tap handler navigates immediately. */
 [data-us-tile]{transition:transform var(--us-motion-press) var(--us-ease-standard)}
 [data-us-tile]:active{transform:scale(.975)}
-.us-content-enter{animation:us-content-enter var(--us-motion-fast) var(--us-ease-enter) 1 both}
+
 @keyframes us-content-enter{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:none}}
 :root[data-us-motion="reduced"] [data-us-tile]:active{transform:none}
-:root[data-us-motion="reduced"] .us-content-enter{animation:none}
-@media (prefers-reduced-motion:reduce){[data-us-tile]:active{transform:none}.us-content-enter{animation:none}}
+
+@media (prefers-reduced-motion:reduce){[data-us-tile]:active{transform:none}}
 
 /* Fluidità 1 — first loads show the shape of what is coming instead of a
    «Carico…» line. The words stay for screen readers (.us-sr, inside a
@@ -649,18 +638,7 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
   color:var(--us-color-danger-ink);
   box-shadow:inset 0 0 0 1px rgba(228,90,104,.30);
 }
-.us-icon-button {
-  width:44px;
-  height:44px;
-  min-width:44px;
-  padding:0;
-  display:inline-grid;
-  place-items:center;
-  border-radius:50%;
-  background:var(--us-glass-2-bg);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10),inset 0 1px 0 rgba(255,255,255,.055);
-  color:var(--us-color-text);
-}
+
 :where(button):disabled,
 :where(button)[aria-disabled="true"] {
   cursor:not-allowed;
@@ -691,47 +669,6 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 }
 
 /* Chip and segmented control: pill track, selected = accent soft. */
-.us-chip {
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:32px;
-  padding:0 12px;
-  border-radius:var(--us-radius-pill);
-  background:var(--us-glass-1-bg);
-  box-shadow:inset 0 0 0 1px var(--us-color-line);
-  color:var(--us-color-text-2);
-  font-size:var(--us-text-secondary);
-  font-weight:650;
-}
-.us-segment {
-  display:flex;
-  gap:4px;
-  padding:4px;
-  border-radius:var(--us-radius-pill);
-  background:var(--us-glass-1-bg);
-  box-shadow:inset 0 0 0 1px var(--us-color-line);
-}
-.us-segment>button {
-  flex:1 1 0;
-  min-height:40px;
-  padding:0 14px;
-  border-radius:var(--us-radius-pill);
-  background:transparent;
-  color:var(--us-color-text-2);
-  font-size:13px;
-  font-weight:650;
-  transition:background var(--us-motion-micro) var(--us-ease-standard),color var(--us-motion-micro) var(--us-ease-standard);
-}
-.us-chip[aria-pressed="true"],
-.us-chip.is-active,
-.us-segment>button.is-active,
-.us-segment>button[aria-pressed="true"],
-.us-segment>button[aria-selected="true"] {
-  background:var(--us-color-accent-soft);
-  box-shadow:inset 0 0 0 1px var(--us-color-accent-line);
-  color:var(--us-color-text);
-}
 
 /* Close: one button for every popup, sheet and viewer (Phosphor X). */
 .us-modal-close {
@@ -804,15 +741,6 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
   border-radius:var(--us-radius-sheet);
 }
 /* Sheet header: eyebrow + editorial title + close, same rhythm everywhere. */
-.us-sheet-title {
-  margin:4px 0 0;
-  font-family:var(--us-font-editorial);
-  font-size:24px;
-  font-weight:500;
-  line-height:1.15;
-  letter-spacing:-.3px;
-  color:var(--us-color-text);
-}
 
 /* Confirmation (UsUiFoundation.confirm): a small floating sheet. */
 .us-confirm {

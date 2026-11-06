@@ -274,7 +274,7 @@ test('once the source declares the guarded FCM service, test builds must ship it
 });
 
 test('signed internal APK workflows never upload an installable APK in clear from a public repo', () => {
-  for (const file of ['android-internal-release.yml', 'android-candidate-signed.yml', 'android-ui-integration-signed.yml']) {
+  for (const file of ['android-internal-release.yml']) {
     const workflow = read(`.github/workflows/${file}`);
     const guard = workflow.indexOf('Keep signed APK out of public artifacts');
     const upload = workflow.indexOf('actions/upload-artifact');
@@ -288,7 +288,7 @@ test('signed internal APK workflows never upload an installable APK in clear fro
 });
 
 test('signing workflows mask keystore passwords before exporting them to later steps', () => {
-  for (const file of ['android-internal-release.yml', 'android-candidate-signed.yml', 'android-ui-integration-signed.yml']) {
+  for (const file of ['android-internal-release.yml']) {
     const workflow = read(`.github/workflows/${file}`);
     for (const field of ['storePassword', 'keyPassword']) {
       const mask = workflow.indexOf(`::add-mask::$($bundle.${field})`);

@@ -7,6 +7,9 @@ const path = require('node:path');
 const { createRequire } = require('node:module');
 
 const ROOT = path.resolve(__dirname, '../..');
+// US_TEST_WEB_ROOT=dist/cloudflare-pages runs the same browser tests against the
+// published (minified) bundle instead of this checkout (audit 05/11).
+const WEB_ROOT = process.env.US_TEST_WEB_ROOT ? path.resolve(ROOT, process.env.US_TEST_WEB_ROOT) : ROOT;
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
   '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml',
   '.png': 'image/png', '.webp': 'image/webp', '.woff2': 'font/woff2' };
@@ -25,16 +28,23 @@ function loadChromium() {
   return null;
 }
 
+// The real index.html pins supabase-js with Subresource Integrity (audit 05/11).
+// These tests answer that URL with an in-page fake, whose body can never match
+// the production hash: the local server serves the page without the pin.
+function stripThirdPartyIntegrity(html) {
+  return String(html).replace(/(<script defer src="https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@[^"]+") integrity="[^"]+" crossorigin="anonymous"/, '$1');
+}
+
 function startServer() {
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://127.0.0.1');
-    let file = path.join(ROOT, decodeURIComponent(url.pathname));
-    if (!file.startsWith(ROOT)) { res.writeHead(403); res.end(); return; }
-    if (url.pathname === '/' || !path.extname(file)) file = path.join(ROOT, 'index.html');
+    let file = path.join(WEB_ROOT, decodeURIComponent(url.pathname));
+    if (!file.startsWith(WEB_ROOT)) { res.writeHead(403); res.end(); return; }
+    if (url.pathname === '/' || !path.extname(file)) file = path.join(WEB_ROOT, 'index.html');
     fs.readFile(file, (error, body) => {
       if (error) { res.writeHead(404); res.end(); return; }
       res.writeHead(200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream' });
-      res.end(body);
+      res.end(path.extname(file) === '.html' ? stripThirdPartyIntegrity(body) : body);
     });
   });
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
@@ -96,4 +106,4 @@ const FAKE_SUPABASE = `(() => {
   window.supabase = { createClient: () => client };
 })();`;
 
-module.exports = { ROOT, loadChromium, startServer, FAKE_SUPABASE };
+module.exports = { ROOT, loadChromium, startServer, FAKE_SUPABASE, stripThirdPartyIntegrity };

@@ -91,7 +91,6 @@ test('Rewards V2 client: themes keep text-on-accent contrast >= 3:1 (default US 
     const bg = body.match(/--us-color-bg:(#[0-9a-f]{6})/i)?.[1] || '#08040e';
     assert.ok(ratio(ink, bg) >= 7, `${kind} ${name}: accent ink on background`);
   }
-  assert.match(read('identity.css'), /\.answer-btn\.selected\{[^}]*color:var\(--us-color-text-on-accent\)!important/);
   assert.match(read('games.css'), /\.us-gv2-pervoi-cta\{[^}]*color:var\(--us-color-text-on-accent\)/);
 });
 

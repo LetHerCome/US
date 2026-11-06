@@ -29,7 +29,6 @@ const label = (role) => window.UsIdentity?.current().nameForRole(role) || 'La tu
 const asWritten = (yes) => (yes ? ' translate="no"' : '');
 const coupleWritten = (item) => item?.source_type === 'couple_custom';
 const myRole = () => window.usProfile?.role || null;
-const partnerRole = () => (myRole() === 'francesco' ? 'beatrice' : 'francesco');
 const partnerName = () => window.UsIdentity?.current().partnerName || 'La tua persona';
 const familyName = (id) => (id === 'per_voi' ? PER_VOI.name : id === 'swipe' ? SWIPE.name : FAMILY[id]?.name || 'Gioca');
 const icon = (name) => `<span class="us-gv2-icon" data-gv2-icon="${esc(name)}" aria-hidden="true"></span>`;

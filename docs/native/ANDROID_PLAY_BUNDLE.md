@@ -74,7 +74,7 @@ Play Console può chiedere di completare alcune dichiarazioni (privacy, accesso 
 ## Limiti noti
 
 - `RECORD_AUDIO` assente dal manifest: il gate lo segnala come avviso (roadmap B2, manifest di competenza delle notifiche).
-- APK interni firmati (`android-internal-release.yml`, `android-candidate-signed.yml`, `android-ui-integration-signed.yml`): finché il repository è pubblico l'APK non viene più caricato in chiaro. Viene caricato solo cifrato (7z AES-256) se esiste il segreto facoltativo `ANDROID_INTERNAL_ARTIFACT_PASSWORD` (≥ 24 caratteri), altrimenti restano solo hash, firma e info di build. Gli artifact già pubblicati prima di questa modifica restano scaricabili fino alla loro scadenza (30 giorni). Il workflow di staging della PR #187 (`s3-staging-android-qa.yml`) va protetto allo stesso modo.
+- APK interni firmati (`android-internal-release.yml`; i vecchi `android-candidate-signed.yml` e `android-ui-integration-signed.yml` sono stati tolti il 05/11/2026): finché il repository è pubblico l'APK non viene più caricato in chiaro. Viene caricato solo cifrato (7z AES-256) se esiste il segreto facoltativo `ANDROID_INTERNAL_ARTIFACT_PASSWORD` (≥ 24 caratteri), altrimenti restano solo hash, firma e info di build. Gli artifact già pubblicati prima di questa modifica restano scaricabili fino alla loro scadenza (30 giorni). Il workflow di staging della PR #187 (`s3-staging-android-qa.yml`) va protetto allo stesso modo.
 - Gli asset sorgente (`assets/source`) restano nel bundle (roadmap B3).
 
 ## Prima prova reale (13/10/2026, commit `adace8c`, modo test)

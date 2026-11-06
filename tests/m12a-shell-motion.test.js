@@ -235,7 +235,6 @@ test('tiles: Gioca destinations share one press + destination primitive', () => 
   assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-game/);
   assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-pervoi/);
   assert.match(foundationCss, /\[data-us-tile\]:active\{transform:scale\(\.975\)\}/);
-  assert.match(foundationCss, /\.us-content-enter\{animation:us-content-enter var\(--us-motion-fast\)/);
   assert.match(foundationCss, /@keyframes us-content-enter\{from\{opacity:0;transform:translate3d\(0,8px,0\)\}/);
   assert.match(read('styles.css'), /#bond \.noi-canonical-page:not\(\[data-noi-view="hub"\]\)>:is\(/);
   // Purely presentational: opening is not delayed.
