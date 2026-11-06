@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: the home screen tells the live/debug app apart from the
+     installed US and US STAGING apps. -->
+<resources>
+    <string name="app_name">US LIVE</string>
+    <string name="title_activity_main">US LIVE</string>
+</resources>

@@ -15,7 +15,9 @@
     "build:capacitor-web": "node scripts/build-capacitor-web.mjs",
     "visual-lab": "node scripts/visual-lab-server.mjs",
     "build:cloudflare-pages": "node scripts/build-cloudflare-pages.mjs && node scripts/minify-web.mjs dist/cloudflare-pages",
-    "build:us-staging-pages": "node scripts/build-cloudflare-pages.mjs && US_S31_STAGING_PREVIEW=true node scripts/build-s31-staging-preview.mjs && node scripts/minify-web.mjs dist/s31-staging-preview"
+    "build:us-staging-pages": "node scripts/build-cloudflare-pages.mjs && US_S31_STAGING_PREVIEW=true node scripts/build-s31-staging-preview.mjs && node scripts/minify-web.mjs dist/s31-staging-preview",
+    "android:live": "node scripts/android-live.mjs serve",
+    "android:live:apk": "node scripts/android-live.mjs apk"
   },
   "dependencies": {
     "@capacitor/android": "8.5.0",

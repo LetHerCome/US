@@ -55,6 +55,10 @@ Controllo prima dell'uscita (04/11): revisione del codice main…staging (3 corr
 
 Note: `export-my-data` resta spenta (D-7), quindi le modifiche a `s3-2-export-core.mjs` non si distribuiscono. `notification-core.mjs` cambia solo con voci nuove: `calendar-reminders-worker` e `monthiversary-job` non vanno ridistribuite.
 
+## Android live, strumento di prova (04/11/2026)
+
+**Stato:** solo strumento di sviluppo, niente da portare agli utenti. `scripts/android-live.mjs` e `docs/native/ANDROID_LIVE.md`. Tocca `android/app/build.gradle` (id `com.usapp.us.staging.live` solo con `US_STAGING_QA` e `US_ANDROID_LIVE`) e aggiunge `android/app/src/debug/` (HTTP verso localhost e nome «US LIVE», solo nelle build di debug). Release e AAB di produzione restano uguali: quando staging va su `main` questi file possono venire con il resto.
+
 ## Lavagna in Noi e widget «Lavagna» (03/11/2026, fase 2 della Noi nuova)
 
 **Stato:** su staging dal 03/11 (SQL e `send-web-push` applicati con il via del founder), non in produzione. Va in produzione insieme a tutta la Noi nuova, solo con il via del founder. Missione: `docs/missions/lavagna-v1.md`.
