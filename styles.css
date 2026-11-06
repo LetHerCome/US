@@ -5,6 +5,11 @@ radial-gradient(circle at 20% -10%,rgba(255,102,142,.13),transparent 35%),
 radial-gradient(circle at 90% 10%,rgba(169,133,255,.10),transparent 28%),var(--bg);
 color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
 body{min-height:100vh}
+/* Edge to edge, the page scrolls under the status bar: once it leaves its top,
+   a band of the theme's night keeps the clock readable (ui-foundation.js sets
+   data-us-scrolled, 06/11/2026). Pointer-transparent; sheets sit above it. */
+body::after{content:"";position:fixed;z-index:var(--us-layer-chrome);top:0;left:0;right:0;height:calc(var(--us-safe-top) * 1.4);pointer-events:none;opacity:0;transition:opacity .2s;background:linear-gradient(180deg,color-mix(in srgb,var(--us-color-bg) 94%,transparent) 0,color-mix(in srgb,var(--us-color-bg) 86%,transparent) 70%,transparent 100%)}
+html[data-us-scrolled] body::after{opacity:1}
 .app{max-width:480px;margin:0 auto;min-height:100vh;padding:var(--us-safe-top) 16px calc(92px + var(--us-safe-bottom))}
 .top{padding:18px 4px 12px;display:flex;justify-content:space-between;align-items:center}
 

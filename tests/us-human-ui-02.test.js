@@ -296,7 +296,7 @@ test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the cou
   assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'together-mode', 'story-archive', 'leave-couple']);
   assert.match(scope('voi'), /<article class="us-couple-id-card" id="usCoupleIdCard"/, 'the couple card is shared state');
   assert.match(scope('tu'), /<h3 id="usSettingsTuTitle">Tu<\/h3>/);
-  assert.match(scope('voi'), /<h3 id="usSettingsVoiTitle">Voi<\/h3>/);
+  assert.match(scope('voi'), /<h3 id="usSettingsVoiTitle">Voi due<\/h3>/);
 });
 
 test('Settings: every control exists exactly once and keeps its existing action', () => {

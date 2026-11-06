@@ -855,7 +855,7 @@
     'Torna a Noi': 'Back to Us',
     'Altre sezioni di Noi': 'More of Us',
     'Sezioni di Noi': 'Us sections',
-    Lavagna: 'Board',
+    Lavagna: 'Blackboard',
     'Di coppia': 'For two',
     Eventi: 'Events',
     'Date speciali': 'Special dates',
