@@ -2,7 +2,7 @@
 
 ## Patch 1.4.2: errori dell'app e domanda di oggi mentre si aspetta il partner (09/11/2026)
 
-**Stato:** preparata il 09/11 sul branch `claude/misure-e-attesa` (da `main` 1.4.1), da portare su staging. Non in produzione. Nasce dall'ispezione del 09/11 verso l'uscita pubblica: l'uso dei tester cala (Ti penso da 32 a 16 a settimana; 5 persone su 14 ancora attive dopo 7 giorni di coppia), nessuno vede gli errori sui telefoni, e chi aspetta il partner trova solo il codice.
+**Stato:** su staging dal 09/11 (commit `3b5667f0` nel branch di staging, build `us-staging-20261109-106`), non in produzione. Migrazione `client_errors_v1` applicata su US-STAGING col workflow «Supabase SQL», approvata dal founder (run 42679596506), e controllata in sola lettura: tabella con RLS, `report_client_errors` per `authenticated` e non per `anon`, nessuna lettura dall'app, pulizia notturna. Sul sito di staging: il modulo degli errori è il primo script differito, la chiamata senza account è rifiutata (401, 42501) e senza sessione l'app non manda niente; nessun errore all'avvio. Il salvataggio con un account e la schermata d'attesa sono provati nei test e nel browser locale col finto Supabase, non ancora con un account vero su staging. Nasce dall'ispezione del 09/11 verso l'uscita pubblica: l'uso dei tester cala (Ti penso da 32 a 16 a settimana; 5 persone su 14 ancora attive dopo 7 giorni di coppia), nessuno vede gli errori sui telefoni, e chi aspetta il partner trova solo il codice.
 
 **Novità per Play** (se esce con un AAB)
 - IT: «Mentre aspetti la tua persona puoi già rispondere alla domanda di oggi: l'invito le dice che ti aspetta la tua risposta.»
