@@ -245,7 +245,7 @@ html .auth-overlay #usVerifyBack,
 html .auth-overlay #usOnboarding :is(.us-auth-primary,#mc3Retry){min-height:52px}
 /* The design's disabled button: .45, no other change (fix4.css dims every
    disabled button to .58 and desaturates it, both !important). */
-html .auth-overlay :is(.us-auth-primary,#mc3ShareCode,#mc3CopyCode,#mc3Retry,#usVerifyResend):disabled,
+html .auth-overlay :is(.us-auth-primary,#mc3ShareCode,#mc3CopyCode,#mc3TodaySave,#mc3Retry,#usVerifyResend):disabled,
 .us-setup .us-auth-primary:disabled,
 .us-setup .us-setup-secondary:disabled{opacity:.45!important;filter:none}
 /* A link never dims (the design's .link): while something works it is only out of reach. */
@@ -257,6 +257,7 @@ html .auth-overlay #usOnboarding[data-us-busy] :is(button,input,select,textarea)
 html .auth-overlay #mc3BackCreate,
 html .auth-overlay #mc3BackJoin,
 html .auth-overlay #mc3CopyCode,
+html .auth-overlay #mc3TodaySave,
 html .auth-overlay :is(#usGoogleSignIn,#usGoogleSignUp),
 html .auth-overlay #usVerifyResend,
 html .auth-overlay #mc3Waiting.has-code #mc3Generate,
@@ -763,6 +764,20 @@ html .auth-overlay #mc3Waiting .mc3-actions>button,
 html .auth-overlay #mc3CodeArea>*,
 html .auth-overlay #mc3CodeArea .us-auth-field{order:0}
 html .auth-overlay #mc3Waiting .us-ob-invite-help{margin-top:-6px}
+/* Waiting for the partner (09/11/2026): today's question in a card like the invite status, before the closing note. */
+#mc3Waiting .us-ob-today{order:6}
+html .auth-overlay #usOnboarding .us-ob-today:not([hidden]){display:grid;gap:12px;margin:0;padding:16px;border-radius:22px;border:1px solid var(--us-color-line);background:var(--us-color-surface)}
+html .auth-overlay #usOnboarding .us-ob-today-kicker{margin:0;color:var(--us-color-text-3);font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase}
+html .auth-overlay #usOnboarding .us-ob-today-question{margin:0;color:var(--us-color-text);font:500 18px/1.35 var(--us-font-editorial);overflow-wrap:anywhere}
+html .auth-overlay #usOnboarding .us-ob-today .us-auth-field>span{font-size:11px;letter-spacing:.14em}
+html .auth-overlay .auth-card #mc3TodayAnswer{min-height:96px;padding:12px 14px;resize:vertical}
+html .auth-overlay .auth-card #mc3TodayAnswer:read-only{opacity:.8}
+html .auth-overlay #mc3Waiting .us-ob-today .mc3-help{text-align:left}
+/* The step's own order (fields 3, help 3) would lift the button over the field: inside the card, reading order. */
+html .auth-overlay #usOnboarding .us-ob-today>*{order:0}
+html .auth-overlay #mc3Waiting #mc3TodaySave{margin:0}
+html .auth-overlay #mc3Waiting #mc3TodaySave[hidden]{display:none}
+.us-ob-today-status[data-kind="error"]{color:var(--us-rosso)}
 
 /* ---------- The phone setup after pairing (#usDeviceSetup) ---------- */
 .us-setup{

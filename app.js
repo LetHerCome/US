@@ -987,6 +987,13 @@ const usOnboarding=window.UsOnboarding.mount({
   // the "Tu" step is one yearly event, through the same insert as events.js.
   openStep:id=>showAuthStep(id),
   insertEvent:row=>sb.from('shared_events').insert(row),
+  // Waiting for the partner (09/11/2026): today's question on the invite
+  // screen, through the same RPC and the same answer row as Oggi (saveAnswer).
+  daily:{
+    question:()=>usWithDeadline(sb.rpc('get_or_create_daily_question'),5000),
+    readAnswer:(questionId,userId)=>usWithDeadline(sb.from('daily_answers').select('answer').eq('question_id',questionId).eq('user_id',userId).maybeSingle(),5000),
+    saveAnswer:row=>sb.from('daily_answers').upsert({...row,updated_at:new Date().toISOString()},{onConflict:'question_id,user_id'})
+  },
   signOut:async()=>{
     const revocation=revokeCurrentDevice();
     usInvalidateAuth({revokePush:false});

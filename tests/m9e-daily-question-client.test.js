@@ -186,7 +186,9 @@ test('M9E client: giorno client allineato a Europe/Rome attorno alla mezzanotte'
 test('M9E client: una sola authority, niente fallback da seed scaduto, card M9B con stato di errore', () => {
   const hydrate = slice('async function hydrateToday(){', 'async function updateHomeStatus');
   assert.doesNotMatch(app, /from\('daily_questions'\)/, 'client never queries daily_questions by date');
-  assert.equal((app.match(/rpc\('get_or_create_daily_question'/g) || []).length, 1);
+  // Two callers of the one authority: Oggi, and the waiting screen of the onboarding (09/11/2026).
+  assert.equal((app.match(/rpc\('get_or_create_daily_question'/g) || []).length, 2);
+  assert.match(app, /daily:\{\s*question:\(\)=>usWithDeadline\(sb\.rpc\('get_or_create_daily_question'\),5000\)/);
   assert.equal((app.match(/rpc\('get_daily_state'/g) || []).length, 1);
   assert.doesNotMatch(app, /La prossima domanda sta arrivando/);
   assert.doesNotMatch(hydrate, /localDateISO/);

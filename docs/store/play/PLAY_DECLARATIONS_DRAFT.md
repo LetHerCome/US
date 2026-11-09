@@ -21,7 +21,7 @@ Documenti collegati: `PRIVACY_POLICY_DRAFT.md` e `TERMS_DRAFT.md` con le version
 | Offrite un modo per chiedere l'eliminazione dei dati? | Sì **[DIPENDE #190]** | oggi assente; la #190 aggiunge eliminazione in app, pagina web `/elimina-account` ed email |
 | Dati raccolti solo per uso effimero? | No | i contenuti restano salvati per la coppia |
 
-Nessun SDK di analisi, pubblicità o crash reporting. Nessun permesso AD_ID (verificato dal gate AAB). Nessuna vendita di dati.
+Nessun SDK di analisi, pubblicità o crash reporting: dal 09/11/2026 gli errori dell'app li salva US nel suo database (vedi «Informazioni e prestazioni dell'app» qui sotto). Nessun permesso AD_ID (verificato dal gate AAB). Nessuna vendita di dati.
 
 ### 1.2 Tipi di dati
 
@@ -41,6 +41,7 @@ Nessun SDK di analisi, pubblicità o crash reporting. Nessun permesso AD_ID (ver
 | Attività nelle app › Interazioni | progressi, giochi giocati, streak | Sì | No | Sì |
 | Attività nelle app › Cronologia ricerche in-app | testo cercato nel pannello musica | Sì | **Vedi nota Spotify** | No |
 | ID dispositivo o altri ID | token FCM, ID installazione, sottoscrizione Web Push | Sì | No | No (solo se si attivano le notifiche) |
+| Informazioni e prestazioni dell'app › Log degli arresti anomali; Diagnostica | errori JavaScript dell'app: messaggio ripulito (senza indirizzi, email, numeri lunghi o testi tra virgolette), file e riga, build, piattaforma; legati all'account, cancellati dopo 30 giorni (`private.client_errors`, migrazione `client_errors_v1`, 09/11/2026). Scopo: funzionalità dell'app | Sì | No | Sì |
 
 Non raccolti: dati finanziari, salute, contatti, calendario di sistema, file, SMS, cronologia web, ID pubblicitario, dati biometrici (lo sblocco con impronta resta sul telefono e non arriva al server).
 

@@ -25,6 +25,7 @@ const RUNTIME_FILES = [
   'styles.css',
   'ui-foundation.css',
   'ui-foundation.js',
+  'client-errors.js',
   'platform.js',
   'app-update.js',
   'person-colors.js',
