@@ -70,6 +70,12 @@ android {
         if (System.getenv('US_STAGING_QA') == 'true') {
             applicationId "com.usapp.us.staging"
             manifestPlaceholders = [usInviteHost: "us-staging-s31.pages.dev", usInviteHostOld: "us-staging-s31.pages.dev"]
+            // Android live (04/11/2026): a debug app of its own, beside the signed
+            // staging QA app, whose web part comes from this PC
+            // (scripts/android-live.mjs). Never a release or a Play build.
+            if (System.getenv('US_ANDROID_LIVE') == 'true') {
+                applicationId "com.usapp.us.staging.live"
+            }
         }
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion

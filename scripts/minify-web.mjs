@@ -34,6 +34,13 @@ export async function minifyWebBundle(directory) {
     .filter((entry) => entry.isFile() && /\.(js|css)$/.test(entry.name))
     .map((entry) => entry.name)
     .sort();
+  // us-staging-s31 builds every branch; any branch but staging gets only the
+  // placeholder page (build-s31-staging-preview.mjs): nothing to minify.
+  if (!files.length) {
+    const { PLACEHOLDER_HTML } = await import('./build-s31-staging-preview.mjs');
+    const index = await readFile(path.join(target, 'index.html'), 'utf8').catch(() => null);
+    if (index === PLACEHOLDER_HTML) return { files: 0, before: 0, after: 0, placeholder: true };
+  }
   if (!files.includes('app.js') || !files.includes('styles.css')) {
     throw new Error(`minify-web: ${target} does not look like a US web bundle`);
   }
@@ -62,8 +69,9 @@ export async function minifyWebBundle(directory) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const directory = process.argv[2];
   if (!directory) throw new Error('minify-web: pass the dist directory');
-  const { files, before, after, skipped } = await minifyWebBundle(path.resolve(ROOT, directory));
+  const { files, before, after, skipped, placeholder } = await minifyWebBundle(path.resolve(ROOT, directory));
   const kb = (bytes) => `${Math.round(bytes / 1024)} KB`;
-  if (skipped) console.warn(`minify-web: esbuild is not installed, ${files} files ship unminified`);
+  if (placeholder) console.log('minify-web: placeholder page only (not the staging branch), nothing to minify');
+  else if (skipped) console.warn(`minify-web: esbuild is not installed, ${files} files ship unminified`);
   else console.log(`Web bundle minified: ${files} files, ${kb(before)} -> ${kb(after)}`);
 }
