@@ -2,7 +2,7 @@
 
 ## Patch 1.5: versione pubblica, tre partite al giorno e «US Plus, in arrivo» (13/11/2026)
 
-**Stato:** in preparazione sul branch `claude/beta-release-date-4799e4`, sopra lo staging (1.4.2). Il founder ha chiesto di provarla solo nell'emulatore di staging e poi di passare alla produzione. Decisione: [DECISIONS.md, 13/11](../DECISIONS.md).
+**Stato:** provata il 13/11 nell'emulatore di staging (build `us-staging-20261113-107`, migrazioni su US-STAGING run 43456669485 e 43456698374: contatore «3 su 3», «Avvisatemi» salvato davvero). Uscita in produzione col via del founder («Sì, vai in prod», 13/11): build `us-rilascio-20261113-108`, Novità id `1.5`. Decisione: [DECISIONS.md, 13/11](../DECISIONS.md).
 
 **Novità per Play**
 - IT: «Ora le partite di Gioca sono 3 al giorno, e un contatore vi dice quante ne restano. Mentre aspetti la tua persona puoi già rispondere alla domanda di oggi. In arrivo: US Plus.»
