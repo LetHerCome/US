@@ -479,3 +479,12 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Colori a scelta:** restano gratis per tutti finché Plus non si può comprare (come nella beta, `plus_on_sale` spento).
 - **«US Plus, in arrivo»:** in Impostazioni (gruppo US Plus) e dalla riga di Gioca, una schermata con cosa sbloccherà (D4 §5, senza i Ricordi finché il limite non è fissato), «Quello che usate oggi resta gratis, per sempre» e «Avvisatemi quando arriva». Nessun prezzo e nessun acquisto. «Avvisatemi» salva solo l'account e la data (`private.plus_waitlist`), si toglie con «Non avvisarmi più» e va via con l'account; il founder legge solo il conteggio.
 - **Le sponsorizzate aspettano Plus in vendita;** il marketing parte con i video di Bea, gratis.
+
+## 2026-11-13 — Cupido: il regista dietro le quinte (da progettare)
+
+**Fonte:** founder, 13/11/2026, sessione /grill-me: un'AI dietro le quinte, «una sorta di cupido» che ricorda cosa ha fatto l'uno per l'altra e manda spinte; decisioni D1–D22, riepilogo confermato con «Sì, scrivilo». Progetto: [`docs/product/2026-11-13-cupido.md`](product/2026-11-13-cupido.md).
+
+- **Cosa:** Cupido (nome interno) spinge l'uno verso l'altra usando la storia della coppia. Suggerisce e prepara, il gesto lo fa sempre la persona: niente invii a nome di nessuno. Onnisciente per decidere, muto sui contenuti che l'altro non ha visto; mai umore, litigi, salute, gelosia, ex, soldi, sesso.
+- **Gratis:** fase 1 a regole, senza AI, voce «US ti ricorda». **US Plus e livello 3:** fase 2 con Claude Haiku 5.5, voce del Compagno in una bolla da fumetto, consenso di tutti e due, memoria visibile e cancellabile.
+- **Non si costruisce ancora.** Prima lo studio (costi veri, privacy, prototipo a regole su staging, poi prototipo LLM su staging con coppie finte entro un budget approvato). Dopo lo studio il founder decide se costruire. Per Plus in produzione serve un credito API separato con DPA, ciascuna spesa con la sua approvazione.
+- Non cambia i no del 05/11: niente coach AI, chat generica o terapia.
