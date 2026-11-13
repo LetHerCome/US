@@ -100,7 +100,7 @@ function tzOffsetMinutes(at: Date): number {
 
 function humanOffset(offsetMinutes: number): string {
   if (offsetMinutes === 1440) return "Domani";
-  if (offsetMinutes === 60) return "Tra un'ora";
+  if (offsetMinutes === 60) return "Tra un’ora";
   return `Tra ${offsetMinutes} minuti`;
 }
 
@@ -145,7 +145,7 @@ Deno.serve(async (request) => {
     if (entriesError) throw entriesError;
     const entryById = new Map((entries || []).map((e: EntryRow) => [e.id, e]));
 
-    // Nome del richiedente per la copia "X ti ricorda — …" (display name
+    // Nome del richiedente per la copia "X ti ricorda: …" (display name
     // reale dal profilo, mai hardcoded).
     const requesterIds = [...new Set(rows.map((r) => r.requested_by))];
     const { data: requesters, error: requestersError } = await admin
@@ -190,15 +190,15 @@ Deno.serve(async (request) => {
     // la consegna (Web Push + app native) passa dal dispatcher condiviso.
     for (const { reminder, entry } of dueRows) {
       const requesterName = nameByRequester.get(reminder.requested_by) || "La tua persona";
-      // Copia: se il destinatario È il richiedente → "Tra un'ora — Titolo";
-      // se è l'altro → "Francesco ti ricorda — Cena alle 20:30 ♡".
+      // Copia: se il destinatario È il richiedente → "Tra un’ora: Titolo";
+      // se è l'altro → "Francesco ti ricorda: Cena alle 20:30 ♡".
       const isSelf = reminder.recipient_id === reminder.requested_by;
       const when = entry.is_all_day
         ? "oggi"
         : formatWhen(entry.starts_at);
       const body = isSelf
-        ? `${humanOffset(reminder.offset_minutes)} — ${entry.title}`
-        : `${requesterName} ti ricorda — ${entry.title}${when && when !== "oggi" ? ` alle ${when}` : ""} ♡`;
+        ? `${humanOffset(reminder.offset_minutes)}: ${entry.title}`
+        : `${requesterName} ti ricorda: ${entry.title}${when && when !== "oggi" ? ` alle ${when}` : ""} ♡`;
 
       const result = await deliverNotification(admin, {
         notification: buildNotification("calendar_reminder", { reminderId: reminder.id, entryId: entry.id, body }),

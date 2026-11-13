@@ -1,7 +1,7 @@
 /* «La cosa di oggi» (founder, 13/11/2026, docs/DECISIONS.md): the Domanda di
    oggi card on Oggi (app.js renderDailyRitual) goes on after the answers.
    Instead of «Rivedi» it offers the next gesture (a Ti penso), then closes the
-   day («Oggi ci siete stati tutti e due ♡»); in the first week it brings the
+   day («Oggi c’eravate voi due ♡»); in the first week it brings the
    day's step after the question; the gentle streak takes the place of «Una
    domanda, due risposte». The server counts everything (public.cosa_di_oggi);
    this file only reads it, words it and celebrates it. */
@@ -16,7 +16,7 @@
     daily: { text: () => 'Rispondete alla vostra prima domanda', cta: 'Rispondi', next: 'la prima domanda' },
     think: { text: (p) => `Manda il primo Ti penso a ${p}`, cta: 'Ti penso', next: 'il primo Ti penso', heart: true },
     game: { text: () => 'Fate la vostra prima partita', cta: 'Gioca', next: 'la prima partita' },
-    moment: { text: () => 'Salvate il vostro primo Ricordo', cta: 'Aggiungi', next: 'il primo Ricordo' },
+    moment: { text: () => 'Salvate il vostro primo ricordo', cta: 'Aggiungi', next: 'il primo ricordo' },
     calendar: { text: () => 'Mettete un impegno nel calendario', cta: 'Aggiungi', next: 'un impegno nel calendario' },
     left: { text: (p) => `Lascia qualcosa da aprire a ${p}`, cta: 'Lascia', next: 'Lasciato per te' },
     widget: { text: () => 'Metti US sulla tua Home', cta: 'Widget', next: 'il widget sulla Home' },
@@ -75,7 +75,7 @@
       }
     }
     if (!s.today?.my_think) return { ...base, look: 'think', question: `Manda un Ti penso a ${partner}`, cta: 'Ti penso', ctaHtml: ctaHtml('Ti penso', true), action: 'think' };
-    if (s.today?.counted) return { ...base, look: 'closed', question: 'Oggi ci siete stati tutti e due ♡', cta: 'Rivedi', ctaHtml: ctaHtml('Rivedi') };
+    if (s.today?.counted) return { ...base, look: 'closed', question: 'Oggi c’eravate voi due ♡', cta: 'Rivedi', ctaHtml: ctaHtml('Rivedi') };
     return model;
   }
 
@@ -182,7 +182,7 @@
     else if (list.includes('record') && once(`record:${s?.streak}:${day}`)) setTimeout(() => party('Nuovo record ♡', `${s.streak} giorni di fila insieme`), 400);
     else {
       const m = list.find((x) => x.startsWith('milestone:'));
-      if (m && once(`${m}:${day}`)) setTimeout(() => party(`${m.slice(10)} giorni di fila ♡`, 'Continuate così, insieme'), 400);
+      if (m && once(`${m}:${day}`)) setTimeout(() => party(`${m.slice(10)} giorni di fila ♡`, 'Continuate così'), 400);
     }
   }
 

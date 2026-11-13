@@ -44,12 +44,12 @@
       root.className = 'us-top-profiles';
       root.innerHTML = `
         <div class="us-top-story" id="usStoryPartner">
-          <button type="button" class="us-top-story-btn us-important-control" id="usStoryPartnerOpen" aria-label="Stories del partner">
-            <span class="us-top-story-ring"><span class="us-top-story-avatar"><img id="usStoryPartnerImg" alt="Foto profilo partner" hidden><span class="fallback" id="usStoryPartnerFallback">♡</span></span></span>
+          <button type="button" class="us-top-story-btn us-important-control" id="usStoryPartnerOpen" aria-label="Stories della tua persona">
+            <span class="us-top-story-ring"><span class="us-top-story-avatar"><img id="usStoryPartnerImg" alt="Foto profilo della tua persona" hidden><span class="fallback" id="usStoryPartnerFallback">♡</span></span></span>
             <span class="us-top-story-dot" aria-hidden="true"></span>
           </button>
         </div>
-        <button type="button" class="us-story-add-only us-important-control us-premium-control" id="usStoryAdd" aria-label="Aggiungi una story"><span class="us-brand-icon us-brand-icon--stories" aria-hidden="true"><img class="us-brand-icon-off us-approved-custom-icon" src="/assets/derived/runtime/us-icon-stories-128-v1.png" alt=""><img class="us-brand-icon-on us-approved-custom-icon" src="/assets/derived/runtime/us-icon-stories-128-v1.png" alt=""></span></button>
+        <button type="button" class="us-story-add-only us-important-control us-premium-control" id="usStoryAdd" aria-label="Aggiungi una Story"><span class="us-brand-icon us-brand-icon--stories" aria-hidden="true"><img class="us-brand-icon-off us-approved-custom-icon" src="/assets/derived/runtime/us-icon-stories-128-v1.png" alt=""><img class="us-brand-icon-on us-approved-custom-icon" src="/assets/derived/runtime/us-icon-stories-128-v1.png" alt=""></span></button>
       `;
       const actions = document.querySelector('.top .top-actions');
       if (actions) actions.appendChild(root);
@@ -295,7 +295,7 @@
     const plus = document.getElementById('usStoryAdd');
     plus?.classList.add('uploading');
     setCameraBusy(true);
-    setCameraFeedback('Pubblico…');
+    setCameraFeedback('Carico la Story…');
     try {
       let mediaBlob = blob;
       if (typeof compressImageFile === 'function' && blob instanceof File) {
@@ -313,8 +313,8 @@
       return true;
     } catch (error) {
       console.warn('[US Stories] camera upload', error);
-      toast('Non riesco a pubblicare la story');
-      setCameraFeedback('Pubblicazione non riuscita.', { retry: true });
+      toast('Non riesco a caricare la Story');
+      setCameraFeedback('Caricamento non riuscito.', { retry: true });
       return false;
     } finally {
       uploadBusy = false;
@@ -498,7 +498,7 @@
       }
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', .86));
-      if (!blob) { setCameraFeedback('Foto non acquisita.'); return; }
+      if (!blob) { setCameraFeedback('Foto non scattata. Riprova.'); return; }
       pendingStoryBlob = blob;
       const ok = await publishStoryBlob(blob);
       if (ok) { pendingStoryBlob = null; closeStoryCamera(); }
@@ -515,7 +515,7 @@
     const author = coupleProfiles.find((p) => p.id === authorId) || null;
     if (!rows.length) {
       if (own) openStoryCamera();
-      else if (typeof toast === 'function') toast((author?.display_name || 'Il partner') + ' non ha stories attive');
+      else if (typeof toast === 'function') toast((author?.display_name || 'La tua persona') + ' non ha Stories attive');
       return;
     }
     currentViewerStories = rows;

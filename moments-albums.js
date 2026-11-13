@@ -78,7 +78,7 @@ function ensureUi(){
             <input type="file" id="usAlbumFile" accept="image/jpeg,image/png,image/webp" hidden>
             <div class="us-album-composer" id="usAlbumComposer" hidden>
               <img class="us-album-composer-preview" id="usAlbumPreview" alt="Anteprima foto">
-              <input type="text" maxlength="180" id="usAlbumCaption" placeholder="Descrizione (opzionale)">
+              <input type="text" maxlength="180" id="usAlbumCaption" placeholder="Descrizione (facoltativa)">
               <div class="us-album-composer-actions">
                 <button type="button" class="us-album-cancel" id="usAlbumCancel">Annulla</button>
                 <button type="button" class="us-album-save" id="usAlbumSave">Aggiungi al ricordo</button>
@@ -1447,7 +1447,7 @@ console.info('[US] Moments Albums attivo');
   }
 
   function kindLabel(kind) {
-    return window.UsLeftForYou?.labelForKind?.(kind) || 'Lasciato per voi';
+    return window.UsLeftForYou?.labelForKind?.(kind) || 'Lasciato per te';
   }
 
   function renderConservatiList(entries) {
@@ -1462,7 +1462,7 @@ console.info('[US] Moments Albums attivo');
       const mark = thumb
         ? `<span class="conservati-card-mark conservati-card-thumb" aria-hidden="true"><img src="${escapeConservati(entry.mediaUrl)}" alt="" loading="lazy" decoding="async"></span>`
         : `<span class="conservati-card-mark" aria-hidden="true"><span class="us-icon" data-us-icon="${CONSERVATI_ICON[entry.source.kind] || 'heart'}" aria-hidden="true"></span></span>`;
-      return `<button type="button" class="conservati-card" data-conservati-open="${escapeConservati(entry.contribution.id)}" data-owner="${owner}" aria-label="Apri ${escapeConservati(kindLabel(entry.source.kind))} lasciato da ${escapeConservati(entry.senderName)}">
+      return `<button type="button" class="conservati-card" data-conservati-open="${escapeConservati(entry.contribution.id)}" data-owner="${owner}" aria-label="Apri: ${escapeConservati(kindLabel(entry.source.kind))}, da ${escapeConservati(entry.senderName)}">
         ${mark}
         <span class="conservati-card-copy"><b translate="no">${escapeConservati(entry.senderName)}</b><small>${escapeConservati(formatConservatiDate(entry.source.created_at))}</small><span${entry.source.body ? ' translate="no"' : ''}>${escapeConservati(preview)}</span></span>
         <span class="conservati-card-kind">${escapeConservati(kindLabel(entry.source.kind))}</span>

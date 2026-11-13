@@ -157,9 +157,9 @@ function install(w){
       :lines.length?`<ul class="us-postit-items">${lines.map(ideaLine).join('')}</ul>`:'<p class="us-postit-text">Le cose da fare insieme, un giorno.</p>';
     const more=onNoi&&hidden?`<button type="button" class="us-postit-more" data-board-all>e altre ${hidden}</button>`:'';
     return `<li class="us-postit is-pinned" data-davivere data-color="lilac">
-      <h3 class="us-postit-heading">Da vivere</h3>
+      <h3 class="us-postit-heading">Le vostre idee</h3>
       ${list}${more}
-      <input type="text" class="us-postit-add" data-davivere-add maxlength="120" placeholder="Aggiungi…" aria-label="Aggiungi a Da vivere" enterkeyhint="done">
+      <input type="text" class="us-postit-add" data-davivere-add maxlength="120" placeholder="Aggiungi…" aria-label="Aggiungi alle vostre idee" enterkeyhint="done">
       <small class="us-postit-by"><i class="us-notes-dot" data-who="noi" aria-hidden="true"></i><span>Insieme · fisso in cima</span></small>
     </li>`;
   }
@@ -275,7 +275,7 @@ function install(w){
     notes=data||[];loaded=true;loadedAt=Date.now();owner=k;
     // Couple sync (05/11): the partner's deletion now arrives as a reload, not
     // as a DELETE event; the post-it open here says so, as onChange does.
-    if(editing?.id&&before.has(editing.id)&&!notes.some(n=>n.id===editing.id)){editing.id=null;paintMeta();notice('L’altra persona ha staccato questo post-it. Se continui a scrivere, lo salvo di nuovo.');}
+    if(editing?.id&&before.has(editing.id)&&!notes.some(n=>n.id===editing.id)){editing.id=null;paintMeta();notice('La tua persona ha staccato questo post-it. Se continui a scrivere, lo salvo di nuovo.');}
     if(!editing)paint();
     else{paint();notes.forEach(n=>repaintTile(n.id));}
   }
@@ -440,7 +440,7 @@ function install(w){
     const id=box.dataset.idea,state=box.dataset.state;
     box.checked=state==='lived';
     if(state==='partner'){
-      const ok=await w.UsUiFoundation?.confirm?.({title:'L’avete vissuta?',body:`${partnerName()} dice di sì. Poi resta tra le idee vissute.`,confirmLabel:'Sì, vissuta'});
+      const ok=await w.UsUiFoundation?.confirm?.({title:'L’avete vissuta?',body:`${partnerName()} dice di sì: se confermi, va tra le idee vissute.`,confirmLabel:'Sì, vissuta'});
       if(ok===false)return;
     }
     await w.UsDaVivere?.markLived?.(id);
@@ -467,7 +467,7 @@ function install(w){
     if(row&&!fullRow(row)){load();return;}
     if(gone){
       notes=notes.filter(n=>n.id!==gone);
-      if(editing?.id===gone){editing.id=null;paintMeta();notice('L’altra persona ha staccato questo post-it. Se continui a scrivere, lo salvo di nuovo.');}
+      if(editing?.id===gone){editing.id=null;paintMeta();notice('La tua persona ha staccato questo post-it. Se continui a scrivere, lo salvo di nuovo.');}
     }
     if(row){
       notes=[row,...notes.filter(n=>n.id!==row.id)];

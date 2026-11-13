@@ -46,8 +46,8 @@ test('the interface says «voi due», never «entrambi»', () => {
     assert.doesNotMatch(read(f).replace(/^\s*\/\/.*$/gm, ''), /['"`][^'"`]*\bentramb[ie]\b(?! i telefoni)[^'"`]*['"`]/, f);
   }
   const en = read('i18n-en.js');
-  for (const key of ['Le risposte si sbloccano quando avete risposto voi due.', 'Sparirà per voi due.', 'Sparirà dal vostro calendario.',
-    'Le risposte si scoprono quando avete risposto voi due.', 'Le vostre idee · per voi due', 'Elimina questo ricordo per voi due']) {
+  for (const key of ['Le risposte si svelano quando avete risposto voi due.', 'Sparirà per voi due.', 'Sparirà dal vostro calendario.',
+    'Le vostre idee · per voi due', 'Elimina questo ricordo per voi due']) {
     assert.ok(en.includes(`'${key}'`), `English for «${key}»`);
   }
 });

@@ -22,6 +22,20 @@
 
 **Aperto:** su Android, scorrendo, il titolo della pagina traspare sotto l'orologio anche con la fascia quasi opaca (causa da capire).
 
+### Revisione dei testi (14/11)
+
+**Stato:** branch `claude/revisione-testi` (nato da `claude/ritocchi-visivi`). Rapporto approvato dal founder il 14/11 («Sì, come consigli»): [missione](../missions/revisione-testi.md). Test mirati verdi; non ancora su staging né in produzione.
+
+**Cosa cambia:** circa 290 testi corretti in tutta l'app. Niente più genere indovinato («mandale», «vi siete messi insieme», «Siete vicini» → «Siete a meno di 3 km», «in amore» → «col cuore pieno»); un nome solo per la stessa cosa (punti e non XP, sfida e non missioni, «La domanda di oggi» anche nelle notifiche, «vissuto» per gli eventi); niente più «email e password» per chi entra con Google; «Avvisami» per US Plus; Impostazioni mostrano la versione vera dell'app («US 1.5.0») invece di «US 1.0»; i fogli Elimina account ed Esci dalla coppia hanno lo stesso elenco delle pagine legali. Pagine legali: elimina-account non dice più che non ci sono backup (la produzione ne fa uno al giorno), l'informativa dice che chi resta tiene lo spazio con i ricordi condivisi, i termini non parlano più di «versione 1.0»; date di aggiornamento al 14/11.
+
+**Server:** migrazione `20261113232109_revisione_testi.sql`, solo `update`: 29 domande del giorno, 57 carte dei giochi (`version + 1`), 1 ricetta, 10 carte di Questo o quello, 17 sfide e missioni, 18 premi. Tre sfide da fare insieme (abbraccio, messaggio nascosto, giornata perfetta) passano da `any` a `near`: le coppie a distanza e quelle che non hanno risposto a «Vi vedete spesso?» non le ricevono più (le `any` scendono da 10 a 7). I giorni e le settimane già mostrati tengono il loro testo. Funzioni da ripubblicare per i testi delle notifiche (`notification-core.mjs` e promemoria del calendario): tutte quelle che importano `notification-core.mjs`, più `calendar-reminders-worker` e `us-widget-state`.
+
+**Android (serve l'AAB):** titoli delle notifiche native (`UsPushNotices.java`), widget «Distanza e batteria» («< 3 km», descrizioni) e «Come stai» («col cuore pieno», «sui libri»).
+
+**Test:** `tests/revisione-testi-db.test.js` più le asserzioni aggiornate nei test dei moduli toccati.
+
+**Novità per Play:** nessuna voce a sé («Piccole correzioni»).
+
 ### La mascotte non sparisce più
 
 **Stato:** commit della mascotte dentro lo stesso branch `claude/cosa-di-oggi` (nato da `claude/mascotte-visibile`), provata nell'emulatore di staging (US LIVE) il 13/11; non in produzione.
@@ -32,7 +46,7 @@
 
 **Novità per Play:** nessuna voce a sé; va con il prossimo AAB («Piccole correzioni»).
 
-**Ordine in produzione (tutta la 1.5.1):** 1. database: `20261113202138_cosa_di_oggi_v1.sql` (workflow «Supabase SQL», target production, conferma PRODUZIONE); l'app già installata non la chiama e non cambia. 2. Sito: merge su `main` con build id di produzione e Novità id `1.5.1`. 3. Android: AAB nuovo (il web dell'app è dentro il pacchetto).
+**Ordine in produzione (tutta la 1.5.1):** 1. database: `20261113202138_cosa_di_oggi_v1.sql`, poi `20261113232109_revisione_testi.sql` (workflow «Supabase SQL», target production, conferma PRODUZIONE); l'app già installata non chiama la prima e con la seconda vede solo testi nuovi. 2. Funzioni Supabase dei testi delle notifiche (revisione dei testi, sopra). 3. Sito: merge su `main` con build id di produzione e Novità id `1.5.1`. 4. Android: AAB nuovo (il web dell'app è dentro il pacchetto).
 
 ## Patch 1.5: versione pubblica, tre partite al giorno e «US Plus, in arrivo» (13/11/2026)
 

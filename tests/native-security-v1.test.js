@@ -266,7 +266,7 @@ test('N1 lockout temporaneo e permanente: messaggio chiaro e uscita sicura via a
   env.nodes.get('usAppLockPrimary').click();
   await settle();
   assert.equal(env.nodes.get('usAppLock').dataset.mode, 'account');
-  assert.equal(env.nodes.get('usAppLockPrimary').textContent, 'Accedi con email e password');
+  assert.equal(env.nodes.get('usAppLockPrimary').textContent, 'Accedi di nuovo');
   assert.equal(env.nodes.get('usAppLockSecondary').hidden, true);
 });
 
@@ -280,7 +280,7 @@ test('N1 fallback "Usa l’accesso con account": prima distrugge la sessione, po
   await settle();
   env.nodes.get('usAppLockSecondary').click();
   assert.equal(env.nodes.get('usAppLock').dataset.mode, 'confirm');
-  assert.match(env.nodes.get('usAppLockCopy').textContent, /email e password/);
+  assert.match(env.nodes.get('usAppLockCopy').textContent, /accedere di nuovo/);
   env.nodes.get('usAppLockSecondary').click();
   assert.equal(env.nodes.get('usAppLock').dataset.mode, 'locked', 'Annulla torna al lock');
   env.nodes.get('usAppLockSecondary').click();

@@ -11,7 +11,7 @@ const STYLES=Object.freeze([
   {id:'glass',name:'Vetro',note:'Una lente sulla vostra foto.'},
   {id:'aurora',name:'Aurora',note:'La luce dentro le cifre.',reward:'frame_aurora',level:4},
   {id:'orbit',name:'Orbita',note:'Un giro di luce ogni minuto.',reward:'ring_orbit',level:9},
-  {id:'chrome',name:'Cromo',note:'Il tempo diventa materia.',reward:'frame_chrome',level:12}
+  {id:'chrome',name:'Cromo',note:'Cifre lucide come il metallo.',reward:'frame_chrome',level:12}
 ]);
 const civil=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'});
 function dayNumber(value){
@@ -91,7 +91,7 @@ function install(w){
     // Nothing on Oggi ("Nessuno in Oggi", or not ready yet): one quiet way back.
     const entry=$('usCountdownEntry');if(entry)entry.hidden=shown||!state;
     if(!shown)return;
-    surface.setAttribute('aria-label',`${e.title}, ${view.value} ${view.unit} ${view.label}. Modifica countdown`);
+    surface.setAttribute('aria-label',`${e.title}, ${view.value} ${view.unit}${view.label?` ${view.label}`:''}. Modifica countdown`);
     const signature=`${e.together?'together':state.active_id}:${e.style}:${view.value.length}:${e.title}`;
     if(surface.dataset.signature!==signature){surface.innerHTML=markup(view,e.title,e.style,Boolean(e.together));surface.dataset.signature=signature;}
     else{

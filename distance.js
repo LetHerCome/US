@@ -15,7 +15,7 @@ const VALUE=Object.freeze({near:'Spesso',far:'A distanza'});
 function todayPriority(state,seen){
   if(!state?.known||state.mode||seen)return null;
   return {id:'distance:ask',factKey:'distance:ask',arrivalType:'distance',category:'waiting_for_me',attention:true,
-    title:'Una domanda per voi',detail:'Vi vedete spesso o vivete lontani?',action:'distance',actionLabel:'Rispondi'};
+    title:'Una domanda per voi',detail:'Vi vedete spesso o vivete a distanza?',action:'distance',actionLabel:'Rispondi'};
 }
 const settingValue=mode=>VALUE[mode]||'Da scegliere';
 
@@ -63,7 +63,7 @@ function install(w){
       if(error)throw error;
       state={known:true,mode};paint();
       w.UsUiFoundation?.done?.(button);
-      w.toast?.('Grazie: le missioni ora sono pensate per voi',{icon:'check',quiet:false});
+      w.toast?.('Grazie: ora la sfida è scelta per voi',{icon:'check',quiet:false});
       w.setTimeout(close,420);
       return true;
     }catch(err){

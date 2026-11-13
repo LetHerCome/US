@@ -53,5 +53,5 @@ test('stories and post-it expose their refresh; an open post-it the partner remo
   assert.match(notes, /api\.refresh=\(\)=>ensure\(\{force:true\}\)/);
   const load = notes.slice(notes.indexOf('async function load(){'), notes.indexOf('function ensure('));
   assert.match(load, /const before=new Set\(notes\.map\(n=>n\.id\)\);/);
-  assert.match(load, /if\(editing\?\.id&&before\.has\(editing\.id\)&&!notes\.some\(n=>n\.id===editing\.id\)\)\{editing\.id=null;paintMeta\(\);notice\('L’altra persona ha staccato questo post-it\. Se continui a scrivere, lo salvo di nuovo\.'\);\}/);
+  assert.match(load, /if\(editing\?\.id&&before\.has\(editing\.id\)&&!notes\.some\(n=>n\.id===editing\.id\)\)\{editing\.id=null;paintMeta\(\);notice\('La tua persona ha staccato questo post-it\. Se continui a scrivere, lo salvo di nuovo\.'\);\}/);
 });

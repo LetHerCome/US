@@ -16,12 +16,12 @@
     { kind: 'think', name: 'Ti penso', copy: 'Un pensiero con un tocco, anche con US chiusa.', shape: 'square' },
     // 04/11/2026: the Countdown left the widgets; the Post-it took its place.
     { kind: 'postit', name: 'Post-it', copy: 'L’ultimo post-it della vostra bacheca. Toccalo per aprirla.', shape: 'square' },
-    { kind: 'noi', name: 'Distanza e batteria', copy: 'La distanza tra voi e la batteria di chi ami. Mai dove siete.', shape: 'wide' },
+    { kind: 'noi', name: 'Distanza e batteria', copy: 'La distanza tra voi e la batteria della tua persona. Mai dove siete.', shape: 'wide' },
     { kind: 'photo', name: 'Foto & Noi', copy: 'La foto di Oggi, che cambia ogni ora, con i giorni insieme.', shape: 'square' },
-    { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda del giorno e a chi tocca rispondere. Mai le risposte.', shape: 'wide' },
+    { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda di oggi e a chi tocca rispondere. Mai le risposte.', shape: 'wide' },
     { kind: 'message', name: 'Lasciato per te', copy: 'Il Lasciato per te ancora chiuso: solo che cosa è e quando.', shape: 'square' },
     { kind: 'memories', name: 'Ricordi a pila', copy: 'Le vostre foto di questo giorno, un anno fa. Altrimenti le più recenti.', shape: 'square' },
-    { kind: 'status', name: 'Come stai', copy: 'Come state tu e chi ami, con un’emoji. Dura 12 ore.', shape: 'wide' },
+    { kind: 'status', name: 'Come stai', copy: 'Come state tu e la tua persona, con un’emoji. Dura 12 ore.', shape: 'wide' },
     { kind: 'lavagna', name: 'Lavagna', copy: 'L’ultimo disegno sulla vostra lavagna. Toccalo per disegnare.', shape: 'square' }
   ]);
   window.UsWidgetCatalog = CATALOG;
@@ -64,7 +64,7 @@
   // Distanza e batteria: the two colours, the distance, never a map.
   function noiPreview(snapshot) {
     const known=snapshot.couple?.distanceNear || snapshot.couple?.distanceText;
-    const distance=snapshot.couple?.distanceNear ? 'vicini' : snapshot.couple?.distanceText || 'Distanza non nota';
+    const distance=snapshot.couple?.distanceNear ? 'meno di 3 km' : snapshot.couple?.distanceText || 'Distanza non nota';
     const sub=known
       ? (snapshot.couple?.distanceState === 'stale' ? 'ULTIMA DISTANZA' : 'TRA VOI')
       : 'APRI NOI';
@@ -205,7 +205,7 @@
     try { result = await widgets().requestPin(kind); } catch (_) {}
     if (!result.requested) {
       pending = null;
-      status[kind] = result.supported ? 'Il telefono non ha aperto la richiesta. Riprova.' : 'Il launcher non supporta aggiunta automatica. Usa i widget della Home.';
+      status[kind] = result.supported ? 'Il telefono non ha aperto la richiesta. Riprova.' : 'Questo telefono non aggiunge widget da solo. Usa i widget della Home.';
       render();
       return;
     }

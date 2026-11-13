@@ -143,12 +143,12 @@ function renderTop() {
   button.dataset.gv2State = state;
   button.dataset.usAttention = attention ? 'on' : 'off';
   const labels = {
-    idle: 'Per voi: una partita preparata per voi',
+    idle: 'Per voi: una partita preparata apposta',
     in_progress: 'Per voi: riprendi la partita',
     pending: 'Per voi: tocca a te',
     waiting: `Per voi: aspettiamo ${partnerName()}`,
     reveal_ready: 'Per voi: le vostre risposte sono pronte',
-    played: 'Per voi: per oggi avete giocato, il prossimo arriva domani',
+    played: 'Per voi: per oggi avete giocato, la prossima partita domani',
   };
   button.setAttribute('aria-label', labels[state] || labels.idle);
   button.classList.remove('is-loading');
@@ -163,7 +163,7 @@ function renderTop() {
 const allowance = () => home?.allowance || null;
 const freeLeft = () => { const a = allowance(); return a ? Math.max(0, a.free_limit - a.free_used) : 1; };
 const playedThisWeek = (family) => allowance()?.families?.[family] || null;
-const EXHAUSTED = 'Nuovi giochi domani.';
+const EXHAUSTED = 'Nuove partite domani.';
 // Under I vostri giochi: how many rounds are left today, once the server said
 // (three a day since 13/11/2026). A visible counter: one dot per round of the
 // day, lit while it is still there.
@@ -177,10 +177,10 @@ function dayHint() {
   return `<span class="us-gv2-daycount" data-gv2-left="${left}" role="status"><span class="us-gv2-daycount-dots" aria-hidden="true">${dots}</span><small>${esc(text)}</small></span>`;
 }
 // Once today's rounds are spent: unlimited rounds are US Plus, coming (D4 §4).
-// Nothing to buy yet: the tap opens «US Plus, in arrivo» with «Avvisatemi».
+// Nothing to buy yet: the tap opens «US Plus, in arrivo» with «Avvisami».
 function plusSoonRow() {
   if (!allowance() || freeLeft() || !window.UsPlusSoon?.open) return '';
-  return `<button type="button" class="us-gv2-plus-soon" data-us-feedback="tap" data-gv2-action="plus-soon" data-s>${glyph('sparkle')}<span class="us-gv2-plus-soon-copy"><b>Partite illimitate con US Plus</b><small>In arrivo · Avvisatemi</small></span>${icon('caret-right')}</button>`;
+  return `<button type="button" class="us-gv2-plus-soon" data-us-feedback="tap" data-gv2-action="plus-soon" data-s>${glyph('sparkle')}<span class="us-gv2-plus-soon-copy"><b>Partite illimitate con US Plus</b><small>In arrivo · Avvisami</small></span>${icon('caret-right')}</button>`;
 }
 
 // ---------------------------------------------------------------- the week
@@ -305,17 +305,17 @@ function weeklyCard(w) {
   }
   if (w.partner_left_question) {
     return `<section class="us-gv2-weekly is-sealed" data-s aria-label="La domanda della settimana">
-      ${head('feather', `${partnerName()} ha lasciato una domanda`, 'La troverete giocando.')}
+      ${head('feather', `${partnerName()} ha lasciato una domanda`, 'La troverai giocando.')}
     </section>`;
   }
   if (w.my_turn) {
     return `<section class="us-gv2-weekly is-open" data-s aria-label="La domanda della settimana">
-      ${head('feather', 'Tocca a te', 'Una domanda scritta da voi, per questa settimana.')}
+      ${head('feather', 'Tocca a te', 'Scrivi tu la domanda di questa settimana.')}
       <button type="button" class="primary us-gv2-weekly-cta" data-us-feedback="tap" data-gv2-action="weekly-create">Crea la domanda</button>
     </section>`;
   }
   return `<section class="us-gv2-weekly is-locked" data-s aria-label="La domanda della settimana">
-    ${head('lock-simple', `Questa settimana crea ${label(w.assigned_role)}`, w.next_role === myRole() ? `Tocca a te da ${unlock}` : `Cambia ${unlock}`)}
+    ${head('lock-simple', `Questa settimana tocca a ${label(w.assigned_role)}`, w.next_role === myRole() ? `Tocca a te da ${unlock}` : `Si cambia ${unlock}`)}
   </section>`;
 }
 
@@ -579,7 +579,7 @@ async function confirmSpend({ family, played, title, confirmLabel, again = '' })
   if (typeof ask !== 'function') return true;
   const left = Math.max(1, a.limit - Math.min(a.used, a.limit));
   const name = familyName(family);
-  const spend = left === 1 ? 'Userete il gioco di oggi.' : `Userete 1 dei ${left} giochi di oggi.`;
+  const spend = left === 1 ? 'Userete la partita di oggi.' : `Userete 1 delle ${left} partite di oggi.`;
   return ask({
     kicker: played ? name.toUpperCase() : 'OGGI',
     title: played ? title : name,
@@ -948,13 +948,13 @@ function renderSwipeWaiting({ dir = 1 } = {}) {
     ${waitArt('Vedrete insieme dove la pensate allo stesso modo.')}
     ${waitActions()}
     ${mineFold(`<ol class="us-gv2-swipe-mine">${current.items.map((item, i) => `<li><span>${i + 1}</span><small>${esc(item.question_text)}</small><b>${esc(myAnswerText(item))}</b></li>`).join('')}</ol>`)}
-  </article>`, { kicker: SWIPE.name, title: 'Le tue 8 scelte sono dentro.', tone: 'ambra', label: SWIPE.name }, { dir });
+  </article>`, { kicker: SWIPE.name, title: 'Le tue 8 scelte sono salvate.', tone: 'ambra', label: SWIPE.name }, { dir });
 }
 
 function renderWaiting({ dir = 1 } = {}) {
   if (current?.game_family === 'swipe') return renderSwipeWaiting({ dir });
   showPanel(`<article class="us-gv2-waiting">
-    ${waitArt('Le risposte si scoprono quando avete risposto voi due.')}
+    ${waitArt('Le risposte si svelano quando avete risposto voi due.')}
     ${waitActions()}
     ${mineFold(`<ol class="us-gv2-mine">${current.items.map((i) => `<li><small${asWritten(coupleWritten(i))}>${esc(i.my_prompt || i.question_text)}</small><b${asWritten(i.answer_kind === 'open' || coupleWritten(i))}>${esc(myAnswerText(i))}</b></li>`).join('')}</ol>`)}
   </article>`, { kicker: familyName(current.game_family), title: 'Hai risposto.', label: familyName(current.game_family) }, { dir });
@@ -1055,8 +1055,8 @@ function readingLine(items){
   const partner=knownPartner();
   const read=scored('subject'),mine=scored('predictor');
   const hits=(list)=>list.filter((i)=>i.prediction_matched).length;
-  if(read.length)return `${partner||'La tua persona'} ti ha letto ${times(hits(read))} su ${read.length}`;
-  if(mine.length)return `Hai letto ${partner||'la tua persona'} ${times(hits(mine))} su ${mine.length}`;
+  if(read.length)return `${partner||'La tua persona'} ha indovinato ${times(hits(read))} su ${read.length}`;
+  if(mine.length)return `Con ${partner||'la tua persona'} hai indovinato ${times(hits(mine))} su ${mine.length}`;
   return '';
 }
 function revealHead(groups){

@@ -94,7 +94,7 @@ test('every server response maps to one outcome and message', async () => {
     assert.deepEqual(result, { kind, done }, String(status));
     assert.ok(deletion.message(kind).length > 0);
   }
-  assert.equal(deletion.message('deletion_disabled', 'x@y.invalid'), 'Eliminazione non ancora disponibile, scrivi a x@y.invalid.');
+  assert.equal(deletion.message('deletion_disabled', 'x@y.invalid'), 'Eliminazione non ancora disponibile: scrivi a x@y.invalid.');
   assert.match(deletion.message('deletion_failed'), /non è stato eliminato nulla/);
   // The app asks only for the password; the public page asks for email and password.
   assert.equal(deletion.message('wrong_password', 'x@y.invalid', 'app'), 'Password non corretta. Riprova.');
@@ -165,7 +165,7 @@ test('public page: standalone, Play sections present, pinned supabase-js with SR
   }
   assert.match(html, /entro 30 giorni/);
   assert.match(html, /12 mesi/);
-  assert.match(html, /non usa copie di backup/);
+  assert.match(html, /copiato ogni giorno in un backup gestito da Supabase: un dato eliminato può restarci al massimo 7 giorni/);
   assert.doesNotMatch(html, /sovrascritt/);
   assert.match(html, /<script defer src="https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.112\.4\/dist\/umd\/supabase\.js" integrity="sha384-[A-Za-z0-9+/=]+" crossorigin="anonymous"><\/script>/);
   assert.match(html, /<label for="deletePassword">/);

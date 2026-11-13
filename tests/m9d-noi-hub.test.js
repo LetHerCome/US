@@ -62,8 +62,8 @@ test('M9D/Progression V1: Sintonia explains only server-backed meaningful action
   // Round 3 (mockup parity): the mockup's "Come cresce la Sintonia" fold; each source still opens its place.
   const grow = bond().match(/<ul class="us-sintonia-guide"[\s\S]*?<\/ul>/)?.[0] || '';
   const sources = [...grow.matchAll(/data-sintonia-go="([a-z]+)">([^<]+)<\/button>/g)].map((m) => `${m[1]}:${m[2]}`);
-  assert.deepEqual(sources, ['quest:Missioni', 'daily:Domanda di oggi', 'games:Gioca', 'memory:Ricordi']);
-  assert.match(grow, /Le cose che completate insieme continuano ad alimentare la Sintonia\./);
+  assert.deepEqual(sources, ['quest:Idee', 'daily:Domanda di oggi', 'games:Gioca', 'memory:Ricordi']);
+  assert.match(grow, /Le cose che completate insieme fanno crescere la Sintonia\./);
   assert.match(bond(), /<section class="noi-resonance-guide"/);
   assert.doesNotMatch(bond(), /noi-resonance-grow/, 'the old line under the bar is gone');
   const migration = read('supabase/migrations_history/20261002181500_us_progression_v1.sql');

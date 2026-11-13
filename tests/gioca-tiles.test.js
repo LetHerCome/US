@@ -74,7 +74,7 @@ test('Gioca hub: no page header prose, no separate in-progress list, one week st
 test('Gioca hub: a spent day stays compact and locks unplayed tiles until tomorrow', async () => {
   const html = await hub(homeOf({ per_voi: { state: 'played', session_id: 'p' },
     allowance: allowance({ used: 1, limit: 1, per_voi_used: 1, free_used: 1, free_limit: 1, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) })).html();
-  assert.doesNotMatch(html, /Nuovi giochi domani/, 'the hub does not duplicate exhaustion prose; tiles carry the state');
+  assert.doesNotMatch(html, /Nuove partite domani/, 'the hub does not duplicate exhaustion prose; tiles carry the state');
   // Round 3 parity: no budget strip; a locked tile is dimmed and says when.
   assert.doesNotMatch(html, /Tutti giocati|us-gv2-rhythm/);
   assert.match(html, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true" aria-label="Scopritevi: [^"]+\. Da domani"[\s\S]*?<small>Da domani<\/small>/);
@@ -120,7 +120,7 @@ test('Gioca hub: once the day is spent, the counter says tomorrow and Plus is co
     const html = await hub(homeOf({ allowance: spent }), { UsPlusSoon: { open() {} } }).html();
     assert.equal(titleHint(html), 'Domani altre 3');
     assert.deepEqual(dots(html), [false, false, false]);
-    assert.match(html, /data-gv2-action="plus-soon"[^>]*>.*Partite illimitate con US Plus.*In arrivo · Avvisatemi/s);
+    assert.match(html, /data-gv2-action="plus-soon"[^>]*>.*Partite illimitate con US Plus.*In arrivo · Avvisami/s);
   }
 });
 

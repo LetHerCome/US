@@ -40,7 +40,7 @@ test('the title says which year it is', () => {
 test('Ti penso is told lightly, never as a ranking', () => {
   assert.equal(R.thinkLine(recap().think, names, 'beatrice'), 'Francesco ti ha pensato un po’ di più');
   assert.equal(R.thinkLine(recap().think, names, 'francesco'), 'Hai pensato tu un po’ di più', 'said to the one who reads it');
-  assert.equal(R.thinkLine({ total: 4, francesco: 2, beatrice: 2 }, names, 'beatrice'), 'Pari: vi siete pensati tanto quanto');
+  assert.equal(R.thinkLine({ total: 4, francesco: 2, beatrice: 2 }, names, 'beatrice'), 'Pari: lo stesso numero di Ti penso');
   assert.equal(R.thinkLine({ total: 3, francesco: 0, beatrice: 0 }, names, 'beatrice'), '');
   for (const c of R.cards(recap())) assert.doesNotMatch(JSON.stringify(c), /vinc|classific|punt|record/i);
 });
@@ -82,6 +82,6 @@ test('shell: loaded, precached, built, back-closable, reset; Oggi and Noi open i
 
 test('English for the fixed lines', () => {
   const en = read('i18n-en.js');
-  for (const it of ['Il vostro anno', 'Il vostro anno, finora', 'Il vostro primo anno', 'Il mese più vostro', 'Il prossimo anno comincia oggi'])
+  for (const it of ['Il vostro anno', 'Il vostro anno, finora', 'Il vostro primo anno', 'Il mese più vostro', 'Per ora è tutto'])
     assert.ok(en.includes(`'${it}'`), it);
 });

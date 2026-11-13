@@ -39,7 +39,7 @@ test('Oggi: one arrival at a time, the oldest first, Maudit included, never twic
   const first = C.todayPriority(list, new Set());
   assert.equal(first.id, 'companion:maudit');
   assert.equal(first.title, 'È arrivato Maudit');
-  assert.equal(first.detail, 'Un nuovo compagno, in Sintonia');
+  assert.equal(first.detail, 'Sbloccato con la Sintonia');
   assert.equal(first.category, 'celebration', 'a small celebration; on a monthiversary it waits a day');
   assert.equal(first.action, 'companion');
   assert.equal(C.todayPriority(list, new Set(['maudit'])).title, 'È arrivato Milo');
@@ -91,12 +91,12 @@ test('the choice lives in pet.js on this phone; the server only says what is unl
 });
 
 test('copy: inclusive Italian, no therapy or growth words', () => {
-  const copy = C.CATALOG.flatMap((c) => [c.name, c.arrived]).join(' ') + ' Un nuovo compagno, in Sintonia Tocca un compagno per tenerlo sopra la barra. Vale solo su questo telefono.';
+  const copy = C.CATALOG.flatMap((c) => [c.name, c.arrived]).join(' ') + ' Sbloccato con la Sintonia Tocca un compagno per tenerlo sopra la barra. Vale solo su questo telefono.';
   for (const banned of [/entrambi/i, /tutti e due/i, /ognuno/i, /da sol[oa]/i, /uno dei due/i, /per prim[oa]/i, /l['’]altr[oa]/i, /\b\w+[oa]\/[ae]\b/, /cresc/i]) {
     assert.doesNotMatch(copy, banned, String(banned));
   }
   const en = read('i18n-en.js');
-  for (const key of ['È arrivato Maudit', 'È arrivato Firix', 'Un nuovo compagno, in Sintonia', 'Compagni', '{name} · con te sopra la barra', 'Un compagno sopra la barra · mancano {n} XP']) {
+  for (const key of ['È arrivato Maudit', 'È arrivato Firix', 'Sbloccato con la Sintonia', 'Compagni', '{name} · con te sopra la barra', 'Un compagno sopra la barra · mancano {n} punti']) {
     assert.ok(en.includes(`'${key}':`) || en.includes(`${key}:`), key);
   }
 });

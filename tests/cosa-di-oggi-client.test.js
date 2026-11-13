@@ -42,7 +42,7 @@ test('after the answers: a Ti penso to send, then the day closed', () => {
   assert.match(text(think.footHtml), /12 giorni di fila/);
   const closed = api.decorate(revealed, s({ today: { counted: true, me: true, partner: true, my_think: true } }), { partner: 'Bea', today: TODAY });
   assert.equal(closed.look, 'closed');
-  assert.equal(closed.question, 'Oggi ci siete stati tutti e due ♡');
+  assert.equal(closed.question, 'Oggi c’eravate voi due ♡');
   assert.equal(closed.action, undefined, 'a tap opens the answers again');
   assert.match(text(closed.ctaHtml), /^Rivedi$/, 'a button, like the other Oggi cards');
   assert.equal(closed.state, 'revealed', 'it can still be swiped away for today');
@@ -76,7 +76,7 @@ test('first week: the step after the question, «Fatto» with tomorrow, the end'
   assert.equal(left.question, 'Lascia qualcosa da aprire a Bea');
   const done = api.decorate(revealed, s({ week: week({ current: 'moment', done: 3, ready: false, done_today: true }) }), { partner: 'Bea', today: TODAY });
   assert.deepEqual([done.look, done.question, done.action], ['done', 'Fatto ♡', undefined]);
-  assert.equal(text(done.subHtml), 'Domani: il primo Ricordo');
+  assert.equal(text(done.subHtml), 'Domani: il primo ricordo');
   const end = api.decorate(revealed, s({ week: week({ current: null, all_done: true, done: 7, finished_on: TODAY }) }), { partner: 'Bea', today: TODAY });
   assert.deepEqual([end.look, end.question], ['finished', 'Settimana finita ♡']);
   assert.match(text(end.subHtml), /\+100 punti Sintonia/);

@@ -42,7 +42,7 @@ function createdDate(row){return localISOFromDate(row.created_at)||row.event_dat
 // "Da segnare" keeps only what happened in the last 30 days.
 const DUE_WINDOW_DAYS=30;
 // Why a lived event brought no points (xp_reason of complete_shared_event).
-const NO_XP_COPY={same_day:'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo',before_creation:'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo',daily_limit:'Evento vissuto ♡ Oggi un evento ha già fatto crescere la Sintonia'};
+const NO_XP_COPY={same_day:'Evento vissuto ♡ Niente punti: valgono gli eventi creati in anticipo',before_creation:'Evento vissuto ♡ Niente punti: valgono gli eventi creati in anticipo',daily_limit:'Evento vissuto ♡ Oggi un evento ha già fatto crescere la Sintonia'};
 
 function occurrence(row){
   const today=localTodayISO(),raw=row.event_date;if(!raw)return null;
@@ -249,9 +249,9 @@ function editEvent(id,occurrenceDate=null){
   const when=$('usEventDetailWhen');if(when)when.textContent=capFirst(formatDate(editingOccurrenceDate))+(row.event_time?` · ${String(row.event_time).slice(0,5)}`:'');
   const where=$('usEventDetailWhere');if(where)where.textContent=[row.location||'Luogo da decidere',state==='next'?countdownLower(daysBetween(localTodayISO(),editingOccurrenceDate)):''].filter(Boolean).join(' · ');
   const note=$('usEventDetailNote');if(note){note.textContent=row.note||'';note.hidden=!row.note;}
-  const lead=$('usEventDetailLead');if(lead)lead.textContent=state==='done'?'Festeggiato insieme ♡':state==='due'?"L'avete vissuto? Segnatelo: vale per la vostra Sintonia.":'Quando arriva il giorno potrete segnarlo come vissuto.';
-  if(!comp&&canComplete){completeBtn.hidden=false;completeBtn.disabled=false;completeBtn.innerHTML='<span class="us-icon" data-us-icon="check" aria-hidden="true"></span><span>Segna come fatto</span>';}
-  const hasAnyCompletion=completions.some(c=>c.event_id===row.id);$('usEventDeleteBtn').hidden=hasAnyCompletion?true:false;if(hasAnyCompletion)$('usEventStatus').textContent='Gli eventi già completati restano nello storico.';else $('usEventDeleteBtn').hidden=false;
+  const lead=$('usEventDetailLead');if(lead)lead.textContent=state==='done'?'Festeggiato insieme ♡':state==='due'?'L’avete vissuto? Segnatelo: vale per la vostra Sintonia.':'Quando arriva il giorno potrete segnarlo come vissuto.';
+  if(!comp&&canComplete){completeBtn.hidden=false;completeBtn.disabled=false;completeBtn.innerHTML='<span class="us-icon" data-us-icon="check" aria-hidden="true"></span><span>Segna come vissuto</span>';}
+  const hasAnyCompletion=completions.some(c=>c.event_id===row.id);$('usEventDeleteBtn').hidden=hasAnyCompletion?true:false;if(hasAnyCompletion)$('usEventStatus').textContent='Gli eventi già vissuti restano nello storico.';else $('usEventDeleteBtn').hidden=false;
   setFormMode('detail');showForm({focus:false});
 }
 // Modifica: the same event, now as the form.
@@ -279,7 +279,7 @@ function cancelEventEdit(){resetForm();showBrowse();if(editorReturn)closeEditorT
 async function completeEvent(){
   if(!editingId||!editingOccurrenceDate||busy||!window.usProfile)return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');
   busy=true;const btn=$('usEventCompleteBtn');btn.disabled=true;btn.textContent='Segno…';
-  try{const {data,error}=await sb.rpc('complete_shared_event',{target_event_id:editingId,target_occurrence_date:editingOccurrenceDate});if(error)throw error;await hydrateEvents();refreshOggiNextFromEvents();await window.hydrateBondSummary?.();cancelEventEdit();const xp=Math.max(0,Number(data?.xp_awarded)||0);if(data?.already_completed)toast('Già completato');
+  try{const {data,error}=await sb.rpc('complete_shared_event',{target_event_id:editingId,target_occurrence_date:editingOccurrenceDate});if(error)throw error;await hydrateEvents();refreshOggiNextFromEvents();await window.hydrateBondSummary?.();cancelEventEdit();const xp=Math.max(0,Number(data?.xp_awarded)||0);if(data?.already_completed)toast('Già vissuto');
 else if(!xp)toast(NO_XP_COPY[data?.xp_reason]||'Evento vissuto ♡');
 else if(!window.usCelebrateXp?.(xp,'Evento vissuto'))toast('Evento vissuto ♡');}catch(error){console.warn('[US Events] complete',error);$('usEventStatus').textContent='Non riesco a completarlo. Controlla la data e riprova.';}finally{busy=false;btn.disabled=false;}
 }
@@ -289,7 +289,7 @@ async function saveEvent(event){
   try{let result;if(editingId)result=await sb.from('shared_events').update(payload).eq('id',editingId);else result=await sb.from('shared_events').insert({...payload,couple_id:window.usProfile.couple_id,created_by:window.usProfile.id});if(result.error)throw result.error;const wasEditing=Boolean(editingId);await hydrateEvents();refreshOggiNextFromEvents();cancelEventEdit();toast(wasEditing?'Evento aggiornato':'Evento aggiunto');}catch(error){console.warn('[US Events] save',error);$('usEventStatus').textContent='Non riesco a salvarlo. Riprova.';}finally{busy=false;saveBtn.disabled=false;}
 }
 async function deleteEvent(){
-  if(!editingId||busy||!window.usProfile)return;if(completions.some(c=>c.event_id===editingId))return toast('Un evento completato resta nello storico');if(!(await usConfirm({kicker:'I NOSTRI EVENTI',title:'Eliminare questo evento?',body:'Sparirà per voi due.',confirmLabel:'Elimina',tone:'danger'})))return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');busy=true;const btn=$('usEventDeleteBtn');btn.disabled=true;$('usEventStatus').textContent='Elimino…';
+  if(!editingId||busy||!window.usProfile)return;if(completions.some(c=>c.event_id===editingId))return toast('Un evento vissuto resta nello storico');if(!(await usConfirm({kicker:'I NOSTRI EVENTI',title:'Eliminare questo evento?',body:'Sparirà per voi due.',confirmLabel:'Elimina',tone:'danger'})))return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');busy=true;const btn=$('usEventDeleteBtn');btn.disabled=true;$('usEventStatus').textContent='Elimino…';
   try{const {error}=await sb.from('shared_events').delete().eq('id',editingId);if(error)throw error;await hydrateEvents();refreshOggiNextFromEvents();cancelEventEdit();toast('Evento eliminato');}catch(error){console.warn('[US Events] delete',error);$('usEventStatus').textContent='Non riesco a eliminarlo. Riprova.';}finally{busy=false;btn.disabled=false;}
 }
 async function openEvents(){const overlay=$('usEventsOverlay');if(!overlay)return;window.UsUiFoundation?.cancelSurfaceExit?.(overlay);overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.classList.add('us-events-open');showBrowse();if(!window.usProfile){$('usEventsList').innerHTML='<div class="us-events-empty">Un attimo…</div>';return;}await hydrateEvents();}

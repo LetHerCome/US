@@ -48,7 +48,7 @@
   }
   function errorMessage(error){
     if(error?.code==='42501')return 'Questo account non può completare l’accesso. Contatta chi ti ha invitato o esci.';
-    if(error?.code==='22023')return 'Controlla nome e data: il nome deve avere da 1 a 40 caratteri e la data deve essere valida.';
+    if(error?.code==='22023')return 'Controlla il nome (1–40 caratteri) e la data.';
     if(error?.code==='P0001')return 'Codice non valido, scaduto o già utilizzato. Verifica con la tua persona.';
     return unavailable;
   }
@@ -904,8 +904,8 @@
     }
     function copyFor(step){
       const partner=partnerName(),role=profile?.role;
-      if(step==='noi')return `${partner} ha accettato l’invito ed è ${partnerColourName(role)}, tu ${colourName(role)}. Dove vi incontrate nasce il vostro colore.`;
-      if(step==='color')return 'Scegli il tuo: lo vedete uguale tutti e due, e quello della tua persona resta suo. Dove vi incontrate nasce il Noi.';
+      if(step==='noi')return `${partner} ha accettato l’invito ed è ${partnerColourName(role)}, tu ${colourName(role)}.`;
+      if(step==='color')return 'Scegli il tuo: lo vedete uguale tutti e due, e quello della tua persona resta suo.';
       if(step==='push')return 'Solo per le cose vostre, anche a US chiusa. Cosa ricevere lo scegli tu.';
       if(step==='place')return 'Se la attivi, in Oggi vedete la distanza tra voi.';
       return mode==='device'?'Su questo telefono è tutto a posto.':'';
@@ -945,7 +945,7 @@
       placed:'Aggiunto alla Home',
       retry:'Il telefono non ha aperto la richiesta. Riprova.',
       missed:'Non aggiunto. Riprova oppure usa la sezione Widget della Home Android.',
-      unsupported:'Il launcher non supporta aggiunta automatica. Usa i widget della Home.'
+      unsupported:'Questo telefono non aggiunge widget da solo. Usa i widget della Home.'
     };
     function widgetRow(){
       const state=widget.state,placed=state==='placed';
@@ -1097,7 +1097,7 @@
       setBusy(false);
       if(result?.kind==='busy'){status('');return;}
       status(result?.kind==='denied'?'Permesso negato: puoi consentirle dalle impostazioni del telefono'
-        :result?.kind==='unavailable'?'Notifiche non disponibili in questa versione di US':`${result?.kind==='network'&&result?.pending?'La rete non risponde: le attivo da solo appena può':result?.kind==='network'?'Rete lenta: riprova tra poco, oppure con il Wi-Fi':'Non riesco ad attivare le notifiche'}${result?.code?` · ${result.code}`:''}`,'error');
+        :result?.kind==='unavailable'?'Notifiche non disponibili in questa versione di US':`${result?.kind==='network'&&result?.pending?'La rete non risponde: le attivo appena torna':result?.kind==='network'?'Rete lenta: riprova tra poco, oppure con il Wi-Fi':'Non riesco ad attivare le notifiche'}${result?.code?` · ${result.code}`:''}`,'error');
     }
     function activatePlace(){
       setBusy(true);
@@ -1348,9 +1348,9 @@
         choice:me.name?`${me.name}, ora crea il vostro spazio o raggiungi la tua persona.`:'Ora crea il vostro spazio o raggiungi la tua persona.',
         create:'Da questa data partono i giorni insieme, il mesiversario e l’anniversario.',
         join:'Scrivi il codice che ti ha mandato la tua persona.',
-        color:'Scegli il tuo: lo vedete uguale tutti e due, e potrai cambiarlo in Impostazioni. Dove vi incontrate nasce il Noi.',
-        waiting:state.code?`${ownName}, invita la tua persona: mandale questo codice.`:`${ownName}, invita la tua persona. Quando entrerà, troverete qui il vostro spazio.`,
-        error:'La sessione è conservata. Puoi riprovare o uscire.'
+        color:'Scegli il tuo: lo vedete uguale tutti e due, e potrai cambiarlo in Impostazioni.',
+        waiting:state.code?`${ownName}, manda questo codice alla tua persona.`:`${ownName}, invita la tua persona. Quando entrerà, troverete qui il vostro spazio.`,
+        error:'Il tuo accesso resta valido: puoi riprovare o uscire.'
       }[view];
       // In the colour step the words follow the two circles.
       node('mc3Copy').textContent=view==='color'?'':copy;node('mc3Copy').hidden=view==='color';
@@ -1511,7 +1511,7 @@
     node('mc3Join').addEventListener('submit',event=>{event.preventDefault();press(event.submitter||node('mc3Join').querySelector('[type=submit]'),'Entro…','Entra nel nostro US');const fields={name:node('mc3JoinName').value,code:node('mc3JoinCode').value};node('mc3JoinCode').value='';run(()=>controller.join(fields),'join');});
     node('mc3Generate').addEventListener('click',()=>{press(node('mc3Generate'),'Genero…');run(()=>controller.generate());});
     node('mc3Revoke').addEventListener('click',()=>{press(node('mc3Revoke'),'');run(()=>controller.revoke());});
-    node('mc3Refresh').addEventListener('click',()=>{press(node('mc3Refresh'),'Verifico…','Verifica accesso partner');run(()=>controller.refresh());});
+    node('mc3Refresh').addEventListener('click',()=>{press(node('mc3Refresh'),'Verifico…','Verifica accesso');run(()=>controller.refresh());});
     node('mc3Retry').addEventListener('click',()=>run(()=>controller.refresh()));
     // A line under the invite that stays through the automatic checks.
     const say=(text,kind)=>{note={text,kind};render(controller.state);};

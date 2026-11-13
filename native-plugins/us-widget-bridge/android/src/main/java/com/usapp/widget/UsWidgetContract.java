@@ -74,7 +74,7 @@ final class UsWidgetContract {
                     ? coupleIn.optString("distanceText", "") : "")
                 .put("distanceState", "stale".equals(coupleIn.optString("distanceState", ""))
                     ? "stale" : "ready")
-                // Distanza e batteria: "vicini", and when the distance was read.
+                // Distanza e batteria: "meno di 3 km", and when the distance was read.
                 .put("distanceNear", coupleIn.optBoolean("distanceNear", false))
                 .put("distanceAt", instantText(coupleIn.optString("distanceAt", "")));
             // Batteria del partner: the level the partner last reported, whether

@@ -469,7 +469,7 @@ test('Auth first-run: private entry is compact, device-aware and keeps backend o
   assert.match(auth, /id="usAuthInstall"/);
   assert.doesNotMatch(auth, /authPair|pairBtn|pairCode|Magic Link/);
   assert.match(app, /showAuthStep\('authLogin'\)/);
-  assert.match(app, /Accedi con email e password per entrare in US\./);
+  assert.match(app, /Accedi per entrare in US\./);
   assert.match(app, /passwordEnter\.addEventListener\('keydown'/);
 
   assert.match(app, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);

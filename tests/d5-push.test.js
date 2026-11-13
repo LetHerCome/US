@@ -9,7 +9,7 @@ test('D5 Game push uses same-tenant display name and preserves dedupe',async()=>
   const options={ensureVapid(){},sendNotification:web.sendNotification};
   assert.equal((await deliverGamePush(admin,event,options)).delivered,1);
   // US 1.0 (G11): the push names the game of the round.
-  assert.equal(web.sent[0].payload.body,'Alex ha finito Ridete: tocca a te');
+  assert.equal(web.sent[0].payload.body,'Alex ha giocato a «Ridete»: tocca a te');
   assert.equal((await deliverGamePush(admin,event,options)).outcome,'deduplicated');
   assert.equal(web.sent.length,1);
 });

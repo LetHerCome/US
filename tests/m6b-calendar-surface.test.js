@@ -517,8 +517,8 @@ test('M6B (50): quickEntryError supports the legacy single-time helper and valid
 test('M6B (51): saveEntry validates Inizio/Fine through the pure helper before building the payload', () => {
   const saveBlock = js().match(/async function saveEntry\(event\)[\s\S]*?\n\}/)?.[0] || '';
   assert.match(saveBlock, /quickEntryError\(\{ allDay, startTime, endTime \}\)/);
-  assert.match(saveBlock, /Inserisci l\\'ora di inizio/);
-  assert.match(saveBlock, /Inserisci l\\'ora di fine/);
+  assert.match(saveBlock, /Inserisci l’ora di inizio/);
+  assert.match(saveBlock, /Inserisci l’ora di fine/);
   const guardIdx = saveBlock.indexOf('quickEntryError');
   const payloadIdx = saveBlock.indexOf('buildEntryPayload(');
   assert.ok(guardIdx > 0 && payloadIdx > guardIdx);

@@ -38,7 +38,7 @@ test('copy: text kept on purpose (destructive, reveal, privacy, irreversible) is
   for (const phrase of [
     // Fluidità 1 (22/10): «entrambi» about the two people became «voi due».
     'Eliminare questo impegno?', 'Sparirà dal vostro calendario.', 'Elimina questo ricordo per voi due', '>Eliminato<', '>Annulla<',
-    'Sparirà per voi due.', 'Dopo la conferma le risposte non si cambiano più.', 'Le risposte si sbloccano quando avete risposto voi due.',
+    'Sparirà per voi due.', 'Dopo la conferma le risposte non si cambiano più.', 'Le risposte si svelano quando avete risposto voi due.',
     'Scollega questo telefono', 'Per rientrare in US userai la tua email o Google. Gli altri dispositivi restano collegati.',
     'Sei offline.', 'Su di te · ',
   ]) assert.ok(text.includes(phrase), `"${phrase}" kept`);
@@ -64,5 +64,5 @@ test('copy: Noi and Settings rows carry a label, not a description', () => {
   assert.match(html, /<b>Distanza<\/b><\/span>/);
   // Noi nuova (03/11/2026): no tiles; the board under the calendar has a title.
   assert.doesNotMatch(html, /data-noi-open-link/);
-  assert.match(html, /<h2 id="usNoiBoardTitle">Bacheca<\/h2><small>Le cose senza data: si scrive qui sopra<\/small>/);
+  assert.match(html, /<h2 id="usNoiBoardTitle">Bacheca<\/h2><small>Per le cose senza data<\/small>/);
 });

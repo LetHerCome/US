@@ -49,8 +49,8 @@ test('the accessory swaps the pictures of the poses, never the moving parts', ()
 
 test('in the collection: a group of its own, chosen on this phone, Niente by default', () => {
   const p = read('progression.js');
-  assert.match(p, /pet_accessory: \{ pref: 'pet_accessory', label: 'Accessori', place: 'sul vostro Compagno'/);
-  assert.match(p, /pet_accessory: \{ id: 'none', title: 'Niente', description: 'Il vostro Compagno com’è\.' \}/);
+  assert.match(p, /pet_accessory: \{ pref: 'pet_accessory', label: 'Accessori', place: 'sul vostro compagno'/);
+  assert.match(p, /pet_accessory: \{ id: 'none', title: 'Niente', description: 'Il vostro compagno com’è\.' \}/);
   assert.match(p, /'ti_penso', 'pet_accessory', 'app_icon', 'countdown', 'companion'/);
   assert.match(p, /const accessory = value\('pet_accessory'\);/);
   assert.match(p, /window\.USPet\?\.setAppearance\?\.\(\{ accessory: accessory \|\| '' \}\);/);

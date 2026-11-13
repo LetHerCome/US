@@ -241,7 +241,7 @@ window.addEventListener('us-identity-change',event=>{
     const reveal=document.getElementById('todayReveal');if(reveal)reveal.innerHTML='';
     const answer=document.getElementById('answer');if(answer)answer.value='';
     for(const id of ['thinkLastReceived','thinkLastSent','thinkLiveText']){
-      const label=document.getElementById(id);if(label)label.textContent='Ancora nessun segnale';
+      const label=document.getElementById(id);if(label)label.textContent='Ancora nessun Ti penso';
     }
     for(const id of ['momentsGrid','ricordiRivivi','ricordiChapters']){
       const root=document.getElementById(id);if(root){root.innerHTML='';delete root.dataset.loaded;}
@@ -299,7 +299,7 @@ window.UsWidgetDataApi=Object.freeze({
     return {startedOn:coupleRes.data?.started_on||'',names:(profilesRes.data||[]).map(p=>p.display_name).filter(Boolean)};
   },
   // A last-known, already-rendered distance label, never coordinates: the
-  // text ("12 km"), "vicini", and when the older of the two readings was taken.
+  // text ("12 km"), "meno di 3 km", and when the older of the two readings was taken.
   noiDistance(){
     const model=usLocationRuntime.snapshot;
     const line=noiDistanceLine(model);
@@ -683,7 +683,7 @@ async function refreshWebPushUi(){
     card.hidden=false;
     if(title)title.textContent='Attiva le notifiche';
     // 25/10/2026: «Attiva» tapped but Google's token did not come (5G): US finishes by itself.
-    if(text)text.textContent=state.pending?'Le attivo da solo appena la rete risponde. Con il Wi-Fi è subito.':'Ti penso, risposte e missioni, anche a US chiusa.';
+    if(text)text.textContent=state.pending?'Le attivo appena la rete risponde. Con il Wi-Fi è subito.':'Ti penso, risposte e sfide, anche a US chiusa.';
     if(button){button.hidden=false;button.disabled=false;button.textContent=state.pending?'Riprova':'Attiva';}
     return;
   }
@@ -715,7 +715,7 @@ async function refreshWebPushUi(){
   }
   card.hidden=false;
   if(title)title.textContent='Attiva le notifiche';
-  if(text)text.textContent='Ti penso, risposte e missioni, anche a US chiusa.';
+  if(text)text.textContent='Ti penso, risposte e sfide, anche a US chiusa.';
   if(button){button.hidden=false;button.disabled=false;button.textContent=Notification.permission==='granted'?'Completa attivazione':'Attiva';}
   setPushSettingsState('inactive','Notifiche non attive','','Attiva');
 }
@@ -732,7 +732,7 @@ async function enableNativePush(){
   else if(result.kind==='denied')toast('Permesso negato: puoi consentirle dalle impostazioni del telefono');
   else if(result.kind==='unavailable')toast('Notifiche non disponibili in questa versione di US');
   // 19/10/2026: the code says where it stopped (notifications.js failureCode).
-  else if(result.kind==='network'&&result.pending)toast(`La rete non risponde: le attivo da solo appena può${result.code?` · ${result.code}`:''}`);
+  else if(result.kind==='network'&&result.pending)toast(`La rete non risponde: le attivo appena torna${result.code?` · ${result.code}`:''}`);
   else if(result.kind==='network')toast(`Rete lenta: riprova tra poco, oppure con il Wi-Fi${result.code?` · ${result.code}`:''}`);
   else if(result.kind!=='busy')toast(`Non riesco ad attivare le notifiche${result.code?` · ${result.code}`:''}`);
   if(button)button.disabled=false;
@@ -1167,8 +1167,8 @@ async function initCloud(){
           ? (authBootstrapIssue
               ? 'Non riesco a ripristinare la sessione. Accedi di nuovo per continuare.'
               : (returningDevice
-                  ? 'Accedi di nuovo con email e password per continuare.'
-                  : 'Accedi con email e password per entrare in US.'))
+                  ? 'Accedi di nuovo per continuare.'
+                  : 'Accedi per entrare in US.'))
           : 'Sei offline. Riconnettiti per accedere.',
         // The plain welcome line is for screen readers; the design shows no box.
         navigator.onLine?(authBootstrapIssue?'neutral':'hint'):'error'
@@ -1407,8 +1407,8 @@ function distanceCapsuleModel({server=null,partnerName='',permission='unknown',s
   const oldest=Math.max(locationAgeMs(server.my_updated_at),locationAgeMs(server.partner_updated_at));
   const stale=oldest>US_LOCATION_STALE_DISPLAY_MS;
   const older=locationAgeMs(server.my_updated_at)>=locationAgeMs(server.partner_updated_at)?server.my_updated_at:server.partner_updated_at;
-  const text=near?'vicini':formatDistance(km);
-  return {state:stale?'stale':'ready',visible:true,near,km:near?0:km,text,detail:near?'Siete vicini':`${text} tra voi`,age:older,stale};
+  const text=near?'meno di 3 km':formatDistance(km);
+  return {state:stale?'stale':'ready',visible:true,near,km:near?0:km,text,detail:near?'Siete a meno di 3 km':`${text} tra voi`,age:older,stale};
 }
 
 // HUMAN-UI-02 — the Noi couple row reads the same model. Only a real reading
@@ -1416,8 +1416,8 @@ function distanceCapsuleModel({server=null,partnerName='',permission='unknown',s
 // as unknown.
 function noiDistanceLine(model){
   const state=model?.state||'unknown';
-  if(state==='ready'&&model.text)return {state,text:model.text,label:model.near?'Siete vicini':`${model.text} tra voi`};
-  if(state==='stale'&&model.text)return {state,text:model.text,label:model.near?'Ultima distanza nota: vicini':`Ultima distanza nota: ${model.text}`};
+  if(state==='ready'&&model.text)return {state,text:model.text,label:model.near?'Siete a meno di 3 km':`${model.text} tra voi`};
+  if(state==='stale'&&model.text)return {state,text:model.text,label:model.near?'Ultima distanza nota: meno di 3 km':`Ultima distanza nota: ${model.text}`};
   return {state:'unknown',text:'distanza non nota',label:'Distanza tra voi non nota'};
 }
 function renderNoiDistance(model){
@@ -1438,7 +1438,7 @@ function renderDistanceCapsule(model){
   root.hidden=!model.visible;
   root.dataset.usDistanceState=model.state;
   value.textContent=model.text||'';
-  root.setAttribute('aria-label',model.visible?(model.near?'Siete vicini':`Distanza tra voi: ${model.text}`):'Distanza tra voi');
+  root.setAttribute('aria-label',model.visible?(model.near?'Siete a meno di 3 km':`Distanza tra voi: ${model.text}`):'Distanza tra voi');
   if(typeof syncOggiRow==='function')syncOggiRow();
   if (typeof Event === 'function' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(new Event('us:distance-changed'));
@@ -1501,7 +1501,7 @@ function geolocationError(error,silent=false){
 function refreshMyLocation(options={}){
   if(window.__US_LOCAL_DEV__)return;
   const silent=Boolean(options?.silent);
-  if(!window.usProfile)return toast('Connessione non pronta');
+  if(!window.usProfile)return toast('Connessione non pronta. Riprova tra poco.');
   if(!locationConsentGiven())return;
   if(!navigator.geolocation){
     renderDistanceCapsule(distanceCapsuleModel({supported:false}));
@@ -1520,7 +1520,7 @@ function refreshMyLocation(options={}){
     }catch(error){
       usLocationRuntime.lastFailureAt=Date.now();
       console.warn(error);
-      if(!silent)toast('Errore sync posizione');
+      if(!silent)toast('Non riesco ad aggiornare la posizione. Riprova.');
     }finally{
       locationRefreshInFlight=false;
     }
@@ -1738,7 +1738,7 @@ async function hydrateProfileAvatars(){
 window.hydrateProfileAvatars=hydrateProfileAvatars;
 
 function pickProfilePhoto(){
-  if(!window.usProfile)return toast('Connessione non pronta');
+  if(!window.usProfile)return toast('Connessione non pronta. Riprova tra poco.');
   document.getElementById('profileAvatarFile').click();
 }
 window.pickProfilePhoto=pickProfilePhoto;
@@ -2609,7 +2609,7 @@ function thinkTodayPriorityViewModel(now=Date.now()){
     // finale) è un'azione reale per CHI lo riceve.
     attention:true,
     title:`${partner?.display_name||'La tua persona'} ti pensa`,
-    detail:age||'Ha lasciato un segnale per te.',
+    detail:age||'Ti ha mandato un Ti penso.',
     recency:Number.isFinite(at)?at:0,
     action:'think',
     actionLabel:'Apri'
@@ -3475,12 +3475,12 @@ function dailyRevealPartnerLabel(){return usIdentity().partnerName;}
 // other felt. Receipt/notice and keepsake authorities stay untouched.
 const US_DAILY_REACTIONS=Object.freeze({
   heart:{label:'Metti un cuore alla risposta'},
-  cry:{label:'Mi hai commosso'}
+  cry:{label:'Mi hai fatto commuovere'}
 });
 // What the other felt about my answer (also the Oggi card's line). Never "angry".
 function dailyPartnerReactionLine(meta,partner){
   if(meta?.partner_reaction==='heart')return `${partner} ha messo ♥ alla tua risposta`;
-  if(meta?.partner_reaction==='cry')return `${partner}: mi hai commosso`;
+  if(meta?.partner_reaction==='cry')return `${partner}: mi hai fatto commuovere`;
   return '';
 }
 let usTodayRevealDrawn='';
@@ -3509,7 +3509,7 @@ const US_WHATS_NEW=Object.freeze({
   items:[
     'Gioca: ora le partite sono 3 al giorno, e un contatore vi dice quante ne restano.',
     'Mentre aspetti la tua persona puoi già rispondere alla domanda di oggi.',
-    'In arrivo US Plus: in Impostazioni vedete cosa porterà, e con «Avvisatemi» vi diciamo quando arriva.'
+    'In arrivo US Plus: in Impostazioni vedete cosa porterà, e con «Avvisami» ti diciamo quando arriva.'
   ]
 });
 function usShowWhatsNew(returning){
@@ -3683,7 +3683,7 @@ async function hydrateToday(){
     }else if(state?.partner_has_answer){
       locked.innerHTML='<span class="dot" data-who="partner" aria-hidden="true"></span><span>'+escapeHtml(`${partner} ha già risposto. Vedrete le risposte insieme appena invii la tua.`)+'</span>';
     }else{
-      locked.innerHTML='<span class="dot" data-who="noi" aria-hidden="true"></span><span>Le risposte si sbloccano quando avete risposto voi due.</span>';
+      locked.innerHTML='<span class="dot" data-who="noi" aria-hidden="true"></span><span>Le risposte si svelano quando avete risposto voi due.</span>';
     }
   }
   updateHomeStatus();
@@ -4010,7 +4010,7 @@ function consumeFreshRicordo(grid){
 window.UsRicordiFresh=Object.freeze({mark:markFreshRicordo,consume:consumeFreshRicordo});
 
 async function uploadMoment(){
-  if(!window.usProfile)return toast('Connessione non pronta');
+  if(!window.usProfile)return toast('Connessione non pronta. Riprova tra poco.');
   if(!pendingMomentFile)return toast('Scegli prima una foto');
   const btn=document.getElementById('momentUploadBtn');
   if(btn.disabled)return;
@@ -4905,7 +4905,8 @@ function renderBondProgress(totalXp){
   const rankEl=document.getElementById('bondRankTitle');if(rankEl)rankEl.textContent=bondRankTitle(info.level);
   // As the mockup: the points inside the level and the points to the next one.
   const tag=(globalThis.UsI18n?.tag||'it-IT');
-  const nextEl=document.getElementById('bondNextXp');if(nextEl)nextEl.textContent=`${(info.needed-info.current).toLocaleString(tag)} XP al livello ${info.level+1}`;
+  const left=info.needed-info.current;
+  const nextEl=document.getElementById('bondNextXp');if(nextEl)nextEl.textContent=`${left===1?'1 punto':`${left.toLocaleString(tag)} punti`} al livello ${info.level+1}`;
   const pageFill=document.getElementById('bondPageFill');if(pageFill)pageFill.style.width=`${info.progress}%`;
   // M10.1D — la barra è il progresso REALE dentro il livello corrente (bondLevelInfo:
   // (XP totali - soglia del livello) / XP del livello), mai un valore decorativo.
@@ -4916,7 +4917,7 @@ function renderBondProgress(totalXp){
     track.setAttribute('aria-valuenow',String(info.current));
     track.setAttribute('aria-valuetext',`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} di ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} punti nel livello ${info.level}`);
   }
-  const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString(tag)} / ${info.needed.toLocaleString(tag)} XP`;
+  const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString(tag)} / ${info.needed.toLocaleString(tag)} punti`;
   // M9D — hub Noi e superficie Risonanza: stessi numeri di couples.bond_xp.
   const hubTitle=document.getElementById('noiHubResonanceTitle');if(hubTitle)hubTitle.textContent=bondRankTitle(info.level);
   const hubMeta=document.getElementById('noiHubResonanceMeta');if(hubMeta)hubMeta.textContent=`Livello ${info.level}`;
@@ -4999,14 +5000,14 @@ function renderResonanceHistory(entries){
   // The same rows are never rebuilt (Sintonia hydrates on every tab switch, while its entrance plays).
   const paint=(html)=>{if(root.__usMarkup===html&&root.innerHTML)return;root.__usMarkup=html;root.innerHTML=html;};
   if(!entries?.length){
-    paint('<div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Missioni, eventi vissuti e mesiversari: le cose che fate insieme.</span></div>');
+    paint('<div class="noi-resonance-history-empty"><b>Il prossimo progresso apparirà qui</b><span>Sfide, eventi vissuti e mesiversari: le cose che fate insieme.</span></div>');
     return;
   }
   paint(entries.map(entry=>{
     const date=resonanceHistoryDate(entry.at);
     const what=resonanceHistoryWhat(entry);
     const detail=`<span${what.own?' translate="no"':''}>${escapeHtml(what.detail)}</span>${what.live?' <span>(titolo attuale)</span>':''}${date?` · <time>${escapeHtml(date)}</time>`:''}`;
-    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><p class="noi-resonance-history-copy">${escapeHtml(what.title)}<small>${detail}</small></p>${entry.xp>0?`<b class="noi-resonance-history-xp">+${entry.xp} XP</b>`:''}</article>`;
+    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><p class="noi-resonance-history-copy">${escapeHtml(what.title)}<small>${detail}</small></p>${entry.xp>0?`<b class="noi-resonance-history-xp">+${entry.xp} punti</b>`:''}</article>`;
   }).join(''));
 }
 // The fold sits after the collection, as in the mockup.
@@ -5036,7 +5037,7 @@ async function hydrateResonanceHistory(){
   if(questError&&eventError&&milestoneError){
     root.setAttribute('aria-busy','false');
     root.__usMarkup='';
-    root.innerHTML='<div class="noi-resonance-history-empty"><b>Crescita non disponibile</b><span>Riprova tra un momento.</span></div>';
+    root.innerHTML='<div class="noi-resonance-history-empty"><b>Progressi non disponibili</b><span>Riprova tra un momento.</span></div>';
     return;
   }
   renderResonanceHistory(resonanceHistoryEntries(questError?[]:(quests||[]),eventError?[]:(events||[]),historyError?[]:(history||[]),milestoneError?[]:(milestones||[])));
@@ -5250,13 +5251,13 @@ function renderNoiIdeaDetailState(item){
   if(livedBtn){
     livedBtn.hidden=!(pending==='none'||pending==='partner');
     livedBtn.dataset.confirm='';
-    livedBtn.textContent=pending==='partner'?"Sì, l'abbiamo vissuta":"L'abbiamo vissuta";
+    livedBtn.textContent=pending==='partner'?'Sì, l’abbiamo vissuta':'L’abbiamo vissuta';
     livedBtn.disabled=false;
   }
   const livedWait=document.getElementById('noiIdeaDetailLivedWait');
   if(livedWait){
     livedWait.hidden=pending==='none'||pending==='lived';
-    livedWait.textContent=pending==='mine'?`In attesa della conferma di ${noiIdeaPartnerName()}`:pending==='partner'?`${noiIdeaPartnerName()} dice che l'avete vissuta`:'';
+    livedWait.textContent=pending==='mine'?`In attesa della conferma di ${noiIdeaPartnerName()}`:pending==='partner'?`${noiIdeaPartnerName()} dice che l’avete vissuta`:'';
   }
   const memory=document.getElementById('noiIdeaDetailMemory');
   if(memory)memory.hidden=item.status!=='lived';
@@ -5505,7 +5506,7 @@ function openNoiIdeaCalendarEntry(){
   if(!item?.calendar_entry_id)return;
   window.UsCalendarLinks?.openEntry?.(item.calendar_entry_id);
 }
-// M7D — "L'abbiamo vissuta", in due: la prima persona propone, l'altra conferma
+// M7D — «L’abbiamo vissuta», in due: la prima persona propone, l'altra conferma
 // e solo allora il server porta l'idea a lived (RPC confirm_bucket_item_lived;
 // nessuna scrittura diretta di status/completed). Non tocca calendar_entry_id
 // (il link al giorno vero resta com'era) né crea un Moment: il ricordo, se c'è,
@@ -5545,8 +5546,8 @@ async function markNoiIdeaLived(){
   // Chiudere è irreversibile: la conferma finale vale due tocchi.
   if(phase==='partner'&&btn&&btn.dataset.confirm!=='1'){
     btn.dataset.confirm='1';
-    btn.textContent='Confermo, l\'abbiamo vissuta';
-    setTimeout(()=>{if(btn.dataset.confirm==='1'){btn.dataset.confirm='';btn.textContent="Sì, l'abbiamo vissuta";}},3000);
+    btn.textContent='Confermo, l’abbiamo vissuta';
+    setTimeout(()=>{if(btn.dataset.confirm==='1'){btn.dataset.confirm='';btn.textContent='Sì, l’abbiamo vissuta';}},3000);
     return;
   }
   const userId=window.usProfile.id,coupleId=window.usProfile.couple_id,identityGen=noiIdeaIdentityGen;
@@ -5730,10 +5731,10 @@ async function hydrateThink(){
   const sentReaction=sent?reactions.get(sent.id):null;
   if(received&&!receivedReaction){usIncomingThink=received;usThinkReactionFinal=null;}
   else if(!received||receivedReaction){usIncomingThink=null;usThinkReactionFinal=receivedReaction?.reaction||null;}
-  const receivedEl=document.getElementById('thinkLastReceived');if(receivedEl)receivedEl.textContent=received?(receivedReaction?`${partnerName} ha reagito al tuo Ti penso`:`${partnerName} ti ha pensato ${relativeSignalAge(received.created_at)}`):'Ancora nessun segnale';
+  const receivedEl=document.getElementById('thinkLastReceived');if(receivedEl)receivedEl.textContent=received?(receivedReaction?`${partnerName} ha reagito al tuo Ti penso`:`${partnerName} ti ha pensato ${relativeSignalAge(received.created_at)}`):'Ancora nessun Ti penso';
   const sentEl=document.getElementById('thinkLastSent');if(sentEl)sentEl.textContent=sent?(sentReaction?`${partnerName} ha reagito ${thinkReactionLabel(sentReaction.reaction)}`:`Hai pensato a ${partnerName} ${relativeSignalAge(sent.created_at)}`):'Non ne hai ancora inviati';
   const monthEl=document.getElementById('thinkMonthCount');if(monthEl)monthEl.textContent=Number(count||0).toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
-  const live=document.getElementById('thinkLiveText');if(live&&received)live.textContent=`Ultimo segnale da ${partnerName} · ${relativeSignalAge(received.created_at)}`;
+  const live=document.getElementById('thinkLiveText');if(live&&received)live.textContent=`Ultimo Ti penso da ${partnerName} · ${relativeSignalAge(received.created_at)}`;
   if(sentReaction){
     const signature=`${sent.id}:${sentReaction.reaction}:${sentReaction.updated_at||''}`;
     if(usThinkKnownReactionSignature&&usThinkKnownReactionSignature!==signature)toast(`Ha reagito ${thinkReactionLabel(sentReaction.reaction)}`);
@@ -5748,10 +5749,10 @@ async function hydrateThink(){
 }
 window.hydrateThink=hydrateThink;
 async function sendThinkSignal(){
-  if(!window.usProfile){toast('Connessione non pronta');return false;}
+  if(!window.usProfile){toast('Connessione non pronta. Riprova tra poco.');return false;}
   const btn=document.getElementById('thinkButton');if(btn?.disabled)return false;
   const profiles=await getCoupleProfiles(),partner=partnerFromProfiles(profiles);
-  if(!partner){toast('L’altro profilo non è ancora collegato');return false;}
+  if(!partner){toast('La tua persona non è ancora collegata');return false;}
   if(!usThinkOperationId)usThinkOperationId=globalThis.crypto?.randomUUID?.()||String(Date.now())+'-'+Math.random().toString(16).slice(2);
   if(btn)btn.disabled=true;
   const {data,error}=await sb.rpc('send_think',{operation_id:usThinkOperationId});

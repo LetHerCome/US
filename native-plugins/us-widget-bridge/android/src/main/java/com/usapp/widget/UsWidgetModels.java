@@ -222,7 +222,7 @@ final class UsWidgetModels {
         String todayInvitation = "";
         String distanceText = "";
         boolean distanceStale = false;
-        /** "vicini": closer than the app writes a number for. */
+        /** "meno di 3 km": closer than the app writes a number for. */
         boolean distanceNear = false;
         /** "aggiornato 10 min fa"; "" when unknown or a week old. */
         String distanceAgo = "";
@@ -483,7 +483,7 @@ final class UsWidgetModels {
 
     /** The founder's twelve (02/11/2026): key, emoji, masculine, feminine, undeclined. Same as member-status.js. */
     static final String[][] STATUSES = {
-        { "innamorato", "🥰", "innamorato", "innamorata", "in amore" },
+        { "innamorato", "🥰", "innamorato", "innamorata", "col cuore pieno" },
         { "felice", "😊", "felice", "felice", "felice" },
         { "stanco", "😴", "stanco", "stanca", "senza energie" },
         { "giu", "😔", "giù", "giù", "giù" },
@@ -491,7 +491,7 @@ final class UsWidgetModels {
         { "malato", "🤒", "non sto bene", "non sto bene", "non sto bene" },
         { "festa", "🥳", "in festa", "in festa", "in festa" },
         { "lavoro", "💼", "al lavoro", "al lavoro", "al lavoro" },
-        { "studio", "📚", "studio", "studio", "studio" },
+        { "studio", "📚", "sui libri", "sui libri", "sui libri" },
         { "palestra", "🏋️", "in palestra", "in palestra", "in palestra" },
         { "viaggio", "🚗", "in viaggio", "in viaggio", "in viaggio" },
         { "tavola", "🍝", "a tavola", "a tavola", "a tavola" }

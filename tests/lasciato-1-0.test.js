@@ -237,12 +237,12 @@ test('L3 the sender sees what happened to the last thing they left', async () =>
   const now = new Date(2026, 9, 14, 12, 0);
   const at = (d, h, m) => new Date(2026, 9, d, h, m).toISOString();
   const last = (seen) => ({ id: 'x', created_at: at(12, 9, 0), seen_at: seen });
-  assert.equal(api.lastOutcomeText(last(null), { now }), "L'ultima cosa che hai lasciato a Bea: ancora da aprire.");
-  assert.equal(api.lastOutcomeText(last(at(14, 9, 5)), { now }), "L'ultima cosa che hai lasciato a Bea: aperta oggi alle 9:05.");
-  assert.equal(api.lastOutcomeText(last(at(13, 21, 40)), { now }), "L'ultima cosa che hai lasciato a Bea: aperta ieri alle 21:40.");
-  assert.equal(api.lastOutcomeText(last(at(10, 21, 40)), { now }), "L'ultima cosa che hai lasciato a Bea: aperta sabato alle 21:40.");
-  assert.equal(api.lastOutcomeText({ id: 'x', created_at: at(1, 9, 0), seen_at: at(2, 8, 0) }, { now }), "L'ultima cosa che hai lasciato a Bea: aperta il 2 ottobre alle 8:00.");
-  assert.equal(api.lastOutcomeText(last(at(13, 21, 40)), { now, conserved: true }), "L'ultima cosa che hai lasciato a Bea: conservata.");
+  assert.equal(api.lastOutcomeText(last(null), { now }), "L’ultima cosa che hai lasciato a Bea: ancora da aprire.");
+  assert.equal(api.lastOutcomeText(last(at(14, 9, 5)), { now }), "L’ultima cosa che hai lasciato a Bea: aperta oggi alle 9:05.");
+  assert.equal(api.lastOutcomeText(last(at(13, 21, 40)), { now }), "L’ultima cosa che hai lasciato a Bea: aperta ieri alle 21:40.");
+  assert.equal(api.lastOutcomeText(last(at(10, 21, 40)), { now }), "L’ultima cosa che hai lasciato a Bea: aperta sabato alle 21:40.");
+  assert.equal(api.lastOutcomeText({ id: 'x', created_at: at(1, 9, 0), seen_at: at(2, 8, 0) }, { now }), "L’ultima cosa che hai lasciato a Bea: aperta il 2 ottobre alle 8:00.");
+  assert.equal(api.lastOutcomeText(last(at(13, 21, 40)), { now, conserved: true }), "L’ultima cosa che hai lasciato a Bea: conservata.");
   assert.equal(api.lastOutcomeText({ id: 'x', created_at: new Date(2026, 8, 1).toISOString(), seen_at: null }, { now }), '', 'older than 30 days: maybe no longer the last one');
   assert.equal(api.lastOutcomeText(null, { now }), '');
 });
@@ -253,7 +253,7 @@ test('L3 the outcome line is read from the sender rows and Conserva, and hidden 
   kept.api.openComposer();
   await sleep(5);
   assert.equal(kept.el('leftForYouComposerLast').hidden, false);
-  assert.equal(kept.el('leftForYouComposerLast').textContent, "L'ultima cosa che hai lasciato a Bea: conservata.");
+  assert.equal(kept.el('leftForYouComposerLast').textContent, "L’ultima cosa che hai lasciato a Bea: conservata.");
   const query = kept.log.queries.find(({ table, filters }) => table === 'left_for_you' && filters.sender_id);
   assert.deepEqual(query.filters, { sender_id: 'fra-id', couple_id: 'couple-id' });
 
@@ -340,14 +340,14 @@ test('every new Italian text has its English in i18n-en.js', () => {
     'Un vocale',
     'Vocale',
     'Didascalia (facoltativa)',
-    "L'ultima cosa che hai lasciato a Bea: ancora da aprire.",
-    "L'ultima cosa che hai lasciato alla tua persona: conservata.",
-    "L'ultima cosa che hai lasciato a Bea: aperta ieri alle 9:40 PM.",
-    "L'ultima cosa che hai lasciato a Bea: aperta Monday alle 9:40 PM.",
-    "L'ultima cosa che hai lasciato a Bea: aperta il October 2 alle 8:00 AM.",
+    "L’ultima cosa che hai lasciato a Bea: ancora da aprire.",
+    "L’ultima cosa che hai lasciato alla tua persona: conservata.",
+    "L’ultima cosa che hai lasciato a Bea: aperta ieri alle 9:40 PM.",
+    "L’ultima cosa che hai lasciato a Bea: aperta Monday alle 9:40 PM.",
+    "L’ultima cosa che hai lasciato a Bea: aperta il October 2 alle 8:00 AM.",
     'Manca il permesso per la fotocamera. Attivalo da Impostazioni del telefono › App › US › Autorizzazioni.',
   ];
   for (const text of samples) assert.notEqual(i18n.lookup(dict, text), null, text);
-  assert.equal(i18n.lookup(dict, "L'ultima cosa che hai lasciato a Bea: aperta Monday alle 9:40 PM."), 'The last thing you left for Bea: opened Monday at 9:40 PM.');
-  assert.equal(i18n.lookup(dict, "L'ultima cosa che hai lasciato a Bea: aperta il October 2 alle 8:00 AM."), 'The last thing you left for Bea: opened on October 2 at 8:00 AM.');
+  assert.equal(i18n.lookup(dict, "L’ultima cosa che hai lasciato a Bea: aperta Monday alle 9:40 PM."), 'The last thing you left for Bea: opened Monday at 9:40 PM.');
+  assert.equal(i18n.lookup(dict, "L’ultima cosa che hai lasciato a Bea: aperta il October 2 alle 8:00 AM."), 'The last thing you left for Bea: opened on October 2 at 8:00 AM.');
 });

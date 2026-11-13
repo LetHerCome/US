@@ -209,8 +209,8 @@ test('capsule model: compact states, near under 3 km, stale stays visible, nothi
 
   const near = api.distanceCapsuleModel({ server: pair(1, 1, { near: true, distance_km: null }), consent: true });
   assert.equal(near.state, 'ready');
-  assert.equal(near.text, 'vicini');
-  assert.equal(near.detail, 'Siete vicini');
+  assert.equal(near.text, 'meno di 3 km');
+  assert.equal(near.detail, 'Siete a meno di 3 km');
   assert.equal(near.km, 0);
 
   const stale = api.distanceCapsuleModel({ server: pair(200, 1), partnerName: 'Beatrice', consent: true });

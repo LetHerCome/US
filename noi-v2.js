@@ -102,7 +102,7 @@ function daysMilestoneItems(data=snapshot,span=nearMonths()){
 }
 function relationshipItem(months){
   const base={kind:'relationship',months,sort:'00:00'};
-  if(months===0)return {...base,title:'Il nostro giorno',time:'Dove è iniziato tutto'};
+  if(months===0)return {...base,title:'Il nostro giorno',time:'Da qui è iniziato tutto'};
   if(months%12===0){const years=months/12;return {...base,title:'Anniversario',time:years===1?'Un anno insieme':`${years} anni insieme`};}
   return {...base,title:'Mesiversario',time:months===1?'Un mese insieme':`${months} mesi insieme`};
 }
@@ -184,7 +184,7 @@ function itemMarkup(day,item) {
   // Il nostro giorno: the couple mark and how long ago it all began.
   if(item.kind==='relationship'&&item.months===0){
     const ago=Math.round((dateOf(today())-dateOf(day))/86400000);
-    const since=ago>1?`${ago} giorni fa`:ago===1?'Un giorno fa':'';
+    const since=ago>1?`${ago} giorni fa`:ago===1?'Ieri':'';
     return `<button type="button" class="us-noi-v2-item us-noi-v2-ourday" data-noi-item="${action}" data-day="${esc(day)}" data-id="" data-months="${item.months}" data-owner="noi">
     ${VENN}<span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small class="us-noi-v2-item-meta"><span>${esc(item.time)}</span>${since?`<span>${esc(since)}</span>`:''}<span class="us-noi-v2-owner" data-owner-type="relationship" hidden>${esc(ownerLabel(item))}</span></small></span>
   </button>`;

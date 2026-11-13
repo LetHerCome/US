@@ -19,7 +19,7 @@ const THEMES = Object.freeze([
   { id: 'moonlight', name: 'Chiaro di luna', note: 'Notte blu, stelle e un riflesso di luna.', reward: 'oggi_theme_moonlight', level: 6 },
   // Premi Sintonia V2 (29/10/2026): the seasonal theme follows the season by itself.
   // Premi Sintonia V2: the headline of level 20, the couple's own sky.
-  { id: 'sky', name: 'Il vostro cielo', kicker: 'Leggenda', note: 'Le stelle della sera in cui vi siete messi insieme, sopra la vostra città.', reward: 'sky_ours', level: 20 },
+  { id: 'sky', name: 'Il vostro cielo', kicker: 'Leggenda', note: 'Le stelle della sera in cui è iniziata la vostra storia, sopra la vostra città.', reward: 'sky_ours', level: 20 },
   { id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: 'Cambia da solo: fiori in primavera, sole d’estate, foglie d’autunno, neve d’inverno.', reward: 'oggi_theme_seasonal', level: 10 }
 ]);
 const EFFECTS = Object.freeze([
@@ -274,7 +274,7 @@ function galleryMarkup() {
   const looks = visibleLooks(tab);
   const hidden = (CATALOG[tab] || []).length - looks.length;
   const lead = tab === 'theme'
-    ? 'Cambia l’atmosfera di Oggi: luce, colori e dettagli. La foto resta vostra.'
+    ? 'Cambia il tema di Oggi: luce, colori e dettagli. La vostra foto non cambia.'
     : 'Un tocco leggero sopra la foto. Uno alla volta, mai sopra i comandi.';
   return `<p class="us-look-lead">${lead}</p>
     <div class="us-look-grid" data-slot="${tab}">${looks.map((look) => tileMarkup(tab, look, snapshot)).join('')}</div>
@@ -288,11 +288,11 @@ function detailMarkup() {
   const effect = tab === 'effect' ? look.id : applied.effect;
   const current = applied[tab] === look.id;
   // Il vostro cielo: the city and the hour first («Dove eravate quella sera?»,
-  // «A che ora vi siete messi insieme?», 22:00 unless they say), then the picture to keep.
+  // «A che ora è iniziata la vostra storia?», 22:00 unless they say), then the picture to keep.
   const sky = tab === 'theme' && look.id === 'sky' && s.state !== 'locked';
   const { cityId, minutes } = sky ? skyContext() : { cityId: '', minutes: null };
   const cities = sky && window.UsSky ? `<label class="us-look-sky-city"><span>Dove eravate quella sera?</span><select id="usSkyCity">${cityId ? '' : '<option value="">Scegli la città</option>'}${window.UsSky.CITIES.map((c) => `<option value="${esc(c.id)}"${c.id === cityId ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
-      <label class="us-look-sky-city"><span>A che ora vi siete messi insieme?</span><input type="time" id="usSkyTime" value="${window.UsSky.clock(minutes)}"></label>` : '';
+      <label class="us-look-sky-city"><span>A che ora è iniziata la vostra storia?</span><input type="time" id="usSkyTime" value="${window.UsSky.clock(minutes)}"></label>` : '';
   const save = sky && cityId && skyStars ? '<button type="button" class="us-look-save" data-look-save-sky>Salva l’immagine</button>' : '';
   const action = sky && !cityId
     ? `<button type="button" class="us-look-apply" disabled>Scegli prima la città</button>`

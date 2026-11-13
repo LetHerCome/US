@@ -105,7 +105,7 @@ test('in the app: a theme of Oggi, drawn from «Insieme dal», the city and the 
 test('the city and the hour are asked when the sky is first used, and the picture can be saved', () => {
   const look = read('oggi-look.js');
   assert.match(look, /Dove eravate quella sera\?/);
-  assert.match(look, /A che ora vi siete messi insieme\?/);
+  assert.match(look, /A che ora è iniziata la vostra storia\?/);
   assert.match(look, /<input type="time" id="usSkyTime"/);
   assert.match(read('sky.js'), /sb\.rpc\('set_sky', \{ p_city: city, p_minutes: minutes \}\)/);
   assert.doesNotMatch(read('sky.js'), /set_sky_city/);

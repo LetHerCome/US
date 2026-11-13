@@ -39,7 +39,8 @@ test('the ladder: today\'s rewards move down, headlines are marked, the top is l
   assert.equal(phase1.length, Object.keys(expect).length, 'only these are active from Phase 1');
   assert.deepEqual(phase1.filter((r) => r.headline).map((r) => r.id), ['oggi_effect_petals', 'oggi_theme_cinematic', 'ti_penso_hearts', 'oggi_theme_seasonal', 'sky_ours']);
   assert.deepEqual(phase1.filter((r) => r.p).map((r) => r.id), ['oggi_effect_aurora'], 'Phase 1 has one Plus extra');
-  assert.equal(at.oggi_theme_seasonal.title, 'Tema delle stagioni');
+  // «Stagioni», the name the Oggi gallery uses (text review, 14/11/2026).
+  assert.equal(at.oggi_theme_seasonal.title, 'Stagioni');
   assert.ok(rows.filter((r) => r.p).every((r) => r.l >= 2 && r.l <= 12 && !r.headline), 'Plus only on levels 2–12, never a free headline');
 });
 

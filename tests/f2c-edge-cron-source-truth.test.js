@@ -272,8 +272,8 @@ test('F2C calendar-reminders-worker: configures VAPID before Web Push and before
   // Preserved: payload, dedupe, stale-subscription cleanup, sent_at.
   assert.equal(webpush.sent.length, 1);
   const { payload, options } = webpush.sent[0];
-  assert.equal(payload.title, 'US. · Calendar');
-  assert.match(payload.body, /^Bea ti ricorda — Cena alle \d\d:\d\d ♡$/);
+  assert.equal(payload.title, 'US. · Calendario');
+  assert.match(payload.body, /^Bea ti ricorda: Cena alle \d\d:\d\d ♡$/);
   assert.equal(payload.tag, 'calendar-reminder-r1');
   assert.deepEqual(options, { TTL: 43200, urgency: 'high' });
   assert.deepEqual(admin.db.push_event_log.map((r) => [r.dedupe_key, r.event_type]), [['calendar-reminder:r1', 'calendar_reminder']]);

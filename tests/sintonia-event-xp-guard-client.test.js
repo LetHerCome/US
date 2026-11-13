@@ -64,8 +64,8 @@ async function completeWith(answer, options = {}) {
 
 test('a completion without points is never celebrated: a quiet line says why', async () => {
   const cases = [
-    ['same_day', 'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo'],
-    ['before_creation', 'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo'],
+    ['same_day', 'Evento vissuto ♡ Niente punti: valgono gli eventi creati in anticipo'],
+    ['before_creation', 'Evento vissuto ♡ Niente punti: valgono gli eventi creati in anticipo'],
     ['daily_limit', 'Evento vissuto ♡ Oggi un evento ha già fatto crescere la Sintonia'],
     [undefined, 'Evento vissuto ♡'],
   ];
@@ -77,16 +77,16 @@ test('a completion without points is never celebrated: a quiet line says why', a
   }
   // Without the Polish layer the fallback toast never says "+0 XP" either.
   const bare = await completeWith({ completed: true, already_completed: false, xp_awarded: 0, xp_reason: 'same_day' }, { celebrate: false });
-  assert.deepEqual(bare.toasts, ['Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo']);
+  assert.deepEqual(bare.toasts, ['Evento vissuto ♡ Niente punti: valgono gli eventi creati in anticipo']);
 });
 
 // US 1.0 (N7): Eventi never shows points. A completion that earned points gets the
 // same quiet toast; labels and the complete button never promise XP.
 test('already completed says so, never with points', async () => {
   const none = await completeWith({ completed: true, already_completed: true, xp_awarded: 0, completed_at: stamp(0) });
-  assert.deepEqual(none.toasts, ['Già completato']);
+  assert.deepEqual(none.toasts, ['Già vissuto']);
   const some = await completeWith({ completed: true, already_completed: true, xp_awarded: 35, completed_at: stamp(0) });
-  assert.deepEqual(some.toasts, ['Già completato']);
+  assert.deepEqual(some.toasts, ['Già vissuto']);
   assert.deepEqual([...none.celebrations, ...some.celebrations], []);
 });
 
@@ -126,7 +126,7 @@ test('the complete button and the due list never promise points', async () => {
   await fresh.window.hydrateEvents();
   for (const id of ['today', 'yearly', 'planned']) {
     fresh.window.editEvent(id, TODAY);
-    assert.match(fresh.node('usEventCompleteBtn').innerHTML, /data-us-icon="check"[\s\S]*<span>Segna come fatto<\/span>$/, id);
+    assert.match(fresh.node('usEventCompleteBtn').innerHTML, /data-us-icon="check"[\s\S]*<span>Segna come vissuto<\/span>$/, id);
     assert.doesNotMatch(fresh.node('usEventCompleteBtn').innerHTML, /XP/, id);
   }
 

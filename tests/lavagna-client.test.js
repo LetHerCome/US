@@ -125,8 +125,8 @@ test('wiring: the slot in Noi, scripts and styles everywhere, back closes it, Re
 test('English: every sentence of the board has its translation', () => {
   const en = read('i18n-en.js');
   for (const it of ['Torna a Noi', 'Pulisci', 'Pulire la lavagna?', 'Il disegno sparisce per tutti e due.', 'Ultimo tratto', 'Disegna', 'Apri la lavagna',
-    'Rosa', 'Lilla', 'Ambra', 'Latte', 'Tratto sottile', 'Tratto spesso', 'Gomma', "Annulla l'ultimo tratto", 'Strumenti della lavagna',
-    'La lavagna è vuota', 'Disegnate qualcosa: lo vedete tutti e due', 'La lavagna è piena: pulitela per continuare', 'Tratto non salvato. Riprova tra poco.']) {
+    'Rosa', 'Lilla', 'Ambra', 'Latte', 'Tratto sottile', 'Tratto spesso', 'Gomma', 'Annulla l’ultimo tratto', 'Strumenti della lavagna',
+    'La lavagna è vuota', 'Disegnate qualcosa: lo vedete tutti e due', 'La lavagna è piena: puliscila per continuare', 'Tratto non salvato. Riprova tra poco.']) {
     assert.ok(en.includes(`'${it.replace(/'/g, "\\'")}':`) || en.includes(`"${it}":`) || new RegExp(`\\n\\s*${it}:`).test(en), it);
   }
 });

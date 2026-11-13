@@ -46,7 +46,7 @@ test('catalogue: Italian copy never says Today, Bond, XP or quest; English follo
   assert.equal(en('quest_confirmed').title, 'US. · Missions');
   assert.equal(en('think_reaction').title, 'US. · Thinking of you');
   assert.equal(en('left_for_you').body, 'Bea left something for you ♡');
-  assert.equal(en('game_waiting', { gameName: 'This or that' }).body, 'Bea finished This or that: your turn');
+  assert.equal(en('game_waiting', { gameName: 'This or that' }).body, 'Bea played “This or that”: your turn');
 });
 
 test('catalogue: reactions are named, never "angry"; the anniversary copy has no points and opens Eventi', async () => {
@@ -58,13 +58,13 @@ test('catalogue: reactions are named, never "angry"; the anniversary copy has no
   assert.equal(think('hug', 'en'), 'Bea sends you a hug');
   const daily = (reaction, locale) => buildNotification('daily_reaction', { senderName: 'Bea', questionId: UUID(6), reaction, locale }).body;
   assert.equal(daily('heart'), 'Bea ha messo ♥ alla tua risposta');
-  assert.equal(daily('cry'), 'Bea: mi hai commosso');
+  assert.equal(daily('cry'), 'Bea: mi hai fatto commuovere');
   assert.equal(daily('cry', 'en'), 'Bea: you moved me');
   assert.doesNotMatch(daily('angry'), /arrabbiat|angry/i);
   const rel = (kind, months, locale) => buildNotification('relationship', { kind, months, tag: 'relationship-2027-02-28', locale });
-  assert.deepEqual([rel('monthiversary', 1).title, rel('monthiversary', 1).body, rel('monthiversary', 1).target], ['US. · Mesiversario ♡', 'Oggi è un mese insieme', 'events']);
-  assert.equal(rel('monthiversary', 13).body, 'Oggi sono 13 mesi insieme');
-  assert.deepEqual([rel('anniversary', 24).title, rel('anniversary', 24).body], ['US. · Anniversario ♡', 'Oggi sono 2 anni insieme']);
+  assert.deepEqual([rel('monthiversary', 1).title, rel('monthiversary', 1).body, rel('monthiversary', 1).target], ['US. · Mesiversario ♡', 'Oggi fate un mese insieme', 'events']);
+  assert.equal(rel('monthiversary', 13).body, 'Oggi fate 13 mesi insieme');
+  assert.deepEqual([rel('anniversary', 24).title, rel('anniversary', 24).body], ['US. · Anniversario ♡', 'Oggi fate 2 anni insieme']);
   assert.equal(rel('anniversary', 12, 'en').body, 'One year together today');
   assert.equal(buildNotification('partner_joined', { senderName: 'Bea' }).body, 'Bea ha accettato l’invito: il vostro spazio è pronto');
 });
@@ -118,7 +118,7 @@ test('O2 daily_reaction: only a stored ♥ or "commosso" of the caller notifies 
   const ok = await post('jwt-b', { type: 'daily_reaction', reference_id: Q });
   assert.deepEqual(ok.body, { delivered: 1, failed: 0 });
   assert.deepEqual(world.webpush.sent.map((s) => [s.endpoint, s.payload.title, s.payload.body, s.payload.target]),
-    [['https://push.example/s-fra', 'US. · Domanda del giorno', 'Bea ha messo ♥ alla tua risposta', 'today']]);
+    [['https://push.example/s-fra', 'US. · La domanda di oggi', 'Bea ha messo ♥ alla tua risposta', 'today']]);
   assert.doesNotMatch(JSON.stringify(world.webpush.sent), /SEGRETO/);
   assert.deepEqual((await post('jwt-b', { type: 'daily_reaction', reference_id: Q })).body, { delivered: 0, deduplicated: true });
   assert.ok(world.admin.db.push_event_log.some((row) => row.dedupe_key === `daily-reaction:${Q}:${B}` && row.event_type === 'daily_reaction'));
@@ -230,18 +230,18 @@ test('G11 game pushes name the game of the round, in the recipient language; oth
     const web = createFakeWebPush();
     return { admin, web, options: { ensureVapid() {}, sendNotification: web.sendNotification.bind(web) } };
   };
-  for (const [family, body] of [['ridete', 'Bea ha finito Ridete: tocca a te'], ['quanto_mi_conosci', 'Bea ha finito Quanto mi conosci?: tocca a te'],
-    ['e_se', 'Bea ha finito Confrontatevi: tocca a te'], ['swipe', 'Bea ha finito Questo o quello: tocca a te'], ['mystery', 'Bea ha giocato: tocca a te']]) {
+  for (const [family, body] of [['ridete', 'Bea ha giocato a «Ridete»: tocca a te'], ['quanto_mi_conosci', 'Bea ha giocato a «Quanto mi conosci?»: tocca a te'],
+    ['e_se', 'Bea ha giocato a «Confrontatevi»: tocca a te'], ['swipe', 'Bea ha giocato a «Questo o quello»: tocca a te'], ['mystery', 'Bea ha giocato: tocca a te']]) {
     const w = world(family);
     await deliverGamePush(w.admin, event(), w.options);
     assert.deepEqual([w.web.sent[0].payload.title, w.web.sent[0].payload.body], ['US. · Gioca', body], family);
   }
   const reveal = world('scopritevi');
   await deliverGamePush(reveal.admin, event('game_reveal'), reveal.options);
-  assert.equal(reveal.web.sent[0].payload.body, 'Scopritevi: le vostre risposte sono pronte ♡');
+  assert.equal(reveal.web.sent[0].payload.body, 'Risposte pronte per «Scopritevi» ♡');
   const english = world('swipe', COUPLE, 'en');
   await deliverGamePush(english.admin, event(), english.options);
-  assert.deepEqual([english.web.sent[0].payload.title, english.web.sent[0].payload.body], ['US. · Play', 'Bea finished This or that: your turn']);
+  assert.deepEqual([english.web.sent[0].payload.title, english.web.sent[0].payload.body], ['US. · Play', 'Bea played “This or that”: your turn']);
   const foreign = world('ridete', UUID(901));
   await deliverGamePush(foreign.admin, event(), foreign.options);
   assert.equal(foreign.web.sent[0].payload.body, 'Bea ha giocato: tocca a te', 'a round of another couple is never read');
@@ -282,7 +282,7 @@ test('O3 evening reminder: at 20:30 Rome, once, only to whoever the partner is w
   assert.equal(first.result.recipients.find((r) => r.userId === B).outcome, 'already-answered');
   const reminder = first.webpush.sent.filter((s) => s.payload.tag === `daily-evening-${DQ.id}`);
   assert.deepEqual(reminder.map((s) => [s.endpoint, s.payload.title, s.payload.body, s.payload.target]),
-    [['https://push.example/s-fra', 'US. · La domanda di oggi', 'Bea ha già risposto alla domanda di oggi. Tocca a te ♡', 'today']]);
+    [['https://push.example/s-fra', 'US. · La domanda di oggi', 'Bea ha già risposto. Tocca a te ♡', 'today']]);
   const claim = admin.db.push_event_log.find((row) => row.dedupe_key === `daily-evening:${DAY}:${F}`);
   assert.deepEqual([claim.event_type, claim.sender_id, claim.couple_id], ['daily_evening', null, COUPLE]);
 
@@ -305,7 +305,7 @@ test('O3 evening reminder: not when the partner answered after 20:30, both answe
   assert.ok(!solo.result.evening.recipients.some((r) => r.userId === 'solo'), 'a space still waiting for the partner gets no reminder');
   const english = await evening(eveningWorld({ answers: [beaAnswered('2026-10-15T10:00:00Z')], locale: 'en' }), at('2026-10-15T18:30:00Z'));
   assert.deepEqual(english.webpush.sent.map((s) => [s.payload.title, s.payload.body]),
-    [['US. · Question of the day', "Bea already answered today's question. Your turn ♡"]]);
+    [['US. · Question of the day', 'Bea already answered. Your turn ♡']]);
 });
 
 test('O3 worker: the same cron run reports the evening outcomes', async () => {
@@ -357,7 +357,7 @@ test('A11/N7 monthiversary: a start on the 31st fires on the last day of shorter
   assert.deepEqual(feb.awards, [{ target_couple_id: COUPLE, target_milestone_date: '2027-02-28', target_months: 13, target_kind: 'monthiversary', target_xp: 60 }]);
   const byEndpoint = Object.fromEntries(feb.webpush.sent.map((s) => [s.endpoint, s.payload]));
   assert.deepEqual([byEndpoint['https://push.example/s-fra'].title, byEndpoint['https://push.example/s-fra'].body, byEndpoint['https://push.example/s-fra'].target],
-    ['US. · Mesiversario ♡', 'Oggi sono 13 mesi insieme', 'events']);
+    ['US. · Mesiversario ♡', 'Oggi fate 13 mesi insieme', 'events']);
   assert.equal(byEndpoint['https://push.example/s-fra'].url, '/?open=events&from=push');
   assert.equal(byEndpoint['https://push.example/s-bea'].body, '13 months together today');
   assert.doesNotMatch(JSON.stringify(feb.webpush.sent), /XP|Bond|\+\d/);
@@ -375,7 +375,7 @@ test('A11/N7 monthiversary: a start on the 31st fires on the last day of shorter
   const leap = monthiversaryWorld('2028-02-29');
   await runMonthiversary(leap, '2029-02-28T08:30:00Z');
   assert.deepEqual([leap.awards[0].target_kind, leap.awards[0].target_months, leap.awards[0].target_xp], ['anniversary', 12, 200]);
-  assert.deepEqual(leap.webpush.sent.map((s) => s.payload.body), ['Oggi è un anno insieme', 'Oggi è un anno insieme']);
+  assert.deepEqual(leap.webpush.sent.map((s) => s.payload.body), ['Oggi fate un anno insieme', 'Oggi fate un anno insieme']);
 
   // Ordinary day-of-month start: unchanged behaviour (fires on that day only).
   const plain = monthiversaryWorld('2026-01-04');

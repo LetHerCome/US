@@ -280,7 +280,7 @@
   const createdTime = (item) => { const time = Date.parse(item?.created_at || ''); return Number.isFinite(time) ? time : 0; };
   const oldestFirst = (list) => list.slice().sort((a, b) => createdTime(a) - createdTime(b));
   const partner = () => profiles.get(items[0]?.sender_id) || [...profiles.values()].find((p) => p.id !== window.usProfile?.id) || null;
-  const labelForKind = (kind) => ({ text: 'Un pensiero', photo: 'Una foto', audio: 'Un vocale', video: 'Un momento', music: 'Musica' }[kind] || 'Lasciato per te');
+  const labelForKind = (kind) => ({ text: 'Un pensiero', photo: 'Una foto', audio: 'Un vocale', video: 'Un video', music: 'Musica' }[kind] || 'Lasciato per te');
 
   function renderItemMarkup(item, mediaUrl = '') {
     const kind = kinds.has(item?.kind) ? item.kind : 'text';
@@ -740,7 +740,7 @@
       const when = openedWhen(last.seen_at, now);
       outcome = when ? `aperta ${when}` : 'aperta';
     }
-    return `L'ultima cosa che hai lasciato ${toPartner()}: ${outcome}.`;
+    return `L’ultima cosa che hai lasciato ${toPartner()}: ${outcome}.`;
   }
 
   async function refreshLastOutcome() {
@@ -1653,7 +1653,7 @@
     const other = partner();
     const personName = composerPartnerName();
     if (!client || !me || !other || other.id === me.id) {
-      setComposerStatus('Non so ancora a chi lasciarlo. Riprova.', 'error');
+      setComposerStatus('La tua persona non è ancora collegata. Riprova tra poco.', 'error');
       return;
     }
     const kind = composer.kind;
@@ -1675,14 +1675,14 @@
     } else if (kind === 'audio') {
       file = composer.recording?.file;
       if (!file) { setComposerStatus('Registra un vocale prima di lasciarlo.', 'error'); return; }
-      if (file.size > 25 * 1024 * 1024) { setComposerStatus('Il file è troppo grande (massimo 25 MB).', 'error'); return; }
+      if (file.size > 25 * 1024 * 1024) { setComposerStatus('Il vocale è troppo grande (massimo 25 MB).', 'error'); return; }
     } else {
       file = selectedComposerFile(kind);
       if (!file) { setComposerStatus('Scegli qualcosa da lasciare.', 'error'); return; }
       if (kind === 'video') {
         const problem = await videoProblem(file);
         if (problem) { setComposerStatus(problem, 'error'); return; }
-      } else if (file.size > 25 * 1024 * 1024) { setComposerStatus('Il file è troppo grande (massimo 25 MB).', 'error'); return; }
+      } else if (file.size > 25 * 1024 * 1024) { setComposerStatus('La foto è troppo grande (massimo 25 MB).', 'error'); return; }
     }
     if (CAPTION_FIELDS[kind]) {
       body = composerCaption(kind);

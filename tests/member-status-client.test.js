@@ -29,7 +29,7 @@ test('the founder\'s twelve, in the same order in the app, the SQL and the widge
 test('words in the chosen form, or undeclined', () => {
   assert.equal(status.word('innamorato', 'f'), 'innamorata');
   assert.equal(status.word('innamorato', 'm'), 'innamorato');
-  assert.equal(status.word('innamorato', null), 'in amore');
+  assert.equal(status.word('innamorato', null), 'col cuore pieno');
   assert.equal(status.word('stanco', 'x'), 'senza energie');
   assert.equal(status.word('nope', 'f'), '');
 });
