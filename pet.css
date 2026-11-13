@@ -7,9 +7,11 @@
 .us-pet-layer[hidden]{display:none!important}
 /* A page scrolling under the cat: it steps back so the text shows (03/11/2026). */
 .us-pet-layer[data-pet-scrolling]{opacity:.2}
-/* A control resting under it (pet.js covered()): it steps down out of the way,
-   and its hit target stops taking taps (06/11/2026). */
-.us-pet-layer[data-pet-aside]{opacity:0;translate:0 30px;visibility:hidden;transition:opacity .3s,translate .45s var(--us-ease-standard),visibility 0s linear .3s}
+/* A control resting under it (pet.js covered()): it stays in its spot, see-through,
+   and taps pass through it to the control (06/11/2026). Since 13/11/2026 it no
+   longer vanishes: in Ricordi and Gioca a tile is always under it. */
+.us-pet-layer[data-pet-aside]{opacity:.45}
+.us-pet-layer[data-pet-aside] .us-pet-hit{pointer-events:none!important}
 .us-pet-layer,.us-pet-layer *{pointer-events:none!important;user-select:none;-webkit-user-select:none}
 .us-pet-actor{position:absolute;inset:0;display:block;touch-action:manipulation}
 .us-pet-layer .us-pet-hit{position:absolute;inset:0;z-index:1;pointer-events:auto!important;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;cursor:pointer}

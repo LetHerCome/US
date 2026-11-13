@@ -1,5 +1,17 @@
 # Prossima patch in produzione
 
+## Patch 1.5.1: la mascotte non sparisce più (13/11/2026)
+
+**Stato:** sul branch `claude/mascotte-visibile`, provata nell'emulatore di staging (US LIVE) il 13/11; non in produzione.
+
+**Il bug (segnalato dal founder in produzione, 13/11):** in Ricordi e in Gioca la mascotte spariva. Dal 06/11, quando sotto di lei c'era un comando, si «faceva da parte» diventando invisibile; in quelle pagine c'è quasi sempre una tessera sotto, quindi restava sparita.
+
+**Cosa cambia:** con un comando sotto, la mascotte resta al suo posto, trasparente al 45%, e i tocchi le passano attraverso fino al comando (`pet.css`). Il problema del 06/11 (si prendeva il tocco dell'interruttore dell'impronta) resta risolto. Test: `tests/emulator-polish-20261106.test.js`. Nell'emulatore: Gioca scorsa su una tessera → `data-pet-aside`, visibile, opacità 0,45, tocco disattivato sulla mascotte.
+
+**Novità per Play:** nessuna voce a sé; va con il prossimo AAB («Piccole correzioni»).
+
+**Ordine in produzione:** niente SQL. Sito: merge su `main` con build id di produzione. Android: AAB nuovo (il web dell'app è dentro il pacchetto).
+
 ## Patch 1.5: versione pubblica, tre partite al giorno e «US Plus, in arrivo» (13/11/2026)
 
 **Stato:** provata il 13/11 nell'emulatore di staging (build `us-staging-20261113-107`, migrazioni su US-STAGING run 43456669485 e 43456698374: contatore «3 su 3», «Avvisatemi» salvato davvero). Uscita in produzione col via del founder («Sì, vai in prod», 13/11): build `us-rilascio-20261113-108`, Novità id `1.5`. Decisione: [DECISIONS.md, 13/11](../DECISIONS.md).
