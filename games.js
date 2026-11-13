@@ -383,7 +383,7 @@ function renderHub() {
  const families=OFFERED.map(f=>gameCard({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)})).join('');
  root.innerHTML=`
   <h2 class="us-gv2-sr">Gioca</h2>
-  <div class="us-gv2-daily-slot" data-gv4-daily-slot data-s aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Sfida di oggi</span><small>Preparo la domanda di oggi…</small></div></div>
+  <div class="us-gv2-daily-slot" data-gv4-daily-slot data-s aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">La domanda di oggi</span><small>Preparo la domanda di oggi…</small></div></div>
   <div class="us-wc-slot" data-wc-slot></div>
   ${weekStrip()}
   <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">

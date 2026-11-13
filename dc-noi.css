@@ -71,12 +71,14 @@
    put it (two at most, then +n). A day with a Ricordo is its photo. Today is
    bold; the chosen day has a frame. */
 #bond .us-noi-v2-grid{position:relative;gap:4px}
-#bond .us-noi-v2-day,#bond .us-noi-v2-blank{height:clamp(72px,20vw,84px)}
-#bond .us-noi-v2 .us-noi-v2-day{position:relative;z-index:1;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:2px;min-width:0;padding:5px 3px 4px;overflow:hidden;border:1px solid var(--us-color-line);border-radius:12px;background:var(--us-color-surface);color:var(--us-color-text);text-align:left;transition:border-color .2s}
+/* Lighter month (founder, 13/11, visual review): no box lines, a faint
+   paper for each day, shorter rows so the board comes up sooner. */
+#bond .us-noi-v2-day,#bond .us-noi-v2-blank{height:clamp(60px,16.5vw,70px)}
+#bond .us-noi-v2 .us-noi-v2-day{position:relative;z-index:1;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:2px;min-width:0;padding:5px 3px 4px;overflow:hidden;border:1px solid transparent;border-radius:12px;background:rgba(247,239,233,.035);color:var(--us-color-text);text-align:left;transition:border-color .2s}
 #bond .us-noi-v2-day.is-past{color:var(--us-color-text-3)}
 #bond .us-noi-v2-day-number{position:relative;display:block;width:auto;height:auto;padding-left:3px;font-size:14px;font-weight:600;line-height:1;letter-spacing:0;text-align:left;background:transparent!important;border-radius:0;box-shadow:none;transition:none}
 #bond .us-noi-v2-day:active .us-noi-v2-day-number{transform:none}
-#bond .us-noi-v2-day.is-today{background:var(--us-color-elevated)}
+#bond .us-noi-v2-day.is-today{background:var(--us-color-elevated);border-color:var(--us-color-line-strong)}
 #bond .us-noi-v2-day.is-today .us-noi-v2-day-number{color:var(--us-color-text);font-weight:800;box-shadow:none}
 #bond .us-noi-v2-day.is-selected{border:2px solid var(--us-color-text);padding:4px 2px 3px}
 #bond .us-noi-v2-day.is-selected .us-noi-v2-day-number{color:inherit}
@@ -86,7 +88,7 @@
 #bond .us-noi-v2-day.has-photo::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,rgba(0,0,0,.42),transparent 40%,transparent 60%,rgba(0,0,0,.34));pointer-events:none}
 #bond .us-noi-v2-day.has-photo .us-noi-v2-day-number{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6)}
 #bond .us-noi-v2-day-bars{position:relative;z-index:1;display:flex;flex-direction:column;gap:2px;width:100%;margin-top:auto;min-width:0}
-#bond .us-noi-v2-bar{display:block;min-width:0;padding:2px 4px;border-radius:5px;background:var(--dc-who);color:var(--us-inchiostro);font-size:9.5px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bond .us-noi-v2-bar{display:block;min-width:0;padding:2px 4px;border-radius:5px;background:var(--dc-who);color:var(--us-inchiostro);font-size:10.5px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #bond .us-noi-v2-bar.is-milestone{display:-webkit-box;padding:2px;white-space:normal;overflow-wrap:normal;text-overflow:clip;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 #bond .us-noi-v2-more{padding-left:3px;font-size:9.5px;font-weight:700;line-height:1.2;color:inherit;opacity:.8}
 #bond .us-noi-v2-content[data-state="loading"] .us-noi-v2-day-bars{opacity:0}

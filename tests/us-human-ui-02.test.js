@@ -79,7 +79,7 @@ test('page labels: Ricordi and Gioca stay accessible without a visible top-left 
   const games = read('games.js');
   assert.match(games, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
   // Round 3 parity (062): Sfida di oggi leads the hub, then the mockup's week.
-  assert.match(games, /<span class="us-gv4-daily-pending-title">Sfida di oggi<\/span>/);
+  assert.match(games, /<span class="us-gv4-daily-pending-title">La domanda di oggi<\/span>/);
   assert.match(games, /<div class="us-gv2-week" id="usGv2Week" data-s role="list" aria-label="Questa settimana">/);
   assert.doesNotMatch(games, /rhythmStrip|us-gv2-head"/);
 });

@@ -3190,11 +3190,11 @@ function dailyHubModel(){
   return {...base,state:'answer',meta:'Una domanda per voi oggi',cta:'Rispondi'};
 }
 function dailyHubMarkup(model){
-  if(!model)return '<div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Sfida di oggi</span><small>La domanda di oggi non è ancora disponibile.</small></div>';
+  if(!model)return '<div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">La domanda di oggi</span><small>La domanda di oggi non è ancora disponibile.</small></div>';
   // Never the hidden answers here: question, state and the way in.
   return `<button type="button" class="us-gv2-daily" data-us-daily-entry data-daily-state="${escapeHtml(model.state)}">
    <span class="us-gv4-daily-art" aria-hidden="true"><span class="us-gv4-art-ring"></span><span class="us-gv4-art-heart"></span></span>
-   <span class="us-gv2-daily-copy"><small>Sfida di oggi</small><b>${escapeHtml(model.question)}</b><span class="us-gv2-daily-state">${escapeHtml(model.meta)}</span></span>
+   <span class="us-gv2-daily-copy"><small>La domanda di oggi</small><b>${escapeHtml(model.question)}</b><span class="us-gv2-daily-state">${escapeHtml(model.meta)}</span></span>
    <span class="us-gv4-daily-footer"><span>Una domanda, due risposte</span><span class="us-gv2-daily-cta">${escapeHtml(model.cta)} <span aria-hidden="true">›</span></span></span>
   </button>`;
 }

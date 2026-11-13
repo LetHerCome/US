@@ -20,11 +20,15 @@ html.us-native #home .home-photo-shade {
      and notification icons; keep the existing bottom text protection. */
   background: linear-gradient(
     180deg,
-    rgba(4, 5, 10, .52) 0px,
-    rgba(4, 5, 10, .15) calc(var(--us-safe-top) + 36px),
-    rgba(4, 6, 9, .01) 50%,
-    rgba(4, 6, 9, .46) 100%
+    rgba(4, 5, 10, .55) 0px,
+    rgba(15, 11, 19, .3) calc(var(--us-safe-top) + 36px),
+    rgba(15, 11, 19, .1) 34%,
+    rgba(15, 11, 19, .12) 50%,
+    rgba(15, 11, 19, .86) 76%,
+    var(--us-color-bg) 100%
   ) !important;
+  /* 13/11 (visual review): the same night at the bottom as the web
+     (dc-oggi.css), so caption, pills and cards read on a bright photo. */
 }
 
 /* The Home chrome itself already uses --us-safe-top, and its actions must

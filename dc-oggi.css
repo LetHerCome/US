@@ -8,7 +8,9 @@
 
 :root{
   --dc-oggi-scrim:rgba(15,11,19,.42);
-  --dc-oggi-glass:rgba(247,239,233,.1);
+  /* Dark glass, as the heart and envelope (founder, 13/11: the light glass
+     vanished on a bright photo). */
+  --dc-oggi-glass:rgba(15,11,19,.42);
   --dc-oggi-card:color-mix(in srgb,var(--us-color-surface) 88%,transparent);
   --dc-e-out:cubic-bezier(.2,.8,.2,1);
   --dc-e-io:cubic-bezier(.7,0,.2,1);
@@ -19,9 +21,16 @@
 /* The photo starts at the very top of the screen (no -2px pull from the legacy layer). */
 #home.page{margin-top:0}
 #home .home-photo-shade{
-  background:linear-gradient(180deg,rgba(15,11,19,.55) 0%,rgba(15,11,19,0) 22%,rgba(15,11,19,0) 42%,rgba(15,11,19,.86) 76%,var(--us-color-bg) 100%)!important;
+  background:linear-gradient(180deg,rgba(15,11,19,.6) 0%,rgba(15,11,19,.18) 24%,rgba(15,11,19,0) 38%,rgba(15,11,19,.12) 50%,rgba(15,11,19,.86) 76%,var(--us-color-bg) 100%)!important;
   transition:opacity .45s var(--dc-e-out);
 }
+/* Readable on any photo (founder, 13/11, visual review): a soft night behind
+   the days together and a shadow under every word that sits on the photo. */
+#home #homeHero .us-countdown-display::before{content:"";position:absolute;z-index:-1;inset:-44px -76px;border-radius:50%;background:radial-gradient(closest-side,rgba(15,11,19,.5),rgba(15,11,19,.24) 58%,transparent);pointer-events:none}
+#home #homeHero .us-countdown-number{text-shadow:0 2px 18px rgba(15,11,19,.5),0 6px 40px rgba(0,0,0,.35)}
+#home #homeHero :is(.us-countdown-unit,.us-countdown-tail,.us-countdown-title,.us-countdown-sub){color:var(--us-color-text);text-shadow:0 1px 12px rgba(15,11,19,.8),0 0 2px rgba(15,11,19,.5)}
+#home #usOggiCaption{text-shadow:0 1px 12px rgba(15,11,19,.8),0 0 2px rgba(15,11,19,.5)}
+#home #usOggiCaption small{color:var(--us-color-text)}
 /* Focus (mockup .is-focus): only the photo; everything else fades in .45s. */
 #home #homeHero :is(.us-oggi-dock,.us-countdown-display,.us-countdown-entry){transition:opacity .45s var(--dc-e-out)}
 #home #homeHero.us-oggi-focus .home-photo-shade{opacity:.25}
@@ -430,7 +439,7 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 }
 #home #usTodayPriorityRegion .us-today-priority-card::before{content:"";grid-area:dot;width:9px;height:9px;border-radius:50%;background:var(--us-partner)}
 #home #usTodayPriorityRegion .us-today-priority-card.us-attention-orbit::after{display:none}
-#home #usTodayPriorityRegion .us-today-priority-kind{grid-area:kind;align-self:end;font:700 10px/1.5 var(--us-font-ui)!important;letter-spacing:.12em;text-transform:uppercase;color:var(--us-partner)}
+#home #usTodayPriorityRegion .us-today-priority-kind{grid-area:kind;align-self:end;font:700 11px/1.5 var(--us-font-ui)!important;letter-spacing:.12em;text-transform:uppercase;color:var(--us-partner)}
 #home #usTodayPriorityRegion .us-today-priority-copy{grid-area:copy;align-self:start;display:block;min-width:0;font-size:13px;color:var(--us-color-text-2)}
 #home #usTodayPriorityRegion .us-today-priority-copy b{display:block;font:600 15px/1.5 var(--us-font-ui)!important;color:var(--us-color-text)}
 #home #usTodayPriorityRegion .us-today-priority-copy small{display:block;font:400 13px/1.5 var(--us-font-ui)!important;color:var(--us-color-text-2)}
