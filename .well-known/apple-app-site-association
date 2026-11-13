@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "KW79XL4LBZ.com.usapp.us"
+        ],
+        "components": [
+          {
+            "/": "/invito",
+            "comment": "Invito di coppia di US"
+          }
+        ]
+      }
+    ]
+  }
+}
