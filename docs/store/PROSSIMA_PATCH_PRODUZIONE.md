@@ -6,7 +6,7 @@
 
 **Il bug (segnalato dal founder in produzione, 13/11):** in Ricordi e in Gioca la mascotte spariva. Dal 06/11, quando sotto di lei c'era un comando, si «faceva da parte» diventando invisibile; in quelle pagine c'è quasi sempre una tessera sotto, quindi restava sparita.
 
-**Cosa cambia:** con un comando sotto, la mascotte resta al suo posto, trasparente al 45%, e i tocchi le passano attraverso fino al comando (`pet.css`). Il problema del 06/11 (si prendeva il tocco dell'interruttore dell'impronta) resta risolto. Test: `tests/emulator-polish-20261106.test.js`. Nell'emulatore: Gioca scorsa su una tessera → `data-pet-aside`, visibile, opacità 0,45, tocco disattivato sulla mascotte.
+**Cosa cambia:** con un comando sotto, la mascotte resta al suo posto, normale (il founder non la vuole trasparente), e i tocchi le passano attraverso fino al comando (`pet.css`). Il problema del 06/11 (si prendeva il tocco dell'interruttore dell'impronta) resta risolto. Test: `tests/emulator-polish-20261106.test.js`. Nell'emulatore: Gioca scorsa su una tessera → `data-pet-aside`, visibile, tocco disattivato sulla mascotte (provata trasparente; poi tolta la trasparenza, cambia solo l'opacità).
 
 **Novità per Play:** nessuna voce a sé; va con il prossimo AAB («Piccole correzioni»).
 

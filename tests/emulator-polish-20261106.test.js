@@ -23,9 +23,9 @@ test('the cat steps aside, without a hit target, when a control rests under it',
   assert.match(js, /left:layer.offsetLeft,top:layer.offsetTop/);
   assert.match(js, /\[role="switch"\]/);
   assert.match(js, /layer\.dataset\.petAside=''/);
-  // 13/11/2026: aside it stays visible, see-through, and taps pass through to the control.
+  // 13/11/2026 (founder): aside it stays as it is, and taps pass through to the control.
   const css = read('pet.css');
-  assert.match(css, /\.us-pet-layer\[data-pet-aside\]\{opacity:\.45\}/);
+  assert.doesNotMatch(css, /\.us-pet-layer\[data-pet-aside\]\{/, 'no fade, no move, no hide');
   assert.match(css, /\.us-pet-layer\[data-pet-aside\] \.us-pet-hit\{pointer-events:none!important\}/);
   assert.doesNotMatch(css, /\[data-pet-aside\]\{[^}]*visibility:hidden/, 'never vanishes');
 });
