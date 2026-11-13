@@ -21,7 +21,7 @@ test('N2 identity: application id, bundle id and signing are unchanged; no Fireb
   // google-services is applied only when the (uncommitted) config file exists.
   assert.match(gradle, /google-services\.json/);
   const pbx = read('ios/App/App.xcodeproj/project.pbxproj');
-  assert.deepEqual([...pbx.matchAll(/PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/g)].map((m) => m[1]), ['com.usapp.us', 'com.usapp.us']);
+  assert.deepEqual([...pbx.matchAll(/PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/g)].map((m) => m[1]), ['app.uscouple', 'app.uscouple']);
   assert.doesNotMatch(pbx, /DEVELOPMENT_TEAM\s*=|PROVISIONING_PROFILE/);
   const tracked = execFileSync('git', ['ls-files'], { cwd: ROOT, encoding: 'utf8' }).split('\n');
   for (const file of tracked) {

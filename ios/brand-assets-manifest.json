@@ -1,14 +1,47 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "generator": "scripts/build-ios-brand-assets.py",
-  "background": "#08040E",
+  "launchBackground": "#26142E",
+  "alternateIcons": {
+    "night": "AppIcon-Night",
+    "gold": "AppIcon-Gold",
+    "neon": "AppIcon-Neon"
+  },
   "derivatives": [
     {
       "path": "ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png",
-      "sha256": "03c3b1fb0a84c4db7a792890a5d32831d3c6226d1232ab4b9956f3bf980a0540",
-      "operation": "FIT_CENTER_DARK_08040E_OPAQUE",
+      "sha256": "c16b5eb78fa25add7b963232e31c5a2a1579c874a1ce5a073c00e9855f0f77bc",
+      "operation": "ANDROID_ADAPTIVE_VISIBLE_1024_OPAQUE",
       "sources": {
-        "assets/source/brand/us-symbol-master-v1.png": "bcbb3f3060edd5cf7218f245e1b56053de2c011ea5244e49f9e5f325269d28fd"
+        "assets/source/brand/app-icon/us-launcher-symbol-v2.png": "a75c69e23a4e5cf94a6ad06f4b2ae126d8499b281e0a7010f511077427715e4a"
+      },
+      "background": "#FFFFFF"
+    },
+    {
+      "path": "ios/App/App/Assets.xcassets/AppIcon-Night.appiconset/AppIcon-Night-1024.png",
+      "sha256": "45f600cac851055e3c5eee77e7ffa83e46cd3b99e2eb62ebcbbdff8f01450f03",
+      "operation": "ANDROID_ADAPTIVE_VISIBLE_1024_OPAQUE",
+      "sources": {
+        "assets/source/brand/app-icon/us-launcher-symbol-notte-v1.png": "34155dd3a70e7be420e317097f2a5ccd3319cd245bede40cd9e8eda78d0aeb1f",
+        "assets/source/brand/app-icon/us-launcher-background-notte-v1.png": "ef84127d9e7c457d42884548e569fa413d68b2dfe99ca3713fa5a521d96ab0b0"
+      }
+    },
+    {
+      "path": "ios/App/App/Assets.xcassets/AppIcon-Gold.appiconset/AppIcon-Gold-1024.png",
+      "sha256": "df98ef027ef64ce28a787b88e89bc0a327d7a5f58c651a598f3883c158f36943",
+      "operation": "ANDROID_ADAPTIVE_VISIBLE_1024_OPAQUE",
+      "sources": {
+        "assets/source/brand/app-icon/us-launcher-symbol-oro-v1.png": "756a401bfeb30122374318bcef78972374baf79595bc42fce6f6bf33489dab68",
+        "assets/source/brand/app-icon/us-launcher-background-oro-v1.png": "c36718277795114bf409d714afac50a84a694aae8f408126464d0db41cc68662"
+      }
+    },
+    {
+      "path": "ios/App/App/Assets.xcassets/AppIcon-Neon.appiconset/AppIcon-Neon-1024.png",
+      "sha256": "40b31ce4ec7f64dff7b7a98c3402d27ced470a9cd788131a0d6183c57b4dae06",
+      "operation": "ANDROID_ADAPTIVE_VISIBLE_1024_OPAQUE",
+      "sources": {
+        "assets/source/brand/app-icon/us-launcher-symbol-neon-v1.png": "67a986fd9b13047a2c9c2cf1419c75050815117a402fffdf3b231276f110e804",
+        "assets/source/brand/app-icon/us-launcher-background-neon-v1.png": "7b842aecf5efac1d65b050a53fd967aff7f709e903d4dcb7bc05b668fbb74719"
       }
     },
     {

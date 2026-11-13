@@ -4,7 +4,7 @@
   "webDir": "dist/capacitor",
   "ios": {
     "contentInset": "never",
-    "backgroundColor": "#08040E",
+    "backgroundColor": "#26142E",
     "allowsLinkPreview": false,
     "preferredContentMode": "mobile",
     "limitsNavigationsToAppBoundDomains": false

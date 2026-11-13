@@ -246,4 +246,11 @@ html.us-returning-device .auth-overlay{
    under «Accedi», with the Phosphor GoogleLogo mark in the text colour. */
 html .auth-overlay :is(#usGoogleSignIn,#usGoogleSignUp){gap:8px;margin-top:10px}
 html .auth-overlay :is(#usGoogleSignIn,#usGoogleSignUp)[hidden]{display:none}
+/* Accedi con Apple (iOS Store V1, 05/11/2026): Apple's rules for a custom button on a dark
+   screen: white, black title "Continua con Apple", the Apple logo from the iPhone's own
+   system font (U+F8FF), no smaller than the Google button. Shown only in the iPhone app. */
+html .auth-overlay :is(#usAppleSignIn,#usAppleSignUp){display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;margin-top:10px;border:0;border-radius:999px;background:#fff;color:#000;font:600 16px/1.2 -apple-system,system-ui,sans-serif;letter-spacing:0;cursor:pointer}
+html .auth-overlay :is(#usAppleSignIn,#usAppleSignUp)[hidden]{display:none}
+html .auth-overlay :is(#usAppleSignIn,#usAppleSignUp):disabled{opacity:.6}
+.us-auth-apple-mark{font:500 19px/1 -apple-system,system-ui,sans-serif;margin-top:-2px}
 .us-auth-google-mark{width:18px;height:18px;flex:0 0 18px;background-color:currentColor;-webkit-mask:url("/assets/icons/phosphor/google-logo-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/google-logo-regular.svg") center/contain no-repeat}

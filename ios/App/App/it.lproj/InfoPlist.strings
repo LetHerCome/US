@@ -1,0 +1,7 @@
+/* iOS Store V1 (05/11/2026): permission prompts in Italian (same text as Info.plist). */
+"NSCameraUsageDescription" = "US usa la fotocamera per scattare le foto e i video che condividi con il tuo partner.";
+"NSMicrophoneUsageDescription" = "US usa il microfono per registrare le note vocali e l’audio dei video che lasci al tuo partner.";
+"NSLocationWhenInUseUsageDescription" = "US usa la posizione approssimativa di questo telefono solo mentre l'app è aperta, per calcolare la distanza tra voi due. L'altra persona vede solo la distanza, mai dove sei.";
+"NSPhotoLibraryUsageDescription" = "US apre la tua libreria per scegliere le foto da condividere con il tuo partner.";
+"NSPhotoLibraryAddUsageDescription" = "US salva nella tua libreria le foto dei Ricordi che scegli di scaricare.";
+"NSFaceIDUsageDescription" = "US usa Face ID per proteggere l’accesso all’app su questo telefono, se lo attivi tu.";

@@ -1,0 +1,14 @@
+{
+  "name": "@us/apple-signin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "US Accedi con Apple (iOS): AuthenticationServices returns an Apple identity token bound to a nonce; the app exchanges it with Supabase (signInWithIdToken). App Store rule 4.8, next to Google.",
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  },
+  "peerDependencies": {
+    "@capacitor/core": "8.5.0"
+  }
+}
