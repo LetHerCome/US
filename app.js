@@ -2862,20 +2862,37 @@ function bindDailyRitualSwipe(card){
   card.addEventListener('pointercancel',event=>{if(start&&event.pointerId===start.id){dx=0;end(event);}});
   // A swipe is not a tap: the sheet opens only on a real tap.
   card.addEventListener('click',event=>{if(moved){event.preventDefault();event.stopImmediatePropagation();moved=false;}},true);
+  // La cosa di oggi: a card with its own gesture (a Ti penso, the week's step)
+  // does it instead of opening the answers.
+  card.addEventListener('click',event=>{
+    const action=card.dataset.cdoAction;
+    if(!action||typeof window.UsCosaDiOggi?.act!=='function')return;
+    event.preventDefault();event.stopImmediatePropagation();
+    window.UsCosaDiOggi.act(action);
+  },true);
 }
 function renderDailyRitual(model){
   const card=document.getElementById('usDailyRitual');
   if(!card)return;
   const before=card.dataset.state||'';
+  // La cosa di oggi (cosa-di-oggi.js): after the answers the next gesture,
+  // the closed day or the first week's step; the streak in the foot. The
+  // server's state is read again when the card changes state.
+  if(model&&before!==model.state)window.UsCosaDiOggi?.refresh?.({force:true});
+  if(model&&window.UsCosaDiOggi?.decorate)model=window.UsCosaDiOggi.decorate(model);
   if(model?.state==='revealed'&&model.questionId&&typeof dailyRitualDismissedId==='function'&&dailyRitualDismissedId()===String(model.questionId))model=null;
-  if(!model){card.hidden=true;card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.dataset.usAttention='off';return;}
+  if(!model){card.hidden=true;card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.removeAttribute('data-look');delete card.dataset.cdoAction;card.dataset.usAttention='off';return;}
   card.dataset.state=model.state;
+  if(model.look)card.dataset.look=model.look;else card.removeAttribute('data-look');
+  if(model.action)card.dataset.cdoAction=model.action;else delete card.dataset.cdoAction;
   if(model.questionId)card.dataset.questionId=String(model.questionId);else delete card.dataset.questionId;
   bindDailyRitualSwipe(card);
   card.dataset.usAttention=model.attention?'on':'off';
   // The visible words are the accessible name (and the English translation).
   card.removeAttribute('aria-label');
-  const html=`${dailyRitualRingMarkup(model)}<span class="eyebrow us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="dq-q us-daily-ritual-question"${dailyQuestionLengthAttr(model.question)}>${escapeHtml(model.question)}</span><span class="dq-foot">${model.meta?`<span class="dq-sub us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="btn-primary us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span></span>${model.state==='revealed'?`<span class="us-daily-ritual-swipe">${escapeHtml('Scorri di lato per toglierla')}</span>`:''}`;
+  const foot=model.footHtml??(model.meta?`<span class="dq-sub us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:'');
+  const cta=model.ctaHtml??`<span class="btn-primary us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span>`;
+  const html=`${dailyRitualRingMarkup(model)}<span class="eyebrow us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="dq-q us-daily-ritual-question"${dailyQuestionLengthAttr(model.question)}>${escapeHtml(model.question)}</span>${model.subHtml||''}<span class="dq-foot">${foot}${cta}</span>${model.state==='revealed'?`<span class="us-daily-ritual-swipe">${escapeHtml('Scorri di lato per toglierla')}</span>`:''}`;
   // Same words, same circles: leave the card (and a running animation) alone.
   if(card.hidden||card.usDailyHtml!==html){card.innerHTML=html;card.usDailyHtml=html;}
   card.hidden=false;
@@ -2892,6 +2909,9 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   const refreshId=++usTodayPriorityRefreshId;
   // La domanda di oggi widget (widgets.js): the question and whose turn it is.
   window.UsWidgets?.syncDaily?.().catch?.(()=>{});
+  // La cosa di oggi: the streak and the first week (read at most every 20 s;
+  // a change paints Oggi again).
+  window.UsCosaDiOggi?.refresh?.()?.catch?.(()=>{});
   const dailySource=daily===undefined&&window.todayQuestion?{
     question:window.todayQuestion,
     state:window.todayState,
@@ -5748,6 +5768,8 @@ async function sendThinkSignal(){
   if(result?.duplicate)toast('Già inviato',{quiet:true});
   else toast(`Ti penso inviato a ${partner.display_name||usIdentity().partnerName}`,{icon:'heart',quiet:false});
   await hydrateThink();
+  // La cosa di oggi: my Ti penso of today, at once.
+  window.UsCosaDiOggi?.refresh?.({force:true})?.catch?.(()=>{});
   setTimeout(()=>{if(btn)btn.disabled=false;},1800);
   return true;
 }

@@ -47,6 +47,7 @@ const RUNTIME_FILES = [
   'partner-battery.js',
   'member-status.js',
   'weekly-challenge.js',
+  'cosa-di-oggi.js',
   'navigation.js',
   'games.css',
   'games.js',

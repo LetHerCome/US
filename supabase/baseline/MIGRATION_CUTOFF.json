@@ -52,7 +52,8 @@
     "20261105112050_rls_initplan_fk_indexes.sql",
     "20261109183329_client_errors_v1.sql",
     "20261113153748_gioca_tre_al_giorno_v1.sql",
-    "20261113153750_plus_waitlist_v1.sql"
+    "20261113153750_plus_waitlist_v1.sql",
+    "20261113202138_cosa_di_oggi_v1.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
@@ -100,7 +101,8 @@
     "20261105112050_rls_initplan_fk_indexes.sql",
     "20261109183329_client_errors_v1.sql",
     "20261113153748_gioca_tre_al_giorno_v1.sql",
-    "20261113153750_plus_waitlist_v1.sql"
+    "20261113153750_plus_waitlist_v1.sql",
+    "20261113202138_cosa_di_oggi_v1.sql"
   ],
   "counts": {
     "repo_files": 47,

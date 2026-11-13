@@ -299,6 +299,51 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 #home #usDailyRitual .ring[data-st="attesa"] .r-fill{transform:translateY(0)}
 #home #usDailyRitual .ring:is([data-st="pronte"],[data-st="svelate"]) :is(.r-me,.r-you){opacity:0}
 #home #usDailyRitual .ring:is([data-st="pronte"],[data-st="svelate"]) .r-noi{opacity:1}
+/* La cosa di oggi (cosa-di-oggi.js, 13/11/2026): the streak with its heart, the
+   first week's dots, «Domani: …», the two of you side by side. */
+#home #usDailyRitual .us-cdo-left{display:inline-flex;align-items:center;gap:10px;min-width:0}
+#home #usDailyRitual .us-cdo-streak{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--us-color-text-2)}
+#home #usDailyRitual .us-cdo-streak .us-cdo-heart{width:14px;height:14px;flex:none;color:var(--us-noi)}
+#home #usDailyRitual .us-cdo-streak-n{display:inline-block}
+#home #usDailyRitual .us-daily-ritual-cta .us-cdo-heart{width:16px;height:16px;flex:none}
+#home #usDailyRitual .us-cdo-dots{display:inline-flex;align-items:center;gap:5px;flex:none}
+#home #usDailyRitual .us-cdo-dots i{width:7px;height:7px;border-radius:50%;border:1.5px solid rgba(247,239,233,.38);box-sizing:border-box}
+#home #usDailyRitual .us-cdo-dots i.on{border-color:var(--us-tu);background:var(--us-tu)}
+#home #usDailyRitual .us-cdo-dots i.now{border-color:var(--us-tu);box-shadow:0 0 0 3px rgba(255,124,150,.18)}
+#home #usDailyRitual .us-cdo-sub{grid-column:1/-1;margin-top:-4px;font:400 14px/1.4 var(--us-font-ui);color:var(--us-color-text-2)}
+#home #usDailyRitual .us-cdo-pair{flex:none;margin-left:auto;display:inline-flex;align-items:center}
+#home #usDailyRitual .us-cdo-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:700 14px/1 var(--us-font-ui);color:var(--us-inchiostro);border:2px solid rgba(23,17,28,.85)}
+#home #usDailyRitual .us-cdo-av[data-who="tu"]{background:var(--us-tu);z-index:1}
+#home #usDailyRitual .us-cdo-av[data-who="partner"]{background:var(--us-partner);margin-left:-9px}
+#home #usDailyRitual:is([data-look="done"],[data-look="closed"],[data-look="finished"]) .us-daily-ritual-question{font-size:20px}
+#home #usDailyRitual[data-look] .us-daily-ritual-swipe{display:none}
+/* The moments: hearts and a check over the card, the party over Oggi. */
+.us-cdo-fx{position:fixed;z-index:var(--us-layer-transient);pointer-events:none;overflow:visible}
+.us-cdo-fly{position:absolute;bottom:38%;width:18px;height:18px;color:var(--us-noi);opacity:0;animation:usCdoFly 1.3s cubic-bezier(.2,.8,.2,1) forwards}
+.us-cdo-fly svg{width:100%;height:100%;display:block}
+@keyframes usCdoFly{0%{opacity:0;transform:translate(0,0) scale(.5)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-120px) scale(1.15)}}
+.us-cdo-check{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;animation:usCdoCheck 1.1s ease forwards}
+.us-cdo-check svg{width:100%;height:100%;display:block}
+.us-cdo-check circle{fill:var(--us-verde)}
+.us-cdo-check path{fill:none;stroke:var(--us-inchiostro);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:24;stroke-dashoffset:24;animation:usCdoTick .38s .12s ease-out forwards}
+@keyframes usCdoCheck{0%{opacity:0;transform:scale(.4)}25%{opacity:1;transform:scale(1.08)}40%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1)}}
+@keyframes usCdoTick{to{stroke-dashoffset:0}}
+.us-cdo-party{position:fixed;inset:0;z-index:var(--us-layer-transient);pointer-events:none;overflow:hidden}
+.us-cdo-rain{position:absolute;top:-24px;width:18px;height:18px;font:700 16px/18px var(--us-font-ui);text-align:center;color:var(--us-ambra);animation:usCdoRain 2.6s cubic-bezier(.3,.1,.6,1) forwards}
+.us-cdo-rain[data-k="heart"]{color:var(--us-noi)}
+.us-cdo-rain svg{width:100%;height:100%;display:block}
+@keyframes usCdoRain{0%{opacity:0;transform:translate(0,0) rotate(0)}10%{opacity:1}100%{opacity:0;transform:translate(var(--dx),105vh) rotate(var(--r))}}
+.us-cdo-banner{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);display:grid;gap:4px;justify-items:center;box-sizing:border-box;width:min(320px,calc(100% - 48px));padding:18px 22px;border-radius:24px;border:1px solid var(--us-color-line-strong);background:rgba(26,16,32,.92);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);text-align:center;animation:usCdoBanner 2.9s ease forwards}
+.us-cdo-banner b{font:400 24px/1.15 var(--us-font-display);color:var(--us-color-text)}
+.us-cdo-banner span{font:400 14px/1.4 var(--us-font-ui);color:var(--us-color-text-2)}
+@keyframes usCdoBanner{0%{opacity:0;transform:translate(-50%,-40%) scale(.92)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.03)}20%{transform:translate(-50%,-50%) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%)}}
+:root[data-us-motion="reduced"] :is(.us-cdo-fly,.us-cdo-check,.us-cdo-rain){display:none}
+:root[data-us-motion="reduced"] .us-cdo-banner{animation:usCdoFade 2.9s linear forwards}
+@keyframes usCdoFade{0%,100%{opacity:0}10%,85%{opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  :is(.us-cdo-fly,.us-cdo-check,.us-cdo-rain){display:none}
+  .us-cdo-banner{animation:usCdoFade 2.9s linear forwards}
+}
 /* Short screens: the photo keeps its room; the question keeps two lines, so it can be read (03/11/2026). */
 @media(max-height:700px){
   #home #usDailyRitual{gap:8px 12px;padding:13px 14px}
