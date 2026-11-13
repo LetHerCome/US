@@ -232,11 +232,14 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
   display:grid;
   grid-template-columns:auto minmax(0,1fr);
   align-items:center;
-  gap:10px 12px;
-  padding:16px;
-  border:1px solid var(--us-color-line-strong);
-  border-radius:26px;
-  background:var(--dc-oggi-card);
+  /* Founder, 13/11 (emulator): «troppo scuro», «troppo grande». A veil of
+     the colour of both at the strength of the card above (18%), and the
+     same size as it. */
+  gap:6px 10px;
+  padding:13px 14px 13px 16px;
+  border:1px solid color-mix(in srgb,var(--us-noi) 40%,transparent);
+  border-radius:22px;
+  background:color-mix(in srgb,var(--us-noi) 18%,var(--dc-oggi-card));
   -webkit-backdrop-filter:blur(18px);
   backdrop-filter:blur(18px);
   box-shadow:none;
@@ -250,7 +253,7 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 #home #usDailyRitual .us-daily-ritual-question{
   grid-column:1/-1;
   margin:0;
-  font:400 18px/1.2 var(--us-font-display);
+  font:400 17px/1.2 var(--us-font-display);
   color:var(--us-color-text);
   text-wrap:balance;
   display:-webkit-box;
@@ -274,18 +277,18 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
   align-items:center;
   justify-content:center;
   gap:6px;
-  min-height:44px;
-  padding:0 18px;
+  min-height:40px;
+  padding:0 16px;
   border-radius:999px;
   background:var(--us-tu);
   box-shadow:none;
   color:var(--us-inchiostro);
-  font:700 15px/1 var(--us-font-ui);
+  font:700 14px/1 var(--us-font-ui);
   white-space:nowrap;
 }
 #home #usDailyRitual .us-daily-ritual-arrow{display:inline-block;width:18px;height:18px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:translate .25s var(--dc-e-out)}
 /* Two circles that become one (mockup .ring, data-st tocca/pronte/svelate). */
-#home #usDailyRitual .ring{width:48px;height:30px;overflow:visible;flex:none}
+#home #usDailyRitual .ring{width:40px;height:25px;overflow:visible;flex:none}
 #home #usDailyRitual .ring .r-bloom{stroke:var(--us-noi)}
 #home #usDailyRitual .ring .r-you-full{fill:var(--us-partner)}
 #home #usDailyRitual .ring .r-you-wait{fill:rgba(23,17,28,.6);stroke:var(--us-partner);opacity:0}
