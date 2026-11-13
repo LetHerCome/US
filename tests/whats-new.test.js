@@ -38,9 +38,9 @@ test('wired: after sign-in on a phone that knew US, the list of what is new', ()
   const body = app.slice(app.indexOf('const US_WHATS_NEW='), app.indexOf('function usShowWhatsNew(') + 600);
   assert.match(body, /releaseNotesDue\?\.\(US_WHATS_NEW\.id,\{returning\}\)/);
   assert.match(body, /notice\?\.\(\{kicker:'Novità',title:US_WHATS_NEW\.title,items:US_WHATS_NEW\.items,confirmLabel:'Ho capito',icon:'sparkle'\}\)/);
-  // 1.4 (04/11/2026): Noi nuova, bacheca, sfida, Come stai, batteria, album, Atmosfere, widget.
-  assert.match(body, /id:'1.4'/);
-  for (const item of ['calendario', 'post-it', 'lavagna', 'sfida della settimana', 'Come stai', 'batteria', 'album', 'Vino', 'Widget']) assert.match(body, new RegExp(item), item);
+  // 1.5 (13/11/2026): tre partite al giorno, domanda mentre si aspetta, US Plus in arrivo.
+  assert.match(body, /id:'1.5'/);
+  for (const item of ['3 al giorno', 'contatore', 'domanda di oggi', 'US Plus', 'Avvisatemi']) assert.match(body, new RegExp(item), item);
   const en = read('i18n-en.js');
   assert.ok(en.includes("'Ho capito'") || en.includes('"Ho capito"'));
   assert.ok(en.includes("'Novità'"));
