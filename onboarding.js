@@ -358,9 +358,59 @@
   }
   // What "Condividi" sends: in the sender's language, the link on its own line,
   // never translated. No expiry: the one who invites says it, if needed.
-  function inviteMessage(code,t,origin){
+  // Answered today's question while waiting (09/11/2026): one more line, and
+  // the partner answers to see it (the reveal of Oggi).
+  function inviteMessage(code,t,origin,{answered=false}={}){
     const say=typeof t==='function'?t:(text=>text);
-    return [say('Ti aspetto su US ♡'),say('Apri il mio invito:'),inviteLink(code,origin)].join('\n');
+    const hook=answered?[say('Ho già risposto alla domanda di oggi: rispondi anche tu per vedere la mia.')]:[];
+    return [say('Ti aspetto su US ♡'),...hook,say('Apri il mio invito:'),inviteLink(code,origin)].join('\n');
+  }
+  // Waiting for the partner (09/11/2026): who waits can already answer
+  // today's question, with the same RPC and the same answer row as Oggi
+  // (the server only asks for a couple, and the waiting one has it). It never
+  // holds the invite up: if anything fails, the card simply does not appear.
+  // The draft stays in memory only, like everything typed in the onboarding.
+  function waitingToday(daily,{now=()=>new Date()}={}){
+    const FAILED='Non riesco a salvare la risposta. Riprova.';
+    let key='',flight=null,state={status:'off',question:null,answer:'',error:''};
+    const api={draft:'',get state(){return state;},answered:()=>state.status==='answered'};
+    api.load=profile=>{
+      if(!daily||!profile?.id||!profile?.couple_id){key='';state={status:'off',question:null,answer:'',error:''};return Promise.resolve(state);}
+      const next=`${profile.id}|${profile.couple_id}|${romeToday(now())}`;
+      if(next===key)return flight||Promise.resolve(state);
+      key=next;api.draft='';state={status:'loading',question:null,answer:'',error:''};
+      const mine=flight=(async()=>{
+        let result={status:'off',question:null,answer:'',error:''};
+        try{
+          const asked=await daily.question();
+          const q=asked?.data;
+          if(!asked?.error&&q?.id&&typeof q.question==='string'&&q.question.trim()){
+            const read=await daily.readAnswer(q.id,profile.id);
+            if(!read?.error){
+              const answer=String(read?.data?.answer||'');
+              result={status:answer?'answered':'open',question:{id:q.id,text:q.question.trim()},answer,error:''};
+            }
+          }
+        }catch(_e){}
+        if(flight===mine&&key===next){state=result;flight=null;}
+        return state;
+      })();
+      return mine;
+    };
+    api.save=async(profile,text)=>{
+      if(!['open'].includes(state.status)||!state.question||!profile?.id)return state;
+      const answer=String(text||'').trim().slice(0,1000);
+      if(!answer){state={...state,error:'Scrivi qualcosa prima'};return state;}
+      const asked=state.question.id,owner=key;
+      state={...state,status:'saving',error:''};
+      let ok=false;
+      try{const result=await daily.saveAnswer({question_id:asked,user_id:profile.id,couple_id:profile.couple_id,answer});ok=!result?.error;}catch(_e){ok=false;}
+      if(key!==owner)return state;
+      state=ok?{...state,status:'answered',answer,error:''}:{...state,status:'open',error:FAILED};
+      if(ok)api.draft='';
+      return state;
+    };
+    return api;
   }
   // The share sheet where the phone has one (web, iOS); otherwise the message
   // goes to the clipboard. The Android app has no share sheet without a plugin.
@@ -1166,8 +1216,9 @@
     return Object.freeze({maybeOpen,close,markPasswordSignIn,get open(){return isOpen;}});
   }
 
-  function mount({readProfile,readCouple,rpc,resume,signOut,openStep,insertEvent}){
+  function mount({readProfile,readCouple,rpc,resume,signOut,openStep,insertEvent,daily}){
     colourIO=typeof readCouple==='function'&&typeof rpc==='function'?{readCouple,rpc}:null;
+    const waitingDay=waitingToday(daily);
     const root=document.getElementById('usOnboarding');
     const node=id=>document.getElementById(id);
     let mode='me',lastKind='',lastView='',lastInvite='',hiddenPrivate=[],me={name:'',birthday:null},meFor='',justCreated=false,note={text:'',kind:''},dismissed='';
@@ -1350,9 +1401,34 @@
         if(view==='color')playColour(node('authOverlay'),node('mc3Venn'),after);
       }
       lastKind=state.kind;lastView=active?view:'';
+      // Today's question under the invite: painted after the buttons above
+      // took their busy state, loaded once per account and day.
+      paintToday(state.busy);
+      if(lastView==='waiting')waitingDay.load(state.profile).then(()=>paintToday(Boolean(controllerRef?.state?.busy)),()=>{});
       if(state.profile?.couple_id)saveBirthday({profile:state.profile,local:localStorage,session:sessionStorage,insertEvent}).catch(()=>{});
       scheduleCheck(state);
       window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
+    }
+    // Waiting for the partner (09/11/2026): the card of today's question. The
+    // controller does not exist yet during its first renders, hence the ref.
+    let controllerRef=null;
+    function paintToday(busy=false){
+      const box=node('mc3Today');if(!box)return;
+      const day=waitingDay.state,show=lastView==='waiting'&&['open','saving','answered'].includes(day.status);
+      box.hidden=!show;
+      if(!show)return;
+      node('mc3TodayQuestion').textContent=day.question.text;
+      const field=node('mc3TodayAnswer'),button=node('mc3TodaySave'),status=node('mc3TodayStatus');
+      if(day.status==='answered')field.value=day.answer;
+      else if(!field.value&&waitingDay.draft)field.value=waitingDay.draft;
+      field.readOnly=day.status==='answered';
+      field.disabled=day.status==='saving';
+      button.hidden=day.status==='answered';
+      button.disabled=day.status==='saving'||Boolean(busy);
+      button.textContent=day.status==='saving'?'Salvo…':'Rispondi';
+      node('mc3TodayDone').hidden=day.status!=='answered';
+      status.textContent=day.error||'';status.hidden=!day.error;
+      if(day.error)status.dataset.kind='error';else delete status.dataset.kind;
     }
     // While the invite screen is on and its code can still be used, look for
     // the partner every 10 s. Hidden or locked: suspend() stops it, the return
@@ -1372,6 +1448,7 @@
       },CHECK_MS);
     }
     const controller=createController({readProfile,rpc,onChange:render,onJoined:coupleId=>{window.sendWebPushEvent?.('partner_joined',coupleId);}});
+    controllerRef=controller;
     const run=async(action,kind)=>{
       const result=await action();
       const joined=result?.profile?.couple_id&&(result.kind==='PAIRED'||result.kind==='MEMBER_WAITING_PARTNER');
@@ -1454,11 +1531,24 @@
     node('mc3ShareCode').addEventListener('click',async()=>{
       const code=controller.state.code,ticket=controller.epoch;if(!code)return;
       const still=()=>controller.epoch===ticket&&controller.state.code===code;
-      const how=await shareInvite(inviteMessage(code,window.UsI18n?.t));
+      const how=await shareInvite(inviteMessage(code,window.UsI18n?.t,undefined,{answered:waitingDay.answered()}));
       if(!still())return;
       if(how==='shared')say('Fatto. Appena la tua persona entra, lo vedi qui.','success');
       else if(how==='copied')say('Messaggio copiato: incollalo nella chat con la tua persona.','success');
       else if(how==='failed')selectCode();
+    });
+    // Today's question while waiting: the draft lives in memory (the onboarding
+    // empties its fields when the app goes to the background).
+    node('mc3TodayAnswer')?.addEventListener('input',event=>{waitingDay.draft=event.target.value;});
+    node('mc3TodaySave')?.addEventListener('click',async()=>{
+      const state=controller.state;
+      if(state.kind!=='MEMBER_WAITING_PARTNER'||state.busy)return;
+      const saving=waitingDay.save(state.profile,node('mc3TodayAnswer').value);
+      paintToday(state.busy);
+      await saving;
+      paintToday(controller.state.busy);
+      if(waitingDay.answered())window.UsFeedback?.success?.();
+      else if(waitingDay.state.error)window.UsFeedback?.error?.();
     });
     node('mc3Exit').addEventListener('click',async()=>{const id=controller.userId;controller.suspend();clearForms();rememberBirthday(sessionStorage,id,null);me={name:'',birthday:null};justCreated=false;await signOut();});
     document.addEventListener('visibilitychange',()=>{
@@ -1474,5 +1564,5 @@
   }
   return Object.freeze({route,validName,validDate,normalizeCode,validCode,inviteCodeIn,inviteLink,inviteFromLink,takeInvite,togetherDate,togetherYears,romeToday,errorMessage,createController,mount,
     FIRST_RUN_KEYS,tourWanted,birthdayCheck,nextBirthday,birthdayEvent,rememberBirthday,saveBirthday,setupMode,setupSteps,pushStepState,placeStepWanted,daysTogether,inviteExpiry,
-    inviteMessage,shareInvite,widgetOfferWanted,CHECK_MS,authSwap,authArrive,shake});
+    inviteMessage,shareInvite,waitingToday,widgetOfferWanted,CHECK_MS,authSwap,authArrive,shake});
 });

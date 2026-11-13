@@ -1,6 +1,87 @@
 # Prossima patch in produzione
 
-## Uscita in produzione: l'ordine (preparato il 04/11/2026, ogni passo col via del founder)
+## Patch 1.5: versione pubblica, tre partite al giorno e «US Plus, in arrivo» (13/11/2026)
+
+**Stato:** provata il 13/11 nell'emulatore di staging (build `us-staging-20261113-107`, migrazioni su US-STAGING run 43456669485 e 43456698374: contatore «3 su 3», «Avvisatemi» salvato davvero). Uscita in produzione col via del founder («Sì, vai in prod», 13/11): build `us-rilascio-20261113-108`, Novità id `1.5`. Decisione: [DECISIONS.md, 13/11](../DECISIONS.md).
+
+**Novità per Play**
+- IT: «Ora le partite di Gioca sono 3 al giorno, e un contatore vi dice quante ne restano. Mentre aspetti la tua persona puoi già rispondere alla domanda di oggi. In arrivo: US Plus.»
+- EN: «You now get 3 games a day in Play, and a counter shows how many are left. While you wait for your person you can already answer today's question. Coming soon: US Plus.»
+
+**Cosa cambia**
+- **Gioca, tre partite al giorno:** migrazione `20261113153748_gioca_tre_al_giorno_v1.sql`, che ridefinisce solo `private.game_v2_week_limits` (`day` da 1 a 3). Stesse chiavi e stessi messaggi d'errore: l'app già installata continua a funzionare e dice già «2 partite da giocare oggi». Nell'app nuova il contatore con i pallini sotto «I vostri giochi» e, a partite finite, la riga «Partite illimitate con US Plus · In arrivo» (`games.js`, `dc-gioca.css`).
+- **US Plus, in arrivo:** gruppo «US Plus» in Impostazioni e schermata con cosa sblocca e «Avvisatemi quando arriva» / «Non avvisarmi più» (`index.html`, `settings.js`, `dc-settings.css`, `i18n-en.js`). Server: migrazione `20261113153750_plus_waitlist_v1.sql`, tabella `private.plus_waitlist` (solo account e data, RLS senza regole, via con l'account) e `public.plus_waitlist(join)` solo per chi chiama. Conteggio: `select count(*) from private.plus_waitlist;`.
+- **Informativa IT/EN (13/11):** la riga di «Avvisatemi» (consenso, revocabile dall'app). Lavagna e foto della sfida c'erano già dal 09/11.
+- **Test:** `tests/gioca-daily-limit-v1-db.test.js` (ora tre al giorno), `tests/plus-waitlist-db.test.js`, `tests/gioca-tiles.test.js`.
+
+**Ordine in produzione** (insieme alla 1.4.2 qui sotto, che non è ancora uscita)
+1. **Database**, una migrazione per volta (workflow «Supabase SQL», target production, conferma PRODUZIONE): `20261109183329_client_errors_v1.sql`, `20261113153748_gioca_tre_al_giorno_v1.sql`, `20261113153750_plus_waitlist_v1.sql`. Dalla seconda in poi anche l'app vecchia permette 3 partite.
+2. **Play Console, Sicurezza dei dati, prima dell'AAB:** i log degli arresti anomali e la diagnostica della 1.4.2; per «Avvisatemi» niente di nuovo da dichiarare oltre all'«ID utente» già dichiarato [da verificare nella Console].
+3. **Sito:** merge su `main` con build id di produzione.
+4. **Android:** AAB 1.5.0 con la nota qui sopra.
+
+**Restano al founder:** protezione dalle password già rubate in Supabase; richiesta dell'accesso alla produzione su Play; pulizia degli 8 account anonimi (dati di produzione, passo a parte).
+
+## Patch 1.4.2: errori dell'app e domanda di oggi mentre si aspetta il partner (09/11/2026)
+
+**Stato:** su staging dal 09/11 (commit `3b5667f0` nel branch di staging, build `us-staging-20261109-106`), non in produzione. Migrazione `client_errors_v1` applicata su US-STAGING col workflow «Supabase SQL», approvata dal founder (run 42679596506), e controllata in sola lettura: tabella con RLS, `report_client_errors` per `authenticated` e non per `anon`, nessuna lettura dall'app, pulizia notturna. Sul sito di staging: il modulo degli errori è il primo script differito, la chiamata senza account è rifiutata (401, 42501) e senza sessione l'app non manda niente; nessun errore all'avvio. Il salvataggio con un account e la schermata d'attesa sono provati nei test e nel browser locale col finto Supabase, non ancora con un account vero su staging. Nasce dall'ispezione del 09/11 verso l'uscita pubblica: l'uso dei tester cala (Ti penso da 32 a 16 a settimana; 5 persone su 14 ancora attive dopo 7 giorni di coppia), nessuno vede gli errori sui telefoni, e chi aspetta il partner trova solo il codice.
+
+**Novità per Play** (se esce con un AAB)
+- IT: «Mentre aspetti la tua persona puoi già rispondere alla domanda di oggi: l'invito le dice che ti aspetta la tua risposta.»
+- EN: «While you wait for your person you can already answer today's question: the invite tells them your answer is waiting.»
+
+**Cosa cambia**
+- **Errori dell'app:** gli errori JavaScript che nessuno intercetta e le promesse rifiutate arrivano su Supabase, nel nostro database, senza servizi esterni (`client-errors.js`, primo script differito di `index.html`). Solo dati tecnici: messaggio ripulito (senza indirizzi web, email, numeri lunghi, token e testi tra virgolette), file e riga, build, piattaforma. Al massimo 20 per apertura, lo stesso errore una volta con il conto; solo con un account (prima aspettano in memoria); se la chiamata fallisce si buttano. Server: migrazione `20261109183329_client_errors_v1.sql`: tabella `private.client_errors` (nessuno la legge dall'API), `public.report_client_errors()` solo per chi ha un account, 20 righe per chiamata e 50 al giorno per account, via con l'account, cancellate dopo 30 giorni dalla pulizia notturna già attiva in produzione (`us-operational-retention-daily`). Si leggono con `docs/store/US_ERRORI_APP.sql`.
+- **Chi aspetta il partner:** sotto l'invito la scheda «Intanto, la domanda di oggi» con la domanda, il campo e «Rispondi». Stessa RPC (`get_or_create_daily_question`) e stessa riga di `daily_answers` di Oggi: quando la tua persona entra e risponde, vede la tua risposta come sempre. Se hai risposto, «Condividi» aggiunge «Ho già risposto alla domanda di oggi: rispondi anche tu per vedere la mia.». Se qualcosa non va la scheda non compare: l'invito resta com'era (`index.html`, `onboarding.js`, `app.js`, `dc-primo.css`, `i18n-en.js`).
+- **Numeri della settimana:** `docs/store/US_NUMERI_DELLA_SETTIMANA.sql`, solo lettura e solo conteggi, dai dati che l'app salva già: percorso di chi si iscrive (profilo, coppia, coppia completa, prima risposta, ancora attivi dopo 7 giorni), coppie in attesa, coppie e persone attive, gesti per tipo, questa settimana contro la precedente.
+- **Informativa IT/EN (09/11):** gli errori tecnici (cosa, perché, 30 giorni, via con l'account) e, dal punto 17 dell'audit, i disegni della lavagna e le foto della sfida. Le bozze `docs/store/play/PRIVACY_POLICY_DRAFT*.md` erano già indietro (senza batteria e «Come stai»): le pagine pubblicate restano il riferimento.
+- **Test:** `tests/client-errors-v1-db.test.js`, `tests/client-errors-client.test.js`, `tests/waiting-today-question.test.js`.
+
+**Non in questa patch:** il promemoria a chi aspetta da 1 e 3 giorni. Chi aspetta di solito non ha ancora le notifiche (si attivano dopo, nell'app), quindi servirebbe una mail: è un passo a parte, da decidere.
+
+**Ordine in produzione (dopo la prova su staging)**
+1. **Database prima del sito:** `20261109183329_client_errors_v1.sql` (workflow «Supabase SQL», target production, conferma PRODUZIONE). Senza la tabella l'app funziona lo stesso: gli errori si buttano.
+2. **Play Console, Sicurezza dei dati, prima dell'AAB:** aggiungere «Informazioni e prestazioni dell'app › Log degli arresti anomali» e «Diagnostica»: raccolti, non condivisi, obbligatori, scopo funzionalità dell'app (`docs/store/play/PLAY_DECLARATIONS_DRAFT.md`).
+3. **Sito:** merge su `main` con build id di produzione; esce anche l'informativa nuova.
+4. **Android:** AAB nuovo (la schermata d'attesa e gli errori sono nel pacchetto dell'app).
+
+## Patch 1.4.1: correzioni dell'audit della produzione (preparata il 05/11/2026)
+
+**Uscita in produzione (06/11, col via del founder):** migrazioni applicate in produzione col workflow «Supabase SQL» dal commit di staging `0aa0fe96` (`couple_sync_v1` run 42295652661, controllata in sola lettura: tabella, 8 trigger, Realtime, RLS; `calendar_reminders_insert_rule` run 42296054838, regola riletta; `rls_initplan_fk_indexes` run 42296229168, 50 indici presenti e l'advisor non segnala più `auth_rls_initplan` né `unindexed_foreign_keys`); sito dal branch `claude/rilascio-1-4-1` con la build `us-rilascio-20261106-105` (test 2567 passati, 0 falliti; build di produzione minificata). Novità alla prima apertura: resta l'id `1.4`, è una patch di correzioni.
+
+**Stato precedente:** su staging dal 05/11, non in produzione. Unita nel branch di staging (merge `ff5e3159`, build `us-staging-20261105-102`); le tre migrazioni applicate su US-STAGING col workflow «Supabase SQL», approvate dal founder (run 42023293693, 42023355477, 42023675730). Sito di staging controllato: build nuova, minificato, integrità di supabase-js, nessun errore all'avvio. In produzione solo col via del founder. Rapporto: [`docs/audit/2026-11-05-audit-produzione.md`](../audit/2026-11-05-audit-produzione.md).
+
+**Controllo del 05/11:** `npm test` 2687 test, 0 falliti; `npm run build:cloudflare-pages` con la minificazione ok. Test nel browser, sul codice e sul sito minificato: gli stessi fallimenti che ha già `main` (test rimasti indietro), più due che cedono solo sotto carico (attese di 30 s) e passano se lanciati da soli. Integrità di supabase-js e MapLibre provata dal vivo sul CDN.
+
+**Novità per Play**
+- IT: «Piccole correzioni: se l'altra persona elimina un ricordo, un post-it o un impegno, lo vedi sparire subito; il calendario si aggiorna da solo; «Scollega questo telefono» scollega solo questo telefono.»
+- EN: «Small fixes: when your person deletes a memory, a sticky note or a plan, it disappears for you right away; the calendar updates by itself; “Disconnect this phone” only disconnects this phone.»
+
+**Cosa cambia**
+- **Uscita:** «Scollega questo telefono» chiudeva le sessioni dell'account su tutti i dispositivi (`signOut()` di supabase-js è globale). Ora solo questo telefono, anche nell'uscita dall'onboarding; il testo non parla più del «codice privato» (`settings.js`, `app.js`, `i18n-en.js`).
+- **Cancellazioni e calendario in tempo reale:** tabella `public.couple_sync` e trigger sulle cancellazioni di Ricordi, foto, post-it, eventi e storie, e su ogni cambio del calendario; l'app la ascolta su un canale Realtime suo, così se la migrazione mancasse fallirebbe solo quel canale e non Ti penso e il resto (`app.js`, `couple-notes.js`, `stories.js`). Se l'altra persona stacca il post-it aperto, compare di nuovo l'avviso.
+- **Codice esterno con controllo di integrità:** supabase-js (sito) e MapLibre (sito e app) da jsDelivr con `integrity`; la build Android sostituisce il tag intero con la copia locale (`index.html`, `ricordi-place.js`, `scripts/build-capacitor-web.mjs`).
+- **Anteprime dei link:** Open Graph e descrizione su `index.html` e `invito.html`, indirizzo canonico `www`, font della prima schermata precaricati.
+- **Sito minificato:** ultimo passo delle build web (`scripts/minify-web.mjs`, `package.json`): JS e CSS da 2,7 MB a 1,9 MB (compressi da 639 a 465 KB). Lo staging minifica dopo le sue sostituzioni. L'app Android resta com'è.
+- **Database:** regola di inserimento dei promemoria riscritta (non era sfruttabile); 81 regole RLS calcolano `auth.uid()` e la coppia una volta per richiesta; 50 indici sulle chiavi esterne.
+- **Pulizia (05/11, nessun cambio visibile):** tolti circa 400 righe di CSS mai usato (soprattutto la vecchia Quest e Noi hub), 7 funzioni JS senza chiamate, 18 icone e il wordmark non usati, 3 workflow morti; il service worker non mette più in cache le due icone del profilo tolte. Elenco e motivi: [`docs/milestones/pulizia-20261105.md`](../milestones/pulizia-20261105.md). Niente SQL né Edge. Su staging con la build `us-staging-20261105-103`.
+- **Ritocchi dalla prova nell'emulatore (06/11):** scorrendo, una fascia del colore del tema sotto la barra di stato tiene leggibile l'orologio (`styles.css`, `ui-foundation.js`); il gattino si fa da parte quando sotto c'è un comando, per esempio l'interruttore dell'impronta in Impostazioni, che prima copriva e gli rubava il tocco (`pet.js`, `pet.css`); in inglese «Voi» delle Impostazioni diventa «You two» (in italiano «Voi due») e la lavagna «Blackboard», non più «Board» come la bacheca (`index.html`, `i18n-en.js`). Test: `tests/emulator-polish-20261106.test.js`. Su staging con la build `us-staging-20261106-104`.
+- **Test:** `tests/sri-third-party.test.js`, `tests/link-preview-meta.test.js`, `tests/couple-sync-v1-db.test.js`, `tests/couple-sync-client.test.js`, `tests/calendar-reminders-insert-rule-db.test.js`, `tests/rls-initplan-fk-indexes-db.test.js`; i test nel browser servono la pagina senza il pin di integrità (il finto supabase-js non può avere quell'impronta) e con `US_TEST_WEB_ROOT=dist/cloudflare-pages` girano anche sul sito minificato.
+
+**Ordine in produzione (dopo la prova su staging)**
+1. **Database prima del sito**, una migrazione per volta (workflow «Supabase SQL», target production, conferma PRODUZIONE): `20261105110941_couple_sync_v1.sql`, `20261105111516_calendar_reminders_insert_rule.sql`, `20261105112050_rls_initplan_fk_indexes.sql`.
+2. **Sito:** merge su `main`; Cloudflare pubblica con `npm run build:cloudflare-pages`, che ora minifica. Prima del merge, build id nuovo.
+3. **Android:** AAB nuovo (MapLibre con integrità, uscita solo da questo telefono, segnale delle cancellazioni). Nessun dato nuovo per la Sicurezza dei dati.
+
+**Non in questa patch, da decidere o da fare a mano** (dettagli nel rapporto):
+- protezione dalle password già rubate (Authentication, impostazione del founder);
+- reindirizzamento 301 da `uscouple.app` e `us-a33.pages.dev` verso `www` (Cloudflare);
+- widget Scriptable di Bea: ancora servito dalla produzione con codice che non è più nel repo, da tenere fino all'app iPhone o da spegnere;
+- registro delle migrazioni di produzione (9 su 41) da riallineare con `supabase migration repair`;
+- `supabase/config.toml` con il Site URL vecchio;
+- account anonimi rimasti, schermi da 320 px, test nel browser vecchi.
+
+## 1.4: l'uscita in produzione del 04/11/2026 (fatta)
 
 Controllo prima dell'uscita (04/11): revisione del codice main…staging (3 correzioni fatte, nessun errore aperto); suite completa 2537 passati e 0 falliti; test nel browser vero con gli stessi 15 fallimenti che ha già main (test vecchi, non errori nuovi); APK firmato costruito e widget provati sull'emulatore.
 

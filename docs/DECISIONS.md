@@ -475,8 +475,18 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 **Fonte:** richiesta del founder del 05/11/2026, arrivata dalla sessione principale: portare iOS al livello della produzione Android adesso, per comprare l'account Apple Developer il prima possibile (iOS è al 36,5% in Italia; in circa una coppia su due c'è un iPhone, che oggi usa solo il sito). Missione: `docs/missions/ios-store-v1.md`.
 
 - **D3 cambia:** Apple non aspetta più la fine di Android. Android resta com'è; l'app iOS si prepara adesso, senza account, e si pubblica dopo l'acquisto.
-- **Restano** le scelte iOS del 06/10 (iOS 16, SPM, `com.usapp.us`, App Group riservato, origine congelata, swipe Indietro, APNs diretto, Face ID/Touch ID).
+- **Restano** le scelte iOS del 06/10 (iOS 16, SPM, schema `com.usapp.us` — il bundle iOS è `app.uscouple` dal 13/11, App Group riservato, origine congelata, swipe Indietro, APNs diretto, Face ID/Touch ID).
 - **Proposte tecniche della missione, da confermare o cambiare dal founder:** stessa icona di Android 1.4 e stesse icone premio, con l'inquadratura del launcher Android (dagli asset APPROVED); schermata di lancio `#26142E` come la splash Android; solo iPhone nel primo rilascio; italiano e inglese; numero di build come il `versionCode` di Play; firma e caricamento su TestFlight solo dal CI (`ios-testflight.yml`, ambiente `ios-deploy`).
 - **Accesso su iPhone (founder, stesso giorno: «Apple e Google»):** Sign in with Apple e Google già nel primo rilascio iOS (strada A della missione, §3). Google su iPhone senza l'SDK di Google: browser di sistema con PKCE, come Credential Manager su Android non porta pacchetti di terzi. Quando si elimina un account Apple, US revoca il token di Apple dal server (regola 5.1.1(v), TN3194).
 - **Da decidere dal founder:** ordine delle fasi dei widget.
 - **Governance:** acquisto dell'account, push, workflow, merge, secret e pubblicazione hanno ciascuno il suo via esplicito.
+
+## 2026-11-13 — Versione pubblica: tre partite al giorno e «US Plus, in arrivo»
+
+**Fonte:** founder, 13/11/2026, dopo i 14 giorni del test chiuso: «uscire così», «le partite gratis al giorno sono 3 con un contatore visibile delle partite rimanenti»; poi «sì» al riepilogo (colori gratis finché Plus non è in vendita, schermata «in arrivo» con «Avvisatemi»), con la prova solo nell'emulatore di staging e poi la produzione.
+
+- **Si esce senza funzioni nuove.** US va pubblica su Play gratis, con Plus «in arrivo» (D4 §4).
+- **Gioca gratis: tre partite al giorno** di qualsiasi tipo, sul giorno di Europe/Rome. Sostituisce D4 §6 («una partita al giorno»). Con Plus resteranno illimitate. In Gioca un contatore con un pallino per partita dice quante ne restano («Ancora 2 su 3 oggi»); finite, «Domani altre 3» e la riga «Partite illimitate con US Plus · In arrivo».
+- **Colori a scelta:** restano gratis per tutti finché Plus non si può comprare (come nella beta, `plus_on_sale` spento).
+- **«US Plus, in arrivo»:** in Impostazioni (gruppo US Plus) e dalla riga di Gioca, una schermata con cosa sbloccherà (D4 §5, senza i Ricordi finché il limite non è fissato), «Quello che usate oggi resta gratis, per sempre» e «Avvisatemi quando arriva». Nessun prezzo e nessun acquisto. «Avvisatemi» salva solo l'account e la data (`private.plus_waitlist`), si toglie con «Non avvisarmi più» e va via con l'account; il founder legge solo il conteggio.
+- **Le sponsorizzate aspettano Plus in vendita;** il marketing parte con i video di Bea, gratis.

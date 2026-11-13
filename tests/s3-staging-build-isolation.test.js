@@ -61,7 +61,7 @@ test('staging configuration CLI refuses to mutate sources without explicit QA op
 
 test('Android Gradle uses staging package ONLY under explicit QA flag; original signed workflow never builds S3', () => {
   const gradle = fs.readFileSync(path.join(ROOT, 'android/app/build.gradle'), 'utf8');
-  const productionWorkflow = fs.readFileSync(path.join(ROOT, '.github/workflows/android-ui-integration-signed.yml'), 'utf8');
+  const productionWorkflow = fs.readFileSync(path.join(ROOT, '.github/workflows/android-internal-release.yml'), 'utf8');
   assert.match(gradle, /applicationId "com\.usapp\.us"/);
   assert.match(gradle, /System\.getenv\('US_STAGING_QA'\) == 'true'/);
   assert.match(gradle, /applicationId "com\.usapp\.us\.staging"/);
@@ -97,4 +97,14 @@ test('widget endpoints: production in the source, US-STAGING only in the staging
   assert.match(staged, /PROJECTS = \{ "dugmhngrfkuieeletatb" \};/);
   assert.doesNotMatch(staged, /iiakdfsxpywdkxravqjh/);
   assert.match(fs.readFileSync(path.join(__dirname, '..', 'scripts/configure-s3-staging-qa.mjs'), 'utf8'), /writeFile\(WIDGET_ENDPOINTS_PATH, widgetEndpoints\)/);
+});
+
+test('widget endpoints unit test follows the staging rewrite (the APK workflow runs testDebugUnitTest)', async () => {
+  const { isolateWidgetEndpointsTest, WIDGET_ENDPOINTS_TEST_PATH } = await import('../scripts/configure-s3-staging-qa.mjs');
+  const source = fs.readFileSync(path.join(ROOT, WIDGET_ENDPOINTS_TEST_PATH), 'utf8');
+  assert.match(source, /iiakdfsxpywdkxravqjh/);
+  const staged = isolateWidgetEndpointsTest(source);
+  assert.doesNotMatch(staged, /iiakdfsxpywdkxravqjh/);
+  assert.match(staged, /"https:\/\/dugmhngrfkuieeletatb\.supabase\.co\/functions\/v1\/widget-think-send"/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'scripts/configure-s3-staging-qa.mjs'), 'utf8'), /writeFile\(WIDGET_ENDPOINTS_TEST_PATH, widgetEndpointsTest\)/);
 });

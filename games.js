@@ -29,7 +29,6 @@ const label = (role) => window.UsIdentity?.current().nameForRole(role) || 'La tu
 const asWritten = (yes) => (yes ? ' translate="no"' : '');
 const coupleWritten = (item) => item?.source_type === 'couple_custom';
 const myRole = () => window.usProfile?.role || null;
-const partnerRole = () => (myRole() === 'francesco' ? 'beatrice' : 'francesco');
 const partnerName = () => window.UsIdentity?.current().partnerName || 'La tua persona';
 const familyName = (id) => (id === 'per_voi' ? PER_VOI.name : id === 'swipe' ? SWIPE.name : FAMILY[id]?.name || 'Gioca');
 const icon = (name) => `<span class="us-gv2-icon" data-gv2-icon="${esc(name)}" aria-hidden="true"></span>`;
@@ -165,12 +164,23 @@ const allowance = () => home?.allowance || null;
 const freeLeft = () => { const a = allowance(); return a ? Math.max(0, a.free_limit - a.free_used) : 1; };
 const playedThisWeek = (family) => allowance()?.families?.[family] || null;
 const EXHAUSTED = 'Nuovi giochi domani.';
-// Under I vostri giochi: how many rounds are left today, once the server said.
+// Under I vostri giochi: how many rounds are left today, once the server said
+// (three a day since 13/11/2026). A visible counter: one dot per round of the
+// day, lit while it is still there.
 function dayHint() {
-  if (!allowance()) return 'Bastano pochi minuti';
-  const left = freeLeft();
-  if (!left) return 'Domani un’altra partita';
-  return left === 1 ? '1 partita da giocare oggi' : `${left} partite da giocare oggi`;
+  if (!allowance()) return '<small>Bastano pochi minuti</small>';
+  const a = allowance();
+  const limit = Math.max(1, Number(a.free_limit) || 1);
+  const left = Math.min(limit, freeLeft());
+  const text = left ? `Ancora ${left} su ${limit} oggi` : (limit === 1 ? 'Domani un’altra partita' : `Domani altre ${limit}`);
+  const dots = Array.from({ length: limit }, (_, i) => `<i data-on="${i < left ? 'true' : 'false'}"></i>`).join('');
+  return `<span class="us-gv2-daycount" data-gv2-left="${left}" role="status"><span class="us-gv2-daycount-dots" aria-hidden="true">${dots}</span><small>${esc(text)}</small></span>`;
+}
+// Once today's rounds are spent: unlimited rounds are US Plus, coming (D4 §4).
+// Nothing to buy yet: the tap opens «US Plus, in arrivo» with «Avvisatemi».
+function plusSoonRow() {
+  if (!allowance() || freeLeft() || !window.UsPlusSoon?.open) return '';
+  return `<button type="button" class="us-gv2-plus-soon" data-us-feedback="tap" data-gv2-action="plus-soon" data-s>${glyph('sparkle')}<span class="us-gv2-plus-soon-copy"><b>Partite illimitate con US Plus</b><small>In arrivo · Avvisatemi</small></span>${icon('caret-right')}</button>`;
 }
 
 // ---------------------------------------------------------------- the week
@@ -377,7 +387,7 @@ function renderHub() {
   <div class="us-wc-slot" data-wc-slot></div>
   ${weekStrip()}
   <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">
-   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3><small>${esc(dayHint())}</small></div>
+   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3>${dayHint()}</div>
    <div class="us-gv2-game-grid" data-s>
     <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState==='pending'||pvState==='reveal_ready'?'on':'off'}">
      <span class="us-gv2-glyph" aria-hidden="true" data-us-attention-icon>${gameArt('per_voi')}</span>
@@ -386,6 +396,7 @@ function renderHub() {
     </button>
     ${swipe}${families}
    </div>
+   ${plusSoonRow()}
   </section>
   ${weeklyCard(home?.weekly)}
   ${continueSection(home,onTiles)}
@@ -1208,6 +1219,7 @@ function onClick(event) {
     Promise.resolve(refresh()).catch(() => {}).finally(() => { if (button.isConnected) { button.disabled = false; if (text) text.textContent = before; } });
   }
   else if (action === 'retry') load();
+  else if (action === 'plus-soon') window.UsPlusSoon?.open?.({ from: 'gioca' });
   else if (button.dataset.gv2Family) chooseMode(button.dataset.gv2Family);
   else if (button.dataset.gv2Session) openSession(button.dataset.gv2Session);
 }

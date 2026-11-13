@@ -336,7 +336,27 @@ function install(w){
     on(hit,'contextmenu',event=>event.preventDefault());
     on(d,'pointerdown',event=>{if(!hit.contains?.(event?.target))pet.touch();},{capture:true,passive:true});
     // A page scrolling under it: the cat steps back so the text shows, then returns (03/11/2026).
-    on(d,'scroll',()=>{layer.dataset.petScrolling='';later('scrolling',()=>{delete layer.dataset.petScrolling;},700);},{capture:true,passive:true});
+    on(d,'scroll',()=>{layer.dataset.petScrolling='';later('scrolling',()=>{delete layer.dataset.petScrolling;covered();},700);},{capture:true,passive:true});
+    // A control resting under the cat (a switch, a button): it steps aside, so
+    // its hit target never takes the tap meant for the control (06/11/2026).
+    const CONTROL='button,a[href],input,select,textarea,label,[role="button"],[role="switch"],[role="checkbox"],[role="tab"]';
+    function covered(){
+      // Its home spot, without the step aside (offsets ignore translate): measured
+      // with the box, a cat stepped down would find the bar and come back up.
+      const r={left:layer.offsetLeft,top:layer.offsetTop,width:layer.offsetWidth,height:layer.offsetHeight};
+      if(!r.width||typeof d.elementsFromPoint!=='function')return;
+      const points=[[.25,.3],[.75,.3],[.5,.6],[.25,.85],[.75,.85]].map(([x,y])=>[r.left+r.width*x,r.top+r.height*y]);
+      const under=points.some(([x,y])=>d.elementsFromPoint(x,y).some(node=>{
+        if(layer.contains(node)||nav.contains(node))return false;
+        const control=node.closest?.(CONTROL);
+        return Boolean(control&&!nav.contains(control));
+      }));
+      if(under)layer.dataset.petAside='';else delete layer.dataset.petAside;
+    }
+    // Twice: once the tap has landed, and again once a page sliding in has
+    // settled (Settings takes about 1.4 s on a phone).
+    on(d,'click',()=>{later('covered',covered,450);later('covered-settled',covered,1800);},{capture:true,passive:true});
+    on(w,'resize',()=>later('covered',covered,300),{passive:true});
 
     // Glance: the pupils turn towards a tapped tab for a moment.
     function glance(x){

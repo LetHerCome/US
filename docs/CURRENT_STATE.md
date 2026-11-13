@@ -1,10 +1,27 @@
 # US — Current State
 
 **Status:** OPERATIONAL STATUS AUTHORITY
-**Verified snapshot:** 2026-10-30 (la sezione del 30/10; le sezioni più vecchie restano alle loro date)
-**Verified main SHA:** 3f36c58 (PR #243 merged)
+**Verified snapshot:** 2026-11-09 (la sezione del 09/11; le sezioni più vecchie restano alle loro date)
+**Verified main SHA:** 0d47c3b2 (PR #247 merged, rilascio 1.4.1)
 
 Stati: PROGETTATO / IN BRANCH / MERGED / SQL o Edge APPLICATO (staging? produzione?) / TESTATO SU DEVICE. Non confonderli. Ogni merge su `main` pubblica il web di produzione (Cloudflare Pages), ma non applica SQL né Edge. Merge, SQL di produzione, deploy Edge e pubblicazione Store richiedono ciascuno un'autorizzazione separata del founder.
+
+## Aggiornamento 09/11 — 1.4.1 in produzione; errori dell'app e domanda in attesa verso staging
+
+- **In produzione dal 06/11 (col via del founder):** la patch 1.4.1 (audit, pulizia, ritocchi). Le tre migrazioni sono applicate e verificate in sola lettura; `www.uscouple.app` serve `us-rilascio-20261106-105` (PR #247); l'AAB 1.4.1 (446281) è nel test interno. Dettagli nella [nota della patch](store/PROSSIMA_PATCH_PRODUZIONE.md).
+- **Uso al 09/11 (solo conteggi):** 8 coppie complete, 2 in attesa del partner (da 14 e 4 giorni); coppie attive 6 (la settimana prima 7); Ti penso 16 (32); risposte alla domanda del giorno 26 (29); 5 persone su 14 ancora attive dopo 7 giorni di coppia. Si rifà con `docs/store/US_NUMERI_DELLA_SETTIMANA.sql`.
+- **In branch (`claude/misure-e-attesa`), patch 1.4.2:** errori JavaScript dell'app salvati su Supabase senza servizi esterni (migrazione `client_errors_v1`), la domanda di oggi nella schermata d'attesa del partner con il gancio nell'invito, informativa IT/EN aggiornata. Prima su staging.
+- **Ancora nell'app:** niente pagamenti (RevenueCat), niente richiesta di recensione, nessuna misura d'uso oltre ai conteggi del database.
+
+## Controllo del 05/11 — audit della produzione (sola lettura)
+
+- **Verificato in produzione:** `www.uscouple.app` serve `us-rilascio-20261104-101` (`main` `dd70e38a`, rilascio 1.4); 20 Edge Function pubblicate, tra cui `send-web-push` v20 e `weekly-challenge-job` v1 del 04/11; 10 cron attivi, tutte le esecuzioni degli ultimi 3 giorni riuscite; un backup al giorno (piano Pro), senza PITR. Le righe più sotto che dicono «nessun backup di produzione» sono superate.
+- **Uso (solo conteggi):** 28 account, 9 coppie (8 complete), 6 coppie attive negli ultimi 7 giorni; dal 25/10 15 iscrizioni, 12 finite in una coppia completa.
+- **Esito:** nessun problema grave; 18 punti da sistemare, i primi sono l'uscita «Scollega questo telefono» che scollega tutti i dispositivi, le cancellazioni che non arrivano in tempo reale, il primo caricamento lento del sito e il codice preso da jsDelivr senza controllo di integrità. Dettagli: [audit](audit/2026-11-05-audit-produzione.md). Confronto con i concorrenti e piano economico: [proposta](product/2026-11-05-concorrenti-e-piano-economico.md).
+- **Registro delle migrazioni di produzione:** 9 versioni su 41 del repo. Non usare `supabase db push` né `supabase migration list` sulla produzione finché non è riallineato.
+- **Widget Scriptable:** ritirato nel repo il 06/10, ma mai pubblicato: in produzione `us-widget-state` v9 e `widget-scriptable-setup` v6 servono ancora il widget sull'iPhone di Bea (token usato il 5/11). Non pubblicare `us-widget-state` dal repo senza una decisione del founder.
+- **Patch 1.4.1 (su staging dal 05/11; in produzione dal 06/11, vedi la sezione del 09/11):** le correzioni dell'audit unite nel branch di staging (`mission/us-store-s3-1-public-auth-staging-20261011`, build `us-staging-20261105-102`); le tre migrazioni (`couple_sync_v1`, `calendar_reminders_insert_rule`, `rls_initplan_fk_indexes`) applicate su US-STAGING col workflow. Su staging restano non avvolte una regola e una chiave del «Punto della settimana», che esiste solo lì. Nota: [prossima patch](store/PROSSIMA_PATCH_PRODUZIONE.md).
+- **App iPhone:** dal 05/11 una sessione a parte («App iOS al livello di Android», con il suo branch) la porta al livello dell'Android di produzione, in attesa dell'account Apple Developer.
 
 ## Aggiornamento 30/10 — rilascio 1.3.0 (patch unica)
 

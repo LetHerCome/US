@@ -987,12 +987,19 @@ const usOnboarding=window.UsOnboarding.mount({
   // the "Tu" step is one yearly event, through the same insert as events.js.
   openStep:id=>showAuthStep(id),
   insertEvent:row=>sb.from('shared_events').insert(row),
+  // Waiting for the partner (09/11/2026): today's question on the invite
+  // screen, through the same RPC and the same answer row as Oggi (saveAnswer).
+  daily:{
+    question:()=>usWithDeadline(sb.rpc('get_or_create_daily_question'),5000),
+    readAnswer:(questionId,userId)=>usWithDeadline(sb.from('daily_answers').select('answer').eq('question_id',questionId).eq('user_id',userId).maybeSingle(),5000),
+    saveAnswer:row=>sb.from('daily_answers').upsert({...row,updated_at:new Date().toISOString()},{onConflict:'question_id,user_id'})
+  },
   signOut:async()=>{
     const revocation=revokeCurrentDevice();
     usInvalidateAuth({revokePush:false});
     try{
       await revocation;
-      const result=await usWithDeadline(sb.auth.signOut(),5000);
+      const result=await usWithDeadline(sb.auth.signOut({scope:'local'}),5000);
       if(result?.error)throw result.error;
       window.UsAppLock?.reset?.();
       await initCloud();
@@ -1028,6 +1035,7 @@ function usInvalidateAuth({revokePush=true,keepDevice=false}={}){
     window.UsNotifications?.signedOut?.();
   }
   if(usRealtimeChannel){sb.removeChannel(usRealtimeChannel);usRealtimeChannel=null;}
+  window.usStopCoupleSync?.();
   document.documentElement.classList.remove('us-auth-ready','us-returning-device');
   document.documentElement.classList.add('us-auth-pending');
 }
@@ -1197,6 +1205,7 @@ async function initCloud(){
       window.usProfile = null;
       window.UsCoupleContext?.clear?.();
       if(usRealtimeChannel){sb.removeChannel(usRealtimeChannel);usRealtimeChannel=null;}
+      window.usStopCoupleSync?.();
       setCloudBadge(false,'da collegare');
       window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false}}));
       return;
@@ -3507,17 +3516,12 @@ function usHeartLike(button){const turn=window.UsUiFoundation?.heartTurn?.(windo
 // Novità (founder, 30/10/2026): the beta testers see once, after the update,
 // what changed. One id per release; a new install does not see it.
 const US_WHATS_NEW=Object.freeze({
-  id:'1.4',
+  id:'1.5',
   title:'US si è aggiornata',
   items:[
-    'Noi nuova: il calendario con le foto dei vostri ricordi, e «Prossimi» per quello che vi aspetta.',
-    'La bacheca: post-it colorati da scrivere e spuntare insieme, e la lavagna su cui disegnare in due.',
-    'La sfida della settimana in Gioca: una al lunedì, si chiude con una foto che diventa un ricordo.',
-    'Come stai: dite all’altra persona come state con un’emoji, per 12 ore.',
-    'La batteria di chi ami accanto alla distanza, su Oggi.',
-    'Ricordi diventa un album: solo le vostre foto, mese per mese.',
-    'Un nuovo sfondo, Vino, e in Sintonia le Atmosfere da sbloccare: Prugna, Notte blu, Grafite e altre.',
-    'Widget nuovi sulla Home: Ti penso con un tocco sul cuore, Post-it, Lavagna, Come stai e altri.'
+    'Gioca: ora le partite sono 3 al giorno, e un contatore vi dice quante ne restano.',
+    'Mentre aspetti la tua persona puoi già rispondere alla domanda di oggi.',
+    'In arrivo US Plus: in Impostazioni vedete cosa porterà, e con «Avvisatemi» vi diciamo quando arriva.'
   ]
 });
 function usShowWhatsNew(returning){
@@ -3736,10 +3740,6 @@ const US_MOMENT_COLUMNS='id,created_by,storage_path,thumbnail_path,caption,momen
 const US_MOMENT_PLACE_COLUMNS='place_lat,place_lon,place_label,place_source';
 const US_MOMENT_MAX_PHOTOS=10;
 const US_MOMENT_TYPES=['image/jpeg','image/png','image/webp'];
-
-function formatMomentDetectedDate(value){
-  try{return new Date(value+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long',year:'numeric'});}catch(_){return value;}
-}
 
 function parseExifDateString(value){
   const m=String(value||'').match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
@@ -4856,21 +4856,6 @@ function weekStartISO(now=new Date()){
   d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));
   return d.toISOString().slice(0,10);
 }
-function questWeekDate(week,days=0){
-  const [y,m,d]=String(week).split('-').map(Number);
-  return new Date(Date.UTC(y,m-1,d+days));
-}
-function questDayLabel(date,options){return date.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{timeZone:'UTC',...options});}
-function nextWeekLabel(week=weekStartISO()){
-  return questDayLabel(questWeekDate(week,7),{weekday:'long',day:'numeric',month:'short'});
-}
-// "12–18 ott" inside one month, "28 set – 4 ott" across two (the mockup's
-// kicker); month:'long' for the past weeks ("5–11 ottobre").
-function questWeekRangeLabel(week,month='short'){
-  const from=questWeekDate(week),to=questWeekDate(week,6);
-  if(from.getUTCMonth()===to.getUTCMonth())return `${from.getUTCDate()}–${questDayLabel(to,{day:'numeric',month})}`;
-  return `${questDayLabel(from,{day:'numeric',month})} – ${questDayLabel(to,{day:'numeric',month})}`;
-}
 function bondLevelInfo(totalXp=0){
   const total=Math.max(0,Number(totalXp)||0);
   let level=1,floor=0,needed=200;
@@ -5710,6 +5695,9 @@ document.getElementById('noiIdeaLivedList')?.addEventListener('click',(event)=>{
 
 // ===== Ti penso =====
 let usRealtimeChannel=null;
+let usCoupleSyncChannel=null;
+function usStopCoupleSync(){if(usCoupleSyncChannel){sb.removeChannel(usCoupleSyncChannel);usCoupleSyncChannel=null;}}
+window.usStopCoupleSync=usStopCoupleSync;
 function partnerFromProfiles(profiles){const me=window.usProfile;return me?.couple_id?(profiles||[]).find(p=>p.couple_id===me.couple_id&&p.id!==me.id)||null:null;}
 async function getCoupleProfiles(){
   const profile=window.usProfile,coupleId=profile?.couple_id;
@@ -5840,8 +5828,20 @@ function scheduleUsRealtimeRefresh(kind){
       window.UsTodayPriority?.refresh?.({freshEvents:true});
     }
     if(kind==='think-reaction'){hydrateThink().catch(()=>{});return;}
+    if(kind==='calendar'){if(active==='bond')window.USNoiV2?.refresh?.();window.UsTodayPriority?.refresh?.({freshEvents:true});return;}
   },180);
   usRealtimeRefreshTimers.set(kind,timer);
+}
+// Couple sync V1 (audit 05/11/2026): Realtime drops DELETE events filtered by
+// couple, so the server moves public.couple_sync when something of the couple
+// is deleted, and on every calendar change. Each kind refreshes what shows it.
+function usOnCoupleSync(payload){
+  const kind=payload?.new?.kind;
+  if(kind==='moments')return scheduleUsRealtimeRefresh('moments');
+  if(kind==='events')return scheduleUsRealtimeRefresh('events');
+  if(kind==='calendar')return scheduleUsRealtimeRefresh('calendar');
+  if(kind==='notes')return window.UsCoupleNotes?.refresh?.();
+  if(kind==='stories')return window.usRefreshStories?.();
 }
 function startUsRealtime(){
   if(!window.usProfile)return;
@@ -5865,6 +5865,12 @@ function startUsRealtime(){
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'lavagna_strokes',filter:`couple_id=eq.${coupleId}`},payload=>window.UsLavagna?.onStroke?.(payload))
     .on('postgres_changes',{event:'*',schema:'public',table:'lavagna_boards',filter:`couple_id=eq.${coupleId}`},payload=>window.UsLavagna?.onBoard?.(payload))
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'couples',filter:`id=eq.${coupleId}`},payload=>{renderBondProgress(payload.new?.bond_xp||0);window.USProgression?.refreshAfterAction?.();})
+    .subscribe();
+  // Couple sync on a channel of its own: if the web goes live before the
+  // couple_sync migration, only this channel fails, never Ti penso and the rest.
+  usStopCoupleSync();
+  usCoupleSyncChannel=sb.channel(`us-sync-${userId}`)
+    .on('postgres_changes',{event:'*',schema:'public',table:'couple_sync',filter:`couple_id=eq.${coupleId}`},payload=>usOnCoupleSync(payload))
     .subscribe();
 }
 window.startUsRealtime=startUsRealtime;

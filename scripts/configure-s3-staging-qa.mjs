@@ -71,6 +71,14 @@ export function isolateWidgetEndpoints(javaSource) {
   return staged;
 }
 
+// Its unit test (run by the staging APK workflow) checks the same rule for the
+// project of this build, so it follows the rewrite.
+export const WIDGET_ENDPOINTS_TEST_PATH = 'native-plugins/us-widget-bridge/android/src/test/java/com/usapp/widget/UsWidgetEndpointsTest.java';
+export function isolateWidgetEndpointsTest(javaSource) {
+  if (!javaSource.includes(PRODUCTION_PROJECT_REF)) throw new Error('S3 staging QA: widget endpoints test does not name production');
+  return javaSource.split(PRODUCTION_PROJECT_REF).join(STAGING_PROJECT_REF);
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.env.US_STAGING_QA !== 'true') {
     throw new Error('S3 staging QA mutation is disabled unless US_STAGING_QA=true');
@@ -80,11 +88,13 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const [appJs, indexHtml, capacitorJson] = await Promise.all(paths.map(p => readFile(p, 'utf8')));
   const out = isolateStagingBuild({ appJs, indexHtml, capacitorJson, publishableKey: key });
   const widgetEndpoints = isolateWidgetEndpoints(await readFile(WIDGET_ENDPOINTS_PATH, 'utf8'));
+  const widgetEndpointsTest = isolateWidgetEndpointsTest(await readFile(WIDGET_ENDPOINTS_TEST_PATH, 'utf8'));
   await Promise.all([
     writeFile(paths[0], out.appJs),
     writeFile(paths[1], out.indexHtml),
     writeFile(paths[2], out.capacitorJson),
-    writeFile(WIDGET_ENDPOINTS_PATH, widgetEndpoints)
+    writeFile(WIDGET_ENDPOINTS_PATH, widgetEndpoints),
+    writeFile(WIDGET_ENDPOINTS_TEST_PATH, widgetEndpointsTest)
   ]);
   process.stdout.write('S3 staging inputs isolated: com.usapp.us.staging -> US-STAGING (no production Supabase host)\n');
 }

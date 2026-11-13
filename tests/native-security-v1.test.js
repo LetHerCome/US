@@ -534,7 +534,7 @@ test('N1 settings: riga locale, logout rimuove la protezione solo dopo signOut',
   const html = read('index.html');
   assert.match(html, /data-us-setting="app-lock" id="usAppLockSetting" role="switch" aria-checked="false" hidden/);
   assert.match(settings, /if\(name==='app-lock'\)return toggleAppLock\(\);/);
-  const signOut = settings.indexOf('const {error}=await sb.auth.signOut();');
+  const signOut = settings.indexOf("const {error}=await sb.auth.signOut({scope:'local'});");
   const reset = settings.indexOf('await window.UsAppLock?.reset?.()');
   assert.ok(signOut > 0 && reset > signOut);
   assert.doesNotMatch(settings, /app[_-]lock[^\n]*(sb\.from|sb\.rpc)/i, 'mai una preferenza di coppia sul server');

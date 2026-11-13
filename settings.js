@@ -293,6 +293,35 @@ function personColorLockedModal(){
   openModal('Il tuo colore',`<p class="us-person-color-locked">Si sblocca con US Plus: ognuno di voi sceglie il suo colore tra 8, e lo vedete tutti e due.</p><div class="us-setting-choice us-person-colors is-locked">${list.map(c=>`<button type="button" aria-disabled="true" data-person-color-locked><span><i class="us-person-swatch" style="background:${esc(c.hex)}" aria-hidden="true"></i>${esc(c.name)}</span><b>${c.mine?'Il tuo':''}</b></button>`).join('')}</div>`,'US PLUS');
   $('usSettingsModalBody').querySelectorAll('[data-person-color-locked]').forEach(btn=>btn.addEventListener('click',()=>toast('Si sblocca con US Plus')));
 }
+// US Plus, in arrivo (13/11/2026, verso l'uscita pubblica): what Plus will
+// unlock (D4 §5) and «Avvisatemi». Nothing to buy and no price yet; the
+// answer is saved for this account only (plus_waitlist).
+const PLUS_SOON=['Partite illimitate a Gioca','«Il vostro anno» completo','L’archivio delle domande passate','Pacchetti di domande a tema'];
+async function plusSoonModal(){
+  const overlay=$('usSettingsOverlay');if(overlay?.dataset)overlay.dataset.usSettingsSheet='plus';
+  openModal('In arrivo',`<div class="us-plus-soon"><p class="us-plus-soon-lead">Un abbonamento per la coppia: paga uno, vale per tutti e due.</p><ul class="us-plus-soon-list">${PLUS_SOON.map(t=>`<li><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span><span>${esc(t)}</span></li>`).join('')}</ul><p class="us-plus-soon-free">Quello che usate oggi resta gratis, per sempre.</p><button type="button" class="primary us-plus-soon-cta" data-plus-soon-join disabled>Avvisatemi quando arriva</button><p class="us-plus-soon-state" data-plus-soon-state hidden>Vi avviseremo qui su US ♡</p><button type="button" class="us-ob-link us-plus-soon-leave" data-plus-soon-leave hidden>Non avvisarmi più</button></div>`,'US PLUS');
+  const body=$('usSettingsModalBody');
+  const join=body.querySelector('[data-plus-soon-join]'),state=body.querySelector('[data-plus-soon-state]'),leave=body.querySelector('[data-plus-soon-leave]');
+  const paint=joined=>{join.hidden=joined;join.disabled=false;state.hidden=!joined;leave.hidden=!joined;};
+  const ask=async value=>{
+    const{data,error}=await sb.rpc('plus_waitlist',{join:value});
+    if(error)throw error;
+    return data?.joined===true;
+  };
+  try{paint(await ask(null));}catch(error){console.warn(error);paint(false);}
+  join.addEventListener('click',async()=>{
+    join.disabled=true;
+    try{paint(await ask(true));toast('Vi avviseremo quando arriva ♡');}
+    catch(error){console.warn(error);join.disabled=false;toast('Non riesco a salvarlo. Riprova.');}
+  });
+  leave.addEventListener('click',async()=>{
+    leave.disabled=true;
+    try{paint(await ask(false));}
+    catch(error){console.warn(error);toast('Non riesco a salvarlo. Riprova.');}
+    finally{leave.disabled=false;}
+  });
+}
+window.UsPlusSoon={open:()=>plusSoonModal()};
 function personColorModal(){
   const profiles=settingsSnapshot?.profiles||[],meId=window.usProfile?.id;
   const me=profiles.find(p=>p.id===meId),partner=profiles.find(p=>p.id!==meId)?.display_name||'la tua persona';
@@ -1015,7 +1044,7 @@ async function reportModal(){
 
 function logoutConfirmationModal(){
   openModal('Scollega questo telefono',`
-    <div class="us-settings2-modal-copy">Dovrai inserire di nuovo il codice privato per rientrare in US.</div>
+    <div class="us-settings2-modal-copy">Per rientrare in US userai la tua email o Google. Gli altri dispositivi restano collegati.</div>
     <div class="us-settings2-action-stack">
       <button type="button" class="ghost" id="usCancelLogout">Annulla</button>
       <button type="button" class="us-settings2-disconnect" id="usConfirmLogout">Scollega questo telefono</button>
@@ -1032,7 +1061,7 @@ async function logout(){
   if(btn){btn.disabled=true;btn.textContent='Scollego…';}
   try{await window.revokeCurrentDevice?.();}catch(error){console.warn('[US Logout] device cleanup',error);}
   try{
-    const {error}=await sb.auth.signOut();
+    const {error}=await sb.auth.signOut({scope:'local'});
     if(error)throw error;
     // Session gone: drop this phone's biometric protection record too.
     try{await window.UsAppLock?.reset?.();}catch(_e){}
@@ -1044,6 +1073,7 @@ async function action(name){
   // Which sheet is open: dc-settings.css gives each one the mockup's blocks.
   const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='maudit'&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
   if(name==='relationship-date')return relationshipDateModal();
+  if(name==='plus')return plusSoonModal();
   if(name==='together-mode')return window.UsDistance?.open?.();
   if(name==='status-form')return window.UsMemberStatus?.open?.('form');
   if(name==='person-color'){if(!settingsSnapshot?.colorsOpen)return personColorLockedModal();return personColorModal();}
