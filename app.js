@@ -987,6 +987,13 @@ const usOnboarding=window.UsOnboarding.mount({
   // the "Tu" step is one yearly event, through the same insert as events.js.
   openStep:id=>showAuthStep(id),
   insertEvent:row=>sb.from('shared_events').insert(row),
+  // Waiting for the partner (09/11/2026): today's question on the invite
+  // screen, through the same RPC and the same answer row as Oggi (saveAnswer).
+  daily:{
+    question:()=>usWithDeadline(sb.rpc('get_or_create_daily_question'),5000),
+    readAnswer:(questionId,userId)=>usWithDeadline(sb.from('daily_answers').select('answer').eq('question_id',questionId).eq('user_id',userId).maybeSingle(),5000),
+    saveAnswer:row=>sb.from('daily_answers').upsert({...row,updated_at:new Date().toISOString()},{onConflict:'question_id,user_id'})
+  },
   signOut:async()=>{
     const revocation=revokeCurrentDevice();
     usInvalidateAuth({revokePush:false});
@@ -3477,17 +3484,12 @@ function usHeartLike(button){const turn=window.UsUiFoundation?.heartTurn?.(windo
 // Novità (founder, 30/10/2026): the beta testers see once, after the update,
 // what changed. One id per release; a new install does not see it.
 const US_WHATS_NEW=Object.freeze({
-  id:'1.4',
+  id:'1.5',
   title:'US si è aggiornata',
   items:[
-    'Noi nuova: il calendario con le foto dei vostri ricordi, e «Prossimi» per quello che vi aspetta.',
-    'La bacheca: post-it colorati da scrivere e spuntare insieme, e la lavagna su cui disegnare in due.',
-    'La sfida della settimana in Gioca: una al lunedì, si chiude con una foto che diventa un ricordo.',
-    'Come stai: dite all’altra persona come state con un’emoji, per 12 ore.',
-    'La batteria di chi ami accanto alla distanza, su Oggi.',
-    'Ricordi diventa un album: solo le vostre foto, mese per mese.',
-    'Un nuovo sfondo, Vino, e in Sintonia le Atmosfere da sbloccare: Prugna, Notte blu, Grafite e altre.',
-    'Widget nuovi sulla Home: Ti penso con un tocco sul cuore, Post-it, Lavagna, Come stai e altri.'
+    'Gioca: ora le partite sono 3 al giorno, e un contatore vi dice quante ne restano.',
+    'Mentre aspetti la tua persona puoi già rispondere alla domanda di oggi.',
+    'In arrivo US Plus: in Impostazioni vedete cosa porterà, e con «Avvisatemi» vi diciamo quando arriva.'
   ]
 });
 function usShowWhatsNew(returning){

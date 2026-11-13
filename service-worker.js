@@ -1,4 +1,4 @@
-const BUILD_ID = "us-rilascio-20261106-105";
+const BUILD_ID = "us-rilascio-20261113-108";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -12,6 +12,7 @@ const APP_SHELL = [
   versioned("/public-auth.js"),
   versioned("/google-auth.js"),
   versioned("/public-auth.css"),
+  versioned("/client-errors.js"),
   versioned("/platform.js"),
   versioned("/app-lock.js"),
   versioned("/app-lock.css"),

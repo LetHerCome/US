@@ -1,6 +1,6 @@
 # Mission — US Plus V1 su staging
 
-**Status:** §1 (Gioca una partita al giorno) fatto sul branch `claude/gioca-una-al-giorno`, in prova su staging. Il resto da iniziare. Nessun passo è autorizzato per implicazione: ognuno ha il via del founder.
+**Status:** §1 fatto (una partita al giorno dal 28/10; tre al giorno dal 13/11 con `gioca_tre_al_giorno_v1`, vedi DECISIONS) sul branch `claude/gioca-una-al-giorno`, in prova su staging. Il resto da iniziare. Nessun passo è autorizzato per implicazione: ognuno ha il via del founder.
 **Decisione:** nuova D4 del 28/10/2026 in [`docs/DECISIONS.md`](../DECISIONS.md), più la regola «prove solo su staging» dello stesso giorno.
 **Ricerca:** [`docs/product/lancio-marketing-monetizzazione.md`](../product/lancio-marketing-monetizzazione.md), §3 (Play Billing, RevenueCat, schema dell'accesso) e §4.5 (prova su staging).
 **Dove:** US-STAGING (`com.usapp.us.staging`, Supabase `us-staging-s31`). In produzione arrivano solo patch mirate di ciò che su staging funziona.
