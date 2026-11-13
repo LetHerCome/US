@@ -25,9 +25,9 @@
   const ASKED = (code) => `us:app-update:v1:asked:${code}`;
   // The App Store's numeric id of US (App Store Connect › App Information ›
   // Apple ID). The plugin reads appId only on iOS; Android opens Play by
-  // package name. Empty until the app record exists
-  // (docs/store/ios/GIORNO_ACQUISTO.md).
-  const APP_STORE_ID = '';
+  // package name. App record «US: app per coppie» (app.uscouple), created
+  // 13/11/2026 (docs/store/ios/GIORNO_ACQUISTO.md).
+  const APP_STORE_ID = '6834589989';
   const storeOptions = (appStoreId) => (/^[0-9]{6,12}$/.test(String(appStoreId || '')) ? { appId: String(appStoreId) } : undefined);
 
   function updatePlan({ info, minVersionCode }) {
