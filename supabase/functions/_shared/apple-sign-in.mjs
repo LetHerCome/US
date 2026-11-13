@@ -18,13 +18,13 @@
 //   APPLE_TEAM_ID                 10 characters (falls back to APNS_TEAM_ID)
 //   APPLE_SIGN_IN_KEY_ID          10 characters, a "Sign in with Apple" key
 //   APPLE_SIGN_IN_PRIVATE_KEY     that key's .p8 (PEM)
-//   APPLE_SIGN_IN_CLIENT_ID       optional, default com.usapp.us (the bundle id)
+//   APPLE_SIGN_IN_CLIENT_ID       optional, default app.uscouple (the iOS bundle id)
 // Missing or malformed → not configured: nothing is exchanged or revoked.
 
 export const APPLE_AUDIENCE = 'https://appleid.apple.com';
 export const APPLE_TOKEN_URL = 'https://appleid.apple.com/auth/token';
 export const APPLE_REVOKE_URL = 'https://appleid.apple.com/auth/revoke';
-export const APPLE_CLIENT_ID_DEFAULT = 'com.usapp.us';
+export const APPLE_CLIENT_ID_DEFAULT = 'app.uscouple';
 // Apple accepts a client secret for up to 6 months; ours lives 5 minutes.
 export const CLIENT_SECRET_SECONDS = 300;
 const REQUEST_TIMEOUT_MS = 10_000;

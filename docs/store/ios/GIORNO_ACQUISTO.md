@@ -35,16 +35,16 @@ Tempo: circa 1–2 ore il primo giorno, più l'attesa di Apple per l'iscrizione 
 
 [developer.apple.com/account](https://developer.apple.com/account) › Certificates, IDs & Profiles › Identifiers › **+** › App IDs › App:
 - Description: `US`
-- Bundle ID: **Explicit** `com.usapp.us`
+- Bundle ID: **Explicit** `app.uscouple` (fatto il 13/11/2026: `com.usapp.us` era già preso su Apple)
 - Capabilities: **Push Notifications**, **Associated Domains** e **Sign in with Apple** (Enable as a primary App ID). App Groups più avanti, con i widget.
 
 ## 4b. Accesso con Apple e Google (tu, poi Supabase con il tuo via)
 
 Il client Google per iPhone **si può creare anche oggi**, prima dell'acquisto: non chiede niente ad Apple.
-1. **Google Cloud** › progetto «US Play» › API e servizi › Credenziali › Crea credenziali › ID client OAuth › tipo **iOS**, bundle ID `com.usapp.us` (Team ID e App Store ID si aggiungono dopo, sono facoltativi). Mandami il client ID (`…apps.googleusercontent.com`, non è un segreto): lo metto in `ios/App/App/Info.plist`.
-2. **Chiave Sign in with Apple** (dopo l'acquisto): Certificates, IDs & Profiles › Keys › **+** › nome `US Accedi con Apple`, spunta **Sign in with Apple** › Configure › App ID primario `com.usapp.us` › Register. Scarica il `.p8` (**una volta sola**) e annota il Key ID. Serve al server per revocare il token quando qualcuno elimina l'account.
+1. **Google Cloud** › progetto «US Play» › API e servizi › Credenziali › Crea credenziali › ID client OAuth › tipo **iOS**, bundle ID `app.uscouple` (Team ID e App Store ID si aggiungono dopo, sono facoltativi). Mandami il client ID (`…apps.googleusercontent.com`, non è un segreto): lo metto in `ios/App/App/Info.plist`.
+2. **Chiave Sign in with Apple** (dopo l'acquisto): Certificates, IDs & Profiles › Keys › **+** › nome `US Accedi con Apple`, spunta **Sign in with Apple** › Configure › App ID primario `app.uscouple` › Register. Scarica il `.p8` (**una volta sola**) e annota il Key ID. Serve al server per revocare il token quando qualcuno elimina l'account.
 3. **Supabase staging, poi produzione** (Authentication › Sign In / Providers), ogni passo col tuo via:
-   - **Apple:** acceso, **Client IDs** = `com.usapp.us`. Le impostazioni OAuth (Services ID, chiave segreta) restano vuote: servono solo al sito, non all'app.
+   - **Apple:** acceso, **Client IDs** = `app.uscouple`. Le impostazioni OAuth (Services ID, chiave segreta) restano vuote: servono solo al sito, non all'app.
    - **Google:** in **Client IDs** aggiungi il client iOS dopo quello web: `<client web>,<client iOS>`. Il controllo del nonce resta acceso (US lo manda).
    - Secret delle Edge Function (quando arriva la revoca): `APPLE_SIGN_IN_KEY_ID`, `APPLE_SIGN_IN_PRIVATE_KEY` (il `.p8`); il Team ID è già `APNS_TEAM_ID`.
 
@@ -56,7 +56,7 @@ Il client Google per iPhone **si può creare anche oggi**, prima dell'acquisto: 
    - `APNS_KEY_ID` = il Key ID
    - `APNS_TEAM_ID` = il Team ID
    - `APNS_PRIVATE_KEY` = tutto il contenuto del file `.p8`, righe `BEGIN`/`END` comprese
-   - `APNS_TOPIC` non serve (vale `com.usapp.us`)
+   - `APNS_TOPIC` non serve (vale `app.uscouple`)
 
    L'app iOS di TestFlight usa la **produzione**: senza questi secret le notifiche iOS restano spente e quelle Android non cambiano. Sono un'impostazione di produzione: li metti tu, oppure Claude con il tuo via esplicito. Non serve ripubblicare le funzioni.
 
@@ -76,7 +76,7 @@ Il client Google per iPhone **si può creare anche oggi**, prima dell'acquisto: 
 
 ## 7. Record dell'app (tu → Claude)
 
-1. App Store Connect › App › **+** › Nuova app: piattaforma iOS, nome `US: app per coppie` (se è preso: `US – app per coppie` o `US: coppia`), lingua principale **Italiano**, bundle `com.usapp.us`, SKU `us-ios-1`, accesso completo.
+1. App Store Connect › App › **+** › Nuova app: piattaforma iOS, nome `US: app per coppie` (se è preso: `US – app per coppie` o `US: coppia`), lingua principale **Italiano**, bundle `app.uscouple`, SKU `us-ios-1`, accesso completo.
 2. App Information › **Apple ID** (un numero di 10 cifre circa): mandalo a Claude, che lo scrive in `APP_STORE_ID` in `app-update.js` (serve al pulsante «Aggiorna» sotto la versione minima).
 
 ## 8. Primo TestFlight (tu avvii, GitHub costruisce)

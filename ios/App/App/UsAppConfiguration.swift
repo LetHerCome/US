@@ -5,10 +5,10 @@ import UIKit
 /// Nothing here enables a capability: App Groups, Push and Keychain sharing
 /// need entitlements + provisioning that are added with their milestones.
 enum UsAppConfiguration {
-    static let bundleIdentifier = "com.usapp.us"
+    static let bundleIdentifier = "app.uscouple"
     /// Reserved App Group for app <-> extension data (widget snapshots,
     /// shared media cache). Not in the entitlements yet; see docs/native/IOS_BASELINE.md.
-    static let appGroupIdentifier = "group.com.usapp.us.shared"
+    static let appGroupIdentifier = "group.app.uscouple.shared"
     /// Public URL scheme registered in Info.plist (CFBundleURLTypes).
     static let urlScheme = "com.usapp.us"
 

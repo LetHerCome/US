@@ -33,10 +33,10 @@ Only durable decisions belong here. New missions should not reopen them without 
 
 ### Native iOS (M15)
 
-- iOS is a Capacitor 8 target in `ios/` (Swift Package Manager) sharing the Android web bundle; bundle id `com.usapp.us`, deployment target **iOS 16.0**.
+- iOS is a Capacitor 8 target in `ios/` (Swift Package Manager) sharing the Android web bundle; deployment target **iOS 16.0**. Bundle id **`app.uscouple`** (13/11/2026: `com.usapp.us` was already taken on Apple; Android, Play and Firebase keep `com.usapp.us`). Team ID `KW79XL4LBZ` (individual account, Francesco Monti).
 - Shared product JS stays platform-neutral; iOS specifics live in `ios/` and native-only glue in `native-entry.mjs` / `app-links.mjs`.
 - iOS Back = left-edge swipe into `UsNavigation.handleNativeBack()`; never exits the app.
-- Public URL scheme `com.usapp.us`; reserved App Group `group.com.usapp.us.shared` for all future extensions; refresh tokens never go in the App Group.
+- Public URL scheme `com.usapp.us` (shared with Android, unchanged); reserved App Group `group.app.uscouple.shared` for all future extensions; refresh tokens never go in the App Group.
 - WebView data (session) is excluded from iOS backups, mirroring Android `allowBackup=false`.
 - The iOS WebView origin (`capacitor://localhost`) is frozen: changing it orphans stored sessions.
 

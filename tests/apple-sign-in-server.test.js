@@ -35,7 +35,7 @@ test('configuration: the Sign in with Apple key, the team and the bundle id, or 
   const { pem } = await keyPair();
   const config = appleSignInConfig(env({ APPLE_TEAM_ID: 'AB12CD34EF', APPLE_SIGN_IN_KEY_ID: 'KEY1234567', APPLE_SIGN_IN_PRIVATE_KEY: pem }));
   assert.equal(config.teamId, 'AB12CD34EF');
-  assert.equal(config.clientId, 'com.usapp.us');
+  assert.equal(config.clientId, 'app.uscouple');
   assert.equal(appleSignInConfig(env({ APNS_TEAM_ID: 'AB12CD34EF', APPLE_SIGN_IN_KEY_ID: 'KEY1234567', APPLE_SIGN_IN_PRIVATE_KEY: pem })).teamId, 'AB12CD34EF', 'the APNs team id is the same team');
   assert.equal(appleSignInConfig(env({ APPLE_TEAM_ID: 'AB12CD34EF', APPLE_SIGN_IN_KEY_ID: 'KEY1234567' })), null, 'no key: off');
   assert.equal(appleSignInConfig(env({ APPLE_TEAM_ID: 'short', APPLE_SIGN_IN_KEY_ID: 'KEY1234567', APPLE_SIGN_IN_PRIVATE_KEY: pem })), null);
@@ -49,7 +49,7 @@ test('client secret: ES256, kid, team, Apple audience, bundle id, five minutes',
   const secret = await appleClientSecret(config, { crypto: webcrypto, now: () => 1_800_000_000_000 });
   const [header, claims, signature] = secret.split('.');
   assert.deepEqual(decode(header), { alg: 'ES256', kid: 'KEY1234567' });
-  assert.deepEqual(decode(claims), { iss: 'AB12CD34EF', iat: 1_800_000_000, exp: 1_800_000_300, aud: 'https://appleid.apple.com', sub: 'com.usapp.us' });
+  assert.deepEqual(decode(claims), { iss: 'AB12CD34EF', iat: 1_800_000_000, exp: 1_800_000_300, aud: 'https://appleid.apple.com', sub: 'app.uscouple' });
   const valid = await webcrypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, publicKey, Buffer.from(signature, 'base64url'), Buffer.from(`${header}.${claims}`));
   assert.equal(valid, true, 'signed with the Sign in with Apple key');
   await assert.rejects(appleClientSecret(null), /apple_sign_in_not_configured/);
@@ -63,7 +63,7 @@ test('code exchange: the refresh token, or a short outcome', async () => {
   assert.deepEqual(await exchangeAuthorizationCode(config, 'c1234567.abc', { fetch: ok.fetch, crypto: webcrypto }), { ok: true, refreshToken: 'r.1.secret' });
   assert.equal(ok.calls[0].url, APPLE_TOKEN_URL);
   assert.equal(ok.calls[0].body.grant_type, 'authorization_code');
-  assert.equal(ok.calls[0].body.client_id, 'com.usapp.us');
+  assert.equal(ok.calls[0].body.client_id, 'app.uscouple');
   assert.equal(ok.calls[0].body.code, 'c1234567.abc');
   assert.equal(ok.calls[0].body.client_secret.split('.').length, 3);
   assert.equal(ok.calls[0].headers['Content-Type'], 'application/x-www-form-urlencoded');
@@ -90,7 +90,7 @@ test('revoke at deletion: the refresh token, with token_type_hint; no token = no
   assert.deepEqual(await revokeRefreshToken(config, 'r.1.secret', { fetch: ok.fetch, crypto: webcrypto }), { ok: true });
   assert.equal(ok.calls[0].url, APPLE_REVOKE_URL);
   assert.deepEqual({ token: ok.calls[0].body.token, hint: ok.calls[0].body.token_type_hint, client: ok.calls[0].body.client_id },
-    { token: 'r.1.secret', hint: 'refresh_token', client: 'com.usapp.us' });
+    { token: 'r.1.secret', hint: 'refresh_token', client: 'app.uscouple' });
   const down = fakeApple([{ status: 500 }]);
   assert.deepEqual(await revokeRefreshToken(config, 'r.1.secret', { fetch: down.fetch, crypto: webcrypto }), { ok: false, outcome: 'transient' });
   const badClient = fakeApple([{ status: 400, body: { error: 'invalid_client' } }]);

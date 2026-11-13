@@ -15,7 +15,7 @@ const Auth = require('../google-auth.js');
 const Apple = Auth.apple;
 
 const b64url = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
-const appleToken = (sub) => `${b64url({ alg: 'RS256', kid: 'k' })}.${b64url({ iss: 'https://appleid.apple.com', aud: 'com.usapp.us', sub })}.signature`;
+const appleToken = (sub) => `${b64url({ alg: 'RS256', kid: 'k' })}.${b64url({ iss: 'https://appleid.apple.com', aud: 'app.uscouple', sub })}.signature`;
 const appleUser = (extra = {}) => ({
   id: 'u1', app_metadata: { provider: 'apple', providers: ['apple'] },
   identities: [{ provider: 'apple', identity_data: { sub: '001234.abcdef.1234' } }], user_metadata: {}, ...extra

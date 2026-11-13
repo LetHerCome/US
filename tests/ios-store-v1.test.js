@@ -170,9 +170,9 @@ test('Universal Links: entitlement per /invito, file del sito scritto col Team I
   assert.doesNotMatch(entitlements, /application-groups|keychain-access-groups/, 'App Group e Keychain condiviso arrivano con i widget (W0)');
 
   const { appSiteAssociation, BUNDLE_ID, INVITE_PATH } = await import(pathToFileURL(path.join(ROOT, 'scripts', 'write-apple-app-site-association.mjs')).href);
-  assert.equal(BUNDLE_ID, 'com.usapp.us');
+  assert.equal(BUNDLE_ID, 'app.uscouple');
   assert.deepEqual(appSiteAssociation('ABCDE12345'), {
-    applinks: { details: [{ appIDs: ['ABCDE12345.com.usapp.us'], components: [{ '/': '/invito', comment: 'Invito di coppia di US' }] }] }
+    applinks: { details: [{ appIDs: ['ABCDE12345.app.uscouple'], components: [{ '/': '/invito', comment: 'Invito di coppia di US' }] }] }
   });
   for (const bad of ['', 'abcde12345', 'ABCDE1234', 'ABCDE123456', 'ABCDE-1234', null]) assert.throws(() => appSiteAssociation(bad));
   // The same page Android opens (App Links) and onboarding.js reads.
@@ -190,7 +190,7 @@ test('Universal Links: entitlement per /invito, file del sito scritto col Team I
   assert.equal(fs.existsSync(site), listed, 'file e build devono arrivare insieme');
   if (listed) {
     const served = JSON.parse(fs.readFileSync(site, 'utf8'));
-    assert.match(served.applinks.details[0].appIDs[0], /^[A-Z0-9]{10}\.com\.usapp\.us$/);
+    assert.match(served.applinks.details[0].appIDs[0], /^[A-Z0-9]{10}\.app\.uscouple$/);
   }
 });
 
@@ -214,7 +214,7 @@ test('CI iOS: nuovi controlli, avvio nel simulatore, nessuna credenziale', () =>
   assert.match(workflow, /UsAppIconCatalog\.swift/);
   assert.match(workflow, /CFBundleIcons:CFBundleAlternateIcons/);
   assert.match(workflow, /NSPhotoLibraryAddUsageDescription/);
-  assert.match(workflow, /xcrun simctl launch "\$DEVICE" com\.usapp\.us/);
+  assert.match(workflow, /xcrun simctl launch "\$DEVICE" app\.uscouple/);
   assert.match(workflow, /xcrun simctl io "\$DEVICE" screenshot/);
   assert.doesNotMatch(workflow, /\$\{\{\s*secrets\./);
 });
@@ -244,5 +244,5 @@ test('documenti: missione, scheda App Store, etichette privacy e lista del giorn
   const listing = read('docs/store/ios/APP_STORE_SCHEDA.md');
   for (const part of ['## Italiano', '## English', 'Note per la revisione', 'Screenshot', 'Età']) assert.ok(listing.includes(part), part);
   const day = read('docs/store/ios/GIORNO_ACQUISTO.md');
-  for (const part of ['Team ID', 'com.usapp.us', 'APNS_PRIVATE_KEY', 'APP_STORE_CONNECT_KEY_P8_B64', 'TestFlight', 'apple-app-site-association', 'APP_STORE_ID']) assert.ok(day.includes(part), part);
+  for (const part of ['Team ID', 'app.uscouple', 'APNS_PRIVATE_KEY', 'APP_STORE_CONNECT_KEY_P8_B64', 'TestFlight', 'apple-app-site-association', 'APP_STORE_ID']) assert.ok(day.includes(part), part);
 });

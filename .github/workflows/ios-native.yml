@@ -218,7 +218,7 @@ jobs:
           echo "$APP"
           /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist"
           /usr/libexec/PlistBuddy -c "Print :MinimumOSVersion" "$APP/Info.plist"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")" = "com.usapp.us"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")" = "app.uscouple"
           test -f "$APP/public/index.html"
           test -f "$APP/public/native-entry.js"
           test ! -f "$APP/public/stories.js"
@@ -263,11 +263,11 @@ jobs:
           # The unsigned build gets the local ad-hoc signature Xcode's "Sign to Run Locally" uses.
           codesign --force --deep --sign - --timestamp=none "$APP"
           xcrun simctl install "$DEVICE" "$APP"
-          xcrun simctl launch "$DEVICE" com.usapp.us
+          xcrun simctl launch "$DEVICE" app.uscouple
           sleep 15
           xcrun simctl io "$DEVICE" screenshot build/ios-simulator-launch.png
           RUNNING=$(xcrun simctl spawn "$DEVICE" launchctl list)
-          grep -q "UIKitApplication:com.usapp.us" <<< "$RUNNING" || { echo "::error::US non è più in esecuzione dopo l'avvio"; exit 1; }
+          grep -q "UIKitApplication:app.uscouple" <<< "$RUNNING" || { echo "::error::US non è più in esecuzione dopo l'avvio"; exit 1; }
           xcrun simctl shutdown "$DEVICE" || true
 
       - name: Upload simulator screenshot

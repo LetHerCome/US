@@ -10,7 +10,7 @@ Limiti di Apple: nome 30 caratteri, sottotitolo 30, testo promozionale 170, paro
 
 | Campo | Valore | Note |
 |---|---|---|
-| Bundle ID | `com.usapp.us` | come Android |
+| Bundle ID | `app.uscouple` | Android resta `com.usapp.us`: su Apple era già preso (13/11/2026) |
 | SKU | `us-ios-1` | interno, non si vede |
 | Lingua principale | Italiano | inglese come seconda localizzazione |
 | Categoria | Stile di vita (Lifestyle) | secondaria: nessuna |

@@ -4,7 +4,7 @@
 **Fonte:** richiesta del founder del 05/11/2026: portare iOS al livello della produzione Android adesso, per comprare l'account Apple Developer il prima possibile. iOS è al 36,5% in Italia e in circa una coppia su due c'è un iPhone, che oggi usa solo il sito.
 **Base:** `main` `dd70e38a` (rilascio 1.4, Android nel test chiuso «Alpha»).
 **Cambia D3 del 10/10** («Android prima, Apple dopo»): Apple parte adesso, senza fermare Android.
-**Decisioni iOS che restano** (`DECISIONS.md`, 06/10): iOS 16.0 con Swift Package Manager; bundle e schema `com.usapp.us`; App Group riservato `group.com.usapp.us.shared`, mai i refresh token nell'App Group; dati del WebView fuori dai backup; origine `capacitor://localhost` congelata; Indietro = swipe dal bordo sinistro verso `UsNavigation.handleNativeBack()`; APNs diretto, niente Firebase su iOS; blocco solo con Face ID o Touch ID.
+**Decisioni iOS che restano** (`DECISIONS.md`, 06/10): iOS 16.0 con Swift Package Manager; schema `com.usapp.us`; bundle iOS `app.uscouple` dal 13/11 (`com.usapp.us` era preso su Apple); App Group riservato `group.app.uscouple.shared`, mai i refresh token nell'App Group; dati del WebView fuori dai backup; origine `capacitor://localhost` congelata; Indietro = swipe dal bordo sinistro verso `UsNavigation.handleNativeBack()`; APNs diretto, niente Firebase su iOS; blocco solo con Face ID o Touch ID.
 
 ## 1. Audit Android ↔ iOS, funzione per funzione
 
@@ -76,8 +76,8 @@ Apple chiede un accesso «equivalente e rispettoso della privacy» (in pratica S
 
 **Manca, in quest'ordine:**
 1. ~~Pulsanti e conferma~~ fatto, vedi sopra.
-2. **Google Cloud (founder, si può fare subito):** client OAuth di tipo iOS nel progetto «US Play», bundle `com.usapp.us`; il client ID va in `Info.plist`.
-3. **Supabase, prima staging poi produzione (con il via del founder):** provider Apple acceso con Client IDs `com.usapp.us` (per l'app nativa non serve il segreto); provider Google con Client IDs `<web>,<iOS>` (web per primo), controllo del nonce acceso.
+2. **Google Cloud (founder, si può fare subito):** client OAuth di tipo iOS nel progetto «US Play», bundle `app.uscouple`; il client ID va in `Info.plist`.
+3. **Supabase, prima staging poi produzione (con il via del founder):** provider Apple acceso con Client IDs `app.uscouple` (per l'app nativa non serve il segreto); provider Google con Client IDs `<web>,<iOS>` (web per primo), controllo del nonce acceso.
 4. **Revoca del token (dopo l'acquisto):** chiave «Sign in with Apple» (.p8) nei secret, tabella solo service role per il refresh token (migrazione su staging), Edge che scambia il codice dopo l'accesso, `delete-account` che revoca prima di eliminare; se manca il token, il messaggio di fine eliminazione dice come togliere US da Impostazioni › Apple ID › Accedi con Apple.
 5. **Privacy:** `privacy.html` IT/EN con Apple (accesso e notifiche) e la scheda App Store.
 6. **Prove su TestFlight:** accesso nuovo, accesso di un account già esistente con la stessa email, «Nascondi la mia email», eliminazione dell'account (con revoca), uscita dalla coppia.

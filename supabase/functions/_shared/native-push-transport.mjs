@@ -10,7 +10,7 @@
 //   APNS_KEY_ID               10-character key id of the APNs auth key
 //   APNS_TEAM_ID              10-character Apple team id
 //   APNS_PRIVATE_KEY          the .p8 auth key (PEM)
-//   APNS_TOPIC                optional, default com.usapp.us
+//   APNS_TOPIC                optional, default app.uscouple (the iOS bundle id)
 // Missing or malformed → that provider is "not ready" and its devices are
 // skipped (fail closed); nothing is guessed.
 //
@@ -20,7 +20,7 @@
 //   config         credentials rejected               → token kept
 //   rejected       payload refused                    → token kept
 
-export const APNS_TOPIC_DEFAULT = 'com.usapp.us';
+export const APNS_TOPIC_DEFAULT = 'app.uscouple';
 export const ANDROID_CHANNELS = Object.freeze({ partner: 'us_partner', reminders: 'us_reminders' });
 export const APNS_CATEGORIES = Object.freeze({ think: 'US_THINK' });
 const FCM_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';

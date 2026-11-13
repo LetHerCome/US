@@ -16,7 +16,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-export const BUNDLE_ID = 'com.usapp.us';
+export const BUNDLE_ID = 'app.uscouple';
 export const INVITE_PATH = '/invito';
 const TEAM_ID = /^[A-Z0-9]{10}$/;
 

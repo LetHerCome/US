@@ -277,7 +277,7 @@ test('transport config: missing or malformed secrets leave the provider not read
   assert.deepEqual(await throwing.send({ provider: 'fcm', platform: 'android', token: FCM_TOKEN }, {}), { ok: false, outcome: 'config' });
   const { env } = await providerKeys();
   const config = t.nativePushConfig((k) => env[k]);
-  assert.equal(config.apns.topic, 'com.usapp.us');
+  assert.equal(config.apns.topic, 'app.uscouple');
   assert.equal(config.fcm.projectId, 'us-test-project');
 });
 
@@ -330,7 +330,7 @@ test('transport APNs: ES256 provider token, sandbox vs production host, headers,
   assert.equal(calls[0].url, `https://api.sandbox.push.apple.com/3/device/${APNS_TOKEN}`);
   assert.equal(calls[1].url, `https://api.push.apple.com/3/device/${APNS_TOKEN}`);
   const headers = calls[0].init.headers;
-  assert.equal(headers['apns-topic'], 'com.usapp.us');
+  assert.equal(headers['apns-topic'], 'app.uscouple');
   assert.equal(headers['apns-push-type'], 'alert');
   assert.equal(headers['apns-priority'], '10');
   assert.equal(headers['apns-expiration'], String(1_700_000_000 + 43_200));

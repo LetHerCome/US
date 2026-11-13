@@ -42,7 +42,7 @@ test('M15 iOS: identità Capacitor stabile com.usapp.us, edge-to-edge, nessun se
 test('M15 iOS: progetto Xcode con bundle id, deployment target 16.0 e nessun team/firma committati', () => {
   const pbx = read('ios/App/App.xcodeproj/project.pbxproj');
   const bundleIds = [...pbx.matchAll(/PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/g)].map((match) => match[1]);
-  assert.deepEqual(bundleIds, ['com.usapp.us', 'com.usapp.us']);
+  assert.deepEqual(bundleIds, ['app.uscouple', 'app.uscouple']);
   const targets = [...pbx.matchAll(/IPHONEOS_DEPLOYMENT_TARGET = ([^;]+);/g)].map((match) => match[1]);
   assert.equal(targets.length, 4);
   assert.ok(targets.every((value) => value === '16.0'), `deployment target: ${targets.join(',')}`);
@@ -108,8 +108,8 @@ test('M15 iOS: sessione fuori dai backup e App Group riservato ma non attivato',
   assert.match(launch, /UsPrivateStorage\.excludeWebDataFromBackup\(\)/);
   assert.match(storage, /appendingPathComponent\("WebKit"/);
   assert.match(storage, /isExcludedFromBackup = true/);
-  assert.match(config, /appGroupIdentifier = "group\.com\.usapp\.us\.shared"/);
-  assert.match(config, /bundleIdentifier = "com\.usapp\.us"/);
+  assert.match(config, /appGroupIdentifier = "group\.app\.uscouple\.shared"/);
+  assert.match(config, /bundleIdentifier = "app\.uscouple"/);
   assert.equal(fs.existsSync(path.join(ROOT, 'ios', 'App', 'UsWidgets')), false, 'nessuna WidgetKit extension in M15');
 });
 
