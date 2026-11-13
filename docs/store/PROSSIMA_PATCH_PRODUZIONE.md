@@ -1,8 +1,22 @@
 # Prossima patch in produzione
 
-## Patch 1.5.1: la mascotte non sparisce più (13/11/2026)
+## Patch 1.5.1: «La cosa di oggi» e la mascotte che non sparisce più (13/11/2026)
 
-**Stato:** sul branch `claude/mascotte-visibile`, provata nell'emulatore di staging (US LIVE) il 13/11; non in produzione.
+### La cosa di oggi: serie gentile, prima settimana, animazioni
+
+**Stato:** sul branch `claude/cosa-di-oggi` (commit `31c7000f`), con tutti i test e il build verdi e le foto dell'app in locale col finto Supabase. Non ancora su staging, non in produzione. Decisione: [DECISIONS.md, 13/11, «La cosa di oggi»](../DECISIONS.md).
+
+**Cosa cambia:** il riquadro della domanda su Oggi resta com'è fino alle risposte. Dopo, al posto di «Rivedi», propone «Manda un Ti penso a …» e poi «Oggi ci siete stati tutti e due ♡» con le due iniziali. La serie («♡ 12 giorni di fila») prende il posto di «Una domanda, due risposte». Per le coppie nuove, nei primi 21 giorni, dopo la domanda arriva il passo del giorno (primo Ti penso, prima partita, primo Ricordo, impegno nel calendario, Lasciato per te, widget sui telefoni Android), con 7 pallini e «Fatto ♡ · Domani: …». Alla fine «Settimana finita ♡» e 100 punti Sintonia, una volta sola. Animazioni: cuori e spunta, serie +1, le iniziali che si toccano, festa per settimana finita, nuovo record e traguardi (7, 14, 21, 30… giorni). Con «riduci animazioni» resta solo il riquadro della festa, senza movimento.
+
+**Server:** migrazione `20261113202138_cosa_di_oggi_v1.sql`: `public.cosa_di_oggi(widget)` per chi chiama (solo `authenticated`), conta serie, record e passi dai dati che ci sono già (nessun dato nuovo, informativa invariata); `private.feature_launches` segna quando parte la settimana guidata (le coppie già formate non la vedono). I 100 punti passano da `private.progression_award` (traguardo `guided-week`, fuori dal Ritmo).
+
+**Test:** `tests/cosa-di-oggi-db.test.js`, `tests/cosa-di-oggi-client.test.js`.
+
+**Novità per Play (proposta):** IT «Su Oggi, dopo la domanda, US vi propone il gesto successivo e conta i giorni di fila insieme. Le coppie nuove hanno una prima settimana guidata.» EN «On Today, after the question, US suggests what to do next and counts your days in a row together. New couples get a guided first week.»
+
+### La mascotte non sparisce più
+
+**Stato:** commit della mascotte dentro lo stesso branch `claude/cosa-di-oggi` (nato da `claude/mascotte-visibile`), provata nell'emulatore di staging (US LIVE) il 13/11; non in produzione.
 
 **Il bug (segnalato dal founder in produzione, 13/11):** in Ricordi e in Gioca la mascotte spariva. Dal 06/11, quando sotto di lei c'era un comando, si «faceva da parte» diventando invisibile; in quelle pagine c'è quasi sempre una tessera sotto, quindi restava sparita.
 
@@ -10,7 +24,7 @@
 
 **Novità per Play:** nessuna voce a sé; va con il prossimo AAB («Piccole correzioni»).
 
-**Ordine in produzione:** niente SQL. Sito: merge su `main` con build id di produzione. Android: AAB nuovo (il web dell'app è dentro il pacchetto).
+**Ordine in produzione (tutta la 1.5.1):** 1. database: `20261113202138_cosa_di_oggi_v1.sql` (workflow «Supabase SQL», target production, conferma PRODUZIONE); l'app già installata non la chiama e non cambia. 2. Sito: merge su `main` con build id di produzione e Novità id `1.5.1`. 3. Android: AAB nuovo (il web dell'app è dentro il pacchetto).
 
 ## Patch 1.5: versione pubblica, tre partite al giorno e «US Plus, in arrivo» (13/11/2026)
 
