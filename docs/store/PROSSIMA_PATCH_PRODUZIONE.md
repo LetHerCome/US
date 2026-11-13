@@ -1,5 +1,27 @@
 # Prossima patch in produzione
 
+## Patch 1.5: versione pubblica, tre partite al giorno e «US Plus, in arrivo» (13/11/2026)
+
+**Stato:** in preparazione sul branch `claude/beta-release-date-4799e4`, sopra lo staging (1.4.2). Il founder ha chiesto di provarla solo nell'emulatore di staging e poi di passare alla produzione. Decisione: [DECISIONS.md, 13/11](../DECISIONS.md).
+
+**Novità per Play**
+- IT: «Ora le partite di Gioca sono 3 al giorno, e un contatore vi dice quante ne restano. Mentre aspetti la tua persona puoi già rispondere alla domanda di oggi. In arrivo: US Plus.»
+- EN: «You now get 3 games a day in Play, and a counter shows how many are left. While you wait for your person you can already answer today's question. Coming soon: US Plus.»
+
+**Cosa cambia**
+- **Gioca, tre partite al giorno:** migrazione `20261113153748_gioca_tre_al_giorno_v1.sql`, che ridefinisce solo `private.game_v2_week_limits` (`day` da 1 a 3). Stesse chiavi e stessi messaggi d'errore: l'app già installata continua a funzionare e dice già «2 partite da giocare oggi». Nell'app nuova il contatore con i pallini sotto «I vostri giochi» e, a partite finite, la riga «Partite illimitate con US Plus · In arrivo» (`games.js`, `dc-gioca.css`).
+- **US Plus, in arrivo:** gruppo «US Plus» in Impostazioni e schermata con cosa sblocca e «Avvisatemi quando arriva» / «Non avvisarmi più» (`index.html`, `settings.js`, `dc-settings.css`, `i18n-en.js`). Server: migrazione `20261113153750_plus_waitlist_v1.sql`, tabella `private.plus_waitlist` (solo account e data, RLS senza regole, via con l'account) e `public.plus_waitlist(join)` solo per chi chiama. Conteggio: `select count(*) from private.plus_waitlist;`.
+- **Informativa IT/EN (13/11):** la riga di «Avvisatemi» (consenso, revocabile dall'app). Lavagna e foto della sfida c'erano già dal 09/11.
+- **Test:** `tests/gioca-daily-limit-v1-db.test.js` (ora tre al giorno), `tests/plus-waitlist-db.test.js`, `tests/gioca-tiles.test.js`.
+
+**Ordine in produzione** (insieme alla 1.4.2 qui sotto, che non è ancora uscita)
+1. **Database**, una migrazione per volta (workflow «Supabase SQL», target production, conferma PRODUZIONE): `20261109183329_client_errors_v1.sql`, `20261113153748_gioca_tre_al_giorno_v1.sql`, `20261113153750_plus_waitlist_v1.sql`. Dalla seconda in poi anche l'app vecchia permette 3 partite.
+2. **Play Console, Sicurezza dei dati, prima dell'AAB:** i log degli arresti anomali e la diagnostica della 1.4.2; per «Avvisatemi» niente di nuovo da dichiarare oltre all'«ID utente» già dichiarato [da verificare nella Console].
+3. **Sito:** merge su `main` con build id di produzione.
+4. **Android:** AAB 1.5.0 con la nota qui sopra.
+
+**Restano al founder:** protezione dalle password già rubate in Supabase; richiesta dell'accesso alla produzione su Play; pulizia degli 8 account anonimi (dati di produzione, passo a parte).
+
 ## Patch 1.4.2: errori dell'app e domanda di oggi mentre si aspetta il partner (09/11/2026)
 
 **Stato:** su staging dal 09/11 (commit `3b5667f0` nel branch di staging, build `us-staging-20261109-106`), non in produzione. Migrazione `client_errors_v1` applicata su US-STAGING col workflow «Supabase SQL», approvata dal founder (run 42679596506), e controllata in sola lettura: tabella con RLS, `report_client_errors` per `authenticated` e non per `anon`, nessuna lettura dall'app, pulizia notturna. Sul sito di staging: il modulo degli errori è il primo script differito, la chiamata senza account è rifiutata (401, 42501) e senza sessione l'app non manda niente; nessun errore all'avvio. Il salvataggio con un account e la schermata d'attesa sono provati nei test e nel browser locale col finto Supabase, non ancora con un account vero su staging. Nasce dall'ispezione del 09/11 verso l'uscita pubblica: l'uso dei tester cala (Ti penso da 32 a 16 a settimana; 5 persone su 14 ancora attive dopo 7 giorni di coppia), nessuno vede gli errori sui telefoni, e chi aspetta il partner trova solo il codice.

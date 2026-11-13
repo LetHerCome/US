@@ -1,6 +1,7 @@
-// Gioca: una partita al giorno (D4 del 28/10/2026, docs/missions/plus-v1-staging.md §1).
-// The couple starts one new round per Europe/Rome day, of any mode, Per voi
-// and Questo o quello included: 7 a week instead of 1 Per voi + 2 free. Open
+// Gioca: a daily budget of new rounds (D4 del 28/10/2026, one a day; three a
+// day since gioca_tre_al_giorno_v1, founder 13/11/2026). The couple starts
+// up to three new rounds per Europe/Rome day, of any mode, Per voi and Questo
+// o quello included. Open
 // rounds are resumed for free and at most 3 stay open. Full repo schema in
 // disposable PGlite; nothing here touches a real Supabase project.
 const test = require('node:test');
@@ -50,24 +51,36 @@ test('migration exists, is listed in the cutoff and only redefines the private b
   assert.match(sql, /revoke all on function private\.game_v2_week_usage\(uuid, timestamptz\) from public, anon, authenticated, service_role;/);
 });
 
-test('one new round a day, of any mode: a second one the same Rome day waits until tomorrow', async () => {
-  const allowance = (await home(h.F)).allowance;
-  assert.deepEqual([allowance.used, allowance.limit, allowance.period, allowance.resets_on], [0, 1, 'day', '2026-11-06']);
+test('the three-a-day migration only sets the day budget', () => {
+  const file = fs.readdirSync(DIR).find((f) => /_gioca_tre_al_giorno_v1\.sql$/.test(f));
+  assert.ok(file, 'missing supabase/migrations/*_gioca_tre_al_giorno_v1.sql');
+  const sql = fs.readFileSync(path.join(DIR, file), 'utf8').replace(/--[^\n]*/g, '');
+  assert.match(sql, /jsonb_build_object\('day', 3, 'open', 3\)/);
+  assert.doesNotMatch(sql, /\b(drop|truncate|delete\s+from|alter\s+table|create\s+table|update\s+public\.)/i);
+});
 
-  const first = await start(h.F, 'ridete');
-  await playBoth(first.id);
+test('three new rounds a day, of any mode: a fourth one the same Rome day waits until tomorrow', async () => {
+  const allowance = (await home(h.F)).allowance;
+  assert.deepEqual([allowance.used, allowance.limit, allowance.period, allowance.resets_on], [0, 3, 'day', '2026-11-06']);
+
+  for (const family of ['ridete', 'per_voi']) await playBoth((await start(h.F, family)).id);
+  const two = (await home(h.B)).allowance;
+  assert.deepEqual([two.used, two.limit, two.free_available, two.per_voi_available], [2, 3, true, true]);
+  await playBoth((await start(h.B, 'confrontatevi')).id);
   for (const family of ['scopritevi', 'ridete', 'per_voi']) {
     await assert.rejects(start(h.B, family), refusedUntil('2026-11-06'), family);
   }
   await assert.rejects(startSwipe(h.F), refusedUntil('2026-11-06'), 'Questo o quello counts too');
   const spent = (await home(h.B)).allowance;
-  assert.deepEqual([spent.used, spent.limit, spent.free_available, spent.per_voi_available], [1, 1, false, false]);
-  assert.equal(await rounds(), 1);
+  assert.deepEqual([spent.used, spent.limit, spent.free_available, spent.per_voi_available], [3, 3, false, false]);
+  assert.equal(await rounds(), 3);
 });
 
-test('Per voi spends the day too, and the day after anything is open again', async () => {
+test('Per voi spends one of the three too, and the day after anything is open again', async () => {
   const pv = await start(h.F, 'per_voi');
   await playBoth(pv.id);
+  assert.equal((await home(h.B)).allowance.used, 1);
+  for (const family of ['ridete', 'scopritevi']) await playBoth((await start(h.B, family)).id);
   await assert.rejects(start(h.B, 'confrontatevi'), refusedUntil('2026-11-06'));
   await setClock(day(1));
   assert.equal((await start(h.B, 'per_voi')).resumed, false, 'a new Per voi the next day');
@@ -75,7 +88,7 @@ test('Per voi spends the day too, and the day after anything is open again', asy
 
 test('the day turns at midnight Europe/Rome, on the server clock', async () => {
   await setClock(THU_2359);
-  await playBoth((await start(h.F, 'ridete')).id);
+  for (const family of ['ridete', 'scopritevi', 'confrontatevi']) await playBoth((await start(h.F, family)).id);
   await assert.rejects(start(h.F, 'rivivete'), refusedUntil('2026-11-06'), 'still Thursday at 23:59:59 Rome');
   await setClock(FRI_0000);
   const allowance = (await home(h.F)).allowance;
