@@ -44,7 +44,7 @@ test('after the answers: a Ti penso to send, then the day closed', () => {
   assert.equal(closed.look, 'closed');
   assert.equal(closed.question, 'Oggi ci siete stati tutti e due ♡');
   assert.equal(closed.action, undefined, 'a tap opens the answers again');
-  assert.match(closed.ctaHtml, /us-cdo-pair/);
+  assert.match(text(closed.ctaHtml), /^Rivedi$/, 'a button, like the other Oggi cards');
   assert.equal(closed.state, 'revealed', 'it can still be swiped away for today');
 });
 

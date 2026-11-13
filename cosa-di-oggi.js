@@ -48,11 +48,6 @@
   function ctaHtml(label, heart) {
     return `<span class="btn-primary us-daily-ritual-cta">${heart ? HEART : ''}${esc(label)}${heart ? '' : '<span class="us-daily-ritual-arrow" aria-hidden="true"></span>'}</span>`;
   }
-  function pairHtml() {
-    let own = 'T', other = 'P';
-    try { const id = w.usIdentity?.() || (typeof usIdentity === 'function' ? usIdentity() : null); own = initials(id?.ownName); other = initials(id?.partnerName); } catch (_) {} // eslint-disable-line no-undef
-    return `<span class="us-cdo-pair" aria-hidden="true"><span class="us-cdo-av" data-who="tu" translate="no">${esc(own)}</span><span class="us-cdo-av" data-who="partner" translate="no">${esc(other)}</span></span>`;
-  }
 
   // The first week is on while it has a step left, or on the day it ended.
   function weekOn(s, today) {
@@ -72,15 +67,15 @@
     if (model.state !== 'revealed') return model;
     const base = { ...model, kicker: week ? 'La vostra prima settimana' : 'La cosa di oggi', footHtml: foot, attention: false };
     if (week) {
-      if (week.all_done) return { ...base, look: 'finished', question: 'Settimana finita ♡', subHtml: `<span class="us-cdo-sub">${esc('Avete scoperto tutto US · +100 punti Sintonia')}</span>`, footHtml: left(`${dotsHtml({ total: week.total, done: week.total })}${streakHtml(streak)}`), ctaHtml: pairHtml() };
+      if (week.all_done) return { ...base, look: 'finished', question: 'Settimana finita ♡', subHtml: `<span class="us-cdo-sub">${esc('Avete scoperto tutto US · +100 punti Sintonia')}</span>`, footHtml: left(`${dotsHtml({ total: week.total, done: week.total })}${streakHtml(streak)}`), cta: 'Rivedi', ctaHtml: ctaHtml('Rivedi') };
       const step = STEPS[week.current];
       if (step && week.current !== 'daily') {
         if (week.ready) return { ...base, look: 'step', step: week.current, question: step.text(partner), cta: step.cta, ctaHtml: ctaHtml(step.cta, step.heart), action: `step:${week.current}` };
-        return { ...base, look: 'done', question: 'Fatto ♡', subHtml: `<span class="us-cdo-sub">${esc(`Domani: ${step.next}`)}</span>`, ctaHtml: pairHtml() };
+        return { ...base, look: 'done', question: 'Fatto ♡', subHtml: `<span class="us-cdo-sub">${esc(`Domani: ${step.next}`)}</span>`, cta: 'Rivedi', ctaHtml: ctaHtml('Rivedi') };
       }
     }
     if (!s.today?.my_think) return { ...base, look: 'think', question: `Manda un Ti penso a ${partner}`, cta: 'Ti penso', ctaHtml: ctaHtml('Ti penso', true), action: 'think' };
-    if (s.today?.counted) return { ...base, look: 'closed', question: 'Oggi ci siete stati tutti e due ♡', ctaHtml: pairHtml() };
+    if (s.today?.counted) return { ...base, look: 'closed', question: 'Oggi ci siete stati tutti e due ♡', cta: 'Rivedi', ctaHtml: ctaHtml('Rivedi') };
     return model;
   }
 
@@ -149,12 +144,6 @@
     el.querySelector('.us-cdo-streak-n')?.animate([{ transform: 'translateY(60%)', opacity: 0 }, { transform: 'translateY(-12%)', opacity: 1, offset: 0.6 }, { transform: 'none', opacity: 1 }], { duration: 520, easing: 'cubic-bezier(.2,.8,.2,1)' });
     el.querySelector('.us-cdo-heart')?.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.45)', offset: 0.35 }, { transform: 'scale(.92)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: 640, easing: 'ease-out' });
   }
-  function touchPair() {
-    const avs = card()?.querySelectorAll?.('.us-cdo-av');
-    if (!avs || avs.length < 2 || !avs[0].animate) return;
-    avs[0].animate([{ transform: 'translateX(-10px)' }, { transform: 'translateX(2px)', offset: 0.7 }, { transform: 'none' }], { duration: 620, easing: 'cubic-bezier(.2,.8,.2,1)' });
-    avs[1].animate([{ transform: 'translateX(10px)' }, { transform: 'translateX(-2px)', offset: 0.7 }, { transform: 'none' }], { duration: 620, easing: 'cubic-bezier(.2,.8,.2,1)' });
-  }
   function party(title, sub) {
     const doc = w.document;
     const fx = doc.createElement('div');
@@ -185,8 +174,7 @@
   function celebrate(list) {
     if (!list.length || !onOggi()) return;
     const motion = !reduced();
-    if (motion && (list.includes('step') || list.includes('gesture'))) { hearts(); try { w.USPet?.react?.('think'); } catch (_) {} try { w.UsFeedback?.action?.(); } catch (_) {} }
-    if (motion && list.includes('closed')) setTimeout(touchPair, 120);
+    if (motion && (list.includes('step') || list.includes('gesture') || list.includes('closed'))) { hearts(); try { w.USPet?.react?.('think'); } catch (_) {} try { w.UsFeedback?.action?.(); } catch (_) {} }
     if (motion && list.includes('streak')) { setTimeout(bumpStreak, 360); try { w.USPet?.react?.('streak'); } catch (_) {} }
     const s = state;
     const day = romeToday();

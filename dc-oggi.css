@@ -300,7 +300,8 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 #home #usDailyRitual .ring:is([data-st="pronte"],[data-st="svelate"]) :is(.r-me,.r-you){opacity:0}
 #home #usDailyRitual .ring:is([data-st="pronte"],[data-st="svelate"]) .r-noi{opacity:1}
 /* La cosa di oggi (cosa-di-oggi.js, 13/11/2026): the streak with its heart, the
-   first week's dots, «Domani: …», the two of you side by side. */
+   first week's dots, «Domani: …», and always a button, as the
+   other Oggi cards (founder, 13/11: «non c'è un tasto»). */
 #home #usDailyRitual .us-cdo-left{display:inline-flex;align-items:center;gap:10px;min-width:0}
 #home #usDailyRitual .us-cdo-streak{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--us-color-text-2)}
 #home #usDailyRitual .us-cdo-streak .us-cdo-heart{width:14px;height:14px;flex:none;color:var(--us-noi)}
@@ -311,11 +312,6 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 #home #usDailyRitual .us-cdo-dots i.on{border-color:var(--us-tu);background:var(--us-tu)}
 #home #usDailyRitual .us-cdo-dots i.now{border-color:var(--us-tu);box-shadow:0 0 0 3px rgba(255,124,150,.18)}
 #home #usDailyRitual .us-cdo-sub{grid-column:1/-1;margin-top:-4px;font:400 14px/1.4 var(--us-font-ui);color:var(--us-color-text-2)}
-#home #usDailyRitual .us-cdo-pair{flex:none;margin-left:auto;display:inline-flex;align-items:center}
-#home #usDailyRitual .us-cdo-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:700 14px/1 var(--us-font-ui);color:var(--us-inchiostro);border:2px solid rgba(23,17,28,.85)}
-#home #usDailyRitual .us-cdo-av[data-who="tu"]{background:var(--us-tu);z-index:1}
-#home #usDailyRitual .us-cdo-av[data-who="partner"]{background:var(--us-partner);margin-left:-9px}
-#home #usDailyRitual:is([data-look="done"],[data-look="closed"],[data-look="finished"]) .us-daily-ritual-question{font-size:20px}
 #home #usDailyRitual[data-look] .us-daily-ritual-swipe{display:none}
 /* The moments: hearts and a check over the card, the party over Oggi. */
 .us-cdo-fx{position:fixed;z-index:var(--us-layer-transient);pointer-events:none;overflow:visible}
