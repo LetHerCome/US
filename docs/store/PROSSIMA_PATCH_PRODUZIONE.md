@@ -14,6 +14,14 @@
 
 **Novità per Play (proposta):** IT «Su Oggi, dopo la domanda, US vi propone il gesto successivo e conta i giorni di fila insieme. Le coppie nuove hanno una prima settimana guidata.» EN «On Today, after the question, US suggests what to do next and counts your days in a row together. New couples get a guided first week.»
 
+### Ritocchi visivi (revisione del 13/11)
+
+**Stato:** branch `claude/ritocchi-visivi` (nato da `claude/cosa-di-oggi`, commit `6b6dec3c`), provati nell'emulatore con US LIVE e approvati dal founder («Sì, salvali»). Non in produzione.
+
+**Cosa cambia:** Oggi leggibile anche su foto chiare (velo dietro i giorni insieme, ombra sui testi, pillole di vetro scuro; su Android la stessa ombreggiatura in basso del sito); la card della domanda in Gioca si chiama «La domanda di oggi»; calendario di Noi senza linee e con righe più basse, etichette dei giorni più grandi; etichetta delle schede di Oggi da 10 a 11 px. Solo CSS e due testi, niente SQL.
+
+**Aperto:** su Android, scorrendo, il titolo della pagina traspare sotto l'orologio anche con la fascia quasi opaca (causa da capire).
+
 ### La mascotte non sparisce più
 
 **Stato:** commit della mascotte dentro lo stesso branch `claude/cosa-di-oggi` (nato da `claude/mascotte-visibile`), provata nell'emulatore di staging (US LIVE) il 13/11; non in produzione.
