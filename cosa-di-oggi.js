@@ -203,11 +203,22 @@
   let stateKey = '';
   let fetchedAt = 0;
   let inflight = null;
+  let queued = null;
+  // A promise that never answers (the native bridge or the network at
+  // startup, emulator 13/11) must never hold every later read.
+  const TIMEOUT = Symbol('timeout');
+  const LIMITS = { widget: 2500, read: 10000 };
+  function deadline(promise, ms) {
+    let timer;
+    return Promise.race([Promise.resolve(promise), new Promise((resolve) => { timer = setTimeout(() => resolve(TIMEOUT), ms); })])
+      .finally(() => clearTimeout(timer));
+  }
   async function widgetState() {
     const widgets = w.UsWidgets;
     if (!widgets?.isAvailable?.()) return 'unsupported';
     try {
-      const placed = await widgets.installed();
+      const placed = await deadline(widgets.installed(), LIMITS.widget);
+      if (placed === TIMEOUT) return 'todo';
       return Object.values(placed?.installed || {}).some(Boolean) ? 'done' : 'todo';
     } catch (_) { return 'todo'; }
   }
@@ -220,11 +231,18 @@
     const k = keyNow();
     if (!k || !db()) { state = null; stateKey = ''; return Promise.resolve(null); }
     if (k !== stateKey) { stateKey = k; state = null; fetchedAt = 0; }
-    if (inflight) return inflight;
+    // A forced read during an older one (my Ti penso while Oggi was reading)
+    // reads again right after it, so it never gets the answer from before.
+    if (inflight) {
+      if (!force) return inflight;
+      if (!queued) queued = inflight.then(() => { queued = null; return refresh({ force: true }); });
+      return queued;
+    }
     if (!force && Date.now() - fetchedAt < 20000) return Promise.resolve(state);
     inflight = (async () => {
       const widget = await widgetState();
-      const { data, error } = await db().rpc('cosa_di_oggi', { widget });
+      const answer = await deadline(db().rpc('cosa_di_oggi', { widget }), LIMITS.read);
+      const { data, error } = answer === TIMEOUT ? { data: null, error: new Error('cosa_di_oggi timeout') } : answer;
       if (error) { console.warn('[US Cosa di oggi]', error); fetchedAt = Date.now(); return state; }
       if (keyNow() !== k) return state;
       const prev = state;
@@ -264,7 +282,7 @@
     return false;
   }
 
-  const api = { decorate, changes, refresh, act, celebrate, party, weekOn, romeToday, STEPS, MILESTONES, get state() { return state; } };
+  const api = { limits: LIMITS, decorate, changes, refresh, act, celebrate, party, weekOn, romeToday, STEPS, MILESTONES, get state() { return state; } };
   w.UsCosaDiOggi = Object.freeze(api);
   // Back on the app: the day may have moved on, the other person may have done something.
   w.document?.addEventListener?.('visibilitychange', () => { if (w.document.visibilityState === 'visible') refresh(); });

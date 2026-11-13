@@ -10,7 +10,7 @@ const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-function load({ rpc } = {}) {
+function load({ rpc, timers = false } = {}) {
   const window = {
     usProfile: { id: 'f', couple_id: 'c' },
     usIdentity: () => ({ ownName: 'Francesco', partnerName: 'Bea' }),
@@ -18,7 +18,7 @@ function load({ rpc } = {}) {
     sb: { calls: [], rpc(name, args) { this.calls.push([name, args]); return Promise.resolve(rpc ? rpc(name, args) : { data: null, error: null }); } },
     document: null,
   };
-  const context = vm.createContext({ window, console: { warn() {} }, Intl, Date, Promise, JSON, Math, setTimeout: () => 0, Object, String, Number, Array });
+  const context = vm.createContext({ window, console: { warn() {} }, Intl, Date, Promise, JSON, Math, setTimeout: timers ? setTimeout : () => 0, clearTimeout, Object, String, Number, Array });
   vm.runInContext(read('cosa-di-oggi.js'), context);
   return { api: window.UsCosaDiOggi, window };
 }
@@ -125,6 +125,30 @@ test('the server is read with the widget state, at most every 20 s unless forced
   window.UsWidgets = { isAvailable: () => true, installed: async () => ({ installed: {} }) };
   await api.refresh({ force: true });
   assert.deepEqual(plain(window.sb.calls[3]), ['cosa_di_oggi', { widget: 'todo' }]);
+});
+
+test('a bridge or a read that never answers does not block the next reads', async () => {
+  let hang = true;
+  const { api, window } = load({ timers: true, rpc: () => (hang ? new Promise(() => {}) : { data: s(), error: null }) });
+  api.limits.widget = 30;
+  api.limits.read = 60;
+  window.UsWidgets = { isAvailable: () => true, installed: () => new Promise(() => {}) };
+  assert.equal(await api.refresh({ force: true }), null, 'the hanging read gives up');
+  assert.deepEqual(plain(window.sb.calls[0]), ['cosa_di_oggi', { widget: 'todo' }], 'a silent bridge counts as no widget');
+  hang = false;
+  await api.refresh({ force: true });
+  assert.equal(api.state.streak, 12, 'the next read goes through');
+});
+
+test('a forced read during an older one reads again after it', async () => {
+  let n = 0;
+  const { api, window } = load({ rpc: () => ({ data: s({ today: { counted: true, me: true, partner: true, my_think: ++n > 1 } }), error: null }) });
+  const first = api.refresh({ force: true });
+  const after = api.refresh({ force: true });
+  await first;
+  await after;
+  assert.equal(window.sb.calls.length, 2);
+  assert.equal(api.state.today.my_think, true, 'the answer from after my gesture wins');
 });
 
 test('wiring: the card decorates, routes its own gesture and the script ships everywhere', () => {
