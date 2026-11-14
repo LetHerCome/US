@@ -3504,12 +3504,12 @@ function usHeartLike(button){const turn=window.UsUiFoundation?.heartTurn?.(windo
 // Novità (founder, 30/10/2026): the beta testers see once, after the update,
 // what changed. One id per release; a new install does not see it.
 const US_WHATS_NEW=Object.freeze({
-  id:'1.5',
+  id:'1.5.1',
   title:'US si è aggiornata',
   items:[
-    'Gioca: ora le partite sono 3 al giorno, e un contatore vi dice quante ne restano.',
-    'Mentre aspetti la tua persona puoi già rispondere alla domanda di oggi.',
-    'In arrivo US Plus: in Impostazioni vedete cosa porterà, e con «Avvisami» ti diciamo quando arriva.'
+    'Su Oggi, dopo la domanda, US vi propone il gesto successivo e conta i giorni di fila che passate insieme.',
+    'Abbiamo riletto tutti i testi di US: domande, giochi e notifiche ora sono più chiari.',
+    'I promemoria del calendario dicono l’ora giusta, e «domani» quando serve. E il gattino non sparisce più in Ricordi e Gioca.'
   ]
 });
 function usShowWhatsNew(returning){

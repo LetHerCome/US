@@ -2270,6 +2270,9 @@
     'Mentre aspetti la tua persona puoi già rispondere alla domanda di oggi.': 'While you wait for your person you can already answer today’s question.',
     'In arrivo US Plus: in Impostazioni vedete cosa porterà, e con «Avvisami» ti diciamo quando arriva.': 'US Plus is coming: Settings shows what it will bring, and with «Notify me» we’ll tell you when it’s here.',
     'In arrivo · Avvisami': 'Coming soon · Notify me',
+    'Su Oggi, dopo la domanda, US vi propone il gesto successivo e conta i giorni di fila che passate insieme.': 'On Today, after the question, US suggests what to do next and counts the days in a row you spend together.',
+    'Abbiamo riletto tutti i testi di US: domande, giochi e notifiche ora sono più chiari.': 'We reread every text in US: questions, games and notifications are now clearer.',
+    'I promemoria del calendario dicono l’ora giusta, e «domani» quando serve. E il gattino non sparisce più in Ricordi e Gioca.': 'Calendar reminders now say the right time, and «tomorrow» when needed. And the kitten no longer disappears in Memories and Play.',
     'US PLUS': 'US PLUS',
     'Partite illimitate e altro, per tutti e due': 'Unlimited games and more, for both of you',
     // La cosa di oggi (13/11/2026)

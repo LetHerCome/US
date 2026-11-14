@@ -1,4 +1,4 @@
-const BUILD_ID = "us-rilascio-20261113-108";
+const BUILD_ID = "us-rilascio-20261114-109";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
