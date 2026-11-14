@@ -48,6 +48,18 @@
 
 **Test:** `tests/m6d-reminders.test.js` (girano in UTC come il server), `tests/f2c-edge-cron-source-truth.test.js` (il worker vero controlla l'ora di Roma).
 
+### Livelli giusti per Orbita e Cromo (14/11)
+
+**Stato:** branch `claude/livelli-countdown` (nato da `claude/revisione-testi`). Trovato dalla revisione dei testi. Test verdi; non ancora su staging né in produzione.
+
+**Il bug:** il server sblocca gli stili del countdown Orbita al livello 8 e Cromo al 10 (`20261029031726_sintonia_rewards_v2_phase1.sql`), ma l'app li dichiarava al 9 e al 12. La tessera bloccata (nello stile del countdown e nella Collezione di Sintonia) diceva «Livello 9» o «Livello 12» mentre «Prossimo sblocco» diceva 8 o 10.
+
+**Cosa cambia:** `countdown.js` ora dice 8 e 10, come il server; la Collezione legge da lì. Gli altri temi ed effetti di Oggi (`oggi-look.js`) erano già giusti. Solo il codice dell'app, niente SQL: va col sito e con l'AAB.
+
+**Test:** `tests/livelli-premi-client-db.test.js` confronta il livello di ogni stile, tema ed effetto con premio con `progression_reward_catalog` costruito da tutte le migrazioni: se un giorno si separano, il test fallisce. In `tests/rewards-countdown-visual-pass.test.js` Cromo bloccato ora dice «Livello 10».
+
+**Novità per Play:** nessuna voce a sé («Piccole correzioni»).
+
 ### La mascotte non sparisce più
 
 **Stato:** commit della mascotte dentro lo stesso branch `claude/cosa-di-oggi` (nato da `claude/mascotte-visibile`), provata nell'emulatore di staging (US LIVE) il 13/11; non in produzione.
