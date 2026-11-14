@@ -18,6 +18,9 @@
     const hit=text.split(/[^0-9A-Za-z]+/).find(word=>word.length===26&&validCode(word));
     return hit?normalizeCode(hit):'';
   }
+  // On screen the code reads in groups of four (14/11/2026): the server's code
+  // already carries dashes, and a space every five made «M3WJ- NXY3-».
+  const codeGroups=value=>(normalizeCode(value).match(/.{1,4}/g)||[]).join(' ');
   function romeToday(now=new Date()){
     const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
     const part=type=>parts.find(p=>p.type===type).value;
@@ -1383,7 +1386,7 @@
       const holdCode=waiting&&state.busy&&!state.code&&lastView==='waiting'&&!node('mc3CodeArea').hidden;
       if(!holdCode){
         node('mc3CodeArea').hidden=!waiting||!state.code;
-        node('mc3CodeShown').textContent=waiting&&state.code?state.code.replace(/(.{5})/g,'$1 ').trim():'';
+        node('mc3CodeShown').textContent=waiting&&state.code?codeGroups(state.code):'';
         node('mc3Waiting').classList.toggle('has-code',Boolean(waiting&&state.code));
       }
       node('mc3Generate').textContent=invite?.status==='none'?'Crea invito':'Genera nuovo codice';
@@ -1403,6 +1406,7 @@
       lastKind=state.kind;lastView=active?view:'';
       // Today's question under the invite: painted after the buttons above
       // took their busy state, loaded once per account and day.
+      waitingProfile=state.profile||null;
       paintToday(state.busy);
       if(lastView==='waiting')waitingDay.load(state.profile).then(()=>paintToday(Boolean(controllerRef?.state?.busy)),()=>{});
       if(state.profile?.couple_id)saveBirthday({profile:state.profile,local:localStorage,session:sessionStorage,insertEvent}).catch(()=>{});
@@ -1411,10 +1415,19 @@
     }
     // Waiting for the partner (09/11/2026): the card of today's question. The
     // controller does not exist yet during its first renders, hence the ref.
-    let controllerRef=null;
+    let controllerRef=null,waitingProfile=null;
+    // Shared or copied the code: remembered per account, so the question stays
+    // after closing and reopening US.
+    const sentKey=profile=>profile?.id?`us:ob:invite-sent:${profile.id}`:'';
+    const inviteSent=profile=>Boolean(sentKey(profile)&&storeGet(localStorage,sentKey(profile)));
+    function markInviteSent(){const key=sentKey(waitingProfile);if(key)storeSet(localStorage,key,'1');paintToday(Boolean(controllerRef?.state?.busy));}
     function paintToday(busy=false){
       const box=node('mc3Today');if(!box)return;
-      const day=waitingDay.state,show=lastView==='waiting'&&['open','saving','answered'].includes(day.status);
+      // 14/11/2026 (founder): first the code, then the question. It shows once
+      // the code was shared or copied (remembered for this account), or when
+      // today's answer is already there.
+      const day=waitingDay.state,ready=day.status==='answered'||inviteSent(waitingProfile);
+      const show=lastView==='waiting'&&ready&&['open','saving','answered'].includes(day.status);
       box.hidden=!show;
       if(!show)return;
       node('mc3TodayQuestion').textContent=day.question.text;
@@ -1525,7 +1538,7 @@
     node('mc3CopyCode').addEventListener('click',async()=>{
       const code=controller.state.code,ticket=controller.epoch;if(!code)return;
       const still=()=>controller.epoch===ticket&&controller.state.code===code;
-      try{await navigator.clipboard.writeText(code);if(still())say('Codice copiato. Condividilo soltanto con la tua persona.','success');}
+      try{await navigator.clipboard.writeText(code);if(still()){say('Codice copiato. Condividilo soltanto con la tua persona.','success');markInviteSent();}}
       catch(_error){if(still())selectCode();}
     });
     node('mc3ShareCode').addEventListener('click',async()=>{
@@ -1535,6 +1548,7 @@
       if(!still())return;
       if(how==='shared')say('Fatto. Appena la tua persona entra, lo vedi qui.','success');
       else if(how==='copied')say('Messaggio copiato: incollalo nella chat con la tua persona.','success');
+      if(how==='shared'||how==='copied')markInviteSent();
       else if(how==='failed')selectCode();
     });
     // Today's question while waiting: the draft lives in memory (the onboarding
@@ -1564,5 +1578,5 @@
   }
   return Object.freeze({route,validName,validDate,normalizeCode,validCode,inviteCodeIn,inviteLink,inviteFromLink,takeInvite,togetherDate,togetherYears,romeToday,errorMessage,createController,mount,
     FIRST_RUN_KEYS,tourWanted,birthdayCheck,nextBirthday,birthdayEvent,rememberBirthday,saveBirthday,setupMode,setupSteps,pushStepState,placeStepWanted,daysTogether,inviteExpiry,
-    inviteMessage,shareInvite,waitingToday,widgetOfferWanted,CHECK_MS,authSwap,authArrive,shake});
+    inviteMessage,shareInvite,waitingToday,codeGroups,widgetOfferWanted,CHECK_MS,authSwap,authArrive,shake});
 });

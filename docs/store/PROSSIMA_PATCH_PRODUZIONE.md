@@ -1,5 +1,17 @@
 # Prossima patch in produzione
 
+## Prossima patch (dopo la 1.5.1)
+
+### Iscrizione: prima il codice, poi la domanda (14/11)
+
+**Stato:** branch `claude/attesa-dopo-invito` (da `main` dopo la 1.5.1). Provata nel browser col finto Supabase; non ancora su staging né in produzione.
+
+**Il problema (founder, provando l'iscrizione in produzione):** appena creato lo spazio, sotto il codice d'invito c'era già «Intanto, la domanda di oggi» con il campo per rispondere: distraeva dal passo che conta, mandare il codice. E il codice si leggeva «M3WJ- NXY3- CX2G-…»: il server lo dà già coi trattini, lo schermo aggiungeva uno spazio ogni cinque caratteri.
+
+**Cosa cambia:** la domanda compare solo dopo «Condividi» o «Copia codice» riusciti (ricordato per l'account, `us:ob:invite-sent:<id>`, quindi resta anche riaprendo US), oppure se la risposta di oggi c'è già. Il codice sullo schermo è a gruppi di quattro («M3WJ NXY3 CX2G HEYB 57H3 3TTS HM») e va a capo solo tra un gruppo e l'altro; quello copiato e condiviso non cambia. Solo app (`onboarding.js`, `dc-primo.css`), niente SQL.
+
+**Test:** `tests/waiting-today-question.test.js`.
+
 ## Patch 1.5.1: «La cosa di oggi» e la mascotte che non sparisce più (13/11/2026)
 
 **In produzione il 14/11 col via del founder («puoi passarlo tutto su produzione»):** migrazioni `20261113202138_cosa_di_oggi_v1.sql` (run 43614053143) e `20261113232109_revisione_testi.sql` (run 43614166584), controllate in sola lettura (`cosa_di_oggi` solo per `authenticated`, `guided_week` dal 14/11 alle 16:11 UTC, le tre sfide da fare insieme in `near`); 10 funzioni delle notifiche (run 43614174829, senza `s3-staging-send-web-push`); sito con build `us-rilascio-20261114-109` e Novità id `1.5.1`; poi AAB 1.5.1. Su staging prima: migrazioni (run 43506086376, 43613038149) e 11 funzioni (run 43613057381, 43613066146), prova con US LIVE.

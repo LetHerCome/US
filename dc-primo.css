@@ -751,7 +751,7 @@ html .auth-overlay .auth-card #mc3Code:focus+.us-inv-code{display:none}
   font:600 19px/1.5 ui-monospace,"SF Mono","Roboto Mono",Menlo,monospace;
   letter-spacing:.06em;
   word-spacing:.3em;
-  overflow-wrap:anywhere;
+  overflow-wrap:normal;
 }
 /* Condividi leads (1.0 A2, after the mockup), Copia codice beside it. */
 html .auth-overlay #mc3CodeArea .mc3-code-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:4px}
