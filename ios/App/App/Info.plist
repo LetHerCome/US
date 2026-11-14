@@ -65,9 +65,9 @@
 	<string>US apre la tua libreria per scegliere le foto da condividere con il tuo partner.</string>
 	<!-- Accesso con Google on the iPhone (us-google-signin): the iOS OAuth client of the
 	     Google Cloud project «US Play» (<number>-<id>.apps.googleusercontent.com). Not a
-	     secret. Empty until the founder creates it: the plugin answers not_configured. -->
+	     secret. Created by the founder on 14/11/2026 «US iPhone», bundle app.uscouple. -->
 	<key>UsGoogleIOSClientID</key>
-	<string></string>
+	<string>792714579837-sjm2hnv4i59d9gdnik5339v6f9pfv2m3.apps.googleusercontent.com</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
