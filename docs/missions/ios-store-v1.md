@@ -31,7 +31,7 @@ Legenda: ✅ c'è · 🟡 c'è ma manca un pezzo · ❌ manca · — non esiste 
 | Posizione (distanza) | `ACCESS_COARSE_LOCATION` | ✅ `NSLocationWhenInUseUsageDescription` + precisione ridotta | invariato; da provare sull'iPhone (WKWebView può chiedere due volte) | prova dopo |
 | Posto delle foto (Mappa dei Ricordi) | `us-photo-place` (GPS dell'originale) | ❌ su iPhone il posto arriva solo se il file lo conserva | plugin iOS con PHPicker + posizione del `PHAsset`; serve anche una riga in `ricordi-place.js` (file del pacchetto di correzioni dell'audit) | fase 2 |
 | Batteria del partner | `UsWidgetBridge.getBatteryStatus` | ❌ (WKWebView non ha la Battery API) | arriva con il ponte widget iOS (fase W0 sotto) | fase W0 |
-| Widget (8) | `us-widget-bridge` | ❌ | piano a fasi (§4) | dopo l'ok del founder |
+| Widget (9 + schermata di blocco) | `us-widget-bridge` | ❌ | piano a fasi (§4) | dopo l'ok del founder |
 | Accesso con Google e con Apple | `us-google-signin` (Credential Manager) | — il pulsante Google restava nascosto (mancava il plugin) | founder, 05/11: **Apple e Google** (§3). Plugin iOS Google (browser di sistema, PKCE) e Apple pronti; pulsanti e conferma da collegare | plugin ora; pulsanti col via sui file condivisi; Supabase e revoca **dopo** |
 | Lingue | italiano e inglese | 🟡 solo italiano dichiarato | `CFBundleLocalizations` it/en e frasi dei permessi in inglese | ora |
 | iPad | — | 🟡 il progetto dichiara iPhone e iPad | solo iPhone nel primo rilascio: niente screenshot iPad, l'app gira comunque su iPad | ora |
@@ -82,19 +82,73 @@ Apple chiede un accesso «equivalente e rispettoso della privacy» (in pratica S
 5. **Privacy:** `privacy.html` IT/EN con Apple (accesso e notifiche) e la scheda App Store.
 6. **Prove su TestFlight:** accesso nuovo, accesso di un account già esistente con la stessa email, «Nascondi la mia email», eliminazione dell'account (con revoca), uscita dalla coppia.
 
-## 4. Widget iOS (WidgetKit) — piano a fasi
+## 4. Widget iOS (WidgetKit): tutti i widget Android più la schermata di blocco
 
-I widget sono la parte più vista nei video. Su iOS si fanno con un'estensione WidgetKit che legge un'istantanea dall'App Group `group.com.usapp.us.shared`; il token per «Ti penso» sta nel Keychain condiviso, mai nell'App Group (decisione del 06/10). Stesso contratto JS di Android (`platform.js`, `widgets.js`), così il JS non cambia.
+**Scopo (14/11/2026, sessione dei widget iOS):** su iPhone tutti i widget Android di US, uguali nell'aspetto e nel comportamento, più widget per la schermata di blocco. Il JS condiviso con Android non cambia: l'estensione legge la stessa istantanea v2 (`platform.js` › `normalizeWidgetSnapshot`, `UsWidgetContract.java`) e le stesse immagini che l'app prepara già (`writeWidgetPhoto`, `writeWidgetNoiPortrait` con i posti `pair`, `me`, `partner`, `memories`, `memories_wide`, `lavagna`, `lavagna_night`). I tocchi aprono gli stessi link `us://widget/<tipo>` che `widgets.js` sa già leggere.
+
+### 4.1 Android → iPhone, widget per widget
+
+Taglie: il 2×2 Android è il **piccolo** di iOS, il 4×2 è il **medio**, un widget allargato fino a 4×4 è il **grande**.
+
+| Widget (classe Android) | Android | iPhone | Cosa mostra | Tocco | Differenze su iOS |
+|---|---|---|---|---|---|
+| Foto & Noi (`UsPhotoWidgetProvider`) | 2×2, allargabile | piccolo, medio, grande | la foto di Oggi che cambia ogni ora (adesso e le due dopo), i giorni insieme | apre la foto di Oggi | nessuna. Le tre foto diventano tre voci della timeline, come l'allarme Android. Tema chiaro: sfuma nella crema; scuro come prima |
+| Ti penso (`UsThinkWidgetProvider`, `UsThinkHeartActivity`, `UsThinkWidgetActionReceiver`) | 2×2, 4×2 | piccolo, medio | il cuore, «Bea ti ha pensato · 2 min fa», quante volte oggi (medio), «Inviato», «Ricambiato · adesso», «Non è partito · Riprova», «Apri US per collegarlo» | il cuore invia subito, in sottofondo | **iOS 17+**: il cuore è un pulsante (App Intent) che invia dal widget con lo stesso token e lo stesso `actionId` (il server scarta i doppi). **Animazione sopra la Home: impossibile su iOS** (un widget non apre finestre): il cuore fa il battito dentro il widget e passa a «Ricambiato · adesso». **iOS 16**: il tocco apre US su Ti penso (un tocco in più) |
+| Distanza e batteria (`UsNoiWidgetProvider`) | 2×1, 2×2, 4×2 | piccolo, medio | distanza o «meno di 3 km», da quanto, batteria della tua persona (un giorno al massimo), le due foto tonde | apre Noi | **il 2×1 non esiste sulla Home di iOS**: lo sostituisce il rettangolare della schermata di blocco. La batteria di chi ha l'iPhone va a gradini di 5% (`UIDevice`) |
+| La domanda di oggi (`UsDailyWidgetProvider`) | 4×2 (anche 2×2) | medio, piccolo | la domanda, a chi tocca, mai le risposte | apre la domanda | nessuna |
+| Lasciato per te (`UsMessageWidgetProvider`) | 2×2, 4×2 | piccolo, medio | busta chiusa, solo tipo e ora | apre il Lasciato | nessuna |
+| Ricordi a pila (`UsMemoriesWidgetProvider`) | 2×2, 4×2 | piccolo, medio | la pila disegnata dall'app, «Un anno fa» solo quel giorno, titolo, quanti | apre Ricordi | nessuna |
+| Come stai (`UsStatusWidgetProvider`) | 4×2 (anche 2×2) | medio, piccolo | l'emoji di tutti e due, la parola nella forma scelta, da quando (12 ore) | apre Come stai in Oggi | nessuna |
+| Lavagna (`UsLavagnaWidgetProvider`) | 2×2, allargabile | piccolo, medio, grande | l'ultimo disegno (chiaro e scuro), chi e quando | apre la lavagna | nessuna |
+| Post-it (`UsPostitWidgetProvider`) | 2×2, allargabile | piccolo, medio | l'ultimo post-it sulla sua carta, chi, «+N» | apre la bacheca | nessuna |
+| Giorni insieme (`UsDaysWidgetProvider`) | nascosto | — | — | — | **non si porta**: su Android resta solo perché i widget già messi non si rompano; su iPhone non ce ne sono |
+
+Uguale per tutti:
+- **Aggiornamento:** come Android. Quando l'app scrive l'istantanea si ridisegnano tutti; in mezzo una timeline già calcolata (mezzanotte di Roma, cambio della foto ogni ora, fine di «Ricambiato», scadenza di Come stai e della batteria). Nessuna rete in sottofondo; l'unica chiamata è l'invio di Ti penso.
+- **Temi:** chiaro → Pastello, scuro → Midnight (`colorScheme`). iOS 18 «colorato» e iOS 26 «trasparente»: i disegni restano leggibili e le foto restano a colori.
+- **Caratteri:** Fraunces e Figtree stanno nell'estensione. Su iOS i testi sono testo vero nel carattere dell'app, senza le immagini di testo di `UsWidgetArt`.
+- **StandBy (iPhone in carica, orizzontale):** usa i widget **piccoli della Home**, non quelli della schermata di blocco; di notte iOS li tinge di rosso.
+- **iPad:** l'app è solo per iPhone (`TARGETED_DEVICE_FAMILY = 1`) e sull'iPad gira in modalità iPhone: lì i widget non ci sono.
+- **«Aggiungi alla Home» da Impostazioni › Widget:** iOS non lo permette. Il ponte risponde `supported: false` e Widget Hub dice già «Questo telefono non aggiunge widget da solo. Usa i widget della Home.» (nessun cambio). Alternativa da approvare: i passi iOS (tieni premuto sulla Home › Modifica › Aggiungi widget › US), con un piccolo cambio neutro del JS (il testo arriva dal ponte).
+- **Settimana guidata:** il passo «widget sulla Home» compare su iPhone da solo appena c'è il ponte (`hasWidgetBridge`), e si conta con `getInstalledWidgets` (WidgetKit sa quali widget di US sono messi).
+
+### 4.2 Schermata di blocco (iOS 16+: rotondo, rettangolare, sopra l'ora)
+
+La schermata di blocco la vede chiunque: niente foto e niente testi privati. Nomi e frasi si segnano «privati» (`privacySensitive`): a telefono bloccato iOS li copre, e compaiono quando Face ID riconosce chi lo tiene.
+
+| Proposta | Forme | Cosa mostra da bloccato |
+|---|---|---|
+| A. Ti penso | rotondo | il cuore, pieno quando ti ha pensato e non hai ricambiato. iOS 17+: il tocco invia; iOS 16: apre US |
+| B. Giorni insieme | rotondo, sopra l'ora | «195 giorni», «♡ 195 giorni insieme» |
+| C. Ultimo Ti penso ricevuto | rettangolare | «Ti ha pensato · 10 min fa»; il nome solo dopo Face ID |
+| D. La domanda di oggi | rotondo, rettangolare | da fare / tocca a te / fatta; mai la domanda |
+| E. Distanza e batteria | rotondo, rettangolare | anello della batteria della tua persona; «12 km · 45%» |
+| F. Come stai | rotondo | l'emoji della tua persona (in un solo colore) |
+| G. Lasciato per te | rotondo | la busta, con un punto se ce n'è uno chiuso |
+| H. Sfida della settimana | rotondo | **serve un dato nuovo nell'istantanea (JS condiviso)**: dopo, con un via a parte |
+| Controllo «Ti penso» (iOS 18+) | Centro di Controllo, i due pulsanti in basso della schermata di blocco, tasto Azione | un tocco invia, con lo stesso App Intent |
+
+### 4.3 Fasi
 
 | Fase | Cosa | Note |
 |---|---|---|
-| W0 | ponte `UsWidgetBridge` iOS: istantanea e foto nell'App Group, credenziale nel Keychain condiviso, batteria (`UIDevice`), `getInstalledWidgets` da WidgetKit; niente «aggiungi alla Home» (iOS non lo permette: Widget Hub mostra i passi) | accende anche la batteria del partner per chi ha l'iPhone |
-| W1 | **Foto & Noi** (piccolo, medio) e **Ti penso** | Ti penso: su iOS 17+ il cuore invia dal widget (App Intent), su iOS 16 apre l'app. L'animazione del cuore sopra la Home non esiste su iOS: il widget cambia stato |
-| W2 | La domanda di oggi, Distanza e batteria, Come stai | sola lettura |
+| W0 | ponte `UsWidgetBridge` iOS (stessi metodi di Android): istantanea validata in Swift come `UsWidgetContract.java`, foto nell'App Group, token di Ti penso nel Keychain condiviso, batteria (`UIDevice`), `getInstalledWidgets`; estensione `app.uscouple.widgets`; firma e CI | accende anche la batteria del partner per chi ha l'iPhone |
+| W1 | **Foto & Noi** e **Ti penso** | poi, quando sono sull'iPhone di Bea, si propone lo spegnimento del widget Scriptable |
+| W2 | La domanda di oggi, Distanza e batteria, Come stai | |
 | W3 | Ricordi a pila, Lasciato per te, Lavagna, Post-it | |
-| W4 | widget della schermata di blocco (iOS 16+) | Ti penso e giorni insieme, piccoli |
+| W4 | schermata di blocco (§4.2) e Controllo «Ti penso» | |
 
-Prima di W0 servono: l'account (App Group e Keychain condiviso si registrano sul profilo), la scelta del founder sull'ordine e un giro di disegni Pastello/Midnight in SwiftUI da approvare. Ogni fase si prova su staging prima della produzione.
+Prima del codice: l'ordine delle fasi e il set della schermata di blocco scelti dal founder, e i disegni SwiftUI Pastello/Midnight approvati. Ogni fase: PR verde in `ios-native.yml`, build TestFlight pronta da lanciare; niente lancio né merge senza il via del founder, e non prima che Bea confermi la build 1.5.0 (457497).
+
+### 4.4 Firma: cosa fa la CI e cosa deve fare il founder
+
+`scripts/ios-asc-signing.mjs` crea a ogni giro un certificato Apple Distribution e un profilo App Store; si estende a due profili (app e `app.uscouple.widgets`), firma a mano tutti e due i target ed esporta con tutti e due. Il Keychain condiviso non va registrato (i profili App Store lo includono). **L'API di Apple non crea l'App Group e non lo assegna agli identificativi**: va fatto una volta a mano, su developer.apple.com › Certificates, Identifiers & Profiles › Identifiers:
+1. «+» › **App Groups** › Continue › descrizione «US condiviso», identificativo `group.app.uscouple.shared` › Register.
+2. «+» › **App IDs** › App › descrizione «US Widgets», Bundle ID «Explicit» `app.uscouple.widgets`, spunta **App Groups** › Continue › Register.
+3. Apri `app.uscouple` › accanto ad App Groups «Configure» › spunta `group.app.uscouple.shared` › Continue › Save (Apple avvisa che i profili vanno rifatti: la CI li rifà a ogni giro).
+4. Stessa cosa su `app.uscouple.widgets`.
+
+### 4.5 Il widget Scriptable di Bea
 
 **Oggi su iPhone c'è già un widget (05/11/2026, dall'audit della produzione):** Bea usa un widget Scriptable servito dalla produzione, con le funzioni `us-widget-state` v9 e `widget-scriptable-setup` v6 del 25/09 e il cron `us-widget-scriptable-state-expiry`. C'è un'installazione attiva, con il token usato il 05/11.
 - Nel repository Scriptable è ritirato dal 06/10 (`tests/pre-native-cleanup.test.js`), ma il ritiro non è mai stato pubblicato. **Pubblicare `us-widget-state` dal repository spegnerebbe il widget di Bea.**
