@@ -227,6 +227,12 @@ test('TestFlight: solo a mano, da main, dopo l\'approvazione in ios-deploy, mai 
   assert.match(workflow, /"\$GITHUB_REF" != "refs\/heads\/main"/);
   assert.match(workflow, /-allowProvisioningUpdates/);
   assert.match(workflow, /-authenticationKeyPath "\$RUNNER_TEMP\/asc\/AuthKey\.p8"/);
+  // No registered iPhone in the team (14/11/2026): App Store certificate and profile from the API, manual signing.
+  assert.match(workflow, /node scripts\/ios-asc-signing\.mjs prepare /);
+  assert.match(workflow, /node scripts\/ios-asc-signing\.mjs pin-project ios\/App\/App\.xcodeproj\/project\.pbxproj /);
+  assert.match(workflow, /<key>signingStyle<\/key><string>manual<\/string>/);
+  assert.doesNotMatch(workflow, /CODE_SIGN_STYLE=Automatic/);
+  assert.match(workflow, /security delete-keychain/);
   assert.match(workflow, /<key>method<\/key><string>app-store-connect<\/string>/);
   assert.match(workflow, /<key>destination<\/key><string>upload<\/string>/);
   assert.match(workflow, /code="\$\(\( \( \$\(date -u \+%s\) - 1767225600 \) \/ 60 \)\)"/, 'build come il versionCode di Play');
