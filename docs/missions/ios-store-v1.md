@@ -138,7 +138,7 @@ La schermata di blocco la vede chiunque: niente foto e niente testi privati. Nom
 | W3 | Ricordi a pila, Lasciato per te, Lavagna, Post-it | |
 | W4 | schermata di blocco (§4.2) e Controllo «Ti penso» | |
 
-**Scelte del founder (14/11/2026, `DECISIONS.md`):** quest'ordine; sulla schermata di blocco A, B, E, F, G e il Controllo (non C, D, H per ora); il battito del cuore dentro il widget; i passi per iPhone in Impostazioni › Widget. Prima del codice: i disegni SwiftUI Pastello/Midnight approvati (tavola del 14/11, in attesa: https://claude.ai/artifact/7r3PaBCzW1AP1sgqruCo71). Ogni fase: PR verde in `ios-native.yml`, build TestFlight pronta da lanciare; niente lancio né merge senza il via del founder, e non prima che Bea confermi la build 1.5.0 (457497).
+**Scelte del founder (14/11/2026, `DECISIONS.md`):** quest'ordine; sulla schermata di blocco A, B, E, F, G e il Controllo (non C, D, H per ora); il battito del cuore dentro il widget; i passi per iPhone in Impostazioni › Widget. Disegni SwiftUI Pastello/Midnight **approvati** dal founder il 14/11 («il resto tutto bello»): https://claude.ai/artifact/7r3PaBCzW1AP1sgqruCo71. Unica modifica: Distanza e batteria piccolo senza il disegno dietro (arco tratteggiato, due cerchi e cuore), solo il fondo sfumato con la foto tonda in alto, i km sotto, nome e batteria in basso. Il medio tiene l'arco. Ogni fase: PR verde in `ios-native.yml`, build TestFlight pronta da lanciare; niente lancio né merge senza il via del founder, e non prima che Bea confermi la build 1.5.0 (457497).
 
 ### 4.4 Firma: cosa fa la CI e cosa deve fare il founder
 
