@@ -115,6 +115,6 @@ test('picker preview and Impostazioni: generic, the new name', () => {
   assert.doesNotMatch(preview, /android:text="[^@]/);
   assert.match(res('values/strings.xml'), /<string name="us_widget_preview_battery" formatted="false">78%<\/string>/);
   const hub = read('widget-hub.js');
-  assert.match(hub, /\{ kind: 'noi', name: 'Distanza e batteria', copy: 'La distanza tra voi e la batteria di chi ami\. Mai dove siete\.', shape: 'wide' \}/);
+  assert.match(hub, /\{ kind: 'noi', name: 'Distanza e batteria', copy: 'La distanza tra voi e la batteria della tua persona\. Mai dove siete\.', shape: 'wide' \}/);
   assert.match(read('i18n-en.js'), /'Distanza e batteria': 'Distance and battery'/);
 });

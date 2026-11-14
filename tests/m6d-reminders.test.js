@@ -131,17 +131,82 @@ test('M6D (10): the cron key is vault-only and dedicated — the worker reads it
   assert.doesNotMatch(readme, /x-us-cron-key','[A-Za-z0-9_\-]{16,}/);
 });
 
-// (11) all-day + copy: la copia self/partner rispecchia la missione.
-test('M6D (11): notification copy — self has no attribution, partner copy carries requester + time', () => {
-  assert.equal(
-    cal.reminderCopy({ selfRecipient: false, requesterName: 'Francesco', title: 'Cena', startsAt: new Date(2026, 8, 28, 20, 30).toISOString(), allDay: false }),
-    'Francesco ti ricorda — Cena alle 20:30 ♡'
-  );
-  assert.equal(cal.reminderCopy({ selfRecipient: true, requesterName: 'Francesco', title: 'Esame Psicologia', startsAt: null, allDay: false }), '— Esame Psicologia');
-  assert.equal(cal.reminderCopy({ selfRecipient: false, requesterName: 'Beatrice', title: 'Cena', startsAt: null, allDay: true }), 'Beatrice ti ricorda — Cena ♡');
-  assert.match(worker(), /ti ricorda/);
+// (11) copy: il testo vive in un modulo condiviso che il worker importa.
+// Le Edge Function girano in UTC: i test girano in UTC anche loro, così
+// un'ora presa dal fuso della macchina si vede subito.
+const copyModule = () => import('../supabase/functions/_shared/calendar-reminder-copy.mjs');
+const inUtc = async (fn) => {
+  const previous = process.env.TZ;
+  process.env.TZ = 'UTC';
+  try { return await fn(); } finally {
+    if (previous === undefined) delete process.env.TZ; else process.env.TZ = previous;
+  }
+};
+
+test('M6D (11): the worker builds the text from the shared copy module, never from the server clock', () => {
+  assert.match(worker(), /import \{ reminderBody \} from "\.\.\/_shared\/calendar-reminder-copy\.mjs";/);
+  assert.doesNotMatch(worker(), /getHours|getMinutes/);
+  assert.doesNotMatch(read('supabase/functions/_shared/calendar-reminder-copy.mjs'), /getHours|getMinutes/);
   assert.match(worker(), /La tua persona/, 'fallback name, never a hardcoded real name');
+  assert.doesNotMatch(js(), /ti ricorda/, 'the Calendar UI keeps no second copy of the text');
 });
+
+test('M6D (11b): partner copy shows the Rome time, summer and winter', () => inUtc(async () => {
+  const { reminderBody } = await copyModule();
+  // 10/07 alle 20:30 a Roma (ora legale, UTC+2), promemoria un'ora prima.
+  assert.equal(reminderBody({
+    selfRecipient: false, requesterName: 'Francesco', title: 'Cena', allDay: false,
+    startsAt: '2026-07-10T18:30:00.000Z', startDate: null, offsetMinutes: 60,
+    nowMs: Date.parse('2026-07-10T17:30:00.000Z')
+  }), 'Francesco ti ricorda: Cena alle 20:30 ♡');
+  // 20/11 alle 20:30 a Roma (ora solare, UTC+1), 30 minuti prima.
+  assert.equal(reminderBody({
+    selfRecipient: false, requesterName: 'Francesco', title: 'Cena', allDay: false,
+    startsAt: '2026-11-20T19:30:00.000Z', startDate: null, offsetMinutes: 30,
+    nowMs: Date.parse('2026-11-20T19:00:00.000Z')
+  }), 'Francesco ti ricorda: Cena alle 20:30 ♡');
+}));
+
+test('M6D (11c): partner copy says «domani» when the event falls on the next day in Rome', () => inUtc(async () => {
+  const { reminderBody } = await copyModule();
+  // «1 giorno prima»: arriva il 19/11 alle 20:30 per la cena del 20/11 alle 20:30.
+  assert.equal(reminderBody({
+    selfRecipient: false, requesterName: 'Beatrice', title: 'Cena', allDay: false,
+    startsAt: '2026-11-20T19:30:00.000Z', startDate: null, offsetMinutes: 1440,
+    nowMs: Date.parse('2026-11-19T19:30:00.000Z')
+  }), 'Beatrice ti ricorda: Cena, domani alle 20:30 ♡');
+  // Tutto il giorno: arriva alle 18:00 della sera prima, senza ora.
+  assert.equal(reminderBody({
+    selfRecipient: false, requesterName: 'Beatrice', title: 'Compleanno di mamma', allDay: true,
+    startsAt: null, startDate: '2026-11-20', offsetMinutes: 1440,
+    nowMs: Date.parse('2026-11-19T17:00:00.000Z')
+  }), 'Beatrice ti ricorda: Compleanno di mamma, domani ♡');
+  // Un'ora prima, a cavallo della mezzanotte di Roma (in UTC è ancora il 20/11 per entrambi).
+  assert.equal(reminderBody({
+    selfRecipient: false, requesterName: 'Francesco', title: 'Pizza', allDay: false,
+    startsAt: '2026-11-20T23:15:00.000Z', startDate: null, offsetMinutes: 60,
+    nowMs: Date.parse('2026-11-20T22:15:00.000Z')
+  }), 'Francesco ti ricorda: Pizza, domani alle 00:15 ♡');
+}));
+
+test('M6D (11d): self copy keeps the offset lead and adds the Rome time to «Domani»', () => inUtc(async () => {
+  const { reminderBody } = await copyModule();
+  assert.equal(reminderBody({
+    selfRecipient: true, requesterName: 'Francesco', title: 'Esame di Psicologia', allDay: false,
+    startsAt: '2026-11-20T08:00:00.000Z', startDate: null, offsetMinutes: 60,
+    nowMs: Date.parse('2026-11-20T07:00:00.000Z')
+  }), 'Tra un’ora: Esame di Psicologia');
+  assert.equal(reminderBody({
+    selfRecipient: true, requesterName: 'Francesco', title: 'Cena', allDay: false,
+    startsAt: '2026-11-20T19:30:00.000Z', startDate: null, offsetMinutes: 1440,
+    nowMs: Date.parse('2026-11-19T19:30:00.000Z')
+  }), 'Domani alle 20:30: Cena');
+  assert.equal(reminderBody({
+    selfRecipient: true, requesterName: 'Francesco', title: 'Compleanno di mamma', allDay: true,
+    startsAt: null, startDate: '2026-11-20', offsetMinutes: 1440,
+    nowMs: Date.parse('2026-11-19T17:00:00.000Z')
+  }), 'Domani: Compleanno di mamma');
+}));
 
 // (12) review-fix regressioni: savedId scope + cronKey const.
 test('M6D (12): review fixes hold — savedId declared before the branch, cronKey constant defined', () => {

@@ -33,12 +33,12 @@ const SLOTS = Object.freeze({
   oggi_theme: { pref: 'oggi_theme', look: 'theme', label: 'Temi di Oggi', place: 'atmosfera, foto e countdown', unlock: 'Nuovo tema di Oggi', where: 'Oggi, attorno alla vostra foto' },
   oggi_effect: { pref: 'oggi_effect', look: 'effect', label: 'Effetti di Oggi', place: 'sopra la vostra foto', unlock: 'Nuovo effetto di Oggi', where: 'Oggi, sopra la vostra foto' },
   theme: { pref: 'theme_reward_id', label: 'Atmosfera', place: 'lo sfondo di tutta US', unlock: 'Nuova atmosfera', where: 'In tutta US' },
-  accent: { pref: 'accent_reward_id', label: 'Colore di Noi', place: 'controlli, progressi, navigazione', unlock: 'Nuovo colore di Noi', where: 'Selezioni e progressi, in tutta US' },
+  accent: { pref: 'accent_reward_id', label: 'Colore di Noi', place: 'selezioni, progressi, navigazione', unlock: 'Nuovo colore di Noi', where: 'Selezioni e progressi, in tutta US' },
   effect: { pref: 'effect_reward_id', label: 'Simbolo US', place: 'il simbolo in alto', unlock: 'Nuovo effetto del simbolo', where: 'Il simbolo in alto su Oggi' },
   // Premi Sintonia V2: how this phone receives a Ti penso.
   ti_penso: { pref: 'ti_penso', label: 'Ti penso', place: 'quando ne ricevi uno', unlock: 'Nuovo Ti penso', where: 'Quando ricevi un Ti penso' },
   // Premi Sintonia V2, Fase 2: what the companion wears on this phone (pet.css).
-  pet_accessory: { pref: 'pet_accessory', label: 'Accessori', place: 'sul vostro Compagno', unlock: 'Nuovo accessorio', where: 'Sul vostro Compagno, sopra la barra' },
+  pet_accessory: { pref: 'pet_accessory', label: 'Accessori', place: 'sul vostro compagno', unlock: 'Nuovo accessorio', where: 'Sul vostro compagno, sopra la barra' },
   // and the icon of US on this phone (native-plugins/us-app-icon, the Android app).
   app_icon: { pref: 'app_icon', label: 'Icona dell’app', place: 'sul tuo telefono', unlock: 'Nuova icona', where: 'L’icona di US sul tuo telefono, nell’app Android' },
   frame: { pref: 'frame_reward_id', retired: true, label: 'Cornici', place: 'sulla foto di Oggi', unlock: 'NUOVA CORNICE', where: 'Sulla foto di Oggi' },
@@ -279,7 +279,7 @@ const SLOT_DEFAULT = Object.freeze({
   accent: { id: 'orchidea', title: 'Orchidea', description: 'Il colore di Noi, dove i vostri due colori si incontrano.' },
   effect: { id: 'none', title: 'Fermo', description: 'Il simbolo US, senza movimento.' },
   ti_penso: { id: 'classic', title: 'Classico', description: 'Il Ti penso di sempre: un cuore e il vostro nome.' },
-  pet_accessory: { id: 'none', title: 'Niente', description: 'Il vostro Compagno com’è.' },
+  pet_accessory: { id: 'none', title: 'Niente', description: 'Il vostro compagno com’è.' },
   app_icon: { id: 'us', title: 'US', description: 'L’icona di sempre.' }
 });
 function itemColor(cat, id) { return ITEM_COLOR[cat]?.[id] || ''; }
@@ -434,6 +434,8 @@ function startCanvases(root) {
 const EASE = Object.freeze({ out: 'cubic-bezier(.2,.8,.2,1)', io: 'cubic-bezier(.7,0,.2,1)', spring: 'cubic-bezier(.34,1.56,.64,1)', in: 'cubic-bezier(.4,0,1,1)' });
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const fmt = (n) => (Number(n) || 0).toLocaleString(window.UsI18n?.tag || 'it-IT');
+// «mancano 40 punti», «manca 1 punto».
+const pointsLeft = (n) => (Number(n) === 1 ? 'manca 1 punto' : `mancano ${fmt(n)} punti`);
 const canAnimate = (el) => typeof el?.animate === 'function' && !reducedMotion();
 // "+35 XP · Evento vissuto · Sintonia": rises, holds and leaves (1550 ms).
 function xpPop(n, label) {
@@ -442,7 +444,7 @@ function xpPop(n, label) {
   const pop = document.createElement('div');
   pop.className = 'us-xp-pop';
   pop.setAttribute('role', 'status');
-  pop.innerHTML = `<b>+${xp} XP</b><small>${esc(label ? `${label} · Sintonia` : 'Sintonia')}</small>`;
+  pop.innerHTML = `<b>+${xp} punti</b><small>${esc(label ? `${label} · Sintonia` : 'Sintonia')}</small>`;
   document.body.appendChild(pop);
   const done = () => pop.remove();
   if (!canAnimate(pop)) { setTimeout(done, 1500); return true; }
@@ -547,7 +549,7 @@ async function playGain(fromXp, toXp) {
   }
   await Promise.all([animBar(pct(before), 100, 650), tweenLens(1, 650)]);
   const line = $('bondLevelXp');
-  setText(line, `${fmt(before.needed)} / ${fmt(before.needed)} XP`);
+  setText(line, `${fmt(before.needed)} / ${fmt(before.needed)} punti`);
   await tweenLens(86 / 46, 380, (t) => t * t);
   const bloom = sintoniaVenn()?.querySelector?.('.is-bloom');
   if (canAnimate(bloom)) bloom.animate([{ opacity: 0.95, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.9)' }], { duration: 900, easing: EASE.out });
@@ -715,7 +717,7 @@ function celebrateLevelUp(next, pending, fromPct = 0.86) {
   return true;
 }
 // sintonia.js levelMoment, inside the shared Momento (core.js momento):
-// "Livello 6", "Intesa rara. Il prossimo arriva a 950 XP.", "Un premio
+// "Livello 6", "Intesa rara. Il prossimo arriva a 950 punti.", "Un premio
 // sbloccato", Scoprilo. The beats: 1 the Sintonia ring closes, 2 the two
 // colours orbit closer, 3 they merge into Noi, 4 the number rolls.
 function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
@@ -734,7 +736,7 @@ function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
     <div class="lvx" aria-hidden="true"><span class="lvx-wash"></span><svg viewBox="0 0 220 220" focusable="false"><circle class="lvx-track" cx="110" cy="110" r="100"/><circle class="lvx-ring" cx="110" cy="110" r="100" pathLength="100"/><circle class="lvx-wave" cx="110" cy="110" r="64"/><g class="lvx-orbit"><circle class="lvx-a" cx="72" cy="110" r="34"/><circle class="lvx-b" cx="148" cy="110" r="34"/></g><circle class="lvx-noi" cx="110" cy="110" r="64"/>${dots}</svg><span class="lvx-num"><span class="lvx-odo"><i>${Math.max(1, from)}</i><i>${level}</i></span></span></div>
     <span class="us-level-moment-kicker">Nuovo livello di Sintonia</span>
     <h2 id="usLevelMomentTitle">Livello <em>${level}</em></h2>
-    <p>${esc(rank ? `${rank}. Il prossimo arriva a ${fmt(need)} XP.` : `Il prossimo arriva a ${fmt(need)} XP.`)}</p>
+    <p>${esc(rank ? `${rank}. Il prossimo arriva a ${fmt(need)} punti.` : `Il prossimo arriva a ${fmt(need)} punti.`)}</p>
     ${chip ? `<span class="us-level-moment-chip"><i></i>${esc(chip)}</span>` : ''}
     <div class="us-level-moment-actions"><button type="button" class="primary" data-us-level-go>${action}</button></div>
   </div>`;
@@ -820,7 +822,7 @@ function renderRhythm(next = state) {
   const copy = $('usProgressionRhythmCopy');
   setText(value, compact);
   setText(copy, next.rhythm_today
-    ? 'Oggi ci siete stati.'
+    ? 'Oggi c’eravate.'
     : days > 0 ? 'Una piccola cosa oggi mantiene il Ritmo.' : 'Fate una piccola cosa insieme per iniziare.');
   const segments = Array.from($('usProgressionRhythmDays')?.children || []);
   const last = next.rhythm_today ? segments.length - 1 : segments.length - 2;
@@ -881,7 +883,7 @@ function paintHTML(root, markup) {
   root.innerHTML = markup;
   return true;
 }
-// "Prossimo sblocco · Livello 6 / Lucciole / e Respiro · mancano 40 XP".
+// "Prossimo sblocco · Livello 6 / Lucciole / e Respiro · mancano 40 punti".
 // The next companion still locked (companions.js), with its level.
 function nextCompanion() {
   const list = window.UsCompanions?.list?.() || [];
@@ -909,7 +911,7 @@ function renderNext(next = state) {
     // Level already reached: the companion is on its way (the next read of get_companions_v1).
     const xp = xpToLevel(total, companion.level);
     const soon = daysEstimate(xp, next);
-    const line = xp > 0 ? `Un compagno sopra la barra · mancano ${fmt(xp)} XP${soon ? ` · ${soon}` : ''}` : 'Un compagno sopra la barra';
+    const line = xp > 0 ? `Un compagno sopra la barra · ${pointsLeft(xp)}${soon ? ` · ${soon}` : ''}` : 'Un compagno sopra la barra';
     paintHTML(root, `<span class="us-progression-next-preview" aria-hidden="true">${companionArt(companion)}</span><span class="us-progression-next-copy"><small>Prossimo sblocco · Livello ${companion.level}</small><b>${esc(companion.name)}</b><span>${esc(line)}</span></span><span class="us-progression-next-chev" aria-hidden="true"></span>`);
     return;
   }
@@ -922,10 +924,9 @@ function renderNext(next = state) {
     return;
   }
   const xp = xpToLevel(total, target);
-  const missing = fmt(xp);
   const estimate=daysEstimate(xp, next);
   const second = !headline && rewards[1] ? presentedTitle(rewards[1]) : '';
-  const line = `${second ? `e ${second} · ` : ''}mancano ${missing} XP${estimate ? ` · ${estimate}` : ''}`;
+  const line = `${second ? `e ${second} · ` : ''}${pointsLeft(xp)}${estimate ? ` · ${estimate}` : ''}`;
   if (paintHTML(root, `<span class="us-progression-next-preview" aria-hidden="true">${artMarkup(artItem(first))}</span><span class="us-progression-next-copy"><small>Prossimo sblocco · Livello ${target}</small><b>${esc(presentedTitle(first))}</b><span>${esc(line)}</span></span><span class="us-progression-next-chev" aria-hidden="true"></span>`)) startCanvases(root);
 }
 // «circa N giorni» on the couple's own pace (points of the last 14 days);
@@ -1372,7 +1373,7 @@ function missionCompleted({ xp, questId } = {}) {
     const tab = $('usGiocaTabSintonia');
     if (tab && tab.getAttribute('aria-selected') !== 'true') tab.click();
     await wait(500);
-    window.toast?.(`Missione completata · +${points} XP ♡`, { icon: 'sparkle', quiet: false });
+    window.toast?.(`Missione completata · +${points} punti ♡`, { icon: 'sparkle', quiet: false });
     await wait(700);
     await hydrate({ showUnlocks: false, force: true });
     const toXp = Math.max(Number(state?.total_xp) || 0, fromXp);

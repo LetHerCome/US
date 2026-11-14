@@ -39,7 +39,7 @@ test('Round 3 G1: Sfida di oggi leads Gioca, then the 7-day strip and the existi
   assert.equal((html.match(/aria-current="date"/g)||[]).length,1);
   assert.match(html,/class="us-gv2-wd is-today" role="listitem" aria-current="date" aria-label="sabato 10 · oggi"><span aria-hidden="true" translate="no">S<\/span><b aria-hidden="true" translate="no">10<\/b>/);
   assert.doesNotMatch(html,/us-gv2-rhythm|us-gv4-week|us-gv4-day/,'no budget strip, no old rail');
-  assert.match(html,/<span class="us-gv4-daily-pending-title">Sfida di oggi<\/span><small>Preparo la domanda di oggi…<\/small>/);
+  assert.match(html,/<span class="us-gv4-daily-pending-title">La domanda di oggi<\/span><small>Preparo la domanda di oggi…<\/small>/);
   assert.doesNotMatch(html,/data-who=/,'no dot without real data');
   assert.doesNotMatch(html,/data-streak|data-completed-days|day-played/,'no fictitious past-day progress');
 });
@@ -65,8 +65,8 @@ test('V4 → 1.0: La domanda di oggi is one stable slot; only the existing Daily
   window.todayState={my_answer:null,partner_has_answer:true,both_answered:false,partner_answer:'Risposta segreta'};
   vm.runInContext('paintDailyInGioca()',vmContext);
   assert.equal((slot.innerHTML.match(/data-us-daily-entry/g)||[]).length,1);
-  // Round 3 parity: the mockup's kicker, uppercased by CSS.
-  assert.match(slot.innerHTML,/<small>Sfida di oggi<\/small>/);
+  // The same name as on Oggi (founder, 13/11, visual review), uppercased by CSS.
+  assert.match(slot.innerHTML,/<small>La domanda di oggi<\/small>/);
   assert.doesNotMatch(slot.innerHTML,/LA DOMANDA DI OGGI/);
   assert.match(slot.innerHTML,/Un ricordo speciale/);
   assert.match(slot.innerHTML,/Bea ha già risposto · tocca a te/);

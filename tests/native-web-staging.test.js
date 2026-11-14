@@ -76,7 +76,7 @@ test('staging native mantiene Lasciato per te completo e non reintroduce Stories
   assert.doesNotMatch(nativeHtml, /src="\/stories\.js/);
   assert.doesNotMatch(nativeHtml, /href="\/stories\.css/);
   assert.doesNotMatch(nativeHtml, /data-us-setting="story-archive"/);
-  assert.doesNotMatch(nativeHtml, /Apri le tue Stories|Aggiungi una story|Stories del partner/);
+  assert.doesNotMatch(nativeHtml, /Apri le tue Stories|Aggiungi una Story|Stories della tua persona/);
 });
 
 test('Left for You renderer-only resta disponibile come modalità interna senza avviare inbox o Realtime', () => {

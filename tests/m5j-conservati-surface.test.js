@@ -348,7 +348,7 @@ test('M5J R8: the Conservati entry stays hidden while nothing is kept, and kept 
   assert.equal((list.match(/conservati-card-thumb/g) || []).length, 1, 'only photos become thumbnails');
   const html = read('index.html');
   assert.doesNotMatch(html, /id="conservatiEntry"/, 'Ricordi is only the album (04/11/2026)');
-  assert.match(html, /Quello che non conservate in Lasciato per te sparisce dopo 30 giorni\./);
+  assert.match(html, /Quello che non conservate in Lasciato per te sparisce 30 giorni dopo l’apertura\./);
 });
 
 // 04/11/2026 (founder): Ricordi is only the album; Conservati's door moved to

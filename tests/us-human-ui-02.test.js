@@ -79,7 +79,7 @@ test('page labels: Ricordi and Gioca stay accessible without a visible top-left 
   const games = read('games.js');
   assert.match(games, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
   // Round 3 parity (062): Sfida di oggi leads the hub, then the mockup's week.
-  assert.match(games, /<span class="us-gv4-daily-pending-title">Sfida di oggi<\/span>/);
+  assert.match(games, /<span class="us-gv4-daily-pending-title">La domanda di oggi<\/span>/);
   assert.match(games, /<div class="us-gv2-week" id="usGv2Week" data-s role="list" aria-label="Questa settimana">/);
   assert.doesNotMatch(games, /rhythmStrip|us-gv2-head"/);
 });
@@ -384,7 +384,7 @@ test('Oggi density: arbitration stays authoritative; the dock holds one evidence
   // Parity 2026-10 (mockup .og-bottom / .dq): a 12px column; the card is ring + kicker,
   // the question across, then the status line and the button; short screens keep it smaller (03/11/2026).
   assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?display:grid;\s*gap:12px;/);
-  assert.match(dcOggi, /#home #usDailyRitual\{[\s\S]*?grid-template-columns:auto minmax\(0,1fr\);[\s\S]*?padding:16px;[\s\S]*?border-radius:26px;/);
+  assert.match(dcOggi, /#home #usDailyRitual\{[\s\S]*?grid-template-columns:auto minmax\(0,1fr\);[\s\S]*?padding:13px 14px 13px 16px;[\s\S]*?border-radius:22px;/);
   assert.match(dcOggi, /#home #usDailyRitual \.dq-foot\{grid-column:1\/-1;display:flex;/);
   assert.match(dcOggi, /@media\(max-height:600px\)\{\n  #home #usDailyRitual \.us-daily-ritual-question\{font-size:15px\}/);
   const app = read('app.js');
@@ -469,7 +469,7 @@ test('Auth first-run: private entry is compact, device-aware and keeps backend o
   assert.match(auth, /id="usAuthInstall"/);
   assert.doesNotMatch(auth, /authPair|pairBtn|pairCode|Magic Link/);
   assert.match(app, /showAuthStep\('authLogin'\)/);
-  assert.match(app, /Accedi con email e password per entrare in US\./);
+  assert.match(app, /Accedi per entrare in US\./);
   assert.match(app, /passwordEnter\.addEventListener\('keydown'/);
 
   assert.match(app, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);

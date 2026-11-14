@@ -81,8 +81,8 @@ function fakeElement(id) {
 const catalog = [
   { id: 'badge_day_one', level_required: 1, category: 'badge', title: 'Day One', description: 'Spilla', token: 'badge_day_one' },
   { id: 'frame_aurora', level_required: 4, category: 'frame', title: 'Aurora', description: 'Bordo', token: 'frame_aurora' },
-  { id: 'ring_orbit', level_required: 9, category: 'ring', title: 'Orbita', description: 'Anello', token: 'ring_orbit' },
-  { id: 'frame_chrome', level_required: 12, category: 'frame', title: 'Cromo', description: 'Metallo', token: 'frame_chrome' }
+  { id: 'ring_orbit', level_required: 8, category: 'ring', title: 'Orbita', description: 'Anello', token: 'ring_orbit' },
+  { id: 'frame_chrome', level_required: 10, category: 'frame', title: 'Cromo', description: 'Metallo', token: 'frame_chrome' }
 ];
 
 function runProgression({ level, pending = [], withCountdown = true }) {
@@ -148,10 +148,10 @@ test('Collection: Countdown styles are a visible group whose locks follow the ex
   await api.hydrate({ showUnlocks: false, force: true });
   let markup = el('usProgressionRewards').innerHTML;
   assert.match(markup, /data-category="countdown" aria-label="Countdown"/);
-  assert.match(markup, /<em>5\/6<\/em>/, 'three free + Aurora (L4) + Orbita (L9); Cromo still locked');
-  // Round 3 (mockup parity): a locked tile still answers a tap ("Si sblocca al livello 12 di Sintonia").
-  assert.match(markup, /data-countdown-style-select="chrome" data-locked="true" data-level="12"/);
-  assert.match(markup, />Cromo<\/b><small>Livello 12<\/small>/);
+  assert.match(markup, /<em>5\/6<\/em>/, 'three free + Aurora (L4) + Orbita (L8); Cromo (L10) still locked');
+  // Round 3 (mockup parity): a locked tile still answers a tap ("Si sblocca al livello 10 di Sintonia").
+  assert.match(markup, /data-countdown-style-select="chrome" data-locked="true" data-level="10"/);
+  assert.match(markup, />Cromo<\/b><small>Livello 10<\/small>/);
   assert.doesNotMatch(markup, /data-countdown-style-select="orbit" data-locked/);
   assert.match(markup, /class="[^"]*us-progression-countdown-style[^"]*is-equipped[^"]*"[^>]*data-countdown-style-select="editorial"[^>]*aria-pressed="true"/);
   assert.equal((markup.match(/us-progression-reward-plus/g) || []).length, 0, 'US V3: Aurora, Orbita and Cromo are presented as the styles themselves, not as frames/rings');

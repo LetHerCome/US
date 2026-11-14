@@ -1,5 +1,79 @@
 # Prossima patch in produzione
 
+## Patch 1.5.1: «La cosa di oggi» e la mascotte che non sparisce più (13/11/2026)
+
+**In produzione il 14/11 col via del founder («puoi passarlo tutto su produzione»):** migrazioni `20261113202138_cosa_di_oggi_v1.sql` (run 43614053143) e `20261113232109_revisione_testi.sql` (run 43614166584), controllate in sola lettura (`cosa_di_oggi` solo per `authenticated`, `guided_week` dal 14/11 alle 16:11 UTC, le tre sfide da fare insieme in `near`); 10 funzioni delle notifiche (run 43614174829, senza `s3-staging-send-web-push`); sito con build `us-rilascio-20261114-109` e Novità id `1.5.1`; poi AAB 1.5.1. Su staging prima: migrazioni (run 43506086376, 43613038149) e 11 funzioni (run 43613057381, 43613066146), prova con US LIVE.
+
+### La cosa di oggi: serie gentile, prima settimana, animazioni
+
+**Stato:** branch `claude/cosa-di-oggi`. Migrazione applicata su US-STAGING il 13/11 (run 43506086376, approvata dal founder) e controllata in sola lettura: `cosa_di_oggi` solo per `authenticated`, `private.feature_launches` con RLS e chiusa. Provata nell'emulatore con US LIVE sull'account di prova: risposta dell'altro account → «tocca a te» in tempo reale → risposta dal telefono → «Manda un Ti penso a …» → tocco, Ti penso vero → «Oggi ci siete stati tutti e due ♡»; poi, con la data della coppia di prova spostata al 12/11 solo su staging (era il 22/10 alle 15:34:58 UTC), «La vostra prima settimana · Fatto ♡ · Domani: la prima partita» con 2 pallini su 7. In prova trovati e corretti due difetti del telefono: una lettura che non risponde all'avvio non blocca più le successive (tempo massimo), e il «rileggi subito» dopo un Ti penso non riceve più la risposta di prima. Sito di staging non aggiornato (prova fatta con US LIVE dal PC). Non in produzione. Decisione: [DECISIONS.md, 13/11, «La cosa di oggi»](../DECISIONS.md).
+
+**Cosa cambia:** il riquadro della domanda su Oggi resta com'è fino alle risposte. Dopo, al posto di «Rivedi», propone «Manda un Ti penso a …» e poi «Oggi ci siete stati tutti e due ♡» con le due iniziali. La serie («♡ 12 giorni di fila») prende il posto di «Una domanda, due risposte». Per le coppie nuove, nei primi 21 giorni, dopo la domanda arriva il passo del giorno (primo Ti penso, prima partita, primo Ricordo, impegno nel calendario, Lasciato per te, widget sui telefoni Android), con 7 pallini e «Fatto ♡ · Domani: …». Alla fine «Settimana finita ♡» e 100 punti Sintonia, una volta sola. Animazioni: cuori e spunta, serie +1, le iniziali che si toccano, festa per settimana finita, nuovo record e traguardi (7, 14, 21, 30… giorni). Con «riduci animazioni» resta solo il riquadro della festa, senza movimento.
+
+**Server:** migrazione `20261113202138_cosa_di_oggi_v1.sql`: `public.cosa_di_oggi(widget)` per chi chiama (solo `authenticated`), conta serie, record e passi dai dati che ci sono già (nessun dato nuovo, informativa invariata); `private.feature_launches` segna quando parte la settimana guidata (le coppie già formate non la vedono). I 100 punti passano da `private.progression_award` (traguardo `guided-week`, fuori dal Ritmo).
+
+**Test:** `tests/cosa-di-oggi-db.test.js`, `tests/cosa-di-oggi-client.test.js`.
+
+**Novità per Play (proposta):** IT «Su Oggi, dopo la domanda, US vi propone il gesto successivo e conta i giorni di fila insieme. Le coppie nuove hanno una prima settimana guidata.» EN «On Today, after the question, US suggests what to do next and counts your days in a row together. New couples get a guided first week.»
+
+### Ritocchi visivi (revisione del 13/11)
+
+**Stato:** branch `claude/ritocchi-visivi` (nato da `claude/cosa-di-oggi`, commit `6b6dec3c`), provati nell'emulatore con US LIVE e approvati dal founder («Sì, salvali»). Non in produzione.
+
+**Cosa cambia:** Oggi leggibile anche su foto chiare (velo dietro i giorni insieme, ombra sui testi, pillole di vetro scuro; su Android la stessa ombreggiatura in basso del sito); la card della domanda in Gioca si chiama «La domanda di oggi»; calendario di Noi senza linee e con righe più basse, etichette dei giorni più grandi; etichetta delle schede di Oggi da 10 a 11 px. Solo CSS e due testi, niente SQL.
+
+**Aperto:** su Android, scorrendo, il titolo della pagina traspare sotto l'orologio anche con la fascia quasi opaca (causa da capire).
+
+### Revisione dei testi (14/11)
+
+**Stato:** branch `claude/revisione-testi` (nato da `claude/ritocchi-visivi`). Rapporto approvato dal founder il 14/11 («Sì, come consigli»): [missione](../missions/revisione-testi.md). Test mirati verdi; non ancora su staging né in produzione.
+
+**Cosa cambia:** circa 290 testi corretti in tutta l'app. Niente più genere indovinato («mandale», «vi siete messi insieme», «Siete vicini» → «Siete a meno di 3 km», «in amore» → «col cuore pieno»); un nome solo per la stessa cosa (punti e non XP, sfida e non missioni, «La domanda di oggi» anche nelle notifiche, «vissuto» per gli eventi); niente più «email e password» per chi entra con Google; «Avvisami» per US Plus; Impostazioni mostrano la versione vera dell'app («US 1.5.0») invece di «US 1.0»; i fogli Elimina account ed Esci dalla coppia hanno lo stesso elenco delle pagine legali. Pagine legali: elimina-account non dice più che non ci sono backup (la produzione ne fa uno al giorno), l'informativa dice che chi resta tiene lo spazio con i ricordi condivisi, i termini non parlano più di «versione 1.0»; date di aggiornamento al 14/11.
+
+**Server:** migrazione `20261113232109_revisione_testi.sql`, solo `update`: 29 domande del giorno, 57 carte dei giochi (`version + 1`), 1 ricetta, 10 carte di Questo o quello, 17 sfide e missioni, 18 premi. Tre sfide da fare insieme (abbraccio, messaggio nascosto, giornata perfetta) passano da `any` a `near`: le coppie a distanza e quelle che non hanno risposto a «Vi vedete spesso?» non le ricevono più (le `any` scendono da 10 a 7). I giorni e le settimane già mostrati tengono il loro testo. Funzioni da ripubblicare per i testi delle notifiche (`notification-core.mjs` e promemoria del calendario): tutte quelle che importano `notification-core.mjs`, più `calendar-reminders-worker` e `us-widget-state`.
+
+**Android (serve l'AAB):** titoli delle notifiche native (`UsPushNotices.java`), widget «Distanza e batteria» («< 3 km», descrizioni) e «Come stai» («col cuore pieno», «sui libri»).
+
+**Test:** `tests/revisione-testi-db.test.js` più le asserzioni aggiornate nei test dei moduli toccati.
+
+**Novità per Play:** nessuna voce a sé («Piccole correzioni»).
+
+### Promemoria del calendario: ora di Roma e «domani» (14/11)
+
+**Stato:** branch `claude/gallant-colden-6e4f75` (nato da `claude/revisione-testi`); test mirati verdi. Funzione non ancora pubblicata né su staging né in produzione.
+
+**I due difetti (N4 e N5 della revisione dei testi):** le Edge Function girano in UTC e l'ora del promemoria si leggeva dall'orologio del server, quindi per una cena alle 20:30 la notifica diceva «alle 19:30» (d'estate «alle 18:30»). I promemoria «1 giorno prima» e quelli degli eventi di tutto il giorno arrivano la sera prima, ma il testo non diceva che l'evento è domani.
+
+**Cosa cambia:** il testo si costruisce in `supabase/functions/_shared/calendar-reminder-copy.mjs`, con ora e giorno nel fuso di Roma. Per la tua persona: «Bea ti ricorda: Cena alle 20:30 ♡», e «Bea ti ricorda: Cena, domani alle 20:30 ♡» (o «…: Compleanno, domani ♡» per tutto il giorno) quando l'evento cade il giorno dopo. Per chi ha chiesto il promemoria: «Tra un’ora: Cena», «Domani alle 20:30: Cena», «Domani: Compleanno». Tolta `reminderCopy` da `calendar.js`, che serviva solo al vecchio test.
+
+**Da pubblicare:** solo la funzione `calendar-reminders-worker` (porta con sé il modulo condiviso); niente SQL, niente AAB. Va insieme alla ripubblicazione della revisione dei testi.
+
+**Test:** `tests/m6d-reminders.test.js` (girano in UTC come il server), `tests/f2c-edge-cron-source-truth.test.js` (il worker vero controlla l'ora di Roma).
+
+### Livelli giusti per Orbita e Cromo (14/11)
+
+**Stato:** branch `claude/livelli-countdown` (nato da `claude/revisione-testi`). Trovato dalla revisione dei testi. Test verdi; non ancora su staging né in produzione.
+
+**Il bug:** il server sblocca gli stili del countdown Orbita al livello 8 e Cromo al 10 (`20261029031726_sintonia_rewards_v2_phase1.sql`), ma l'app li dichiarava al 9 e al 12. La tessera bloccata (nello stile del countdown e nella Collezione di Sintonia) diceva «Livello 9» o «Livello 12» mentre «Prossimo sblocco» diceva 8 o 10.
+
+**Cosa cambia:** `countdown.js` ora dice 8 e 10, come il server; la Collezione legge da lì. Gli altri temi ed effetti di Oggi (`oggi-look.js`) erano già giusti. Solo il codice dell'app, niente SQL: va col sito e con l'AAB.
+
+**Test:** `tests/livelli-premi-client-db.test.js` confronta il livello di ogni stile, tema ed effetto con premio con `progression_reward_catalog` costruito da tutte le migrazioni: se un giorno si separano, il test fallisce. In `tests/rewards-countdown-visual-pass.test.js` Cromo bloccato ora dice «Livello 10».
+
+**Novità per Play:** nessuna voce a sé («Piccole correzioni»).
+
+### La mascotte non sparisce più
+
+**Stato:** commit della mascotte dentro lo stesso branch `claude/cosa-di-oggi` (nato da `claude/mascotte-visibile`), provata nell'emulatore di staging (US LIVE) il 13/11; non in produzione.
+
+**Il bug (segnalato dal founder in produzione, 13/11):** in Ricordi e in Gioca la mascotte spariva. Dal 06/11, quando sotto di lei c'era un comando, si «faceva da parte» diventando invisibile; in quelle pagine c'è quasi sempre una tessera sotto, quindi restava sparita.
+
+**Cosa cambia:** con un comando sotto, la mascotte resta al suo posto, normale (il founder non la vuole trasparente), e i tocchi le passano attraverso fino al comando (`pet.css`). Il problema del 06/11 (si prendeva il tocco dell'interruttore dell'impronta) resta risolto. Test: `tests/emulator-polish-20261106.test.js`. Nell'emulatore: Gioca scorsa su una tessera → `data-pet-aside`, visibile, tocco disattivato sulla mascotte (provata trasparente; poi tolta la trasparenza, cambia solo l'opacità).
+
+**Novità per Play:** nessuna voce a sé; va con il prossimo AAB («Piccole correzioni»).
+
+**Ordine in produzione (tutta la 1.5.1):** 1. database: `20261113202138_cosa_di_oggi_v1.sql`, poi `20261113232109_revisione_testi.sql` (workflow «Supabase SQL», target production, conferma PRODUZIONE); l'app già installata non chiama la prima e con la seconda vede solo testi nuovi. 2. Funzioni Supabase dei testi delle notifiche (revisione dei testi, sopra). 3. Sito: merge su `main` con build id di produzione e Novità id `1.5.1`. 4. Android: AAB nuovo (il web dell'app è dentro il pacchetto).
+
 ## Patch 1.5: versione pubblica, tre partite al giorno e «US Plus, in arrivo» (13/11/2026)
 
 **Stato:** provata il 13/11 nell'emulatore di staging (build `us-staging-20261113-107`, migrazioni su US-STAGING run 43456669485 e 43456698374: contatore «3 su 3», «Avvisatemi» salvato davvero). Uscita in produzione col via del founder («Sì, vai in prod», 13/11): build `us-rilascio-20261113-108`, Novità id `1.5`. Decisione: [DECISIONS.md, 13/11](../DECISIONS.md).

@@ -104,7 +104,7 @@ test('wired into Noi: the board under the calendar, the whole board in its Fogli
 
   const en = read('i18n-en.js');
   // A key is quoted, or a bare word (Bacheca: 'Board').
-  for (const it of ['Bacheca', 'Nuovo post-it', 'Tutti i post-it ({n})', 'Carta gialla', 'Insieme · fisso in cima', 'Le cose senza data: si scrive qui sopra']) {
+  for (const it of ['Bacheca', 'Nuovo post-it', 'Tutti i post-it ({n})', 'Carta gialla', 'Insieme · fisso in cima', 'Per le cose senza data']) {
     assert.ok(en.includes(`'${it}':`) || en.includes(`\n    ${it}:`), it);
   }
 });

@@ -17,7 +17,7 @@ const W = 'native-plugins/us-widget-bridge/android/src/main';
 test('Oggi asks once: only when the answer is known to be missing and this member has not opened it', () => {
   assert.equal(D.todayPriority({ known: false, mode: null }, false), null, 'not before the couple is read');
   const card = D.todayPriority({ known: true, mode: null }, false);
-  assert.deepEqual([card.title, card.detail, card.action, card.category], ['Una domanda per voi', 'Vi vedete spesso o vivete lontani?', 'distance', 'waiting_for_me']);
+  assert.deepEqual([card.title, card.detail, card.action, card.category], ['Una domanda per voi', 'Vi vedete spesso o vivete a distanza?', 'distance', 'waiting_for_me']);
   assert.equal(D.todayPriority({ known: true, mode: null }, true), null, 'opened once on this phone');
   assert.equal(D.todayPriority({ known: true, mode: 'far' }, false), null, 'answered by either member');
   assert.deepEqual(['near', 'far', null].map(D.settingValue), ['Spesso', 'A distanza', 'Da scegliere']);
@@ -34,14 +34,14 @@ test('the answer is one column of the couple, written like the name and the date
 test('copy: two plain answers, inclusive Italian, English aligned', () => {
   const sheet = html.match(/<div id="usDistanceSheet"[\s\S]*?<\/section>/)[0];
   assert.match(sheet, /data-distance="near"[^>]*><b>Ci vediamo spesso<\/b>/);
-  assert.match(sheet, /data-distance="far"[^>]*><b>Viviamo lontani<\/b>/);
+  assert.match(sheet, /data-distance="far"[^>]*><b>Viviamo a distanza<\/b>/);
   for (const banned of [/entrambi/i, /tutti e due/i, /ognuno/i, /l['’]altr[oa]/i, /\b\w+[oa]\/[ae]\b/]) assert.doesNotMatch(sheet, banned, String(banned));
   const en = read('i18n-en.js');
-  for (const key of ['Come vi vedete?', 'Ci vediamo spesso', 'Viviamo lontani', 'Da scegliere', 'Grazie: le missioni ora sono pensate per voi']) assert.ok(en.includes(`'${key}':`), key);
+  for (const key of ['Vi vedete spesso?', 'Ci vediamo spesso', 'Viviamo a distanza', 'Da scegliere', 'Grazie: ora la sfida è scelta per voi']) assert.ok(en.includes(`'${key}':`), key);
 });
 
 test('shell: Settings row, sheet, native back, Oggi card, reset, precache and both builds', () => {
-  assert.match(html, /data-us-setting="together-mode">[\s\S]*?<b>Come vi vedete<\/b>[\s\S]*?id="usDistanceValue"/);
+  assert.match(html, /data-us-setting="together-mode">[\s\S]*?<b>Vi vedete spesso\?<\/b>[\s\S]*?id="usDistanceValue"/);
   assert.match(html, /<div id="usDistanceSheet" class="us-distance-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>/);
   assert.match(read('settings.js'), /if\(name==='together-mode'\)return window\.UsDistance\?\.open\?\.\(\);/);
   assert.match(read('navigation.js'), /name:'distance',\n    find:\(\)=>document\.getElementById\('usDistanceSheet'\)/);

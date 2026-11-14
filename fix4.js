@@ -175,8 +175,8 @@
   const A11Y_LABELS = [
     ['.memory-refresh', 'Aggiorna il ricordo'],
     ['.moment-delete', 'Elimina ricordo'],
-    ['.us-story-close', 'Chiudi storia'],
-    ['.us-story-add-only', 'Aggiungi storia'],
+    ['.us-story-close', 'Chiudi la Story'],
+    ['.us-story-add-only', 'Aggiungi una Story'],
     ['.us-camera-icon-btn', 'Azione fotocamera']
   ];
   function ensureAccessibility(root = document) {

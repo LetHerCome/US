@@ -88,13 +88,13 @@ test('M11D waiting then reveal: partner only, once each, role-based dedupe', asy
   const first = await dispatchGameSessionPush(w.admin, { sessionId: s.id, actorId: w.f, ...w.options });
   assert.deepEqual([first.kind, first.outcome], ['game_waiting', 'delivered']);
   // US 1.0 (G11): the push names the game (game_sessions.game_family of the round).
-  assert.deepEqual(w.webpush.sent.map((x) => [x.endpoint, x.payload.body]), [['https://push.example/bea', 'Francesco ha finito Per voi: tocca a te']]);
+  assert.deepEqual(w.webpush.sent.map((x) => [x.endpoint, x.payload.body]), [['https://push.example/bea', 'Francesco ha giocato a «Per voi»: tocca a te']]);
   assert.equal((await dispatchGameSessionPush(w.admin, { sessionId: s.id, actorId: w.f, ...w.options })).outcome, 'deduplicated');
   await playSide(w.db, w.b, s.id);
   const reveal = await dispatchGameSessionPush(w.admin, { sessionId: s.id, actorId: w.b, ...w.options });
   assert.deepEqual([reveal.kind, reveal.outcome], ['game_reveal', 'delivered']);
   assert.deepEqual(w.webpush.sent.at(-1).endpoint, 'https://push.example/fra', 'the first finisher learns the reveal is ready');
-  assert.equal(w.webpush.sent.at(-1).payload.body, 'Per voi: le vostre risposte sono pronte ♡');
+  assert.equal(w.webpush.sent.at(-1).payload.body, 'Risposte pronte per «Per voi» ♡');
   assert.equal((await dispatchGameSessionPush(w.admin, { sessionId: s.id, actorId: w.f, ...w.options })).outcome, 'nothing-to-send', 'the first finisher never notifies the second of a reveal they just caused');
   assert.deepEqual((await log(w.db)).map((r) => [r.dedupe_key, r.event_type]), [
     [`game-reveal:${s.id}:francesco`, 'game_reveal'], [`game-waiting:${s.id}:beatrice`, 'game_waiting']]);
@@ -179,7 +179,7 @@ test('M11D worker: weekly turn once per Rome week, 9-22 only, never once the que
   assert.equal(early.reason, 'outside-window');
   const run = await dispatchGameV2PendingPushes(w.admin, { now: new Date(MON_ROME_10), ...w.options });
   assert.deepEqual(run.events.map((e) => [e.kind, e.outcome]), [['game_weekly_turn', 'delivered']]);
-  assert.deepEqual(w.webpush.sent.map((x) => [x.endpoint, x.payload.body]), [['https://push.example/bea', 'Questa settimana la domanda per voi la scegli tu.']]);
+  assert.deepEqual(w.webpush.sent.map((x) => [x.endpoint, x.payload.body]), [['https://push.example/bea', 'Questa settimana la domanda la scegli tu.']]);
   assert.equal((await log(w.db))[0].dedupe_key, `game-weekly-turn:${w.c}:2026-10-05`);
   assert.equal((await log(w.db))[0].sender_id, null, 'a system event has no sender');
   const again = await dispatchGameV2PendingPushes(w.admin, { now: new Date(MON_ROME_10), ...w.options });
@@ -279,7 +279,7 @@ test('M11D game-v2-push: game events carry only the reference; actor comes from 
   assert.equal(ok.status, 200);
   assert.deepEqual(ok.body, { kind: 'game_waiting', outcome: 'delivered', delivered: 1, failed: 0 });
   assert.deepEqual(calls, [{ target_session_id: sid, actor_id: 'fra' }], 'actor from the verified session, extra fields ignored');
-  assert.deepEqual(webpush.sent.map((s) => [s.endpoint, s.payload.body]), [['https://push.example/bea', 'Francesco ha finito Ridete: tocca a te']]);
+  assert.deepEqual(webpush.sent.map((s) => [s.endpoint, s.payload.body]), [['https://push.example/bea', 'Francesco ha giocato a «Ridete»: tocca a te']]);
   assert.equal((await post({ type: 'think', reference_id: sid })).status, 400, 'only game events');
   assert.equal((await fn.call(new Request('https://x/functions/v1/game-v2-push', { method: 'POST', body: '{}' }))).status, 401);
   const weekly = await post({ type: 'game_weekly', reference_id: sid });

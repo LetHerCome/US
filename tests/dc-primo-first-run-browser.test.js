@@ -148,7 +148,7 @@ test('first run: Tu with birthday, create, colour, invite; the partner joins; ea
     assert.equal(await text(partner.page,'#usSetupKicker'),'Posizione · 4 di 4');
     assert.equal(await text(partner.page,'#usSetupTitle'),'Anche da lontano');
     const points=await text(partner.page,'#usSetupPoints');
-    assert.match(points,/Mira vede solo la distanza, mai dove sei\./);assert.match(points,/Sotto i 3 km vedete solo «vicini»/);assert.match(points,/Solo mentre US è aperta/);
+    assert.match(points,/Mira vede solo la distanza, mai dove sei\./);assert.match(points,/Sotto i 3 km non vedete la distanza esatta/);assert.match(points,/Solo mentre US è aperta/);
     assert.doesNotMatch(points+await text(partner.page,'#usSetupBody'),/circa 1 km/);
     await partner.page.click('#usSetupSecondary');
     await partner.page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='ready');

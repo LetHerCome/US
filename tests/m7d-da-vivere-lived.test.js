@@ -13,7 +13,7 @@ const noi = () => read('index.html').match(/<section class="noi-idea-section"[\s
 
 test('M7D markup: one warm lived action, a quiet waiting line and a discreet memory bridge, all hidden by default', () => {
   assert.match(noi(), /id="noiIdeaDetailLivedWait"[^>]*hidden/);
-  assert.match(noi(), /id="noiIdeaDetailLived"[^>]*hidden>L'abbiamo vissuta</);
+  assert.match(noi(), /id="noiIdeaDetailLived"[^>]*hidden>L’abbiamo vissuta</);
   assert.match(noi(), /id="noiIdeaDetailMemory"[^>]*hidden/);
   assert.match(noi(), /id="noiIdeaDetailMemoryAdd"[^>]*>Aggiungi un ricordo</);
   assert.doesNotMatch(noi(), /workflow|stato:|step \d/i);
@@ -73,7 +73,7 @@ test('M7D runtime: A proposes and waits, B confirms, only then lived with the Ca
   await window.hydrateNoiIdeas();
   window.openNoiIdeaDetail('i1');
   assert.equal(el('noiIdeaDetailLived').hidden, false);
-  assert.equal(el('noiIdeaDetailLived').textContent, "L'abbiamo vissuta");
+  assert.equal(el('noiIdeaDetailLived').textContent, 'L’abbiamo vissuta');
   assert.equal(el('noiIdeaDetailLivedWait').hidden, true);
   const click = vm.runInContext('markNoiIdeaLived', context);
   responses.push({ data: { id: 'i1', status: 'scheduled', calendar_entry_id: 'e1', completed_at: null, lived_proposed_by: 'u1' }, error: null });
@@ -92,8 +92,8 @@ test('M7D runtime: A proposes and waits, B confirms, only then lived with the Ca
   await window.hydrateNoiIdeas();
   window.openNoiIdeaDetail('i1');
   assert.equal(el('noiIdeaDetailLived').hidden, false);
-  assert.equal(el('noiIdeaDetailLived').textContent, "Sì, l'abbiamo vissuta");
-  assert.equal(el('noiIdeaDetailLivedWait').textContent, "Francesco dice che l'avete vissuta");
+  assert.equal(el('noiIdeaDetailLived').textContent, 'Sì, l’abbiamo vissuta');
+  assert.equal(el('noiIdeaDetailLivedWait').textContent, 'Francesco dice che l’avete vissuta');
   await click(); // first tap only arms the final confirm
   assert.equal(calls.length, 1);
   responses.push({ data: { id: 'i1', status: 'lived', calendar_entry_id: 'e1', completed_at: '2026-09-29T10:00:00Z', lived_proposed_by: 'u1' }, error: null });
