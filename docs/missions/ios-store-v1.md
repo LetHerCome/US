@@ -138,7 +138,7 @@ La schermata di blocco la vede chiunque: niente foto e niente testi privati. Nom
 | W3 | Ricordi a pila, Lasciato per te, Lavagna, Post-it | |
 | W4 | schermata di blocco (§4.2) e Controllo «Ti penso» | |
 
-Prima del codice: l'ordine delle fasi e il set della schermata di blocco scelti dal founder, e i disegni SwiftUI Pastello/Midnight approvati. Ogni fase: PR verde in `ios-native.yml`, build TestFlight pronta da lanciare; niente lancio né merge senza il via del founder, e non prima che Bea confermi la build 1.5.0 (457497).
+**Scelte del founder (14/11/2026, `DECISIONS.md`):** quest'ordine; sulla schermata di blocco A, B, E, F, G e il Controllo (non C, D, H per ora); il battito del cuore dentro il widget; i passi per iPhone in Impostazioni › Widget. Prima del codice: i disegni SwiftUI Pastello/Midnight approvati. Ogni fase: PR verde in `ios-native.yml`, build TestFlight pronta da lanciare; niente lancio né merge senza il via del founder, e non prima che Bea confermi la build 1.5.0 (457497).
 
 ### 4.4 Firma: cosa fa la CI e cosa deve fare il founder
 
