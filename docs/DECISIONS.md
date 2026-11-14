@@ -33,10 +33,10 @@ Only durable decisions belong here. New missions should not reopen them without 
 
 ### Native iOS (M15)
 
-- iOS is a Capacitor 8 target in `ios/` (Swift Package Manager) sharing the Android web bundle; bundle id `com.usapp.us`, deployment target **iOS 16.0**.
+- iOS is a Capacitor 8 target in `ios/` (Swift Package Manager) sharing the Android web bundle; deployment target **iOS 16.0**. Bundle id **`app.uscouple`** (13/11/2026: `com.usapp.us` was already taken on Apple; Android, Play and Firebase keep `com.usapp.us`). Team ID `KW79XL4LBZ` (individual account, Francesco Monti).
 - Shared product JS stays platform-neutral; iOS specifics live in `ios/` and native-only glue in `native-entry.mjs` / `app-links.mjs`.
 - iOS Back = left-edge swipe into `UsNavigation.handleNativeBack()`; never exits the app.
-- Public URL scheme `com.usapp.us`; reserved App Group `group.com.usapp.us.shared` for all future extensions; refresh tokens never go in the App Group.
+- Public URL scheme `com.usapp.us` (shared with Android, unchanged); reserved App Group `group.app.uscouple.shared` for all future extensions; refresh tokens never go in the App Group.
 - WebView data (session) is excluded from iOS backups, mirroring Android `allowBackup=false`.
 - The iOS WebView origin (`capacitor://localhost`) is frozen: changing it orphans stored sessions.
 
@@ -469,6 +469,17 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Bacheca:** in cima la **lavagna** da disegnare in due (una sola; ogni tratto si salva quando si alza il dito e l'altro lo vede in 1-2 secondi; «Pulisci» chiede conferma; notifica al massimo ogni 2 ore, spegnibile; widget «Lavagna» con l'ultimo disegno, chiaro e scuro, che apre la lavagna). Sotto i **post-it**, scritti e spuntati sul posto, carta a scelta tra quattro colori con l'autore in basso, al massimo 6 su Noi più «Tutti i post-it». Un post-it fisso **«Da vivere»** prende il posto di «Le vostre idee», con le idee già scritte.
 - **Sfida della settimana** al posto delle missioni: una sola, scelta da US secondo «Come vi vedete», un cambio a settimana; in Gioca sotto la domanda del giorno, e su Oggi da venerdì se non è fatta. Si chiude con la foto di uno dei due (coppie a distanza: due foto affiancate; una sola a domenica vale 30 punti). La foto diventa un Ricordo segnato «Sfida». 60 punti fissi; scade domenica alle 23:59 di Roma senza penalità; 100 punti in più ogni 4 settimane di fila. Notifiche il lunedì mattina e il sabato se non è fatta, spegnibili.
 - **Come si procede:** prima le tavole che mancano (bacheca intera, lavagna aperta, sfida in Gioca e su Oggi, sfida a distanza); dopo l'ok del founder tre fasi su staging in tre sessioni parallele (Noi e bacheca; lavagna e widget; sfida). In produzione tutto insieme, solo dopo l'approvazione del founder; ogni migrazione e ogni passo con la sua approvazione.
+
+## 2026-11-05 — iPhone adesso (cambia D3)
+
+**Fonte:** richiesta del founder del 05/11/2026, arrivata dalla sessione principale: portare iOS al livello della produzione Android adesso, per comprare l'account Apple Developer il prima possibile (iOS è al 36,5% in Italia; in circa una coppia su due c'è un iPhone, che oggi usa solo il sito). Missione: `docs/missions/ios-store-v1.md`.
+
+- **D3 cambia:** Apple non aspetta più la fine di Android. Android resta com'è; l'app iOS si prepara adesso, senza account, e si pubblica dopo l'acquisto.
+- **Restano** le scelte iOS del 06/10 (iOS 16, SPM, schema `com.usapp.us` — il bundle iOS è `app.uscouple` dal 13/11, App Group riservato, origine congelata, swipe Indietro, APNs diretto, Face ID/Touch ID).
+- **Proposte tecniche della missione, da confermare o cambiare dal founder:** stessa icona di Android 1.4 e stesse icone premio, con l'inquadratura del launcher Android (dagli asset APPROVED); schermata di lancio `#26142E` come la splash Android; solo iPhone nel primo rilascio; italiano e inglese; numero di build come il `versionCode` di Play; firma e caricamento su TestFlight solo dal CI (`ios-testflight.yml`, ambiente `ios-deploy`).
+- **Accesso su iPhone (founder, stesso giorno: «Apple e Google»):** Sign in with Apple e Google già nel primo rilascio iOS (strada A della missione, §3). Google su iPhone senza l'SDK di Google: browser di sistema con PKCE, come Credential Manager su Android non porta pacchetti di terzi. Quando si elimina un account Apple, US revoca il token di Apple dal server (regola 5.1.1(v), TN3194).
+- **Da decidere dal founder:** ordine delle fasi dei widget.
+- **Governance:** acquisto dell'account, push, workflow, merge, secret e pubblicazione hanno ciascuno il suo via esplicito.
 
 ## 2026-11-13 — Versione pubblica: tre partite al giorno e «US Plus, in arrivo»
 

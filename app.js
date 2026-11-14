@@ -2425,6 +2425,38 @@ for(const [id,statusId] of [['usGoogleSignIn','loginStatus'],['usGoogleSignUp','
     setAuthStatus(statusId,US_GOOGLE_SIGN_IN_ERRORS[result.kind]||'Non riesco ad accedere con Google. Riprova.','error');
   });
 })();
+// Accedi con Apple (iOS Store V1, 05/11/2026): App Store rule 4.8, next to Google on
+// the iPhone. google-auth.js UsAppleAuth shows it only where the native plugin is.
+// Apple gives the name only at the first sign-in: kept for this session so the
+// onboarding starts from it (Apple: never ask again what it already gave).
+window.usAppleAuth = window.usS31Auth && window.UsAppleAuth?.create?.({auth:sb.auth}) || null;
+const US_APPLE_SIGN_IN_ERRORS=Object.freeze({
+  unavailable:'Accesso con Apple non disponibile su questo telefono.'
+});
+for(const [id,statusId] of [['usAppleSignIn','loginStatus'],['usAppleSignUp','usSignupStatus']])(function mountAppleSignIn(){
+  const button=document.getElementById(id);
+  if(!button||!window.usAppleAuth?.supported?.())return;
+  button.hidden=false;
+  const label=button.querySelector('.us-auth-apple-label');
+  button.addEventListener('click',async()=>{
+    if(button.disabled)return;
+    button.disabled=true;
+    if(label)label.textContent='Accesso…';
+    setAuthStatus(statusId,'');
+    const result=await window.usAppleAuth.signIn();
+    if(label)label.textContent='Continua con Apple';
+    button.disabled=false;
+    if(result.ok&&result.kind==='signed_in'){
+      if(result.name)try{sessionStorage.setItem('us:apple-name:v1',JSON.stringify({uid:result.userId,name:result.name}));}catch(_){}
+      usOnboarding.setup?.markPasswordSignIn?.(result.userId);
+      await initCloud();
+      return;
+    }
+    // Closing Apple's sheet is a choice, not an error.
+    if(result.ok||result.kind==='cancelled')return;
+    setAuthStatus(statusId,US_APPLE_SIGN_IN_ERRORS[result.kind]||'Non riesco ad accedere con Apple. Riprova.','error');
+  });
+})();
 (function mountGoogleTerms(){
   const form=document.getElementById('usGoogleTerms');
   const box=document.getElementById('usGoogleTermsBox'),submit=document.getElementById('usGoogleTermsSubmit');

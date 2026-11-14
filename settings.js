@@ -725,16 +725,24 @@ function loadAccountDeletion(){
 }
 
 // Accesso con Google (25/10/2026): an account without a password confirms
-// deletion and leaving with Google again (google-auth.js, Android only).
+// deletion and leaving with Google again (google-auth.js, Android and iPhone).
+// Accedi con Apple (05/11/2026): an Apple account confirms with Apple (iPhone).
+// `google` keeps its old meaning, "no password: the provider confirms".
 async function accountReauthMode(){
   let user=null;
   try{const {data}=await sb.auth.getSession();user=data?.session?.user||null;}catch(_){}
-  const google=Boolean(user&&window.UsGoogleAuth?.usesGoogle?.(user)&&!window.UsGoogleAuth?.hasPassword?.(user));
-  const available=!google||Boolean(window.usGoogleAuth?.native&&window.usGoogleAuth?.supported?.());
-  return {user,google,available,client:google&&available?window.usGoogleAuth:null};
+  const auth=window.UsGoogleAuth;
+  const noPassword=Boolean(user&&!auth?.hasPassword?.(user));
+  const provider=noPassword&&auth?.usesGoogle?.(user)?'google':noPassword&&auth?.usesApple?.(user)?'apple':'';
+  const client=provider==='apple'?window.usAppleAuth:provider==='google'?window.usGoogleAuth:null;
+  const available=!provider||Boolean(client?.native&&client?.supported?.());
+  return {user,google:Boolean(provider),provider,available,client:provider&&available?client:null};
 }
 function reauthField(mode,id,support){
   if(!mode.google)return `<label class="us-settings2-field"><span>Password del tuo account</span><input id="${id}" type="password" autocomplete="current-password" required></label>`;
+  if(mode.provider==='apple')return mode.available
+    ?'<p class="us-settings2-modal-copy">Accedi con Apple: per confermare ti chiederemo di accedere di nuovo con il tuo account Apple.</p>'
+    :`<p class="us-settings2-modal-copy">Accedi con Apple: per confermare usa US sull’iPhone, oppure scrivi a <b>${support}</b>.</p>`;
   return mode.available
     ?'<p class="us-settings2-modal-copy">Accedi con Google: per confermare ti chiederemo di scegliere di nuovo il tuo account Google.</p>'
     :`<p class="us-settings2-modal-copy">Accedi con Google: per confermare usa US sul telefono Android, oppure scrivi a <b>${support}</b>.</p>`;

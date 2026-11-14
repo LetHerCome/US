@@ -7,6 +7,11 @@
 //   - below the minimum, US stays behind «Aggiorna US» until it is updated.
 // Native only; the web app updates through its service worker. Offline or
 // with no answer nothing happens and nothing blocks.
+// iPhone (iOS Store V1, 05/11/2026): the same plugin asks the App Store, which
+// has no in-app update: below the minimum «Aggiorna» opens the App Store page.
+// The store may not answer (an app not yet in the App Store, a failed lookup):
+// the installed build is then read from the app itself (App.getInfo), so the
+// minimum still holds. iOS builds are numbered like Play's versionCode.
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -18,6 +23,12 @@
   const CHECK_GAP_MS = 6 * 3600e3;    // on resume, at most every 6 hours
   const ASK_AGAIN_MS = 24 * 3600e3;   // Play's download prompt, once a day per version
   const ASKED = (code) => `us:app-update:v1:asked:${code}`;
+  // The App Store's numeric id of US (App Store Connect › App Information ›
+  // Apple ID). The plugin reads appId only on iOS; Android opens Play by
+  // package name. App record «US: app per coppie» (app.uscouple), created
+  // 13/11/2026 (docs/store/ios/GIORNO_ACQUISTO.md).
+  const APP_STORE_ID = '6834589989';
+  const storeOptions = (appStoreId) => (/^[0-9]{6,12}$/.test(String(appStoreId || '')) ? { appId: String(appStoreId) } : undefined);
 
   function updatePlan({ info, minVersionCode }) {
     const current = Number(info?.currentVersionCode);
@@ -33,7 +44,7 @@
     return { kind: 'none' };
   }
 
-  function createAppUpdater({ plugin, platformName, readMin, ui, storage, now = () => Date.now() }) {
+  function createAppUpdater({ plugin, platformName, readMin, readInstalled = null, appStoreId = APP_STORE_ID, ui, storage, now = () => Date.now() }) {
     let lastCheck = -Infinity, blocked = false, listening = false, busy = null;
     const get = (key) => { try { return storage?.getItem?.(key) ?? null; } catch (_) { return null; } };
     const set = (key, value) => { try { storage?.setItem?.(key, String(value)); } catch (_) {} };
@@ -56,7 +67,7 @@
             const result = await Promise.resolve(plugin.performImmediateUpdate()).catch(() => null);
             if (result?.code === OK) return;
           }
-          await Promise.resolve(plugin.openAppStore?.()).catch(() => {});
+          await Promise.resolve(plugin.openAppStore?.(storeOptions(appStoreId))).catch(() => {});
         },
       });
     }
@@ -64,7 +75,15 @@
     async function run() {
       lastCheck = now();
       let info = null;
-      try { info = await plugin.getAppUpdateInfo(); } catch (_) { return { kind: 'none' }; }
+      try { info = await plugin.getAppUpdateInfo(); } catch (_) { info = null; }
+      // No answer from the store: only the installed build, for the minimum.
+      if (!info && typeof readInstalled === 'function') {
+        try {
+          const build = (await readInstalled())?.build;
+          info = build ? { currentVersionCode: String(build) } : null;
+        } catch (_) { info = null; }
+      }
+      if (!info) return { kind: 'none' };
       // Unreadable (signed out, offline): 0 for now, and asked again next time.
       let min = 0;
       try { min = Number(await readMin(platformName)) || 0; } catch (_) { min = 0; lastCheck = -Infinity; }
@@ -122,12 +141,14 @@
   function start({ readMin, platform = globalThis.UsPlatform, doc = globalThis.document } = {}) {
     const plugin = platform?.isNative ? platform.getNativePlugin?.('AppUpdate') : null;
     if (!plugin || typeof readMin !== 'function' || !doc) return null;
-    const updater = createAppUpdater({ plugin, platformName: platform.platformName, readMin, ui: domUi(doc), storage: globalThis.localStorage });
+    const app = platform.getNativePlugin?.('App');
+    const readInstalled = typeof app?.getInfo === 'function' ? () => app.getInfo() : null;
+    const updater = createAppUpdater({ plugin, platformName: platform.platformName, readMin, readInstalled, ui: domUi(doc), storage: globalThis.localStorage });
     // After the first screen has settled, and whenever US comes back.
     setTimeout(() => { updater.check(); }, 2500);
     doc.addEventListener('visibilitychange', () => { if (doc.visibilityState === 'visible') updater.check(); });
     return updater;
   }
 
-  return Object.freeze({ updatePlan, createAppUpdater, start });
+  return Object.freeze({ updatePlan, createAppUpdater, storeOptions, start });
 });

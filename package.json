@@ -28,6 +28,7 @@
     "@supabase/supabase-js": "2.112.4",
     "@us/app-icon": "file:native-plugins/us-app-icon",
     "@us/app-lock": "file:native-plugins/us-app-lock",
+    "@us/apple-signin": "file:native-plugins/us-apple-signin",
     "@us/google-signin": "file:native-plugins/us-google-signin",
     "@us/photo-place": "file:native-plugins/us-photo-place",
     "@us/push-support": "file:native-plugins/us-push-support",

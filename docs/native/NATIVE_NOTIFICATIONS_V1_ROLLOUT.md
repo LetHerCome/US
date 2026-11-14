@@ -45,10 +45,10 @@ functions before the migration is also safe for the same reason, but the order a
 
 ## 4. Apple (iOS)
 
-1. Apple Developer → Identifiers → `com.usapp.us` → enable **Push Notifications**.
+1. Apple Developer → Identifiers → `app.uscouple` (the iOS bundle id) → enable **Push Notifications**.
 2. Keys → create an **APNs Auth Key** (.p8). Note the Key ID and the Team ID.
 3. `supabase secrets set APNS_KEY_ID=… APNS_TEAM_ID=… APNS_PRIVATE_KEY="$(cat AuthKey_XXXX.p8)"`
-   (`APNS_TOPIC` optional, defaults to `com.usapp.us`).
+   (`APNS_TOPIC` optional, defaults to `app.uscouple`).
 4. Signing: the app's provisioning profiles must include the Push capability. `App.entitlements` declares
    `aps-environment = development`; Xcode/App Store distribution signing rewrites it to `production` for
    TestFlight/App Store builds. The app reports which APNs environment its token belongs to.

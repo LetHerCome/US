@@ -1261,8 +1261,14 @@
     togetherYears().forEach(year=>dateYear.add(new Option(String(year),String(year))));
     const tour=mountTour({openStep});
     const setup=mountSetup();
+    // Accedi con Apple (05/11/2026): Apple gives the name only at the first sign-in
+    // (app.js keeps it for this session); the field starts from it, still editable.
+    function appleName(uid){
+      try{const saved=JSON.parse(sessionStorage.getItem('us:apple-name:v1')||'null');return saved&&uid&&saved.uid===uid&&validName(saved.name)?saved.name.trim():'';}
+      catch(_){return '';}
+    }
     function fillMe(){
-      node('mc3Name').value=me.name;
+      node('mc3Name').value=me.name||appleName(meFor);
       daySelect.value=me.birthday?String(me.birthday.day):'';
       monthSelect.value=me.birthday?String(me.birthday.month):'';
     }

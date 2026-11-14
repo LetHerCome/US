@@ -52,6 +52,9 @@ function message(kind,supportEmail=US_SUPPORT_EMAIL,channel='web'){
     case 'google_cancelled':return 'Conferma con Google annullata. Non è cambiato nulla.';
     case 'google_other_account':return 'Hai scelto un altro account Google: scegli quello con cui accedi a US.';
     case 'google_failed':return 'Non riesco a confermare con Google. Riprova tra poco.';
+    case 'apple_cancelled':return 'Conferma con Apple annullata. Non è cambiato nulla.';
+    case 'apple_other_account':return 'Hai usato un altro account Apple: usa quello con cui accedi a US.';
+    case 'apple_failed':return 'Non riesco a confermare con Apple. Riprova tra poco.';
     default:return 'Eliminazione non riuscita: non è stato eliminato nulla. Riprova tra poco.';
   }
 }
@@ -107,13 +110,15 @@ async function freshAccessToken({client,email,password}={}){
 }
 
 // The Google path: Google's sheet again, the same account (google-auth.js).
+// The Apple client (UsAppleAuth, 05/11/2026) has the same shape: provider 'apple'.
 async function freshGoogleToken({google,user}={}){
   if(typeof google?.reauthenticate!=='function'||!user)return {kind:'unavailable',done:false};
+  const who=google.provider==='apple'?'apple':'google';
   let result;
-  try{result=await google.reauthenticate(user);}catch(_){return {kind:'google_failed',done:false};}
+  try{result=await google.reauthenticate(user);}catch(_){return {kind:`${who}_failed`,done:false};}
   if(result?.ok&&result.accessToken)return {accessToken:result.accessToken};
-  const kinds={cancelled:'google_cancelled',other_account:'google_other_account'};
-  return {kind:kinds[result?.kind]||'google_failed',done:false};
+  const kinds={cancelled:`${who}_cancelled`,other_account:`${who}_other_account`};
+  return {kind:kinds[result?.kind]||`${who}_failed`,done:false};
 }
 const freshToken=({client,email,password,google,user})=>google?freshGoogleToken({google,user}):freshAccessToken({client,email,password});
 
