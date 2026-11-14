@@ -1,5 +1,7 @@
 # Prossima patch in produzione
 
+> **Regola (founder, 14/11/2026): ogni patch va in tutte e due le app.** Dalla beta Apple in poi, ogni rilascio esce dallo stesso commit di `main` sia come AAB per Play (workflow «Android Play bundle») sia come build TestFlight (workflow `ios-testflight.yml`), con **lo stesso numero di versione** (es. 1.5.2 e 1.5.2). Ordine: staging → SQL e funzioni in produzione → merge su `main` (sito) → AAB + TestFlight. Le parti native (widget, notifiche native, accesso Apple/Google) sono separate: un fix lì va fatto per ciascuna piattaforma o vale per una sola, e la nota lo dice. Le prove iOS le fa Bea da TestFlight.
+
 ## Prossima patch (dopo la 1.5.1)
 
 ### Iscrizione: prima il codice, poi la domanda (14/11)
