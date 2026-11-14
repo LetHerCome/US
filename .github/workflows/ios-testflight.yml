@@ -8,6 +8,9 @@ name: iOS TestFlight (App Store Connect)
 #   (required reviewer: the founder). Nothing runs on push.
 # - Signing: Xcode automatic signing with an App Store Connect API key
 #   (cloud-managed distribution certificate, profiles created by xcodebuild).
+#   The archive is signed straight away with "Apple Distribution" (App Store
+#   profile): the team has no registered iPhone, and a development profile
+#   needs one (first run 14/11/2026: "Your team has no devices").
 #   No certificate, profile or Team ID is committed to the repository.
 # - The .ipa is never an artifact (the repository is public): xcodebuild
 #   uploads it straight to App Store Connect (ExportOptions destination=upload).
@@ -132,6 +135,7 @@ jobs:
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             MARKETING_VERSION="$US_IOS_VERSION_NAME" \
             CURRENT_PROJECT_VERSION="$US_IOS_BUILD_NUMBER" \
             archive | tee build/xcodebuild-archive.log | grep -E "warning:|error:|ARCHIVE (SUCCEEDED|FAILED)" || true
