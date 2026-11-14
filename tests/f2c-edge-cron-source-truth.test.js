@@ -273,7 +273,9 @@ test('F2C calendar-reminders-worker: configures VAPID before Web Push and before
   assert.equal(webpush.sent.length, 1);
   const { payload, options } = webpush.sent[0];
   assert.equal(payload.title, 'US. · Calendario');
-  assert.match(payload.body, /^Bea ti ricorda: Cena alle \d\d:\d\d ♡$/);
+  // Ora di Roma, non dell'orologio del server; «domani» se l'evento passa la mezzanotte.
+  const romeTime = new Intl.DateTimeFormat('it-IT', { timeZone: 'Europe/Rome', hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }).format(new Date(admin.db.calendar_entries[0].starts_at));
+  assert.match(payload.body, new RegExp(`^Bea ti ricorda: Cena(, domani)? alle ${romeTime} ♡$`));
   assert.equal(payload.tag, 'calendar-reminder-r1');
   assert.deepEqual(options, { TTL: 43200, urgency: 'high' });
   assert.deepEqual(admin.db.push_event_log.map((r) => [r.dedupe_key, r.event_type]), [['calendar-reminder:r1', 'calendar_reminder']]);

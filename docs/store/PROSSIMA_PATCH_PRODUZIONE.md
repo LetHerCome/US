@@ -36,6 +36,18 @@
 
 **Novità per Play:** nessuna voce a sé («Piccole correzioni»).
 
+### Promemoria del calendario: ora di Roma e «domani» (14/11)
+
+**Stato:** branch `claude/gallant-colden-6e4f75` (nato da `claude/revisione-testi`); test mirati verdi. Funzione non ancora pubblicata né su staging né in produzione.
+
+**I due difetti (N4 e N5 della revisione dei testi):** le Edge Function girano in UTC e l'ora del promemoria si leggeva dall'orologio del server, quindi per una cena alle 20:30 la notifica diceva «alle 19:30» (d'estate «alle 18:30»). I promemoria «1 giorno prima» e quelli degli eventi di tutto il giorno arrivano la sera prima, ma il testo non diceva che l'evento è domani.
+
+**Cosa cambia:** il testo si costruisce in `supabase/functions/_shared/calendar-reminder-copy.mjs`, con ora e giorno nel fuso di Roma. Per la tua persona: «Bea ti ricorda: Cena alle 20:30 ♡», e «Bea ti ricorda: Cena, domani alle 20:30 ♡» (o «…: Compleanno, domani ♡» per tutto il giorno) quando l'evento cade il giorno dopo. Per chi ha chiesto il promemoria: «Tra un’ora: Cena», «Domani alle 20:30: Cena», «Domani: Compleanno». Tolta `reminderCopy` da `calendar.js`, che serviva solo al vecchio test.
+
+**Da pubblicare:** solo la funzione `calendar-reminders-worker` (porta con sé il modulo condiviso); niente SQL, niente AAB. Va insieme alla ripubblicazione della revisione dei testi.
+
+**Test:** `tests/m6d-reminders.test.js` (girano in UTC come il server), `tests/f2c-edge-cron-source-truth.test.js` (il worker vero controlla l'ora di Roma).
+
 ### La mascotte non sparisce più
 
 **Stato:** commit della mascotte dentro lo stesso branch `claude/cosa-di-oggi` (nato da `claude/mascotte-visibile`), provata nell'emulatore di staging (US LIVE) il 13/11; non in produzione.

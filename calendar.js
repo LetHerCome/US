@@ -409,14 +409,6 @@ function reminderRowsFor({ entryType, target, requesterId, partnerId, offsetMinu
     offset_minutes: offsetMinutes
   }));
 }
-// Copia della notifica: self → "Tra un'ora — Titolo"; partner →
-// "Francesco ti ricorda — Cena alle 20:30 ♡" (display name reale dal profilo).
-function reminderCopy({ selfRecipient, requesterName, title, startsAt, allDay }) {
-  if (selfRecipient) return '— ' + title;
-  const hhmm = startsAt ? new Date(startsAt) : null;
-  const when = allDay || !hhmm ? '' : ' alle ' + pad2(hhmm.getHours()) + ':' + pad2(hhmm.getMinutes());
-  return requesterName + ' ti ricorda — ' + title + when + ' ♡';
-}
 
 function buildEntryPayload({ title, description, location, allDay, date, time, durationMinutes, spanDays }) {
   if (allDay) {
@@ -635,7 +627,7 @@ const pureApi = {
   formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
   shiftISODate, originalAllDaySpanDays,
   monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, US_FREE_EVENING, freeEveningFor, tempoWindowLabel,
-  normalizeQuickTime, maskClockTyping, addCalendarPreset, removeCalendarPreset, CALENDAR_BUILTIN_PRESETS, addClockMinutes, durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor, reminderCopy,
+  normalizeQuickTime, maskClockTyping, addCalendarPreset, removeCalendarPreset, CALENDAR_BUILTIN_PRESETS, addClockMinutes, durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor,
   buildEntryPayload, withCreateAuthority, canEditEntry,
   quickEntryError, quickEntryHiddenFields, classifyMutationResult,
   oggiEventLabel, composeOggiCalendarFact, oggiRemainingWindows, oggiNextCommitment,
