@@ -60,6 +60,11 @@ on:
       - 'tests/ios-sign-in-v1.test.js'
       - 'tests/native-performance-ux-v1.test.js'
       - 'tests/ricordi-thumbnails-v1.test.js'
+      - 'native-plugins/us-widget-bridge/**'
+      - 'widget-hub.js'
+      - 'tests/ios-widgets-w0.test.js'
+      - 'scripts/ios-asc-signing.mjs'
+      - 'tests/ios-asc-signing.test.js'
       - '.github/workflows/ios-native.yml'
   pull_request:
     paths:
@@ -108,6 +113,11 @@ on:
       - 'google-auth.js'
       - 'tests/google-auth-v1.test.js'
       - 'tests/ios-sign-in-v1.test.js'
+      - 'native-plugins/us-widget-bridge/**'
+      - 'widget-hub.js'
+      - 'tests/ios-widgets-w0.test.js'
+      - 'scripts/ios-asc-signing.mjs'
+      - 'tests/ios-asc-signing.test.js'
       - '.github/workflows/ios-native.yml'
 
 permissions:
@@ -141,7 +151,7 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/ricordi-inline-feed-v2.test.js tests/ricordi-carousel-v1.test.js tests/centered-popups-v1.test.js tests/native-frameless-v1.test.js tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js tests/sec-rls-hardening.test.js tests/ios-store-v1.test.js tests/app-update.test.js tests/app-icons.test.js tests/ios-sign-in-v1.test.js tests/google-auth-v1.test.js
+        run: node --test tests/ricordi-inline-feed-v2.test.js tests/ricordi-carousel-v1.test.js tests/centered-popups-v1.test.js tests/native-frameless-v1.test.js tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js tests/sec-rls-hardening.test.js tests/ios-store-v1.test.js tests/app-update.test.js tests/app-icons.test.js tests/ios-sign-in-v1.test.js tests/google-auth-v1.test.js tests/ios-widgets-w0.test.js tests/ios-asc-signing.test.js
 
       - name: App lock policy checks (host swiftc, no simulator)
         run: |
@@ -173,6 +183,15 @@ jobs:
             native-plugins/us-apple-signin/ios/Tests/PolicyCheck/main.swift \
             -o build/us-apple-signin-policy-check
           build/us-apple-signin-policy-check
+
+      # Widgets (W0): the Foundation-only core shared by the plugin and the
+      # WidgetKit extension (contract, App Group store, credential rules, models).
+      - name: Widget core checks (host swiftc, no simulator)
+        run: |
+          swiftc native-plugins/us-widget-bridge/ios/Sources/UsWidgetBridgePlugin/Core/*.swift \
+            native-plugins/us-widget-bridge/ios/Tests/CoreCheck/main.swift \
+            -o build/us-widget-core-check
+          build/us-widget-core-check
 
       - name: npm run build:capacitor-web
         run: npm run build:capacitor-web
@@ -244,6 +263,14 @@ jobs:
           if /usr/libexec/PlistBuddy -c 'Print :UIDeviceFamily:1' "$APP/Info.plist" >/dev/null 2>&1; then echo "::error::Solo iPhone nel primo rilascio"; exit 1; fi
           test -f "$APP/PrivacyInfo.xcprivacy"
           plutil -lint "$APP/PrivacyInfo.xcprivacy"
+          # Widgets (W0, W1): the bridge in the app, the WidgetKit extension inside it.
+          grep -q UsWidgetBridgePlugin "$APP/capacitor.config.json"
+          EXT="$APP/PlugIns/UsWidgets.appex"
+          test -d "$EXT"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$EXT/Info.plist")" = "app.uscouple.widgets"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionPointIdentifier' "$EXT/Info.plist")" = "com.apple.widgetkit-extension"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$EXT/Info.plist")" = "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist")"
+          for file in Fraunces.ttf Fraunces-Italic.ttf Figtree.ttf art_photo.webp art_photo_night.webp art_think_s.webp art_think_m_night.webp grain_tile.png; do test -f "$EXT/$file"; done
 
       # Proof the app starts: the unsigned Debug build in a booted iPhone
       # simulator, a screenshot of what it shows (the sign-in screen: nothing

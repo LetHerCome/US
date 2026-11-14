@@ -20,7 +20,8 @@ let package = Package(
         .package(name: "UsAppLock", path: "../../../native-plugins/us-app-lock"),
         .package(name: "UsAppleSignin", path: "../../../native-plugins/us-apple-signin"),
         .package(name: "UsGoogleSignin", path: "../../../native-plugins/us-google-signin"),
-        .package(name: "UsPushSupport", path: "../../../native-plugins/us-push-support")
+        .package(name: "UsPushSupport", path: "../../../native-plugins/us-push-support"),
+        .package(name: "UsWidgetBridge", path: "../../../native-plugins/us-widget-bridge")
     ],
     targets: [
         .target(
@@ -36,7 +37,8 @@ let package = Package(
                 .product(name: "UsAppLock", package: "UsAppLock"),
                 .product(name: "UsAppleSignin", package: "UsAppleSignin"),
                 .product(name: "UsGoogleSignin", package: "UsGoogleSignin"),
-                .product(name: "UsPushSupport", package: "UsPushSupport")
+                .product(name: "UsPushSupport", package: "UsPushSupport"),
+                .product(name: "UsWidgetBridge", package: "UsWidgetBridge")
             ]
         )
     ]

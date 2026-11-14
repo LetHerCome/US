@@ -142,11 +142,14 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASS" "$KEYCHAIN" > /dev/null
           security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
           security find-identity -v -p codesigning "$KEYCHAIN"
-          UUID="$(tr -d '[:space:]' < "$SIGN/profile-uuid.txt")"
-          for dir in "$HOME/Library/MobileDevice/Provisioning Profiles" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
-            mkdir -p "$dir"
-            cp "$SIGN/US_AppStore.mobileprovision" "$dir/$UUID.mobileprovision"
-          done
+          # The app's profile and the widget extension's (app.uscouple.widgets), one line each: "<uuid> <file>".
+          while read -r PUUID PFILE; do
+            [ -n "$PUUID" ] || continue
+            for dir in "$HOME/Library/MobileDevice/Provisioning Profiles" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+              mkdir -p "$dir"
+              cp "$SIGN/$PFILE" "$dir/$PUUID.mobileprovision"
+            done
+          done < "$SIGN/profiles.txt"
           rm -f "$SIGN/key.pem" "$SIGN/distribution.p12"
           node scripts/ios-asc-signing.mjs pin-project ios/App/App.xcodeproj/project.pbxproj "$TEAM_ID" "$PROFILE_NAME"
           echo "US_SIGN_PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
@@ -195,6 +198,7 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>app.uscouple</key><string>${US_SIGN_PROFILE_NAME}</string>
+              <key>app.uscouple.widgets</key><string>${US_SIGN_PROFILE_NAME} widgets</string>
             </dict>
             <key>teamID</key><string>${TEAM_ID}</string>
             <key>uploadSymbols</key><true/>
