@@ -226,6 +226,8 @@ test('TestFlight: solo a mano, da main, dopo l\'approvazione in ios-deploy, mai 
   assert.match(workflow, /environment: ios-deploy/);
   assert.match(workflow, /"\$GITHUB_REF" != "refs\/heads\/main"/);
   assert.match(workflow, /-allowProvisioningUpdates/);
+  // No registered iPhone in the team: the archive is signed for the App Store, never for development.
+  assert.match(workflow, /CODE_SIGN_STYLE=Automatic \\\n\s+CODE_SIGN_IDENTITY="Apple Distribution" \\/);
   assert.match(workflow, /-authenticationKeyPath "\$RUNNER_TEMP\/asc\/AuthKey\.p8"/);
   assert.match(workflow, /<key>method<\/key><string>app-store-connect<\/string>/);
   assert.match(workflow, /<key>destination<\/key><string>upload<\/string>/);
