@@ -837,6 +837,7 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.USCountdown?.reset?.();
   window.UsYearRecap?.reset?.();
   window.UsCompanions?.reset?.();
+  window.UsRuntimeErrors?.clear?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
   const storageKeys=[
     'us:fix4:last-profile',
@@ -1040,6 +1041,7 @@ async function initCloud(){
     }catch(error){
       authBootstrapIssue=true;
       console.warn('[US Auth] session restore unavailable',error);
+      window.UsRuntimeErrors?.note?.('auth-restore',String(error?.message||error));
     }
 
     // A returning PWA can briefly report no session while its durable

@@ -5,61 +5,192 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="us-anno-compagni-20261025-28"/>
+<meta name="us-build" content="us-runtime-errors-20261025-29"/>
+<!-- us-runtime-errors: start -->
+<script>
+// US 2.0 F3A.1 — first script of the shell. Records uncaught errors, failed
+// boot scripts/stylesheets and unhandled rejections on this device only
+// (scrubbed, capped), so a launch that dies before reaching Supabase leaves
+// evidence. Read with UsRuntimeErrors.list(). It must never throw.
+(() => {
+  const KEY = 'us:runtime-errors:v1';
+  const MAX_ENTRIES = 25;
+  const MAX_MESSAGE = 240;
+  const BOOT_DEADLINE_MS = 8000;
+  let entries = [];
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || '[]');
+    if (Array.isArray(saved)) entries = saved.filter((item) => item && typeof item.kind === 'string').slice(-MAX_ENTRIES);
+  } catch (_) {}
+  let build = '';
+  try { build = document.querySelector('meta[name="us-build"]')?.content || ''; } catch (_) {}
+
+  const shortUrl = (url) => {
+    const match = /^([a-z][a-z0-9+.-]*:\/\/[^/?#\s]+)?([^?#\s]*)/i.exec(String(url || ''));
+    const origin = match?.[1] || '';
+    const segment = (match?.[2] || '').split('/').filter(Boolean).pop() || '';
+    return { origin, segment };
+  };
+  const scrub = (value) => String(value == null ? '' : value)
+    .replace(/[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}/gi, '<email>')
+    .replace(/eyJ[\w-]+\.[\w-]+\.[\w-]+/g, '<jwt>')
+    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, '<uuid>')
+    .replace(/\bhttps?:\/\/[^\s'"<>)]+/gi, (url) => {
+      const { origin, segment } = shortUrl(url);
+      return segment ? `${origin}/…/${segment}` : origin;
+    })
+    .replace(/[A-Za-z0-9_-]{32,}/g, '<token>')
+    .slice(0, MAX_MESSAGE);
+  const fileName = (url) => scrub(shortUrl(url).segment).slice(0, 80);
+  const persist = () => {
+    try { localStorage.setItem(KEY, JSON.stringify(entries)); } catch (_) {}
+  };
+  const phase = () => {
+    try { return document.documentElement.classList.contains('us-auth-ready') ? 'ready' : 'boot'; } catch (_) { return 'boot'; }
+  };
+  const record = (kind, message, source, line, col) => {
+    try {
+      const now = Date.now();
+      const item = {
+        kind: String(kind).slice(0, 40),
+        message: scrub(message),
+        source: String(source || ''),
+        line: Number(line) || 0,
+        col: Number(col) || 0
+      };
+      const same = entries.find((entry) => entry.kind === item.kind && entry.message === item.message &&
+        entry.source === item.source && entry.line === item.line);
+      if (same) {
+        same.count = (Number(same.count) || 1) + 1;
+        same.last = now;
+      } else {
+        entries.push(Object.assign(item, { count: 1, first: now, last: now, build, phase: phase() }));
+        if (entries.length > MAX_ENTRIES) entries = entries.slice(-MAX_ENTRIES);
+      }
+      persist();
+    } catch (_) {}
+  };
+  const stackFrame = (stack) => {
+    const match = /\(?((?:https?|file|capacitor):\/\/[^\s()]+):(\d+):(\d+)\)?/.exec(String(stack || ''));
+    return match ? { source: fileName(match[1]), line: match[2], col: match[3] } : {};
+  };
+
+  window.addEventListener('error', (event) => {
+    try {
+      const target = event?.target;
+      if (target && target !== window && target.tagName) {
+        const tag = String(target.tagName).toUpperCase();
+        if (tag !== 'SCRIPT' && tag !== 'LINK') return;
+        const { origin, segment } = shortUrl(target.src || target.href);
+        const sameOrigin = !origin || origin === window.location?.origin;
+        const source = scrub(sameOrigin ? segment : `${origin.replace(/^[a-z]+:\/\//i, '')}/${segment}`).slice(0, 80);
+        record('resource', `${tag} failed to load`, source, 0, 0);
+        return;
+      }
+      const message = String(event?.message || event?.error?.message || 'Unknown error');
+      const file = String(event?.filename || '');
+      if (/^(chrome|moz|safari(-web)?)-extension:/i.test(file) || /ResizeObserver loop/i.test(message)) return;
+      record('error', message, file ? fileName(file) : 'inline', event?.lineno, event?.colno);
+    } catch (_) {}
+  }, true);
+
+  window.addEventListener('unhandledrejection', (event) => {
+    try {
+      const reason = event?.reason;
+      if (reason?.name === 'AbortError') return;
+      const message = reason instanceof Error || reason?.message
+        ? `${reason.name || 'Error'}: ${reason.message}`
+        : String(reason);
+      const frame = stackFrame(reason?.stack);
+      record('rejection', message, frame.source, frame.line, frame.col);
+    } catch (_) {}
+  });
+
+  let returningDevice = false;
+  try {
+    const profile = JSON.parse(localStorage.getItem('us:fix4:last-profile') || 'null');
+    returningDevice = Boolean(profile?.id && profile?.couple_id);
+  } catch (_) {}
+  if (returningDevice) {
+    setTimeout(() => {
+      try {
+        if (document.documentElement.classList.contains('us-auth-ready')) return;
+        const missing = ['supabase', 'sb', 'UsPlatform'].filter((name) => !window[name]);
+        const context = [
+          missing.length ? `missing: ${missing.join(', ')}` : 'all boot globals present',
+          document.hidden ? 'hidden' : 'visible',
+          navigator.onLine === false ? 'offline' : 'online'
+        ];
+        record('boot-timeout', `auth not ready after ${BOOT_DEADLINE_MS / 1000}s; ${context.join('; ')}`, 'index.html', 0, 0);
+      } catch (_) {}
+    }, BOOT_DEADLINE_MS);
+  }
+
+  window.UsRuntimeErrors = Object.freeze({
+    list: () => entries.map((entry) => Object.assign({}, entry)),
+    note: (kind, message) => record(kind, message, 'note', 0, 0),
+    clear: () => {
+      entries = [];
+      try { localStorage.removeItem(KEY); } catch (_) {}
+    }
+  });
+})();
+</script>
+<!-- us-runtime-errors: end -->
 <!-- Game V2 production rollout -->
-<link rel="manifest" href="/manifest.webmanifest?v=us-anno-compagni-20261025-28"/>
-<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-anno-compagni-20261025-28"/>
-<link rel="icon" type="image/png" sizes="256x256" href="/assets/derived/runtime/us-symbol-256-v1.png?v=us-anno-compagni-20261025-28"/>
+<link rel="manifest" href="/manifest.webmanifest?v=us-runtime-errors-20261025-29"/>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-runtime-errors-20261025-29"/>
+<link rel="icon" type="image/png" sizes="256x256" href="/assets/derived/runtime/us-symbol-256-v1.png?v=us-runtime-errors-20261025-29"/>
 <meta name="application-name" content="US"/>
 <meta name="apple-mobile-web-app-title" content="US"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<script src="/i18n.js?v=us-anno-compagni-20261025-28"></script>
-<script src="/i18n-en.js?v=us-anno-compagni-20261025-28"></script>
+<script src="/i18n.js?v=us-runtime-errors-20261025-29"></script>
+<script src="/i18n-en.js?v=us-runtime-errors-20261025-29"></script>
 <title>US — Il vostro spazio</title>
-<link rel="stylesheet" href="/styles.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/ui-foundation.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/fix4.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/events.css?v=us-anno-compagni-20261025-28" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/moments-albums.css?v=us-anno-compagni-20261025-28" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/games.css?v=us-anno-compagni-20261025-28" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/progression.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/countdown.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/year-recap.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/companions.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/pet.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/settings.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/identity.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/settings2.css?v=us-anno-compagni-20261025-28" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/widget-hub.css?v=us-anno-compagni-20261025-28" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/stories.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/left-for-you.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/calendar.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/state-system.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/auth-first-run.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/public-auth.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/onboarding.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/app-lock.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/top-chrome.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/modal-center.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/ricordi-carousel.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/ricordi-inline-carousel.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/noi-v2.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/oggi-look.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/due-colori.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/dc-oggi.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/dc-noi.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/dc-ricordi.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/dc-gioca.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/dc-popup.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/dc-primo.css?v=us-anno-compagni-20261025-28"/>
-<link rel="stylesheet" href="/dc-settings.css?v=us-anno-compagni-20261025-28"/>
+<link rel="stylesheet" href="/styles.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/ui-foundation.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/fix4.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/events.css?v=us-runtime-errors-20261025-29" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/moments-albums.css?v=us-runtime-errors-20261025-29" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/games.css?v=us-runtime-errors-20261025-29" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/progression.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/countdown.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/year-recap.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/companions.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/pet.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/settings.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/identity.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/settings2.css?v=us-runtime-errors-20261025-29" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/widget-hub.css?v=us-runtime-errors-20261025-29" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/stories.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/left-for-you.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/calendar.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/state-system.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/auth-first-run.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/public-auth.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/onboarding.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/app-lock.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/top-chrome.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/modal-center.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/ricordi-carousel.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/ricordi-inline-carousel.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/noi-v2.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/oggi-look.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/due-colori.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/dc-oggi.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/dc-noi.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/dc-ricordi.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/dc-gioca.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/dc-popup.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/dc-primo.css?v=us-runtime-errors-20261025-29"/>
+<link rel="stylesheet" href="/dc-settings.css?v=us-runtime-errors-20261025-29"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
 <link rel="dns-prefetch" href="//iiakdfsxpywdkxravqjh.supabase.co">
-<link rel="preload" href="/app.js?v=us-anno-compagni-20261025-28" as="script">
+<link rel="preload" href="/app.js?v=us-runtime-errors-20261025-29" as="script">
 <script>
 (() => {
   document.documentElement.classList.add('us-auth-pending');
@@ -143,12 +274,12 @@ html.us-returning-device .auth-overlay{
   display:none!important;
 }
 </style>
-<script defer src="/platform.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/app-lock.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/notifications.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/auth-first-run.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/widgets.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/fastboot2.js?v=us-anno-compagni-20261025-28"></script>
+<script defer src="/platform.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/app-lock.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/notifications.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/auth-first-run.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/widgets.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/fastboot2.js?v=us-runtime-errors-20261025-29"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>window.__US_LEFT_FOR_YOU_ACTIVE__ = true;</script>
 <style id="usLaunchIntroStyle">
@@ -1247,30 +1378,30 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 </div>
 
 
-<script defer src="/auth-storage.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/onboarding.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/public-auth.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/app.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/progression.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/stories.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/fix4.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/left-for-you.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/events.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/games.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/settings.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/widget-hub.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/identity.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/moments-albums.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/ricordi-inline-carousel.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/calendar-domain.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/calendar.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/noi-v2.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/oggi-look.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/navigation.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/ui-foundation.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/countdown.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/year-recap.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/pet.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/companions.js?v=us-anno-compagni-20261025-28"></script>
-<script defer src="/due-colori.js?v=us-anno-compagni-20261025-28"></script>
+<script defer src="/auth-storage.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/onboarding.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/public-auth.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/app.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/progression.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/stories.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/fix4.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/left-for-you.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/events.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/games.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/settings.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/widget-hub.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/identity.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/moments-albums.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/ricordi-inline-carousel.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/calendar-domain.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/calendar.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/noi-v2.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/oggi-look.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/navigation.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/ui-foundation.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/countdown.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/year-recap.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/pet.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/companions.js?v=us-runtime-errors-20261025-29"></script>
+<script defer src="/due-colori.js?v=us-runtime-errors-20261025-29"></script>
 </body></html>
