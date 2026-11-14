@@ -10,8 +10,8 @@ const STYLES=Object.freeze([
   {id:'signal',name:'Partenze',note:'Come un tabellone in stazione.'},
   {id:'glass',name:'Vetro',note:'Una lente sulla vostra foto.'},
   {id:'aurora',name:'Aurora',note:'La luce dentro le cifre.',reward:'frame_aurora',level:4},
-  {id:'orbit',name:'Orbita',note:'Un giro di luce ogni minuto.',reward:'ring_orbit',level:9},
-  {id:'chrome',name:'Cromo',note:'Cifre lucide come il metallo.',reward:'frame_chrome',level:12}
+  {id:'orbit',name:'Orbita',note:'Un giro di luce ogni minuto.',reward:'ring_orbit',level:8},
+  {id:'chrome',name:'Cromo',note:'Cifre lucide come il metallo.',reward:'frame_chrome',level:10}
 ]);
 const civil=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'});
 function dayNumber(value){
