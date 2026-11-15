@@ -118,7 +118,7 @@
   function syncNetworkUi() {
     if (!navigator.onLine) {
       clearConnectingTimer();
-      showStatus('Sei offline. Riprendo appena torni online.', 'offline');
+      showStatus('Siete senza rete: quello che fate parte appena torna.', 'offline');
       return;
     }
     if (onlineBadge?.classList.contains('warn')) {

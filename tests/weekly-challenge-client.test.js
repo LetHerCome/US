@@ -96,18 +96,22 @@ test('Oggi (board SfidaOggi): from Friday if not done, «Chiudi»; apart and wai
 
 test('the markup: one section, real buttons of at least 44px, nothing but text from the server', () => {
   const html = wc.markup(wc.viewModel(base({ title: '<img src=x onerror=alert(1)>' }), opts()));
-  assert.match(html, /<section class="us-wc" data-wc-state="open" aria-labelledby="usWcTitle">/);
-  assert.match(html, /data-wc-action="photo"[^>]*>[\s\S]*Chiudi con una foto/);
-  assert.match(html, /data-wc-action="change"/);
+  // Il diario, ma pulito (15/11/2026): section.dy-wc, kicker «La sfida della
+  // settimana», the photo slots as 124px tiles; «Cambia» is a small 32px button of
+  // the design scale; no animation in the card.
+  assert.match(html, /<section class="dy-wc" data-wc-state="open" aria-labelledby="usWcTitle">/);
+  assert.match(html, /<span class="dy-wc-kicker">La sfida della settimana<\/span>/);
+  assert.match(html, /<button type="button" class="dy-wc-add" data-wc-action="photo">[\s\S]*Chiudi con una foto/);
+  assert.match(html, /<button type="button" class="dy-btn dy-btn-s dy-btn-ghost dy-hit" data-wc-action="change">/);
   assert.doesNotMatch(html, /<img src=x/);
   assert.match(html, /&lt;img src=x/);
   const apart = wc.markup(wc.viewModel(base({ two_places: true, waiting_for: 'me', photos: [{ mine: false, moment_id: M, path: 'p/bea.webp', place_label: 'Lisbona', created_at: '2026-11-11T20:04:00Z' }] }), opts()));
-  assert.match(apart, /data-wc-action="mine"[^>]*>[\s\S]*Aggiungi la tua/);
+  assert.match(apart, /<button type="button" class="dy-wc-add" data-wc-action="mine">[\s\S]*La tua foto/);
   assert.match(apart, /data-wc-path="p\/bea\.webp"/);
-  const css = read('dc-gioca.css');
-  assert.match(css, /#quiz \.us-wc-actions button\{[^}]*min-height:48px/);
-  assert.match(css, /#quiz \.us-wc-pair-add\{[^}]*min-height:/);
-  assert.match(css, /prefers-reduced-motion|data-us-motion="reduced"\] #quiz \.us-wc/);
+  const css = read('diario.css');
+  assert.match(css, /\.dy-wc-tile,\.dy-wc-add,\.dy-wc-wait\{[^}]*height:124px/);
+  assert.match(css, /\.dy-btn-s\{height:var\(--us-btn-s\)/);
+  assert.doesNotMatch(css.split('\n').filter((line) => line.includes('.dy-wc')).join('\n'), /animation|transition/);
 });
 
 test('the photo: the Ricordi composer with the title, then the server closes it; apart, the first tells the other', async () => {
@@ -199,7 +203,7 @@ test('Impostazioni › Notifiche: the challenge\'s switch, «Come vi vedete» sp
   assert.match(settings, /key==='bond'\?'Il lunedì la nuova, il sabato un promemoria'/);
   const index = read('index.html');
   assert.match(index, /Ci serve solo per scegliere la sfida giusta per voi\./);
-  assert.match(index, /<small>Serve per la sfida della settimana<\/small>/);
+  // Il diario, ma pulito (15/11/2026): the row is «La distanza» (mockup, no second line); the sheet above still says why.
   const en = require('../i18n-en.js');
   const dict = en.EN || en;
   for (const key of ['LA SFIDA DELLA SETTIMANA', '{n} punti', 'Scade domenica alle 23:59 · mancano {n} giorni', 'Scade domenica alle 23:59 · manca 1 giorno', 'Scade stasera alle 23:59', 'Chiudi con una foto', 'Cambia · {n}',

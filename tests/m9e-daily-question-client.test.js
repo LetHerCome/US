@@ -208,7 +208,9 @@ test('M9E client: una sola authority, niente fallback da seed scaduto, card M9B 
   assert.equal(window.UsDailyRitual.viewModel({ daily: null }), null);
 
   const css = read('styles.css');
-  assert.match(css, /\.us-daily-ritual\[data-state="error"\]/);
+  // Il diario, ma pulito (15/11/2026): the M9B card stays mounted in the hidden
+  // hero; the question card of Oggi (diario.js) says the error and offers Riprova.
+  assert.match(read('diario.js'), /if \(source\?\.status === 'error'\) \{[\s\S]{0,300}La domanda di oggi non è arrivata\.[\s\S]{0,200}>Riprova<\/button>/);
   assert.match(css, /#answer\[hidden\],#todaySaveBtn\[hidden\]\{display:none!important\}/);
   const html = read('index.html');
   assert.match(html, /<textarea id="answer" rows="4" placeholder="Scrivi…" hidden disabled><\/textarea>/);

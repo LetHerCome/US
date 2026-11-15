@@ -24,8 +24,10 @@ test('V0E usa direttamente i sei master custom approvati nelle rispettive superf
     assert.equal(record?.immutable, true, `${id} deve restare immutabile`);
   });
 
-  assert.match(html, /us-nav-icon--moments[\s\S]{0,320}phosphor\/images-(?:regular|fill)\.svg/);
-  assert.match(html, /us-nav-icon--bond[\s\S]{0,320}phosphor\/heart-straight-(?:regular|fill)\.svg/);
+  // Il diario, ma pulito (15/11/2026): the nav tabs draw the mockup's stroke icons inline, not Phosphor.
+  const nav = html.match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0] || '';
+  assert.doesNotMatch(nav, /phosphor\//);
+  for (const page of ['moments', 'bond']) assert.match(nav, new RegExp(`data-page="${page}"[^>]*><svg class="dy-nav-icon"`));
   // M10.1B: il controllo top-left "Oggi / Domanda" è rimosso; la domanda vive nella card di Oggi.
   assert.doesNotMatch(html, /id="todayOrb"/);
   assert.match(html, /id="usDailyRitual"/);

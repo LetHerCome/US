@@ -19,7 +19,8 @@ test('Capacitor 8: CSS safe area insets and visible dark system bars', () => {
   const config = JSON.parse(read('capacitor.config.json'));
   assert.equal(config.plugins.SystemBars.insetsHandling, 'css');
   assert.equal(config.plugins.SystemBars.initialViewportFitValueHint, 'cover');
-  assert.equal(config.plugins.SystemBars.style, 'DARK');
+  // Il diario, ma pulito (15/11/2026): the bars stay visible, with dark icons on the paper (LIGHT).
+  assert.equal(config.plugins.SystemBars.style, 'LIGHT');
   assert.equal(config.plugins.SystemBars.hidden, false);
   assert.equal(config.ios.contentInset, 'never');
   const html = read('index.html');
@@ -43,9 +44,10 @@ test('Native CSS: full-bleed Oggi and safe controls, no forced fullscreen', () =
   const pageStyles = read('styles.css');
   assert.match(css, /html\.us-native #home \{/);
   assert.match(css, /margin-top: calc\(-1 \* var\(--us-safe-top\)\)/);
-  assert.match(css, /height: var\(--us-viewport-height, 100dvh\) !important/);
-  assert.match(css, /#homeHero:not\(\[data-us-countdown\]\) \.us-oggi-stack/);
-  assert.match(css, /#homeHero\[data-us-countdown\]/);
+  // Il diario, ma pulito (15/11/2026): the full-screen photo hero is hidden; the
+  // paper runs under the status bar and the Oggi header clears it itself.
+  assert.doesNotMatch(css, /#homeHero/);
+  assert.match(read('diario.css'), /\.dy-head\{[^}]*padding:calc\(var\(--us-safe-top\) \+ 6px\) 20px 0\}/);
   assert.match(tokens, /--us-safe-top:var\(--safe-area-inset-top,env\(safe-area-inset-top,0px\)\)/);
   assert.match(pageStyles, /\.app\{[^\n]*padding:var\(--us-safe-top\)/);
   assert.doesNotMatch(css, /\bdisplay:\s*none|\bvisibility:\s*hidden|overflow:\s*hidden|position:\s*fixed/);

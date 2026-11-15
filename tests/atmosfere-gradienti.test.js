@@ -10,7 +10,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-test('Vino is the canvas of US: a gradient that holds the screen while the page scrolls', () => {
+test('Vino is the canvas of US: a gradient that holds the screen while the page scrolls', { skip: 'Il diario, ma pulito (15/11/2026): la tela Vino e le Atmosfere sono in pausa, vale solo la carta' }, () => {
   const foundation = read('ui-foundation.css');
   assert.match(foundation, /--us-color-bg:#140c14;/);
   assert.match(foundation, /--us-atmo:radial-gradient\([^;]*rgba\(255,124,150,\.24\)[^;]*linear-gradient\(180deg,#3a1426 0%,#22101d 50%,#140c14 100%\);/);

@@ -12,9 +12,12 @@ const read = (name) => fs.readFileSync(path.join(__dirname, '..', name), 'utf8')
 const F = { id: 'f', role: 'francesco', display_name: 'Francesco', person_color: null };
 const B = { id: 'b', role: 'beatrice', display_name: 'Beatrice', person_color: null };
 
+// Il diario, ma pulito (15/11/2026): «un colore, un significato» (honey is time,
+// sky is distance, the heart is the Ti penso): oro, cielo and rubino left the
+// person palette for blu, prugna and menta (migration 20261115183900, staging only).
 test('the 8 colours match the server, rosa and lilla are the usual ones', () => {
-  assert.deepEqual(Object.keys(C.PALETTE), ['rosa', 'lilla', 'cielo', 'salvia', 'oro', 'pesca', 'rubino', 'perla']);
-  const sql = read('supabase/migrations/20261029014653_person_colors_plus_v1.sql');
+  assert.deepEqual(Object.keys(C.PALETTE), ['rosa', 'lilla', 'blu', 'salvia', 'pesca', 'prugna', 'menta', 'perla']);
+  const sql = read('supabase/migrations/20261115183900_personaggi_forma_e_colori.sql');
   assert.ok(sql.includes(`check (person_color in (${Object.keys(C.PALETTE).map((k) => `'${k}'`).join(', ')}))`));
   assert.equal(C.PALETTE.rosa, '#ff7c96');
   assert.equal(C.PALETTE.lilla, '#a98bff');
@@ -24,7 +27,9 @@ test('the 8 colours match the server, rosa and lilla are the usual ones', () => 
 
 test('each person\'s token takes their chosen colour, or stays the usual one', () => {
   assert.deepEqual(C.coupleColors([F, B]), { rosa: null, lilla: null });
-  assert.deepEqual(C.coupleColors([{ ...F, person_color: 'cielo' }, { ...B, person_color: 'rosa' }]), { rosa: '#6fb8ff', lilla: '#ff7c96' });
+  assert.deepEqual(C.coupleColors([{ ...F, person_color: 'blu' }, { ...B, person_color: 'rosa' }]), { rosa: '#6f9bff', lilla: '#ff7c96' });
+  // Until the migration moves them, the retired names read as the nearest new colour.
+  assert.deepEqual(C.coupleColors([{ ...F, person_color: 'cielo' }, { ...B, person_color: 'rubino' }]), { rosa: '#6f9bff', lilla: '#c98bd6' });
   assert.deepEqual(C.coupleColors([{ ...F, person_color: 'boh' }]), { rosa: null, lilla: null });
 });
 
@@ -32,15 +37,16 @@ test('applied on the page root, and removed back to the design tokens', () => {
   const set = new Map();
   const style = { setProperty: (k, v) => set.set(k, v), removeProperty: (k) => set.delete(k) };
   C.applyCoupleColors([{ ...F, person_color: 'oro' }, B], { style });
-  assert.deepEqual([...set], [['--us-rosa', '#f2cf6b']]);
+  assert.deepEqual([...set], [['--us-rosa', '#ff9f6e']], 'oro reads as pesca');
   C.applyCoupleColors([], { style });
   assert.equal(set.size, 0);
 });
 
 test('the picker: mine marked, the partner\'s (or their usual one) taken', () => {
-  const choices = C.choices([{ ...F, person_color: 'cielo' }, B], 'f');
+  const choices = C.choices([{ ...F, person_color: 'blu' }, B], 'f');
   assert.equal(choices.length, 8);
-  assert.deepEqual(choices.find((c) => c.id === 'cielo'), { id: 'cielo', name: 'Cielo', hex: '#6fb8ff', mine: true, taken: false });
+  assert.deepEqual(choices.find((c) => c.id === 'blu'), { id: 'blu', name: 'Blu', hex: '#6f9bff', mine: true, taken: false });
+  assert.equal(C.choices([{ ...F, person_color: 'cielo' }, B], 'f').find((c) => c.id === 'blu').mine, true, 'cielo reads as blu');
   assert.deepEqual(choices.find((c) => c.id === 'lilla'), { id: 'lilla', name: 'Lilla', hex: '#a98bff', mine: false, taken: true });
   assert.equal(C.choices([F, B], 'f').find((c) => c.id === 'rosa').mine, true, 'no choice yet: the usual one is mine');
   assert.equal(C.nameOf([F, { ...B, person_color: 'salvia' }], 'b'), 'Salvia');
@@ -72,13 +78,14 @@ test('without Plus the row is there, locked: it shows that Plus unlocks it, with
   const settings = read('settings.js');
   // Shown once Plus can be read; hidden only when it cannot (server not ready).
   assert.match(settings, /if\(colorRow\)\{colorRow\.hidden=Boolean\(plusRes\?\.error\)\|\|!plusRes\?\.data;colorRow\.dataset\.locked=colorsOpen\?'false':'true';\}/);
-  assert.match(settings, /if\(colorValue\)colorValue\.textContent=colorsOpen\?\(window\.UsPersonColors\?\.nameOf\?\.\(profiles,identityProfile\.id\)\|\|''\):'US Plus';/);
+  // Il diario, ma pulito (15/11/2026): open, the dot in your colour (its name for screen readers); locked, «US Plus» in words.
+  assert.match(settings, /if\(colorValue\)\{colorValue\.textContent=colorsOpen\?\(window\.UsPersonColors\?\.nameOf\?\.\(profiles,identityProfile\.id\)\|\|''\):'US Plus';colorValue\.className=colorsOpen\?'us-sr':'dy-set-lock';\}/);
   assert.match(settings, /if\(!settingsSnapshot\?\.colorsOpen\)return personColorLockedModal\(\);/);
   const locked = settings.slice(settings.indexOf('function personColorLockedModal'), settings.indexOf('function personColorModal'));
   assert.match(locked, /Si sblocca con US Plus/);
   assert.doesNotMatch(locked, /acquist|compra|prezzo|€|abbonati/i, 'no purchase while Plus is not on sale');
-  assert.match(read('index.html'), /<span class="us-setting-value" id="usPersonColorValue"><\/span><span class="us-icon us-person-color-lock" data-us-icon="lock" aria-hidden="true"><\/span>/);
-  assert.match(read('dc-settings.css'), /#usPersonColorSetting:not\(\[data-locked="true"\]\) \.us-person-color-lock\{display:none\}/);
+  assert.match(read('index.html'), /<span class="dy-set-val"><span class="us-sr" id="usPersonColorValue"><\/span><i class="dy-set-dot" aria-hidden="true"><\/i><\/span>/);
+  assert.match(read('diario.css'), /\.dy-set-row\[data-locked="true"\] \.dy-set-dot\{opacity:\.45\}/);
 });
 
 test('locked colours look locked, and a tap says why', () => {

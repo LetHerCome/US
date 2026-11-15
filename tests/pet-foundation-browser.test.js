@@ -67,7 +67,7 @@ test('PET production Maudit mounts without a preview query',async t=>{
   assert.deepEqual(errors,[]);await ctx.close();
  }finally{await h.close();}
 });
-test('PET preview sits in its home spot over the nav\'s right end, never covers or blocks a tab, at every base viewport',async t=>{
+test('PET preview sits in its home spot over the nav\'s right end, never covers or blocks a tab, at every base viewport', { skip: 'Il diario, ma pulito (15/11/2026): il gatto Maudit esce dall\'app (pet.js non è più caricato da index.html)' },async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{for(const [width,height] of [[320,568],[390,844],[844,390]]){
   const {page,ctx,errors}=await preview(h,{width,height,style:'editorial'});
@@ -86,7 +86,7 @@ test('PET preview sits in its home spot over the nav\'s right end, never covers 
  }}finally{await h.close();}
 });
 
-test('PET steps aside for the keyboard, sleeps in background and stays still with reduced motion',async t=>{
+test('PET steps aside for the keyboard, sleeps in background and stays still with reduced motion', { skip: 'Il diario, ma pulito (15/11/2026): il gatto Maudit esce dall\'app (pet.js non è più caricato da index.html)' },async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
   const {page,ctx,errors}=await preview(h,{});
@@ -153,7 +153,7 @@ test('Sintonia collection preview: Countdown styles group with real locks (scree
  }finally{await h.close();}
 });
 
-test('F4/F5 in a real DOM: failed renderer swap keeps the live placeholder; reactions refused before observer delivery',async t=>{
+test('F4/F5 in a real DOM: failed renderer swap keeps the live placeholder; reactions refused before observer delivery', { skip: 'Il diario, ma pulito (15/11/2026): il gatto Maudit esce dall\'app (pet.js non è più caricato da index.html)' },async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
   const {page,ctx,errors}=await preview(h,{});
@@ -184,7 +184,7 @@ test('F4/F5 in a real DOM: failed renderer swap keeps the live placeholder; reac
  }finally{await h.close();}
 });
 
-test('PET stays through notices, the Ti penso arrival and sheets (their scrim covers it), and comes back after navigation',async t=>{
+test('PET stays through notices, the Ti penso arrival and sheets (their scrim covers it), and comes back after navigation', { skip: 'Il diario, ma pulito (15/11/2026): il gatto Maudit esce dall\'app (pet.js non è più caricato da index.html)' },async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
   const {page,ctx,errors}=await pageFor(h,{});
@@ -225,25 +225,26 @@ test('PET stays through notices, the Ti penso arrival and sheets (their scrim co
 });
 
 // US 1.0 (N10): the old calendar overlay is gone; its detail and form sheets are the calendar's sheets now.
-test('layer ladder: content < nav < Ti penso < PET < every sheet < confirm, auth above sheets, notices above every popup',async t=>{
+// Il diario, ma pulito (15/11/2026): the PET left the ladder and the Oggi dock is
+// no longer shown (Oggi is in-flow content); the bottom nav is .dy-nav.
+test('layer ladder: content < nav < Ti penso < every sheet < confirm, auth above sheets, notices above every popup',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
   const {page,ctx,errors}=await pageFor(h,{});
   const z=await page.evaluate(()=>{const v=q=>Number(getComputedStyle(document.querySelector(q)).zIndex);
-    return {nav:v('.nav'),toast:v('#toast'),dock:v('#usOggiDock'),status:v('#appStatusBar'),update:v('#appUpdateBar'),think:v('#thinkArrival'),pet:v('#usPetLayer'),
+    return {nav:v('.dy-nav'),toast:v('#toast'),status:v('#appStatusBar'),update:v('#appUpdateBar'),think:v('#thinkArrival'),
      sheets:['#today','#usCountdownSheet','#usEventsOverlay','#leftForYouOverlay','#leftForYouComposerOverlay','#leftForYouCameraOverlay','#momentViewer','#usMomentComposeOverlay','#usSettingsOverlay','#usCalendarDetailSheet','#usCalendarFormSheet','#conservatiOverlay','#usAlbumOverlay'].map(q=>[q,v(q)]),
     unlock:v('#usProgressionUnlock'),auth:v('#authOverlay')};});
-  // 1.0: the Oggi dock (what waits for me + the Domanda di oggi) is content, under the nav; the transient nudge is gone.
-  assert.ok(z.dock<z.nav&&z.nav<z.think&&z.think<z.pet&&z.toast===z.status&&z.status===z.update,JSON.stringify(z));
+  assert.ok(z.nav<z.think&&z.toast===z.status&&z.status===z.update,JSON.stringify(z));
   // Mockup .toast z 60 over sheets (20), Galleria (25), Momento (30) and auth (40).
-  assert.ok(z.sheets.every(([,value])=>z.toast>value)&&z.toast>z.auth&&z.toast>z.pet,`notices ${z.toast} above every popup`);
-  for(const [q,value] of z.sheets)assert.ok(value>z.pet,`${q} (${value}) sits above the PET (${z.pet})`);
-  assert.ok(z.unlock>z.pet);
+  assert.ok(z.sheets.every(([,value])=>z.toast>value)&&z.toast>z.auth,`notices ${z.toast} above every popup`);
+  for(const [q,value] of z.sheets)assert.ok(value>z.think,`${q} (${value}) sits above the Ti penso arrival (${z.think})`);
+  assert.ok(z.unlock>z.think);
   assert.ok(z.sheets.every(([,value])=>z.auth>value),'auth covers any sheet it interrupts');
   const confirmZ=await page.evaluate(()=>{const answer=window.UsUiFoundation.confirm({title:'QA',confirmLabel:'Ok'});const value=Number(getComputedStyle(document.querySelector('.us-confirm')).zIndex);document.querySelector('[data-us-confirm="cancel"]')?.click();return answer.then(()=>value);});
-  assert.ok(z.sheets.every(([,value])=>confirmZ>value)&&confirmZ>z.pet&&z.toast>confirmZ,`confirm ${confirmZ}`);
+  assert.ok(z.sheets.every(([,value])=>confirmZ>value)&&z.toast>confirmZ,`confirm ${confirmZ}`);
   // No accidental stacking context traps a fixed surface below its rung.
-  const trapped=await page.evaluate(()=>['#thinkArrival','#usPetLayer','#today','#usCountdownSheet','#authOverlay','#toast'].filter(q=>{
+  const trapped=await page.evaluate(()=>['#thinkArrival','#today','#usCountdownSheet','#authOverlay','#toast'].filter(q=>{
    for(let p=document.querySelector(q).parentElement;p&&p!==document.body;p=p.parentElement){const s=getComputedStyle(p);if(s.transform!=='none'||s.filter!=='none'||s.isolation==='isolate'||(s.position!=='static'&&s.zIndex!=='auto')||Number(s.opacity)<1)return true;}return false;}));
   assert.deepEqual(trapped,[]);
   assert.deepEqual(errors,[]);await ctx.close();

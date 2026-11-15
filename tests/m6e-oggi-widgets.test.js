@@ -146,7 +146,9 @@ test('M6E (7): the Oggi hero gains exactly one new widget region, positioned ins
   const hero = html().match(/<section class="hero home-hero-only" id="homeHero"[\s\S]*?<\/section>/)?.[0] || '';
   assert.match(hero, /id="usOggiCalendarWidget"/);
   assert.match(hero, /id="distanceWidget"/, 'the existing distance widget must still be present');
-  assert.match(hero, /id="pushOptInCard"/, 'the existing push opt-in card must still be present');
+  // Il diario, ma pulito (15/11/2026): the push opt-in moved under the question of Oggi (#dyMore).
+  assert.match(html().match(/<div class="dy-more" id="dyMore">[\s\S]*?<\/aside>/)?.[0] || '', /id="pushOptInCard"/, 'the existing push opt-in card must still be present');
+  assert.equal((html().match(/id="pushOptInCard"/g) || []).length, 1);
   assert.equal((hero.match(/id="usOggiCalendarWidget"/g) || []).length, 1);
 });
 
@@ -273,7 +275,7 @@ test('M6E (13): styles fade the exact three hero widgets under Focus Photo, and 
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{[^}]*us-oggi[^}]*transition:none/s);
 });
 
-test('M6E polish: mobile Oggi widget sits just below the safe-area-aware top bar without changing desktop positioning', () => {
+test('M6E polish: mobile Oggi widget sits just below the safe-area-aware top bar without changing desktop positioning', { skip: 'Il diario, ma pulito (15/11/2026): lo stack del vecchio Oggi sulla foto non si mostra più' }, () => {
   // M10A: the same offsets now position the Oggi stack that holds the widget.
   const css = read('styles.css');
   assert.match(css, /\.us-oggi-stack\{[^}]*top:calc\(var\(--us-top-chrome-clearance\) \+ 64px\)/);
@@ -422,7 +424,7 @@ test('M6E (20): M10.1C — the date target is selected up-front; no stale day-sh
 // P2 accessibility: a keyboard/AT-operable Focus Photo toggle, without adding
 // a second visible dashboard control.
 
-test('M6E (21): the hero gains a visually hidden, keyboard-operable Focus Photo toggle with an accessible name and pressed state', () => {
+test('M6E (21): the hero gains a visually hidden, keyboard-operable Focus Photo toggle with an accessible name and pressed state', { skip: 'Il diario, ma pulito (15/11/2026): la foto a tutto schermo (Focus Photo) è tolta da Oggi; il vecchio hero resta nascosto' }, () => {
   const hero = html().match(/<section class="hero home-hero-only" id="homeHero"[\s\S]*?<\/section>/)?.[0] || '';
   assert.match(hero, /id="usOggiFocusToggle"/);
   assert.match(hero, /<button[^>]*id="usOggiFocusToggle"[^>]*class="us-oggi-focus-toggle"[^>]*aria-pressed="false"[^>]*aria-label="[^"]+"/);

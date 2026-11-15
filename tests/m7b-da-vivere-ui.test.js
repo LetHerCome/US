@@ -65,7 +65,8 @@ test('M7B markup: la rappresentazione di scheduled/lived è discreta (nessun bad
 });
 
 test('M7B markup: non introduce una nuova destinazione di root/bottom-nav', () => {
-  const nav = html().match(/<nav[^>]*class="nav[^"]*"[^>]*>[\s\S]*?<\/nav>/)?.[0] || '';
+  // Il diario, ma pulito (15/11/2026): the bottom nav is <nav class="dy-nav">.
+  const nav = html().match(/<nav[^>]*class="dy-nav"[^>]*>[\s\S]*?<\/nav>/)?.[0] || '';
   assert.notEqual(nav, '');
   const navButtons = [...nav.matchAll(/data-page="([a-z]+)"/g)].map((m) => m[1]);
   assert.deepEqual(navButtons, ['home', 'bond', 'moments', 'quiz']);

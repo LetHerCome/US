@@ -32,11 +32,13 @@ test('Due colori usa Fraunces e Figtree self-hosted con fallback locale', () => 
   assert.doesNotMatch(css, /fonts\.googleapis|fonts\.gstatic/);
 });
 
+// Il diario, ma pulito (15/11/2026): the nav draws the mockup's stroke icons
+// inline instead of the Phosphor regular/fill pairs; same four root tabs.
 test('M1 bottom navigation usa Phosphor regular/fill senza cambiare le quattro root tab', () => {
   const html = index();
-  for (const asset of PHOSPHOR_NAV_ASSETS) {
-    assert.match(html, new RegExp(`data-icon="/assets/icons/phosphor/${asset}"`));
-  }
+  const nav = html.match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0] || '';
+  for (const asset of PHOSPHOR_NAV_ASSETS) assert.doesNotMatch(nav, new RegExp(asset.replace('.', '\\.')));
+  assert.equal((nav.match(/<svg class="dy-nav-icon"/g) || []).length, 4);
   assert.equal((html.match(/<button[^>]+data-page="(?:home|bond|moments|quiz)"/g) || []).length, 4);
   assert.doesNotMatch(html, /data-page="settings"/);
 });
@@ -49,16 +51,21 @@ test('HUMAN-UI-02 la nav attiva non ha animazioni in loop', () => {
 });
 
 test('HUMAN-UI-02 conserva target touch >= 44px con una nav compatta', () => {
-  const css = identity();
-  assert.match(css, /\.us-nav-premium button\{[\s\S]*?min-width:44px!important;[\s\S]*?min-height:46px!important/);
-  assert.match(css, /\.us-nav-premium button \.nicon\{[\s\S]*?width:32px!important;[\s\S]*?height:28px!important/);
+  // Il diario, ma pulito (15/11/2026): four equal columns of a full-width bar;
+  // each button is the bar height (--us-nav-height) minus its padding, 44px+ even in short landscape.
+  const css = read('diario.css');
+  assert.match(css, /\.dy-nav\{[^}]*grid-template-columns:repeat\(4,1fr\);height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:8px /);
+  assert.match(foundation(), /--us-nav-height:66px;/);
+  assert.match(read('fix4.css'), /\{:root\{--us-nav-height:52px\}/);
+  assert.match(css, /\.dy-nav \.dy-nav-icon\{width:24px;height:24px;/);
 });
 
 test('M1 applica il top chrome APK senza introdurre fullscreen/settings o relocation Home', () => {
   const css = identity();
   const html = index();
-  assert.match(css, /\.top\.us-premium-top\{position:absolute/);
-  assert.match(css, /\.top\.us-premium-top::before\{content:""/);
+  // Il diario, ma pulito (15/11/2026): the APK top pill is a hidden holder; the header of Oggi is in the page.
+  assert.match(html, /<div class="top us-premium-top" hidden>/);
+  assert.doesNotMatch(css, /\.top\.us-premium-top\{position:absolute/);
   assert.doesNotMatch(html, /data-us-fullscreen-page|usSettingsBack|usHeroOverlayLayer|thinkReceivedContext/);
   assert.doesNotMatch(html, /native-entry\.js|reliability\.js|vendor\/supabase\.js/);
 });
@@ -66,15 +73,17 @@ test('M1 applica il top chrome APK senza introdurre fullscreen/settings o reloca
 test('M1 ancora il top chrome al contenitore mobile .app, non al viewport desktop', () => {
   const css = read('fix4.css') + read('identity.css');
   assert.match(css, /\.app\{[^}]*position:relative/);
-  assert.match(css, /\.top\.us-premium-top\{position:absolute/);
+  // Il diario, ma pulito (15/11/2026): the header of Oggi lives inside .app.
+  assert.ok(index().indexOf('<div class="app">') < index().indexOf('<header class="dy-head">'));
 });
 
 test('M1.2 usa una clearance authority e riserva spazio sulle tre secondary root pages', () => {
   const css = read('identity.css') + read('fix4.css') + read('ui-foundation.css');
   assert.match(css, /--us-top-chrome-height:46px/);
   assert.match(css, /--us-top-chrome-clearance:56px/);
-  assert.match(css, /\.top\.us-premium-top\{[^}]*height:var\(--us-top-chrome-height\)/);
-  assert.match(css, /\.top\.us-premium-top::before\{[^}]*height:var\(--us-top-chrome-clearance\)/);
+  // Il diario, ma pulito (15/11/2026): the pill rules went with the pill; the clearance
+  // token still reserves space on the secondary pages (0 outside Oggi, top-chrome.css).
+  assert.match(read('top-chrome.css'), /body:has\(\.app > \.page\.active:not\(#home\)\) \{\s*--us-top-chrome-clearance: 0px;/);
   assert.match(css, /#bond,#moments,#quiz\{padding-top:calc\(var\(--us-top-chrome-clearance\) \+ var\(--us-space-2\)\);box-sizing:border-box\}/);
   assert.match(css, /#bond>\.section,#moments>\.section,#quiz>\.section\{margin-top:0!important\}/);
   assert.doesNotMatch(css, /#home\{padding-top:/);
@@ -88,11 +97,12 @@ test('M1.3 (M12A) il centro della top chrome è il marchio US; I nostri eventi v
   // Noi nuova (03/11/2026): no Eventi tile; Eventi opens from the dates of the Noi calendar.
   assert.match(read('noi-v2.js'), /window\.openNoiSection\?\.\('eventi'\)/);
   assert.doesNotMatch(html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '', /class="us-event-add"/);
-  assert.match(css, /\.us-top-brand\{[^}]*grid-column:2[^}]*pointer-events:none/);
+  // Il diario, ma pulito (15/11/2026): the centre of the header is «us» (dy-mark), not a control.
+  assert.match(html, /<span class="dy-mark" role="img" aria-label="US">us<\/span>/);
   assert.doesNotMatch(css, /us-events-top/);
 });
 
-test('M1.4 rende la top chrome una floating pill contenuta nella shell', () => {
+test('M1.4 rende la top chrome una floating pill contenuta nella shell', { skip: 'Il diario, ma pulito (15/11/2026): la barra in alto a pillola fluttuante (M1/M12A) è tolta; Oggi ha la sua testata su carta' }, () => {
   const css = read('identity.css');
   assert.match(css, /\.top\.us-premium-top\{[^}]*left:10px;right:10px/);
   assert.match(css, /\.top\.us-premium-top\{[^}]*border-radius:28px/);
@@ -119,14 +129,15 @@ test('M1.6 rende Home full-bleed senza cambiare il padding globale delle seconda
   // M12B.1: Oggi fits by dropping the nav clearance of .app, never by clipping overflow.
   assert.match(css, /#home\.page\.active\{padding-bottom:0!important\}/);
   assert.match(css, /body:has\(#home\.page\.active\) \.app\{padding-bottom:0!important\}/);
-  assert.match(css, /#home \.home-hero-only\{[^}]*height:calc\(var\(--us-viewport-height\) - var\(--us-safe-top\)\)!important[^}]*min-height:0!important/);
-  assert.match(css, /#home \.home-distance-pill\{[^}]*bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 18px\)!important/);
-  assert.match(css, /#home \.push-optin-card\{[^}]*bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 70px\)!important/);
+  // Il diario, ma pulito (15/11/2026): the full-bleed photo hero is hidden; the
+  // page of today clears the nav itself and its photo fills its frame.
+  const diario = read('diario.css');
+  assert.match(diario, /\.dy-oggi\{padding:0 0 calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\) \+ 24px\)\}/);
+  assert.match(diario, /\.dy-photo-img\{[^}]*object-fit:cover\}/);
   assert.match(css, /\.app\{[^}]*padding-bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 34px\)!important/);
-  assert.match(css, /\.home-photo-layer\{[\s\S]*background-size:cover/);
 });
 
-test('M1 topbar refinement bilancia tre zone senza ridurre i touch target', () => {
+test('M1 topbar refinement bilancia tre zone senza ridurre i touch target', { skip: 'Il diario, ma pulito (15/11/2026): la barra in alto a pillola fluttuante (M1/M12A) è tolta; Oggi ha la sua testata su carta' }, () => {
   const css = read('identity.css');
   assert.match(css, /\.top\.us-premium-top\{[^}]*display:grid[^}]*grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/);
   assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*grid-column:2/);

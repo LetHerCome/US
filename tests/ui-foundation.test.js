@@ -314,7 +314,11 @@ test('il foglio fondazionale espone token conservativi e target comuni da 44px',
   assert.match(css, /--us-space-5:16px/);
   assert.match(css, /--us-radius-card:20px/);
   assert.match(css, /--us-radius-sheet:29px/);
-  assert.match(css, /--us-shadow-card:0 10px 28px/);
+  // Il diario, ma pulito (15/11/2026): the card shadow is the paper one (ink at 8% and 4%).
+  assert.match(css, /--us-shadow-card:var\(--us-card-shadow\)/);
+  assert.match(css, /--us-card-shadow:0 1px 2px var\(--us-ink-08\),0 8px 24px var\(--us-ink-04\)/);
+  // The paper palette (mission «Fondamenta»): paper, beige, card, one ink, the red pencil.
+  for (const token of ['--us-paper:#FAF7F1', '--us-beige:#F0EBE2', '--us-card:#FFFDF9', '--us-ink-100:#14120E', '--us-pencil:#D3402A', '--us-think:#FF5477', '--us-icon-btn:44px', '--us-color-bg:var(--us-paper)']) assert.ok(css.includes(token + ';'), token);
   assert.match(css, /--us-motion-press:90ms/);
   assert.match(css, /--us-motion-micro:140ms/);
   assert.match(css, /--us-motion-fast:180ms/);

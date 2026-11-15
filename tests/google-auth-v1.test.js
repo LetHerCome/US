@@ -133,7 +133,8 @@ test('deletion and leaving: a Google account confirms with Google, the same acco
 test('beta fix 28/10: «Continua con Google» also under «Crea il tuo account», wired like the login one', () => {
   const html = read('index.html');
   const signup = html.slice(html.indexOf('id="usSignup"'), html.indexOf('id="usVerifyEmail"'));
-  assert.match(signup, /id="usSignupSubmit" type="submit">Registrati<\/button>\s*<button type="button" class="us-auth-google" id="usGoogleSignUp" hidden>[\s\S]*?Continua con Google/);
+  // Il diario, ma pulito (15/11/2026, «Il tuo account»): Google and Apple come first, then «oppure con la mail».
+  assert.match(signup, /<button type="button" class="us-auth-google" id="usGoogleSignUp" hidden>[\s\S]*?Continua con Google[\s\S]*?oppure con la mail[\s\S]*?id="usSignupSubmit" type="submit">Registrati<\/button>/);
   const app = read('app.js');
   assert.match(app, /\[\['usGoogleSignIn','loginStatus'\],\['usGoogleSignUp','usSignupStatus'\]\]/);
 });

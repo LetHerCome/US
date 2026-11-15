@@ -21,7 +21,8 @@ test('Noi is the only user-facing calendar; legacy launchers delegate rather tha
 });
 test('Noi add uses existing date-aware editor directly, preserving all-day, start/end, edit and reminders',()=>{
   assert.match(html,/id="usNoiV2AddTop" data-noi-add/);
-  assert.equal((html.match(/class="us-noi-v2-add"[^>]*data-noi-add/g)||[]).length,1);
+  // Il diario, ma pulito (15/11/2026): the one + of the Noi header is a dark square button.
+  assert.equal((html.match(/class="dy-ib is-dark" id="usNoiV2AddTop" data-noi-add/g)||[]).length,1);
   assert.match(noi,/window\.UsCalendarLinks\.createForDate\(selected\)/);
   assert.match(calendar,/startCreateForDate\(dateISO\);\s*void prepareNoiEntryDate\(dateISO\)\.then/,'editor opens before waiting on reads');
   assert.match(calendar,/ensureNoiEditorSheets\(\)/);
@@ -70,7 +71,8 @@ test('Noi: external date opens selected month and plus calls create on that exac
   const document={readyState:'complete',hidden:false,getElementById:node,querySelector:()=>null,addEventListener(){}};
   vm.runInNewContext(noi,{window,document,console:{warn(){}},MutationObserver:class{observe(){}},Promise,Date,setTimeout,Set,Map});
   window.USNoiV2.openCalendar({date:'2026-12-24'});
-  assert.match(node('usNoiV2Month').innerHTML,/^Dicembre <span class="us-noi-v2-year">2026<\/span>$/,'Due colori: the year is set smaller beside the month');
+  // Il diario, ma pulito (15/11/2026): the year sits beside the month as .dy-cal-year.
+  assert.match(node('usNoiV2Month').innerHTML,/^Dicembre <span class="dy-cal-year">2026<\/span>$/,'Due colori: the year is set smaller beside the month');
   assert.equal(node('usNoiV2AddTop').getAttribute?.('aria-label'),undefined); // fake attribute intentionally ignored
   node('usNoiV2').emit('click',{target:{closest:selector=>selector==='[data-noi-add]'?{}:null}});
   assert.deepEqual(opened,['2026-12-24']);

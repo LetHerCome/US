@@ -20,7 +20,8 @@ const noi = bond.match(/<section class="us-noi-v2"[\s\S]*?<\/section>\s*\n\s*<ar
 test('Noi icons: well-formed markup, the approved settings icon, a real list icon', () => {
   assert.ok(noi.length > 1000, 'Noi V2 markup found');
   assert.doesNotMatch(html, /<span class="us-icon"\s+<img/, 'no half-open icon tag (the old grey square)');
-  assert.match(noi, /class="us-noi-v2-settings"[^>]*><img class="us-approved-custom-icon" src="\/assets\/derived\/runtime\/us-icon-settings-128-v1\.png"/);
+  // Il diario, ma pulito (15/11/2026): Settings is the stroke gear of the Noi header «I vostri giorni».
+  assert.match(noi, /<header class="dy-hd">\s*<h2 class="dy-h2">I vostri <em>giorni<\/em><\/h2>[\s\S]*?<button type="button" class="dy-ib" onclick="go\('settings',\{nav:true\}\)" aria-label="Impostazioni"><svg viewBox="0 0 24 24"/);
   // Noi nuova (03/11/2026): the two views are words, «Mese» and «Prossimi»; no tiles.
   assert.match(noi, /id="usNoiV2ModeList"[^>]*>Prossimi<\/button>/);
   assert.doesNotMatch(noi, /data-noi-open-link/);
@@ -33,7 +34,8 @@ test('Icons: every data-us-icon used by the shell is mapped to an official Phosp
     for (const m of source.matchAll(/data-us-icon="([a-z-]+)"/g)) used.add(m[1]);
     for (const m of source.matchAll(/\bicon\('([a-z-]+)'\)/g)) used.add(m[1]);
   }
-  assert.ok(used.size > 15);
+  // Il diario, ma pulito (15/11/2026): Impostazioni draws the mockup's stroke icons inline, so the shell uses fewer Phosphor names.
+  assert.ok(used.size >= 12);
   for (const name of used) {
     const rule = css.match(new RegExp(`\\.us-icon\\[data-us-icon="${name}"\\]\\{--us-icon-src:url\\("(\\/assets\\/icons\\/phosphor\\/[a-z-]+\\.svg)"\\)\\}`));
     assert.ok(rule, `${name} has a mapping`);
@@ -108,24 +110,27 @@ test('Noi calendar: only the weeks the month spans, today selected, a label per 
       { id: 'a3', title: 'Lago', entry_type: 'personal', owner_id: 'b', is_all_day: true, dates: [ymd(later)] }
     ]
   };
-  const { node } = await noiRender({ snapshot });
+  const { node, click } = await noiRender({ snapshot });
   const grid = node('usNoiV2Content').innerHTML;
   const first = new Date(now.getFullYear(), now.getMonth(), 1);
   const weeks = Math.ceil((((first.getDay() + 6) % 7) + new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()) / 7);
-  assert.match(grid, new RegExp(`data-weeks="${weeks}"`));
-  assert.equal((grid.match(/class="us-noi-v2-(?:day|blank)[" ]/g) || []).length, weeks * 7, 'no empty sixth row');
+  // Il diario, ma pulito (15/11/2026): the grid is .dy-cal; today is the ink
+  // square (framed only after a tap); under the number a bar per person, in
+  // that person's colour (both for what is shared); our dates get the red circle.
+  assert.equal((grid.match(/class="dy-cal-day[" ]/g) || []).length, weeks * 7, 'no empty sixth row');
   const today = grid.match(new RegExp(`<button[^>]*data-noi-day="${todayIso}"[\\s\\S]*?<\\/button>`))?.[0] || '';
-  assert.match(today, /is-selected/);
+  assert.match(today, /class="dy-cal-day is-today"/);
   assert.match(today, /aria-current="date"/);
-  // Noi nuova (03/11/2026): a label per commitment with its name, in the
-  // colour of whose it is (mine, theirs, ours); two at most, then +n.
-  // In a square the anniversary says how much («6 anni», 04/11/2026).
-  assert.match(today, new RegExp(`<span class="us-noi-v2-bar is-milestone" data-owner="noi">${now.getFullYear() - 2020} anni</span><span class="us-noi-v2-bar" data-owner="tu" translate="no">Palestra</span><span class="us-noi-v2-more">\\+1</span>`), 'labels in the owner colour');
+  assert.match(today, /<svg class="dy-cal-circle"/, 'the anniversary: the red circle');
+  assert.deepEqual([...today.matchAll(/<i class="dy-bar" data-owner="([^"]+)"/g)].map((m) => m[1]).sort(), ['partner', 'tu'], 'bars in the owner colours');
+  assert.match(today, /aria-label="[^"]*3 impegni"/);
   if (ymd(later) !== todayIso) {
     const next = grid.match(new RegExp(`<button[^>]*data-noi-day="${ymd(later)}"[\\s\\S]*?<\\/button>`))?.[0] || '';
-    assert.match(next, /data-owner="partner" translate="no">Lago</, 'the other person\'s commitment takes their colour');
+    assert.deepEqual([...next.matchAll(/<i class="dy-bar" data-owner="([^"]+)"/g)].map((m) => m[1]), ['partner'], 'the other person\'s commitment takes their colour');
   }
-  assert.doesNotMatch(grid, /us-noi-v2-legend|us-noi-v2-day-marks/, 'no key, no dots');
+  assert.doesNotMatch(grid, /us-noi-v2-legend|us-noi-v2-day-marks|us-noi-v2-bar/, 'no key, no dots, no text labels');
+  assert.equal(node('usNoiV2Detail').hidden, true, 'the day detail opens on a tap');
+  click({ matches: (sel) => sel === '[data-noi-day]', dataset: { noiDay: todayIso }, hasAttribute: () => false });
   const detail = node('usNoiV2Detail').innerHTML;
   assert.match(detail, /<span class="us-noi-v2-today-pill">Oggi<\/span>/);
   const titles = [...detail.matchAll(/<b(?: translate="no")?>([^<]+)<\/b>/g)].map((m) => m[1]);
@@ -138,11 +143,13 @@ test('Noi calendar: a failed read keeps the grid and offers Riprova; list mode h
   const { node } = await noiRender({ fail: true });
   const content = node('usNoiV2Content').innerHTML;
   assert.match(content, /role="alert"[\s\S]*data-noi-retry/);
-  assert.match(content, /class="us-noi-v2-grid"/, 'the month is still readable');
+  // Il diario, ma pulito (15/11/2026): the grid is .dy-cal-grid; «Prossimi» is the
+  // «In arrivo» rows, waiting for their own read (none in this fixture).
+  assert.match(content, /class="dy-cal-grid"/, 'the month is still readable');
   assert.equal(node('usNoiV2Content').dataset.state, 'error');
-  // Noi nuova: «Prossimi» has its own read; without one it says it cannot load.
   node('usNoiV2ModeList').emit('click');
-  assert.match(node('usNoiV2Content').innerHTML, /Carico i prossimi impegni…/);
+  assert.equal(node('usNoiV2Content').innerHTML, '');
+  assert.match(node('dyNoiUpcomingRows').innerHTML, /<p class="dy-rows-note">Carico…<\/p>/);
   assert.equal(node('usNoiV2Detail').hidden, true, 'list mode does not repeat the day detail');
 });
 
@@ -162,18 +169,23 @@ test('Noi calendar: month change animates once and only without reduced motion',
 test('Gioca round 3: daily first, the week, bento games, weekly question, then the rest', () => {
   const games = read('games.js');
   const hub = games.slice(games.indexOf('function renderHub() {'), games.indexOf('function renderHubError() {'));
-  const order = ['us-gv2-daily-slot', '${weekStrip()}', 'us-gv2-choose', 'data-gv2-action="per-voi"', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
+  // Il diario, ma pulito (15/11/2026): «Giochi a due» with its tag, the (hidden)
+  // daily slot, the challenge of the week, «Da giocare» (Per voi first, then the
+  // games, one row each), La vostra domanda, then the rest. No 7-day strip.
+  const order = ['<header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due</em></h2>${dyCountTag()}</header>', '<div class="us-gv2-daily-slot" data-gv4-daily-slot hidden></div>', 'data-wc-slot', 'class="dy-games"', 'data-gv2-action="per-voi"', '${swipe}${families}', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
   const positions = order.map((needle) => hub.indexOf(needle));
   assert.ok(positions.every((p) => p >= 0), JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a, b) => a - b), positions);
-  assert.doesNotMatch(hub, /dayRail\(\)/);
+  assert.doesNotMatch(hub, /dayRail\(\)|weekStrip\(\)/);
   assert.match(read('app.js'), /const slot=hub\.querySelector\('\.us-gv2-daily-slot'\);/);
   assert.match(games, /\$\{knownPartner\(\) \|\| 'La tua persona'\} la troverà in Gioca: risponderete tutti e due\./, 'write → discover, in one line (mockup wording)');
 });
 
 test('Sintonia: one premium segmented control, keyboard-friendly, and a page that scrolls', () => {
   // Round 3: [data-s] so the segmented control rises first, as the mockup's .seg.
-  assert.match(html, /<div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia">/);
+  // Il diario, ma pulito (15/11/2026): the control stays wired but hidden; Sintonia
+  // lives in «Voi due» and its collection still opens here (USNoiV2.openSintonia).
+  assert.match(html, /<div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia" hidden>/);
   assert.match(noiJs, /\$\('usGiocaTabs'\)\?\.setAttribute\('data-active',giocaTab\)/);
   assert.match(noiJs, /e\.key!=='ArrowLeft'&&e\.key!=='ArrowRight'/);
   assert.match(noiCss, /#quiz \.us-gioca-tabs\[data-active="sintonia"\]::before\{transform:translateX\(100%\)\}/);

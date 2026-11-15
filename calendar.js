@@ -1096,6 +1096,9 @@ function setFormKind(kind) {
 // already typed) to Noi, which opens the Eventi editor in its place.
 function chooseFormKind(kind) {
   if (editingFormEntry || pendingIdeaLink || busy) return;
+  // Il diario, ma pulito (founder, 15/11/2026): the countdown is made from Noi
+  // too; its own editor (countdown.js) keeps the rules, the styles and the save.
+  if (kind === 'countdown') { closeCalendarFormSheet(); window.USCountdown?.open?.(window.USCountdown?.hasActive?.() ? 'active' : 'collection'); return; }
   if (kind !== 'event') { setFormKind(kind); return; }
   const open = window.USNoiV2?.addSpecialDate;
   if (typeof open !== 'function') return;

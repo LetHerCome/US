@@ -36,21 +36,20 @@ const allowance = (over = {}) => ({ week_start: '2026-09-28', resets_on: '2026-1
 
 test('Gioca tiles: a fresh week is six cards of icon, name, kind of moment and "Disponibile"', async () => {
   const html = await hub(homeOf({ allowance: allowance() })).html();
-  const tiles = html.match(/<button type="button" (?:data-us-[a-z-]+(?:="[a-z]+")? )*class="us-gv2-game[^"]*" data-gv2-family="[a-z_]+"[\s\S]*?<\/button>/g) || [];
+  // Il diario, ma pulito (15/11/2026): «Da giocare» is a list of rows (button.dy-game):
+  // a square black icon, the name, the kind of moment and a status tag.
+  const tiles = html.match(/<button type="button" (?:data-us-[a-z-]+(?:="[a-z]+")? )*class="dy-game" data-gv2-family="[a-z_]+"[\s\S]*?<\/button>/g) || [];
   // G7 1.0 — "E se…?" is no longer offered: Swipe plus five families.
   assert.equal(tiles.length, 5);
   assert.doesNotMatch(html, /data-gv2-family="e_se"/);
   for (const tile of tiles) {
-    assert.match(tile, /class="us-gv2-glyph"/, 'each card leads with the icon chip');
-    assert.match(tile, /<b>[^<]+<\/b><small>[^<]+<\/small>/, 'then its name and the kind of moment');
-    // Round 3 parity (062): the mockup's tile is its art, name and kind; a
-    // ready card says "Disponibile" to assistive tech, not with a badge.
-    assert.match(tile, /<svg class="us-gv2-art" viewBox="0 0 44 44"/, 'the mockup art, not a Phosphor glyph');
-    assert.match(tile, /data-gv2-mode-state="ready"[^>]*aria-label="[^"]+\. Disponibile"/, 'a ready card says it is available');
-    assert.doesNotMatch(tile, /us-gv2-game-state/);
+    assert.match(tile, /<span class="dy-ib is-dark dy-game-ic" aria-hidden="true"><svg viewBox="0 0 24 24"/, 'each row leads with its icon');
+    assert.match(tile, /<span class="dy-game-copy"><b>[^<]+<\/b><small>[^<]+<\/small><\/span>/, 'then its name and the kind of moment');
+    assert.match(tile, /data-gv2-mode-state="ready"[^>]*aria-label="[^"]+\. Disponibile"/, 'a ready row says it is available');
+    assert.match(tile, /<span class="dy-tag dy-tag-s dy-game-tag"[^>]*>da giocare<\/span>/);
   }
   assert.doesNotMatch(html, /is-wide|us-gv2-deck/);
-  assert.match(html, /<div class="us-gv2-game-grid" data-s>/);
+  assert.match(html, /<div class="dy-game-list">/);
   for (const gone of ['Quello che forse non sapete ancora', 'Stessa situazione, due sguardi', 'Scenari assurdi', 'Uno risponde, l’altro indovina', 'Lo stesso momento, due memorie', 'Scelte, futuri, possibilità']) {
     assert.doesNotMatch(html, new RegExp(gone));
   }
@@ -62,12 +61,12 @@ test('Gioca hub: no page header prose, no separate in-progress list, one week st
   const html = await hub(homeOf({ allowance: allowance({ used: 1, free_used: 1, families: { ridete: { session_id: 'r', completed: true } } }),
     open_rounds: [{ id: 'o1', game_family: 'confrontatevi', item_count: 5, my_answered_count: 2 }] })).html();
   for (const gone of ['Scopritevi, giocando', 'Cinque domande alla volta', 'Un Per voi e due giochi a scelta', 'IN CORSO', 'SCEGLIETE VOI', 'Non scegliete. US ha preparato']) assert.doesNotMatch(html, new RegExp(gone));
-  assert.match(html, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
-  assert.equal((html.match(/id="usGv2Week"/g) || []).length, 1, 'one week strip');
-  assert.equal((html.match(/class="us-gv2-wd[ "]/g) || []).length, 7, 'seven days');
-  assert.equal((html.match(/aria-current="date"/g) || []).length, 1, 'today, once');
+  // Il diario, ma pulito (15/11/2026): the page title is the header «Giochi a due»;
+  // the week strip is gone; an open round says its progress in its row's tag.
+  assert.match(html, /<header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due<\/em><\/h2>/);
+  assert.doesNotMatch(html, /id="usGv2Week"|class="us-gv2-wd[ "]/, 'no week strip');
   assert.doesNotMatch(html, /us-gv2-rhythm|QUESTA SETTIMANA|Ancora \d giochi/, 'no budget strip');
-  assert.match(html, /data-gv2-family="confrontatevi" data-gv2-mode-state="open" data-gv2-session="o1" data-tone="progress"[\s\S]*?<small>2 di 5<\/small>/, 'an open round shows on its own card');
+  assert.match(html, /data-gv2-family="confrontatevi" data-gv2-mode-state="open" data-gv2-session="o1" data-tone="progress"[\s\S]*?<span class="dy-tag dy-tag-s dy-game-tag"[^>]*>2 di 5<\/span>/, 'an open round shows on its own row');
   assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"[\s\S]*?<small>Giocato questa settimana<\/small>/);
 });
 
@@ -81,10 +80,12 @@ test('Gioca hub: a spent day stays compact and locks unplayed tiles until tomorr
 });
 
 test('Gioca hub: Per voi is one line of state plus one action', async () => {
-  const expectations = { idle: ['5 domande scelte per voi', 'Inizia'], pending: ['Beatrice ha iniziato', 'Rispondi'], waiting: ['Aspetti Beatrice', 'Apri'], reveal_ready: ['Risposte pronte ♡', 'Scopri'], in_progress: ['A metà', 'Continua'] };
+  // Il diario, ma pulito (15/11/2026): Per voi is a row like the games; its action
+  // is the status tag (tocca a te / risposte pronte in their colours, else the action).
+  const expectations = { idle: ['5 domande scelte per voi', 'inizia'], pending: ['Beatrice ha iniziato', 'tocca a te'], waiting: ['Aspetti Beatrice', 'apri'], reveal_ready: ['Risposte pronte ♡', 'risposte pronte'], in_progress: ['A metà', 'continua'] };
   for (const [state, [line, cta]] of Object.entries(expectations)) {
     const html = await hub(homeOf({ per_voi: { state, session_id: 's' } })).html();
-    assert.match(html, new RegExp(`<b>Per voi</b><small>${line}</small></span>\\s*<span class="us-gv2-pervoi-cta">${cta}</span>`), state);
+    assert.match(html, new RegExp(`<b>Per voi</b><small>${line}</small></span>\\s*<span class="dy-tag dy-tag-s dy-game-tag"[^>]*>${cta}</span>`), state);
   }
 });
 
@@ -103,14 +104,16 @@ test('Gioca CSS: tiles use the canonical tokens and the Noi chip recipe, never a
 // D4 (28/10/2026), three a day since 13/11/2026: the hub counts the rounds
 // left today under I vostri giochi, from the server's allowance, with one dot
 // per round of the day.
-const titleHint = (html) => html.match(/id="usGv2ChooseTitle">I vostri giochi<\/h3>.*?<small>([^<]*)<\/small>/s)?.[1];
+// Il diario, ma pulito (15/11/2026): the count is the honey tag of the header
+// («N su 3 oggi», «Domani si rigioca»); the dots are gone.
+const titleHint = (html) => html.match(/<header class="dy-hd">[\s\S]*?<span class="dy-tag"[^>]*data-gv2-left="\d+">([^<]*)<\/span><\/header>/)?.[1];
 const dots = (html) => [...(html.match(/class="us-gv2-daycount-dots"[^>]*>(.*?)<\/span>/s)?.[1] || '').matchAll(/data-on="(true|false)"/g)].map((m) => m[1] === 'true');
 const day = (over = {}) => allowance({ period: 'day', resets_on: '2026-10-29', limit: 3, free_limit: 3, ...over });
 
 test('Gioca hub: the counter says how many of the three rounds are left today', async () => {
   const html = await hub(homeOf({ allowance: day({ used: 1, free_used: 1 }) })).html();
-  assert.equal(titleHint(html), 'Ancora 2 su 3 oggi');
-  assert.deepEqual(dots(html), [true, true, false]);
+  assert.equal(titleHint(html), '2 su 3 oggi');
+  assert.deepEqual(dots(html), [], 'no dots');
   assert.doesNotMatch(html, /data-gv2-action="plus-soon"/, 'no Plus row while rounds are left');
 });
 
@@ -118,18 +121,22 @@ test('Gioca hub: once the day is spent, the counter says tomorrow and Plus is co
   {
     const spent = day({ used: 3, free_used: 3, per_voi_used: 3, free_available: false, per_voi_available: false });
     const html = await hub(homeOf({ allowance: spent }), { UsPlusSoon: { open() {} } }).html();
-    assert.equal(titleHint(html), 'Domani altre 3');
-    assert.deepEqual(dots(html), [false, false, false]);
+    assert.equal(titleHint(html), 'Domani si rigioca');
+    assert.deepEqual(dots(html), [], 'no dots');
     assert.match(html, /data-gv2-action="plus-soon"[^>]*>.*Partite illimitate con US Plus.*In arrivo · Avvisami/s);
   }
 });
 
 test('Gioca hub: an older one-a-day server still reads well', async () => {
   const one = day({ limit: 1, free_limit: 1, used: 1, free_used: 1, free_available: false, per_voi_available: false });
-  assert.equal(titleHint(await hub(homeOf({ allowance: one })).html()), 'Domani un’altra partita');
+  // Il diario, ma pulito (15/11/2026): one wording for every limit.
+  assert.equal(titleHint(await hub(homeOf({ allowance: one })).html()), 'Domani si rigioca');
 });
 
 test('Gioca V4 hub: bento title keeps the low-friction hint', async () => {
   const html = await hub(homeOf()).html();
-  assert.match(html, /<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3><small>Bastano pochi minuti<\/small>/);
+  // Il diario, ma pulito (15/11/2026): the section is «Da giocare»; with no allowance
+  // from the server the header shows no count at all.
+  assert.match(html, /<div class="dy-sec-head"><h3 id="usGv2ChooseTitle">Da giocare<\/h3><\/div>/);
+  assert.match(html, /<header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due<\/em><\/h2><\/header>/);
 });

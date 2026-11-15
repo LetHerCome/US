@@ -30,7 +30,11 @@ test('M12B.1 static: Oggi keeps no overflow clip on body, html or #home', () => 
 test('M12B.1 static: the Oggi frame drops the nav clearance of .app, only while Oggi is active', () => {
   const identity = read('identity.css');
   assert.match(identity, /body:has\(#home\.page\.active\) \.app\{padding-bottom:0!important\}/);
-  assert.match(identity, /#home \.home-hero-only\{height:calc\(var\(--us-viewport-height\) - var\(--us-safe-top\)\)!important;min-height:0!important\}/);
+  // Il diario, ma pulito (15/11/2026): the old full-screen hero is hidden; the
+  // page of today clears the nav itself.
+  const diario = read('diario.css');
+  assert.match(diario, /#home #homeHero\[hidden\]\{display:none!important\}/);
+  assert.match(diario, /\.dy-oggi\{padding:0 0 calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\) \+ 24px\)\}/);
   // Every other page keeps the shared clearance for the floating nav.
   assert.match(read('fix4.css'), /\.app\{[^}]*padding-bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 34px\)!important/);
 });

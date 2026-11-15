@@ -8,7 +8,8 @@ const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const html = read('index.html');
-const topBar = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<main id="home"/)?.[0] || '';
+// Il diario, ma pulito (15/11/2026): the top chrome of Oggi is its header (.dy-head).
+const topBar = html.match(/<header class="dy-head">[\s\S]*?<\/header>/)?.[0] || '';
 const foundation = read('ui-foundation.css');
 const CANONICAL = 'assets/derived/brand/us-symbol-apk-foreground-v1.png';
 // In-app display uses the runtime-sized derivative of that master (perf 1.0).
@@ -17,7 +18,9 @@ const RUNTIME = 'assets/derived/runtime/us-symbol-256-v1.png';
 // ---------------------------------------------------------------- TOP BAR
 
 test('top bar: the centre is the canonical identity used by the PWA icon and launcher, not a UI variant', () => {
-  assert.match(topBar, new RegExp(`<div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/${RUNTIME}"`));
+  // Il diario, ma pulito (15/11/2026): in the header «us» is written in Permanent Marker
+  // (mockup); the canonical mark stays the app icon, the PWA icon and the launcher.
+  assert.match(topBar, /<span class="dy-mark" role="img" aria-label="US">us<\/span>/);
   assert.doesNotMatch(html, /us-symbol-ui-crisp-v1/, 'the old UI logo is used nowhere');
   assert.doesNotMatch(read('service-worker.js'), /us-symbol-ui-crisp-v1/);
   const webManifest = JSON.parse(read('manifest.webmanifest'));
@@ -30,17 +33,18 @@ test('top bar: the centre is the canonical identity used by the PWA icon and lau
 });
 
 test('top bar: accessible, inert, centred, and still three balanced zones', () => {
-  assert.match(topBar, /class="us-top-brand" role="img" aria-label="US"/);
-  assert.match(topBar, /class="us-top-brand-art"[^>]*alt="" aria-hidden="true"/);
-  const css = read('identity.css');
-  assert.match(css, /\.top\.us-premium-top \.us-top-brand\{grid-column:2;[^}]*overflow:hidden;pointer-events:none/);
-  assert.match(css, /\.us-top-brand-art\{[^}]*height:58px;width:58px/, 'the square mark is cropped inside the 38px bar slot');
-  assert.ok(topBar.indexOf('id="usPerVoiTop"') < topBar.indexOf('us-top-brand') && topBar.indexOf('us-top-brand') < topBar.indexOf('id="leftForYouPartnerEntry"'));
+  // Il diario, ma pulito (15/11/2026): «us» is a span (no control), centred
+  // between Ti penso and Lasciato per te.
+  assert.match(topBar, /class="dy-mark" role="img" aria-label="US"/);
+  const css = read('diario.css');
+  assert.match(css, /\.dy-mark\{[^}]*user-select:none/);
+  assert.match(css, /\.dy-head\{display:flex;justify-content:space-between;align-items:center;/);
+  assert.ok(topBar.indexOf('id="thinkButton"') < topBar.indexOf('dy-mark') && topBar.indexOf('dy-mark') < topBar.indexOf('id="leftForYouPartnerEntry"'));
 });
 
 // ---------------------------------------------------------------- AURORA
 
-test('aurora: visibility is tunable from two tokens, clearly raised, CSS only', () => {
+test('aurora: visibility is tunable from two tokens, clearly raised, CSS only', { skip: 'Il diario, ma pulito (15/11/2026): la barra in alto con l\'aurora non c\'è più, Oggi ha la sua testata su carta' }, () => {
   const tokens = foundation.match(/--us-aurora-ambient:([\d.]+);--us-aurora-react:([\d.]+)/);
   assert.ok(tokens, 'ambient + reaction visibility tokens exist');
   const [ambient, react] = [Number(tokens[1]), Number(tokens[2])];

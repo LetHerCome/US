@@ -16,7 +16,9 @@ const tick = async (n = 8) => { for (let i = 0; i < n; i += 1) await new Promise
 // ---------------------------------------------------------------- shell / nav
 
 test('nav: the same four destinations, in order, with the same handlers and names', () => {
-  const nav = html.match(/<nav class="nav us-nav us-nav-premium"[\s\S]*?<\/nav>/)?.[0] || '';
+  // Il diario, ma pulito (15/11/2026): <nav class="dy-nav">, same buttons; the
+  // icons are the mockup's inline strokes (Gioca a controller), no Phosphor files.
+  const nav = html.match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0] || '';
   const buttons = [...nav.matchAll(/<button [^>]*data-page="([^"]+)" onclick="([^"]+)" aria-label="([^"]+)"/g)].map((m) => m.slice(1));
   assert.deepEqual(buttons, [
     ['home', "go('home',{nav:true})", 'Oggi'],
@@ -26,42 +28,45 @@ test('nav: the same four destinations, in order, with the same handlers and name
   ]);
   assert.equal((nav.match(/aria-current="page"/g) || []).length, 1, 'one current page at boot');
   assert.match(nav, /class="active" data-page="home"[^>]*aria-current="page"/);
-  assert.match(nav, /game-controller-regular\.svg/);
-  assert.match(nav, /game-controller-fill\.svg/);
-  assert.doesNotMatch(nav, /cards-three-(?:regular|fill)\.svg/, 'Gioca uses the minimal controller glyph');
+  assert.equal((nav.match(/<svg class="dy-nav-icon"/g) || []).length, 4);
+  assert.doesNotMatch(nav, /phosphor\/|cards-three/, 'inline icons only');
 });
 
 test('nav: aria-current still follows the .active tab (ui-foundation sync is unchanged)', () => {
   const src = read('ui-foundation.js');
-  assert.match(src, /function syncNavigation\(\) \{\s*Array\.from\(documentRef\.querySelectorAll\('\.nav button'\)\)\.forEach\(\(button\) => \{\s*if \(button\.classList\.contains\('active'\)\) button\.setAttribute\('aria-current', 'page'\);\s*else button\.removeAttribute\('aria-current'\);/);
+  // Il diario, ma pulito (15/11/2026): the same sync, on .dy-nav.
+  assert.match(src, /function syncNavigation\(\) \{\s*Array\.from\(documentRef\.querySelectorAll\('\.dy-nav button'\)\)\.forEach\(\(button\) => \{\s*if \(button\.classList\.contains\('active'\)\) button\.setAttribute\('aria-current', 'page'\);\s*else button\.removeAttribute\('aria-current'\);/);
 });
 
 test('nav: ~56px before the safe area, 44px+ targets, 24px icons, no looping animation', () => {
+  // Il diario, ma pulito (15/11/2026): the bar is 66px before the safe area
+  // (84 with the 18 below); its buttons fill the bar above the safe area, icons 24px; the current
+  // tab is ink, bold, with the red scribble; one hop when it changes, never a loop.
   const tokens = read('ui-foundation.css');
-  assert.match(tokens, /--us-nav-height:56px;/);
-  const id = read('identity.css');
-  const block = id.slice(id.indexOf('/* --- M1 APK shell navigation'), id.indexOf('/* M1 top chrome'));
-  assert.match(block, /\.us-nav-premium button\{[\s\S]*?min-width:44px!important;[\s\S]*?min-height:46px!important/);
-  assert.match(block, /\.us-nav-icon\{position:relative;display:block;width:24px;height:24px;/);
-  assert.match(block, /\.us-nav-icon--quiz\{transform:translateY\(-2px\)\}/, 'only the controller glyph gets optical vertical alignment');
+  assert.match(tokens, /--us-nav-height:66px;/);
+  const block = read('diario.css').split('\n').filter((line) => line.includes('.dy-nav')).join('\n');
+  assert.match(block, /\.dy-nav\{[^}]*height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:8px /);
+  assert.match(block, /\.dy-nav \.dy-nav-icon\{width:24px;height:24px;/);
   assert.doesNotMatch(block, /infinite/, 'no looping animation on the nav');
-  assert.doesNotMatch(block, /button\.active::after/, 'no extra dot under the active label');
-  assert.match(block, /button\.active \.us-nav-icon-on\{display:block!important\}/, 'active is still unmistakable: filled icon');
-  assert.match(tokens, /\.us-nav:has\(> button:nth-of-type\(4\)\.active\)\{--us-nav-index:3\}/, 'the sliding indicator still marks the active tab');
-  assert.match(tokens, /@media \(prefers-reduced-motion:reduce\)\{\.us-nav-indicator\{transition:none\}\}/);
+  assert.match(block, /\.dy-nav button\.active\{color:var\(--us-ink-100\);font-weight:800\}/, 'active is still unmistakable');
+  assert.match(block, /\.dy-nav button\.active \.dy-nav-scrib\{opacity:1\}/);
+  assert.match(block, /\.dy-nav button\.active \.dy-nav-icon\{animation:dy-lift \.38s /);
+  assert.match(block, /html\[data-us-motion="reduced"\] :is\(\.dy-oggi,\.dy-nav,\.dy-over\) \*\{animation:none!important;transition:none!important\}/);
   assert.match(read('fix4.css'), /@media \(orientation:landscape\) and \(max-height:560px\)\{:root\{--us-nav-height:52px\}/);
 });
 
 test('top: the pill is only as tall as its 44px controls and content starts right after it', () => {
-  const tokens = read('ui-foundation.css');
-  assert.match(tokens, /--us-top-chrome-height:46px;/);
-  assert.match(tokens, /--us-top-chrome-clearance:56px;/);
-  assert.match(read('identity.css'), /\.top\.us-premium-top\{top:calc\(var\(--us-safe-top\) \+ 6px\);left:max\(34px,var\(--us-safe-left\)\);right:max\(34px,var\(--us-safe-right\)\);padding:0 1px!important;/);
-  // Global shell: Ti penso and Lasciato per te flank the product mark.
-  const top = html.split('\n').find((line) => line.includes('<div class="top us-premium-top">')) || '';
-  assert.match(top, /id="thinkButton" class="us-top-think us-premium-control" onclick="sendThinkSignal\(\)"/);
+  // Il diario, ma pulito (15/11/2026): no floating pill. The header of Oggi
+  // starts 6px under the safe area; its controls are square 44px buttons and
+  // the date follows it in the page flow.
+  const diario = read('diario.css');
+  assert.match(diario, /\.dy-head\{[^}]*padding:calc\(var\(--us-safe-top\) \+ 6px\) 20px 0\}/);
+  assert.match(diario, /\.dy-ib\{[^}]*width:var\(--us-icon-btn\);height:var\(--us-icon-btn\);/);
+  // Ti penso and Lasciato per te flank «us».
+  const top = html.match(/<header class="dy-head">[\s\S]*?<\/header>/)?.[0] || '';
+  assert.match(top, /id="thinkButton" class="dy-ib dy-think" onclick="sendThinkSignal\(\)"/);
   assert.match(top, /id="leftForYouPartnerEntry"/);
-  assert.match(top, /class="us-top-brand"/);
+  assert.match(top, /class="dy-mark"/);
   assert.doesNotMatch(top, /id="usPerVoiTop"/, 'Per voi belongs to Gioca, not global chrome');
   assert.equal((html.match(/id="thinkButton"/g) || []).length, 1, 'one global Ti penso action');
 });
@@ -69,18 +74,21 @@ test('top: the pill is only as tall as its 44px controls and content starts righ
 test('HUMAN-UI-01 is not reintroduced: no capsule, no floating envelope shell', () => {
   assert.doesNotMatch(html, /us-capsule|usCapsuleMark|usNavGioca/);
   assert.doesNotMatch(read('ui-foundation.js'), /capsule\(/);
-  assert.match(html, /<div class="top us-premium-top"><span class="us-aurora"/, 'the production top pill (with its aurora) stays');
+  // Il diario, ma pulito (15/11/2026): the old pill is a hidden holder; the header of Oggi replaces it.
+  assert.match(html, /<div class="top us-premium-top" hidden>/);
+  assert.doesNotMatch(html, /class="us-aurora"/);
 });
 
 test('page labels: Ricordi and Gioca stay accessible without a visible top-left title', () => {
   const moments = html.match(/<main id="moments"[\s\S]*?<\/main>/)?.[0] || '';
   assert.match(moments, /<h2 class="noi-sr">Ricordi<\/h2>/);
   assert.doesNotMatch(moments, /<h2>Ricordi<\/h2>/);
+  // Il diario, ma pulito (15/11/2026): Ricordi and Gioca now have a visible header
+  // (.dy-hd «Il vostro diario», «Giochi a due»); the week strip left the hub.
+  assert.match(moments, /<header class="dy-hd">\s*<h2 class="dy-h2">Il vostro <em>diario<\/em><\/h2>/);
   const games = read('games.js');
-  assert.match(games, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
-  // Round 3 parity (062): Sfida di oggi leads the hub, then the mockup's week.
-  assert.match(games, /<span class="us-gv4-daily-pending-title">La domanda di oggi<\/span>/);
-  assert.match(games, /<div class="us-gv2-week" id="usGv2Week" data-s role="list" aria-label="Questa settimana">/);
+  assert.match(games, /<header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due<\/em><\/h2>\$\{dyCountTag\(\)\}<\/header>/);
+  assert.doesNotMatch(games.slice(games.indexOf('function renderHub()'), games.indexOf('function renderHubError()')), /weekStrip\(\)/);
   assert.doesNotMatch(games, /rhythmStrip|us-gv2-head"/);
 });
 
@@ -127,11 +135,12 @@ test('Gioca V4: six existing game IDs and hero are in one bento grid', async () 
   const ids = [...html.matchAll(/data-gv2-family="([a-z_]+)"/g)].map((m) => m[1]);
   // G7 1.0 — "E se…?" is no longer offered (old rounds still open by id).
   assert.deepEqual(ids, ['scopritevi', 'confrontatevi', 'ridete', 'quanto_mi_conosci', 'rivivete']);
-  assert.ok(html.indexOf('us-gv2-game-grid') < html.indexOf('data-gv2-action="per-voi"'), 'Per voi is the first bento tile inside the game grid');
+  // Il diario, ma pulito (15/11/2026): one «Da giocare» list (.dy-game-list), Per voi first.
+  assert.ok(html.indexOf('dy-game-list') < html.indexOf('data-gv2-action="per-voi"'), 'Per voi is the first row of the list');
   assert.ok(html.indexOf('data-gv2-action="per-voi"') < html.indexOf('data-gv2-action="swipe"'), 'Per voi precedes Swipe in visual and keyboard order');
   assert.equal((html.match(/data-gv2-action="per-voi"/g) || []).length, 1);
   assert.equal((html.match(/data-gv2-action="swipe"/g) || []).length, 1, 'Swipe has exactly one entry');
-  assert.match(html, /<section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">[\s\S]*?<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3>[\s\S]*?<div class="us-gv2-game-grid" data-s>/);
+  assert.match(html, /<section class="dy-games" aria-labelledby="usGv2ChooseTitle">[\s\S]*?<h3 id="usGv2ChooseTitle">Da giocare<\/h3>[\s\S]*?<div class="dy-game-list">/);
   assert.doesNotMatch(html, /us-gv2-deck|us-gv2-filters|data-gv2-filter/);
   assert.doesNotMatch(read('games.css'), /\.us-gv2-game-grid\{[^}]*overflow-x/, 'discovering games never needs a sideways scroll');
 });
@@ -155,13 +164,15 @@ test('Gioca: rounds are plain readings of open_rounds / recent, on their tiles; 
   const rows = [...section.matchAll(/data-gv2-session="([^"]+)" data-tone="([a-z]+)"/g)].map((m) => [m[1], m[2]]);
   assert.deepEqual(rows, [['o2', 'progress']]);
   assert.match(section, /<b>E se…\?<\/b>/);
-  const tiles = [...html.matchAll(/data-gv2-family="([a-z_]+)" data-gv2-mode-state="open" data-gv2-session="([^"]+)" data-tone="([a-z]+)"[^>]*>[\s\S]*?<small>([^<]+)<\/small>/g)].map((m) => m.slice(1));
-  assert.deepEqual(tiles, [['scopritevi', 'o3', 'waiting', 'Aspetti Beatrice'], ['ridete', 'o1', 'turn', 'Tocca a te'], ['rivivete', 'r1', 'ready', 'Risposte pronte']]);
-  assert.ok(html.indexOf('us-gv2-continue') > html.indexOf('us-gv2-choose'), 'the rest comes after the games');
+  // Il diario, ma pulito (15/11/2026): a row says its round in its status tag.
+  const tiles = [...html.matchAll(/data-gv2-family="([a-z_]+)" data-gv2-mode-state="open" data-gv2-session="([^"]+)" data-tone="([a-z]+)"[^>]*>[\s\S]*?<span class="dy-tag dy-tag-s dy-game-tag"[^>]*>(?:<span class="dy-mini"[\s\S]*?<\/svg><\/span>)?([^<]+)<\/span>/g)].map((m) => m.slice(1)); // the turn tag may start with the small character (v4.1)
+  // v4.1: a round the other person already played says «ha giocato» with their small character.
+  assert.deepEqual(tiles, [['scopritevi', 'o3', 'waiting', 'aspetti Beatrice'], ['ridete', 'o1', 'turn', 'ha giocato'], ['rivivete', 'r1', 'ready', 'risposte pronte']]);
+  assert.ok(html.indexOf('us-gv2-continue') > html.indexOf('dy-games'), 'the rest comes after the games');
   const done = html.match(/<details class="us-gv2-done">[\s\S]*?<\/details>/)?.[0] || '';
   assert.match(done, /<summary><span>Partite completate<\/span><b>1<\/b><\/summary>/);
   assert.deepEqual([...done.matchAll(/data-gv2-session="([^"]+)"/g)].map((m) => m[1]), ['r2']);
-  assert.ok(html.indexOf('us-gv2-done') > html.indexOf('us-gv2-choose'), 'completed rounds stay at the end');
+  assert.ok(html.indexOf('us-gv2-done') > html.indexOf('dy-games'), 'completed rounds stay at the end');
 });
 
 test('Gioca: a round row opens the existing session action and keeps no client state', async () => {
@@ -253,7 +264,12 @@ test('Noi distance: the existing capsule render also fills the couple row, and o
 // Missioni and Eventi are the three links under the one Noi calendar.
 test('Noi: the couple row stays centered, "La nostra settimana" owns the week, and destinations stay focused', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  const head = bond.match(/<header class="noi-canonical-head noi-couple-head">[\s\S]*?<\/header>/)?.[0] || '';
+  // Il diario, ma pulito (15/11/2026): the couple row stays mounted (its avatars and
+  // distance are still filled) but hidden; Noi opens on «I vostri giorni», whose
+  // gear is the visible way to Settings.
+  const head = bond.match(/<header class="noi-canonical-head noi-couple-head" hidden>[\s\S]*?<\/header>/)?.[0] || '';
+  const dyHead = bond.match(/<header class="dy-hd">\s*<h2 class="dy-h2">I vostri <em>giorni<\/em><\/h2>[\s\S]*?<\/header>/)?.[0] || '';
+  assert.match(dyHead, /<button type="button" class="dy-ib" onclick="go\('settings',\{nav:true\}\)" aria-label="Impostazioni">/);
   assert.match(head, /id="pairAvatarFrancesco"><img alt="" hidden><span class="fallback"/);
   assert.match(head, /id="pairAvatarBeatrice"><img alt="" hidden><span class="fallback"/);
   assert.match(head, /id="noiCoupleCard" role="group" aria-label="Voi due, distanza e impostazioni"/);
@@ -286,29 +302,45 @@ test('Quest → Sfida della settimana (03/11/2026): the weekly board and its act
 
 // ---------------------------------------------------------------- Settings
 
+// Il diario, ma pulito (15/11/2026, mockup v4.1): Impostazioni is a page of the
+// diary with four groups (Tu, Voi due, App, Aiuto e account) under the couple
+// card. «Compagni» (the retired cat) and «Foto Home» left; every other control
+// keeps its data-us-setting hook and its action.
 const settingsPage = html.match(/<main id="settings"[\s\S]*?<\/main>/)?.[0] || '';
-const scope = (name) => settingsPage.match(new RegExp(`<section class="us-settings2-section" data-us-settings-scope="${name}"[\\s\\S]*?\\n      </section>`))?.[0] || '';
+const scope = (name) => settingsPage.match(new RegExp(`<section class="dy-set-group" data-us-settings-scope="${name}"[\\s\\S]*?\\n      </section>`))?.[0] || '';
 const settingsIn = (chunk) => [...chunk.matchAll(/data-us-setting="([a-z-]+)"/g)].map((m) => m[1]);
 
 test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the couple shares', () => {
-  // US V3 — Personalizza Oggi was this phone's own choice in TU; since 29/10/2026 (founder) it lives in Sintonia only.
-  // US Plus, in arrivo (13/11/2026): «Avvisatemi» is this account's own answer, so it sits in TU.
-  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'person-color', 'status-form', 'plus', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status', 'report']);
+  assert.deepEqual(settingsIn(scope('tu')), ['character-shape', 'profile-photo', 'person-color', 'status', 'status-form']);
   assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'together-mode', 'story-archive', 'leave-couple']);
-  assert.match(scope('voi'), /<article class="us-couple-id-card" id="usCoupleIdCard"/, 'the couple card is shared state');
-  assert.match(scope('tu'), /<h3 id="usSettingsTuTitle">Tu<\/h3>/);
-  assert.match(scope('voi'), /<h3 id="usSettingsVoiTitle">Voi due<\/h3>/);
+  assert.deepEqual(settingsIn(scope('app')), ['notifications', 'location', 'app-lock', 'feedback', 'optimize-ricordi', 'widgets']);
+  assert.deepEqual(settingsIn(scope('aiuto')), ['plus', 'report', 'sync-status', 'privacy', 'logout']);
+  assert.match(settingsPage, /<button type="button" class="dy-card dy-set-couple" id="usCoupleIdCard" data-us-setting="voi-due"/, 'the couple card opens «Voi due»');
+  assert.ok(settingsPage.indexOf('id="usCoupleIdCard"') < settingsPage.indexOf('data-us-settings-scope="tu"'), 'the couple card sits on top');
+  assert.match(scope('tu'), /<h3 class="dy-set-title" id="usSettingsTuTitle">Tu<\/h3>/);
+  assert.match(scope('voi'), /<h3 class="dy-set-title" id="usSettingsVoiTitle">Voi due<\/h3>/);
+  assert.match(scope('app'), /<h3 class="dy-set-title" id="usSettingsAppTitle">App<\/h3>/);
+  assert.match(scope('aiuto'), /<h3 class="dy-set-title" id="usSettingsHelpTitle">Aiuto e account<\/h3>/);
 });
 
 test('Settings: every control exists exactly once and keeps its existing action', () => {
   const all = settingsIn(settingsPage);
   assert.equal(new Set(all).size, all.length, 'no duplicated control');
-  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'leave-couple', 'location', 'logout', 'maudit', 'notifications', 'optimize-ricordi', 'person-color', 'plus', 'privacy', 'profile-photo', 'relationship-date', 'report', 'status-form', 'story-archive', 'sync-status', 'together-mode', 'widgets']);
+  assert.deepEqual([...all].sort(), ['app-lock', 'character-shape', 'feedback', 'leave-couple', 'location', 'logout', 'notifications', 'optimize-ricordi', 'person-color', 'plus', 'privacy', 'profile-photo', 'relationship-date', 'report', 'status', 'status-form', 'story-archive', 'sync-status', 'together-mode', 'voi-due', 'widgets']);
   const settingsJs = read('settings.js');
   for (const name of all) assert.match(settingsJs, new RegExp(`if\\(name==='${name}'\\)`), `${name} is still handled`);
-  for (const id of ['usRelationshipDateValue', 'usNotificationsValue', 'usDistanceUnitValue', 'usLocationState', 'usFeedbackValue', 'usSyncValue', 'usStoryArchiveValue', 'usSettingsBuild', 'usCoupleAvatars', 'usCoupleNames', 'usTogetherLine', 'usSettingsDeviceDot']) {
+  for (const id of ['usRelationshipDateValue', 'usNotificationsValue', 'usLocationState', 'usFeedbackValue', 'usSyncValue', 'usStoryArchiveValue', 'usSettingsBuild', 'usSettingsVersion', 'usCoupleAvatars', 'usCoupleNames', 'usTogetherLine', 'usStatusFormValue', 'usStatusValue', 'usCharacterShapeValue', 'usDistanceValue', 'usDistanceKmTag', 'usNotificationsSwitch', 'usLocationSwitch', 'usFeedbackSwitch']) {
     assert.equal((html.match(new RegExp(`id="${id}"`, 'g')) || []).length, 1, id);
   }
+  // The switches and the two segmented controls are wired once each.
+  assert.deepEqual([...settingsPage.matchAll(/data-us-switch="([a-z-]+)"/g)].map((m) => m[1]), ['notifications', 'location', 'feedback']);
+  assert.deepEqual([...settingsPage.matchAll(/data-us-aspetto="([a-z]+)"/g)].map((m) => m[1]), ['auto', 'chiaro', 'scuro']);
+  assert.deepEqual([...settingsPage.matchAll(/data-us-distance-unit="([a-z]+)"/g)].map((m) => m[1]), ['km', 'mi']);
+  assert.match(settingsJs, /function switchAction\(name\)\{\n  if\(name==='notifications'\)return toggleNotifications\(\);\n  if\(name==='location'\)return locationAction\(\);\n  if\(name==='feedback'\)return toggleFeedback\(\);/);
+  assert.match(settingsJs, /window\.UsAspetto\?\.set\?\.\(btn\.dataset\.usAspetto\)/);
+  // Retired with the redesign: the cat's switch and «Foto Home».
+  assert.doesNotMatch(settingsPage, /data-us-setting="(maudit|home-photo|distance)"|<b>Compagni<\/b>|<b>Foto Home<\/b>/);
+  assert.doesNotMatch(settingsJs, /homePhotoModal|toggleMaudit|distanceModal/);
 });
 
 test('Settings: ownership matches storage (shared rows write couple data, personal rows do not)', () => {
@@ -362,16 +394,24 @@ test('Gioca density: played Per voi, game grid and weekly question use compact h
 });
 
 
+// Il diario, ma pulito (15/11/2026): the mockup's measures, in diario.css with tokens only.
+// Il diario, ma pulito (15/11/2026): the mockup's measures (58px rows on a hairline, 36px icon tiles, 13px group titles).
 test('Settings density: utility rows, couple card and footer stay compact without changing controls', () => {
-  const css = read('settings2.css');
-  assert.match(css, /US-SETTINGS-DENSITY-01/);
-  assert.match(css, /US-SETTINGS-ORGANIZE-01/);
-  assert.match(css, /#settings \.us-settings2-row\{min-height:58px!important;/);
-  assert.match(css, /#settings \.us-settings2-icon\{[\s\S]*?width:28px;[\s\S]*?height:28px;/);
-  assert.match(css, /#settings \.us-couple-id-card\{[\s\S]*?padding:10px 11px;/);
-  assert.match(css, /body:has\(#settings\.page\.active\) #thinkButton\{\s*display:none!important;/);
+  const css = read('diario.css');
+  assert.match(css, /\.dy-set \.dy-set-row\{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;[^}]*border-bottom:1px solid var\(--us-ink-08\)/);
+  assert.match(css, /\.dy-set-ic\{flex:none;width:36px;height:36px;border-radius:10px;/);
+  assert.match(css, /\.dy-set \.dy-set-title\{margin:0 0 2px;font:800 var\(--us-text-13\)\/1\.3 var\(--us-font-ui\);letter-spacing:0;color:var\(--us-ink-60\)\}/);
+  assert.match(css, /\.dy-set \.dy-set-couple\{[^}]*padding:16px;/);
+  // Ink for what you do: the switch is ink when on, never a person colour.
+  assert.match(css, /\.dy-sw\[aria-checked="true"\]::before,\[aria-checked="true"\]>\.dy-sw::before\{background:var\(--us-ink-100\)\}/);
+  // Tokens only (dark mode follows); a person colour only on your dot.
+  const block = css.slice(css.indexOf('/* ---------------------------------------------------------------- Impostazioni */'));
+  assert.doesNotMatch(block, /#[0-9a-f]{3,6}\b/i, 'no hard-coded colours');
+  assert.deepEqual(block.match(/var\(--us-(tu|partner|rosa|lilla)\)/g), ['var(--us-tu)'], 'only the dot of «Il tuo colore»');
+  assert.match(block, /\.dy-set-dot\{[^}]*background:var\(--us-tu\)/);
+  assert.match(read('settings2.css'), /body:has\(#settings\.page\.active\) #thinkButton\{\s*display:none!important;/);
   const page = html.match(/<main id="settings"[\s\S]*?<\/main>/)?.[0] || '';
-  for (const name of ['profile-photo','notifications','location','distance','feedback','home-photo','sync-status','relationship-date','story-archive']) {
+  for (const name of ['profile-photo', 'notifications', 'location', 'feedback', 'sync-status', 'relationship-date', 'story-archive', 'together-mode']) {
     assert.match(page, new RegExp(`data-us-setting="${name}"`), name);
   }
 });
@@ -380,13 +420,10 @@ test('Settings density: utility rows, couple card and footer stay compact withou
 // 1.0: the dock above the nav holds one evidence card and the Domanda di oggi;
 // arbitration stays authoritative, the cards keep the mockup geometry (dc-oggi.css).
 test('Oggi density: arbitration stays authoritative; the dock holds one evidence card and the daily card', () => {
-  const dcOggi = read('dc-oggi.css');
-  // Parity 2026-10 (mockup .og-bottom / .dq): a 12px column; the card is ring + kicker,
-  // the question across, then the status line and the button; short screens keep it smaller (03/11/2026).
-  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?display:grid;\s*gap:12px;/);
-  assert.match(dcOggi, /#home #usDailyRitual\{[\s\S]*?grid-template-columns:auto minmax\(0,1fr\);[\s\S]*?padding:13px 14px 13px 16px;[\s\S]*?border-radius:22px;/);
-  assert.match(dcOggi, /#home #usDailyRitual \.dq-foot\{grid-column:1\/-1;display:flex;/);
-  assert.match(dcOggi, /@media\(max-height:600px\)\{\n  #home #usDailyRitual \.us-daily-ritual-question\{font-size:15px\}/);
+  // Il diario, ma pulito (15/11/2026): the dock and the M9B card are mounted in the
+  // hidden hero (their layout was pruned); the arbitration that fills them is unchanged,
+  // and the notices of Oggi sit in a 12px column under the question (#dyMore).
+  assert.match(read('diario.css'), /\.dy-more\{display:flex;flex-direction:column;gap:12px;/);
   const app = read('app.js');
   assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink'\]\)/);
   assert.match(app, /winner\.evidence===id\?'evidence':winner\.daily===id\?'daily':'suppressed'/);
@@ -394,12 +431,12 @@ test('Oggi density: arbitration stays authoritative; the dock holds one evidence
 
 
 test('shell: Ti penso lives in top chrome and Per voi stays inside Gioca', () => {
-  const top = html.split('\n').find((line) => line.includes('<div class="top us-premium-top">')) || '';
+  // Il diario, ma pulito (15/11/2026): the top chrome of Oggi is its header (.dy-head).
+  const top = html.match(/<header class="dy-head">[\s\S]*?<\/header>/)?.[0] || '';
   assert.match(top, /id="thinkButton"/);
   assert.match(top, /id="leftForYouPartnerEntry"/);
   assert.doesNotMatch(top, /usPerVoiTop/);
   assert.equal((html.match(/id="thinkButton"/g) || []).length, 1);
-  assert.match(read('identity.css'), /US-SHELL-THINK-01/);
   // T1 1.0 — polish4.css is gone; the top-chrome rule lives in identity.css.
   assert.equal(fs.existsSync(path.join(ROOT, 'polish4.css')), false);
   assert.match(read('games.js'), /data-gv2-action="per-voi"/);
@@ -436,7 +473,8 @@ test('state system: loading, empty, error, retry and connectivity share one visu
   const build = html.match(/<meta name="us-build" content="([^"]+)"\/>/)?.[1];
   assert.match(html, new RegExp(`/state-system\\.css\\?v=${build}`));
   assert.match(read('service-worker.js'), /versioned\("\/state-system\.css"\)/);
-  assert.match(read('fix4.js'), /showStatus\('Sei offline\. Riprendo appena torni online\.', 'offline'\)/);
+  // Il diario, ma pulito (15/11/2026): the copy of the mockup v4.1.
+  assert.match(read('fix4.js'), /showStatus\('Siete senza rete: quello che fate parte appena torna\.', 'offline'\)/);
 });
 
 
@@ -502,5 +540,8 @@ test('Pre-native polish: Settings has one explicit home inside the couple card a
   assert.match(css, /#bond \.noi-couple-card #usSettingsEntry\{/);
   assert.match(css, /right:8px;/);
   assert.match(css, /top:8px;/);
-  assert.match(identity, /#home \.home-distance-pill\{display:none!important\}/);
+  // Il diario, ma pulito (15/11/2026): the distance pill sits in the hidden hero
+  // (the distance is said by the sentence of the day), so its own hide rule was pruned.
+  assert.match(html, /<section class="hero home-hero-only" id="homeHero"[^>]* hidden>[\s\S]*?id="distanceWidget"[\s\S]*?<\/section>/);
+  assert.doesNotMatch(identity, /#home \.home-distance-pill\{/);
 });

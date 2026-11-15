@@ -1,5 +1,33 @@
 # Prossima patch in produzione
 
+> **Regola (founder, 14/11/2026): ogni patch va in tutte e due le app.** Dalla beta Apple in poi, ogni rilascio esce dallo stesso commit di `main` sia come AAB per Play (workflow «Android Play bundle») sia come build TestFlight (workflow `ios-testflight.yml`), con **lo stesso numero di versione** (es. 1.5.2 e 1.5.2). Ordine: staging → SQL e funzioni in produzione → merge su `main` (sito) → AAB + TestFlight. Le parti native (widget, notifiche native, accesso Apple/Google) sono separate: un fix lì va fatto per ciascuna piattaforma o vale per una sola, e la nota lo dice. Le prove iOS le fa Bea da TestFlight.
+
+## Prossima patch (dopo la 1.5.1)
+
+### In preparazione: «Il diario, ma pulito» (15/11/2026)
+
+**SQL (staging fatto, produzione da fare col via):** `20261115183900_personaggi_forma_e_colori.sql` (forma del personaggio, `set_my_character_shape`, tavolozza nuova con i colori spostati) è applicata su US-STAGING (run 43758649805). In produzione va applicata prima del sito, perché il sito nuovo scrive le forme e i nomi nuovi dei colori.
+
+**Stato:** branch `claude/diario-pulito-c85387` (nato da `main`), provato su US LIVE con i dati di staging; non sul sito di staging, non in produzione. Missione e differenze dal mockup: [diario-pulito.md](../missions/diario-pulito.md). Solo web e una riga di config Capacitor (`SystemBars` LIGHT): niente SQL, niente Edge.
+
+**Cosa cambia:** tutta US passa dallo scuro alla carta chiara dello studio approvato il 15/11: Oggi come pagina del giorno (foto da Ricordi, frase del giorno, personaggi, domanda), «Voi due» al posto di Sintonia in Gioca (con «Come stai»), Noi con il calendario a stanghette e «In arrivo», Ricordi come diario per giorni, Gioca con la sfida e «Da giocare». Il countdown attivo diventa la frase del giorno e si crea da Noi. Il gatto non si vede più.
+
+**Da decidere prima della produzione — Atmosfere (founder, 15/11: «concordo con tutto»):** le Atmosfere sono in pausa (`ATMOSFERE_PAUSED` in progression.js). In produzione chi le ha sbloccate o scelte **le vedrà sparire**: la scelta resta salvata sul server ma non si applica più. Va deciso se dirlo nella nota della patch (Novità per Play e schermata «Novità») oppure farle tornare come colori della carta (varianti chiare) prima di uscire. Lo stesso vale per i premi del gatto, che diventeranno accessori dei personaggi.
+
+**L'entrata (branch `claude/diario-entrata`):** benvenuto, account, «Da dove partite?», «Tu» con forma e colore del personaggio, «Da quando state insieme?», il codice con «Ti avviso quando entra?» e la domanda di oggi, l'arrivo «Ora siete in due». Via i passi Notifiche, Posizione e «Tutto pronto» dopo l'abbinamento. La forma si salva con `set_my_character_shape` (migrazione `20261115183900`, da applicare prima su staging e poi in produzione insieme alla patch); senza, resta sul telefono. Differenze: [diario-pulito.md, «L'entrata»](../missions/diario-pulito.md).
+
+**Android:** i widget restano scuri per ora (lavoro a parte, dopo la prova su staging). Le icone scure della barra di stato le chiede il web (SystemBars dal JS), quindi funzionano anche senza AAB nuovo; la config `SystemBars` LIGHT entra con il prossimo AAB.
+
+### Iscrizione: prima il codice, poi la domanda (14/11)
+
+**Stato:** branch `claude/attesa-dopo-invito` (da `main` dopo la 1.5.1). Provata nel browser col finto Supabase; non ancora su staging né in produzione.
+
+**Il problema (founder, provando l'iscrizione in produzione):** appena creato lo spazio, sotto il codice d'invito c'era già «Intanto, la domanda di oggi» con il campo per rispondere: distraeva dal passo che conta, mandare il codice. E il codice si leggeva «M3WJ- NXY3- CX2G-…»: il server lo dà già coi trattini, lo schermo aggiungeva uno spazio ogni cinque caratteri.
+
+**Cosa cambia:** la domanda compare solo dopo «Condividi» o «Copia codice» riusciti (ricordato per l'account, `us:ob:invite-sent:<id>`, quindi resta anche riaprendo US), oppure se la risposta di oggi c'è già. Il codice sullo schermo è a gruppi di quattro («M3WJ NXY3 CX2G HEYB 57H3 3TTS HM») e va a capo solo tra un gruppo e l'altro; quello copiato e condiviso non cambia. Solo app (`onboarding.js`, `dc-primo.css`), niente SQL.
+
+**Test:** `tests/waiting-today-question.test.js`.
+
 ## Patch 1.5.1: «La cosa di oggi» e la mascotte che non sparisce più (13/11/2026)
 
 **In produzione il 14/11 col via del founder («puoi passarlo tutto su produzione»):** migrazioni `20261113202138_cosa_di_oggi_v1.sql` (run 43614053143) e `20261113232109_revisione_testi.sql` (run 43614166584), controllate in sola lettura (`cosa_di_oggi` solo per `authenticated`, `guided_week` dal 14/11 alle 16:11 UTC, le tre sfide da fare insieme in `near`); 10 funzioni delle notifiche (run 43614174829, senza `s3-staging-send-web-push`); sito con build `us-rilascio-20261114-109` e Novità id `1.5.1`; poi AAB 1.5.1. Su staging prima: migrazioni (run 43506086376, 43613038149) e 11 funzioni (run 43613057381, 43613066146), prova con US LIVE.

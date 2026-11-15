@@ -35,6 +35,8 @@ let refreshedAt = 0;
 let identity = null;
 let giocaTab = 'giochi';
 let enterDirection = 0;
+// The chosen day opens its detail only after a tap (the studio shows the month and «In arrivo»).
+let dayOpen = false;
 // «Prossimi»: its own read, from today to the same day next year.
 let upcoming = null;
 let upcomingAt = 0;
@@ -224,30 +226,106 @@ function cellLabel(item){
   if(item.months%12===0){const years=item.months/12;return years===1?'1 anno':`${years} anni`;}
   return item.months===1?'1 mese':`${item.months} mesi`;
 }
-// Only the weeks this month actually spans: 4–6 rows, never an empty sixth row.
-// A day is a square: its number, then a label per commitment (at most two,
-// then "+n") in the colour of whoever put it; a day with a Ricordo is its photo.
+// Il diario, ma pulito (15/11/2026): the month as in the studio. A day is its
+// number in a 32 px square (today in ink), and under it a short bar for each
+// person who has something that day, in that person's colour (both colours
+// for what is shared). Our dates (mesiversari, the anniversary, the hundreds
+// of days) get the red pencil circle. Days of the months around are greyed.
+function dayBars(items,past){
+  const owners=[];
+  for(const item of items){
+    const owner=ownerOf(item);
+    for(const who of owner==='noi'?['tu','partner']:[owner])if(!owners.includes(who))owners.push(who);
+  }
+  return owners.slice(0,3).map(who=>`<i class="dy-bar" data-owner="${who}"${past?' data-past':''}></i>`).join('');
+}
+const SCRIBBLE_CIRCLE='<svg class="dy-cal-circle" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><path d="M10 9 C22 1 48 2 54 16 C60 30 40 39 25 37 C9 35 2 25 6 15 C9 9 16 5 23 4"/></svg>';
 function calendarMarkup(index) {
   const first=new Date(year,month,1,12);
   const offset=(first.getDay()+6)%7;
   const count=new Date(year,month+1,0).getDate();
+  const before=new Date(year,month,0).getDate();
   const slots=Math.ceil((offset+count)/7)*7;
-  const now=today(),ricordi=ricordiByDay();
-  const header=weekdays.map(([short,long])=>`<abbr class="us-noi-v2-weekday" title="${long}">${short}</abbr>`).join('');
+  const now=today();
+  const header=weekdays.map(([short,long])=>`<abbr class="dy-cal-wd" title="${long}">${short}</abbr>`).join('');
   const days=Array.from({length:slots},(_,i)=>{
     const n=i-offset+1,valid=n>0&&n<=count;
-    if(!valid)return '<span class="us-noi-v2-blank" aria-hidden="true"></span>';
-    const day=iso(year,month,n),todayFlag=day===now,active=day===selected;
+    if(!valid)return `<span class="dy-cal-day is-out" aria-hidden="true"><span class="dy-cal-n">${n<1?before+n:n-count}</span><span class="dy-cal-bars"></span></span>`;
+    const day=iso(year,month,n),todayFlag=day===now,pressed=dayOpen&&day===selected,active=pressed&&!todayFlag,past=day<now;
     const items=index.get(day)||[];
-    const photo=(ricordi.get(day)||[]).find(m=>m.thumb);
-    const bars=items.slice(0,BAR_MAX).map(item=>`<span class="us-noi-v2-bar${item.kind==='relationship'?' is-milestone':''}" data-owner="${ownerOf(item)}"${item.kind==='relationship'?'':' translate="no"'}>${esc(cellLabel(item))}</span>`).join('');
-    const more=items.length>BAR_MAX?`<span class="us-noi-v2-more">+${items.length-BAR_MAX}</span>`:'';
+    const ours=items.some(item=>item.kind==='relationship');
     const plans=items.length===1?'1 impegno':items.length?`${items.length} impegni`:'niente in programma';
-    return `<button type="button" class="us-noi-v2-day${active?' is-selected':''}${photo?' has-photo':''}${todayFlag?' is-today':''}${day<now?' is-past':''}" data-noi-day="${day}" aria-pressed="${active}" ${todayFlag?'aria-current="date"':''} aria-label="${esc(dayLabel(day))}${todayFlag?', oggi':''}${photo?', con un Ricordo':''}, ${plans}">
-      ${photo?`<img class="us-noi-v2-day-photo" src="${esc(photo.thumb)}" alt="" loading="lazy" decoding="async">`:''}<span class="us-noi-v2-day-number">${n}</span><span class="us-noi-v2-day-bars" aria-hidden="true">${bars}${more}</span>
-    </button>`;
+    return `<button type="button" class="dy-cal-day${todayFlag?' is-today':''}${active?' is-selected':''}${past?' is-past':''}" data-noi-day="${day}" aria-pressed="${pressed}" ${todayFlag?'aria-current="date"':''} aria-label="${esc(dayLabel(day))}${todayFlag?', oggi':''}, ${plans}"><span class="dy-cal-n">${n}${ours?SCRIBBLE_CIRCLE:''}</span><span class="dy-cal-bars" aria-hidden="true">${dayBars(items,past)}</span></button>`;
   }).join('');
-  return `<div class="us-noi-v2-calendar" role="group" aria-label="Calendario di ${months[month]} ${year}"><div class="us-noi-v2-weekdays" aria-hidden="true">${header}</div><div class="us-noi-v2-grid" data-weeks="${slots/7}">${days}</div></div>`;
+  return `<div class="dy-cal" role="group" aria-label="Calendario di ${months[month]} ${year}"><div class="dy-cal-wds" aria-hidden="true">${header}</div><div class="dy-cal-grid">${days}</div></div>`;
+}
+// «In arrivo»: a row per commitment from today, with whose it is and what kind
+// of day it is. Three under the month, up to UPCOMING_MAX in «Prossimi».
+const COUNT_WORDS=['','un impegno','due impegni','tre impegni','quattro impegni','cinque impegni','sei impegni','sette impegni','otto impegni','nove impegni','dieci impegni'];
+function whoTag(item){
+  const owner=ownerOf(item);
+  if(owner==='noi')return '<span class="dy-tag dy-tag-s dy-tag-both">insieme</span>';
+  if(owner==='tu')return '<span class="dy-tag dy-tag-s" style="background:var(--us-tu-soft)">tu</span>';
+  return `<span class="dy-tag dy-tag-s" style="background:var(--us-partner-soft)" translate="no">${esc(whoName('partner'))}</span>`;
+}
+function kindTag(item){
+  if(item.kind==='relationship'){
+    if(item.days)return '<span class="dy-tag dy-tag-s" style="background:var(--us-miele)">traguardo</span>';
+    if(item.months===0)return '';
+    return `<span class="dy-tag dy-tag-s" style="background:var(--us-miele)">${item.months%12===0?'anniversario':'mesiversario'}</span>`;
+  }
+  if(item.kind==='event')return '<span class="dy-tag dy-tag-s" style="background:var(--us-miele)">data speciale</span>';
+  const clock=clockOf(item.time);
+  return clock?`<span class="dy-tag dy-tag-s" style="background:var(--us-miele)">${esc(clock)}</span>`:'';
+}
+function upcomingRow(day,item){
+  const d=dateOf(day);
+  const wd=d.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{weekday:'short'}).replace('.','');
+  // Our dates say how long: «7 mesi insieme», «2 anni insieme», «4100 giorni insieme».
+  const title=item.kind!=='relationship'?item.title:item.days?`${item.days} giorni insieme`:item.months%12===0?(item.months===12?'Un anno insieme':`${item.months/12} anni insieme`):(item.months===1?'Un mese insieme':`${item.months} mesi insieme`);
+  return `<button type="button" class="dy-row" data-noi-item="${itemAction(item)}" data-day="${esc(day)}" data-id="${esc(item.id||'')}"${item.kind==='relationship'?` data-months="${item.months}"`:''} data-owner="${ownerOf(item)}" aria-label="${esc(upcomingDayLabel(day))}: ${esc(title)}, ${esc(ownerLabel(item))}">
+    <span class="dy-row-date"><b>${d.getDate()}</b><small>${esc(wd)}</small></span>
+    <span class="dy-row-copy"><b${item.kind==='relationship'?'':' translate="no"'}>${esc(title)}</b><span class="dy-row-tags">${whoTag(item)}${kindTag(item)}</span></span>
+    <svg class="dy-row-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
+  </button>`;
+}
+function countdownRow(){
+  const st=window.USCountdown?.widgetState?.();
+  if(!st?.active||st.kind==='together')return '';
+  const day=String(st.target||'').slice(0,10);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||day<today())return '';
+  const d=dateOf(day);
+  const wd=d.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{weekday:'short'}).replace('.','');
+  const left=Math.round((d-dateOf(today()))/86400000);
+  const when=left===0?'oggi':left===1?'domani':`tra ${left} giorni`;
+  return `<button type="button" class="dy-row" data-dy-countdown aria-label="Countdown: ${esc(st.title||'')}, ${esc(when)}">
+    <span class="dy-row-date"><b>${d.getDate()}</b><small>${esc(wd)}</small></span>
+    <span class="dy-row-copy"><b translate="no">${esc(st.title||'Il nostro momento')}</b><span class="dy-row-tags"><span class="dy-tag dy-tag-s" style="background:var(--us-miele)">countdown</span><span class="dy-tag dy-tag-s" style="background:var(--us-miele)">${esc(when)}</span></span></span>
+    <svg class="dy-row-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
+  </button>`;
+}
+function renderUpcomingRows(){
+  const rows=$('dyNoiUpcomingRows'),countEl=$('dyNoiUpcomingCount');
+  if(!rows)return;
+  if(!upcoming){
+    rows.innerHTML=upcomingError?`<p class="dy-rows-note">Calendario non raggiungibile. <button type="button" class="dy-btn dy-btn-s" data-noi-retry>Riprova</button></p>`:'<p class="dy-rows-note">Carico…</p>';
+    if(countEl)countEl.textContent='';
+    return;
+  }
+  const from=today(),to=yearAhead();
+  const index=itemsByDate(upcoming,monthsBetween(from,to));
+  const limit=mode==='list'?UPCOMING_MAX:3;
+  const list=[];
+  for(const day of [...index.keys()].filter(day=>day>=from&&day<to).sort()){
+    for(const item of index.get(day)){
+      if(item.kind==='relationship'&&item.months===0)continue;
+      if(list.length<limit)list.push([day,item]);
+    }
+  }
+  // The active countdown first (founder, 15/11/2026: made and changed from Noi).
+  const cd=countdownRow();
+  rows.innerHTML=cd+(list.length?list.map(([day,item])=>upcomingRow(day,item)).join(''):cd?'':'<div class="dy-rows-empty"><b>Niente in arrivo</b><button type="button" class="dy-btn dy-btn-m" data-noi-add>Aggiungi un impegno</button></div>');
+  if(countEl)countEl.textContent=mode==='list'?'nei prossimi dodici mesi':(COUNT_WORDS[list.length]||`${list.length} impegni`);
 }
 // «Prossimi»: what is coming from today, a year ahead, with the dates that
 // come back every year (birthdays, mesiversari, the anniversary); the first
@@ -379,7 +457,7 @@ function continueEnter(container){
   if(!entering)return;
   const elapsed=performance.now()-entering.start;
   if(elapsed>=320||reducedMotion()){entering=null;return;}
-  const area=container.querySelector('.us-noi-v2-calendar,.us-noi-v2-month-list,.us-noi-v2-empty-month');
+  const area=container.querySelector('.dy-cal');
   area?.animate?.([{opacity:0,translate:`${entering.direction*30}px 0`},{opacity:1,translate:'0 0'}],{duration:320,delay:-elapsed,easing:EASE_OUT});
 }
 function flushLeaving(){
@@ -396,7 +474,7 @@ function setMode(next){
   if(mode===next)return;
   mode=next;render();
   if(next==='list')refreshUpcoming();
-  const shown=$('usNoiV2Content')?.querySelector(next==='list'?'.us-noi-v2-month-list,.us-noi-v2-empty-month,.us-skeleton-rows':'.us-noi-v2-calendar');
+  const shown=next==='list'?$('dyNoiUpcomingRows'):$('usNoiV2Content')?.querySelector('.dy-cal');
   if(shown&&!reducedMotion())shown.animate?.([{opacity:0,translate:'0 10px'},{opacity:1,translate:'0 0'}],{duration:320,easing:EASE_OUT});
 }
 function render(){
@@ -404,7 +482,7 @@ function render(){
   if(!root)return;
   root.dataset.mode=mode;
   const label=$('usNoiV2Month');
-  if(label)label.innerHTML=`${months[month][0].toUpperCase()+months[month].slice(1)} <span class="us-noi-v2-year">${year}</span>`;
+  if(label)label.innerHTML=`${months[month][0].toUpperCase()+months[month].slice(1)} <span class="dy-cal-year">${year}</span>`;
   const weekBack=$('usNoiV2WeekBack');if(weekBack)weekBack.hidden=mode!=='week';
   $('usNoiV2AddTop')?.setAttribute('aria-label',`Aggiungi un impegno il ${dayLabel(selected)}`);
   const pick=$('usNoiV2IdeaPick');
@@ -424,9 +502,10 @@ function render(){
   const index=itemsByDate();
   const direction=enterDirection;
   enterDirection=0;
+  const card=$('dyCalCard');if(card)card.hidden=mode==='list';
   if(mode==='list'){
-    container.dataset.state=upcoming?'ready':upcomingError?'error':'loading';
-    container.innerHTML=upcomingMarkup();
+    container.dataset.state='ready';
+    container.innerHTML='';
   }else{
     const notice=error&&!snapshot?`<p class="us-noi-v2-notice" role="alert">${icon('arrows-clockwise')}<span>Calendario non raggiungibile.</span><button type="button" data-noi-retry>Riprova</button></p>`:'';
     container.dataset.state=pending&&!snapshot?'loading':error&&!snapshot?'error':'ready';
@@ -434,8 +513,10 @@ function render(){
   }
   if(direction&&mode!=='week')playEnter(container,direction);else continueEnter(container);
   renderWeekSheet(index);
-  detail.hidden=mode==='list';
-  detail.innerHTML=mode==='list'?'':detailMarkup(index);
+  const showDetail=mode!=='list'&&dayOpen;
+  detail.hidden=!showDetail;
+  detail.innerHTML=showDetail?detailMarkup(index):'';
+  renderUpcomingRows();
 }
 // «Prossimi» reads a year from today (calendar.js readNoiRange), once a
 // minute at most; a change in Eventi or the editor forces it like the month.
@@ -456,14 +537,14 @@ async function refreshUpcoming({force=false}={}){
   }catch(e){
     if(token===upcomingSeq&&key===identityKey()){upcomingError='Non disponibile';console.warn('[US Noi V2] upcoming read',e);}
   }finally{
-    if(token===upcomingSeq){upcomingPending=false;if(mode==='list')render();}
+    if(token===upcomingSeq){upcomingPending=false;renderUpcomingRows();}
   }
 }
 async function refresh({force=false}={}){
   const key=identityKey();
   if(!key){identity=null;snapshot=null;error='';render();return;}
   if(key!==identity){snapshot=null;refreshedAt=0;identity=key;}
-  if(mode==='list')refreshUpcoming({force});
+  refreshUpcoming({force});
   if(pending&&!force)return;
   if(!force&&snapshot&&Date.now()-refreshedAt<60000){render();return;}
   const source=window.USNoiCalendarRead?.readMonth;
@@ -491,7 +572,7 @@ function goToMonth(y,m,day,direction){
     enterDirection=direction;
     snapshot=null;refreshedAt=0;requestSeq++;pending=false;refresh({force:true});
   };
-  const area=mode==='calendar'&&direction?$('usNoiV2Content')?.querySelector('.us-noi-v2-calendar'):null;
+  const area=mode==='calendar'&&direction?$('usNoiV2Content')?.querySelector('.dy-cal'):null;
   if(!area||typeof area.animate!=='function'||reducedMotion()){apply();return;}
   const anim=area.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:`${-direction*30}px 0`}],{duration:200,easing:EASE_IN,fill:'forwards'});
   leaving={anim,apply};
@@ -518,6 +599,7 @@ function chooseDay(day,{fromList=false,fromWeek=false}={}) {
   // The grid only picks its own month; «Prossimi» and the week reach any.
   if(differentMonth&&mode==='calendar')return;
   selected=day;
+  dayOpen=true;
   if(fromWeek&&!ideaPick)mode='calendar';
   if(ideaPick){
     const picker=window.UsCalendarLinks?.createForIdeaDate;
@@ -590,7 +672,7 @@ function openItem(item){
 function boot(){
   moveSintonia();setTab('giochi');render();
   // Main-nav tap always returns to Giochi; explicit Sintonia deep links remain available.
-  document.querySelector('.nav button[data-page="quiz"]')?.addEventListener('click',()=>setTab('giochi'),true);
+  document.querySelector('.dy-nav button[data-page="quiz"]')?.addEventListener('click',()=>setTab('giochi'),true);
   $('usGiocaTabGames')?.addEventListener('click',()=>setTab('giochi'));
   $('usGiocaTabSintonia')?.addEventListener('click',()=>{window.USGameV2?.showHub?.();setTab('sintonia');});
   $('usGiocaTabs')?.addEventListener('keydown',e=>{
@@ -616,6 +698,7 @@ function boot(){
   $('usNoiV2')?.addEventListener('click',e=>{
     const day=e.target.closest('[data-noi-day]');if(day){chooseDay(day.dataset.noiDay,{fromList:day.hasAttribute('data-noi-focus-list')});return;}
     if(e.target.closest('[data-noi-retry]')){refresh({force:true});return;}
+    if(e.target.closest('[data-dy-countdown]')){window.USCountdown?.open?.('active');return;}
     // A Ricordo of the day opens in its album, like a card of Ricordi.
     const ricordo=e.target.closest('[data-noi-ricordo]');
     if(ricordo){window.openMomentViewer?.(ricordo);return;}
@@ -660,9 +743,10 @@ function boot(){
     observer.observe(bond,{attributes:true,attributeFilter:['class']});
   }
   // A tap on the Noi tab while already in Noi also returns to the month.
-  document.querySelector('.nav button[data-page="bond"]')?.addEventListener('click',()=>{if($('bond')?.classList.contains('active'))closeWeek();},true);
+  document.querySelector('.dy-nav button[data-page="bond"]')?.addEventListener('click',()=>{if($('bond')?.classList.contains('active'))closeWeek();},true);
   const events=$('usEventsOverlay');
   if(events)new MutationObserver(()=>{if(events.getAttribute('aria-hidden')==='true'&&$('bond')?.classList.contains('active'))refresh({force:true});}).observe(events,{attributes:true,attributeFilter:['aria-hidden']});
+  window.addEventListener('us:countdown-updated',()=>renderUpcomingRows());
   window.addEventListener('us-identity-change',()=>{
     requestSeq++;pending=false;identity=null;snapshot=null;refreshedAt=0;error='';
     upcomingSeq++;upcomingPending=false;upcoming=null;upcomingAt=0;upcomingKey='';upcomingError='';
@@ -680,6 +764,8 @@ function openMainCalendar(dateISO,requestedMode='calendar'){
     if(Number.isFinite(d.getTime())&&iso(d.getFullYear(),d.getMonth(),d.getDate())===dateISO){
       const delta=d.getFullYear()*12+d.getMonth()-(year*12+month);
       year=d.getFullYear();month=d.getMonth();selected=dateISO;
+      // A date asked from elsewhere (Oggi, a reminder) opens that day as well.
+      dayOpen=true;
       if(delta){snapshot=null;refreshedAt=0;requestSeq++;pending=false;}
     }
   }

@@ -61,11 +61,7 @@
 .us-cos-acc{position:absolute;inset:0;display:block;background:var(--art,none) center/58% no-repeat,radial-gradient(100% 70% at 50% 0%,rgba(255,255,255,.05),transparent 62%),#141018}
 .us-cos-icon{background-size:46%,auto}
 
-
 .us-cos-stage{display:grid;place-items:center;background:radial-gradient(110% 80% at 50% 0%,rgba(255,255,255,.06),transparent 64%),#141018}
-
-/* ---------- FRAMES · #homeHero (full-bleed photo) + preview photo ---------- */
-#homeHero{--cos-u:1px}
 
 /* Controluce — warm hairline with a low sun bleeding in. */
 
@@ -127,8 +123,6 @@
 :root[data-us-accent="cherry"],.us-cos-accent[data-accent="cherry"]{--us-noi:#f0566c}
 :root[data-us-accent="champagne"],.us-cos-accent[data-accent="champagne"]{--us-noi:#e6c78e}
 :root[data-us-accent="ice"],.us-cos-accent[data-accent="ice"]{--us-noi:#9fd2ff}
-:root[data-us-theme] .us-nav-premium button.active .us-nav-icon-on,:root[data-us-accent] .us-nav-premium button.active .us-nav-icon-on{color:var(--us-color-accent-strong)}
-:root[data-us-theme] .us-nav-indicator,:root[data-us-accent] .us-nav-indicator{background:linear-gradient(150deg,color-mix(in srgb,var(--us-color-rose) 22%,transparent),color-mix(in srgb,var(--us-color-violet) 17%,transparent))}
 
 /* theme + accent preview tiles */
 .us-cos-theme{overflow:hidden;background:radial-gradient(90% 60% at 20% -10%,var(--us-theme-glow-a),transparent 62%),var(--us-color-bg)}
@@ -151,7 +145,7 @@
 /* ---------- EFFECTS · the US symbol (top bar) + preview ---------- */
 .us-cos-logo{position:relative;display:block;width:60px;height:60px;overflow:hidden}
 .us-cos-logo img{position:absolute;inset:0;width:100%;height:100%;display:block}
-:root[data-us-effect="pulse"] .us-top-brand-art{animation:us-progression-pulse 3.2s ease-in-out infinite}
+
 .us-cos-logo[data-effect="pulse"] img{filter:drop-shadow(0 0 7px rgba(190,155,255,.42));transform:scale(1.035)}
 /* Costellazione — three tiny stars that light up one after another. */
 :root[data-us-effect="constellation"] .us-top-brand::before,:root[data-us-effect="constellation"] .us-top-brand::after,

@@ -20,7 +20,12 @@ test('la navigazione usa un ingresso direzionale M5B senza riattivare il fade le
   assert.match(app, /isReducedMotion/);
   assert.match(css, /\.page\.active\.us-motion5-enter-next/);
   assert.match(css, /\.page\.active\.us-motion5-enter-prev/);
-  assert.match(css, /animation:usMotion5PageEnter 240ms var\(--us-ease-enter\) both/);
+  // Il diario, ma pulito (15/11/2026): 260 ms, ±28px and a fade from 0; the timer in app.js waits 280 ms.
+  assert.match(css, /animation:usMotion5PageEnter 260ms cubic-bezier\(\.2,\.8,\.2,1\) both/);
+  assert.match(css, /\.page\.active\.us-motion5-enter-next\{--us-motion5-enter-x:28px\}/);
+  assert.match(css, /\.page\.active\.us-motion5-enter-prev\{--us-motion5-enter-x:-28px\}/);
+  assert.match(css, /from\{opacity:0;transform:translate3d\(var\(--us-motion5-enter-x\),0,0\)\}/);
+  assert.match(app, /\},280\); \/\/ the 260 ms entry of styles\.css, plus a frame/);
 });
 
 test('le superfici concordate adottano l opt-in motion', () => {

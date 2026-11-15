@@ -22,3 +22,12 @@ Downloaded from the npm registry on 2026-10-14. No runtime CDN or Google Fonts d
 ## Android widgets
 
 - `native-plugins/us-widget-bridge/android/src/main/res/font/`: `us_font_fraunces.ttf`, `us_font_fraunces_italic.ttf` and `us_font_figtree.ttf` are the files above, decompressed from WOFF2 to TTF without changes (Google's `woff2` decoder, `wawoff2` 2.0.1), because Android font resources do not read WOFF2. Same licences. Added on 2026-11-02 for the «Pastello» widgets.
+
+## Gochi Hand e Permanent Marker (diario pulito, 15/11/2026)
+
+Studio «Il diario, ma pulito», approvato dal founder il 15/11/2026: la scrittura a mano solo per quello che scrive la coppia (Gochi Hand) e «us» in alto su Oggi (Permanent Marker).
+
+- **Gochi Hand:** `@fontsource/gochi-hand` 5.3.0, file `gochi-hand-latin-400-normal.woff2` → `GochiHand-Latin.woff2`, senza modifiche. Licenza SIL Open Font License 1.1 (`GochiHand-OFL.txt`), Reserved Font Names «Gochi» e «Gochi Hand»: il file non è modificato e il nome resta quello. Copyright (c) 2011, HT Fonts.
+- **Permanent Marker:** `@fontsource/permanent-marker` 5.3.0, file `permanent-marker-latin-400-normal.woff2` → `PermanentMarker-Latin.woff2`, senza modifiche. Licenza Apache 2.0 (`PermanentMarker-Apache-2.0.txt`). Font Diner.
+
+Presi dal registro npm il 15/11/2026. Nessun Google Fonts a runtime.

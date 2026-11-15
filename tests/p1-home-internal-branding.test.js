@@ -73,7 +73,8 @@ test('P1 integra il monogramma US netto in auth, header e mini-branding', () => 
   const html = read('index.html');
   // Design parity (021-blocco): the lock screen shows the fingerprint in a circle, not the logo.
   // Design parity (081-impostazioni): the Settings footer is the plain "US 1.0" line, without the mini-branding.
-  assert.equal((html.match(/assets\/derived\/runtime\/us-symbol-256-v1\.png/g) || []).length, 3, 'icon link, auth logo and top bar (M12A.1)');
+  // Il diario, ma pulito (15/11/2026): the header of Oggi writes «us» (dy-mark), so the mark is only in the icon link and the auth logo.
+  assert.equal((html.match(/assets\/derived\/runtime\/us-symbol-256-v1\.png/g) || []).length, 2, 'icon link and auth logo');
   assert.match(html, /<span class="us-app-lock-icon" aria-hidden="true"><\/span>/, 'native app-lock screen: the fingerprint circle');
   assert.doesNotMatch(html, /us-symbol-apk-foreground-v1/, 'the 1254 px master is never loaded by the app shell');
   assert.doesNotMatch(html, /assets\/derived\/brand\/us-symbol-ui-transparent-v1\.png/);
@@ -91,8 +92,9 @@ test('P1 usa esclusivamente Heart e HeartFill Phosphor per la CTA Ti Penso', () 
   const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
   const legacyAsset = manifest.assets.find((asset) => asset.path === 'assets/source/ui/us-icon-ti-penso-v1.png');
   assert.doesNotMatch(thinkButton, /us-icon-ti-penso-v1\.png/);
-  assert.match(thinkButton, /assets\/icons\/think-off\.svg/);
-  assert.match(thinkButton, /assets\/icons\/think-on\.svg/);
+  // Il diario, ma pulito (15/11/2026): the button draws the HeartFill of think-on.svg inline, in the Ti penso pink.
+  assert.ok(thinkButton.includes(`<path fill="#FF5477" d="${PHOSPHOR_HEART_FILL_PATH}"/>`), 'the Ti penso heart is the official HeartFill');
+  assert.match(read('ui-foundation.css'), /--us-think:#FF5477;/);
   assert.match(thinkOff, /Phosphor Icons Heart,/);
   assert.ok(thinkOff.includes(PHOSPHOR_HEART_REGULAR_PATH), 'OFF deve usare la geometria Heart ufficiale');
   assert.match(thinkOn, /Phosphor Icons HeartFill,/);

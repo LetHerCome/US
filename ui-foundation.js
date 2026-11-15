@@ -289,7 +289,7 @@
     }
 
     function syncNavigation() {
-      Array.from(documentRef.querySelectorAll('.nav button')).forEach((button) => {
+      Array.from(documentRef.querySelectorAll('.dy-nav button')).forEach((button) => {
         if (button.classList.contains('active')) button.setAttribute('aria-current', 'page');
         else button.removeAttribute('aria-current');
       });

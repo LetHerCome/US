@@ -44,7 +44,9 @@ test('index.html: the first-screen fonts are preloaded with the exact URLs of ui
   const html = read('index.html');
   const css = read('ui-foundation.css');
   const preloads = [...html.matchAll(/<link rel="preload" href="([^"]+)" as="font" type="font\/woff2" crossorigin\/>/g)].map((m) => m[1]);
-  assert.deepEqual(preloads, ['/assets/fonts/Fraunces-Soft-Roman.woff2', '/assets/fonts/Fraunces-Soft-Italic.woff2', '/assets/fonts/Figtree-Latin.woff2']);
+  // Il diario, ma pulito (15/11/2026): the first screen is Figtree, one word in Fraunces italic,
+  // the couple's hand (Gochi Hand) and «us» (Permanent Marker); Fraunces roman is no longer on it.
+  assert.deepEqual(preloads, ['/assets/fonts/Fraunces-Soft-Italic.woff2', '/assets/fonts/Figtree-Latin.woff2', '/assets/fonts/GochiHand-Latin.woff2', '/assets/fonts/PermanentMarker-Latin.woff2']);
   for (const url of preloads) {
     assert.ok(css.includes(`url("${url}")`), `${url} is the one @font-face asks for`);
     assert.ok(fs.existsSync(path.join(ROOT, url)), `${url} exists`);

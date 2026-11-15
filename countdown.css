@@ -1,11 +1,6 @@
 /* One timepiece on the existing photograph. Six identities, no new assets. */
 .us-countdown-display[hidden],.us-countdown-overlay [hidden]{display:none!important}
-.us-countdown-entry{display:none!important}
-.us-countdown-display{position:relative;z-index:4;max-width:100%;padding:0;border:0;background:none;color:var(--us-latte,#f7efe9);cursor:pointer;text-align:center;min-height:44px}
-/* Parity with the approved mockup (.cd): the time sits at 15% of the screen,
-   centred, over the photo; the hero itself no longer lays it out. */
-#home #homeHero .us-countdown-display{position:absolute;z-index:4;top:15%;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);margin:0}
-#homeHero[data-us-countdown]{display:block;padding:0}
+
 /* The art is the mockup's button (.cd button): a centred column, number then label. */
 .us-countdown-art{position:relative;isolation:isolate;display:flex;flex-flow:row wrap;align-items:baseline;justify-content:center;column-gap:.26em;padding:6px 18px;border-radius:24px;color:var(--us-latte,#f7efe9);line-height:1;min-width:0;text-shadow:none}
 .us-countdown-title{order:3;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -60,11 +55,9 @@
 /* Cromo (mockup chrome): the figures in polished metal. */
 [data-countdown-style="chrome"] .us-countdown-number{font:600 64px/.9 var(--us-font-display);letter-spacing:-.03em;background:linear-gradient(180deg,#fff 0%,#c9c3d4 38%,#6e6878 52%,#e8e2f0 64%,#a59fb0 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
 [data-countdown-style="chrome"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
-/* Oggi theme Cinematic (mockup): lighter, wider figures; the words in spaced small caps. */
-html[data-us-oggi-theme="cinematic"] #home .us-countdown-display .us-countdown-number{font-weight:400;letter-spacing:.06em;font-size:64px}
+
 html[data-us-oggi-theme="cinematic"] #home .us-countdown-display :is(.us-countdown-unit,.us-countdown-tail,.us-countdown-title){font:700 11px/1.5 var(--us-font-ui);letter-spacing:.32em;text-transform:uppercase}
-.us-oggi-focus .us-countdown-display{opacity:0;pointer-events:none;}
-.us-countdown-display:focus-visible{outline:2px solid var(--us-color-accent-ink);outline-offset:5px;}
+
 /* Canonical sheet, content scrolls including the action when the keyboard opens. */
 .us-countdown-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:end;justify-content:center;}
 .us-countdown-overlay[aria-hidden="false"]{display:flex;}

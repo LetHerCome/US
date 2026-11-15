@@ -38,8 +38,9 @@ test('premium navigation uses tab animations but not global page-swipe tracking'
   // T1 1.0 — the page-entry rules moved from polish4.css to styles.css;
   // reduced motion skips them in app.js (animatePageEntry).
   const styles = read('styles.css');
-  assert.match(styles, /animation:usMotion5PageEnter 240ms/);
-  assert.match(styles, /html\.us-native-android \.page\.active\.us-motion5-enter-next,[\s\S]*animation-duration:220ms!important/);
+  // Il diario, ma pulito (15/11/2026): one 260 ms entry everywhere, Android included.
+  assert.match(styles, /animation:usMotion5PageEnter 260ms/);
+  assert.doesNotMatch(styles, /html\.us-native-android \.page\.active\.us-motion5-enter-next/);
   assert.doesNotMatch(read('app.js'), /let swipeGesture=null/);
   assert.match(read('app.js'), /Global tab-swipe removed/);
   assert.match(read('app.js'), /if\(!page\|\|isReducedMotion\(\)\)return;/);

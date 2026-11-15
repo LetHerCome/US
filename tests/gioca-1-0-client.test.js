@@ -117,10 +117,11 @@ test('G4: Per voi says when the partner question is inside — before the round 
   const left = weekly({ assigned_role: 'beatrice', created: true, partner_left_question: true, created_at: '2026-10-13T10:00:00Z' });
   const idle = harness({ homeState: home({ weekly: left }) });
   await tick();
-  assert.match(idle.nodes.quizHub.innerHTML, /<small class="us-gv2-pervoi-note">Dentro c’è la domanda di Beatrice<\/small>/);
+  // Il diario, ma pulito (15/11/2026): in the Per voi row the note takes the place of its line.
+  assert.match(idle.nodes.quizHub.innerHTML, /<b>Per voi<\/b><small>Dentro c’è la domanda di Beatrice<\/small>/);
   const later = harness({ homeState: home({ weekly: left, recent: [{ id: 'r', game_family: 'per_voi', started_at: '2026-10-14T10:00:00Z' }] }) });
   await tick();
-  assert.doesNotMatch(later.nodes.quizHub.innerHTML, /us-gv2-pervoi-note/, 'a round started after the question decides by its items, not by guess');
+  assert.doesNotMatch(later.nodes.quizHub.innerHTML, /Dentro c’è la domanda/,'a round started after the question decides by its items, not by guess');
   const written = item({ source_type: 'couple_custom', context: { author_role: 'beatrice', origin: 'weekly' } });
   const pending = harness({ homeState: home({ weekly: left, per_voi: { state: 'pending', session_id: 'pv' } }), handlers: { get_game_session: () => session({ id: 'pv', game_family: 'per_voi', reveal_ready: false, items: [written] }) } });
   await tick(14);

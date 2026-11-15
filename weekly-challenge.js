@@ -137,44 +137,43 @@
   const ICON_CAMERA = icon('camera');
   const ICON_CHECK = icon('check');
   const img = (path, alt = '') => (path ? `<img class="us-wc-img" data-wc-path="${esc(path)}" alt="${esc(alt)}" decoding="async">` : '');
-  const streakRow = (v) => `<div class="us-wc-streak"><div class="us-wc-bars" aria-hidden="true">${v.bars.map((on) => `<i${on ? ' data-on="true"' : ''}></i>`).join('')}</div><p>${v.streakBold ? `<b>${esc(v.streakBold)}</b> ` : ''}<span>${esc(v.streakText)}</span></p></div>`;
 
-  // Pure: the section for the Gioca slot.
+  // Pure: the section for the Gioca slot. Il diario, ma pulito (15/11/2026):
+  // a beige box, «La sfida della settimana», the challenge in words, then the
+  // two photos side by side (theirs with its tag, mine dashed in my colour).
   function markup(v) {
     if (!v) return '';
-    if (v.state === 'done') {
-      return `<section class="us-wc is-done" data-wc-state="done" aria-label="${esc(v.kicker)}">
-  <span class="us-wc-thumb" aria-hidden="true">${img(v.photos[0]?.path)}</span>
-  <div class="us-wc-done-copy"><span class="us-wc-by">${ICON_CHECK}<span>${esc(v.by)}</span></span><b class="us-wc-done-title">${esc(v.doneTitle)}</b><small>${esc(v.doneLine)}</small></div>
+    const kicker = 'La sfida della settimana';
+    const tag = (text, who) => `<span class="dy-tag dy-tag-s dy-wc-tag" style="background:var(--us-${who === 'me' ? 'tu' : 'partner'}-soft)"><span>${esc(text)}</span></span>`;
+    if (v.state === 'done' || v.state === 'apart-done') {
+      const pics = (v.state === 'done' ? [v.photos[0]] : v.pair).filter(Boolean);
+      return `<section class="dy-wc is-done" data-wc-state="${v.state}" aria-label="${esc(kicker)}">
+  <span class="dy-wc-kicker">${esc(kicker)}</span>
+  <b class="dy-wc-title">${esc(v.doneTitle)}</b>
+  ${pics.length ? `<div class="dy-wc-pair">${pics.map((p) => `<span class="dy-wc-tile">${img(p.path)}</span>`).join('')}</div>` : ''}
+  <small class="dy-wc-note">${esc(v.state === 'done' ? v.by : v.doneLine)}</small>
 </section>`;
     }
-    if (v.state === 'apart-done') {
-      return `<section class="us-wc is-born" data-wc-state="apart-done" aria-label="${esc(v.doneTitle)}">
-  <div class="us-wc-born-pair" aria-hidden="true">${v.pair.map((p) => `<span>${img(p.path)}</span>`).join('')}</div>
-  <div class="us-wc-born-copy"><span class="us-wc-kicker">${esc(v.kicker)}</span><b class="us-wc-done-title">${esc(v.doneTitle)}</b><small>${esc(v.doneLine)}</small></div>
-</section>`;
-    }
-    const head = `<div class="us-wc-head"><span class="us-wc-kicker">${esc(v.kicker)}</span><span class="us-wc-chip${v.state === 'apart' ? ' is-apart' : ''}">${esc(v.chip)}</span></div>
-  <h3 class="us-wc-title" id="usWcTitle">${esc(v.title)}</h3>`;
-    const change = v.change ? `<button type="button" class="us-wc-change" data-wc-action="change">${esc(v.change)}</button>` : '';
+    const change = v.change ? `<button type="button" class="dy-btn dy-btn-s dy-btn-ghost dy-hit" data-wc-action="change">${esc(v.change)}</button>` : '';
+    const note = `<div class="dy-wc-foot"><small class="dy-wc-note">${esc(v.when)} · ${esc(v.chip === 'A distanza' ? '60 punti' : v.chip)}</small>${change}</div>`;
     if (v.state === 'apart') {
-      const cell = (who, c) => `<div class="us-wc-pair-cell" data-who="${who}">${c.empty
-        ? (c.action ? `<button type="button" class="us-wc-pair-add" data-wc-action="mine">${ICON_CAMERA}<span>${esc(c.action)}</span></button>` : '<span class="us-wc-pair-wait" aria-hidden="true"></span>')
-        : `<span class="us-wc-pair-photo">${img(c.path)}</span>`}<span class="us-wc-pair-label"><i aria-hidden="true"></i><span>${esc(c.label)}</span></span></div>`;
-      return `<section class="us-wc is-apart" data-wc-state="apart" aria-labelledby="usWcTitle">
-  ${head}
-  <div class="us-wc-pair">${cell('partner', v.partner)}${cell('me', v.me)}</div>
-  <p class="us-wc-rule">${esc(v.rule)}</p>
-  <p class="us-wc-when">${ICON_WHEN}<span>${esc(v.when)}</span></p>
-  ${change ? `<div class="us-wc-actions is-change">${change}</div>` : ''}
-  ${streakRow(v)}
+      const cell = (who, c) => {
+        if (!c.empty) return `<span class="dy-wc-tile">${img(c.path)}${tag(c.label, who)}</span>`;
+        if (c.action) return `<button type="button" class="dy-wc-add" data-wc-action="mine">${ICON_CAMERA}<span>La tua foto</span></button>`;
+        return `<span class="dy-wc-wait"><span>${esc(c.label)}</span></span>`;
+      };
+      return `<section class="dy-wc is-apart" data-wc-state="apart" aria-labelledby="usWcTitle">
+  <span class="dy-wc-kicker">${esc(kicker)}</span>
+  <h3 class="dy-wc-title" id="usWcTitle">${esc(v.title)}</h3>
+  <div class="dy-wc-pair">${cell('partner', v.partner)}${cell('me', v.me)}</div>
+  ${note}
 </section>`;
     }
-    return `<section class="us-wc" data-wc-state="open" aria-labelledby="usWcTitle">
-  ${head}
-  <p class="us-wc-when">${ICON_WHEN}<span>${esc(v.when)}</span></p>
-  <div class="us-wc-actions"><button type="button" class="us-wc-photo" data-wc-action="photo">${ICON_CAMERA}<span>Chiudi con una foto</span></button>${change}</div>
-  ${streakRow(v)}
+    return `<section class="dy-wc" data-wc-state="open" aria-labelledby="usWcTitle">
+  <span class="dy-wc-kicker">${esc(kicker)}</span>
+  <h3 class="dy-wc-title" id="usWcTitle">${esc(v.title)}</h3>
+  <div class="dy-wc-pair"><button type="button" class="dy-wc-add" data-wc-action="photo">${ICON_CAMERA}<span>Chiudi con una foto</span></button></div>
+  ${note}
 </section>`;
   }
 
@@ -314,7 +313,7 @@
     function open() {
       w?.openQuizHub?.({ nav: true });
       setTimeout(() => {
-        const card = w?.document?.querySelector?.('[data-wc-slot] .us-wc');
+        const card = w?.document?.querySelector?.('[data-wc-slot] .dy-wc');
         card?.scrollIntoView?.({ block: 'center', behavior: w?.UsUiFoundation?.isReducedMotion?.() ? 'auto' : 'smooth' });
         card?.querySelector?.('[data-wc-action]')?.focus?.({ preventScroll: true });
       }, 180);

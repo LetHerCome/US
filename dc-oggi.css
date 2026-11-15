@@ -20,43 +20,9 @@
 /* ---------- 1 · Photo: full screen, night at the top and at the bottom (.og-scrim) ---------- */
 /* The photo starts at the very top of the screen (no -2px pull from the legacy layer). */
 #home.page{margin-top:0}
-#home .home-photo-shade{
-  background:linear-gradient(180deg,rgba(15,11,19,.6) 0%,rgba(15,11,19,.18) 24%,rgba(15,11,19,0) 38%,rgba(15,11,19,.12) 50%,rgba(15,11,19,.86) 76%,var(--us-color-bg) 100%)!important;
-  transition:opacity .45s var(--dc-e-out);
-}
-/* Readable on any photo (founder, 13/11, visual review): a soft night behind
-   the days together and a shadow under every word that sits on the photo. */
-#home #homeHero .us-countdown-display::before{content:"";position:absolute;z-index:-1;inset:-44px -76px;border-radius:50%;background:radial-gradient(closest-side,rgba(15,11,19,.5),rgba(15,11,19,.24) 58%,transparent);pointer-events:none}
-#home #homeHero .us-countdown-number{text-shadow:0 2px 18px rgba(15,11,19,.5),0 6px 40px rgba(0,0,0,.35)}
-#home #homeHero :is(.us-countdown-unit,.us-countdown-tail,.us-countdown-title,.us-countdown-sub){color:var(--us-color-text);text-shadow:0 1px 12px rgba(15,11,19,.8),0 0 2px rgba(15,11,19,.5)}
-#home #usOggiCaption{text-shadow:0 1px 12px rgba(15,11,19,.8),0 0 2px rgba(15,11,19,.5)}
-#home #usOggiCaption small{color:var(--us-color-text)}
-/* Focus (mockup .is-focus): only the photo; everything else fades in .45s. */
-#home #homeHero :is(.us-oggi-dock,.us-countdown-display,.us-countdown-entry){transition:opacity .45s var(--dc-e-out)}
-#home #homeHero.us-oggi-focus .home-photo-shade{opacity:.25}
-#home #homeHero.us-oggi-focus :is(.us-oggi-dock,.us-countdown-display,.us-countdown-entry){opacity:0!important;pointer-events:none!important}
-body:has(#homeHero.us-oggi-focus) .app>.top.us-premium-top{opacity:0;pointer-events:none}
-/* The bar steps down out of the photo (mockup .screen.is-focus .nav, 450 ms io). */
-body:has(#home.active):not(.us-keyboard-open) .nav.us-nav{transition:translate .45s var(--dc-e-io,cubic-bezier(.7,0,.2,1))}
-body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
-.app>.top.us-premium-top{transition:opacity .45s var(--dc-e-out)}
 
-/* ---------- 2 · Top: heart, logo, envelope (mockup .og-top, .ic-btn, .logo-wrap) ---------- */
-.app>.top.us-premium-top{
-  left:max(16px,var(--us-safe-left,0px))!important;
-  right:max(16px,var(--us-safe-right,0px))!important;
-  top:calc(var(--us-safe-top) + 16px)!important;
-  height:46px;
-  padding:0!important;
-  border:0!important;
-  border-radius:0!important;
-  background:none!important;
-  box-shadow:none!important;
-  -webkit-backdrop-filter:none!important;
-  backdrop-filter:none!important;
-}
-.app>.top.us-premium-top::before{display:none}
-.app>.top.us-premium-top .us-top-left,.app>.top.us-premium-top .top-actions{min-width:46px}
+#home #homeHero :is(.us-countdown-unit,.us-countdown-tail,.us-countdown-title,.us-countdown-sub){color:var(--us-color-text);text-shadow:0 1px 12px rgba(15,11,19,.8),0 0 2px rgba(15,11,19,.5)}
+
 #thinkButton.us-top-think,
 #leftForYouPartnerEntry.us-envelope-control{
   position:relative;
@@ -78,8 +44,6 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 }
 #thinkButton.us-top-think:focus-visible,
 #leftForYouPartnerEntry.us-envelope-control:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
-.app>.top.us-premium-top .us-top-brand{width:46px;height:46px}
-.app>.top.us-premium-top .us-top-brand-art{width:46px;height:46px}
 
 /* Heart: drawn in the text colour; when I send it fills with my colour for
    2.4 s (mockup), when one arrives with theirs. */
@@ -97,9 +61,7 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 #thinkButton.received .us-shell-icon--think::before{-webkit-mask-image:url("/assets/icons/think-on.svg");mask-image:url("/assets/icons/think-on.svg")}
 #thinkButton.sent .us-shell-icon--think::before{background:var(--us-tu)}
 #thinkButton.received .us-shell-icon--think::before{background:var(--us-partner)}
-#thinkButton.us-top-think.sent,#thinkButton.us-top-think.received{animation:none}
-/* While the send cools down the button is disabled, but the heart stays lit (mockup: full colour for 2.4 s). */
-#thinkButton.us-top-think.sent:disabled{opacity:1!important;filter:none!important}
+
 #thinkButton.sent .us-shell-icon--think{animation:dc-oggi-heart .7s ease-out}
 @keyframes dc-oggi-heart{0%{scale:1}25%{scale:1.3}50%{scale:.92}70%{scale:1.12}100%{scale:1}}
 
@@ -122,29 +84,6 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 :root[data-us-visibility="hidden"] #leftForYouPartnerEntry[data-us-attention="on"] .beat{animation-play-state:paused}
 #leftForYouPartnerEntry.is-loading .us-envelope-icon{animation:none}
 
-/* ---------- 3 · The column above the nav (mockup .og-bottom) ----------
-   Caption, next event + distance (hidden while a card waits), the card that
-   waits for me or the notifications invite, the Domanda di oggi. The band
-   right above the nav stays free: Maudit stands there, never over the cards. */
-#home .us-oggi-dock{
-  position:fixed;
-  z-index:19;
-  left:50%;
-  /* Mockup .og-bottom: 130px from the bottom of the screen (above the safe area). */
-  bottom:calc(var(--us-safe-bottom) + 130px);
-  width:min(420px,calc(100% - 28px));
-  transform:translateX(-50%);
-  display:grid;
-  /* One column that never grows past the dock: an auto column takes the
-     min-content of its widest child, and the one-line photo caption made it
-     wider than the phone (16/10: caption and cards cut on the right). */
-  grid-template-columns:minmax(0,1fr);
-  gap:12px;
-  pointer-events:none;
-}
-body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-safe-bottom) + var(--us-nav-height) + 14px)}
-#home .us-oggi-dock>*{pointer-events:auto}
-#home .us-oggi-dock>[hidden]{display:none!important}
 #home #usOggiDock #usTodayPriorityRegion{
   position:static!important;
   left:auto!important;
@@ -169,162 +108,17 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-card-in .42s var(--dc-e-out) both}
 @keyframes dc-oggi-card-in{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
 
-/* Caption: Fraunces italic 30px, then the day and who, with their colour. */
-#home #usOggiCaption.og-cap{min-width:0;margin:0 4px;font:400 22px/1.05 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text);pointer-events:none}
-#home #usOggiCaption em{font-style:italic;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#home #usOggiCaption small{display:flex;align-items:center;gap:8px;margin-top:6px;font:400 13px/1.1 var(--us-font-ui);letter-spacing:0;color:var(--us-color-text-2)}
 #home #usOggiCaption .dot,#today .question .locked .dot{display:inline-block;flex:none;width:9px;height:9px;border-radius:50%;background:var(--us-noi)}
 #home #usOggiCaption .dot[data-who="tu"],#today .question .locked .dot[data-who="tu"]{background:var(--us-tu)}
 #home #usOggiCaption .dot[data-who="partner"],#today .question .locked .dot[data-who="partner"]{background:var(--us-partner)}
 
-/* Next event and distance: two glass pills (mockup .og-next, .og-pill). */
-#home #usOggiRow.og-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-#home #usOggiNext.og-next{
-  justify-self:start;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  min-height:40px;
-  min-width:0;
-  max-width:100%;
-  padding:8px 14px 8px 10px;
-  border:1px solid var(--us-color-line-strong);
-  border-radius:999px;
-  background:var(--dc-oggi-glass);
-  -webkit-backdrop-filter:blur(10px);
-  backdrop-filter:blur(10px);
-  box-shadow:none;
-  color:var(--us-color-text-2);
-  font:400 13px/1.2 var(--us-font-ui);
-  text-align:left;
-}
-#home #usOggiNext[hidden]{display:none}
-#home #usOggiNext b{flex:none;color:var(--us-color-text);font-weight:600}
-#home #usOggiNext #usOggiNextTitle{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#home #usOggiNext .us-icon{--us-icon-size:18px;flex:none;color:var(--us-ambra)}
-#home #homeHero .og-row .home-distance-pill:not([hidden]){
-  position:static!important;
-  inset:auto!important;
-  transform:none!important;
-  display:inline-flex!important;
-  align-items:center;
-  gap:6px;
-  min-height:40px;
-  height:auto;
-  padding:0 13px 0 10px;
-  border:1px solid var(--us-color-line-strong);
-  border-radius:999px;
-  background:var(--dc-oggi-glass);
-  -webkit-backdrop-filter:blur(10px);
-  backdrop-filter:blur(10px);
-  box-shadow:none;
-  color:var(--us-color-text);
-  font:600 13px/1 var(--us-font-ui);
-  white-space:nowrap;
-  opacity:1;
-}
-#home #homeHero .og-row .home-distance-pill .us-icon{--us-icon-size:17px;color:var(--us-noi)}
-#home #homeHero .og-row .home-distance-pill b{font-weight:600}
-/* Batteria del partner beside the distance (founder, 31/10/2026): "12 km · 🔋 18%".
-   Low and not charging: the glyph in corallo, nothing louder. */
-#home #homeHero .og-row .home-distance-pill .us-distance-battery{display:inline-flex;align-items:center;gap:4px;color:var(--us-color-text-2);font-variant-numeric:tabular-nums}
-#home #homeHero .og-row .home-distance-pill .us-distance-battery[hidden]{display:none}
-#home #homeHero .og-row .home-distance-pill .us-distance-battery::before{content:"·";content:"·" / "";margin-right:2px}
-#home #homeHero .og-row .home-distance-pill .us-distance-battery .us-icon{--us-icon-size:16px;color:var(--us-color-text-2)}
-#home #homeHero .og-row .home-distance-pill .us-distance-battery[data-low="true"] .us-icon{color:var(--us-corallo)}
-#home :is(#usOggiNext,.og-row .home-distance-pill):focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
-
-/* ---------- 4 · Domanda di oggi on Oggi (mockup .dq + .ring) ---------- */
-#home #usDailyRitual{
-  width:100%;
-  min-height:0;
-  display:grid;
-  grid-template-columns:auto minmax(0,1fr);
-  align-items:center;
-  /* Founder, 13/11 (emulator): «troppo scuro», «troppo grande». A veil of
-     the colour of both at the strength of the card above (18%), and the
-     same size as it. */
-  gap:6px 10px;
-  padding:13px 14px 13px 16px;
-  border:1px solid color-mix(in srgb,var(--us-noi) 40%,transparent);
-  border-radius:22px;
-  background:color-mix(in srgb,var(--us-noi) 18%,var(--dc-oggi-card));
-  -webkit-backdrop-filter:blur(18px);
-  backdrop-filter:blur(18px);
-  box-shadow:none;
-  color:var(--us-color-text);
-  font:inherit;
-  text-align:left;
-}
-#home #usDailyRitual:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
-#home #usDailyRitual.us-attention-orbit::after{display:none}
-#home #usDailyRitual .us-daily-ritual-kicker{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-tu)}
-#home #usDailyRitual .us-daily-ritual-question{
-  grid-column:1/-1;
-  margin:0;
-  font:400 17px/1.2 var(--us-font-display);
-  color:var(--us-color-text);
-  text-wrap:balance;
-  display:-webkit-box;
-  -webkit-box-orient:vertical;
-  -webkit-line-clamp:2;
-  overflow:hidden;
-}
-#home #usDailyRitual[data-state="error"] .us-daily-ritual-question{font-size:17px;color:var(--us-color-text-2)}
-/* Long questions step down instead of leaving the card: more lines, smaller type. */
-#home #usDailyRitual .us-daily-ritual-question{overflow-wrap:anywhere}
-#home #usDailyRitual .us-daily-ritual-question[data-length="long"]{font-size:16px;line-height:1.22;-webkit-line-clamp:3}
-#home #usDailyRitual .us-daily-ritual-question[data-length="xlong"]{font-size:15px;line-height:1.25;-webkit-line-clamp:4}
-#home #usDailyRitual .dq-foot{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
-#home #usDailyRitual[data-state="revealed"]{touch-action:pan-y;user-select:none;-webkit-user-select:none}
-#home #usDailyRitual .us-daily-ritual-swipe{display:block;grid-column:1/-1;margin-top:-2px;font:400 11px/1.4 var(--us-font-ui);letter-spacing:.02em;color:var(--us-color-text-3,var(--us-color-text-2));opacity:.8}
-#home #usDailyRitual .us-daily-ritual-meta{margin:0;min-width:0;font:400 13px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
-#home #usDailyRitual .us-daily-ritual-cta{
-  flex:none;
-  margin-left:auto;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  min-height:40px;
-  padding:0 16px;
-  border-radius:999px;
-  background:var(--us-tu);
-  box-shadow:none;
-  color:var(--us-inchiostro);
-  font:700 14px/1 var(--us-font-ui);
-  white-space:nowrap;
-}
-#home #usDailyRitual .us-daily-ritual-arrow{display:inline-block;width:18px;height:18px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:translate .25s var(--dc-e-out)}
-/* Two circles that become one (mockup .ring, data-st tocca/pronte/svelate). */
-#home #usDailyRitual .ring{width:40px;height:25px;overflow:visible;flex:none}
-#home #usDailyRitual .ring .r-bloom{stroke:var(--us-noi)}
-#home #usDailyRitual .ring .r-you-full{fill:var(--us-partner)}
-#home #usDailyRitual .ring .r-you-wait{fill:rgba(23,17,28,.6);stroke:var(--us-partner);opacity:0}
-#home #usDailyRitual .ring .r-me-ring{fill:rgba(23,17,28,.6);stroke:var(--us-tu)}
-#home #usDailyRitual .ring .r-fill{fill:var(--us-tu);transform:translateY(26px)}
-#home #usDailyRitual .ring .r-noi circle{fill:var(--us-noi)}
-#home #usDailyRitual .ring .r-noi path{fill:var(--us-inchiostro)}
 #home #usDailyRitual .ring :is(.r-noi,.r-bloom){opacity:0;transform-box:view-box;transform-origin:24px 15px}
 #home #usDailyRitual .ring:is([data-st="vuoto"],[data-st="attesa"]) .r-you-full{opacity:0}
 #home #usDailyRitual .ring:is([data-st="vuoto"],[data-st="attesa"]) .r-you-wait{opacity:1}
-#home #usDailyRitual .ring[data-st="attesa"] .r-fill{transform:translateY(0)}
+
 #home #usDailyRitual .ring:is([data-st="pronte"],[data-st="svelate"]) :is(.r-me,.r-you){opacity:0}
 #home #usDailyRitual .ring:is([data-st="pronte"],[data-st="svelate"]) .r-noi{opacity:1}
-/* La cosa di oggi (cosa-di-oggi.js, 13/11/2026): the streak with its heart, the
-   first week's dots, «Domani: …», and always a button, as the
-   other Oggi cards (founder, 13/11: «non c'è un tasto»). */
-#home #usDailyRitual .us-cdo-left{display:inline-flex;align-items:center;gap:10px;min-width:0}
-#home #usDailyRitual .us-cdo-streak{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--us-color-text-2)}
-#home #usDailyRitual .us-cdo-streak .us-cdo-heart{width:14px;height:14px;flex:none;color:var(--us-noi)}
-#home #usDailyRitual .us-cdo-streak-n{display:inline-block}
-#home #usDailyRitual .us-daily-ritual-cta .us-cdo-heart{width:16px;height:16px;flex:none}
-#home #usDailyRitual .us-cdo-dots{display:inline-flex;align-items:center;gap:5px;flex:none}
-#home #usDailyRitual .us-cdo-dots i{width:7px;height:7px;border-radius:50%;border:1.5px solid rgba(247,239,233,.38);box-sizing:border-box}
-#home #usDailyRitual .us-cdo-dots i.on{border-color:var(--us-tu);background:var(--us-tu)}
-#home #usDailyRitual .us-cdo-dots i.now{border-color:var(--us-tu);box-shadow:0 0 0 3px rgba(255,124,150,.18)}
-#home #usDailyRitual .us-cdo-sub{grid-column:1/-1;margin-top:-4px;font:400 14px/1.4 var(--us-font-ui);color:var(--us-color-text-2)}
-#home #usDailyRitual[data-look] .us-daily-ritual-swipe{display:none}
+
 /* The moments: hearts and a check over the card, the party over Oggi. */
 .us-cdo-fx{position:fixed;z-index:var(--us-layer-transient);pointer-events:none;overflow:visible}
 .us-cdo-fly{position:absolute;bottom:38%;width:18px;height:18px;color:var(--us-noi);opacity:0;animation:usCdoFly 1.3s cubic-bezier(.2,.8,.2,1) forwards}
@@ -390,31 +184,6 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
   background:var(--us-partner);
   box-shadow:0 0 0 2px var(--us-color-bg,#0f0b13);
 }
-
-/* ---------- 4d · Countdown: one quiet way back when Oggi shows none (O9) ---------- */
-#home #homeHero .us-countdown-entry:not([hidden]){
-  position:absolute;
-  z-index:5;
-  top:15%;
-  left:50%;
-  right:auto;
-  transform:translateX(-50%);
-  display:inline-flex!important;
-  align-items:center;
-  gap:6px;
-  min-height:44px;
-  padding:0 16px 0 14px;
-  border:1px solid var(--us-color-line-strong);
-  border-radius:999px;
-  background:var(--dc-oggi-glass);
-  -webkit-backdrop-filter:blur(10px);
-  backdrop-filter:blur(10px);
-  box-shadow:none;
-  color:var(--us-color-text-2);
-  font:600 14px/1 var(--us-font-ui);
-}
-#home #homeHero .us-countdown-entry .us-icon{--us-icon-size:18px}
-#home #homeHero .us-countdown-entry:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
 
 /* ---------- 5 · Priority card: what waits for me, in their colour (mockup .prio) ---------- */
 #home #usTodayPriorityRegion .us-today-priority-card{
@@ -517,9 +286,6 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
   box-shadow:none;
 }
 #home .push-optin-card.denied{border-color:color-mix(in srgb,var(--us-rosso) 30%,transparent)}
-
-/* ---------- 7 · Legacy calendar widget (kept mounted, hidden by the Home decisions) ---------- */
-#home .us-oggi-card{border:1px solid var(--us-color-line-strong);border-radius:999px;background:var(--dc-oggi-scrim);box-shadow:none;color:var(--us-color-text-2);font-size:13px}
 
 /* ---------- 8 · Today sheet: write (mockup #sheetAnswer), then the two answers (#sheetReveal) ---------- */
 #today .today-sheet-head{display:block;margin:0}
@@ -1091,7 +857,7 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
 
 /* ---------- 13 · Reduced motion: movement becomes a fade or nothing ---------- */
 :root[data-us-motion="reduced"] :is(#thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-head>div>*,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-visual i,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind){animation:none!important}
-:root[data-us-motion="reduced"] #home .us-daily-ritual-ring *{transition:none!important}
+
 :root[data-us-motion="reduced"] #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
 :root[data-us-motion="reduced"] #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-fade .2s linear both!important}
 @media (prefers-reduced-motion:reduce){
