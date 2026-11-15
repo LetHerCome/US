@@ -15,6 +15,7 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PLACEHOLDER_HTML } from './build-s31-staging-preview.mjs';
 
 // esbuild is a devDependency. If a build host skips devDependencies, the site
 // still ships, unminified, with a warning: a missing optimisation must never
@@ -34,6 +35,14 @@ export async function minifyWebBundle(directory) {
     .filter((entry) => entry.isFile() && /\.(js|css)$/.test(entry.name))
     .map((entry) => entry.name)
     .sort();
+  // Cloudflare builds of branches other than the staging one publish only the
+  // static placeholder: nothing to minify. Any other content still has to be a
+  // full bundle.
+  const names = entries.map((entry) => entry.name);
+  if (names.length === 1 && names[0] === 'index.html'
+    && await readFile(path.join(target, 'index.html'), 'utf8') === PLACEHOLDER_HTML) {
+    return { files: 0, before: 0, after: 0, placeholder: true };
+  }
   if (!files.includes('app.js') || !files.includes('styles.css')) {
     throw new Error(`minify-web: ${target} does not look like a US web bundle`);
   }
@@ -62,8 +71,9 @@ export async function minifyWebBundle(directory) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const directory = process.argv[2];
   if (!directory) throw new Error('minify-web: pass the dist directory');
-  const { files, before, after, skipped } = await minifyWebBundle(path.resolve(ROOT, directory));
+  const { files, before, after, skipped, placeholder } = await minifyWebBundle(path.resolve(ROOT, directory));
   const kb = (bytes) => `${Math.round(bytes / 1024)} KB`;
-  if (skipped) console.warn(`minify-web: esbuild is not installed, ${files} files ship unminified`);
+  if (placeholder) console.log('minify-web: placeholder page only, nothing to minify');
+  else if (skipped) console.warn(`minify-web: esbuild is not installed, ${files} files ship unminified`);
   else console.log(`Web bundle minified: ${files} files, ${kb(before)} -> ${kb(after)}`);
 }

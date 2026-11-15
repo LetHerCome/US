@@ -252,6 +252,30 @@ test('us-staging-s31 Cloudflare builds of other branches publish only a static p
   assert.match(read('scripts/build-s31-staging-preview.mjs'),/CF_PAGES_BRANCH !== APPROVED_BRANCH/);
 });
 
+// PR #251, #253, #255: the placeholder build then failed in minify-web. The
+// chain of build:us-staging-pages runs on copies of the two scripts in a temp
+// root, because dist/s31-staging-preview is tracked in git.
+test('us-staging-s31: the placeholder survives minify-web, a broken bundle still does not',()=>{
+  const {execFileSync}=require('node:child_process');
+  const os=require('node:os');
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'us-s31-'));
+  try {
+    fs.mkdirSync(path.join(root,'scripts'));
+    for(const f of ['build-s31-staging-preview.mjs','minify-web.mjs']) fs.copyFileSync(path.resolve(__dirname,'..','scripts',f),path.join(root,'scripts',f));
+    const run=(script,args,env)=>execFileSync(process.execPath,[path.join(root,'scripts',script),...args],{cwd:root,env:{...process.env,...env},stdio:'pipe'});
+    const env={CF_PAGES:'1',CF_PAGES_BRANCH:'claude/some-pr-branch',US_S31_STAGING_PREVIEW:'true'};
+    run('build-s31-staging-preview.mjs',[],env);
+    run('minify-web.mjs',['dist/s31-staging-preview'],env);
+    const out=path.join(root,'dist','s31-staging-preview');
+    assert.deepEqual(fs.readdirSync(out),['index.html']);
+    assert.match(fs.readFileSync(path.join(out,'index.html'),'utf8'),/This branch is not a US-STAGING preview/);
+    fs.writeFileSync(path.join(out,'index.html'),'<!doctype html><p>half a bundle</p>\n');
+    assert.throws(()=>run('minify-web.mjs',['dist/s31-staging-preview'],env),/does not look like a US web bundle/);
+  } finally {
+    fs.rmSync(root,{recursive:true,force:true});
+  }
+});
+
 test('beta fix 28/10: back from the email link, the verify step signs in by itself', async () => {
   let verified = false;
   const auth = fakeAuth();
