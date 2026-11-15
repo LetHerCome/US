@@ -643,6 +643,20 @@
   function sign(who, mood, body, size = 30) {
     return `<div class="dy-f-sign"><span class="dy-stk">${character(roleOf(who), { size, mood })}</span>${body}</div>`;
   }
+  // The characters a sheet carries in its markup ([data-dy-who="me|partner"],
+  // data-dy-size, data-dy-mood), drawn each time the sheet opens.
+  function paintPeople(root) {
+    root?.querySelectorAll?.('[data-dy-who]').forEach((el) => {
+      el.innerHTML = character(roleOf(el.dataset.dyWho), { size: Number(el.dataset.dySize) || 30, mood: el.dataset.dyMood || '' });
+    });
+  }
+  function watchSheets() {
+    if (typeof MutationObserver !== 'function' || !d.body) return;
+    new MutationObserver((list) => list.forEach((m) => {
+      const t = m.target;
+      if (t.classList?.contains('dy-foglio') && t.getAttribute('aria-hidden') === 'false') paintPeople(t);
+    })).observe(d.body, { attributes: true, attributeFilter: ['aria-hidden'], subtree: true });
+  }
   // Drag the handle or the head down to close (founder, 16/11/2026): the sheet
   // follows the finger and, past 110 px or on a quick flick, closes with its
   // own close button, so every feature keeps its own closing.
@@ -755,6 +769,7 @@
     darkQuery?.addEventListener?.('change', () => { if (aspetto() === 'auto') applyAspetto(); });
     d.addEventListener('click', onClick);
     dragToClose();
+    watchSheets();
     d.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVoiDue(); });
     w.addEventListener('popstate', () => closeVoiDue({ fromBack: true }));
     w.addEventListener('us:home-photo-changed', () => paintPhoto());
@@ -794,7 +809,7 @@
     setInterval(() => { if (!d.hidden) paintTitle(); }, 60000);
   }
 
-  w.UsDiario = Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, shapeOf, slot, paintDiary, paintQuestion, paintVoiDue, thinkSent, openVoiDue, closeVoiDue, character, sentences, paintAll, sign, icon, roles: couple });
+  w.UsDiario = Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, shapeOf, slot, paintDiary, paintQuestion, paintVoiDue, thinkSent, openVoiDue, closeVoiDue, character, sentences, paintAll, sign, icon, paintPeople, roles: couple });
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot, { once: true });
   else boot();
 })();

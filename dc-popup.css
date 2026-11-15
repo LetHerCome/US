@@ -64,7 +64,7 @@
    Supersedes the centred shell of modal-center.css for this list. A new
    sheet opts in with the class .us-foglio on its overlay.
    ========================================================================== */
-:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio){
+:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio){
   align-items:flex-end!important;
   justify-content:center!important;
   /* No padding: the panel's max-height keeps it under the status bar, and a
@@ -75,7 +75,7 @@
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
 }
-:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]{
+:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]{
   position:relative;
   width:100%!important;
   max-width:560px;
@@ -94,10 +94,10 @@
   backdrop-filter:none;
   color:var(--us-color-text);
 }
-:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]::-webkit-scrollbar{display:none}
+:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]::-webkit-scrollbar{display:none}
 
 /* The handle: drawn by the sheet itself, above a sticky header. */
-:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]::before{
+:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]::before{
   content:"";
   position:absolute;
   top:10px;
@@ -118,15 +118,14 @@
 :is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,.us-moment-compose-overlay)>[data-us-modal-panel]{padding-top:29px!important;padding-bottom:calc(24px + var(--us-safe-bottom))!important}
 
 /* …and sheets whose (sticky) header carries its own padding. */
-:is(#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet)>[data-us-modal-panel]>header:first-of-type{padding-top:29px!important}
+:is(#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet)>[data-us-modal-panel]>header:first-of-type{padding-top:29px!important}
 /* The Lasciato per te sheets had no bottom inset of their own. */
-:is(#leftForYouOverlay,#leftForYouComposerOverlay)>[data-us-modal-panel]{padding-bottom:var(--us-safe-bottom)}
 
 /* Tablet: the calendar month keeps its wider sheet. */
 
 /* Keyboard open: the overlay ends where the visible area ends, so the
    sheet's bottom (and its button) stays above the keyboard. */
-body.us-keyboard-open :is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio){
+body.us-keyboard-open :is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio){
   bottom:auto!important;
   height:var(--us-viewport-height,100dvh)!important;
 }
@@ -135,10 +134,10 @@ body.us-keyboard-open :is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,
 /* The eyebrow speaks in the colour of the area the sheet belongs to, not of
    the tab it was opened from. An area may set --us-sheet-k on its panel. */
 :is(#usCountdownSheet){--us-sheet-k:var(--us-corallo)}
-:is(#leftForYouOverlay,#leftForYouComposerOverlay,#usSettingsOverlay,#usWidgetHub){--us-sheet-k:var(--us-tu)}
+:is(#usSettingsOverlay,#usWidgetHub){--us-sheet-k:var(--us-tu)}
 :is(#usEventsOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet){--us-sheet-k:var(--us-noi)}
 :is(#conservatiOverlay,.us-moment-compose-overlay){--us-sheet-k:var(--us-ambra)}
-:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]>:is(header,.us-moment-compose-title) :is(.tiny,.us-eyebrow){
+:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]>:is(header,.us-moment-compose-title) :is(.tiny,.us-eyebrow){
   display:block;
   margin:0 0 2px;
   font-family:var(--us-font-ui);
@@ -150,7 +149,7 @@ body.us-keyboard-open :is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,
   color:var(--us-sheet-k,var(--us-noi));
   opacity:1;
 }
-:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]>:is(header,.us-moment-compose-title) :is(h2,h3,.us-sheet-title,.us-moment-compose-title b){
+:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]>:is(header,.us-moment-compose-title) :is(h2,h3,.us-sheet-title,.us-moment-compose-title b){
   margin:0;
   font-family:var(--us-font-display);
   font-size:26px;
@@ -161,7 +160,7 @@ body.us-keyboard-open :is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,
   color:var(--us-color-text);
   text-wrap:balance;
 }
-:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel] .us-modal-close:not(.is-on-media){
+:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel] .us-modal-close:not(.is-on-media){
   /* The mockup's 40px disc (.sh-x) inside a 44px touch target: the disc is
      the content box, and the 2px around it sit outside the header edges. */
   width:44px;
@@ -183,38 +182,38 @@ body.us-keyboard-open :is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
 }
-:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel] .us-modal-close:not(.is-on-media) .us-icon{width:18px;height:18px}
+:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel] .us-modal-close:not(.is-on-media) .us-icon{width:18px;height:18px}
 
 /* ---------- Foglio motion: up from the bottom with the soft spring ----------
    Transitions only, so a close in the middle of the rise simply turns back
    and exitSurface() still gets its `transform` transitionend. @starting-style
    gives the rise when the overlay comes out of display:none (engines without
    it show the sheet in place, as before). */
-[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio) [data-us-modal-panel]{
+[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio) [data-us-modal-panel]{
   opacity:1;
   transform:translate3d(0,100%,0);
   transform-origin:50% 100%;
   transition:transform var(--us-pop-sheet-out) var(--us-ease-exit);
   will-change:transform;
 }
-[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{
+[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{
   opacity:1;
   transform:none;
   transition:transform var(--us-pop-sheet-in) var(--us-ease-enter);
 }
-[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) .us-modal-backdrop{
+[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) .us-modal-backdrop{
   transition:opacity var(--us-pop-scrim-in) linear;
 }
 @starting-style{
-  [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{transform:translate3d(0,100%,0)}
-  [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show) .us-modal-backdrop{opacity:0}
+  [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{transform:translate3d(0,100%,0)}
+  [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show) .us-modal-backdrop{opacity:0}
 }
-[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)[data-us-motion-exiting] [data-us-modal-panel]{
+[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)[data-us-motion-exiting] [data-us-modal-panel]{
   opacity:1;
   transform:translate3d(0,100%,0);
   transition:transform var(--us-pop-sheet-out) var(--us-ease-exit);
 }
-[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)[data-us-motion-exiting] .us-modal-backdrop{
+[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)[data-us-motion-exiting] .us-modal-backdrop{
   opacity:0;
   transition:opacity var(--us-pop-scrim-out) linear;
 }
@@ -399,25 +398,25 @@ body.us-keyboard-open.us-update-visible.us-status-visible .app-status-bar{bottom
    Reduced motion: no travel. Sheets and confirmations simply fade in and
    disappear (exitSurface finishes at once); the Avviso fades in place.
    ========================================================================== */
-:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio) [data-us-modal-panel]{
+:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio) [data-us-modal-panel]{
   transform:none!important;
 }
-:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{
+:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{
   transition:opacity var(--us-pop-fade) var(--us-ease-standard)!important;
 }
 @starting-style{
-  :root[data-us-motion="reduced"] [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{opacity:0}
+  :root[data-us-motion="reduced"] [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{opacity:0}
 }
 
 :root[data-us-motion="reduced"] .toast{transform:translateX(-50%);transition:opacity var(--us-pop-fade) var(--us-ease-standard)}
 :root[data-us-motion="reduced"] :is(.app-status-bar,.app-update-bar){transition:none}
 @media (prefers-reduced-motion:reduce){
-  [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio) [data-us-modal-panel]{transform:none!important}
-  [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{
+  [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio) [data-us-modal-panel]{transform:none!important}
+  [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{
     transition:opacity var(--us-pop-fade) var(--us-ease-standard)!important;
   }
   @starting-style{
-    [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{opacity:0}
+    [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{opacity:0}
   }
   
   .toast{transform:translateX(-50%);transition:opacity var(--us-pop-fade) var(--us-ease-standard)}

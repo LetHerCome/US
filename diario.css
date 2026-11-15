@@ -530,3 +530,55 @@ html[data-us-motion="reduced"] .dy-foglio-panel,html[data-us-motion="reduced"] .
 .dy-think-status{justify-content:center;margin-top:12px}
 @media (prefers-reduced-motion:reduce){.dy-think-heart{animation:none}}
 html[data-us-motion="reduced"] .dy-think-heart{animation:none}
+/* Lasciato per te (#leftForYouOverlay, #leftForYouComposerOverlay,
+   left-for-you.js): who left it signs with their character, what you write is
+   in your hand, the kind of message is a row of tiles. The envelope stays: it
+   opens once, because the message opens once. */
+.dy-lfy-from{align-items:center}
+.dy-lfy-from-copy{display:flex;flex-direction:column;gap:1px;min-width:0}
+.dy-lfy-from-copy b{font:800 var(--us-text-15)/1.25 var(--us-font-ui);color:var(--us-ink-100)}
+.dy-lfy-from-copy small{font:500 12.5px/1.3 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-lfy-from-copy small:empty{display:none}
+#leftForYouConserve.is-conserved{background:transparent;color:var(--us-ink-100);box-shadow:inset 0 0 0 1.5px var(--us-ink-12)}
+.dy-lfy-kept{margin-top:4px;border-top:1px solid var(--us-ink-08)}
+.dy-lfy-kept[hidden]{display:none}
+.dy-lfy-count{flex:none;font:600 13px/1 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-f-pick{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;min-height:64px;margin:0;padding:12px 14px;border:0;border-radius:var(--us-r-16);background:var(--us-beige);color:var(--us-ink-100);font:inherit;text-align:left;cursor:pointer}
+.dy-f-pick b{font:700 var(--us-text-15)/1.25 var(--us-font-ui)}
+.dy-f-pick small{font:500 12.5px/1.3 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-f-pick:focus-visible{outline:3px solid var(--us-pencil);outline-offset:2px}
+.dy-foglio .left-for-you-composer-panel{display:flex;flex-direction:column;gap:10px}
+.dy-foglio .left-for-you-composer-panel[hidden]{display:none}
+.dy-foglio .left-for-you-photo-actions{display:grid;gap:8px}
+.dy-foglio :is(.left-for-you-loading,.left-for-you-empty,.left-for-you-error){padding:8px 0;color:var(--us-ink-60);font:500 var(--us-text-15)/1.4 var(--us-font-ui)}
+.dy-foglio :is(.left-for-you-empty,.left-for-you-error) h3{margin:0 0 10px;font:800 var(--us-text-20)/1.25 var(--us-font-ui);color:var(--us-ink-100)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+/* The envelope of Lasciato per te (left-for-you.js openLetter): paper, a card
+   letter written by hand, the seal in your two colours. */
+.dy-foglio .left-for-you-item .left-for-you-kind{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.dy-foglio .left-for-you-item.is-letter{display:block;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+.dy-foglio .left-for-you-item.is-letter::before,.dy-foglio .left-for-you-item.is-letter::after{content:none}
+.dy-foglio .left-for-you-env-stage{display:grid;place-items:center;width:100%;height:calc(214px + var(--letter-extra,0px));perspective:700px}
+.dy-foglio .left-for-you-env{position:relative;width:220px;height:140px;margin-top:calc(50px + var(--letter-extra,0px))}
+.dy-foglio .left-for-you-env-back{position:absolute;inset:0;border-radius:12px;background:color-mix(in srgb,var(--us-beige) 86%,var(--us-ink-100))}
+.dy-foglio .left-for-you-env-letter{position:absolute;left:12px;right:12px;top:10px;height:118px;overflow:hidden;padding:12px 14px;border-radius:10px;background:var(--us-card);box-shadow:0 1px 3px rgba(20,18,14,.18);color:var(--us-ink-100);font:20px/1.25 var(--us-font-hand);text-align:left}
+.dy-foglio .left-for-you-env-letter small{display:block;margin-bottom:4px;font:700 12px/1.3 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-foglio .left-for-you-env-letter :is(.left-for-you-text,.left-for-you-note){position:static;margin:0;padding:0;border:0;background:none;box-shadow:none;color:inherit;font:inherit;white-space:pre-wrap;overflow-wrap:anywhere;animation:none}
+.dy-foglio .left-for-you-env-front{position:absolute;inset:0;border-radius:12px;background:var(--us-beige);clip-path:polygon(0 30%,50% 64%,100% 30%,100% 100%,0 100%)}
+.dy-foglio .left-for-you-env-flap{position:absolute;left:0;right:0;top:0;z-index:3;height:72%;background:color-mix(in srgb,var(--us-beige) 92%,var(--us-ink-100));clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;backface-visibility:hidden}
+.dy-foglio .left-for-you-env-seal{position:absolute;left:50%;top:58%;z-index:4;width:30px;height:20px;translate:-50% -50%}
+.dy-foglio .left-for-you-env.is-open .left-for-you-env-flap{z-index:0;transform:rotateX(180deg)}
+.dy-foglio .left-for-you-env.is-open .left-for-you-env-seal{opacity:0}
+.dy-foglio .left-for-you-env.is-open .left-for-you-env-letter{height:calc(118px + var(--letter-extra,0px));translate:0 calc(-64px - var(--letter-extra,0px))}
+.dy-foglio .left-for-you-env.is-open.is-still .left-for-you-env-letter{translate:0 calc(-60px - var(--letter-extra,0px))}
+.dy-foglio .left-for-you-env-letter:has(.left-for-you-env-photo){padding:10px 12px;font-size:18px}
+.dy-foglio .left-for-you-env-photo{display:block;width:100%;height:44px;margin:0 0 6px;padding:0;overflow:hidden;border:0;border-radius:6px;background:var(--us-beige);cursor:zoom-in}
+.dy-foglio .left-for-you-env-photo img{display:block;width:100%;height:100%;object-fit:cover}
+.dy-foglio .left-for-you-item.is-letter>.left-for-you-photo{display:none}
+.dy-foglio .left-for-you-item.is-letter.is-photo-open>.left-for-you-photo{display:block;width:100%;margin-top:12px;border-radius:var(--us-r-16)}
+.dy-foglio .left-for-you-vn-frame{padding:18px 12px;border-radius:var(--us-r-16);background:var(--us-beige)}
+.dy-foglio .left-for-you-vn{border:0;background:var(--us-ink-100);box-shadow:0 0 0 5px var(--us-ink-08);color:var(--us-paper)}
+.dy-foglio .left-for-you-vn:is([data-phase="rec"],[data-phase="clip"]){background:var(--us-card);box-shadow:inset 0 0 0 1.5px var(--us-ink-12);color:var(--us-ink-100)}
+.dy-foglio .left-for-you-vn[data-phase="rec"]{box-shadow:inset 0 0 0 1.5px var(--us-pencil)}
+.dy-foglio .left-for-you-composer-file:empty{display:none}
+.dy-foglio :is(.left-for-you-composer-file,.left-for-you-composer-hint){font:500 12.5px/1.35 var(--us-font-ui);color:var(--us-ink-60)}

@@ -1206,59 +1206,61 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </section>
 </div>
 
-<div class="left-for-you-overlay" id="leftForYouOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
-  <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouBackdrop"></div>
-  <section class="left-for-you-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouTitle" data-us-modal-panel>
-    <header class="left-for-you-head">
-      <div><div class="tiny" id="leftForYouKind">Lasciato per te</div><h2 id="leftForYouTitle">Lasciato per te</h2><small id="leftForYouPartnerName" translate="no">La tua persona</small></div>
-      <button type="button" class="left-for-you-close us-modal-close" id="leftForYouClose" aria-label="Chiudi Lasciato per te" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
-    </header>
-    <div class="left-for-you-body">
+<div class="dy-foglio" id="leftForYouOverlay" aria-hidden="true" data-us-modal>
+  <div class="dy-foglio-scrim" id="leftForYouBackdrop"></div>
+  <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="leftForYouTitle" data-us-modal-panel>
+    <span class="dy-grab" aria-hidden="true"></span>
+    <div class="dy-sheet-head">
+      <div><h2 class="dy-sheet-title" id="leftForYouTitle">Lasciato <em>per te</em></h2><p class="dy-sheet-sub" id="leftForYouKind"></p><small id="leftForYouPartnerName" translate="no" hidden>La tua persona</small></div>
+      <button type="button" class="dy-ib dy-close" id="leftForYouClose" aria-label="Chiudi Lasciato per te" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="dy-f-body">
       <div class="left-for-you-loading" id="leftForYouLoading" aria-busy="true"><p>Un attimo…</p></div>
       <div class="left-for-you-empty" id="leftForYouEmpty" hidden><h3>Lasciato per te</h3><p>Niente per ora.</p></div>
-      <div class="left-for-you-error" id="leftForYouError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" data-action id="leftForYouRetry">Riprova</button></div>
-      <div class="left-for-you-card" id="leftForYouCard" hidden>
-        <div class="left-for-you-meta"><span class="left-for-you-from"><span class="left-for-you-from-avatar" id="leftForYouFromFallback">♡</span><span>Da <b id="leftForYouFromName" translate="no">la tua persona</b></span></span><span id="leftForYouCounter"></span></div>
+      <div class="left-for-you-error" id="leftForYouError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" class="dy-btn dy-btn-m dy-btn-ghost" data-action id="leftForYouRetry">Riprova</button></div>
+      <div class="dy-f-body dy-lfy-card" id="leftForYouCard" hidden>
+        <div class="dy-f-sign dy-lfy-from"><span class="dy-stk" data-dy-who="partner" data-dy-size="36"></span><span class="dy-lfy-from-copy"><b>Da <span id="leftForYouFromName" translate="no">la tua persona</span></b><small id="leftForYouCounter"></small></span></div>
         <div id="leftForYouContent"></div>
-        <p class="left-for-you-once" id="leftForYouOnce">Si apre una volta: conservalo se vuoi tenerlo.</p>
-        <div class="left-for-you-actions" id="leftForYouActions"><button type="button" id="leftForYouConserve">Conserva</button><button type="button" id="leftForYouReply">Rispondi</button><button type="button" id="leftForYouNext" hidden>Apri il prossimo</button></div>
-        <div class="left-for-you-status" id="leftForYouStatus" role="status" aria-live="polite"></div>
+        <p class="dy-f-note" id="leftForYouOnce"><svg class="dy-f-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10v17l-5-3.5-5 3.5z"/></svg><span>Si apre una volta: conservalo se vuoi tenerlo.</span></p>
+        <div class="dy-f-acts" id="leftForYouActions"><button type="button" class="dy-btn dy-btn-l" id="leftForYouConserve">Conserva</button><div class="dy-f-acts is-row"><button type="button" class="dy-btn dy-btn-m dy-btn-ghost" id="leftForYouReply">Rispondi</button><button type="button" class="dy-btn dy-btn-m dy-btn-ghost" id="leftForYouNext" hidden>Apri il prossimo</button></div></div>
+        <div class="dy-f-note" id="leftForYouStatus" role="status" aria-live="polite"></div>
       </div>
-      <button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
-        <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span></span>
-        <span class="us-conservati-entry-copy"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
-        <small class="us-conservati-entry-count" data-conservati-count></small>
-        <span class="us-conservati-entry-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></span>
+      <button type="button" class="dy-f-row dy-lfy-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
+        <span class="dy-f-row-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10v17l-5-3.5-5 3.5z"/></svg></span>
+        <span class="dy-f-row-tx"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
+        <small class="dy-lfy-count" data-conservati-count></small>
+        <svg class="dy-row-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
       </button>
     </div>
   </section>
 </div>
 
-<div class="left-for-you-overlay left-for-you-composer-overlay" id="leftForYouComposerOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
-  <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouComposerBackdrop"></div>
-  <section class="left-for-you-sheet left-for-you-composer-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouComposerTitle" data-us-modal-panel>
-    <header class="left-for-you-head">
-      <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouComposerTitle">Lascia qualcosa alla tua persona</h2></div>
-      <button type="button" class="left-for-you-close us-modal-close" id="leftForYouComposerClose" aria-label="Chiudi il compositore" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
-    </header>
-    <div class="left-for-you-body left-for-you-composer-body">
-      <p class="left-for-you-last" id="leftForYouComposerLast" hidden></p>
-      <div class="left-for-you-composer-kinds" role="tablist" aria-label="Tipo di messaggio">
-        <button type="button" role="tab" aria-selected="true" class="is-active" data-us-composer-kind="text">Testo</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="photo">Foto</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="audio">Vocale</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="video">Video</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="music">Musica</button>
+<div class="dy-foglio" id="leftForYouComposerOverlay" aria-hidden="true" data-us-modal>
+  <div class="dy-foglio-scrim" id="leftForYouComposerBackdrop"></div>
+  <section class="dy-foglio-panel left-for-you-composer-sheet" role="dialog" aria-modal="true" aria-labelledby="leftForYouComposerTitle" data-us-modal-panel>
+    <span class="dy-grab" aria-hidden="true"></span>
+    <div class="dy-sheet-head">
+      <div><h2 class="dy-sheet-title" id="leftForYouComposerTitle">Lascia qualcosa <em>alla tua persona</em></h2><p class="dy-sheet-sub">Lo trova nella busta, su Oggi. Si apre una volta.</p></div>
+      <button type="button" class="dy-ib dy-close" id="leftForYouComposerClose" aria-label="Chiudi il compositore" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="dy-f-body left-for-you-composer-body">
+      <p class="dy-f-note" id="leftForYouComposerLast" hidden></p>
+      <div class="dy-tiles" role="tablist" aria-label="Tipo di messaggio">
+        <button type="button" role="tab" aria-selected="true" class="dy-tile is-active" data-us-composer-kind="text"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14 M5 11h14 M5 15.5h9"/></svg>Testo</button>
+        <button type="button" role="tab" aria-selected="false" class="dy-tile" data-us-composer-kind="photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h4l2-2.5h4L16 8h4v11H4z M12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg>Foto</button>
+        <button type="button" role="tab" aria-selected="false" class="dy-tile" data-us-composer-kind="audio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11.5a6 6 0 0 0 12 0 M12 17.5v3"/></svg>Vocale</button>
+        <button type="button" role="tab" aria-selected="false" class="dy-tile" data-us-composer-kind="video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7h12v10h-12z M15.5 10.5l5-3v9l-5-3"/></svg>Video</button>
+        <button type="button" role="tab" aria-selected="false" class="dy-tile" data-us-composer-kind="music"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V5.5l10-2v12 M9 17.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z M19 15.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/></svg>Musica</button>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="text">
-        <label class="left-for-you-composer-label" for="leftForYouComposerText">Il tuo messaggio</label><textarea id="leftForYouComposerText" class="left-for-you-composer-text" maxlength="1000" rows="4" placeholder="Scrivi qualcosa per la tua persona…"></textarea><span class="left-for-you-composer-count" id="leftForYouComposerCount">0 / 1000</span>
+        <label class="sr-only" for="leftForYouComposerText">Il tuo messaggio</label><div class="dy-f-sign"><span class="dy-stk" data-dy-who="me" data-dy-size="30"></span><div class="dy-f-field"><textarea id="leftForYouComposerText" class="dy-f-in dy-f-hand" maxlength="1000" rows="5" placeholder="Scrivi qualcosa per la tua persona…"></textarea><span class="dy-f-count" id="leftForYouComposerCount">0 / 1000</span></div></div>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="photo" hidden>
         <div class="left-for-you-photo-preview" id="leftForYouComposerPhotoPreview" hidden><img id="leftForYouComposerPhotoPreviewImage" alt="Anteprima della foto scelta"><button type="button" class="left-for-you-photo-change" id="leftForYouComposerPhotoChange">Cambia foto</button></div>
-        <div class="left-for-you-photo-actions" id="leftForYouComposerPhotoActions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoCamera" data-pick="camera"><b>Scatta una foto</b><small>Resta privata, solo tra voi due</small></button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoPick" data-pick="gallery"><b>Scegli dalla galleria</b><small>Fino a 25 MB</small></button></div>
+        <div class="left-for-you-photo-actions" id="leftForYouComposerPhotoActions"><button type="button" class="dy-f-pick" id="leftForYouComposerPhotoCamera" data-pick="camera"><b>Scatta una foto</b><small>Resta privata, solo tra voi due</small></button><button type="button" class="dy-f-pick" id="leftForYouComposerPhotoPick" data-pick="gallery"><b>Scegli dalla galleria</b><small>Fino a 25 MB</small></button></div>
         <input type="file" id="leftForYouComposerPhotoFile" accept="image/jpeg,image/png,image/webp" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerPhotoName"></span>
-        <input type="text" class="left-for-you-composer-url left-for-you-composer-caption" id="leftForYouComposerPhotoCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia della foto">
+        <input type="text" class="dy-f-in left-for-you-composer-caption" id="leftForYouComposerPhotoCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia della foto">
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="audio" hidden>
         <div class="left-for-you-vn-frame">
@@ -1284,15 +1286,15 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <span class="left-for-you-vn-still-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
           <span class="left-for-you-vn-hint" id="leftForYouComposerAudioHint" data-phase="idle" aria-live="polite">Tocca per registrare</span>
         </div>
-        <input type="text" class="left-for-you-composer-url left-for-you-composer-caption" id="leftForYouComposerAudioCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia del vocale">
+        <input type="text" class="dy-f-in left-for-you-composer-caption" id="leftForYouComposerAudioCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia del vocale">
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="video" hidden>
-        <button type="button" class="left-for-you-composer-pick" id="leftForYouComposerVideoPick" data-pick="video"><b>Scegli un video</b><small class="left-for-you-composer-hint" id="leftForYouComposerVideoHint">Fino a 30 secondi e 20 MB.</small></button><input type="file" id="leftForYouComposerVideoFile" accept="video/mp4,video/webm,video/quicktime" hidden>
+        <button type="button" class="dy-f-pick" id="leftForYouComposerVideoPick" data-pick="video"><b>Scegli un video</b><small class="left-for-you-composer-hint" id="leftForYouComposerVideoHint">Fino a 30 secondi e 20 MB.</small></button><input type="file" id="leftForYouComposerVideoFile" accept="video/mp4,video/webm,video/quicktime" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerVideoName"></span>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="music" hidden>
         <div class="left-for-you-music-attribution"><img class="left-for-you-spotify-attribution" src="/assets/third-party/spotify/spotify-full-logo-white.svg" alt="Spotify" width="80" height="22"></div>
-        <label class="left-for-you-composer-label" for="leftForYouMusicSearch">Brano</label><input type="search" id="leftForYouMusicSearch" class="left-for-you-composer-url" placeholder="Cerca su Spotify…" autocomplete="off" spellcheck="false">
+        <label class="dy-f-lab" for="leftForYouMusicSearch">Brano</label><input type="search" id="leftForYouMusicSearch" class="dy-f-in" placeholder="Cerca su Spotify…" autocomplete="off" spellcheck="false">
         <p class="left-for-you-music-search-status" id="leftForYouMusicSearchStatus" role="status" aria-live="polite"></p>
         <ul class="left-for-you-music-results" id="leftForYouMusicResults" aria-label="Risultati Spotify" hidden></ul>
         <div class="left-for-you-music-selected" id="leftForYouMusicSelected" hidden>
@@ -1301,16 +1303,16 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         </div>
         <details class="left-for-you-music-manual">
           <summary>Incolla link Spotify</summary>
-          <input type="url" id="leftForYouComposerMusic" class="left-for-you-composer-url" maxlength="512" placeholder="https://open.spotify.com/track/…" spellcheck="false">
+          <input type="url" id="leftForYouComposerMusic" class="dy-f-in" maxlength="512" placeholder="https://open.spotify.com/track/…" spellcheck="false">
         </details>
       </div>
-      <div class="left-for-you-actions left-for-you-composer-actions"><button type="button" id="leftForYouComposerSend" disabled>Lascia per la tua persona</button></div>
-      <div class="left-for-you-status" id="leftForYouComposerStatus" role="status" aria-live="polite"></div>
-      <button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
-        <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span></span>
-        <span class="us-conservati-entry-copy"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
-        <small class="us-conservati-entry-count" data-conservati-count></small>
-        <span class="us-conservati-entry-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></span>
+      <div class="dy-f-acts"><button type="button" class="dy-btn dy-btn-l" id="leftForYouComposerSend" disabled>Lascia per la tua persona</button></div>
+      <div class="dy-f-note" id="leftForYouComposerStatus" role="status" aria-live="polite"></div>
+      <button type="button" class="dy-f-row dy-lfy-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
+        <span class="dy-f-row-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10v17l-5-3.5-5 3.5z"/></svg></span>
+        <span class="dy-f-row-tx"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
+        <small class="dy-lfy-count" data-conservati-count></small>
+        <svg class="dy-row-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
       </button>
     </div>
   </section>
@@ -1323,7 +1325,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     <div class="left-for-you-body left-for-you-camera-body">
       <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden><span class="left-for-you-camera-flash" id="leftForYouCameraFlash" aria-hidden="true"></span></div>
       <div class="left-for-you-camera-status" id="leftForYouCameraStatus" role="status" aria-live="polite"></div>
-      <div class="left-for-you-camera-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraSwitch">Cambia fotocamera</button><button type="button" class="left-for-you-camera-shutter" id="leftForYouCameraCapture" aria-label="Scatta foto"><span aria-hidden="true"></span></button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraUse" hidden>Usa foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraRetake" hidden>Rifai</button></div>
+      <div class="left-for-you-camera-actions"><button type="button" class="dy-f-pick" id="leftForYouCameraSwitch">Cambia fotocamera</button><button type="button" class="left-for-you-camera-shutter" id="leftForYouCameraCapture" aria-label="Scatta foto"><span aria-hidden="true"></span></button><button type="button" class="dy-f-pick" id="leftForYouCameraUse" hidden>Usa foto</button><button type="button" class="dy-f-pick" id="leftForYouCameraRetake" hidden>Rifai</button></div>
     </div>
   </section>
 </div>
