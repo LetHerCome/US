@@ -173,7 +173,9 @@ test('Gioca round 3: daily first, the week, bento games, weekly question, then t
 
 test('Sintonia: one premium segmented control, keyboard-friendly, and a page that scrolls', () => {
   // Round 3: [data-s] so the segmented control rises first, as the mockup's .seg.
-  assert.match(html, /<div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia">/);
+  // Il diario, ma pulito (15/11/2026): the control stays wired but hidden; Sintonia
+  // lives in «Voi due» and its collection still opens here (USNoiV2.openSintonia).
+  assert.match(html, /<div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia" hidden>/);
   assert.match(noiJs, /\$\('usGiocaTabs'\)\?\.setAttribute\('data-active',giocaTab\)/);
   assert.match(noiJs, /e\.key!=='ArrowLeft'&&e\.key!=='ArrowRight'/);
   assert.match(noiCss, /#quiz \.us-gioca-tabs\[data-active="sintonia"\]::before\{transform:translateX\(100%\)\}/);

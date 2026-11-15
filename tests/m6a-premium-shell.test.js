@@ -11,15 +11,17 @@ test('M6A conserva coppie SVG OFF/ON reali senza tint o mask', () => {
   const html = read('index.html');
   const css = read('identity.css');
 
+  // Il diario, ma pulito (15/11/2026): no OFF/ON pair any more. Each tab has one
+  // inline stroke icon and the red scribble; the current tab is ink, bold, and
+  // shows the scribble.
+  const diario = read('diario.css');
   PRIMARY_NAV.forEach((name) => {
-    assert.match(html, new RegExp(`data-page="${name}"[\\s\\S]{0,420}us-nav-icon--${name}`));
-    assert.match(html, new RegExp(`us-nav-icon--${name}[\\s\\S]{0,260}us-nav-icon-off[\\s\\S]{0,260}us-nav-icon-on`));
+    assert.match(html, new RegExp(`data-page="${name}"[^>]*><svg class="dy-nav-icon"[\\s\\S]{0,420}<svg class="dy-nav-scrib"`));
   });
-  assert.match(css, /\.us-nav-icon-off\{[\s\S]*display:block/);
-  assert.match(css, /\.us-nav-premium button\.active \.us-nav-icon-off\{[\s\S]*display:none/);
-  assert.match(css, /\.us-nav-premium button\.active \.us-nav-icon-on\{[\s\S]*display:block/);
-  assert.ok(css.includes('.us-nav-icon [data-icon]') && css.includes('-webkit-mask-image:url("/assets/icons/phosphor/'), 'la nav M1 usa gli asset Phosphor locali come mask colorabile');
-  assert.doesNotMatch(css, /filter:\s*(?:saturate|brightness)/, 'gli SVG ON/OFF devono conservare il proprio colore');
+  assert.match(diario, /\.dy-nav \.dy-nav-scrib\{[^}]*opacity:0;/);
+  assert.match(diario, /\.dy-nav button\.active\{color:var\(--us-ink-100\);font-weight:800\}/);
+  assert.match(diario, /\.dy-nav button\.active \.dy-nav-scrib\{opacity:1\}/);
+  assert.doesNotMatch(css + diario, /filter:\s*(?:saturate|brightness)/, 'no tint filters on the icons');
 });
 
 test('M6A precarica tutti gli asset shell premium e mantiene il contratto PWA', () => {
@@ -35,16 +37,20 @@ test('M6A precarica tutti gli asset shell premium e mantiene il contratto PWA', 
   assert.ok(worker.includes('const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;'));
   assert.match(worker, /"\/assets\/derived\/runtime\/us-symbol-256-v1\.png"/);
   const referencedPhosphor = [...new Set([...html.matchAll(/data-icon="(\/assets\/icons\/phosphor\/[^"]+\.svg)"/g)].map((m) => m[1]))];
-  assert.ok(referencedPhosphor.length >= 8);
+  // Il diario, ma pulito (15/11/2026): the nav and the envelope draw inline
+  // SVGs; the Phosphor icons still named by index.html must be precached.
+  assert.ok(referencedPhosphor.length >= 1);
   for (const file of referencedPhosphor) {
     assert.ok(fs.existsSync(path.join(ROOT, file.slice(1))), `${file} deve essere disponibile al runtime`);
     assert.ok(worker.includes(`"${file}"`), `${file} deve essere precachato`);
   }
+  // Il diario, ma pulito (15/11/2026): the two new fonts join the shell; the
+  // nav-only Phosphor pairs (house, images fill, game controller) left the nav.
   ['Fraunces-Soft-Roman.woff2', 'Fraunces-Soft-Italic.woff2', 'Figtree-Latin.woff2', 'Figtree-LatinExt.woff2',
-    'house-regular.svg', 'house-fill.svg',
+    'GochiHand-Latin.woff2', 'PermanentMarker-Latin.woff2',
     'heart-straight-regular.svg', 'heart-straight-fill.svg',
-    'images-regular.svg', 'images-fill.svg',
-    'cards-three-regular.svg', 'game-controller-regular.svg', 'game-controller-fill.svg', 'calendar-dots-regular.svg'].forEach((name) => {
+    'images-regular.svg',
+    'cards-three-regular.svg', 'calendar-dots-regular.svg'].forEach((name) => {
     const file = name.endsWith('.woff2') ? `assets/fonts/${name}` : `assets/icons/phosphor/${name}`;
     assert.match(worker, new RegExp(`"/${file.replaceAll('.', '\\.') }"`));
   });

@@ -204,6 +204,7 @@ test('Settings: one "Compagni" switch row, device-local, correct accessible stat
 test('no economy and no noise in V1: no XP, coins, hunger, toast, modal or text from touching Maudit', () => {
   assert.doesNotMatch(petJs, /\bxp\b|award|coins?\b|hunger|happiness|food|shop|level|streak_/i);
   assert.doesNotMatch(petJs, /toast\(|openModal|confirm\(|textContent=/);
-  assert.match(html, /<div class="us-pet-layer" id="usPetLayer" aria-hidden="true" data-us-ambient hidden>/, 'decorative to screen readers');
+  // Il diario, ma pulito (15/11/2026): the layer stays, retired (pet.js never mounts on it).
+  assert.match(html, /<div class="us-pet-layer" id="usPetLayer" aria-hidden="true" data-us-ambient data-us-retired hidden>/, 'decorative to screen readers');
   assert.doesNotMatch(petJs, /tabindex|setAttribute\('role'|aria-label/, 'no focusable control inside an aria-hidden layer');
 });

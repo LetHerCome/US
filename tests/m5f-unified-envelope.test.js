@@ -437,17 +437,19 @@ test('M5F no active Stories entry remains reachable', () => {
 test('M5F envelope uses the canonical Phosphor pair and a restrained trace, not a Stories ring', () => {
   const html = read('index.html');
   const css = read('left-for-you.css');
-  assert.match(html, /data-icon="\/assets\/icons\/phosphor\/envelope-simple-regular\.svg"/);
-  assert.match(html, /data-icon="\/assets\/icons\/phosphor\/envelope-open-regular\.svg"/);
-  for (const file of ['envelope-simple-regular.svg', 'envelope-open-regular.svg']) {
-    const svg = read(`assets/icons/phosphor/${file}`);
-    assert.match(svg, /viewBox="0 0 256 256"/);
-  }
-  // M10E: the restrained trace is now the shared personal attention orbit
-  // (ui-foundation.css), driven by unseenCount; reduced motion keeps a static halo.
+  // Il diario, ma pulito (15/11/2026): one closed envelope drawn inline in the
+  // mockup's stroke, a square 44px button; "something for you" is a still red
+  // dot (.is-closed, set by left-for-you.js), no orbit, no Stories ring.
+  const envelope = html.match(/<button[^>]*id="leftForYouPartnerEntry"[\s\S]*?<\/button>/)?.[0] || '';
+  assert.match(envelope, /class="dy-ib dy-envelope is-loading"/);
+  assert.match(envelope, /<svg viewBox="0 0 24 24"[^>]*aria-hidden="true"/);
+  assert.match(envelope, /<span class="dy-dot" aria-hidden="true"><\/span>/);
+  assert.doesNotMatch(envelope, /us-attention-orbit|story/);
   assert.doesNotMatch(css, /us-envelope-trace/);
-  assert.match(read('index.html'), /class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry"/);
-  assert.match(read('ui-foundation.css'), /@media \(prefers-reduced-motion:reduce\)\{\s*\.us-attention-orbit\[data-us-attention="on"\]::after,\s*\.us-attention-orbit\[data-us-attention="on"\] \[data-us-attention-icon\]\{animation:none\}/);
+  const diario = read('diario.css');
+  assert.match(diario, /\.dy-envelope \.dy-dot\{[^}]*display:none\}/);
+  assert.match(diario, /\.dy-envelope\.is-closed \.dy-dot\{display:block\}/);
+  assert.doesNotMatch(diario.match(/\.dy-envelope[^{]*\{[^}]*\}/g).join(''), /animation/, 'the dot never loops');
 });
 
 test('M5F top chrome: question icon for the daily question, no legacy avatar control', () => {

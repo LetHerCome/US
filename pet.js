@@ -252,7 +252,10 @@ function install(w){
   const approved=PET_ASSET_STATUS==='APPROVED'&&renderers.has('sprite');
   const preview=Boolean(layer&&actor&&nav)&&previewRequested(w);
   const disabled=Boolean(layer&&actor&&nav)&&disabledRequested(w);
-  const available=Boolean(layer&&actor&&nav&&!disabled&&(approved||preview));
+  // Il diario, ma pulito (founder, 15/11/2026): «il gatto esce». index.html
+  // marks the layer retired: the companion never mounts in the app.
+  const retired=Boolean(layer?.hasAttribute?.('data-us-retired'));
+  const available=Boolean(layer&&actor&&nav&&!disabled&&!retired&&(approved||preview));
   // Device-local preference (Settings → Maudit). A blocked storage keeps the default.
   const store={
     get(key){try{return w.localStorage?.getItem(key)??null;}catch(_){return null;}},

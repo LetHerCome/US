@@ -252,11 +252,16 @@ test('M10.2 swipe: soglia proporzionale 50–70px; il bottone × non avvia un dr
 });
 
 test('M10.2 markup: dismiss accessibile, swipe verticale libero, nessuna icona inventata', () => {
-  assert.match(css, /\.us-today-priority-swipe\{[^}]*touch-action:pan-y/);
-  // US-UI-UNIFICATION-01: 44px tap target; focus comes from the one global ring.
-  const dismissRule = css.match(/\.us-today-priority-dismiss\{[^}]*\}/)?.[0] || '';
-  assert.match(dismissRule, /width:44px/);
-  assert.match(dismissRule, /height:44px/);
+  // Il diario, ma pulito (15/11/2026): the notice is .dy-notice in diario.css.
+  // The swipe still has to leave the vertical scroll to the browser.
+  const diario = read('diario.css');
+  assert.match(diario, /\.dy-notice-swipe\{[^}]*touch-action:pan-y/);
+  // US-UI-UNIFICATION-01: 44px tap target (the dismiss stretches to the notice, 64px tall).
+  const dismissRule = diario.match(/\.dy-notice-dismiss\{[^}]*\}/)?.[0] || '';
+  assert.match(dismissRule, /width:var\(--us-icon-btn\)/);
+  assert.match(read('ui-foundation.css'), /--us-icon-btn:44px;/);
+  assert.match(diario, /\.dy-notice-swipe\{[^}]*align-items:stretch/);
+  assert.match(diario, /\.dy-notice\{[^}]*min-height:64px/);
   assert.match(read('ui-foundation.css'), /:where\(button[^{]*\):focus-visible\s*\{\s*outline:2px solid/);
   assert.match(css, /\.us-daily-reveal-link\{[^}]*position:relative/);
   const link = css.match(/\.us-daily-reveal-link\{[^}]*\}/)?.[0] || '';

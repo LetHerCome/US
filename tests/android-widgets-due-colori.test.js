@@ -16,9 +16,13 @@ test('widgets: the palette is the app tokens (ui-foundation.css)', () => {
   const colors = res('values/colors.xml');
   const css = read('ui-foundation.css');
   const pairs = { us_widget_bg: '140c14', us_widget_surface: '1d1119', us_widget_text: 'f7efe9', us_widget_rosa: 'ff7c96', us_widget_lilla: 'a98bff', us_widget_orchidea: 'd98be0', us_widget_corallo: 'ff8b7b' };
+  // Il diario, ma pulito (15/11/2026): the app moved to paper; the widgets keep
+  // their night card until they are redesigned. Only the two person colours are
+  // still shared with the app tokens.
+  const shared = new Set(['ff7c96', 'a98bff']);
   for (const [name, hex] of Object.entries(pairs)) {
     assert.match(colors, new RegExp(`<color name="${name}">#FF${hex}</color>`, 'i'), name);
-    assert.match(css, new RegExp(`#${hex}`, 'i'), `${hex} is an app token`);
+    if (shared.has(hex)) assert.match(css, new RegExp(`#${hex}`, 'i'), `${hex} is an app token`);
   }
   assert.match(res('drawable/us_widget_background.xml'), /android:startColor="#FF1D1119"[\s\S]*<stroke android:width="1dp" android:color="#17F7EFE9"/);
 });

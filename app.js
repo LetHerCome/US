@@ -20,7 +20,7 @@ function animatePageEntry(page,direction){
     if(usEntryTimers.get(page)!==timer)return;
     page.classList.remove(entry);
     usEntryTimers.delete(page);
-  },US_MOTION_FAST_MS);
+  },280); // the 260 ms entry of styles.css, plus a frame
   usEntryTimers.set(page,timer);
 }
 let usPageHydrationTicket=0;
@@ -74,7 +74,7 @@ function go(id,options={}){
     el.classList.toggle('active',pageId===id);
   });
   if(options.nav&&!options.motionCommit&&direction)animatePageEntry(document.getElementById(id),direction);
-  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  document.querySelectorAll('.dy-nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   if(options.swipe&&!options.motionCommit)setTimeout(()=>document.getElementById(id)?.classList.remove('swipe-next','swipe-prev'),190);
   scrollTo({top:0,behavior:(options.swipe||options.motionCommit)?'auto':'smooth'});
   schedulePageHydration(id);
@@ -1928,6 +1928,9 @@ function homeRotationPick(rows,key,avoid){
   return rows[idx]||null;
 }
 
+// The Ricordi read for the photo of the day, kept for «the next one» (a tap on
+// the photo, diario.js) and for the sentence of the day.
+let usHomePhotoRows=[];
 async function getHomeRotationPath(){
   if(!window.usProfile)return null;
   const viewer=window.usProfile,epoch=usAuthEpoch;
@@ -1939,6 +1942,7 @@ async function getHomeRotationPath(){
     .limit(120);
   if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
   if(error){console.warn(error);return undefined;}
+  usHomePhotoRows=Array.isArray(rows)?rows:[];
   if(rows?.length){
     const row=homeRotationPick(rows,homeRotationKey(),homePhotoPath);
     usHomePhotoMeta=row?.storage_path?{path:row.storage_path,caption:row.caption||'',date:row.moment_date||'',author:row.created_by||'',place:row.place_label||''}:null;
@@ -2063,6 +2067,40 @@ async function hydrateHomePhoto(force=false){
   crossfadeHomePhoto(signedUrl,{path,hourKey});
 }
 window.hydrateHomePhoto=hydrateHomePhoto;
+// Il diario, ma pulito (diario.js): the photo Oggi shows now, with what US
+// knows of it, and the next Ricordo on a tap. Same signing and crossfade.
+function usOggiPhotoMeta(){
+  if(!homePhotoPath)return null;
+  if(usHomePhotoMeta?.path===homePhotoPath)return usHomePhotoMeta;
+  const row=usHomePhotoRows.find(r=>r?.storage_path===homePhotoPath);
+  return row?{path:row.storage_path,caption:row.caption||"",date:row.moment_date||"",author:row.created_by||"",place:row.place_label||""}:null;
+}
+function usOggiPhotoCurrent(){
+  const layer=document.getElementById(`homePhotoLayer${homePhotoActiveLayer}`);
+  const bg=String(layer?.style?.backgroundImage||"");
+  const url=bg.startsWith("url(")?bg.slice(4,-1).replace(/^["']|["']$/g,""):"";
+  return {url:homePhotoHasPainted?url:"",path:homePhotoPath||"",meta:usOggiPhotoMeta()};
+}
+async function usOggiPhotoNext(){
+  const viewer=window.usProfile,epoch=usAuthEpoch,rows=usHomePhotoRows.filter(row=>row?.storage_path);
+  if(!viewer||rows.length<2)return false;
+  const at=rows.findIndex(row=>row.storage_path===homePhotoPath);
+  const row=rows[(at+1)%rows.length];
+  const url=await usGetSignedUrl(row.storage_path,US_MEDIA_URL_TTL_S);
+  if(window.usProfile!==viewer||epoch!==usAuthEpoch||!url)return false;
+  usHomePhotoMeta={path:row.storage_path,caption:row.caption||"",date:row.moment_date||"",author:row.created_by||"",place:row.place_label||""};
+  crossfadeHomePhoto(url,{path:row.storage_path,hourKey:homeRotationKey()});
+  return true;
+}
+// The photo may come from the boot cache (no read of Ricordi yet): read the
+// rows once, so its caption, its author and «the next one» are known.
+let usOggiPhotoLoading=null;
+function usOggiPhotoLoad(){
+  if(usOggiPhotoLoading||!window.usProfile)return usOggiPhotoLoading;
+  usOggiPhotoLoading=getHomeRotationPath().then(()=>{window.dispatchEvent(new Event("us:home-photo-changed"));}).catch(()=>{}).finally(()=>{usOggiPhotoLoading=null;});
+  return usOggiPhotoLoading;
+}
+window.UsOggiPhoto=Object.freeze({current:usOggiPhotoCurrent,next:usOggiPhotoNext,load:usOggiPhotoLoad,rows:()=>usHomePhotoRows.slice()});
 
 function startHomePhotoRotation(){
   if(homePhotoRotationTimer)clearInterval(homePhotoRotationTimer);
@@ -2600,10 +2638,10 @@ function renderTodayPriorityItem(item,total=0){
   if(!region)return;
   if(!item){region.innerHTML='';region.hidden=true;return;}
   const queueLabel=total>1?` · 1/${total}`:'';
-  const card=`<button type="button" class="us-today-priority-card us-attention-orbit" data-us-attention="${item.attention?'on':'off'}" data-us-today-action="${escapeHtml(item.action)}" data-us-arrival-type="${escapeHtml(item.arrivalType||item.category||'arrival')}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="us-today-priority-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}${queueLabel}</span><span class="us-today-priority-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="us-today-priority-action">${escapeHtml(item.actionLabel)}</span></button>`;
+  const card=`<button type="button" class="dy-notice" data-us-attention="${item.attention?'on':'off'}" data-us-today-action="${escapeHtml(item.action)}" data-us-arrival-type="${escapeHtml(item.arrivalType||item.category||'arrival')}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="dy-notice-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}${queueLabel}</span><span class="dy-notice-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="dy-notice-action">${escapeHtml(item.actionLabel)}</span></button>`;
   // M10.2 — avviso nascondibile: swipe orizzontale O bottone accessibile, stessa autorità.
   region.innerHTML=item.dismissLabel
-    ?`<div class="us-today-priority-swipe has-dismiss" data-us-swipe-item data-us-question-id="${escapeHtml(item.questionId||'')}">${card}<button type="button" class="us-today-priority-dismiss" data-us-today-dismiss aria-label="${escapeHtml(item.dismissLabel)}"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>`
+    ?`<div class="dy-notice-swipe" data-us-swipe-item data-us-question-id="${escapeHtml(item.questionId||'')}">${card}<button type="button" class="dy-notice-dismiss" data-us-today-dismiss aria-label="${escapeHtml(item.dismissLabel)}"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>`
     :card;
   region.hidden=false;
 }
@@ -2719,7 +2757,7 @@ function oggiTodayISO(){
 // F2 — a dot on the Oggi tab while the other is waiting for me: the Domanda di
 // oggi they already answered, a game round, the other one's photo of the challenge.
 function renderToccaATe({daily=false,game=false,challenge=false}={}){
-  const tab=document.querySelector?.('.nav button[data-page="home"]');
+  const tab=document.querySelector?.('.dy-nav button[data-page="home"]');
   if(!tab)return false;
   const on=Boolean(daily||game||challenge);
   if(on)tab.setAttribute('data-us-tocca','on');else tab.removeAttribute('data-us-tocca');
@@ -2958,6 +2996,8 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   // M9B: la Domanda di oggi ha la sua card su Oggi (renderDailyRitual):
   // non entra nella coda priority, così non compare due volte.
   renderDailyRitual(dailyRitualViewModel(dailySource));
+  // Il diario, ma pulito: the question card of Oggi (diario.js) reads the same source.
+  window.UsDiario?.paintQuestion?.(dailySource);
   // M10.2 — "Risposte pronte": piccolo avviso personale, mai la card Daily.
   const revealNotice=dailyTodayPriorityViewModel(dailySource);
   if(revealNotice)candidates.push(revealNotice);
@@ -4206,7 +4246,7 @@ function ricordiNewRows(rows,state){
   });
 }
 function ricordiPaintTabDot(on){
-  const tab=document.querySelector('.nav button[data-page="moments"]');
+  const tab=document.querySelector('.dy-nav button[data-page="moments"]');
   if(!tab)return;
   tab.toggleAttribute('data-ricordi-new',Boolean(on));
   tab.setAttribute('aria-label',on?'Ricordi, c’è qualcosa di nuovo':'Ricordi');
@@ -4663,6 +4703,7 @@ async function hydrateMomentsCore(){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
     renderRicordiChapters([],new Map(),today);
+    window.UsDiario?.paintDiary?.({timeline:[],urls:new Map(),names:new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi'])),kept:keptRows});
     grid.dataset.loaded='1';grid.dataset.signature=signature;window.dispatchEvent(new CustomEvent('us:moments-updated'));return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
@@ -4701,6 +4742,8 @@ async function hydrateMomentsCore(){
     // R7 — Rivivi also brings back "X mesi fa", not only anniversaries.
     renderRicordiRivivi(ricordiPickRivivi(timeline,today),displayUrls,names);
     ricordiArchiveState={timeline,urls:displayUrls,names};
+    // Il diario, ma pulito: Ricordi as a diary of days (diario.js) reads the same rows.
+    window.UsDiario?.paintDiary?.({timeline,urls:displayUrls,names,kept:keptRows});
     // The year chapters left with the album (founder, 04/11/2026).
     renderRicordiChapters([],displayUrls,today);
     usRicordiKeepMedia(thumbPaths.filter(path=>!localMedia.has(path)).map(path=>[path,signedUrls.get(path)]));
@@ -5024,7 +5067,12 @@ function resonanceHistoryWhat(entry){
   }
   return {title:entry.kind==='quest'?'Missione di coppia':'Evento vissuto',detail:entry.title,own:entry.kind==='event'&&entry.titleSource!=='missing',live:entry.kind==='event'&&entry.titleSource==='live'};
 }
+// «Voi due» (diario.js) shows the last of these rows.
+let usResonanceEntries=null;
+window.UsResonance=Object.freeze({entries:()=>usResonanceEntries,what:(entry)=>resonanceHistoryWhat(entry),date:(at)=>resonanceHistoryDate(at),hydrate:()=>hydrateResonanceHistory()});
 function renderResonanceHistory(entries){
+  usResonanceEntries=Array.isArray(entries)?entries.slice():[];
+  window.UsDiario?.paintVoiDue?.();
   const root=document.getElementById('noiResonanceHistory');
   if(!root)return;
   root.setAttribute('aria-busy','false');
@@ -5795,11 +5843,18 @@ async function sendThinkSignal(){
   if(messageId)sendWebPushEvent('think',messageId).catch(()=>{});
   // Mockup: the heart takes my colour for a moment and two sparks, mine and
   // theirs, fly out of it; then "Ti penso inviato a …".
+  // Il diario, ma pulito: the heart pulses, three small hearts leave it, the
+  // notice says it arrived and your characters hop (diario.js). Elsewhere the
+  // earlier heart and toast.
+  const thinkName=partner.display_name||usIdentity().partnerName;
+  if(window.UsDiario?.thinkSent?.({name:thinkName,duplicate:Boolean(result?.duplicate)})){window.UsFeedback?.action?.();}
+  else{
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),2400);
   // Il cuore (founder, 29/10/2026): the same heart as the others, counted with them.
   if(btn&&!result?.duplicate)usHeartLike(btn);else window.UsFeedback?.action?.();
   if(result?.duplicate)toast('Già inviato',{quiet:true});
-  else toast(`Ti penso inviato a ${partner.display_name||usIdentity().partnerName}`,{icon:'heart',quiet:false});
+  else toast(`Ti penso inviato a ${thinkName}`,{icon:'heart',quiet:false});
+  }
   await hydrateThink();
   // La cosa di oggi: my Ti penso of today, at once.
   window.UsCosaDiOggi?.refresh?.({force:true})?.catch?.(()=>{});

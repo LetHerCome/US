@@ -34,22 +34,19 @@ test('M10A follow-up: Oggi keeps only the actionable notice outside the retired 
   const stack = hero.match(/<div class="us-oggi-stack" id="usOggiStack">[\s\S]*?\n {6}<\/div>/)?.[0] || '';
   assert.ok(stack, 'legacy Oggi stack remains mounted for existing authorities');
   assert.equal(stack.indexOf('id="usTodayPriorityRegion"'), -1, 'personal notice no longer lives in the retired stack');
-  assert.ok(hero.indexOf('id="usTodayPriorityRegion"') >= 0, 'personal notice remains inside the Home hero');
-  assert.ok(hero.indexOf('id="usTodayPriorityRegion"') < hero.indexOf('id="usOggiStack"'), 'notice is structurally separate from the retired stack');
   for (const legacy of ['id="usOggiCalendarWidget"', 'id="usDailyRevealLink"']) assert.ok(stack.indexOf(legacy) >= 0, `${legacy} remains mounted for its authority`);
   for (const passive of ['id="distanceWidget"', 'id="pushOptInCard"', 'id="homeEmptyState"', 'id="usDailyRitual"']) {
     assert.equal(stack.indexOf(passive), -1, `${passive} is not in the retired stack`);
   }
-  assert.match(css, /#home #usOggiStack\{height:0!important;[^}]*visibility:hidden!important;[^}]*pointer-events:none!important\}/);
-  // 1.0: one dock above the nav — what waits for me (or the notifications invite), then the Domanda di oggi.
-  const dock = hero.match(/<div class="us-oggi-dock[^"]*" id="usOggiDock">[\s\S]*?\n {6}<\/div>/)?.[0] || '';
-  const order = ['id="usTodayPriorityRegion"', 'id="pushOptInCard"', 'id="usDailyRitual"'].map((id) => dock.indexOf(id));
-  assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), `dock order ${order}`);
-  assert.ok(hero.indexOf('id="usOggiDock"') < hero.indexOf('id="usOggiStack"'));
-  const dcOggi = read('dc-oggi.css');
-  // Parity 2026-10: the mockup's .og-bottom sits 130px from the bottom edge (nav + Maudit's band).
-  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?position:fixed;[\s\S]*?bottom:calc\(var\(--us-safe-bottom\) \+ 130px\);/, 'a band above the nav stays free for Maudit');
-  assert.match(dcOggi, /#home #usOggiDock #usTodayPriorityRegion\{[\s\S]*?position:static!important;/);
+  // Il diario, ma pulito (15/11/2026): the old hero and its dock are mounted
+  // but hidden; what waits for me, then the notifications invite, sit under the
+  // question of today (#dyMore), outside the hero.
+  assert.match(html, /<section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo" hidden>/);
+  const oggi = html.slice(html.indexOf('<div class="dy-oggi" id="dyOggi">'), html.indexOf('<section class="hero home-hero-only"'));
+  const order = ['id="dyQuestion"', 'id="dyMore"', 'id="usTodayPriorityRegion"', 'id="pushOptInCard"'].map((id) => oggi.indexOf(id));
+  assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), `Oggi order ${order}`);
+  assert.equal(hero.indexOf('id="usTodayPriorityRegion"'), -1, 'the notice left the hidden hero');
+  assert.equal((html.match(/id="usTodayPriorityRegion"/g) || []).length, 1);
   assert.equal((html.match(/id="usOggiCalendarWidget"/g) || []).length, 1);
   assert.match(app, /const fact=await window\.getOggiCalendarInsightSource\?\.\(\);/);
   assert.match(app, /target\.closest\('#usTodayPriorityRegion,/);
@@ -106,7 +103,7 @@ test('M10B: un errore non mostra mai una risposta finta o modificabile', () => {
   assert.match(card.innerHTML, /Riprova/);
 });
 
-test('M10A: invito empty-state e opt-in notifiche non si sovrappongono alla colonna Oggi', () => {
+test('M10A: invito empty-state e opt-in notifiche non si sovrappongono alla colonna Oggi', { skip: 'Il diario, ma pulito (15/11/2026): il vecchio Oggi (foto, countdown, dock, invito sulla foto) è nascosto; l\'opt-in sta in #dyMore' }, () => {
   // The empty state is placed in the free band under the countdown (1.0: visible without a photo)
   // and above the dock, and sheds its secondary lines when short.
   const layout = app.slice(app.indexOf('function layoutOggiEmptyState'), app.indexOf("if(typeof ResizeObserver==='function')"));

@@ -320,7 +320,8 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   const app = read('app.js');
   const games = read('games.js');
   const css = read('games.css') + read('identity.css');
-  const top = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<main id="home"/)?.[0] || '';
+  // Il diario, ma pulito (15/11/2026): the top chrome of Oggi is its header (.dy-head).
+  const top = html.match(/<header class="dy-head">[\s\S]*?<\/header>/)?.[0] || '';
   assert.match(top, /id="thinkButton"/);
   assert.doesNotMatch(top, /id="usPerVoiTop"/, 'Per voi is a Gioca action, not a global top-bar action');
   assert.match(games, /class="us-gv2-pervoi us-attention-orbit"/);

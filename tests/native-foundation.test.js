@@ -192,7 +192,7 @@ test('config Capacitor resta bundled-only; iOS (M15) e Android condividono la st
   assert.equal(config.server, undefined);
   assert.deepEqual(config.plugins.SystemBars, {
     insetsHandling: 'css',
-    style: 'DARK',
+    style: 'LIGHT', // Il diario, ma pulito (15/11/2026): dark icons on the paper (Capacitor 8: LIGHT = dark content)
     hidden: false,
     initialViewportFitValueHint: 'cover'
   });

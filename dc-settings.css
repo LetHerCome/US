@@ -278,7 +278,7 @@
 #settings [data-us-setting="feedback"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/waveform-regular.svg")}
 #settings [data-us-setting="maudit"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/cat-regular.svg")}
 #settings [data-us-setting="optimize-ricordi"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/image-regular.svg")}
-#settings [data-us-setting="home-photo"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/arrow-clockwise-regular.svg")}
+
 #settings [data-us-setting="sync-status"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/cloud-regular.svg")}
 #settings [data-us-setting="relationship-date"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/calendar-blank-regular.svg")}
 #settings [data-us-setting="story-archive"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/book-regular.svg")}
@@ -811,11 +811,6 @@
    impostazioni → noi). Presentation only: navigation is still go().
    ========================================================================== */
 body:has(#settings.page.active) .us-nav{--us-nav-index:1;--us-nav-blob:var(--us-noi)}
-body:has(#settings.page.active) .us-nav .us-nav-indicator{opacity:.16!important}
-body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nicon{color:var(--us-nav-c)!important}
-body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .us-nav-icon-off{display:block!important;color:var(--us-nav-c)!important}
-body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .us-nav-icon-on{display:block!important;color:color-mix(in srgb,var(--us-nav-c) 28%,transparent)!important}
-body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nlabel{font-weight:600;color:var(--us-color-text)}
 
 /* ==========================================================================
    360px and large text: the rows keep their 44px+ targets, nothing clips.
@@ -855,3 +850,4 @@ body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nlabel
 .us-plus-soon-cta{width:100%}
 .us-plus-soon-state{color:var(--us-color-text)}
 .us-plus-soon-leave{justify-self:center}
+#settings [data-us-setting="home-photo"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/arrow-clockwise-regular.svg")}

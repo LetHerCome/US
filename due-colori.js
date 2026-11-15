@@ -124,7 +124,7 @@ function canHole() {
 
 // The tab is marked at once, before the colour moves (mockup markTab/placeBlob).
 function markNav(button) {
-  doc.querySelectorAll('.nav button[data-page]').forEach((b) => {
+  doc.querySelectorAll('.dy-nav button[data-page]').forEach((b) => {
     const on = b === button;
     b.classList.toggle('active', on);
     if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');

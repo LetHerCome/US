@@ -10,19 +10,20 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const html = read('index.html');
 const foundationCss = read('ui-foundation.css');
 const identityCss = read('identity.css');
-const topBar = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<main id="home"/)[0];
+// Il diario, ma pulito (15/11/2026): the top chrome of Oggi is its header (.dy-head).
+const topBar = html.match(/<header class="dy-head">[\s\S]*?<\/header>/)[0];
 
 // ---------------------------------------------------------------- SHELL
 
 test('shell: Ti penso left, the US mark at the centre, Left for You right', () => {
   const think = topBar.indexOf('id="thinkButton"');
-  const brand = topBar.indexOf('class="us-top-brand"');
+  // Il diario, ma pulito (15/11/2026): «us» in Permanent Marker is the centre (mockup).
+  const brand = topBar.indexOf('class="dy-mark"');
   const envelope = topBar.indexOf('id="leftForYouPartnerEntry"');
   assert.ok(think > 0 && brand > think && envelope > brand, 'order: Ti penso, US, Left for You');
   assert.doesNotMatch(topBar, /id="usPerVoiTop"/, 'Per voi belongs to Gioca, not global chrome');
-  assert.match(topBar, /<div class="us-top-brand" role="img" aria-label="US"><img[^>]+us-symbol-256-v1\.png/);
-  assert.match(identityCss, /\.top\.us-premium-top \.us-top-brand\{grid-column:2;/);
-  assert.match(identityCss, /\.top\.us-premium-top\{display:grid;grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/);
+  assert.match(topBar, /<span class="dy-mark" role="img" aria-label="US">us<\/span>/);
+  assert.match(read('diario.css'), /\.dy-head\{display:flex;justify-content:space-between;align-items:center;/);
 });
 
 test('shell: Events no longer owns the global centre slot but stays reachable', () => {
@@ -43,7 +44,9 @@ test('shell: the canonical PWA/launcher mark is used as-is (display cropping onl
   assert.equal(asset.status, 'APPROVED');
   assert.match(read('service-worker.js'), /"\/assets\/derived\/runtime\/us-symbol-256-v1\.png"/);
   assert.doesNotMatch(read('service-worker.js'), /us-symbol-apk-foreground-v1/, 'the 1254 px master is the install icon, not a shell asset');
-  assert.match(identityCss, /\.us-top-brand-art\{[^}]*height:58px[^}]*width:58px/);
+  // Il diario, ma pulito (15/11/2026): the header no longer shows the mark; the
+  // auth screen still does, as-is.
+  assert.match(html, /<link rel="icon"[^>]+href="\/assets\/derived\/runtime\/us-symbol-256-v1\.png/);
 });
 
 async function runNetwork({ online, warn }) {
@@ -89,13 +92,14 @@ test('connection: healthy shows nothing, offline is immediate, "connecting" wait
 });
 
 test('connection: the top-bar badge itself never occupies shell space', () => {
-  assert.match(identityCss, /\.top\.us-premium-top \.online-badge\{display:none!important\}/);
+  // Il diario, ma pulito (15/11/2026): the badge lives in the old top bar, which is now a hidden holder.
+  assert.match(html, /<div class="top us-premium-top" hidden><div class="top-actions"><div class="online-badge warn" id="onlineBadge"/);
   assert.match(read('fix4.css'), /\.online-badge\.ok\{display:none!important\}/);
 });
 
 // ---------------------------------------------------------------- AURORA
 
-test('aurora: one canonical layer with ambient drift, reaction and reduced-motion state', () => {
+test('aurora: one canonical layer with ambient drift, reaction and reduced-motion state', { skip: 'Il diario, ma pulito (15/11/2026): la barra in alto con l\'aurora non c\'è più, Oggi ha la sua testata su carta' }, () => {
   assert.match(topBar, /<span class="us-aurora" aria-hidden="true"><\/span>/);
   assert.match(foundationCss, /\.top\.us-premium-top>\.us-aurora\{[^}]*overflow:hidden[^}]*pointer-events:none/);
   assert.match(foundationCss, /animation:us-aurora-drift 12s ease-in-out infinite alternate/);
@@ -182,10 +186,12 @@ test('aurora: reduced motion never pulses', () => {
 // ---------------------------------------------------------------- ATTENTION
 
 test('attention: global Left for You and Gioca Per voi share the same primitive', () => {
+  // Il diario, ma pulito (15/11/2026): the envelope keeps data-us-attention (set by
+  // left-for-you.js) but shows it with its red dot, not with the orbit ring.
   const envelope = topBar.match(/<button[^>]*id="leftForYouPartnerEntry"[^>]*>/)?.[0] || '';
-  assert.match(envelope, /us-attention-orbit/);
+  assert.doesNotMatch(envelope, /us-attention-orbit/);
   assert.match(envelope, /data-us-attention="off"/);
-  assert.equal((topBar.match(/data-us-attention-icon/g) || []).length, 1, 'only the global envelope owns an attention glyph in the top bar');
+  assert.equal((topBar.match(/data-us-attention-icon/g) || []).length, 0, 'no orbit glyph in the header');
   const games = read('games.js');
   assert.match(games, /us-gv2-pervoi us-attention-orbit/);
   assert.match(games, /data-gv2-action="per-voi"/);
@@ -194,7 +200,8 @@ test('attention: global Left for You and Gioca Per voi share the same primitive'
 });
 
 test('attention: the primitive is generic (no envelope/Per voi selectors), slow with a rest, and reduced-motion aware', () => {
-  const block = foundationCss.slice(foundationCss.indexOf('M10E / M12A'), foundationCss.indexOf('M12A — Shell aurora'));
+  // Il diario, ma pulito (15/11/2026): the aurora comment that closed this block was pruned with the top bar.
+  const block = foundationCss.slice(foundationCss.indexOf('M10E / M12A'), foundationCss.indexOf('M12A — One-shot soft pulse'));
   assert.doesNotMatch(block, /envelope|pervoi|leftForYou|usPerVoiTop/i);
   assert.match(block, /\.us-attention-orbit\[data-us-attention="on"\] \[data-us-attention-icon\]\{[^}]*animation:us-attention-breathe/);
   assert.match(block, /us-attention-period,5\.2s/);
@@ -208,7 +215,7 @@ test('attention: the primitive is generic (no envelope/Per voi selectors), slow 
 
 // ---------------------------------------------------------------- NAV
 
-test('nav: a single sliding indicator whose slot follows the active tab', () => {
+test('nav: a single sliding indicator whose slot follows the active tab', { skip: 'Il diario, ma pulito (15/11/2026): la barra ha icone a tratto e lo scarabocchio rosso sotto la scheda attiva, non più l\'indicatore che scorre' }, () => {
   const nav = html.match(/<nav class="nav us-nav us-nav-premium"[\s\S]*?<\/nav>/)[0];
   assert.match(nav, /<span class="us-nav-track" aria-hidden="true"><span class="us-nav-indicator"><\/span><\/span>/);
   assert.deepEqual([...nav.matchAll(/data-page="(\w+)"/g)].map((m) => m[1]), ['home', 'bond', 'moments', 'quiz'], 'tab order unchanged');
@@ -221,7 +228,8 @@ test('nav: a single sliding indicator whose slot follows the active tab', () => 
 
 test('nav: navigation logic is untouched (go() still only toggles the active class)', () => {
   const app = read('app.js');
-  assert.match(app, /document\.querySelectorAll\('\.nav button'\)\.forEach\(b=>b\.classList\.toggle\('active',b\.dataset\.page===id\)\);/);
+  // Il diario, ma pulito (15/11/2026): the bottom nav is .dy-nav.
+  assert.match(app, /document\.querySelectorAll\('\.dy-nav button'\)\.forEach\(b=>b\.classList\.toggle\('active',b\.dataset\.page===id\)\);/);
   assert.match(app, /function openQuizHub\(options=\{\}\)\{go\('quiz',options\);window\.USGameV2\?\.showHub\(\);\}/);
 });
 

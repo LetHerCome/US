@@ -163,7 +163,8 @@ test('Rewards V2 client: equipped slots paint locally; re-tap unequips without a
   const { api, el, root, calls, storage } = runProgression(() => state(), { storageSeed: { 'us:cosmetics:v1:c:f': localPrefs } });
   await api.hydrate({ showUnlocks: false, force: true });
   // US V3 — only theme, accent and effect still paint; retired slots stay stored but unpainted.
-  assert.deepEqual({ ...root.dataset }, { usTheme: 'film', usAccent: 'champagne', usEffect: 'constellation' });
+  // Il diario, ma pulito (15/11/2026): the Atmosfere are paused, so the theme stays stored but is never painted.
+  assert.deepEqual({ ...root.dataset }, { usAccent: 'champagne', usEffect: 'constellation' });
   assert.equal(el('homeHero').dataset.usFrame, undefined);
   assert.equal(el('usCoupleBadge').hidden, true);
   assert.equal(el('usHeroSticker').hidden, true);
@@ -181,7 +182,8 @@ test('Rewards V2 client: equipped slots paint locally; re-tap unequips without a
   // Round 3 (mockup parity): the free look "Orchidea" clears only this phone accent.
   await el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionDefault: 'accent' }, getAttribute: () => null }) } });
   assert.equal(root.dataset.usAccent, undefined, 'choosing Orchidea clears only this phone accent');
-  assert.equal(root.dataset.usTheme, 'film');
+  assert.equal(root.dataset.usTheme, undefined, 'Atmosfere paused: data-us-theme is never written');
+  assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.theme_reward_id, 'theme_film', 'the saved Atmosfera is kept');
   await tap('badge_day_one');
   assert.equal(el('usCoupleBadge').hidden, true, 'a retired reward cannot be equipped any more');
 
@@ -212,8 +214,13 @@ test('Rewards V2 client: V1 compatibility seed is cleared once for Bea but prese
   await francesco.api.hydrate({ showUnlocks: false, force: true });
   await bea.api.hydrate({ showUnlocks: false, force: true });
 
-  assert.equal(francesco.root.dataset.usTheme, 'film', 'Francesco keeps his existing local look');
-  assert.equal(bea.root.dataset.usTheme, undefined, 'Bea legacy inherited look is reset to standard');
+  // Il diario, ma pulito (15/11/2026): the Atmosfere are paused (never painted);
+  // the look each phone keeps is read from its painted accent and its stored theme.
+  assert.equal(francesco.root.dataset.usTheme, undefined, 'Atmosfere paused');
+  assert.equal(bea.root.dataset.usTheme, undefined, 'Atmosfere paused');
+  assert.equal(francesco.root.dataset.usAccent, 'champagne', 'Francesco keeps his existing local look');
+  assert.equal(bea.root.dataset.usAccent, undefined, 'Bea legacy inherited look is reset to standard');
+  assert.equal(JSON.parse(francesco.storage.get('us:cosmetics:v1:c:f')).preferences.theme_reward_id, 'theme_film', 'Francesco keeps his stored Atmosfera');
   assert.equal(JSON.parse(francesco.storage.get('us:cosmetics:v1:c:f')).version, 2);
   assert.equal(JSON.parse(bea.storage.get('us:cosmetics:v1:c:b')).version, 2);
   assert.equal(JSON.parse(bea.storage.get('us:cosmetics:v1:c:b')).preferences.theme_reward_id, null);
@@ -236,16 +243,22 @@ test('Rewards V2 client: two phones can equip different cosmetics from the same 
   const phoneB = runProgression(() => sharedState());
   await phoneA.api.hydrate({ showUnlocks: false, force: true });
   await phoneB.api.hydrate({ showUnlocks: false, force: true });
-  assert.equal(phoneA.root.dataset.usTheme, 'film');
+  // Il diario, ma pulito (15/11/2026): the Atmosfere are paused (data-us-theme is
+  // never written); each phone's choice is still stored on that phone only.
+  const storedTheme = (phone, profile) => JSON.parse(phone.storage.get(`us:cosmetics:v1:c:${profile}`) || '{"preferences":{}}').preferences.theme_reward_id ?? null;
+  assert.equal(phoneA.root.dataset.usTheme, undefined);
+  assert.equal(storedTheme(phoneA, 'f'), 'theme_film');
   assert.equal(phoneB.root.dataset.usTheme, undefined, 'a fresh phone starts with the standard US look');
 
   const tapA = (id) => phoneA.el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionReward: id }, getAttribute: () => null }) } });
   await tapA('theme_blue_hour');
-  assert.equal(phoneA.root.dataset.usTheme, 'blue_hour');
+  assert.equal(phoneA.root.dataset.usTheme, undefined, 'Atmosfere paused');
+  assert.equal(storedTheme(phoneA, 'f'), 'theme_blue_hour');
   assert.equal(phoneB.root.dataset.usTheme, undefined, 'phone B keeps its own standard local appearance');
 
   await phoneB.api.hydrate({ showUnlocks: false, force: true });
   assert.equal(phoneB.root.dataset.usTheme, undefined, 'server refresh never imports couple-level legacy cosmetics');
+  assert.notEqual(storedTheme(phoneB, 'f'), 'theme_film', 'server refresh never imports couple-level legacy cosmetics');
   assert.equal(phoneA.calls.some((call) => call.name === 'equip_progression_reward'), false);
   assert.equal(phoneB.calls.some((call) => call.name === 'equip_progression_reward'), false);
 });

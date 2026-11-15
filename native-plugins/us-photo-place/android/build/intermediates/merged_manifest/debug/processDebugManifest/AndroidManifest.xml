@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.usapp.photoplace" >
+
+    <uses-sdk android:minSdkVersion="26" />
+    <!--
+         Mappa dei Ricordi: read the place of a photo the user picked. Not
+         READ_MEDIA_IMAGES: the app never browses the gallery by itself.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+
+</manifest>

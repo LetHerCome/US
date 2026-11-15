@@ -147,31 +147,12 @@ body.viewer-open{overflow:hidden}
 
 .home-hero-only{min-height:min(68vh,650px);height:clamp(440px,68vh,650px);padding:0;background:var(--us-color-surface);isolation:isolate}
 .home-hero-only:before{display:none!important}
-.home-photo-layer{position:absolute!important;inset:0;z-index:0!important;background-size:cover;background-position:center;opacity:0;transform:scale(1.006);transition:opacity var(--us-motion-photo) var(--us-ease-standard),transform var(--us-motion-photo) var(--us-ease-standard);will-change:opacity,transform}
-.home-photo-layer.active{opacity:1;transform:scale(1)}
-.home-photo-shade{position:absolute!important;inset:0;z-index:1!important;background:linear-gradient(180deg,rgba(5,7,10,.04),rgba(5,7,10,.02) 55%,rgba(5,7,10,.42) 100%);pointer-events:none}
 
-/* M6E — Oggi calendar widget + Focus Photo fade. */
-/* M10A — Oggi si legge dall'alto: priorità personale → impegni di oggi → Domanda del giorno, in UNA colonna (niente sovrapposizioni). */
-.us-oggi-stack{position:absolute;z-index:4;top:calc(var(--us-top-chrome-clearance) + 64px);left:14px;right:14px;display:flex;flex-direction:column;gap:8px;pointer-events:none;transition:opacity var(--us-motion-base) var(--us-ease-standard)}
 /* The app and top bar already share the safe-top inset; relative to the hero, it cancels. */
 @media(max-width:600px){.us-oggi-stack{top:calc(var(--us-top-chrome-height) + 20px)}}
-.us-oggi-widgets{position:relative;z-index:3;display:flex;flex-direction:column;gap:8px;pointer-events:auto;transition:opacity var(--us-motion-base) var(--us-ease-standard)}
-.us-oggi-widgets[hidden]{display:none!important}
-.us-oggi-card{min-height:44px;width:100%;display:flex;align-items:flex-start;gap:11px;padding:8px 12px 9px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(10,12,17,.46);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);color:#fff;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.18)}
-.us-oggi-card.is-loading{opacity:.5}
-.us-oggi-card-mark{width:26px;height:26px;margin-top:1px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.10);font-size:14px;flex:0 0 auto}
-.us-oggi-card-copy{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
-.us-oggi-card-copy b{font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.us-oggi-card-copy small{font-size:var(--us-text-meta);color:rgba(255,255,255,.68);white-space:normal;line-height:1.3}
-.us-oggi-card-lines{display:flex;flex-direction:column;gap:2px;margin-top:0}
-.us-oggi-card-line{display:grid;grid-template-columns:minmax(70px,auto) minmax(0,1fr);align-items:baseline;column-gap:8px;font-size:10.5px;line-height:1.22;color:rgba(255,255,255,.72)}
-.us-oggi-card-line-label{font-weight:720;color:rgba(255,255,255,.92);white-space:nowrap}
-.us-oggi-card-line-value{min-width:0;overflow-wrap:anywhere}
-.us-oggi-card-line[data-kind="together"]{margin-top:1px;padding-top:4px;border-top:1px solid rgba(255,255,255,.10);color:rgba(255,225,239,.90)}
-.us-oggi-card-line[data-kind="together"] .us-oggi-card-line-label{color:#ffd5e6}
+
 .push-optin-card{transition:opacity var(--us-motion-base) var(--us-ease-standard)}
-.us-oggi-focus-toggle{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
 .us-oggi-focus .us-oggi-widgets,.us-oggi-focus .home-distance-pill,.us-oggi-focus .push-optin-card{opacity:0!important;pointer-events:none!important}
 @media(prefers-reduced-motion:reduce){.us-oggi-stack,.us-oggi-widgets,.us-oggi-card,.push-optin-card{transition:none!important}}
 
@@ -215,28 +196,8 @@ body.viewer-open{overflow:hidden}
 #usTodayPriorityRegion[hidden]{display:none!important}
 #usTodayPriorityRegion{position:relative;z-index:6;display:block;padding:0;pointer-events:none}
 .us-oggi-focus #usTodayPriorityRegion,.us-oggi-focus .us-today-priority-card{opacity:0!important;pointer-events:none!important}
-.us-today-priority-card{width:100%;min-height:44px;padding:12px 13px;border:1px solid rgba(255,255,255,.11);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025)),var(--card);color:var(--text);display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kind action" "copy action";align-items:center;gap:4px 12px;text-align:left;box-shadow:0 11px 28px rgba(0,0,0,.16)}
-.us-today-priority-card{position:relative;pointer-events:auto}
-.us-today-priority-kind{grid-area:kind;font-size:8px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--pink2)}
-.us-today-priority-copy{grid-area:copy;min-width:0;display:grid;gap:3px}.us-today-priority-copy b{font-size:13px;line-height:1.25}.us-today-priority-copy small{font-size:10px;line-height:1.35;color:var(--muted)}
-.us-today-priority-action{grid-area:action;font-size:10px;font-weight:800;color:#eadfff;white-space:nowrap}
-.us-today-priority-card:active{transform:scale(.985)}
-/* M10.2 — avviso "Risposte pronte": nascondibile con swipe orizzontale o con il bottone; lo scroll verticale resta del browser. */
-.us-today-priority-swipe{position:relative;pointer-events:auto;touch-action:pan-y;will-change:transform,opacity}
-.us-today-priority-swipe.has-dismiss .us-today-priority-card{padding-right:48px}
-.us-today-priority-dismiss{position:absolute;top:50%;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:transparent;font:400 20px/1 var(--us-font-ui,inherit);cursor:pointer;-webkit-tap-highlight-color:transparent;--us-icon-size:16px;width:44px;height:44px;margin-top:-22px;right:2px;color:var(--us-color-text-3)}
-.us-today-priority-dismiss:hover{background:rgba(255,255,255,.08);color:#fff}
+
 .home-hero-only{height:calc(100svh - 86px - var(--us-safe-top) - var(--us-safe-bottom))!important;min-height:520px!important;max-height:none!important;border-radius:0!important;border-left:0!important;border-right:0!important;box-shadow:none!important}
-.home-photo-layer{transition:opacity var(--us-motion-photo-slow) var(--us-ease-standard),transform var(--us-motion-photo-slow) var(--us-ease-standard)!important;transform:scale(1.006)!important}
-.home-photo-layer.active{transform:scale(1)!important}
-.home-hero-only[data-us-home-photo-instant] .home-photo-layer{transition:none!important}
-.home-photo-shade{background:linear-gradient(180deg,rgba(4,6,9,.03),rgba(4,6,9,.01) 58%,rgba(4,6,9,.46) 100%)!important}
-.home-empty-state[hidden]{display:none}
-.home-empty-state{position:absolute!important;z-index:2!important;left:28px;right:28px;top:48%;transform:translateY(-50%);display:grid;justify-items:center;gap:10px;text-align:center;color:var(--us-color-text);transition:top var(--us-motion-base) var(--us-ease-standard)}
-.home-empty-state.is-compact .home-empty-mark,.home-empty-state.is-compact .home-empty-copy small{display:none}
-.home-empty-mark{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(232,138,162,.22);background:rgba(15,16,22,.40);color:var(--us-pink);font-family:var(--us-serif);font-size:28px;box-shadow:0 14px 34px rgba(0,0,0,.20)}
-.home-empty-copy{display:grid;gap:5px;max-width:270px}.home-empty-copy b{font-family:var(--us-serif);font-size:20px;line-height:1.12;font-weight:600}.home-empty-copy small{font-size:var(--us-text-secondary);line-height:1.4;color:rgba(239,239,244,.67)}
-.home-empty-action{min-height:44px;padding:9px 15px;border:1px solid rgba(255,255,255,.13);border-radius:var(--us-radius-pill);background:rgba(18,20,27,.58);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:var(--us-color-text);font-size:var(--us-text-secondary);box-shadow:0 10px 26px rgba(0,0,0,.18)}
 
 /* Today: mini capsule leggibile accanto a Us. */
 
@@ -419,31 +380,15 @@ body.viewer-open{overflow:hidden}
 .think-arrival-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.think-arrival-head h2{margin:3px 0 0;font-size:18px;letter-spacing:-.25px}
 .think-arrival-copy{margin:7px 0 12px;color:rgba(247,242,248,.68);font-size:12px;line-height:1.35}.think-reaction-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.think-reaction-button{min-width:44px;min-height:58px;padding:8px;border-radius:17px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.055);color:#fff;display:grid;place-items:center;transition:transform var(--us-motion-micro) var(--us-ease-standard),border-color var(--us-motion-micro) var(--us-ease-standard),background var(--us-motion-micro) var(--us-ease-standard),box-shadow var(--us-motion-micro) var(--us-ease-standard)}.think-reaction-glyph{display:grid;place-items:center;width:32px;height:32px;font-size:28px;line-height:1;font-family:Georgia,serif;text-shadow:0 2px 12px rgba(255,160,190,.22)}.think-reaction-heart{color:#ffb4c7;font-size:25px}.think-reaction-hug,.think-reaction-miss{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;font-size:26px;text-shadow:none}.think-reaction-button:active{transform:scale(.95)}.think-reaction-button.selected{border-color:rgba(255,174,201,.68);background:linear-gradient(135deg,rgba(255,132,169,.20),rgba(169,133,255,.18));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 0 2px rgba(255,154,190,.08)}.think-reaction-button:disabled{cursor:default;opacity:.54}.think-reaction-button.selected:disabled{opacity:1}.think-arrival-status{min-height:16px;margin:9px 0 0;text-align:center;color:rgba(247,242,248,.72);font-size:11px}
 @media(max-width:360px){.think-arrival-overlay{padding-inline:12px}.think-arrival-sheet{width:min(326px,100%);padding-inline:12px}.think-reaction-button{min-height:56px}}
-/* M9B/M10B — Domanda del giorno su Oggi: card compatta, solo ingresso al foglio (stato solo da get_daily_state) */
-.us-daily-ritual[hidden]{display:none!important}
-.us-daily-ritual{position:relative;z-index:4;width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"head action" "question action";align-items:center;gap:5px 12px;padding:11px 12px 12px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(150deg,rgba(46,24,54,.80),rgba(20,15,28,.74) 62%,rgba(14,12,20,.78));backdrop-filter:blur(26px) saturate(150%);-webkit-backdrop-filter:blur(26px) saturate(150%);box-shadow:0 14px 36px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.08);color:#fff;text-align:left;font:inherit;cursor:pointer;pointer-events:auto;transition:transform var(--us-motion-fast) var(--us-ease-standard),border-color var(--us-motion-base) var(--us-ease-standard),opacity var(--us-motion-base) var(--us-ease-standard);-webkit-tap-highlight-color:transparent}
-.us-daily-ritual:active{transform:scale(.985)}
-.us-daily-ritual:focus-visible{outline:2px solid rgba(255,160,196,.85);outline-offset:3px}
-.us-daily-ritual-kicker{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--us-type-eyebrow);font-weight:750;letter-spacing:var(--us-type-eyebrow-tracking);text-transform:uppercase;color:var(--us-color-accent-ink)}
-.us-daily-ritual-question{grid-area:question;min-width:0;font-family:var(--us-font-editorial,"Newsreader",Georgia,serif);font-size:17px;line-height:1.22;font-weight:500;letter-spacing:-.005em;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:pretty}
-.us-daily-ritual-cta{grid-area:action;flex:0 0 auto;min-height:34px;display:inline-flex;align-items:center;padding:0 14px;border-radius:999px;font-size:12.5px;font-weight:800;letter-spacing:.01em;white-space:nowrap}
-.us-daily-ritual-cta{color:#fff;background:linear-gradient(135deg,var(--us-color-rose),var(--us-color-violet));box-shadow:0 8px 20px rgba(255,102,142,.22)}
-/* A' — il partner ha già risposto, io no: stessa copia, bordo più caldo */
-.us-daily-ritual[data-state="invited"]{border-color:rgba(255,130,170,.36);background:linear-gradient(150deg,rgba(78,28,64,.84),rgba(30,16,36,.80) 60%,rgba(18,13,24,.80))}
-.us-daily-ritual[data-state="invited"] .us-daily-ritual-mark{background:linear-gradient(145deg,var(--us-color-rose),var(--us-color-violet));color:#fff}
-/* D — errore reale: onesto, compatto */
-.us-daily-ritual[data-state="error"]{background:linear-gradient(150deg,rgba(30,22,40,.72),rgba(16,14,22,.72));border-color:rgba(255,255,255,.09)}
-.us-daily-ritual[data-state="error"] .us-daily-ritual-question{color:rgba(255,255,255,.76);font-size:16px}
-.us-daily-ritual[data-state="error"] .us-daily-ritual-cta{background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);color:rgba(255,255,255,.86)}
+
 #answer[hidden],#todaySaveBtn[hidden]{display:none!important}
-.us-oggi-focus .us-daily-ritual{opacity:0!important;pointer-events:none!important}
+
 @media(max-height:700px){.us-daily-ritual{padding:9px 10px 10px 12px;gap:4px 10px}.us-daily-ritual-question{font-size:15.5px}}
 @media(prefers-reduced-motion:reduce){.us-daily-ritual{transition:none}}
 /* M10.2 — accesso passivo al reveal di oggi: secondario, senza orbit né animazione. */
 .us-daily-reveal-link[hidden]{display:none!important}
 .us-daily-reveal-link{position:relative;z-index:4;align-self:flex-start;max-width:100%;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(10,12,17,.46);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);color:rgba(255,255,255,.74);font:inherit;font-size:12px;font-weight:600;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .us-daily-reveal-link:focus-visible{outline:2px solid rgba(255,160,196,.85);outline-offset:2px}
-.us-oggi-focus .us-daily-reveal-link{opacity:0!important;pointer-events:none!important}
 
 /* M12A — opening a Noi tile eases its destination in (fade + short rise), once per opening. */
 #bond .noi-canonical-page:not([data-noi-view="hub"])>:is(.noi-resonance,.noi-resonance-history,.noi-resonance-guide,.noi-living-section,.noi-idea-section,.noi-events-section){animation:us-content-enter var(--us-motion-fast) var(--us-ease-enter) 1 both}
@@ -464,7 +409,7 @@ body.viewer-open{overflow:hidden}
 .us-distance-capsule[data-us-distance-state="stale"] .us-icon{color:#ffd08a}
 .us-distance-capsule[data-us-distance-state="denied"],.us-distance-capsule[data-us-distance-state="needs-permission"]{color:rgba(255,255,255,.8)}
 .us-distance-capsule[data-us-distance-state="denied"] .us-icon{color:var(--muted)}
-.us-oggi-focus .us-distance-capsule{opacity:0!important;pointer-events:none!important}
+
 @media(prefers-reduced-motion:reduce){.us-distance-capsule{transition:none}.us-distance-capsule:active{transform:none}}
 
 /* M12A — Oggi arbitration: a surface that lost the priority contest is only hidden, never removed. */
@@ -490,14 +435,6 @@ body.viewer-open{overflow:hidden}
 }
 @media(max-width:340px){
   .noi-couple-avatar{width:40px;height:40px}
-}
-
-/* ===== US-OGGI-DENSITY-01 · photo first, one action + one quiet fact =====
-   Presentation only. M12A arbitration remains the single source of visible state. */
-#home .us-oggi-stack{
-  gap:6px;
-  left:12px;
-  right:12px;
 }
 
 /* Primary attention should feel actionable, not like a second hero. */
@@ -529,42 +466,6 @@ body.viewer-open{overflow:hidden}
   font-size:10px;
 }
 
-/* Daily Question: compact editorial prompt, still the main action when it wins. */
-#home .us-daily-ritual[data-us-oggi-slot="primary"]{
-  min-height:70px;
-  padding:9px 10px 10px 12px;
-  grid-template-columns:minmax(0,1fr) auto;
-  grid-template-areas:"head action" "question action";
-  gap:3px 10px;
-  border-radius:18px;
-  box-shadow:0 10px 26px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.06);
-}
-#home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-head{
-  gap:5px;
-}
-#home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-mark{
-  width:18px;
-  height:18px;
-  flex-basis:18px;
-}
-#home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-mark::before{
-  width:11px;
-  height:11px;
-}
-#home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-kicker{
-  font-size:8.5px;
-}
-#home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-question{
-  font-size:15.5px;
-  line-height:1.16;
-}
-#home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-cta{
-  min-height:44px;
-  padding:0 12px;
-  font-size:11.5px;
-  box-shadow:none;
-}
-
 /* Quiet facts are strips, not cards that compete with the action. */
 #home #usTodayPriorityRegion[data-us-oggi-slot="quiet"] .us-today-priority-card,
 #home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card{
@@ -589,43 +490,6 @@ body.viewer-open{overflow:hidden}
 #home #usTodayPriorityRegion[data-us-oggi-slot="quiet"] .us-today-priority-copy small{
   font-size:9px;
 }
-#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card{
-  align-items:center;
-  gap:8px;
-}
-#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card-mark{
-  width:22px;
-  height:22px;
-  margin-top:0;
-  font-size:12px;
-}
-#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card-copy{
-  gap:1px;
-}
-#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card-copy b{
-  font-size:11.5px;
-}
-#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card-lines{
-  gap:1px;
-}
-#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card-line{
-  grid-template-columns:minmax(58px,auto) minmax(0,1fr);
-  column-gap:6px;
-  font-size:9.25px;
-  line-height:1.15;
-}
-#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card-line[data-kind="together"]{
-  padding-top:2px;
-}
-
-/* Passive reveal access is a chip-sized affordance. */
-#home .us-daily-reveal-link[data-us-oggi-slot="quiet"]{
-  min-height:44px;
-  padding:0 12px;
-  border-radius:14px;
-  font-size:10.5px;
-  background:rgba(10,12,17,.38);
-}
 
 /* Install/push guidance stays secondary at the bottom of the photo. */
 #home .push-optin-card[data-us-oggi-slot="quiet"]{
@@ -647,11 +511,6 @@ body.viewer-open{overflow:hidden}
   min-height:44px;
   padding:0 11px;
   font-size:10.5px;
-}
-
-/* Slightly calmer photo shading: chrome is readable without dimming the memory. */
-#home .home-photo-shade{
-  background:linear-gradient(180deg,rgba(4,6,9,.08) 0%,rgba(4,6,9,.015) 40%,rgba(4,6,9,.16) 70%,rgba(4,6,9,.62) 100%)!important;
 }
 
 @media(max-height:700px){
@@ -817,21 +676,6 @@ body.viewer-open{overflow:hidden}
   #bond .noi-couple-card .noi-couple-name{font-size:10.5px}
 }
 
-/* US Home Cleanup — Noi weekly board + transient Daily Question nudge. */
-#home #usOggiStack{height:0!important;overflow:hidden!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important}
-#home #usTodayPriorityRegion{
-  position:fixed!important;
-  z-index:19;
-  left:50%!important;
-  right:auto!important;
-  top:auto!important;
-  bottom:calc(10px + var(--us-safe-bottom) + var(--us-nav-height) + 12px)!important;
-  width:min(420px,calc(100% - 28px));
-  transform:translateX(-50%);
-  opacity:1!important;
-  visibility:visible!important;
-  pointer-events:none;
-}
 #home #usTodayPriorityRegion:not([hidden]){display:block!important}
 #home #usTodayPriorityRegion .us-today-priority-card,
 #home #usTodayPriorityRegion .us-today-priority-swipe{pointer-events:auto}
@@ -854,24 +698,19 @@ html.us-native{
   }
 }
 
-/* Page entry after a tab change (app.js animatePageEntry): a short slide
-   towards the new page. Moved here from polish4.css when that file went. */
+/* Page entry after a tab change (app.js animatePageEntry). Il diario, ma
+   pulito (15/11/2026): the four tabs sit in a row like the sections of a
+   notebook, so the page comes in from the right going forward and from the
+   left going back: 28 px and a fade in 260 ms. */
 .page.active.us-motion5-enter-next,
 .page.active.us-motion5-enter-prev{
-  animation:usMotion5PageEnter 240ms var(--us-ease-enter) both!important;
+  animation:usMotion5PageEnter 260ms cubic-bezier(.2,.8,.2,1) both!important;
 }
-.page.active.us-motion5-enter-next{--us-motion5-enter-x:14px}
-.page.active.us-motion5-enter-prev{--us-motion5-enter-x:-14px}
+.page.active.us-motion5-enter-next{--us-motion5-enter-x:28px}
+.page.active.us-motion5-enter-prev{--us-motion5-enter-x:-28px}
 @keyframes usMotion5PageEnter{
-  from{opacity:.78;transform:translate3d(var(--us-motion5-enter-x),4px,0)}
+  from{opacity:0;transform:translate3d(var(--us-motion5-enter-x),0,0)}
   to{opacity:1;transform:none}
-}
-
-/* Android: the previous 100ms override made navigation feel abrupt. Use
-   the same ~220ms premium motion as web while keeping swipe tracking live. */
-html.us-native-android .page.active.us-motion5-enter-next,
-html.us-native-android .page.active.us-motion5-enter-prev{
-  animation-duration:220ms!important;
 }
 
 /* Daily V5: no duplicated answer editor or reaction/comment section after reveal. */
