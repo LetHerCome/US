@@ -196,7 +196,9 @@ async function hydrateUsCoupleContext(){
   try{
     [coupleResult,profilesResult]=await Promise.all([
       sb.from('couples').select('id,name,started_on,sky_city,sky_minutes,created_at').eq('id',coupleId).maybeSingle(),
-      sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true})
+      // character_shape (diario pulito) exists after the staging migration: without it, read as before.
+      sb.from('profiles').select('id,display_name,role,couple_id,person_color,character_shape').eq('couple_id',coupleId).order('created_at',{ascending:true})
+        .then(r=>r?.error?sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true}):r)
     ]);
   }catch(error){
     if(window.usProfile===profile&&window.usProfile?.couple_id===coupleId&&generation===usCoupleContextState.generation)clearUsCoupleContext();

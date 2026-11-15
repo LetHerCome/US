@@ -61,11 +61,15 @@
   --us-miele:#F3D27A;                    /* dates */
   --us-cielo:#B4D8F4;                    /* distance */
   --us-think:#FF5477;                    /* the Ti penso heart, assets/icons/think-on.svg */
-  --us-think-soft:#FFE3EA;
+  --us-think-soft:color-mix(in srgb,var(--us-think) 16%,var(--us-card));
+  --us-on:#14120E;                       /* text on pastel tags, in light and dark */
+  --us-pastel-base:#FAF7F1;              /* pastels mix with light paper in both themes */
   --us-rosa:#ff7c96;
   --us-lilla:#a98bff;
-  --us-rosa-soft:color-mix(in srgb,var(--us-rosa) 45%,var(--us-paper));
-  --us-lilla-soft:color-mix(in srgb,var(--us-lilla) 45%,var(--us-paper));
+  --us-rosa-soft:color-mix(in srgb,var(--us-rosa) 45%,var(--us-pastel-base));
+  --us-lilla-soft:color-mix(in srgb,var(--us-lilla) 45%,var(--us-pastel-base));
+  --us-rosa-hl:var(--us-rosa-soft);      /* highlighter under what a person wrote */
+  --us-lilla-hl:var(--us-lilla-soft);
   /* Fixed scales: four type sizes, button heights 32/44/52/64 with radii
      8/12/16, tags 24/28/44, square icon buttons of 44. */
   --us-text-30:30px;
@@ -99,8 +103,10 @@
   --us-latte:var(--us-paper);
   --us-tu:var(--us-rosa);
   --us-partner:var(--us-lilla);
-  --us-tu-soft:color-mix(in srgb,var(--us-tu) 45%,var(--us-paper));
-  --us-partner-soft:color-mix(in srgb,var(--us-partner) 45%,var(--us-paper));
+  --us-tu-soft:color-mix(in srgb,var(--us-tu) 45%,var(--us-pastel-base));
+  --us-partner-soft:color-mix(in srgb,var(--us-partner) 45%,var(--us-pastel-base));
+  --us-tu-hl:color-mix(in srgb,var(--us-tu) 45%,var(--us-pastel-base));
+  --us-partner-hl:color-mix(in srgb,var(--us-partner) 45%,var(--us-pastel-base));
   --us-noi:var(--us-orchidea);
   --us-tab:var(--us-ink-100);
   --us-glow:transparent;
@@ -289,6 +295,35 @@
   --us-paper:var(--us-color-paper);
 }
 
+/* La carta di notte (founder, 15/11/2026, mockup v4.1): the same paper with the
+   light off. It follows the phone (Aspetto «Automatico», the default) or is
+   fixed in Impostazioni → App → Aspetto (html[data-us-aspetto]). Characters
+   keep their #14120E outline and white sticker edge; pastel tags keep dark
+   text (--us-on); person colours get a touch lighter; highlighters darker. */
+@media (prefers-color-scheme:dark){
+  :root:not([data-us-aspetto="chiaro"]){
+    color-scheme:dark;
+    --us-paper:#16130F;--us-beige:#2A251F;--us-card:#211D18;
+    --us-ink-100:#F4EEE4;--us-ink-80:rgba(244,238,228,.8);--us-ink-60:rgba(244,238,228,.62);--us-ink-40:rgba(244,238,228,.4);
+    --us-ink-12:rgba(244,238,228,.13);--us-ink-08:rgba(244,238,228,.09);--us-ink-04:rgba(244,238,228,.05);
+    --us-pencil:#F2765E;--us-miele:#EACB74;--us-cielo:#A8CFEF;
+    --us-tu-hl:color-mix(in srgb,var(--us-tu) 48%,transparent);--us-partner-hl:color-mix(in srgb,var(--us-partner) 50%,transparent);
+    --us-rosa-hl:color-mix(in srgb,var(--us-rosa) 46%,transparent);--us-lilla-hl:color-mix(in srgb,var(--us-lilla) 50%,transparent);
+    --us-card-shadow:0 0 0 1px var(--us-ink-08);
+    --us-scrim:rgba(0,0,0,.5);
+  }
+}
+:root[data-us-aspetto="scuro"]{
+  color-scheme:dark;
+  --us-paper:#16130F;--us-beige:#2A251F;--us-card:#211D18;
+  --us-ink-100:#F4EEE4;--us-ink-80:rgba(244,238,228,.8);--us-ink-60:rgba(244,238,228,.62);--us-ink-40:rgba(244,238,228,.4);
+  --us-ink-12:rgba(244,238,228,.13);--us-ink-08:rgba(244,238,228,.09);--us-ink-04:rgba(244,238,228,.05);
+  --us-pencil:#F2765E;--us-miele:#EACB74;--us-cielo:#A8CFEF;
+  --us-tu-hl:color-mix(in srgb,var(--us-tu) 48%,transparent);--us-partner-hl:color-mix(in srgb,var(--us-partner) 50%,transparent);
+  --us-rosa-hl:color-mix(in srgb,var(--us-rosa) 46%,transparent);--us-lilla-hl:color-mix(in srgb,var(--us-lilla) 50%,transparent);
+  --us-card-shadow:0 0 0 1px var(--us-ink-08);
+  --us-scrim:rgba(0,0,0,.5);
+}
 :where(button:not(:disabled):not([data-us-motion-tap="off"])) {
   transition-property:transform;
   transition-duration:var(--us-motion-press);

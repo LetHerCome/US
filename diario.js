@@ -37,43 +37,67 @@
   // square for whoever joined (role beatrice, --us-lilla). Drawn here so they
   // take the person's colour and can be animated; the same shapes as the studio.
   const ell = (x, y, rx, ry) => `M${x - rx} ${y} a${rx} ${ry} 0 1 0 ${2 * rx} 0 a${rx} ${ry} 0 1 0 ${-2 * rx} 0 Z`;
+  // Five shapes (founder, 15/11/2026, mockup v4.1): each person picks one; two
+  // may share a shape, never a colour. Without a choice: the ball for whoever
+  // created the couple, the square for whoever joined.
   const SHAPES = Object.freeze({
-    palla: { body: 'M12 60 a38 36 0 1 0 76 0 a38 36 0 1 0 -76 0 Z', ex: [40, 60], ey: 58, feet: [37, 63] },
-    quadrato: { body: 'M36 24 H64 Q86 24 86 46 V72 Q86 94 64 94 H36 Q14 94 14 72 V46 Q14 24 36 24 Z', ex: [40, 60], ey: 56, feet: [36, 64] },
+    palla: { body: 'M12 60 a38 36 0 1 0 76 0 a38 36 0 1 0 -76 0 Z', ex: [40, 60], ey: 58, feet: [37, 63], hl: [32, 40] },
+    quadrato: { body: 'M36 24 H64 Q86 24 86 46 V72 Q86 94 64 94 H36 Q14 94 14 72 V46 Q14 24 36 24 Z', ex: [40, 60], ey: 56, feet: [36, 64], hl: [32, 40] },
+    triangolo: { body: 'M50 16 Q57 16 61 24 L89 81 Q94 94 79 94 H21 Q6 94 11 81 L39 24 Q43 16 50 16 Z', ex: [41, 59], ey: 66, feet: [34, 66], hl: [45, 38] },
+    goccia: { body: 'M50 14 C61 30 86 44 86 64 A36 32 0 0 1 14 64 C14 44 39 30 50 14 Z', ex: [40, 60], ey: 62, feet: [37, 63], hl: [38, 44] },
+    nuvola: { body: 'M27 52 C17 38 31 24 43 31 C47 18 67 17 71 30 C83 23 97 37 87 51 C97 60 92 93 66 93 H34 C9 93 6 61 27 52 Z', ex: [40, 60], ey: 64, feet: [37, 63], hl: [52, 30] },
   });
+  const SHAPE_NAMES = Object.freeze({ palla: 'Tondo', quadrato: 'Quadrato', triangolo: 'Triangolo', goccia: 'Goccia', nuvola: 'Nuvola' });
+  // The shape of a role in this couple: the stored choice, or the old look.
+  function shapeOf(role) {
+    try {
+      const prof = (w.UsCoupleContext?.snapshot?.()?.profiles || []).find((x) => x?.role === role);
+      if (SHAPES[prof?.character_shape]) return prof.character_shape;
+    } catch (_) { /* no context yet */ }
+    return role === 'beatrice' ? 'quadrato' : 'palla';
+  }
   const INK = '#14120E';
   // The twelve states of Come stai (member-status.js) on four faces.
-  const FACE = Object.freeze({ occhiolino: 'felice', felice: 'felice', festa: 'innamorato', innamorato: 'innamorato', giu: 'giu', malato: 'giu', stanco: 'stanco', nervoso: 'teso', lavoro: 'felice', studio: 'felice', palestra: 'felice', viaggio: 'felice', tavola: 'felice' });
+  const FACE = Object.freeze({ dorme: 'dorme', occhiolino: 'felice', felice: 'felice', festa: 'innamorato', innamorato: 'innamorato', giu: 'giu', malato: 'giu', stanco: 'stanco', nervoso: 'teso', lavoro: 'felice', studio: 'felice', palestra: 'felice', viaggio: 'felice', tavola: 'felice' });
   // How each of you is, by role, from Come stai (12 hours; nothing when not said).
   function moods() {
     const st = w.UsMemberStatus?.widgetState?.();
     const c = couple();
     return { [c.myRole]: st?.me?.status || '', [c.partnerRole]: st?.partner?.status || '' };
   }
-  function character(role, o = {}) {
-    const shape = role === 'beatrice' ? 'quadrato' : 'palla';
-    const color = role === 'beatrice' ? 'var(--us-lilla)' : 'var(--us-rosa)';
+  // who: a role ('francesco' | 'beatrice', colour and shape of that person) or
+  // { shape, color } for a character that is not (yet) a member (the entrance).
+  function character(who, o = {}) {
+    const role = typeof who === 'string' ? who : '';
+    const shape = SHAPES[o.shape] ? o.shape : SHAPES[who?.shape] ? who.shape : shapeOf(role);
+    const color = o.color || who?.color || (role === 'beatrice' ? 'var(--us-lilla)' : 'var(--us-rosa)');
     const s = SHAPES[shape], size = o.size || 56, dx = o.dx || 0, [a, b] = s.ex, y = s.ey, wink = o.mood === 'occhiolino';
     // Come stai (founder, 15/11/2026): the face says how you are.
     const face = FACE[o.mood] || 'felice';
-    const shut = face === 'stanco' || face === 'innamorato';
+    const shut = face === 'stanco' || face === 'innamorato' || face === 'dorme';
     const open = wink ? [a] : shut ? [] : [a, b];
-    const lids = shut ? `<path d="${[a, b].map((x) => face === 'innamorato' ? `M${x + dx - 4.5} ${y + 1} Q${x + dx} ${y - 5} ${x + dx + 4.5} ${y + 1}` : `M${x + dx - 4.5} ${y} Q${x + dx} ${y + 3.5} ${x + dx + 4.5} ${y}`).join(' ')}" fill="none" stroke="${INK}" stroke-width="2.8" stroke-linecap="round"/>` : '';
+    const lids = shut ? `<path d="${[a, b].map((x) => face === 'dorme' ? `M${x + dx - 5} ${y} Q${x + dx} ${y + 4.5} ${x + dx + 5} ${y}` : face === 'innamorato' ? `M${x + dx - 4.5} ${y + 1} Q${x + dx} ${y - 5} ${x + dx + 4.5} ${y + 1}` : `M${x + dx - 4.5} ${y} Q${x + dx} ${y + 3.5} ${x + dx + 4.5} ${y}`).join(' ')}" fill="none" stroke="${INK}" stroke-width="2.8" stroke-linecap="round"/>` : '';
     const brows = face === 'teso' ? `<path d="M${a - 6} ${y - 10} L${a + 4} ${y - 7} M${b + 6} ${y - 10} L${b - 4} ${y - 7}" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>` : '';
-    const mouth = face === 'giu' ? `M46 ${y + 13} Q50 ${y + 9} 54 ${y + 13}` : face === 'teso' || face === 'stanco' ? `M46.5 ${y + 11.5} H53.5` : face === 'innamorato' ? `M44.5 ${y + 9} Q50 ${y + 16.5} 55.5 ${y + 9}` : `M46 ${y + 10} Q50 ${y + 14.5} 54 ${y + 10}`;
+    const mouth = face === 'dorme' ? `${ell(50, y + 12, 2.4, 1.9)}` : face === 'giu' ? `M46 ${y + 14} Q50 ${y + 9.5} 54 ${y + 14}` : face === 'teso' || face === 'stanco' ? `M46.5 ${y + 11.5} H53.5` : face === 'innamorato' ? `M44.5 ${y + 9} Q50 ${y + 16.5} 55.5 ${y + 9}` : `M46 ${y + 10} Q50 ${y + 14.5} 54 ${y + 10}`;
     const label = o.label ? ` role="img" aria-label="${esc(o.label)}"` : ' aria-hidden="true"';
     return `<svg class="dy-char" viewBox="-4 6 108 100" width="${size}" height="${Math.round(size * 100 / 108)}"${label} focusable="false">
       <path d="${ell(s.feet[0], 97, 9, 5)} ${ell(s.feet[1], 97, 9, 5)}" style="fill:${color}" stroke="${INK}" stroke-width="3"/>
       <path d="${s.body}" style="fill:${color}" stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"/>
-      <path d="${ell(32, 40, 8, 5)}" fill="rgba(255,255,255,.55)"/>
+      <path d="${ell(s.hl[0], s.hl[1], 8, 5)}" fill="rgba(255,255,255,.55)"/>
       <path d="${ell(a - 8, y + 9, 5, 3)} ${ell(b + 8, y + 9, 5, 3)}" fill="rgba(211,64,42,.3)"/>
       ${open.length ? `<g class="dy-eyes"><path d="${open.map((x) => ell(x + dx, y, 4.4, 5.8)).join(' ')}" fill="${INK}"/><path d="${open.map((x) => ell(x + dx + 1.5, y - 2.3, 1.5, 1.5)).join(' ')}" fill="#fff"/></g>` : ''}${lids}${brows}
       ${wink ? `<path d="M${b - 5} ${y + 1} Q${b} ${y - 4} ${b + 5} ${y + 1}" fill="none" stroke="${INK}" stroke-width="2.8" stroke-linecap="round"/>` : ''}
-      <path d="${mouth}" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="${mouth}" fill="${face === 'dorme' ? INK : 'none'}" stroke="${face === 'dorme' ? 'none' : INK}" stroke-width="2.6" stroke-linecap="round"/>
+      ${face === 'dorme' ? '<text x="84" y="36" font-family="Figtree,sans-serif" font-weight="800" font-size="19" style="fill:var(--us-ink-100)">z</text><text x="97" y="22" font-family="Figtree,sans-serif" font-weight="800" font-size="13" style="fill:var(--us-ink-100)">z</text>' : ''}
       ${o.acc === 'occhiali' ? `<path d="${ell(a, y, 9.5, 8.5)} ${ell(b, y, 9.5, 8.5)} M${a + 9.5} ${y} H${b - 9.5}" fill="rgba(255,255,255,.28)" stroke="${INK}" stroke-width="2.6"/>` : ''}
     </svg>`;
   }
-  // Both phones show the same two, in the same order: the ball, then the square.
+  // The place of someone who has not arrived yet: the same shape, dashed.
+  function slot(shape, size, q = true) {
+    const s = SHAPES[shape] || SHAPES.quadrato;
+    return `<svg class="dy-char dy-slot" viewBox="-4 6 108 100" width="${size}" height="${Math.round(size * 100 / 108)}" aria-hidden="true" focusable="false"><path d="${s.body}" style="fill:var(--us-ink-04);stroke:var(--us-ink-40)" stroke-width="3" stroke-dasharray="7 6" stroke-linejoin="round"/>${q ? `<text x="50" y="${s.ey + 12}" text-anchor="middle" font-family="Figtree,sans-serif" font-weight="800" font-size="30" style="fill:var(--us-ink-40)">?</text>` : ''}</svg>`;
+  }
+  // Both phones show the same two, in the same order: the creator, then who joined.
   function couple() {
     const me = w.usProfile || {};
     const myRole = me.role === 'beatrice' ? 'beatrice' : 'francesco';
@@ -305,9 +329,9 @@
     const both = Boolean(st.both_answered);
     const unread = both && revealUnread(source, q);
     const theirs = both && !unread && typeof st.partner_answer === 'string' ? st.partner_answer : null;
-    const mineHl = (text) => `<span><span class="dy-hl" style="--c:var(--us-tu-soft)" translate="no">${esc(text)}</span></span>`;
+    const mineHl = (text) => `<span><span class="dy-hl" style="--c:var(--us-tu-hl)" translate="no">${esc(text)}</span></span>`;
     // The other person's answer exists but is not readable: a blurred line, never their words.
-    const ghost = `<span class="dy-q-blur" aria-hidden="true"><span class="dy-hl" style="--c:var(--us-partner-soft)">quando mi hai chiamato solo per dirmi buonanotte</span></span>`;
+    const ghost = `<span class="dy-q-blur" aria-hidden="true"><span class="dy-hl" style="--c:var(--us-partner-hl)">quando mi hai chiamato solo per dirmi buonanotte</span></span>`;
     const was = lastQuestion;
     const justRevealed = theirs !== null && was.id === q.id && (was.unread || !was.both || was.mine === null);
     let answers = '', foot = '';
@@ -321,7 +345,7 @@
       answers = `<div class="dy-q-answers">${mineHl(mine)}${ghost}</div>`;
       foot = `<div class="dy-q-foot"><span class="dy-q-hint">${esc(`Anche ${partner} ha risposto`)}</span><button type="button" class="dy-btn dy-btn-l" data-dy="answer">Leggi ${ARROW}</button></div>`;
     } else {
-      answers = `<div class="dy-q-answers">${mineHl(mine)}<span class="${justRevealed && !reduced() ? 'dy-q-unblur' : ''}"><span class="dy-hl" style="--c:var(--us-partner-soft)" translate="no">${esc(theirs || '')}</span></span></div>`;
+      answers = `<div class="dy-q-answers">${mineHl(mine)}<span class="${justRevealed && !reduced() ? 'dy-q-unblur' : ''}"><span class="dy-hl" style="--c:var(--us-partner-hl)" translate="no">${esc(theirs || '')}</span></span></div>`;
     }
     const html = `<span class="dy-q-kicker">La domanda di oggi</span><span class="dy-q-text">${esc(q.question)}</span>${answers}${foot}`;
     if (card.__dyHtml !== html || card.hidden) { card.innerHTML = html; card.__dyHtml = html; }
@@ -506,7 +530,7 @@
     return `<button type="button" class="dy-pic${big ? ' is-big' : ''}" data-dy-moment="${esc(row.id)}" aria-label="${esc(row.caption || 'Un ricordo')}. Apri"><img src="${esc(url)}" alt="" loading="lazy" decoding="async">${who ? `<span class="dy-pic-who" style="--who:${who}" aria-hidden="true"></span>` : ''}</button>`;
   }
   function questionMarkup(k) {
-    const line = (role, text) => (text ? `<span class="dy-dq-a"><span class="dy-hl" style="--c:var(--us-${role === 'francesco' ? 'rosa' : 'lilla'}-soft)" translate="no">${esc(text)}</span></span>` : '');
+    const line = (role, text) => (text ? `<span class="dy-dq-a"><span class="dy-hl" style="--c:var(--us-${role === 'francesco' ? 'rosa' : 'lilla'}-hl)" translate="no">${esc(text)}</span></span>` : '');
     return `<div class="dy-dq"><span class="dy-dq-q">${esc(k.question_text || '')}</span>${line('francesco', k.francesco_answer)}${line('beatrice', k.beatrice_answer)}</div>`;
   }
   function paintDiary(data) {
@@ -606,12 +630,32 @@
   }
   // The paper is light: dark clock and icons on Android and iOS. Asked again
   // when US comes back, because the launch (splash, edge-to-edge) resets it.
+  // Aspetto (founder, 15/11/2026): Automatico (the phone decides), Chiaro or Scuro, on this phone.
+  const ASPETTO_KEY = 'us:aspetto';
+  const darkQuery = w.matchMedia ? w.matchMedia('(prefers-color-scheme: dark)') : null;
+  function aspetto() { try { const v = w.localStorage.getItem(ASPETTO_KEY); return v === 'chiaro' || v === 'scuro' ? v : 'auto'; } catch (_) { return 'auto'; } }
+  function isDark() { const a = aspetto(); return a === 'scuro' || (a === 'auto' && Boolean(darkQuery?.matches)); }
+  function applyAspetto() {
+    const a = aspetto(), html = d.documentElement;
+    if (a === 'auto') delete html.dataset.usAspetto; else html.dataset.usAspetto = a;
+    d.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark() ? '#16130F' : '#FAF7F1');
+    d.querySelector('meta[name="color-scheme"]')?.setAttribute('content', a === 'auto' ? 'light dark' : (isDark() ? 'dark' : 'light'));
+    lightBars();
+    w.dispatchEvent(new Event('us:aspetto-changed'));
+  }
+  function setAspetto(value) {
+    try { if (value === 'chiaro' || value === 'scuro') w.localStorage.setItem(ASPETTO_KEY, value); else w.localStorage.removeItem(ASPETTO_KEY); } catch (_) { /* this load only */ }
+    applyAspetto();
+  }
+  w.UsAspetto = Object.freeze({ get: aspetto, set: setAspetto, isDark });
+  // Dark clock and icons on paper, light ones on the paper at night (Capacitor: «DARK» = light content).
   function lightBars() {
-    try { const p = w.Capacitor?.isNativePlatform?.() && w.Capacitor?.Plugins?.SystemBars; if (p?.setStyle) Promise.resolve(p.setStyle({ style: 'LIGHT' })).catch(() => {}); } catch (_) { /* web */ }
+    try { const sbp = w.Capacitor?.isNativePlatform?.() && w.Capacitor?.Plugins?.SystemBars; if (sbp?.setStyle) Promise.resolve(sbp.setStyle({ style: isDark() ? 'DARK' : 'LIGHT' })).catch(() => {}); } catch (_) { /* web */ }
   }
   function boot() {
-    lightBars();
+    applyAspetto();
     setTimeout(lightBars, 1200);
+    darkQuery?.addEventListener?.('change', () => { if (aspetto() === 'auto') applyAspetto(); });
     d.addEventListener('click', onClick);
     d.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVoiDue(); });
     w.addEventListener('popstate', () => closeVoiDue({ fromBack: true }));
@@ -650,7 +694,7 @@
     setInterval(() => { if (!d.hidden) paintTitle(); }, 60000);
   }
 
-  w.UsDiario = Object.freeze({ paintDiary, paintQuestion, paintVoiDue, thinkSent, openVoiDue, closeVoiDue, character, sentences, paintAll });
+  w.UsDiario = Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, shapeOf, slot, paintDiary, paintQuestion, paintVoiDue, thinkSent, openVoiDue, closeVoiDue, character, sentences, paintAll });
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot, { once: true });
   else boot();
 })();

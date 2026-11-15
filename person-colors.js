@@ -11,24 +11,30 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
 
+  // Il diario, ma pulito (founder, 15/11/2026): one colour, one meaning. Honey
+  // is time, sky is distance, the heart red is the Ti penso: oro, cielo and
+  // rubino left the person palette for blu, prugna and menta.
   const PALETTE = Object.freeze({
-    rosa: '#ff7c96', lilla: '#a98bff', cielo: '#6fb8ff', salvia: '#8fd49b',
-    oro: '#f2cf6b', pesca: '#ff9f6e', rubino: '#e5484d', perla: '#e8e1f0',
+    rosa: '#ff7c96', lilla: '#a98bff', blu: '#6f9bff', salvia: '#8fd49b',
+    pesca: '#ff9f6e', prugna: '#c98bd6', menta: '#6fd6c8', perla: '#e8e1f0',
   });
   const NAMES = Object.freeze({
-    rosa: 'Rosa', lilla: 'Lilla', cielo: 'Cielo', salvia: 'Salvia',
-    oro: 'Oro', pesca: 'Pesca', rubino: 'Rubino', perla: 'Perla',
+    rosa: 'Rosa', lilla: 'Lilla', blu: 'Blu', salvia: 'Salvia',
+    pesca: 'Pesca', prugna: 'Prugna', menta: 'Menta', perla: 'Perla',
   });
+  // Until the staging migration moves them, the retired names read as the nearest new one.
+  const RETIRED = Object.freeze({ cielo: 'blu', rubino: 'prugna', oro: 'pesca' });
+  const idOf = (value) => (PALETTE[value] ? value : RETIRED[value] || null);
   const TOKEN = Object.freeze({ francesco: 'rosa', beatrice: 'lilla' });
 
-  const chosen = (profile) => (PALETTE[profile?.person_color] ? profile.person_color : null);
+  const chosen = (profile) => idOf(profile?.person_color);
   const effective = (profile) => chosen(profile) || TOKEN[profile?.role] || null;
 
   function coupleColors(profiles) {
     const out = { rosa: null, lilla: null };
     for (const p of profiles || []) {
       const token = TOKEN[p?.role];
-      if (token && chosen(p)) out[token] = PALETTE[p.person_color];
+      if (token && chosen(p)) out[token] = PALETTE[chosen(p)];
     }
     return out;
   }
@@ -49,5 +55,5 @@
   }
   const nameOf = (profiles, id) => NAMES[effective((profiles || []).find((p) => p?.id === id))] || '';
 
-  return Object.freeze({ PALETTE, NAMES, coupleColors, applyCoupleColors, choices, nameOf });
+  return Object.freeze({ PALETTE, NAMES, RETIRED, idOf, coupleColors, applyCoupleColors, choices, nameOf });
 });

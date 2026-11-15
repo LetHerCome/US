@@ -25,7 +25,7 @@ em.dy-em,.dy-h1 em,.dy-sheet-title em{font-family:var(--us-font-editorial);font-
 .dy-btn-l{height:var(--us-btn-l);border-radius:var(--us-r-16)}
 .dy-btn-xl{height:var(--us-btn-xl);border-radius:var(--us-r-16);padding:0 26px;font-size:16px}
 .dy-btn-ghost{background:transparent;color:var(--us-ink-100);box-shadow:inset 0 0 0 1.5px var(--us-ink-12)}
-.dy-tag{display:inline-flex;align-items:center;gap:6px;height:var(--us-tag-m);padding:0 10px;border-radius:var(--us-r-8);font:700 12.5px/1 var(--us-font-ui);color:var(--us-ink-100);white-space:nowrap}
+.dy-tag{display:inline-flex;align-items:center;gap:6px;height:var(--us-tag-m);padding:0 10px;border-radius:var(--us-r-8);font:700 12.5px/1 var(--us-font-ui);color:var(--us-on);white-space:nowrap}
 .dy-tag-s{height:var(--us-tag-s);border-radius:6px;padding:0 8px;font-size:11.5px}
 .dy-tag-l{height:var(--us-tag-l);border-radius:var(--us-r-12);padding:0 14px;font-size:14px}
 .dy-card{background:var(--us-card);border-radius:var(--us-r-20);box-shadow:var(--us-card-shadow)}
@@ -337,3 +337,10 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 .dy-mood-copy b{font:800 14px/1.25 var(--us-font-ui)}
 .dy-mood-copy span{font:500 12.5px/1.35 var(--us-font-ui);color:var(--us-ink-60)}
 .dy-mood .dy-btn{flex:none}
+/* Text on pastel is always dark (--us-on); on beige it is the ink of the theme. */
+.dy-tag[style*="--us-beige"]{color:var(--us-ink-100)}
+.dy-chip[data-dy-who="me"][aria-pressed="true"],.dy-chip[data-dy-who="partner"][aria-pressed="true"],.dy-frase,.dy-plus{color:var(--us-on)}
+
+/* Text on pastel is always dark (--us-on); on beige it is the ink of the theme. */
+.dy-tag[style*="--us-beige"]{color:var(--us-ink-100)}
+.dy-chip[data-dy-who="me"][aria-pressed="true"],.dy-chip[data-dy-who="partner"][aria-pressed="true"],.dy-frase,.dy-plus{color:var(--us-on)}
