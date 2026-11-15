@@ -79,7 +79,7 @@ test('page labels: Ricordi and Gioca stay accessible without a visible top-left 
   const games = read('games.js');
   assert.match(games, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
   // Round 3 parity (062): Sfida di oggi leads the hub, then the mockup's week.
-  assert.match(games, /<span class="us-gv4-daily-pending-title">Sfida di oggi<\/span>/);
+  assert.match(games, /<span class="us-gv4-daily-pending-title">La domanda di oggi<\/span>/);
   assert.match(games, /<div class="us-gv2-week" id="usGv2Week" data-s role="list" aria-label="Questa settimana">/);
   assert.doesNotMatch(games, /rhythmStrip|us-gv2-head"/);
 });
@@ -292,7 +292,8 @@ const settingsIn = (chunk) => [...chunk.matchAll(/data-us-setting="([a-z-]+)"/g)
 
 test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the couple shares', () => {
   // US V3 — Personalizza Oggi was this phone's own choice in TU; since 29/10/2026 (founder) it lives in Sintonia only.
-  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'person-color', 'status-form', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status', 'report']);
+  // US Plus, in arrivo (13/11/2026): «Avvisatemi» is this account's own answer, so it sits in TU.
+  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'person-color', 'status-form', 'plus', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status', 'report']);
   assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'together-mode', 'story-archive', 'leave-couple']);
   assert.match(scope('voi'), /<article class="us-couple-id-card" id="usCoupleIdCard"/, 'the couple card is shared state');
   assert.match(scope('tu'), /<h3 id="usSettingsTuTitle">Tu<\/h3>/);
@@ -302,7 +303,7 @@ test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the cou
 test('Settings: every control exists exactly once and keeps its existing action', () => {
   const all = settingsIn(settingsPage);
   assert.equal(new Set(all).size, all.length, 'no duplicated control');
-  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'leave-couple', 'location', 'logout', 'maudit', 'notifications', 'optimize-ricordi', 'person-color', 'privacy', 'profile-photo', 'relationship-date', 'report', 'status-form', 'story-archive', 'sync-status', 'together-mode', 'widgets']);
+  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'leave-couple', 'location', 'logout', 'maudit', 'notifications', 'optimize-ricordi', 'person-color', 'plus', 'privacy', 'profile-photo', 'relationship-date', 'report', 'status-form', 'story-archive', 'sync-status', 'together-mode', 'widgets']);
   const settingsJs = read('settings.js');
   for (const name of all) assert.match(settingsJs, new RegExp(`if\\(name==='${name}'\\)`), `${name} is still handled`);
   for (const id of ['usRelationshipDateValue', 'usNotificationsValue', 'usDistanceUnitValue', 'usLocationState', 'usFeedbackValue', 'usSyncValue', 'usStoryArchiveValue', 'usSettingsBuild', 'usCoupleAvatars', 'usCoupleNames', 'usTogetherLine', 'usSettingsDeviceDot']) {
@@ -344,7 +345,7 @@ test('release: one BUILD_ID owns HTML, version marker and atomic shell cache', (
 
 test('no new dependencies', () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/haptics', '@capacitor/ios', '@capacitor/push-notifications', '@capawesome/capacitor-app-update', '@supabase/supabase-js', '@us/app-icon', '@us/app-lock', '@us/google-signin', '@us/photo-place', '@us/push-support', '@us/splash-theme', '@us/widget-bridge']); // Mappa dei Ricordi (29/10/2026): local photo-place plugin; Icone dell'app (29/10/2026, Premi Sintonia V2): local app-icon plugin; Aggiornamento dell'app (29/10/2026, founder): Play in-app updates plugin; Accesso con Google (25/10/2026): local Credential Manager plugin; M15: iOS platform; Native Security V1: local app-lock plugin; Native Notifications V1: official push plugin + local push-support; 18/10/2026: local splash-theme plugin (Android splash follows the app theme)
+  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/haptics', '@capacitor/ios', '@capacitor/push-notifications', '@capawesome/capacitor-app-update', '@supabase/supabase-js', '@us/app-icon', '@us/app-lock', '@us/apple-signin', '@us/google-signin', '@us/photo-place', '@us/push-support', '@us/splash-theme', '@us/widget-bridge']); // Accedi con Apple (05/11/2026, iOS Store V1): local apple-signin plugin, iOS only; Mappa dei Ricordi (29/10/2026): local photo-place plugin; Icone dell'app (29/10/2026, Premi Sintonia V2): local app-icon plugin; Aggiornamento dell'app (29/10/2026, founder): Play in-app updates plugin; Accesso con Google (25/10/2026): local Credential Manager plugin; M15: iOS platform; Native Security V1: local app-lock plugin; Native Notifications V1: official push plugin + local push-support; 18/10/2026: local splash-theme plugin (Android splash follows the app theme)
   assert.deepEqual(Object.keys(pkg.devDependencies).sort(), ['@capacitor/cli', '@electric-sql/pglite', 'esbuild']);
 });
 
@@ -383,7 +384,7 @@ test('Oggi density: arbitration stays authoritative; the dock holds one evidence
   // Parity 2026-10 (mockup .og-bottom / .dq): a 12px column; the card is ring + kicker,
   // the question across, then the status line and the button; short screens keep it smaller (03/11/2026).
   assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?display:grid;\s*gap:12px;/);
-  assert.match(dcOggi, /#home #usDailyRitual\{[\s\S]*?grid-template-columns:auto minmax\(0,1fr\);[\s\S]*?padding:16px;[\s\S]*?border-radius:26px;/);
+  assert.match(dcOggi, /#home #usDailyRitual\{[\s\S]*?grid-template-columns:auto minmax\(0,1fr\);[\s\S]*?padding:13px 14px 13px 16px;[\s\S]*?border-radius:22px;/);
   assert.match(dcOggi, /#home #usDailyRitual \.dq-foot\{grid-column:1\/-1;display:flex;/);
   assert.match(dcOggi, /@media\(max-height:600px\)\{\n  #home #usDailyRitual \.us-daily-ritual-question\{font-size:15px\}/);
   const app = read('app.js');
@@ -468,7 +469,7 @@ test('Auth first-run: private entry is compact, device-aware and keeps backend o
   assert.match(auth, /id="usAuthInstall"/);
   assert.doesNotMatch(auth, /authPair|pairBtn|pairCode|Magic Link/);
   assert.match(app, /showAuthStep\('authLogin'\)/);
-  assert.match(app, /Accedi con email e password per entrare in US\./);
+  assert.match(app, /Accedi per entrare in US\./);
   assert.match(app, /passwordEnter\.addEventListener\('keydown'/);
 
   assert.match(app, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);

@@ -37,7 +37,7 @@
   const cleanEmail = value => typeof value === 'string' ? value.trim().toLowerCase() : '';
   const passwordValid = value => typeof value === 'string'
     && value.length >= PASSWORD_MIN && value.length <= PASSWORD_MAX && !/^\s|\s$/.test(value);
-  const GENERIC_MAIL = 'Se l’indirizzo può ricevere il messaggio, troverai le istruzioni nella tua email.';
+  const GENERIC_MAIL = 'Se l’indirizzo ha un account, troverai le istruzioni nella tua email.';
   const TRY_AGAIN = 'Operazione non disponibile adesso. Attendi qualche minuto e riprova.';
   function isStagingEndpoint(url) {
     if (!STAGING_ORIGIN) return false;
@@ -101,7 +101,7 @@
             // A signup that immediately produces a session means email confirmation
             // is OFF server-side. Never treat that as a verified S3.1 signup.
             await auth.signOut({ scope: 'local' });
-            if (alive(ticket)) publish('Verifica email non attiva. Registrazione sospesa.', 'error');
+            if (alive(ticket)) publish('Registrazione non disponibile adesso. Riprova più tardi.', 'error');
             return { ok: false, kind: 'confirmation_required' };
           }
           if (error && !/user[_-]?already[_-]?(?:exists|registered)|email[_-]?exists|already[_-]?registered/i.test(String(error.code || ''))) {

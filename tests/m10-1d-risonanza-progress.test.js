@@ -74,8 +74,8 @@ test('M10.1D: the rendered bar, labels and progressbar semantics all come from t
   assert.equal(els.noiHubResonanceFill.style.width, '12%', 'hub and Risonanza never disagree');
   assert.equal(els.bondResonanceLevel.textContent, 'Livello 3');
   // Round 3 (mockup parity): under the bar, the points inside the level and the points to the next one.
-  assert.equal(els.bondLevelXp.textContent, '60 / 500 XP');
-  assert.equal(els.bondNextXp.textContent, '440 XP al livello 4');
+  assert.equal(els.bondLevelXp.textContent, '60 / 500 punti');
+  assert.equal(els.bondNextXp.textContent, '440 punti al livello 4');
   assert.deepEqual(['aria-valuenow', 'aria-valuemax', 'aria-valuetext'].map((a) => els.bondProgressTrack.getAttribute(a)), ['60', '500', '60 di 500 punti nel livello 3']);
   assert.equal(els.noiResonanceTotal.textContent, '610');
   // XP grows → the bar advances; crossing the threshold → new level range.
@@ -83,11 +83,11 @@ test('M10.1D: the rendered bar, labels and progressbar semantics all come from t
   assert.equal(els.bondPageFill.style.width, `${(800 - 550) / 500 * 100}%`);
   assert.ok(parseFloat(els.bondPageFill.style.width) > 12);
   window.render(1049);
-  assert.equal(els.bondNextXp.textContent, '1 XP al livello 4');
+  assert.equal(els.bondNextXp.textContent, '1 punto al livello 4');
   window.render(1050);
   assert.equal(els.bondResonanceLevel.textContent, 'Livello 4');
   assert.equal(els.bondPageFill.style.width, '0%');
-  assert.equal(els.bondNextXp.textContent, '650 XP al livello 5');
+  assert.equal(els.bondNextXp.textContent, '650 punti al livello 5');
   assert.equal(els.bondProgressTrack.getAttribute('aria-valuemax'), '650');
   assert.equal(window.usBondXp, 1050);
 });

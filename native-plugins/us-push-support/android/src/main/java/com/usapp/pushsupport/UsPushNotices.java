@@ -64,20 +64,20 @@ public final class UsPushNotices {
                 return notice(en, "US. · Ti penso", "US. · Thinking of you",
                     who + " ha risposto al tuo Ti penso ♡", who + " answered your thought ♡", "oggi");
             case "daily_turn":
-                return notice(en, "US. · Domanda di oggi", "US. · Today's question",
+                return notice(en, "US. · La domanda di oggi", "US. · Question of the day",
                     who + " ha risposto. Ora tocca a te.", who + " answered. Your turn now.", "oggi");
             case "daily_ready":
-                return notice(en, "US. · Domanda di oggi", "US. · Today's question",
+                return notice(en, "US. · La domanda di oggi", "US. · Question of the day",
                     "Le vostre risposte sono pronte ♡", "Your answers are ready ♡", "oggi");
             case "daily_reaction":
-                return notice(en, "US. · Domanda di oggi", "US. · Today's question",
+                return notice(en, "US. · La domanda di oggi", "US. · Question of the day",
                     who + " ha reagito alla tua risposta", who + " reacted to your answer", "oggi");
             case "daily_new":
-                return notice(en, "US. · Domanda di oggi", "US. · Today's question",
-                    "C'è una nuova domanda per voi.", "There is a new question for you two.", "oggi");
+                return notice(en, "US. · La domanda di oggi", "US. · Question of the day",
+                    "C’è una nuova domanda per voi.", "There is a new question for you two.", "oggi");
             case "quest":
                 return notice(en, "US. · Missioni", "US. · Missions",
-                    who + " ha completato una missione. Ora tocca a te", who + " completed a mission. Your turn now", "noi");
+                    who + " ha fatto una missione. Ora tocca a te", who + " did a mission. Your turn now", "noi");
             case "left_for_you":
                 return notice(en, "US.", "US.",
                     who + " ti ha lasciato qualcosa ♡", who + " left something for you ♡", "oggi");
@@ -98,19 +98,19 @@ public final class UsPushNotices {
                     "Hai un promemoria in calendario", "You have a calendar reminder", "noi");
             case "anniversary":
                 return notice(en, "US.", "US.",
-                    "Oggi è un giorno speciale per voi ♡", "Today is a special day for you two ♡", "oggi");
+                    "Oggi avete qualcosa da festeggiare ♡", "Today you have something to celebrate ♡", "oggi");
             case "partner_joined":
                 return notice(en, "US.", "US.",
-                    who + " ha accettato l'invito: il vostro spazio è pronto", who + " joined: your space is ready", "oggi");
+                    who + " ha accettato l’invito: il vostro spazio è pronto", who + " joined: your space is ready", "oggi");
             case "lavagna":
                 return notice(en, "US. · Lavagna", "US. · Board",
                     who + " ha disegnato sulla lavagna", who + " drew on the board", "noi");
             case "challenge":
                 return notice(en, "US. · La sfida della settimana", "US. · This week's challenge",
-                    "C'è una nuova sfida per voi ♡", "There is a new challenge for you two ♡", "gioca");
+                    "C’è una nuova sfida per voi ♡", "There is a new challenge for you two ♡", "gioca");
             case "challenge_reminder":
                 return notice(en, "US. · La sfida della settimana", "US. · This week's challenge",
-                    "Domani è l'ultimo giorno per la sfida ♡", "Tomorrow is the last day for the challenge ♡", "gioca");
+                    "Domani è l’ultimo giorno per la sfida ♡", "Tomorrow is the last day for the challenge ♡", "gioca");
             case "challenge_photo":
                 return notice(en, "US. · La sfida della settimana", "US. · This week's challenge",
                     who + " ha messo la sua foto: manca solo la tua", who + " added their photo: only yours is missing", "gioca");

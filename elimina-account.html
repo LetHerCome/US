@@ -66,7 +66,7 @@ fieldset:disabled{opacity:.6}
     <h2 id="formTitle">Accedi ed elimina</h2>
     <p>L’eliminazione è <b>definitiva</b>: dopo la conferma non si può annullare. Parte subito e la rimozione completa di dati e file si conclude entro 30 giorni.</p>
     <p class="notice" id="hostNotice" role="alert" hidden>Configurazione non disponibile su questo dominio. Usa l’app US oppure scrivi a <span data-us-support-email>—</span>.</p>
-    <p class="small">Accedi a US con Google? Elimina l’account dall’app (Impostazioni › Privacy e dati › Elimina account), dove confermi con Google, oppure scrivi a <span data-us-support-email>—</span> dall’indirizzo del tuo account Google.</p>
+    <p class="small">Accedi a US con Google o con Apple? Elimina l’account dall’app (Impostazioni › Privacy e dati › Elimina account), dove confermi con Google o con Apple, oppure scrivi a <span data-us-support-email>—</span> dall’indirizzo del tuo account.</p>
     <form id="deleteForm" novalidate>
       <fieldset id="deleteFieldset" disabled>
         <label for="deleteEmail">Email del tuo account</label>
@@ -85,26 +85,27 @@ fieldset:disabled{opacity:.6}
     <h2 id="deletedTitle">Cosa viene eliminato</h2>
     <ul>
       <li>Il tuo account, il profilo e la foto profilo.</li>
-      <li>I tuoi dati personali: risposte quotidiane, umore, risposte ai giochi, posizione, preferenze di notifica.</li>
+      <li>I tuoi dati personali: risposte alla domanda di oggi, “Come stai”, posizione, batteria, preferenze di notifica.</li>
       <li>I dispositivi collegati e i token di notifica e dei widget.</li>
-      <li>Le tue Stories e i tuoi impegni personali nel calendario.</li>
-      <li>I “Lasciato per te” che la tua persona non ha conservato e i messaggi programmati non ancora consegnati.</li>
+      <li>Le tue Stories, i tuoi impegni personali e i promemoria del calendario.</li>
+      <li>I “Lasciato per te” che hai mandato e che la tua persona non ha conservato, e i messaggi programmati non ancora consegnati.</li>
+      <li>Gli errori tecnici dell’app legati al tuo account e l’iscrizione ad “Avvisatemi” di US Plus.</li>
       <li>Se sei l’ultima persona rimasta nella coppia: tutto lo spazio di coppia, foto comprese.</li>
     </ul>
   </section>
 
   <section aria-labelledby="keptTitle">
     <h2 id="keptTitle">Cosa resta alla tua persona</h2>
-    <p>I ricordi condivisi che hai creato restano alla tua persona, <b>senza il tuo nome</b>: Momenti e relative foto, messaggi già consegnati, impegni ed eventi condivisi, desideri, ricordi delle risposte create insieme e ciò che ha scelto di conservare.</p>
-    <p>La tua persona non riceve una notifica. Lo spazio di coppia viene chiuso: nessun altro potrà entrarci. La tua persona conserva l’archivio dei ricordi condivisi.</p>
+    <p>Quello che avete condiviso resta alla tua persona, <b>senza il tuo nome</b>: i Ricordi e le loro foto (comprese quelle della sfida della settimana), le domande conservate nei Ricordi con le risposte di entrambi, i Ti penso e gli altri messaggi già consegnati, gli impegni condivisi e gli Eventi, le vostre idee, i post-it, i disegni sulla lavagna, le partite dei giochi, i “Lasciato per te” che la tua persona ha conservato e i progressi della Sintonia.</p>
+    <p>La tua persona non riceve notifiche, continua a usare l’app e conserva i ricordi condivisi. Nello spazio di coppia non potrà entrare nessun altro.</p>
   </section>
 
   <section aria-labelledby="retentionTitle">
     <h2 id="retentionTitle">Tempi e conservazione</h2>
     <ul>
       <li>L’account viene eliminato subito dopo la conferma; la rimozione completa dei dati e dei file si conclude entro 30 giorni.</li>
-      <li>Conserviamo per 12 mesi solo una ricevuta minima dell’eliminazione: identificativo dell’account, date, canale della richiesta (app o web) ed esito. Non contiene i tuoi contenuti.</li>
-      <li>Con il piano attuale US non usa copie di backup dei dati. Se questo cambierà, aggiorneremo questa pagina.</li>
+      <li>Conserviamo per 12 mesi solo una ricevuta minima dell’eliminazione: identificativo dell’account e della coppia, date, canale della richiesta (app, web o email) ed esito. Non contiene i tuoi contenuti.</li>
+      <li>Il database viene copiato ogni giorno in un backup gestito da Supabase: un dato eliminato può restarci al massimo 7 giorni, senza essere usato.</li>
     </ul>
   </section>
 

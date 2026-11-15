@@ -38,10 +38,12 @@ test('wired: after sign-in on a phone that knew US, the list of what is new', ()
   const body = app.slice(app.indexOf('const US_WHATS_NEW='), app.indexOf('function usShowWhatsNew(') + 600);
   assert.match(body, /releaseNotesDue\?\.\(US_WHATS_NEW\.id,\{returning\}\)/);
   assert.match(body, /notice\?\.\(\{kicker:'Novità',title:US_WHATS_NEW\.title,items:US_WHATS_NEW\.items,confirmLabel:'Ho capito',icon:'sparkle'\}\)/);
-  // 1.4 (04/11/2026): Noi nuova, bacheca, sfida, Come stai, batteria, album, Atmosfere, widget.
-  assert.match(body, /id:'1.4'/);
-  for (const item of ['calendario', 'post-it', 'lavagna', 'sfida della settimana', 'Come stai', 'batteria', 'album', 'Vino', 'Widget']) assert.match(body, new RegExp(item), item);
+  // 1.5.1 (14/11/2026): La cosa di oggi, revisione dei testi, promemoria e gattino.
+  assert.match(body, /id:'1.5.1'/);
+  for (const item of ['giorni di fila', 'testi', 'promemoria', 'gattino']) assert.match(body, new RegExp(item), item);
   const en = read('i18n-en.js');
+  function en_has(s) { return en.includes("'" + s + "':"); }
   assert.ok(en.includes("'Ho capito'") || en.includes('"Ho capito"'));
   assert.ok(en.includes("'Novità'"));
+  for (const item of body.match(/^    '[^']+'/gm)) assert.ok(en_has(item.trim().slice(1, -1)), item);
 });

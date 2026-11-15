@@ -1,4 +1,4 @@
-const BUILD_ID = "us-staging-20261109-106";
+const BUILD_ID = "us-rilascio-20261114-109";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -54,6 +54,7 @@ const APP_SHELL = [
   versioned("/partner-battery.js"),
   versioned("/member-status.js"),
   versioned("/weekly-challenge.js"),
+  versioned("/cosa-di-oggi.js"),
   versioned("/navigation.js"),
   versioned("/games.css"),
   versioned("/games.js"),

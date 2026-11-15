@@ -55,8 +55,8 @@ test('M10C: nuova domanda del giorno → entrambi i membri ricevono UNA push di 
   assert.deepEqual(webpush.sent.map((s) => s.endpoint).sort(), ['https://push.example/s-bea', 'https://push.example/s-fra']);
   for (const { payload, options } of webpush.sent) {
     assert.deepEqual(payload, {
-      title: 'US. · Domanda del giorno',
-      body: "C'è una nuova domanda per voi.",
+      title: 'US. · La domanda di oggi',
+      body: 'C’è una nuova domanda per voi.',
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       tag: `daily-question-${Q1.id}`,
@@ -238,7 +238,7 @@ test('M10C worker: con la chiave cron consegna; il body non può scegliere doman
   const response = await withClock('2026-10-05T08:00:00Z', () => worker.call(post({ 'x-us-cron-key': 'cron-key-ok' }, forged)));
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, { ok: true, day: '2026-10-05', reason: null, delivered: 2, outcomes: { delivered: 2 } });
-  assert.ok(webpush.sent.every((s) => s.payload.tag === `daily-question-${Q1.id}` && s.payload.title === 'US. · Domanda del giorno'));
+  assert.ok(webpush.sent.every((s) => s.payload.tag === `daily-question-${Q1.id}` && s.payload.title === 'US. · La domanda di oggi'));
   assert.equal(webpush.vapid.length, 1);
   assert.doesNotMatch(JSON.stringify(response.body), /Quale momento|push\.example/);
   const again = await withClock('2026-10-05T08:10:00Z', () => worker.call(post({ 'x-us-cron-key': 'cron-key-ok' })));

@@ -2,7 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyLists-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Native Notifications V1: APNs. The App Store export re-signs it as production. -->
 	<key>aps-environment</key>
 	<string>development</string>
+	<!-- iOS Store V1 (05/11/2026): Universal Links for the shared invite
+	     https://www.uscouple.app/invito#CODE, vouched for by the site's
+	     /.well-known/apple-app-site-association (scripts/write-apple-app-site-association.mjs). -->
+	<!-- Accedi con Apple (us-apple-signin): App Store rule 4.8, next to Google. -->
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:www.uscouple.app</string>
+	</array>
 </dict>
 </plist>

@@ -199,7 +199,7 @@ test('Impostazioni › Notifiche: the challenge\'s switch, «Come vi vedete» sp
   assert.match(settings, /key==='bond'\?'Il lunedì la nuova, il sabato un promemoria'/);
   const index = read('index.html');
   assert.match(index, /Ci serve solo per scegliere la sfida giusta per voi\./);
-  assert.match(index, /<small>Sceglie la sfida della settimana<\/small>/);
+  assert.match(index, /<small>Serve per la sfida della settimana<\/small>/);
   const en = require('../i18n-en.js');
   const dict = en.EN || en;
   for (const key of ['LA SFIDA DELLA SETTIMANA', '{n} punti', 'Scade domenica alle 23:59 · mancano {n} giorni', 'Scade domenica alle 23:59 · manca 1 giorno', 'Scade stasera alle 23:59', 'Chiudi con una foto', 'Cambia · {n}',
@@ -208,7 +208,7 @@ test('Impostazioni › Notifiche: the challenge\'s switch, «Come vi vedete» sp
     'Con tutte e due le foto: 60 punti. Se a domenica ce n’è una sola, la sfida si chiude lo stesso con 30.', 'Sfida · scade domenica', 'Mancano {n} giorni · {m} punti', 'Manca 1 giorno · {n} punti', 'Scade stasera · {n} punti',
     '{name} ha messo la sua foto', 'Manca solo la tua · {n} punti', 'La sfida della settimana', 'Il lunedì la nuova, il sabato un promemoria', 'Cambiare la sfida?',
     'Sfida fatta: +{n} punti a tutti e due ♡', 'La settimana è finita: la foto resta nei Ricordi', 'Con una foto già messa la sfida non si cambia',
-    'Ci serve solo per scegliere la sfida giusta per voi.', 'Sceglie la sfida della settimana']) {
+    'Ci serve solo per scegliere la sfida giusta per voi.', 'Serve per la sfida della settimana']) {
     assert.ok(Object.prototype.hasOwnProperty.call(dict, key), `i18n-en: ${key}`);
   }
 });

@@ -26,7 +26,7 @@ function title(r){
 function thinkLine(t,names,me){
   const f=num(t?.francesco),b=num(t?.beatrice);
   if(!f&&!b)return '';
-  if(f===b)return 'Pari: vi siete pensati tanto quanto';
+  if(f===b)return 'Pari: lo stesso numero di Ti penso';
   const more=f>b?'francesco':'beatrice';
   return more===me?'Hai pensato tu un po’ di più':`${names?.[more]||'La tua persona'} ti ha pensato un po’ di più`;
 }
@@ -39,7 +39,7 @@ function cards(r){
   if(num(r.think?.total))out.push({kind:'think'});
   if(num(r.daily?.answered_together)||num(r.daily?.kept))out.push({kind:'daily'});
   const together=[['games','completed','partita finita','partite finite'],['missions','completed','missione insieme','missioni insieme'],
-    ['events','lived','evento vissuto','eventi vissuti'],['left_for_you','count','cosa lasciata per te','cose lasciate per voi']]
+    ['events','lived','evento vissuto','eventi vissuti'],['left_for_you','count','cosa lasciata','cose lasciate']]
     .map(([k,f,one,many])=>({n:num(r[k]?.[f]),one,many})).filter(x=>x.n);
   if(together.length)out.push({kind:'together',items:together});
   out.push({kind:'outro',photo:m.last||m.first});
@@ -94,7 +94,7 @@ function renderCard(c,ctx={}){
   }else if(c.kind==='together'){
     body=`<span class="us-recap-kicker">Insieme</span><ul class="us-recap-grid">${c.items.map(x=>`<li><b>${esc(x.n)}</b><span>${esc(x.n===1?x.one:x.many)}</span></li>`).join('')}</ul>`;
   }else if(c.kind==='outro'){
-    body=`<h2 class="us-recap-title">Il prossimo anno comincia oggi</h2><span class="us-recap-sub">Grazie per tutto quello che vi siete dati.</span><button type="button" class="primary us-recap-done" data-recap-close>Chiudi</button>`;
+    body=`<h2 class="us-recap-title">Per ora è tutto</h2><button type="button" class="primary us-recap-done" data-recap-close>Chiudi</button>`;
   }
   return `<article class="us-recap-card is-${esc(c.kind)}${bg?' has-photo':''}" data-recap-card="${esc(c.kind)}">${media}<div class="us-recap-copy">${body}</div></article>`;
 }

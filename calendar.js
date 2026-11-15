@@ -409,14 +409,6 @@ function reminderRowsFor({ entryType, target, requesterId, partnerId, offsetMinu
     offset_minutes: offsetMinutes
   }));
 }
-// Copia della notifica: self → "Tra un'ora — Titolo"; partner →
-// "Francesco ti ricorda — Cena alle 20:30 ♡" (display name reale dal profilo).
-function reminderCopy({ selfRecipient, requesterName, title, startsAt, allDay }) {
-  if (selfRecipient) return '— ' + title;
-  const hhmm = startsAt ? new Date(startsAt) : null;
-  const when = allDay || !hhmm ? '' : ' alle ' + pad2(hhmm.getHours()) + ':' + pad2(hhmm.getMinutes());
-  return requesterName + ' ti ricorda — ' + title + when + ' ♡';
-}
 
 function buildEntryPayload({ title, description, location, allDay, date, time, durationMinutes, spanDays }) {
   if (allDay) {
@@ -552,8 +544,8 @@ function composeOggiCalendarFact({ dayStartISO, dayEndISO, personA, personB, fre
     return {
       type: 'free-all-day',
       title: 'Oggi',
-      detail: 'Liberi insieme · Nessun impegno per oggi.',
-      rows: [{ kind: 'together', label: 'Insieme', value: 'Liberi tutto il giorno' }],
+      detail: 'Giornata libera · Nessun impegno per oggi.',
+      rows: [{ kind: 'together', label: 'Insieme', value: 'Tutto il giorno' }],
       dateISO: dayStartISO
     };
   }
@@ -581,7 +573,7 @@ function composeOggiCalendarFact({ dayStartISO, dayEndISO, personA, personB, fre
   return {
     type: 'events',
     title: 'Oggi',
-    detail: `${eventsDetail} — Liberi insieme ${windowLabel}`,
+    detail: `${eventsDetail} — Insieme ${windowLabel}`,
     rows: [...personRows, { kind: 'together', label: 'Insieme', value: windowLabel }],
     dateISO: dayStartISO
   };
@@ -635,7 +627,7 @@ const pureApi = {
   formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
   shiftISODate, originalAllDaySpanDays,
   monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, US_FREE_EVENING, freeEveningFor, tempoWindowLabel,
-  normalizeQuickTime, maskClockTyping, addCalendarPreset, removeCalendarPreset, CALENDAR_BUILTIN_PRESETS, addClockMinutes, durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor, reminderCopy,
+  normalizeQuickTime, maskClockTyping, addCalendarPreset, removeCalendarPreset, CALENDAR_BUILTIN_PRESETS, addClockMinutes, durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor,
   buildEntryPayload, withCreateAuthority, canEditEntry,
   quickEntryError, quickEntryHiddenFields, classifyMutationResult,
   oggiEventLabel, composeOggiCalendarFact, oggiRemainingWindows, oggiNextCommitment,
@@ -974,7 +966,7 @@ async function deleteEntry() {
     // M7C — un evento che spiega ancora un'esperienza Da vivere è protetto
     // dalla FK (ON DELETE RESTRICT -> 23001; 23503 se la FK fosse NO ACTION):
     // lo diciamo, invece di un errore generico.
-    if (outcome === 'error' && (error?.code === '23001' || error?.code === '23503')) { toast('È collegato a una vostra idea: resta nel calendario.'); return; }
+    if (outcome === 'error' && (error?.code === '23001' || error?.code === '23503')) { toast('Non si può eliminare: è collegato a una vostra idea.'); return; }
     if (outcome === 'error') throw error;
     if (outcome === 'not_authorized') throw new Error('delete matched 0 rows');
     entries = entries.filter((e) => e.id !== detailEntry.id);
@@ -1196,7 +1188,7 @@ async function saveEntry(event) {
   const endTime = allDay ? '' : normalizeTimeField('usCalendarEndTimeInput');
   const timeError = quickEntryError({ allDay, startTime, endTime });
   if (timeError) {
-    setFormStatus(timeError === 'start' ? 'Inserisci l\'ora di inizio.' : timeError === 'end' ? 'Inserisci l\'ora di fine.' : 'Inizio e fine non possono coincidere.');
+    setFormStatus(timeError === 'start' ? 'Inserisci l’ora di inizio.' : timeError === 'end' ? 'Inserisci l’ora di fine.' : 'Inizio e fine non possono coincidere.');
     return;
   }
   const hidden = quickEntryHiddenFields({

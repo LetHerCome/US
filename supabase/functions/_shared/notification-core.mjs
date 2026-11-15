@@ -51,7 +51,7 @@ const THINK_REACTION_COPY = Object.freeze({
 });
 const DAILY_REACTION_COPY = Object.freeze({
   heart: (n, en) => pick(en, `${n} ha messo ♥ alla tua risposta`, `${n} left a ♥ on your answer`),
-  cry: (n, en) => pick(en, `${n}: mi hai commosso`, `${n}: you moved me`),
+  cry: (n, en) => pick(en, `${n}: mi hai fatto commuovere`, `${n}: you moved me`),
 });
 function relationshipCopy(a, en) {
   const months = Number(a.months);
@@ -59,7 +59,7 @@ function relationshipCopy(a, en) {
     const years = Math.round(months / 12);
     return {
       title: pick(en, 'US. · Anniversario ♡', 'US. · Anniversary ♡'),
-      body: years === 1 ? pick(en, 'Oggi è un anno insieme', 'One year together today') : pick(en, `Oggi sono ${years} anni insieme`, `${years} years together today`),
+      body: years === 1 ? pick(en, 'Oggi fate un anno insieme', 'One year together today') : pick(en, `Oggi fate ${years} anni insieme`, `${years} years together today`),
     };
   }
   // Every 100 days together (29/10/2026); 1000 has its own name.
@@ -67,13 +67,13 @@ function relationshipCopy(a, en) {
     const days = Number(a.days);
     return {
       title: days === 1000 ? pick(en, 'US. · Mille giorni ♡', 'US. · A thousand days ♡') : pick(en, `US. · ${days} giorni ♡`, `US. · ${days} days ♡`),
-      body: pick(en, `Oggi sono ${days} giorni insieme`, `${days} days together today`),
+      body: pick(en, `Oggi fate ${days} giorni insieme`, `${days} days together today`),
     };
   }
   if (a.kind === 'monthiversary') {
     return {
       title: pick(en, 'US. · Mesiversario ♡', 'US. · Monthiversary ♡'),
-      body: months === 1 ? pick(en, 'Oggi è un mese insieme', 'One month together today') : pick(en, `Oggi sono ${months} mesi insieme`, `${months} months together today`),
+      body: months === 1 ? pick(en, 'Oggi fate un mese insieme', 'One month together today') : pick(en, `Oggi fate ${months} mesi insieme`, `${months} months together today`),
     };
   }
   return { title: a.title, body: a.body };
@@ -91,19 +91,19 @@ const CATALOGUE = Object.freeze({
   daily_answer: (a, en) => ({ title: DAILY_TITLE(en), body: pick(en, `${name(a.senderName)} ha risposto. Ora tocca a te.`, `${name(a.senderName, true)} answered. Your turn now.`), target: 'today', ref: a.questionId, tag: `daily-answer-${a.questionId}`, channel: 'partner', urgency: 'normal' }),
   daily_reveal: (a, en) => ({ title: DAILY_TITLE(en), body: pick(en, 'Le vostre risposte sono pronte ♡', 'Your answers are ready ♡'), target: 'today', ref: a.questionId, tag: `daily-reveal-${a.questionId}`, channel: 'partner', urgency: 'normal' }),
   // O2: the partner reacted to MY answer of the Question of the day.
-  daily_reaction: (a, en) => ({ title: pick(en, 'US. · Domanda del giorno', 'US. · Question of the day'), body: own(DAILY_REACTION_COPY, a.reaction)?.(name(a.senderName, en), en) || pick(en, `${name(a.senderName)} ha reagito alla tua risposta`, `${name(a.senderName, true)} reacted to your answer`), target: 'today', ref: a.questionId, tag: `daily-reaction-${a.questionId}`, channel: 'partner', urgency: 'normal' }),
+  daily_reaction: (a, en) => ({ title: DAILY_TITLE(en), body: own(DAILY_REACTION_COPY, a.reaction)?.(name(a.senderName, en), en) || pick(en, `${name(a.senderName)} ha reagito alla tua risposta`, `${name(a.senderName, true)} reacted to your answer`), target: 'today', ref: a.questionId, tag: `daily-reaction-${a.questionId}`, channel: 'partner', urgency: 'normal' }),
   // O3: one evening reminder when the partner already answered and you did not.
-  daily_evening: (a, en) => ({ title: DAILY_TITLE(en), body: pick(en, `${name(a.senderName)} ha già risposto alla domanda di oggi. Tocca a te ♡`, `${name(a.senderName, true)} already answered today's question. Your turn ♡`), target: 'today', ref: a.questionId, tag: `daily-evening-${a.questionId}`, channel: 'reminders', urgency: 'normal' }),
-  daily_question: (a, en) => ({ title: pick(en, 'US. · Domanda del giorno', 'US. · Question of the day'), body: pick(en, "C'è una nuova domanda per voi.", 'There is a new question for you two.'), target: 'today', ref: a.questionId, tag: `daily-question-${a.questionId}`, channel: 'reminders', urgency: 'normal' }),
+  daily_evening: (a, en) => ({ title: DAILY_TITLE(en), body: pick(en, `${name(a.senderName)} ha già risposto. Tocca a te ♡`, `${name(a.senderName, true)} already answered. Your turn ♡`), target: 'today', ref: a.questionId, tag: `daily-evening-${a.questionId}`, channel: 'reminders', urgency: 'normal' }),
+  daily_question: (a, en) => ({ title: DAILY_TITLE(en), body: pick(en, 'C’è una nuova domanda per voi.', 'There is a new question for you two.'), target: 'today', ref: a.questionId, tag: `daily-question-${a.questionId}`, channel: 'reminders', urgency: 'normal' }),
   // N5: "Bea ha fatto «titolo». Ora tocca a te", opens Missioni (target bond).
   quest_confirmed: (a, en) => ({ title: pick(en, 'US. · Missioni', 'US. · Missions'), body: a.questTitle ? pick(en, `${name(a.senderName)} ha fatto «${a.questTitle}». Ora tocca a te`, `${name(a.senderName, true)} did “${a.questTitle}”. Your turn now`) : pick(en, `${name(a.senderName)} ha fatto una missione. Ora tocca a te`, `${name(a.senderName, true)} did a mission. Your turn now`), target: 'bond', ref: a.questId, tag: `quest-${a.questId}`, channel: 'partner', urgency: 'normal' }),
   left_for_you: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} ti ha lasciato qualcosa ♡`, `${name(a.senderName, true)} left something for you ♡`), target: 'left_for_you', ref: a.itemId, tag: `left-for-you:${a.itemId}`, channel: 'partner', urgency: 'high' }),
-  // G11: game pushes name the game ("Bea ha finito Ridete: tocca a te").
-  game_waiting: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: a.gameName ? pick(en, `${name(a.senderName)} ha finito ${a.gameName}: tocca a te`, `${name(a.senderName, true)} finished ${a.gameName}: your turn`) : pick(en, `${name(a.senderName)} ha giocato: tocca a te`, `${name(a.senderName, true)} played: your turn`), target: 'quiz', ref: a.sessionId, tag: a.tag, channel: 'partner', urgency: 'normal' }),
-  game_reveal: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: a.gameName ? pick(en, `${a.gameName}: le vostre risposte sono pronte ♡`, `${a.gameName}: your answers are ready ♡`) : pick(en, 'Le vostre risposte sono pronte ♡', 'Your answers are ready ♡'), target: 'quiz', ref: a.sessionId, tag: a.tag, channel: 'partner', urgency: 'normal' }),
+  // G11: game pushes name the game ("Bea ha giocato a «Ridete»: tocca a te").
+  game_waiting: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: a.gameName ? pick(en, `${name(a.senderName)} ha giocato a «${a.gameName}»: tocca a te`, `${name(a.senderName, true)} played “${a.gameName}”: your turn`) : pick(en, `${name(a.senderName)} ha giocato: tocca a te`, `${name(a.senderName, true)} played: your turn`), target: 'quiz', ref: a.sessionId, tag: a.tag, channel: 'partner', urgency: 'normal' }),
+  game_reveal: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: a.gameName ? pick(en, `Risposte pronte per «${a.gameName}» ♡`, `Answers ready for “${a.gameName}” ♡`) : pick(en, 'Le vostre risposte sono pronte ♡', 'Your answers are ready ♡'), target: 'quiz', ref: a.sessionId, tag: a.tag, channel: 'partner', urgency: 'normal' }),
   game_weekly_created: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: pick(en, `${name(a.senderName)} ha lasciato la domanda della settimana ♡`, `${name(a.senderName, true)} left this week's question ♡`), target: 'quiz', tag: a.tag, channel: 'partner', urgency: 'normal' }),
-  game_weekly_turn: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: pick(en, 'Questa settimana la domanda per voi la scegli tu.', 'This week you choose the question for you two.'), target: 'quiz', tag: a.tag, channel: 'reminders', urgency: 'normal' }),
-  calendar_reminder: (a) => ({ title: 'US. · Calendar', body: a.body, target: 'calendar', ref: a.entryId, tag: `calendar-reminder-${a.reminderId}`, channel: 'reminders', urgency: 'high' }),
+  game_weekly_turn: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: pick(en, 'Questa settimana la domanda la scegli tu.', 'This week you choose the question.'), target: 'quiz', tag: a.tag, channel: 'reminders', urgency: 'normal' }),
+  calendar_reminder: (a, en) => ({ title: pick(en, 'US. · Calendario', 'US. · Calendar'), body: a.body, target: 'calendar', ref: a.entryId, tag: `calendar-reminder-${a.reminderId}`, channel: 'reminders', urgency: 'high' }),
   // A11/N7: mesiversario / anniversario, no points in the text, opens Eventi.
   relationship: (a, en) => ({ ...relationshipCopy(a, en), target: a.kind ? 'events' : 'home', tag: a.tag, channel: 'reminders', urgency: 'normal', ttl: 60 * 60 * 24 }),
   // Lavagna V1: the partner drew; one tag, so a newer line replaces the older.

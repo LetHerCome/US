@@ -80,7 +80,8 @@ test('the catalog: curated challenges with short titles in both languages, one p
   const far = rows.filter((r) => r.two_places), near = rows.filter((r) => !r.two_places && ['near', 'any'].includes(r.mode)), any = rows.filter((r) => !r.two_places && r.mode === 'any');
   assert.ok(far.length >= 10, `far pool ${far.length}`);
   assert.ok(near.length >= 16, `near pool ${near.length}`);
-  assert.ok(any.length >= 8, `any pool ${any.length}`);
+  // The hug, the hidden message and the perfect day need to be together: near only since the text review of 14/11.
+  assert.ok(any.length >= 7, `any pool ${any.length}`);
   // The founder's example, from the approved board SfidaDistanza.
   const sky = rows.find((r) => r.key === 'far-same-sky');
   assert.ok(sky && sky.two_places && /cielo/.test(sky.title) && sky.short_title === 'Lo stesso cielo');

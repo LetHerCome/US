@@ -47,6 +47,7 @@ const RUNTIME_FILES = [
   'partner-battery.js',
   'member-status.js',
   'weekly-challenge.js',
+  'cosa-di-oggi.js',
   'navigation.js',
   'games.css',
   'games.js',
@@ -120,6 +121,7 @@ const RUNTIME_FILES = [
   'invito.js',
   // App Links: the site vouches for the Android app that opens /invito.
   '.well-known/assetlinks.json',
+  '.well-known/apple-app-site-association',
   // Public legal pages (Play listing, sign-up box, Settings › Privacy e dati).
   'legal.css',
   'privacy.html',

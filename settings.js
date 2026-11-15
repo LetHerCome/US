@@ -20,6 +20,9 @@ window.addEventListener('us-identity-change',event=>{
 });
 
 function currentBuild(){return document.querySelector('meta[name="us-build"]')?.content||'';}
+// "US 1.5.0": the version of the installed app (Android versionName, iOS
+// CFBundleShortVersionString); the web has only its build, so just "US".
+function appVersion(){return Promise.resolve().then(()=>window.UsCapacitorRuntime?.app?.getInfo?.()).then(info=>info?.version?`US ${info.version}`:'US',()=>'US');}
 
 function openModal(title,body,kicker='US.'){
   const modalBody=$('usSettingsModalBody');
@@ -159,6 +162,7 @@ async function hydrateUsSettings(){
   syncAppLockSetting().catch(()=>{});
   syncRicordiOptimizationSetting().catch(()=>{});
   $('usSettingsBuild').textContent=currentBuild();
+  appVersion().then(text=>{const el=$('usSettingsVersion');if(el)el.textContent=text;});
 
   const locEl=$('usLocationState');
   locEl.className='us-setting-state';
@@ -188,7 +192,7 @@ function relationshipDateModal(valueOverride){
   const today=new Date();
   const max=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
   openModal('Data della relazione',`
-    <div class="us-settings2-modal-copy">Questa data regola giorni insieme, mesiversario, anniversario e i relativi punti Sintonia.</div>
+    <div class="us-settings2-modal-copy">Da questa data contiamo giorni insieme, mesiversari, anniversari e i loro punti Sintonia.</div>
     <label class="us-settings2-field"><span>Insieme dal</span><input id="usRelationshipDateInput" type="date" max="${max}" value="${esc(current)}"></label>
     <button type="button" class="primary us-settings-main-action" id="usSaveRelationshipDate">Salva data</button>
   `,'VOI');
@@ -293,6 +297,35 @@ function personColorLockedModal(){
   openModal('Il tuo colore',`<p class="us-person-color-locked">Si sblocca con US Plus: ognuno di voi sceglie il suo colore tra 8, e lo vedete tutti e due.</p><div class="us-setting-choice us-person-colors is-locked">${list.map(c=>`<button type="button" aria-disabled="true" data-person-color-locked><span><i class="us-person-swatch" style="background:${esc(c.hex)}" aria-hidden="true"></i>${esc(c.name)}</span><b>${c.mine?'Il tuo':''}</b></button>`).join('')}</div>`,'US PLUS');
   $('usSettingsModalBody').querySelectorAll('[data-person-color-locked]').forEach(btn=>btn.addEventListener('click',()=>toast('Si sblocca con US Plus')));
 }
+// US Plus, in arrivo (13/11/2026, verso l'uscita pubblica): what Plus will
+// unlock (D4 §5) and «Avvisami». Nothing to buy and no price yet; the
+// answer is saved for this account only (plus_waitlist).
+const PLUS_SOON=['Partite illimitate a Gioca','«Il vostro anno» completo','L’archivio delle domande passate','Pacchetti di domande a tema'];
+async function plusSoonModal(){
+  const overlay=$('usSettingsOverlay');if(overlay?.dataset)overlay.dataset.usSettingsSheet='plus';
+  openModal('In arrivo',`<div class="us-plus-soon"><p class="us-plus-soon-lead">Un abbonamento per la coppia: se ne paga uno, vale per tutti e due.</p><ul class="us-plus-soon-list">${PLUS_SOON.map(t=>`<li><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span><span>${esc(t)}</span></li>`).join('')}</ul><p class="us-plus-soon-free">Quello che usate oggi resta gratis, per sempre.</p><button type="button" class="primary us-plus-soon-cta" data-plus-soon-join disabled>Avvisami quando arriva</button><p class="us-plus-soon-state" data-plus-soon-state hidden>Ti avviseremo qui su US ♡</p><button type="button" class="us-ob-link us-plus-soon-leave" data-plus-soon-leave hidden>Non avvisarmi più</button></div>`,'US PLUS');
+  const body=$('usSettingsModalBody');
+  const join=body.querySelector('[data-plus-soon-join]'),state=body.querySelector('[data-plus-soon-state]'),leave=body.querySelector('[data-plus-soon-leave]');
+  const paint=joined=>{join.hidden=joined;join.disabled=false;state.hidden=!joined;leave.hidden=!joined;};
+  const ask=async value=>{
+    const{data,error}=await sb.rpc('plus_waitlist',{join:value});
+    if(error)throw error;
+    return data?.joined===true;
+  };
+  try{paint(await ask(null));}catch(error){console.warn(error);paint(false);}
+  join.addEventListener('click',async()=>{
+    join.disabled=true;
+    try{paint(await ask(true));toast('Ti avviseremo quando arriva ♡');}
+    catch(error){console.warn(error);join.disabled=false;toast('Non riesco a salvarlo. Riprova.');}
+  });
+  leave.addEventListener('click',async()=>{
+    leave.disabled=true;
+    try{paint(await ask(false));}
+    catch(error){console.warn(error);toast('Non riesco a salvarlo. Riprova.');}
+    finally{leave.disabled=false;}
+  });
+}
+window.UsPlusSoon={open:()=>plusSoonModal()};
 function personColorModal(){
   const profiles=settingsSnapshot?.profiles||[],meId=window.usProfile?.id;
   const me=profiles.find(p=>p.id===meId),partner=profiles.find(p=>p.id!==meId)?.display_name||'la tua persona';
@@ -350,7 +383,7 @@ async function locationAction(){
 
 function preferenceToggle(key,label,checked){
   return `<button type="button" class="us-settings2-toggle-row" data-pref="${key}" aria-pressed="${checked?'true':'false'}">
-    <span><b>${label}</b><small>${key==='think'?'Quando la tua persona ti pensa':key==='today'?'Quando arriva e quando le risposte sono pronte':key==='bond'?'Il lunedì la nuova, il sabato un promemoria':key==='left_for_you'?'Quando trovi qualcosa nella busta':key==='games'?'Quando tocca a te':key==='lavagna'?'Quando la tua persona disegna sulla lavagna':'Mesiversario, anniversario ed eventi'}</small></span>
+    <span><b>${label}</b><small>${key==='think'?'Quando la tua persona ti pensa':key==='today'?'Quando arriva e quando le risposte sono pronte':key==='bond'?'Il lunedì la nuova, il sabato un promemoria':key==='left_for_you'?'Quando la tua persona ti lascia qualcosa':key==='games'?'Quando tocca a te':key==='lavagna'?'Quando la tua persona disegna sulla lavagna':'Mesiversario, anniversario ed eventi'}</small></span>
     <i class="${checked?'on':''}"><u></u></i>
   </button>`;
 }
@@ -372,8 +405,8 @@ function feedbackModal(){
     ${feedbackToggle('sounds','Suoni','Solo per conferme, Ti penso e momenti importanti',prefs.sounds)}
     ${feedbackToggle('haptics','Vibrazione','Tocchi brevi e delicati sui gesti',prefs.haptics)}
   </div>
-  <section class="us-feedback-preview" aria-label="Prova i feedback">
-    <div class="us-feedback-preview-heading"><b>Prova i feedback</b></div>
+  <section class="us-feedback-preview" aria-label="Prova suoni e vibrazione">
+    <div class="us-feedback-preview-heading"><b>Prova suoni e vibrazione</b></div>
     <div class="us-feedback-preview-grid">
       <button type="button" data-us-feedback="off" data-feedback-preview="action">Azione</button>
       <button type="button" data-us-feedback="off" data-feedback-preview="success">Completato</button>
@@ -407,7 +440,7 @@ function feedbackModal(){
         return;
       }
       window.UsFeedback?.testHaptic?.();
-      if(status)status.textContent='Impulso richiesto. Se non lo senti, controlla le impostazioni di vibrazione del telefono.';
+      if(status)status.textContent='Vibrazione inviata. Se non la senti, controlla le impostazioni del telefono.';
       return;
     }
     if(!['action','success','attention','reveal'].includes(kind))return;
@@ -448,7 +481,7 @@ function ricordiOptimizationModal(){
       <button type="button" class="primary" id="usOptimizeRicordiStart">Ottimizza adesso</button>
       <button type="button" class="ghost" id="usOptimizeRicordiCancel">Più tardi</button>
     </div>
-    <p class="us-settings2-note">L'operazione scarica temporaneamente le foto: falla una volta quando sei sotto Wi-Fi.</p>
+    <p class="us-settings2-note">Serve scaricare le foto: fallo una volta, con il Wi-Fi.</p>
   `,'QUESTO TELEFONO');
   window.UsRicordiThumbnails.missingCount?.().then(count=>{const progress=$('usOptimizeRicordiProgress');if(progress&&!progress.textContent&&count>0)progress.textContent=`0 / ${count}`;}).catch(()=>{});
   $('usOptimizeRicordiCancel')?.addEventListener('click',closeModal);
@@ -467,7 +500,7 @@ function ricordiOptimizationModal(){
       }
     }).catch(error=>({ok:false,code:'error',error}));
     if(result.code==='offline'){
-      if(progress)progress.textContent='Serve una connessione. Riprova sotto Wi-Fi.';
+      if(progress)progress.textContent='Serve una connessione. Riprova con il Wi-Fi.';
       btn.disabled=false;if(cancel)cancel.disabled=false;btn.textContent='Riprova';
       return;
     }
@@ -635,7 +668,8 @@ async function syncStatusModal(){
     sb.from('profiles').select('id,display_name').eq('couple_id',window.usProfile.couple_id)
   ]);
   const profiles=profilesRes.data||[];
-  // Mockup set-stato: four checks and "Tutto aggiornato · US 1.0".
+  // Mockup set-stato: four checks and "Tutto aggiornato · US 1.5.0" (appVersion).
+  const version=await appVersion();
   const rows=[
     ['Rete',navigator.onLine?'Online':'Offline',navigator.onLine],
     ['Coppia',`${profiles.length} di 2 profili collegati`,profiles.length>=2],
@@ -644,7 +678,7 @@ async function syncStatusModal(){
   ];
   $('usSettingsModalBody').innerHTML=`<div class="us-settings2-status-list">${rows.map(([label,value,ok])=>`
     <div><span><b>${label}</b><small>${value}</small></span><i class="${ok?'ok':''}">${ok?'✓':'○'}</i></div>
-  `).join('')}</div><p class="us-settings2-build-detail" title="${esc(currentBuild())}">${rows.every(row=>row[2])?'Tutto aggiornato · ':''}US 1.0</p>`;
+  `).join('')}</div><p class="us-settings2-build-detail" title="${esc(currentBuild())}">${rows.every(row=>row[2])?'Tutto aggiornato · ':''}${version}</p>`;
 }
 
 async function privacyModal(){
@@ -696,16 +730,24 @@ function loadAccountDeletion(){
 }
 
 // Accesso con Google (25/10/2026): an account without a password confirms
-// deletion and leaving with Google again (google-auth.js, Android only).
+// deletion and leaving with Google again (google-auth.js, Android and iPhone).
+// Accedi con Apple (05/11/2026): an Apple account confirms with Apple (iPhone).
+// `google` keeps its old meaning, "no password: the provider confirms".
 async function accountReauthMode(){
   let user=null;
   try{const {data}=await sb.auth.getSession();user=data?.session?.user||null;}catch(_){}
-  const google=Boolean(user&&window.UsGoogleAuth?.usesGoogle?.(user)&&!window.UsGoogleAuth?.hasPassword?.(user));
-  const available=!google||Boolean(window.usGoogleAuth?.native&&window.usGoogleAuth?.supported?.());
-  return {user,google,available,client:google&&available?window.usGoogleAuth:null};
+  const auth=window.UsGoogleAuth;
+  const noPassword=Boolean(user&&!auth?.hasPassword?.(user));
+  const provider=noPassword&&auth?.usesGoogle?.(user)?'google':noPassword&&auth?.usesApple?.(user)?'apple':'';
+  const client=provider==='apple'?window.usAppleAuth:provider==='google'?window.usGoogleAuth:null;
+  const available=!provider||Boolean(client?.native&&client?.supported?.());
+  return {user,google:Boolean(provider),provider,available,client:provider&&available?client:null};
 }
 function reauthField(mode,id,support){
   if(!mode.google)return `<label class="us-settings2-field"><span>Password del tuo account</span><input id="${id}" type="password" autocomplete="current-password" required></label>`;
+  if(mode.provider==='apple')return mode.available
+    ?'<p class="us-settings2-modal-copy">Accedi con Apple: per confermare ti chiederemo di accedere di nuovo con il tuo account Apple.</p>'
+    :`<p class="us-settings2-modal-copy">Accedi con Apple: per confermare usa US sull’iPhone, oppure scrivi a <b>${support}</b>.</p>`;
   return mode.available
     ?'<p class="us-settings2-modal-copy">Accedi con Google: per confermare ti chiederemo di scegliere di nuovo il tuo account Google.</p>'
     :`<p class="us-settings2-modal-copy">Accedi con Google: per confermare usa US sul telefono Android, oppure scrivi a <b>${support}</b>.</p>`;
@@ -724,8 +766,8 @@ async function accountDeletionModal(){
   openModal('Elimina account',`
     <div class="us-settings-copy us-account-delete-copy">
       <p><b>È definitivo.</b> Dopo la conferma non si può annullare: l’eliminazione parte subito e si completa entro 30 giorni.</p>
-      <p><b>Cosa viene eliminato</b> · il tuo account e il profilo, la foto profilo, le tue risposte di Oggi, l’umore e le risposte ai giochi, la posizione, le preferenze di notifica e i dispositivi collegati, le Stories, i tuoi impegni personali, i Lasciato per te che la tua persona non ha conservato e i messaggi programmati non ancora consegnati.</p>
-      <p><b>Cosa resta alla tua persona</b> · i ricordi condivisi che hai creato: Momenti e foto, messaggi già consegnati, impegni ed eventi condivisi, desideri, ricordi delle risposte create insieme e ciò che ha scelto di conservare. Restano senza il tuo nome. Non riceverà una notifica e lo spazio di coppia viene chiuso: nessun altro potrà entrarci.</p>
+      <p><b>Cosa viene eliminato</b> · il tuo account e il profilo, la foto profilo, le tue risposte alla domanda di oggi, il tuo «Come stai», la posizione e la batteria, le preferenze di notifica, i dispositivi collegati e i widget, le Stories, i tuoi impegni personali e i promemoria del calendario, i Lasciato per te che hai mandato e che la tua persona non ha conservato, i messaggi programmati non ancora consegnati, gli errori tecnici dell’app e l’iscrizione ad «Avvisami».</p>
+      <p><b>Cosa resta alla tua persona</b> · quello che avete condiviso, senza il tuo nome: i Ricordi e le loro foto, le domande conservate nei Ricordi con le risposte di tutti e due, i Ti penso e gli altri messaggi già consegnati, gli impegni condivisi e gli Eventi, le vostre idee, i post-it, i disegni sulla lavagna, le partite dei giochi, i Lasciato per te che ha conservato e i progressi della Sintonia. Non riceve notifiche e continua a usare l’app con i ricordi condivisi; nello spazio non potrà entrare nessun altro.</p>
       <p>Se nella coppia ci sei solo tu, viene eliminato tutto lo spazio di coppia, foto comprese.</p>
       <p><b>Vuoi una copia dei tuoi dati?</b> Prima di eliminare scrivi a <b>${support}</b>: la ricevi entro 30 giorni.</p>
     </div>
@@ -853,9 +895,9 @@ async function leaveCoupleModal(){
   leaveCoupleMode=mode;
   openModal('Esci dalla coppia',`
     <div class="us-settings-copy us-account-delete-copy">
-      <p><b>Lo spazio di coppia si chiude.</b> Dopo la conferma non si può annullare. Il tuo account resta: potrai creare un nuovo spazio o accettare un invito.</p>
-      <p><b>Cosa viene eliminato</b> · il tuo profilo in questa coppia e la foto profilo, le tue risposte di Oggi, l’umore e le risposte ai giochi, la posizione, i dispositivi collegati, le Stories, i tuoi impegni personali, i Lasciato per te che la tua persona non ha conservato e i messaggi programmati non ancora consegnati.</p>
-      <p><b>Cosa resta alla tua persona</b> · i ricordi condivisi che hai creato: Momenti e foto, messaggi già consegnati, impegni ed eventi condivisi, desideri e ciò che ha scelto di conservare. Restano senza il tuo nome. Nessun altro potrà entrare in questo spazio.</p>
+      <p><b>Non potrai più entrare in questo spazio.</b> Dopo la conferma non si può annullare. Il tuo account resta: potrai creare un nuovo spazio o accettare un invito.</p>
+      <p><b>Cosa viene eliminato</b> · il tuo profilo in questa coppia e la foto profilo, le tue risposte alla domanda di oggi, il tuo «Come stai», la posizione e la batteria, le preferenze di notifica, i dispositivi collegati e i widget, le Stories, i tuoi impegni personali e i promemoria del calendario, i Lasciato per te che hai mandato e che la tua persona non ha conservato e i messaggi programmati non ancora consegnati.</p>
+      <p><b>Cosa resta alla tua persona</b> · quello che avete condiviso, senza il tuo nome: i Ricordi e le loro foto, le domande conservate nei Ricordi con le risposte di tutti e due, i Ti penso e gli altri messaggi già consegnati, gli impegni condivisi e gli Eventi, le vostre idee, i post-it, i disegni sulla lavagna, le partite dei giochi, i Lasciato per te che ha conservato e i progressi della Sintonia. Continua a usare l’app con i ricordi condivisi; nello spazio non potrà entrare nessun altro.</p>
       <p>Se nella coppia ci sei solo tu, viene eliminato tutto lo spazio di coppia, foto comprese.</p>
       <p><b>Vuoi una copia dei tuoi dati?</b> Prima di uscire scrivi a <b>${esc(api.US_SUPPORT_EMAIL)}</b>.</p>
     </div>
@@ -1036,6 +1078,7 @@ async function action(name){
   // Which sheet is open: dc-settings.css gives each one the mockup's blocks.
   const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='maudit'&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
   if(name==='relationship-date')return relationshipDateModal();
+  if(name==='plus')return plusSoonModal();
   if(name==='together-mode')return window.UsDistance?.open?.();
   if(name==='status-form')return window.UsMemberStatus?.open?.('form');
   if(name==='person-color'){if(!settingsSnapshot?.colorsOpen)return personColorLockedModal();return personColorModal();}

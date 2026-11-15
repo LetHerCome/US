@@ -105,12 +105,12 @@ test('G3: Quanto mi conosci? ends with how many times you were read, from predic
   await tick();
   await h.api.openSession('s1');
   await tick();
-  assert.match(h.nodes.usGameV2Panel.innerHTML, /<p class="us-gv5-reading">Beatrice ti ha letto 2 volte su 3<\/p>/);
+  assert.match(h.nodes.usGameV2Panel.innerHTML, /<p class="us-gv5-reading">Beatrice ha indovinato 2 volte su 3<\/p>/);
   const one = harness({ handlers: { get_game_session: () => session({ game_family: 'quanto_mi_conosci', items: [predicted(1, true), predicted(2, false)] }) } });
   await tick();
   await one.api.openSession('s1');
   await tick();
-  assert.match(one.nodes.usGameV2Panel.innerHTML, /Beatrice ti ha letto 1 volta su 2/);
+  assert.match(one.nodes.usGameV2Panel.innerHTML, /Beatrice ha indovinato 1 volta su 2/);
 });
 
 test('G4: Per voi says when the partner question is inside — before the round and once it exists', async () => {
@@ -175,9 +175,9 @@ test('S6: Ultime crescite (the mockup fold) — what, detail · date and its poi
     [{ milestone_date: '2026-10-12', kind: 'monthiversary', months_together: 16, xp_awarded: 60 }, { milestone_date: '2026-06-12', kind: 'anniversary', months_together: 12, xp_awarded: 0 }]);
   assert.deepEqual(Array.from(entries, (e) => e.kind), ['milestone', 'quest', 'milestone'], 'newest first, mesiversari included');
   window.api.renderHistory(entries);
-  // Round 3 (mockup parity): "Mesiversario / 16 mesi insieme · 12 ott / +60 XP", as the mockup's .hist rows.
-  assert.match(root.innerHTML, /<p class="noi-resonance-history-copy">Mesiversario<small><span>16 mesi insieme<\/span> · <time>12 ott<\/time><\/small><\/p><b class="noi-resonance-history-xp">\+60 XP<\/b>/);
-  assert.match(root.innerHTML, /Missione di coppia<small><span>Cena senza telefoni<\/span> · <time>9 ott<\/time><\/small><\/p><b class="noi-resonance-history-xp">\+80 XP<\/b>/);
+  // Round 3 (mockup parity): "Mesiversario / 16 mesi insieme · 12 ott / +60 punti", as the mockup's .hist rows.
+  assert.match(root.innerHTML, /<p class="noi-resonance-history-copy">Mesiversario<small><span>16 mesi insieme<\/span> · <time>12 ott<\/time><\/small><\/p><b class="noi-resonance-history-xp">\+60 punti<\/b>/);
+  assert.match(root.innerHTML, /Missione di coppia<small><span>Cena senza telefoni<\/span> · <time>9 ott<\/time><\/small><\/p><b class="noi-resonance-history-xp">\+80 punti<\/b>/);
   assert.match(root.innerHTML, /Anniversario<small><span>1 anno insieme<\/span>/);
   assert.equal((root.innerHTML.match(/noi-resonance-history-xp/g) || []).length, 2, 'a milestone that gave no points shows none');
 });
@@ -188,7 +188,7 @@ test('S2/S8/S10/T1: level moment, reward scope, Back and the old party (sources)
   const nav = read('navigation.js');
   // Round 3 (mockup parity) — the level Momento: "Livello 6", "Intesa rara. Il prossimo arriva a 950 XP.", the chip.
   assert.match(progression, /Livello <em>\$\{level\}<\/em>/);
-  assert.match(progression, /`\$\{rank\}\. Il prossimo arriva a \$\{fmt\(need\)\} XP\.`/);
+  assert.match(progression, /`\$\{rank\}\. Il prossimo arriva a \$\{fmt\(need\)\} punti\.`/);
   assert.match(progression, /'Un premio sbloccato'/);
   assert.doesNotMatch(progression, /XP al prossimo livello|PROSSIMO SBLOCCO · LIVELLO/);
   // S8 — the scope is said under "I vostri sblocchi"; the next unlock is the mockup's card.

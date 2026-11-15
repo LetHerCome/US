@@ -44,6 +44,20 @@ on:
       - 'native-plugins/us-push-support/**'
       - 'notifications.js'
       - 'tests/native-notifications-v1-native.test.js'
+      - 'native-plugins/us-app-icon/**'
+      - 'app-update.js'
+      - 'tests/app-update.test.js'
+      - 'tests/app-icons.test.js'
+      - 'tests/ios-store-v1.test.js'
+      - 'scripts/build-ios-brand-assets.py'
+      - 'scripts/write-apple-app-site-association.mjs'
+      - 'cloudflare/_headers'
+      - '.github/workflows/ios-testflight.yml'
+      - 'native-plugins/us-apple-signin/**'
+      - 'native-plugins/us-google-signin/**'
+      - 'google-auth.js'
+      - 'tests/google-auth-v1.test.js'
+      - 'tests/ios-sign-in-v1.test.js'
       - 'tests/native-performance-ux-v1.test.js'
       - 'tests/ricordi-thumbnails-v1.test.js'
       - '.github/workflows/ios-native.yml'
@@ -80,6 +94,20 @@ on:
       - 'native-plugins/us-push-support/**'
       - 'notifications.js'
       - 'tests/native-notifications-v1-native.test.js'
+      - 'native-plugins/us-app-icon/**'
+      - 'app-update.js'
+      - 'tests/app-update.test.js'
+      - 'tests/app-icons.test.js'
+      - 'tests/ios-store-v1.test.js'
+      - 'scripts/build-ios-brand-assets.py'
+      - 'scripts/write-apple-app-site-association.mjs'
+      - 'cloudflare/_headers'
+      - '.github/workflows/ios-testflight.yml'
+      - 'native-plugins/us-apple-signin/**'
+      - 'native-plugins/us-google-signin/**'
+      - 'google-auth.js'
+      - 'tests/google-auth-v1.test.js'
+      - 'tests/ios-sign-in-v1.test.js'
       - '.github/workflows/ios-native.yml'
 
 permissions:
@@ -113,7 +141,7 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/ricordi-inline-feed-v2.test.js tests/ricordi-carousel-v1.test.js tests/centered-popups-v1.test.js tests/native-frameless-v1.test.js tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js tests/sec-rls-hardening.test.js
+        run: node --test tests/ricordi-inline-feed-v2.test.js tests/ricordi-carousel-v1.test.js tests/centered-popups-v1.test.js tests/native-frameless-v1.test.js tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js tests/sec-rls-hardening.test.js tests/ios-store-v1.test.js tests/app-update.test.js tests/app-icons.test.js tests/ios-sign-in-v1.test.js tests/google-auth-v1.test.js
 
       - name: App lock policy checks (host swiftc, no simulator)
         run: |
@@ -129,6 +157,22 @@ jobs:
             native-plugins/us-push-support/ios/Tests/EnvironmentCheck/main.swift \
             -o build/us-push-environment-check
           build/us-push-environment-check
+
+      - name: App icon catalog checks (host swiftc, no simulator)
+        run: |
+          swiftc native-plugins/us-app-icon/ios/Sources/UsAppIconPlugin/UsAppIconCatalog.swift             native-plugins/us-app-icon/ios/Tests/CatalogCheck/main.swift             -o build/us-app-icon-catalog-check
+          build/us-app-icon-catalog-check
+
+      - name: Google and Apple sign-in checks (host swiftc, no simulator)
+        run: |
+          swiftc native-plugins/us-google-signin/ios/Sources/UsGoogleSignInPlugin/UsGoogleOAuth.swift \
+            native-plugins/us-google-signin/ios/Tests/OAuthCheck/main.swift \
+            -o build/us-google-oauth-check
+          build/us-google-oauth-check
+          swiftc native-plugins/us-apple-signin/ios/Sources/UsAppleSignInPlugin/UsAppleSignInPolicy.swift \
+            native-plugins/us-apple-signin/ios/Tests/PolicyCheck/main.swift \
+            -o build/us-apple-signin-policy-check
+          build/us-apple-signin-policy-check
 
       - name: npm run build:capacitor-web
         run: npm run build:capacitor-web
@@ -174,7 +218,7 @@ jobs:
           echo "$APP"
           /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist"
           /usr/libexec/PlistBuddy -c "Print :MinimumOSVersion" "$APP/Info.plist"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")" = "com.usapp.us"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")" = "app.uscouple"
           test -f "$APP/public/index.html"
           test -f "$APP/public/native-entry.js"
           test ! -f "$APP/public/stories.js"
@@ -185,6 +229,54 @@ jobs:
           grep -q UsPushSupportPlugin "$APP/capacitor.config.json"
           grep -q PushNotificationsPlugin "$APP/capacitor.config.json"
           test -f "$APP/public/notifications.js"
+          # iOS Store V1: Sintonia icons, permission prompts in it/en, iPhone only, privacy manifest.
+          grep -q UsAppIconPlugin "$APP/capacitor.config.json"
+          grep -q UsAppleSignInPlugin "$APP/capacitor.config.json"
+          grep -q UsGoogleSignInPlugin "$APP/capacitor.config.json"
+          ALTERNATE=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIcons:CFBundleAlternateIcons" "$APP/Info.plist")
+          echo "$ALTERNATE"
+          for icon in AppIcon-Night AppIcon-Gold AppIcon-Neon; do echo "$ALTERNATE" | grep -q "$icon"; done
+          /usr/libexec/PlistBuddy -c "Print :NSPhotoLibraryAddUsageDescription" "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleLocalizations" "$APP/Info.plist" | grep -q " it"
+          test -f "$APP/en.lproj/InfoPlist.strings"
+          test -f "$APP/it.lproj/InfoPlist.strings"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :UIDeviceFamily:0' "$APP/Info.plist")" = "1"
+          if /usr/libexec/PlistBuddy -c 'Print :UIDeviceFamily:1' "$APP/Info.plist" >/dev/null 2>&1; then echo "::error::Solo iPhone nel primo rilascio"; exit 1; fi
+          test -f "$APP/PrivacyInfo.xcprivacy"
+          plutil -lint "$APP/PrivacyInfo.xcprivacy"
+
+      # Proof the app starts: the unsigned Debug build in a booted iPhone
+      # simulator, a screenshot of what it shows (the sign-in screen: nothing
+      # private, the repository is public), and a crash at launch fails the job.
+      - name: Launch in the iOS Simulator and take a screenshot
+        run: |
+          set -euo pipefail
+          APP=$(find build/ios-derived/Build/Products/Debug-iphonesimulator -maxdepth 1 -name App.app -type d | head -n 1)
+          DEVICE=$(xcrun simctl list devices available -j | node -e '
+            const all = Object.entries(JSON.parse(require("fs").readFileSync(0, "utf8")).devices)
+              .filter(([runtime]) => /iOS/.test(runtime)).flatMap(([, list]) => list);
+            const pick = all.find((d) => /^iPhone 1[5-9] Pro$/.test(d.name)) || all.find((d) => /^iPhone/.test(d.name));
+            process.stdout.write(pick ? pick.udid : "");')
+          if [ -z "$DEVICE" ]; then echo "::warning::Nessun simulatore iPhone su questo runner"; exit 0; fi
+          xcrun simctl boot "$DEVICE"
+          xcrun simctl bootstatus "$DEVICE" -b
+          # The unsigned build gets the local ad-hoc signature Xcode's "Sign to Run Locally" uses.
+          codesign --force --deep --sign - --timestamp=none "$APP"
+          xcrun simctl install "$DEVICE" "$APP"
+          xcrun simctl launch "$DEVICE" app.uscouple
+          sleep 15
+          xcrun simctl io "$DEVICE" screenshot build/ios-simulator-launch.png
+          RUNNING=$(xcrun simctl spawn "$DEVICE" launchctl list)
+          grep -q "UIKitApplication:app.uscouple" <<< "$RUNNING" || { echo "::error::US non è più in esecuzione dopo l'avvio"; exit 1; }
+          xcrun simctl shutdown "$DEVICE" || true
+
+      - name: Upload simulator screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-simulator-screenshot
+          path: build/ios-simulator-*.png
+          if-no-files-found: ignore
 
       - name: Upload build logs
         if: always()

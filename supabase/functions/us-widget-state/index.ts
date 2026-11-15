@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
       const createdAt = new Date(thinkResult.data.created_at);
       const ageMinutes = Math.max(0, Math.floor((Date.now() - createdAt.getTime()) / 60000));
       const sender = profiles.find((p: any) => p.id === thinkResult.data.sender_id);
-      lastThink = { from: sender?.display_name || partner?.display_name || "Partner", createdAt: thinkResult.data.created_at, ageMinutes };
+      lastThink = { from: sender?.display_name || partner?.display_name || "La tua persona", createdAt: thinkResult.data.created_at, ageMinutes };
     }
 
     const relationshipDays = couple.started_on ? Math.max(0, daysBetween(couple.started_on, today)) : null;
@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
       version: 1,
       generatedAt: new Date().toISOString(),
       todayDate: today,
-      user: { displayName: me.display_name, partnerName: partner?.display_name || "Partner", role: me.role },
+      user: { displayName: me.display_name, partnerName: partner?.display_name || "La tua persona", role: me.role },
       relationship: { startedOn: couple.started_on, daysTogether: relationshipDays },
       homePhotoUrl,
       nextEvent: nextEvent ? {

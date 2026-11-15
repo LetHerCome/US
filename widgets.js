@@ -261,7 +261,7 @@
     const next = window.UsWidgetDataApi?.noiDistance?.();
     const distanceText = cleanText(next?.distanceText || '', 24);
     const distanceState = next?.distanceState === 'stale' ? 'stale' : 'ready';
-    // Distanza e batteria: "vicini" and how old the reading is.
+    // Distanza e batteria: "meno di 3 km" and how old the reading is.
     const distanceNear = next?.distanceNear === true;
     const distanceAt = isoInstant(next?.distanceAt);
     if (couple.distanceText === distanceText && couple.distanceState === distanceState

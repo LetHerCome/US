@@ -5,6 +5,7 @@ import { vapidSubject } from "../_shared/web-push-vapid.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 import { buildNotification, deliverNotification } from "../_shared/notification-core.mjs";
 import { nativeTransport } from "../_shared/native-push-env.ts";
+import { reminderBody } from "../_shared/calendar-reminder-copy.mjs";
 
 // M6D — Calendar reminders worker.
 // Chiamato SOLO dal cron pg_cron (chiave dedicata via Edge secret,
@@ -98,12 +99,6 @@ function tzOffsetMinutes(at: Date): number {
   return (asUtc - at.getTime()) / 60000;
 }
 
-function humanOffset(offsetMinutes: number): string {
-  if (offsetMinutes === 1440) return "Domani";
-  if (offsetMinutes === 60) return "Tra un'ora";
-  return `Tra ${offsetMinutes} minuti`;
-}
-
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -145,7 +140,7 @@ Deno.serve(async (request) => {
     if (entriesError) throw entriesError;
     const entryById = new Map((entries || []).map((e: EntryRow) => [e.id, e]));
 
-    // Nome del richiedente per la copia "X ti ricorda — …" (display name
+    // Nome del richiedente per la copia "X ti ricorda: …" (display name
     // reale dal profilo, mai hardcoded).
     const requesterIds = [...new Set(rows.map((r) => r.requested_by))];
     const { data: requesters, error: requestersError } = await admin
@@ -190,15 +185,20 @@ Deno.serve(async (request) => {
     // la consegna (Web Push + app native) passa dal dispatcher condiviso.
     for (const { reminder, entry } of dueRows) {
       const requesterName = nameByRequester.get(reminder.requested_by) || "La tua persona";
-      // Copia: se il destinatario È il richiedente → "Tra un'ora — Titolo";
-      // se è l'altro → "Francesco ti ricorda — Cena alle 20:30 ♡".
-      const isSelf = reminder.recipient_id === reminder.requested_by;
-      const when = entry.is_all_day
-        ? "oggi"
-        : formatWhen(entry.starts_at);
-      const body = isSelf
-        ? `${humanOffset(reminder.offset_minutes)} — ${entry.title}`
-        : `${requesterName} ti ricorda — ${entry.title}${when && when !== "oggi" ? ` alle ${when}` : ""} ♡`;
+      // Copia (ora e «domani» nel fuso di Roma): se il destinatario È il
+      // richiedente → "Tra un’ora: Titolo"; se è l'altro → "Francesco ti
+      // ricorda: Cena, domani alle 20:30 ♡".
+      const body = reminderBody({
+        selfRecipient: reminder.recipient_id === reminder.requested_by,
+        requesterName,
+        title: entry.title,
+        allDay: entry.is_all_day,
+        startsAt: entry.starts_at,
+        startDate: entry.start_date,
+        offsetMinutes: reminder.offset_minutes,
+        nowMs,
+        timeZone: TIMEZONE,
+      });
 
       const result = await deliverNotification(admin, {
         notification: buildNotification("calendar_reminder", { reminderId: reminder.id, entryId: entry.id, body }),
@@ -236,9 +236,3 @@ Deno.serve(async (request) => {
     return json({ error: "Reminder dispatch failed" }, 500);
   }
 });
-
-function formatWhen(startsAtIso: string | null): string {
-  if (!startsAtIso) return "";
-  const d = new Date(startsAtIso);
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}

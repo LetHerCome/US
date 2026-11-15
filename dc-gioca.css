@@ -67,6 +67,19 @@
 #quiz .us-gv2-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 12px}
 #quiz .us-gv2-section-title{margin:0;font:400 20px/1.5 var(--us-font-display);letter-spacing:0;color:var(--us-color-text)}
 #quiz .us-gv2-section-head small{font-size:13px;line-height:1.5;color:var(--us-color-text-3)}
+/* Partite di oggi (13/11/2026): one dot per round of the day, lit while it is left */
+#quiz .us-gv2-daycount{display:inline-flex;align-items:center;gap:8px;flex:none}
+#quiz .us-gv2-daycount-dots{display:inline-flex;gap:4px}
+#quiz .us-gv2-daycount-dots i{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--us-color-text-3);background:transparent}
+#quiz .us-gv2-daycount-dots i[data-on="true"]{border-color:var(--us-tu);background:var(--us-tu)}
+#quiz .us-gv2-daycount[data-gv2-left="0"] small{color:var(--us-color-text-2,var(--us-color-text-3))}
+/* Partite finite: US Plus, in arrivo */
+#quiz #quizHub .us-gv2-plus-soon{display:flex;align-items:center;gap:12px;width:100%;margin:8px 0 0;padding:12px 14px;border-radius:18px;border:1px dashed color-mix(in srgb,var(--us-tu) 55%,var(--us-color-line));background:color-mix(in srgb,var(--us-tu) 8%,var(--us-color-surface));color:var(--us-color-text);text-align:left;font:400 15px/1.4 var(--us-font-ui)}
+#quiz #quizHub .us-gv2-plus-soon .us-gv2-glyph{flex:none}
+#quiz #quizHub .us-gv2-plus-soon-copy{display:grid;gap:2px;flex:1;min-width:0}
+#quiz #quizHub .us-gv2-plus-soon-copy b{font-weight:600}
+#quiz #quizHub .us-gv2-plus-soon-copy small{font-size:13px;color:var(--us-color-text-3)}
+#quiz #quizHub .us-gv2-plus-soon>.us-gv2-icon{flex:none;width:16px;height:16px;color:var(--us-color-text-3)}
 
 /* .games/.game — flat night tiles, the mockup's art, Per voi tall with my colour washing in */
 #quiz #quizHub .us-gv2-game-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}

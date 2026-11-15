@@ -45,13 +45,16 @@ function message(kind,supportEmail=US_SUPPORT_EMAIL,channel='web'){
     case 'wrong_password':return channel==='app'?'Password non corretta. Riprova.':'Email o password non corrette. Riprova.';
     case 'reauth_required':return 'Per sicurezza inserisci di nuovo la password e riprova.';
     case 'confirm_required':return `Scrivi ${CONFIRM_WORD} per confermare.`;
-    case 'deletion_disabled':return `Eliminazione non ancora disponibile, scrivi a ${supportEmail}.`;
+    case 'deletion_disabled':return `Eliminazione non ancora disponibile: scrivi a ${supportEmail}.`;
     case 'network':return 'Non riesco a raggiungere US. Controlla la connessione e riprova.';
-    case 'no_email':return `Non trovo l'email del tuo account. Scrivi a ${supportEmail}.`;
+    case 'no_email':return `Non trovo l’email del tuo account. Scrivi a ${supportEmail}.`;
     case 'unavailable':return `Servizio non disponibile. Scrivi a ${supportEmail}.`;
     case 'google_cancelled':return 'Conferma con Google annullata. Non è cambiato nulla.';
     case 'google_other_account':return 'Hai scelto un altro account Google: scegli quello con cui accedi a US.';
     case 'google_failed':return 'Non riesco a confermare con Google. Riprova tra poco.';
+    case 'apple_cancelled':return 'Conferma con Apple annullata. Non è cambiato nulla.';
+    case 'apple_other_account':return 'Hai usato un altro account Apple: usa quello con cui accedi a US.';
+    case 'apple_failed':return 'Non riesco a confermare con Apple. Riprova tra poco.';
     default:return 'Eliminazione non riuscita: non è stato eliminato nulla. Riprova tra poco.';
   }
 }
@@ -107,13 +110,15 @@ async function freshAccessToken({client,email,password}={}){
 }
 
 // The Google path: Google's sheet again, the same account (google-auth.js).
+// The Apple client (UsAppleAuth, 05/11/2026) has the same shape: provider 'apple'.
 async function freshGoogleToken({google,user}={}){
   if(typeof google?.reauthenticate!=='function'||!user)return {kind:'unavailable',done:false};
+  const who=google.provider==='apple'?'apple':'google';
   let result;
-  try{result=await google.reauthenticate(user);}catch(_){return {kind:'google_failed',done:false};}
+  try{result=await google.reauthenticate(user);}catch(_){return {kind:`${who}_failed`,done:false};}
   if(result?.ok&&result.accessToken)return {accessToken:result.accessToken};
-  const kinds={cancelled:'google_cancelled',other_account:'google_other_account'};
-  return {kind:kinds[result?.kind]||'google_failed',done:false};
+  const kinds={cancelled:`${who}_cancelled`,other_account:`${who}_other_account`};
+  return {kind:kinds[result?.kind]||`${who}_failed`,done:false};
 }
 const freshToken=({client,email,password,google,user})=>google?freshGoogleToken({google,user}):freshAccessToken({client,email,password});
 
@@ -149,7 +154,7 @@ function leaveMessage(kind,supportEmail=US_SUPPORT_EMAIL){
     case 'left_pending_cleanup':return 'Lo spazio di coppia è chiuso. Il tuo account resta attivo. Stiamo completando la rimozione degli ultimi file.';
     case 'not_in_couple':return 'Non fai più parte di questa coppia. Il tuo account resta attivo.';
     case 'leave_confirm_required':return `Scrivi ${LEAVE_WORD} per confermare.`;
-    case 'leave_disabled':return `Uscita dalla coppia non ancora disponibile, scrivi a ${supportEmail}.`;
+    case 'leave_disabled':return `Uscita dalla coppia non ancora disponibile: scrivi a ${supportEmail}.`;
     case 'leave_failed':return 'Uscita non riuscita: non è cambiato nulla. Riprova tra poco.';
     default:return message(kind,supportEmail,'app');
   }
@@ -180,7 +185,7 @@ function canReport({category,details}={}){
 function reportMessage(kind,supportEmail=US_SUPPORT_EMAIL){
   switch(kind){
     case 'received':return 'Segnalazione inviata al team di US. Se qualcuno è in pericolo chiama subito il 112.';
-    case 'rate_limited':return `Hai già inviato diverse segnalazioni oggi. Per altro scrivi a ${supportEmail}.`;
+    case 'rate_limited':return `Hai già inviato diverse segnalazioni oggi. Per le altre scrivi a ${supportEmail}.`;
     case 'invalid':return 'Scegli un motivo e scrivi cosa è successo.';
     case 'network':return 'Non riesco a raggiungere US. Controlla la connessione e riprova.';
     default:return `Segnalazione non inviata. Riprova o scrivi a ${supportEmail}.`;

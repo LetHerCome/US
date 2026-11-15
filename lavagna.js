@@ -221,7 +221,7 @@ function install(w){
   function commit(points){
     const flat=pack(points);
     if(!flat)return;
-    if(strokes.length>=LIMITS.strokes){say('La lavagna è piena: pulitela per continuare');return;}
+    if(strokes.length>=LIMITS.strokes){say('La lavagna è piena: puliscila per continuare');return;}
     const s={id:w.crypto?.randomUUID?.()||fallbackId(),tool,color:tool==='eraser'?null:color,width,points:flat,author_id:me(),created_at:null,pending:true};
     strokes.push(s);
     changed({added:s});
@@ -236,7 +236,7 @@ function install(w){
       console.warn('[US Lavagna] save',error);
       const was=strokes.includes(s);
       strokes=strokes.filter(x=>x!==s);failed++;
-      say(/lavagna_full/.test(error?.message||'')?'La lavagna è piena: pulitela per continuare':'Tratto non salvato. Riprova tra poco.');
+      say(/lavagna_full/.test(error?.message||'')?'La lavagna è piena: puliscila per continuare':'Tratto non salvato. Riprova tra poco.');
       if(was)changed({});
       return;
     }
@@ -320,7 +320,7 @@ function install(w){
       <button type="button" class="us-lav-size" data-lav-width="1" aria-label="Tratto sottile" aria-pressed="false"><span></span></button>
       <button type="button" class="us-lav-size is-thick" data-lav-width="2" aria-label="Tratto spesso" aria-pressed="false"><span></span></button>
       <button type="button" class="us-lav-tool us-lav-eraser" data-lav-eraser aria-label="Gomma" aria-pressed="false"><span class="us-icon" data-us-icon="eraser" aria-hidden="true"></span></button>
-      <button type="button" class="us-lav-tool" data-lav-undo aria-label="Annulla l'ultimo tratto"><span class="us-icon" data-us-icon="arrow-counter-clockwise" aria-hidden="true"></span></button>
+      <button type="button" class="us-lav-tool" data-lav-undo aria-label="Annulla l’ultimo tratto"><span class="us-icon" data-us-icon="arrow-counter-clockwise" aria-hidden="true"></span></button>
     </div>
     <p class="us-lav-status" id="usLavagnaStatus" role="status" aria-live="polite"></p>
   </section>`;

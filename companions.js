@@ -38,7 +38,7 @@ function todayPriority(list,seen){
   if(!next)return null;
   const c=byId(next.id);
   return {id:`companion:${c.id}`,factKey:`companion:${c.id}`,arrivalType:'companion',category:'celebration',attention:true,
-    title:c.arrived,detail:'Un nuovo compagno, in Sintonia',action:'companion',actionLabel:'Guardalo'};
+    title:c.arrived,detail:'Sbloccato con la Sintonia',action:'companion',actionLabel:'Guardalo'};
 }
 function install(w){
   const d=w.document;

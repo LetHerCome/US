@@ -17,7 +17,7 @@
   // The founder's twelve (02/11/2026). The same keys, emoji and words are in
   // the SQL check and in the widget (UsWidgetModels.STATUSES).
   const STATUSES = Object.freeze([
-    { key: 'innamorato', emoji: '🥰', m: 'innamorato', f: 'innamorata', n: 'in amore' },
+    { key: 'innamorato', emoji: '🥰', m: 'innamorato', f: 'innamorata', n: 'col cuore pieno' },
     { key: 'felice', emoji: '😊', m: 'felice', f: 'felice', n: 'felice' },
     { key: 'stanco', emoji: '😴', m: 'stanco', f: 'stanca', n: 'senza energie' },
     { key: 'giu', emoji: '😔', m: 'giù', f: 'giù', n: 'giù' },
@@ -25,7 +25,7 @@
     { key: 'malato', emoji: '🤒', m: 'non sto bene', f: 'non sto bene', n: 'non sto bene' },
     { key: 'festa', emoji: '🥳', m: 'in festa', f: 'in festa', n: 'in festa' },
     { key: 'lavoro', emoji: '💼', m: 'al lavoro', f: 'al lavoro', n: 'al lavoro' },
-    { key: 'studio', emoji: '📚', m: 'studio', f: 'studio', n: 'studio' },
+    { key: 'studio', emoji: '📚', m: 'sui libri', f: 'sui libri', n: 'sui libri' },
     { key: 'palestra', emoji: '🏋️', m: 'in palestra', f: 'in palestra', n: 'in palestra' },
     { key: 'viaggio', emoji: '🚗', m: 'in viaggio', f: 'in viaggio', n: 'in viaggio' },
     { key: 'tavola', emoji: '🍝', m: 'a tavola', f: 'a tavola', n: 'a tavola' }
@@ -38,7 +38,7 @@
 
   const validForm = (form) => (FORMS.includes(form) ? form : null);
 
-  // "innamorata", "innamorato", or the undeclined "in amore".
+  // "innamorata", "innamorato", or the undeclined "col cuore pieno".
   function word(key, form) {
     const s = BY_KEY.get(key);
     if (!s) return '';

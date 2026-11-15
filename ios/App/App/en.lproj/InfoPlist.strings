@@ -1,0 +1,7 @@
+/* iOS Store V1 (05/11/2026): permission prompts in English (every phone not set to Italian). */
+"NSCameraUsageDescription" = "US uses the camera to take the photos and videos you share with your partner.";
+"NSMicrophoneUsageDescription" = "US uses the microphone to record the voice notes and the sound of the videos you leave for your partner.";
+"NSLocationWhenInUseUsageDescription" = "US uses this phone's approximate location only while the app is open, to work out the distance between you two. Your partner only sees the distance, never where you are.";
+"NSPhotoLibraryUsageDescription" = "US opens your library so you can choose the photos to share with your partner.";
+"NSPhotoLibraryAddUsageDescription" = "US saves to your library the Memories photos you choose to download.";
+"NSFaceIDUsageDescription" = "US uses Face ID to protect access to the app on this phone, if you turn it on.";

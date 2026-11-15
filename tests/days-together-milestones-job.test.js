@@ -67,7 +67,7 @@ test('1000 days: awarded with the biggest prize and told to both, each in their 
   assert.deepEqual(w.awards, [['days', { target_couple_id: COUPLE, target_milestone_date: '2029-01-15', target_days: 1000, target_xp: 300 }]]);
   const byEndpoint = Object.fromEntries(w.webpush.sent.map((s) => [s.endpoint, s.payload]));
   assert.deepEqual([byEndpoint['https://push.example/s-fra'].title, byEndpoint['https://push.example/s-fra'].body, byEndpoint['https://push.example/s-fra'].target],
-    ['US. · Mille giorni ♡', 'Oggi sono 1000 giorni insieme', 'events']);
+    ['US. · Mille giorni ♡', 'Oggi fate 1000 giorni insieme', 'events']);
   assert.deepEqual([byEndpoint['https://push.example/s-bea'].title, byEndpoint['https://push.example/s-bea'].body], ['US. · A thousand days ♡', '1000 days together today']);
   assert.doesNotMatch(JSON.stringify(w.webpush.sent), /XP|Bond|\+\d/);
 });
@@ -75,7 +75,7 @@ test('1000 days: awarded with the biggest prize and told to both, each in their 
 test('100 days: its own copy; on a mesiversario too, both awarded and one notification each', async () => {
   const hundred = world('2026-04-21');
   await run(hundred, '2026-07-30T07:30:00Z');
-  assert.deepEqual(hundred.webpush.sent.map((s) => [s.payload.title, s.payload.body]), [['US. · 100 giorni ♡', 'Oggi sono 100 giorni insieme'], ['US. · 100 giorni ♡', 'Oggi sono 100 giorni insieme']]);
+  assert.deepEqual(hundred.webpush.sent.map((s) => [s.payload.title, s.payload.body]), [['US. · 100 giorni ♡', 'Oggi fate 100 giorni insieme'], ['US. · 100 giorni ♡', 'Oggi fate 100 giorni insieme']]);
   // 700 days after 1 May 2025 is 1 April 2027: a mesiversario too.
   const w = world('2025-05-01');
   const res = await run(w, '2027-04-01T07:30:00Z');

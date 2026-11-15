@@ -844,3 +844,14 @@ body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nlabel
 .us-person-color-locked{margin:0 0 12px;color:var(--us-color-text-2);line-height:1.45}
 #usSettingsModalBody .us-person-colors.is-locked button::before{display:none}
 #usSettingsModalBody .us-person-colors.is-locked button{opacity:.6}
+
+/* US Plus, in arrivo (13/11/2026) */
+.us-plus-soon{display:grid;gap:14px}
+.us-plus-soon-lead,.us-plus-soon-free,.us-plus-soon-state{margin:0;line-height:1.45;color:var(--us-color-text-2)}
+.us-plus-soon-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.us-plus-soon-list li{display:flex;align-items:center;gap:10px;color:var(--us-color-text)}
+.us-plus-soon-list .us-icon{flex:none;width:18px;height:18px;color:var(--us-tu)}
+.us-plus-soon-free{font-size:14px}
+.us-plus-soon-cta{width:100%}
+.us-plus-soon-state{color:var(--us-color-text)}
+.us-plus-soon-leave{justify-self:center}
