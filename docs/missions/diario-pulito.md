@@ -170,4 +170,4 @@ Il founder: «Sì, e unisci l'attesa». Unito `claude/attesa-dopo-invito` (la do
 - In Impostazioni resta visibile la barra in basso (nel mockup no).
 - Gli screenshot dell'entrata sono dell'app nel browser con dati finti (l'entrata chiede un account nuovo), fatti prima della correzione della carta beige.
 
-**Migrazione** `20261115183900_personaggi_forma_e_colori.sql`: scritta, controllata dalla sessione principale, **non applicata** (solo staging, aspetta il via del founder).
+**Migrazione** `20261115183900_personaggi_forma_e_colori.sql`: **applicata su US-STAGING** il 15/11/2026 col via del founder («Sì, su staging»), workflow «Supabase SQL (manual)», run 43758649805 (HTTP 201), dal ref `claude/diario-pulito-c85387` (04a99c0d). Controllata in sola lettura: colonna `character_shape` con il check delle cinque forme; `set_my_character_shape` security definer, `search_path` vuoto, eseguibile solo da `authenticated`; check dei colori e `set_my_color` con la nuova tavolozza; nessun profilo resta su oro, cielo o rubino (su staging: 3 col colore di base, 1 blu, 1 perla). **Non in produzione.**

@@ -6,6 +6,8 @@
 
 ### In preparazione: «Il diario, ma pulito» (15/11/2026)
 
+**SQL (staging fatto, produzione da fare col via):** `20261115183900_personaggi_forma_e_colori.sql` (forma del personaggio, `set_my_character_shape`, tavolozza nuova con i colori spostati) è applicata su US-STAGING (run 43758649805). In produzione va applicata prima del sito, perché il sito nuovo scrive le forme e i nomi nuovi dei colori.
+
 **Stato:** branch `claude/diario-pulito-c85387` (nato da `main`), provato su US LIVE con i dati di staging; non sul sito di staging, non in produzione. Missione e differenze dal mockup: [diario-pulito.md](../missions/diario-pulito.md). Solo web e una riga di config Capacitor (`SystemBars` LIGHT): niente SQL, niente Edge.
 
 **Cosa cambia:** tutta US passa dallo scuro alla carta chiara dello studio approvato il 15/11: Oggi come pagina del giorno (foto da Ricordi, frase del giorno, personaggi, domanda), «Voi due» al posto di Sintonia in Gioca (con «Come stai»), Noi con il calendario a stanghette e «In arrivo», Ricordi come diario per giorni, Gioca con la sfida e «Da giocare». Il countdown attivo diventa la frase del giorno e si crea da Noi. Il gatto non si vede più.
