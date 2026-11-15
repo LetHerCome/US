@@ -108,9 +108,9 @@
 #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-card-in .42s var(--dc-e-out) both}
 @keyframes dc-oggi-card-in{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
 
-#home #usOggiCaption .dot,#today .question .locked .dot{display:inline-block;flex:none;width:9px;height:9px;border-radius:50%;background:var(--us-noi)}
-#home #usOggiCaption .dot[data-who="tu"],#today .question .locked .dot[data-who="tu"]{background:var(--us-tu)}
-#home #usOggiCaption .dot[data-who="partner"],#today .question .locked .dot[data-who="partner"]{background:var(--us-partner)}
+#home #usOggiCaption .dot{display:inline-block;flex:none;width:9px;height:9px;border-radius:50%;background:var(--us-noi)}
+#home #usOggiCaption .dot[data-who="tu"]{background:var(--us-tu)}
+#home #usOggiCaption .dot[data-who="partner"]{background:var(--us-partner)}
 
 #home #usDailyRitual .ring :is(.r-noi,.r-bloom){opacity:0;transform-box:view-box;transform-origin:24px 15px}
 #home #usDailyRitual .ring:is([data-st="vuoto"],[data-st="attesa"]) .r-you-full{opacity:0}
@@ -288,190 +288,31 @@
 #home .push-optin-card.denied{border-color:color-mix(in srgb,var(--us-rosso) 30%,transparent)}
 
 /* ---------- 8 · Today sheet: write (mockup #sheetAnswer), then the two answers (#sheetReveal) ---------- */
-#today .today-sheet-head{display:block;margin:0}
-#today .today-sheet-head .tiny{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-#today>.today-sheet.us-sheet[data-us-modal-panel]>.today-sheet-head h2{margin:0;font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;text-wrap:nowrap;color:var(--us-tu)}
-#today:has(#todayReveal:not(.hidden))>.today-sheet.us-sheet[data-us-modal-panel]>.today-sheet-head h2{color:var(--us-noi)}
+
 /* No cross on these two sheets (mockup): the handle, the scrim and Esc close it;
    the button stays for screen readers and shows itself on keyboard focus. */
-#today .today-sheet-head .today-close:not(:focus-visible){position:absolute!important;width:1px!important;height:1px!important;min-width:0!important;min-height:0!important;padding:0!important;overflow:hidden;clip:rect(0 0 0 0);border:0!important;opacity:0}
-#today .today-sheet-head .today-close:focus-visible{position:absolute;top:14px;right:16px}
-#today .today-sheet .card.question{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  margin:12px 0 0;
-  padding:0;
-  border:0;
-  border-radius:0;
-  background:none!important;
-  box-shadow:none!important;
-}
-#today .qtext{margin:0;font:400 26px/1.12 var(--us-font-display);letter-spacing:0;color:var(--us-color-text);text-wrap:balance}
-#today textarea#answer{
-  width:100%;
-  height:96px;
-  min-height:96px;
-  padding:14px;
-  border:1px solid var(--us-color-line-strong);
-  border-radius:16px;
-  background:var(--us-color-bg)!important;
-  color:var(--us-color-text);
-  font:400 16px/1.5 var(--us-font-ui);
-  box-shadow:none;
-  resize:none;
-}
-#today textarea#answer::placeholder{color:var(--us-color-text-3)}
-#today textarea#answer:focus{outline:2px solid var(--us-noi);outline-offset:2px;border-color:var(--us-color-line-strong);box-shadow:none}
-#today .question .locked{order:2;display:flex;gap:8px;margin:0;padding:0;border:0;border-radius:0;background:none;font:400 12px/1.5 var(--us-font-ui);color:var(--us-color-text-3);text-align:left}
-#today .question .locked .dot{margin-top:4px}
-#today .question .locked b{font-weight:600;color:var(--us-color-text-2)}
-#today .question>.row{order:3;margin:4px 0 0}
-#today .question>#todayReveal{order:4}
-#today .question>#todayKeep{order:5}
-#today #todaySaveBtn{width:100%;min-height:52px;border:0;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro);font:700 16px/1 var(--us-font-ui);box-shadow:none}
-#today .today-reveal--simple{display:grid;gap:10px;margin:4px 0}
-#today .today-reveal--simple .today-answer{padding:14px 16px;border:0;border-radius:20px;color:var(--us-inchiostro);box-shadow:none}
-#today .today-reveal--simple .today-answer[data-us-daily-answer="partner"]{order:-1;margin-right:28px;background:var(--us-partner)}
-#today .today-reveal--simple .today-answer[data-us-daily-answer="mine"]{margin-left:28px;background:var(--us-tu)}
-#today .today-reveal--simple .today-answer b{display:block;margin-bottom:4px;font:700 11px/1.5 var(--us-font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--us-inchiostro);opacity:.7}
-#today .today-reveal--simple .today-answer p{margin:0;font:400 19px/1.25 var(--us-font-display);color:var(--us-inchiostro);overflow-wrap:anywhere}
+
 /* The bubbles come in from the sides (mockup revealOpen); the panel never scrolls sideways. */
-#today .today-reveal--simple{overflow-x:clip}
-#today.open .today-reveal--simple .today-answer[data-us-daily-answer="partner"]{animation:dc-oggi-from-left .62s var(--dc-e-soft) .18s backwards}
-#today.open .today-reveal--simple .today-answer[data-us-daily-answer="mine"]{animation:dc-oggi-from-right .62s var(--dc-e-soft) .32s backwards}
+
 @keyframes dc-oggi-from-left{from{opacity:0;translate:-70% 0;rotate:-5deg}to{opacity:1;translate:0 0;rotate:0deg}}
 @keyframes dc-oggi-from-right{from{opacity:0;translate:70% 0;rotate:5deg}to{opacity:1;translate:0 0;rotate:0deg}}
 /* O2 — one tap on their answer (♥ or "Mi hai commosso"); under mine, what they felt. */
-#today .today-reveal--simple .today-reactions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-#today .today-reveal--simple .today-reaction{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  min-width:40px;
-  min-height:40px;
-  padding:0 14px;
-  border:0;
-  border-radius:999px;
-  background:none;
-  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--us-inchiostro) 45%,transparent);
-  color:var(--us-inchiostro);
-  font:600 14px/1 var(--us-font-ui);
-}
-#today .today-reveal--simple .today-reaction .us-icon{--us-icon-size:20px}
-#today .today-reveal--simple .today-reaction[aria-pressed="true"]{background:var(--us-inchiostro);box-shadow:none;color:var(--us-partner)}
-#today .today-reveal--simple .today-reaction:focus-visible{outline:2px solid var(--us-inchiostro);outline-offset:2px}
-#today .today-reveal--simple .today-reaction:disabled{opacity:.6}
-#today .today-reveal--simple .today-answer p.today-reaction-note{margin:8px 0 0;font:600 13px/1.35 var(--us-font-ui);color:var(--us-inchiostro);opacity:.8}
-#today .today-keep{display:grid;gap:12px;margin:0}
-#today .today-keep-button,#today .today-keep-done{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  width:100%;
-  min-height:52px;
-  margin:0;
-  border:0;
-  border-radius:999px;
-  background:var(--us-tu);
-  color:var(--us-inchiostro);
-  font:700 16px/1 var(--us-font-ui);
-  box-shadow:none;
-}
-#today .today-keep-button::before{content:"";width:18px;height:18px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat}
-#today .today-keep-button[aria-busy="true"]::before{display:none}
-#today .today-keep-button:disabled,#today .today-keep-done{opacity:.45}
-#today .today-keep-done .us-icon{--us-icon-size:18px;color:inherit}
-#today .today-keep-done.is-fresh{animation:dc-oggi-kept .38s var(--us-ease-spring,cubic-bezier(.34,1.56,.64,1))}
+
 @keyframes dc-oggi-kept{0%{scale:1}40%{scale:1.04}100%{scale:1}}
-#today .today-keep-note{margin:0;font:400 12px/1.5 var(--us-font-ui);color:var(--us-color-text-3);text-align:center}
-#today .today-keep-status,#today .today-sync-status{font-size:12px;color:var(--us-color-text-3);text-align:center}
 
 /* ---------- 9 · Ti penso ricevuto: a Momento (mockup UP.momento + arrive()) ----------
    Their colour floods from the top (700 ms), the two circles slide together,
    the words arrive one after the other (500 ms each, 80 ms apart). */
-#thinkArrival.think-arrival-overlay{padding:0;align-items:stretch;justify-content:stretch}
-#thinkArrival .think-arrival-backdrop{background:none}
-#thinkArrival .think-arrival-sheet{
-  position:fixed!important;
-  inset:0!important;
-  width:auto!important;
-  max-width:none!important;
-  max-height:none!important;
-  margin:0!important;
-  display:grid;
-  align-content:center;
-  justify-items:center;
-  gap:8px;
-  padding:calc(var(--us-safe-top) + 24px) 24px calc(var(--us-safe-bottom) + 24px)!important;
-  border:0!important;
-  border-radius:0!important;
-  background:radial-gradient(120% 70% at 50% 0%,color-mix(in srgb,var(--us-partner) 52%,var(--us-color-bg)),var(--us-color-bg) 64%)!important;
-  box-shadow:none!important;
-  text-align:center;
-  overflow:auto;
-  transform:none!important;
-}
-#thinkArrival .think-arrival-sheet::before,#thinkArrival .think-arrival-sheet::after{display:none}
-#thinkArrival .think-arrival-head{display:contents}
-#thinkArrival .think-arrival-head>div{display:contents}
-#thinkArrival .think-arrival-visual{position:relative;display:block;width:120px;height:80px;margin:6px 0 10px}
-#thinkArrival .think-arrival-visual i{position:absolute;top:14px;width:52px;height:52px;border-radius:50%}
-#thinkArrival .think-arrival-visual i:first-child{left:22px;background:var(--us-partner)}
-#thinkArrival .think-arrival-visual i:last-child{left:46px;background:var(--us-tu);mix-blend-mode:screen}
-#thinkArrival .think-arrival-head .tiny{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-partner)}
-#thinkArrival #thinkArrivalTitle{max-width:320px;margin:0;font:400 40px/1.02 var(--us-font-display);letter-spacing:0;color:var(--us-color-text);text-wrap:balance}
-#thinkArrival #thinkArrivalTitle .think-arrival-name{display:block}
-#thinkArrival #thinkArrivalTitle em{font-style:italic;color:var(--us-partner)}
-#thinkArrival .think-arrival-copy{margin:0;font:400 15px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
-#thinkArrival .think-reaction-grid{display:flex;justify-content:center;gap:10px;margin-top:8px}
-#thinkArrival .think-reaction-button{
-  width:56px;
-  min-width:56px;
-  height:56px;
-  min-height:56px;
-  padding:0;
-  display:grid;
-  place-items:center;
-  border:1px solid var(--us-color-line);
-  border-radius:50%;
-  background:var(--us-color-surface-2);
-  box-shadow:none;
-}
-#thinkArrival .think-reaction-button[aria-pressed="true"],#thinkArrival .think-reaction-button.selected{border-color:var(--us-noi);background:color-mix(in srgb,var(--us-noi) 22%,var(--us-color-surface-2))}
-#thinkArrival .think-reaction-button.selected .think-reaction-glyph{animation:dc-oggi-react .42s var(--us-ease-spring,cubic-bezier(.34,1.56,.64,1))}
+
 @keyframes dc-oggi-react{0%{scale:1}35%{scale:1.35}100%{scale:1}}
-#thinkArrival .think-reaction-button:disabled:not(.selected){opacity:1}
-#thinkArrival .think-reaction-glyph{position:relative;display:block;width:26px;height:26px;font-size:0;line-height:26px;text-align:center;color:transparent}
-#thinkArrival .think-reaction-heart{background:var(--us-rosa);-webkit-mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/66% no-repeat;mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/66% no-repeat}
-#thinkArrival .think-reaction-hug::before,#thinkArrival .think-reaction-hug::after{content:"";position:absolute;top:6.5px;width:13px;height:13px;border-radius:50%}
-#thinkArrival .think-reaction-hug::before{left:3.25px;background:var(--us-rosa)}
-#thinkArrival .think-reaction-hug::after{left:9.75px;background:var(--us-lilla);mix-blend-mode:screen}
+
 /* A thought in amber (mockup "pensiero"): a soft bubble and two small dots. */
-#thinkArrival .think-reaction-miss::before{content:"";position:absolute;left:6.5px;top:4.3px;width:15.2px;height:11.7px;border-radius:50% 50% 50% 50%/55% 55% 45% 45%;background:var(--us-ambra)}
-#thinkArrival .think-reaction-miss::after{content:"";position:absolute;left:4.6px;top:18.3px;width:3.5px;height:3.5px;border-radius:50%;background:var(--us-ambra);box-shadow:-2.2px 2.7px 0 -.5px var(--us-ambra)}
-#thinkArrival .think-arrival-status{min-height:1.5em;margin:0;font:400 14px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
-#thinkArrival .think-arrival-actions{display:grid;width:188px;margin-top:14px}
-#thinkArrival .think-arrival-close{width:100%;min-height:48px;padding:0 18px;border:1px solid var(--us-color-line-strong);border-radius:999px;background:none;box-shadow:none;color:var(--us-color-text);font:600 15px/1 var(--us-font-ui)}
-#thinkArrival .think-arrival-close:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+
 /* The shared modal chrome turns panel animations off (modal-center.css): the Momento keeps its flood. */
-#thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-flood .7s var(--dc-e-io) both!important}
-#thinkArrival.open :is(.think-arrival-visual,.think-arrival-head .tiny,#thinkArrivalTitle,.think-arrival-copy,.think-reaction-grid,.think-arrival-status,.think-arrival-actions){animation:dc-oggi-rise-14 .5s var(--dc-e-out) backwards}
-#thinkArrival.open .think-arrival-visual{animation-delay:.38s}
-#thinkArrival.open .think-arrival-head .tiny{animation-delay:.46s}
-#thinkArrival.open #thinkArrivalTitle{animation-delay:.54s}
-#thinkArrival.open .think-arrival-copy{animation-delay:.62s}
-#thinkArrival.open .think-reaction-grid{animation-delay:.7s}
-#thinkArrival.open:has(.think-arrival-copy[hidden]) .think-reaction-grid{animation-delay:.62s}
-#thinkArrival.open .think-arrival-status{animation-delay:.78s}
-#thinkArrival.open .think-arrival-actions{animation-delay:.86s}
-#thinkArrival.open .think-arrival-visual i:first-child{animation:dc-oggi-from-l .7s var(--dc-e-soft) .25s backwards}
-#thinkArrival.open .think-arrival-visual i:last-child{animation:dc-oggi-from-r .7s var(--dc-e-soft) .25s backwards}
+
 /* Closing: the Momento fades away in 280 ms (mockup closeMoment); the tiny shift
    lets the shared surface exit hear its transform transition end. */
-#thinkArrival[data-us-motion-exiting] .think-arrival-sheet{opacity:0;transform:translateY(.01px)!important;transition:opacity .28s linear,transform .28s linear!important;pointer-events:none}
+
 @keyframes dc-oggi-flood{from{clip-path:circle(0% at 50% 0%)}to{clip-path:circle(150% at 50% 0%)}}
 @keyframes dc-oggi-rise-14{from{opacity:0;translate:0 14px}to{opacity:1;translate:0 0}}
 @keyframes dc-oggi-from-l{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
@@ -856,14 +697,13 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
 #leftForYouCameraOverlay #leftForYouCameraRetake{order:1;background:rgba(15,11,19,.55);box-shadow:inset 0 0 0 1px var(--us-color-line-strong);color:var(--us-color-text);font-weight:600}
 
 /* ---------- 13 · Reduced motion: movement becomes a fade or nothing ---------- */
-:root[data-us-motion="reduced"] :is(#thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-head>div>*,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-visual i,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind){animation:none!important}
+:root[data-us-motion="reduced"] :is(#thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind){animation:none!important}
 
-:root[data-us-motion="reduced"] #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
 :root[data-us-motion="reduced"] #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-fade .2s linear both!important}
 @media (prefers-reduced-motion:reduce){
-  #thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-head>div>*,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-visual i,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind{animation:none!important}
+  #thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind{animation:none!important}
   #home .us-daily-ritual-ring *{transition:none!important}
-  #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
+  
   #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-fade .2s linear both!important}
   #leftForYouPartnerEntry.us-attention-orbit[data-us-attention="on"]::after{animation:none;transition:none}
   #home .home-photo-shade{transition:none}

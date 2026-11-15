@@ -456,7 +456,8 @@ test('secondary surfaces: internal destinations use the same compact sheet and r
   assert.match(moments, /\.conservati-card\{[\s\S]*?min-height:60px/);
   assert.match(left, /\.left-for-you-head h2\{font-size:22px/);
   assert.match(settings, /\.us-setting-choice button\{min-height:48px/);
-  assert.match(styles, /#today \.question\{padding:14px/);
+  // Mockup v5 «I fogli» (16/11/2026): the question of today is the one sheet of the diary.
+  assert.match(read('index.html'), /<main id="today" class="dy-foglio"/);
 });
 
 

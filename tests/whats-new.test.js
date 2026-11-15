@@ -28,7 +28,8 @@ test('the notice can carry a list, written as text', () => {
   const src = read('ui-foundation.js');
   assert.match(src, /if \(Array\.isArray\(options\.items\) && options\.items\.length\)/);
   assert.match(src, /li\.textContent = text\(item\);/);
-  assert.match(read('ui-foundation.css'), /\.us-confirm-list\{/);
+  // Mockup v5 «I fogli» (16/11/2026): the notice is the one sheet; its list is drawn in diario.css.
+  assert.match(read('diario.css'), /\.dy-f-list\{/);
 });
 
 test('wired: after sign-in on a phone that knew US, the list of what is new', () => {

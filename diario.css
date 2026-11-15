@@ -151,7 +151,7 @@ body.us-keyboard-open .dy-nav{opacity:0;pointer-events:none;transform:translateY
 .dy-over.is-closing .dy-sheet{animation:dy-sheet-down .24s cubic-bezier(.4,0,1,1) forwards}
 @keyframes dy-fade{from{opacity:0}to{opacity:1}}
 @keyframes dy-sheet-up{from{transform:translateY(100%)}to{transform:none}}
-@keyframes dy-sheet-down{from{transform:none}to{transform:translateY(100%)}}
+@keyframes dy-sheet-down{to{transform:translateY(100%)}}
 .dy-grab{display:block;width:40px;height:5px;border-radius:3px;background:var(--us-ink-12);margin:0 auto 14px}
 .dy-sheet-head{display:flex;justify-content:space-between;align-items:center}
 .dy-sheet-title{margin:0;font:800 26px/1 var(--us-font-ui);letter-spacing:-.02em}
@@ -430,3 +430,103 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 .dy-shape[aria-pressed="true"]{background:var(--us-card);box-shadow:inset 0 0 0 2px var(--us-ink-100);font-weight:800}
 @media (prefers-reduced-motion:reduce){.dy-set .dy-sw::before,.dy-set .dy-sw i{transition:none}}
 html[data-us-motion="reduced"] .dy-set .dy-sw::before,html[data-us-motion="reduced"] .dy-set .dy-sw i{transition:none}
+
+/* ================================================================ fogli */
+/* Il foglio unico (founder, 16/11/2026, mockup v5 «I fogli»): every sheet
+   that rises over the tabs has the same parts as «Voi due». The handle, the
+   title with one word in italics, the square close of 36, the card paper with
+   28 on top, one ink button of 52 and the others in outline, rows of 58 on a
+   hairline, what you two write in your hand with your character beside it.
+   The feature JS keeps open/close, aria-hidden and focus (ui-foundation.js);
+   the panel rises with a keyframe (out of display:none) and leaves on a
+   transform transition, which is what exitSurface() waits for.
+   Why it moves: it rises because it rests on the page you were on, so when
+   it closes you are still there. Nothing inside moves unless something
+   happens (an answer comes into focus, a character hops). */
+.dy-foglio{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:flex;align-items:flex-end;justify-content:center}
+.dy-foglio[aria-hidden="true"],.dy-foglio[hidden]{display:none}
+.dy-foglio-scrim{position:absolute;inset:0;background:var(--us-scrim);animation:dy-fade .2s ease-out;transition:opacity .2s ease-in}
+.dy-foglio-panel{position:relative;width:100%;max-width:560px;max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 12px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;background:var(--us-card);color:var(--us-ink-100);border-radius:28px 28px 0 0;padding:10px calc(20px + var(--us-safe-right)) calc(28px + var(--us-safe-bottom)) calc(20px + var(--us-safe-left));box-shadow:0 -10px 30px rgba(20,18,14,.2);text-align:left;animation:dy-sheet-up .34s cubic-bezier(.2,.8,.2,1);transition:transform .24s cubic-bezier(.4,0,1,1)}
+.dy-foglio-panel::-webkit-scrollbar{display:none}
+.dy-foglio[data-us-motion-exiting]{pointer-events:none}
+.dy-foglio[data-us-motion-exiting] .dy-foglio-scrim{opacity:0}
+.dy-foglio[data-us-motion-exiting] .dy-foglio-panel{animation:none;transform:translateY(100%)}
+.dy-foglio-panel.is-dragging,.dy-sheet.is-dragging{transition:none}
+.dy-foglio .dy-grab,.dy-foglio .dy-sheet-head,.dy-over .dy-grab,.dy-over .dy-sheet-head{touch-action:none}
+body.us-keyboard-open .dy-foglio{bottom:auto;height:var(--us-viewport-height,100dvh)}
+.dy-sheet-head{gap:12px}
+.dy-sheet-head>div{min-width:0}
+.dy-sheet-title{line-height:1.08;overflow-wrap:anywhere}
+.dy-sheet-sub{margin:6px 0 0;font:500 13.5px/1.4 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-sheet-sub:empty{display:none}
+.dy-close{flex:none;align-self:flex-start}
+/* The body: a column with one rhythm. */
+.dy-f-body{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+.dy-f-body[hidden],.dy-f-acts[hidden],.dy-f-note[hidden],.dy-f-sign[hidden],.dy-f-in[hidden]{display:none}
+.dy-f-q{font:700 var(--us-text-20)/1.3 var(--us-font-ui);letter-spacing:-.01em;color:var(--us-ink-100);overflow-wrap:anywhere}
+.dy-f-lab{display:flex;flex-direction:column;gap:6px;font:700 var(--us-text-13)/1.2 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-f-in{display:block;box-sizing:border-box;width:100%;min-height:52px;margin:0;border:0;border-radius:var(--us-r-12);background:var(--us-beige);padding:0 14px;font:600 var(--us-text-15)/1.3 var(--us-font-ui);color:var(--us-ink-100);-webkit-appearance:none;appearance:none}
+.dy-f-in::placeholder{color:var(--us-ink-40);font-weight:500;opacity:1}
+.dy-f-in:focus-visible{outline:2px solid var(--us-ink-100);outline-offset:0}
+textarea.dy-f-in{padding:12px 14px;resize:none}
+.dy-f-hand{min-height:112px;font:21px/1.3 var(--us-font-hand)}
+.dy-f-hand::placeholder{font-weight:400}
+.dy-f-field{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.dy-f-count{align-self:flex-end;font:600 12px/1 var(--us-font-ui);color:var(--us-ink-40)}
+.dy-f-count:empty{display:none}
+.dy-f-note{display:flex;align-items:center;gap:8px;margin:0;font:500 12.5px/1.35 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-f-note:empty{display:none}
+.dy-f-ico{flex:none;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* Someone did it, waits or arrives: their character, small, like a signature. */
+.dy-f-sign{display:flex;align-items:flex-start;gap:10px}
+.dy-f-sign>.dy-stk{flex:none;margin-top:1px}
+.dy-f-sign-body{flex:1;min-width:0;font:21px/1.25 var(--us-font-hand);color:var(--us-ink-100);overflow-wrap:anywhere}
+.dy-f-wait{flex:1;min-width:0;align-self:center;font:600 12.5px/1.35 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-f-paper{padding:16px;border-radius:var(--us-r-16);background:var(--us-beige);color:var(--us-ink-100)}
+/* The actions: one ink button the width of the sheet, the others in outline. */
+.dy-f-acts{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.dy-f-acts>.dy-btn{width:100%}
+.dy-f-acts.is-row{flex-direction:row}
+.dy-f-acts.is-row>.dy-btn{flex:1;min-width:0}
+.dy-btn:disabled,.dy-btn[aria-disabled="true"]{background:var(--us-ink-12);color:var(--us-ink-40);box-shadow:none;cursor:default}
+.dy-btn-ghost:disabled{background:transparent;box-shadow:inset 0 0 0 1.5px var(--us-ink-08)}
+.dy-btn[hidden]{display:none}
+/* Rows of 58 on a hairline, as in Impostazioni. */
+.dy-f-row{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;margin:0;padding:7px 0;border:0;border-bottom:1px solid var(--us-ink-08);background:transparent;font:inherit;color:var(--us-ink-100);text-align:left}
+.dy-f-row:last-child{border-bottom:0}
+button.dy-f-row{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dy-f-row-ic{flex:none;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--us-beige);color:var(--us-ink-100)}
+.dy-f-row-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dy-f-row-tx b{font:700 var(--us-text-15)/1.25 var(--us-font-ui)}
+.dy-f-row-tx small,.dy-f-row-tx span{font:500 12.5px/1.3 var(--us-font-ui);color:var(--us-ink-60)}
+/* A choice among a few: tiles in a row, the chosen one in ink. */
+.dy-tiles{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}
+.dy-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:48px;margin:0;padding:6px 4px;border:0;border-radius:var(--us-r-12);background:var(--us-beige);color:var(--us-ink-100);font:600 12.5px/1.15 var(--us-font-ui);text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dy-tile svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dy-tile[aria-pressed="true"],.dy-tile[aria-selected="true"],.dy-tile.is-active{background:var(--us-ink-100);color:var(--us-paper);font-weight:800}
+.dy-f-row:focus-visible,.dy-tile:focus-visible,.dy-close:focus-visible{outline:3px solid var(--us-pencil);outline-offset:2px}
+/* «Riduci movimento»: the sheet appears and goes without moving. */
+@media (prefers-reduced-motion:reduce){.dy-foglio-panel,.dy-foglio-scrim,.dy-foglio .dy-q-unblur,.dy-foglio .dy-hop{animation:none;transition:none}}
+html[data-us-motion="reduced"] .dy-foglio-panel,html[data-us-motion="reduced"] .dy-foglio-scrim,html[data-us-motion="reduced"] .dy-foglio .dy-q-unblur,html[data-us-motion="reduced"] .dy-foglio .dy-hop{animation:none;transition:none}
+/* La domanda di oggi (#today, app.js): the two answers signed, the reactions
+   under the other's, in ink when chosen. */
+.dy-f-react{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0 40px}
+.dy-f-react .dy-btn[aria-pressed="true"]{background:var(--us-ink-100);color:var(--us-paper);box-shadow:none}
+.dy-f-react .us-icon{--us-icon-size:18px}
+.dy-foglio .today-answer>.dy-f-note{margin:8px 0 0 40px}
+/* La conferma (UsUiFoundation.confirm / notice): a short sheet; the list of the Novità. */
+.dy-f-list{margin:14px 0 0;padding:0 0 0 18px;font:500 14px/1.45 var(--us-font-ui);color:var(--us-ink-80)}
+.dy-f-list li{margin-bottom:6px}
+/* Ti penso ricevuto (#thinkArrival, app.js): a short sheet over Oggi. */
+.dy-think-who{position:relative;display:flex;justify-content:center;padding:14px 0 4px}
+.dy-think-who .dy-hop{animation-delay:.22s}
+.dy-think-heart{position:absolute;left:calc(50% + 34px);top:8px;width:30px;height:30px;animation:dy-pop .45s .34s cubic-bezier(.2,1.6,.4,1) both}
+.dy-think-heart svg,.dy-think-glyph svg{display:block;width:100%;height:100%;fill:var(--us-think);stroke:none}
+.dy-think-react{margin-top:16px}
+.dy-think-react .dy-tile{min-height:76px;gap:6px;font-size:13px;font-weight:700}
+.dy-think-react .dy-tile:disabled{opacity:.55;cursor:default}
+.dy-think-react .dy-tile[aria-pressed="true"]:disabled{opacity:1}
+.dy-think-glyph{display:block;width:26px;height:26px;font-size:24px;line-height:26px;text-align:center}
+.dy-think-status{justify-content:center;margin-top:12px}
+@media (prefers-reduced-motion:reduce){.dy-think-heart{animation:none}}
+html[data-us-motion="reduced"] .dy-think-heart{animation:none}

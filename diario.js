@@ -621,6 +621,74 @@
     card?.click?.();
   }
 
+  // ---------------------------------------------------------------- fogli
+  // The pieces of the one sheet (mockup v5 «I fogli»), for the feature code
+  // that owns each sheet: who did it (their character, small, like a
+  // signature) and the stroke icons. Each feature keeps its own data.
+  const ICONS = Object.freeze({
+    x: 'M6 6l12 12M18 6L6 18', lock: 'M8 11V8.5a4 4 0 0 1 8 0V11 M6.5 11h11v8.5h-11z',
+    keep: 'M7 3.5h10v17l-5-3.5-5 3.5z', diary: 'M5.2 4.6l12.4-1.4 1.9 16.4-12.4 1.4z M7 7.2l9.5-1.1 1 8.9-9.5 1.1z',
+    text: 'M5 6.5h14 M5 11h14 M5 15.5h9', cam: 'M4 8h4l2-2.5h4L16 8h4v11H4z M12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z',
+    mic: 'M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11.5a6 6 0 0 0 12 0 M12 17.5v3',
+    video: 'M3.5 7h12v10h-12z M15.5 10.5l5-3v9l-5-3',
+    music: 'M9 17.5V5.5l10-2v12 M9 17.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z M19 15.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z',
+    pin: 'M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z M12 11h.01', right: 'M9 5l7 7-7 7', left: 'M15 5l-7 7 7 7',
+    arrow: 'M5 12h13M13 6l6 6-6 6', trash: 'M5 7h14 M9.5 7V4.5h5V7 M7 7l1 13h8l1-13', clock: 'M12 20.5a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17z M12 7.5V12l3 2',
+    down: 'M12 4v11 M7.5 10.5l4.5 4.5 4.5-4.5 M5 19.5h14', plus: 'M12 5v14M5 12h14', bell: 'M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z M10 20.5h4',
+    note: 'M6 3.5h12v17H6z M9 8h6 M9 11.5h6 M9 15h3', heart: 'M12 20.5C5.5 16 3 12.6 3.6 9.2C4.3 5.4 8.9 4.6 12 8.4C15.1 4.6 19.7 5.4 20.4 9.2C21 12.6 18.5 16 12 20.5Z',
+  });
+  const icon = (name, cls = 'dy-f-ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[name] || ''}"/></svg>`;
+  // who: 'me' | 'partner' | a role.
+  const roleOf = (who) => { const c = couple(); return who === 'me' ? c.myRole : who === 'partner' ? c.partnerRole : who; };
+  function sign(who, mood, body, size = 30) {
+    return `<div class="dy-f-sign"><span class="dy-stk">${character(roleOf(who), { size, mood })}</span>${body}</div>`;
+  }
+  // Drag the handle or the head down to close (founder, 16/11/2026): the sheet
+  // follows the finger and, past 110 px or on a quick flick, closes with its
+  // own close button, so every feature keeps its own closing.
+  function dragToClose() {
+    let drag = null;
+    const panelOf = (el) => el?.closest?.('.dy-foglio-panel, .dy-over .dy-sheet');
+    d.addEventListener('pointerdown', (e) => {
+      if (e.button > 0 || !e.target.closest?.('.dy-grab, .dy-sheet-head') || e.target.closest('button, a, input, textarea, select')) return;
+      const panel = panelOf(e.target);
+      if (!panel || panel.scrollTop > 2) return;
+      drag = { panel, id: e.pointerId, y: e.clientY, t: e.timeStamp, dy: 0 };
+    });
+    d.addEventListener('pointermove', (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      drag.dy = Math.max(0, e.clientY - drag.y);
+      if (drag.dy > 4) drag.panel.classList.add('is-dragging');
+      drag.panel.style.transform = drag.dy ? `translateY(${drag.dy}px)` : '';
+    });
+    const end = (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const { panel, dy, t } = drag;
+      drag = null;
+      panel.classList.remove('is-dragging');
+      const flick = dy > 40 && dy / Math.max(1, e.timeStamp - t) > 0.6;
+      if (e.type === 'pointerup' && (dy > 110 || flick)) {
+        const close = panel.querySelector('.dy-close, [data-us-modal-close]');
+        if (close) {
+          close.click();
+          // From where the finger left it, down; cleared once it is gone.
+          // «Voi due» leaves with its own keyframe, which starts from here.
+          if (!panel.classList.contains('dy-sheet')) {
+            panel.style.transition = 'transform .2s cubic-bezier(.4,0,1,1)';
+            panel.style.transform = 'translateY(100%)';
+          }
+          setTimeout(() => { panel.style.transition = ''; panel.style.transform = ''; }, 420);
+          return;
+        }
+      }
+      panel.style.transition = 'transform .2s cubic-bezier(.2,.8,.2,1)';
+      panel.style.transform = '';
+      setTimeout(() => { panel.style.transition = ''; }, 220);
+    };
+    d.addEventListener('pointerup', end);
+    d.addEventListener('pointercancel', end);
+  }
+
   // ---------------------------------------------------------------- wiring
   function onClick(event) {
     const t = event.target;
@@ -686,6 +754,7 @@
     setTimeout(lightBars, 1200);
     darkQuery?.addEventListener?.('change', () => { if (aspetto() === 'auto') applyAspetto(); });
     d.addEventListener('click', onClick);
+    dragToClose();
     d.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVoiDue(); });
     w.addEventListener('popstate', () => closeVoiDue({ fromBack: true }));
     w.addEventListener('us:home-photo-changed', () => paintPhoto());
@@ -725,7 +794,7 @@
     setInterval(() => { if (!d.hidden) paintTitle(); }, 60000);
   }
 
-  w.UsDiario = Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, shapeOf, slot, paintDiary, paintQuestion, paintVoiDue, thinkSent, openVoiDue, closeVoiDue, character, sentences, paintAll });
+  w.UsDiario = Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, shapeOf, slot, paintDiary, paintQuestion, paintVoiDue, thinkSent, openVoiDue, closeVoiDue, character, sentences, paintAll, sign, icon, roles: couple });
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot, { once: true });
   else boot();
 })();

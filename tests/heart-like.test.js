@@ -102,7 +102,7 @@ test('wired: Oggi and Ti penso play it when a heart is given, never when taken b
   assert.match(app, /window\.todayRevealMeta=\{\.\.\.meta,my_reaction:next\};renderTodayReveal\(\);\n  if\(next==='heart'\)usHeartLike\(document\.querySelector\('#todayReveal \[data-daily-reaction="heart"\]'\)\);/);
   assert.match(app, /if\(next&&next!=='heart'\)window\.UsUiFoundation\?\.done\?\.\(/, 'the heart has its own animation');
   // The reply from the server draws the same thing: the button stays, the animation goes on.
-  assert.match(app, /if\(usTodayRevealDrawn===html&&reveal\.firstElementChild\)return;usTodayRevealDrawn=html;reveal\.innerHTML=html;/);
+  assert.match(app, /if\(usTodayRevealDrawn===html&&reveal\.firstElementChild\)return;usTodayRevealDrawn=html;\s*reveal\.innerHTML=fresh\?/);
   // Ti penso: the heart plays at the tap; the other reactions keep their «fatto!».
   assert.match(app, /if\(reaction==='heart'\)usHeartLike\(document\.querySelector\('#thinkArrival \[data-think-reaction="heart"\]'\)\);/);
   assert.match(app, /if\(usThinkReactionFinal!=='heart'\)window\.UsUiFoundation\?\.done\?\.\(/);

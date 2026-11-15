@@ -634,20 +634,21 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     </section>
   </div>
 
-  <main id="today" class="today-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
-    <div class="today-backdrop us-modal-backdrop" onclick="closeToday()"></div>
-    <section class="today-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="La domanda di oggi" data-us-modal-panel>
-      <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close us-modal-close" onclick="closeToday()" aria-label="Chiudi la domanda di oggi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>
-      <div class="card question">
-        <div class="qtext">Un attimo…</div>
-        <textarea id="answer" rows="4" placeholder="Scrivi…" hidden disabled></textarea>
-        <div class="row"><button class="primary" id="todaySaveBtn" onclick="saveAnswer()" hidden disabled>Rispondi</button></div>
-        <div class="locked" id="locked" role="status" aria-live="polite"></div>
+  <main id="today" class="dy-foglio" aria-hidden="true" data-us-modal>
+    <div class="dy-foglio-scrim" onclick="closeToday()"></div>
+    <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="todayTitle" data-us-modal-panel>
+      <span class="dy-grab" aria-hidden="true"></span>
+      <div class="dy-sheet-head"><h2 class="dy-sheet-title" id="todayTitle">La domanda <em>di oggi</em></h2><button type="button" class="dy-ib dy-close" onclick="closeToday()" aria-label="Chiudi la domanda di oggi" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="dy-f-body">
+        <div class="qtext dy-f-q">Un attimo…</div>
+        <div id="todayPartner" hidden></div>
+        <div id="todayMine" class="dy-f-sign" hidden><span class="dy-stk" id="todayMe"></span><div class="dy-f-field"><textarea id="answer" class="dy-f-in dy-f-hand" rows="4" placeholder="scrivi qui…" hidden disabled></textarea></div></div>
+        <div class="dy-f-note" id="locked" role="status" aria-live="polite"></div>
         <div id="todayReveal" class="hidden"></div>
-        <div id="todayKeep" class="today-keep" data-us-daily-keepsake aria-live="polite" hidden></div>
+        <div id="todayKeep" class="dy-f-acts today-keep" data-us-daily-keepsake aria-live="polite" hidden></div>
       </div>
-      <p id="todaySyncStatus" class="today-sync-status" role="status" hidden></p>
-      <button type="button" id="todayRetryBtn" onclick="hydrateToday()" hidden>Riprova</button>
+      <p id="todaySyncStatus" class="dy-f-note today-sync-status" role="status" hidden></p>
+      <div class="dy-f-acts"><button class="dy-btn dy-btn-l" id="todaySaveBtn" onclick="saveAnswer()" hidden disabled>Rispondi</button><button type="button" class="dy-btn dy-btn-l dy-btn-ghost" id="todayRetryBtn" onclick="hydrateToday()" hidden>Riprova</button></div>
       <div class="push-settings-row" id="pushSettingsRow" hidden>
         <span><b id="pushSettingsStatus">Notifiche</b><small id="pushSettingsDetail">Stato notifiche US</small></span>
         <button type="button" id="pushDisableBtn" onclick="disableWebPush()">Disattiva</button>
@@ -655,18 +656,18 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     </section>
   </main>
 
-  <main id="thinkArrival" class="think-arrival-overlay" aria-hidden="true" data-us-modal data-us-transient data-us-motion-surface>
-    <div class="think-arrival-backdrop us-modal-backdrop" onclick="closeThinkArrival()"></div>
-    <section class="think-arrival-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="Ti penso ricevuto" data-us-modal-panel>
-      <header class="think-arrival-head"><div><span class="think-arrival-visual" aria-hidden="true"><i></i><i></i></span><div class="tiny">Ti penso</div><h2 id="thinkArrivalTitle">La tua persona ti pensa</h2></div></header>
-      <p id="thinkArrivalCopy" class="think-arrival-copy" hidden></p>
-      <div class="think-reaction-grid" role="group" aria-label="Rispondi con">
-        <button type="button" class="think-reaction-button" data-think-reaction="heart" aria-label="Rispondi con un cuore" aria-pressed="false"><span class="think-reaction-glyph think-reaction-heart" aria-hidden="true">♥</span><span class="sr-only">heart</span></button>
-        <button type="button" class="think-reaction-button" data-think-reaction="hug" aria-label="Rispondi con un abbraccio" aria-pressed="false"><span class="think-reaction-glyph think-reaction-hug" aria-hidden="true">🫂</span><span class="sr-only">hug</span></button>
-        <button type="button" class="think-reaction-button" data-think-reaction="miss_you" aria-label="Rispondi con un pensiero" aria-pressed="false"><span class="think-reaction-glyph think-reaction-miss" aria-hidden="true">💭</span><span class="sr-only">miss_you</span></button>
+  <main id="thinkArrival" class="dy-foglio" aria-hidden="true" data-us-modal data-us-transient>
+    <div class="dy-foglio-scrim" onclick="closeThinkArrival()"></div>
+    <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="thinkArrivalTitle" data-us-modal-panel>
+      <span class="dy-grab" aria-hidden="true"></span>
+      <div class="dy-sheet-head"><div><h2 class="dy-sheet-title" id="thinkArrivalTitle">La tua persona <em>ti pensa</em></h2><p id="thinkArrivalCopy" class="dy-sheet-sub" hidden></p></div><button type="button" class="dy-ib dy-close" onclick="closeThinkArrival()" aria-label="Chiudi" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="dy-think-who" id="thinkArrivalWho" aria-hidden="true"></div>
+      <div class="dy-tiles dy-think-react" role="group" aria-label="Rispondi con">
+        <button type="button" class="dy-tile think-reaction-button" data-think-reaction="heart" aria-label="Rispondi con un cuore" aria-pressed="false"><span class="think-reaction-glyph dy-think-glyph" aria-hidden="true"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/></svg></span>Un cuore</button>
+        <button type="button" class="dy-tile think-reaction-button" data-think-reaction="hug" aria-label="Rispondi con un abbraccio" aria-pressed="false"><span class="think-reaction-glyph dy-think-glyph" aria-hidden="true">🫂</span>Un abbraccio</button>
+        <button type="button" class="dy-tile think-reaction-button" data-think-reaction="miss_you" aria-label="Rispondi con un pensiero" aria-pressed="false"><span class="think-reaction-glyph dy-think-glyph" aria-hidden="true">💭</span>Un pensiero</button>
       </div>
-      <p id="thinkArrivalStatus" class="think-arrival-status" role="status" aria-live="polite"></p>
-      <div class="think-arrival-actions"><button type="button" class="think-arrival-close ghost" onclick="closeThinkArrival()">Chiudi</button></div>
+      <p id="thinkArrivalStatus" class="dy-f-note dy-think-status" role="status" aria-live="polite"></p>
     </section>
   </main>
 

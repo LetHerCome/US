@@ -14,22 +14,7 @@
 /* Shared centre positioning across the existing popup controllers, including
    the two nested Calendar detail/form layers. Do not change their display
    state; each feature still owns open/show/aria-hidden. */
-:is(
-  #today,
-  #thinkArrival,
-  #usCountdownSheet,
-  #usEventsOverlay,
-  #usSettingsOverlay,
-  #usWidgetHub,
-  #leftForYouOverlay,
-  #leftForYouComposerOverlay,
-  #conservatiOverlay,
-  #usCalendarOverlay,
-  #usCalendarDetailSheet,
-  #usCalendarFormSheet,
-  .us-moment-compose-overlay,
-  .us-confirm
-) {
+:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay){
   align-items: center !important;
   justify-content: center !important;
   padding:
@@ -43,22 +28,7 @@
 
 /* One recognisable floating surface. More complex panels scroll internally
    rather than sliding up from the bottom or escaping under system chrome. */
-:is(
-  #today,
-  #thinkArrival,
-  #usCountdownSheet,
-  #usEventsOverlay,
-  #usSettingsOverlay,
-  #usWidgetHub,
-  #leftForYouOverlay,
-  #leftForYouComposerOverlay,
-  #conservatiOverlay,
-  #usCalendarOverlay,
-  #usCalendarDetailSheet,
-  #usCalendarFormSheet,
-  .us-moment-compose-overlay,
-  .us-confirm
-) > [data-us-modal-panel] {
+:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay) > [data-us-modal-panel]{
   width: min(100%, var(--us-popup-width)) !important;
   min-width: 0;
   max-height: var(--us-popup-safe-height) !important;
@@ -75,18 +45,6 @@
 }
 
 /* Daily owns one scroller. Insets belong to the overlay, not also its panel. */
-#today { overflow: hidden; }
-#today > .today-sheet {
-  flex-shrink: 1;
-  min-height: 0;
-  padding: 14px !important;
-}
-#today .qtext { overflow-wrap: anywhere; }
-#today .today-sheet-head > div { min-width: 0; }
-#today .today-close { flex-shrink: 0; }
-#today .today-sync-status { font-size: 13px; line-height: 1.4; }
-#todayRetryBtn { width: 100%; min-height: 44px; }
-#todaySyncStatus[hidden], #todayRetryBtn[hidden] { display: none !important; }
 
 /* Calendar month requires more horizontal space on tablet, not on phones. */
 
@@ -104,22 +62,7 @@
 
 /* Consistent entry and exit from the centre. Existing ui-foundation JS waits
    for the transform transition before finalising dismissals. */
-[data-us-motion-surface]:is(
-  #today,
-  #thinkArrival,
-  #usCountdownSheet,
-  #usEventsOverlay,
-  #usSettingsOverlay,
-  #usWidgetHub,
-  #leftForYouOverlay,
-  #leftForYouComposerOverlay,
-  #conservatiOverlay,
-  #usCalendarOverlay,
-  #usCalendarDetailSheet,
-  #usCalendarFormSheet,
-  .us-moment-compose-overlay,
-  .us-confirm
-) [data-us-modal-panel] {
+[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay) [data-us-modal-panel]{
   opacity: 0;
   transform: translateY(8px) scale(.965);
   transform-origin: 50% 50%;
@@ -129,52 +72,18 @@
   animation: none !important;
 }
 
-[data-us-motion-surface]:is(
-  #today,
-  #thinkArrival,
-  #usCountdownSheet,
-  #usEventsOverlay,
-  #usSettingsOverlay,
-  #usWidgetHub,
-  #leftForYouOverlay,
-  #leftForYouComposerOverlay,
-  #conservatiOverlay,
-  #usCalendarOverlay,
-  #usCalendarDetailSheet,
-  #usCalendarFormSheet,
-  .us-moment-compose-overlay,
-  .us-confirm
-):is(.open, .show, [aria-hidden="false"]) [data-us-modal-panel] {
+[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{
   opacity: 1;
   transform: none;
 }
 
-[data-us-motion-surface]:is(
-  #today,
-  #thinkArrival,
-  #usCountdownSheet,
-  #usEventsOverlay,
-  #usSettingsOverlay,
-  #usWidgetHub,
-  #leftForYouOverlay,
-  #leftForYouComposerOverlay,
-  #conservatiOverlay,
-  #usCalendarOverlay,
-  #usCalendarDetailSheet,
-  #usCalendarFormSheet,
-  .us-moment-compose-overlay,
-  .us-confirm
-)[data-us-motion-exiting] [data-us-modal-panel] {
+[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay)[data-us-motion-exiting] [data-us-modal-panel]{
   opacity: 0;
   transform: translateY(8px) scale(.965);
 }
 
 /* confirmSurface builds its root with aria-hidden=false before toggling
    .open on the next animation frame. Keep that first frame hidden. */
-.us-confirm:not(.open) [data-us-modal-panel] {
-  opacity: 0 !important;
-  transform: translateY(8px) scale(.965) !important;
-}
 
 /* Calendar's nested detail and form were not previously in the shared
    motion system; allow them to fade with exactly the same rules. */
@@ -187,17 +96,17 @@
    visualViewport height. Dialog contents remain scrollable and reachable. */
 @media (max-height: 540px) {
   :root { --us-popup-safe-height: max(100px, calc(var(--us-viewport-height, 100dvh) - var(--us-safe-top) - var(--us-safe-bottom) - 16px)); }
-  :is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) {
+  :is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay){
     padding-top: max(8px, var(--us-safe-top)) !important;
     padding-bottom: max(8px, var(--us-safe-bottom)) !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-us-motion-surface]:is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) [data-us-modal-panel] {
+  [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay) [data-us-modal-panel]{
     transition: none !important;
   }
 }
-:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) [data-us-modal-panel] {
+:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay) [data-us-modal-panel]{
   transition: none !important;
 }
