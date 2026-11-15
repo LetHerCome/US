@@ -327,7 +327,7 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   // Il diario, ma pulito (15/11/2026): Per voi is a «Da giocare» row; what waits
   // for you is its status tag («tocca a te», «risposte pronte»), not the orbit.
   assert.match(games, /class="dy-game" data-gv2-action="per-voi" data-gv2-state="\$\{esc\(pvState\)\}"/);
-  assert.match(games, /pvState==='reveal_ready'\?'<span class="dy-tag dy-tag-s dy-game-tag" style="background:var\(--us-miele\)">risposte pronte<\/span>':pvState==='pending'\?'<span class="dy-tag dy-tag-s dy-game-tag" style="background:var\(--us-tu-soft\)">tocca a te<\/span>'/);
+  assert.match(games, /pvState==='reveal_ready'\?'<span class="dy-tag dy-tag-s dy-game-tag" style="background:var\(--us-miele\)">risposte pronte<\/span>':pvState==='pending'\?'<span class="dy-tag dy-tag-s dy-game-tag" style="background:var\(--us-tu-soft\)">'\+dyMini\(myRoleNow\(\)\)\+'tocca a te<\/span>'/); // Il diario, ma pulito (15/11/2026): with the small character (v4.1)
   assert.match(games, /dataset\.usAttention/, 'the Per voi entry state still drives data-us-attention');
   assert.match(html, /<div id="quizHub" class="us-gv2-hub"/);
   assert.match(html, /<div id="usGameV2Panel" class="us-gv2-panel hidden"/);

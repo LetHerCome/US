@@ -165,8 +165,9 @@ test('Gioca: rounds are plain readings of open_rounds / recent, on their tiles; 
   assert.deepEqual(rows, [['o2', 'progress']]);
   assert.match(section, /<b>E se…\?<\/b>/);
   // Il diario, ma pulito (15/11/2026): a row says its round in its status tag.
-  const tiles = [...html.matchAll(/data-gv2-family="([a-z_]+)" data-gv2-mode-state="open" data-gv2-session="([^"]+)" data-tone="([a-z]+)"[^>]*>[\s\S]*?<span class="dy-tag dy-tag-s dy-game-tag"[^>]*>([^<]+)<\/span>/g)].map((m) => m.slice(1));
-  assert.deepEqual(tiles, [['scopritevi', 'o3', 'waiting', 'aspetti Beatrice'], ['ridete', 'o1', 'turn', 'tocca a te'], ['rivivete', 'r1', 'ready', 'risposte pronte']]);
+  const tiles = [...html.matchAll(/data-gv2-family="([a-z_]+)" data-gv2-mode-state="open" data-gv2-session="([^"]+)" data-tone="([a-z]+)"[^>]*>[\s\S]*?<span class="dy-tag dy-tag-s dy-game-tag"[^>]*>(?:<span class="dy-mini"[\s\S]*?<\/svg><\/span>)?([^<]+)<\/span>/g)].map((m) => m.slice(1)); // the turn tag may start with the small character (v4.1)
+  // v4.1: a round the other person already played says «ha giocato» with their small character.
+  assert.deepEqual(tiles, [['scopritevi', 'o3', 'waiting', 'aspetti Beatrice'], ['ridete', 'o1', 'turn', 'ha giocato'], ['rivivete', 'r1', 'ready', 'risposte pronte']]);
   assert.ok(html.indexOf('us-gv2-continue') > html.indexOf('dy-games'), 'the rest comes after the games');
   const done = html.match(/<details class="us-gv2-done">[\s\S]*?<\/details>/)?.[0] || '';
   assert.match(done, /<summary><span>Partite completate<\/span><b>1<\/b><\/summary>/);
@@ -472,7 +473,8 @@ test('state system: loading, empty, error, retry and connectivity share one visu
   const build = html.match(/<meta name="us-build" content="([^"]+)"\/>/)?.[1];
   assert.match(html, new RegExp(`/state-system\\.css\\?v=${build}`));
   assert.match(read('service-worker.js'), /versioned\("\/state-system\.css"\)/);
-  assert.match(read('fix4.js'), /showStatus\('Sei offline\. Riprendo appena torni online\.', 'offline'\)/);
+  // Il diario, ma pulito (15/11/2026): the copy of the mockup v4.1.
+  assert.match(read('fix4.js'), /showStatus\('Siete senza rete: quello che fate parte appena torna\.', 'offline'\)/);
 });
 
 

@@ -155,7 +155,7 @@ textarea,input{background:var(--us-field-bg)!important;border-color:rgba(255,255
 #moments .moment-card.moment-postit,
 .us-album-photo-card,
 .us-album-caption-postit{
-  background-color:var(--us-paper)!important;
+  background-color:var(--us-color-paper)!important;
 }
 
 /* --- Selection / focus ----------------------------------------- */

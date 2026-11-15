@@ -133,7 +133,6 @@ const APP_SHELL = [
   "/assets/icons/phosphor/fingerprint-regular.svg",
   "/assets/icons/phosphor/device-mobile-regular.svg",
   "/assets/icons/phosphor/user-regular.svg",
-  "/assets/icons/phosphor/shield-regular.svg",
   "/assets/icons/phosphor/cloud-regular.svg",
   "/assets/icons/phosphor/check-bold.svg",
   "/assets/icons/phosphor/camera-regular.svg",

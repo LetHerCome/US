@@ -81,7 +81,7 @@ test('connection: healthy shows nothing, offline is immediate, "connecting" wait
 
   const offline = await runNetwork({ online: false, warn: false });
   assert.equal(offline.status.hidden, false, 'offline is surfaced at once');
-  assert.match(offline.status.textContent, /offline/i);
+  assert.match(offline.status.textContent, /senza rete/i); // Il diario, ma pulito (15/11/2026): the copy of the mockup v4.1
 
   const connecting = await runNetwork({ online: true, warn: true });
   assert.equal(connecting.status.hidden, true, 'a transient "connecting…" does not flash');
@@ -195,7 +195,7 @@ test('attention: global Left for You and Gioca Per voi share the same primitive'
   // Per voi (Il diario, ma pulito): a «Da giocare» row whose status tag says what waits for you.
   const games = read('games.js');
   assert.match(games, /class="dy-game" data-gv2-action="per-voi"/);
-  assert.match(games, />tocca a te<\/span>/);
+  assert.match(games, /tocca a te<\/span>/); // Il diario, ma pulito (15/11/2026): after the small character of whose turn it is
   assert.match(games, /dataset\.usAttention = attention \? 'on' : 'off';/);
 });
 
