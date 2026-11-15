@@ -152,3 +152,22 @@ Branch `claude/diario-entrata`. Sei passi: Benvenuto (una schermata al posto del
 - La domanda di oggi sull'invito ha il bottone «Rispondi»; sull'arrivo la scheda «Hai già risposto…» c'è solo se hai risposto mentre aspettavi.
 - La forma si salva con `set_my_character_shape`; finché la funzione non è sul server resta sul telefono (`us:character-shape:<id>`).
 - La carta della porta è la stessa del resto dell'app: oggi `--us-paper` vale il beige (`ui-foundation.css`, l'alias `--us-paper:var(--us-color-paper)`), quindi la carta è più scura del mockup e i bottoni a icona beige non si staccano dal fondo. Va sistemato nelle fondamenta, per tutta l'app.
+
+## Mockup v4.1 (15/11/2026, sera): scuro, colori, personaggi, Impostazioni, entrata
+
+Il founder: «Sì, e unisci l'attesa». Unito `claude/attesa-dopo-invito` (la domanda di oggi dopo il codice, codice a gruppi di quattro, nota della patch). Impostazioni ed entrata le hanno fatte due agenti in branch separati (`claude/diario-impostazioni`, `claude/diario-entrata`), uniti qui; le loro differenze sono nelle sezioni qui sopra.
+
+**Fatto**
+- **Carta di notte:** token scuri in `ui-foundation.css` (fondo #16130F, beige #2A251F, scheda #211D18, inchiostro #F4EEE4 con le trasparenze, matita #F2765E, miele e cielo un filo più tenui, evidenziatori `--us-*-hl` più scuri, testo delle etichette pastello sempre #14120E `--us-on`). Segue il telefono; Impostazioni → App → Aspetto (Automatico, Chiaro, Scuro) vale per questo telefono (`UsAspetto`, `localStorage us:aspetto`, applicato prima del primo disegno). La barra di stato segue il tema (SystemBars dal JS).
+- **Un colore, un significato:** tavolozza delle persone con blu, prugna e menta al posto di oro, cielo e rubino (i vecchi nomi si leggono come pesca, blu e prugna finché la migrazione non li sposta); orari e countdown in miele anche in Noi.
+- **Personaggi:** cinque forme (tondo, quadrato, triangolo, goccia, nuvola) con la forma dal profilo (`character_shape`) o, prima della migrazione, dal telefono; umore «dorme» con le z; posto tratteggiato. Sulla domanda di oggi accanto a ogni risposta chi l'ha scritta, chi non ha risposto dorme; avviso «<nome> ti ha pensato» col suo personaggio e «Ricambia» (manda un ti penso); in Gioca il personaggio piccolo nell'etichetta del turno («tocca a te» col tuo, «ha giocato» con quello dell'altra persona, «aspetti <nome>» con il suo che dorme); Ricordi vuoto «La prima pagina la scrivete voi»; su Oggi senza rete i due dormono con «Siete senza rete: quello che fate parte appena torna.».
+- Corretto un vecchio alias che faceva diventare beige tutta la carta (`--us-paper`).
+
+**Diverso dal mockup**
+- I colori delle persone nello scuro non sono schiariti (il colore è per ruolo in un altro file e lo schiarimento lo rendeva diverso tra i due telefoni); evidenziatori e pastelli sì.
+- «nuovo» in matita rossa nei giochi non c'è: l'app non sa se un gioco non è mai stato giocato (sa solo «giocato questa settimana»).
+- Dopo «Ricambia» compare l'avviso «Ti penso inviato a <nome>», non la scheda «Le hai risposto…» del mockup (che indovinava il genere).
+- In Impostazioni resta visibile la barra in basso (nel mockup no).
+- Gli screenshot dell'entrata sono dell'app nel browser con dati finti (l'entrata chiede un account nuovo), fatti prima della correzione della carta beige.
+
+**Migrazione** `20261115183900_personaggi_forma_e_colori.sql`: scritta, controllata dalla sessione principale, **non applicata** (solo staging, aspetta il via del founder).
