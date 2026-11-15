@@ -615,3 +615,31 @@ html[data-us-motion="reduced"] .dy-think-heart{animation:none}
 .dy-mc-bar[hidden]{display:none}
 .dy-mc-bar i{display:block;width:0;height:100%;border-radius:3px;background:var(--us-miele)}
 .dy-mc-pick:focus-visible,.dy-mc-place-btn:focus-visible{outline:3px solid var(--us-pencil);outline-offset:2px}
+/* Il calendario (#usCalendarDetailSheet, #usCalendarFormSheet, calendar.js):
+   the day for title, times in honey, the kinds as tiles, the suggestions
+   under the field, «Tutto il giorno» on an ink switch. Nothing here moves. */
+.dy-cal-name{font:800 22px/1.2 var(--us-font-ui);letter-spacing:-.01em;color:var(--us-ink-100);overflow-wrap:anywhere}
+.dy-f-row-tx b.dy-cal-note{font:20px/1.2 var(--us-font-hand);font-weight:400}
+.dy-cal-by{background:none}
+.dy-cal-form .dy-tiles[hidden],.dy-cal-presets[hidden],.dy-cal-times[hidden],.dy-cal-day-line[hidden],.dy-cal-day-entries[hidden],.dy-cal-preset-new[hidden]{display:none}
+.dy-cal-day-line{margin:0;font:700 var(--us-text-15)/1.3 var(--us-font-ui);color:var(--us-ink-100)}
+.dy-cal-day-entries{display:flex;flex-direction:column;gap:6px}
+.dy-cal-day-entries .us-cal-form-day-kicker{font:700 var(--us-text-13)/1.2 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-cal-day-entries .us-cal-form-day-entry{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 12px;border:0;border-radius:var(--us-r-12);background:var(--us-beige);color:var(--us-ink-100);font:600 14px/1.2 var(--us-font-ui);text-align:left}
+.dy-cal-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:-6px}
+.dy-chip-o{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--us-tag-m);min-width:28px;margin:0;padding:0 10px;border:0;border-radius:var(--us-r-8);background:transparent;box-shadow:inset 0 0 0 1.5px var(--us-ink-12);color:var(--us-ink-100);font:600 12.5px/1 var(--us-font-ui);cursor:pointer}
+.dy-chip-o[aria-pressed="true"]{background:var(--us-ink-100);color:var(--us-paper);box-shadow:none}
+.dy-chip-o .us-icon{--us-icon-size:14px}
+.dy-cal-preset-new{display:flex;gap:6px;width:100%}
+.dy-cal-preset-new .dy-f-in{min-height:44px}
+.dy-cal-allday{cursor:pointer}
+.dy-cal-times{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.dy-cal-time{font-variant-numeric:tabular-nums}
+/* A native checkbox drawn as the ink switch of Impostazioni. */
+.dy-f-switch{flex:none;position:relative;width:46px;height:28px;margin:0;border-radius:14px;background:var(--us-ink-12);-webkit-appearance:none;appearance:none;cursor:pointer;transition:background .2s ease}
+.dy-f-switch::before{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--us-card);box-shadow:0 1px 3px rgba(20,18,14,.25);transition:left .2s ease,background .2s ease}
+.dy-f-switch:checked{background:var(--us-ink-100)}
+.dy-f-switch:checked::before{left:21px;background:var(--us-paper)}
+.dy-f-switch:focus-visible,.dy-chip-o:focus-visible{outline:3px solid var(--us-pencil);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.dy-f-switch,.dy-f-switch::before{transition:none}}
+html[data-us-motion="reduced"] .dy-f-switch,html[data-us-motion="reduced"] .dy-f-switch::before{transition:none}

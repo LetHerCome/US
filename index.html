@@ -1404,55 +1404,51 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 </div>
 
 <!-- Noi calendar editors: the day detail and the "+" form open over Noi. -->
-<div class="us-cal-sheet-overlay" id="usCalendarDetailSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
-  <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarDetailBackdrop"></div>
-  <section class="us-cal-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usCalendarDetailTitle" data-us-modal-panel>
-    <header class="us-cal-sheet-head">
-      <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Impegno</small><h3 id="usCalendarDetailTitle" translate="no">—</h3></div>
-      <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usCalendarDetailClose" aria-label="Chiudi impegno"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
-    </header>
-    <div class="us-cal-detail-body" id="usCalendarDetailBody"></div>
-      <div class="us-cal-detail-actions" id="usCalendarDetailActions" hidden>
-      <button type="button" class="us-cal-detail-edit" id="usCalendarDetailEdit">Modifica</button>
-      <button type="button" class="us-cal-detail-delete" id="usCalendarDetailDelete">Elimina</button>
+<div class="dy-foglio" id="usCalendarDetailSheet" aria-hidden="true" data-us-modal>
+  <div class="dy-foglio-scrim" id="usCalendarDetailBackdrop"></div>
+  <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="usCalendarDetailTitle" data-us-modal-panel>
+    <span class="dy-grab" aria-hidden="true"></span>
+    <div class="dy-sheet-head"><h3 class="dy-sheet-title" id="usCalendarDetailTitle">—</h3><button type="button" class="dy-ib dy-close" id="usCalendarDetailClose" aria-label="Chiudi impegno"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="dy-f-body dy-cal-detail" id="usCalendarDetailBody"></div>
+    <div class="dy-f-acts is-row" id="usCalendarDetailActions" hidden>
+      <button type="button" class="dy-btn dy-btn-l dy-btn-ghost" id="usCalendarDetailDelete">Elimina</button>
+      <button type="button" class="dy-btn dy-btn-l" id="usCalendarDetailEdit">Modifica</button>
     </div>
   </section>
 </div>
 
-<div class="us-cal-sheet-overlay" id="usCalendarFormSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
-  <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarFormBackdrop"></div>
-  <section class="us-cal-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usCalendarFormTitle" data-us-modal-panel>
-    <header class="us-cal-sheet-head">
-      <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Calendario</small><h3 id="usCalendarFormTitle">Nuovo impegno</h3></div>
-      <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usCalendarFormClose" aria-label="Chiudi modulo"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
-    </header>
-    <form class="us-cal-form" id="usCalendarForm">
-      <div class="us-cal-kind" id="usCalendarKind" role="group" aria-label="Che cosa aggiungi">
-        <button type="button" data-us-calendar-kind="personal" data-owner="tu" aria-pressed="true"><span class="us-icon" data-us-icon="user-circle" aria-hidden="true"></span><span>Solo mio</span></button>
-        <button type="button" data-us-calendar-kind="shared" data-owner="noi" aria-pressed="false"><span class="us-icon" data-us-icon="heart" aria-hidden="true"></span><span>Nostro</span></button>
-        <button type="button" data-us-calendar-kind="event" data-owner="noi" aria-pressed="false"><span class="us-icon" data-us-icon="calendar-heart" aria-hidden="true"></span><span>Data speciale</span></button>
-        <button type="button" data-us-calendar-kind="countdown" data-owner="noi" aria-pressed="false"><span class="us-icon" data-us-icon="clock-counter-clockwise" aria-hidden="true"></span><span>Countdown</span></button>
+<div class="dy-foglio" id="usCalendarFormSheet" aria-hidden="true" data-us-modal>
+  <div class="dy-foglio-scrim" id="usCalendarFormBackdrop"></div>
+  <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="usCalendarFormTitle" data-us-modal-panel>
+    <span class="dy-grab" aria-hidden="true"></span>
+    <div class="dy-sheet-head"><h3 class="dy-sheet-title" id="usCalendarFormTitle">Nuovo <em>impegno</em></h3><button type="button" class="dy-ib dy-close" id="usCalendarFormClose" aria-label="Chiudi modulo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <form class="dy-f-body dy-cal-form" id="usCalendarForm">
+      <div class="dy-tiles" id="usCalendarKind" role="group" aria-label="Che cosa aggiungi">
+        <button type="button" class="dy-tile" data-us-calendar-kind="personal" data-owner="tu" aria-pressed="true">Solo mio</button>
+        <button type="button" class="dy-tile" data-us-calendar-kind="shared" data-owner="noi" aria-pressed="false">Nostro</button>
+        <button type="button" class="dy-tile" data-us-calendar-kind="event" data-owner="noi" aria-pressed="false">Data speciale</button>
+        <button type="button" class="dy-tile" data-us-calendar-kind="countdown" data-owner="noi" aria-pressed="false">Countdown</button>
       </div>
-      <p class="us-cal-form-context" id="usCalendarFormContext" hidden>Le vostre idee · per voi due</p>
-      <p class="us-cal-form-day" id="usCalendarFormDay" hidden></p>
-      <div class="us-cal-form-day-entries" id="usCalendarFormDayEntries" hidden></div>
-      <div class="us-cal-presets" id="usCalendarPresets" role="group" aria-label="Titoli rapidi">
-        <button type="button" id="usCalendarPresetWork" data-us-calendar-preset="Lavoro" aria-pressed="false">Lavoro</button>
-        <button type="button" id="usCalendarPresetUniversity" data-us-calendar-preset="Università" aria-pressed="false">Università</button>
-        <button type="button" id="usCalendarPresetOut" data-us-calendar-preset="Uscita" aria-pressed="false">Uscita</button>
-        <button type="button" class="us-cal-preset-add" id="usCalendarPresetAdd" aria-label="Aggiungi un titolo rapido"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
-        <span class="us-cal-preset-new" id="usCalendarPresetNew" hidden><input id="usCalendarPresetNewInput" type="text" maxlength="30" enterkeyhint="done" placeholder="Nuovo titolo" aria-label="Nuovo titolo rapido"><button type="button" id="usCalendarPresetNewSave">Aggiungi</button></span>
+      <p class="dy-f-note" id="usCalendarFormContext" hidden>Le vostre idee · per voi due</p>
+      <p class="dy-cal-day-line" id="usCalendarFormDay" hidden></p>
+      <div class="dy-cal-day-entries" id="usCalendarFormDayEntries" hidden></div>
+      <label class="dy-f-lab"><span>Che cosa fai?</span><input id="usCalendarTitleInput" class="dy-f-in" type="text" maxlength="200" required placeholder="Che cosa fai?"></label>
+      <div class="dy-cal-presets" id="usCalendarPresets" role="group" aria-label="Titoli rapidi">
+        <button type="button" class="dy-chip-o" id="usCalendarPresetWork" data-us-calendar-preset="Lavoro" aria-pressed="false">Lavoro</button>
+        <button type="button" class="dy-chip-o" id="usCalendarPresetUniversity" data-us-calendar-preset="Università" aria-pressed="false">Università</button>
+        <button type="button" class="dy-chip-o" id="usCalendarPresetOut" data-us-calendar-preset="Uscita" aria-pressed="false">Uscita</button>
+        <button type="button" class="dy-chip-o dy-chip-add" id="usCalendarPresetAdd" aria-label="Aggiungi un titolo rapido"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
+        <span class="dy-cal-preset-new" id="usCalendarPresetNew" hidden><input id="usCalendarPresetNewInput" class="dy-f-in" type="text" maxlength="30" enterkeyhint="done" placeholder="Nuovo titolo" aria-label="Nuovo titolo rapido"><button type="button" class="dy-btn dy-btn-m" id="usCalendarPresetNewSave">Aggiungi</button></span>
       </div>
-      <label class="us-cal-field"><span>Che cosa fai?</span><input id="usCalendarTitleInput" type="text" maxlength="200" required placeholder="Che cosa fai?"></label>
-      <label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno</span><input id="usCalendarDateInput" type="date"></label>
-      <label class="us-cal-field us-cal-allday-field"><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
-      <div class="us-cal-time-fields" id="usCalendarTimeFields">
-        <label class="us-cal-field"><span>Inizio</span><input id="usCalendarStartTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="next" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di inizio"></label>
-        <span class="us-cal-time-arrow" aria-hidden="true">→</span>
-        <label class="us-cal-field"><span>Fine</span><input id="usCalendarEndTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di fine"></label>
+      <label class="dy-f-lab" id="usCalendarDateField" hidden><span>Giorno</span><input id="usCalendarDateInput" class="dy-f-in" type="date"></label>
+      <label class="dy-f-row dy-cal-allday"><span class="dy-f-row-tx"><b>Tutto il giorno</b></span><input id="usCalendarAllDayInput" class="dy-f-switch" type="checkbox" role="switch"></label>
+      <div class="dy-cal-times" id="usCalendarTimeFields">
+        <label class="dy-f-lab"><span>Inizio</span><input id="usCalendarStartTimeInput" class="dy-f-in dy-cal-time" type="text" inputmode="numeric" enterkeyhint="next" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di inizio"></label>
+        
+        <label class="dy-f-lab"><span>Fine</span><input id="usCalendarEndTimeInput" class="dy-f-in dy-cal-time" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di fine"></label>
       </div>
-      <div class="us-cal-form-status" id="usCalendarFormStatus" role="status" aria-live="polite"></div>
-      <button type="submit" class="primary us-cal-form-save" id="usCalendarFormSave">Salva impegno</button>
+      <div class="dy-f-note" id="usCalendarFormStatus" role="status" aria-live="polite"></div>
+      <div class="dy-f-acts"><button type="submit" class="dy-btn dy-btn-l" id="usCalendarFormSave">Salva impegno</button></div>
     </form>
   </section>
 </div>
