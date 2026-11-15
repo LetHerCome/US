@@ -367,3 +367,66 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 .dy-offline{display:flex;align-items:center;gap:2px;padding:12px 14px;border-radius:var(--us-r-16);background:var(--us-card);box-shadow:var(--us-card-shadow)}
 .dy-offline .dy-stk{flex:none}
 .dy-offline-copy{flex:1;margin-left:10px;font:600 13.5px/1.35 var(--us-font-ui);color:var(--us-ink-60)}
+
+/* ---------------------------------------------------------------- Impostazioni */
+/* Il diario, ma pulito (15/11/2026, mockup v4.1): a page of the diary. The
+   couple card opens «Voi due»; groups of 58px rows on a hairline; stroke icons
+   on a 36px tile. Ink is what you do (switches, the chosen option), your
+   colour only says who (your dot), honey is time, sky is distance. */
+/* #settings scrolls on its own (identity.css): the end clears the bar. */
+#settings .dy-set{margin:6px 0 0;padding:0 0 calc(var(--us-nav-height) + max(18px,var(--us-safe-bottom)) + 16px);color:var(--us-ink-100)}
+.dy-set-hd{justify-content:flex-start;align-items:center}
+.dy-set-svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.dy-set-chev{flex:none;width:22px;height:22px;fill:none;stroke:var(--us-ink-40);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dy-set .dy-set-couple{display:flex;align-items:center;gap:14px;width:100%;margin:16px 0 0;padding:16px;border:0;font:inherit;color:var(--us-ink-100);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dy-set-duo{flex:none;display:flex;align-items:flex-end;min-height:48px}
+.dy-set-duo-b{margin-left:-4px}
+.dy-set-couple-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.dy-set-couple-copy b{font:800 18px/1.2 var(--us-font-ui);color:var(--us-ink-100);overflow-wrap:anywhere}
+.dy-set-couple-copy b em{font-size:20px}
+.dy-set-couple-copy>span{font:500 var(--us-text-13)/1.35 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-set-group{padding:22px 4px 0}
+.dy-set .dy-set-title{margin:0 0 2px;font:800 var(--us-text-13)/1.3 var(--us-font-ui);letter-spacing:0;color:var(--us-ink-60)}
+.dy-set .dy-set-row{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;margin:0;padding:7px 0;border:0;border-bottom:1px solid var(--us-ink-08);border-radius:0;background:transparent;font:inherit;color:var(--us-ink-100);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dy-set .dy-set-row[hidden]{display:none}
+.dy-set div.dy-set-row{cursor:default}
+.dy-set .dy-set-main{flex:1;min-width:0;display:flex;align-items:center;gap:12px;min-height:44px;margin:0;padding:0;border:0;border-radius:0;background:transparent;font:inherit;color:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dy-set-ic{flex:none;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--us-beige);color:var(--us-ink-100)}
+.dy-set-me{flex:none;width:36px;display:flex;justify-content:center}
+.dy-set-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dy-set-copy b{font:700 var(--us-text-15)/1.25 var(--us-font-ui);color:var(--us-ink-100)}
+.dy-set-copy small{font:500 12.5px/1.3 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-set-copy small:empty{display:none}
+.dy-set-val{flex:none;display:flex;align-items:center;gap:6px;max-width:46%;font:600 13.5px/1.2 var(--us-font-ui);color:var(--us-ink-60);text-align:right}
+.dy-set-val:empty,.dy-set-val [hidden]{display:none}
+.dy-set-row .dy-set-val+.dy-set-chev,.dy-set-row .dy-tag+.dy-set-chev{margin-left:-10px}
+.dy-set-dot{width:22px;height:22px;border-radius:50%;background:var(--us-tu);box-shadow:0 0 0 2px var(--us-card),0 0 0 3.5px var(--us-ink-12)}
+.dy-set-row[data-locked="true"] .dy-set-dot{opacity:.45}
+.dy-set-lock{font:600 13.5px/1.2 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-set-photo{display:block;width:28px;height:28px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1.5px var(--us-ink-12)}
+.dy-set-km{background:var(--us-cielo)}
+.dy-set-soon{background:var(--us-miele);flex:none}
+/* The switch: ink when on, never a person colour. */
+.dy-set .dy-sw{flex:none;position:relative;display:block;width:46px;height:44px;margin:0;padding:0;border:0;border-radius:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dy-sw::before{content:"";position:absolute;left:0;top:8px;width:46px;height:28px;border-radius:14px;background:var(--us-ink-12);transition:background .2s ease}
+.dy-sw i{position:absolute;top:11px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--us-card);box-shadow:0 1px 3px rgba(20,18,14,.25);transition:left .2s ease,background .2s ease}
+.dy-sw[aria-checked="true"]::before,[aria-checked="true"]>.dy-sw::before{background:var(--us-ink-100)}
+.dy-sw[aria-checked="true"] i,[aria-checked="true"]>.dy-sw i{left:21px;background:var(--us-paper)}
+.dy-set-row.is-unavailable .dy-sw{opacity:.5}
+/* Aspetto and Distanza in: the segmented control of the diary. */
+.dy-set-block{display:flex;flex-direction:column;gap:10px;padding:10px 0 12px;border-bottom:1px solid var(--us-ink-08)}
+.dy-set-block-head{display:flex;align-items:center;gap:12px}
+.dy-set-block-head b{font:700 var(--us-text-15)/1.25 var(--us-font-ui)}
+.dy-set .dy-set-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;height:auto;margin:0;padding:3px}
+.dy-set .dy-set-seg button{height:38px;margin:0;padding:0;font-size:13.5px}
+.dy-set .dy-set-seg-unit{flex:none;width:120px;grid-template-columns:repeat(2,1fr)}
+.dy-set .dy-set-foot{margin:0;padding:22px 4px 8px;text-align:center;font:600 12px/1.4 var(--us-font-ui);color:var(--us-ink-40)}
+.dy-set-hand{font:15px/1 var(--us-font-hand)}
+.dy-set-foot small{display:block;margin-top:2px;font-size:11px}
+.dy-set-row:focus-visible,.dy-set-main:focus-visible,.dy-sw:focus-visible,.dy-set-couple:focus-visible,.dy-shape:focus-visible{outline:3px solid var(--us-pencil);outline-offset:2px}
+/* Il tuo personaggio: the five shapes in your colour; the chosen one in ink. */
+.dy-shape-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.dy-shape{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:44px;padding:14px 6px 12px;border:0;border-radius:var(--us-r-16);background:var(--us-beige);color:var(--us-ink-100);font:700 var(--us-text-13)/1.2 var(--us-font-ui);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dy-shape[aria-pressed="true"]{background:var(--us-card);box-shadow:inset 0 0 0 2px var(--us-ink-100);font-weight:800}
+@media (prefers-reduced-motion:reduce){.dy-set .dy-sw::before,.dy-set .dy-sw i{transition:none}}
+html[data-us-motion="reduced"] .dy-set .dy-sw::before,html[data-us-motion="reduced"] .dy-set .dy-sw i{transition:none}

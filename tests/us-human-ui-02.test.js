@@ -301,29 +301,45 @@ test('Quest → Sfida della settimana (03/11/2026): the weekly board and its act
 
 // ---------------------------------------------------------------- Settings
 
+// Il diario, ma pulito (15/11/2026, mockup v4.1): Impostazioni is a page of the
+// diary with four groups (Tu, Voi due, App, Aiuto e account) under the couple
+// card. «Compagni» (the retired cat) and «Foto Home» left; every other control
+// keeps its data-us-setting hook and its action.
 const settingsPage = html.match(/<main id="settings"[\s\S]*?<\/main>/)?.[0] || '';
-const scope = (name) => settingsPage.match(new RegExp(`<section class="us-settings2-section" data-us-settings-scope="${name}"[\\s\\S]*?\\n      </section>`))?.[0] || '';
+const scope = (name) => settingsPage.match(new RegExp(`<section class="dy-set-group" data-us-settings-scope="${name}"[\\s\\S]*?\\n      </section>`))?.[0] || '';
 const settingsIn = (chunk) => [...chunk.matchAll(/data-us-setting="([a-z-]+)"/g)].map((m) => m[1]);
 
 test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the couple shares', () => {
-  // US V3 — Personalizza Oggi was this phone's own choice in TU; since 29/10/2026 (founder) it lives in Sintonia only.
-  // US Plus, in arrivo (13/11/2026): «Avvisatemi» is this account's own answer, so it sits in TU.
-  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'person-color', 'status-form', 'plus', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status', 'report']);
+  assert.deepEqual(settingsIn(scope('tu')), ['character-shape', 'profile-photo', 'person-color', 'status', 'status-form']);
   assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'together-mode', 'story-archive', 'leave-couple']);
-  assert.match(scope('voi'), /<article class="us-couple-id-card" id="usCoupleIdCard"/, 'the couple card is shared state');
-  assert.match(scope('tu'), /<h3 id="usSettingsTuTitle">Tu<\/h3>/);
-  assert.match(scope('voi'), /<h3 id="usSettingsVoiTitle">Voi due<\/h3>/);
+  assert.deepEqual(settingsIn(scope('app')), ['notifications', 'location', 'app-lock', 'feedback', 'optimize-ricordi', 'widgets']);
+  assert.deepEqual(settingsIn(scope('aiuto')), ['plus', 'report', 'sync-status', 'privacy', 'logout']);
+  assert.match(settingsPage, /<button type="button" class="dy-card dy-set-couple" id="usCoupleIdCard" data-us-setting="voi-due"/, 'the couple card opens «Voi due»');
+  assert.ok(settingsPage.indexOf('id="usCoupleIdCard"') < settingsPage.indexOf('data-us-settings-scope="tu"'), 'the couple card sits on top');
+  assert.match(scope('tu'), /<h3 class="dy-set-title" id="usSettingsTuTitle">Tu<\/h3>/);
+  assert.match(scope('voi'), /<h3 class="dy-set-title" id="usSettingsVoiTitle">Voi due<\/h3>/);
+  assert.match(scope('app'), /<h3 class="dy-set-title" id="usSettingsAppTitle">App<\/h3>/);
+  assert.match(scope('aiuto'), /<h3 class="dy-set-title" id="usSettingsHelpTitle">Aiuto e account<\/h3>/);
 });
 
 test('Settings: every control exists exactly once and keeps its existing action', () => {
   const all = settingsIn(settingsPage);
   assert.equal(new Set(all).size, all.length, 'no duplicated control');
-  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'leave-couple', 'location', 'logout', 'maudit', 'notifications', 'optimize-ricordi', 'person-color', 'plus', 'privacy', 'profile-photo', 'relationship-date', 'report', 'status-form', 'story-archive', 'sync-status', 'together-mode', 'widgets']);
+  assert.deepEqual([...all].sort(), ['app-lock', 'character-shape', 'feedback', 'leave-couple', 'location', 'logout', 'notifications', 'optimize-ricordi', 'person-color', 'plus', 'privacy', 'profile-photo', 'relationship-date', 'report', 'status', 'status-form', 'story-archive', 'sync-status', 'together-mode', 'voi-due', 'widgets']);
   const settingsJs = read('settings.js');
   for (const name of all) assert.match(settingsJs, new RegExp(`if\\(name==='${name}'\\)`), `${name} is still handled`);
-  for (const id of ['usRelationshipDateValue', 'usNotificationsValue', 'usDistanceUnitValue', 'usLocationState', 'usFeedbackValue', 'usSyncValue', 'usStoryArchiveValue', 'usSettingsBuild', 'usCoupleAvatars', 'usCoupleNames', 'usTogetherLine', 'usSettingsDeviceDot']) {
+  for (const id of ['usRelationshipDateValue', 'usNotificationsValue', 'usLocationState', 'usFeedbackValue', 'usSyncValue', 'usStoryArchiveValue', 'usSettingsBuild', 'usSettingsVersion', 'usCoupleAvatars', 'usCoupleNames', 'usTogetherLine', 'usStatusFormValue', 'usStatusValue', 'usCharacterShapeValue', 'usDistanceValue', 'usDistanceKmTag', 'usNotificationsSwitch', 'usLocationSwitch', 'usFeedbackSwitch']) {
     assert.equal((html.match(new RegExp(`id="${id}"`, 'g')) || []).length, 1, id);
   }
+  // The switches and the two segmented controls are wired once each.
+  assert.deepEqual([...settingsPage.matchAll(/data-us-switch="([a-z-]+)"/g)].map((m) => m[1]), ['notifications', 'location', 'feedback']);
+  assert.deepEqual([...settingsPage.matchAll(/data-us-aspetto="([a-z]+)"/g)].map((m) => m[1]), ['auto', 'chiaro', 'scuro']);
+  assert.deepEqual([...settingsPage.matchAll(/data-us-distance-unit="([a-z]+)"/g)].map((m) => m[1]), ['km', 'mi']);
+  assert.match(settingsJs, /function switchAction\(name\)\{\n  if\(name==='notifications'\)return toggleNotifications\(\);\n  if\(name==='location'\)return locationAction\(\);\n  if\(name==='feedback'\)return toggleFeedback\(\);/);
+  assert.match(settingsJs, /window\.UsAspetto\?\.set\?\.\(btn\.dataset\.usAspetto\)/);
+  // Retired with the redesign: the cat's switch and «Foto Home».
+  assert.doesNotMatch(settingsPage, /data-us-setting="(maudit|home-photo|distance)"|<b>Compagni<\/b>|<b>Foto Home<\/b>/);
+  assert.doesNotMatch(settingsJs, /homePhotoModal|toggleMaudit|distanceModal/);
 });
 
 test('Settings: ownership matches storage (shared rows write couple data, personal rows do not)', () => {
@@ -377,16 +393,24 @@ test('Gioca density: played Per voi, game grid and weekly question use compact h
 });
 
 
+// Il diario, ma pulito (15/11/2026): the mockup's measures, in diario.css with tokens only.
+// Il diario, ma pulito (15/11/2026): the mockup's measures (58px rows on a hairline, 36px icon tiles, 13px group titles).
 test('Settings density: utility rows, couple card and footer stay compact without changing controls', () => {
-  const css = read('settings2.css');
-  assert.match(css, /US-SETTINGS-DENSITY-01/);
-  assert.match(css, /US-SETTINGS-ORGANIZE-01/);
-  assert.match(css, /#settings \.us-settings2-row\{min-height:58px!important;/);
-  assert.match(css, /#settings \.us-settings2-icon\{[\s\S]*?width:28px;[\s\S]*?height:28px;/);
-  assert.match(css, /#settings \.us-couple-id-card\{[\s\S]*?padding:10px 11px;/);
-  assert.match(css, /body:has\(#settings\.page\.active\) #thinkButton\{\s*display:none!important;/);
+  const css = read('diario.css');
+  assert.match(css, /\.dy-set \.dy-set-row\{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;[^}]*border-bottom:1px solid var\(--us-ink-08\)/);
+  assert.match(css, /\.dy-set-ic\{flex:none;width:36px;height:36px;border-radius:10px;/);
+  assert.match(css, /\.dy-set \.dy-set-title\{margin:0 0 2px;font:800 var\(--us-text-13\)\/1\.3 var\(--us-font-ui\);letter-spacing:0;color:var\(--us-ink-60\)\}/);
+  assert.match(css, /\.dy-set \.dy-set-couple\{[^}]*padding:16px;/);
+  // Ink for what you do: the switch is ink when on, never a person colour.
+  assert.match(css, /\.dy-sw\[aria-checked="true"\]::before,\[aria-checked="true"\]>\.dy-sw::before\{background:var\(--us-ink-100\)\}/);
+  // Tokens only (dark mode follows); a person colour only on your dot.
+  const block = css.slice(css.indexOf('/* ---------------------------------------------------------------- Impostazioni */'));
+  assert.doesNotMatch(block, /#[0-9a-f]{3,6}\b/i, 'no hard-coded colours');
+  assert.deepEqual(block.match(/var\(--us-(tu|partner|rosa|lilla)\)/g), ['var(--us-tu)'], 'only the dot of «Il tuo colore»');
+  assert.match(block, /\.dy-set-dot\{[^}]*background:var\(--us-tu\)/);
+  assert.match(read('settings2.css'), /body:has\(#settings\.page\.active\) #thinkButton\{\s*display:none!important;/);
   const page = html.match(/<main id="settings"[\s\S]*?<\/main>/)?.[0] || '';
-  for (const name of ['profile-photo','notifications','location','distance','feedback','home-photo','sync-status','relationship-date','story-archive']) {
+  for (const name of ['profile-photo', 'notifications', 'location', 'feedback', 'sync-status', 'relationship-date', 'story-archive', 'together-mode']) {
     assert.match(page, new RegExp(`data-us-setting="${name}"`), name);
   }
 });

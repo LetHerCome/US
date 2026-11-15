@@ -54,6 +54,18 @@
       const prof = (w.UsCoupleContext?.snapshot?.()?.profiles || []).find((x) => x?.role === role);
       if (SHAPES[prof?.character_shape]) return prof.character_shape;
     } catch (_) { /* no context yet */ }
+    // Temporary fallback (15/11/2026): while set_my_character_shape is not on
+    // the server (migration 20261115183900 written, not applied), Impostazioni
+    // keeps MY choice on this phone only (us:character-shape:<userId>) and
+    // removes it as soon as the server saves one. Only my own role reads it,
+    // and only when the server has no shape for me; the partner never does.
+    try {
+      const me = w.usProfile;
+      if (me?.id && role === (me.role === 'beatrice' ? 'beatrice' : 'francesco')) {
+        const local = w.localStorage?.getItem?.(`us:character-shape:${me.id}`);
+        if (SHAPES[local]) return local;
+      }
+    } catch (_) { /* no storage */ }
     return role === 'beatrice' ? 'quadrato' : 'palla';
   }
   const INK = '#14120E';

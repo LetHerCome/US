@@ -200,7 +200,7 @@ body:has(#home.page.active) .app{padding-bottom:0!important}
 }
 
 #settings{height:calc(var(--us-viewport-height) - var(--us-safe-top));overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding-top:calc(var(--us-top-chrome-clearance) + 10px);box-sizing:border-box}
-#settings .us-settings2-page{padding-top:4px!important;padding-bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 28px)!important}
+
 .noi-canonical-page{height:auto!important;min-height:calc(var(--us-viewport-height) - var(--us-top-chrome-clearance) - var(--us-safe-top) - var(--us-safe-bottom) - 12px);overflow:visible!important}
 .noi-living-section{overflow:visible!important}
 .noi-living-list{height:clamp(230px,35vh,300px)!important;overflow:visible!important}

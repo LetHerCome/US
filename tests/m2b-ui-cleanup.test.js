@@ -15,6 +15,7 @@ function functionSource(source, start, end) {
   return source.slice(from, to);
 }
 
+// Il diario, ma pulito (15/11/2026): «Foto Home» left Impostazioni, so the date confirmation now ends before showStoryArchive.
 function settingsModalHarness() {
   const source = read('settings.js');
   const elements = new Map();
@@ -73,7 +74,7 @@ function settingsModalHarness() {
     ${functionSource(source, 'function closeModal(', 'window.closeUsSettingsModal=')}
     ${functionSource(source, 'function formatDate(', 'async function locationState(')}
     ${functionSource(source, 'function relationshipDateModal(', 'function relationshipDateConfirmation(')}
-    ${functionSource(source, 'function relationshipDateConfirmation(', 'function homePhotoModal(')}
+    ${functionSource(source, 'function relationshipDateConfirmation(', 'async function showStoryArchive(')}
     ${functionSource(source, 'function logoutConfirmationModal(', 'async function logout(')}
     ${functionSource(source, 'async function logout(', 'async function action(')}
     ${functionSource(source, 'async function action(', 'function boot(){')}

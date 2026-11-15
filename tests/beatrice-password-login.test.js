@@ -28,7 +28,9 @@ test('auth: legacy anonymous -> email upgrade flow is retired (F1A)', () => {
 
 test('auth: settings never stores credentials and never signs up, pairs or signs in', () => {
   const s = settings();
-  assert.doesNotMatch(s, /localStorage\.setItem\((?!'us:settings:distance-unit')/);
+  // Il diario, ma pulito (15/11/2026): besides the distance unit, only the
+  // character shape may stay on this phone (while its SQL is not applied).
+  assert.doesNotMatch(s, /localStorage\.setItem\((?!'us:settings:distance-unit'|`us:character-shape:\$\{userId\}`,shape\))/);
   assert.doesNotMatch(s, /signUp|signInAnonymously|signInWithOtp|claim_us_role|signInWithPassword/);
 });
 

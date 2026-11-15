@@ -184,21 +184,10 @@ test('poses: curious / pet / sleep / happy are CSS poses of the approved drawing
 });
 
 // Founder, 29/10/2026: the switch is called «Compagni», it turns off whichever companion is shown.
-test('Settings: one "Compagni" switch row, device-local, correct accessible state, one short line of copy', () => {
-  const row = html.match(/<button[^>]*data-us-setting="maudit"[^>]*>[\s\S]*?<\/button>/)?.[0];
-  assert.ok(row, 'row exists');
-  assert.match(row, /role="switch" aria-checked="true"/);
-  // US 1.0 Settings mockup (#200): the label plus one short line, never a paragraph.
-  assert.match(row, /<b>Compagni<\/b>(<small>[^<]{1,40}<\/small>)?<\/span>/);
-  const deviceGroup = html.slice(html.indexOf('data-us-settings-scope="tu"'), html.indexOf('data-us-settings-scope="voi"'));
-  assert.ok(deviceGroup.includes('data-us-setting="maudit"'), 'lives with the other on-this-phone settings');
-  assert.match(settingsJs, /if\(name==='maudit'\)return toggleMaudit\(\);/);
-  assert.match(settingsJs, /window\.USPet\?\.setEnabled\?\.\(next\)/);
-  assert.match(settingsJs, /row\.setAttribute\('aria-checked',mauditEnabled\(\)\?'true':'false'\)/);
-  assert.match(settingsCss, /\.us-settings2-switch-row\[aria-checked="true"\] \.us-settings2-switch u\{transform:translateX\(18px\)/);
-  const toggle = settingsJs.slice(settingsJs.indexOf('// Maudit V1'), settingsJs.indexOf('async function notificationsModal'));
-  assert.ok(toggle.length > 100);
-  assert.doesNotMatch(petJs + toggle, /\bsb\.|supabase|\.rpc\(/i, 'no Supabase schema/RPC for the toggle');
+// Il diario, ma pulito (15/11/2026): the cat is retired, so its «Compagni» switch left Impostazioni.
+test('Settings: the retired «Compagni» switch is gone from Impostazioni', () => {
+  assert.doesNotMatch(html, /data-us-setting="maudit"|id="usMauditSetting"|<b>Compagni<\/b>/);
+  assert.doesNotMatch(settingsJs, /toggleMaudit|syncMauditSetting|name==='maudit'/);
 });
 
 test('no economy and no noise in V1: no XP, coins, hunger, toast, modal or text from touching Maudit', () => {
