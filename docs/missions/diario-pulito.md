@@ -120,3 +120,21 @@ Il founder il 15/11 (via la sessione principale): «per ora tieni questo logo po
 ## Portarlo sul sito di staging (proposta, serve il via)
 
 Il sito `us-staging-s31` si costruisce dal branch fisso di staging, non da questo. Proposta: unire `claude/diario-pulito-c85387` nel branch di staging con una PR verso di lui (mai verso `main`), poi lanciare la build di staging come per le patch precedenti. Per Android basta US LIVE; un APK di staging serve solo per i tester.
+
+## L'entrata (mockup v4.1, 15/11/2026)
+
+Branch `claude/diario-entrata`. Sei passi: Benvenuto (una schermata al posto delle tre schede), «Il tuo account», «Da dove partite?», «Iniziamo da te» (nome, cinque forme, otto colori, compleanno; il personaggio grande prende forma e colore subito e salta quando cambi forma), «Da quando state insieme?» (solo chi crea, con le etichette miele e il nome del diario facoltativo), «Il suo posto è pronto» (codice a gruppi di quattro, Condividi / Copia, poi «Codice mandato», «Ti avviso quando entra?» e la domanda di oggi) e l'arrivo «Ora siete in due» (chi arriva cade nel posto, chi aspettava salta). Provato nel browser col finto Supabase, chiaro e scuro.
+
+**Spostato**
+- Le notifiche si chiedono sull'invito, dopo che il codice è partito, con i flussi che ci sono già (notifications.js sull'app, la stessa iscrizione web e la stessa RPC sul sito). Chi aspetta la sua persona tiene le notifiche di questo telefono (prima tornando in US venivano tolte). Chi entra col codice trova l'invito alle notifiche su Oggi, come prima.
+- La posizione non è più un passo: la chiede la distanza la prima volta che si apre (`openDistanceDetail` → `openLocationDisclosure`, già così) e Impostazioni › Posizione.
+- Tolti i passi dopo l'abbinamento (Notifiche, Posizione, «Tutto pronto» con il widget Ti penso, che resta in Impostazioni › Widget) e l'animazione dei due cerchi. Le schermate cambiano subito: il mockup muove solo i personaggi.
+
+**Diverso dal mockup, e perché**
+- Chi entra col codice non vede il colore dell'altra persona già occupato: prima di entrare l'app non può leggerlo (servirebbe una lettura nuova sul server col codice, SQL solo col tuo via). Dopo l'ingresso, se il colore scelto è quello dell'altra persona, si salva il primo libero e l'arrivo dice i due colori.
+- Chi entra col codice scrive prima il codice (una schermata «Il vostro codice», 1 di 2) e poi «Tu» (2 di 2), da cui entra; il mockup disegna solo il percorso di chi crea.
+- Il compleanno sono due menu (giorno, mese) e c'è «Conferma password»: controlli che c'erano già. Google e Apple compaiono solo dove sono attivi (Apple solo sull'iPhone); senza, sparisce anche «oppure con la mail».
+- Il codice vero ha 26 caratteri: va su due righe a 22 px invece di una a 28. Sotto il codice restano la scadenza, «Puoi revocarlo quando vuoi» (anche dopo averlo mandato), «Verifica accesso» ed «Esci».
+- La domanda di oggi sull'invito ha il bottone «Rispondi»; sull'arrivo la scheda «Hai già risposto…» c'è solo se hai risposto mentre aspettavi.
+- La forma si salva con `set_my_character_shape`; finché la funzione non è sul server resta sul telefono (`us:character-shape:<id>`).
+- La carta della porta è la stessa del resto dell'app: oggi `--us-paper` vale il beige (`ui-foundation.css`, l'alias `--us-paper:var(--us-color-paper)`), quindi la carta è più scura del mockup e i bottoni a icona beige non si staccano dal fondo. Va sistemato nelle fondamenta, per tutta l'app.

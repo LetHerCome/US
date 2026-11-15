@@ -12,6 +12,8 @@
 
 **Da decidere prima della produzione — Atmosfere (founder, 15/11: «concordo con tutto»):** le Atmosfere sono in pausa (`ATMOSFERE_PAUSED` in progression.js). In produzione chi le ha sbloccate o scelte **le vedrà sparire**: la scelta resta salvata sul server ma non si applica più. Va deciso se dirlo nella nota della patch (Novità per Play e schermata «Novità») oppure farle tornare come colori della carta (varianti chiare) prima di uscire. Lo stesso vale per i premi del gatto, che diventeranno accessori dei personaggi.
 
+**L'entrata (branch `claude/diario-entrata`):** benvenuto, account, «Da dove partite?», «Tu» con forma e colore del personaggio, «Da quando state insieme?», il codice con «Ti avviso quando entra?» e la domanda di oggi, l'arrivo «Ora siete in due». Via i passi Notifiche, Posizione e «Tutto pronto» dopo l'abbinamento. La forma si salva con `set_my_character_shape` (migrazione `20261115183900`, da applicare prima su staging e poi in produzione insieme alla patch); senza, resta sul telefono. Differenze: [diario-pulito.md, «L'entrata»](../missions/diario-pulito.md).
+
 **Android:** i widget restano scuri per ora (lavoro a parte, dopo la prova su staging). Le icone scure della barra di stato le chiede il web (SystemBars dal JS), quindi funzionano anche senza AAB nuovo; la config `SystemBars` LIGHT entra con il prossimo AAB.
 
 ### Iscrizione: prima il codice, poi la domanda (14/11)

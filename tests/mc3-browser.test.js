@@ -53,32 +53,42 @@ async function pageFor(h,b,{user='u1',width=390,height=844,reduced=false,signedO
  await page.goto(h.base+'/?us-dev=1',{waitUntil:'load'});
  return {page,ctx,errors,logs};
 }
-// Due colori first run: the name is asked once in the "Tu" step, then copied
-// into the (hidden) create/join name fields that the controller still reads.
-async function tuStep(page,name){
- await page.waitForFunction(()=>document.getElementById('mc3Me').hidden===false&&document.getElementById('usOnboarding').classList.contains('active'));
+// Il diario, ma pulito (15/11/2026): «Da dove partite?» comes first. Whoever
+// creates gives the name in «Tu», then the date; whoever joins writes the code,
+// then the name in «Tu», and enters from there. The name is still copied into
+// the (hidden) create/join name fields that the controller reads.
+const choiceShown=page=>page.waitForFunction(()=>document.getElementById('mc3Choice').hidden===false&&document.getElementById('usOnboarding').classList.contains('active'));
+async function createStep(page,name){
+ await choiceShown(page);await page.click('#mc3ChooseCreate');
+ await page.waitForFunction(()=>!document.getElementById('mc3Me').hidden);
  await page.fill('#mc3Name',name);await page.click('#mc3MeNext');
- await page.waitForFunction(()=>document.getElementById('mc3Choice').hidden===false);
+ await page.waitForFunction(()=>!document.getElementById('mc3Create').hidden);
+}
+async function joinStep(page,name,code){
+ await choiceShown(page);await page.click('#mc3ChooseJoin');
+ await page.waitForFunction(()=>!document.getElementById('mc3Join').hidden);
+ await page.fill('#mc3JoinCode',code);await page.click('#mc3JoinNext');
+ await page.waitForFunction(()=>!document.getElementById('mc3Me').hidden);
+ await page.fill('#mc3Name',name);await page.click('#mc3MeNext');
 }
 const capture=async(page,label,width)=>{if(process.env.MC3_ARTIFACTS)await page.screenshot({path:path.join(process.env.MC3_ARTIFACTS,`mc3-${label}-${width}.png`),fullPage:true});};
 for(const [width,height] of [[320,568],[390,844],[844,390]])test(`MC3 create/invite/copy/revoke/refresh and mobile geometry ${width}x${height}`,async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');const b=backend();
  try{const {page,ctx,errors,logs}=await pageFor(h,b,{width,height,reduced:true});
-  await page.waitForFunction(()=>document.getElementById('mc3Me').hidden===false&&document.getElementById('usOnboarding').classList.contains('active'));
+  await choiceShown(page);
   assert.equal(await page.locator('.app').evaluate(el=>getComputedStyle(el).visibility),'hidden');
   assert.equal(await page.locator('.app').evaluate(el=>el.inert),true);assert.equal(await page.locator('#usAuthInstall').isVisible(),false);
-  await capture(page,'me',width);await tuStep(page,'Mira');
-  await capture(page,'choice',width);await page.click('#mc3ChooseCreate');
+  await capture(page,'choice',width);await createStep(page,'Mira');
   assert.equal(await page.locator('#mc3DateDay').evaluate(el=>el===document.activeElement),true);
   assert.equal(await page.inputValue('#mc3CreateName'),'Mira');assert.equal(await page.locator('#mc3CreateName').isVisible(),false);
   await page.selectOption('#mc3DateDay','29');await page.selectOption('#mc3DateMonth','2');await page.selectOption('#mc3DateYear','2024');await capture(page,'create',width);
   await page.setViewportSize({width,height:320});await page.locator('#mc3CoupleName').focus();await page.locator('#mc3CoupleName').scrollIntoViewIfNeeded();
   assert.equal(await page.locator('#mc3CoupleName').evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),true);
   await capture(page,'keyboard',width);await page.setViewportSize({width,height});
-  await page.locator('#mc3Create button[type=submit]').click();await page.waitForFunction(()=>!document.getElementById('mc3Color').hidden);
-  assert.equal(await page.evaluate(()=>window.usProfile),null);await capture(page,'color',width);
-  await page.click('#mc3ColorNext');await page.waitForFunction(()=>!document.getElementById('mc3Waiting').hidden);
-  await page.click('#mc3Generate');await page.waitForFunction(()=>document.getElementById('mc3Code').value.length>0);
+  await page.locator('#mc3Create button[type=submit]').click();await page.waitForFunction(()=>!document.getElementById('mc3Waiting').hidden);
+  assert.equal(await page.evaluate(()=>window.usProfile),null);
+  // The first code comes by itself, once.
+  await page.waitForFunction(()=>document.getElementById('mc3Code').value.length>0);assert.equal(b.calls.filter(c=>c.name==='create_partner_invite').length,1);
   const token=await page.inputValue('#mc3Code');await page.click('#mc3CopyCode');assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),token);
   await capture(page,'waiting',width);
   await page.locator('#mc3Refresh').scrollIntoViewIfNeeded();await capture(page,'waiting-actions',width);
@@ -101,10 +111,9 @@ test('MC3 four users / two couples: partner join and creator soft transition pre
  const h=await start();if(!h)return t.skip('Playwright unavailable');const b=backend();
  try{const creator=await pageFor(h,b);const a=await pageFor(h,b,{user:'f1'});
   await a.page.waitForFunction(()=>window.UsIdentity?.current().partnerName==='Beatrice');assert.equal(await a.page.locator('#usOnboarding').isVisible(),false);await capture(a.page,'paired',390);
-  await tuStep(creator.page,'Mira');await creator.page.click('#mc3ChooseCreate');await creator.page.selectOption('#mc3DateDay','1');await page.selectOption('#mc3DateMonth','1');await page.selectOption('#mc3DateYear','2024');await creator.page.locator('#mc3Create button[type=submit]').click();await creator.page.waitForFunction(()=>!document.getElementById('mc3Color').hidden);
-  await creator.page.click('#mc3ColorNext');await creator.page.waitForFunction(()=>!document.getElementById('mc3Waiting').hidden);
-  await creator.page.click('#mc3Generate');await creator.page.waitForFunction(()=>document.getElementById('mc3Code').value);const token=await creator.page.inputValue('#mc3Code');
-  const partner=await pageFor(h,b,{user:'u2'});await tuStep(partner.page,'Nico');await partner.page.click('#mc3ChooseJoin');await partner.page.fill('#mc3JoinCode',token.match(/.{1,4}/g).join(' - '));await partner.page.locator('#mc3Join button[type=submit]').click();
+  await createStep(creator.page,'Mira');await creator.page.selectOption('#mc3DateDay','1');await creator.page.selectOption('#mc3DateMonth','1');await creator.page.selectOption('#mc3DateYear','2024');await creator.page.locator('#mc3Create button[type=submit]').click();await creator.page.waitForFunction(()=>!document.getElementById('mc3Waiting').hidden);
+  await creator.page.waitForFunction(()=>document.getElementById('mc3Code').value);const token=await creator.page.inputValue('#mc3Code');
+  const partner=await pageFor(h,b,{user:'u2'});await joinStep(partner.page,'Nico',token.match(/.{1,4}/g).join(' - '));
   await partner.page.waitForFunction(()=>window.usProfile?.id==='u2'&&window.UsIdentity?.current().partnerName==='Mira');
   // 1.0 (A2): the waiting screen checks by itself every 10 s; tap only if it has not got there yet.
   await creator.page.evaluate(()=>{const b=document.getElementById('mc3Refresh');if(b&&b.getClientRects().length&&!b.disabled)b.click();});await creator.page.waitForFunction(()=>window.usProfile?.id==='u1'&&window.UsIdentity?.current().partnerName==='Nico');
@@ -121,14 +130,13 @@ test('MC3 auth switch, suspended reads, offline verification and neutral errors'
   await page.evaluate(()=>{window.__QA.me='u1';window.__authCallback('SIGNED_IN',{user:{id:'u1'}});});
   await page.waitForTimeout(150);assert.equal(await page.evaluate(()=>window.usProfile),null);assert.equal(await page.locator('.app').evaluate(el=>getComputedStyle(el).visibility),'hidden');
   await page.evaluate(()=>{window.__QA.me='u2';window.__authCallback('SIGNED_IN',{user:{id:'u2'}});});release();b.delay=null;
-  await tuStep(page,'<img src=x onerror=window.__injected=1>');
-  await page.click('#mc3ChooseJoin');await page.fill('#mc3JoinCode','A'.repeat(26));await page.locator('#mc3Join button[type=submit]').click();await page.waitForFunction(()=>document.getElementById('mc3Status').textContent.includes('Codice non valido'));
+  await joinStep(page,'<img src=x onerror=window.__injected=1>','A'.repeat(26));await page.waitForFunction(()=>document.getElementById('mc3Status').textContent.includes('Codice non valido'));
   assert.doesNotMatch(await page.locator('#mc3Status').innerText(),/victim|metadata/);assert.equal(await page.evaluate(()=>window.__injected),undefined);
   await page.evaluate(()=>{window.__QA.profileError=true;window.__authCallback('SIGNED_IN',{user:{id:'u2'}});});await page.waitForFunction(()=>!document.getElementById('mc3Retry').hidden);assert.equal(await page.locator('#mc3Choice').isVisible(),false);
   await page.evaluate(()=>localStorage.setItem('us:fix4:last-profile',JSON.stringify({id:'f1',couple_id:'c1',display_name:'Francesco',role:'francesco'})));
   await ctx.setOffline(true);await page.waitForTimeout(250);assert.equal(await page.evaluate(()=>window.usProfile),null);assert.equal(await page.locator('.app').evaluate(el=>getComputedStyle(el).visibility),'hidden');await ctx.setOffline(false);
   await page.evaluate(()=>{window.__QA.profileError=false;});await page.click('#mc3Retry');await page.waitForFunction(()=>!document.getElementById('mc3Choice').hidden);
-  await page.evaluate(()=>{window.__QA.me='banned';window.__authCallback('SIGNED_IN',{user:{id:'banned'}});});await page.waitForFunction(()=>!document.getElementById('mc3Me').hidden);assert.equal(await page.inputValue('#mc3Name'),'');await tuStep(page,'Beta');await page.click('#mc3ChooseCreate');await page.selectOption('#mc3DateDay','1');await page.selectOption('#mc3DateMonth','1');await page.selectOption('#mc3DateYear','2024');await page.locator('#mc3Create button[type=submit]').click();await page.waitForFunction(()=>!document.getElementById('mc3Retry').hidden);
+  await page.evaluate(()=>{window.__QA.me='banned';window.__authCallback('SIGNED_IN',{user:{id:'banned'}});});await choiceShown(page);assert.equal(await page.inputValue('#mc3Name'),'');await createStep(page,'Beta');await page.selectOption('#mc3DateDay','1');await page.selectOption('#mc3DateMonth','1');await page.selectOption('#mc3DateYear','2024');await page.locator('#mc3Create button[type=submit]').click();await page.waitForFunction(()=>!document.getElementById('mc3Retry').hidden);
   assert.match(await page.locator('#mc3Status').innerText(),/Questo account/);assert.deepEqual(errors,[]);await ctx.close();
  }finally{await h.close();}
 });

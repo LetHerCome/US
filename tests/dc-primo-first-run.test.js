@@ -105,33 +105,40 @@ test('first run: the phone setup opens once per user, only after onboarding here
   assert.equal(OB.setupMode({userId:'u1',local:broken,session:broken}),null);
 });
 
-test('first run: setup steps follow the order and skip what is already done',()=>{
-  assert.deepEqual(OB.setupSteps({mode:'created',push:true,place:true}),['noi','push','place','ready']);
-  assert.deepEqual(OB.setupSteps({mode:'joined',push:false,place:true}),['color','place','ready']);
-  assert.deepEqual(OB.setupSteps({mode:'joined',push:false,place:false}),['color','ready']);
-  assert.deepEqual(OB.setupSteps({mode:'device',push:true,place:false}),['push','ready']);
-  assert.deepEqual(OB.setupSteps({mode:'device',push:false,place:false}),[]);
-  assert.deepEqual(OB.setupSteps({mode:null,push:true,place:true}),[]);
+// Il diario, ma pulito (15/11/2026): after pairing only the arrival «Ora siete
+// in due», for whoever created or joined here. Notifications moved to the
+// invite («Ti avviso quando entra?»), the position to the first opening of
+// the distance; a password sign-in on a new phone has nothing left to ask.
+test('first run: after pairing only the arrival, never for a new phone',()=>{
+  assert.deepEqual(OB.setupSteps({mode:'created'}),['arrivo']);
+  assert.deepEqual(OB.setupSteps({mode:'joined'}),['arrivo']);
+  assert.deepEqual(OB.setupSteps({mode:'device'}),[]);
+  assert.deepEqual(OB.setupSteps({mode:null}),[]);
+  assert.deepEqual(OB.setupSteps(),[]);
 });
 
-test('first run: notifications are skipped when unsupported, active or unavailable',async()=>{
-  assert.deepEqual(await OB.pushStepState(undefined),{wanted:false,kind:'unsupported'});
-  assert.deepEqual(await OB.pushStepState({supported:()=>false,getState:async()=>({kind:'inactive'})}),{wanted:false,kind:'unsupported'});
-  const with_=kind=>({supported:()=>true,getState:async()=>({supported:true,kind})});
-  assert.equal((await OB.pushStepState(with_('active'))).wanted,false);
-  assert.equal((await OB.pushStepState(with_('unavailable'))).wanted,false);
-  assert.equal((await OB.pushStepState(with_('inactive'))).wanted,true);
-  assert.equal((await OB.pushStepState(with_('denied'))).wanted,true);
-  assert.equal((await OB.pushStepState({supported:()=>true,getState:async()=>{throw Error('x');}})).wanted,false);
+// Il diario, ma pulito (15/11/2026): «Ti avviso quando entra?» on the invite,
+// with the same enable flows as Oggi (native notifications.js, browser
+// subscription), only where they can still be turned on.
+test('first run: the invite asks for notifications with the existing enable flows',()=>{
+  const app=read('app.js'),ob=read('onboarding.js');
+  assert.match(app,/waitingPush:\{wanted:profile=>usWaitingPushWanted\(profile\),enable:profile=>usEnableWaitingPush\(profile\)\}/);
+  assert.match(app,/async function usWaitingPushWanted\(profile\)\{[\s\S]*?await window\.UsNotifications\.authReady\(profile\);[\s\S]*?return state\?\.kind==='inactive';/);
+  assert.match(app,/async function usEnableWaitingPush\(profile\)\{[\s\S]*?return await window\.UsNotifications\.enable\(\);[\s\S]*?sb\.rpc\('register_web_push_subscription'/);
+  // Who waits keeps this phone's notifications; any other non-paired answer retires them.
+  assert.match(app,/if\(result\.kind!=='MEMBER_WAITING_PARTNER'\)window\.UsNotifications\?\.signedOut\?\.\(\);/);
+  // Asked only after the code left (the same gate as today's question).
+  assert.match(ob,/const show=lastView==='waiting'&&inviteSent\(waitingProfile\)&&notify\.userId===waitingProfile\?\.id&&\(notify\.wanted\|\|notify\.state==='on'\);/);
+  assert.doesNotMatch(ob,/UsNotifications\.enable|requestPermission/,'onboarding.js never asks the OS itself');
 });
 
-test('first run: position is skipped when sharing is already on or cannot start',()=>{
-  const location=sharing=>({start(){return true;},isSharing:()=>sharing});
-  assert.equal(OB.placeStepWanted(location(false),true),true);
-  assert.equal(OB.placeStepWanted(location(true),true),false);
-  assert.equal(OB.placeStepWanted(location(false),false),false);
-  assert.equal(OB.placeStepWanted({isSharing:()=>false},true),false);
-  assert.equal(OB.placeStepWanted(undefined,true),false);
+// Il diario, ma pulito (15/11/2026): the position is no longer a step after
+// pairing; the distance asks for it the first time it is opened, with the
+// full disclosure, and only after «Attiva».
+test('first run: the position is asked where the distance opens, never by the onboarding',()=>{
+  const app=read('app.js'),ob=read('onboarding.js');
+  assert.match(app,/async function openDistanceDetail\(\)\{[\s\S]*?if\(model\.state==='needs-permission'\)\{\s*await openLocationDisclosure\(\);/);
+  assert.doesNotMatch(ob,/UsLocation|geolocation/);
 });
 
 test('first run: summary helpers',()=>{
@@ -141,6 +148,9 @@ test('first run: summary helpers',()=>{
   assert.equal(OB.inviteExpiry('nope'),'');
 });
 
+// Il diario, ma pulito (15/11/2026): «Da dove partite?» first, then «Tu» (name,
+// character, colour, birthday), then «Da quando state insieme?» for whoever
+// creates; whoever joins writes the code first and enters from «Tu».
 test('first run: the step split keeps the controller fields and the only new write is the birthday',()=>{
   const html=read('index.html'),app=read('app.js'),ob=read('onboarding.js');
   const onboarding=html.match(/<section[^>]+id="usOnboarding"[\s\S]*?<\/section>/)?.[0]||'';
@@ -148,22 +158,40 @@ test('first run: the step split keeps the controller fields and the only new wri
   assert.match(onboarding,/<input id="mc3Name"[^>]*required>/);
   assert.match(onboarding,/<label[^>]*for="mc3CreateName" hidden>/);assert.match(onboarding,/<label[^>]*for="mc3JoinName" hidden>/);
   assert.match(onboarding,/id="mc3BirthDay"/);assert.match(onboarding,/id="mc3BirthMonth"/);
-  for(const id of ['mc3CreateName','mc3JoinName','mc3DateDay','mc3DateMonth','mc3DateYear','mc3CoupleName','mc3JoinCode','mc3ChooseCreate','mc3ChooseJoin','mc3Color','mc3ColorNext','mc3Waiting','mc3Generate','mc3CopyCode','mc3Revoke','mc3Refresh','mc3Retry','mc3Exit'])assert.match(onboarding,new RegExp(`id="${id}"`),id);
+  for(const id of ['mc3CreateName','mc3JoinName','mc3DateDay','mc3DateMonth','mc3DateYear','mc3CoupleName','mc3JoinCode','mc3ChooseCreate','mc3ChooseJoin','mc3Shapes','mc3Colors','mc3Big','mc3Waiting','mc3Generate','mc3ShareCode','mc3CopyCode','mc3Revoke','mc3Refresh','mc3Notify','mc3Retry','mc3Exit','mc3Back'])assert.match(onboarding,new RegExp(`id="${id}"`),id);
+  // «Da dove partite?» comes before «Tu».
+  assert.ok(onboarding.indexOf('id="mc3Choice"')<onboarding.indexOf('id="mc3Me"'));
   // The controller still reads the create/join name fields, filled from "Tu".
   assert.match(ob,/controller\.create\(\{name:node\('mc3CreateName'\)\.value/);
-  assert.match(ob,/name:node\('mc3JoinName'\)\.value,code:node\('mc3JoinCode'\)\.value/);
+  assert.match(ob,/const fields=\{name:node\('mc3JoinName'\)\.value,code:node\('mc3JoinCode'\)\.value\}/);
   assert.match(ob,/node\('mc3CreateName'\)\.value=me\.name/);assert.match(ob,/node\('mc3JoinName'\)\.value=me\.name/);
+  // The look: the colour with set_my_color, the shape with set_my_character_shape (kept on the phone while it is not on the server).
+  assert.match(ob,/colourIO\.rpc\('set_my_color',\{p_color:colour\}\)/);
+  assert.match(ob,/colourIO\.rpc\('set_my_character_shape',\{p_shape:look\.shape\}\)/);
+  assert.match(ob,/if\(!ok\)storeSet\(localStorage,FIRST_RUN_KEYS\.characterShape\(profile\.id\),look\.shape\);/);
+  assert.equal(OB.FIRST_RUN_KEYS.characterShape('u1'),'us:character-shape:u1');
   // No Supabase client in onboarding.js; the one insert is wired in app.js.
   assert.doesNotMatch(ob,/\bsb\.|supabase|\.from\('/);
   assert.match(app,/insertEvent:row=>sb\.from\('shared_events'\)\.insert\(row\)/);
   assert.equal((app.match(/from\('shared_events'\)\.insert/g)||[]).length,1);
-  // The tour, the setup overlay and the lock screen keep their hooks.
-  assert.match(html,/<section class="us-tour" id="usTour"[^>]*hidden/);
+  // The welcome, the arrival overlay and the lock screen keep their hooks.
+  assert.match(html,/<section class="us-tour[^"]*" id="usTour"[^>]*hidden/);
   assert.match(html,/id="usDeviceSetup" role="dialog" aria-modal="true"/);
   assert.doesNotMatch(read('public-auth.js'),/localStorage|sessionStorage/);
-  // The location step reuses the confirmed half of the existing disclosure.
+  // The location disclosure keeps its confirmed half (Impostazioni and the distance).
   assert.match(app,/function startLocationSharing\(\)\{\s*setLocationConsent\(true\);/);
   assert.match(app,/if\(!ok\)return false;\s*return startLocationSharing\(\);/);
+});
+
+test('first run: the colour saved is the one picked, never the other person\'s',()=>{
+  const colors=require('../person-colors.js');
+  const me={id:'u2',role:'beatrice',person_color:null},creator=(c=null)=>({id:'u1',role:'francesco',person_color:c});
+  assert.equal(OB.lookColour('menta',[creator(),me],'u2',colors),'menta');
+  assert.equal(OB.lookColour('rosa',[creator(),me],'u2',colors),'lilla','rosa is the creator\'s by default: the first free one');
+  assert.equal(OB.lookColour('pesca',[creator('pesca'),me],'u2',colors),'rosa','taken: the first free one');
+  assert.equal(OB.lookColour('oro',[me],'u2',colors),'rosa','a retired or unknown colour is not saved as is');
+  assert.equal(OB.lookColour('blu',[me],'u2',undefined),'blu','without the palette the server decides');
+  assert.deepEqual(OB.SHAPES,['palla','quadrato','triangolo','goccia','nuvola']);
 });
 
 // ---------- 1.0 (A2): the invite while waiting ----------
@@ -284,16 +312,9 @@ test('invite (1.0 A2): the share sheet with its fallback',async()=>{
   assert.equal(await OB.shareInvite('m',undefined),'failed');
 });
 
-test('first run (1.0 F5): the widget is offered only where the launcher can pin it and none is there',async()=>{
-  const widgets=(device,available=true)=>({isAvailable:()=>available,installed:async()=>{if(device instanceof Error)throw device;return device;},requestPin:async()=>({supported:true,requested:true})});
-  assert.equal(await OB.widgetOfferWanted(undefined),false);
-  assert.equal(await OB.widgetOfferWanted(widgets({installed:{},pinSupported:true},false)),false,'web, iOS');
-  assert.equal(await OB.widgetOfferWanted(widgets({installed:{},pinSupported:false})),false,'launcher cannot pin');
-  assert.equal(await OB.widgetOfferWanted(widgets({installed:{think:1},pinSupported:true})),false,'already on the Home screen');
-  assert.equal(await OB.widgetOfferWanted(widgets(Error('bridge'))),false);
-  assert.equal(await OB.widgetOfferWanted({isAvailable:()=>true,installed:async()=>({pinSupported:true})}),false,'no pin request available');
-  assert.equal(await OB.widgetOfferWanted(widgets({installed:{think:0,photo:2},pinSupported:true})),true);
-});
+// Il diario, ma pulito (15/11/2026): «Tutto pronto» left the first run with the
+// steps after pairing; the Ti penso widget is added from Impostazioni › Widget.
+test.skip('Il diario, ma pulito (15/11/2026): «Tutto pronto» (and its widget offer) left the first run',()=>{});
 
 test('beta fix 28/10: the setup takes the whole door, after Google’s Terms too', () => {
   // After «Prima di entrare» (usGoogleTerms) the setup opened under it: only
@@ -311,6 +332,7 @@ test('beta fix 28/10: «Insieme dal» is day, month and year, so 1980 is one tap
   assert.deepEqual(OB.togetherYears('2026-10-28').slice(0, 2), [2026, 2025]);
   assert.equal(OB.togetherYears('2026-10-28').at(-1), 1900, 'down to 1900, newest first');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  assert.match(html, /<legend>Insieme dal<\/legend>[\s\S]*?id="mc3DateDay"[\s\S]*?id="mc3DateMonth"[\s\S]*?id="mc3DateYear"/);
+  // Il diario, ma pulito (15/11/2026): the title asks «Da quando state insieme?»; the legend stays for screen readers.
+  assert.match(html, /<legend class="us-sr-only">Insieme dal<\/legend>[\s\S]*?id="mc3DateDay"[\s\S]*?id="mc3DateMonth"[\s\S]*?id="mc3DateYear"/);
   assert.doesNotMatch(html, /id="mc3Date" type="date"/);
 });

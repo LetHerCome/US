@@ -783,6 +783,55 @@ async function enableWebPush(){
 }
 window.enableWebPush=enableWebPush;
 
+// Il diario, ma pulito (founder, 15/11/2026): «Ti avviso quando entra?» on the
+// invite. Who waits for the partner is already a member of the couple (the
+// only thing the push registrations ask the server), so the same flows run
+// here before the shell exists: the native one (notifications.js) for this
+// member, the browser one with the same subscription and the same RPC.
+async function usWaitingPushWanted(profile){
+  if(!profile?.id||!profile.couple_id)return false;
+  if(window.UsNotifications?.supported?.()){
+    try{await window.UsNotifications.authReady(profile);}catch(_e){return false;}
+    try{const state=await window.UsNotifications.getState();return state?.kind==='inactive';}catch(_e){return false;}
+  }
+  if(!isWebPushSupported()||(isIosDevice()&&!isStandaloneUs())||Notification.permission==='denied')return false;
+  if(Notification.permission!=='granted')return true;
+  const subscription=await getCurrentPushSubscription();
+  if(!subscription)return true;
+  try{return localStorage.getItem(`us:push:subscription:${profile.id}`)===null;}catch(_e){return true;}
+}
+async function usEnableWaitingPush(profile){
+  if(!profile?.id||!profile.couple_id)return {ok:false,kind:'unavailable'};
+  if(window.UsNotifications?.supported?.()){
+    try{await window.UsNotifications.authReady(profile);return await window.UsNotifications.enable();}
+    catch(_e){return {ok:false,kind:'error'};}
+  }
+  if(!isWebPushSupported())return {ok:false,kind:'unavailable'};
+  if(usPushUiBusy)return {ok:false,kind:'busy'};
+  usPushUiBusy=true;
+  try{
+    let permission=Notification.permission;
+    if(permission==='default')permission=await Notification.requestPermission();
+    if(permission!=='granted')return {ok:false,kind:'denied'};
+    const reg=await getUsServiceWorkerRegistration();
+    if(!reg)return {ok:false,kind:'unavailable'};
+    const subscription=await reg.pushManager.getSubscription()||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(US_VAPID_PUBLIC_KEY)});
+    const json=subscription.toJSON();
+    if(usRetiredWebPush().some(entry=>entry.endpoint===json.endpoint))return {ok:false,kind:'error'};
+    const {error}=await sb.rpc('register_web_push_subscription',{
+      target_endpoint:json.endpoint,
+      target_p256dh:json.keys?.p256dh||'',
+      target_auth:json.keys?.auth||'',
+      target_expiration_time:json.expirationTime??null,
+      target_user_agent:(navigator.userAgent||'').slice(0,500)
+    });
+    if(error){console.warn('[US Push] waiting subscription failed',error);return {ok:false,kind:'network'};}
+    try{localStorage.setItem(`us:push:subscription:${profile.id}`,JSON.stringify([json.endpoint,json.keys?.p256dh||'',json.keys?.auth||'',json.expirationTime??null]));}catch(_e){}
+    return {ok:true,kind:'active'};
+  }catch(error){console.warn('[US Push] waiting enable failed',error);return {ok:false,kind:'error'};}
+  finally{usPushUiBusy=false;}
+}
+
 async function disableWebPush(options={}){
   const silent=options?.silent===true;
   const priorOperation=Object.hasOwn(options,'waitForOperation')?options.waitForOperation:usPushOperationInFlight;
@@ -989,6 +1038,8 @@ const usOnboarding=window.UsOnboarding.mount({
   // the "Tu" step is one yearly event, through the same insert as events.js.
   openStep:id=>showAuthStep(id),
   insertEvent:row=>sb.from('shared_events').insert(row),
+  // «Ti avviso quando entra?» on the invite (Il diario, ma pulito, 15/11/2026).
+  waitingPush:{wanted:profile=>usWaitingPushWanted(profile),enable:profile=>usEnableWaitingPush(profile)},
   // Waiting for the partner (09/11/2026): today's question on the invite
   // screen, through the same RPC and the same answer row as Oggi (saveAnswer).
   daily:{
@@ -1201,7 +1252,10 @@ async function initCloud(){
       // phone: its notifications and widgets stay. Only a real answer (no couple,
       // an account that may not enter) retires them.
       if(!result.transient){
-        window.UsNotifications?.signedOut?.();
+        // Il diario, ma pulito (15/11/2026): who waits for the partner is a
+        // member of the couple and may have said yes to «Ti avviso quando
+        // entra?» on the invite: this phone's notifications stay.
+        if(result.kind!=='MEMBER_WAITING_PARTNER')window.UsNotifications?.signedOut?.();
         window.UsWidgets?.clear?.().catch(()=>{});
       }
       window.usProfile = null;
@@ -1280,13 +1334,12 @@ function setAuthStatus(id,message='',kind='neutral'){
 window.setAuthStatus=setAuthStatus;
 
 function showAuthStep(id){
-  // The step on screen leaves as in the design; the page itself switches now.
-  window.UsOnboarding?.authSwap?.(id);
+  // Il diario, ma pulito (15/11/2026): the steps change at once (the mockup
+  // moves only the characters).
   if(id!=='authLogin')usOnboarding.tour?.close?.();
   document.querySelectorAll('.auth-step').forEach(x=>x.classList.remove('active'));
   const next=document.getElementById(id);
   if(next)next.classList.add('active');
-  window.UsOnboarding?.authArrive?.(id);
   window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
 }
 

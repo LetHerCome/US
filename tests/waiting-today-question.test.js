@@ -80,15 +80,18 @@ test('an answer already given shows as given; any failure keeps the card away or
 
 test('the card sits in the invite screen, in Italian and English, wired to the Oggi RPC and row', () => {
   const html = read('index.html');
-  const waiting = html.slice(html.indexOf('id="mc3Waiting"'), html.indexOf('us-ob-note'));
+  // Il diario, ma pulito (15/11/2026): «Intanto, la domanda di oggi» is a card
+  // of the diary under «Codice mandato» and «Ti avviso quando entra?».
+  const waiting = html.slice(html.indexOf('id="mc3Waiting"'), html.indexOf('id="mc3Refresh"'));
   for (const id of ['mc3Today', 'mc3TodayQuestion', 'mc3TodayAnswer', 'mc3TodayStatus', 'mc3TodaySave', 'mc3TodayDone']) {
     assert.match(waiting, new RegExp(`id="${id}"`), id);
   }
-  assert.match(waiting, /<div class="us-ob-today" id="mc3Today" role="group"[^>]* hidden>/);
-  assert.match(waiting, /<textarea id="mc3TodayAnswer" rows="3" maxlength="1000"><\/textarea>/);
+  assert.match(waiting, /<div class="[^"]*\bus-ob-today\b[^"]*" id="mc3Today" role="group"[^>]* hidden>/);
+  assert.match(waiting, /<textarea id="mc3TodayAnswer" rows="2" maxlength="1000" placeholder="scrivi qui…"><\/textarea>/);
+  assert.ok(waiting.indexOf('id="mc3CodeArea"') < waiting.indexOf('id="mc3Notify"') && waiting.indexOf('id="mc3Notify"') < waiting.indexOf('id="mc3Today"'), 'the code, the notifications, then the question');
   const en = read('i18n-en.js');
   for (const it of ['Intanto, la domanda di oggi', 'La tua risposta', 'Rispondi', 'Salvo…', 'Scrivi qualcosa prima',
-    'Fatto. La tua persona vedrà la tua risposta quando avrà dato la sua.', 'Non riesco a salvare la risposta. Riprova.',
+    'Fatto. La vedrete insieme quando avrà risposto anche la tua persona.', 'Non riesco a salvare la risposta. Riprova.',
     'Ho già risposto alla domanda di oggi: rispondi anche tu per vedere la mia.']) {
     assert.ok(en.includes(`'${it}':`) || en.includes(`${it}:`), `English for «${it}»`);
   }
@@ -96,9 +99,7 @@ test('the card sits in the invite screen, in Italian and English, wired to the O
   assert.match(app, /daily:\{\s*question:\(\)=>usWithDeadline\(sb\.rpc\('get_or_create_daily_question'\),5000\)/);
   assert.match(app, /saveAnswer:row=>sb\.from\('daily_answers'\)\.upsert\(\{\.\.\.row,updated_at:new Date\(\)\.toISOString\(\)\},\{onConflict:'question_id,user_id'\}\)/);
   const css = read('dc-primo.css');
-  assert.match(css, /#mc3Waiting \.us-ob-today\{order:6\}/);
-  assert.match(css, /#usOnboarding \.us-ob-today>\*\{order:0\}/, 'the button stays under the field: the step orders fields first');
-  assert.match(css, /html \.auth-overlay #mc3CopyCode,\nhtml \.auth-overlay #mc3TodaySave,/, 'a secondary button, like Copia codice');
+  assert.match(css, /html \.auth-overlay #mc3TodaySave\{align-self:flex-end;height:var\(--us-btn-m\)\}/, 'the diary\'s 44px button, under the field');
   const ob = read('onboarding.js');
   assert.match(ob, /inviteMessage\(code,window\.UsI18n\?\.t,undefined,\{answered:waitingDay\.answered\(\)\}\)/);
 });
@@ -111,7 +112,7 @@ test('the question shows only after the code was shared or copied, remembered pe
     "ready=day.status==='answered'||inviteSent(waitingProfile)",
     "show=lastView==='waiting'&&ready&&['open','saving','answered'].includes(day.status)",
     'us:ob:invite-sent:${profile.id}',
-    "say('Codice copiato. Condividilo soltanto con la tua persona.','success');markInviteSent();",
+    "note={text:'Codice copiato. Condividilo soltanto con la tua persona.',kind:'success'};markInviteSent();",
     "if(how==='shared'||how==='copied')markInviteSent();",
   ]) assert.ok(ob.includes(line), line);
 });
