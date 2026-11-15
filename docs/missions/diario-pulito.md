@@ -102,6 +102,20 @@ Il founder il 15/11 (via la sessione principale): «per ora tieni questo logo po
 - La domanda di oggi non è più in Gioca (resta su Oggi), come nel mockup; la settimana a pallini e il contatore a pallini sono tolti. Sotto restano «La vostra domanda», «Da continuare» e le partite completate, non ancora ridisegnate.
 - Nella sfida: sparita la fila dei bonus ogni quattro sfide e la regola lunga; resta una riga con scadenza e punti, e «Cambia».
 
+## Differenze dal mockup (Impostazioni, v4.1)
+
+Branch `claude/diario-impostazioni`. Provato nel browser col finto Supabase a 390×844, chiaro e scuro.
+
+- Uguale al mockup: testata con «‹» verso Noi, scheda della coppia (i due personaggi, «<nome> *e* <nome>», «Insieme dal … · livello N», apre «Voi due»), i quattro gruppi Tu / Voi due / App / Aiuto e account, righe da 58 con filo, icone a tratto su 36, interruttori in inchiostro, Aspetto Automatico / Chiaro / Scuro (UsAspetto), Distanza in km / mi, US Plus «in arrivo» in miele, la distanza in cielo, «US · *fatto in due*».
+- Tolte: «Compagni» (il gatto è in pausa) e «Foto Home».
+- Righe in più rispetto al mockup, perché sono funzioni in uso: in Tu «Le tue parole» (Come stai al maschile o al femminile); in Voi due «Archivio Stories» (solo web, il build nativo la toglie); in App «Widget» (solo app) e «Ottimizza Ricordi» (solo app e solo se ci sono foto da alleggerire: è un'azione una tantum, quindi una riga con freccia e non un interruttore); in Aiuto e account «Sincronizzazione». Elimina account e la copia dei dati restano dentro «Privacy e dati». Lingua e Novità non esistono in Impostazioni.
+- «La distanza» apre la domanda «Vi vedete spesso o vivete a distanza?» (distance.js); i km compaiono solo quando Oggi li conosce.
+- Notifiche e Suoni e vibrazione: l'interruttore fa la cosa subito; toccando il testo si apre il foglio di prima (i tipi di notifica, la prova dei suoni). Posizione: l'interruttore passa dal foglio di prima (spiegazione prima del permesso, «Smetti e cancella» per spegnere). Quando il telefono blocca le notifiche, la seconda riga lo dice al posto di «Ti penso, risposte, turni di gioco».
+- Il tuo personaggio: cinque forme nel tuo colore. Si salva con `set_my_character_shape`; finché la migrazione 20261115183900 non è applicata la scelta resta su questo telefono (`us:character-shape:<id>`), e UsDiario.shapeOf la legge solo per il tuo ruolo e solo se il server non ha una forma.
+- Sotto «US · fatto in due» resta la riga piccola con la build (scelta del 03/11). Sul web la versione è solo «US» (la versione esiste solo nell'app installata).
+- «Segnala un problema» come nel mockup; il foglio dice ancora «Segnala un problema o un contenuto» (Play).
+- I fogli che si aprono dalle righe sono quelli di prima, con i colori della carta, non ridisegnati.
+
 ## Decisioni del founder sui punti aperti (15/11/2026, «concordo con tutto»)
 
 - **D1 Countdown:** un countdown attivo verso una data è la frase del giorno sopra la foto, al posto delle altre («12 giorni · Padova»); «Insieme da» (quello di base) resta una delle frasi che girano. Si crea e si cambia da Noi: «Countdown» nel modulo del «+» e la riga «countdown» in cima a «In arrivo». Dopo il salvataggio: «Salvato». **Fatto.**

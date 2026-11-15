@@ -46,7 +46,8 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,180}onclick="usEnvelopeTap\(\)"/);
   assert.doesNotMatch(html, /id="profileAvatarBtn"/, 'nessun avatar/foto legacy nel top chrome');
   assert.match(html, /id="profileAvatarFile"/, 'il flusso foto profilo resta vivo tramite Impostazioni');
-  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);
+  // Il diario, ma pulito (15/11/2026): the row carries its inline stroke icon before the label.
+  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,700}<b>Foto profilo<\/b>/);
   assert.doesNotMatch(html, /onclick="openOwnStories\(\)"/);
   assert.match(stories, /__US_LEFT_FOR_YOU_ACTIVE__/);
   assert.match(html, /id="usSettingsEntry"[\s\S]{0,160}onclick="go\('settings',\{nav:true\}\)"/);
@@ -59,6 +60,6 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   assert.match(html, /class="dy-mark"[^>]*role="img" aria-label="US"/);
   // Noi nuova (03/11/2026): Eventi si apre dalle date del calendario di Noi.
   assert.match(read('noi-v2.js'), /window\.openNoiSection\?\.\('eventi'\)/);
-  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);
+  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,700}<b>Foto profilo<\/b>/);
   assert.match(read('settings.js'), /window\.pickProfilePhoto\?\.\(\)/);
 });

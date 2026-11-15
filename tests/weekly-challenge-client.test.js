@@ -203,7 +203,7 @@ test('Impostazioni › Notifiche: the challenge\'s switch, «Come vi vedete» sp
   assert.match(settings, /key==='bond'\?'Il lunedì la nuova, il sabato un promemoria'/);
   const index = read('index.html');
   assert.match(index, /Ci serve solo per scegliere la sfida giusta per voi\./);
-  assert.match(index, /<small>Serve per la sfida della settimana<\/small>/);
+  // Il diario, ma pulito (15/11/2026): the row is «La distanza» (mockup, no second line); the sheet above still says why.
   const en = require('../i18n-en.js');
   const dict = en.EN || en;
   for (const key of ['LA SFIDA DELLA SETTIMANA', '{n} punti', 'Scade domenica alle 23:59 · mancano {n} giorni', 'Scade domenica alle 23:59 · manca 1 giorno', 'Scade stasera alle 23:59', 'Chiudi con una foto', 'Cambia · {n}',

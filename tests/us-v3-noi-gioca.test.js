@@ -34,7 +34,8 @@ test('Icons: every data-us-icon used by the shell is mapped to an official Phosp
     for (const m of source.matchAll(/data-us-icon="([a-z-]+)"/g)) used.add(m[1]);
     for (const m of source.matchAll(/\bicon\('([a-z-]+)'\)/g)) used.add(m[1]);
   }
-  assert.ok(used.size > 15);
+  // Il diario, ma pulito (15/11/2026): Impostazioni draws the mockup's stroke icons inline, so the shell uses fewer Phosphor names.
+  assert.ok(used.size >= 12);
   for (const name of used) {
     const rule = css.match(new RegExp(`\\.us-icon\\[data-us-icon="${name}"\\]\\{--us-icon-src:url\\("(\\/assets\\/icons\\/phosphor\\/[a-z-]+\\.svg)"\\)\\}`));
     assert.ok(rule, `${name} has a mapping`);

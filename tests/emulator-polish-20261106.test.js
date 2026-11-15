@@ -35,5 +35,6 @@ test('English: the shared Settings section and the blackboard keep their own nam
   assert.match(en, /'Voi due': 'You two'/);
   assert.match(en, /Lavagna: 'Blackboard'/);
   assert.match(en, /Bacheca: 'Board'/);
-  assert.match(read('index.html'), /<h3 id="usSettingsVoiTitle">Voi due<\/h3>/);
+  // Il diario, ma pulito (15/11/2026): the group title is a dy-set-title.
+  assert.match(read('index.html'), /<h3 class="dy-set-title" id="usSettingsVoiTitle">Voi due<\/h3>/);
 });

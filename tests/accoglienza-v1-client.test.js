@@ -41,7 +41,8 @@ test('copy: two plain answers, inclusive Italian, English aligned', () => {
 });
 
 test('shell: Settings row, sheet, native back, Oggi card, reset, precache and both builds', () => {
-  assert.match(html, /data-us-setting="together-mode">[\s\S]*?<b>Vi vedete spesso\?<\/b>[\s\S]*?id="usDistanceValue"/);
+  // Il diario, ma pulito (15/11/2026): the row is «La distanza» (the km in sky when known) and still opens this question.
+  assert.match(html, /data-us-setting="together-mode">[\s\S]*?<b>La distanza<\/b>[\s\S]*?id="usDistanceValue"/);
   assert.match(html, /<div id="usDistanceSheet" class="us-distance-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>/);
   assert.match(read('settings.js'), /if\(name==='together-mode'\)return window\.UsDistance\?\.open\?\.\(\);/);
   assert.match(read('navigation.js'), /name:'distance',\n    find:\(\)=>document\.getElementById\('usDistanceSheet'\)/);
