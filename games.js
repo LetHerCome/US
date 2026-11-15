@@ -275,7 +275,7 @@ function tileRound(family) {
     || null;
 }
 function modeStatus(f, open) {
-  if (open) return { ...roundStatus(open), state: 'open', session: open.id };
+  if (open) return { ...roundStatus(open), state: 'open', session: open.id, partnerPlayed: Boolean(open.partner_complete) };
   if (playedThisWeek(f.id)) return { text: 'Giocato', tone: 'seen', state: 'played' };
   if (allowance() && !freeLeft()) return { text: 'Domani', tone: 'locked', state: 'locked' };
   return null;
@@ -354,7 +354,7 @@ function doneSection(h) {
 // in the card's line, instead of the kind of moment.
 function cardState(status) {
   if (!status) return { state: 'ready', text: 'Disponibile' };
-  if (status.state === 'open') return { state: 'open', text: status.text, tone: status.tone, session: status.session };
+  if (status.state === 'open') return { state: 'open', text: status.text, tone: status.tone, session: status.session, partnerPlayed: Boolean(status.partnerPlayed) };
   if (status.state === 'played') return { state: 'played', text: 'Giocato questa settimana' };
   return { state: 'locked', text: 'Da domani' };
 }
@@ -389,12 +389,16 @@ const DY_ICON = {
   rivivete: 'M5.2 4.6l12.4-1.4 1.9 16.4-12.4 1.4z M7 7.2l9.5-1.1 1 8.9-9.5 1.1z',
 };
 const dyIcon = (id) => `<span class="dy-ib is-dark dy-game-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="${DY_ICON[id] || DY_ICON.per_voi}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+// Mockup v4.1: whose turn it is, with that person's small character in the tag.
+const myRoleNow = () => (window.usProfile?.role === 'beatrice' ? 'beatrice' : 'francesco');
+const partnerRoleNow = () => (myRoleNow() === 'beatrice' ? 'francesco' : 'beatrice');
+const dyMini = (role, mood) => (window.UsDiario?.character ? `<span class="dy-mini" aria-hidden="true">${window.UsDiario.character(role, { size: 21, mood })}</span>` : '');
 function dyStatusTag(card, fresh) {
-  const t = (text, bg) => `<span class="dy-tag dy-tag-s dy-game-tag" style="background:${bg}">${esc(text)}</span>`;
+  const t = (text, bg, mini = '') => `<span class="dy-tag dy-tag-s dy-game-tag" style="background:${bg}">${mini}${esc(text)}</span>`;
   if (card.state === 'open') {
-    if (card.tone === 'turn') return t('tocca a te', 'var(--us-tu-soft)');
+    if (card.tone === 'turn') return card.partnerPlayed ? t('ha giocato', 'var(--us-partner-soft)', dyMini(partnerRoleNow())) : t('tocca a te', 'var(--us-tu-soft)', dyMini(myRoleNow()));
     if (card.tone === 'ready') return t('risposte pronte', 'var(--us-miele)');
-    if (card.tone === 'waiting') return t(`aspetti ${knownPartner() || 'la tua persona'}`, 'var(--us-partner-soft)');
+    if (card.tone === 'waiting') return t(`aspetti ${knownPartner() || 'la tua persona'}`, 'var(--us-partner-soft)', dyMini(partnerRoleNow(), 'dorme'));
     return t(String(card.text || '').toLocaleLowerCase('it-IT'), 'var(--us-beige)');
   }
   if (card.state === 'played') return t('giocato', 'var(--us-beige)');
@@ -425,7 +429,7 @@ function renderHub() {
  const pv=perVoiCopy(),pvState=home?.per_voi?.state||'idle';
  const onTiles=new Set();
  const tileStatus=(f)=>{const r=tileRound(f.id);if(r)onTiles.add(r.id);return modeStatus(f,r);};
- const pvTag=pvState==='reveal_ready'?'<span class="dy-tag dy-tag-s dy-game-tag" style="background:var(--us-miele)">risposte pronte</span>':pvState==='pending'?'<span class="dy-tag dy-tag-s dy-game-tag" style="background:var(--us-tu-soft)">tocca a te</span>':'';
+ const pvTag=pvState==='reveal_ready'?'<span class="dy-tag dy-tag-s dy-game-tag" style="background:var(--us-miele)">risposte pronte</span>':pvState==='pending'?'<span class="dy-tag dy-tag-s dy-game-tag" style="background:var(--us-tu-soft)">'+dyMini(myRoleNow())+'tocca a te</span>':'';
  const swipe=dyGameRow({id:'swipe',name:SWIPE.name,kind:'8 carte · veloce e privato',action:'swipe',status:tileStatus(SWIPE)});
  const families=OFFERED.map(f=>dyGameRow({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)})).join('');
  root.innerHTML=`

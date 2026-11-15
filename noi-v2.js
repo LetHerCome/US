@@ -276,7 +276,7 @@ function kindTag(item){
   }
   if(item.kind==='event')return '<span class="dy-tag dy-tag-s" style="background:var(--us-miele)">data speciale</span>';
   const clock=clockOf(item.time);
-  return clock?`<span class="dy-tag dy-tag-s" style="background:var(--us-beige)">${esc(clock)}</span>`:'';
+  return clock?`<span class="dy-tag dy-tag-s" style="background:var(--us-miele)">${esc(clock)}</span>`:'';
 }
 function upcomingRow(day,item){
   const d=dateOf(day);
@@ -300,7 +300,7 @@ function countdownRow(){
   const when=left===0?'oggi':left===1?'domani':`tra ${left} giorni`;
   return `<button type="button" class="dy-row" data-dy-countdown aria-label="Countdown: ${esc(st.title||'')}, ${esc(when)}">
     <span class="dy-row-date"><b>${d.getDate()}</b><small>${esc(wd)}</small></span>
-    <span class="dy-row-copy"><b translate="no">${esc(st.title||'Il nostro momento')}</b><span class="dy-row-tags"><span class="dy-tag dy-tag-s" style="background:var(--us-miele)">countdown</span><span class="dy-tag dy-tag-s" style="background:var(--us-beige)">${esc(when)}</span></span></span>
+    <span class="dy-row-copy"><b translate="no">${esc(st.title||'Il nostro momento')}</b><span class="dy-row-tags"><span class="dy-tag dy-tag-s" style="background:var(--us-miele)">countdown</span><span class="dy-tag dy-tag-s" style="background:var(--us-miele)">${esc(when)}</span></span></span>
     <svg class="dy-row-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
   </button>`;
 }

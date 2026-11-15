@@ -2640,6 +2640,13 @@ function renderTodayPriorityItem(item,total=0){
   if(!region)return;
   if(!item){region.innerHTML='';region.hidden=true;return;}
   const queueLabel=total>1?` · 1/${total}`:'';
+  // A Ti penso received: the partner's character, the heart, «Ricambia» (mockup v4.1).
+  if(item.arrivalType==='think-received'&&window.UsDiario?.character){
+    const role=window.usProfile?.role==='beatrice'?'francesco':'beatrice';
+    region.innerHTML=`<div class="dy-notice dy-notice-think" data-us-attention="on" data-us-arrival-type="think-received"><span class="dy-stk">${window.UsDiario.character(role,{size:40,mood:'occhiolino'})}</span><span class="dy-notice-copy"><b><svg viewBox="0 0 256 256" width="14" height="14" aria-hidden="true" focusable="false"><path fill="#FF5477" d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/></svg>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><button type="button" class="dy-btn dy-btn-m" data-us-today-action="think-back">${escapeHtml(item.actionLabel)}</button></div>`;
+    region.hidden=false;
+    return;
+  }
   const card=`<button type="button" class="dy-notice" data-us-attention="${item.attention?'on':'off'}" data-us-today-action="${escapeHtml(item.action)}" data-us-arrival-type="${escapeHtml(item.arrivalType||item.category||'arrival')}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="dy-notice-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}${queueLabel}</span><span class="dy-notice-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="dy-notice-action">${escapeHtml(item.actionLabel)}</span></button>`;
   // M10.2 — avviso nascondibile: swipe orizzontale O bottone accessibile, stessa autorità.
   region.innerHTML=item.dismissLabel
@@ -2680,11 +2687,13 @@ function thinkTodayPriorityViewModel(now=Date.now()){
     // M10E.3 — un Ti penso ricevuto e non ancora gestito (nessuna reazione
     // finale) è un'azione reale per CHI lo riceve.
     attention:true,
-    title:`${partner?.display_name||'La tua persona'} ti pensa`,
-    detail:age||'Ti ha mandato un Ti penso.',
+    // Il diario, ma pulito (mockup v4.1): «<nome> ti ha pensato», with their
+    // character, and «Ricambia» sends a Ti penso back.
+    title:`${partner?.display_name||'La tua persona'} ti ha pensato`,
+    detail:Number.isFinite(at)?`alle ${new Date(at).toLocaleTimeString((globalThis.UsI18n?.tag||'it-IT'),{hour:'2-digit',minute:'2-digit'})}`:(age||'Ti ha mandato un Ti penso.'),
     recency:Number.isFinite(at)?at:0,
-    action:'think',
-    actionLabel:'Apri'
+    action:'think-back',
+    actionLabel:'Ricambia'
   };
 }
 // L4 — something new in Lasciato per te. The envelope (left-for-you.js) is the
@@ -3064,6 +3073,7 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
   if(action==='today')window.openToday?.();
   if(action==='events')window.openEvents?.();
   if(action==='think')window.openThinkArrival?.();
+  if(action==='think-back')window.sendThinkSignal?.();
   if(action==='left')window.openLeftForYou?.();
   if(action==='game'){
     // The round itself lives in Gioca: open the hub, then that round.

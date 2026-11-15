@@ -245,9 +245,9 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 .dy-cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
 .dy-cal-day{height:48px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0 0;border:0;background:transparent;cursor:pointer;color:var(--us-ink-100);-webkit-tap-highlight-color:transparent}
 .dy-cal-n{position:relative;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font:600 14px/1 var(--us-font-ui)}
-.dy-cal-day.is-past .dy-cal-n{color:rgba(20,18,14,.45)}
+.dy-cal-day.is-past .dy-cal-n{color:color-mix(in srgb,var(--us-ink-100) 45%,transparent)}
 .dy-cal-day.is-out{cursor:default}
-.dy-cal-day.is-out .dy-cal-n{color:rgba(20,18,14,.2)}
+.dy-cal-day.is-out .dy-cal-n{color:color-mix(in srgb,var(--us-ink-100) 20%,transparent)}
 .dy-cal-day.is-today .dy-cal-n{background:var(--us-ink-100);color:var(--us-paper);font-weight:800}
 .dy-cal-day.is-selected .dy-cal-n{background:var(--us-beige);font-weight:800}
 .dy-cal-circle{position:absolute;left:50%;top:50%;width:38px;height:30px;transform:translate(-50%,-50%);overflow:visible;fill:none;stroke:var(--us-pencil);stroke-width:2.6;stroke-linecap:round;pointer-events:none}
@@ -344,3 +344,26 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 /* Text on pastel is always dark (--us-on); on beige it is the ink of the theme. */
 .dy-tag[style*="--us-beige"]{color:var(--us-ink-100)}
 .dy-chip[data-dy-who="me"][aria-pressed="true"],.dy-chip[data-dy-who="partner"][aria-pressed="true"],.dy-frase,.dy-plus{color:var(--us-on)}
+/* The question of today: who wrote each answer, or who is asleep (mockup v4.1). */
+.dy-q-answers{gap:12px}
+.dy-q-sign{display:flex;align-items:flex-start;gap:10px}
+.dy-q-sign>.dy-stk{flex:none;margin-top:1px}
+.dy-q-sign-body{flex:1;min-width:0;font:21px/1.25 var(--us-font-hand);overflow-wrap:anywhere}
+.dy-q-sign.is-asleep{align-items:center}
+.dy-q-sign.is-asleep .dy-q-hint{flex:1;max-width:none}
+.dy-q-sign .dy-btn{flex:none}
+/* «<nome> ti ha pensato» (mockup v4.1): their character, the heart, «Ricambia». */
+.dy-notice-think{display:flex;align-items:center;gap:12px;cursor:default}
+.dy-notice-think>.dy-stk{flex:none}
+.dy-notice-think .dy-notice-copy b{display:flex;align-items:center;gap:6px}
+.dy-notice-think .dy-btn{flex:none}
+.dy-mini{display:inline-block;line-height:0;margin:-3px 0 -3px -4px}
+.dy-mini .dy-char text{display:none}
+
+/* Ricordi with nothing yet, and Oggi without network (mockup v4.1). */
+.dy-empty-page{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 16px;border-radius:var(--us-r-20);background:var(--us-beige);text-align:center}
+.dy-empty-page b{font:800 var(--us-text-20)/1.25 var(--us-font-ui);letter-spacing:-.01em}
+.dy-empty-chars{display:flex;align-items:flex-end;gap:2px}
+.dy-offline{display:flex;align-items:center;gap:2px;padding:12px 14px;border-radius:var(--us-r-16);background:var(--us-card);box-shadow:var(--us-card-shadow)}
+.dy-offline .dy-stk{flex:none}
+.dy-offline-copy{flex:1;margin-left:10px;font:600 13.5px/1.35 var(--us-font-ui);color:var(--us-ink-60)}

@@ -329,24 +329,30 @@
     const both = Boolean(st.both_answered);
     const unread = both && revealUnread(source, q);
     const theirs = both && !unread && typeof st.partner_answer === 'string' ? st.partner_answer : null;
-    const mineHl = (text) => `<span><span class="dy-hl" style="--c:var(--us-tu-hl)" translate="no">${esc(text)}</span></span>`;
+    // Mockup v4.1: beside each answer, who wrote it, small like a signature;
+    // whoever has not answered yet is asleep.
+    const c = couple();
+    const sign = (role, mood, inner) => `<div class="dy-q-sign"><span class="dy-stk">${character(role, { size: 30, mood })}</span><div class="dy-q-sign-body">${inner}</div></div>`;
+    const mineHl = (text) => `<span class="dy-hl" style="--c:var(--us-tu-hl)" translate="no">${esc(text)}</span>`;
     // The other person's answer exists but is not readable: a blurred line, never their words.
     const ghost = `<span class="dy-q-blur" aria-hidden="true"><span class="dy-hl" style="--c:var(--us-partner-hl)">quando mi hai chiamato solo per dirmi buonanotte</span></span>`;
     const was = lastQuestion;
     const justRevealed = theirs !== null && was.id === q.id && (was.unread || !was.both || was.mine === null);
-    let answers = '', foot = '';
+    const asleep = (role, text, button) => `<div class="dy-q-sign is-asleep"><span class="dy-stk">${character(role, { size: 30, mood: 'dorme' })}</span><span class="dy-q-hint">${esc(text)}</span>${button || ''}</div>`;
+    const btn = (label, ghostBtn) => `<button type="button" class="dy-btn dy-btn-m${ghostBtn ? ' dy-btn-ghost' : ''}" data-dy="answer">${label}</button>`;
+    let rows = [];
     if (mine === null) {
-      if (st.partner_has_answer) answers = `<div class="dy-q-answers">${ghost}</div>`;
-      foot = `<div class="dy-q-foot"><span class="dy-q-hint">${esc(st.partner_has_answer ? `La risposta di ${partner} si apre quando rispondi anche tu` : 'Una domanda, due risposte: si aprono insieme')}</span><button type="button" class="dy-btn dy-btn-l" data-dy="answer">Rispondi ${ARROW}</button></div>`;
+      rows = st.partner_has_answer
+        ? [sign(c.partnerRole, 'felice', ghost), asleep(c.myRole, `${partner} ha risposto. La sua si apre quando rispondi anche tu`, btn(`Rispondi ${ARROW}`))]
+        : [asleep(c.partnerRole, `${partner} non ha ancora risposto`), asleep(c.myRole, 'Una domanda, due risposte: si aprono insieme', btn(`Rispondi ${ARROW}`))];
     } else if (!both) {
-      answers = `<div class="dy-q-answers">${mineHl(mine)}</div>`;
-      foot = `<div class="dy-q-foot"><span class="dy-q-hint">${esc(`Aspettiamo ${partner}`)}</span><button type="button" class="dy-btn dy-btn-m dy-btn-ghost" data-dy="answer">Modifica</button></div>`;
+      rows = [sign(c.myRole, 'felice', mineHl(mine)), asleep(c.partnerRole, `Aspettiamo ${partner}`, btn('Modifica', true))];
     } else if (unread) {
-      answers = `<div class="dy-q-answers">${mineHl(mine)}${ghost}</div>`;
-      foot = `<div class="dy-q-foot"><span class="dy-q-hint">${esc(`Anche ${partner} ha risposto`)}</span><button type="button" class="dy-btn dy-btn-l" data-dy="answer">Leggi ${ARROW}</button></div>`;
+      rows = [sign(c.myRole, 'felice', mineHl(mine)), sign(c.partnerRole, 'felice', ghost), `<div class="dy-q-foot"><span class="dy-q-hint">${esc(`Anche ${partner} ha risposto`)}</span>${btn(`Leggi ${ARROW}`)}</div>`];
     } else {
-      answers = `<div class="dy-q-answers">${mineHl(mine)}<span class="${justRevealed && !reduced() ? 'dy-q-unblur' : ''}"><span class="dy-hl" style="--c:var(--us-partner-hl)" translate="no">${esc(theirs || '')}</span></span></div>`;
+      rows = [sign(c.myRole, 'felice', mineHl(mine)), sign(c.partnerRole, 'felice', `<span class="${justRevealed && !reduced() ? 'dy-q-unblur' : ''}"><span class="dy-hl" style="--c:var(--us-partner-hl)" translate="no">${esc(theirs || '')}</span></span>`)];
     }
+    const answers = `<div class="dy-q-answers">${rows.join('')}</div>`, foot = '';
     const html = `<span class="dy-q-kicker">La domanda di oggi</span><span class="dy-q-text">${esc(q.question)}</span>${answers}${foot}`;
     if (card.__dyHtml !== html || card.hidden) { card.innerHTML = html; card.__dyHtml = html; }
     card.hidden = false;
@@ -557,7 +563,8 @@
     }
     const list = [...days.values()].sort((a, b) => b.iso.localeCompare(a.iso));
     if (!list.length) {
-      root.innerHTML = '<div class="dy-rows-empty"><b>Il vostro diario comincia da una foto</b><button type="button" class="dy-btn dy-btn-m" data-dy="add-moment">Aggiungi un ricordo</button></div>';
+      const c0 = couple();
+      root.innerHTML = `<div class="dy-empty-page"><span class="dy-empty-chars"><span class="dy-stk">${character(c0.myRole, { size: 56, mood: 'giu' })}</span><span class="dy-stk">${character(c0.partnerRole, { size: 60 })}</span></span><b>La prima pagina la scrivete voi</b><button type="button" class="dy-btn dy-btn-m" data-dy="add-moment">Aggiungi un ricordo</button></div>`;
       return;
     }
     const thisYear = todayISO().slice(0, 4);
@@ -622,7 +629,17 @@
     // The collection of Sintonia (equip what you unlocked) until the accessories arrive.
     if (act === 'rewards') { closeVoiDue(); setTimeout(() => w.USNoiV2?.openSintonia?.(), 260); }
   }
+  function paintOffline() {
+    const more = $('dyMore');
+    if (!more) return;
+    let card = $('dyOffline');
+    if (navigator.onLine !== false || !w.usProfile?.couple_id) { card?.remove(); return; }
+    if (!card) { card = d.createElement('div'); card.id = 'dyOffline'; card.className = 'dy-offline'; card.setAttribute('role', 'status'); more.prepend(card); }
+    const c = couple();
+    card.innerHTML = `<span class="dy-stk">${character(c.myRole, { size: 40, mood: 'dorme' })}</span><span class="dy-stk">${character(c.partnerRole, { size: 44, mood: 'dorme' })}</span><span class="dy-offline-copy">Siete senza rete: quello che fate parte appena torna.</span>`;
+  }
   function paintAll() {
+    paintOffline();
     paintTitle();
     paintDuo();
     paintPhoto();
@@ -660,6 +677,8 @@
     d.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVoiDue(); });
     w.addEventListener('popstate', () => closeVoiDue({ fromBack: true }));
     w.addEventListener('us:home-photo-changed', () => paintPhoto());
+    w.addEventListener('online', paintOffline);
+    w.addEventListener('offline', paintOffline);
     w.addEventListener('us:member-status-changed', () => { paintDuo(); paintVoiDue(); });
     w.addEventListener('us:countdown-updated', () => paintFrase(w.UsOggiPhoto?.current?.()?.meta || null));
     w.addEventListener('us-identity-change', () => { shownPath = null; lastQuestion = { id: null, mine: null, both: false, unread: false }; paintAll(); });

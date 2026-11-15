@@ -1666,6 +1666,7 @@
     '● accesso richiesto': '● sign-in needed',
     '● da collegare': '● not linked',
     'SYNC ATTIVO': 'CONNECTED',
+    'Siete senza rete: quello che fate parte appena torna.': 'You’re offline: what you do goes out as soon as you’re back.',
     'Sei offline. Riprendo appena torni online.': 'You’re offline. Picking up again once you’re back online.',
     'Di nuovo online. Sincronizzo…': 'Back online. Syncing…',
     'Connessione in corso…': 'Connecting…',
