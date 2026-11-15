@@ -678,9 +678,9 @@ h1,h2,h3{font-family:var(--us-font-editorial)}
 
 /* Buttons: primary · secondary (.ghost) · quiet · danger · icon. */
 .primary {
-  background:var(--us-accent-gradient);
-  color:var(--us-color-text-on-accent);
-  box-shadow:var(--us-accent-shadow);
+  background:var(--us-ink-100);
+  color:var(--us-paper);
+  box-shadow:none;
 }
 .ghost,
 .us-btn-secondary {

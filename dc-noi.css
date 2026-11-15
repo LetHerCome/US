@@ -289,7 +289,7 @@
 #bond .noi-idea-quick-form .noi-idea-form-status{grid-column:1/-1}
 #bond .noi-idea-quick-actions button,#bond .noi-idea-detail-actions button{min-height:44px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:700}
 #bond .noi-idea-quick-actions .ghost,#bond #noiIdeaDetailArchive{background:transparent;border:1px solid var(--us-color-line-strong);color:var(--us-color-text)}
-#bond .noi-idea-quick-actions .primary,#bond .noi-idea-detail-actions .primary{background:var(--us-tu);color:var(--us-inchiostro);border:0;box-shadow:none}
+#bond .noi-idea-quick-actions .primary,#bond .noi-idea-detail-actions .primary{background:var(--us-ink-100);color:var(--us-paper);border:0;box-shadow:none}
 #bond .noi-idea-browse .noi-idea-list{display:grid;gap:0;margin-top:12px;border-radius:20px;background:var(--us-color-surface-2);overflow-x:hidden;overflow-y:auto;padding-bottom:0;-webkit-mask-image:none;mask-image:none}
 #bond .noi-idea-browse .noi-idea-list:empty{display:none}
 #bond .noi-idea-browse .noi-idea-list>.noi-quiet-state,#bond .noi-idea-browse .noi-idea-list>.empty-state{padding:22px 16px;text-align:center}
@@ -315,7 +315,7 @@
 #bond .noi-idea-section .noi-idea-quick-form{grid-template-columns:minmax(0,1fr) auto;gap:0 8px;margin:0}
 #bond .noi-idea-section .noi-idea-quick-form>input{grid-column:1;grid-row:1;min-height:48px;border-radius:16px;background:var(--us-color-bg);border:1px solid var(--us-color-line-strong)}
 #bond .noi-idea-section .noi-idea-quick-actions,#bond .noi-idea-section .noi-idea-quick-form:has(#noiIdeaQuickExtra:not([hidden])) .noi-idea-quick-actions{grid-column:2;grid-row:1;align-self:stretch}
-#bond .noi-idea-section .noi-idea-quick-actions .primary{min-height:48px;padding:0 14px;font-size:14px;font-weight:700;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro)}
+#bond .noi-idea-section .noi-idea-quick-actions .primary{min-height:48px;padding:0 14px;font-size:14px;font-weight:700;border-radius:999px;background:var(--us-ink-100);color:var(--us-paper)}
 #bond .noi-idea-section .noi-idea-quick-more{grid-column:1/-1;grid-row:2;min-height:36px;margin-top:10px;font-size:13px;font-weight:600;color:var(--us-color-text-2)}
 #bond .noi-idea-section .noi-idea-quick-extra{grid-row:3;margin-top:8px}
 #bond .noi-idea-section .noi-idea-quick-form .noi-idea-form-status{grid-row:4}
@@ -398,7 +398,7 @@
 #usEventsOverlay .us-event-tag{font-style:normal;font-size:10px;font-weight:700;line-height:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--us-inchiostro);background:var(--us-ambra);padding:4px 8px;border-radius:999px;white-space:nowrap}
 #usEventsOverlay .us-event-ok{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--us-verde) 20%,transparent);color:var(--us-verde);font-style:normal}
 #usEventsOverlay .us-event-ok .us-icon{--us-icon-size:14px}
-#usEventsOverlay .us-event-add{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;margin:4px 0 0;border-radius:999px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:16px;font-weight:700;box-shadow:none}
+#usEventsOverlay .us-event-add{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;margin:4px 0 0;border-radius:999px;border:0;background:var(--us-ink-100);color:var(--us-paper);font-size:16px;font-weight:700;box-shadow:none}
 #usEventsOverlay .us-event-add .us-icon{--us-icon-size:18px;color:inherit}
 #usEventsOverlay .us-events-empty{padding:22px 16px;border-radius:18px;border:1px dashed var(--us-color-line-strong);background:none;text-align:center;font-size:14px;color:var(--us-color-text-2)}
 /* One event: the detail (mode="detail") or its fields (mode="edit"). */
@@ -424,18 +424,18 @@
 #usEventForm .us-event-repeat small{display:block;margin:0;font-size:12px;line-height:1.3;color:var(--us-color-text-3)}
 #usEventForm .us-event-repeat input[type="checkbox"]{-webkit-appearance:none;appearance:none;position:relative;width:50px;height:30px;margin:0;flex:none;border:0;border-radius:30px;background:var(--us-color-elevated)!important;box-shadow:none;cursor:pointer;transition:background .25s}
 #usEventForm .us-event-repeat input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--us-latte);box-shadow:0 2px 6px rgba(0,0,0,.35);transition:translate .38s cubic-bezier(.34,1.56,.64,1)}
-#usEventForm .us-event-repeat input[type="checkbox"]:checked{background:var(--us-tu)!important}
+#usEventForm .us-event-repeat input[type="checkbox"]:checked{background:var(--us-ink-100)!important}
 #usEventForm .us-event-repeat input:checked::after{translate:20px 0}
 #usEventForm .us-event-repeat input:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
 #usEventForm .us-event-status{min-height:0;margin:0;font-size:13px;font-weight:600;color:var(--us-color-text-2)}
 #usEventForm .us-event-status:empty{display:none}
-#usEventForm .us-event-complete{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;margin:4px 0 0;border-radius:999px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:16px;font-weight:700;letter-spacing:0;box-shadow:none}
+#usEventForm .us-event-complete{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;margin:4px 0 0;border-radius:999px;border:0;background:var(--us-ink-100);color:var(--us-paper);font-size:16px;font-weight:700;letter-spacing:0;box-shadow:none}
 #usEventForm .us-event-complete[hidden]{display:none}
 #usEventForm .us-event-complete .us-icon{--us-icon-size:18px}
 #usEventForm .us-event-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:4px 0 0}
 #usEventForm[data-mode="edit"] .us-event-actions,#usEventForm .us-event-actions:has(#usEventDeleteBtn[hidden]){grid-template-columns:minmax(0,1fr)}
 #usEventForm .us-event-actions button{min-height:48px;border-radius:999px;font-size:15px;box-shadow:none}
-#usEventForm #usEventSaveBtn{min-height:52px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:16px;font-weight:700}
+#usEventForm #usEventSaveBtn{min-height:52px;border:0;background:var(--us-ink-100);color:var(--us-paper);font-size:16px;font-weight:700}
 #usEventForm .us-event-edit{background:transparent;border:1px solid var(--us-color-line-strong);color:var(--us-color-text);font-weight:600}
 #usEventForm .us-event-delete{background:transparent;border:1px solid color-mix(in srgb,var(--us-rosso) 40%,transparent);color:var(--us-rosso);font-weight:600}
 

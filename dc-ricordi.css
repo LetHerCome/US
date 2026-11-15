@@ -276,7 +276,7 @@
 #usAlbumOverlay[data-us-galleria] .us-album-composer-actions{gap:8px;margin-top:10px}
 #usAlbumOverlay[data-us-galleria] .us-album-composer-actions button{min-height:48px;border-radius:999px;font-size:15px;font-weight:700}
 #usAlbumOverlay[data-us-galleria] .us-album-cancel{border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text)}
-#usAlbumOverlay[data-us-galleria] .us-album-save{border:0;background:var(--us-tu)!important;color:var(--us-inchiostro)}
+#usAlbumOverlay[data-us-galleria] .us-album-save{border:0;background:var(--us-ink-100)!important;color:var(--us-paper)}
 
 /* The flying copy of the tapped photo. */
 /* A clipping frame sized to the landing box, moved and scaled with transforms;

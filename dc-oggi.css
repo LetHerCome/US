@@ -340,7 +340,7 @@
 }
 #usCountdownSheet .us-countdown-row [data-countdown-select][aria-pressed="true"]{box-shadow:inset 0 0 0 1.5px var(--us-tu)}
 #usCountdownSheet .us-countdown-check{order:-1;flex:none;width:12px;height:12px;border:2px solid var(--us-color-line-strong);border-radius:50%;font-size:0;color:transparent}
-#usCountdownSheet [aria-pressed="true"] .us-countdown-check{border-color:var(--us-tu);background:var(--us-tu)}
+#usCountdownSheet [aria-pressed="true"] .us-countdown-check{border-color:var(--us-ink-100);background:var(--us-ink-100)}
 #usCountdownSheet .us-countdown-value{flex:none;min-width:58px;font:400 28px/1.5 var(--us-font-display);font-variant-numeric:lining-nums tabular-nums;color:var(--us-color-text)}
 #usCountdownSheet .us-countdown-copy{flex:1;min-width:0}
 #usCountdownSheet .us-countdown-row b{font-size:15px;font-weight:600;line-height:1.5}
@@ -478,7 +478,7 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
 .us-look-overlay .us-look-detail-copy h3{font:400 26px/1.1 var(--us-font-display)}
 .us-look-overlay .us-look-detail-copy p{font-size:14px;color:var(--us-color-text-2)}
 .us-look-overlay .us-look-apply{min-height:52px;border:0;box-shadow:inset 0 0 0 1px var(--us-color-line-strong);background:transparent;font:700 16px/1 var(--us-font-ui);color:var(--us-color-text-2)}
-.us-look-overlay .us-look-apply.primary{box-shadow:none;background:var(--us-tu);color:var(--us-inchiostro)}
+.us-look-overlay .us-look-apply.primary{box-shadow:none;background:var(--us-ink-100);color:var(--us-paper)}
 .us-look-overlay .us-look-apply.is-current{color:var(--us-color-text)}
 .us-look-overlay button:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
 /* The little Oggi inside every tile follows the new Oggi: circles, count, card. */
@@ -568,7 +568,7 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
 #leftForYouCameraOverlay .left-for-you-camera-shutter{width:78px;height:78px;border:0;background:#fff;box-shadow:0 0 0 5px rgba(0,0,0,.25),0 0 0 9px rgba(255,255,255,.55)}
 #leftForYouCameraOverlay .left-for-you-camera-shutter span{display:none}
 #leftForYouCameraOverlay :is(#leftForYouCameraUse,#leftForYouCameraRetake){flex:1;min-height:52px;border:0;border-radius:999px;font:700 16px/1 var(--us-font-ui)}
-#leftForYouCameraOverlay #leftForYouCameraUse{order:2;background:var(--us-tu);color:var(--us-inchiostro)}
+#leftForYouCameraOverlay #leftForYouCameraUse{order:2;background:var(--us-ink-100);color:var(--us-paper)}
 #leftForYouCameraOverlay #leftForYouCameraRetake{order:1;background:rgba(15,11,19,.55);box-shadow:inset 0 0 0 1px var(--us-color-line-strong);color:var(--us-color-text);font-weight:600}
 
 /* ---------- 13 · Reduced motion: movement becomes a fade or nothing ---------- */

@@ -26,7 +26,9 @@ function appVersion(){return Promise.resolve().then(()=>window.UsCapacitorRuntim
 
 function openModal(title,body,kicker='US.'){
   const modalBody=$('usSettingsModalBody');
-  $('usSettingsModalTitle').textContent=title;
+  // Mockup v5 «I fogli» (16/11/2026): the last word of the title in italics.
+  const words=String(title??'').trim().split(/\s+/),last=words.pop()||'';
+  $('usSettingsModalTitle').innerHTML=`${words.length?`${esc(words.join(' '))} `:''}<em>${esc(last)}</em>`;
   $('usSettingsModalKicker').textContent=kicker;
   modalBody.innerHTML=body;
   const root=$('usSettingsOverlay');

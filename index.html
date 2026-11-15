@@ -1188,12 +1188,12 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </section>
 </div>
 
-<div class="us-settings-overlay" id="usSettingsOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
-  <div class="us-settings-backdrop us-modal-backdrop" data-us-settings-close></div>
-  <section class="us-settings-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usSettingsModalTitle" data-us-modal-panel>
-    <div class="us-settings-sheet-grabber"></div>
-    <header><div><div class="tiny" id="usSettingsModalKicker">US.</div><h3 id="usSettingsModalTitle">Impostazione</h3></div><button type="button" class="us-settings-close us-modal-close" data-us-settings-close data-us-modal-close aria-label="Chiudi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
-    <div class="us-settings-modal-body" id="usSettingsModalBody"></div>
+<div class="dy-foglio" id="usSettingsOverlay" aria-hidden="true" data-us-modal>
+  <div class="dy-foglio-scrim" data-us-settings-close></div>
+  <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="usSettingsModalTitle" data-us-modal-panel>
+    <span class="dy-grab" aria-hidden="true"></span>
+    <div class="dy-sheet-head"><div><h3 class="dy-sheet-title" id="usSettingsModalTitle">Impostazione</h3><span id="usSettingsModalKicker" hidden>US.</span></div><button type="button" class="dy-ib dy-close" data-us-settings-close data-us-modal-close aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="dy-f-body us-settings-modal-body" id="usSettingsModalBody"></div>
   </section>
 </div>
 

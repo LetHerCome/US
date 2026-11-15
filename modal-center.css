@@ -14,7 +14,7 @@
 /* Shared centre positioning across the existing popup controllers, including
    the two nested Calendar detail/form layers. Do not change their display
    state; each feature still owns open/show/aria-hidden. */
-:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay){
+:is(#usCountdownSheet,#usEventsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay){
   align-items: center !important;
   justify-content: center !important;
   padding:
@@ -28,7 +28,7 @@
 
 /* One recognisable floating surface. More complex panels scroll internally
    rather than sliding up from the bottom or escaping under system chrome. */
-:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay) > [data-us-modal-panel]{
+:is(#usCountdownSheet,#usEventsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay) > [data-us-modal-panel]{
   width: min(100%, var(--us-popup-width)) !important;
   min-width: 0;
   max-height: var(--us-popup-safe-height) !important;
@@ -61,7 +61,7 @@
 
 /* Consistent entry and exit from the centre. Existing ui-foundation JS waits
    for the transform transition before finalising dismissals. */
-[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay) [data-us-modal-panel]{
+[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay) [data-us-modal-panel]{
   opacity: 0;
   transform: translateY(8px) scale(.965);
   transform-origin: 50% 50%;
@@ -71,12 +71,12 @@
   animation: none !important;
 }
 
-[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{
+[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{
   opacity: 1;
   transform: none;
 }
 
-[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay)[data-us-motion-exiting] [data-us-modal-panel]{
+[data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay)[data-us-motion-exiting] [data-us-modal-panel]{
   opacity: 0;
   transform: translateY(8px) scale(.965);
 }
@@ -91,17 +91,17 @@
    visualViewport height. Dialog contents remain scrollable and reachable. */
 @media (max-height: 540px) {
   :root { --us-popup-safe-height: max(100px, calc(var(--us-viewport-height, 100dvh) - var(--us-safe-top) - var(--us-safe-bottom) - 16px)); }
-  :is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay){
+  :is(#usCountdownSheet,#usEventsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay){
     padding-top: max(8px, var(--us-safe-top)) !important;
     padding-bottom: max(8px, var(--us-safe-bottom)) !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay) [data-us-modal-panel]{
+  [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay) [data-us-modal-panel]{
     transition: none !important;
   }
 }
-:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay) [data-us-modal-panel]{
+:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay) [data-us-modal-panel]{
   transition: none !important;
 }
