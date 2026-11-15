@@ -242,36 +242,17 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     <div class="auth-logo us-brand-symbol" aria-label="US"><img class="us-brand-symbol-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true"></div>
     <div class="us-auth-context" aria-label="Il vostro spazio privato"><span>Voi</span><span aria-hidden="true">♡</span><span>due</span></div>
 
-    <!-- First run (dc-primo): three cards before the account, only on a phone where nobody has signed in yet. Static, no network. -->
-    <section class="us-tour" id="usTour" hidden aria-label="Come funziona US">
-      <button type="button" class="us-tour-skip" id="usTourSkip">Salta</button>
-      <div class="us-tour-view" role="region" aria-roledescription="carosello" aria-label="Come funziona US">
-        <div class="us-tour-track" id="usTourTrack" tabindex="0">
-          <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="1 di 3">
-            <div class="us-tour-vis" aria-hidden="true"><svg viewBox="0 0 240 180" focusable="false"><circle class="t1-w" cx="120" cy="90" r="60"/><circle class="t1-a" cx="92" cy="90" r="54"/><circle class="t1-b" cx="148" cy="90" r="54"/><path class="t1-n" d="M120 43.83A54 54 0 0 1 120 136.17A54 54 0 0 1 120 43.83Z"/></svg></div>
-            <h2>Uno spazio <em>solo vostro</em></h2>
-            <p class="us-auth-lede">US è per due persone e basta. Niente pubblico e niente feed: quello che condividete resta tra voi.</p>
-          </section>
-          <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="2 di 3">
-            <div class="us-tour-vis" aria-hidden="true"><svg viewBox="0 0 240 170" focusable="false"><path class="t2-arc" d="M70 46Q120 2 170 46"/><circle class="t2-a" cx="46" cy="54" r="22"/><circle class="t2-b" cx="194" cy="54" r="22"/><path class="t2-h" transform="translate(108.4 14.3) scale(1.35)" d="M8.6 14.4S0 9.8 0 4.6C0 1.9 2 0 4.4 0c1.8 0 3.4 1 4.2 2.6C9.4 1 11 0 12.8 0c2.4 0 4.4 1.9 4.4 4.6 0 5.2-8.6 9.8-8.6 9.8z"/><rect class="t2-bl" x="8" y="100" width="108" height="62" rx="18"/><rect class="t2-br" x="124" y="100" width="108" height="62" rx="18"/><rect class="t2-l" x="22" y="117" width="74" height="8" rx="4"/><rect class="t2-l" x="22" y="133" width="50" height="8" rx="4"/><rect class="t2-l" x="138" y="117" width="78" height="8" rx="4"/><rect class="t2-l" x="138" y="133" width="56" height="8" rx="4"/><circle class="t2-d" cx="50" cy="131" r="3.5"/><circle class="t2-d" cx="62" cy="131" r="3.5"/><circle class="t2-d" cx="74" cy="131" r="3.5"/><circle class="t2-d" cx="166" cy="131" r="3.5"/><circle class="t2-d" cx="178" cy="131" r="3.5"/><circle class="t2-d" cx="190" cy="131" r="3.5"/></svg></div>
-            <h2>Un gesto <em>al giorno</em></h2>
-            <p class="us-auth-lede">Una domanda ogni giorno: le risposte si svelano quando avete risposto voi due. E un Ti penso quando volete, con un tocco.</p>
-          </section>
-          <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="3 di 3">
-            <div class="us-tour-vis" aria-hidden="true"><img class="t3-p t3-pl" alt=""><img class="t3-p t3-pr" alt=""><div class="t3-ring"><svg viewBox="0 0 150 150" focusable="false"><circle class="t3-tr" cx="75" cy="75" r="64"/><circle class="t3-r" cx="75" cy="75" r="64" pathLength="100"/><circle class="us-duo-a" cx="64" cy="75" r="19"/><circle class="us-duo-b" cx="86" cy="75" r="19"/><path class="us-duo-n" d="M75 59.51A19 19 0 0 1 75 90.49A19 19 0 0 1 75 59.51Z"/></svg></div><span class="t3-x">♡</span><span class="t3-c"><i></i>Livello 5 · Intesa rara</span></div>
-            <h2>Crescete <em>insieme</em></h2>
-            <p class="us-auth-lede">Ricordi, calendario e giochi. Più cose fate insieme, più cresce la vostra Sintonia e si sbloccano sorprese.</p>
-          </section>
-        </div>
-      </div>
-      <div class="us-tour-dots" id="usTourDots">
-        <button type="button" data-us-tour-dot="0" aria-label="Scheda 1"></button>
-        <button type="button" data-us-tour-dot="1" aria-label="Scheda 2"></button>
-        <button type="button" data-us-tour-dot="2" aria-label="Scheda 3"></button>
-      </div>
-      <div class="us-tour-actions us-auth-foot" data-us-enter="flat">
-        <button type="button" class="primary us-auth-primary" id="usTourNext">Avanti</button>
-        <button type="button" class="us-auth-link" id="usTourLogin">Ho già un account</button>
+    <!-- Il diario, ma pulito (15/11/2026, mockup v4.1 «L'entrata» 1): one welcome before the account,
+         only on a phone where nobody has signed in yet. Static, no network. The two characters are
+         drawn by diario.js (UsDiario.character), as everywhere else. -->
+    <section class="us-tour dy-ent-welcome" id="usTour" hidden aria-labelledby="usTourTitle">
+      <p class="dy-ent-mark" role="img" aria-label="US">us</p>
+      <div class="dy-ent-duo" id="usTourDuo" aria-hidden="true"></div>
+      <h2 class="dy-ent-h" id="usTourTitle" tabindex="-1">Il diario <em>della coppia</em></h2>
+      <p class="dy-ent-lead">Una pagina al giorno, scritta in due: le vostre foto, una domanda, i giochi e un ti penso quando vi mancate.</p>
+      <div class="dy-ent-foot">
+        <button type="button" class="dy-btn dy-btn-xl" id="usTourNext">Inizia</button>
+        <button type="button" class="dy-btn dy-btn-l dy-btn-ghost" id="usTourLogin">Ho già un account</button>
       </div>
     </section>
 
@@ -294,20 +275,23 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         <button type="button" class="us-auth-link" id="usShowForgot">Password dimenticata?</button>
       </nav>
     </div>
+    <!-- Il diario, ma pulito (15/11/2026, «L'entrata» 2): Google and Apple first, then the mail. -->
     <form class="auth-step us-public-auth-form" id="usSignup" aria-labelledby="usSignupHeading">
-      <div class="tiny">US · INIZIA DA QUI</div>
-      <h2 id="usSignupHeading">Crea il tuo <em>account</em></h2>
-      <p class="us-auth-lede">Un account a testa. Dopo la verifica potrai creare il vostro spazio o accettare un invito.</p>
-      <label class="us-auth-field" for="usSignupEmail"><span>Email</span><input id="usSignupEmail" type="email" inputmode="email" autocomplete="email" maxlength="254" placeholder="tua@email.com" required></label>
-      <label class="us-auth-field" for="usSignupPassword"><span>Password · almeno 10 caratteri</span><input id="usSignupPassword" type="password" autocomplete="new-password" minlength="10" maxlength="72" required></label>
+      <div class="dy-ent-top"><button type="button" class="dy-ib" id="usSignupHome" aria-label="Indietro"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button></div>
+      <h2 id="usSignupHeading">Il tuo <em>account</em></h2>
+      <p class="us-auth-lede">Serve per ritrovare il vostro diario anche su un altro telefono.</p>
+      <button type="button" class="us-auth-google" id="usGoogleSignUp" hidden><span class="us-auth-google-mark" data-icon="/assets/icons/phosphor/google-logo-regular.svg" aria-hidden="true"></span><span class="us-auth-google-label">Continua con Google</span></button>
+      <button type="button" class="us-auth-apple" id="usAppleSignUp" hidden><span class="us-auth-apple-mark" aria-hidden="true">&#xF8FF;</span><span class="us-auth-apple-label">Continua con Apple</span></button>
+      <p class="dy-ent-or" aria-hidden="true">oppure con la mail</p>
+      <label class="us-auth-field" for="usSignupEmail"><span>Email</span><input id="usSignupEmail" type="email" inputmode="email" autocomplete="email" maxlength="254" placeholder="nome@esempio.it" required></label>
+      <label class="us-auth-field" for="usSignupPassword"><span>Password</span><input id="usSignupPassword" type="password" autocomplete="new-password" minlength="10" maxlength="72" placeholder="almeno 10 caratteri" required></label>
       <label class="us-auth-field" for="usSignupConfirm"><span>Conferma password</span><input id="usSignupConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="72" required></label>
       <!-- 18+ and the Terms: "Registrati" stays off until ticked (public-auth.js). The links get their
            href from LEGAL_URLS once the public pages exist; until then the words carry no link. -->
       <label class="us-auth-consent" for="usSignupTerms"><input id="usSignupTerms" type="checkbox" required><span>Ho almeno 18 anni e accetto i <a data-us-legal="terms">Termini</a> e la <a data-us-legal="privacy">Privacy</a></span></label>
       <p class="auth-status" id="usSignupStatus" role="status" aria-live="polite"></p>
       <button class="primary us-auth-primary" id="usSignupSubmit" type="submit">Registrati</button>
-      <button type="button" class="us-auth-google" id="usGoogleSignUp" hidden><span class="us-auth-google-mark" data-icon="/assets/icons/phosphor/google-logo-regular.svg" aria-hidden="true"></span><span class="us-auth-google-label">Continua con Google</span></button>
-      <button type="button" class="us-auth-apple" id="usAppleSignUp" hidden><span class="us-auth-apple-mark" aria-hidden="true">&#xF8FF;</span><span class="us-auth-apple-label">Continua con Apple</span></button>
+      <p class="dy-ent-note dy-ent-center" id="usSignupNote">Con la mail ti chiediamo di confermarla. Con Google o Apple no.</p>
       <button class="us-auth-link us-public-auth-back us-auth-foot" id="usSignupBack" type="button">Ho già un account</button>
     </form>
     <section class="auth-step us-public-auth-form" id="usVerifyEmail" aria-labelledby="usVerifyHeading">
@@ -348,84 +332,103 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <button type="submit" class="primary us-auth-primary" id="usRecoverySubmit">Aggiorna password</button>
     </form>
 
+    <!-- Il diario, ma pulito (15/11/2026, mockup v4.1 «L'entrata» 3–6): «Da dove partite?», «Tu»
+         (name, character, colour, birthday), «Da quando state insieme?» (whoever creates), the code
+         for the other person («Il suo posto è pronto») and, for whoever joins, the code first. -->
     <section class="auth-step us-ob-step" id="usOnboarding" aria-labelledby="mc3Title">
-      <div class="tiny" id="mc3Kicker">US · SPAZIO PRIVATO</div>
-      <div class="us-ob-progress" id="mc3Progress" aria-hidden="true" hidden><i></i></div>
-      <h2 id="mc3Title" tabindex="-1">Il vostro US, da qui</h2>
+      <div class="dy-ent-top"><button type="button" class="dy-ib" id="mc3Back" aria-label="Indietro" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button></div>
+      <p class="dy-ent-step" id="mc3Kicker"></p>
+      <h2 id="mc3Title" class="dy-ent-h" tabindex="-1">Da dove <em>partite?</em></h2>
       <p class="us-auth-lede" id="mc3Copy"></p>
-      <form id="mc3Me" hidden novalidate>
-        <label class="us-auth-field" for="mc3Name"><span>Il tuo nome</span><input id="mc3Name" autocomplete="given-name" autocapitalize="words" required></label>
-        <fieldset class="us-ob-bday" aria-describedby="mc3BirthHelp">
-          <legend>Il tuo compleanno · facoltativo</legend>
-          <div class="us-ob-bday-row">
-            <span class="us-ob-select"><select id="mc3BirthDay" aria-label="Giorno del compleanno"><option value="">Giorno</option></select></span>
-            <span class="us-ob-select"><select id="mc3BirthMonth" aria-label="Mese del compleanno"><option value="">Mese</option></select></span>
-          </div>
-          <p class="mc3-help" id="mc3BirthHelp">Solo giorno e mese. Lo aggiungiamo al vostro calendario, ogni anno.</p>
-        </fieldset>
-        <button type="submit" class="primary us-auth-primary" id="mc3MeNext">Continua</button>
-      </form>
-      <div id="mc3Choice" class="mc3-actions us-ob-pick">
-        <button type="button" id="mc3ChooseCreate" class="us-ob-pick-card"><svg class="us-duo-mark" viewBox="0 0 58 36" aria-hidden="true" focusable="false"><circle class="us-duo-a" cx="20" cy="18" r="15"/><circle class="us-duo-b" cx="38" cy="18" r="15"/><path class="us-duo-n" d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z"/></svg><span class="us-ob-pick-copy"><b>Crea il nostro spazio</b><small>Inizi tu, poi inviti la tua persona</small></span></button>
-        <button type="button" id="mc3ChooseJoin" class="us-ob-pick-card" data-us-enter="with-prev"><span class="us-ob-pick-icon" aria-hidden="true"></span><span class="us-ob-pick-copy"><b>Ho un codice d’invito</b><small>La tua persona ha già creato lo spazio</small></span></button>
-        <button type="button" id="mc3BackMe" class="mc3-back us-auth-link us-auth-foot">Indietro</button>
+      <div id="mc3Choice" class="dy-ent-come">
+        <button type="button" id="mc3ChooseCreate" class="dy-card dy-ent-pick"><span class="dy-ent-pick-art" data-ent-art="create" aria-hidden="true"></span><span class="dy-ent-pick-copy"><b>Apro io il nostro diario</b><small>Lo crei e mandi un codice alla tua persona.</small></span><svg class="dy-ent-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button type="button" id="mc3ChooseJoin" class="dy-card dy-ent-pick"><span class="dy-ent-pick-art" data-ent-art="join" aria-hidden="true"></span><span class="dy-ent-pick-copy"><b>Ho un codice</b><small>La tua persona ti ha invitato. Se hai aperto il suo link, il codice è già scritto.</small></span><svg class="dy-ent-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg></button>
+        <p class="dy-ent-note">Il personaggio e il colore li sceglie ognuno al passo dopo. Chi entra col codice non può prendere il colore dell’altra persona.</p>
       </div>
-      <form id="mc3Create" hidden>
-        <label class="us-auth-field" for="mc3CreateName" hidden><span>Come ti chiami?</span><input id="mc3CreateName" autocomplete="off" tabindex="-1"></label>
-        <fieldset class="us-ob-bday us-ob-together" aria-describedby="mc3DateHelp">
-          <legend>Insieme dal</legend>
-          <div class="us-ob-date-row">
-            <span class="us-ob-select"><select id="mc3DateDay" aria-label="Giorno" required><option value="">Giorno</option></select></span>
-            <span class="us-ob-select"><select id="mc3DateMonth" aria-label="Mese" required><option value="">Mese</option></select></span>
-            <span class="us-ob-select"><select id="mc3DateYear" aria-label="Anno" required><option value="">Anno</option></select></span>
-          </div>
-        </fieldset>
-        <p class="mc3-help us-sr-only" id="mc3DateHelp">La vostra data, per contare i giorni insieme. Scegli una data dal 1900 a oggi.</p>
-        <label class="us-auth-field" for="mc3CoupleName"><span>Nome del vostro spazio · facoltativo</span><input id="mc3CoupleName" placeholder="US." autocomplete="off"></label>
-        <button type="submit" class="primary us-auth-primary">Crea il nostro spazio</button>
-        <button type="button" id="mc3BackCreate" class="mc3-back" data-us-enter="with-prev">Indietro</button>
-      </form>
-      <form id="mc3Join" hidden>
+      <form id="mc3Join" class="dy-ent-form" hidden novalidate>
         <label class="us-auth-field" for="mc3JoinName" hidden><span>Come ti chiami?</span><input id="mc3JoinName" autocomplete="off" tabindex="-1"></label>
-        <label class="us-auth-field" for="mc3JoinCode"><span>Codice d’invito</span><textarea id="mc3JoinCode" rows="2" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="26 caratteri" required aria-describedby="mc3CodeHelp"></textarea></label>
-        <p class="mc3-help us-sr-only" id="mc3CodeHelp">Puoi incollare il codice con spazi o trattini.</p>
-        <button type="submit" class="primary us-auth-primary">Entra nel nostro US</button>
-        <button type="button" id="mc3BackJoin" class="mc3-back" data-us-enter="with-prev">Indietro</button>
+        <label class="us-auth-field" for="mc3JoinCode"><span>Il codice</span><textarea id="mc3JoinCode" rows="2" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="26 caratteri" required aria-describedby="mc3CodeHelp"></textarea></label>
+        <p class="dy-ent-note" id="mc3CodeHelp">Puoi incollare tutto il messaggio: il codice lo trovo io.</p>
+        <button type="submit" class="dy-btn dy-btn-l" id="mc3JoinNext">Avanti</button>
       </form>
-      <div id="mc3Color" class="us-ob-color" hidden>
-        <div class="us-ob-venn" id="mc3Venn" aria-hidden="true"></div>
-        <div class="us-ob-colors" id="mc3Colors" role="group" aria-label="Il tuo colore" hidden></div>
-        <p class="us-auth-lede" id="mc3ColorCopy"></p>
-        <button type="button" id="mc3ColorNext" class="primary us-auth-primary">Invita la tua persona</button>
-      </div>
-      <div id="mc3Waiting" data-us-enter="flat" hidden>
-        <p id="mc3InviteStatus" class="us-inv-st"></p>
-        <div id="mc3CodeArea" data-us-enter="flat" hidden>
-          <label class="us-auth-field" for="mc3Code" data-us-enter="with-prev"><span>Il nuovo codice</span><textarea id="mc3Code" readonly autocomplete="off" spellcheck="false" rows="2"></textarea><code class="us-inv-code" id="mc3CodeShown" aria-hidden="true" translate="no"></code></label>
-          <div class="mc3-code-actions">
-            <button type="button" id="mc3ShareCode">Condividi</button>
-            <button type="button" id="mc3CopyCode">Copia codice</button>
+      <form id="mc3Me" class="dy-ent-form" hidden novalidate>
+        <div class="dy-ent-big"><span class="dy-stk" id="mc3Big"></span><span class="dy-ent-name" id="mc3BigName" translate="no"></span></div>
+        <label class="us-auth-field" for="mc3Name"><span>Come ti chiami?</span><input id="mc3Name" autocomplete="given-name" autocapitalize="words" required></label>
+        <fieldset class="dy-ent-group">
+          <legend>Il tuo personaggio</legend>
+          <div class="dy-ent-shapes" id="mc3Shapes"></div>
+        </fieldset>
+        <fieldset class="dy-ent-group" aria-describedby="mc3ColorHelp">
+          <legend>Il tuo colore</legend>
+          <div class="dy-ent-colors" id="mc3Colors"></div>
+          <p class="dy-ent-note" id="mc3ColorHelp">Il colore dice cosa hai fatto tu: le tue foto, le tue risposte, il tuo personaggio. Chi entra col codice non può prendere il tuo.</p>
+        </fieldset>
+        <fieldset class="dy-ent-group us-ob-bday" aria-describedby="mc3BirthHelp">
+          <legend>Compleanno</legend>
+          <div class="dy-ent-row">
+            <span class="us-ob-select"><select id="mc3BirthDay" aria-label="Giorno del compleanno"><option value="">Giorno</option></select></span>
+            <span class="us-ob-select dy-ent-wide"><select id="mc3BirthMonth" aria-label="Mese del compleanno"><option value="">Mese</option></select></span>
+          </div>
+          <p class="dy-ent-note" id="mc3BirthHelp">Giorno e mese, se vuoi: lo mettiamo nel vostro calendario, ogni anno.</p>
+        </fieldset>
+        <button type="submit" class="dy-btn dy-btn-l" id="mc3MeNext">Avanti</button>
+      </form>
+      <form id="mc3Create" class="dy-ent-form" hidden novalidate>
+        <label class="us-auth-field" for="mc3CreateName" hidden><span>Come ti chiami?</span><input id="mc3CreateName" autocomplete="off" tabindex="-1"></label>
+        <fieldset class="dy-ent-group us-ob-together" aria-describedby="mc3DateHelp">
+          <legend class="us-sr-only">Insieme dal</legend>
+          <div class="dy-ent-row dy-ent-date">
+            <span class="us-ob-select"><select id="mc3DateDay" aria-label="Giorno" required><option value="">Giorno</option></select></span>
+            <span class="us-ob-select dy-ent-wide"><select id="mc3DateMonth" aria-label="Mese" required><option value="">Mese</option></select></span>
+            <span class="us-ob-select dy-ent-year"><select id="mc3DateYear" aria-label="Anno" required><option value="">Anno</option></select></span>
+          </div>
+        </fieldset>
+        <div class="dy-ent-why" id="mc3DateHelp"><span>Così il diario conta i vostri giorni e ve li ricorda:</span><span class="dy-ent-tags"><span class="dy-tag dy-tag-s dy-ent-miele" id="mc3DaysTag">i vostri giorni insieme</span><span class="dy-tag dy-tag-s dy-ent-miele">mesiversario</span><span class="dy-tag dy-tag-s dy-ent-miele">un anno fa oggi</span></span></div>
+        <label class="us-auth-field" for="mc3CoupleName"><span>Il nome del vostro diario</span><input id="mc3CoupleName" placeholder="facoltativo" maxlength="40" autocomplete="off"></label>
+        <button type="submit" class="dy-btn dy-btn-l" id="mc3CreateNext">Apri il nostro diario</button>
+      </form>
+      <div id="mc3Waiting" class="dy-ent-wait" hidden>
+        <div class="dy-ent-pair" id="mc3Pair" aria-hidden="true"></div>
+        <div class="dy-card dy-ent-code" id="mc3CodeArea" hidden>
+          <div class="dy-ent-fresh">
+            <span class="dy-ent-kicker">Il vostro codice</span>
+            <code class="us-inv-code" id="mc3CodeShown" aria-hidden="true" translate="no"></code>
+            <label class="us-auth-field dy-ent-raw" for="mc3Code"><span>Il codice</span><textarea id="mc3Code" readonly autocomplete="off" spellcheck="false" rows="2"></textarea></label>
+            <div class="dy-ent-code-actions">
+              <button type="button" class="dy-btn dy-btn-l" id="mc3ShareCode"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 15V4 M8 7.5l4-4 4 4 M5.5 12v8h13v-8"/></svg>Condividi</button>
+              <button type="button" class="dy-btn dy-btn-l dy-btn-ghost" id="mc3CopyCode" aria-label="Copia il codice"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 9h10.5v10.5H9z M15 9V4.5H4.5V15H9"/></svg></button>
+            </div>
+          </div>
+          <div class="dy-ent-sent">
+            <span class="dy-ent-sent-copy"><b>Codice mandato</b><span id="mc3CodeSmall" translate="no"></span></span>
+            <button type="button" class="dy-btn dy-btn-m dy-btn-ghost" id="mc3CopyAgain"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 9h10.5v10.5H9z M15 9V4.5H4.5V15H9"/></svg>Copia</button>
           </div>
         </div>
-        <p class="mc3-help us-ob-invite-help">Il codice resta qui finché non scade o chiudi US. Uno nuovo annulla il precedente. Condividilo solo con la tua persona.</p>
-        <div class="mc3-actions us-ob-invite-actions">
-          <button type="button" id="mc3Generate" class="primary us-auth-primary">Crea invito</button>
-          <button type="button" id="mc3Revoke" class="us-ob-link" hidden>Revoca codice</button>
-          <button type="button" id="mc3Refresh" class="us-ob-link">Verifica accesso</button>
+        <button type="button" id="mc3Revoke" class="dy-ent-link" hidden>Puoi revocarlo quando vuoi</button>
+        <p id="mc3InviteStatus" class="dy-ent-note dy-ent-center us-inv-st"></p>
+        <div class="dy-ent-invite-actions">
+          <button type="button" id="mc3Generate" class="dy-btn dy-btn-l">Crea il codice</button>
         </div>
-        <div class="us-ob-today" id="mc3Today" role="group" aria-labelledby="mc3TodayKicker" hidden>
-          <p class="us-ob-today-kicker" id="mc3TodayKicker">Intanto, la domanda di oggi</p>
-          <p class="us-ob-today-question" id="mc3TodayQuestion"></p>
-          <label class="us-auth-field" for="mc3TodayAnswer"><span>La tua risposta</span><textarea id="mc3TodayAnswer" rows="3" maxlength="1000"></textarea></label>
-          <p class="mc3-help us-ob-today-status" id="mc3TodayStatus" role="status" hidden></p>
-          <button type="button" id="mc3TodaySave">Rispondi</button>
-          <p class="mc3-help us-ob-today-done" id="mc3TodayDone" hidden>Fatto. La tua persona vedrà la tua risposta quando avrà dato la sua.</p>
+        <div class="dy-card dy-ent-notify" id="mc3Notify" hidden>
+          <span class="dy-ib dy-ent-bell" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z M10 20.5h4"/></svg></span>
+          <span class="dy-ent-notify-copy"><b id="mc3NotifyTitle">Ti avviso quando entra?</b><span id="mc3NotifyText">Così non devi controllare tu</span></span>
+          <button type="button" class="dy-btn dy-btn-m" id="mc3NotifyYes">Sì</button>
         </div>
-        <p class="mc3-help us-ob-note">Puoi chiudere US: quando la riapri, riprendi da qui.</p>
+        <div class="dy-card dy-ent-today us-ob-today" id="mc3Today" role="group" aria-labelledby="mc3TodayKicker" hidden>
+          <p class="dy-ent-kicker" id="mc3TodayKicker">Intanto, la domanda di oggi</p>
+          <p class="dy-ent-q" id="mc3TodayQuestion"></p>
+          <label class="us-auth-field dy-ent-hand" for="mc3TodayAnswer"><span class="us-sr-only">La tua risposta</span><textarea id="mc3TodayAnswer" rows="2" maxlength="1000" placeholder="scrivi qui…"></textarea></label>
+          <p class="dy-ent-note" id="mc3TodayStatus" role="status" hidden></p>
+          <button type="button" class="dy-btn dy-btn-m" id="mc3TodaySave">Rispondi</button>
+          <p class="dy-ent-note" id="mc3TodayDone" hidden>Fatto. La vedrete insieme quando avrà risposto anche la tua persona.</p>
+          <p class="dy-ent-note" id="mc3TodayHint">La vedrete insieme quando avrà risposto anche la tua persona.</p>
+        </div>
+        <p class="dy-ent-note dy-ent-center">Il codice resta qui finché non scade o chiudi US. Puoi chiudere US: quando la riapri, riprendi da qui.</p>
+        <button type="button" id="mc3Refresh" class="dy-ent-link">Verifica accesso</button>
       </div>
       <p id="mc3Status" class="auth-status" role="status" aria-live="polite"></p>
-      <button type="button" id="mc3Retry" hidden>Riprova</button>
-      <button type="button" id="mc3Exit" class="mc3-back us-auth-foot">Esci</button>
+      <button type="button" id="mc3Retry" class="dy-btn dy-btn-l" hidden>Riprova</button>
+      <button type="button" id="mc3Exit" class="dy-ent-link us-auth-foot">Esci</button>
     </section>
     <section class="us-auth-install" id="usAuthInstall" hidden aria-label="Installa US">
       <div class="us-auth-install-row">
@@ -438,36 +441,25 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </div>
 </div>
 
-<!-- First run (dc-primo): set up this phone once, after pairing (after onboarding here, or after
-     an email and password sign-in on a new phone). Opens only once US is unlocked and paired. -->
+<!-- Il diario, ma pulito (15/11/2026, mockup v4.1 «L'entrata» 6, the arrival): once per user on this
+     phone, after onboarding here, «Ora siete in due». Notifications are asked on the invite, the
+     position the first time the distance is opened (app.js openDistanceDetail). Opens only once US
+     is unlocked and paired. -->
 <div class="us-setup" id="usDeviceSetup" role="dialog" aria-modal="true" aria-labelledby="usSetupTitle" hidden>
   <div class="us-setup-card">
-    <div class="us-auth-brand" aria-hidden="true"><svg class="us-duo-mark" viewBox="0 0 58 36" focusable="false"><circle class="us-duo-a" cx="20" cy="18" r="15"/><circle class="us-duo-b" cx="38" cy="18" r="15"/><path class="us-duo-n" d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z"/></svg></div>
-    <p class="tiny" id="usSetupKicker"></p>
-    <div class="us-ob-progress" id="usSetupProgress" aria-hidden="true"><i></i></div>
     <div class="us-setup-body" id="usSetupBody">
-      <h2 id="usSetupTitle" tabindex="-1"></h2>
-      <div class="us-ob-venn" id="usSetupVenn" aria-hidden="true" hidden></div>
-      <div class="us-ob-colors" id="usSetupColors" role="group" aria-label="Il tuo colore" hidden></div>
-      <div class="us-setup-push" id="usSetupPushVis" aria-hidden="true" hidden>
-        <div class="us-setup-note"><span class="us-setup-note-icon"></span><span><small>US · adesso</small><b id="usSetupPushPartner">La tua persona ti pensa ♡</b>Tocca per rispondere.</span></div>
-        <div class="us-setup-note"><span class="us-setup-note-icon"></span><span><small>US · 2 min fa</small><b>Le vostre risposte sono pronte</b>Si svelano insieme.</span></div>
+      <div class="dy-ent-arrive">
+        <div class="dy-ent-pair dy-ent-pair-big" id="usSetupPair" aria-hidden="true"></div>
+        <h2 id="usSetupTitle" class="dy-ent-h" tabindex="-1">Ora siete <em>in due</em></h2>
+        <p class="us-auth-lede" id="usSetupCopy"></p>
       </div>
-      <div class="us-setup-place" id="usSetupPlaceVis" aria-hidden="true" hidden><svg viewBox="0 14 280 92" focusable="false"><circle class="pl-h pl-hr" cx="40" cy="60" r="30"/><circle class="pl-h pl-hl" cx="240" cy="60" r="30"/><g class="pl-ln"><path class="pl-line" d="M62 60H218"/></g><circle class="pl-d us-duo-a" cx="40" cy="60" r="9"/><circle class="pl-d us-duo-b" cx="240" cy="60" r="9"/></svg><span class="pl-chip"><i class="pl-chip-icon"></i></span></div>
-      <p class="us-auth-lede" id="usSetupCopy"></p>
-      <ul class="us-setup-points" id="usSetupPoints" hidden>
-        <li><span class="us-setup-point-icon us-setup-point-icon--distance" aria-hidden="true"></span><span><b>Solo la distanza</b><span id="usSetupPointPartner">La tua persona vede solo la distanza, mai dove sei.</span></span></li>
-        <li><span class="us-setup-point-icon us-setup-point-icon--pin" aria-hidden="true"></span><span><b>Approssimata</b>Solo mentre US è aperta. Sotto i 3 km non vedete la distanza esatta.</span></li>
-        <li><span class="us-setup-point-icon us-setup-point-icon--lock" aria-hidden="true"></span><span><b>Decidi tu</b>La spegni e la cancelli quando vuoi.</span></li>
-      </ul>
-      <ul class="us-setup-ready" id="usSetupReady" hidden></ul>
+      <div class="dy-card dy-ent-today" id="usSetupToday" hidden>
+        <p class="dy-ent-kicker">La domanda di oggi</p>
+        <p class="dy-ent-q dy-ent-q-s" id="usSetupTodayText"></p>
+      </div>
       <p class="auth-status" id="usSetupStatus" role="status" aria-live="polite"></p>
-      <div class="us-setup-actions">
-        <button type="button" class="primary us-auth-primary" id="usSetupPrimary">Continua</button>
-        <button type="button" class="us-setup-secondary" id="usSetupSecondary" hidden>Non ora</button>
-      </div>
+      <button type="button" class="dy-btn dy-btn-xl" id="usSetupPrimary">Entra nel diario</button>
     </div>
-    <div class="us-setup-intro" id="usSetupIntro" aria-hidden="true" hidden><span class="c a"></span><span class="c b"></span><span class="logo"></span><span class="word">il vostro spazio</span></div>
   </div>
 </div>
 

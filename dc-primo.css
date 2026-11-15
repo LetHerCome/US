@@ -1,12 +1,17 @@
-/* Due colori, un Noi — primo avvio e accesso. Area layer on top of due-colori.css (approved design, 2026-10-14). */
-/* Parity pass (2026-10-15): the approved mockup (v3, auth.js and the "Accesso" and
-   "primo avvio" parts of style.css/style2.css) is the authority for every size,
-   space, colour and move on these screens. The values below are the mockup's.
-   Screens: login, account, recovery, the tour, Tu/Voi (#usOnboarding), the
-   phone setup after pairing (#usDeviceSetup), the lock screen and the system
-   pills. Legacy layers (auth-first-run.css, identity.css, fix4.css,
-   onboarding.css, public-auth.css) are overridden here, never edited.
-   Pseudo-elements stay on classes: a leaving step is painted by a copy without ids. */
+/* L'entrata — Il diario, ma pulito (founder, 15/11/2026; docs/missions/diario-pulito.md).
+   The approved mockup v4.1, «L'entrata»: the welcome, the account, «Da dove
+   partite?», «Tu», «Da quando state insieme?», «Il suo posto è pronto» and
+   the arrival «Ora siete in due». The same paper, ink, buttons and cards as
+   the rest of the diary (tokens in ui-foundation.css, dy-* in diario.css),
+   in light and in «carta di notte». The other doors (login, recovery, the
+   mail check, Google's Terms) wear the same clothes.
+   Legacy layers (styles.css, auth-first-run.css, identity.css, fix4.css,
+   public-auth.css) still load before this file: the few !important below
+   answer theirs, nothing else.
+   Movement (the mockup's, nothing else): the character hops when you pick a
+   shape and takes your colour at once; at the arrival who comes drops into
+   the place and who waited hops. Reduced motion stops them. The screens
+   change at once. */
 
 /* ---------- Shared pieces ---------- */
 .us-duo-a{fill:var(--us-rosa)}
@@ -15,39 +20,36 @@
 .us-duo-mark{display:block;width:54px;height:34px;flex:none;overflow:visible}
 .us-sr-only{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
 
-/* While onboarding, before the couple exists, the creator is rosa. */
-html.us-onboarding-active .auth-overlay{--us-tu:var(--us-rosa);--us-partner:var(--us-lilla)}
-html.us-onboarding-active .auth-overlay[data-us-tone="beatrice"]{--us-tu:var(--us-lilla);--us-partner:var(--us-rosa)}
-
-/* ---------- The front door: full screen night, one column (.auth) ---------- */
+/* ---------- The door: paper, one column ---------- */
 .auth-overlay,
-html.us-onboarding-active .auth-overlay{
+html.us-onboarding-active .auth-overlay,
+.us-setup{
   display:block;
   padding:0;
   overflow-x:hidden;
   overflow-y:auto;
   overscroll-behavior:contain;
-  background:var(--us-color-bg);
-  color:var(--us-color-text);
+  background:var(--us-paper);
+  color:var(--us-ink-100);
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
+  -webkit-tap-highlight-color:transparent;
 }
+/* onboarding.css shows the door with display:flex!important while onboarding. */
 html.us-onboarding-active .auth-overlay{display:block!important}
 .auth-overlay.hidden{display:none}
 /* A password sign-in in progress (app.js loginAccount): the sign-in stays on
-   screen while the account is checked, then the next step takes its place as
-   in the design, never an empty screen in between. */
+   screen while the account is checked, never an empty screen in between. */
 html.us-auth-pending.us-auth-signing-in .auth-overlay:not(.hidden),
 html.us-returning-device.us-auth-signing-in .auth-overlay:not(.hidden){display:block!important}
+.us-setup{position:fixed;inset:0;z-index:var(--us-layer-auth)}
+.us-setup[hidden]{display:none}
+.us-setup,.us-setup-card,.us-setup-body,#usSetupTitle{transition:none}
 
-/* .auth{padding:28px 22px 26px}: brand, body in the middle, foot at the bottom. */
+/* The column: 20px from the sides (the mockup's), safe areas respected. */
 html .auth-overlay .auth-card,
 .us-setup-card{
-  --us-auth-top:calc(max(14px,var(--us-safe-top,0px)) + 14px);
-  --us-auth-side-l:max(22px,var(--us-safe-left,0px));
-  --us-auth-side-r:max(22px,var(--us-safe-right,0px));
   position:relative;
-  isolation:auto;
   display:flex;
   flex-direction:column;
   width:min(100%,460px);
@@ -55,943 +57,359 @@ html .auth-overlay .auth-card,
   min-height:100%;
   max-height:none;
   margin:0 auto;
-  padding:var(--us-auth-top) var(--us-auth-side-r) calc(max(12px,var(--us-safe-bottom,0px)) + 14px) var(--us-auth-side-l);
+  padding:calc(max(10px,var(--us-safe-top,0px)) + 6px) max(20px,var(--us-safe-right,0px)) calc(max(14px,var(--us-safe-bottom,0px)) + 20px) max(20px,var(--us-safe-left,0px));
   overflow:visible;
+  /* identity.css paints every .auth-card with !important. */
   border:0!important;
   border-radius:0;
   background:transparent!important;
   box-shadow:none;
-  color:var(--us-color-text);
-  font:400 15px/1.5 var(--us-font-ui);
+  color:var(--us-ink-100);
+  font:500 var(--us-text-15)/1.45 var(--us-font-ui);
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
 }
 html .auth-overlay .auth-card::before{display:none}
 .auth-overlay .auth-logo,
-.auth-overlay .us-auth-context{display:none!important}
+.auth-overlay .us-auth-context,
+.auth-overlay .us-auth-brand{display:none!important}
 
-/* .brand: the two circles (54×34) and, on the right, the eyebrow. */
-.us-auth-brand{display:flex;align-items:center;height:34px;flex:none}
-/* On the tour the eyebrow is "Salta", 44px tall: the row grows with it. */
-html .auth-overlay.us-tour-active .us-auth-brand{height:44px}
-
-html .auth-overlay .auth-step>.tiny,
-.us-setup-card>.tiny{
-  position:absolute;
-  top:var(--us-auth-top);
-  right:var(--us-auth-side-r);
-  max-width:calc(100% - 120px);
-  height:34px;
-  margin:0;
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  text-align:right;
-  color:var(--us-color-text);
-  font:700 11px/1.5 var(--us-font-ui);
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  white-space:nowrap;
-}
-
-/* .a-prog: 3px, 14px under the brand row. Tu · Voi · Notifiche · Posizione. */
-.us-ob-progress{
-  position:absolute;
-  left:var(--us-auth-side-l);
-  right:var(--us-auth-side-r);
-  top:calc(var(--us-auth-top) + 45px);
-  height:3px;
-  border-radius:3px;
-  background:var(--us-color-line);
-  overflow:hidden;
-}
-#usOnboarding .us-ob-progress[hidden]{display:none!important}
-.us-ob-progress i{
-  display:block;
-  height:100%;
-  width:calc(var(--us-progress,0) * 100%);
-  border-radius:inherit;
-  background:var(--us-tu);
-  /* .6s e-out as in the design, once the old step has gone (onboarding.js
-     sets the wait: 0 when the step is drawn after it, 180 ms under a copy). */
-  transition:width .6s cubic-bezier(.2,.8,.2,1) var(--us-ob-delay,0ms),background-color .4s var(--us-ob-delay,0ms);
-}
-
-/* .a-body: gap 14, padding 20 (14 on the numbered steps), centred between the
-   brand and the foot. Two spacers do the centring; the foot cancels one gap. */
+/* One step at a time, a column with 14px between its pieces. */
 html .auth-overlay .auth-step{display:none}
-html .auth-overlay :is(.auth-step.active,.us-step-ghost),
+html .auth-overlay .auth-step.active,
 .us-setup-body{
   display:flex;
   flex-direction:column;
   flex:1 0 auto;
-  justify-content:flex-start;
   gap:14px;
   min-width:0;
   margin:0;
   padding:0;
 }
-html .auth-overlay :is(.auth-step.active,.us-step-ghost)::before,
-html .auth-overlay :is(.auth-step.active,.us-step-ghost)::after,
-.us-setup-body::before,
-.us-setup-body::after{content:"";display:block;flex:1 0 6px;order:-1}
-html .auth-overlay :is(.auth-step.active,.us-step-ghost)::after,
-.us-setup-body::after{order:50}
-html .auth-overlay :is(#usOnboarding.active,.us-step-ghost.us-ob-step)::before,
-html .auth-overlay :is(#usOnboarding.active,.us-step-ghost.us-ob-step)::after,
-.us-setup-body::before,
-.us-setup-body::after{flex-basis:0px}
-html .auth-overlay .us-auth-foot{order:60;margin-top:-14px}
-/* The leaving copy of a step, painted over the old place while it fades. */
-html .auth-overlay .us-step-ghost,
-.us-setup .us-step-ghost{position:absolute;z-index:3;pointer-events:none}
-.us-setup .us-step-ghost{display:flex;flex-direction:column;gap:14px}
-.us-setup .us-step-ghost::before,.us-setup .us-step-ghost::after{content:"";display:block;flex:1 0 0px;order:-1}
-.us-setup .us-step-ghost::after{order:50}
+html .auth-overlay.us-tour-active .auth-step,
+html .auth-overlay.us-tour-active .us-auth-install{display:none!important}
+html .auth-overlay .us-auth-foot{margin-top:auto}
+/* The doors without a back button start where the others' titles do. */
+html .auth-overlay :is(#authLogin,#usVerifyEmail,#usForgotPassword,#usGoogleTerms,#usRecovery).active{padding-top:40px}
+/* The old eyebrows («US · SPAZIO PRIVATO»): the diary has none. */
+html .auth-overlay .auth-step>.tiny{display:none}
 
-/* Type: h2 44/1 (40 on the numbered steps), the lead 16px. */
+/* The back button, top left (.dy-ib, 44px). */
+.dy-ent-top{display:flex;align-items:center;min-height:var(--us-icon-btn);margin:0 0 -4px}
+.dy-ent-top .dy-ib svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dy-ent-top .dy-ib[hidden]{display:none}
+html .dy-ent-step{margin:0;font:700 var(--us-text-13)/1.2 var(--us-font-ui);color:var(--us-ink-60)}
+html .dy-ent-step[hidden]{display:none}
+
+/* Type: 30px, one word in Fraunces italic (33px), the lead 15px. */
 html .auth-overlay .auth-card h2,
 .us-setup h2{
   margin:0;
   max-width:100%;
-  color:var(--us-color-text);
-  font:400 44px/1 var(--us-font-display);
-  letter-spacing:-.02em;
+  color:var(--us-ink-100);
+  font:800 var(--us-text-30)/1.08 var(--us-font-ui);
+  letter-spacing:-.025em;
   text-align:left;
   text-wrap:balance;
   overflow-wrap:break-word;
 }
-html .auth-overlay #usOnboarding h2,
-html .auth-overlay .us-ob-step h2,
-.us-setup h2{font-size:40px}
 html .auth-overlay .auth-card h2 em,
-.us-setup h2 em{font-style:italic;color:var(--us-tu)}
-html .auth-overlay .auth-card h2:focus{outline:none}
+.us-setup h2 em{font-family:var(--us-font-editorial);font-style:italic;font-weight:500;font-size:33px;letter-spacing:-.01em;color:inherit}
+html .auth-overlay .auth-card h2:focus,.us-setup h2:focus{outline:none}
+/* A heading takes the focus when its step arrives (screen readers start there): it is not a control, so no ring. */
 html .auth-overlay .auth-card h2:focus-visible,
-.us-setup h2:focus-visible{outline:2px solid var(--us-noi);outline-offset:4px;border-radius:6px}
+.us-setup h2:focus-visible{outline:none}
 html .auth-overlay .auth-card .us-auth-lede,
-.us-setup .us-auth-lede{
+.us-setup .us-auth-lede,
+html .dy-ent-lead{
   max-width:none;
   margin:0;
   text-align:left;
-  color:var(--us-color-text-2);
-  font:400 16px/1.5 var(--us-font-ui);
+  color:var(--us-ink-60);
+  font:500 var(--us-text-15)/1.45 var(--us-font-ui);
 }
-.us-setup .us-auth-lede:empty{display:none}
+html .auth-overlay .auth-card .us-auth-lede[hidden],.us-setup .us-auth-lede:empty{display:none}
+html .dy-ent-note{margin:0;font:500 12.5px/1.45 var(--us-font-ui);color:var(--us-ink-60)}
+html .dy-ent-note[hidden]{display:none}
+html .dy-ent-center{text-align:center}
+html .dy-ent-kicker{margin:0;font:700 var(--us-text-13)/1.2 var(--us-font-ui);color:var(--us-ink-60)}
 
-/* .field: label 12px, input 52px on the night, radius 16. */
-html .auth-overlay .us-auth-field{display:grid;gap:6px;margin:0;min-width:0}
+/* ---------- Fields: 52px, radius 12, on the card colour ---------- */
+html .auth-overlay .us-auth-field{display:flex;flex-direction:column;gap:6px;position:relative;margin:0;min-width:0}
 html .auth-overlay .us-auth-field[hidden]{display:none}
 html .auth-overlay .us-auth-field>span,
-html .auth-overlay .us-ob-bday legend{
+.dy-ent-group>legend{
   display:block;
   margin:0;
   padding:0;
-  color:var(--us-color-text-3);
-  font:700 12px/1.5 var(--us-font-ui);
-  letter-spacing:.1em;
-  text-transform:uppercase;
+  color:var(--us-ink-60);
+  font:700 var(--us-text-13)/1.2 var(--us-font-ui);
+  letter-spacing:0;
+  text-transform:none;
 }
 html .auth-overlay .auth-card input:not([type="checkbox"]),
 html .auth-overlay .auth-card textarea,
 html .auth-overlay .auth-card select{
   width:100%;
-  min-height:52px;
+  min-height:var(--us-btn-l);
   margin:0;
   padding:0 14px;
-  border-radius:16px;
-  background-color:var(--us-color-bg)!important;
-  border:1px solid var(--us-color-line-strong)!important;
-  color:var(--us-color-text);
-  font:400 16px/1.5 var(--us-font-ui);
+  border-radius:var(--us-r-12);
+  /* identity.css: textarea,input{background;border-color} with !important. */
+  background-color:var(--us-card)!important;
+  border:0!important;
+  box-shadow:inset 0 0 0 1.5px var(--us-ink-12);
+  color:var(--us-ink-100);
+  font:600 16px/1.3 var(--us-font-ui);
   letter-spacing:normal;
-  box-shadow:none;
-  color-scheme:dark;
 }
-html .auth-overlay .auth-card input::placeholder,
-html .auth-overlay .auth-card textarea::placeholder{color:var(--us-color-text-3);opacity:1}
-html .auth-overlay .auth-card :is(input,textarea,select):focus{outline:none;box-shadow:none}
-html .auth-overlay .auth-card :is(input,textarea,select):focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
-html .auth-overlay .auth-card input:disabled,
-html .auth-overlay .auth-card select:disabled{opacity:.6}
-html .auth-overlay .mc3-help,
-#usOnboarding .mc3-help{margin:0;color:var(--us-color-text-3);font:400 12px/1.5 var(--us-font-ui)}
+html .auth-overlay .auth-card textarea{padding:14px;line-height:1.4;resize:none}
+html .auth-overlay .auth-card :is(input,textarea,select)::placeholder{color:var(--us-ink-40);opacity:1;font-weight:500}
+html .auth-overlay .auth-card :is(input,textarea,select):focus{outline:none;box-shadow:inset 0 0 0 2px var(--us-ink-100)}
+html .auth-overlay .auth-card :is(input,select,textarea):disabled{opacity:.6}
+html .auth-overlay .auth-card input[data-us-pass-toggle]{padding-right:52px}
+html .auth-overlay .us-pass-toggle{right:4px;bottom:4px;width:44px;height:44px;color:var(--us-ink-60)}
+/* A select draws its own small chevron. */
+.us-ob-select{position:relative;display:block;min-width:0}
+.us-ob-select select{-webkit-appearance:none;appearance:none;padding-right:34px!important;cursor:pointer}
+.us-ob-select::after{content:"";position:absolute;right:15px;top:50%;width:7px;height:7px;border-right:2px solid var(--us-ink-60);border-bottom:2px solid var(--us-ink-60);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.dy-ent-row{display:flex;gap:8px;min-width:0}
+.dy-ent-row>*{flex:1 1 0;min-width:0}
+.dy-ent-row>.dy-ent-wide{flex-grow:2}
+.dy-ent-row>.dy-ent-year{flex-grow:1.4}
+html .auth-overlay .dy-ent-date select{font-weight:700;font-size:17px;text-align:center;text-align-last:center;padding:0 22px 0 10px!important}
+.dy-ent-date .us-ob-select::after{right:10px}
 
-/* .btns: primary 52px (16px, 700), ghost 48px; 8px apart, 4px after the field. */
+/* ---------- Buttons: the diary's (ink, 52/64px, radius 16) ---------- */
 html .auth-overlay .us-auth-primary,
-html .auth-overlay #mc3ShareCode,
-html .auth-overlay #mc3Retry,
-html .auth-overlay #usVerifyBack,
-.us-setup .us-auth-primary{
+html .auth-overlay .dy-btn,
+.us-setup .dy-btn{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:6px;
-  width:100%;
-  min-height:52px;
-  margin:4px 0 0;
-  padding:0 18px;
+  gap:8px;
+  min-height:0;
+  margin:0;
   border:0;
-  border-radius:999px;
-  background:var(--us-tu)!important;
-  color:var(--us-inchiostro)!important;
-  font:700 16px/1.2 var(--us-font-ui);
+  /* identity.css paints .primary with !important. */
+  background:var(--us-ink-100)!important;
+  color:var(--us-paper)!important;
+  font:800 var(--us-text-15)/1 var(--us-font-ui);
   letter-spacing:normal;
   text-decoration:none;
   white-space:nowrap;
   box-shadow:none;
 }
-/* onboarding.css gives every #usOnboarding button 44px: the design's primary is 52. */
-html .auth-overlay #usOnboarding :is(.us-auth-primary,#mc3Retry){min-height:52px}
-/* The design's disabled button: .45, no other change (fix4.css dims every
-   disabled button to .58 and desaturates it, both !important). */
-html .auth-overlay :is(.us-auth-primary,#mc3ShareCode,#mc3CopyCode,#mc3TodaySave,#mc3Retry,#usVerifyResend):disabled,
-.us-setup .us-auth-primary:disabled,
-.us-setup .us-setup-secondary:disabled{opacity:.45!important;filter:none}
-/* A link never dims (the design's .link): while something works it is only out of reach. */
-html .auth-overlay :is(.us-auth-link,.mc3-back,.us-ob-link):disabled,
-.us-setup .us-auth-link:disabled{opacity:1!important;filter:none}
-/* busy(): only the pressed button dims and says what is happening; the rest
-   waits without changing (it is disabled all the same). */
+html .auth-overlay .us-auth-primary{width:100%;height:var(--us-btn-l);padding:0 20px;border-radius:var(--us-r-16)}
+html .auth-overlay .dy-btn-ghost,
+.us-setup .dy-btn-ghost{background:transparent!important;color:var(--us-ink-100)!important;box-shadow:inset 0 0 0 1.5px var(--us-ink-12)}
+/* The main button of a step takes the whole column. */
+html .auth-overlay :is(.auth-step,.dy-ent-form,.dy-ent-foot,.dy-ent-invite-actions)>.dy-btn,
+.us-setup-body>.dy-btn{width:100%}
+html .auth-overlay .dy-btn[hidden],.us-setup .dy-btn[hidden]{display:none}
+/* fix4.css dims every disabled button to .58 (!important): the diary's is .45. */
+html .auth-overlay :is(.us-auth-primary,.dy-btn,.us-auth-google,.us-auth-apple):disabled,
+.us-setup .dy-btn:disabled{opacity:.45!important;filter:none}
+/* While something works only the pressed button dims and says what is happening. */
 html .auth-overlay #usOnboarding[data-us-busy] :is(button,input,select,textarea):disabled:not([data-us-busy]){opacity:1!important;filter:none}
-html .auth-overlay #mc3BackCreate,
-html .auth-overlay #mc3BackJoin,
-html .auth-overlay #mc3CopyCode,
-html .auth-overlay #mc3TodaySave,
-html .auth-overlay :is(#usGoogleSignIn,#usGoogleSignUp),
-html .auth-overlay #usVerifyResend,
-html .auth-overlay #mc3Waiting.has-code #mc3Generate,
-.us-setup .us-setup-secondary{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:100%;
-  min-height:48px;
-  margin:-6px 0 0;
-  padding:0 18px;
-  border-radius:999px;
-  border:1px solid var(--us-color-line-strong);
-  background:transparent!important;
-  color:var(--us-color-text)!important;
-  font:600 15px/1.2 var(--us-font-ui);
-  text-decoration:none;
-  box-shadow:none;
-}
-.us-setup .us-setup-secondary[hidden]{display:none}
 
-/* 18+ and the Terms (1.0 A1, after the mockup): a real checkbox in my colour. */
-html .auth-overlay .us-auth-consent{
-  display:flex;
-  align-items:flex-start;
-  gap:12px;
-  min-height:44px;
-  margin:0;
-  padding:4px 0;
-  color:var(--us-color-text-2);
-  font:400 14px/1.45 var(--us-font-ui);
-  cursor:pointer;
-}
+/* Google and Apple, first on the account: Google on the card with an edge, Apple in ink. */
+html .auth-overlay :is(#usGoogleSignIn,#usGoogleSignUp){
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;height:var(--us-btn-l);min-height:0;margin:0;padding:0 20px;border:0;border-radius:var(--us-r-16);
+  background:var(--us-card)!important;color:var(--us-ink-100)!important;box-shadow:inset 0 0 0 1.5px var(--us-ink-12);font:800 var(--us-text-15)/1 var(--us-font-ui)}
+html .auth-overlay :is(#usAppleSignIn,#usAppleSignUp){
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;height:var(--us-btn-l);min-height:0;margin:0;padding:0 20px;border:0;border-radius:var(--us-r-16);
+  background:var(--us-ink-100);color:var(--us-paper);box-shadow:none;font:800 var(--us-text-15)/1 var(--us-font-ui)}
+html .auth-overlay :is(#usGoogleSignIn,#usGoogleSignUp,#usAppleSignIn,#usAppleSignUp)[hidden]{display:none}
+html .dy-ent-or{display:none;align-items:center;gap:10px;margin:0;font:600 12.5px/1 var(--us-font-ui);color:var(--us-ink-40)}
+.dy-ent-or::before,.dy-ent-or::after{content:"";flex:1;height:1px;background:var(--us-ink-12)}
+html #usSignupNote{display:none}
+html #usSignup:has(:is(#usGoogleSignUp,#usAppleSignUp):not([hidden])) .dy-ent-or{display:flex}
+html #usSignup:has(:is(#usGoogleSignUp,#usAppleSignUp):not([hidden])) #usSignupNote{display:block}
+
+/* 18+ and the Terms: a real checkbox, ink when ticked, the sentence ticks it too. */
+html .auth-overlay .us-auth-consent{display:flex;align-items:flex-start;gap:10px;min-height:44px;margin:0;padding:2px 0;color:var(--us-ink-80);font:500 13.5px/1.4 var(--us-font-ui);cursor:pointer}
 html .auth-overlay .auth-card .us-auth-consent input{
-  flex:none;
-  width:22px;
-  min-height:0;
-  height:22px;
-  margin:0;
-  padding:0;
-  border-radius:6px;
-  accent-color:var(--us-tu);
-  color-scheme:dark;
-  cursor:pointer;
-}
-html .auth-overlay .us-auth-consent input:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
-html .auth-overlay .us-auth-consent a{color:var(--us-color-text);text-decoration:none}
+  -webkit-appearance:none;appearance:none;flex:none;display:grid;place-items:center;width:22px;height:22px;min-height:0;margin:0;padding:0;
+  border:0!important;border-radius:6px;background-color:var(--us-card)!important;box-shadow:inset 0 0 0 1.5px var(--us-ink-40);cursor:pointer}
+html .auth-overlay .auth-card .us-auth-consent input:checked{background-color:var(--us-ink-100)!important;box-shadow:none}
+html .auth-overlay .auth-card .us-auth-consent input:checked::after{content:"";width:16px;height:16px;background:var(--us-paper);-webkit-mask:url("/assets/icons/phosphor/check-bold.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/check-bold.svg") center/contain no-repeat}
+html .auth-overlay .us-auth-consent a{color:inherit;text-decoration:none}
 html .auth-overlay .us-auth-consent a[href]{text-decoration:underline;text-underline-offset:3px}
 
-/* .link: 14px 600 underlined, 40px in the flow, a 44px target. */
+/* Links: 14px, underlined, a 44px target. */
 html .auth-overlay .us-auth-link,
-html .auth-overlay #usOnboarding .mc3-back:not(#mc3BackCreate):not(#mc3BackJoin),
-html .auth-overlay #mc3Revoke,
-html .auth-overlay #mc3Refresh{
-  position:relative;
-  align-self:center;
-  width:auto;
-  min-height:44px;
-  margin:-2px 0;
-  padding:0;
-  border:0;
-  background:none!important;
-  color:var(--us-color-text)!important;
-  font:600 14px/1.2 var(--us-font-ui);
-  text-decoration:underline;
-  text-underline-offset:3px;
-  box-shadow:none;
-}
-html .auth-overlay .us-auth-foot.us-auth-link,
-html .auth-overlay #usOnboarding .mc3-back.us-auth-foot{margin:-16px 0 -2px}
-html .auth-overlay .us-auth-link[hidden],
-html .auth-overlay #usOnboarding .mc3-back[hidden]{display:none}
-/* .a-links: centred, 8px apart, a dot between. */
-html .auth-overlay .us-auth-links{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:0 8px;margin:0}
+html .auth-overlay .dy-ent-link,
+.us-setup .dy-ent-link{
+  position:relative;align-self:center;width:auto;min-height:44px;margin:-4px 0;padding:0 8px;border:0;
+  background:none!important;color:var(--us-ink-60)!important;font:700 14px/1.2 var(--us-font-ui);text-decoration:underline;text-underline-offset:3px;box-shadow:none}
+html .auth-overlay :is(.us-auth-link,.dy-ent-link)[hidden]{display:none}
+html .auth-overlay :is(.us-auth-link,.dy-ent-link):disabled{opacity:1!important;filter:none}
+html .auth-overlay .us-auth-links{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:0 4px;margin:0}
 html .auth-overlay .us-auth-links[hidden]{display:none!important}
-html .auth-overlay .us-auth-links .us-auth-link+.us-auth-link::before,
-html .auth-overlay .mc3-actions .us-ob-link+.us-ob-link:not([hidden])::before{
-  content:"·";
-  display:inline-block;
-  margin-right:8px;
-  color:var(--us-color-text-3);
-  text-decoration:none;
-}
-html .auth-overlay .mc3-actions .us-ob-link[hidden]+.us-ob-link::before{content:none}
 
-/* .a-st: a quiet box under the fields, red or green when it matters. */
+/* The status line: quiet, red pencil when it matters; empty, it leaves the flow. */
 html .auth-overlay .auth-status,
-.us-setup .auth-status{
-  min-height:0;
-  margin:0;
-  padding:10px 14px;
-  border-radius:14px;
-  background:var(--us-color-surface);
-  text-align:left;
-  color:var(--us-color-text-2);
-  font:600 14px/1.5 var(--us-font-ui);
-}
-/* Empty (or a hint the lead already says), it leaves the flow but stays for screen readers. */
+.us-setup .auth-status{min-height:0;margin:0;padding:0;text-align:left;color:var(--us-ink-60);font:600 var(--us-text-13)/1.4 var(--us-font-ui)}
 html .auth-overlay .auth-status:empty,
 html .auth-overlay .auth-status[data-kind="hint"],
-.us-setup .auth-status:empty{
-  position:absolute;
-  width:1px;
-  height:1px;
-  padding:0;
-  overflow:hidden;
-  clip-path:inset(50%);
-  white-space:nowrap;
-}
+.us-setup .auth-status:empty{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 html .auth-overlay .auth-status[data-kind="error"],
-.us-setup .auth-status[data-kind="error"]{color:var(--us-rosso);background:color-mix(in srgb,var(--us-rosso) 10%,var(--us-color-surface))}
+.us-setup .auth-status[data-kind="error"]{color:var(--us-pencil)}
 html .auth-overlay .auth-status[data-kind="success"],
-.us-setup .auth-status[data-kind="success"]{color:var(--us-verde);background:color-mix(in srgb,var(--us-verde) 10%,var(--us-color-surface))}
+.us-setup .auth-status[data-kind="success"]{color:var(--us-ink-80)}
 
-/* Verify: .a-ic, the envelope in my colour. */
-.us-auth-icon{
-  display:grid;
-  place-items:center;
-  width:64px;
-  height:64px;
-  border-radius:20px;
-  background:color-mix(in srgb,var(--us-tu) 16%,transparent);
-}
-.us-auth-icon::before{
-  content:"";
-  width:30px;
-  height:30px;
-  background:var(--us-tu);
-  -webkit-mask:url("/assets/icons/phosphor/envelope-simple-regular.svg") center/contain no-repeat;
-  mask:url("/assets/icons/phosphor/envelope-simple-regular.svg") center/contain no-repeat;
-}
+/* The mail check: the envelope on beige. */
+.us-auth-icon{display:grid;place-items:center;width:64px;height:64px;border-radius:var(--us-r-20);background:var(--us-beige)}
+.us-auth-icon::before{content:"";width:30px;height:30px;background:var(--us-ink-100);-webkit-mask:url("/assets/icons/phosphor/envelope-simple-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/envelope-simple-regular.svg") center/contain no-repeat}
 html .auth-overlay #usVerifyBack{order:4}
-html .auth-overlay #usVerifyResend{order:5;display:inline-flex}
+html .auth-overlay #usVerifyResend{order:3}
 
-/* .install: "Tieni US sul telefono", the foot of the login. */
-html .auth-overlay .us-auth-install{
-  flex:none;
-  margin:0;
-  padding:12px 12px 12px 14px;
-  border:1px solid var(--us-color-line);
-  border-radius:20px;
-  background:var(--us-color-surface);
-  text-align:left;
-}
-html .auth-overlay .us-auth-install[hidden],
-html .auth-overlay.us-tour-active .us-auth-install{display:none!important}
+/* «Tieni US sul telefono», under the login: a card. */
+html .auth-overlay .us-auth-install{flex:none;margin:14px 0 0;padding:12px 12px 12px 14px;border:0;border-radius:var(--us-r-20);background:var(--us-card);box-shadow:var(--us-card-shadow);text-align:left}
+html .auth-overlay .us-auth-install[hidden]{display:none!important}
 html .auth-overlay .us-auth-install-row{display:flex;align-items:center;gap:12px}
-.us-auth-install-icon{
-  position:relative;
-  width:38px;
-  height:38px;
-  flex:none;
-  border-radius:12px;
-  background:var(--us-color-surface-2);
-}
-.us-auth-install-icon::before{
-  content:"";
-  position:absolute;
-  inset:9px;
-  background:var(--us-color-text-2);
-  -webkit-mask:url("/assets/icons/phosphor/device-mobile-regular.svg") center/contain no-repeat;
-  mask:url("/assets/icons/phosphor/device-mobile-regular.svg") center/contain no-repeat;
-}
-html .auth-overlay .us-auth-install-copy{flex:1;min-width:0;display:block}
-html .auth-overlay .us-auth-install-copy b{display:block;color:var(--us-color-text);font:600 14px/1.5 var(--us-font-ui)}
-html .auth-overlay .us-auth-install-copy small{display:inline;color:var(--us-color-text-3);font:400 12px/1.5 var(--us-font-ui)}
-/* .mini-btn.g: 40px, 44px target. */
-html .auth-overlay .us-auth-install-btn{
-  position:relative;
-  flex:none;
-  min-height:40px;
-  margin:0;
-  padding:0 14px;
-  border-radius:999px;
-  border:1px solid var(--us-color-line-strong);
-  background:transparent;
-  color:var(--us-color-text-2);
-  font:700 14px/1 var(--us-font-ui);
-  box-shadow:none;
-}
-html .auth-overlay .us-auth-install-btn::after{content:"";position:absolute;inset:-2px 0}
-html .auth-overlay .us-auth-install-help{
-  margin:10px 0 0;
-  padding:10px 14px;
-  border:0;
-  border-radius:14px;
-  background:var(--us-color-surface-2);
-  color:var(--us-color-text-2);
-  font:400 13px/1.45 var(--us-font-ui);
-}
+.us-auth-install-icon{position:relative;width:40px;height:40px;flex:none;border-radius:10px;background:var(--us-beige)}
+.us-auth-install-icon::before{content:"";position:absolute;inset:10px;background:var(--us-ink-100);-webkit-mask:url("/assets/icons/phosphor/device-mobile-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/device-mobile-regular.svg") center/contain no-repeat}
+html .auth-overlay .us-auth-install-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+html .auth-overlay .us-auth-install-copy b{color:var(--us-ink-100);font:800 var(--us-text-15)/1.2 var(--us-font-ui)}
+html .auth-overlay .us-auth-install-copy small{color:var(--us-ink-60);font:500 12.5px/1.35 var(--us-font-ui)}
+html .auth-overlay .us-auth-install-btn{flex:none;min-height:44px;margin:0;padding:0 16px;border:0;border-radius:var(--us-r-12);background:var(--us-ink-100);color:var(--us-paper);font:800 14px/1 var(--us-font-ui);box-shadow:none}
+html .auth-overlay .us-auth-install-help{margin:10px 0 0;padding:10px 14px;border:0;border-radius:var(--us-r-12);background:var(--us-beige);color:var(--us-ink-80);font:500 13px/1.45 var(--us-font-ui)}
 
-/* Focus rings: 2px orchidea, 3px out (the mockup's). The legacy rings
-   (identity.css pink outline, fix4.css halo, both !important) stay out. */
-html .auth-overlay button:focus-visible,
-.us-setup button:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+/* Focus: the pencil ring (the diary's). The legacy rings (identity.css,
+   fix4.css, both !important) stay out. */
 html .auth-overlay :is(button,input,textarea,select):focus-visible,
 .us-setup :is(button,input,textarea,select):focus-visible,
-.us-app-lock button:focus-visible{outline:2px solid var(--us-noi)!important;outline-offset:3px;box-shadow:none!important}
-/* A tap shows only the press, never the phone's own highlight (the mockup's button rule). */
-.auth-overlay,.us-setup,.us-app-lock{-webkit-tap-highlight-color:transparent}
+.us-app-lock button:focus-visible{outline:3px solid var(--us-pencil)!important;outline-offset:2px;box-shadow:none!important}
+html .auth-overlay .auth-card :is(input,textarea,select):focus-visible{outline:none!important;box-shadow:inset 0 0 0 2px var(--us-ink-100)!important}
 
-/* ---------- The tour: three cards (.auth.is-tour) ---------- */
-html .auth-overlay.us-tour-active .auth-step{display:none!important}
-.us-tour{display:flex;flex-direction:column;flex:1 0 auto;gap:10px;min-width:0}
-.us-tour::before,.us-tour::after{content:"";display:block;flex:1 0 0px;order:-1}
-.us-tour::before{flex-basis:0px}
-.us-tour::after{order:50;flex-basis:0px}
-/* .a-body padding 10px 0 4px: the spacers carry it, the foot cancels the gap. */
-.us-tour .us-tour-view{order:0;margin-top:-4px}
-.us-tour .us-tour-dots{order:1;margin-bottom:-6px}
-html .auth-overlay .us-tour .us-auth-foot{margin-top:-10px}
-.us-tour[hidden]{display:none}
-.us-tour-skip{
-  position:absolute;
-  top:var(--us-auth-top);
-  right:calc(var(--us-auth-side-r) - 2px);
-  min-height:44px;
-  min-width:44px;
-  margin:0;
-  padding:0 2px 0 12px;
-  border:0;
-  background:none;
-  color:var(--us-color-text-2);
-  font:700 11px/1.5 var(--us-font-ui);
-  letter-spacing:.14em;
-  text-transform:uppercase;
-}
-.us-tour-view{display:block;min-width:0;margin:0 calc(var(--us-auth-side-r) * -1) 0 calc(var(--us-auth-side-l) * -1)}
-.us-tour-track{
-  display:flex;
-  width:100%;
-  overflow-x:auto;
-  overflow-y:hidden;
-  scroll-snap-type:x mandatory;
-  scrollbar-width:none;
-  overscroll-behavior-x:contain;
-  touch-action:pan-x pan-y;
-}
-.us-tour-track::-webkit-scrollbar{display:none}
-.us-tour-track:focus-visible{outline:2px solid var(--us-noi);outline-offset:-4px;border-radius:24px}
-.us-tour-slide{
-  flex:0 0 100%;
-  min-width:0;
-  scroll-snap-align:center;
-  scroll-snap-stop:always;
-  display:grid;
-  justify-items:center;
-  align-content:center;
-  gap:12px;
-  padding:0 26px;
-  text-align:center;
-}
-html .auth-overlay .us-tour-slide h2{font-size:40px;text-align:center}
-html .auth-overlay .us-tour-slide .us-auth-lede{max-width:31ch;text-align:center}
-.us-tour-vis{position:relative;width:240px;height:180px;display:grid;place-items:center;margin-bottom:6px}
-.us-tour-vis svg{width:240px;height:180px;overflow:visible}
-/* .t-dots: 32px buttons (44px targets), the current one long, in my colour. */
-.us-tour-dots{display:flex;justify-content:center}
-/* The design's dots sit 32px apart in a 32px row; each target is 44px (−6px margins keep the layout). */
-.us-tour-dots button{position:relative;display:grid;place-items:center;width:44px;height:44px;margin:-6px;padding:0;border:0;background:none}
-.us-tour-dots button::before{
-  content:"";
-  width:7px;
-  height:7px;
-  border-radius:9px;
-  background:var(--us-color-text-3);
-  transition:width .35s var(--us-ease-standard),background-color .35s;
-}
-.us-tour-dots button[aria-current="true"]::before{width:22px;background:var(--us-tu)}
-/* .a-foot of the tour: Avanti, then "Ho già un account". */
-html .auth-overlay .us-tour-actions{display:grid;gap:10px;justify-items:stretch;text-align:center}
-html .auth-overlay .us-tour-actions .us-auth-primary{margin:0}
-html .auth-overlay .us-tour-actions .us-auth-link{justify-self:center;margin:-2px 0}
-.t1-a{fill:var(--us-rosa)}
-.t1-b{fill:var(--us-lilla)}
-.t1-n{fill:var(--us-noi)}
-.t1-a,.t1-b,.t1-n,.t1-w,.t2-a,.t2-b,.t2-l{transform-box:fill-box;transform-origin:center}
-.t1-w{fill:none;stroke:var(--us-noi);stroke-width:2;opacity:0}
-.t2-a{fill:var(--us-rosa)}
-.t2-b{fill:var(--us-lilla)}
-.t2-arc{fill:none;stroke:var(--us-color-text-3);stroke-width:1.6;stroke-dasharray:2 6;stroke-linecap:round}
-.t2-h{fill:var(--us-rosa)}
-.t2-bl{fill:color-mix(in srgb,var(--us-rosa) 14%,var(--us-color-surface));stroke:color-mix(in srgb,var(--us-rosa) 40%,transparent)}
-.t2-br{fill:color-mix(in srgb,var(--us-lilla) 14%,var(--us-color-surface));stroke:color-mix(in srgb,var(--us-lilla) 40%,transparent)}
-.t2-l{fill:var(--us-color-text-2)}
-.t2-d{fill:var(--us-color-text-3);opacity:0}
-/* Two of your photos, tilted: painted on the phone, before any account. */
-.t3-p{position:absolute;left:50%;top:50%;width:76px;height:100px;margin:-50px 0 0 -38px;object-fit:cover;border-radius:16px;border:3px solid var(--us-color-surface);box-shadow:0 10px 24px rgba(0,0,0,.35)}
-.t3-p:not([src]){visibility:hidden}
-.t3-pl{transform:translate(-82px,14px) rotate(-12deg)}
-.t3-pr{transform:translate(82px,8px) rotate(10deg)}
-.t3-ring{position:relative;width:150px;height:150px}
-.t3-ring svg{width:150px;height:150px}
-.t3-tr{fill:var(--us-color-surface);stroke:var(--us-color-line-strong);stroke-width:7}
-.t3-r{fill:none;stroke:var(--us-noi);stroke-width:7;stroke-linecap:round;stroke-dasharray:100 100;stroke-dashoffset:22;transform:rotate(-90deg);transform-origin:75px 75px}
-/* Something done together: a heart rises (no points outside the Sintonia bar). */
-.t3-x{position:absolute;right:30px;top:12px;color:var(--us-noi);font:800 13px/1.5 var(--us-font-ui);opacity:0}
-.t3-c{
-  position:absolute;
-  left:50%;
-  bottom:-4px;
-  translate:-50% 0;
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:6px 12px;
-  border-radius:999px;
-  background:var(--us-color-elevated);
-  border:1px solid var(--us-color-line-strong);
-  color:var(--us-color-text);
-  font:700 12px/1.5 var(--us-font-ui);
-  white-space:nowrap;
-}
-.t3-c i{width:7px;height:7px;border-radius:50%;background:var(--us-noi)}
+/* ---------- 1. Il benvenuto ---------- */
+html .auth-overlay .dy-ent-welcome:not([hidden]){display:flex;flex-direction:column;flex:1 0 auto;padding:0 4px}
+.dy-ent-welcome[hidden]{display:none}
+html .dy-ent-mark{margin:10px 0 0;text-align:center;font:34px/1 var(--us-font-mark);color:var(--us-ink-100);user-select:none}
+.dy-ent-duo{flex:1 0 210px;display:flex;align-items:center;justify-content:center}
+.dy-ent-tilt-l{transform:rotate(-6deg)}
+.dy-ent-tilt-r{transform:rotate(5deg);margin-left:-10px}
+html .auth-overlay .dy-ent-welcome .dy-ent-lead{margin:10px 0 24px;font-size:16px}
+.dy-ent-foot{display:flex;flex-direction:column;gap:10px}
+html .auth-overlay .dy-ent-foot .dy-btn-xl{height:var(--us-btn-xl)}
+html .auth-overlay .dy-ent-foot .dy-btn-l{height:var(--us-btn-l)}
 
-/* ---------- Tu, Voi, your colour, the invite (#usOnboarding, .auth.is-step) ---------- */
-/* The forms let their fields join the step's column, so the status line can
-   sit under the fields and above the buttons, as on the mockup:
-   title 1 · lead 2 · fields 3 · status 4 · primary 5 · ghost 6 · foot 9. */
-html .auth-overlay #usOnboarding :is(#mc3Me,#mc3Create,#mc3Join,#mc3Choice,#mc3Color):not([hidden]){display:contents}
-html .auth-overlay .us-ob-step>h2{order:1}
-html .auth-overlay .us-ob-step>.us-auth-lede{order:2}
-html .auth-overlay .us-ob-step .us-auth-field,
-html .auth-overlay .us-ob-step .us-ob-bday,
-html .auth-overlay .us-ob-step .mc3-help,
-html .auth-overlay .us-ob-step .us-ob-pick-card,
-html .auth-overlay .us-ob-step .us-ob-venn,
-html .auth-overlay .us-ob-step .us-ob-color>.us-auth-lede,
-html .auth-overlay .us-ob-step #mc3Waiting{order:3}
-html .auth-overlay .us-ob-step>.auth-status{order:4}
-html .auth-overlay .us-ob-step .us-auth-primary,
-html .auth-overlay .us-ob-step #mc3Retry{order:5}
-html .auth-overlay .us-ob-step :is(#mc3BackCreate,#mc3BackJoin){order:6}
-html .auth-overlay .us-ob-step .us-auth-foot{order:60}
-html .auth-overlay #usOnboarding.active,
-html .auth-overlay .us-step-ghost.us-ob-step{gap:14px}
-html .auth-overlay #usOnboarding.active{padding:0}
-/* Esci only where nothing else leads back to it: Tu, the invite and the error. */
-html .auth-overlay #usOnboarding[data-view="choice"] #mc3Exit,
-html .auth-overlay #usOnboarding[data-view="create"] #mc3Exit,
-html .auth-overlay #usOnboarding[data-view="join"] #mc3Exit,
-html .auth-overlay #usOnboarding[data-view="color"] #mc3Exit{display:none}
-/* The foot cancels one gap (the link rule's −2px would otherwise win here). */
-html #authOverlay.auth-overlay #usOnboarding :is(#mc3BackMe,#mc3Exit).mc3-back.us-auth-foot{margin:-16px 0 -2px}
+/* ---------- 3. Da dove partite? ---------- */
+.dy-ent-come{display:flex;flex-direction:column;gap:14px;margin:0 -4px}
+.dy-ent-come[hidden]{display:none}
+html .auth-overlay .dy-ent-pick{width:100%;min-height:0;margin:0;border:0;cursor:pointer;display:flex;align-items:center;gap:16px;padding:18px;text-align:left;color:var(--us-ink-100);font:inherit;background:var(--us-card)}
+.dy-ent-pick-art{flex:none;display:flex;align-items:flex-end;min-width:100px;min-height:46px}
+.dy-ent-pick-art .dy-ent-slot{line-height:0;margin-left:-2px}
+.dy-ent-pick-art>:first-child{margin-left:0}
+.dy-ent-pick-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.dy-ent-pick-copy b{font:800 17px/1.2 var(--us-font-ui)}
+.dy-ent-pick-copy small{font:500 13.5px/1.4 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-ent-chev{flex:none;width:22px;height:22px;fill:none;stroke:var(--us-ink-40);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+html .dy-ent-come .dy-ent-note{margin:6px 4px 0}
 
-/* Il tuo compleanno: two selects, .8fr and 1.4fr. */
-#usOnboarding .us-ob-bday{display:grid;gap:6px;min-width:0;margin:0;padding:0;border:0}
-/* A floated legend is a plain grid item: the 6px under it, as under every label. */
-#usOnboarding .us-ob-bday legend{float:left;width:100%}
-.us-ob-bday-row{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);gap:8px}
-/* Insieme dal (beta fix 28/10): day, month, year in the same selects. */
-.us-ob-date-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);gap:8px}
-.us-ob-date-row .us-ob-select::after{right:9px}
-html .auth-overlay .auth-card .us-ob-date-row .us-ob-select select{padding-left:11px;padding-right:28px}
-.us-ob-select{position:relative;display:block;min-width:0}
-.us-ob-select::after{
-  content:"";
-  position:absolute;
-  right:13px;
-  top:50%;
-  width:16px;
-  height:16px;
-  margin-top:-8px;
-  background:rgba(247,239,233,.55);
-  pointer-events:none;
-  -webkit-mask:url("/assets/icons/phosphor/caret-down-regular.svg") center/contain no-repeat;
-  mask:url("/assets/icons/phosphor/caret-down-regular.svg") center/contain no-repeat;
-}
-html .auth-overlay .auth-card .us-ob-select select{padding-right:38px;-webkit-appearance:none;appearance:none}
-.us-ob-select select option{background:#17111c;color:#f7efe9}
+/* ---------- The steps' forms ---------- */
+.dy-ent-form{display:flex;flex-direction:column;gap:14px;margin:0;min-width:0}
+.dy-ent-group{display:block;min-width:0;margin:0;padding:0;border:0}
+.dy-ent-group>legend{margin-bottom:8px}
+.dy-ent-group>:not(legend)+*{margin-top:8px}
+html .auth-overlay .dy-ent-form>.dy-btn{height:var(--us-btn-l)}
 
-/* .pick: two cards, 16px in, radius 22. */
-html .auth-overlay #usOnboarding .us-ob-pick-card{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  width:100%;
-  min-height:0;
-  margin:-4px 0 0;
-  padding:16px;
-  border-radius:22px;
-  border:1px solid var(--us-color-line);
-  background:var(--us-color-surface)!important;
-  color:var(--us-color-text)!important;
-  text-align:left;
-  box-shadow:none;
-}
-html .auth-overlay #usOnboarding .us-ob-pick-card+.us-ob-pick-card{margin-top:-4px}
-html .auth-overlay #usOnboarding #mc3ChooseCreate{margin-top:0}
-.us-ob-pick-card .us-duo-mark{width:58px;height:36px}
-.us-ob-pick-icon{display:grid;place-items:center;width:58px;height:36px;flex:none}
-/* The mockup's key is its own stroke drawing (ring low left, stem up to the
-   right), not a Phosphor glyph: the Phosphor key, file unchanged, is mirrored
-   across its diagonal so it lies the same way (ring low left, teeth below). */
-.us-ob-pick-icon::before{
-  content:"";
-  width:28px;
-  height:28px;
-  transform:matrix(0,1,1,0,0,0);
-  background:var(--us-partner);
-  -webkit-mask:url("/assets/icons/phosphor/key-regular.svg") center/contain no-repeat;
-  mask:url("/assets/icons/phosphor/key-regular.svg") center/contain no-repeat;
-}
-.us-ob-pick-copy{display:block;min-width:0}
-.us-ob-pick-copy b{display:block;font:400 21px/1.5 var(--us-font-display)}
-.us-ob-pick-copy small{color:var(--us-color-text-3);font:400 13px/1.5 var(--us-font-ui)}
+/* ---------- 4. Tu: the big character takes your shape and your colour ---------- */
+.dy-ent-big{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0 2px}
+.dy-ent-name{min-height:24px;font:24px/1 var(--us-font-hand);color:var(--us-ink-100);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dy-ent-big .dy-char path,.dy-ent-shape .dy-char path{transition:fill .25s ease}
+.dy-ent-shapes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+html .auth-overlay .dy-ent-shape{
+  height:64px;min-height:0;min-width:0;margin:0;padding:0;border:0;border-radius:var(--us-r-12);cursor:pointer;background:var(--us-card);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:700 11px/1 var(--us-font-ui);color:var(--us-ink-60);box-shadow:none}
+html .auth-overlay .dy-ent-shape[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--us-ink-100);color:var(--us-ink-100)}
+.dy-ent-shape-art{line-height:0}
+.dy-ent-colors{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}
+html .auth-overlay .dy-ent-swatch{height:44px;min-height:0;min-width:0;margin:0;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:none}
+.dy-ent-swatch i{display:block;width:32px;height:32px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(20,18,14,.12)}
+.dy-ent-swatch[aria-pressed="true"] i{box-shadow:0 0 0 3px var(--us-card),0 0 0 5px var(--us-ink-100)}
+html .auth-overlay .dy-ent-swatch:disabled{opacity:.3!important}
+@media (max-width:359px){.dy-ent-colors{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}}
 
-/* The invite code, typed or pasted: 80px, upper case, a little air. */
-html .auth-overlay .auth-card #mc3JoinCode{
-  display:block;
-  height:80px;
-  min-height:0;
-  padding:13px 14px;
-  line-height:1.5;
-  resize:none;
-  letter-spacing:.04em;
-  text-transform:uppercase;
-  font-variant-numeric:tabular-nums;
-}
+/* ---------- 5. Da quando state insieme? ---------- */
+.dy-ent-why{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:var(--us-r-16);background:var(--us-beige);color:var(--us-ink-80);font:600 13.5px/1.4 var(--us-font-ui)}
+.dy-ent-tags{display:flex;flex-wrap:wrap;gap:6px}
+.dy-ent-miele{background:var(--us-miele)}
+#mc3CreateNext{margin-top:6px}
 
-/* Your colour: .ob-venn, the two circles and who is who. */
-.us-ob-color{display:contents}
-.us-ob-venn{display:grid;justify-items:center;gap:8px;justify-self:center;align-self:center;margin:2px 0 4px}
-.us-ob-venn[hidden]{display:none}
-.us-ob-venn svg{width:200px;height:120px;overflow:visible}
-.ov-a{fill:var(--us-rosa)}
-.ov-b{fill:var(--us-lilla)}
-.ov-n{fill:var(--us-noi)}
-.ov-a,.ov-b,.ov-n,.ov-wait,.ov-halo{transform-box:fill-box;transform-origin:center}
-.ov-wait{fill:none;stroke-width:2;stroke-dasharray:3 7;stroke-linecap:round}
-.ov-wait-a{stroke:var(--us-rosa)}
-.ov-wait-b{stroke:var(--us-lilla)}
-.ov-wait.is-gone{opacity:0}
-.ov-halo{fill:none;stroke:var(--us-noi);stroke-width:2;opacity:0}
-.ov-l{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 18px;color:var(--us-color-text-2);font:600 13px/1.5 var(--us-font-ui)}
-.ov-l>span{display:inline-flex;align-items:center;gap:6px}
-.ov-dot{width:9px;height:9px;border-radius:50%;flex:none}
-.ov-dot-a{background:var(--us-rosa)}
-.ov-dot-b{background:var(--us-lilla)}
-.us-ob-flood{position:fixed;inset:0;z-index:5;pointer-events:none}
+/* ---------- 6. Il suo posto è pronto ---------- */
+.dy-ent-wait{display:flex;flex-direction:column;gap:14px}
+.dy-ent-pair{display:flex;justify-content:center;align-items:flex-end;padding:4px 0;min-height:80px}
+.dy-ent-pair>*+*{margin-left:-2px}
+.dy-ent-slot{display:inline-block;line-height:0}
+.dy-ent-code{display:flex;flex-direction:column;gap:12px;padding:16px}
+.dy-ent-code[hidden]{display:none}
+.dy-ent-fresh{display:flex;flex-direction:column;gap:12px}
+.dy-ent-sent{display:none;align-items:center;gap:10px}
+.dy-ent-code[data-sent] .dy-ent-fresh{display:none}
+.dy-ent-code[data-sent] .dy-ent-sent{display:flex}
+/* The code in groups of four: a line breaks only between groups. */
+.us-inv-code{display:block;padding:6px 0;color:var(--us-ink-100);font:800 22px/1.35 var(--us-font-ui);letter-spacing:.08em;word-spacing:.12em;text-align:center;white-space:normal;word-break:keep-all;font-variant-numeric:tabular-nums}
+/* No clipboard: the plain code shows in its field, selected, to copy by hand. */
+html .auth-overlay .dy-ent-raw{display:none}
+html .auth-overlay .dy-ent-code[data-manual] .dy-ent-raw{display:flex}
+.dy-ent-code-actions{display:flex;gap:8px}
+html .auth-overlay .dy-ent-code-actions .dy-btn{height:var(--us-btn-l)}
+html .auth-overlay #mc3ShareCode{flex:1}
+html .auth-overlay #mc3CopyCode{flex:none;width:var(--us-btn-l);padding:0}
+.dy-ent-sent-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dy-ent-sent-copy b{font:800 var(--us-text-15)/1.2 var(--us-font-ui)}
+.dy-ent-sent-copy span{font:700 var(--us-text-13)/1.35 var(--us-font-ui);letter-spacing:.08em;color:var(--us-ink-60);word-break:keep-all}
+html .auth-overlay #mc3CopyAgain{flex:none;height:var(--us-btn-m)}
+.us-inv-st:empty{display:none}
+/* Once sent, the card says it: the expiry line goes with the fresh code. */
+#mc3Waiting:has(#mc3CodeArea[data-sent]:not([hidden])) #mc3InviteStatus{display:none}
+.dy-ent-invite-actions{display:flex;flex-direction:column;align-items:stretch;gap:2px}
+.dy-ent-invite-actions:not(:has(>:not([hidden]))){display:none}
+html .auth-overlay .dy-ent-invite-actions .dy-btn{height:var(--us-btn-l)}
+html .auth-overlay #mc3Revoke{font-weight:600;font-size:12.5px}
+.dy-ent-notify{display:flex;align-items:center;gap:12px;padding:14px}
+.dy-ent-notify[hidden]{display:none}
+.dy-ent-bell{width:40px;height:40px;border-radius:10px;cursor:default}
+.dy-ent-bell svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dy-ent-notify-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dy-ent-notify-copy b{font:800 var(--us-text-15)/1.25 var(--us-font-ui)}
+.dy-ent-notify-copy span{font:500 12.5px/1.35 var(--us-font-ui);color:var(--us-ink-60)}
+html .auth-overlay #mc3NotifyYes{flex:none;height:var(--us-btn-m)}
+.dy-ent-today{display:flex;flex-direction:column;gap:10px;padding:16px}
+.dy-ent-today[hidden]{display:none}
+html .dy-ent-q{margin:0;color:var(--us-ink-100);font:700 17px/1.3 var(--us-font-ui);overflow-wrap:anywhere}
+html .dy-ent-q-s{font-size:16px;line-height:1.35}
+html .auth-overlay .auth-card .dy-ent-hand textarea{min-height:48px;padding:12px 14px;background-color:var(--us-beige)!important;box-shadow:none;font:19px/1.3 var(--us-font-hand)}
+html .auth-overlay .auth-card .dy-ent-hand textarea:focus{box-shadow:inset 0 0 0 2px var(--us-ink-100)}
+html .auth-overlay #mc3TodaySave{align-self:flex-end;height:var(--us-btn-m)}
+html .auth-overlay #mc3Retry{width:100%;height:var(--us-btn-l)}
 
-/* The invite: .inv (status, "Il nuovo codice", the code), the buttons, the links, the notes. */
-html .auth-overlay #mc3Waiting:not([hidden]){display:flex;flex-direction:column;gap:14px}
-#mc3Waiting .us-inv-st{order:1}
-#mc3Waiting #mc3CodeArea{order:2}
-#mc3Waiting .us-ob-invite-actions{order:4}
-#mc3Waiting .us-ob-invite-help{order:5}
-#mc3Waiting .us-ob-note{order:6}
-html .auth-overlay #usOnboarding .us-inv-st{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin:0;
-  padding:16px;
-  border-radius:22px;
-  border:1px solid var(--us-color-line);
-  background:var(--us-color-surface);
-  color:var(--us-color-text-2);
-  font:600 13px/1.5 var(--us-font-ui);
-}
-html .auth-overlay #usOnboarding .us-inv-st:empty{display:none}
-.us-inv-st::before{
-  content:"";
-  flex:none;
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:var(--us-ambra);
-  box-shadow:0 0 0 3px color-mix(in srgb,var(--us-ambra) 22%,transparent);
-}
-.us-inv-st:is([data-status="revoked"],[data-status="expired"])::before{background:var(--us-rosso);box-shadow:0 0 0 3px color-mix(in srgb,var(--us-rosso) 22%,transparent)}
-.us-inv-st:is([data-status="none"],[data-status="used"])::before{background:var(--us-color-text-3);box-shadow:none}
-html .auth-overlay #usOnboarding .has-code .us-inv-st{border-bottom:0;border-radius:22px 22px 0 0;padding-bottom:0}
-html .auth-overlay #mc3CodeArea:not([hidden]){display:flex;flex-direction:column;gap:14px;margin-top:-14px}
-#mc3CodeArea .us-auth-field{
-  gap:10px;
-  padding:10px 16px 16px;
-  border:1px solid var(--us-color-line);
-  border-top:0;
-  border-radius:0 0 22px 22px;
-  background:var(--us-color-surface);
-}
-html .auth-overlay #mc3CodeArea .us-auth-field>span{font-size:11px;letter-spacing:.14em;line-height:1.5}
-/* The code in groups of five (the field under it keeps the plain code for copying and screen readers). */
-html .auth-overlay .auth-card #mc3Code{position:absolute;width:1px;height:1px;min-height:0;padding:0;border:0!important;opacity:0;pointer-events:none}
-html .auth-overlay .auth-card #mc3Code:focus{position:static;width:100%;height:auto;opacity:1;pointer-events:auto;background:transparent!important;font:600 19px/1.5 ui-monospace,"SF Mono","Roboto Mono",Menlo,monospace;letter-spacing:.06em}
-html .auth-overlay .auth-card #mc3Code:focus+.us-inv-code{display:none}
-.us-inv-code{
-  display:block;
-  color:var(--us-color-text);
-  font:600 19px/1.5 ui-monospace,"SF Mono","Roboto Mono",Menlo,monospace;
-  letter-spacing:.06em;
-  word-spacing:.3em;
-  overflow-wrap:normal;
-}
-/* Condividi leads (1.0 A2, after the mockup), Copia codice beside it. */
-html .auth-overlay #mc3CodeArea .mc3-code-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:4px}
-html .auth-overlay #mc3CodeArea .mc3-code-actions button{min-height:52px;margin:0;padding:0 12px}
-html .auth-overlay #mc3Waiting .mc3-actions{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:0 8px}
-html .auth-overlay #mc3Waiting #mc3Generate{flex:1 0 100%;margin:0 0 4px}
-html .auth-overlay #mc3Waiting.has-code #mc3Generate{margin:-6px 0 4px}
-html .auth-overlay #mc3Waiting .mc3-help{text-align:center}
-html .auth-overlay #mc3Waiting .mc3-actions>button,
-html .auth-overlay #mc3CodeArea>*,
-html .auth-overlay #mc3CodeArea .us-auth-field{order:0}
-html .auth-overlay #mc3Waiting .us-ob-invite-help{margin-top:-6px}
-/* Waiting for the partner (09/11/2026): today's question in a card like the invite status, before the closing note. */
-#mc3Waiting .us-ob-today{order:6}
-html .auth-overlay #usOnboarding .us-ob-today:not([hidden]){display:grid;gap:12px;margin:0;padding:16px;border-radius:22px;border:1px solid var(--us-color-line);background:var(--us-color-surface)}
-html .auth-overlay #usOnboarding .us-ob-today-kicker{margin:0;color:var(--us-color-text-3);font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase}
-html .auth-overlay #usOnboarding .us-ob-today-question{margin:0;color:var(--us-color-text);font:500 18px/1.35 var(--us-font-editorial);overflow-wrap:anywhere}
-html .auth-overlay #usOnboarding .us-ob-today .us-auth-field>span{font-size:11px;letter-spacing:.14em}
-html .auth-overlay .auth-card #mc3TodayAnswer{min-height:96px;padding:12px 14px;resize:vertical}
-html .auth-overlay .auth-card #mc3TodayAnswer:read-only{opacity:.8}
-html .auth-overlay #mc3Waiting .us-ob-today .mc3-help{text-align:left}
-/* The step's own order (fields 3, help 3) would lift the button over the field: inside the card, reading order. */
-html .auth-overlay #usOnboarding .us-ob-today>*{order:0}
-html .auth-overlay #mc3Waiting #mc3TodaySave{margin:0}
-html .auth-overlay #mc3Waiting #mc3TodaySave[hidden]{display:none}
-.us-ob-today-status[data-kind="error"]{color:var(--us-rosso)}
+/* ---------- The arrival: «Ora siete in due» ---------- */
+.us-setup-body{gap:14px}
+.dy-ent-arrive{flex:1 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding-top:24px;text-align:center}
+.dy-ent-arrive h2,.us-setup .dy-ent-arrive .us-auth-lede{text-align:center}
+.dy-ent-pair-big{min-height:120px}
+.us-setup .dy-btn-xl{height:var(--us-btn-xl)}
+/* Who arrives drops into the place, who waited hops when it lands. */
+.dy-ent-drop{animation:dy-ent-drop .9s .15s cubic-bezier(.3,1.25,.5,1) both}
+@keyframes dy-ent-drop{0%{opacity:0;transform:translateY(-170px) rotate(-14deg)}55%{opacity:1;transform:translateY(6px) rotate(3deg)}75%{transform:translateY(-8px) rotate(-1deg)}100%{transform:none}}
+.dy-ent-hop-late{animation:dy-hop .5s .75s ease-out}
 
-/* ---------- The phone setup after pairing (#usDeviceSetup) ---------- */
-.us-setup{
-  position:fixed;
-  inset:0;
-  z-index:var(--us-layer-auth);
-  overflow-x:hidden;
-  overflow-y:auto;
-  overscroll-behavior:contain;
-  background:var(--us-color-bg);
-  color:var(--us-color-text);
-}
-/* It appears at once: a visibility transition (the reduced-motion "all .01ms"
-   included) would keep the heading unfocusable for a frame. */
-.us-setup,.us-setup-card,.us-setup-body,#usSetupTitle{transition:none}
-.us-setup[hidden]{display:none}
-.us-setup.is-pending .us-setup-body,
-.us-setup.is-pending .us-setup-card>.tiny,
-.us-setup.is-pending .us-ob-progress{visibility:hidden}
-/* "Entra in US": the setup fades, the intro covers the app on its own. */
-.us-setup.is-intro{background:transparent;overflow:hidden}
-.us-setup.is-intro .us-setup-card>:not(.us-setup-intro){visibility:hidden}
-.us-setup-body>[hidden]{display:none!important}
-.us-setup-body>*{order:0}
-.us-setup-actions{display:grid;gap:8px;margin-top:4px}
-.us-setup-actions .us-auth-primary{margin:0}
-.us-setup .us-setup-actions .us-setup-secondary{margin:0}
-
-/* Notifiche: .np, what arrives. */
-.us-setup-push{display:grid;gap:8px;margin:2px 0}
-.us-setup-note{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:11px 13px;
-  border-radius:20px;
-  border:1px solid var(--us-color-line-strong);
-  background:var(--us-color-surface);
-  text-align:left;
-}
-.us-setup-note+.us-setup-note{opacity:.82}
-.us-setup-note-icon{
-  width:34px;
-  height:34px;
-  flex:none;
-  border-radius:9px;
-  background:url("/assets/derived/runtime/us-symbol-256-v1.png") center/contain no-repeat;
-}
-.us-setup-note>span:last-child{flex:1;min-width:0;color:var(--us-color-text-2);font:400 13px/1.5 var(--us-font-ui)}
-.us-setup-note small{display:block;color:var(--us-color-text-3);font-size:11px;line-height:1.5}
-.us-setup-note b{display:block;color:var(--us-color-text);font:600 14px/1.5 var(--us-font-ui)}
-
-/* Posizione: .tv-place, two dots and the distance between them. */
-.us-setup-place{position:relative;height:84px;display:grid;place-items:center}
-.us-setup-place svg{width:100%;max-width:290px;height:84px;overflow:visible}
-.pl-h,.pl-d,.pl-ln{transform-box:fill-box;transform-origin:center}
-.pl-hr{fill:color-mix(in srgb,var(--us-rosa) 20%,transparent)}
-.pl-hl{fill:color-mix(in srgb,var(--us-lilla) 20%,transparent)}
-.pl-line{fill:none;stroke:var(--us-color-text-3);stroke-width:2.4;stroke-dasharray:1 7;stroke-linecap:round}
-/* .pl-chip: no kilometres before the first reading, the two arrows instead. */
-.pl-chip{
-  position:absolute;
-  left:50%;
-  top:50%;
-  translate:-50% -50%;
-  display:grid;
-  place-items:center;
-  width:62px;
-  height:42px;
-  border-radius:999px;
-  border:1px solid var(--us-color-line-strong);
-  background:var(--us-color-surface-2);
-}
-.pl-chip-icon{
-  width:22px;
-  height:22px;
-  background:var(--us-color-text);
-  -webkit-mask:url("/assets/icons/phosphor/arrows-left-right-regular.svg") center/contain no-repeat;
-  mask:url("/assets/icons/phosphor/arrows-left-right-regular.svg") center/contain no-repeat;
-}
-.us-setup-points{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.us-setup-points li{display:flex;align-items:flex-start;gap:12px;color:var(--us-color-text-2);font:400 14px/1.4 var(--us-font-ui)}
-.us-setup-points b{display:block;color:var(--us-color-text);font-weight:600}
-.us-setup-point-icon{
-  width:20px;
-  height:20px;
-  flex:none;
-  margin-top:1px;
-  background:var(--us-tu);
-  -webkit-mask:var(--us-setup-icon) center/contain no-repeat;
-  mask:var(--us-setup-icon) center/contain no-repeat;
-}
-.us-setup-point-icon--distance{--us-setup-icon:url("/assets/icons/phosphor/arrows-left-right-regular.svg")}
-.us-setup-point-icon--pin{--us-setup-icon:url("/assets/icons/phosphor/map-pin-regular.svg")}
-.us-setup-point-icon--lock{--us-setup-icon:url("/assets/icons/phosphor/shield-regular.svg")}
-
-/* Tutto pronto: .ready-list, what is set, with a tick. */
-.us-setup-ready{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.us-setup-ready li{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:12px 14px;
-  border-radius:20px;
-  border:1px solid var(--us-color-line);
-  background:var(--us-color-surface);
-}
-.us-setup-ready li>span:nth-child(2){flex:1;min-width:0}
-.us-setup-ready b{display:block;color:var(--us-color-text);font:600 15px/1.5 var(--us-font-ui);overflow-wrap:anywhere}
-.us-setup-ready small{display:block;color:var(--us-color-text-3);font:400 12.5px/1.5 var(--us-font-ui)}
-.us-setup-ready-icon{
-  position:relative;
-  width:36px;
-  height:36px;
-  flex:none;
-  border-radius:12px;
-  background:var(--us-color-surface-2);
-}
-.us-setup-ready-icon::before{
-  content:"";
-  position:absolute;
-  inset:8.5px;
-  background:var(--us-color-text-2);
-  -webkit-mask:var(--us-setup-icon) center/contain no-repeat;
-  mask:var(--us-setup-icon) center/contain no-repeat;
-}
-.us-setup-ready-icon--user{--us-setup-icon:url("/assets/icons/phosphor/user-regular.svg")}
-.us-setup-ready-icon--heart{--us-setup-icon:url("/assets/icons/phosphor/heart-regular.svg")}
-.us-setup-ready-icon--bell{--us-setup-icon:url("/assets/icons/phosphor/bell-regular.svg")}
-.us-setup-ready-icon--pin{--us-setup-icon:url("/assets/icons/phosphor/map-pin-regular.svg")}
-.us-setup-ready-icon--widget{--us-setup-icon:url("/assets/icons/phosphor/squares-four-regular.svg")}
-/* The widget offer (Android, 1.0 F5): one small pill in the row. */
-.us-setup-ready .us-setup-ready-action{
-  flex:none;
-  min-height:44px;
-  margin:0;
-  padding:0 14px;
-  border:0;
-  border-radius:999px;
-  background:var(--us-tu);
-  color:var(--us-inchiostro);
-  font:700 13.5px/1.15 var(--us-font-ui);
-  box-shadow:none;
-  max-width:46%;
-}
-.us-setup-ready .us-setup-ready-action[aria-disabled="true"]{opacity:.6}
-.us-setup-ready .us-setup-ready-action:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
-.us-setup-ready li>i[hidden]{display:none}
-.us-setup-ready li.is-ok .us-setup-ready-icon{background:color-mix(in srgb,var(--us-tu) 14%,var(--us-color-surface-2))}
-.us-setup-ready li.is-ok .us-setup-ready-icon::before{background:var(--us-tu)}
-.us-setup-ready li>i{
-  position:relative;
-  width:26px;
-  height:26px;
-  flex:none;
-  border-radius:50%;
-  border:1.5px dashed var(--us-color-line-strong);
-}
-.us-setup-ready li.is-ok>i{border:0;background:var(--us-tu)}
-.us-setup-ready li.is-ok>i::before{
-  content:"";
-  position:absolute;
-  inset:5.5px;
-  background:var(--us-inchiostro);
-  -webkit-mask:url("/assets/icons/phosphor/check-bold.svg") center/contain no-repeat;
-  mask:url("/assets/icons/phosphor/check-bold.svg") center/contain no-repeat;
-}
-
-/* "Entra in US" (.intro): two circles meet, become the logo, then the app. */
-.us-setup-intro{position:fixed;inset:0;z-index:7;display:grid;place-items:center;background:var(--us-color-bg);isolation:isolate;pointer-events:none}
-.us-setup-intro[hidden]{display:none}
-.us-setup-intro .c{position:absolute;left:50%;top:46%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;mix-blend-mode:screen}
-.us-setup-intro .c.a{background:var(--us-rosa)}
-.us-setup-intro .c.b{background:var(--us-lilla)}
-.us-setup-intro .logo{
-  position:relative;
-  width:96px;
-  height:96px;
-  background:url("/assets/derived/runtime/us-symbol-256-v1.png") center/contain no-repeat;
-  opacity:0;
-}
-.us-setup-intro .word{
-  position:absolute;
-  left:0;
-  right:0;
-  top:calc(46% + 96px);
-  text-align:center;
-  color:var(--us-color-text-2);
-  font:italic 400 22px/1.5 var(--us-font-display);
-  opacity:0;
-}
-
-/* ---------- Small and short screens ---------- */
-@media (max-width:360px){
-  html .auth-overlay .auth-card h2{font-size:38px}
-  html .auth-overlay #usOnboarding h2,
-  .us-setup h2,
-  html .auth-overlay .us-tour-slide h2{font-size:35px}
-  .us-tour-vis{transform:scale(.88);margin:-10px 0 -6px}
-}
-@media (max-height:640px){
-  html .auth-overlay .auth-card h2{font-size:36px}
-  html .auth-overlay #usOnboarding h2,
-  .us-setup h2,
-  html .auth-overlay .us-tour-slide h2{font-size:32px}
-  .us-tour-vis{width:200px;height:150px}
-  .us-tour-vis svg{width:200px;height:150px}
-}
-
-/* ---------- Reduced motion: nothing slides, nothing grows ---------- */
-:root[data-us-motion="reduced"] .us-ob-progress i,
-:root[data-us-motion="reduced"] .us-tour-dots button::before{transition:none}
+/* ---------- Reduced motion: nothing moves ---------- */
+:root[data-us-motion="reduced"] :is(.dy-ent-drop,.dy-ent-hop-late,#mc3Big.dy-hop){animation:none}
+:root[data-us-motion="reduced"] :is(.dy-ent-big,.dy-ent-shape) .dy-char path{transition:none}
 @media (prefers-reduced-motion:reduce){
-  .us-ob-progress i,.us-tour-dots button::before{transition:none}
+  :is(.dy-ent-drop,.dy-ent-hop-late,#mc3Big.dy-hop){animation:none}
+  :is(.dy-ent-big,.dy-ent-shape) .dy-char path{transition:none}
+}
+
+/* ---------- Short screens ---------- */
+@media (max-height:640px){
+  .dy-ent-duo{flex-basis:150px}
+  .dy-ent-duo .dy-char{width:96px;height:auto}
 }
 
 /* ---------- Lock screen (#usAppLock, .lock-screen) ---------- */
