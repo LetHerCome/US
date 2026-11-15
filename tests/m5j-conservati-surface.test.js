@@ -246,7 +246,7 @@ test('M5J supports opening a conserved item in detail and returning to the list'
 
 test('M5J Conservati surfaces have isolated styling in the existing Moments stylesheet', () => {
   const css = read('moments-albums.css');
-  assert.ok(/\.us-conservati-entry\s*\{/.test(css));
+  assert.ok(/\.dy-lfy-kept\{/.test(read('diario.css'))); // mockup v5 «I fogli»: a row of the one sheet
   assert.ok(/\.conservati-overlay\s*\{/.test(css));
   assert.ok(/\.conservati-card\s*\{/.test(css));
   assert.ok(/\.conservati-detail\s*\{/.test(css));
@@ -359,7 +359,7 @@ test('Conservati: its door is at the bottom of Lasciato per te, both sheets', ()
   for (const id of ['leftForYouOverlay', 'leftForYouComposerOverlay']) {
     const start = html.indexOf(`id="${id}"`);
     const sheet = html.slice(start, html.indexOf('</section>', start));
-    assert.match(sheet, /<button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>[\s\S]*?<b>Conservati<\/b>[\s\S]*?data-conservati-count/, id);
+    assert.match(sheet, /<button type="button" class="dy-f-row dy-lfy-kept" data-conservati-entry aria-label="Apri Conservati" hidden>[\s\S]*?<b>Conservati<\/b>[\s\S]*?data-conservati-count/, id);
   }
   const albums = read('moments-albums.js');
   assert.match(albums, /const entries = \[document\.getElementById\('conservatiEntry'\), \.\.\.all\('\[data-conservati-entry\]'\)\]\.filter\(Boolean\);/);
@@ -369,5 +369,5 @@ test('Conservati: its door is at the bottom of Lasciato per te, both sheets', ()
   const left = read('left-for-you.js');
   assert.match(left, /new CustomEvent\('us:left-for-you-opened'\)/);
   assert.equal((left.match(/announceOpened\(\);/g) || []).length, 3, 'opened, composer opened, something kept');
-  assert.match(read('dc-oggi.css'), /\.left-for-you-kept\.us-conservati-entry\[hidden\]\{display:none!important\}/);
+  assert.match(read('diario.css'), /\.dy-lfy-kept\[hidden\]\{display:none\}/); // mockup v5 «I fogli»
 });

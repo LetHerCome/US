@@ -405,7 +405,7 @@ test('Settings density: utility rows, couple card and footer stay compact withou
   // Ink for what you do: the switch is ink when on, never a person colour.
   assert.match(css, /\.dy-sw\[aria-checked="true"\]::before,\[aria-checked="true"\]>\.dy-sw::before\{background:var\(--us-ink-100\)\}/);
   // Tokens only (dark mode follows); a person colour only on your dot.
-  const block = css.slice(css.indexOf('/* ---------------------------------------------------------------- Impostazioni */'));
+  const block = css.slice(css.indexOf('/* ---------------------------------------------------------------- Impostazioni */'), css.indexOf('/* ================================================================ fogli */'));
   assert.doesNotMatch(block, /#[0-9a-f]{3,6}\b/i, 'no hard-coded colours');
   assert.deepEqual(block.match(/var\(--us-(tu|partner|rosa|lilla)\)/g), ['var(--us-tu)'], 'only the dot of «Il tuo colore»');
   assert.match(block, /\.dy-set-dot\{[^}]*background:var\(--us-tu\)/);

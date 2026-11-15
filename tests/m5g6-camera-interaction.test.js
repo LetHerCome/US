@@ -36,6 +36,8 @@ test('M5G6 camera use-photo flow selects the capture and returns to the composer
 
 test('M5G6 enabled CTA has active foreground and disabled CTA stays muted', () => {
   const css = read('left-for-you.css');
-  assert.match(css, /button:not\(:disabled\)\{[^}]*color:(#fffafc|var\(--us-color-text\))/);
-  assert.match(css, /button:disabled\{[^}]*color:rgba\(247,242,248,\.48\)/);
+  // Mockup v5 «I fogli» (16/11/2026): ink when it can be pressed, ink at 12% when it cannot.
+  void css;
+  assert.match(read('diario.css'), /\.dy-btn\{[^}]*background:var\(--us-ink-100\);color:var\(--us-paper\)/);
+  assert.match(read('diario.css'), /\.dy-btn:disabled,\.dy-btn\[aria-disabled="true"\]\{background:var\(--us-ink-12\);color:var\(--us-ink-40\)/);
 });
