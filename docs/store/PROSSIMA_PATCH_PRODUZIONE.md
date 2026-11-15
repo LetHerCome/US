@@ -1,6 +1,10 @@
 # Prossima patch in produzione
 
-## In preparazione: «Il diario, ma pulito» (15/11/2026)
+> **Regola (founder, 14/11/2026): ogni patch va in tutte e due le app.** Dalla beta Apple in poi, ogni rilascio esce dallo stesso commit di `main` sia come AAB per Play (workflow «Android Play bundle») sia come build TestFlight (workflow `ios-testflight.yml`), con **lo stesso numero di versione** (es. 1.5.2 e 1.5.2). Ordine: staging → SQL e funzioni in produzione → merge su `main` (sito) → AAB + TestFlight. Le parti native (widget, notifiche native, accesso Apple/Google) sono separate: un fix lì va fatto per ciascuna piattaforma o vale per una sola, e la nota lo dice. Le prove iOS le fa Bea da TestFlight.
+
+## Prossima patch (dopo la 1.5.1)
+
+### In preparazione: «Il diario, ma pulito» (15/11/2026)
 
 **Stato:** branch `claude/diario-pulito-c85387` (nato da `main`), provato su US LIVE con i dati di staging; non sul sito di staging, non in produzione. Missione e differenze dal mockup: [diario-pulito.md](../missions/diario-pulito.md). Solo web e una riga di config Capacitor (`SystemBars` LIGHT): niente SQL, niente Edge.
 
@@ -9,6 +13,16 @@
 **Da decidere prima della produzione — Atmosfere (founder, 15/11: «concordo con tutto»):** le Atmosfere sono in pausa (`ATMOSFERE_PAUSED` in progression.js). In produzione chi le ha sbloccate o scelte **le vedrà sparire**: la scelta resta salvata sul server ma non si applica più. Va deciso se dirlo nella nota della patch (Novità per Play e schermata «Novità») oppure farle tornare come colori della carta (varianti chiare) prima di uscire. Lo stesso vale per i premi del gatto, che diventeranno accessori dei personaggi.
 
 **Android:** i widget restano scuri per ora (lavoro a parte, dopo la prova su staging). Le icone scure della barra di stato le chiede il web (SystemBars dal JS), quindi funzionano anche senza AAB nuovo; la config `SystemBars` LIGHT entra con il prossimo AAB.
+
+### Iscrizione: prima il codice, poi la domanda (14/11)
+
+**Stato:** branch `claude/attesa-dopo-invito` (da `main` dopo la 1.5.1). Provata nel browser col finto Supabase; non ancora su staging né in produzione.
+
+**Il problema (founder, provando l'iscrizione in produzione):** appena creato lo spazio, sotto il codice d'invito c'era già «Intanto, la domanda di oggi» con il campo per rispondere: distraeva dal passo che conta, mandare il codice. E il codice si leggeva «M3WJ- NXY3- CX2G-…»: il server lo dà già coi trattini, lo schermo aggiungeva uno spazio ogni cinque caratteri.
+
+**Cosa cambia:** la domanda compare solo dopo «Condividi» o «Copia codice» riusciti (ricordato per l'account, `us:ob:invite-sent:<id>`, quindi resta anche riaprendo US), oppure se la risposta di oggi c'è già. Il codice sullo schermo è a gruppi di quattro («M3WJ NXY3 CX2G HEYB 57H3 3TTS HM») e va a capo solo tra un gruppo e l'altro; quello copiato e condiviso non cambia. Solo app (`onboarding.js`, `dc-primo.css`), niente SQL.
+
+**Test:** `tests/waiting-today-question.test.js`.
 
 ## Patch 1.5.1: «La cosa di oggi» e la mascotte che non sparisce più (13/11/2026)
 

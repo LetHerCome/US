@@ -102,3 +102,22 @@ test('the card sits in the invite screen, in Italian and English, wired to the O
   const ob = read('onboarding.js');
   assert.match(ob, /inviteMessage\(code,window\.UsI18n\?\.t,undefined,\{answered:waitingDay\.answered\(\)\}\)/);
 });
+
+// 14/11/2026 (founder, on the production sign-up): first the code, then the
+// question; and the code reads in clean groups of four.
+test('the question shows only after the code was shared or copied, remembered per account', () => {
+  const ob = read('onboarding.js');
+  for (const line of [
+    "ready=day.status==='answered'||inviteSent(waitingProfile)",
+    "show=lastView==='waiting'&&ready&&['open','saving','answered'].includes(day.status)",
+    'us:ob:invite-sent:${profile.id}',
+    "say('Codice copiato. Condividilo soltanto con la tua persona.','success');markInviteSent();",
+    "if(how==='shared'||how==='copied')markInviteSent();",
+  ]) assert.ok(ob.includes(line), line);
+});
+
+test('the invite code on screen: groups of four, never «M3WJ- NXY3-»', () => {
+  assert.equal(OB.codeGroups('M3WJ-NXY3-CX2G-HEYB-57H3-3TTS-HM'), 'M3WJ NXY3 CX2G HEYB 57H3 3TTS HM');
+  assert.equal(OB.codeGroups('01jbx4z7q8m2n5p6r9s3t4v7w8'), '01JB X4Z7 Q8M2 N5P6 R9S3 T4V7 W8');
+  assert.doesNotMatch(read('dc-primo.css'), /\.us-inv-code\{[^}]*overflow-wrap:anywhere/, 'a line breaks only between groups');
+});
