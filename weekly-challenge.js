@@ -154,7 +154,7 @@
   <small class="dy-wc-note">${esc(v.state === 'done' ? v.by : v.doneLine)}</small>
 </section>`;
     }
-    const change = v.change ? `<button type="button" class="dy-btn dy-btn-s dy-btn-ghost" data-wc-action="change">${esc(v.change)}</button>` : '';
+    const change = v.change ? `<button type="button" class="dy-btn dy-btn-s dy-btn-ghost dy-hit" data-wc-action="change">${esc(v.change)}</button>` : '';
     const note = `<div class="dy-wc-foot"><small class="dy-wc-note">${esc(v.when)} · ${esc(v.chip === 'A distanza' ? '60 punti' : v.chip)}</small>${change}</div>`;
     if (v.state === 'apart') {
       const cell = (who, c) => {

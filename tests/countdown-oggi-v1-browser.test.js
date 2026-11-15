@@ -51,9 +51,9 @@ test('shared editor creates, edits, selects, hides and deletes without lost or f
   assert.equal(await page.locator('#usCountdownPreview .us-countdown-art').getAttribute('data-countdown-style'),'glass');
   assert.equal(await page.locator('[data-countdown-pick]').count(),0,'editor has no duplicate cosmetic picker');
   await page.click('#usCountdownSave');
-  // Mockup: the sheet closes, "Salvato e in Oggi", and the new countdown is on Oggi.
+  // Il diario, ma pulito (15/11/2026): the sheet closes on «Salvato»; the countdown is the sentence of the day.
   await page.waitForFunction(()=>document.getElementById('usCountdownSheet').getAttribute('aria-hidden')==='true');
-  assert.match(await page.locator('#toast').innerText(),/Salvato e in Oggi/);
+  assert.match(await page.locator('#toast').innerText(),/Salvato/);
   assert.match(await page.locator('#usCountdownDisplay').getAttribute('aria-label'),/La nostra cena/);
   assert.equal(await page.evaluate(()=>window.__QA.countdown.items.at(-1).style),'glass');
   await page.evaluate(()=>window.USCountdown.open());await page.waitForSelector('#usCountdownCollection:not([hidden])');assert.equal(await page.locator('#usCountdownList [data-countdown-select]').count(),3);

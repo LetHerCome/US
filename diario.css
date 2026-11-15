@@ -326,3 +326,14 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
    and keep vertical scrolling while the sideways swipe dismisses them. */
 .dy-notice,.dy-notice-swipe,.dy-notice-dismiss{pointer-events:auto}
 .dy-notice-swipe{touch-action:pan-y}
+
+/* A small button (32 px, as drawn) that answers the finger on 44 px. */
+.dy-hit{position:relative}
+.dy-hit::after{content:"";position:absolute;left:-4px;right:-4px;top:50%;height:44px;transform:translateY(-50%)}
+/* Come stai in «Voi due»: your face, your words, and the way to change them. */
+.dy-mood{display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px;border-radius:var(--us-r-16);box-shadow:inset 0 0 0 1.5px var(--us-ink-08)}
+.dy-mood .dy-stk{flex:none}
+.dy-mood-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dy-mood-copy b{font:800 14px/1.25 var(--us-font-ui)}
+.dy-mood-copy span{font:500 12.5px/1.35 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-mood .dy-btn{flex:none}

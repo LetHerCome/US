@@ -102,7 +102,7 @@ test('the markup: one section, real buttons of at least 44px, nothing but text f
   assert.match(html, /<section class="dy-wc" data-wc-state="open" aria-labelledby="usWcTitle">/);
   assert.match(html, /<span class="dy-wc-kicker">La sfida della settimana<\/span>/);
   assert.match(html, /<button type="button" class="dy-wc-add" data-wc-action="photo">[\s\S]*Chiudi con una foto/);
-  assert.match(html, /<button type="button" class="dy-btn dy-btn-s dy-btn-ghost" data-wc-action="change">/);
+  assert.match(html, /<button type="button" class="dy-btn dy-btn-s dy-btn-ghost dy-hit" data-wc-action="change">/);
   assert.doesNotMatch(html, /<img src=x/);
   assert.match(html, /&lt;img src=x/);
   const apart = wc.markup(wc.viewModel(base({ two_places: true, waiting_for: 'me', photos: [{ mine: false, moment_id: M, path: 'p/bea.webp', place_label: 'Lisbona', created_at: '2026-11-11T20:04:00Z' }] }), opts()));

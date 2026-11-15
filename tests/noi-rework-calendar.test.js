@@ -150,15 +150,15 @@ test('today is bold, the chosen day is framed; a day with a Ricordo shows its ph
   const h = load({ now: '2026-11-24T10:00:00', month: () => NOVEMBER });
   h.api.openCalendar({ date: '2026-11-24' });
   await settle();
-  // Il diario, ma pulito (15/11/2026): today is the ink square; a day is framed
-  // only once you tap it (no frame before a tap). No photos in the squares any
-  // more: the Ricordo of a day is in its detail.
+  // Il diario, ma pulito (15/11/2026): today is the ink square; the asked date
+  // opens with its detail (founder, D4) and says it is chosen. No photos in the
+  // squares any more: the Ricordo of a day is in its detail.
   let grid = h.$('usNoiV2Content').innerHTML;
-  assert.match(cell(grid, '2026-11-24'), /class="dy-cal-day is-today" data-noi-day="2026-11-24" aria-pressed="false" aria-current="date"/);
+  assert.match(cell(grid, '2026-11-24'), /class="dy-cal-day is-today" data-noi-day="2026-11-24" aria-pressed="true" aria-current="date"/);
   const photo = cell(grid, '2026-11-07');
   assert.match(photo, /class="dy-cal-day is-past"/);
   assert.doesNotMatch(grid, /<img/, 'no photo in the squares');
-  assert.equal(h.$('usNoiV2Detail').hidden, true, 'no detail before a tap');
+  assert.equal(h.$('usNoiV2Detail').hidden, false, 'the asked date opens its detail');
 
   h.click((sel) => (sel === '[data-noi-day]' ? { dataset: { noiDay: '2026-11-07' }, hasAttribute: () => false } : null));
   grid = h.$('usNoiV2Content').innerHTML;

@@ -42,20 +42,34 @@
     quadrato: { body: 'M36 24 H64 Q86 24 86 46 V72 Q86 94 64 94 H36 Q14 94 14 72 V46 Q14 24 36 24 Z', ex: [40, 60], ey: 56, feet: [36, 64] },
   });
   const INK = '#14120E';
+  // The twelve states of Come stai (member-status.js) on four faces.
+  const FACE = Object.freeze({ occhiolino: 'felice', felice: 'felice', festa: 'innamorato', innamorato: 'innamorato', giu: 'giu', malato: 'giu', stanco: 'stanco', nervoso: 'teso', lavoro: 'felice', studio: 'felice', palestra: 'felice', viaggio: 'felice', tavola: 'felice' });
+  // How each of you is, by role, from Come stai (12 hours; nothing when not said).
+  function moods() {
+    const st = w.UsMemberStatus?.widgetState?.();
+    const c = couple();
+    return { [c.myRole]: st?.me?.status || '', [c.partnerRole]: st?.partner?.status || '' };
+  }
   function character(role, o = {}) {
     const shape = role === 'beatrice' ? 'quadrato' : 'palla';
     const color = role === 'beatrice' ? 'var(--us-lilla)' : 'var(--us-rosa)';
     const s = SHAPES[shape], size = o.size || 56, dx = o.dx || 0, [a, b] = s.ex, y = s.ey, wink = o.mood === 'occhiolino';
-    const open = wink ? [a] : [a, b];
+    // Come stai (founder, 15/11/2026): the face says how you are.
+    const face = FACE[o.mood] || 'felice';
+    const shut = face === 'stanco' || face === 'innamorato';
+    const open = wink ? [a] : shut ? [] : [a, b];
+    const lids = shut ? `<path d="${[a, b].map((x) => face === 'innamorato' ? `M${x + dx - 4.5} ${y + 1} Q${x + dx} ${y - 5} ${x + dx + 4.5} ${y + 1}` : `M${x + dx - 4.5} ${y} Q${x + dx} ${y + 3.5} ${x + dx + 4.5} ${y}`).join(' ')}" fill="none" stroke="${INK}" stroke-width="2.8" stroke-linecap="round"/>` : '';
+    const brows = face === 'teso' ? `<path d="M${a - 6} ${y - 10} L${a + 4} ${y - 7} M${b + 6} ${y - 10} L${b - 4} ${y - 7}" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>` : '';
+    const mouth = face === 'giu' ? `M46 ${y + 13} Q50 ${y + 9} 54 ${y + 13}` : face === 'teso' || face === 'stanco' ? `M46.5 ${y + 11.5} H53.5` : face === 'innamorato' ? `M44.5 ${y + 9} Q50 ${y + 16.5} 55.5 ${y + 9}` : `M46 ${y + 10} Q50 ${y + 14.5} 54 ${y + 10}`;
     const label = o.label ? ` role="img" aria-label="${esc(o.label)}"` : ' aria-hidden="true"';
     return `<svg class="dy-char" viewBox="-4 6 108 100" width="${size}" height="${Math.round(size * 100 / 108)}"${label} focusable="false">
       <path d="${ell(s.feet[0], 97, 9, 5)} ${ell(s.feet[1], 97, 9, 5)}" style="fill:${color}" stroke="${INK}" stroke-width="3"/>
       <path d="${s.body}" style="fill:${color}" stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"/>
       <path d="${ell(32, 40, 8, 5)}" fill="rgba(255,255,255,.55)"/>
       <path d="${ell(a - 8, y + 9, 5, 3)} ${ell(b + 8, y + 9, 5, 3)}" fill="rgba(211,64,42,.3)"/>
-      <g class="dy-eyes"><path d="${open.map((x) => ell(x + dx, y, 4.4, 5.8)).join(' ')}" fill="${INK}"/><path d="${open.map((x) => ell(x + dx + 1.5, y - 2.3, 1.5, 1.5)).join(' ')}" fill="#fff"/></g>
+      ${open.length ? `<g class="dy-eyes"><path d="${open.map((x) => ell(x + dx, y, 4.4, 5.8)).join(' ')}" fill="${INK}"/><path d="${open.map((x) => ell(x + dx + 1.5, y - 2.3, 1.5, 1.5)).join(' ')}" fill="#fff"/></g>` : ''}${lids}${brows}
       ${wink ? `<path d="M${b - 5} ${y + 1} Q${b} ${y - 4} ${b + 5} ${y + 1}" fill="none" stroke="${INK}" stroke-width="2.8" stroke-linecap="round"/>` : ''}
-      <path d="M46 ${y + 10} Q50 ${y + 14.5} 54 ${y + 10}" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="${mouth}" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
       ${o.acc === 'occhiali' ? `<path d="${ell(a, y, 9.5, 8.5)} ${ell(b, y, 9.5, 8.5)} M${a + 9.5} ${y} H${b - 9.5}" fill="rgba(255,255,255,.28)" stroke="${INK}" stroke-width="2.6"/>` : ''}
     </svg>`;
   }
@@ -74,9 +88,10 @@
     if (!w.usProfile?.couple_id) { root.innerHTML = ''; return; }
     const c = couple();
     const wink = Date.now() < winkUntil;
+    const m = moods();
     // The one who just received my Ti penso winks (the partner's character).
-    const ball = character('francesco', { size: 50, dx: 2, mood: wink && c.partnerRole === 'francesco' ? 'occhiolino' : '' });
-    const square = character('beatrice', { size: 54, dx: -2, mood: wink && c.partnerRole === 'beatrice' ? 'occhiolino' : '' });
+    const ball = character('francesco', { size: 50, dx: 2, mood: wink && c.partnerRole === 'francesco' ? 'occhiolino' : m.francesco });
+    const square = character('beatrice', { size: 54, dx: -2, mood: wink && c.partnerRole === 'beatrice' ? 'occhiolino' : m.beatrice });
     root.innerHTML = `<span class="dy-stk" data-dy-char="francesco">${ball}</span><span class="dy-stk" data-dy-char="beatrice" style="animation-delay:.06s">${square}</span>`;
     root.setAttribute('aria-label', `Voi due: ${c.names.francesco} e ${c.names.beatrice}. La vostra Sintonia`);
     if (hop) hopDuo();
@@ -184,10 +199,30 @@
     if (n > 0 && next100 - n <= 7 && next100 - n >= 0) return { text: next100 === n ? `Oggi sono ${n} giorni insieme` : `Tra ${next100 - n} giorni sono ${next100}`, tone: 'miele' };
     return null;
   }
+  // Founder, 15/11/2026: an active countdown is the sentence of the day, in
+  // place of the others («12 giorni · Padova»). countdown.js stays the authority.
+  function countdownSentence(today) {
+    const st = w.USCountdown?.widgetState?.();
+    if (!st?.active) return null;
+    if (st.kind === 'together') {
+      const n = dayNumber(today) - dayNumber(st.target);
+      return Number.isFinite(n) && n > 0 ? { text: `${n} giorni insieme`, tone: 'miele' } : null;
+    }
+    const target = String(st.target || '').slice(0, 10);
+    const n = dayNumber(target) - dayNumber(today);
+    if (!Number.isFinite(n) || n < 0) return null;
+    const title = String(st.title || '').trim();
+    const when = n === 0 ? 'Oggi' : n === 1 ? 'Domani' : `${n} giorni`;
+    return { text: title ? `${when} · ${title}` : when, tone: 'miele', only: true };
+  }
   function sentences(meta) {
     const today = todayISO();
     const next = nextModel();
     const list = [];
+    // A countdown to a date takes the place of the others; «Insieme da» (the
+    // default one) is just one of the sentences.
+    const countdown = countdownSentence(today);
+    if (countdown?.only) return [countdown];
     const together = togetherSentence(today);
     if (together) list.push(together);
     const distance = distanceSentence(next);
@@ -196,6 +231,7 @@
     list.push(...photoSentences(meta, today));
     const author = meta?.author;
     if (author && author !== w.usProfile?.id && list.length < 2) list.push({ text: `Questa l’ha scelta ${partnerName()} per i Ricordi`, tone: 'partner' });
+    if (countdown) list.push(countdown);
     return list;
   }
   const TONE = { miele: 'var(--us-miele)', cielo: 'var(--us-cielo)', white: '#FFFFFF', partner: 'var(--us-partner-soft)' };
@@ -387,11 +423,25 @@
         <div class="dy-meter-head"><span>Sintonia</span><span>${esc(left === 1 ? `1 punto al livello ${nextLevel}` : `${left} punti al livello ${nextLevel}`)}</span></div>
         <div class="dy-meter" role="progressbar" aria-label="Sintonia verso il livello ${nextLevel}" aria-valuemin="0" aria-valuemax="${esc(info.needed)}" aria-valuenow="${esc(info.current)}"><i style="width:${pct}%"></i></div>
         <div class="dy-streak"><span class="dy-streak-copy"><b>${esc(streakWord)}</b><span>Basta una cosa al giorno, insieme</span></span><span class="dy-streak-days" aria-hidden="true">${squares}</span></div>
+        ${moodMarkup(c)}
         <div class="dy-next"><span class="dy-stk">${character(c.myRole, { size: 46, acc: 'occhiali' })}</span><span class="dy-next-copy"><b>${esc(`Al livello ${nextLevel}: ${acc}`)}</b><span>I premi sono per i personaggi, il cuore e la copertina dell’app</span></span></div>
         <div class="dy-points-title">Gli ultimi punti</div>
         ${points}
         <button type="button" class="dy-btn dy-btn-m dy-btn-ghost dy-sheet-more" data-dy="rewards">I premi che avete</button>
       </div>`;
+  }
+  // Come stai (founder, 15/11/2026): in «Voi due», on your character's face;
+  // the twelve states and their words stay those of member-status.js.
+  function moodMarkup(c) {
+    const api = w.UsMemberStatus;
+    const st = api?.widgetState?.();
+    if (!api || st === undefined) return '';
+    const word = (p) => (p?.status ? api.word(p.status, p.form) : '');
+    const emoji = (p) => api.STATUSES?.find?.((s) => s.key === p?.status)?.emoji || '';
+    const ago = (p) => { const at = Date.parse(p?.at || ''); return Number.isFinite(at) ? api.since(Date.now() - at) : ''; };
+    const mine = st.me?.status ? `${emoji(st.me)} ${word(st.me)} · ${ago(st.me)}` : 'Non l’hai ancora detto';
+    const theirs = st.partner?.status ? `${c.names[c.partnerRole]}: ${emoji(st.partner)} ${word(st.partner)} · ${ago(st.partner)}` : '';
+    return `<div class="dy-mood"><span class="dy-stk">${character(c.myRole, { size: 46, mood: st.me?.status || '' })}</span><span class="dy-mood-copy"><b>Come stai</b><span>${esc(mine)}</span>${theirs ? `<span translate="no">${esc(theirs)}</span>` : ''}</span><button type="button" class="dy-btn dy-btn-s dy-btn-ghost dy-hit" data-dy="status">Cambia</button></div>`;
   }
   let opener = null;
   function openVoiDue() {
@@ -544,6 +594,7 @@
     const chip = t.closest?.('#dyRicordiChips [data-dy-who]');
     if (chip) { diaryWho = chip.dataset.dyWho; paintChips(); return; }
     if (act === 'close') closeVoiDue();
+    if (act === 'status') { closeVoiDue(); setTimeout(() => w.UsMemberStatus?.open?.('status'), 260); return; }
     // The collection of Sintonia (equip what you unlocked) until the accessories arrive.
     if (act === 'rewards') { closeVoiDue(); setTimeout(() => w.USNoiV2?.openSintonia?.(), 260); }
   }
@@ -565,6 +616,8 @@
     d.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVoiDue(); });
     w.addEventListener('popstate', () => closeVoiDue({ fromBack: true }));
     w.addEventListener('us:home-photo-changed', () => paintPhoto());
+    w.addEventListener('us:member-status-changed', () => { paintDuo(); paintVoiDue(); });
+    w.addEventListener('us:countdown-updated', () => paintFrase(w.UsOggiPhoto?.current?.()?.meta || null));
     w.addEventListener('us-identity-change', () => { shownPath = null; lastQuestion = { id: null, mine: null, both: false, unread: false }; paintAll(); });
     d.addEventListener('visibilitychange', () => { if (d.visibilityState === 'visible') { lightBars(); paintTitle(); paintPhoto(); } });
     // The facts the sentence reads (distance, next commitment) arrive later.
@@ -586,10 +639,11 @@
       sync();
     }
     // The profile and the couple arrive after boot: paint when they do.
-    let tries = 0;
+    let tries = 0, countdownAsked = false;
     const wait = () => {
       paintAll();
       if ((!w.usProfile?.couple_id || !startedOn()) && tries++ < 40) setTimeout(wait, 500);
+      else if (w.usProfile?.couple_id && !countdownAsked) { countdownAsked = true; Promise.resolve(w.USCountdown?.refresh?.()).catch(() => {}); }
     };
     wait();
     // A new day while US stays open.

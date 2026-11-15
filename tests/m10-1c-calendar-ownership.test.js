@@ -143,7 +143,8 @@ test('M10.1C: the month cell label says how many commitments and marks the selec
   // Il diario, ma pulito (15/11/2026): the grid is .dy-cal.
   const cell = noi.match(/const days=Array\.from\(\{length:slots\}[\s\S]*?return `<div class="dy-cal"/)?.[0] || '';
   assert.match(cell, /const plans=items\.length===1\?'1 impegno':items\.length\?`\$\{items\.length\} impegni`:'niente in programma';/);
-  assert.match(cell, /aria-pressed="\$\{active\}"/);
+  // Il diario, ma pulito (15/11/2026): today too says when it is the chosen day.
+  assert.match(cell, /aria-pressed="\$\{pressed\}"/);
   assert.match(cell, /is-selected/);
 });
 

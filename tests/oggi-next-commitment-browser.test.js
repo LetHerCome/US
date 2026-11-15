@@ -30,7 +30,9 @@ test('a commitment for tomorrow added in Noi is Oggi\'s next one, refreshed afte
   await page.waitForFunction(()=>document.querySelector('.page.active')?.id==='home'&&!window.UsDueColori?.isFlooding?.());
   // Il diario, ma pulito (15/11/2026): the pill is mounted in the hidden hero and
   // stays the authority; Oggi says the commitment in the sentence of the day.
-  await page.waitForFunction(()=>{const f=document.getElementById('dyFrase');return !f.hidden&&f.textContent.includes('Cena da Marco');},null,{timeout:5000});
+  // With an active countdown to a date (this fixture: «Il nostro viaggio») the
+  // countdown is the sentence, in place of the others (founder, D1, 15/11/2026).
+  await page.waitForFunction(()=>{const f=document.getElementById('dyFrase');return !f.hidden&&/giorni · Il nostro viaggio$/.test(f.textContent);},null,{timeout:5000});
   // Its handler still opens it in the Noi calendar; deleting it there takes it off Oggi.
   await page.evaluate(()=>document.getElementById('usOggiNext').click());
   await page.waitForFunction(()=>document.getElementById('usCalendarDetailSheet')?.getAttribute('aria-hidden')==='false');

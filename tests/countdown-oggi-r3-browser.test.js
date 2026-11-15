@@ -65,7 +65,7 @@ test('a countdown is added from Oggi on a phone, in both modes, and its payload 
    assert.equal(saved.qa.active_id,item.id,'the new one is on Oggi');
    assert.deepEqual({title:item.title,mode:item.mode,style:item.style},{title:'Cena da Marco',mode:'clock',style:'editorial'});
    assert.equal(item.target,await page.evaluate(()=>new Date('2027-12-24T18:30').toISOString()),'the local time, as an instant');
-   assert.match(saved.toast,/Salvato e in Oggi/);assert.match(saved.label,/Cena da Marco/);
+   assert.match(saved.toast,/^Salvato/); /* Il diario, ma pulito (15/11/2026): «Salvato» */ assert.match(saved.label,/Cena da Marco/);
    // A days countdown too, with a style chosen in the editor.
    await page.evaluate(()=>window.USCountdown.open());await page.locator('#usCountdownNew').tap();
    await page.locator('#usCountdownTitle').fill('La laurea');await page.locator('#usCountdownDate').fill('2027-11-27');
