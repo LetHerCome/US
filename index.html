@@ -691,20 +691,22 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       </div>
       <div class="dy-diary" id="dyDiary" aria-live="polite"><p class="dy-rows-note">Carico i ricordi…</p></div>
       <section class="ricordi-rivivi" id="ricordiRivivi" aria-label="Rivivi" hidden></section>
-      <div class="moment-compose" id="momentCompose">
+      <div class="dy-mc" id="momentCompose">
         <input id="momentFile" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
-        <button type="button" class="moment-picker" onclick="pickMomentPhoto()" aria-label="Scegli una foto per il ricordo">
-          <span class="moment-picker-empty"><span class="moment-add-icon"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span><span class="moment-picker-copy"><b>Aggiungi un ricordo</b></span></span>
-          <span id="momentPreview" class="moment-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"><span class="moment-change-chip">Cambia foto</span></span>
+        <button type="button" class="dy-mc-pick" onclick="pickMomentPhoto()" aria-label="Scegli una foto per il ricordo">
+          <span class="dy-mc-empty"><svg class="dy-mc-cam" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h4l2-2.5h4L16 8h4v11H4z M12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg><b>Scegli le foto</b><small>Anche più di una, dal telefono</small></span>
+          <span id="momentPreview" class="dy-mc-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"><span class="dy-mc-change">Cambia foto</span></span>
         </button>
-        <div class="moment-extra" id="momentExtra" hidden><div class="moment-extra-row" id="momentExtraRow"></div><p class="moment-extra-count" id="momentExtraCount"></p></div>
-        <div class="moment-details">
-          <label class="moment-field-label" for="momentCaption">Nota · facoltativa</label>
-          <textarea id="momentCaption" maxlength="180" rows="3" placeholder="Che cosa volete ricordare?"></textarea>
-          <label class="moment-auto-date moment-date-field" id="momentDetectedDate" for="momentDate"><span>Data foto<span id="momentDateWhen"></span></span><input id="momentDate" type="date" required></label>
-          <div class="moment-place-field" id="momentPlaceField"><span class="moment-field-label">Dove · facoltativo</span><span class="moment-place-row"><button type="button" class="moment-place-btn" id="momentPlaceBtn" onclick="editMomentPlace()"><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><span id="momentPlaceLabel" translate="no">Aggiungi il posto</span></button><button type="button" class="moment-place-clear" id="momentPlaceClear" aria-label="Togli il posto" onclick="clearMomentPlace()" hidden><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></span></div>
-          <div class="moment-up-bar" id="momentUpBar" hidden><i></i></div>
-          <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
+        <div class="dy-mc-extra" id="momentExtra" hidden><div class="dy-mc-extra-row" id="momentExtraRow"></div><p class="dy-f-note" id="momentExtraCount"></p></div>
+        <div class="dy-mc-details">
+          <label class="dy-f-lab" for="momentCaption">Una nota · facoltativa</label>
+          <textarea id="momentCaption" class="dy-f-in dy-f-hand dy-mc-note" maxlength="180" rows="2" placeholder="due parole per ricordarlo…"></textarea>
+          <div class="dy-mc-two">
+            <label class="dy-f-lab" id="momentDetectedDate" for="momentDate"><span>Quando<span id="momentDateWhen"></span></span><input id="momentDate" class="dy-f-in" type="date" required></label>
+            <div class="dy-f-lab dy-mc-place" id="momentPlaceField"><span>Dove</span><span class="dy-mc-place-row"><button type="button" class="dy-f-in dy-mc-place-btn" id="momentPlaceBtn" onclick="editMomentPlace()"><svg class="dy-f-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z M12 11h.01"/></svg><span id="momentPlaceLabel" translate="no">Aggiungi il posto</span></button><button type="button" class="dy-ib dy-ib-36 dy-mc-place-clear" id="momentPlaceClear" aria-label="Togli il posto" onclick="clearMomentPlace()" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></div>
+          </div>
+          <div class="dy-mc-bar" id="momentUpBar" hidden><i></i></div>
+          <div class="dy-f-acts"><button id="momentUploadBtn" type="button" class="dy-btn dy-btn-l" onclick="uploadMoment()">Salva ricordo</button></div>
         </div>
       </div>
       <div class="ricordi-section-head ricordi-story-head"><h3 id="ricordiStoryTitle">Mese per mese</h3><button type="button" class="ricordi-map-switch" id="ricordiMapSwitch" aria-pressed="false" onclick="UsRicordiPlace.toggleMap()"><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><span data-switch-label>Mappa</span></button></div>

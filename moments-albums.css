@@ -203,36 +203,7 @@ body.us-album-open{overflow:hidden;touch-action:none}
 .us-moments-add:active{transform:scale(.94)}
 
 /* Composer becomes a focused bottom sheet instead of occupying the feed */
-.us-moment-compose-overlay{
-  position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;
-  align-items:flex-end;justify-content:center;
-  background:transparent;
-  padding-top:calc(var(--us-safe-top) + 10px);
-}
-.us-moment-compose-overlay.show{display:flex}
-.us-moment-compose-sheet{width:min(500px,100%);max-height:calc(var(--us-viewport-height,100dvh) - max(24px,var(--us-safe-top)));overflow:auto;overscroll-behavior:contain;position:relative;z-index:1;padding:10px 14px calc(16px + var(--us-safe-bottom))}
-.us-moment-compose-grabber{
-  width:36px;height:4px;border-radius:99px;background:rgba(255,255,255,.20);
-  margin:1px auto 12px
-}
-.us-moment-compose-title{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 3px 12px
-}
-.us-moment-compose-title div{min-width:0}
-.us-moment-compose-title small{
-  display:block;color:var(--us-color-text-2);font-size:9px;letter-spacing:.11em;text-transform:uppercase
-}
-.us-moment-compose-title b{display:block;margin-top:3px;font-size:17px}
-.us-moment-compose-sheet .moment-compose{margin:0!important}
-.us-moment-compose-sheet .moment-picker{
-  border-radius:20px!important;background:var(--us-color-surface-2)!important;
-  border-color:rgba(255,255,255,.09)!important;
-  box-shadow:none!important
-}
-.us-moment-compose-sheet .moment-picker-empty{min-height:132px!important}
-.us-moment-compose-sheet .moment-preview{aspect-ratio:4/3!important}
-.us-moment-compose-sheet .moment-details{padding:12px 0 0!important}
-.us-moment-compose-sheet .moment-private{text-align:center;margin-top:11px!important}
+
 body.us-moment-compose-open{overflow:hidden}
 
 /* Feed: cleaner photographic journal instead of generic cards */
@@ -469,7 +440,7 @@ body.us-moment-compose-open{overflow:hidden}
   .us-album-photo-card:nth-of-type(3n+1){grid-column:auto}
   .us-album-photo-card:nth-of-type(4n+1){grid-column:span 2}
 }
-@media(prefers-reduced-motion:reduce){.us-moment-compose-sheet,.us-album-overlay.show .us-album-shell{animation:none!important}.us-album-lightbox,.us-album-lightbox-stage,.us-album-lightbox-photo{transform:none!important;transition:opacity 100ms linear!important}}
+@media(prefers-reduced-motion:reduce){.us-album-overlay.show .us-album-shell{animation:none!important}.us-album-lightbox,.us-album-lightbox-stage,.us-album-lightbox-photo{transform:none!important;transition:opacity 100ms linear!important}}
 /* ============================================================
    US · Moments Consistency Fix
    ============================================================ */
