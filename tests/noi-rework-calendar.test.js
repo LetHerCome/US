@@ -97,19 +97,24 @@ test('a day is a big square: each commitment a label with its name, in the colou
   const h = load({ now: '2026-11-24T10:00:00', month: () => NOVEMBER });
   h.api.openCalendar({ date: '2026-11-24' });
   await settle();
+  // Il diario, ma pulito (15/11/2026): no text labels in the square any more. Under
+  // the number a short bar per person who has something that day, in that person's
+  // colour (both colours for what is shared); our dates get the red pencil circle.
+  // The names and the count are in the aria-label and in the day detail.
   const grid = h.$('usNoiV2Content').innerHTML;
+  const bars = (html) => [...html.matchAll(/<i class="dy-bar" data-owner="([^"]+)"/g)].map((m) => m[1]).sort();
   const today = cell(grid, '2026-11-24');
-  assert.match(today, /<span class="us-noi-v2-bar" data-owner="partner" translate="no">Yoga<\/span>/, 'Sara put it: her colour');
-  assert.match(today, /<span class="us-noi-v2-bar" data-owner="noi" translate="no">Cena da noi<\/span>/, 'shared: the colour of both');
-  assert.match(cell(grid, '2026-11-05'), /data-owner="tu" translate="no">Dentista</, 'mine: my colour');
+  assert.deepEqual(bars(today), ['partner', 'tu'], 'Sara put Yoga (her colour); the shared dinner gives both');
+  assert.doesNotMatch(today, /Yoga|Cena da noi/, 'no text labels in the square');
+  assert.match(today, /aria-label="[^"]*2 impegni"/);
+  assert.deepEqual(bars(cell(grid, '2026-11-05')), ['tu'], 'mine: my colour');
   const busy = cell(grid, '2026-11-26');
-  assert.equal((busy.match(/class="us-noi-v2-bar"/g) || []).length, 2, 'two labels fit in a square');
-  assert.match(busy, /<span class="us-noi-v2-more">\+1<\/span>/);
+  assert.deepEqual(bars(busy), ['partner', 'tu'], 'one bar per person, never one per commitment');
   assert.match(busy, /aria-label="[^"]*3 impegni"/);
-  // Staging, 04/11/2026: «Mesiversario» became «Mesi…»; in a square the
-  // couple's dates say how much, on two lines if needed.
-  assert.match(cell(grid, '2026-11-10'), /<span class="us-noi-v2-bar is-milestone" data-owner="noi">34 mesi<\/span>/, 'the mesiversario is a short label (translated)');
-  for (const gone of ['us-noi-v2-day-marks', 'us-noi-v2-legend', 'us-noi-v2-sel', '<i data-owner']) assert.ok(!grid.includes(gone), `no ${gone}`);
+  // The mesiversario: the circle on the number, both colours.
+  assert.match(cell(grid, '2026-11-10'), /<span class="dy-cal-n">10<svg class="dy-cal-circle"/, 'our date: the red circle');
+  assert.doesNotMatch(cell(grid, '2026-11-05'), /dy-cal-circle/);
+  for (const gone of ['us-noi-v2-day-marks', 'us-noi-v2-legend', 'us-noi-v2-sel', 'us-noi-v2-bar', '<i data-owner']) assert.ok(!grid.includes(gone), `no ${gone}`);
 });
 
 test('the couple\'s dates in a square say how much; a hundred-days milestone does not repeat itself in the agenda', async () => {
@@ -118,21 +123,25 @@ test('the couple\'s dates in a square say how much; a hundred-days milestone doe
   const h = load({ now: '2026-11-04T10:00:00', month: () => data, range: () => data, domain: require('../calendar-domain.js') });
   h.api.openCalendar({ date: '2026-11-20' });
   await settle();
+  // Il diario, ma pulito (15/11/2026): in the square our dates are the red circle
+  // (no text); how much is said by the day detail (after a tap) and by «In arrivo».
   const grid = h.$('usNoiV2Content').innerHTML;
-  assert.match(cell(grid, '2026-11-20'), /<span class="us-noi-v2-bar is-milestone" data-owner="noi">4100 giorni<\/span>/);
-  assert.match(cell(grid, '2026-11-30'), /<span class="us-noi-v2-bar is-milestone" data-owner="noi">135 mesi<\/span>/);
+  assert.match(cell(grid, '2026-11-20'), /<span class="dy-cal-n">20<svg class="dy-cal-circle"/);
+  assert.match(cell(grid, '2026-11-30'), /<span class="dy-cal-n">30<svg class="dy-cal-circle"/);
+  assert.match(cell(grid, '2026-11-20'), /aria-label="[^"]*, 1 impegno"/);
+  h.click((sel) => (sel === '[data-noi-day]' ? { dataset: { noiDay: '2026-11-20' }, hasAttribute: () => false } : null));
   const detail = h.$('usNoiV2Detail').innerHTML;
   assert.match(detail, /<b>4100 giorni ♡<\/b>/);
   assert.doesNotMatch(detail, /4100 giorni insieme/, 'the title says it once');
 
   h.tap('usNoiV2ModeList');
   await settle();
-  const list = h.$('usNoiV2Content').innerHTML;
-  assert.equal((list.match(/4100 giorni/g) || []).length, 1, '«Prossimi»: «4100 giorni ♡» and nothing else about it');
-  assert.match(list, /<b>Mesiversario<\/b>[\s\S]*?135 mesi insieme/, 'a mesiversario keeps its line');
-
-  const css = read('dc-noi.css');
-  assert.match(css, /#bond \.us-noi-v2-bar\.is-milestone\{[^}]*white-space:normal[^}]*-webkit-line-clamp:2/);
+  assert.equal(h.$('usNoiV2Content').innerHTML, '', '«Prossimi» is the rows of «In arrivo»');
+  const list = h.$('dyNoiUpcomingRows').innerHTML;
+  assert.equal((list.match(/4100 giorni/g) || []).length, 2, '«Prossimi»: one row «4100 giorni insieme» (title and its label)');
+  assert.match(list, /4100 giorni insieme<\/b><span class="dy-row-tags">[^]*?>traguardo</, 'a milestone row says traguardo');
+  assert.match(list, /135 mesi insieme<\/b><span class="dy-row-tags">[^]*?>mesiversario</, 'a mesiversario keeps its line');
+  assert.doesNotMatch(read('dc-noi.css') + read('diario.css'), /\.dy-cal-day[^{]*\{[^}]*line-clamp/, 'no text to clamp in a square');
   const en = read('i18n-en.js');
   for (const it of ['{n} mesi', '{n} anni', '1 mese', '1 anno', '{n} giorni', 'Inizio']) assert.ok(en.includes(`'${it}':`) || en.includes(`\n    ${it}:`), it);
 });
@@ -141,24 +150,32 @@ test('today is bold, the chosen day is framed; a day with a Ricordo shows its ph
   const h = load({ now: '2026-11-24T10:00:00', month: () => NOVEMBER });
   h.api.openCalendar({ date: '2026-11-24' });
   await settle();
+  // Il diario, ma pulito (15/11/2026): today is the ink square; a day is framed
+  // only once you tap it (no frame before a tap). No photos in the squares any
+  // more: the Ricordo of a day is in its detail.
   let grid = h.$('usNoiV2Content').innerHTML;
-  assert.match(cell(grid, '2026-11-24'), /class="us-noi-v2-day is-selected is-today"[^>]*aria-pressed="true"[^>]*aria-current="date"/);
+  assert.match(cell(grid, '2026-11-24'), /class="dy-cal-day is-today" data-noi-day="2026-11-24" aria-pressed="false" aria-current="date"/);
   const photo = cell(grid, '2026-11-07');
-  assert.match(photo, /class="us-noi-v2-day has-photo is-past"/);
-  assert.match(photo, /<img class="us-noi-v2-day-photo" src="https:\/\/media\.test\/a-thumb\.webp" alt="" loading="lazy" decoding="async">/);
-  assert.match(photo, /aria-label="[^"]*con un Ricordo/);
-  assert.doesNotMatch(cell(grid, '2026-11-08'), /<img/);
+  assert.match(photo, /class="dy-cal-day is-past"/);
+  assert.doesNotMatch(grid, /<img/, 'no photo in the squares');
+  assert.equal(h.$('usNoiV2Detail').hidden, true, 'no detail before a tap');
 
   h.click((sel) => (sel === '[data-noi-day]' ? { dataset: { noiDay: '2026-11-07' }, hasAttribute: () => false } : null));
   grid = h.$('usNoiV2Content').innerHTML;
-  assert.match(cell(grid, '2026-11-07'), /class="us-noi-v2-day is-selected has-photo is-past"/);
-  assert.match(cell(grid, '2026-11-24'), /class="us-noi-v2-day is-today"/);
+  assert.match(cell(grid, '2026-11-07'), /class="dy-cal-day is-selected is-past"[^>]*aria-pressed="true"/);
+  assert.match(cell(grid, '2026-11-24'), /class="dy-cal-day is-today"/);
+  assert.equal(h.$('usNoiV2Detail').hidden, false);
+  assert.match(h.$('usNoiV2Detail').innerHTML, /data-noi-ricordo data-moment-id="m1"/, 'the Ricordo of the day is in its detail');
+  assert.match(grid, /<span class="dy-cal-day is-out" aria-hidden="true">/, 'the days of the months around are greyed');
 });
 
 test('the agenda of the chosen day: its Ricordo, the commitments with time and whose, and «Aggiungi a questo giorno»', async () => {
   const h = load({ now: '2026-11-24T10:00:00', month: () => NOVEMBER });
   h.api.openCalendar({ date: '2026-11-24' });
   await settle();
+  // Il diario, ma pulito (15/11/2026): the agenda of a day opens with a tap on it.
+  const tapDay = (day) => h.click((sel) => (sel === '[data-noi-day]' ? { dataset: { noiDay: day }, hasAttribute: () => false } : null));
+  tapDay('2026-11-24');
   let detail = h.$('usNoiV2Detail').innerHTML;
   assert.match(detail, /<h3>martedì 24 novembre<\/h3><span class="us-noi-v2-today-pill">Oggi<\/span>/);
   assert.match(detail, /19:00[\s\S]*Yoga[\s\S]*Solo Sara[\s\S]*<span class="us-noi-v2-who" data-owner="partner" translate="no">Sara<\/span>/);
@@ -169,7 +186,7 @@ test('the agenda of the chosen day: its Ricordo, the commitments with time and w
   h.click((sel) => (sel === '[data-noi-add]' ? {} : null));
   assert.deepEqual(h.last(), ['createForDate', '2026-11-24'], 'the existing editor, on that day');
 
-  h.api.openCalendar({ date: '2026-11-07' });
+  tapDay('2026-11-07');
   detail = h.$('usNoiV2Detail').innerHTML;
   assert.doesNotMatch(detail, /us-noi-v2-today-pill/);
   assert.match(detail, /<button type="button" class="us-noi-v2-ricordo" data-noi-ricordo data-moment-id="m1"/);
@@ -180,7 +197,7 @@ test('the agenda of the chosen day: its Ricordo, the commitments with time and w
   h.click((sel) => (sel === '[data-noi-ricordo]' ? ricordo : null));
   assert.deepEqual(h.last(), ['openMomentViewer', 'm1'], 'the Ricordo opens in its album');
 
-  h.api.openCalendar({ date: '2026-11-25' });
+  tapDay('2026-11-25');
   assert.match(h.$('usNoiV2Detail').innerHTML, /Niente in programma\. Un giorno libero, tutto vostro\./);
 });
 
@@ -195,21 +212,25 @@ test('«Prossimi»: from today, one year ahead, with birthdays, mesiversari and 
   await settle();
   h.tap('usNoiV2ModeList');
   await settle();
-  assert.deepEqual(h.reads.at(-1), ['range', '2026-11-24', '2027-11-25'], 'from today to the same day next year');
+  // Il diario, ma pulito (15/11/2026): refresh() reads the year ahead together with
+  // the month, so the last read may be the month; «Prossimi» is the «In arrivo»
+  // rows (#dyNoiUpcomingRows, one per date), the month card hidden.
+  assert.deepEqual(h.reads.filter((r) => r[0] === 'range').at(-1), ['range', '2026-11-24', '2027-11-25'], 'from today to the same day next year');
   assert.equal(h.$('usNoiV2').dataset.mode, 'list');
-  const list = h.$('usNoiV2Content').innerHTML;
-  const days = [...list.matchAll(/data-noi-day="([^"]+)" data-noi-focus-list/g)].map((m) => m[1]);
+  assert.equal(h.$('dyCalCard').hidden, true);
+  assert.equal(h.$('usNoiV2Content').innerHTML, '');
+  const list = h.$('dyNoiUpcomingRows').innerHTML;
+  const days = [...new Set([...list.matchAll(/<button type="button" class="dy-row"[^>]*data-day="([^"]+)"/g)].map((m) => m[1]))];
   assert.deepEqual(days.slice(0, 4), ['2026-11-30', '2026-12-31', '2027-01-31', '2027-02-28']);
   assert.ok(days.includes('2027-03-02'), 'the birthday, months away');
   assert.ok(!days.some((d) => d < '2026-11-24'), 'nothing before today');
-  assert.match(list, /Compleanno Sara/);
-  assert.match(list, /<b>Anniversario<\/b>[\s\S]*?3 anni insieme/);
-  assert.match(list, /lunedì 30 novembre/, 'the day says its month');
+  assert.match(list, /Compleanno Sara<\/b><span class="dy-row-tags">[^]*?>data speciale</);
+  assert.match(list, /3 anni insieme<\/b><span class="dy-row-tags">[^]*?>insieme<[^]*?>anniversario</);
+  assert.match(list, /aria-label="lunedì 30 novembre: Volo Roma, [^"]+"/, 'the day says its month');
+  assert.match(list, /Volo Roma<\/b><span class="dy-row-tags"><span class="dy-tag dy-tag-s" style="background:var\(--us-partner-soft\)" translate="no">Sara<\/span>[^]*?>07:15</, 'whose (by name, in their colour) and the hour');
   assert.doesNotMatch(list, /Cena passata|>Ieri</);
-  // No dashes (founder, 04/11/2026): a date without an hour carries a mark.
+  // No dashes (founder, 04/11/2026).
   assert.doesNotMatch(list, /—/);
-  assert.match(list, /us-noi-v2-item-time is-mark" aria-hidden="true"><span class="us-icon" data-us-icon="heart"/);
-  assert.match(list, /us-noi-v2-item-time">07:15</);
   assert.equal(h.$('usNoiV2Detail').hidden, true);
 
   h.tap('usNoiV2ModeCalendar');
@@ -224,14 +245,15 @@ test('«Prossimi» shows at most 30 dates, and a quiet line when nothing is comi
   await settle();
   h.tap('usNoiV2ModeList');
   await settle();
-  assert.equal((h.$('usNoiV2Content').innerHTML.match(/class="us-noi-v2-item"/g) || []).length, 30);
+  // Il diario, ma pulito (15/11/2026): the rows of «In arrivo», up to 30 in «Prossimi».
+  assert.equal((h.$('dyNoiUpcomingRows').innerHTML.match(/class="dy-row"/g) || []).length, 30);
 
   const none = load({ now: '2026-11-24T10:00:00', month: () => NOVEMBER, range: () => ({ appointments: [], events: [], profiles: PROFILES, startedOn: null }) });
   none.api.openCalendar({ date: '2026-11-24' });
   await settle();
   none.tap('usNoiV2ModeList');
   await settle();
-  assert.match(none.$('usNoiV2Content').innerHTML, /Niente in arrivo/);
+  assert.match(none.$('dyNoiUpcomingRows').innerHTML, /<b>Niente in arrivo<\/b><button type="button" class="dy-btn dy-btn-m" data-noi-add>Aggiungi un impegno<\/button>/);
 });
 
 test('the page: «Mese» and «Prossimi», no tiles, no «Il nostro giorno», the board under the calendar with the Lavagna slot', () => {

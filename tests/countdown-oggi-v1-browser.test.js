@@ -2,7 +2,10 @@ const test=require('node:test');const assert=require('node:assert/strict');
 const {start,pageFor}=require('./helpers/countdown-browser');
 const fs=require('node:fs');const path=require('node:path');
 const output=process.env.COUNTDOWN_SCREENSHOTS;
-test('countdown and daily question never overlap at base viewports, all styles and both time formats',async t=>{
+// Il diario, ma pulito (15/11/2026): the countdown is no longer shown on Oggi (the
+// old hero is mounted but hidden); the editor tests open it with USCountdown.open(),
+// exactly what a tap on the old Oggi countdown did.
+test('countdown and daily question never overlap at base viewports, all styles and both time formats', { skip: 'Il diario, ma pulito (15/11/2026): il countdown non è più sulla foto di Oggi (vecchio hero nascosto)' },async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{for(const [width,height] of [[320,568],[390,844],[844,390]])for(const style of ['editorial','signal','glass','aurora','orbit','chrome']){
   const {page,ctx,errors}=await pageFor(h,{width,height,style,mode:style==='signal'?'clock':'days'});
@@ -30,7 +33,7 @@ test('shared editor creates, edits, selects, hides and deletes without lost or f
  try{
   const {page,ctx,errors}=await pageFor(h,{unlocked:false});
   // Round 3 (mockup 032): Oggi's countdown opens the list, "Crea countdown" one tap away.
-  await page.click('#usCountdownDisplay');await page.waitForSelector('#usCountdownCollection:not([hidden])');await page.click('#usCountdownNew');
+  await page.evaluate(()=>window.USCountdown.open());await page.waitForSelector('#usCountdownCollection:not([hidden])');await page.click('#usCountdownNew');
   // Save never greys out (a disabled "Salva…" looked like a stuck spinner): what is missing is said above it, nothing is sent.
   await page.fill('#usCountdownDate','2027-12-24');assert.equal(await page.locator('#usCountdownSave').isDisabled(),false);
   await page.click('#usCountdownSave');assert.equal(await page.locator('#usCountdownError').innerText(),'Dai un nome al countdown.');
@@ -53,14 +56,14 @@ test('shared editor creates, edits, selects, hides and deletes without lost or f
   assert.match(await page.locator('#toast').innerText(),/Salvato e in Oggi/);
   assert.match(await page.locator('#usCountdownDisplay').getAttribute('aria-label'),/La nostra cena/);
   assert.equal(await page.evaluate(()=>window.__QA.countdown.items.at(-1).style),'glass');
-  await page.click('#usCountdownDisplay');await page.waitForSelector('#usCountdownCollection:not([hidden])');assert.equal(await page.locator('#usCountdownList [data-countdown-select]').count(),3);
+  await page.evaluate(()=>window.USCountdown.open());await page.waitForSelector('#usCountdownCollection:not([hidden])');assert.equal(await page.locator('#usCountdownList [data-countdown-select]').count(),3);
   await page.click('#usCountdownHide');await page.waitForSelector('#usCountdownDisplay[hidden]',{state:'attached'});
-  await page.click('[data-countdown-select="together"]');await page.waitForSelector('#usCountdownDisplay:not([hidden])');assert.match(await page.locator('#usCountdownDisplay').getAttribute('aria-label'),/Insieme da/);
+  await page.click('[data-countdown-select="together"]');await page.waitForSelector('#usCountdownDisplay:not([hidden])',{state:'attached'});assert.match(await page.locator('#usCountdownDisplay').getAttribute('aria-label'),/Insieme da/);
   await page.click('#usCountdownList .us-countdown-row:last-child [data-countdown-edit]');await page.fill('#usCountdownTitle','La cena per due');
   await page.evaluate(()=>window.__QA.saveError='offline');await page.click('#usCountdownSave');assert.match(await page.locator('#usCountdownStatus').innerText(),/Non salvato/);assert.equal(await page.locator('#usCountdownTitle').inputValue(),'La cena per due');
   await page.evaluate(()=>{window.__QA.saveError=null;window.__QA.countdown.version++;});await page.click('#usCountdownSave');assert.match(await page.locator('#usCountdownStatus').innerText(),/altro telefono/);
   await page.click('#usCountdownSave');await page.waitForFunction(()=>document.getElementById('usCountdownSheet').getAttribute('aria-hidden')==='true');
-  await page.click('#usCountdownDisplay');await page.waitForSelector('#usCountdownCollection:not([hidden])');assert.match(await page.locator('#usCountdownList').innerText(),/La cena per due/);
+  await page.evaluate(()=>window.USCountdown.open());await page.waitForSelector('#usCountdownCollection:not([hidden])');assert.match(await page.locator('#usCountdownList').innerText(),/La cena per due/);
   await page.click('#usCountdownList .us-countdown-row:last-child [data-countdown-edit]');await page.click('#usCountdownDelete');await page.click('[data-us-confirm="ok"]');await page.waitForSelector('#usCountdownCollection:not([hidden])');assert.equal(await page.locator('#usCountdownList [data-countdown-select]').count(),2);
   assert.match(await page.locator('#toast').innerText(),/Countdown eliminato/);
   assert.deepEqual(errors,[]);await ctx.close();
@@ -75,7 +78,7 @@ test('unavailable backend retries are throttled',async t=>{
 test('ownership switch during a slow save restores fields for the next identity',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
-  const {page,ctx}=await pageFor(h);await page.click('#usCountdownDisplay');await page.click('#usCountdownNew');await page.fill('#usCountdownTitle','Prima coppia');await page.fill('#usCountdownDate','2027-12-24');
+  const {page,ctx}=await pageFor(h);await page.evaluate(()=>window.USCountdown.open());await page.click('#usCountdownNew');await page.fill('#usCountdownTitle','Prima coppia');await page.fill('#usCountdownDate','2027-12-24');
   await page.evaluate(()=>window.__QA.saveDelay=1800);await page.click('#usCountdownSave');assert.equal(await page.locator('#usCountdownTitle').isDisabled(),true);
   await page.evaluate(()=>{window.usProfile={id:'new-user',couple_id:'new-couple',role:'francesco'};});await page.waitForTimeout(2200);
   await page.evaluate(()=>window.USCountdown.open());await page.click('#usCountdownNew');
@@ -88,9 +91,9 @@ test('editing a DST fold instant preserves its exact target and saving locks the
  try{
   const {page,ctx}=await pageFor(h,{mode:'clock'});
   await page.evaluate(()=>{const s=window.__QA.countdown;s.items[0].target='2026-10-25T01:30:37.000Z';return window.USCountdown.refresh();});
-  await page.click('#usCountdownDisplay');await page.click('#usCountdownList .us-countdown-row:last-child [data-countdown-edit]');await page.fill('#usCountdownTitle','Un nuovo titolo');await page.click('#usCountdownSave');await page.waitForFunction(()=>document.getElementById('usCountdownSheet').getAttribute('aria-hidden')==='true');
+  await page.evaluate(()=>window.USCountdown.open());await page.click('#usCountdownList .us-countdown-row:last-child [data-countdown-edit]');await page.fill('#usCountdownTitle','Un nuovo titolo');await page.click('#usCountdownSave');await page.waitForFunction(()=>document.getElementById('usCountdownSheet').getAttribute('aria-hidden')==='true');
   assert.equal(await page.evaluate(()=>window.__QA.countdown.items[0].target),'2026-10-25T01:30:37.000Z','title/style-only edits preserve both fold offset and seconds');
-  await page.click('#usCountdownDisplay');await page.click('#usCountdownList .us-countdown-row:last-child [data-countdown-edit]');await page.fill('#usCountdownTitle','Ultima modifica');await page.evaluate(()=>window.__QA.saveDelay=800);await page.click('#usCountdownSave');
+  await page.evaluate(()=>window.USCountdown.open());await page.click('#usCountdownList .us-countdown-row:last-child [data-countdown-edit]');await page.fill('#usCountdownTitle','Ultima modifica');await page.evaluate(()=>window.__QA.saveDelay=800);await page.click('#usCountdownSave');
   assert.equal(await page.locator('#usCountdownTitle').isDisabled(),true,'typing must not silently change the draft after its payload was sent');assert.equal(await page.locator('#usCountdownMode').isDisabled(),true);assert.equal(await page.locator('#usCountdownDate').isDisabled(),true);
   await page.waitForFunction(()=>document.getElementById('usCountdownSheet').getAttribute('aria-hidden')==='true');
   await ctx.close();
@@ -142,7 +145,7 @@ test('a slow Countdown answer never replaces a new countdown or edits the user a
   const {page,ctx,errors}=await pageFor(h);
   // Opened from the Oggi countdown (active editor) while the read is still in flight.
   await page.evaluate(()=>window.__QA.readDelay=1200);
-  await page.click('#usCountdownDisplay');await page.click('#usCountdownNew');
+  await page.evaluate(()=>window.USCountdown.open());await page.click('#usCountdownNew');
   await page.fill('#usCountdownTitle','Nuovo viaggio');await page.fill('#usCountdownDate','2027-03-01');
   await page.waitForTimeout(1400); // the 1.2 s read has answered
   assert.deepEqual(await page.evaluate(()=>({title:document.getElementById('usCountdownTitle').value,date:document.getElementById('usCountdownDate').value,heading:document.getElementById('usCountdownEditorHeading').textContent})),

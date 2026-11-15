@@ -10,7 +10,13 @@ const widgetState = read('supabase/functions/us-widget-state/index.ts');
 
 test('pre-native: couple identity is one light bridge with Settings in the top-right corner', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  const header = bond.match(/<header class="noi-canonical-head noi-couple-head">[\s\S]*?<\/header>/)?.[0] || '';
+  // Il diario, ma pulito (15/11/2026): the couple card stays mounted (avatars and
+  // distance still fill it) but its header is hidden; Settings is the gear of the
+  // Noi header «I vostri giorni».
+  const header = bond.match(/<header class="noi-canonical-head noi-couple-head" hidden>[\s\S]*?<\/header>/)?.[0] || '';
+  const noiHead = bond.match(/<section class="us-noi-v2" id="usNoiV2"[\s\S]*?<header class="dy-hd">[\s\S]*?<\/header>/)?.[0] || '';
+  assert.match(noiHead, /<h2 class="dy-h2">I vostri <em>giorni<\/em><\/h2>/);
+  assert.match(noiHead, /<button type="button" class="dy-ib" onclick="go\('settings',\{nav:true\}\)" aria-label="Impostazioni">/);
   assert.match(header, /id="noiCoupleCard"/);
   assert.match(header, /id="pairAvatarFrancesco"/);
   assert.match(header, /id="pairAvatarBeatrice"/);

@@ -41,7 +41,8 @@ test('daily reveal: question and two answers, one reaction on theirs; no comment
  assert.match(app,/UsDailyKeepsake\?\.load\?\./);
 });
 test('Noi: selected day labels both individual owners and the shared couple',()=>{
- const a=noi.indexOf('function ownerLabel('),b=noi.indexOf('// Only the weeks',a);
+ // Il diario, ma pulito (15/11/2026): the comment that closed this block is now the one of the month grid.
+ const a=noi.indexOf('function ownerLabel('),b=noi.indexOf('// Il diario, ma pulito (15/11/2026): the month as in the studio',a);
  assert.ok(a>=0&&b>a);
  const box={snapshot:{profiles:[{id:'p1',display_name:'Giulia'},{id:'p2',display_name:'Marco'}],appointments:[
   {id:'a',entry_type:'personal',owner_id:'p1',title:'Lavoro',is_all_day:true,dates:['2026-10-09']},

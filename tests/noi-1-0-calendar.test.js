@@ -82,10 +82,15 @@ const timed = (id, owner, type, date, h1, h2) => ({ id, couple_id: 'c1', entry_t
 
 test('N2: the month shows the mesiversario every month; a 31st counts on the last day of a shorter month', async () => {
   const h = load({ now: '2026-02-10T10:00:00', month: () => ({ appointments: [], events: [], profiles: PROFILES, startedOn: '2024-01-31' }) });
+  // Il diario, ma pulito (15/11/2026): the day detail opens on a tap on the day
+  // (dayOpen); openCalendar only brings its month. The couple's dates get the red circle.
+  const tapDay = (day) => { const el = { dataset: { noiDay: day }, hasAttribute: () => false }; h.$('usNoiV2').handlers.click.forEach((fn) => fn({ target: { closest: (sel) => (sel === '[data-noi-day]' ? el : null) } })); };
   h.api.openCalendar({ date: '2026-02-28' });
   await settle();
   const grid = h.$('usNoiV2Content').innerHTML;
-  assert.match(grid, /data-noi-day="2026-02-28"[^>]*aria-label="[^"]*, 1 impegno"/, 'February has its mesiversario on the 28th');
+  assert.match(grid, /data-noi-day="2026-02-28"[^>]*aria-label="[^"]*, 1 impegno"><span class="dy-cal-n">28<svg class="dy-cal-circle"/, 'February has its mesiversario on the 28th');
+  assert.equal(h.$('usNoiV2Detail').hidden, true, 'no detail before a tap');
+  tapDay('2026-02-28');
   const detail = h.$('usNoiV2Detail').innerHTML;
   assert.match(detail, /<b>Mesiversario<\/b>/);
   assert.match(detail, /25 mesi insieme/);

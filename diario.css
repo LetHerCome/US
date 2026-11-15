@@ -322,3 +322,7 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 /* The question of today lives on Oggi; in Gioca its slot stays empty (studio). */
 #quiz .us-gv2-daily-slot[hidden]{display:none}
 .dy-game{border-radius:0}
+/* The notices take the tap (the region itself lets taps through, styles.css)
+   and keep vertical scrolling while the sideways swipe dismisses them. */
+.dy-notice,.dy-notice-swipe,.dy-notice-dismiss{pointer-events:auto}
+.dy-notice-swipe{touch-action:pan-y}

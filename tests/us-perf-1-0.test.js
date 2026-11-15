@@ -100,7 +100,7 @@ test('perf 1.0: a launch inside the same build serves the precached shell withou
   await sw.extendable('install');
   await sw.extendable('activate');
   sw.network.length = 0;
-  for (const asset of [...localRuntime(), '/assets/fonts/Figtree-Latin.woff2', '/assets/derived/runtime/us-icon-settings-128-v1.png', '/assets/derived/runtime/us-symbol-256-v1.png', '/assets/icons/phosphor/house-fill.svg']) {
+  for (const asset of [...localRuntime(), '/assets/fonts/Figtree-Latin.woff2', '/assets/derived/runtime/us-icon-settings-128-v1.png', '/assets/derived/runtime/us-symbol-256-v1.png', '/assets/icons/phosphor/envelope-simple-regular.svg']) {
     const response = await sw.fetchEvent(asset);
     assert.equal(await response.text(), `asset:${asset.split('?')[0]}`, asset);
   }

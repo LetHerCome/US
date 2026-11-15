@@ -9,13 +9,17 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 test('Foundation 01 distribuisce quattro destinazioni bottom-nav con touch target preservato', () => {
   const html = read('index.html');
   const css = read('fix4.css');
-  const nav = html.match(/<nav class="nav us-nav us-nav-premium"[\s\S]*?<\/nav>/)?.[0] || '';
+  // Il diario, ma pulito (15/11/2026): <nav class="dy-nav">, a bar fixed to the
+  // bottom edge: 4 equal columns; each button is the bar height minus 8px of top
+  // padding (the bar height comes from --us-nav-height; 52px in short landscape, fix4.css).
+  const nav = html.match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0] || '';
+  const diario = read('diario.css');
 
   assert.deepEqual([...nav.matchAll(/data-page="([^"]+)"/g)].map((match) => match[1]), ['home', 'bond', 'moments', 'quiz']);
-  assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)!important/);
-  assert.match(css, /\.nav button\{min-width:0;min-height:52px/);
-  assert.match(css, /bottom:max\(8px,var\(--us-safe-bottom\)\)/);
-  assert.match(css, /@media \(orientation:landscape\) and \(max-height:560px\)[\s\S]{0,1600}\.nav button\{min-height:46px/);
+  assert.match(diario, /\.dy-nav\{position:fixed;left:0;right:0;bottom:0;[^}]*display:grid;grid-template-columns:repeat\(4,1fr\);height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:8px calc\(10px \+ var\(--us-safe-right\)\) max\(18px,var\(--us-safe-bottom\)\)/);
+  assert.match(read('ui-foundation.css'), /--us-nav-height:66px;/);
+  assert.match(css, /@media \(orientation:landscape\) and \(max-height:560px\)\{:root\{--us-nav-height:52px\}/);
+  assert.match(diario, /\.dy-nav button\{[^}]*min-width:0;/);
 });
 
 test('Foundation 01 mantiene il contratto completo di navigation e Oggi', () => {
@@ -30,7 +34,9 @@ test('Foundation 01 mantiene il contratto completo di navigation e Oggi', () => 
   assert.doesNotMatch(app, /const swipePages=/);
   assert.doesNotMatch(html, /data-page="settings"/);
   assert.match(html, /id="usTodayPriorityRegion" hidden aria-live="polite"><\/div>/);
-  assert.doesNotMatch(html, /usTodayPriorityRegion[^>]*>[\s\S]*?(received|reveal ready|waiting for me|priority card)/i);
+  // Il diario, ma pulito (15/11/2026): the region is empty in the markup (the old lazy
+  // pattern ran across the rest of the page, which now follows the region).
+  assert.doesNotMatch(html, /usTodayPriorityRegion[^>]*>(?:(?!<\/div>)[\s\S])*?(received|reveal ready|waiting for me|priority card)/i);
 });
 
 test('partner apre solo Lasciato per te e il profilo resta un controllo foto', () => {
@@ -49,7 +55,8 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   // M12A: il centro è il marchio US; "I nostri eventi" resta raggiungibile da Noi
   // (US 1.0: il vecchio calendario a schermo intero non c'è più, Eventi è il link sotto il calendario di Noi).
   assert.doesNotMatch(html, /id="usEventsTopEntry"/);
-  assert.match(html, /class="us-top-brand"[^>]*role="img" aria-label="US"/);
+  // Il diario, ma pulito (15/11/2026): the centre of the Oggi header is «us» (dy-mark).
+  assert.match(html, /class="dy-mark"[^>]*role="img" aria-label="US"/);
   // Noi nuova (03/11/2026): Eventi si apre dalle date del calendario di Noi.
   assert.match(read('noi-v2.js'), /window\.openNoiSection\?\.\('eventi'\)/);
   assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);

@@ -51,8 +51,9 @@ test('M2 follow-up: la priority region resta in Oggi ma fuori dallo stack ritira
   assert.ok(home.indexOf(region) >= 0);
   assert.equal(stack.indexOf(region), -1, 'la notice personale non torna nello stack legacy');
   assert.ok(home.indexOf(region) < home.indexOf('id="usOggiStack"'));
-  assert.match(read('styles.css'), /\.us-today-priority-card[\s\S]{0,500}min-height:44px/);
-  assert.match(read('styles.css'), /#home #usTodayPriorityRegion\{[\s\S]*?position:fixed!important;[\s\S]*?pointer-events:none/);
+  // Il diario, ma pulito (15/11/2026): the notice is .dy-notice (64px tall) under the question, in the page flow.
+  assert.match(read('diario.css'), /\.dy-notice\{[^}]*min-height:64px/);
+  assert.match(home, /<div class="dy-more" id="dyMore">\s*<div id="usTodayPriorityRegion" hidden aria-live="polite"><\/div>/);
 });
 
 test('M2 compone le priorita in ordine P1 P2 P3 ma il renderer ne mostra una sola', () => {
@@ -142,7 +143,8 @@ test('M2 mantiene il renderer estendibile a future arrival type senza impilarle'
   const { api, region } = installPriorityRuntime();
   api.render([{ id: 'future-1', category: 'received_ready', attention: true, arrivalType: 'partner-reaction', title: 'Una reaction', detail: 'Dal partner', action: 'future', actionLabel: 'Apri' }]);
   assert.match(region.innerHTML, /data-us-arrival-type="partner-reaction"/);
-  assert.equal((region.innerHTML.match(/class="us-today-priority-card[ "]/g) || []).length, 1);
+  // Il diario, ma pulito (15/11/2026): the card class is .dy-notice.
+  assert.equal((region.innerHTML.match(/class="dy-notice[ "]/g) || []).length, 1);
   assert.match(region.innerHTML, /data-us-attention="on"/);
 });
 

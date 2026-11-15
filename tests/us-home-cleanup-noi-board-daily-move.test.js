@@ -18,9 +18,13 @@ test('Home cleanup: Oggi keeps photo/countdown dominant and retires the dashboar
   const home = html.match(/<main id="home"[\s\S]*?<\/main>/)?.[0] || '';
   assert.match(home, /id="usCountdownDisplay"/);
   assert.match(home, /id="usOggiStack"/, 'legacy state anchors remain mounted for existing authorities');
-  assert.match(styles, /#home #usOggiStack\{height:0!important;[^}]*visibility:hidden!important;[^}]*pointer-events:none!important\}/);
   assert.ok(home.indexOf('id="usTodayPriorityRegion"') < home.indexOf('id="usOggiStack"'), 'actionable notice lives outside the retired dashboard stack');
-  assert.match(read('dc-oggi.css'), /#home \.us-oggi-dock\{[\s\S]*?position:fixed;/, 'the actionable notice and the Domanda di oggi share one dock above the nav');
+  // Il diario, ma pulito (15/11/2026): the photo/countdown hero stays mounted but
+  // hidden; Oggi is the page of today: photo, sentence, characters, question, then the notices.
+  assert.match(home, /<section class="hero home-hero-only" id="homeHero"[^>]* hidden>/);
+  const oggi = home.slice(home.indexOf('id="dyOggi"'), home.indexOf('id="homeHero"'));
+  const order = ['id="dyPhoto"', 'id="dyFrase"', 'id="dyDuo"', 'id="dyQuestion"', 'id="usTodayPriorityRegion"'].map((id) => oggi.indexOf(id));
+  assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), `Oggi order ${order}`);
   assert.doesNotMatch(home, /noi-week-board|us-gv2-daily/, 'new destinations do not leak back into Oggi');
 });
 

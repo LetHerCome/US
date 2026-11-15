@@ -196,7 +196,10 @@ test('M6C (11): window labels read like 13:00 – 16:00 / dopo le 19:00 — neve
 test('M6C (12): the week view is a single vertical list at every width; the month view is untouched', () => {
   assert.match(noi(), /<div class="us-noi-v2-week-list" role="group" aria-label="La nostra settimana">/);
   // Parity: the week renders in the Lavagna sheet (#usNoiV2Week); the page keeps the month or the list.
-  assert.match(noi(), /container\.innerHTML=upcomingMarkup\(\);/);
+  // Il diario, ma pulito (15/11/2026): in «Prossimi» the page content is empty and
+  // the list is the «In arrivo» rows (renderUpcomingRows), the month card hidden.
+  assert.match(noi(), /if\(mode==='list'\)\{\s*container\.dataset\.state='ready';\s*container\.innerHTML='';/);
+  assert.match(noi(), /const card=\$\('dyCalCard'\);if\(card\)card\.hidden=mode==='list';/);
   assert.match(noi(), /container\.innerHTML=notice\+calendarMarkup\(index\);/);
   assert.match(noi(), /body\.innerHTML=weekMarkup\(index\)/);
   assert.doesNotMatch(html(), /id="usCalendarWeekList"|id="usCalendarAddBtn"|class="us-cal-fab/);

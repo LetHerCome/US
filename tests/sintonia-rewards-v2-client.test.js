@@ -36,7 +36,7 @@ test('a locked Plus extra says so on its tile', () => {
 const look = fs.readFileSync(path.join(__dirname, '..', 'oggi-look.js'), 'utf8');
 const lookCss = fs.readFileSync(path.join(__dirname, '..', 'oggi-look.css'), 'utf8');
 
-test('Aurora: the Plus extra of level 4, an effect of Oggi like the others', () => {
+test('Aurora: the Plus extra of level 4, an effect of Oggi like the others', { skip: 'Il diario, ma pulito (15/11/2026): i temi e gli effetti di Oggi sono in pausa con le Atmosfere: le loro regole sul vecchio hero sono state potate' }, () => {
   assert.match(look, /\{ id: 'aurora', name: 'Aurora', note: '[^']+', reward: 'oggi_effect_aurora', level: 4, count: \d+ \}/);
   assert.match(look, /aurora: \{ s: \[/);
   assert.match(lookCss, /\.us-oggi-fx\[data-fx="aurora"\]>i\{/);

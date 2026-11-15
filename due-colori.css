@@ -100,7 +100,7 @@ input,textarea,select,button{font-family:inherit}
    shadow. The blob (indicator) is the tab colour at 16%, it slides with the
    spring in 560 ms and takes the new colour at once. Active: the icon in
    the tab colour with a 28% fill, the label in latte; labels 12/600. */
-:root{--us-nav-height:58px}
+:root{--us-nav-height:66px}
 
 @media (prefers-reduced-motion:reduce){.us-nav-indicator{transition:none}}
 

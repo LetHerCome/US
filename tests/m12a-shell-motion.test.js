@@ -192,11 +192,11 @@ test('attention: global Left for You and Gioca Per voi share the same primitive'
   assert.doesNotMatch(envelope, /us-attention-orbit/);
   assert.match(envelope, /data-us-attention="off"/);
   assert.equal((topBar.match(/data-us-attention-icon/g) || []).length, 0, 'no orbit glyph in the header');
+  // Per voi (Il diario, ma pulito): a «Da giocare» row whose status tag says what waits for you.
   const games = read('games.js');
-  assert.match(games, /us-gv2-pervoi us-attention-orbit/);
-  assert.match(games, /data-gv2-action="per-voi"/);
-  assert.match(games, /data-us-attention=/);
-  assert.match(games, /data-us-attention-icon/);
+  assert.match(games, /class="dy-game" data-gv2-action="per-voi"/);
+  assert.match(games, />tocca a te<\/span>/);
+  assert.match(games, /dataset\.usAttention = attention \? 'on' : 'off';/);
 });
 
 test('attention: the primitive is generic (no envelope/Per voi selectors), slow with a rest, and reduced-motion aware', () => {
@@ -240,8 +240,9 @@ test('nav: navigation logic is untouched (go() still only toggles the active cla
 test('tiles: Gioca destinations share one press + destination primitive', () => {
   assert.doesNotMatch(html, /class="noi-hub-card|id="noiWeekBoardOpen"/);
   const games = read('games.js');
-  assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-game/);
-  assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-pervoi/);
+  // Il diario, ma pulito (15/11/2026): the games and Per voi are .dy-game rows, same primitive.
+  assert.match(games, /data-us-tile data-us-feedback="tap" class="dy-game" \$\{data\}/);
+  assert.match(games, /data-us-tile data-us-feedback="tap" class="dy-game" data-gv2-action="per-voi"/);
   assert.match(foundationCss, /\[data-us-tile\]:active\{transform:scale\(\.975\)\}/);
   assert.match(foundationCss, /@keyframes us-content-enter\{from\{opacity:0;transform:translate3d\(0,8px,0\)\}/);
   assert.match(read('styles.css'), /#bond \.noi-canonical-page:not\(\[data-noi-view="hub"\]\)>:is\(/);

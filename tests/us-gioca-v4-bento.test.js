@@ -25,7 +25,10 @@ function gameHub(instant='2026-10-09T22:30:00Z'){
 // already has: a round completed that day, and today's daily question.
 test('Round 3 G1: Sfida di oggi leads Gioca, then the 7-day strip and the existing game bento', async()=>{
   const html=await gameHub().html();
-  const keys=['data-gv4-daily-slot','id="usGv2Week"','class="us-gv2-choose"','data-gv2-action="per-voi"','data-gv2-action="swipe"','data-gv2-family="scopritevi"'];
+  // Il diario, ma pulito (15/11/2026): the header «Giochi a due», the (hidden) slot of the
+  // question of today, the challenge, then «Da giocare»: Per voi, Swipe, the families.
+  // The 7-day strip is gone.
+  const keys=['class="dy-hd"','data-gv4-daily-slot','data-wc-slot','class="dy-games"','data-gv2-action="per-voi"','data-gv2-action="swipe"','data-gv2-family="scopritevi"'];
   const positions=keys.map(k=>html.indexOf(k));
   assert.ok(positions.every(v=>v>=0),JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a,b)=>a-b),positions);
@@ -33,13 +36,10 @@ test('Round 3 G1: Sfida di oggi leads Gioca, then the 7-day strip and the existi
   assert.equal((html.match(/data-gv2-action="swipe"/g)||[]).length,1);
   // G7 1.0 — "E se…?" is no longer offered as a tile.
   assert.equal((html.match(/data-gv2-family="/g)||[]).length,5);
-  // 2026-10-09T22:30Z is Saturday 10 October in Rome: the week is 5 … 11.
-  const days=[...html.matchAll(/<b aria-hidden="true" translate="no">(\d+)<\/b>/g)].map(m=>Number(m[1]));
-  assert.deepEqual(days,[5,6,7,8,9,10,11]);
-  assert.equal((html.match(/aria-current="date"/g)||[]).length,1);
-  assert.match(html,/class="us-gv2-wd is-today" role="listitem" aria-current="date" aria-label="sabato 10 · oggi"><span aria-hidden="true" translate="no">S<\/span><b aria-hidden="true" translate="no">10<\/b>/);
+  assert.doesNotMatch(html,/id="usGv2Week"|class="us-gv2-wd/,'no week strip');
   assert.doesNotMatch(html,/us-gv2-rhythm|us-gv4-week|us-gv4-day/,'no budget strip, no old rail');
-  assert.match(html,/<span class="us-gv4-daily-pending-title">La domanda di oggi<\/span><small>Preparo la domanda di oggi…<\/small>/);
+  // The question of today lives on Oggi; its Gioca slot stays mounted but hidden.
+  assert.match(html,/<div class="us-gv2-daily-slot" data-gv4-daily-slot hidden><\/div>/);
   assert.doesNotMatch(html,/data-who=/,'no dot without real data');
   assert.doesNotMatch(html,/data-streak|data-completed-days|day-played/,'no fictitious past-day progress');
 });

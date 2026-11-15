@@ -101,3 +101,21 @@ Il founder il 15/11 (via la sessione principale): «per ora tieni questo logo po
 - I giochi sono quelli veri (Per voi, Questo o quello, Scopritevi, Confrontatevi, Ridete, Quanto mi conosci?, Rivivete), non i quattro del mockup; le icone sono nello stesso tratto.
 - La domanda di oggi non è più in Gioca (resta su Oggi), come nel mockup; la settimana a pallini e il contatore a pallini sono tolti. Sotto restano «La vostra domanda», «Da continuare» e le partite completate, non ancora ridisegnate.
 - Nella sfida: sparita la fila dei bonus ogni quattro sfide e la regola lunga; resta una riga con scadenza e punti, e «Cambia».
+
+## Da decidere con il founder
+
+- **Countdown:** da Oggi non si apre più (era sulla foto); l'editor c'è ancora (`USCountdown.open()`), ma il messaggio dice «Salvato e in Oggi». Dove lo mettiamo: nella frase del giorno, in Noi, o lo togliamo?
+- **«Come stai» e la batteria dell'altra persona:** non sono più su Oggi (la batteria resta nel foglio Distanza).
+- **Widget Android:** sono ancora sulla carta scura notte, non sui nuovi colori.
+- **Noi:** `openCalendar({date})` (da Oggi o dai promemoria) mostra il mese ma non apre il dettaglio del giorno.
+- **«Cambia» della sfida** è un bottone da 32 px come nel mockup, sotto i 44 px dei bersagli comodi.
+
+## Verifiche (15/11/2026)
+
+- `npm test`: 2779 test, 17 rossi, tutti già rossi su `main` pulito (prove browser instabili o dell'ambiente); 80 saltati con motivo «Il diario, ma pulito (15/11/2026): …» dove proteggevano funzioni ritirate (gatto, Atmosfere, vecchio hero, barra a pillola).
+- `npm run build:cloudflare-pages` e `git diff --check` puliti; shell offline sotto i 3,2 MB.
+- Prova a vista su «US LIVE» nell'emulatore, dati di staging: Oggi, Ti penso, Voi due, Noi, Ricordi, Gioca, Impostazioni, foglio della domanda.
+
+## Portarlo sul sito di staging (proposta, serve il via)
+
+Il sito `us-staging-s31` si costruisce dal branch fisso di staging, non da questo. Proposta: unire `claude/diario-pulito-c85387` nel branch di staging con una PR verso di lui (mai verso `main`), poi lanciare la build di staging come per le patch precedenti. Per Android basta US LIVE; un APK di staging serve solo per i tester.
