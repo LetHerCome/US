@@ -37,7 +37,8 @@ test('a commitment for tomorrow added in Noi is Oggi\'s next one, refreshed afte
   await page.evaluate(()=>document.getElementById('usOggiNext').click());
   await page.waitForFunction(()=>document.getElementById('usCalendarDetailSheet')?.getAttribute('aria-hidden')==='false');
   await page.waitForFunction(()=>document.querySelector('.page.active')?.id==='bond',null,{timeout:5000});
-  assert.equal(await page.locator('#usCalendarDetailTitle').innerText(),'Cena da Marco');
+  // Mockup v5 «I fogli» (16/11/2026): the day is the title, the commitment its first line.
+  assert.equal(await page.locator('#usCalendarDetailBody .dy-cal-name').innerText(),'Cena da Marco');
   await page.locator('#usCalendarDetailDelete').tap();await page.locator('[data-us-confirm="ok"]').tap();
   await page.waitForFunction(()=>document.getElementById('usOggiNext').hidden);
   // The partner's commitments count too; returning to Oggi reads them.

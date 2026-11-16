@@ -214,9 +214,19 @@ Mockup v5 «I fogli» (https://claude.ai/artifact/Phwo9n9Q8sZro7jX8HAN6Y, sezion
   - le scelte sono ancora le righe con A/B, non le due schede grandi del mockup;
   - mancano il personaggio sulla scelta presa e il cerchio rosso sulle scelte uguali (`games.js` non è stato riscritto).
 
-**Non ancora portati** (bottoni già in inchiostro, cornice di prima): la galleria e la foto grande del ricordo, i nostri eventi e il nuovo evento, Come stai, il countdown, le vostre idee, la bacheca, la lavagna, lo sblocco e il nuovo livello di Sintonia, la distanza, i widget, il vostro anno, Conservati, Dove, Personalizza Oggi (in pausa con le Atmosfere). Restano anche i fogli senza tasto (Questa settimana, Capitoli, Stories, la distanza vecchia): il loro CSS non è ancora tolto.
+**Non ancora portati** (bottoni già in inchiostro, cornice di prima): la galleria e la foto grande del ricordo, i nostri eventi e il nuovo evento, Come stai, il countdown, le vostre idee, la bacheca, la lavagna, lo sblocco e il nuovo livello di Sintonia, la distanza, i widget, il vostro anno, Conservati, Dove, Personalizza Oggi (in pausa con le Atmosfere). **Fogli senza tasto (D5).** Prima di toglierli ho controllato che nessun tasto li apra.
+- «Questa settimana» (`#usNoiLavagna`): nessuno chiama `openCalendar({mode:'week'})`. Tolti markup e CSS.
+- «Capitoli» (`#ricordiChapterOverlay`): si apriva solo dalla sezione `#ricordiChapters`, che `diario.css` nasconde. Tolti markup e CSS.
+- In tutti e due i casi il codice (`noi-v2.js`, `app.js`, `navigation.js`) esce da solo se l'elemento non c'è.
+- La distanza vecchia (`openDistanceDetail`) è una conferma: non ha un CSS suo da togliere.
+- Il CSS delle Stories resta, perché «Archivio Stories» nelle Impostazioni (solo web) lo usa ancora.
+
+**Livelli.** Ti penso ricevuto resta sotto i fogli (`--us-layer-transient`). La conferma sta sopra tutti i fogli (nuovo token `--us-layer-confirm`, 10300, lo stesso numero di prima).
 
 **Verifiche (16/11/2026)**
 - `npm test`: 2782 test, 0 rossi, 145 saltati (gli stessi di prima, le prove nel browser senza Playwright). Sulla base, nello stesso giro, era rosso solo «Noi gets the next headline…», che a volte passa e a volte no.
-- Prove nel browser con Playwright (`PLAYWRIGHT_NODE_MODULES`): vedi il resoconto della sessione.
-- Shell offline: 3.259.335 byte, contro i 3.308.706 della base. Il margine sotto i 3,2 MB passa da 46 a 96 KB.
+- Prove nel browser con Playwright (`PLAYWRIGHT_NODE_MODULES`), tutte e 76 sul branch e sulla base:
+  - sono rossi gli stessi test sulle due parti (navigation soak, gatto, anteprime di Sintonia e altri già rossi sulla base);
+  - i due che il branch rompeva (livelli, dettaglio dell'impegno da Oggi) sono sistemati;
+  - `us-v6-daily-reveal-browser` è aggiornato al nuovo foglio della domanda.
+- Shell offline: 3.253.222 byte, contro i 3.308.706 della base. Il margine sotto i 3,2 MB passa da 46 a 102 KB.

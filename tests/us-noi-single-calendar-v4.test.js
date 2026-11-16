@@ -40,7 +40,8 @@ test('La nostra settimana is in Noi and restores month, linked-idea picker remai
   // Noi nuova (03/11/2026): no Lavagna tile; the week opens through openCalendar.
   assert.match(noi,/mode=requestedMode==='week'\?'week':'calendar';/);
   assert.doesNotMatch(html,/data-noi-open-link/);
-  assert.match(html,/id="usNoiV2WeekBack" hidden/);
+  // Founder, 16/11/2026 (mockup v5 «I fogli», D5): no button opened the week sheet any more; its markup left.
+  assert.doesNotMatch(html,/id="usNoiLavagna"/);
   assert.match(noi,/window\.UsCalendarLinks\?\.createForIdeaDate/);
   assert.match(calendar,/async function createCalendarEntryForIdeaDate\(dateISO\)/);
   assert.match(calendar,/openIdeaForm\(pick,dateISO\)/);

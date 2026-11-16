@@ -154,31 +154,8 @@
 #bond .us-noi-v2 .us-noi-v2-empty-month .us-noi-v2-text-action{min-height:44px;padding:0 12px;font-size:14px;font-weight:500;color:var(--us-color-text-3)}
 
 /* ---------- Lavagna (the mockup's Foglio "Questa settimana") ---------- */
-#usNoiLavagna{--us-sheet-k:var(--us-noi)}
-#usNoiLavagna [data-owner]{--dc-who:var(--us-noi)}
-#usNoiLavagna [data-owner="tu"]{--dc-who:var(--us-tu)}
-#usNoiLavagna [data-owner="partner"]{--dc-who:var(--us-partner)}
-#usNoiLavagna.us-foglio>.us-noi-lavagna-sheet{display:grid;align-content:start;gap:12px;min-height:min(calc(var(--us-viewport-height,100dvh) * .86),calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 8px));padding:0 20px calc(24px + var(--us-safe-bottom))}
-#usNoiLavagna .us-noi-lavagna-body{display:grid;gap:12px;min-width:0;touch-action:pan-y}
-#usNoiLavagna .us-noi-v2-week-list{display:grid;gap:6px}
-#usNoiLavagna .us-noi-v2-week-row{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:10px;min-height:54px;padding:8px 12px;border:0;border-radius:16px;background:var(--us-color-surface-2)}
-#usNoiLavagna .us-noi-v2-week-row.is-today{box-shadow:inset 0 0 0 1.5px var(--us-tu)}
-#usNoiLavagna .us-noi-v2-list-date{position:relative;display:block;min-height:0;margin:0;padding:0;border:0;background:none;text-align:left;font-family:var(--us-font-ui);font-size:10px;font-weight:700;line-height:1.5;letter-spacing:.1em;text-transform:uppercase;color:var(--us-color-text-3);cursor:pointer}
-#usNoiLavagna .us-noi-v2-list-date::after{content:"";position:absolute;inset:-8px -12px}
-#usNoiLavagna .us-noi-v2-list-date b{display:block;font-family:var(--us-font-display);font-weight:400;font-size:22px;line-height:1;letter-spacing:0;color:var(--us-color-text)}
-#usNoiLavagna .us-noi-v2-list-date small{font:inherit}
-#usNoiLavagna .us-noi-v2-week-lane{display:flex;flex-wrap:wrap;align-items:center;gap:5px;min-width:0}
-#usNoiLavagna .us-noi-v2-chip{position:relative;min-height:0;max-width:100%;padding:5px 10px;border-radius:999px;border:0;background:var(--dc-who);color:var(--us-inchiostro);font-family:var(--us-font-ui);font-size:12px;font-weight:600;line-height:1.5;text-align:left;overflow-wrap:anywhere;cursor:pointer}
-#usNoiLavagna .us-noi-v2-chip::after{content:"";position:absolute;inset:-6px -2px}
-#usNoiLavagna .us-noi-v2-chip:focus-visible{outline:2px solid var(--us-color-text);outline-offset:2px}
-#usNoiLavagna .us-noi-v2-free{cursor:default}
-#usNoiLavagna .us-noi-v2-free::after{content:none}
-#usNoiLavagna .us-noi-v2-week-empty{padding:0;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
+
 /* The free evenings of both of you, then the mockup's hint, in its small note. */
-#usNoiLavagna .us-noi-v2-week-summary{display:flex;align-items:center;justify-content:center;gap:6px;margin:0;font-size:12px;font-weight:600;line-height:1.5;color:var(--us-color-text-2)}
-#usNoiLavagna .us-noi-v2-week-summary .us-icon{--us-icon-size:14px;width:14px;height:14px;color:var(--us-noi)}
-#usNoiLavagna .us-noi-v2-week-note{margin:0;font-size:12px;line-height:1.5;color:var(--us-color-text-3);text-align:center}
-#usNoiLavagna .us-noi-v2-week-summary+.us-noi-v2-week-note{margin-top:-10px}
 
 /* ---------- Lavagna · Missioni · Eventi tiles ---------- */
 
@@ -360,9 +337,6 @@
 /* Impegno: when, where and whose, in the mockup's .ev-meta card. */
 
 /* The Foglio head of the mockup: no sticky bar, no divider; the kicker in the owner's colour. */
-:is(#usNoiLavagna)>[data-us-modal-panel]>.us-cal-sheet-head{position:static!important;margin:0;padding:30px 20px 0!important;border:0!important;background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important}
-:is(#usNoiLavagna)>[data-us-modal-panel]>.us-cal-sheet-head .tiny{line-height:16.5px!important;margin:0 0 1.5px!important}
-:is(#usNoiLavagna) .us-cal-sheet-titles{gap:0}
 
 /* Nuovo impegno: quick titles, fields with small caps labels, a real switch. */
 

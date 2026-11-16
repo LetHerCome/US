@@ -643,3 +643,7 @@ html[data-us-motion="reduced"] .dy-think-heart{animation:none}
 .dy-f-switch:focus-visible,.dy-chip-o:focus-visible{outline:3px solid var(--us-pencil);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.dy-f-switch,.dy-f-switch::before{transition:none}}
 html[data-us-motion="reduced"] .dy-f-switch,html[data-us-motion="reduced"] .dy-f-switch::before{transition:none}
+/* The ladder (ui-foundation.css): the Ti penso arrival stays under every
+   sheet, the confirmation above them all. */
+#thinkArrival.dy-foglio{z-index:var(--us-layer-transient)}
+.dy-foglio.us-confirm{z-index:var(--us-layer-confirm)}

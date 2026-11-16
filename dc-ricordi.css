@@ -168,18 +168,6 @@
 #moments .ricordi-chapter small{font-size:12px;font-weight:600;color:var(--us-color-text-2)}
 
 /* A year as a sheet: "Capitoli · 2025", one line, then its photos three by three. */
-.ricordi-chapter-overlay{position:fixed;inset:0;z-index:10070;display:none}
-.ricordi-chapter-overlay.show{display:flex}
-.ricordi-chapter-backdrop{position:absolute;inset:0}
-#ricordiChapterOverlay{--us-sheet-k:var(--us-ambra)}
-#ricordiChapterOverlay>.ricordi-chapter-sheet[data-us-modal-panel]{z-index:1;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:12px;min-height:calc(var(--us-viewport-height,100dvh) * .86);padding:30px 20px calc(24px + var(--us-safe-bottom,0px))!important}
-.ricordi-chapter-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.ricordi-chapter-lead{margin:0;font-size:15px;line-height:1.4;color:var(--us-color-text-2)}
-.ricordi-chapter-thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-.ricordi-chapter-thumb{position:relative;display:block;width:100%;aspect-ratio:1;margin:0;padding:0;border:0;border-radius:14px;overflow:hidden;background:var(--us-color-surface-2);transition:transform .3s var(--us-ease-spring)}
-.ricordi-chapter-thumb:active{transform:scale(.95)}
-.ricordi-chapter-thumb:focus-visible{outline:2px solid var(--us-ambra);outline-offset:2px}
-.ricordi-chapter-thumb img{display:block;width:100%;height:100%;object-fit:cover}
 
 /* ==========================================================================
    Galleria: the album opens as one full photo, from where it was tapped.

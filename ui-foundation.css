@@ -32,6 +32,7 @@
   --us-layer-ambient:10040;
   --us-layer-sheet:10060;
   --us-layer-auth:10250;
+  --us-layer-confirm:10300;           /* the one confirmation sheet (UsUiFoundation.confirm) */
   --us-layer-app-lock:2147483000;     /* Native Security V1: above everything, incl. auth */
 
   /* Due colori, un Noi (approved 2026-10-14). Each person has a colour,

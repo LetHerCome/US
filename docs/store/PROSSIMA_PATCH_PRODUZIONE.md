@@ -26,7 +26,7 @@
 
 **Da sapere prima della produzione:** «Elimina account», «Esci dalla coppia» ed «Elimina» non sono più rossi (scelta del founder del 16/11: il rosso è del cuore e della matita); il titolo della conferma dice cosa sparisce. Restano col disegno vecchio (ma coi bottoni in inchiostro): galleria del ricordo, eventi, Come stai, countdown, idee, bacheca, lavagna, sblocco di Sintonia, distanza, widget, il vostro anno, Conservati, Dove. Solo web: nessuna migrazione, nessuna Edge, nessun AAB necessario (basta il sito; l'app installata prende il web nuovo).
 
-**Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.259.335 byte (margine 96 KB, prima 46 KB): tolte circa 82 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`.
+**Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
 ### Iscrizione: prima il codice, poi la domanda (14/11)
 
