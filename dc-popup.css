@@ -418,7 +418,7 @@ body.us-keyboard-open.us-update-visible.us-status-visible .app-status-bar{bottom
   @starting-style{
     [data-us-motion-surface]:is(#usCountdownSheet,#usEventsOverlay,#usWidgetHub,#conservatiOverlay,#usCalendarOverlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{opacity:0}
   }
-  
+
   .toast{transform:translateX(-50%);transition:opacity var(--us-pop-fade) var(--us-ease-standard)}
   :is(.app-status-bar,.app-update-bar){transition:none}
 }

@@ -578,7 +578,7 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
 @media (prefers-reduced-motion:reduce){
   #thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,.us-look-overlay .us-look-sheet{animation:none!important}
   #home .us-daily-ritual-ring *{transition:none!important}
-  
+
   #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-fade .2s linear both!important}
   #leftForYouPartnerEntry.us-attention-orbit[data-us-attention="on"]::after{animation:none;transition:none}
   #home .home-photo-shade{transition:none}
@@ -592,4 +592,3 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
 #home #usTodayPriorityRegion .us-today-priority-card[data-us-arrival-type="challenge"] .us-today-priority-action{background:var(--us-ambra)}
 
 /* Conservati's door at the bottom of Lasciato per te (04/11/2026): Ricordi is only the album. */
-
