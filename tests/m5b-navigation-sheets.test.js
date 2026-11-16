@@ -33,10 +33,13 @@ test('le superfici concordate adottano l opt-in motion', () => {
   const albums = read('moments-albums.js');
   const foundation = read('ui-foundation.css');
 
-  ['today', 'usEventsOverlay', 'usSettingsOverlay'].forEach((id) => {
+  // Mockup v5 «I fogli» (16/11/2026): the question of today moves in diario.css (.dy-foglio).
+  assert.match(index, /id=["']today["'] class="dy-foglio"/);
+  assert.match(index, /class="dy-foglio" id=["']usSettingsOverlay["']/);
+  ['usEventsOverlay'].forEach((id) => {
     assert.match(index, new RegExp(`id=["']${id}["'][^>]*data-us-motion-surface`));
   });
-  assert.match(albums, /overlay\.setAttribute\('data-us-motion-surface',\s*''\)/);
+  assert.match(albums, /overlay\.className = 'dy-foglio us-moment-compose-overlay'/); // mockup v5 «I fogli»: the one sheet moves itself
   assert.match(index, /id=["']momentViewer["'][^>]*data-us-motion-surface/);
   assert.match(foundation, /\[data-us-motion-surface\]\[data-us-motion-exiting\]/);
   assert.match(foundation, /\[data-us-motion-surface\] \.us-modal-backdrop/);

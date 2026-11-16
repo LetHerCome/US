@@ -44,7 +44,9 @@ const roleOf = (e) => e.role; // tests pass the role directly on the entry
 // (1) the week opens from "La nostra settimana" and "Torna al mese" leaves it; no new tab.
 test('M6C (1): "La nostra settimana" opens the week, "Torna al mese" leaves it; never a bottom-nav destination', () => {
   // Parity: the week is the mockup's Lavagna Foglio; its close button leaves it.
-  assert.match(html(), /id="usNoiV2WeekBack" hidden data-us-modal-close aria-label="Chiudi la lavagna">/);
+  // Founder, 16/11/2026 (mockup v5 «I fogli», D5): no button opened the week sheet any more, so its
+  // markup left; the code below stays and does nothing without it.
+  assert.doesNotMatch(html(), /id="usNoiV2WeekBack"/);
   assert.match(noi(), /\$\('usNoiV2WeekBack'\)\?\.addEventListener\('click',closeWeek\)/);
   assert.match(noi(), /function closeWeek\(\)\{\s*if\(mode!=='week'\)return;\s*mode='calendar';render\(\);\s*\}/);
   assert.doesNotMatch(html(), /data-page="calendar"/);

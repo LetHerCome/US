@@ -151,7 +151,7 @@ body.us-keyboard-open .dy-nav{opacity:0;pointer-events:none;transform:translateY
 .dy-over.is-closing .dy-sheet{animation:dy-sheet-down .24s cubic-bezier(.4,0,1,1) forwards}
 @keyframes dy-fade{from{opacity:0}to{opacity:1}}
 @keyframes dy-sheet-up{from{transform:translateY(100%)}to{transform:none}}
-@keyframes dy-sheet-down{from{transform:none}to{transform:translateY(100%)}}
+@keyframes dy-sheet-down{to{transform:translateY(100%)}}
 .dy-grab{display:block;width:40px;height:5px;border-radius:3px;background:var(--us-ink-12);margin:0 auto 14px}
 .dy-sheet-head{display:flex;justify-content:space-between;align-items:center}
 .dy-sheet-title{margin:0;font:800 26px/1 var(--us-font-ui);letter-spacing:-.02em}
@@ -430,3 +430,220 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 .dy-shape[aria-pressed="true"]{background:var(--us-card);box-shadow:inset 0 0 0 2px var(--us-ink-100);font-weight:800}
 @media (prefers-reduced-motion:reduce){.dy-set .dy-sw::before,.dy-set .dy-sw i{transition:none}}
 html[data-us-motion="reduced"] .dy-set .dy-sw::before,html[data-us-motion="reduced"] .dy-set .dy-sw i{transition:none}
+
+/* ================================================================ fogli */
+/* Il foglio unico (founder, 16/11/2026, mockup v5 «I fogli»): every sheet
+   that rises over the tabs has the same parts as «Voi due». The handle, the
+   title with one word in italics, the square close of 36, the card paper with
+   28 on top, one ink button of 52 and the others in outline, rows of 58 on a
+   hairline, what you two write in your hand with your character beside it.
+   The feature JS keeps open/close, aria-hidden and focus (ui-foundation.js);
+   the panel rises with a keyframe (out of display:none) and leaves on a
+   transform transition, which is what exitSurface() waits for.
+   Why it moves: it rises because it rests on the page you were on, so when
+   it closes you are still there. Nothing inside moves unless something
+   happens (an answer comes into focus, a character hops). */
+.dy-foglio{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.dy-foglio[aria-hidden="true"]:not(.open):not(.show),.dy-foglio[hidden]{display:none}
+.dy-foglio-scrim{position:absolute;inset:0;background:var(--us-scrim);animation:dy-fade .2s ease-out;transition:opacity .2s ease-in}
+.dy-foglio-panel{position:relative;width:100%;max-width:560px;max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 12px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;background:var(--us-card);color:var(--us-ink-100);border-radius:28px 28px 0 0;padding:10px calc(20px + var(--us-safe-right)) calc(28px + var(--us-safe-bottom)) calc(20px + var(--us-safe-left));box-shadow:0 -10px 30px rgba(20,18,14,.2);text-align:left;animation:dy-sheet-up .34s cubic-bezier(.2,.8,.2,1);transition:transform .24s cubic-bezier(.4,0,1,1)}
+.dy-foglio-panel::-webkit-scrollbar{display:none}
+.dy-foglio[data-us-motion-exiting]{pointer-events:none}
+.dy-foglio[data-us-motion-exiting] .dy-foglio-scrim{opacity:0}
+.dy-foglio[data-us-motion-exiting] .dy-foglio-panel{animation:none;transform:translateY(100%)}
+.dy-foglio-panel.is-dragging,.dy-sheet.is-dragging{transition:none}
+.dy-foglio .dy-grab,.dy-foglio .dy-sheet-head,.dy-over .dy-grab,.dy-over .dy-sheet-head{touch-action:none}
+body.us-keyboard-open .dy-foglio{bottom:auto;height:var(--us-viewport-height,100dvh)}
+.dy-sheet-head{gap:12px}
+.dy-sheet-head>div{min-width:0}
+.dy-sheet-title{line-height:1.08;overflow-wrap:anywhere}
+.dy-sheet-sub{margin:6px 0 0;font:500 13.5px/1.4 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-sheet-sub:empty{display:none}
+.dy-close{flex:none;align-self:flex-start}
+/* The body: a column with one rhythm. */
+.dy-f-body{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+.dy-f-body[hidden],.dy-f-acts[hidden],.dy-f-note[hidden],.dy-f-sign[hidden],.dy-f-in[hidden]{display:none}
+.dy-f-q{font:700 var(--us-text-20)/1.3 var(--us-font-ui);letter-spacing:-.01em;color:var(--us-ink-100);overflow-wrap:anywhere}
+.dy-f-lab{display:flex;flex-direction:column;gap:6px;font:700 var(--us-text-13)/1.2 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-f-in{display:block;box-sizing:border-box;width:100%;min-height:52px;margin:0;border:0;border-radius:var(--us-r-12);background:var(--us-beige);padding:0 14px;font:600 var(--us-text-15)/1.3 var(--us-font-ui);color:var(--us-ink-100);-webkit-appearance:none;appearance:none}
+.dy-f-in::placeholder{color:var(--us-ink-40);font-weight:500;opacity:1}
+.dy-f-in:focus-visible{outline:2px solid var(--us-ink-100);outline-offset:0}
+textarea.dy-f-in{padding:12px 14px;resize:none}
+.dy-f-hand{min-height:112px;font:21px/1.3 var(--us-font-hand)}
+.dy-f-hand::placeholder{font-weight:400}
+.dy-f-field{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.dy-f-count{align-self:flex-end;font:600 12px/1 var(--us-font-ui);color:var(--us-ink-40)}
+.dy-f-count:empty{display:none}
+.dy-f-note{display:flex;align-items:center;gap:8px;margin:0;font:500 12.5px/1.35 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-f-note:empty{display:none}
+.dy-f-ico{flex:none;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* Someone did it, waits or arrives: their character, small, like a signature. */
+.dy-f-sign{display:flex;align-items:flex-start;gap:10px}
+.dy-f-sign>.dy-stk{flex:none;margin-top:1px}
+.dy-f-sign-body{flex:1;min-width:0;font:21px/1.25 var(--us-font-hand);color:var(--us-ink-100);overflow-wrap:anywhere}
+.dy-f-wait{flex:1;min-width:0;align-self:center;font:600 12.5px/1.35 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-f-paper{padding:16px;border-radius:var(--us-r-16);background:var(--us-beige);color:var(--us-ink-100)}
+/* The actions: one ink button the width of the sheet, the others in outline. */
+.dy-f-acts{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.dy-f-acts>.dy-btn{width:100%}
+.dy-f-acts.is-row{flex-direction:row}
+.dy-f-acts.is-row>.dy-btn{flex:1;min-width:0}
+.dy-btn:disabled,.dy-btn[aria-disabled="true"]{background:var(--us-ink-12);color:var(--us-ink-40);box-shadow:none;cursor:default}
+.dy-btn-ghost:disabled{background:transparent;box-shadow:inset 0 0 0 1.5px var(--us-ink-08)}
+.dy-btn[hidden]{display:none}
+/* Rows of 58 on a hairline, as in Impostazioni. */
+.dy-f-row{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;margin:0;padding:7px 0;border:0;border-bottom:1px solid var(--us-ink-08);background:transparent;font:inherit;color:var(--us-ink-100);text-align:left}
+.dy-f-row:last-child{border-bottom:0}
+button.dy-f-row{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dy-f-row-ic{flex:none;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--us-beige);color:var(--us-ink-100)}
+.dy-f-row-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dy-f-row-tx b{font:700 var(--us-text-15)/1.25 var(--us-font-ui)}
+.dy-f-row-tx small,.dy-f-row-tx span{font:500 12.5px/1.3 var(--us-font-ui);color:var(--us-ink-60)}
+/* A choice among a few: tiles in a row, the chosen one in ink. */
+.dy-tiles{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}
+.dy-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:48px;margin:0;padding:6px 4px;border:0;border-radius:var(--us-r-12);background:var(--us-beige);color:var(--us-ink-100);font:600 12.5px/1.15 var(--us-font-ui);text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dy-tile svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dy-tile[aria-pressed="true"],.dy-tile[aria-selected="true"],.dy-tile.is-active{background:var(--us-ink-100);color:var(--us-paper);font-weight:800}
+.dy-f-row:focus-visible,.dy-tile:focus-visible,.dy-close:focus-visible{outline:3px solid var(--us-pencil);outline-offset:2px}
+/* «Riduci movimento»: the sheet appears and goes without moving. */
+@media (prefers-reduced-motion:reduce){.dy-foglio-panel,.dy-foglio-scrim,.dy-foglio .dy-q-unblur,.dy-foglio .dy-hop{animation:none;transition:none}}
+html[data-us-motion="reduced"] .dy-foglio-panel,html[data-us-motion="reduced"] .dy-foglio-scrim,html[data-us-motion="reduced"] .dy-foglio .dy-q-unblur,html[data-us-motion="reduced"] .dy-foglio .dy-hop{animation:none;transition:none}
+/* La domanda di oggi (#today, app.js): the two answers signed, the reactions
+   under the other's, in ink when chosen. */
+.dy-f-react{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0 40px}
+.dy-f-react .dy-btn[aria-pressed="true"]{background:var(--us-ink-100);color:var(--us-paper);box-shadow:none}
+.dy-f-react .us-icon{--us-icon-size:18px}
+.dy-foglio .today-answer>.dy-f-note{margin:8px 0 0 40px}
+/* La conferma (UsUiFoundation.confirm / notice): a short sheet; the list of the Novità. */
+.dy-f-list{margin:14px 0 0;padding:0 0 0 18px;font:500 14px/1.45 var(--us-font-ui);color:var(--us-ink-80)}
+.dy-f-list li{margin-bottom:6px}
+/* Ti penso ricevuto (#thinkArrival, app.js): a short sheet over Oggi. */
+.dy-think-who{position:relative;display:flex;justify-content:center;padding:14px 0 4px}
+.dy-think-who .dy-hop{animation-delay:.22s}
+.dy-think-heart{position:absolute;left:calc(50% + 34px);top:8px;width:30px;height:30px;animation:dy-pop .45s .34s cubic-bezier(.2,1.6,.4,1) both}
+.dy-think-heart svg,.dy-think-glyph svg{display:block;width:100%;height:100%;fill:var(--us-think);stroke:none}
+.dy-think-react{margin-top:16px}
+.dy-think-react .dy-tile{min-height:76px;gap:6px;font-size:13px;font-weight:700}
+.dy-think-react .dy-tile:disabled{opacity:.55;cursor:default}
+.dy-think-react .dy-tile[aria-pressed="true"]:disabled{opacity:1}
+.dy-think-glyph{display:block;width:26px;height:26px;font-size:24px;line-height:26px;text-align:center}
+.dy-think-status{justify-content:center;margin-top:12px}
+@media (prefers-reduced-motion:reduce){.dy-think-heart{animation:none}}
+html[data-us-motion="reduced"] .dy-think-heart{animation:none}
+/* Lasciato per te (#leftForYouOverlay, #leftForYouComposerOverlay,
+   left-for-you.js): who left it signs with their character, what you write is
+   in your hand, the kind of message is a row of tiles. The envelope stays: it
+   opens once, because the message opens once. */
+.dy-lfy-from{align-items:center}
+.dy-lfy-from-copy{display:flex;flex-direction:column;gap:1px;min-width:0}
+.dy-lfy-from-copy b{font:800 var(--us-text-15)/1.25 var(--us-font-ui);color:var(--us-ink-100)}
+.dy-lfy-from-copy small{font:500 12.5px/1.3 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-lfy-from-copy small:empty{display:none}
+#leftForYouConserve.is-conserved{background:transparent;color:var(--us-ink-100);box-shadow:inset 0 0 0 1.5px var(--us-ink-12)}
+.dy-lfy-kept{margin-top:4px;border-top:1px solid var(--us-ink-08)}
+.dy-lfy-kept[hidden]{display:none}
+.dy-lfy-count{flex:none;font:600 13px/1 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-f-pick{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;min-height:64px;margin:0;padding:12px 14px;border:0;border-radius:var(--us-r-16);background:var(--us-beige);color:var(--us-ink-100);font:inherit;text-align:left;cursor:pointer}
+.dy-f-pick b{font:700 var(--us-text-15)/1.25 var(--us-font-ui)}
+.dy-f-pick small{font:500 12.5px/1.3 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-f-pick:focus-visible{outline:3px solid var(--us-pencil);outline-offset:2px}
+.dy-foglio .left-for-you-composer-panel{display:flex;flex-direction:column;gap:10px}
+.dy-foglio .left-for-you-composer-panel[hidden]{display:none}
+.dy-foglio .left-for-you-photo-actions{display:grid;gap:8px}
+.dy-foglio :is(.left-for-you-loading,.left-for-you-empty,.left-for-you-error){padding:8px 0;color:var(--us-ink-60);font:500 var(--us-text-15)/1.4 var(--us-font-ui)}
+.dy-foglio :is(.left-for-you-empty,.left-for-you-error) h3{margin:0 0 10px;font:800 var(--us-text-20)/1.25 var(--us-font-ui);color:var(--us-ink-100)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+/* The envelope of Lasciato per te (left-for-you.js openLetter): paper, a card
+   letter written by hand, the seal in your two colours. */
+.dy-foglio .left-for-you-item .left-for-you-kind{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.dy-foglio .left-for-you-item.is-letter{display:block;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+.dy-foglio .left-for-you-item.is-letter::before,.dy-foglio .left-for-you-item.is-letter::after{content:none}
+.dy-foglio .left-for-you-env-stage{display:grid;place-items:center;width:100%;height:calc(214px + var(--letter-extra,0px));perspective:700px}
+.dy-foglio .left-for-you-env{position:relative;width:220px;height:140px;margin-top:calc(50px + var(--letter-extra,0px))}
+.dy-foglio .left-for-you-env-back{position:absolute;inset:0;border-radius:12px;background:color-mix(in srgb,var(--us-beige) 86%,var(--us-ink-100))}
+.dy-foglio .left-for-you-env-letter{position:absolute;left:12px;right:12px;top:10px;height:118px;overflow:hidden;padding:12px 14px;border-radius:10px;background:var(--us-card);box-shadow:0 1px 3px rgba(20,18,14,.18);color:var(--us-ink-100);font:20px/1.25 var(--us-font-hand);text-align:left}
+.dy-foglio .left-for-you-env-letter small{display:block;margin-bottom:4px;font:700 12px/1.3 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-foglio .left-for-you-env-letter :is(.left-for-you-text,.left-for-you-note){position:static;margin:0;padding:0;border:0;background:none;box-shadow:none;color:inherit;font:inherit;white-space:pre-wrap;overflow-wrap:anywhere;animation:none}
+.dy-foglio .left-for-you-env-front{position:absolute;inset:0;border-radius:12px;background:var(--us-beige);clip-path:polygon(0 30%,50% 64%,100% 30%,100% 100%,0 100%)}
+.dy-foglio .left-for-you-env-flap{position:absolute;left:0;right:0;top:0;z-index:3;height:72%;background:color-mix(in srgb,var(--us-beige) 92%,var(--us-ink-100));clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;backface-visibility:hidden}
+.dy-foglio .left-for-you-env-seal{position:absolute;left:50%;top:58%;z-index:4;width:30px;height:20px;translate:-50% -50%}
+.dy-foglio .left-for-you-env.is-open .left-for-you-env-flap{z-index:0;transform:rotateX(180deg)}
+.dy-foglio .left-for-you-env.is-open .left-for-you-env-seal{opacity:0}
+.dy-foglio .left-for-you-env.is-open .left-for-you-env-letter{height:calc(118px + var(--letter-extra,0px));translate:0 calc(-64px - var(--letter-extra,0px))}
+.dy-foglio .left-for-you-env.is-open.is-still .left-for-you-env-letter{translate:0 calc(-60px - var(--letter-extra,0px))}
+.dy-foglio .left-for-you-env-letter:has(.left-for-you-env-photo){padding:10px 12px;font-size:18px}
+.dy-foglio .left-for-you-env-photo{display:block;width:100%;height:44px;margin:0 0 6px;padding:0;overflow:hidden;border:0;border-radius:6px;background:var(--us-beige);cursor:zoom-in}
+.dy-foglio .left-for-you-env-photo img{display:block;width:100%;height:100%;object-fit:cover}
+.dy-foglio .left-for-you-item.is-letter>.left-for-you-photo{display:none}
+.dy-foglio .left-for-you-item.is-letter.is-photo-open>.left-for-you-photo{display:block;width:100%;margin-top:12px;border-radius:var(--us-r-16)}
+.dy-foglio .left-for-you-vn-frame{padding:18px 12px;border-radius:var(--us-r-16);background:var(--us-beige)}
+.dy-foglio .left-for-you-vn{border:0;background:var(--us-ink-100);box-shadow:0 0 0 5px var(--us-ink-08);color:var(--us-paper)}
+.dy-foglio .left-for-you-vn:is([data-phase="rec"],[data-phase="clip"]){background:var(--us-card);box-shadow:inset 0 0 0 1.5px var(--us-ink-12);color:var(--us-ink-100)}
+.dy-foglio .left-for-you-vn[data-phase="rec"]{box-shadow:inset 0 0 0 1.5px var(--us-pencil)}
+.dy-foglio .left-for-you-composer-file:empty{display:none}
+.dy-foglio :is(.left-for-you-composer-file,.left-for-you-composer-hint){font:500 12.5px/1.35 var(--us-font-ui);color:var(--us-ink-60)}
+/* Nuovo ricordo (#momentCompose in #usMomentComposeOverlay, app.js and
+   moments-albums.js): the place of the photos is dashed in your colour, as
+   your photo in the challenge; the note is in your hand. */
+.dy-mc{display:flex;flex-direction:column;gap:14px}
+.dy-mc-pick{position:relative;display:block;width:100%;margin:0;padding:0;border:0;border-radius:var(--us-r-16);overflow:hidden;background:none;color:var(--us-ink-100);font:inherit;text-align:center;cursor:pointer}
+.dy-mc-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:150px;border:2px dashed var(--us-tu);border-radius:var(--us-r-16);background:color-mix(in srgb,var(--us-tu-soft) 30%,transparent)}
+.dy-mc-empty b{font:700 var(--us-text-13)/1.2 var(--us-font-ui)}
+.dy-mc-empty small{font:500 12px/1.3 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-mc-cam{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dy-mc-preview{display:none;position:relative;aspect-ratio:16/10;background:var(--us-beige)}
+.dy-mc-preview img{display:block;width:100%;height:100%;object-fit:cover}
+.dy-mc-change{position:absolute;right:10px;bottom:10px;display:inline-flex;align-items:center;height:var(--us-btn-s);padding:0 12px;border-radius:var(--us-r-8);background:var(--us-ink-100);color:var(--us-paper);font:800 13px/1 var(--us-font-ui)}
+.dy-mc.has-photo .dy-mc-empty{display:none}
+.dy-mc.has-photo .dy-mc-preview{display:block}
+.dy-mc-details{display:none;flex-direction:column;gap:10px}
+.dy-mc.has-photo .dy-mc-details{display:flex}
+.dy-mc-note{min-height:64px}
+.dy-mc-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:4px}
+.dy-mc-two .dy-f-in{display:flex;align-items:center;gap:8px;min-width:0}
+.dy-mc-place-row{display:flex;align-items:center;gap:6px}
+.dy-mc-place-btn{flex:1;text-align:left;cursor:pointer;color:var(--us-ink-40);font-weight:500}
+.dy-mc-place.has-place .dy-mc-place-btn{color:var(--us-ink-100);font-weight:600}
+.dy-mc-place-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dy-mc-place-clear[hidden]{display:none}
+.dy-mc-extra{display:flex;flex-direction:column;gap:6px}
+.dy-mc-extra[hidden]{display:none}
+.dy-mc-extra-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.dy-mc-extra-row img{flex:none;width:56px;height:56px;border-radius:var(--us-r-12);object-fit:cover}
+.dy-mc-extra-row .moment-extra-more{flex:none;display:grid;place-items:center;width:56px;height:56px;border-radius:var(--us-r-12);background:var(--us-beige);font:800 13px var(--us-font-ui)}
+.dy-mc-bar{height:6px;border-radius:3px;background:var(--us-beige);overflow:hidden}
+.dy-mc-bar[hidden]{display:none}
+.dy-mc-bar i{display:block;width:0;height:100%;border-radius:3px;background:var(--us-miele)}
+.dy-mc-pick:focus-visible,.dy-mc-place-btn:focus-visible{outline:3px solid var(--us-pencil);outline-offset:2px}
+/* Il calendario (#usCalendarDetailSheet, #usCalendarFormSheet, calendar.js):
+   the day for title, times in honey, the kinds as tiles, the suggestions
+   under the field, «Tutto il giorno» on an ink switch. Nothing here moves. */
+.dy-cal-name{font:800 22px/1.2 var(--us-font-ui);letter-spacing:-.01em;color:var(--us-ink-100);overflow-wrap:anywhere}
+.dy-f-row-tx b.dy-cal-note{font:20px/1.2 var(--us-font-hand);font-weight:400}
+.dy-cal-by{background:none}
+.dy-cal-form .dy-tiles[hidden],.dy-cal-presets[hidden],.dy-cal-times[hidden],.dy-cal-day-line[hidden],.dy-cal-day-entries[hidden],.dy-cal-preset-new[hidden]{display:none}
+.dy-cal-day-line{margin:0;font:700 var(--us-text-15)/1.3 var(--us-font-ui);color:var(--us-ink-100)}
+.dy-cal-day-entries{display:flex;flex-direction:column;gap:6px}
+.dy-cal-day-entries .us-cal-form-day-kicker{font:700 var(--us-text-13)/1.2 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-cal-day-entries .us-cal-form-day-entry{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 12px;border:0;border-radius:var(--us-r-12);background:var(--us-beige);color:var(--us-ink-100);font:600 14px/1.2 var(--us-font-ui);text-align:left}
+.dy-cal-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:-6px}
+.dy-chip-o{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--us-tag-m);min-width:28px;margin:0;padding:0 10px;border:0;border-radius:var(--us-r-8);background:transparent;box-shadow:inset 0 0 0 1.5px var(--us-ink-12);color:var(--us-ink-100);font:600 12.5px/1 var(--us-font-ui);cursor:pointer}
+.dy-chip-o[aria-pressed="true"]{background:var(--us-ink-100);color:var(--us-paper);box-shadow:none}
+.dy-chip-o .us-icon{--us-icon-size:14px}
+.dy-cal-preset-new{display:flex;gap:6px;width:100%}
+.dy-cal-preset-new .dy-f-in{min-height:44px}
+.dy-cal-allday{cursor:pointer}
+.dy-cal-times{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.dy-cal-time{font-variant-numeric:tabular-nums}
+/* A native checkbox drawn as the ink switch of Impostazioni. */
+.dy-f-switch{flex:none;position:relative;width:46px;height:28px;margin:0;border-radius:14px;background:var(--us-ink-12);-webkit-appearance:none;appearance:none;cursor:pointer;transition:background .2s ease}
+.dy-f-switch::before{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--us-card);box-shadow:0 1px 3px rgba(20,18,14,.25);transition:left .2s ease,background .2s ease}
+.dy-f-switch:checked{background:var(--us-ink-100)}
+.dy-f-switch:checked::before{left:21px;background:var(--us-paper)}
+.dy-f-switch:focus-visible,.dy-chip-o:focus-visible{outline:3px solid var(--us-pencil);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.dy-f-switch,.dy-f-switch::before{transition:none}}
+html[data-us-motion="reduced"] .dy-f-switch,html[data-us-motion="reduced"] .dy-f-switch::before{transition:none}
+/* The ladder (ui-foundation.css): the Ti penso arrival stays under every
+   sheet, the confirmation above them all. */
+#thinkArrival.dy-foglio{z-index:var(--us-layer-transient)}
+.dy-foglio.us-confirm{z-index:var(--us-layer-confirm)}

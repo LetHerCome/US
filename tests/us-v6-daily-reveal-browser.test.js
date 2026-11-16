@@ -67,7 +67,8 @@ test('Daily mobile: waiting, retry, keyboard-height viewport and reduced motion 
    assert.equal(await page.locator('#answer').inputValue(),'Una bozza da conservare');
    await page.locator('#todaySaveBtn').scrollIntoViewIfNeeded();assert.equal(await page.locator('#todaySaveBtn').isVisible(),true);
    await page.evaluate(()=>{window.__QA.rpc.get_daily_state=async()=>({data:{my_answer:'Una bozza da conservare',partner_has_answer:false,both_answered:false,partner_answer:null},error:null});return window.hydrateToday();});
-   await page.waitForFunction(()=>document.getElementById('locked').textContent.includes('In attesa'));
+   // Mockup v5 «I fogli» (16/11/2026): the other is drawn asleep with «Aspettiamo <nome>».
+   await page.waitForFunction(()=>document.getElementById('todayPartner').textContent.includes('Aspettiamo'));
    await page.evaluate(()=>{window.__QA.rpc.get_daily_state=async()=>{throw new Error('offline');};return window.hydrateToday();});
    assert.equal(await page.locator('#todayRetryBtn').isVisible(),true);
    await page.evaluate(()=>{window.__QA.rpc.get_daily_state=async()=>({data:{my_answer:null,partner_has_answer:false,both_answered:false,partner_answer:null},error:null});});
@@ -95,7 +96,8 @@ test('Daily mobile: short reveal shows question, both answers and Conserva with 
      window.UsCoupleContext.hydrate().then(()=>window.openToday());
     });
     await page.waitForSelector('[data-us-daily-answer="partner"]');await page.waitForTimeout(300);
-    assert.equal(await page.locator('[data-us-daily-answer="partner"] b').textContent(),'Marco');
+    // Mockup v5 «I fogli» (16/11/2026): the answer is signed by the character; the name is its label.
+    assert.equal(await page.locator('[data-us-daily-answer="partner"]').getAttribute('aria-label'),'Marco');
     await page.waitForSelector('[data-us-daily-keep]');
     assert.equal(await page.locator('[data-us-daily-keep]').isEnabled(),true);
     if(shots){fs.mkdirSync(shots,{recursive:true});await page.screenshot({path:path.join(shots,`daily-short-${width}x${height}.png`)});}

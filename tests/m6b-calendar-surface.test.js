@@ -357,7 +357,7 @@ test('M6B (38): the private media cache name is preserved exactly', () => {
 
 // (39) 1.0: the quick form exposes presets plus explicit start/end without the native clock picker.
 test('M6B (39): quick entry has presets, title, all-day and keyboard start/end fields', () => {
-  const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
+  const formBlock = html().match(/<form class="dy-f-body dy-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
   for (const preset of ['Lavoro', 'Università', 'Uscita']) assert.match(formBlock, new RegExp(`data-us-calendar-preset="${preset}"`));
   assert.match(formBlock, /id="usCalendarTitleInput"/);
   assert.match(formBlock, /id="usCalendarAllDayInput"/);
@@ -367,7 +367,7 @@ test('M6B (39): quick entry has presets, title, all-day and keyboard start/end f
   for (const gone of ['usCalendarKindPicker', 'usCalendarNoteInput', 'usCalendarDurationField', 'usCalendarReminderField']) {
     assert.doesNotMatch(formBlock, new RegExp(gone), `${gone} is not part of the quick form`);
   }
-  assert.match(formBlock, /<label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno<\/span>/);
+  assert.match(formBlock, /<label class="dy-f-lab" id="usCalendarDateField" hidden><span>Giorno<\/span>/);
 });
 
 // (40) end time is explicit; end date/location remain out of the quick form.
@@ -379,7 +379,7 @@ test('M6B (40): explicit end time exists without reintroducing end-date or locat
 
 // (41) concise Inizio/Fine labels replace the old picker wording.
 test('M6B (41): time labels are compact Inizio and Fine', () => {
-  const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
+  const formBlock = html().match(/<form class="dy-f-body dy-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
   assert.match(formBlock, /<span>Inizio<\/span>/);
   assert.match(formBlock, /<span>Fine<\/span>/);
   assert.doesNotMatch(formBlock, /Data inizio|Ora inizio/);
@@ -394,7 +394,7 @@ test('M6B (42): Inizio/Fine visibility follows Tutto il giorno', () => {
 
 // (43) US 1.0 (N1): one "+" with three choices; a new entry starts as "Solo mio".
 test('M6B (43): the "+" chooses Solo mio, Nostro or Data speciale; ideas still create Nostro', () => {
-  const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
+  const formBlock = html().match(/<form class="dy-f-body dy-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
   for (const kind of ['personal', 'shared', 'event']) assert.match(formBlock, new RegExp(`data-us-calendar-kind="${kind}"`));
   assert.match(js(), /setFormKind\(mode === 'edit' \? entry\.entry_type : 'personal'\);/);
   assert.match(js(), /const kind = ideaLink \? 'shared' : calendarKind;/);
@@ -496,7 +496,8 @@ test('M6B (49): a single shared icon-centering rule is defined once and applied 
   for (const id of ['usCalendarDetailClose', 'usCalendarFormClose']) {
     const tag = html().match(new RegExp(`<[^>]*id="${id}"[^>]*>`))?.[0] || '';
     assert.ok(tag, `${id} must exist in the markup`);
-    assert.match(tag, /class="[^"]*\bus-icon-center\b[^"]*"/, `${id} must use the shared centering class`);
+    // Mockup v5 «I fogli» (16/11/2026): the close of the one sheet (a flex-centred 36px tile).
+    assert.match(tag, /class="[^"]*\bdy-close\b[^"]*"/, `${id} is the close of the one sheet`);
   }
 });
 

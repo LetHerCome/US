@@ -163,7 +163,7 @@ function refreshUsIdentityLabels(){
   for(const id of ['noiCoupleCard','noiCouple'])document.getElementById(id)?.setAttribute('aria-label',identity.pairLabel);
   const pair=document.getElementById('usCoupleNames');if(pair){pair.textContent=identity.pairLabel;pair.translate=identity.pairLabel==='Voi due';}
   const ownInitial=document.getElementById('profileAvatarFallback');if(ownInitial)ownInitial.textContent=identity.initialForRole(window.usProfile?.role);
-  const title=document.getElementById('thinkArrivalTitle');if(title)title.textContent=`${identity.partnerName} ti pensa`;
+  const title=document.getElementById('thinkArrivalTitle');if(title)title.innerHTML=`${escapeHtml(identity.partnerName)} <em>ti pensa</em>`;
   window.dispatchEvent(new CustomEvent('us-identity-change',{detail:{identityKey:usCoupleContextState.identityKey}}));
 }
 const usCoupleContextState={couple:null,profiles:[],identityKey:'',generation:0};
@@ -3411,7 +3411,7 @@ function renderThinkReactionUi(){
   const buttons=root.querySelectorAll('[data-think-reaction]');
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
   // Momento: the name on one line, "ti pensa" in italic in their colour (same words).
-  if(title)title.innerHTML=`<span class="think-arrival-name"${partner?.display_name?' translate="no"':''}>${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>ti pensa</em>`;
+  if(title)title.innerHTML=`<span${partner?.display_name?' translate="no"':''}>${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>ti pensa</em>`;
   // Mockup: when it arrived, in plain words ("adesso", "5 min fa").
   if(copy){const at=usIncomingThink?.created_at;const fresh=at&&Date.now()-Date.parse(at)<60000;copy.textContent=at?(fresh?'adesso':relativeSignalAge(at)):'';copy.hidden=!copy.textContent;}
   buttons.forEach(button=>{
@@ -3428,6 +3428,10 @@ function openThinkArrival(){
   window.UsUiFoundation?.cancelSurfaceExit?.(root);
   root.classList.add('open');
   root.setAttribute('aria-hidden','false');
+  // Mockup v5 «I fogli»: who thought of you winks and hops once, the heart
+  // pops: «it arrived». Drawn on opening only, so a reaction does not replay it.
+  const who=document.getElementById('thinkArrivalWho'),D=window.UsDiario;
+  if(who)who.innerHTML=D?.character&&D.roles?`<span class="dy-stk dy-hop">${D.character(D.roles().partnerRole,{size:96,mood:'occhiolino'})}</span><span class="dy-think-heart"><svg viewBox="0 0 256 256"><path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/></svg></span>`:'';
   renderThinkReactionUi();
 }
 window.openThinkArrival=openThinkArrival;
@@ -3497,12 +3501,12 @@ function dailyKeepsakeRuntime(){
   const active=()=>Boolean(state.owner===identity()&&state.questionId&&state.questionId===window.todayQuestion?.id&&window.todayState?.both_answered);
   // Mockup #sheetReveal: Conserva (sparkle) → Conservo… → ✓ Conservato nei
   // Ricordi, with one line under it that says where it goes.
-  const note='<p class="today-keep-note">Conservata, la domanda di oggi resta nei vostri Ricordi.</p>';
+  const note='<p class="dy-f-note today-keep-note">Conservata, la domanda di oggi resta nei vostri Ricordi.</p>';
   let fresh=false;
   const view=()=>{
-    if(state.status==='kept'){const html=`<p class="today-keep-done${fresh?' is-fresh':''}" role="status"><span class="us-icon" data-us-icon="check" aria-hidden="true"></span>Conservato nei Ricordi</p>${note}`;fresh=false;return html;}
+    if(state.status==='kept'){const html=`<p class="dy-f-note today-keep-done${fresh?' is-fresh':''}" role="status"><span class="us-icon" data-us-icon="check" aria-hidden="true"></span>Conservato nei Ricordi</p>${note}`;fresh=false;return html;}
     const saving=state.status==='saving',failed=state.status==='error';
-    return `<button type="button" class="today-keep-button" data-us-daily-keep ${saving?'disabled aria-busy="true"':''}>${saving?'Conservo…':failed?'Riprova':'Conserva'}</button>${failed?'<p class="today-keep-status" role="status">Non conservata. Riprova quando torni online.</p>':note}`;
+    return `<button type="button" class="dy-btn dy-btn-l dy-btn-ghost today-keep-button" data-us-daily-keep ${saving?'disabled aria-busy="true"':''}>${saving?'Conservo…':failed?'Riprova':'Conserva'}</button>${failed?'<p class="dy-f-note today-keep-status" role="status">Non conservata. Riprova quando torni online.</p>':note}`;
   };
   const render=()=>{
     const root=document.getElementById('todayKeep');
@@ -3595,6 +3599,7 @@ function renderTodayQuestionUnavailable(status){
     btn.dataset.usTodayMode=failed?'retry':'loading';
     btn.hidden=!failed; btn.disabled=!failed; btn.textContent=failed?'Riprova':'Un attimo…';
   }
+  paintTodayPeople('none');
 }
 // M10.2 — reveal Daily: risposte da get_daily_state (invariata), stato PERSONALE
 // (ricevuta, avviso nascosto, reazione) da get_daily_reveal_meta. Il server è
@@ -3620,21 +3625,50 @@ function dailyPartnerReactionLine(meta,partner){
   if(meta?.partner_reaction==='cry')return `${partner}: mi hai fatto commuovere`;
   return '';
 }
-let usTodayRevealDrawn='';
+let usTodayRevealDrawn='',usTodayRevealFocused='';
+// Il diario, ma pulito (fogli, 16/11/2026): who is in the sheet of the
+// question. Your character beside your answer; the other beside theirs,
+// blurred until you answer (their words never reach this phone before), or
+// asleep while they have not answered. 'none' while loading and on reveal.
+function paintTodayPeople(mode,text){
+  const D=window.UsDiario;
+  const mine=document.getElementById('todayMine'),me=document.getElementById('todayMe');
+  const them=document.getElementById('todayPartner'),answerEl=document.getElementById('answer');
+  if(mine)mine.hidden=Boolean(answerEl?.hidden);
+  if(me)me.innerHTML=D?.character&&D.roles?D.character(D.roles().myRole,{size:30}):'';
+  if(them){
+    const html=!D?.sign||mode==='none'?''
+      :mode==='answered'?D.sign('partner','felice','<div class="dy-f-sign-body"><span class="dy-q-blur" aria-hidden="true"><span class="dy-hl" style="--c:var(--us-partner-hl)">la sua risposta si apre dopo la tua</span></span></div>')
+      :D.sign('partner','dorme',`<span class="dy-f-wait">${escapeHtml(text||'')}</span>`);
+    them.innerHTML=html;them.hidden=!html;
+  }
+  // Waiting for the other: changing your answer is the quiet action.
+  const save=document.getElementById('todaySaveBtn')?.classList;
+  if(save)save[mode==='asleep'&&window.todayState?.my_answer?'add':'remove']('dy-btn-ghost');
+}
 function renderTodayReveal(){
   const reveal=document.getElementById('todayReveal'),state=window.todayState;
   if(!reveal||!state?.both_answered)return;
   const partner=dailyRevealPartnerLabel(),meta=window.todayRevealMeta;
   const mine=US_DAILY_REACTIONS[meta?.my_reaction]?meta.my_reaction:null;
   const felt=dailyPartnerReactionLine(meta,partner);
-  const note=felt?`<p class="today-reaction-note" data-us-daily-partner-reaction="${escapeHtml(meta.partner_reaction)}">${escapeHtml(felt)}</p>`:'';
+  const note=felt?`<p class="dy-f-note today-reaction-note" data-us-daily-partner-reaction="${escapeHtml(meta.partner_reaction)}">${escapeHtml(felt)}</p>`:'';
   // Without the personal meta (offline) there is nothing to react on.
-  const controls=meta?`<div class="today-reactions" role="group" aria-label="La tua reazione"><button type="button" class="today-reaction" data-daily-reaction="heart" aria-label="${escapeHtml(US_DAILY_REACTIONS.heart.label)}" aria-pressed="${mine==='heart'}"><span class="us-icon" data-us-icon="${mine==='heart'?'heart-fill':'heart'}" aria-hidden="true"></span></button><button type="button" class="today-reaction today-reaction--words" data-daily-reaction="cry" aria-pressed="${mine==='cry'}">${escapeHtml(US_DAILY_REACTIONS.cry.label)}</button></div>`:'';
-  reveal.className='today-reveal today-reveal--simple';
-  const html='<div class="today-answer" data-us-daily-answer="mine"><b>Tu</b><p translate="no">'+escapeHtml(state.my_answer||'')+'</p>'+note+'</div>'+
-    '<div class="today-answer" data-us-daily-answer="partner"><b translate="no">'+escapeHtml(partner)+'</b><p translate="no">'+escapeHtml(state.partner_answer||'')+'</p>'+controls+'</div>';
+  const controls=meta?`<div class="dy-f-react today-reactions" role="group" aria-label="La tua reazione"><button type="button" class="dy-btn dy-btn-s dy-btn-ghost dy-hit today-reaction" data-daily-reaction="heart" aria-label="${escapeHtml(US_DAILY_REACTIONS.heart.label)}" aria-pressed="${mine==='heart'}"><span class="us-icon" data-us-icon="${mine==='heart'?'heart-fill':'heart'}" aria-hidden="true"></span></button><button type="button" class="dy-btn dy-btn-s dy-btn-ghost dy-hit today-reaction today-reaction--words" data-daily-reaction="cry" aria-pressed="${mine==='cry'}">${escapeHtml(US_DAILY_REACTIONS.cry.label)}</button></div>`:'';
+  reveal.className='dy-f-body today-reveal today-reveal--simple';
+  // Mockup v5 «I fogli»: each answer signed by who wrote it, in their
+  // highlighter; the other's comes into focus the first time it opens.
+  const qid=window.todayQuestion?.id||'',fresh=usTodayRevealFocused!==qid;
+  const answer=(who,text,cls)=>{
+    const body=`<div class="dy-f-sign-body"><span class="${cls}"><span class="dy-hl" style="--c:var(--us-${who==='me'?'tu':'partner'}-hl)" translate="no">${escapeHtml(text)}</span></span></div>`;
+    return window.UsDiario?.sign?window.UsDiario.sign(who,'felice',body):body;
+  };
+  const html='<div class="today-answer" data-us-daily-answer="mine" aria-label="Tu">'+answer('me',state.my_answer||'','')+note+'</div>'+
+    '<div class="today-answer" data-us-daily-answer="partner" aria-label="'+escapeHtml(partner)+'">'+answer('partner',state.partner_answer||'','')+controls+'</div>';
   // The same drawing stays: the heart animating on the button is not cut by the server's reply.
-  if(usTodayRevealDrawn===html&&reveal.firstElementChild)return;usTodayRevealDrawn=html;reveal.innerHTML=html;
+  if(usTodayRevealDrawn===html&&reveal.firstElementChild)return;usTodayRevealDrawn=html;
+  reveal.innerHTML=fresh?html.replace('<span class=""><span class="dy-hl" style="--c:var(--us-partner-hl)"','<span class="dy-q-unblur"><span class="dy-hl" style="--c:var(--us-partner-hl)"'):html;
+  usTodayRevealFocused=qid;
 }
 // Il cuore (founder, 29/10/2026): one animation for every heart given; every third is the big one.
 function usHeartLike(button){const turn=window.UsUiFoundation?.heartTurn?.(window.usProfile?.id);window.UsUiFoundation?.heart?.(button,{big:Boolean(turn?.big)});}
@@ -3781,19 +3815,20 @@ async function hydrateToday(){
   delete btn.dataset.usTodayMode;
   if(state?.my_answer&&!hasDraft){
     document.getElementById('answer').value=state.my_answer;
-    btn.textContent='Aggiorna risposta';
+    btn.textContent='Aggiorna la risposta';
   }else{
-    btn.textContent='Invia la mia risposta';
+    btn.textContent='Rispondi';
   }
   // The sheet's eyebrow names what it shows (mockup): the question, then the two answers.
-  const head=document.querySelector('#today .today-sheet-head h2');
-  if(head)head.textContent=state?.both_answered?'Le vostre risposte':'La domanda di oggi';
+  const head=document.getElementById('todayTitle');
+  if(head)head.innerHTML=state?.both_answered?'Le vostre <em>risposte</em>':'La domanda <em>di oggi</em>';
   if(state?.both_answered){
     // Reveal is strictly question + two answers. Do not leave a duplicate,
     // disabled composer or "Risposte sbloccate" banner above the real answers.
     locked.hidden=true;locked.textContent='';
     answerEl.hidden=true;answerEl.disabled=true;
     btn.hidden=true;btn.disabled=true;
+    paintTodayPeople('none');
     // M10.2 — stato personale (ricevuta, avviso, reazioni) dal server; mai testo qui.
     renderTodayReveal();
     const meta=await loadDailyRevealMeta(q.id);
@@ -3809,18 +3844,23 @@ async function hydrateToday(){
   }else{
     locked.hidden=false;
     answerEl.hidden=false;answerEl.disabled=false;btn.hidden=false;btn.disabled=todayAnswerIsSaving();
-    btn.textContent=todayAnswerIsSaving()?'Salvo…':state.my_answer?'Aggiorna risposta':'Invia la mia risposta';
+    btn.textContent=todayAnswerIsSaving()?'Salvo…':state.my_answer?'Aggiorna la risposta':'Rispondi';
     window.todayRevealMeta=null;
     reveal.classList.add('hidden');reveal.innerHTML='';
     window.UsDailyKeepsake?.hide?.();
-    // Mockup: a dot in the colour of whoever the line is about, then plain words.
+    // Mockup v5 «I fogli»: who is waiting is drawn (the other asleep, or
+    // their answer already there and blurred), and one line under it.
     const partner=usIdentity().partnerName;
+    const lock=window.UsDiario?.icon?.('lock')||'';
     if(state?.my_answer){
-      locked.innerHTML='<span class="dot" data-who="tu" aria-hidden="true"></span><span>'+escapeHtml(`Hai risposto. In attesa di ${partner}…`)+'</span>';
+      locked.innerHTML='';
+      paintTodayPeople('asleep',`Aspettiamo ${partner}. Quando risponde ti arriva un avviso e le due risposte si aprono.`);
     }else if(state?.partner_has_answer){
-      locked.innerHTML='<span class="dot" data-who="partner" aria-hidden="true"></span><span>'+escapeHtml(`${partner} ha già risposto. Vedrete le risposte insieme appena invii la tua.`)+'</span>';
+      locked.innerHTML=lock+'<span>'+escapeHtml(`${partner} ha risposto. Le due risposte si aprono insieme quando rispondi.`)+'</span>';
+      paintTodayPeople('answered');
     }else{
-      locked.innerHTML='<span class="dot" data-who="noi" aria-hidden="true"></span><span>Le risposte si svelano quando avete risposto voi due.</span>';
+      locked.innerHTML=lock+'<span>Una domanda, due risposte: si aprono insieme.</span>';
+      paintTodayPeople('asleep',`${partner} non ha ancora risposto`);
     }
   }
   updateHomeStatus();
@@ -5797,7 +5837,7 @@ window.openNoiSection=openNoiSection;
 window.closeNoiSection=closeNoiSection;
 document.getElementById('noiSectionBack')?.addEventListener('click',closeNoiSection);
 document.getElementById('noiQuestSheet')?.addEventListener('click',(event)=>{if(event.target.closest('[data-noi-sheet-close]'))closeNoiSection();});
-document.addEventListener?.('keydown',(event)=>{if(event.key==='Escape'&&document.getElementById('noiQuestSheet')?.classList.contains('open')&&!document.querySelector('.us-cal-sheet-overlay.open,#usEventsOverlay.open,.us-confirm.open'))closeNoiSection();});
+document.addEventListener?.('keydown',(event)=>{if(event.key==='Escape'&&document.getElementById('noiQuestSheet')?.classList.contains('open')&&!document.querySelector('.us-cal-sheet-overlay.open,#usCalendarDetailSheet.open,#usCalendarFormSheet.open,#usEventsOverlay.open,.us-confirm.open'))closeNoiSection();});
 document.getElementById('noiIdeaAddToggle')?.addEventListener('click',()=>{
   toggleNoiIdeaQuickForm(Boolean(document.getElementById('noiIdeaQuickForm')?.hidden));
 });

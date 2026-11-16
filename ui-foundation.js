@@ -657,12 +657,14 @@
     return api;
   }
 
-  // The one US confirmation (the Conferma form): a small sheet docked at the
-  // bottom on the shared scrim and material, the choice first and the safe
-  // choice under it, focus on the safe choice, Escape / backdrop / Annulla
-  // cancel. tone:'danger' is only for what cannot be undone (red). `icon`
-  // names one of the shared Phosphor icons (data-us-icon); the default is
-  // trash for tone:'danger' and info otherwise.
+  // The one US confirmation: since 16/11/2026 (mockup v5 «I fogli», founder)
+  // it is the one sheet of the diary (.dy-foglio, diario.css). The handle, the
+  // title with the words after the first one in italics («Eliminare
+  // *l'impegno*?»), a line under it, the choice in ink and the safe choice in
+  // outline under it, focus on the safe choice; Escape, the backdrop, the X
+  // and Annulla cancel. tone:'danger' no longer turns red (red is the heart's
+  // and the pencil's): the title says what goes. `kicker` and `icon` are
+  // accepted and no longer drawn.
   // Resolves true only for the explicit confirm button. Without a DOM (or if
   // building it fails) it degrades to the platform confirm.
   let openConfirm = null;
@@ -676,45 +678,42 @@
       const id = `usConfirm${Date.now().toString(36)}`;
       const root = documentRef.createElement('div');
       const danger = options.tone === 'danger';
-      root.className = danger ? 'us-confirm is-danger' : 'us-confirm';
+      root.className = danger ? 'dy-foglio us-confirm is-danger' : 'dy-foglio us-confirm';
       root.setAttribute('data-us-modal', '');
-      root.setAttribute('data-us-motion-surface', '');
       root.setAttribute('aria-hidden', 'false');
-      const tone = danger ? 'us-btn-danger' : 'primary';
-      root.innerHTML = `<div class="us-modal-backdrop" data-us-confirm="cancel"></div>
-        <section class="us-sheet us-confirm-sheet" role="alertdialog" aria-modal="true" aria-labelledby="${id}T" aria-describedby="${id}B" data-us-modal-panel>
-          <span class="us-confirm-icon" aria-hidden="true" hidden><span class="us-icon"></span></span><span class="us-eyebrow"></span><h3 id="${id}T"></h3><p id="${id}B"></p>
-          <div class="us-confirm-actions"><button type="button" class="${tone}" data-us-confirm="ok"></button><button type="button" class="ghost" data-us-confirm="cancel" data-us-modal-close></button></div>
+      root.innerHTML = `<div class="dy-foglio-scrim" data-us-confirm="cancel"></div>
+        <section class="dy-foglio-panel us-confirm-sheet" role="alertdialog" aria-modal="true" aria-labelledby="${id}T" aria-describedby="${id}B" data-us-modal-panel>
+          <span class="dy-grab" aria-hidden="true"></span>
+          <div class="dy-sheet-head"><div><h3 class="dy-sheet-title" id="${id}T"></h3><p class="dy-sheet-sub" id="${id}B"></p></div><button type="button" class="dy-ib dy-close" data-us-confirm-x aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+          <div class="dy-f-acts us-confirm-actions"><button type="button" class="dy-btn dy-btn-l" data-us-confirm="ok"></button><button type="button" class="dy-btn dy-btn-l dy-btn-ghost" data-us-confirm="cancel" data-us-modal-close></button></div>
         </section>`;
-      // As in the mockup every Conferma carries an icon: trash when it cannot
-      // be undone, info otherwise, unless the caller names one (icon:'' = none).
-      const iconName = options.icon === undefined ? (danger ? 'trash' : 'info') : text(options.icon);
-      if (iconName) {
-        const icon = root.querySelector('.us-confirm-icon');
-        icon.firstElementChild.setAttribute('data-us-icon', iconName);
-        icon.hidden = false;
-      }
-      root.querySelector('.us-eyebrow').textContent = text(options.kicker || 'US');
-      root.querySelector('h3').textContent = text(options.title);
+      // The first word plain, the rest in italics: «Iniziare *Questo o quello*?».
+      const title = root.querySelector('h3'), words = text(options.title).trim();
+      const split = words.match(/^(\S+)\s+(.+?)([?!.…]*)$/u);
+      if (split) {
+        const em = documentRef.createElement('em');
+        em.textContent = split[2];
+        title.append(`${split[1]} `, em, split[3]);
+      } else title.textContent = words;
       const body = root.querySelector('p');
       if (options.body) body.textContent = text(options.body); else body.remove();
       // One short line under the title (the partner's battery under the distance).
       if (options.note) {
         const note = documentRef.createElement('p');
-        note.className = 'us-confirm-note';
+        note.className = 'dy-sheet-sub us-confirm-note';
         note.id = `${id}N`;
         note.textContent = text(options.note);
-        root.querySelector('h3').after(note);
+        title.after(note);
         root.querySelector('section').setAttribute('aria-describedby', options.body ? `${id}N ${id}B` : `${id}N`);
       }
       // A list (the Novità after an update), each line as plain text.
       if (Array.isArray(options.items) && options.items.length) {
         const list = documentRef.createElement('ul');
-        list.className = 'us-confirm-list';
+        list.className = 'dy-f-list us-confirm-list';
         options.items.forEach((item) => { const li = documentRef.createElement('li'); li.textContent = text(item); list.appendChild(li); });
-        root.querySelector('h3').after(list);
+        root.querySelector('.dy-sheet-head').after(list);
       }
-      const cancelButton = root.querySelector('[data-us-confirm="cancel"].ghost');
+      const cancelButton = root.querySelector('[data-us-confirm="cancel"][data-us-modal-close]');
       if (options.single) cancelButton.remove(); else cancelButton.textContent = text(options.cancelLabel || 'Annulla');
       root.querySelector('[data-us-confirm="ok"]').textContent = text(options.confirmLabel || (options.single ? 'Chiudi' : 'Conferma'));
       let settled = false;
@@ -730,6 +729,7 @@
       };
       const onKey = (event) => { if (event.key === 'Escape') { event.preventDefault(); finish(false); } };
       root.addEventListener('click', (event) => {
+        if (event.target.closest?.('[data-us-confirm-x]')) { finish(false); return; }
         const choice = event.target.closest?.('[data-us-confirm]')?.getAttribute('data-us-confirm');
         if (choice) finish(choice === 'ok');
       });

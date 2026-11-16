@@ -913,7 +913,6 @@ function openDetail(entryId) {
   if (!entry) return;
   detailEntry = entry;
   const title = $('usCalendarDetailTitle');
-  if (title) title.textContent = entry.title;
   const isShared = entry.entry_type === 'shared';
   const owner = isShared ? 'noi' : entry.owner_id === window.usProfile?.id ? 'tu' : 'partner';
   const identityLabel = isShared ? `Insieme · creato da ${profileName(entry.created_by)}` : `Personale di ${profileName(entry.owner_id)}`;
@@ -926,9 +925,23 @@ function openDetail(entryId) {
     ? (oneDay ? `${longDayLabel(startDay)} · Tutto il giorno` : formatDateRangeLabel(startDay, endDay))
     : oneDay ? `${longDayLabel(startDay)} · ${hhmm(entry.starts_at)}–${hhmm(entry.ends_at)}`
       : `${formatDateRangeLabel(startDay, endDay)} · ${entryTimeLabel(entry)}`;
-  const place = entry.location ? `<span class="us-cal-detail-location" translate="no">${esc(entry.location)}</span> · ` : '';
-  const rows = [`<div class="us-cal-detail-meta"><span class="us-cal-detail-dot" aria-hidden="true"></span><span><b class="us-cal-detail-date">${esc(dateLabel)}</b><small class="us-cal-detail-kind">${place}${esc(identityLabel)}</small></span></div>`];
-  if (entry.description) rows.push(`<p class="us-cal-detail-note" translate="no">${esc(entry.description)}</p>`);
+  // Mockup v5 «I fogli» (16/11/2026): the day is the title (its date in
+  // italics), then the commitment, whose it is and when, where and the note
+  // in your hand, and who added it with their character.
+  if (title) { const day = longDayLabel(startDay), cut = day.indexOf(' '); title.innerHTML = cut > 0 ? `${esc(day.slice(0, cut))} <em>${esc(day.slice(cut + 1))}</em>` : esc(day); }
+  const D = window.UsDiario, icon = (name) => D?.icon?.(name) || '';
+  const whoTag = owner === 'noi' ? '<span class="dy-tag dy-tag-s dy-tag-both">insieme</span>'
+    : `<span class="dy-tag dy-tag-s" style="background:var(--us-${owner === 'tu' ? 'tu' : 'partner'}-soft)"${owner === 'tu' ? '' : ' translate="no"'}>${esc(owner === 'tu' ? 'tu' : profileName(entry.owner_id))}</span>`;
+  const when = entry.is_all_day ? (oneDay ? 'tutto il giorno' : formatDateRangeLabel(startDay, endDay)) : oneDay ? `${hhmm(entry.starts_at)}–${hhmm(entry.ends_at)}` : `${formatDateRangeLabel(startDay, endDay)} · ${entryTimeLabel(entry)}`;
+  const row = (ic, b, sub, cls = '') => `<div class="dy-f-row"><span class="dy-f-row-ic">${ic}</span><span class="dy-f-row-tx"><b class="${cls}" translate="no">${b}</b><small>${esc(sub)}</small></span></div>`;
+  const by = isShared ? entry.created_by : entry.owner_id;
+  const byRole = by === window.usProfile?.id ? D?.roles?.().myRole : D?.roles?.().partnerRole;
+  const rows = [`<div class="dy-cal-name" translate="no">${esc(entry.title)}</div>`, `<div class="dy-row-tags">${whoTag}<span class="dy-tag dy-tag-s" style="background:var(--us-miele)">${esc(when)}</span></div>`];
+  const lines = [];
+  if (entry.location) lines.push(row(icon('pin'), esc(entry.location), 'Dove'));
+  if (entry.description) lines.push(row(icon('note'), esc(entry.description), 'La nota', 'dy-cal-note'));
+  lines.push(`<div class="dy-f-row"><span class="dy-f-row-ic dy-cal-by">${D?.character && byRole ? `<span class="dy-stk">${D.character(byRole, { size: 28 })}</span>` : ''}</span><span class="dy-f-row-tx"><b>${esc(by === window.usProfile?.id ? (isShared ? 'Insieme · l’hai aggiunto tu' : 'L’hai aggiunto tu') : identityLabel)}</b><small>${esc(dateLabel)}</small></span></div>`);
+  rows.push(`<div>${lines.join('')}</div>`);
   const body = $('usCalendarDetailBody');
   if (body) body.innerHTML = rows.join('');
   // Due colori: the detail card carries whose it is (mine, theirs, ours).
@@ -943,14 +956,15 @@ function openDetail(entryId) {
   ensureNoiEditorSheets();
   const sheet = $('usCalendarDetailSheet');
   if (!sheet) return;
+  window.UsUiFoundation?.cancelSurfaceExit?.(sheet);
   sheet.classList.add('open');
   sheet.setAttribute('aria-hidden', 'false');
 }
 function closeCalendarDetailSheet() {
   const sheet = $('usCalendarDetailSheet');
   if (!sheet) return;
-  sheet.classList.remove('open');
-  sheet.setAttribute('aria-hidden', 'true');
+  const finalize = () => { sheet.classList.remove('open'); sheet.setAttribute('aria-hidden', 'true'); };
+  if (window.UsUiFoundation?.exitSurface && sheet.getAttribute('aria-hidden') === 'false') window.UsUiFoundation.exitSurface(sheet, finalize); else finalize();
   detailEntry = null;
 }
 
@@ -1115,7 +1129,7 @@ function openForm(mode, entry, dateISO) {
   const context = $('usCalendarFormContext');
   if (context) context.hidden = true;
   const title = $('usCalendarFormTitle');
-  if (title) title.textContent = mode === 'edit' ? 'Modifica impegno' : 'Nuovo impegno';
+  if (title) title.innerHTML = mode === 'edit' ? 'Modifica <em>impegno</em>' : 'Nuovo <em>impegno</em>';
   setFormStatus('');
   const saveBtn = $('usCalendarFormSave');
   if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = mode === 'edit' ? 'Salva modifiche' : 'Salva impegno'; }
@@ -1158,6 +1172,7 @@ function openForm(mode, entry, dateISO) {
   ensureNoiEditorSheets();
   const sheet = $('usCalendarFormSheet');
   if (!sheet) return;
+  window.UsUiFoundation?.cancelSurfaceExit?.(sheet);
   sheet.classList.add('open');
   sheet.setAttribute('aria-hidden', 'false');
   setTimeout(() => $('usCalendarTitleInput')?.focus({ preventScroll: true }), 80);
@@ -1173,8 +1188,8 @@ function startCreateForDate(dateISO) {
 function closeCalendarFormSheet() {
   const sheet = $('usCalendarFormSheet');
   if (!sheet) return;
-  sheet.classList.remove('open');
-  sheet.setAttribute('aria-hidden', 'true');
+  const finalize = () => { sheet.classList.remove('open'); sheet.setAttribute('aria-hidden', 'true'); };
+  if (window.UsUiFoundation?.exitSurface && sheet.getAttribute('aria-hidden') === 'false') window.UsUiFoundation.exitSurface(sheet, finalize); else finalize();
   editingFormEntry = null;
   pendingIdeaLink = null;
 }
@@ -1355,7 +1370,7 @@ function openIdeaForm(pick, dateISO) {
   const kindGroup = $('usCalendarKind');
   if (kindGroup) kindGroup.hidden = true;
   const title = $('usCalendarFormTitle');
-  if (title) title.textContent = 'Metti in calendario';
+  if (title) title.innerHTML = 'Metti in <em>calendario</em>';
   const context = $('usCalendarFormContext');
   if (context) context.hidden = false;
   const saveBtn = $('usCalendarFormSave');

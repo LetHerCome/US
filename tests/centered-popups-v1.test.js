@@ -7,12 +7,22 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const read = (name) => fs.readFileSync(path.join(root,name),'utf8');
 
+// Mockup v5 «I fogli» (16/11/2026): the sheets brought over are the one sheet
+// of the diary (.dy-foglio, diario.css) and leave this centred shell.
+const fogli = ['today', 'thinkArrival', 'usSettingsOverlay', 'leftForYouOverlay', 'leftForYouComposerOverlay', 'usCalendarDetailSheet', 'usCalendarFormSheet'];
+test('the sheets brought over are the one sheet of the diary', () => {
+  const html = read('index.html');
+  const css = read('modal-center.css');
+  for (const id of fogli) {
+    assert.match(html, new RegExp('<[a-z]+ (?=[^>]*id="' + id + '")(?=[^>]*class="dy-foglio)'), id);
+    assert.doesNotMatch(css, new RegExp('#' + id + '(?![\\w-])'));
+  }
+  assert.match(read('ui-foundation.js'), /root\.className = danger \? 'dy-foglio us-confirm is-danger' : 'dy-foglio us-confirm'/);
+  assert.match(read('diario.css'), /\.dy-foglio\[data-us-motion-exiting\] \.dy-foglio-panel\{animation:none;transform:translateY\(100%\)\}/);
+});
 const popups = [
-  'today','thinkArrival','usCountdownSheet','usEventsOverlay',
-  'usSettingsOverlay','usWidgetHub','leftForYouOverlay',
-  'leftForYouComposerOverlay','conservatiOverlay',
-  // 1.0 (N10): the old full-screen calendar overlay is gone; its two sheets stay.
-  'usCalendarDetailSheet','usCalendarFormSheet'
+  'usCountdownSheet','usEventsOverlay',
+  'usWidgetHub','conservatiOverlay'
 ];
 
 test('popup surfaces share a centred container and matching modal-panel shell', () => {
@@ -34,7 +44,6 @@ test('entry/exit both animate softly from centre and respect motion preferences'
   assert.match(css,/transform: translateY\(8px\) scale\(\.965\)/);
   assert.match(css,/\[data-us-motion-exiting\]/);
   assert.match(css,/\[aria-hidden="false"\]/);
-  assert.match(css,/\.us-confirm:not\(\.open\)/);
   assert.match(css,/prefers-reduced-motion: reduce/);
   assert.match(css,/data-us-motion="reduced"/);
   assert.match(read('ui-foundation.js'),/event\.propertyName === 'transform'/);
@@ -44,7 +53,7 @@ test('Calendar nested details and form receive the shared centre-motion treatmen
   const html = read('index.html');
   const calendar = read('calendar.js');
   for(const id of ['usCalendarDetailSheet','usCalendarFormSheet']) {
-    assert.match(html,new RegExp('id="'+id+'" aria-hidden="true" data-us-modal data-us-motion-surface'));
+    assert.match(html,new RegExp('id="'+id+'" aria-hidden="true" data-us-modal>')); // the one sheet (mockup v5 «I fogli»)
     assert.match(calendar,new RegExp("'"+id+"'"));
   }
 });

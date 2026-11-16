@@ -154,31 +154,8 @@
 #bond .us-noi-v2 .us-noi-v2-empty-month .us-noi-v2-text-action{min-height:44px;padding:0 12px;font-size:14px;font-weight:500;color:var(--us-color-text-3)}
 
 /* ---------- Lavagna (the mockup's Foglio "Questa settimana") ---------- */
-#usNoiLavagna{--us-sheet-k:var(--us-noi)}
-#usNoiLavagna [data-owner]{--dc-who:var(--us-noi)}
-#usNoiLavagna [data-owner="tu"]{--dc-who:var(--us-tu)}
-#usNoiLavagna [data-owner="partner"]{--dc-who:var(--us-partner)}
-#usNoiLavagna.us-foglio>.us-noi-lavagna-sheet{display:grid;align-content:start;gap:12px;min-height:min(calc(var(--us-viewport-height,100dvh) * .86),calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 8px));padding:0 20px calc(24px + var(--us-safe-bottom))}
-#usNoiLavagna .us-noi-lavagna-body{display:grid;gap:12px;min-width:0;touch-action:pan-y}
-#usNoiLavagna .us-noi-v2-week-list{display:grid;gap:6px}
-#usNoiLavagna .us-noi-v2-week-row{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:10px;min-height:54px;padding:8px 12px;border:0;border-radius:16px;background:var(--us-color-surface-2)}
-#usNoiLavagna .us-noi-v2-week-row.is-today{box-shadow:inset 0 0 0 1.5px var(--us-tu)}
-#usNoiLavagna .us-noi-v2-list-date{position:relative;display:block;min-height:0;margin:0;padding:0;border:0;background:none;text-align:left;font-family:var(--us-font-ui);font-size:10px;font-weight:700;line-height:1.5;letter-spacing:.1em;text-transform:uppercase;color:var(--us-color-text-3);cursor:pointer}
-#usNoiLavagna .us-noi-v2-list-date::after{content:"";position:absolute;inset:-8px -12px}
-#usNoiLavagna .us-noi-v2-list-date b{display:block;font-family:var(--us-font-display);font-weight:400;font-size:22px;line-height:1;letter-spacing:0;color:var(--us-color-text)}
-#usNoiLavagna .us-noi-v2-list-date small{font:inherit}
-#usNoiLavagna .us-noi-v2-week-lane{display:flex;flex-wrap:wrap;align-items:center;gap:5px;min-width:0}
-#usNoiLavagna .us-noi-v2-chip{position:relative;min-height:0;max-width:100%;padding:5px 10px;border-radius:999px;border:0;background:var(--dc-who);color:var(--us-inchiostro);font-family:var(--us-font-ui);font-size:12px;font-weight:600;line-height:1.5;text-align:left;overflow-wrap:anywhere;cursor:pointer}
-#usNoiLavagna .us-noi-v2-chip::after{content:"";position:absolute;inset:-6px -2px}
-#usNoiLavagna .us-noi-v2-chip:focus-visible{outline:2px solid var(--us-color-text);outline-offset:2px}
-#usNoiLavagna .us-noi-v2-free{cursor:default}
-#usNoiLavagna .us-noi-v2-free::after{content:none}
-#usNoiLavagna .us-noi-v2-week-empty{padding:0;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
+
 /* The free evenings of both of you, then the mockup's hint, in its small note. */
-#usNoiLavagna .us-noi-v2-week-summary{display:flex;align-items:center;justify-content:center;gap:6px;margin:0;font-size:12px;font-weight:600;line-height:1.5;color:var(--us-color-text-2)}
-#usNoiLavagna .us-noi-v2-week-summary .us-icon{--us-icon-size:14px;width:14px;height:14px;color:var(--us-noi)}
-#usNoiLavagna .us-noi-v2-week-note{margin:0;font-size:12px;line-height:1.5;color:var(--us-color-text-3);text-align:center}
-#usNoiLavagna .us-noi-v2-week-summary+.us-noi-v2-week-note{margin-top:-10px}
 
 /* ---------- Lavagna · Missioni · Eventi tiles ---------- */
 
@@ -289,7 +266,7 @@
 #bond .noi-idea-quick-form .noi-idea-form-status{grid-column:1/-1}
 #bond .noi-idea-quick-actions button,#bond .noi-idea-detail-actions button{min-height:44px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:700}
 #bond .noi-idea-quick-actions .ghost,#bond #noiIdeaDetailArchive{background:transparent;border:1px solid var(--us-color-line-strong);color:var(--us-color-text)}
-#bond .noi-idea-quick-actions .primary,#bond .noi-idea-detail-actions .primary{background:var(--us-tu);color:var(--us-inchiostro);border:0;box-shadow:none}
+#bond .noi-idea-quick-actions .primary,#bond .noi-idea-detail-actions .primary{background:var(--us-ink-100);color:var(--us-paper);border:0;box-shadow:none}
 #bond .noi-idea-browse .noi-idea-list{display:grid;gap:0;margin-top:12px;border-radius:20px;background:var(--us-color-surface-2);overflow-x:hidden;overflow-y:auto;padding-bottom:0;-webkit-mask-image:none;mask-image:none}
 #bond .noi-idea-browse .noi-idea-list:empty{display:none}
 #bond .noi-idea-browse .noi-idea-list>.noi-quiet-state,#bond .noi-idea-browse .noi-idea-list>.empty-state{padding:22px 16px;text-align:center}
@@ -315,7 +292,7 @@
 #bond .noi-idea-section .noi-idea-quick-form{grid-template-columns:minmax(0,1fr) auto;gap:0 8px;margin:0}
 #bond .noi-idea-section .noi-idea-quick-form>input{grid-column:1;grid-row:1;min-height:48px;border-radius:16px;background:var(--us-color-bg);border:1px solid var(--us-color-line-strong)}
 #bond .noi-idea-section .noi-idea-quick-actions,#bond .noi-idea-section .noi-idea-quick-form:has(#noiIdeaQuickExtra:not([hidden])) .noi-idea-quick-actions{grid-column:2;grid-row:1;align-self:stretch}
-#bond .noi-idea-section .noi-idea-quick-actions .primary{min-height:48px;padding:0 14px;font-size:14px;font-weight:700;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro)}
+#bond .noi-idea-section .noi-idea-quick-actions .primary{min-height:48px;padding:0 14px;font-size:14px;font-weight:700;border-radius:999px;background:var(--us-ink-100);color:var(--us-paper)}
 #bond .noi-idea-section .noi-idea-quick-more{grid-column:1/-1;grid-row:2;min-height:36px;margin-top:10px;font-size:13px;font-weight:600;color:var(--us-color-text-2)}
 #bond .noi-idea-section .noi-idea-quick-extra{grid-row:3;margin-top:8px}
 #bond .noi-idea-section .noi-idea-quick-form .noi-idea-form-status{grid-row:4}
@@ -354,80 +331,18 @@
 .us-cal-sheet .us-cal-sheet-head{align-items:flex-start;padding:16px 20px 10px}
 .us-cal-sheet-titles{display:grid;gap:2px;min-width:0}
 .us-cal-sheet .us-cal-sheet-kicker{display:block;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--us-tu);opacity:1}
-#usCalendarFormSheet .us-cal-sheet-kicker{color:var(--us-noi)}
+
 .us-cal-sheet .us-cal-sheet-head h3{margin:0;font-family:var(--us-font-display);font-weight:400;font-size:26px;line-height:1.12;letter-spacing:-.01em;text-wrap:balance}
 
 /* Impegno: when, where and whose, in the mockup's .ev-meta card. */
-.us-cal-sheet .us-cal-detail-body{display:grid;gap:12px;margin:12px 20px 0;padding:0;border-radius:0;background:none}
-.us-cal-sheet .us-cal-detail-body::before{content:none}
-.us-cal-sheet .us-cal-detail-body[data-owner="tu"]{--dc-who:var(--us-tu)}
-.us-cal-sheet .us-cal-detail-body[data-owner="partner"]{--dc-who:var(--us-partner)}
-.us-cal-sheet .us-cal-detail-body[data-owner="noi"]{--dc-who:var(--us-noi)}
-.us-cal-sheet .us-cal-detail-meta{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:18px;background:var(--us-color-surface-2)}
-.us-cal-sheet .us-cal-detail-dot{flex:none;width:9px;height:9px;margin-top:6px;border-radius:50%;background:var(--dc-who,var(--us-noi))}
-.us-cal-sheet .us-cal-detail-meta b{display:block;font-size:15px;font-weight:600;line-height:22.5px;color:var(--us-color-text)}
-.us-cal-sheet .us-cal-detail-meta small{display:block;font-size:13px;line-height:19.5px;font-weight:400;color:var(--us-color-text-3)}
-.us-cal-sheet .us-cal-detail-note{margin:0;font-size:15px;line-height:22.5px;color:var(--us-color-text-2)}
+
 /* The Foglio head of the mockup: no sticky bar, no divider; the kicker in the owner's colour. */
-:is(#usCalendarDetailSheet,#usCalendarFormSheet,#usNoiLavagna)>[data-us-modal-panel]>.us-cal-sheet-head{position:static!important;margin:0;padding:30px 20px 0!important;border:0!important;background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important}
-:is(#usCalendarDetailSheet,#usCalendarFormSheet,#usNoiLavagna)>[data-us-modal-panel]>.us-cal-sheet-head .tiny{line-height:16.5px!important;margin:0 0 1.5px!important}
-:is(#usCalendarDetailSheet,#usCalendarFormSheet,#usNoiLavagna) .us-cal-sheet-titles{gap:0}
-#usCalendarDetailSheet{--us-sheet-k:var(--us-tu)}
-#usCalendarDetailSheet[data-owner="partner"]{--us-sheet-k:var(--us-partner)}
-#usCalendarDetailSheet[data-owner="noi"]{--us-sheet-k:var(--us-noi)}
-#usCalendarDetailSheet .us-cal-sheet-kicker{color:var(--us-sheet-k)!important}
-.us-cal-sheet .us-cal-detail-meta small,.us-cal-sheet .us-cal-detail-meta small *{color:var(--us-color-text-3)!important}
-#usCalendarFormSheet>[data-us-modal-panel]{min-height:min(calc(var(--us-viewport-height,100dvh) * .86),calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 8px))}
-.us-cal-sheet .us-cal-detail-actions{display:grid;gap:8px;padding:16px 20px 4px}
-.us-cal-sheet .us-cal-detail-actions button{min-height:52px;border-radius:999px;font-size:16px;font-weight:700}
-.us-cal-sheet .us-cal-detail-edit{background:var(--us-tu);border:0;color:var(--us-inchiostro)}
-.us-cal-sheet .us-cal-detail-delete{background:transparent;border:1px solid color-mix(in srgb,var(--us-rosso) 40%,transparent);color:var(--us-rosso)}
 
 /* Nuovo impegno: quick titles, fields with small caps labels, a real switch. */
-.us-cal-sheet .us-cal-form{display:grid;gap:12px;padding:4px 20px 6px}
+
 /* One "+", three choices: Solo mio · Nostro · Data speciale, each in its colour. */
-.us-cal-sheet .us-cal-kind{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0}
-.us-cal-sheet .us-cal-kind[hidden]{display:none}
-.us-cal-sheet .us-cal-kind button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;padding:8px 4px;border-radius:16px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text-2);font-size:13px;font-weight:600;line-height:1.2;text-align:center;overflow-wrap:anywhere}
-.us-cal-sheet .us-cal-kind button .us-icon{--us-icon-size:20px;color:var(--dc-who)}
-.us-cal-sheet .us-cal-kind button[aria-pressed="true"]{border-color:var(--dc-who);background:color-mix(in srgb,var(--dc-who) 14%,transparent);color:var(--us-color-text)}
-.us-cal-sheet .us-cal-kind button:focus-visible{outline:2px solid var(--us-color-text);outline-offset:2px}
-#usCalendarFormSheet[data-kind="shared"] .us-cal-form-save{background:var(--us-noi)}
-.us-cal-sheet .us-cal-form-context{margin:0;font-size:13px;color:var(--us-color-text-2)}
-.us-cal-sheet .us-cal-form-day{margin:0;font-family:var(--us-font-display);font-weight:400;font-size:20px;color:var(--us-color-text)}
-.us-cal-sheet .us-cal-form-day-entries{margin:0;gap:6px}
-.us-cal-sheet .us-cal-form-day-kicker{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-color-text-3)}
-.us-cal-sheet .us-cal-form-day-entry{min-height:44px;padding:0 13px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent}
-.us-cal-sheet .us-cal-presets{display:flex;flex-wrap:wrap;gap:6px;margin:0}
-.us-cal-sheet .us-cal-presets button{min-height:40px;padding:0 13px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text-2);font-size:13px;font-weight:600;letter-spacing:0;text-transform:none}
-.us-cal-sheet .us-cal-presets button[aria-pressed="true"]{background:var(--us-color-text);border-color:var(--us-color-text);color:var(--us-inchiostro)}
+
 /* «+» adds a quick title of your own (04/11/2026); a long press on one of yours takes it away. */
-.us-cal-sheet .us-cal-presets .us-cal-preset-add{display:grid;place-items:center;width:40px;padding:0;border-style:dashed}
-.us-cal-sheet .us-cal-presets .us-cal-preset-add .us-icon{--us-icon-size:18px}
-.us-cal-sheet .us-cal-preset-new{display:flex;align-items:center;gap:6px;flex:1 1 220px;min-width:0}
-.us-cal-sheet .us-cal-preset-new[hidden],.us-cal-sheet .us-cal-preset-add[hidden]{display:none}
-.us-cal-sheet .us-cal-preset-new input{flex:1;min-width:0;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:var(--us-color-bg);color:var(--us-color-text);font:600 14px/1 var(--us-font-ui)}
-.us-cal-sheet .us-cal-presets .us-cal-preset-new button{background:var(--us-color-text);border-color:var(--us-color-text);color:var(--us-inchiostro)}
-.us-cal-sheet .us-cal-presets [data-us-calendar-preset-own]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.us-cal-sheet .us-cal-field{display:grid;gap:6px;margin:0}
-.us-cal-sheet .us-cal-field>span{margin:0;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--us-color-text-3)}
-.us-cal-sheet .us-cal-field>span i{text-transform:none;letter-spacing:0;font-weight:500}
-.us-cal-sheet .us-cal-field input:not([type="checkbox"]),.us-cal-sheet .us-cal-field textarea{min-height:52px;padding:0 14px;border-radius:16px;background:var(--us-color-bg);border:1px solid var(--us-color-line-strong);color:var(--us-color-text);font-size:16px;box-shadow:none}
-.us-cal-sheet .us-cal-field input:focus-visible{outline:none;border-color:var(--us-noi);box-shadow:0 0 0 3px color-mix(in srgb,var(--us-noi) 26%,transparent)}
-.us-cal-sheet .us-cal-allday-field{display:flex;flex-direction:row-reverse;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:0 14px 0 16px;border-radius:16px;border:0;background:var(--us-color-surface-2);cursor:pointer}
-.us-cal-sheet .us-cal-allday-field>span{margin:0;font-size:15px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--us-color-text)}
-.us-cal-sheet .us-cal-allday-field input{-webkit-appearance:none;appearance:none;position:relative;width:50px;height:30px;min-height:0;margin:0;padding:0;flex:none;border:0;border-radius:30px;background:var(--us-color-elevated);cursor:pointer;transition:background .25s var(--us-ease-standard)}
-.us-cal-sheet .us-cal-allday-field input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--us-latte);box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .38s var(--us-ease-spring)}
-.us-cal-sheet .us-cal-form .us-cal-allday-field input[type="checkbox"]{background:var(--us-color-elevated)!important;box-shadow:inset 0 0 0 1px var(--us-color-line-strong)}
-.us-cal-sheet .us-cal-form .us-cal-allday-field input[type="checkbox"]:checked{background:var(--us-tu)!important;box-shadow:none}
-.us-cal-sheet .us-cal-allday-field input:checked::after{transform:translateX(20px)}
-.us-cal-sheet .us-cal-allday-field input:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
-.us-cal-sheet .us-cal-time-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:end}
-.us-cal-sheet .us-cal-time-arrow{display:none}
-.us-cal-sheet .us-cal-field .us-cal-time-input{text-align:left;letter-spacing:.02em}
-.us-cal-sheet .us-cal-form-status:empty{display:none}
-.us-cal-sheet .us-cal-form-status{font-size:13px;font-weight:600;color:var(--us-rosso)}
-.us-cal-sheet .us-cal-form-save{width:100%;min-height:52px;margin-top:4px;border-radius:999px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:16px;font-weight:700;box-shadow:none}
 
 /* ==========================================================================
    Eventi sheet (events.js): mockup 050 list, 051 new event, 052 one event
@@ -457,7 +372,7 @@
 #usEventsOverlay .us-event-tag{font-style:normal;font-size:10px;font-weight:700;line-height:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--us-inchiostro);background:var(--us-ambra);padding:4px 8px;border-radius:999px;white-space:nowrap}
 #usEventsOverlay .us-event-ok{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--us-verde) 20%,transparent);color:var(--us-verde);font-style:normal}
 #usEventsOverlay .us-event-ok .us-icon{--us-icon-size:14px}
-#usEventsOverlay .us-event-add{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;margin:4px 0 0;border-radius:999px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:16px;font-weight:700;box-shadow:none}
+#usEventsOverlay .us-event-add{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;margin:4px 0 0;border-radius:999px;border:0;background:var(--us-ink-100);color:var(--us-paper);font-size:16px;font-weight:700;box-shadow:none}
 #usEventsOverlay .us-event-add .us-icon{--us-icon-size:18px;color:inherit}
 #usEventsOverlay .us-events-empty{padding:22px 16px;border-radius:18px;border:1px dashed var(--us-color-line-strong);background:none;text-align:center;font-size:14px;color:var(--us-color-text-2)}
 /* One event: the detail (mode="detail") or its fields (mode="edit"). */
@@ -483,26 +398,26 @@
 #usEventForm .us-event-repeat small{display:block;margin:0;font-size:12px;line-height:1.3;color:var(--us-color-text-3)}
 #usEventForm .us-event-repeat input[type="checkbox"]{-webkit-appearance:none;appearance:none;position:relative;width:50px;height:30px;margin:0;flex:none;border:0;border-radius:30px;background:var(--us-color-elevated)!important;box-shadow:none;cursor:pointer;transition:background .25s}
 #usEventForm .us-event-repeat input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--us-latte);box-shadow:0 2px 6px rgba(0,0,0,.35);transition:translate .38s cubic-bezier(.34,1.56,.64,1)}
-#usEventForm .us-event-repeat input[type="checkbox"]:checked{background:var(--us-tu)!important}
+#usEventForm .us-event-repeat input[type="checkbox"]:checked{background:var(--us-ink-100)!important}
 #usEventForm .us-event-repeat input:checked::after{translate:20px 0}
 #usEventForm .us-event-repeat input:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
 #usEventForm .us-event-status{min-height:0;margin:0;font-size:13px;font-weight:600;color:var(--us-color-text-2)}
 #usEventForm .us-event-status:empty{display:none}
-#usEventForm .us-event-complete{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;margin:4px 0 0;border-radius:999px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:16px;font-weight:700;letter-spacing:0;box-shadow:none}
+#usEventForm .us-event-complete{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;margin:4px 0 0;border-radius:999px;border:0;background:var(--us-ink-100);color:var(--us-paper);font-size:16px;font-weight:700;letter-spacing:0;box-shadow:none}
 #usEventForm .us-event-complete[hidden]{display:none}
 #usEventForm .us-event-complete .us-icon{--us-icon-size:18px}
 #usEventForm .us-event-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:4px 0 0}
 #usEventForm[data-mode="edit"] .us-event-actions,#usEventForm .us-event-actions:has(#usEventDeleteBtn[hidden]){grid-template-columns:minmax(0,1fr)}
 #usEventForm .us-event-actions button{min-height:48px;border-radius:999px;font-size:15px;box-shadow:none}
-#usEventForm #usEventSaveBtn{min-height:52px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:16px;font-weight:700}
+#usEventForm #usEventSaveBtn{min-height:52px;border:0;background:var(--us-ink-100);color:var(--us-paper);font-size:16px;font-weight:700}
 #usEventForm .us-event-edit{background:transparent;border:1px solid var(--us-color-line-strong);color:var(--us-color-text);font-weight:600}
 #usEventForm .us-event-delete{background:transparent;border:1px solid color-mix(in srgb,var(--us-rosso) 40%,transparent);color:var(--us-rosso);font-weight:600}
 
 /* ---------- Motion: one light slide on month change; reduced = none ---------- */
 :root[data-us-motion="reduced"] #bond .us-noi-v2 *{transition:none!important;animation:none!important}
-:root[data-us-motion="reduced"] .us-cal-sheet .us-cal-allday-field input::after,:root[data-us-motion="reduced"] #usEventForm .us-event-repeat input::after{transition:none}
+:root[data-us-motion="reduced"] #usEventForm .us-event-repeat input::after{transition:none}
 @media (prefers-reduced-motion:reduce){
-  .us-cal-sheet .us-cal-allday-field input::after,#usEventForm .us-event-repeat input::after,#bond .noi-idea-lived-toggle::after{transition:none}
+  #usEventForm .us-event-repeat input::after,#bond .noi-idea-lived-toggle::after{transition:none}
 }
 
 /* ---------- Small phones and large text ---------- */

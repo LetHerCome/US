@@ -203,36 +203,7 @@ body.us-album-open{overflow:hidden;touch-action:none}
 .us-moments-add:active{transform:scale(.94)}
 
 /* Composer becomes a focused bottom sheet instead of occupying the feed */
-.us-moment-compose-overlay{
-  position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;
-  align-items:flex-end;justify-content:center;
-  background:transparent;
-  padding-top:calc(var(--us-safe-top) + 10px);
-}
-.us-moment-compose-overlay.show{display:flex}
-.us-moment-compose-sheet{width:min(500px,100%);max-height:calc(var(--us-viewport-height,100dvh) - max(24px,var(--us-safe-top)));overflow:auto;overscroll-behavior:contain;position:relative;z-index:1;padding:10px 14px calc(16px + var(--us-safe-bottom))}
-.us-moment-compose-grabber{
-  width:36px;height:4px;border-radius:99px;background:rgba(255,255,255,.20);
-  margin:1px auto 12px
-}
-.us-moment-compose-title{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 3px 12px
-}
-.us-moment-compose-title div{min-width:0}
-.us-moment-compose-title small{
-  display:block;color:var(--us-color-text-2);font-size:9px;letter-spacing:.11em;text-transform:uppercase
-}
-.us-moment-compose-title b{display:block;margin-top:3px;font-size:17px}
-.us-moment-compose-sheet .moment-compose{margin:0!important}
-.us-moment-compose-sheet .moment-picker{
-  border-radius:20px!important;background:var(--us-color-surface-2)!important;
-  border-color:rgba(255,255,255,.09)!important;
-  box-shadow:none!important
-}
-.us-moment-compose-sheet .moment-picker-empty{min-height:132px!important}
-.us-moment-compose-sheet .moment-preview{aspect-ratio:4/3!important}
-.us-moment-compose-sheet .moment-details{padding:12px 0 0!important}
-.us-moment-compose-sheet .moment-private{text-align:center;margin-top:11px!important}
+
 body.us-moment-compose-open{overflow:hidden}
 
 /* Feed: cleaner photographic journal instead of generic cards */
@@ -469,7 +440,7 @@ body.us-moment-compose-open{overflow:hidden}
   .us-album-photo-card:nth-of-type(3n+1){grid-column:auto}
   .us-album-photo-card:nth-of-type(4n+1){grid-column:span 2}
 }
-@media(prefers-reduced-motion:reduce){.us-moment-compose-sheet,.us-album-overlay.show .us-album-shell{animation:none!important}.us-album-lightbox,.us-album-lightbox-stage,.us-album-lightbox-photo{transform:none!important;transition:opacity 100ms linear!important}}
+@media(prefers-reduced-motion:reduce){.us-album-overlay.show .us-album-shell{animation:none!important}.us-album-lightbox,.us-album-lightbox-stage,.us-album-lightbox-photo{transform:none!important;transition:opacity 100ms linear!important}}
 /* ============================================================
    US · Moments Consistency Fix
    ============================================================ */
@@ -608,19 +579,6 @@ body.us-keyboard-open .us-album-floating-add,
 }
 
 /* M5J · Conservati, inside the existing Ricordi experience. */
-.us-conservati-entry{
-  width:100%;min-height:72px;margin:0 0 14px;padding:12px 14px;
-  display:flex;align-items:center;gap:12px;text-align:left;
-  border:1px solid rgba(255,255,255,.10);border-radius:19px;
-  background:linear-gradient(120deg,rgba(246,111,158,.10),rgba(139,114,248,.09));
-  color:var(--us-text);box-shadow:0 9px 24px rgba(0,0,0,.16)
-}
-.us-conservati-entry:active{transform:scale(.99)}
-.us-conservati-entry-mark{width:38px;height:38px;flex:0 0 auto;display:grid;place-items:center;border-radius:14px;background:rgba(255,255,255,.08);font-size:20px;color:#f2a6c7}
-.us-conservati-entry-copy{min-width:0;display:grid;gap:4px;flex:1}
-.us-conservati-entry-copy b{font:500 17px/1.1 var(--us-font-editorial);color:var(--us-color-text)}
-.us-conservati-entry-copy small{color:rgba(247,242,248,.62);font-size:11px;line-height:1.35}
-.us-conservati-entry-chevron{color:rgba(247,242,248,.52);display:grid;--us-icon-size:18px}
 
 .conservati-overlay{position:fixed;inset:0;z-index:10130;display:none;align-items:flex-end;justify-content:center;padding-top:var(--us-safe-top)}
 .conservati-overlay.show{display:flex}
@@ -654,7 +612,6 @@ body.us-keyboard-open .us-album-floating-add,
 .conservati-media-unavailable{margin:18px 0;padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:14px;color:var(--us-muted);font-size:12px;text-align:center}
 .conservati-loading[hidden],.conservati-empty[hidden],.conservati-error[hidden],.conservati-list[hidden],.conservati-detail[hidden]{display:none!important}
 @media(max-width:360px){.conservati-head{padding-inline:15px;background:var(--us-sheet-head-bg);-webkit-backdrop-filter:var(--us-sheet-head-blur);backdrop-filter:var(--us-sheet-head-blur);border-bottom:1px solid var(--us-color-line)}.conservati-body{padding-inline:14px}.conservati-card-kind{max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
-@media(prefers-reduced-motion:reduce){.us-conservati-entry:active{transform:none}}
 
 /* ============================================================
    M8A · Ricordi living archive
@@ -872,27 +829,6 @@ body.us-keyboard-open .us-album-floating-add,
 #moments .ricordi-rivivi-body{padding:0 13px 13px}
 
 /* Conservati is a destination row, not a feature hero. */
-#moments .us-conservati-entry{
-  min-height:54px;
-  margin:0 0 14px;
-  padding:7px 11px;
-  gap:10px;
-  border-radius:17px;
-  background:rgba(255,255,255,.028);
-  border-color:rgba(255,255,255,.075);
-  box-shadow:none;
-}
-#moments .us-conservati-entry-mark{
-  width:32px;height:32px;
-  border-radius:11px;
-  font-size:17px;
-  background:rgba(255,137,172,.075);
-}
-#moments .us-conservati-entry-copy{gap:1px}
-#moments .us-conservati-entry-copy b{
-  font:600 15px/1.1 var(--us-font-ui);
-}
-#moments .us-conservati-entry-chevron{--us-icon-size:16px}
 
 /* Section hierarchy: label small, month is the title. */
 #moments .ricordi-section-head{

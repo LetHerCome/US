@@ -728,7 +728,7 @@ function boot(){
     if(Math.abs(dx)>56&&Math.abs(dx)>Math.abs(dy)*1.5)shiftMonth(dx<0?1:-1);
   });
   document.addEventListener('keydown',e=>{
-    if(e.key!=='Escape'||mode!=='week'||document.querySelector('.us-cal-sheet-overlay.open:not(#usNoiLavagna),#usEventsOverlay.open'))return;
+    if(e.key!=='Escape'||mode!=='week'||document.querySelector('.us-cal-sheet-overlay.open:not(#usNoiLavagna),#usCalendarDetailSheet.open,#usCalendarFormSheet.open,#usEventsOverlay.open'))return;
     closeWeek();
   });
   const bond=$('bond');

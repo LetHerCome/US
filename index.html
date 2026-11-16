@@ -634,20 +634,21 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     </section>
   </div>
 
-  <main id="today" class="today-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
-    <div class="today-backdrop us-modal-backdrop" onclick="closeToday()"></div>
-    <section class="today-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="La domanda di oggi" data-us-modal-panel>
-      <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close us-modal-close" onclick="closeToday()" aria-label="Chiudi la domanda di oggi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>
-      <div class="card question">
-        <div class="qtext">Un attimo…</div>
-        <textarea id="answer" rows="4" placeholder="Scrivi…" hidden disabled></textarea>
-        <div class="row"><button class="primary" id="todaySaveBtn" onclick="saveAnswer()" hidden disabled>Rispondi</button></div>
-        <div class="locked" id="locked" role="status" aria-live="polite"></div>
+  <main id="today" class="dy-foglio" aria-hidden="true" data-us-modal>
+    <div class="dy-foglio-scrim" onclick="closeToday()"></div>
+    <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="todayTitle" data-us-modal-panel>
+      <span class="dy-grab" aria-hidden="true"></span>
+      <div class="dy-sheet-head"><h2 class="dy-sheet-title" id="todayTitle">La domanda <em>di oggi</em></h2><button type="button" class="dy-ib dy-close" onclick="closeToday()" aria-label="Chiudi la domanda di oggi" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="dy-f-body">
+        <div class="qtext dy-f-q">Un attimo…</div>
+        <div id="todayPartner" hidden></div>
+        <div id="todayMine" class="dy-f-sign" hidden><span class="dy-stk" id="todayMe"></span><div class="dy-f-field"><textarea id="answer" class="dy-f-in dy-f-hand" rows="4" placeholder="scrivi qui…" hidden disabled></textarea></div></div>
+        <div class="dy-f-note" id="locked" role="status" aria-live="polite"></div>
         <div id="todayReveal" class="hidden"></div>
-        <div id="todayKeep" class="today-keep" data-us-daily-keepsake aria-live="polite" hidden></div>
+        <div id="todayKeep" class="dy-f-acts today-keep" data-us-daily-keepsake aria-live="polite" hidden></div>
       </div>
-      <p id="todaySyncStatus" class="today-sync-status" role="status" hidden></p>
-      <button type="button" id="todayRetryBtn" onclick="hydrateToday()" hidden>Riprova</button>
+      <p id="todaySyncStatus" class="dy-f-note today-sync-status" role="status" hidden></p>
+      <div class="dy-f-acts"><button class="dy-btn dy-btn-l" id="todaySaveBtn" onclick="saveAnswer()" hidden disabled>Rispondi</button><button type="button" class="dy-btn dy-btn-l dy-btn-ghost" id="todayRetryBtn" onclick="hydrateToday()" hidden>Riprova</button></div>
       <div class="push-settings-row" id="pushSettingsRow" hidden>
         <span><b id="pushSettingsStatus">Notifiche</b><small id="pushSettingsDetail">Stato notifiche US</small></span>
         <button type="button" id="pushDisableBtn" onclick="disableWebPush()">Disattiva</button>
@@ -655,18 +656,18 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     </section>
   </main>
 
-  <main id="thinkArrival" class="think-arrival-overlay" aria-hidden="true" data-us-modal data-us-transient data-us-motion-surface>
-    <div class="think-arrival-backdrop us-modal-backdrop" onclick="closeThinkArrival()"></div>
-    <section class="think-arrival-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="Ti penso ricevuto" data-us-modal-panel>
-      <header class="think-arrival-head"><div><span class="think-arrival-visual" aria-hidden="true"><i></i><i></i></span><div class="tiny">Ti penso</div><h2 id="thinkArrivalTitle">La tua persona ti pensa</h2></div></header>
-      <p id="thinkArrivalCopy" class="think-arrival-copy" hidden></p>
-      <div class="think-reaction-grid" role="group" aria-label="Rispondi con">
-        <button type="button" class="think-reaction-button" data-think-reaction="heart" aria-label="Rispondi con un cuore" aria-pressed="false"><span class="think-reaction-glyph think-reaction-heart" aria-hidden="true">♥</span><span class="sr-only">heart</span></button>
-        <button type="button" class="think-reaction-button" data-think-reaction="hug" aria-label="Rispondi con un abbraccio" aria-pressed="false"><span class="think-reaction-glyph think-reaction-hug" aria-hidden="true">🫂</span><span class="sr-only">hug</span></button>
-        <button type="button" class="think-reaction-button" data-think-reaction="miss_you" aria-label="Rispondi con un pensiero" aria-pressed="false"><span class="think-reaction-glyph think-reaction-miss" aria-hidden="true">💭</span><span class="sr-only">miss_you</span></button>
+  <main id="thinkArrival" class="dy-foglio" aria-hidden="true" data-us-modal data-us-transient>
+    <div class="dy-foglio-scrim" onclick="closeThinkArrival()"></div>
+    <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="thinkArrivalTitle" data-us-modal-panel>
+      <span class="dy-grab" aria-hidden="true"></span>
+      <div class="dy-sheet-head"><div><h2 class="dy-sheet-title" id="thinkArrivalTitle">La tua persona <em>ti pensa</em></h2><p id="thinkArrivalCopy" class="dy-sheet-sub" hidden></p></div><button type="button" class="dy-ib dy-close" onclick="closeThinkArrival()" aria-label="Chiudi" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="dy-think-who" id="thinkArrivalWho" aria-hidden="true"></div>
+      <div class="dy-tiles dy-think-react" role="group" aria-label="Rispondi con">
+        <button type="button" class="dy-tile think-reaction-button" data-think-reaction="heart" aria-label="Rispondi con un cuore" aria-pressed="false"><span class="think-reaction-glyph dy-think-glyph" aria-hidden="true"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/></svg></span>Un cuore</button>
+        <button type="button" class="dy-tile think-reaction-button" data-think-reaction="hug" aria-label="Rispondi con un abbraccio" aria-pressed="false"><span class="think-reaction-glyph dy-think-glyph" aria-hidden="true">🫂</span>Un abbraccio</button>
+        <button type="button" class="dy-tile think-reaction-button" data-think-reaction="miss_you" aria-label="Rispondi con un pensiero" aria-pressed="false"><span class="think-reaction-glyph dy-think-glyph" aria-hidden="true">💭</span>Un pensiero</button>
       </div>
-      <p id="thinkArrivalStatus" class="think-arrival-status" role="status" aria-live="polite"></p>
-      <div class="think-arrival-actions"><button type="button" class="think-arrival-close ghost" onclick="closeThinkArrival()">Chiudi</button></div>
+      <p id="thinkArrivalStatus" class="dy-f-note dy-think-status" role="status" aria-live="polite"></p>
     </section>
   </main>
 
@@ -690,20 +691,22 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       </div>
       <div class="dy-diary" id="dyDiary" aria-live="polite"><p class="dy-rows-note">Carico i ricordi…</p></div>
       <section class="ricordi-rivivi" id="ricordiRivivi" aria-label="Rivivi" hidden></section>
-      <div class="moment-compose" id="momentCompose">
+      <div class="dy-mc" id="momentCompose">
         <input id="momentFile" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
-        <button type="button" class="moment-picker" onclick="pickMomentPhoto()" aria-label="Scegli una foto per il ricordo">
-          <span class="moment-picker-empty"><span class="moment-add-icon"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span><span class="moment-picker-copy"><b>Aggiungi un ricordo</b></span></span>
-          <span id="momentPreview" class="moment-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"><span class="moment-change-chip">Cambia foto</span></span>
+        <button type="button" class="dy-mc-pick" onclick="pickMomentPhoto()" aria-label="Scegli una foto per il ricordo">
+          <span class="dy-mc-empty"><svg class="dy-mc-cam" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h4l2-2.5h4L16 8h4v11H4z M12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg><b>Scegli le foto</b><small>Anche più di una, dal telefono</small></span>
+          <span id="momentPreview" class="dy-mc-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"><span class="dy-mc-change">Cambia foto</span></span>
         </button>
-        <div class="moment-extra" id="momentExtra" hidden><div class="moment-extra-row" id="momentExtraRow"></div><p class="moment-extra-count" id="momentExtraCount"></p></div>
-        <div class="moment-details">
-          <label class="moment-field-label" for="momentCaption">Nota · facoltativa</label>
-          <textarea id="momentCaption" maxlength="180" rows="3" placeholder="Che cosa volete ricordare?"></textarea>
-          <label class="moment-auto-date moment-date-field" id="momentDetectedDate" for="momentDate"><span>Data foto<span id="momentDateWhen"></span></span><input id="momentDate" type="date" required></label>
-          <div class="moment-place-field" id="momentPlaceField"><span class="moment-field-label">Dove · facoltativo</span><span class="moment-place-row"><button type="button" class="moment-place-btn" id="momentPlaceBtn" onclick="editMomentPlace()"><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><span id="momentPlaceLabel" translate="no">Aggiungi il posto</span></button><button type="button" class="moment-place-clear" id="momentPlaceClear" aria-label="Togli il posto" onclick="clearMomentPlace()" hidden><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></span></div>
-          <div class="moment-up-bar" id="momentUpBar" hidden><i></i></div>
-          <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
+        <div class="dy-mc-extra" id="momentExtra" hidden><div class="dy-mc-extra-row" id="momentExtraRow"></div><p class="dy-f-note" id="momentExtraCount"></p></div>
+        <div class="dy-mc-details">
+          <label class="dy-f-lab" for="momentCaption">Una nota · facoltativa</label>
+          <textarea id="momentCaption" class="dy-f-in dy-f-hand dy-mc-note" maxlength="180" rows="2" placeholder="due parole per ricordarlo…"></textarea>
+          <div class="dy-mc-two">
+            <label class="dy-f-lab" id="momentDetectedDate" for="momentDate"><span>Quando<span id="momentDateWhen"></span></span><input id="momentDate" class="dy-f-in" type="date" required></label>
+            <div class="dy-f-lab dy-mc-place" id="momentPlaceField"><span>Dove</span><span class="dy-mc-place-row"><button type="button" class="dy-f-in dy-mc-place-btn" id="momentPlaceBtn" onclick="editMomentPlace()"><svg class="dy-f-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z M12 11h.01"/></svg><span id="momentPlaceLabel" translate="no">Aggiungi il posto</span></button><button type="button" class="dy-ib dy-ib-36 dy-mc-place-clear" id="momentPlaceClear" aria-label="Togli il posto" onclick="clearMomentPlace()" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></div>
+          </div>
+          <div class="dy-mc-bar" id="momentUpBar" hidden><i></i></div>
+          <div class="dy-f-acts"><button id="momentUploadBtn" type="button" class="dy-btn dy-btn-l" onclick="uploadMoment()">Salva ricordo</button></div>
         </div>
       </div>
       <div class="ricordi-section-head ricordi-story-head"><h3 id="ricordiStoryTitle">Mese per mese</h3><button type="button" class="ricordi-map-switch" id="ricordiMapSwitch" aria-pressed="false" onclick="UsRicordiPlace.toggleMap()"><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><span data-switch-label>Mappa</span></button></div>
@@ -1185,12 +1188,12 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </section>
 </div>
 
-<div class="us-settings-overlay" id="usSettingsOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
-  <div class="us-settings-backdrop us-modal-backdrop" data-us-settings-close></div>
-  <section class="us-settings-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usSettingsModalTitle" data-us-modal-panel>
-    <div class="us-settings-sheet-grabber"></div>
-    <header><div><div class="tiny" id="usSettingsModalKicker">US.</div><h3 id="usSettingsModalTitle">Impostazione</h3></div><button type="button" class="us-settings-close us-modal-close" data-us-settings-close data-us-modal-close aria-label="Chiudi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
-    <div class="us-settings-modal-body" id="usSettingsModalBody"></div>
+<div class="dy-foglio" id="usSettingsOverlay" aria-hidden="true" data-us-modal>
+  <div class="dy-foglio-scrim" data-us-settings-close></div>
+  <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="usSettingsModalTitle" data-us-modal-panel>
+    <span class="dy-grab" aria-hidden="true"></span>
+    <div class="dy-sheet-head"><div><h3 class="dy-sheet-title" id="usSettingsModalTitle">Impostazione</h3><span id="usSettingsModalKicker" hidden>US.</span></div><button type="button" class="dy-ib dy-close" data-us-settings-close data-us-modal-close aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="dy-f-body us-settings-modal-body" id="usSettingsModalBody"></div>
   </section>
 </div>
 
@@ -1205,59 +1208,61 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </section>
 </div>
 
-<div class="left-for-you-overlay" id="leftForYouOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
-  <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouBackdrop"></div>
-  <section class="left-for-you-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouTitle" data-us-modal-panel>
-    <header class="left-for-you-head">
-      <div><div class="tiny" id="leftForYouKind">Lasciato per te</div><h2 id="leftForYouTitle">Lasciato per te</h2><small id="leftForYouPartnerName" translate="no">La tua persona</small></div>
-      <button type="button" class="left-for-you-close us-modal-close" id="leftForYouClose" aria-label="Chiudi Lasciato per te" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
-    </header>
-    <div class="left-for-you-body">
+<div class="dy-foglio" id="leftForYouOverlay" aria-hidden="true" data-us-modal>
+  <div class="dy-foglio-scrim" id="leftForYouBackdrop"></div>
+  <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="leftForYouTitle" data-us-modal-panel>
+    <span class="dy-grab" aria-hidden="true"></span>
+    <div class="dy-sheet-head">
+      <div><h2 class="dy-sheet-title" id="leftForYouTitle">Lasciato <em>per te</em></h2><p class="dy-sheet-sub" id="leftForYouKind"></p><small id="leftForYouPartnerName" translate="no" hidden>La tua persona</small></div>
+      <button type="button" class="dy-ib dy-close" id="leftForYouClose" aria-label="Chiudi Lasciato per te" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="dy-f-body">
       <div class="left-for-you-loading" id="leftForYouLoading" aria-busy="true"><p>Un attimo…</p></div>
       <div class="left-for-you-empty" id="leftForYouEmpty" hidden><h3>Lasciato per te</h3><p>Niente per ora.</p></div>
-      <div class="left-for-you-error" id="leftForYouError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" data-action id="leftForYouRetry">Riprova</button></div>
-      <div class="left-for-you-card" id="leftForYouCard" hidden>
-        <div class="left-for-you-meta"><span class="left-for-you-from"><span class="left-for-you-from-avatar" id="leftForYouFromFallback">♡</span><span>Da <b id="leftForYouFromName" translate="no">la tua persona</b></span></span><span id="leftForYouCounter"></span></div>
+      <div class="left-for-you-error" id="leftForYouError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" class="dy-btn dy-btn-m dy-btn-ghost" data-action id="leftForYouRetry">Riprova</button></div>
+      <div class="dy-f-body dy-lfy-card" id="leftForYouCard" hidden>
+        <div class="dy-f-sign dy-lfy-from"><span class="dy-stk" data-dy-who="partner" data-dy-size="36"></span><span class="dy-lfy-from-copy"><b>Da <span id="leftForYouFromName" translate="no">la tua persona</span></b><small id="leftForYouCounter"></small></span></div>
         <div id="leftForYouContent"></div>
-        <p class="left-for-you-once" id="leftForYouOnce">Si apre una volta: conservalo se vuoi tenerlo.</p>
-        <div class="left-for-you-actions" id="leftForYouActions"><button type="button" id="leftForYouConserve">Conserva</button><button type="button" id="leftForYouReply">Rispondi</button><button type="button" id="leftForYouNext" hidden>Apri il prossimo</button></div>
-        <div class="left-for-you-status" id="leftForYouStatus" role="status" aria-live="polite"></div>
+        <p class="dy-f-note" id="leftForYouOnce"><svg class="dy-f-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10v17l-5-3.5-5 3.5z"/></svg><span>Si apre una volta: conservalo se vuoi tenerlo.</span></p>
+        <div class="dy-f-acts" id="leftForYouActions"><button type="button" class="dy-btn dy-btn-l" id="leftForYouConserve">Conserva</button><div class="dy-f-acts is-row"><button type="button" class="dy-btn dy-btn-m dy-btn-ghost" id="leftForYouReply">Rispondi</button><button type="button" class="dy-btn dy-btn-m dy-btn-ghost" id="leftForYouNext" hidden>Apri il prossimo</button></div></div>
+        <div class="dy-f-note" id="leftForYouStatus" role="status" aria-live="polite"></div>
       </div>
-      <button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
-        <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span></span>
-        <span class="us-conservati-entry-copy"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
-        <small class="us-conservati-entry-count" data-conservati-count></small>
-        <span class="us-conservati-entry-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></span>
+      <button type="button" class="dy-f-row dy-lfy-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
+        <span class="dy-f-row-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10v17l-5-3.5-5 3.5z"/></svg></span>
+        <span class="dy-f-row-tx"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
+        <small class="dy-lfy-count" data-conservati-count></small>
+        <svg class="dy-row-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
       </button>
     </div>
   </section>
 </div>
 
-<div class="left-for-you-overlay left-for-you-composer-overlay" id="leftForYouComposerOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
-  <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouComposerBackdrop"></div>
-  <section class="left-for-you-sheet left-for-you-composer-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouComposerTitle" data-us-modal-panel>
-    <header class="left-for-you-head">
-      <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouComposerTitle">Lascia qualcosa alla tua persona</h2></div>
-      <button type="button" class="left-for-you-close us-modal-close" id="leftForYouComposerClose" aria-label="Chiudi il compositore" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
-    </header>
-    <div class="left-for-you-body left-for-you-composer-body">
-      <p class="left-for-you-last" id="leftForYouComposerLast" hidden></p>
-      <div class="left-for-you-composer-kinds" role="tablist" aria-label="Tipo di messaggio">
-        <button type="button" role="tab" aria-selected="true" class="is-active" data-us-composer-kind="text">Testo</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="photo">Foto</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="audio">Vocale</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="video">Video</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="music">Musica</button>
+<div class="dy-foglio" id="leftForYouComposerOverlay" aria-hidden="true" data-us-modal>
+  <div class="dy-foglio-scrim" id="leftForYouComposerBackdrop"></div>
+  <section class="dy-foglio-panel left-for-you-composer-sheet" role="dialog" aria-modal="true" aria-labelledby="leftForYouComposerTitle" data-us-modal-panel>
+    <span class="dy-grab" aria-hidden="true"></span>
+    <div class="dy-sheet-head">
+      <div><h2 class="dy-sheet-title" id="leftForYouComposerTitle">Lascia qualcosa <em>alla tua persona</em></h2><p class="dy-sheet-sub">Lo trova nella busta, su Oggi. Si apre una volta.</p></div>
+      <button type="button" class="dy-ib dy-close" id="leftForYouComposerClose" aria-label="Chiudi il compositore" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="dy-f-body left-for-you-composer-body">
+      <p class="dy-f-note" id="leftForYouComposerLast" hidden></p>
+      <div class="dy-tiles" role="tablist" aria-label="Tipo di messaggio">
+        <button type="button" role="tab" aria-selected="true" class="dy-tile is-active" data-us-composer-kind="text"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14 M5 11h14 M5 15.5h9"/></svg>Testo</button>
+        <button type="button" role="tab" aria-selected="false" class="dy-tile" data-us-composer-kind="photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h4l2-2.5h4L16 8h4v11H4z M12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg>Foto</button>
+        <button type="button" role="tab" aria-selected="false" class="dy-tile" data-us-composer-kind="audio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11.5a6 6 0 0 0 12 0 M12 17.5v3"/></svg>Vocale</button>
+        <button type="button" role="tab" aria-selected="false" class="dy-tile" data-us-composer-kind="video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7h12v10h-12z M15.5 10.5l5-3v9l-5-3"/></svg>Video</button>
+        <button type="button" role="tab" aria-selected="false" class="dy-tile" data-us-composer-kind="music"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V5.5l10-2v12 M9 17.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z M19 15.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/></svg>Musica</button>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="text">
-        <label class="left-for-you-composer-label" for="leftForYouComposerText">Il tuo messaggio</label><textarea id="leftForYouComposerText" class="left-for-you-composer-text" maxlength="1000" rows="4" placeholder="Scrivi qualcosa per la tua persona…"></textarea><span class="left-for-you-composer-count" id="leftForYouComposerCount">0 / 1000</span>
+        <label class="sr-only" for="leftForYouComposerText">Il tuo messaggio</label><div class="dy-f-sign"><span class="dy-stk" data-dy-who="me" data-dy-size="30"></span><div class="dy-f-field"><textarea id="leftForYouComposerText" class="dy-f-in dy-f-hand" maxlength="1000" rows="5" placeholder="Scrivi qualcosa per la tua persona…"></textarea><span class="dy-f-count" id="leftForYouComposerCount">0 / 1000</span></div></div>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="photo" hidden>
         <div class="left-for-you-photo-preview" id="leftForYouComposerPhotoPreview" hidden><img id="leftForYouComposerPhotoPreviewImage" alt="Anteprima della foto scelta"><button type="button" class="left-for-you-photo-change" id="leftForYouComposerPhotoChange">Cambia foto</button></div>
-        <div class="left-for-you-photo-actions" id="leftForYouComposerPhotoActions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoCamera" data-pick="camera"><b>Scatta una foto</b><small>Resta privata, solo tra voi due</small></button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoPick" data-pick="gallery"><b>Scegli dalla galleria</b><small>Fino a 25 MB</small></button></div>
+        <div class="left-for-you-photo-actions" id="leftForYouComposerPhotoActions"><button type="button" class="dy-f-pick" id="leftForYouComposerPhotoCamera" data-pick="camera"><b>Scatta una foto</b><small>Resta privata, solo tra voi due</small></button><button type="button" class="dy-f-pick" id="leftForYouComposerPhotoPick" data-pick="gallery"><b>Scegli dalla galleria</b><small>Fino a 25 MB</small></button></div>
         <input type="file" id="leftForYouComposerPhotoFile" accept="image/jpeg,image/png,image/webp" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerPhotoName"></span>
-        <input type="text" class="left-for-you-composer-url left-for-you-composer-caption" id="leftForYouComposerPhotoCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia della foto">
+        <input type="text" class="dy-f-in left-for-you-composer-caption" id="leftForYouComposerPhotoCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia della foto">
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="audio" hidden>
         <div class="left-for-you-vn-frame">
@@ -1283,15 +1288,15 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <span class="left-for-you-vn-still-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
           <span class="left-for-you-vn-hint" id="leftForYouComposerAudioHint" data-phase="idle" aria-live="polite">Tocca per registrare</span>
         </div>
-        <input type="text" class="left-for-you-composer-url left-for-you-composer-caption" id="leftForYouComposerAudioCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia del vocale">
+        <input type="text" class="dy-f-in left-for-you-composer-caption" id="leftForYouComposerAudioCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia del vocale">
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="video" hidden>
-        <button type="button" class="left-for-you-composer-pick" id="leftForYouComposerVideoPick" data-pick="video"><b>Scegli un video</b><small class="left-for-you-composer-hint" id="leftForYouComposerVideoHint">Fino a 30 secondi e 20 MB.</small></button><input type="file" id="leftForYouComposerVideoFile" accept="video/mp4,video/webm,video/quicktime" hidden>
+        <button type="button" class="dy-f-pick" id="leftForYouComposerVideoPick" data-pick="video"><b>Scegli un video</b><small class="left-for-you-composer-hint" id="leftForYouComposerVideoHint">Fino a 30 secondi e 20 MB.</small></button><input type="file" id="leftForYouComposerVideoFile" accept="video/mp4,video/webm,video/quicktime" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerVideoName"></span>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="music" hidden>
         <div class="left-for-you-music-attribution"><img class="left-for-you-spotify-attribution" src="/assets/third-party/spotify/spotify-full-logo-white.svg" alt="Spotify" width="80" height="22"></div>
-        <label class="left-for-you-composer-label" for="leftForYouMusicSearch">Brano</label><input type="search" id="leftForYouMusicSearch" class="left-for-you-composer-url" placeholder="Cerca su Spotify…" autocomplete="off" spellcheck="false">
+        <label class="dy-f-lab" for="leftForYouMusicSearch">Brano</label><input type="search" id="leftForYouMusicSearch" class="dy-f-in" placeholder="Cerca su Spotify…" autocomplete="off" spellcheck="false">
         <p class="left-for-you-music-search-status" id="leftForYouMusicSearchStatus" role="status" aria-live="polite"></p>
         <ul class="left-for-you-music-results" id="leftForYouMusicResults" aria-label="Risultati Spotify" hidden></ul>
         <div class="left-for-you-music-selected" id="leftForYouMusicSelected" hidden>
@@ -1300,16 +1305,16 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         </div>
         <details class="left-for-you-music-manual">
           <summary>Incolla link Spotify</summary>
-          <input type="url" id="leftForYouComposerMusic" class="left-for-you-composer-url" maxlength="512" placeholder="https://open.spotify.com/track/…" spellcheck="false">
+          <input type="url" id="leftForYouComposerMusic" class="dy-f-in" maxlength="512" placeholder="https://open.spotify.com/track/…" spellcheck="false">
         </details>
       </div>
-      <div class="left-for-you-actions left-for-you-composer-actions"><button type="button" id="leftForYouComposerSend" disabled>Lascia per la tua persona</button></div>
-      <div class="left-for-you-status" id="leftForYouComposerStatus" role="status" aria-live="polite"></div>
-      <button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
-        <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span></span>
-        <span class="us-conservati-entry-copy"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
-        <small class="us-conservati-entry-count" data-conservati-count></small>
-        <span class="us-conservati-entry-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></span>
+      <div class="dy-f-acts"><button type="button" class="dy-btn dy-btn-l" id="leftForYouComposerSend" disabled>Lascia per la tua persona</button></div>
+      <div class="dy-f-note" id="leftForYouComposerStatus" role="status" aria-live="polite"></div>
+      <button type="button" class="dy-f-row dy-lfy-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
+        <span class="dy-f-row-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10v17l-5-3.5-5 3.5z"/></svg></span>
+        <span class="dy-f-row-tx"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
+        <small class="dy-lfy-count" data-conservati-count></small>
+        <svg class="dy-row-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
       </button>
     </div>
   </section>
@@ -1322,7 +1327,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     <div class="left-for-you-body left-for-you-camera-body">
       <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden><span class="left-for-you-camera-flash" id="leftForYouCameraFlash" aria-hidden="true"></span></div>
       <div class="left-for-you-camera-status" id="leftForYouCameraStatus" role="status" aria-live="polite"></div>
-      <div class="left-for-you-camera-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraSwitch">Cambia fotocamera</button><button type="button" class="left-for-you-camera-shutter" id="leftForYouCameraCapture" aria-label="Scatta foto"><span aria-hidden="true"></span></button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraUse" hidden>Usa foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraRetake" hidden>Rifai</button></div>
+      <div class="left-for-you-camera-actions"><button type="button" class="dy-f-pick" id="leftForYouCameraSwitch">Cambia fotocamera</button><button type="button" class="left-for-you-camera-shutter" id="leftForYouCameraCapture" aria-label="Scatta foto"><span aria-hidden="true"></span></button><button type="button" class="dy-f-pick" id="leftForYouCameraUse" hidden>Usa foto</button><button type="button" class="dy-f-pick" id="leftForYouCameraRetake" hidden>Rifai</button></div>
     </div>
   </section>
 </div>
@@ -1374,80 +1379,53 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     </div>
   </section>
 </div>
-<div class="ricordi-chapter-overlay us-foglio" id="ricordiChapterOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
-  <div class="ricordi-chapter-backdrop us-modal-backdrop" id="ricordiChapterBackdrop"></div>
-  <section class="ricordi-chapter-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="ricordiChapterTitle" data-us-modal-panel>
-    <header class="ricordi-chapter-head">
-      <div><div class="tiny">Capitoli</div><h2 id="ricordiChapterTitle"></h2></div>
-      <button type="button" class="ricordi-chapter-close us-modal-close" id="ricordiChapterClose" aria-label="Chiudi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
-    </header>
-    <p class="ricordi-chapter-lead" id="ricordiChapterLead"></p>
-    <div class="ricordi-chapter-thumbs" id="ricordiChapterThumbs"></div>
-  </section>
-</div>
 
-<!-- Lavagna: the week of both of you, a Foglio over the Noi calendar (noi-v2.js fills it). -->
-<div class="us-cal-sheet-overlay us-foglio us-noi-lavagna" id="usNoiLavagna" aria-hidden="true" data-us-modal data-us-motion-surface>
-  <div class="us-cal-sheet-backdrop us-modal-backdrop" data-noi-week-close></div>
-  <section class="us-cal-sheet us-sheet is-bottom us-noi-lavagna-sheet" role="dialog" aria-modal="true" aria-labelledby="usNoiLavagnaTitle" data-us-modal-panel>
-    <header class="us-cal-sheet-head">
-      <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Lavagna</small><h3 id="usNoiLavagnaTitle">Questa settimana</h3></div>
-      <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usNoiV2WeekBack" hidden data-us-modal-close aria-label="Chiudi la lavagna"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
-    </header>
-    <div class="us-noi-lavagna-body" id="usNoiV2Week" aria-live="polite"></div>
-  </section>
-</div>
 
 <!-- Noi calendar editors: the day detail and the "+" form open over Noi. -->
-<div class="us-cal-sheet-overlay" id="usCalendarDetailSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
-  <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarDetailBackdrop"></div>
-  <section class="us-cal-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usCalendarDetailTitle" data-us-modal-panel>
-    <header class="us-cal-sheet-head">
-      <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Impegno</small><h3 id="usCalendarDetailTitle" translate="no">—</h3></div>
-      <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usCalendarDetailClose" aria-label="Chiudi impegno"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
-    </header>
-    <div class="us-cal-detail-body" id="usCalendarDetailBody"></div>
-      <div class="us-cal-detail-actions" id="usCalendarDetailActions" hidden>
-      <button type="button" class="us-cal-detail-edit" id="usCalendarDetailEdit">Modifica</button>
-      <button type="button" class="us-cal-detail-delete" id="usCalendarDetailDelete">Elimina</button>
+<div class="dy-foglio" id="usCalendarDetailSheet" aria-hidden="true" data-us-modal>
+  <div class="dy-foglio-scrim" id="usCalendarDetailBackdrop"></div>
+  <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="usCalendarDetailTitle" data-us-modal-panel>
+    <span class="dy-grab" aria-hidden="true"></span>
+    <div class="dy-sheet-head"><h3 class="dy-sheet-title" id="usCalendarDetailTitle">—</h3><button type="button" class="dy-ib dy-close" id="usCalendarDetailClose" aria-label="Chiudi impegno"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="dy-f-body dy-cal-detail" id="usCalendarDetailBody"></div>
+    <div class="dy-f-acts is-row" id="usCalendarDetailActions" hidden>
+      <button type="button" class="dy-btn dy-btn-l dy-btn-ghost" id="usCalendarDetailDelete">Elimina</button>
+      <button type="button" class="dy-btn dy-btn-l" id="usCalendarDetailEdit">Modifica</button>
     </div>
   </section>
 </div>
 
-<div class="us-cal-sheet-overlay" id="usCalendarFormSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
-  <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarFormBackdrop"></div>
-  <section class="us-cal-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usCalendarFormTitle" data-us-modal-panel>
-    <header class="us-cal-sheet-head">
-      <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Calendario</small><h3 id="usCalendarFormTitle">Nuovo impegno</h3></div>
-      <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usCalendarFormClose" aria-label="Chiudi modulo"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
-    </header>
-    <form class="us-cal-form" id="usCalendarForm">
-      <div class="us-cal-kind" id="usCalendarKind" role="group" aria-label="Che cosa aggiungi">
-        <button type="button" data-us-calendar-kind="personal" data-owner="tu" aria-pressed="true"><span class="us-icon" data-us-icon="user-circle" aria-hidden="true"></span><span>Solo mio</span></button>
-        <button type="button" data-us-calendar-kind="shared" data-owner="noi" aria-pressed="false"><span class="us-icon" data-us-icon="heart" aria-hidden="true"></span><span>Nostro</span></button>
-        <button type="button" data-us-calendar-kind="event" data-owner="noi" aria-pressed="false"><span class="us-icon" data-us-icon="calendar-heart" aria-hidden="true"></span><span>Data speciale</span></button>
-        <button type="button" data-us-calendar-kind="countdown" data-owner="noi" aria-pressed="false"><span class="us-icon" data-us-icon="clock-counter-clockwise" aria-hidden="true"></span><span>Countdown</span></button>
+<div class="dy-foglio" id="usCalendarFormSheet" aria-hidden="true" data-us-modal>
+  <div class="dy-foglio-scrim" id="usCalendarFormBackdrop"></div>
+  <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="usCalendarFormTitle" data-us-modal-panel>
+    <span class="dy-grab" aria-hidden="true"></span>
+    <div class="dy-sheet-head"><h3 class="dy-sheet-title" id="usCalendarFormTitle">Nuovo <em>impegno</em></h3><button type="button" class="dy-ib dy-close" id="usCalendarFormClose" aria-label="Chiudi modulo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <form class="dy-f-body dy-cal-form" id="usCalendarForm">
+      <div class="dy-tiles" id="usCalendarKind" role="group" aria-label="Che cosa aggiungi">
+        <button type="button" class="dy-tile" data-us-calendar-kind="personal" data-owner="tu" aria-pressed="true">Solo mio</button>
+        <button type="button" class="dy-tile" data-us-calendar-kind="shared" data-owner="noi" aria-pressed="false">Nostro</button>
+        <button type="button" class="dy-tile" data-us-calendar-kind="event" data-owner="noi" aria-pressed="false">Data speciale</button>
+        <button type="button" class="dy-tile" data-us-calendar-kind="countdown" data-owner="noi" aria-pressed="false">Countdown</button>
       </div>
-      <p class="us-cal-form-context" id="usCalendarFormContext" hidden>Le vostre idee · per voi due</p>
-      <p class="us-cal-form-day" id="usCalendarFormDay" hidden></p>
-      <div class="us-cal-form-day-entries" id="usCalendarFormDayEntries" hidden></div>
-      <div class="us-cal-presets" id="usCalendarPresets" role="group" aria-label="Titoli rapidi">
-        <button type="button" id="usCalendarPresetWork" data-us-calendar-preset="Lavoro" aria-pressed="false">Lavoro</button>
-        <button type="button" id="usCalendarPresetUniversity" data-us-calendar-preset="Università" aria-pressed="false">Università</button>
-        <button type="button" id="usCalendarPresetOut" data-us-calendar-preset="Uscita" aria-pressed="false">Uscita</button>
-        <button type="button" class="us-cal-preset-add" id="usCalendarPresetAdd" aria-label="Aggiungi un titolo rapido"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
-        <span class="us-cal-preset-new" id="usCalendarPresetNew" hidden><input id="usCalendarPresetNewInput" type="text" maxlength="30" enterkeyhint="done" placeholder="Nuovo titolo" aria-label="Nuovo titolo rapido"><button type="button" id="usCalendarPresetNewSave">Aggiungi</button></span>
+      <p class="dy-f-note" id="usCalendarFormContext" hidden>Le vostre idee · per voi due</p>
+      <p class="dy-cal-day-line" id="usCalendarFormDay" hidden></p>
+      <div class="dy-cal-day-entries" id="usCalendarFormDayEntries" hidden></div>
+      <label class="dy-f-lab"><span>Che cosa fai?</span><input id="usCalendarTitleInput" class="dy-f-in" type="text" maxlength="200" required placeholder="Che cosa fai?"></label>
+      <div class="dy-cal-presets" id="usCalendarPresets" role="group" aria-label="Titoli rapidi">
+        <button type="button" class="dy-chip-o" id="usCalendarPresetWork" data-us-calendar-preset="Lavoro" aria-pressed="false">Lavoro</button>
+        <button type="button" class="dy-chip-o" id="usCalendarPresetUniversity" data-us-calendar-preset="Università" aria-pressed="false">Università</button>
+        <button type="button" class="dy-chip-o" id="usCalendarPresetOut" data-us-calendar-preset="Uscita" aria-pressed="false">Uscita</button>
+        <button type="button" class="dy-chip-o dy-chip-add" id="usCalendarPresetAdd" aria-label="Aggiungi un titolo rapido"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
+        <span class="dy-cal-preset-new" id="usCalendarPresetNew" hidden><input id="usCalendarPresetNewInput" class="dy-f-in" type="text" maxlength="30" enterkeyhint="done" placeholder="Nuovo titolo" aria-label="Nuovo titolo rapido"><button type="button" class="dy-btn dy-btn-m" id="usCalendarPresetNewSave">Aggiungi</button></span>
       </div>
-      <label class="us-cal-field"><span>Che cosa fai?</span><input id="usCalendarTitleInput" type="text" maxlength="200" required placeholder="Che cosa fai?"></label>
-      <label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno</span><input id="usCalendarDateInput" type="date"></label>
-      <label class="us-cal-field us-cal-allday-field"><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
-      <div class="us-cal-time-fields" id="usCalendarTimeFields">
-        <label class="us-cal-field"><span>Inizio</span><input id="usCalendarStartTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="next" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di inizio"></label>
-        <span class="us-cal-time-arrow" aria-hidden="true">→</span>
-        <label class="us-cal-field"><span>Fine</span><input id="usCalendarEndTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di fine"></label>
+      <label class="dy-f-lab" id="usCalendarDateField" hidden><span>Giorno</span><input id="usCalendarDateInput" class="dy-f-in" type="date"></label>
+      <label class="dy-f-row dy-cal-allday"><span class="dy-f-row-tx"><b>Tutto il giorno</b></span><input id="usCalendarAllDayInput" class="dy-f-switch" type="checkbox" role="switch"></label>
+      <div class="dy-cal-times" id="usCalendarTimeFields">
+        <label class="dy-f-lab"><span>Inizio</span><input id="usCalendarStartTimeInput" class="dy-f-in dy-cal-time" type="text" inputmode="numeric" enterkeyhint="next" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di inizio"></label>
+        <label class="dy-f-lab"><span>Fine</span><input id="usCalendarEndTimeInput" class="dy-f-in dy-cal-time" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di fine"></label>
       </div>
-      <div class="us-cal-form-status" id="usCalendarFormStatus" role="status" aria-live="polite"></div>
-      <button type="submit" class="primary us-cal-form-save" id="usCalendarFormSave">Salva impegno</button>
+      <div class="dy-f-note" id="usCalendarFormStatus" role="status" aria-live="polite"></div>
+      <div class="dy-f-acts"><button type="submit" class="dy-btn dy-btn-l" id="usCalendarFormSave">Salva impegno</button></div>
     </form>
   </section>
 </div>

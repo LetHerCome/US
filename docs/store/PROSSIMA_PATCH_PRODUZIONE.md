@@ -18,6 +18,16 @@
 
 **Android:** i widget restano scuri per ora (lavoro a parte, dopo la prova su staging). Le icone scure della barra di stato le chiede il web (SystemBars dal JS), quindi funzionano anche senza AAB nuovo; la config `SystemBars` LIGHT entra con il prossimo AAB.
 
+### I fogli nel linguaggio del diario (16/11/2026)
+
+**Stato:** branch `claude/fogli-diario-e7a923` (nato dal branch fisso di staging a 8f1827bc, che contiene già «Il diario, ma pulito»). Provato nel browser col finto Supabase, chiaro e scuro; non ancora su staging, non in produzione. Mockup approvato dal founder il 16/11 («Sì, come consigli»): https://claude.ai/artifact/Phwo9n9Q8sZro7jX8HAN6Y, sezione «I fogli». Differenze: [diario-pulito.md](../missions/diario-pulito.md#differenze-dal-mockup-fogli).
+
+**Cosa cambia:** i fogli che salgono dal basso hanno lo stesso disegno di «Voi due»: maniglia, titolo con una parola in corsivo, chiusura quadrata, bottone principale in inchiostro, secondari a tratto, scrittura a mano dove scrivete voi, personaggi come firma; si chiudono anche trascinando giù la maniglia. Portati: la domanda di oggi, la conferma (anche «Novità»), Ti penso ricevuto (da schermata intera a foglio corto), Lasciato per te (lettura, busta e scrittura), nuovo ricordo, nuovo impegno e dettaglio dell'impegno, la cornice dei fogli delle Impostazioni (Notifiche come modello), la cornice della partita. In tutta l'app i bottoni principali e quelli per eliminare sono in inchiostro: niente più colore della persona né rosso pieno.
+
+**Da sapere prima della produzione:** «Elimina account», «Esci dalla coppia» ed «Elimina» non sono più rossi (scelta del founder del 16/11: il rosso è del cuore e della matita); il titolo della conferma dice cosa sparisce. Restano col disegno vecchio (ma coi bottoni in inchiostro): galleria del ricordo, eventi, Come stai, countdown, idee, bacheca, lavagna, sblocco di Sintonia, distanza, widget, il vostro anno, Conservati, Dove. Solo web: nessuna migrazione, nessuna Edge, nessun AAB necessario (basta il sito; l'app installata prende il web nuovo).
+
+**Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
+
 ### Iscrizione: prima il codice, poi la domanda (14/11)
 
 **Stato:** branch `claude/attesa-dopo-invito` (da `main` dopo la 1.5.1). Provata nel browser col finto Supabase; non ancora su staging né in produzione.

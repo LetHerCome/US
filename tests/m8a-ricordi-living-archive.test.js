@@ -99,7 +99,7 @@ test('M8A density pass: Ricordi prioritizes memories over chrome without changin
   const css = read('moments-albums.css');
   assert.match(css, /US-RICORDI-DENSITY-01/);
   assert.match(css, /#moments \.ricordi-rivivi-card:not\(\.ricordi-rivivi-note\)\{[\s\S]*?grid-template-columns:108px minmax\(0,1fr\)/);
-  assert.match(css, /#moments \.us-conservati-entry\{[\s\S]*?min-height:54px/);
+  // Mockup v5 «I fogli» (16/11/2026): Conservati's door is a row of the Lasciato per te sheets (diario.css .dy-lfy-kept).
   assert.match(css, /#moments \.ricordi-story \.moment-card\.moment-postit\.ricordi-feature img\{\s*aspect-ratio:16\/9!important;/);
   assert.match(css, /body:has\(#moments\.page\.active\) #thinkButton\{\s*display:none!important;/);
   const page = read('index.html').match(/<main id="moments" class="page">[\s\S]*?<\/main>/)?.[0] || '';

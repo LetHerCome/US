@@ -405,7 +405,7 @@ test('Settings density: utility rows, couple card and footer stay compact withou
   // Ink for what you do: the switch is ink when on, never a person colour.
   assert.match(css, /\.dy-sw\[aria-checked="true"\]::before,\[aria-checked="true"\]>\.dy-sw::before\{background:var\(--us-ink-100\)\}/);
   // Tokens only (dark mode follows); a person colour only on your dot.
-  const block = css.slice(css.indexOf('/* ---------------------------------------------------------------- Impostazioni */'));
+  const block = css.slice(css.indexOf('/* ---------------------------------------------------------------- Impostazioni */'), css.indexOf('/* ================================================================ fogli */'));
   assert.doesNotMatch(block, /#[0-9a-f]{3,6}\b/i, 'no hard-coded colours');
   assert.deepEqual(block.match(/var\(--us-(tu|partner|rosa|lilla)\)/g), ['var(--us-tu)'], 'only the dot of «Il tuo colore»');
   assert.match(block, /\.dy-set-dot\{[^}]*background:var\(--us-tu\)/);
@@ -456,7 +456,8 @@ test('secondary surfaces: internal destinations use the same compact sheet and r
   assert.match(moments, /\.conservati-card\{[\s\S]*?min-height:60px/);
   assert.match(left, /\.left-for-you-head h2\{font-size:22px/);
   assert.match(settings, /\.us-setting-choice button\{min-height:48px/);
-  assert.match(styles, /#today \.question\{padding:14px/);
+  // Mockup v5 «I fogli» (16/11/2026): the question of today is the one sheet of the diary.
+  assert.match(read('index.html'), /<main id="today" class="dy-foglio"/);
 });
 
 

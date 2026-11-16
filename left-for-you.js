@@ -530,7 +530,7 @@
     stopActiveAudioPlayer();
     content.innerHTML = renderItemMarkup(item, url);
     const kindLabel = document.getElementById('leftForYouKind');
-    if (kindLabel) kindLabel.textContent = `Lasciato per te · ${labelForKind(item.kind)}`;
+    if (kindLabel) kindLabel.textContent = labelForKind(item.kind);
     if (item.kind === 'audio') bindAudioStepPlayer(content);
     openLetter(content);
     lastRenderedItemId = item.id;
@@ -574,6 +574,7 @@
   async function open() {
     const modal = root();
     if (!modal) return;
+    window.UsUiFoundation?.cancelSurfaceExit?.(modal);
     modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
     announceOpened();
     await load();
@@ -587,7 +588,9 @@
     const modal = root();
     if (!modal) return;
     stopActiveAudioPlayer();
-    modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true');
+    // Mockup v5 «I fogli»: the sheet goes down (exitSurface waits for it).
+    const finalize = () => { modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true'); };
+    if (window.UsUiFoundation?.exitSurface && modal.getAttribute('aria-hidden') === 'false') window.UsUiFoundation.exitSurface(modal, finalize); else finalize();
     activeItem = null;
     items = [];
     currentIndex = 0;
@@ -694,7 +697,7 @@
     const title = document.getElementById('leftForYouComposerTitle');
     const send = document.getElementById('leftForYouComposerSend');
     const audioRecord = document.getElementById('leftForYouComposerAudioRecord');
-    if (title) title.textContent = `Lascia qualcosa ${toPartner()}`;
+    if (title) title.innerHTML = `Lascia qualcosa <em>${escapeHtml(toPartner())}</em>`;
     if (send && !composer.sending) send.textContent = `Lascia per ${composerPartnerName()}`;
     const text = document.getElementById('leftForYouComposerText');
     if (text) text.placeholder = `Scrivi qualcosa per ${composerPartnerName()}…`;
@@ -817,6 +820,7 @@
   function openComposer(options) {
     const overlay = document.getElementById('leftForYouComposerOverlay');
     if (!overlay) return;
+    window.UsUiFoundation?.cancelSurfaceExit?.(overlay);
     applyComposerOptions(options);
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false');
     announceOpened();
@@ -834,7 +838,8 @@
     closeCamera();
     discardRecording();
     resetMusicSearchUi();
-    overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true');
+    const finalize = () => { overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true'); };
+    if (window.UsUiFoundation?.exitSurface && overlay.getAttribute('aria-hidden') === 'false') window.UsUiFoundation.exitSurface(overlay, finalize); else finalize();
   }
 
   function selectedComposerFile(kind = composer.kind) {
