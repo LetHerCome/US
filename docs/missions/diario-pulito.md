@@ -171,3 +171,52 @@ Il founder: «Sì, e unisci l'attesa». Unito `claude/attesa-dopo-invito` (la do
 - Gli screenshot dell'entrata sono dell'app nel browser con dati finti (l'entrata chiede un account nuovo), fatti prima della correzione della carta beige.
 
 **Migrazione** `20261115183900_personaggi_forma_e_colori.sql`: **applicata su US-STAGING** il 15/11/2026 col via del founder («Sì, su staging»), workflow «Supabase SQL (manual)», run 43758649805 (HTTP 201), dal ref `claude/diario-pulito-c85387` (04a99c0d). Controllata in sola lettura: colonna `character_shape` con il check delle cinque forme; `set_my_character_shape` security definer, `search_path` vuoto, eseguibile solo da `authenticated`; check dei colori e `set_my_color` con la nuova tavolozza; nessun profilo resta su oro, cielo o rubino (su staging: 3 col colore di base, 1 blu, 1 perla). **Non in produzione.**
+
+## Differenze dal mockup (fogli)
+
+Mockup v5 «I fogli» (https://claude.ai/artifact/Phwo9n9Q8sZro7jX8HAN6Y, sezione «I fogli»), approvato dal founder il 16/11/2026 con le sei risposte consigliate («Sì, come consigli»): angoli 16 sul bottone da 52, eliminare senza rosso, Ti penso ricevuto come foglio corto, eventi e impegni con lo stesso disegno (si uniscono dopo), via il CSS dei fogli senza tasto, chiudere trascinando la maniglia. Branch `claude/fogli-diario-e7a923`, nato dal branch fisso di staging (8f1827bc). Provato nel browser col finto Supabase a 390×844, chiaro e scuro; screenshot affiancati al mockup nella cartella delle note della sessione (`fogli-confronto-1/2/3.png`).
+
+**Come è fatto**
+- Il foglio unico è `.dy-foglio` > `.dy-foglio-scrim` + `.dy-foglio-panel` in `diario.css`, con i pezzi di «Voi due» (`.dy-grab`, `.dy-sheet-head`, `.dy-sheet-title`, `.dy-close`) e quelli nuovi `.dy-f-*` (corpo, campi, scrittura a mano, firma col personaggio, righe da 58, caselle, interruttore, azioni). Niente `!important` nuovi.
+- Il codice di ogni foglio tiene i suoi id, `aria-hidden`, `.open` e la focus trap di `ui-foundation.js`. Il foglio sale con una keyframe e scende con una transizione di `transform`, che è quella che `exitSurface()` aspetta.
+- `UsDiario.sign`, `UsDiario.icon` e `UsDiario.paintPeople` (`diario.js`) disegnano i personaggi e le icone. I personaggi scritti nel markup (`data-dy-who`) si ridisegnano quando il foglio si apre. Si chiude trascinando la maniglia o la testata: il dito sposta il foglio, oltre 110 px o con un colpo veloce preme la sua X. Lo stesso vale per «Voi due».
+- Le regole vecchie dei fogli portati sono tolte, non coperte: circa 82 KB in `dc-oggi`, `dc-ricordi`, `dc-noi`, `dc-popup`, `styles`, `left-for-you`, `calendar`, `modal-center` e altri. `.primary` e `.us-btn-danger` sono in inchiostro, e la regola `!important` di `identity.css` che metteva il colore della persona è tolta. I bottoni d'azione rimasti nel colore della persona sono ritoccati sul posto.
+
+**Portati, uguali al mockup**
+- La domanda di oggi: la risposta dell'altra persona c'è già, sfocata e firmata, oppure la persona dorme. Tu scrivi a mano accanto al tuo personaggio. Sotto c'è la riga col lucchetto e «Rispondi» in inchiostro. Mentre aspetti, il bottone è a tratto («Aggiorna la risposta»). A risposte aperte: «Le vostre *risposte*», le due risposte evidenziate e firmate, quella dell'altra persona si mette a fuoco la prima volta, poi le reazioni e «Conserva» a tratto.
+- La conferma, che vale per tutte le conferme dell'app e per «Novità»: titolo con la prima parola dritta e il resto in corsivo, una riga sotto, la scelta in inchiostro, «Annulla» a tratto, la X.
+- Ti penso ricevuto: foglio corto, «<nome> *ti pensa*», l'ora, il personaggio che fa l'occhiolino e salta, il cuore che pulsa, tre caselle da 76.
+- Lasciato per te: chi l'ha lasciato firma col suo personaggio, la riga «Si apre una volta», «Conserva» in inchiostro, «Rispondi» e «Apri il prossimo» a tratto, «Conservati» come riga. Per scrivere: «Lascia qualcosa *a <nome>*», cinque caselle con l'icona, il messaggio a mano accanto al tuo personaggio, «Lascia per <nome>».
+- Nuovo ricordo: lo spazio delle foto è tratteggiato nel tuo colore, la nota è a mano, «Quando» e «Dove» stanno affiancati, poi «Salva ricordo».
+- Nuovo impegno: quattro caselle in una fila, i suggerimenti sotto il campo, «Tutto il giorno» con l'interruttore in inchiostro, «Inizio» e «Fine» affiancati.
+- L'impegno: il giorno è il titolo, con la data in corsivo. Seguono il nome, le etichette di chi è e dell'ora in miele, le righe Dove e Nota (a mano), chi l'ha aggiunto col suo personaggio, poi «Elimina» a tratto e «Modifica» in inchiostro.
+
+**Diverso dal mockup, e perché**
+- La domanda di oggi:
+  - nessun contatore «34 / 500»: il server non ha un limite noto e non volevo tagliare risposte lunghe;
+  - «Rispondi» è senza freccia: il testo del bottone lo cambia il codice («Salvo…», «Riprova»);
+  - nella sfocatura c'è una frase finta, perché le parole dell'altra persona arrivano solo dopo la tua risposta;
+  - «+10 Sintonia» sale su Oggi, al ritorno, come prima, e non dentro il foglio.
+- La conferma: «Elimina» è in inchiostro come deciso. Chi passava `kicker` e `icon` li passa ancora, ma non si disegnano più.
+- Ti penso ricevuto: le caselle dicono «Un cuore», «Un abbraccio», «Un pensiero», cioè le tre reazioni vere. Il mockup diceva «Ricambia» e «Anche io», ma il cuore qui risponde a questo ti penso e non ne manda uno nuovo.
+- Lasciato per te:
+  - la busta che si apre resta: è il movimento con un motivo («si apre una volta»), ridisegnata sulla carta con la lettera a mano;
+  - nel mockup il messaggio stava su un foglio beige senza busta;
+  - la fotocamera resta a tutto schermo con il suo disegno.
+- Nuovo ricordo: la data è il campo data del telefono, non l'etichetta miele del mockup, perché si deve poter cambiare.
+- Le Impostazioni:
+  - è portata la cornice di tutti i 15 fogli: titolo con l'ultima parola in corsivo, X quadrata, maniglia;
+  - in Notifiche, Privacy e simili le righe ora stanno sulla carta, con le etichette senza maiuscolo e gli interruttori ed «Elimina account» in inchiostro;
+  - gli altri contenuti (riquadri, link Privacy e Termini in lilla, «Prova suoni») restano come prima;
+  - il titolo di una parola sola è tutto in corsivo («*Notifiche*», il mockup diceva «Le *notifiche*»).
+- La partita:
+  - sono ritoccate sul posto la cornice (carta, maniglia, X quadrata, nome del gioco in una riga quieta), l'avanzamento in inchiostro, la domanda in Figtree 20 e i bottoni con gli angoli 16;
+  - le scelte sono ancora le righe con A/B, non le due schede grandi del mockup;
+  - mancano il personaggio sulla scelta presa e il cerchio rosso sulle scelte uguali (`games.js` non è stato riscritto).
+
+**Non ancora portati** (bottoni già in inchiostro, cornice di prima): la galleria e la foto grande del ricordo, i nostri eventi e il nuovo evento, Come stai, il countdown, le vostre idee, la bacheca, la lavagna, lo sblocco e il nuovo livello di Sintonia, la distanza, i widget, il vostro anno, Conservati, Dove, Personalizza Oggi (in pausa con le Atmosfere). Restano anche i fogli senza tasto (Questa settimana, Capitoli, Stories, la distanza vecchia): il loro CSS non è ancora tolto.
+
+**Verifiche (16/11/2026)**
+- `npm test`: 2782 test, 0 rossi, 145 saltati (gli stessi di prima, le prove nel browser senza Playwright). Sulla base, nello stesso giro, era rosso solo «Noi gets the next headline…», che a volte passa e a volte no.
+- Prove nel browser con Playwright (`PLAYWRIGHT_NODE_MODULES`): vedi il resoconto della sessione.
+- Shell offline: 3.259.335 byte, contro i 3.308.706 della base. Il margine sotto i 3,2 MB passa da 46 a 96 KB.

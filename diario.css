@@ -443,8 +443,8 @@ html[data-us-motion="reduced"] .dy-set .dy-sw::before,html[data-us-motion="reduc
    Why it moves: it rises because it rests on the page you were on, so when
    it closes you are still there. Nothing inside moves unless something
    happens (an answer comes into focus, a character hops). */
-.dy-foglio{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:flex;align-items:flex-end;justify-content:center}
-.dy-foglio[aria-hidden="true"],.dy-foglio[hidden]{display:none}
+.dy-foglio{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.dy-foglio[aria-hidden="true"]:not(.open):not(.show),.dy-foglio[hidden]{display:none}
 .dy-foglio-scrim{position:absolute;inset:0;background:var(--us-scrim);animation:dy-fade .2s ease-out;transition:opacity .2s ease-in}
 .dy-foglio-panel{position:relative;width:100%;max-width:560px;max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 12px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;background:var(--us-card);color:var(--us-ink-100);border-radius:28px 28px 0 0;padding:10px calc(20px + var(--us-safe-right)) calc(28px + var(--us-safe-bottom)) calc(20px + var(--us-safe-left));box-shadow:0 -10px 30px rgba(20,18,14,.2);text-align:left;animation:dy-sheet-up .34s cubic-bezier(.2,.8,.2,1);transition:transform .24s cubic-bezier(.4,0,1,1)}
 .dy-foglio-panel::-webkit-scrollbar{display:none}
