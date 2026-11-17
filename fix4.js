@@ -34,6 +34,8 @@
     const viewport = window.visualViewport;
     const height = Math.max(320, Math.round(viewport?.height || window.innerHeight || document.documentElement.clientHeight));
     document.documentElement.style.setProperty('--us-viewport-height', `${height}px`);
+    // iOS pans the visible area down over the page to show the field being typed in.
+    document.documentElement.style.setProperty('--us-viewport-top', `${Math.max(0, Math.round(viewport?.offsetTop || 0))}px`);
     const focused = document.activeElement?.matches?.('input,textarea,select,[contenteditable="true"]');
     const reference = Math.max(window.innerHeight || height, document.documentElement.clientHeight || height);
     const nextKeyboardOpen = Boolean(focused && reference - height > 120);
