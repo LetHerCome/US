@@ -49,12 +49,14 @@ test('prepare: pulisce, crea un certificato e i profili App Store di app.uscoupl
   const result = await prepare({ call, csrPem: '-----BEGIN CERTIFICATE REQUEST-----\nX\n-----END CERTIFICATE REQUEST-----\n', profileName: 'US CI 42', log: () => {} });
   assert.deepEqual(calls.map(([m, u]) => `${m} ${u.split('?')[0]}`), [
     'GET /v1/profiles', 'DELETE /v1/profiles/old', 'DELETE /v1/certificates/oldcert',
-    'POST /v1/certificates',
-    'GET /v1/bundleIds', 'GET /v1/bundleIds/b1/bundleIdCapabilities', 'POST /v1/profiles',
-    'GET /v1/bundleIds', 'GET /v1/bundleIds/b2/bundleIdCapabilities', 'POST /v1/profiles'
-  ]);
-  assert.equal(calls[3][2].data.attributes.certificateType, 'DISTRIBUTION');
-  const appProfile = calls[6][2].data;
+    'GET /v1/bundleIds', 'GET /v1/bundleIds/b1/bundleIdCapabilities',
+    'GET /v1/bundleIds', 'GET /v1/bundleIds/b2/bundleIdCapabilities',
+    'POST /v1/certificates', 'POST /v1/profiles', 'POST /v1/profiles'
+  ], 'prima gli identificativi, poi il certificato');
+  // Apple answers 400 to any query parameter on this relationship (run 44086502501, 17/11/2026).
+  for (const [, url] of calls.filter(([, u]) => u.includes('bundleIdCapabilities'))) assert.doesNotMatch(url, /\?/, url);
+  assert.equal(calls[7][2].data.attributes.certificateType, 'DISTRIBUTION');
+  const appProfile = calls[8][2].data;
   const widgetsProfile = calls[9][2].data;
   assert.equal(appProfile.attributes.profileType, 'IOS_APP_STORE');
   assert.equal(appProfile.attributes.name, 'US CI 42');
@@ -74,7 +76,9 @@ test('prepare: pulisce, crea un certificato e i profili App Store di app.uscoupl
 
 test('prepare: senza i passi a mano su developer.apple.com si ferma e dice quali', async () => {
   const { prepare } = await load();
+  const posted = [];
   const base = async (method, url) => {
+    if (method === 'POST') posted.push(url);
     if (method === 'GET' && url.startsWith('/v1/profiles')) return { data: [] };
     if (method === 'POST' && url === '/v1/certificates') return { data: { id: 'cert1', attributes: { certificateContent: '' } } };
     if (method === 'POST' && url === '/v1/profiles') return { data: { id: 'p', attributes: { profileContent: '', uuid: 'U' } } };
@@ -92,6 +96,7 @@ test('prepare: senza i passi a mano su developer.apple.com si ferma e dice quali
     return base(method, url, body);
   };
   await assert.rejects(prepare({ call: noGroups, csrPem: 'x', profileName: 'US CI 1', log: () => {} }), /App Groups non è attivo su app\.uscouple[\s\S]*group\.app\.uscouple\.shared/);
+  assert.deepEqual(posted, [], 'nessun certificato né profilo lasciato su Apple quando si ferma');
 });
 
 test('client: errori leggibili, DELETE di ciò che non c\'è più non blocca', async () => {

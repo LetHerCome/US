@@ -83,22 +83,30 @@ export async function prepare({ call, csrPem, profileName, bundleIdentifiers = [
   for (const id of stale.certificateIds) await call('DELETE', `/v1/certificates/${id}`);
   log(`Tolti ${stale.profileIds.length} profili e ${stale.certificateIds.length} certificati delle build precedenti.`);
 
+  // Every bundle id and its App Group first (17/11/2026): a missing one stops
+  // the run before a certificate exists, so a failure never leaves one behind.
+  const bundles = [];
+  for (const bundleIdentifier of bundleIdentifiers) {
+    const found = (await call('GET', `/v1/bundleIds?filter[identifier]=${encodeURIComponent(bundleIdentifier)}&limit=200`)).data || [];
+    const bundle = found.find((b) => b.attributes?.identifier === bundleIdentifier);
+    if (!bundle) throw new Error(`Identificativo ${bundleIdentifier} non trovato nell'account Apple: crealo con App Groups su ${PORTAL_STEPS}.`);
+    if (bundleIdentifiers.length > 1) {
+      // The widgets share data through the App Group: without it the profile would sign an app that cannot read it.
+      // This relationship takes no query parameters (Apple answers 400 to ?limit).
+      const capabilities = (await call('GET', `/v1/bundleIds/${bundle.id}/bundleIdCapabilities`))?.data || [];
+      if (!capabilities.some((c) => c.attributes?.capabilityType === 'APP_GROUPS')) {
+        throw new Error(`App Groups non è attivo su ${bundleIdentifier}: attivalo e scegli group.app.uscouple.shared su ${PORTAL_STEPS}.`);
+      }
+    }
+    bundles.push({ bundleIdentifier, bundle });
+  }
+
   const certificate = (await call('POST', '/v1/certificates', {
     data: { type: 'certificates', attributes: { certificateType: 'DISTRIBUTION', csrContent: csrPem } }
   })).data;
 
   const profiles = [];
-  for (const bundleIdentifier of bundleIdentifiers) {
-    const bundles = (await call('GET', `/v1/bundleIds?filter[identifier]=${encodeURIComponent(bundleIdentifier)}&limit=200`)).data || [];
-    const bundle = bundles.find((b) => b.attributes?.identifier === bundleIdentifier);
-    if (!bundle) throw new Error(`Identificativo ${bundleIdentifier} non trovato nell'account Apple: crealo con App Groups su ${PORTAL_STEPS}.`);
-    if (bundleIdentifiers.length > 1) {
-      // The widgets share data through the App Group: without it the profile would sign an app that cannot read it.
-      const capabilities = (await call('GET', `/v1/bundleIds/${bundle.id}/bundleIdCapabilities?limit=200`))?.data || [];
-      if (!capabilities.some((c) => c.attributes?.capabilityType === 'APP_GROUPS')) {
-        throw new Error(`App Groups non è attivo su ${bundleIdentifier}: attivalo e scegli group.app.uscouple.shared su ${PORTAL_STEPS}.`);
-      }
-    }
+  for (const { bundleIdentifier, bundle } of bundles) {
     const name = bundleIdentifier === bundleIdentifiers[0] ? profileName : widgetsProfileName(profileName);
     const profile = (await call('POST', '/v1/profiles', {
       data: {
