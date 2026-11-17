@@ -124,9 +124,11 @@
 
 /* Tablet: the calendar month keeps its wider sheet. */
 
-/* Keyboard open: the overlay ends where the visible area ends, so the
-   sheet's bottom (and its button) stays above the keyboard. */
+/* Keyboard open: the overlay is exactly the visible area, so the sheet's
+   bottom (and its button) stays above the keyboard. On iOS that area is
+   panned down over the page: without the top, the page showed under the sheet. */
 body.us-keyboard-open :is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio){
+  top:var(--us-viewport-top,0px)!important;
   bottom:auto!important;
   height:var(--us-viewport-height,100dvh)!important;
 }

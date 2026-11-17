@@ -54,6 +54,31 @@ test('Daily mobile: Foglio docked in the safe area, two distinct answers, long t
  }finally{await h.close();}
 });
 
+test('Daily mobile: with the iOS keyboard the Foglio covers the panned visible area, no page shows under it',async t=>{
+ const h=await start();if(!h)return t.skip('Playwright unavailable');
+ try{
+  const {page,ctx}=await pageFor(h,{width:390,height:844,reduced:true});
+  try{
+   await page.evaluate(()=>window.openToday());await page.waitForSelector('#answer:not([hidden])');
+   // iOS: keyboard up, the visible area is 400px tall and panned 300px down over the page.
+   await page.evaluate(()=>{
+    document.body.classList.add('us-keyboard-open');
+    document.documentElement.style.setProperty('--us-viewport-top','300px');
+    document.documentElement.style.setProperty('--us-viewport-height','400px');
+   });
+   await page.waitForTimeout(100);
+   const g=await page.evaluate(()=>{
+    const r=el=>{const b=el.getBoundingClientRect();return {top:Math.round(b.top),bottom:Math.round(b.bottom)};};
+    return {overlay:r(document.getElementById('today')),backdrop:r(document.querySelector('#today .us-modal-backdrop')),panel:r(document.querySelector('#today [data-us-modal-panel]'))};
+   });
+   assert.deepEqual(g.overlay,{top:300,bottom:700},JSON.stringify(g));
+   assert.deepEqual(g.backdrop,{top:300,bottom:700},JSON.stringify(g));
+   assert.equal(g.panel.bottom,700,'the sheet sits on the keyboard');
+   assert.ok(g.panel.top>=300,'the sheet top stays in the visible area');
+  }finally{await ctx.close();}
+ }finally{await h.close();}
+});
+
 test('Daily mobile: waiting, retry, keyboard-height viewport and reduced motion remain usable',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
