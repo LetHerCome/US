@@ -58,10 +58,39 @@ test('«Cosa provare»: aggiorna le localizzazioni che ci sono, altrimenti ne cr
   const fresh = fakeApple({ states: ['VALID'], groups });
   await distribute({ call: fresh.call, buildNumber: 1, whatToTest: 'Widget', ...quiet });
   const created = fresh.calls.find((c) => c.url === '/v1/betaBuildLocalizations');
-  assert.deepEqual(created.body.data.attributes, { locale: 'it', whatToTest: 'Widget' });
+  assert.deepEqual(created.body.data.attributes, { locale: 'it', whatsNew: 'Widget' });
   const existing = fakeApple({ states: ['VALID'], groups, localizations: [{ id: 'l1' }] });
   await distribute({ call: existing.call, buildNumber: 1, whatToTest: 'Widget', ...quiet });
-  assert.ok(existing.calls.some((c) => c.method === 'PATCH' && c.url === '/v1/betaBuildLocalizations/l1'));
+  const patch = existing.calls.find((c) => c.method === 'PATCH' && c.url === '/v1/betaBuildLocalizations/l1');
+  assert.deepEqual(patch.body.data.attributes, { whatsNew: 'Widget' });
+});
+
+test('«Cosa provare» rifiutato da Apple: avviso, la build arriva lo stesso ai tester', async () => {
+  const { distribute } = await load();
+  const apple = fakeApple({ states: ['VALID'], localizations: [{ id: 'l1' }], groups: [{ id: 'ge', attributes: { name: 'Beta', isInternalGroup: false } }] });
+  const call = async (method, url, body) => {
+    if (method === 'PATCH') throw new Error(`PATCH ${url} → 409 unknown attribute`);
+    return apple.call(method, url, body);
+  };
+  const lines = [];
+  const result = await distribute({ call, buildNumber: 1, whatToTest: 'Widget', wait: async () => {}, log: (line) => lines.push(line) });
+  assert.equal(result.review, 'inviata');
+  assert.ok(lines.some((line) => line.startsWith('::warning::«Cosa provare» non scritto')));
+});
+
+test('log pubblico: numero dei tester e stato della verifica, mai nomi o email', async () => {
+  const { distribute } = await load();
+  const apple = fakeApple({ states: ['VALID'], groups: [{ id: 'ge', attributes: { name: 'Beta', isInternalGroup: false } }] });
+  const call = async (method, url, body) => {
+    if (url.startsWith('/v1/betaGroups/ge/betaTesters')) return { data: [{ id: 't1', attributes: { email: 'bea@example.com', firstName: 'Bea' } }] };
+    if (url.startsWith('/v1/betaAppReviewSubmissions?')) return { data: [{ id: 's1', attributes: { betaReviewState: 'WAITING_FOR_REVIEW' } }] };
+    return apple.call(method, url, body);
+  };
+  const lines = [];
+  await distribute({ call, buildNumber: 1, wait: async () => {}, log: (line) => lines.push(line) });
+  assert.ok(lines.includes('Build aggiunta al gruppo esterno «Beta» (1 tester).'), lines.join('\n'));
+  assert.ok(lines.includes('Verifica beta di Apple: inviata (stato: WAITING_FOR_REVIEW).'), lines.join('\n'));
+  assert.ok(!lines.join('\n').match(/bea@example\.com|Bea\b/));
 });
 
 test('errori chiari: build scartata, attesa finita, nessun gruppo', async () => {
