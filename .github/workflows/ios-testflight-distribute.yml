@@ -16,6 +16,10 @@ on:
         description: 'Cosa provare (TestFlight), facoltativo'
         type: string
         default: ''
+      solo_stato:
+        description: 'Solo leggere lo stato su TestFlight, senza cambiare niente'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -36,6 +40,7 @@ jobs:
         env:
           BUILD_NUMBER: ${{ inputs.build_number }}
           WHAT_TO_TEST: ${{ inputs.what_to_test }}
+          ONLY_STATUS: ${{ inputs.solo_stato }}
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           ASC_KEY_P8_B64: ${{ secrets.APP_STORE_CONNECT_KEY_P8_B64 }}
@@ -44,7 +49,12 @@ jobs:
           mkdir -p "$RUNNER_TEMP/asc" && chmod 700 "$RUNNER_TEMP/asc"
           printf '%s' "$ASC_KEY_P8_B64" | base64 --decode > "$RUNNER_TEMP/asc/AuthKey.p8"
           chmod 600 "$RUNNER_TEMP/asc/AuthKey.p8"
-          ASC_KEY_PATH="$RUNNER_TEMP/asc/AuthKey.p8" node scripts/ios-testflight-distribute.mjs "$BUILD_NUMBER" "$WHAT_TO_TEST"
+          export ASC_KEY_PATH="$RUNNER_TEMP/asc/AuthKey.p8"
+          if [ "$ONLY_STATUS" = "true" ]; then
+            node scripts/ios-testflight-distribute.mjs --stato "$BUILD_NUMBER"
+          else
+            node scripts/ios-testflight-distribute.mjs "$BUILD_NUMBER" "$WHAT_TO_TEST"
+          fi
 
       - name: Remove the key
         if: always()

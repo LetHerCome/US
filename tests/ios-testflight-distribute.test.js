@@ -118,6 +118,29 @@ test('errori chiari: build scartata, attesa finita, nessun gruppo', async () => 
   await assert.rejects(distribute({ call: fakeApple({ groups }).call, buildNumber: 'abc', ...quiet }), /Numero di build non valido/);
 });
 
+test('solo stato: legge build, TestFlight, gruppi e verifica senza scrivere niente; una lettura rifiutata non ferma le altre', async () => {
+  const { status } = await load();
+  const calls = [];
+  const call = async (method, url) => {
+    calls.push({ method, url });
+    if (url.startsWith('/v1/apps?')) return { data: [{ id: 'app1', attributes: { bundleId: 'app.uscouple' } }] };
+    if (url.startsWith('/v1/builds?')) return { data: [{ id: 'b1', attributes: { processingState: 'VALID' } }] };
+    if (url === '/v1/builds/b1/buildBetaDetail') return { data: { attributes: { internalBuildState: 'IN_BETA_TESTING', externalBuildState: 'BETA_REJECTED' } } };
+    if (url.startsWith('/v1/apps/app1/betaGroups')) return { data: [] };
+    if (url.startsWith('/v1/betaGroups?')) throw new Error('GET → 400 bad filter');
+    if (url.startsWith('/v1/betaAppReviewSubmissions?')) return { data: [{ id: 's1', attributes: { betaReviewState: 'REJECTED' } }] };
+    return null;
+  };
+  const lines = [];
+  const result = await status({ call, buildNumber: '461620', log: (line) => lines.push(line) });
+  assert.deepEqual(result, { buildId: 'b1', processingState: 'VALID', external: 'BETA_REJECTED', groups: 0, withBuild: undefined, review: 'REJECTED' });
+  assert.ok(calls.every((c) => c.method === 'GET'));
+  assert.ok(lines.includes('TestFlight interno: IN_BETA_TESTING; esterno: BETA_REJECTED.'), lines.join('\n'));
+  assert.ok(lines.includes('Gruppi dell\'app: nessuno.'), lines.join('\n'));
+  assert.ok(lines.some((line) => line.startsWith('Gruppi con la build: non letto')), lines.join('\n'));
+  assert.equal(lines.at(-1), 'Verifica beta di Apple (stato: REJECTED).');
+});
+
 test('i workflow distribuiscono la build: subito dopo il caricamento e a mano per una build già caricata', () => {
   const upload = fs.readFileSync(path.join(ROOT, '.github/workflows/ios-testflight.yml'), 'utf8');
   const testers = upload.slice(upload.indexOf('\n  testers:'));
@@ -132,4 +155,5 @@ test('i workflow distribuiscono la build: subito dopo il caricamento e a mano pe
   assert.match(manual, /environment: ios-deploy/);
   assert.match(manual, /node scripts\/ios-testflight-distribute\.mjs "\$BUILD_NUMBER"/);
   assert.match(manual, /rm -rf "\$RUNNER_TEMP\/asc"/);
+  assert.match(manual, /node scripts\/ios-testflight-distribute\.mjs --stato "\$BUILD_NUMBER"/);
 });
