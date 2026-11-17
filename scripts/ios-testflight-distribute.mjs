@@ -40,18 +40,23 @@ export async function distribute({
   }
   log(`Build ${buildNumber} elaborata da Apple.`);
 
+  // "Cosa provare" is the API's whatsNew. A nicety: it never stops the build reaching the testers.
   if (whatToTest) {
-    const existing = (await call('GET', `/v1/builds/${build.id}/betaBuildLocalizations`))?.data || [];
-    if (existing.length) {
-      for (const loc of existing) await call('PATCH', `/v1/betaBuildLocalizations/${loc.id}`, { data: { type: 'betaBuildLocalizations', id: loc.id, attributes: { whatToTest } } });
-    } else {
-      await call('POST', '/v1/betaBuildLocalizations', { data: {
-        type: 'betaBuildLocalizations',
-        attributes: { locale: app.attributes?.primaryLocale || 'it', whatToTest },
-        relationships: { build: { data: { type: 'builds', id: build.id } } }
-      } });
+    try {
+      const existing = (await call('GET', `/v1/builds/${build.id}/betaBuildLocalizations`))?.data || [];
+      if (existing.length) {
+        for (const loc of existing) await call('PATCH', `/v1/betaBuildLocalizations/${loc.id}`, { data: { type: 'betaBuildLocalizations', id: loc.id, attributes: { whatsNew: whatToTest } } });
+      } else {
+        await call('POST', '/v1/betaBuildLocalizations', { data: {
+          type: 'betaBuildLocalizations',
+          attributes: { locale: app.attributes?.primaryLocale || 'it', whatsNew: whatToTest },
+          relationships: { build: { data: { type: 'builds', id: build.id } } }
+        } });
+      }
+      log('Scritto «Cosa provare».');
+    } catch (error) {
+      log(`::warning::«Cosa provare» non scritto: ${error.message}`);
     }
-    log('Scritto «Cosa provare».');
   }
 
   const groups = (await call('GET', `/v1/apps/${app.id}/betaGroups?limit=200`)).data || [];
@@ -65,7 +70,9 @@ export async function distribute({
     } catch (error) {
       if (!conflict(error)) throw error;
     }
-    log(`Build aggiunta al gruppo ${isInternalGroup ? 'interno' : 'esterno'} «${name}».`);
+    // Only a count: the logs are public, the testers' names and emails never go there.
+    const testers = ((await call('GET', `/v1/betaGroups/${group.id}/betaTesters?limit=200`))?.data || []).length;
+    log(`Build aggiunta al gruppo ${isInternalGroup ? 'interno' : 'esterno'} «${name}» (${testers} tester).`);
     if (!isInternalGroup) external += 1;
   }
 
@@ -78,7 +85,8 @@ export async function distribute({
       if (!conflict(error)) throw error;
       review = 'già inviata';
     }
-    log(`Verifica beta di Apple: ${review}.`);
+    const submission = ((await call('GET', `/v1/betaAppReviewSubmissions?filter[build]=${build.id}&limit=1`))?.data || [])[0];
+    log(`Verifica beta di Apple: ${review}${submission?.attributes?.betaReviewState ? ` (stato: ${submission.attributes.betaReviewState})` : ''}.`);
   }
   return { buildId: build.id, groups: groups.length, external, review };
 }
