@@ -631,10 +631,14 @@ test('N1 iOS: LocalAuthentication + Keychain solo su questo dispositivo, Face ID
   const pkg = read(`${PLUGIN}/Package.swift`);
   assert.match(pkg, /name: "UsAppLock"/);
   assert.match(pkg, /path: "ios\/Sources\/UsAppLockPlugin"/);
-  // Native Notifications V1 adds App.entitlements for Push only: still no Keychain sharing group.
+  // Since the widgets (W0) the app has a shared Keychain group, but its own group stays
+  // first: the app lock's record is written there, never in the group the widgets read.
   const entitlementFiles = fs.readdirSync(path.join(ROOT, 'ios/App/App')).filter((name) => name.endsWith('.entitlements'));
   assert.deepEqual(entitlementFiles, ['App.entitlements']);
-  assert.doesNotMatch(read('ios/App/App/App.entitlements'), /keychain-access-groups|application-groups/, 'il Keychain dell’app non richiede entitlement');
+  const groups = read('ios/App/App/App.entitlements').match(/<key>keychain-access-groups<\/key>\s*<array>([\s\S]*?)<\/array>/)?.[1] || '';
+  assert.deepEqual([...groups.matchAll(/<string>([^<]+)<\/string>/g)].map((m) => m[1]),
+    ['$(AppIdentifierPrefix)app.uscouple', '$(AppIdentifierPrefix)app.uscouple.shared'], 'il gruppo dell’app resta il primo');
+  assert.doesNotMatch(read(`${PLUGIN}/ios/Sources/UsAppLockPlugin/UsAppLockKeychain.swift`), /kSecAttrAccessGroup/, 'il blocco non scrive nel gruppo condiviso');
   const workflow = read('.github/workflows/ios-native.yml');
   assert.match(workflow, /swiftc native-plugins\/us-app-lock\/ios\/Sources\/UsAppLockPlugin\/UsAppLockPolicy\.swift/);
 });

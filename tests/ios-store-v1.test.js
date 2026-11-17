@@ -123,7 +123,7 @@ test('Info.plist: salvare in Galleria non chiude l\'app, permessi in italiano e 
   assert.match(pbx, /path = en\.lproj\/InfoPlist\.strings;/);
   assert.match(pbx, /path = it\.lproj\/InfoPlist\.strings;/);
   const families = [...pbx.matchAll(/TARGETED_DEVICE_FAMILY = ([^;]+);/g)].map((m) => m[1]);
-  assert.deepEqual(families, ['1', '1'], 'solo iPhone nel primo rilascio: niente screenshot iPad');
+  assert.deepEqual(families, ['1', '1', '1', '1'], 'solo iPhone nel primo rilascio (app ed estensione widget): niente screenshot iPad');
   assert.match(plist, /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/);
 });
 
@@ -165,9 +165,11 @@ test('manifesto privacy: nessun tracciamento, dati collegati all\'account solo p
 
 test('Universal Links: entitlement per /invito, file del sito scritto col Team ID, servito come JSON', async () => {
   const entitlements = read('ios/App/App/App.entitlements');
-  assert.deepEqual(plistKeys(entitlements), ['aps-environment', 'com.apple.developer.applesignin', 'com.apple.developer.associated-domains']);
+  assert.deepEqual(plistKeys(entitlements), ['aps-environment', 'com.apple.developer.applesignin', 'com.apple.developer.associated-domains', 'com.apple.security.application-groups', 'keychain-access-groups']);
   assert.deepEqual([...entitlements.matchAll(/<string>(applinks:[^<]+)<\/string>/g)].map((m) => m[1]), ['applinks:www.uscouple.app']);
-  assert.doesNotMatch(entitlements, /application-groups|keychain-access-groups/, 'App Group e Keychain condiviso arrivano con i widget (W0)');
+  // W0: App Group and shared Keychain group for the widgets only.
+  assert.match(entitlements, /<string>group\.app\.uscouple\.shared<\/string>/);
+  assert.match(entitlements, /<string>\$\(AppIdentifierPrefix\)app\.uscouple\.shared<\/string>/);
 
   const { appSiteAssociation, BUNDLE_ID, INVITE_PATH } = await import(pathToFileURL(path.join(ROOT, 'scripts', 'write-apple-app-site-association.mjs')).href);
   assert.equal(BUNDLE_ID, 'app.uscouple');

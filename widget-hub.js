@@ -205,7 +205,7 @@
     try { result = await widgets().requestPin(kind); } catch (_) {}
     if (!result.requested) {
       pending = null;
-      status[kind] = result.supported ? 'Il telefono non ha aperto la richiesta. Riprova.' : 'Questo telefono non aggiunge widget da solo. Usa i widget della Home.';
+      status[kind] = result.supported ? 'Il telefono non ha aperto la richiesta. Riprova.' : (result.steps || 'Questo telefono non aggiunge widget da solo. Usa i widget della Home.');
       render();
       return;
     }

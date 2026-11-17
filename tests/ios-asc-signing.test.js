@@ -31,31 +31,67 @@ test('pulizia: solo i profili «US CI …» e i loro certificati', async () => {
   assert.deepEqual(staleCiResources({}), { profileIds: [], certificateIds: [] });
 });
 
-test('prepare: pulisce, crea certificato di distribuzione e profilo App Store per app.uscouple', async () => {
+test('prepare: pulisce, crea un certificato e i profili App Store di app.uscouple e app.uscouple.widgets', async () => {
   const { prepare } = await load();
   const calls = [];
   const call = async (method, url, body) => {
     calls.push([method, url, body]);
     if (method === 'GET' && url.startsWith('/v1/profiles')) return { data: [{ id: 'old', attributes: { name: 'US CI 1' }, relationships: { certificates: { data: [{ id: 'oldcert' }] } } }] };
     if (method === 'POST' && url === '/v1/certificates') return { data: { id: 'cert1', attributes: { certificateContent: Buffer.from('DER').toString('base64') } } };
-    if (method === 'GET' && url.startsWith('/v1/bundleIds')) return { data: [{ id: 'b0', attributes: { identifier: 'app.uscouple.share' } }, { id: 'b1', attributes: { identifier: 'app.uscouple' } }] };
-    if (method === 'POST' && url === '/v1/profiles') return { data: { id: 'prof1', attributes: { profileContent: Buffer.from('PROFILE').toString('base64'), uuid: 'UUID-1' } } };
+    if (method === 'GET' && url.startsWith('/v1/bundleIds?')) return { data: [{ id: 'b0', attributes: { identifier: 'app.uscouple.share' } }, { id: 'b1', attributes: { identifier: 'app.uscouple' } }, { id: 'b2', attributes: { identifier: 'app.uscouple.widgets' } }] };
+    if (method === 'GET' && /\/v1\/bundleIds\/b[12]\/bundleIdCapabilities/.test(url)) return { data: [{ attributes: { capabilityType: 'PUSH_NOTIFICATIONS' } }, { attributes: { capabilityType: 'APP_GROUPS' } }] };
+    if (method === 'POST' && url === '/v1/profiles') {
+      const n = calls.filter(([m, u]) => m === 'POST' && u === '/v1/profiles').length;
+      return { data: { id: `prof${n}`, attributes: { profileContent: Buffer.from(`PROFILE${n}`).toString('base64'), uuid: `UUID-${n}` } } };
+    }
     return null;
   };
   const result = await prepare({ call, csrPem: '-----BEGIN CERTIFICATE REQUEST-----\nX\n-----END CERTIFICATE REQUEST-----\n', profileName: 'US CI 42', log: () => {} });
   assert.deepEqual(calls.map(([m, u]) => `${m} ${u.split('?')[0]}`), [
     'GET /v1/profiles', 'DELETE /v1/profiles/old', 'DELETE /v1/certificates/oldcert',
-    'POST /v1/certificates', 'GET /v1/bundleIds', 'POST /v1/profiles'
+    'POST /v1/certificates',
+    'GET /v1/bundleIds', 'GET /v1/bundleIds/b1/bundleIdCapabilities', 'POST /v1/profiles',
+    'GET /v1/bundleIds', 'GET /v1/bundleIds/b2/bundleIdCapabilities', 'POST /v1/profiles'
   ]);
   assert.equal(calls[3][2].data.attributes.certificateType, 'DISTRIBUTION');
-  const profileBody = calls[5][2].data;
-  assert.equal(profileBody.attributes.profileType, 'IOS_APP_STORE');
-  assert.equal(profileBody.relationships.bundleId.data.id, 'b1', 'esattamente app.uscouple, non un prefisso');
-  assert.deepEqual(profileBody.relationships.certificates.data, [{ type: 'certificates', id: 'cert1' }]);
+  const appProfile = calls[6][2].data;
+  const widgetsProfile = calls[9][2].data;
+  assert.equal(appProfile.attributes.profileType, 'IOS_APP_STORE');
+  assert.equal(appProfile.attributes.name, 'US CI 42');
+  assert.equal(appProfile.relationships.bundleId.data.id, 'b1', 'esattamente app.uscouple, non un prefisso');
+  assert.equal(widgetsProfile.attributes.name, 'US CI 42 widgets', 'anche il profilo dei widget inizia con «US CI » e la prossima build lo toglie');
+  assert.equal(widgetsProfile.relationships.bundleId.data.id, 'b2');
+  assert.deepEqual(widgetsProfile.relationships.certificates.data, [{ type: 'certificates', id: 'cert1' }], 'stesso certificato');
   assert.equal(result.certificateDer.toString(), 'DER');
-  assert.equal(result.profile.toString(), 'PROFILE');
+  assert.deepEqual(result.profiles.map((p) => [p.bundleIdentifier, p.name, p.uuid, p.content.toString()]), [
+    ['app.uscouple', 'US CI 42', 'UUID-1', 'PROFILE1'],
+    ['app.uscouple.widgets', 'US CI 42 widgets', 'UUID-2', 'PROFILE2']
+  ]);
+  assert.equal(result.profile.toString(), 'PROFILE1');
   assert.equal(result.profileUuid, 'UUID-1');
   await assert.rejects(prepare({ call, csrPem: 'x', profileName: 'Altro', log: () => {} }), /US CI/);
+});
+
+test('prepare: senza i passi a mano su developer.apple.com si ferma e dice quali', async () => {
+  const { prepare } = await load();
+  const base = async (method, url) => {
+    if (method === 'GET' && url.startsWith('/v1/profiles')) return { data: [] };
+    if (method === 'POST' && url === '/v1/certificates') return { data: { id: 'cert1', attributes: { certificateContent: '' } } };
+    if (method === 'POST' && url === '/v1/profiles') return { data: { id: 'p', attributes: { profileContent: '', uuid: 'U' } } };
+    return null;
+  };
+  const noWidgetsId = async (method, url, body) => {
+    if (method === 'GET' && url.startsWith('/v1/bundleIds?')) return { data: url.includes('widgets') ? [] : [{ id: 'b1', attributes: { identifier: 'app.uscouple' } }] };
+    if (method === 'GET' && url.includes('bundleIdCapabilities')) return { data: [{ attributes: { capabilityType: 'APP_GROUPS' } }] };
+    return base(method, url, body);
+  };
+  await assert.rejects(prepare({ call: noWidgetsId, csrPem: 'x', profileName: 'US CI 1', log: () => {} }), /app\.uscouple\.widgets non trovato[\s\S]*§4\.4/);
+  const noGroups = async (method, url, body) => {
+    if (method === 'GET' && url.startsWith('/v1/bundleIds?')) return { data: [{ id: 'b1', attributes: { identifier: 'app.uscouple' } }] };
+    if (method === 'GET' && url.includes('bundleIdCapabilities')) return { data: [{ attributes: { capabilityType: 'PUSH_NOTIFICATIONS' } }] };
+    return base(method, url, body);
+  };
+  await assert.rejects(prepare({ call: noGroups, csrPem: 'x', profileName: 'US CI 1', log: () => {} }), /App Groups non è attivo su app\.uscouple[\s\S]*group\.app\.uscouple\.shared/);
 });
 
 test('client: errori leggibili, DELETE di ciò che non c\'è più non blocca', async () => {
@@ -75,16 +111,27 @@ test('notifiche: sul runner le entitlements passano a production, come il profil
   assert.throws(() => productionPush('<plist/>'), /aps-environment/);
 });
 
-test('progetto: firma manuale solo nella configurazione Release dell\'app', async () => {
-  const { pinManualSigning } = await load();
+test('progetto: firma manuale solo nelle configurazioni Release dell\'app e dei widget', async () => {
+  const { pinManualSigning, widgetsProfileName, WIDGETS_BUNDLE_ID } = await load();
   const pbx = fs.readFileSync(path.join(ROOT, 'ios/App/App.xcodeproj/project.pbxproj'), 'utf8');
-  const out = pinManualSigning(pbx, { teamId: 'KW79XL4LBZ', profileName: 'US CI 42' });
-  assert.equal((out.match(/CODE_SIGN_STYLE = Manual;/g) || []).length, 1);
-  assert.equal((out.match(/CODE_SIGN_STYLE = Automatic;/g) || []).length, (pbx.match(/CODE_SIGN_STYLE = Automatic;/g) || []).length - 1, 'Debug resta automatico');
+  const app = pinManualSigning(pbx, { teamId: 'KW79XL4LBZ', profileName: 'US CI 42' });
+  const out = pinManualSigning(app, { teamId: 'KW79XL4LBZ', profileName: widgetsProfileName('US CI 42'), bundleIdentifier: WIDGETS_BUNDLE_ID });
+  assert.equal((out.match(/CODE_SIGN_STYLE = Manual;/g) || []).length, 2);
+  assert.equal((out.match(/CODE_SIGN_STYLE = Automatic;/g) || []).length, (pbx.match(/CODE_SIGN_STYLE = Automatic;/g) || []).length - 2, 'Debug resta automatico');
   assert.match(out, /CODE_SIGN_STYLE = Manual;\n\s+CODE_SIGN_IDENTITY = "Apple Distribution";\n\s+"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "Apple Distribution";\n\s+DEVELOPMENT_TEAM = KW79XL4LBZ;\n\s+PROVISIONING_PROFILE_SPECIFIER = "US CI 42";/);
-  const release = out.split('isa = XCBuildConfiguration;').find((b) => b.includes('CODE_SIGN_STYLE = Manual;'));
-  assert.match(release, /PRODUCT_BUNDLE_IDENTIFIER = app\.uscouple;/);
-  assert.match(release, /name = Release;/);
+  const blocks = out.split('isa = XCBuildConfiguration;').filter((b) => b.includes('CODE_SIGN_STYLE = Manual;'));
+  assert.match(blocks[0], /PRODUCT_BUNDLE_IDENTIFIER = app\.uscouple;/);
+  assert.match(blocks[0], /name = Release;/);
+  assert.match(blocks[1], /PRODUCT_BUNDLE_IDENTIFIER = app\.uscouple\.widgets;/);
+  assert.match(blocks[1], /PROVISIONING_PROFILE_SPECIFIER = "US CI 42 widgets";/);
+  assert.match(blocks[1], /name = Release;/);
   assert.throws(() => pinManualSigning(pbx, { teamId: 'bad', profileName: 'US CI 1' }), /Team ID/);
-  assert.throws(() => pinManualSigning(out, { teamId: 'KW79XL4LBZ', profileName: 'US CI 1' }), /CODE_SIGN_STYLE/);
+  assert.throws(() => pinManualSigning(app, { teamId: 'KW79XL4LBZ', profileName: 'US CI 1' }), /CODE_SIGN_STYLE/);
+});
+
+test('workflow TestFlight: installa ed esporta con i due profili', () => {
+  const workflow = fs.readFileSync(path.join(ROOT, '.github/workflows/ios-testflight.yml'), 'utf8');
+  assert.match(workflow, /done < "\$SIGN\/profiles\.txt"/);
+  assert.match(workflow, /<key>app\.uscouple<\/key><string>\$\{US_SIGN_PROFILE_NAME\}<\/string>/);
+  assert.match(workflow, /<key>app\.uscouple\.widgets<\/key><string>\$\{US_SIGN_PROFILE_NAME\} widgets<\/string>/);
 });

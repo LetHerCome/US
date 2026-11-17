@@ -1659,6 +1659,7 @@
     'Preparo il widget…': 'Preparing the widget…',
     'Il telefono non ha aperto la richiesta. Riprova.': 'Your phone didn’t open the request. Try again.',
     'Questo telefono non aggiunge widget da solo. Usa i widget della Home.': 'This phone can’t add widgets by itself. Use the Home screen widgets.',
+    'Su iPhone: tieni premuto su uno spazio vuoto della Home, tocca Modifica › Aggiungi widget e cerca US.': 'On iPhone: touch and hold an empty spot on the Home Screen, tap Edit › Add Widget and search for US.',
     'Conferma sulla schermata che si è aperta.': 'Confirm on the screen that just opened.',
 
     // ------------------------------------------------------------ Connessione ed errori comuni

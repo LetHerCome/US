@@ -21,6 +21,27 @@
 		A15A00022F00000000000003 /* UsPrivateStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A15A00012F00000000000003 /* UsPrivateStorage.swift */; };
 		A15A00022F00000000000004 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A15A00012F00000000000004 /* PrivacyInfo.xcprivacy */; };
 		A15A00042F00000000000004 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A15A00042F00000000000003 /* InfoPlist.strings */; };
+		B1D6E7000000000000000013 /* UsWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000012 /* UsWidgetsBundle.swift */; };
+		B1D6E7000000000000000015 /* UsWidgetTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000014 /* UsWidgetTheme.swift */; };
+		B1D6E7000000000000000017 /* UsPhotoWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000016 /* UsPhotoWidget.swift */; };
+		B1D6E7000000000000000019 /* UsThinkWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000018 /* UsThinkWidget.swift */; };
+		B1D6E700000000000000001B /* UsThinkSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000001A /* UsThinkSender.swift */; };
+		B1D6E700000000000000001D /* UsWidgetContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000001C /* UsWidgetContract.swift */; };
+		B1D6E700000000000000001F /* UsWidgetShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000001E /* UsWidgetShared.swift */; };
+		B1D6E7000000000000000021 /* UsWidgetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000020 /* UsWidgetStore.swift */; };
+		B1D6E7000000000000000023 /* UsWidgetCredentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000022 /* UsWidgetCredentials.swift */; };
+		B1D6E7000000000000000025 /* UsWidgetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000024 /* UsWidgetModels.swift */; };
+		B1D6E7000000000000000027 /* Fraunces.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000026 /* Fraunces.ttf */; };
+		B1D6E7000000000000000029 /* Fraunces-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000028 /* Fraunces-Italic.ttf */; };
+		B1D6E700000000000000002B /* Figtree.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000002A /* Figtree.ttf */; };
+		B1D6E700000000000000002D /* art_photo.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000002C /* art_photo.webp */; };
+		B1D6E700000000000000002F /* art_photo_night.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000002E /* art_photo_night.webp */; };
+		B1D6E7000000000000000031 /* art_think_s.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000030 /* art_think_s.webp */; };
+		B1D6E7000000000000000033 /* art_think_s_night.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000032 /* art_think_s_night.webp */; };
+		B1D6E7000000000000000035 /* art_think_m.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000034 /* art_think_m.webp */; };
+		B1D6E7000000000000000037 /* art_think_m_night.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000036 /* art_think_m_night.webp */; };
+		B1D6E7000000000000000039 /* grain_tile.png in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000038 /* grain_tile.png */; };
+		B1D6E7000000000000000002 /* UsWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000001 /* UsWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +63,29 @@
 		A15A00012F00000000000004 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A15A00042F00000000000001 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		A15A00042F00000000000002 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		B1D6E7000000000000000001 /* UsWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UsWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1D6E7000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B1D6E7000000000000000007 /* UsWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = UsWidgets.entitlements; sourceTree = "<group>"; };
+		B1D6E7000000000000000012 /* UsWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsWidgetsBundle.swift; sourceTree = "<group>"; };
+		B1D6E7000000000000000014 /* UsWidgetTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsWidgetTheme.swift; sourceTree = "<group>"; };
+		B1D6E7000000000000000016 /* UsPhotoWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsPhotoWidget.swift; sourceTree = "<group>"; };
+		B1D6E7000000000000000018 /* UsThinkWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsThinkWidget.swift; sourceTree = "<group>"; };
+		B1D6E700000000000000001A /* UsThinkSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsThinkSender.swift; sourceTree = "<group>"; };
+		B1D6E700000000000000001C /* UsWidgetContract.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsWidgetContract.swift; sourceTree = "<group>"; };
+		B1D6E700000000000000001E /* UsWidgetShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsWidgetShared.swift; sourceTree = "<group>"; };
+		B1D6E7000000000000000020 /* UsWidgetStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsWidgetStore.swift; sourceTree = "<group>"; };
+		B1D6E7000000000000000022 /* UsWidgetCredentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsWidgetCredentials.swift; sourceTree = "<group>"; };
+		B1D6E7000000000000000024 /* UsWidgetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsWidgetModels.swift; sourceTree = "<group>"; };
+		B1D6E7000000000000000026 /* Fraunces.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fraunces.ttf; sourceTree = "<group>"; };
+		B1D6E7000000000000000028 /* Fraunces-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Fraunces-Italic.ttf"; sourceTree = "<group>"; };
+		B1D6E700000000000000002A /* Figtree.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Figtree.ttf; sourceTree = "<group>"; };
+		B1D6E700000000000000002C /* art_photo.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_photo.webp; sourceTree = "<group>"; };
+		B1D6E700000000000000002E /* art_photo_night.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_photo_night.webp; sourceTree = "<group>"; };
+		B1D6E7000000000000000030 /* art_think_s.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_think_s.webp; sourceTree = "<group>"; };
+		B1D6E7000000000000000032 /* art_think_s_night.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_think_s_night.webp; sourceTree = "<group>"; };
+		B1D6E7000000000000000034 /* art_think_m.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_think_m.webp; sourceTree = "<group>"; };
+		B1D6E7000000000000000036 /* art_think_m_night.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_think_m_night.webp; sourceTree = "<group>"; };
+		B1D6E7000000000000000038 /* grain_tile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = grain_tile.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,7 +97,38 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B1D6E700000000000000000A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXContainerItemProxy section */
+		B1D6E7000000000000000010 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B1D6E7000000000000000008;
+			remoteInfo = UsWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B1D6E700000000000000000C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B1D6E7000000000000000002 /* UsWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXGroup section */
 		504EC2FB1FED79650016851F = {
@@ -61,6 +136,7 @@
 			children = (
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
+				B1D6E7000000000000000003 /* UsWidgets */,
 				504EC3051FED79650016851F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -69,6 +145,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* App.app */,
+				B1D6E7000000000000000001 /* UsWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,6 +172,52 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		B1D6E7000000000000000003 /* UsWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				B1D6E7000000000000000012 /* UsWidgetsBundle.swift */,
+				B1D6E7000000000000000014 /* UsWidgetTheme.swift */,
+				B1D6E7000000000000000016 /* UsPhotoWidget.swift */,
+				B1D6E7000000000000000018 /* UsThinkWidget.swift */,
+				B1D6E700000000000000001A /* UsThinkSender.swift */,
+				B1D6E7000000000000000006 /* Info.plist */,
+				B1D6E7000000000000000007 /* UsWidgets.entitlements */,
+				B1D6E7000000000000000005 /* Resources */,
+				B1D6E7000000000000000004 /* Core */,
+			);
+			path = UsWidgets;
+			sourceTree = "<group>";
+		};
+		B1D6E7000000000000000005 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B1D6E7000000000000000026 /* Fraunces.ttf */,
+				B1D6E7000000000000000028 /* Fraunces-Italic.ttf */,
+				B1D6E700000000000000002A /* Figtree.ttf */,
+				B1D6E700000000000000002C /* art_photo.webp */,
+				B1D6E700000000000000002E /* art_photo_night.webp */,
+				B1D6E7000000000000000030 /* art_think_s.webp */,
+				B1D6E7000000000000000032 /* art_think_s_night.webp */,
+				B1D6E7000000000000000034 /* art_think_m.webp */,
+				B1D6E7000000000000000036 /* art_think_m_night.webp */,
+				B1D6E7000000000000000038 /* grain_tile.png */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		B1D6E7000000000000000004 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				B1D6E700000000000000001C /* UsWidgetContract.swift */,
+				B1D6E700000000000000001E /* UsWidgetShared.swift */,
+				B1D6E7000000000000000020 /* UsWidgetStore.swift */,
+				B1D6E7000000000000000022 /* UsWidgetCredentials.swift */,
+				B1D6E7000000000000000024 /* UsWidgetModels.swift */,
+			);
+			name = Core;
+			path = "../../native-plugins/us-widget-bridge/ios/Sources/UsWidgetBridgePlugin/Core";
+			sourceTree = SOURCE_ROOT;
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -105,10 +228,12 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				B1D6E700000000000000000C /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B1D6E7000000000000000011 /* PBXTargetDependency */,
 			);
 			name = App;
 			packageProductDependencies = (
@@ -117,6 +242,23 @@
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
+		};
+		B1D6E7000000000000000008 /* UsWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1D6E700000000000000000D /* Build configuration list for PBXNativeTarget "UsWidgets" */;
+			buildPhases = (
+				B1D6E7000000000000000009 /* Sources */,
+				B1D6E700000000000000000A /* Frameworks */,
+				B1D6E700000000000000000B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UsWidgets;
+			productName = UsWidgets;
+			productReference = B1D6E7000000000000000001 /* UsWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -131,6 +273,9 @@
 						CreatedOnToolsVersion = 9.2;
 						LastSwiftMigration = 1100;
 						ProvisioningStyle = Automatic;
+					};
+					B1D6E7000000000000000008 = {
+						CreatedOnToolsVersion = 16.0;
 					};
 				};
 			};
@@ -152,6 +297,7 @@
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				B1D6E7000000000000000008 /* UsWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -172,6 +318,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B1D6E700000000000000000B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1D6E7000000000000000027 /* Fraunces.ttf in Resources */,
+				B1D6E7000000000000000029 /* Fraunces-Italic.ttf in Resources */,
+				B1D6E700000000000000002B /* Figtree.ttf in Resources */,
+				B1D6E700000000000000002D /* art_photo.webp in Resources */,
+				B1D6E700000000000000002F /* art_photo_night.webp in Resources */,
+				B1D6E7000000000000000031 /* art_think_s.webp in Resources */,
+				B1D6E7000000000000000033 /* art_think_s_night.webp in Resources */,
+				B1D6E7000000000000000035 /* art_think_m.webp in Resources */,
+				B1D6E7000000000000000037 /* art_think_m_night.webp in Resources */,
+				B1D6E7000000000000000039 /* grain_tile.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -187,7 +350,32 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B1D6E7000000000000000009 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1D6E7000000000000000013 /* UsWidgetsBundle.swift in Sources */,
+				B1D6E7000000000000000015 /* UsWidgetTheme.swift in Sources */,
+				B1D6E7000000000000000017 /* UsPhotoWidget.swift in Sources */,
+				B1D6E7000000000000000019 /* UsThinkWidget.swift in Sources */,
+				B1D6E700000000000000001B /* UsThinkSender.swift in Sources */,
+				B1D6E700000000000000001D /* UsWidgetContract.swift in Sources */,
+				B1D6E700000000000000001F /* UsWidgetShared.swift in Sources */,
+				B1D6E7000000000000000021 /* UsWidgetStore.swift in Sources */,
+				B1D6E7000000000000000023 /* UsWidgetCredentials.swift in Sources */,
+				B1D6E7000000000000000025 /* UsWidgetModels.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B1D6E7000000000000000011 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B1D6E7000000000000000008 /* UsWidgets */;
+			targetProxy = B1D6E7000000000000000010 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		A15A00042F00000000000003 /* InfoPlist.strings */ = {
@@ -375,6 +563,54 @@
 			};
 			name = Release;
 		};
+		B1D6E700000000000000000E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = UsWidgets/UsWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = UsWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.uscouple.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		B1D6E700000000000000000F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = UsWidgets/UsWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = UsWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.uscouple.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -392,6 +628,15 @@
 			buildConfigurations = (
 				504EC3171FED79650016851F /* Debug */,
 				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B1D6E700000000000000000D /* Build configuration list for PBXNativeTarget "UsWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1D6E700000000000000000E /* Debug */,
+				B1D6E700000000000000000F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
