@@ -94,9 +94,11 @@ test('«Cosa provare» rifiutato da Apple: avviso, la build arriva lo stesso ai 
 test('log pubblico: numero dei tester e stato della verifica, mai nomi o email', async () => {
   const { distribute } = await load();
   const apple = fakeApple({ states: ['VALID'], groups: [{ id: 'ge', attributes: { name: 'Beta', isInternalGroup: false } }] });
+  let submitted = false;
   const call = async (method, url, body) => {
     if (url.startsWith('/v1/betaGroups/ge/betaTesters')) return { data: [{ id: 't1', attributes: { email: 'bea@example.com', firstName: 'Bea' } }] };
-    if (url.startsWith('/v1/betaAppReviewSubmissions?')) return { data: [{ id: 's1', attributes: { betaReviewState: 'WAITING_FOR_REVIEW' } }] };
+    if (method === 'POST' && url === '/v1/betaAppReviewSubmissions') submitted = true;
+    if (url.startsWith('/v1/betaAppReviewSubmissions?')) return { data: submitted ? [{ id: 's1', attributes: { betaReviewState: 'WAITING_FOR_REVIEW' } }] : [] };
     return apple.call(method, url, body);
   };
   const lines = [];
