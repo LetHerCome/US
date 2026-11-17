@@ -65,6 +65,19 @@ test('«Cosa provare»: aggiorna le localizzazioni che ci sono, altrimenti ne cr
   assert.deepEqual(patch.body.data.attributes, { whatsNew: 'Widget' });
 });
 
+test('build già in verifica: non la rimanda (Apple risponderebbe 422) e dice lo stato', async () => {
+  const { distribute } = await load();
+  const apple = fakeApple({ states: ['VALID'], groups: [{ id: 'ge', attributes: { name: 'Beta', isInternalGroup: false } }] });
+  const call = async (method, url, body) => {
+    if (url.startsWith('/v1/betaAppReviewSubmissions?')) return { data: [{ id: 's1', attributes: { betaReviewState: 'IN_REVIEW' } }] };
+    if (method === 'POST' && url === '/v1/betaAppReviewSubmissions') throw new Error('POST /v1/betaAppReviewSubmissions → 422 not in a valid processing state');
+    return apple.call(method, url, body);
+  };
+  const lines = [];
+  assert.equal((await distribute({ call, buildNumber: 1, wait: async () => {}, log: (line) => lines.push(line) })).review, 'già inviata');
+  assert.ok(lines.includes('Verifica beta di Apple: già inviata (stato: IN_REVIEW).'), lines.join('\n'));
+});
+
 test('«Cosa provare» rifiutato da Apple: avviso, la build arriva lo stesso ai tester', async () => {
   const { distribute } = await load();
   const apple = fakeApple({ states: ['VALID'], localizations: [{ id: 'l1' }], groups: [{ id: 'ge', attributes: { name: 'Beta', isInternalGroup: false } }] });

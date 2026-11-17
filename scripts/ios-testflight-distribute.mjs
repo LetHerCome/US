@@ -78,14 +78,21 @@ export async function distribute({
 
   let review = 'non serve';
   if (external) {
-    try {
-      await call('POST', '/v1/betaAppReviewSubmissions', { data: { type: 'betaAppReviewSubmissions', relationships: { build: { data: { type: 'builds', id: build.id } } } } });
-      review = 'inviata';
-    } catch (error) {
-      if (!conflict(error)) throw error;
+    // Look first: a build already in review answers a second submission with 422, not 409.
+    const findSubmission = async () => ((await call('GET', `/v1/betaAppReviewSubmissions?filter[build]=${build.id}&limit=1`))?.data || [])[0];
+    let submission = await findSubmission();
+    if (submission) {
       review = 'già inviata';
+    } else {
+      try {
+        await call('POST', '/v1/betaAppReviewSubmissions', { data: { type: 'betaAppReviewSubmissions', relationships: { build: { data: { type: 'builds', id: build.id } } } } });
+        review = 'inviata';
+      } catch (error) {
+        if (!conflict(error)) throw error;
+        review = 'già inviata';
+      }
+      submission = await findSubmission();
     }
-    const submission = ((await call('GET', `/v1/betaAppReviewSubmissions?filter[build]=${build.id}&limit=1`))?.data || [])[0];
     log(`Verifica beta di Apple: ${review}${submission?.attributes?.betaReviewState ? ` (stato: ${submission.attributes.betaReviewState})` : ''}.`);
   }
   return { buildId: build.id, groups: groups.length, external, review };
