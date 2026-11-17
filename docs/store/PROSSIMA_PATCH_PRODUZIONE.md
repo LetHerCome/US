@@ -28,6 +28,16 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### Fogli con la tastiera su iPhone, anche nel diario (17/11)
+
+**Stato:** branch `claude/ios-tastiera-fogli-staging`, nato dal branch fisso di staging a f8d86df3; porta su staging la stessa correzione di `main` (PR LetHerCome/US#258, commit fef2f8fb). Trovato da Bea su TestFlight (video del 17/11): rispondendo alla domanda del giorno, sotto il foglio ricompariva la pagina Oggi. Provato col test nel browser che simula la tastiera di iPhone; non ancora su staging, non in produzione, da riprovare su TestFlight.
+
+**Cosa cambia:** con la tastiera aperta iPhone sposta in giù la parte visibile della pagina; ora i fogli partono da lì e la coprono tutta. Vale per i fogli del diario (`.dy-foglio`: domanda di oggi, Ti penso, Impostazioni, Lasciato per te, calendario…) e per quelli col telaio vecchio (conto alla rovescia, eventi, widget, Conservati). Solo sito (`fix4.js` scrive `--us-viewport-top`, `dc-popup.css`, `diario.css`), niente SQL né parti native: vale per Android e iPhone con lo stesso sito.
+
+**Test:** `tests/us-v6-daily-reveal-browser.test.js` («with the iOS keyboard…»), sul foglio `#today` del diario.
+
+**Novità per Play:** nessuna voce a sé («Piccole correzioni»).
+
 ### Iscrizione: prima il codice, poi la domanda (14/11)
 
 **Stato:** branch `claude/attesa-dopo-invito` (da `main` dopo la 1.5.1). Provata nel browser col finto Supabase; non ancora su staging né in produzione.

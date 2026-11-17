@@ -453,7 +453,8 @@ html[data-us-motion="reduced"] .dy-set .dy-sw::before,html[data-us-motion="reduc
 .dy-foglio[data-us-motion-exiting] .dy-foglio-panel{animation:none;transform:translateY(100%)}
 .dy-foglio-panel.is-dragging,.dy-sheet.is-dragging{transition:none}
 .dy-foglio .dy-grab,.dy-foglio .dy-sheet-head,.dy-over .dy-grab,.dy-over .dy-sheet-head{touch-action:none}
-body.us-keyboard-open .dy-foglio{bottom:auto;height:var(--us-viewport-height,100dvh)}
+/* Keyboard open: the Foglio is the visible area, which iOS pans down over the page. */
+body.us-keyboard-open .dy-foglio{top:var(--us-viewport-top,0px);bottom:auto;height:var(--us-viewport-height,100dvh)}
 .dy-sheet-head{gap:12px}
 .dy-sheet-head>div{min-width:0}
 .dy-sheet-title{line-height:1.08;overflow-wrap:anywhere}
