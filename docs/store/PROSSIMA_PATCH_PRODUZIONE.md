@@ -1,5 +1,17 @@
 # Prossima patch in produzione
 
+## Dopo la 1.5.1 (in raccolta)
+
+### Fogli con la tastiera su iPhone (17/11)
+
+**Stato:** branch `claude/whatsapp-video-review-99dc83`, da `main`. Trovato da Bea su TestFlight (video del 17/11): rispondendo alla domanda del giorno, sotto «Invia la mia risposta» ricompariva la pagina Oggi con la card della domanda. Provato col test nel browser che simula la tastiera di iPhone; da riprovare su TestFlight. Non su staging né in produzione.
+
+**Cosa cambia:** con la tastiera aperta iPhone sposta in giù la parte visibile; i fogli (domanda del giorno, conto alla rovescia, eventi, Lasciato per te…) ora partono da lì e la coprono tutta. Solo sito (`fix4.js`, `dc-popup.css`), niente SQL né parti native. Su staging c'è lo stesso difetto anche col diario pulito (`dc-popup.css`, `diario.css` `.dy-foglio`): va corretto anche lì.
+
+**Test:** `tests/us-v6-daily-reveal-browser.test.js` («with the iOS keyboard…»).
+
+**Novità per Play:** nessuna voce a sé («Piccole correzioni»).
+
 ## Patch 1.5.1: «La cosa di oggi» e la mascotte che non sparisce più (13/11/2026)
 
 **In produzione il 14/11 col via del founder («puoi passarlo tutto su produzione»):** migrazioni `20261113202138_cosa_di_oggi_v1.sql` (run 43614053143) e `20261113232109_revisione_testi.sql` (run 43614166584), controllate in sola lettura (`cosa_di_oggi` solo per `authenticated`, `guided_week` dal 14/11 alle 16:11 UTC, le tre sfide da fare insieme in `near`); 10 funzioni delle notifiche (run 43614174829, senza `s3-staging-send-web-push`); sito con build `us-rilascio-20261114-109` e Novità id `1.5.1`; poi AAB 1.5.1. Su staging prima: migrazioni (run 43506086376, 43613038149) e 11 funzioni (run 43613057381, 43613066146), prova con US LIVE.
