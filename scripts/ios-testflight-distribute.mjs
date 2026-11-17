@@ -9,6 +9,7 @@
 //   4. if a group is external, submit it to Beta App Review (once).
 //
 //   node scripts/ios-testflight-distribute.mjs <build-number> [what-to-test]
+//   node scripts/ios-testflight-distribute.mjs --stato <build-number>   (only reads)
 // reads ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH from the environment.
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -98,11 +99,41 @@ export async function distribute({
   return { buildId: build.id, groups: groups.length, external, review };
 }
 
-async function main([buildNumber, whatToTest = '']) {
+// Read only: where a build stands on TestFlight, changing nothing. Every read is
+// independent, so one that Apple refuses does not hide the others.
+export async function status({ call, buildNumber, bundleIdentifier = BUNDLE_ID, log = console.log }) {
+  if (!/^\d+$/.test(String(buildNumber))) throw new Error(`Numero di build non valido: ${buildNumber}`);
+  const read = async (what, url) => {
+    try { return (await call('GET', url))?.data; } catch (error) { log(`${what}: non letto (${error.message}).`); return undefined; }
+  };
+  const app = ((await read('App', `/v1/apps?filter[bundleId]=${encodeURIComponent(bundleIdentifier)}&limit=10`)) || [])
+    .find((a) => a.attributes?.bundleId === bundleIdentifier);
+  if (!app) throw new Error(`App ${bundleIdentifier} non trovata in App Store Connect.`);
+  const build = ((await read('Build', `/v1/builds?filter[app]=${app.id}&filter[version]=${buildNumber}&limit=1`)) || [])[0];
+  if (!build) throw new Error(`La build ${buildNumber} non è in App Store Connect.`);
+  const { processingState, expired } = build.attributes || {};
+  log(`Build ${buildNumber}: ${processingState}${expired ? ', scaduta' : ''}.`);
+  const detail = await read('Dettagli beta', `/v1/builds/${build.id}/buildBetaDetail`);
+  if (detail) log(`TestFlight interno: ${detail.attributes?.internalBuildState}; esterno: ${detail.attributes?.externalBuildState}.`);
+  const groups = await read('Gruppi dell\'app', `/v1/apps/${app.id}/betaGroups?limit=200`);
+  if (groups) log(`Gruppi dell'app: ${groups.length ? groups.map((g) => `«${g.attributes?.name}» (${g.attributes?.isInternalGroup ? 'interno' : 'esterno'})`).join(', ') : 'nessuno'}.`);
+  const withBuild = await read('Gruppi con la build', `/v1/betaGroups?filter[builds]=${build.id}&limit=200`);
+  if (withBuild) log(`Gruppi con la build: ${withBuild.length ? withBuild.map((g) => `«${g.attributes?.name}»`).join(', ') : 'nessuno'}.`);
+  const submission = ((await read('Verifica beta', `/v1/betaAppReviewSubmissions?filter[build]=${build.id}&limit=1`)) || [])[0];
+  const review = submission?.attributes?.betaReviewState || 'non inviata';
+  // Last line, the one the check loop reads.
+  log(`Verifica beta di Apple (stato: ${review}).`);
+  return { buildId: build.id, processingState, external: detail?.attributes?.externalBuildState, groups: groups?.length, withBuild: withBuild?.length, review };
+}
+
+async function main(args) {
+  const onlyStatus = args[0] === '--stato';
+  const [buildNumber, whatToTest = ''] = onlyStatus ? args.slice(1) : args;
   const privateKeyPem = await readFile(process.env.ASC_KEY_PATH, 'utf8');
   // A fresh token for every request: the wait for Apple outlasts one token's 20 minutes.
   const call = (...args) => client({ token: ascToken({ keyId: process.env.ASC_KEY_ID, issuerId: process.env.ASC_ISSUER_ID, privateKeyPem }) })(...args);
-  await distribute({ call, buildNumber, whatToTest });
+  if (onlyStatus) await status({ call, buildNumber });
+  else await distribute({ call, buildNumber, whatToTest });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
