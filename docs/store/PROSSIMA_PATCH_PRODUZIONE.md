@@ -28,9 +28,25 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### Impostazioni riordinate (20/11/2026)
+
+**Stato:** branch `claude/impostazioni` (nato dal branch fisso di staging a f6c2b266). Provato nel browser col finto Supabase, in chiaro e in scuro; non ancora su staging, non in produzione.
+
+**Cosa cambia:** sotto la card della coppia ci sono cinque gruppi.
+- **Tu:** personaggio, colore, Come stai («Il tuo personaggio lo mostra»), foto profilo, «Come ti scriviamo» (prima «Le tue parole»).
+- **Voi due:** Insieme dal, poi la distanza in un posto solo: La distanza, «Usa la posizione» e «Misura in» km/mi (prima erano sparse in due gruppi); in fondo Archivio Stories.
+- **App:** Notifiche, Suoni e vibrazione, Aspetto, Impronta, Ottimizza Ricordi, Widget.
+- **Aiuto:** Segnala un problema, Sincronizzazione.
+- **Account:** in fondo, come vogliono le linee guida. Contiene US Plus, Privacy e dati, «Esci dall’account» (prima «Scollega questo telefono»; anche la conferma ora dice «Esci») ed «Esci dalla coppia», con scritto «Non si può annullare».
+- **Freccia indietro:** torna alla pagina da cui hai aperto le Impostazioni, non più sempre a Noi. Le Impostazioni scorrono sopra qualsiasi delle quattro pagine.
+
+Tutti i comandi e le loro azioni restano gli stessi.
+
+**Da sapere prima della produzione:** solo web (`index.html`, `settings.js`, `app.js`, `due-colori.js`, `i18n-en.js`); nessuna migrazione.
+
 ### Barra e tastiera: le correzioni dopo la barra a goccia (20/11/2026)
 
-**Stato:** branch `claude/barra-tastiera` (nato dal branch fisso di staging a 0539b52b). Provato nel browser col finto Supabase; non ancora su staging, non in produzione.
+**Stato:** in staging con la PR #269 (merge f6c2b266), il 20/11/2026; non in produzione.
 
 **Cosa cambia:**
 - In Impostazioni, dove nessuna delle quattro pagine è tua, la pallina affonda e la barra torna piatta. Prima restava sull'ultima pagina, e sembrava di essere in Gioca.

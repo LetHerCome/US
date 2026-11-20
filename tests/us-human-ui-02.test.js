@@ -306,24 +306,28 @@ test('Quest → Sfida della settimana (03/11/2026): the weekly board and its act
 // ---------------------------------------------------------------- Settings
 
 // Il diario, ma pulito (15/11/2026, mockup v4.1): Impostazioni is a page of the
-// diary with four groups (Tu, Voi due, App, Aiuto e account) under the couple
-// card. «Compagni» (the retired cat) and «Foto Home» left; every other control
+// diary under the couple card; since 20/11/2026 five groups (Tu, Voi due with the
+// distance in one place, App, Aiuto, Account with the two exits last). «Compagni» (the retired cat) and «Foto Home» left; every other control
 // keeps its data-us-setting hook and its action.
 const settingsPage = html.match(/<main id="settings"[\s\S]*?<\/main>/)?.[0] || '';
 const scope = (name) => settingsPage.match(new RegExp(`<section class="dy-set-group" data-us-settings-scope="${name}"[\\s\\S]*?\\n      </section>`))?.[0] || '';
 const settingsIn = (chunk) => [...chunk.matchAll(/data-us-setting="([a-z-]+)"/g)].map((m) => m[1]);
 
 test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the couple shares', () => {
-  assert.deepEqual(settingsIn(scope('tu')), ['character-shape', 'profile-photo', 'person-color', 'status', 'status-form']);
-  assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'together-mode', 'story-archive', 'leave-couple']);
-  assert.deepEqual(settingsIn(scope('app')), ['notifications', 'location', 'app-lock', 'feedback', 'optimize-ricordi', 'widgets']);
-  assert.deepEqual(settingsIn(scope('aiuto')), ['plus', 'report', 'sync-status', 'privacy', 'logout']);
+  assert.deepEqual(settingsIn(scope('tu')), ['character-shape', 'person-color', 'status', 'profile-photo', 'status-form']);
+  assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'together-mode', 'location', 'story-archive']);
+  assert.deepEqual(settingsIn(scope('app')), ['notifications', 'feedback', 'app-lock', 'optimize-ricordi', 'widgets']);
+  assert.deepEqual(settingsIn(scope('aiuto')), ['report', 'sync-status']);
+  assert.deepEqual(settingsIn(scope('account')), ['plus', 'privacy', 'logout', 'leave-couple'], 'the two exits last');
+  // The distance in one place: the row, the location that measures it, km or miles.
+  assert.match(scope('voi'), /data-us-setting="together-mode"[\s\S]*data-us-switch="location"[\s\S]*data-us-distance-unit="km"/);
   assert.match(settingsPage, /<button type="button" class="dy-card dy-set-couple" id="usCoupleIdCard" data-us-setting="voi-due"/, 'the couple card opens «Voi due»');
   assert.ok(settingsPage.indexOf('id="usCoupleIdCard"') < settingsPage.indexOf('data-us-settings-scope="tu"'), 'the couple card sits on top');
   assert.match(scope('tu'), /<h3 class="dy-set-title" id="usSettingsTuTitle">Tu<\/h3>/);
   assert.match(scope('voi'), /<h3 class="dy-set-title" id="usSettingsVoiTitle">Voi due<\/h3>/);
   assert.match(scope('app'), /<h3 class="dy-set-title" id="usSettingsAppTitle">App<\/h3>/);
-  assert.match(scope('aiuto'), /<h3 class="dy-set-title" id="usSettingsHelpTitle">Aiuto e account<\/h3>/);
+  assert.match(scope('aiuto'), /<h3 class="dy-set-title" id="usSettingsHelpTitle">Aiuto<\/h3>/);
+  assert.match(scope('account'), /<h3 class="dy-set-title" id="usSettingsAccountTitle">Account<\/h3>/);
 });
 
 test('Settings: every control exists exactly once and keeps its existing action', () => {
@@ -336,7 +340,7 @@ test('Settings: every control exists exactly once and keeps its existing action'
     assert.equal((html.match(new RegExp(`id="${id}"`, 'g')) || []).length, 1, id);
   }
   // The switches and the two segmented controls are wired once each.
-  assert.deepEqual([...settingsPage.matchAll(/data-us-switch="([a-z-]+)"/g)].map((m) => m[1]), ['notifications', 'location', 'feedback']);
+  assert.deepEqual([...settingsPage.matchAll(/data-us-switch="([a-z-]+)"/g)].map((m) => m[1]), ['location', 'notifications', 'feedback']);
   assert.deepEqual([...settingsPage.matchAll(/data-us-aspetto="([a-z]+)"/g)].map((m) => m[1]), ['auto', 'chiaro', 'scuro']);
   assert.deepEqual([...settingsPage.matchAll(/data-us-distance-unit="([a-z]+)"/g)].map((m) => m[1]), ['km', 'mi']);
   assert.match(settingsJs, /function switchAction\(name\)\{\n  if\(name==='notifications'\)return toggleNotifications\(\);\n  if\(name==='location'\)return locationAction\(\);\n  if\(name==='feedback'\)return toggleFeedback\(\);/);
