@@ -403,7 +403,8 @@ function dyStatusTag(card, fresh) {
   }
   if (card.state === 'played') return t('giocato', 'var(--us-beige)');
   if (card.state === 'locked') return t('domani', 'var(--us-beige)');
-  return fresh ? t('nuovo', '#FFD9D2') : t('da giocare', 'var(--us-beige)');
+  // Gioca a tessere (20/11/2026): a game not started says nothing; only news and turns get a tag.
+  return fresh ? t('nuovo', '#FFD9D2') : '';
 }
 function dyGameRow({ id, name, kind, action, status }) {
   const card = cardState(status);

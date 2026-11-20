@@ -28,9 +28,21 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### Il colore di noi e le scritte sulle foto (20/11/2026)
+
+**Stato:** branch `claude/colore-di-noi` (nato dal branch fisso di staging a d939f3d7). Provato nel browser col finto Supabase, in chiaro e in scuro; non ancora su staging, non in produzione. Il founder, dopo la prova dell'APK: le scritte sulle foto a volte non si leggono, e «abbiamo spento troppo l'app?». Fra tre prove affiancate sull'app vera (ora, «con misura», «più viva») ha scelto «con misura» con Gioca a tessere.
+
+**Il problema:** il visore dei ricordi scriveva con `--us-latte`, il bianco dell'app scura di prima, che dal diario punta alla carta: in scuro le scritte diventavano quasi nere sulla foto (contrasto da 1,0 a 1,6). Anche in chiaro, su una foto chiara, la frase di Oggi e il visore restavano fra 2,2 e 2,9 (servono 4,5; 3 per le scritte grandi); in produzione era già così. Gioca era sette quadrati neri uguali con «da giocare» ripetuto, e ogni azione era nera.
+
+**Cosa cambia:** l'azione principale di ogni pagina (il «Rispondi» della domanda di oggi, il «+» di Noi e Ricordi, il filtro «Tutti», «Post-it») è nel colore di noi, i due colori della coppia sfumati, con la scritta scura; la carta della domanda di oggi ha un filo dello stesso colore; il bottone dell'avviso e la data degli impegni sono miele. Gioca è a tessere pastello su due colonne, con «Per voi» largo nel colore di noi; un gioco mai iniziato non ha più l'etichetta «da giocare» (restano «nuovo», «tocca a te», «risposte pronte», «aspetti…»). In scuro la carta ha un filo di prugna (#1A1419 al posto di #16130F). Le scritte sulle foto (frase di Oggi, titolo, firma, nota, posto e «Chiedi a…» del visore) usano un bianco fisso `--us-on-photo` con un'ombra leggera e un'ombra scura più alta sotto: ora fra 5,1 e 9 anche su una foto quasi bianca, uguale in chiaro e in scuro. La regola «inchiostro = azione» del 16/11 cambia solo per queste azioni principali: gli altri bottoni dei fogli restano in inchiostro.
+
+**Da sapere prima della produzione:** solo web (`ui-foundation.css`, `diario.css`, `diario.js`, `dc-ricordi.css`, `couple-notes.css`, `games.js`); nessuna migrazione, nessuna Edge. Restano da guardare le altre ~20 regole che usano `--us-latte` fuori dal visore (Gioca, popup, lavagna, Impostazioni), se qualcuna sta sopra una foto o un fondo scuro.
+
+**Test:** nuovo `tests/colore-di-noi.test.js`: regole del colore e, nel browser, il contrasto delle scritte su una foto quasi bianca in chiaro e in scuro (sul vecchio staging fallisce: 2,83).
+
 ### Oggi in una pagina sola (20/11/2026)
 
-**Stato:** branch `claude/oggi-una-pagina` (nato dal branch fisso di staging a f8d86df3). Provato nel browser col finto Supabase; non ancora su staging, non in produzione. Richiesta del founder dopo la prova dell'APK di staging: «la home deve essere una pagina unica senza scorrere».
+**Stato:** in staging dal 20/11 (PR #266, merge d939f3d7); non in produzione. Richiesta del founder dopo la prova dell'APK di staging: «la home deve essere una pagina unica senza scorrere».
 
 **Il problema:** a 390×844 Oggi era alto circa 1010 px. La barra in basso copriva il «Rispondi» della domanda di oggi.
 
