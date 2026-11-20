@@ -69,6 +69,17 @@
   --us-lilla:#a98bff;
   --us-rosa-soft:color-mix(in srgb,var(--us-rosa) 45%,var(--us-pastel-base));
   --us-lilla-soft:color-mix(in srgb,var(--us-lilla) 45%,var(--us-pastel-base));
+  /* Il colore di noi (founder, 20/11/2026): the main action of a page is the two
+     colours of the couple blended, with dark text (--us-on) because every person
+     colour is light enough for it; the card of the question is the same blend,
+     barely there. It replaces «ink = action» for those actions only. */
+  --us-noi-grad:linear-gradient(120deg,var(--us-tu),var(--us-partner));
+  --us-noi-soft:color-mix(in srgb,var(--us-partner) 13%,color-mix(in srgb,var(--us-tu) 11%,var(--us-card)));
+  /* Gioca is where the game is felt: one pastel per game tile, the same in both themes. */
+  --us-game-1:#F3D27A;--us-game-2:#A98BFF;--us-game-3:#B4D8F4;--us-game-4:#F7B58E;--us-game-5:#9ED9B8;--us-game-6:#F2A7C9;
+  /* Text on a photo is always light, in both themes, on a dark shade under it. */
+  --us-on-photo:#FBF8F1;
+  --us-photo-shadow:0 1px 2px rgba(0,0,0,.55),0 0 14px rgba(0,0,0,.35);
   --us-rosa-hl:var(--us-rosa-soft);      /* highlighter under what a person wrote */
   --us-lilla-hl:var(--us-lilla-soft);
   /* Fixed scales: four type sizes, button heights 32/44/52/64 with radii
@@ -303,7 +314,7 @@
 @media (prefers-color-scheme:dark){
   :root:not([data-us-aspetto="chiaro"]){
     color-scheme:dark;
-    --us-paper:#16130F;--us-beige:#2A251F;--us-card:#211D18;
+    --us-paper:#1A1419;--us-beige:#33272F;--us-card:#261D24;
     --us-ink-100:#F4EEE4;--us-ink-80:rgba(244,238,228,.8);--us-ink-60:rgba(244,238,228,.62);--us-ink-40:rgba(244,238,228,.4);
     --us-ink-12:rgba(244,238,228,.13);--us-ink-08:rgba(244,238,228,.09);--us-ink-04:rgba(244,238,228,.05);
     --us-pencil:#F2765E;--us-miele:#EACB74;--us-cielo:#A8CFEF;
@@ -315,7 +326,7 @@
 }
 :root[data-us-aspetto="scuro"]{
   color-scheme:dark;
-  --us-paper:#16130F;--us-beige:#2A251F;--us-card:#211D18;
+  --us-paper:#1A1419;--us-beige:#33272F;--us-card:#261D24;
   --us-ink-100:#F4EEE4;--us-ink-80:rgba(244,238,228,.8);--us-ink-60:rgba(244,238,228,.62);--us-ink-40:rgba(244,238,228,.4);
   --us-ink-12:rgba(244,238,228,.13);--us-ink-08:rgba(244,238,228,.09);--us-ink-04:rgba(244,238,228,.05);
   --us-pencil:#F2765E;--us-miele:#EACB74;--us-cielo:#A8CFEF;

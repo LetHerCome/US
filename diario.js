@@ -350,7 +350,7 @@
     const justRevealed = theirs !== null && was.id === q.id && (was.unread || !was.both || was.mine === null);
     // One page (founder, 20/11/2026): who has answered (or sleeps) and the action on one row.
     const act = (role, mood, text, button) => `<div class="dy-q-sign is-act"><span class="dy-stk">${character(role, { size: 30, mood })}</span><span class="dy-q-hint">${esc(text)}</span>${button || ''}</div>`;
-    const btn = (label, ghostBtn) => `<button type="button" class="dy-btn dy-btn-m${ghostBtn ? ' dy-btn-ghost' : ''}" data-dy="answer">${label}</button>`;
+    const btn = (label, ghostBtn) => `<button type="button" class="dy-btn dy-btn-m${ghostBtn ? ' dy-btn-ghost' : ' dy-btn-noi'}" data-dy="answer">${label}</button>`;
     let rows = [];
     if (mine === null) {
       rows = st.partner_has_answer
@@ -748,7 +748,7 @@
   function applyAspetto() {
     const a = aspetto(), html = d.documentElement;
     if (a === 'auto') delete html.dataset.usAspetto; else html.dataset.usAspetto = a;
-    d.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark() ? '#16130F' : '#FAF7F1');
+    d.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark() ? '#1A1419' : '#FAF7F1');
     d.querySelector('meta[name="color-scheme"]')?.setAttribute('content', a === 'auto' ? 'light dark' : (isDark() ? 'dark' : 'light'));
     lightBars();
     w.dispatchEvent(new Event('us:aspetto-changed'));

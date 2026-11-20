@@ -46,7 +46,8 @@ test('Gioca tiles: a fresh week is six cards of icon, name, kind of moment and "
     assert.match(tile, /<span class="dy-ib is-dark dy-game-ic" aria-hidden="true"><svg viewBox="0 0 24 24"/, 'each row leads with its icon');
     assert.match(tile, /<span class="dy-game-copy"><b>[^<]+<\/b><small>[^<]+<\/small><\/span>/, 'then its name and the kind of moment');
     assert.match(tile, /data-gv2-mode-state="ready"[^>]*aria-label="[^"]+\. Disponibile"/, 'a ready row says it is available');
-    assert.match(tile, /<span class="dy-tag dy-tag-s dy-game-tag"[^>]*>da giocare<\/span>/);
+    // Gioca a tessere (20/11/2026): a game not started has no tag; the aria-label still says «Disponibile».
+    assert.doesNotMatch(tile, /dy-game-tag/);
   }
   assert.doesNotMatch(html, /is-wide|us-gv2-deck/);
   assert.match(html, /<div class="dy-game-list">/);
