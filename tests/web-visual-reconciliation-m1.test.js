@@ -54,8 +54,8 @@ test('HUMAN-UI-02 conserva target touch >= 44px con una nav compatta', () => {
   // Il diario, ma pulito (15/11/2026): four equal columns of a full-width bar;
   // each button is the bar height (--us-nav-height) minus its padding, 44px+ even in short landscape.
   const css = read('diario.css');
-  assert.match(css, /\.dy-nav\{[^}]*grid-template-columns:repeat\(4,1fr\);height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:8px /);
-  assert.match(foundation(), /--us-nav-height:66px;/);
+  assert.match(css, /\.dy-nav\{[^}]*grid-template-columns:1fr 1fr 76px 1fr 1fr;height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:6px /);
+  assert.match(foundation(), /--us-nav-height:56px;/);
   assert.match(read('fix4.css'), /\{:root\{--us-nav-height:52px\}/);
   assert.match(css, /\.dy-nav \.dy-nav-icon\{width:24px;height:24px;/);
 });
@@ -133,7 +133,7 @@ test('M1.6 rende Home full-bleed senza cambiare il padding globale delle seconda
   // page of today clears the nav itself and its photo fills its frame.
   const diario = read('diario.css');
   // One page (founder, 20/11/2026): the column fills the screen and keeps the bar clearance.
-  assert.match(diario, /\.dy-oggi\{box-sizing:border-box;display:flex;flex-direction:column;min-height:[^}]*padding:0 0 calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\) \+ 12px\)\}/);
+  assert.match(diario, /\.dy-oggi\{box-sizing:border-box;display:flex;flex-direction:column;min-height:[^}]*padding:0 0 calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\) \+ 12px \+ var\(--us-nav-rise\)\)\}/);
   assert.match(diario, /\.dy-photo-img\{[^}]*object-fit:cover\}/);
   assert.match(css, /\.app\{[^}]*padding-bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 34px\)!important/);
 });

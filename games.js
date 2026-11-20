@@ -434,7 +434,7 @@ function renderHub() {
  const swipe=dyGameRow({id:'swipe',name:SWIPE.name,kind:'8 carte · veloce e privato',action:'swipe',status:tileStatus(SWIPE)});
  const families=OFFERED.map(f=>dyGameRow({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)})).join('');
  root.innerHTML=`
-  <header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due</em></h2>${dyCountTag()}</header>
+  <header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due</em></h2>${dyCountTag()}<span class="dy-hd-tools"><button type="button" class="dy-ib dy-me" data-dy-me onclick="go('settings',{nav:true})" aria-label="Tu: profilo e impostazioni">${window.UsDiario?.character?.(myRoleNow(), { size: 34 }) || ''}</button></span></header>
   <div class="us-gv2-daily-slot" data-gv4-daily-slot hidden></div>
   <div class="us-wc-slot" data-wc-slot></div>
   <section class="dy-games" aria-labelledby="usGv2ChooseTitle">

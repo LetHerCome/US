@@ -93,7 +93,10 @@ test('P1 usa esclusivamente Heart e HeartFill Phosphor per la CTA Ti Penso', () 
   const legacyAsset = manifest.assets.find((asset) => asset.path === 'assets/source/ui/us-icon-ti-penso-v1.png');
   assert.doesNotMatch(thinkButton, /us-icon-ti-penso-v1\.png/);
   // Il diario, ma pulito (15/11/2026): the button draws the HeartFill of think-on.svg inline, in the Ti penso pink.
-  assert.ok(thinkButton.includes(`<path fill="#FF5477" d="${PHOSPHOR_HEART_FILL_PATH}"/>`), 'the Ti penso heart is the official HeartFill');
+  // La barra a goccia (20/11/2026): the HeartFill outline in the Ti penso pink, filled through the think-on.svg mask while held.
+  assert.ok(thinkButton.includes(`<path d="${PHOSPHOR_HEART_FILL_PATH}"/>`), 'the Ti penso heart is the official HeartFill');
+  assert.match(read('diario.css'), /\.dy-think-fill\{-webkit-mask:url\("\/assets\/icons\/think-on\.svg"\)/);
+  assert.match(read('diario.css'), /\.dy-think-line path\{fill:none;stroke:var\(--us-think\)/);
   assert.match(read('ui-foundation.css'), /--us-think:#FF5477;/);
   assert.match(thinkOff, /Phosphor Icons Heart,/);
   assert.ok(thinkOff.includes(PHOSPHOR_HEART_REGULAR_PATH), 'OFF deve usare la geometria Heart ufficiale');

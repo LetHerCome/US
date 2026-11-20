@@ -16,7 +16,8 @@ test('pre-native: couple identity is one light bridge with Settings in the top-r
   const header = bond.match(/<header class="noi-canonical-head noi-couple-head" hidden>[\s\S]*?<\/header>/)?.[0] || '';
   const noiHead = bond.match(/<section class="us-noi-v2" id="usNoiV2"[\s\S]*?<header class="dy-hd">[\s\S]*?<\/header>/)?.[0] || '';
   assert.match(noiHead, /<h2 class="dy-h2">I vostri <em>giorni<\/em><\/h2>/);
-  assert.match(noiHead, /<button type="button" class="dy-ib" onclick="go\('settings',\{nav:true\}\)" aria-label="Impostazioni">/);
+  // La barra a goccia (20/11/2026): your character, top right, opens Impostazioni (the gear left Noi).
+  assert.match(noiHead, /<button type="button" class="dy-ib dy-me" data-dy-me onclick="go\('settings',\{nav:true\}\)" aria-label="Tu: profilo e impostazioni">/);
   assert.match(header, /id="noiCoupleCard"/);
   assert.match(header, /id="pairAvatarFrancesco"/);
   assert.match(header, /id="pairAvatarBeatrice"/);

@@ -43,14 +43,14 @@ test('nav: ~56px before the safe area, 44px+ targets, 24px icons, no looping ani
   // (84 with the 18 below); its buttons fill the bar above the safe area, icons 24px; the current
   // tab is ink, bold, with the red scribble; one hop when it changes, never a loop.
   const tokens = read('ui-foundation.css');
-  assert.match(tokens, /--us-nav-height:66px;/);
+  assert.match(tokens, /--us-nav-height:56px;/);
   const block = read('diario.css').split('\n').filter((line) => line.includes('.dy-nav')).join('\n');
-  assert.match(block, /\.dy-nav\{[^}]*height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:8px /);
+  assert.match(block, /\.dy-nav\{[^}]*height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:6px /);
   assert.match(block, /\.dy-nav \.dy-nav-icon\{width:24px;height:24px;/);
   assert.doesNotMatch(block, /infinite/, 'no looping animation on the nav');
   assert.match(block, /\.dy-nav button\.active\{color:var\(--us-ink-100\);font-weight:800\}/, 'active is still unmistakable');
-  assert.match(block, /\.dy-nav button\.active \.dy-nav-scrib\{opacity:1\}/);
-  assert.match(block, /\.dy-nav button\.active \.dy-nav-icon\{animation:dy-lift \.38s /);
+  // La barra a goccia (20/11/2026): the hill under the page marks it; its icon lifts into it.
+  assert.match(block, /\.dy-nav button\.active \.dy-nav-icon\{transform:translateY\(-5px\);stroke-width:2\.3\}/);
   assert.match(block, /html\[data-us-motion="reduced"\] :is\(\.dy-oggi,\.dy-nav,\.dy-over\) \*\{animation:none!important;transition:none!important\}/);
   assert.match(read('fix4.css'), /@media \(orientation:landscape\) and \(max-height:560px\)\{:root\{--us-nav-height:52px\}/);
 });
@@ -62,9 +62,11 @@ test('top: the pill is only as tall as its 44px controls and content starts righ
   const diario = read('diario.css');
   assert.match(diario, /\.dy-head\{[^}]*padding:calc\(var\(--us-safe-top\) \+ 6px\) 20px 0\}/);
   assert.match(diario, /\.dy-ib\{[^}]*width:var\(--us-icon-btn\);height:var\(--us-icon-btn\);/);
-  // Ti penso and Lasciato per te flank «us».
+  // La barra a goccia (20/11/2026): Lasciato per te and you flank «us»; Ti penso is the middle of the bar.
   const top = html.match(/<header class="dy-head">[\s\S]*?<\/header>/)?.[0] || '';
-  assert.match(top, /id="thinkButton" class="dy-ib dy-think" onclick="sendThinkSignal\(\)"/);
+  assert.doesNotMatch(top, /id="thinkButton"/);
+  assert.match(html.match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0] || '', /id="thinkButton" class="dy-think"/);
+  assert.match(top, /data-dy-me/);
   assert.match(top, /id="leftForYouPartnerEntry"/);
   assert.match(top, /class="dy-mark"/);
   assert.doesNotMatch(top, /id="usPerVoiTop"/, 'Per voi belongs to Gioca, not global chrome');
@@ -87,7 +89,7 @@ test('page labels: Ricordi and Gioca stay accessible without a visible top-left 
   // (.dy-hd «Il vostro diario», «Giochi a due»); the week strip left the hub.
   assert.match(moments, /<header class="dy-hd">\s*<h2 class="dy-h2">Il vostro <em>diario<\/em><\/h2>/);
   const games = read('games.js');
-  assert.match(games, /<header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due<\/em><\/h2>\$\{dyCountTag\(\)\}<\/header>/);
+  assert.match(games, /<header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due<\/em><\/h2>\$\{dyCountTag\(\)\}<span class="dy-hd-tools">/);
   assert.doesNotMatch(games.slice(games.indexOf('function renderHub()'), games.indexOf('function renderHubError()')), /weekStrip\(\)/);
   assert.doesNotMatch(games, /rhythmStrip|us-gv2-head"/);
 });
@@ -269,7 +271,8 @@ test('Noi: the couple row stays centered, "La nostra settimana" owns the week, a
   // gear is the visible way to Settings.
   const head = bond.match(/<header class="noi-canonical-head noi-couple-head" hidden>[\s\S]*?<\/header>/)?.[0] || '';
   const dyHead = bond.match(/<header class="dy-hd">\s*<h2 class="dy-h2">I vostri <em>giorni<\/em><\/h2>[\s\S]*?<\/header>/)?.[0] || '';
-  assert.match(dyHead, /<button type="button" class="dy-ib" onclick="go\('settings',\{nav:true\}\)" aria-label="Impostazioni">/);
+  // La barra a goccia (20/11/2026): your character is the way to Settings (the gear left Noi).
+  assert.match(dyHead, /<button type="button" class="dy-ib dy-me" data-dy-me onclick="go\('settings',\{nav:true\}\)" aria-label="Tu: profilo e impostazioni">/);
   assert.match(head, /id="pairAvatarFrancesco"><img alt="" hidden><span class="fallback"/);
   assert.match(head, /id="pairAvatarBeatrice"><img alt="" hidden><span class="fallback"/);
   assert.match(head, /id="noiCoupleCard" role="group" aria-label="Voi due, distanza e impostazioni"/);
@@ -390,7 +393,8 @@ test('Gioca density: played Per voi, game grid and weekly question use compact h
   assert.match(css, /#quiz \.us-gv2-game-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(css, /#quiz \.us-gv2-game\.is-swipe\{[^}]*grid-column:1\/-1/, 'Swipe stands out without taking the page');
   assert.match(css, /#quiz \.us-gv2-weekly\.is-open\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
-  assert.match(css, /body:has\(#quiz\.page\.active\) #thinkButton\{display:none!important\}/);
+  // La barra a goccia (20/11/2026): Ti penso is in the bar on Gioca too.
+  assert.doesNotMatch(css, /body:has\(#quiz\.page\.active\) #thinkButton/);
 });
 
 
@@ -430,10 +434,10 @@ test('Oggi density: arbitration stays authoritative; the dock holds one evidence
 });
 
 
-test('shell: Ti penso lives in top chrome and Per voi stays inside Gioca', () => {
-  // Il diario, ma pulito (15/11/2026): the top chrome of Oggi is its header (.dy-head).
+test('shell: Ti penso lives in the bottom bar and Per voi stays inside Gioca', () => {
+  // La barra a goccia (20/11/2026): Ti penso is the middle of the bottom bar; the header of Oggi keeps Lasciato per te.
   const top = html.match(/<header class="dy-head">[\s\S]*?<\/header>/)?.[0] || '';
-  assert.match(top, /id="thinkButton"/);
+  assert.match(html.match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0] || '', /id="thinkButton"/);
   assert.match(top, /id="leftForYouPartnerEntry"/);
   assert.doesNotMatch(top, /usPerVoiTop/);
   assert.equal((html.match(/id="thinkButton"/g) || []).length, 1);

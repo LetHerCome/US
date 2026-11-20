@@ -107,7 +107,7 @@ test('Gioca CSS: tiles use the canonical tokens and the Noi chip recipe, never a
 // per round of the day.
 // Il diario, ma pulito (15/11/2026): the count is the honey tag of the header
 // («N su 3 oggi», «Domani si rigioca»); the dots are gone.
-const titleHint = (html) => html.match(/<header class="dy-hd">[\s\S]*?<span class="dy-tag"[^>]*data-gv2-left="\d+">([^<]*)<\/span><\/header>/)?.[1];
+const titleHint = (html) => html.match(/<header class="dy-hd">[\s\S]*?<span class="dy-tag"[^>]*data-gv2-left="\d+">([^<]*)<\/span><span class="dy-hd-tools">/)?.[1];
 const dots = (html) => [...(html.match(/class="us-gv2-daycount-dots"[^>]*>(.*?)<\/span>/s)?.[1] || '').matchAll(/data-on="(true|false)"/g)].map((m) => m[1] === 'true');
 const day = (over = {}) => allowance({ period: 'day', resets_on: '2026-10-29', limit: 3, free_limit: 3, ...over });
 
@@ -139,5 +139,6 @@ test('Gioca V4 hub: bento title keeps the low-friction hint', async () => {
   // Il diario, ma pulito (15/11/2026): the section is «Da giocare»; with no allowance
   // from the server the header shows no count at all.
   assert.match(html, /<div class="dy-sec-head"><h3 id="usGv2ChooseTitle">Da giocare<\/h3><\/div>/);
-  assert.match(html, /<header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due<\/em><\/h2><\/header>/);
+  // La barra a goccia (20/11/2026): your character, top right, opens profile and Impostazioni.
+  assert.match(html, /<header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due<\/em><\/h2><span class="dy-hd-tools"><button type="button" class="dy-ib dy-me" data-dy-me onclick="go\('settings',\{nav:true\}\)" aria-label="Tu: profilo e impostazioni">[\s\S]*?<\/button><\/span><\/header>/);
 });

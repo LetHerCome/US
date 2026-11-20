@@ -309,7 +309,6 @@
 }
 #quiz .us-gv2-note{margin-top:7px}
 
-body:has(#quiz.page.active) #thinkButton{display:none!important}
 
 @media(max-height:700px){
   #quiz .us-gv2-hub{gap:7px}

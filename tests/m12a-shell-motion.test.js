@@ -15,12 +15,14 @@ const topBar = html.match(/<header class="dy-head">[\s\S]*?<\/header>/)[0];
 
 // ---------------------------------------------------------------- SHELL
 
-test('shell: Ti penso left, the US mark at the centre, Left for You right', () => {
-  const think = topBar.indexOf('id="thinkButton"');
+// La barra a goccia (20/11/2026): Left for You left, «us» centre, you right; Ti penso moved to the bar.
+test('shell: Left for You left, the US mark at the centre, you right', () => {
+  const envelope = topBar.indexOf('id="leftForYouPartnerEntry"');
   // Il diario, ma pulito (15/11/2026): «us» in Permanent Marker is the centre (mockup).
   const brand = topBar.indexOf('class="dy-mark"');
-  const envelope = topBar.indexOf('id="leftForYouPartnerEntry"');
-  assert.ok(think > 0 && brand > think && envelope > brand, 'order: Ti penso, US, Left for You');
+  const me = topBar.indexOf('data-dy-me');
+  assert.ok(envelope > 0 && brand > envelope && me > brand, 'order: Left for You, US, you');
+  assert.doesNotMatch(topBar, /id="thinkButton"/);
   assert.doesNotMatch(topBar, /id="usPerVoiTop"/, 'Per voi belongs to Gioca, not global chrome');
   assert.match(topBar, /<span class="dy-mark" role="img" aria-label="US">us<\/span>/);
   assert.match(read('diario.css'), /\.dy-head\{display:flex;justify-content:space-between;align-items:center;/);

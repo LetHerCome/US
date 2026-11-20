@@ -732,6 +732,7 @@
     card.innerHTML = `<span class="dy-stk">${character(c.myRole, { size: 40, mood: 'dorme' })}</span><span class="dy-stk">${character(c.partnerRole, { size: 44, mood: 'dorme' })}</span><span class="dy-offline-copy">Siete senza rete: quello che fate parte appena torna.</span>`;
   }
   function paintAll() {
+    paintMe();
     paintOffline();
     paintTitle();
     paintDuo();
@@ -806,6 +807,94 @@
     wait();
     // A new day while US stays open.
     setInterval(() => { if (!d.hidden) paintTitle(); }, 60000);
+    goccia();
+    heartHold();
+  }
+
+  // ---------------------------------------------------------------- La barra a goccia (founder, 20/11/2026)
+  // You, top right on every page: your character, the way to profile and Impostazioni.
+  function paintMe() {
+    const role = couple().myRole;
+    d.querySelectorAll('[data-dy-me]').forEach((el) => { el.innerHTML = character(role, { size: 34 }); });
+  }
+  // The bar is an svg: a flat top edge with one soft hill under the page you
+  // are on. The hill follows the tab with a spring, flattens and widens while
+  // it travels (the drop is moving), and springs up when it gets there.
+  function goccia() {
+    const nav = d.querySelector('.dy-nav'), svg = nav?.querySelector('.dy-nav-bg');
+    if (!nav || !svg) return;
+    const fill = svg.querySelector('.dy-nav-fill'), edge = svg.querySelector('.dy-nav-edge');
+    const st = { x: null, v: 0, h: 1, hv: 0, raf: 0 };
+    const rise = () => parseFloat(getComputedStyle(d.documentElement).getPropertyValue('--us-nav-rise')) || 14;
+    const target = () => {
+      const on = nav.querySelector('button[data-page].active');
+      if (!on) return null;
+      const a = on.getBoundingClientRect(), b = nav.getBoundingClientRect();
+      return a.left - b.left + a.width / 2;
+    };
+    function draw() {
+      const W = nav.clientWidth, R = rise(), H = nav.clientHeight + R;
+      if (!W) return;
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      const x = st.x ?? W / 2, h = Math.max(0, st.h);
+      const peak = R * (1 - h), half = 30 + (1 - Math.min(1, h)) * 18, a = x - half, b = x + half;
+      const top = `M0 ${R} L${a} ${R} C${a + half * 0.5} ${R} ${x - half * 0.48} ${peak} ${x} ${peak} C${x + half * 0.48} ${peak} ${b - half * 0.5} ${R} ${b} ${R} L${W} ${R}`;
+      edge.setAttribute('d', top);
+      fill.setAttribute('d', `${top} L${W} ${H} L0 ${H} Z`);
+    }
+    function step() {
+      const t = target();
+      if (t == null) { st.h += (0 - st.h) * 0.2; draw(); st.raf = Math.abs(st.h) > 0.01 ? requestAnimationFrame(step) : 0; return; }
+      if (st.x == null || reduced()) { st.x = t; st.v = 0; st.h = 1; st.hv = 0; draw(); st.raf = 0; return; }
+      // A spring that overshoots a little: the drop arrives and settles.
+      st.v = (st.v + (t - st.x) * 0.16) * 0.7;
+      st.x += st.v;
+      const far = Math.abs(t - st.x) > 3;
+      st.hv = (st.hv + ((far ? 0.25 : 1) - st.h) * 0.2) * 0.72;
+      st.h += st.hv;
+      draw();
+      const still = !far && Math.abs(st.v) < 0.05 && Math.abs(st.hv) < 0.003 && Math.abs(1 - st.h) < 0.004;
+      if (still) { st.x = t; st.h = 1; draw(); st.raf = 0; } else st.raf = requestAnimationFrame(step);
+    }
+    const kick = () => { if (!st.raf) st.raf = requestAnimationFrame(step); };
+    if (typeof MutationObserver === 'function') new MutationObserver(kick).observe(nav, { attributes: true, attributeFilter: ['class'], subtree: true });
+    w.addEventListener('resize', () => { st.x = null; kick(); });
+    kick();
+  }
+  // Ti penso in the middle of the bar: hold it, the heart fills from below and
+  // leaves when it is full (650 ms). A quick tap only says how; the keyboard
+  // and screen readers (a click with no pointer) send at once.
+  const HOLD_MS = 650;
+  function heartHold() {
+    const btn = $('thinkButton');
+    if (!btn || btn.dataset.dyHold) return;
+    btn.dataset.dyHold = '1';
+    let timer = 0, hinted = 0;
+    const stop = () => { clearTimeout(timer); btn.classList.remove('is-filling'); };
+    const send = () => Promise.resolve(w.sendThinkSignal?.()).catch(() => false);
+    btn.addEventListener('pointerdown', (e) => {
+      if (btn.disabled || (e.button != null && e.button > 0)) return;
+      try { btn.setPointerCapture(e.pointerId); } catch (_) { /* old WebView */ }
+      btn.classList.remove('is-full');
+      btn.classList.add('is-filling');
+      timer = setTimeout(() => {
+        btn.classList.remove('is-filling');
+        btn.classList.add('is-full');
+        send().finally(() => setTimeout(() => btn.classList.remove('is-full'), 900));
+      }, HOLD_MS);
+    });
+    btn.addEventListener('pointerup', () => {
+      if (!btn.classList.contains('is-filling')) return;
+      stop();
+      if (Date.now() - hinted < 4000) return;
+      hinted = Date.now();
+      const text = 'Tieni premuto il cuore per mandare un Ti penso';
+      if ($('home')?.classList.contains('active') && $('dyToast')) notice(`${HEART}<span>${esc(text)}</span>`);
+      else w.toast?.(text, { quiet: true });
+    });
+    btn.addEventListener('pointercancel', stop);
+    btn.addEventListener('contextmenu', (e) => e.preventDefault());
+    btn.addEventListener('click', (e) => { if (e.detail === 0) send(); });
   }
 
   w.UsDiario = Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, shapeOf, slot, paintDiary, paintQuestion, paintVoiDue, thinkSent, openVoiDue, closeVoiDue, character, sentences, paintAll, sign, icon, paintPeople, roles: couple });
