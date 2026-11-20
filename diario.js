@@ -69,6 +69,97 @@
     return role === 'beatrice' ? 'quadrato' : 'palla';
   }
   const INK = '#14120E';
+  // ---------------------------------------------------------------- il guardaroba
+  // Personaggi (founder, 20–21/11/2026, grill-me D6–D19, tavola approvata):
+  // one thing on the head, one on the face or at the neck; all free. Unlocked
+  // by the couple's Sintonia points on thresholds of their own, or by a real
+  // moment. The server keeps the outfit (set_my_character_look, migration
+  // 20261120232852, staging) and checks the same rule.
+  const LOOK_HEAD = Object.freeze(['cappello', 'fiocco', 'cuffie', 'corona', 'coroncina', 'festa', 'cento']);
+  const LOOK_FACE = Object.freeze(['occhiali', 'sole', 'sciarpina', 'gala', 'macchinetta']);
+  const LOOK_NAMES = Object.freeze({ cappello: 'Cappello', fiocco: 'Fiocco', cuffie: 'Cuffie', corona: 'Corona', coroncina: 'Coroncina', festa: 'Cappello da festa', cento: 'Fascia dei 100', occhiali: 'Occhiali', sole: 'Occhiali da sole', sciarpina: 'Sciarpina', gala: 'Gala', macchinetta: 'Macchinetta' });
+  const LOOK_POINTS = Object.freeze({ occhiali: 150, cappello: 400, fiocco: 700, sciarpina: 1000, sole: 1350, gala: 1700, cuffie: 2100, coroncina: 2550, corona: 3000 });
+  const LOOK_MOMENTS = Object.freeze({ macchinetta: 'il primo Ricordo', cento: '100 giorni in US', festa: 'il primo anno in US' });
+  // Where things sit on each shape: the top of the head [x, y, half width] and the sides [left, right, y].
+  const ANCHOR = Object.freeze({ palla: { head: [50, 26, 19], ears: [12, 88, 56] }, quadrato: { head: [50, 25, 19], ears: [14, 86, 54] }, triangolo: { head: [50, 21, 11], ears: [23, 77, 60] }, goccia: { head: [50, 21, 10], ears: [16, 84, 60] }, nuvola: { head: [56, 22, 15], ears: [12, 88, 60] } });
+  const lp = (d, fill, sw = 2.6) => `<path d="${d}" fill="${fill}" stroke="${INK}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>`;
+  let clipN = 0;
+  // The accessories as on the approved tavola (same strokes as the characters).
+  function lookSvg(item, shape) {
+    const s = SHAPES[shape], an = ANCHOR[shape];
+    if (!s || !an) return '';
+    const [x, y, w0] = an.head, [l, r, ey] = an.ears, [a, b] = s.ex, fy = s.ey, neck = s.ey + 21;
+    switch (item) {
+      case 'cappello': return lp(`M${x - w0 - 3} ${y + 3} Q${x - w0 - 3} ${y - 19} ${x} ${y - 21} Q${x + w0 + 3} ${y - 19} ${x + w0 + 3} ${y + 3} Z`, '#F7B58E') + lp(`M${x - w0 - 5} ${y - 1} H${x + w0 + 5} Q${x + w0 + 8} ${y + 3} ${x + w0 + 5} ${y + 7} H${x - w0 - 5} Q${x - w0 - 8} ${y + 3} ${x - w0 - 5} ${y - 1} Z`, '#E8875C') + lp(ell(x, y - 24, 5.5, 5.5), '#FFF4E6');
+      case 'fiocco': { const fx = x + w0 * 0.85, f = y + 3; return lp(`M${fx} ${f} L${fx - 13} ${f - 10} Q${fx - 17} ${f} ${fx - 13} ${f + 10} Z`, '#FF5A7A') + lp(`M${fx} ${f} L${fx + 13} ${f - 10} Q${fx + 17} ${f} ${fx + 13} ${f + 10} Z`, '#FF5A7A') + lp(ell(fx, f, 4.2, 4.2), '#FF8DA2'); }
+      case 'cuffie': { const top = y - 9, band = `M${l + 1} ${ey - 6} C${l - 2} ${top - 4} ${r + 2} ${top - 4} ${r - 1} ${ey - 6}`; return `<path d="${band}" fill="none" stroke="${INK}" stroke-width="7.5" stroke-linecap="round"/><path d="${band}" fill="none" stroke="#3A3446" stroke-width="3.6" stroke-linecap="round"/>` + lp(`M${l - 6} ${ey - 9} h10 v20 h-10 q-3 -10 0 -20 Z`, '#6FD6C8') + lp(`M${r + 6} ${ey - 9} h-10 v20 h10 q3 -10 0 -20 Z`, '#6FD6C8'); }
+      case 'corona': { const w = Math.max(w0, 14); return lp(`M${x - w} ${y + 3} L${x - w - 1} ${y - 14} L${x - w / 2} ${y - 5} L${x} ${y - 19} L${x + w / 2} ${y - 5} L${x + w + 1} ${y - 14} L${x + w} ${y + 3} Z`, '#F3D27A') + lp(ell(x, y - 3, 2.6, 2.6), '#FF5A7A', 1.6) + lp(ell(x - w / 2 - 1, y - 1, 2, 2), '#6F9BFF', 1.4) + lp(ell(x + w / 2 + 1, y - 1, 2, 2), '#6F9BFF', 1.4); }
+      case 'coroncina': { const w = Math.max(w0, 13) + 4, pts = [-1, -0.5, 0, 0.5, 1].map((t) => [x + t * w, y + 2 - (1 - t * t) * 7]), cols = ['#FF9FB5', '#FFE07A', '#FFFFFF', '#FFE07A', '#FF9FB5']; return `<path d="M${pts[0][0]} ${pts[0][1]} Q${x} ${y - 9} ${pts[4][0]} ${pts[4][1]}" fill="none" stroke="#5E9E6E" stroke-width="3" stroke-linecap="round"/>` + pts.map(([px, py], i) => `<path d="${[0, 72, 144, 216, 288].map((g) => { const q = (g * Math.PI) / 180; return ell(px + Math.cos(q) * 3.2, py + Math.sin(q) * 3.2, 2.6, 2.6); }).join(' ')}" fill="${cols[i]}" stroke="${INK}" stroke-width="1.3"/>` + lp(ell(px, py, 1.8, 1.8), '#F3B23A', 1)).join(''); }
+      case 'festa': { const w = Math.max(w0 * 0.75, 9); return `<g transform="rotate(-12 ${x} ${y})">` + lp(`M${x - w} ${y + 3} L${x} ${y - 25} L${x + w} ${y + 3} Z`, '#A98BFF') + `<path d="M${x - w * 0.62} ${y - 6} L${x + w * 0.35} ${y - 2} M${x - w * 0.3} ${y - 15} L${x + w * 0.15} ${y - 13}" stroke="#FFE07A" stroke-width="2.6" stroke-linecap="round"/>` + lp(ell(x, y - 26, 4, 4), '#FF5A7A') + '</g>'; }
+      case 'cento': { const w = Math.max(w0, 13) + 3, arc = `M${x - w} ${y + 3} Q${x} ${y - 7} ${x + w} ${y + 3}`; return `<path d="${arc}" fill="none" stroke="${INK}" stroke-width="6.5" stroke-linecap="round"/><path d="${arc}" fill="none" stroke="#F3D27A" stroke-width="3" stroke-linecap="round"/>` + lp(ell(x, y - 7, 10, 8), '#FFFDF9', 2.2) + `<text x="${x}" y="${y - 4.3}" text-anchor="middle" font-family="Figtree,sans-serif" font-weight="800" font-size="8.5" fill="${INK}">100</text>`; }
+      case 'occhiali': return lp(`${ell(a, fy, 9.5, 8.5)} ${ell(b, fy, 9.5, 8.5)} M${a + 9.5} ${fy} H${b - 9.5}`, 'rgba(255,255,255,.28)');
+      case 'sole': return lp(`M${a - 10} ${fy - 6} H${a + 9} Q${a + 9} ${fy + 8} ${a - 1} ${fy + 8} Q${a - 10} ${fy + 8} ${a - 10} ${fy - 6} Z M${b - 9} ${fy - 6} H${b + 10} Q${b + 10} ${fy + 8} ${b + 1} ${fy + 8} Q${b - 9} ${fy + 8} ${b - 9} ${fy - 6} Z M${a + 9} ${fy - 3} H${b - 9}`, '#231E2C') + `<path d="M${a - 6} ${fy - 2} l4 -2.5 M${b - 5} ${fy - 2} l4 -2.5" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linecap="round"/>`;
+      case 'sciarpina': { const id = `dyc${++clipN}`; return `<defs><clipPath id="${id}"><path d="${s.body}"/></clipPath></defs><g clip-path="url(#${id})"><path d="M0 ${neck - 6} H110 V${neck + 6} H0 Z" fill="#E8604C" stroke="${INK}" stroke-width="2.6"/><path d="M8 ${neck - 1} H100" stroke="#FFE07A" stroke-width="2.4" stroke-dasharray="5 5"/></g>` + lp(`M58 ${neck + 2} L66 ${neck + 17} L58 ${neck + 19} L52 ${neck + 4} Z`, '#E8604C'); }
+      case 'gala': { const g = neck - 1; return lp(`M50 ${g} L38 ${g - 7} L38 ${g + 7} Z M50 ${g} L62 ${g - 7} L62 ${g + 7} Z`, '#2B2433') + lp(ell(50, g, 3.4, 3.4), '#4A3F57'); }
+      case 'macchinetta': { const m = neck - 2; return `<path d="M42 ${m - 4} L${l + 10} ${fy + 12} M58 ${m - 4} L${r - 10} ${fy + 12}" stroke="${INK}" stroke-width="2.2" stroke-linecap="round" opacity=".85"/>` + lp(`M39 ${m - 6} H61 Q63 ${m - 6} 63 ${m - 4} V${m + 8} Q63 ${m + 10} 61 ${m + 10} H39 Q37 ${m + 10} 37 ${m + 8} V${m - 4} Q37 ${m - 6} 39 ${m - 6} Z`, '#FFFDF9', 2.2) + lp(ell(50, m + 2, 4.6, 4.6), '#3A3446', 1.8) + lp(ell(58, m - 2.5, 1.6, 1.6), '#FF5A7A', 1); }
+      default: return '';
+    }
+  }
+  // What a role wears: the profile (both phones). My own choice stays on this
+  // phone only while the server cannot keep it yet (no character_head column).
+  function lookOf(role) {
+    const clean = (v) => ({ head: LOOK_HEAD.includes(v?.head) ? v.head : null, face: LOOK_FACE.includes(v?.face) ? v.face : null });
+    try {
+      const prof = (w.UsCoupleContext?.snapshot?.()?.profiles || []).find((x) => x?.role === role);
+      if (prof && 'character_head' in prof) return clean({ head: prof.character_head, face: prof.character_face });
+    } catch (_) { /* no context yet */ }
+    try {
+      const me = w.usProfile;
+      if (me?.id && role === (me.role === 'beatrice' ? 'beatrice' : 'francesco')) return clean(JSON.parse(w.localStorage?.getItem?.(`us:character-look:${me.id}`) || 'null'));
+    } catch (_) { /* no storage */ }
+    return { head: null, face: null };
+  }
+  // What the couple has unlocked: the server's answer when it has one, else the
+  // same rule here (points, the first Ricordo, the days since the couple began in US).
+  let lookUnlocks = null;
+  function unlockedLook() {
+    if (Array.isArray(lookUnlocks)) return new Set(lookUnlocks);
+    const out = new Set();
+    const xp = Number(w.USProgression?.getState?.()?.total_xp) || 0;
+    for (const [item, need] of Object.entries(LOOK_POINTS)) if (xp >= need) out.add(item);
+    if ((w.UsOggiPhoto?.rows?.() || []).length) out.add('macchinetta');
+    const born = Date.parse(w.UsCoupleContext?.snapshot?.()?.couple?.created_at || '');
+    if (Number.isFinite(born)) { const days = (Date.now() - born) / 864e5; if (days >= 100) out.add('cento'); if (days >= 365) out.add('festa'); }
+    return out;
+  }
+  function refreshLookUnlocks() {
+    const client = typeof sb !== 'undefined' ? sb : null;
+    if (!client?.rpc || !w.usProfile?.couple_id) return Promise.resolve();
+    return Promise.resolve(client.rpc('my_character_unlocks')).then((r) => { if (!r?.error && Array.isArray(r?.data)) lookUnlocks = r.data; }).catch(() => {});
+  }
+  // Dress my character: the server when it can, else this phone; the partner sees it at the next read.
+  async function saveLook(next) {
+    const me = w.usProfile;
+    if (!me?.id) return false;
+    const look = { head: LOOK_HEAD.includes(next.head) ? next.head : null, face: LOOK_FACE.includes(next.face) ? next.face : null };
+    const client = typeof sb !== 'undefined' ? sb : null;
+    let saved = false, missing = !client?.rpc;
+    if (client?.rpc) {
+      try {
+        const r = await client.rpc('set_my_character_look', { p_head: look.head, p_face: look.face });
+        // Saved only when the server answers with the outfit (an older server has no such function).
+        if (!r?.error && r?.data && typeof r.data === 'object' && 'head' in r.data) { saved = true; if (Array.isArray(r.data.unlocked)) lookUnlocks = r.data.unlocked; }
+        else if (!r?.error) missing = true;
+        else if (/locked/.test(String(r.error.message || ''))) { w.toast?.('Questo non è ancora sbloccato'); return false; }
+        else missing = /function|schema cache|PGRST202|42883/i.test(`${r.error.code || ''} ${r.error.message || ''}`);
+      } catch (_) { missing = true; }
+    }
+    if (!saved && !missing) { w.toast?.('Non riesco a salvarlo, riprova'); return false; }
+    try { if (saved) w.localStorage?.removeItem?.(`us:character-look:${me.id}`); else w.localStorage?.setItem?.(`us:character-look:${me.id}`, JSON.stringify(look)); } catch (_) { /* no storage */ }
+    if (saved) await Promise.resolve(w.UsCoupleContext?.hydrate?.()).catch(() => {});
+    paintAll();
+    return true;
+  }
   // The twelve states of Come stai (member-status.js) on four faces.
   const FACE = Object.freeze({ dorme: 'dorme', occhiolino: 'felice', felice: 'felice', festa: 'innamorato', innamorato: 'innamorato', giu: 'giu', malato: 'giu', stanco: 'stanco', nervoso: 'teso', lavoro: 'felice', studio: 'felice', palestra: 'felice', viaggio: 'felice', tavola: 'felice' });
   // How each of you is, by role, from Come stai (12 hours; nothing when not said).
@@ -92,7 +183,12 @@
     const brows = face === 'teso' ? `<path d="M${a - 6} ${y - 10} L${a + 4} ${y - 7} M${b + 6} ${y - 10} L${b - 4} ${y - 7}" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>` : '';
     const mouth = face === 'dorme' ? `${ell(50, y + 12, 2.4, 1.9)}` : face === 'giu' ? `M46 ${y + 14} Q50 ${y + 9.5} 54 ${y + 14}` : face === 'teso' || face === 'stanco' ? `M46.5 ${y + 11.5} H53.5` : face === 'innamorato' ? `M44.5 ${y + 9} Q50 ${y + 16.5} 55.5 ${y + 9}` : `M46 ${y + 10} Q50 ${y + 14.5} 54 ${y + 10}`;
     const label = o.label ? ` role="img" aria-label="${esc(o.label)}"` : ' aria-hidden="true"';
-    return `<svg class="dy-char" viewBox="-4 6 108 100" width="${size}" height="${Math.round(size * 100 / 108)}"${label} focusable="false">
+    // The outfit: given (the wardrobe's previews), else the role's own.
+    const worn = role ? lookOf(role) : { head: null, face: null };
+    const head = o.head !== undefined ? o.head : worn.head;
+    const faceItem = o.face !== undefined ? o.face : (o.acc === 'occhiali' ? 'occhiali' : worn.face);
+    const dress = `${faceItem ? lookSvg(faceItem, shape) : ''}${head ? lookSvg(head, shape) : ''}`;
+    return `<svg class="dy-char" viewBox="-4 6 108 100" overflow="visible" width="${size}" height="${Math.round(size * 100 / 108)}"${label} focusable="false">
       <path d="${ell(s.feet[0], 97, 9, 5)} ${ell(s.feet[1], 97, 9, 5)}" style="fill:${color}" stroke="${INK}" stroke-width="3"/>
       <path d="${s.body}" style="fill:${color}" stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"/>
       <path d="${ell(s.hl[0], s.hl[1], 8, 5)}" fill="rgba(255,255,255,.55)"/>
@@ -101,7 +197,7 @@
       ${wink ? `<path d="M${b - 5} ${y + 1} Q${b} ${y - 4} ${b + 5} ${y + 1}" fill="none" stroke="${INK}" stroke-width="2.8" stroke-linecap="round"/>` : ''}
       <path d="${mouth}" fill="${face === 'dorme' ? INK : 'none'}" stroke="${face === 'dorme' ? 'none' : INK}" stroke-width="2.6" stroke-linecap="round"/>
       ${face === 'dorme' ? '<text x="84" y="36" font-family="Figtree,sans-serif" font-weight="800" font-size="19" style="fill:var(--us-ink-100)">z</text><text x="97" y="22" font-family="Figtree,sans-serif" font-weight="800" font-size="13" style="fill:var(--us-ink-100)">z</text>' : ''}
-      ${o.acc === 'occhiali' ? `<path d="${ell(a, y, 9.5, 8.5)} ${ell(b, y, 9.5, 8.5)} M${a + 9.5} ${y} H${b - 9.5}" fill="rgba(255,255,255,.28)" stroke="${INK}" stroke-width="2.6"/>` : ''}
+      ${dress}
     </svg>`;
   }
   // The place of someone who has not arrived yet: the same shape, dashed.
@@ -129,7 +225,7 @@
     const ball = character('francesco', { size: 50, dx: 2, mood: wink && c.partnerRole === 'francesco' ? 'occhiolino' : m.francesco });
     const square = character('beatrice', { size: 54, dx: -2, mood: wink && c.partnerRole === 'beatrice' ? 'occhiolino' : m.beatrice });
     root.innerHTML = `<span class="dy-stk" data-dy-char="francesco">${ball}</span><span class="dy-stk" data-dy-char="beatrice" style="animation-delay:.06s">${square}</span>`;
-    root.setAttribute('aria-label', `Voi due: ${c.names.francesco} e ${c.names.beatrice}. La vostra Sintonia`);
+    root.setAttribute('aria-label', `L’angolo di noi: ${c.names.francesco} e ${c.names.beatrice}`);
     if (hop) hopDuo();
   }
   function hopDuo() {
@@ -434,9 +530,50 @@
   }
 
   // ---------------------------------------------------------------- Voi due (Sintonia)
-  // Founder, 15/11/2026: the rewards go to the characters. Phase 1 shows the
-  // next accessory as a preview; the server catalogue does not change.
-  const ACCESSORIES = Object.freeze(['gli occhiali', 'il cappello', 'le cuffie', 'il fiocco', 'la corona']);
+  // L'angolo di noi (founder, 20/11/2026, D3–D16): opened from your two
+  // characters on Oggi, in place of «Voi due». The two of you dressed, a peek
+  // at the other (how they are, what they wear), your wardrobe, the next thing
+  // to unlock; the Sintonia and its rewards stay here.
+  let peekOpen = false;
+  function angoloDuo(c) {
+    const st = w.UsMemberStatus?.widgetState?.();
+    const one = (role, mine) => `<button type="button" class="dy-angolo-who" ${mine ? 'data-dy="look-top"' : `data-dy="peek" aria-expanded="${peekOpen}"`} aria-label="${esc(mine ? `Tu, ${c.names[role]}` : `${c.names[role]}: come sta e cosa indossa`)}"><span class="dy-stk">${character(role, { size: 92, mood: (mine ? st?.me?.status : st?.partner?.status) || '' })}</span><span class="dy-angolo-name" translate="no">${esc(c.names[role])}</span></button>`;
+    const order = c.myRole === 'francesco' ? [[c.myRole, true], [c.partnerRole, false]] : [[c.partnerRole, false], [c.myRole, true]];
+    return `<div class="dy-angolo-duo">${order.map(([r, m]) => one(r, m)).join('')}</div>${peekOpen ? peekMarkup(c, st) : ''}`;
+  }
+  // The peek (D13): how the other is and what they wear; nothing private.
+  function peekMarkup(c, st) {
+    const api = w.UsMemberStatus, p = st?.partner;
+    const word = p?.status && api ? `${api.STATUSES?.find?.((x) => x.key === p.status)?.emoji || ''} ${api.word(p.status, p.form)}` : 'Non l’ha ancora detto';
+    const at = Date.parse(p?.at || ''), ago = Number.isFinite(at) && api?.since ? ` · ${api.since(Date.now() - at)}` : '';
+    const look = lookOf(c.partnerRole), wears = [look.head, look.face].filter(Boolean).map((k) => LOOK_NAMES[k]);
+    return `<div class="dy-peek" role="region" aria-label="${esc(c.names[c.partnerRole])}"><span class="dy-peek-copy"><b translate="no">${esc(c.names[c.partnerRole])}</b><span>Come sta: ${esc(word)}${esc(ago)}</span><span>Indossa: ${esc(wears.length ? wears.join(' e ') : 'niente, per ora')}</span></span><button type="button" class="dy-btn dy-btn-s dy-btn-noi dy-hit" data-dy="think">Ti penso</button></div>`;
+  }
+  // The wardrobe (D6, D7, D16): one thing on the head, one on the face or at the neck.
+  function wardrobeMarkup(c, total) {
+    const mine = lookOf(c.myRole), open = unlockedLook();
+    const chip = (slot, item) => {
+      const on = (slot === 'head' ? mine.head : mine.face) === item;
+      const free = item === null || open.has(item);
+      const preview = character(c.myRole, { size: 44, head: slot === 'head' ? item : mine.head, face: slot === 'face' ? item : mine.face });
+      const how = item === null ? 'Niente' : LOOK_NAMES[item];
+      const lock = free ? '' : (LOOK_POINTS[item] ? `${LOOK_POINTS[item]} punti` : LOOK_MOMENTS[item]);
+      return `<button type="button" class="dy-look-chip${free ? '' : ' is-locked'}" data-dy-look="${slot}:${item || ''}" aria-pressed="${on}"${free ? '' : ' aria-disabled="true"'} aria-label="${esc(free ? how : `${how}: si sblocca con ${lock}`)}"><span class="dy-stk">${preview}</span><span class="dy-look-name">${esc(how)}</span>${lock ? `<small>${esc(lock)}</small>` : ''}</button>`;
+    };
+    const next = Object.entries(LOOK_POINTS).filter(([k]) => !open.has(k)).sort((a, b) => a[1] - b[1])[0];
+    let nextRow = '<div class="dy-look-next"><b>Hai sbloccato tutta la serie della Sintonia</b></div>';
+    if (next) {
+      const prev = Math.max(0, ...Object.values(LOOK_POINTS).filter((v) => v < next[1]));
+      const pct = Math.max(0, Math.min(100, Math.round(((total - prev) / Math.max(1, next[1] - prev)) * 100)));
+      const left = Math.max(0, next[1] - total);
+      nextRow = `<div class="dy-look-next"><span class="dy-stk">${character(c.myRole, { size: 40, head: LOOK_HEAD.includes(next[0]) ? next[0] : mine.head, face: LOOK_FACE.includes(next[0]) ? next[0] : mine.face })}</span><span class="dy-look-next-copy"><b>${esc(`Prossimo: ${LOOK_NAMES[next[0]]}`)}</b><span>${esc(left === 1 ? 'manca 1 punto' : `mancano ${left} punti`)}</span><span class="dy-meter" role="progressbar" aria-label="${esc(`Verso ${LOOK_NAMES[next[0]]}`)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></span></span></div>`;
+    }
+    return `<div class="dy-points-title">Il tuo guardaroba</div>
+      <div class="dy-look-row"><b class="dy-look-slot">In testa</b><div class="dy-look-chips">${[null, ...LOOK_HEAD].map((k) => chip('head', k)).join('')}</div></div>
+      <div class="dy-look-row"><b class="dy-look-slot">Sul viso o al collo</b><div class="dy-look-chips">${[null, ...LOOK_FACE].map((k) => chip('face', k)).join('')}</div></div>
+      <div class="dy-look-more"><button type="button" class="dy-btn dy-btn-s dy-btn-ghost" data-dy="shape">Cambia forma</button><button type="button" class="dy-btn dy-btn-s dy-btn-ghost" data-dy="color">Cambia colore</button></div>
+      ${nextRow}`;
+  }
   function levelOf(total) {
     if (typeof w.bondLevelInfo === 'function') return w.bondLevelInfo(total);
     return { level: 1, current: 0, needed: 200, progress: 0 };
@@ -464,7 +601,6 @@
       return `<i class="${on ? 'on' : ''}${i === 6 && !todayOn ? ' today' : ''}"></i>`;
     }).join('');
     const nextLevel = info.level + 1;
-    const acc = ACCESSORIES[(nextLevel - 2 + ACCESSORIES.length * 10) % ACCESSORIES.length];
     const c = couple();
     const entries = (w.UsResonance?.entries?.() || []).slice(0, 3);
     const points = entries.length
@@ -478,13 +614,14 @@
     return `<div class="dy-scrim" data-dy="close"></div>
       <div class="dy-sheet" role="dialog" aria-modal="true" aria-labelledby="dyVoiDueTitle">
         <span class="dy-grab" aria-hidden="true"></span>
-        <div class="dy-sheet-head"><h2 class="dy-sheet-title" id="dyVoiDueTitle">Voi <em>due</em></h2><button type="button" class="dy-ib dy-close" data-dy="close" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-        <div class="dy-venn"><svg viewBox="0 0 260 118" aria-hidden="true" focusable="false"><circle class="dy-venn-a" cx="100" cy="59" r="52"/><circle class="dy-venn-b" cx="160" cy="59" r="52"/></svg><span class="dy-venn-level">Livello ${esc(info.level)}</span></div>
+        <div class="dy-sheet-head"><h2 class="dy-sheet-title" id="dyVoiDueTitle">L’angolo <em>di noi</em></h2><button type="button" class="dy-ib dy-close" data-dy="close" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        ${angoloDuo(c)}
+        <div class="dy-angolo-level"><span class="dy-venn-level">Livello ${esc(info.level)}</span></div>
         <div class="dy-meter-head"><span>Sintonia</span><span>${esc(left === 1 ? `1 punto al livello ${nextLevel}` : `${left} punti al livello ${nextLevel}`)}</span></div>
         <div class="dy-meter" role="progressbar" aria-label="Sintonia verso il livello ${nextLevel}" aria-valuemin="0" aria-valuemax="${esc(info.needed)}" aria-valuenow="${esc(info.current)}"><i style="width:${pct}%"></i></div>
         <div class="dy-streak"><span class="dy-streak-copy"><b>${esc(streakWord)}</b><span>Basta una cosa al giorno, insieme</span></span><span class="dy-streak-days" aria-hidden="true">${squares}</span></div>
         ${moodMarkup(c)}
-        <div class="dy-next"><span class="dy-stk">${character(c.myRole, { size: 46, acc: 'occhiali' })}</span><span class="dy-next-copy"><b>${esc(`Al livello ${nextLevel}: ${acc}`)}</b><span>I premi sono per i personaggi, il cuore e la copertina dell’app</span></span></div>
+        ${wardrobeMarkup(c, total)}
         <div class="dy-points-title">Gli ultimi punti</div>
         ${points}
         <button type="button" class="dy-btn dy-btn-m dy-btn-ghost dy-sheet-more" data-dy="rewards">I premi che avete</button>
@@ -514,7 +651,7 @@
     d.body.classList.add('dy-sheet-open');
     over.querySelector('.dy-close')?.focus?.({ preventScroll: true });
     // Fresh points and streak, then paint again in place (without the entrance).
-    Promise.allSettled([w.USProgression?.hydrate?.({ showUnlocks: false }), w.UsResonance?.hydrate?.(), w.UsCosaDiOggi?.refresh?.()]).then(() => paintVoiDue());
+    Promise.allSettled([w.USProgression?.hydrate?.({ showUnlocks: false }), w.UsResonance?.hydrate?.(), w.UsCosaDiOggi?.refresh?.(), refreshLookUnlocks()]).then(() => paintVoiDue());
     try { w.history?.pushState?.({ ...(w.history.state || {}), usDiarioSheet: true }, ''); } catch (_) { /* no history */ }
   }
   function paintVoiDue() {
@@ -740,6 +877,19 @@
     const chip = t.closest?.('#dyRicordiChips [data-dy-who]');
     if (chip) { diaryWho = chip.dataset.dyWho; paintChips(); return; }
     if (act === 'close') closeVoiDue();
+    if (act === 'peek') { peekOpen = !peekOpen; paintVoiDue(); return; }
+    if (act === 'look-top') { $('dyVoiDue')?.querySelector?.('.dy-look-row')?.scrollIntoView?.({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' }); return; }
+    if (act === 'think') { w.sendThinkSignal?.(); return; }
+    if (act === 'shape' || act === 'color') { closeVoiDue(); setTimeout(() => w.UsSettingsPage?.action?.(act === 'shape' ? 'character-shape' : 'person-color'), 260); return; }
+    const pick = t.closest?.('[data-dy-look]');
+    if (pick) {
+      if (pick.getAttribute('aria-disabled') === 'true') { w.toast?.(`Si sblocca con ${pick.querySelector('small')?.textContent || 'la Sintonia'}`); return; }
+      const [slot, item] = String(pick.dataset.dyLook).split(':');
+      const now = lookOf(couple().myRole);
+      const next = slot === 'head' ? { head: item || null, face: now.face } : { head: now.head, face: item || null };
+      Promise.resolve(saveLook(next)).then(() => paintVoiDue());
+      return;
+    }
     if (act === 'status') { closeVoiDue(); setTimeout(() => w.UsMemberStatus?.open?.('status'), 260); return; }
     // The collection of Sintonia (equip what you unlocked) until the accessories arrive.
     if (act === 'rewards') { closeVoiDue(); setTimeout(() => w.USNoiV2?.openSintonia?.(), 260); }

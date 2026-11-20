@@ -28,9 +28,31 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### Personaggi: il guardaroba e l'angolo di noi (21/11/2026)
+
+**Stato:** branch `claude/personaggi-guardaroba` (nato dal branch fisso di staging a 7ac76285). Provato nel browser col finto Supabase. La migrazione è stata provata su PGlite e non è ancora applicata a staging. Non è in produzione.
+
+**Cosa cambia:** è la fase 2 dei personaggi (grill-me del 20/11, tavola approvata il 21/11).
+- **Accessori.** Ognuno veste il suo personaggio in due posti:
+  - in testa: cappello, fiocco, cuffie, corona, coroncina, cappello da festa, fascia dei 100;
+  - sul viso o al collo: occhiali, occhiali da sole, sciarpina, gala, macchinetta.
+
+  Gli accessori si vedono ovunque compare il personaggio (Oggi, in alto a destra, l'angolo), anche sul telefono dell'altra persona.
+- **Sblocchi, tutti gratis.**
+  - Con i punti della Sintonia, su soglie proprie e non sui livelli: occhiali 150, cappello 400, fiocco 700, sciarpina 1.000, da sole 1.350, gala 1.700, cuffie 2.100, coroncina 2.550, corona 3.000. Le soglie sono misurate sul ritmo vero delle coppie il 21/11.
+  - Con un momento vero: la macchinetta col primo Ricordo, la fascia dopo 100 giorni in US, il cappello da festa dopo un anno.
+- **L'angolo di noi** prende il posto di «Voi due» e si apre toccando i due personaggi su Oggi. Contiene:
+  - i due personaggi vestiti;
+  - la sbirciata sull'altra persona: come sta, cosa indossa, e da lì un Ti penso;
+  - il guardaroba, con «Cambia forma» e «Cambia colore»;
+  - il prossimo sblocco, con quanti punti mancano;
+  - come prima, la Sintonia, i giorni di fila, gli ultimi punti e «I premi che avete».
+
+**Da sapere prima della produzione:** la migrazione `20261120232852_personaggi_guardaroba.sql` aggiunge due colonne al profilo e le funzioni `set_my_character_look` e `my_character_unlocks`. Va applicata a staging con «Supabase SQL (manual)» e richiede `20261115183900` (la forma), anche lei solo su staging. Finché il server non ha la funzione, la scelta resta solo sul telefono di chi la fa. In produzione ci vogliono le due migrazioni col via del founder.
+
 ### La foto del giorno (20/11/2026)
 
-**Stato:** branch `claude/foto-del-giorno` (nato dal branch fisso di staging a 1b64c236). Provato nel browser col finto Supabase; non ancora su staging, non in produzione.
+**Stato:** in staging con la PR #272 (merge 7ac76285), il 20/11/2026; non in produzione.
 
 **Cosa cambia:**
 - **Una foto per tutta la giornata.** Prima la foto di Oggi cambiava a caso ogni ora e a ogni tocco. Ora è scelta con un senso, uguale sui due telefoni:
