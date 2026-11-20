@@ -351,8 +351,9 @@ window.UsWidgetDataApi=Object.freeze({
     const out=[];
     let avoid=homePhotoPath;
     for(let hour=1;hour<=2;hour++){
-      const row=homeRotationPick(rows,homeRotationKey(new Date(Date.now()+hour*3600e3)),avoid);
-      if(!row?.storage_path)break;
+      // One photo a day: in the next two hours it changes only past midnight.
+      const row=homeDayPick(rows,homeDayKey(new Date(Date.now()+hour*3600e3)),{now:Date.now()+hour*3600e3});
+      if(!row?.storage_path||row.storage_path===avoid)continue;
       const url=await usGetSignedUrl(row.storage_path,3600);
       if(window.usProfile!==viewer||epoch!==usAuthEpoch||!url)return out;
       out.push({id:row.id,path:row.storage_path,url,takenOn:row.moment_date||'',label:row.place_label||row.caption||''});
@@ -1977,12 +1978,47 @@ function homeStableIndex(seed,count){
   return count?((h>>>0)%count):0;
 }
 
-// The hour's Ricordo, never the one just shown. Foto & giorni (widget) asks
-// the same for the next two hours, so it changes with Oggi while US is closed.
-function homeRotationPick(rows,key,avoid){
-  let idx=homeStableIndex(`${window.usProfile.couple_id}|${key}|home`,rows.length);
-  if(rows.length>1&&rows[idx]?.storage_path===avoid)idx=(idx+1)%rows.length;
-  return rows[idx]||null;
+// La foto del giorno (founder, 20/11/2026: «le foto che scorrono hanno poco
+// senso»): one photo for the whole day, chosen for a reason, on both phones
+// alike. First a Ricordo of this very day in a past year (the nearest year),
+// then one just added (the last 36 hours), else one of your Ricordi that
+// stays the whole day. Photos hidden on this phone («Non mostrarla più in
+// Oggi») are skipped. The sentence on the photo says why (diario.js).
+function homeDayKey(d=new Date()){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+// The same day in the ten years before (29 February only when it exists).
+function homeAnniversaryDates(day=homeDayKey()){
+  const [y,m,d]=day.split('-').map(Number),out=[];
+  for(let k=1;k<=10;k++){const t=new Date(y-k,m-1,d);if(t.getMonth()===m-1)out.push(homeDayKey(t));}
+  return out;
+}
+const US_OGGI_HIDDEN_KEY='us:oggi:hidden-photos:v1:';
+function homeHiddenPhotos(){
+  try{const list=JSON.parse(localStorage.getItem(US_OGGI_HIDDEN_KEY+(window.usProfile?.couple_id||''))||'[]');return new Set(Array.isArray(list)?list:[]);}catch(_e){return new Set();}
+}
+function homeHidePhoto(id){
+  if(!id||!window.usProfile?.couple_id)return;
+  const list=[...homeHiddenPhotos()].filter(x=>x!==id);list.push(id);
+  try{localStorage.setItem(US_OGGI_HIDDEN_KEY+window.usProfile.couple_id,JSON.stringify(list.slice(-500)));}catch(_e){}
+}
+function homeDayPick(rows,day=homeDayKey(),{now=Date.now(),hidden=homeHiddenPhotos()}={}){
+  const all=(rows||[]).filter(r=>r?.storage_path);
+  const usable=all.filter(r=>!hidden.has(r.id));
+  const pool=usable.length?usable:all;
+  if(!pool.length)return null;
+  const dates=homeAnniversaryDates(day);
+  for(const date of dates){
+    const same=pool.filter(r=>r.moment_date===date);
+    if(same.length)return same[homeStableIndex(`${window.usProfile?.couple_id}|${day}|year`,same.length)];
+  }
+  const fresh=pool.filter(r=>{const t=Date.parse(r.created_at||'');return Number.isFinite(t)&&now-t<36*3600e3&&now-t>=0;})
+    .sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+  if(fresh.length)return fresh[0];
+  return pool[homeStableIndex(`${window.usProfile?.couple_id}|${day}|home`,pool.length)];
+}
+function homeRotationPick(rows,key){
+  return homeDayPick(rows,String(key||'').slice(0,10)||homeDayKey());
 }
 
 // The Ricordi read for the photo of the day, kept for «the next one» (a tap on
@@ -1999,10 +2035,21 @@ async function getHomeRotationPath(){
     .limit(120);
   if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
   if(error){console.warn(error);return undefined;}
-  usHomePhotoRows=Array.isArray(rows)?rows:[];
+  let years=[];
   if(rows?.length){
-    const row=homeRotationPick(rows,homeRotationKey(),homePhotoPath);
-    usHomePhotoMeta=row?.storage_path?{path:row.storage_path,caption:row.caption||'',date:row.moment_date||'',author:row.created_by||'',place:row.place_label||''}:null;
+    const {data:older,error:olderError}=await sb.from('moments')
+      .select('id,storage_path,moment_date,created_at,caption,created_by,place_label')
+      .eq('couple_id',window.usProfile.couple_id)
+      .in('moment_date',homeAnniversaryDates())
+      .limit(40);
+    if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
+    if(olderError)console.warn(olderError);else years=Array.isArray(older)?older:[];
+  }
+  const seenIds=new Set((rows||[]).map(r=>r.id));
+  usHomePhotoRows=[...(Array.isArray(rows)?rows:[]),...years.filter(r=>!seenIds.has(r.id))];
+  if(usHomePhotoRows.length){
+    const row=homeDayPick(usHomePhotoRows);
+    usHomePhotoMeta=row?.storage_path?{id:row.id,path:row.storage_path,caption:row.caption||'',date:row.moment_date||'',author:row.created_by||'',place:row.place_label||''}:null;
     return row?.storage_path||null;
   }
   const {data:couple,error:coupleError}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
@@ -2130,7 +2177,7 @@ function usOggiPhotoMeta(){
   if(!homePhotoPath)return null;
   if(usHomePhotoMeta?.path===homePhotoPath)return usHomePhotoMeta;
   const row=usHomePhotoRows.find(r=>r?.storage_path===homePhotoPath);
-  return row?{path:row.storage_path,caption:row.caption||"",date:row.moment_date||"",author:row.created_by||"",place:row.place_label||""}:null;
+  return row?{id:row.id,path:row.storage_path,caption:row.caption||"",date:row.moment_date||"",author:row.created_by||"",place:row.place_label||""}:null;
 }
 function usOggiPhotoCurrent(){
   const layer=document.getElementById(`homePhotoLayer${homePhotoActiveLayer}`);
@@ -2145,7 +2192,7 @@ async function usOggiPhotoNext(){
   const row=rows[(at+1)%rows.length];
   const url=await usGetSignedUrl(row.storage_path,US_MEDIA_URL_TTL_S);
   if(window.usProfile!==viewer||epoch!==usAuthEpoch||!url)return false;
-  usHomePhotoMeta={path:row.storage_path,caption:row.caption||"",date:row.moment_date||"",author:row.created_by||"",place:row.place_label||""};
+  usHomePhotoMeta={id:row.id,path:row.storage_path,caption:row.caption||"",date:row.moment_date||"",author:row.created_by||"",place:row.place_label||""};
   crossfadeHomePhoto(url,{path:row.storage_path,hourKey:homeRotationKey()});
   return true;
 }
@@ -2157,7 +2204,30 @@ function usOggiPhotoLoad(){
   usOggiPhotoLoading=getHomeRotationPath().then(()=>{window.dispatchEvent(new Event("us:home-photo-changed"));}).catch(()=>{}).finally(()=>{usOggiPhotoLoading=null;});
   return usOggiPhotoLoading;
 }
-window.UsOggiPhoto=Object.freeze({current:usOggiPhotoCurrent,next:usOggiPhotoNext,load:usOggiPhotoLoad,rows:()=>usHomePhotoRows.slice()});
+// The photo's Ricordo, opened in Ricordi (its grid may still be loading).
+function usOggiPhotoOpen(){
+  const meta=usOggiPhotoMeta();
+  const id=meta?.id||usHomePhotoRows.find(r=>r?.storage_path===homePhotoPath)?.id;
+  if(!id)return false;
+  const find=()=>[...document.querySelectorAll('#momentsGrid .moment-card[data-moment-id]')].find(c=>c.dataset.momentId===id);
+  go('moments',{nav:true});
+  let tries=0;
+  const attempt=()=>{const card=find();if(card){card.click();return;}if(++tries<30)setTimeout(attempt,100);};
+  setTimeout(attempt,60);
+  return true;
+}
+// «Non mostrarla più in Oggi» (on this phone): the Ricordo stays in Ricordi.
+async function usOggiPhotoHide(){
+  const meta=usOggiPhotoMeta();
+  const id=meta?.id||usHomePhotoRows.find(r=>r?.storage_path===homePhotoPath)?.id;
+  if(!id)return false;
+  const ok=await usConfirm({title:'Non mostrarla più in Oggi?',body:'Resta nei vostri Ricordi. Su questo telefono, in Oggi, non tornerà.',kicker:'OGGI',confirmLabel:'Non mostrarla'});
+  if(!ok)return false;
+  homeHidePhoto(id);
+  await hydrateHomePhoto(true);
+  return true;
+}
+window.UsOggiPhoto=Object.freeze({current:usOggiPhotoCurrent,next:usOggiPhotoNext,open:usOggiPhotoOpen,hide:usOggiPhotoHide,load:usOggiPhotoLoad,rows:()=>usHomePhotoRows.slice(),pick:(...a)=>homeDayPick(...a),dayKey:(...a)=>homeDayKey(...a)});
 
 function startHomePhotoRotation(){
   if(homePhotoRotationTimer)clearInterval(homePhotoRotationTimer);

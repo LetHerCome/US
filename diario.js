@@ -258,7 +258,9 @@
     // A countdown to a date takes the place of the others; «Insieme da» (the
     // default one) is just one of the sentences.
     const countdown = countdownSentence(today);
-    if (countdown?.only) return [countdown];
+    // The photo of the day chosen for this very day years ago says so first.
+    const year = photoSentences(meta, today).find((x) => /proprio oggi$/.test(x.text));
+    if (countdown?.only) return year ? [year, countdown] : [countdown];
     const together = togetherSentence(today);
     if (together) list.push(together);
     const distance = distanceSentence(next);
@@ -294,7 +296,7 @@
       who.hidden = !(mine || theirs);
       who.style.setProperty('--who', mine ? 'var(--us-tu)' : 'var(--us-partner)');
     }
-    button.setAttribute('aria-label', `La foto del giorno${model?.text ? `: ${model.text}` : ''}${model?.meta ? `, ${model.meta}` : ''}. Tocca per la prossima`);
+    button.setAttribute('aria-label', `La foto del giorno${model?.text ? `: ${model.text}` : ''}${model?.meta ? `, ${model.meta}` : ''}. Apri il ricordo`);
     const changed = has && now.path !== shownPath;
     if (changed) { if (shownPath !== null) photoTurn += 1; shownPath = now.path; }
     if ((fresh || changed) && has && shownPath !== null) play(button, 'is-fresh', 520);
@@ -311,6 +313,23 @@
     el.style.setProperty('--frase', TONE[pick.tone] || '#fff');
     el.hidden = false;
     if (fresh && !same) play(el, 'is-fresh', 700);
+  }
+
+  let photoHeld = false;
+  function photoHold() {
+    const btn = $('dyPhoto');
+    if (!btn) return;
+    let timer = 0, start = null;
+    const stop = () => { clearTimeout(timer); timer = 0; };
+    btn.addEventListener('pointerdown', (e) => {
+      if (e.button > 0 || !btn.classList.contains('has-photo')) return;
+      start = { x: e.clientX, y: e.clientY };
+      stop();
+      timer = setTimeout(() => { timer = 0; photoHeld = true; w.UsOggiPhoto?.hide?.(); }, 600);
+    });
+    btn.addEventListener('pointermove', (e) => { if (timer && start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 10) stop(); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) => btn.addEventListener(ev, stop));
+    btn.addEventListener('contextmenu', (e) => { e.preventDefault(); if (!photoHeld && btn.classList.contains('has-photo')) { stop(); photoHeld = true; w.UsOggiPhoto?.hide?.(); } });
   }
 
   // ---------------------------------------------------------------- the question of today
@@ -707,7 +726,10 @@
     const t = event.target;
     if (t.closest?.('#dyDuo')) { openVoiDue(); return; }
     if (t.closest?.('#dyPhoto')) {
-      Promise.resolve(w.UsOggiPhoto?.next?.()).catch(() => {});
+      // La foto del giorno (20/11/2026): a tap opens its Ricordo; holding it
+      // offers «Non mostrarla più in Oggi» (photoHold).
+      if (photoHeld) { photoHeld = false; return; }
+      w.UsOggiPhoto?.open?.();
       return;
     }
     const act = t.closest?.('[data-dy]')?.dataset?.dy;
@@ -809,6 +831,7 @@
     setInterval(() => { if (!d.hidden) paintTitle(); }, 60000);
     goccia();
     heartHold();
+    photoHold();
   }
 
   // ---------------------------------------------------------------- La barra a goccia (founder, 20/11/2026)
