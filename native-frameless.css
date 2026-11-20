@@ -10,6 +10,12 @@ html.us-native #home {
   margin-top: calc(-1 * var(--us-safe-top));
 }
 
+/* Oggi is one page (20/11/2026): #home starts at y=0 here, so the page of
+   today is as tall as the whole screen. */
+html.us-native .dy-oggi {
+  min-height: var(--us-viewport-height, 100dvh);
+}
+
 /* Outside Oggi the app's existing --us-safe-top and --us-safe-bottom padding
    are intentionally retained. The top bar stays entirely hidden on these
    pages (top-chrome V2); content never sits behind Android status icons.

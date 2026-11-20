@@ -346,21 +346,20 @@
     const c = couple();
     const sign = (role, mood, inner) => `<div class="dy-q-sign"><span class="dy-stk">${character(role, { size: 30, mood })}</span><div class="dy-q-sign-body">${inner}</div></div>`;
     const mineHl = (text) => `<span class="dy-hl" style="--c:var(--us-tu-hl)" translate="no">${esc(text)}</span>`;
-    // The other person's answer exists but is not readable: a blurred line, never their words.
-    const ghost = `<span class="dy-q-blur" aria-hidden="true"><span class="dy-hl" style="--c:var(--us-partner-hl)">quando mi hai chiamato solo per dirmi buonanotte</span></span>`;
     const was = lastQuestion;
     const justRevealed = theirs !== null && was.id === q.id && (was.unread || !was.both || was.mine === null);
-    const asleep = (role, text, button) => `<div class="dy-q-sign is-asleep"><span class="dy-stk">${character(role, { size: 30, mood: 'dorme' })}</span><span class="dy-q-hint">${esc(text)}</span>${button || ''}</div>`;
+    // One page (founder, 20/11/2026): who has answered (or sleeps) and the action on one row.
+    const act = (role, mood, text, button) => `<div class="dy-q-sign is-act"><span class="dy-stk">${character(role, { size: 30, mood })}</span><span class="dy-q-hint">${esc(text)}</span>${button || ''}</div>`;
     const btn = (label, ghostBtn) => `<button type="button" class="dy-btn dy-btn-m${ghostBtn ? ' dy-btn-ghost' : ''}" data-dy="answer">${label}</button>`;
     let rows = [];
     if (mine === null) {
       rows = st.partner_has_answer
-        ? [sign(c.partnerRole, 'felice', ghost), asleep(c.myRole, `${partner} ha risposto. La sua si apre quando rispondi anche tu`, btn(`Rispondi ${ARROW}`))]
-        : [asleep(c.partnerRole, `${partner} non ha ancora risposto`), asleep(c.myRole, 'Una domanda, due risposte: si aprono insieme', btn(`Rispondi ${ARROW}`))];
+        ? [act(c.partnerRole, 'felice', `${partner} ha risposto: la sua si apre quando rispondi anche tu`, btn(`Rispondi ${ARROW}`))]
+        : [act(c.partnerRole, 'dorme', `${partner} non ha ancora risposto`, btn(`Rispondi ${ARROW}`))];
     } else if (!both) {
-      rows = [sign(c.myRole, 'felice', mineHl(mine)), asleep(c.partnerRole, `Aspettiamo ${partner}`, btn('Modifica', true))];
+      rows = [sign(c.myRole, 'felice', mineHl(mine)), act(c.partnerRole, 'dorme', `Aspettiamo ${partner}`, btn('Modifica', true))];
     } else if (unread) {
-      rows = [sign(c.myRole, 'felice', mineHl(mine)), sign(c.partnerRole, 'felice', ghost), `<div class="dy-q-foot"><span class="dy-q-hint">${esc(`Anche ${partner} ha risposto`)}</span>${btn(`Leggi ${ARROW}`)}</div>`];
+      rows = [sign(c.myRole, 'felice', mineHl(mine)), act(c.partnerRole, 'felice', `Anche ${partner} ha risposto`, btn(`Leggi ${ARROW}`))];
     } else {
       rows = [sign(c.myRole, 'felice', mineHl(mine)), sign(c.partnerRole, 'felice', `<span class="${justRevealed && !reduced() ? 'dy-q-unblur' : ''}"><span class="dy-hl" style="--c:var(--us-partner-hl)" translate="no">${esc(theirs || '')}</span></span>`)];
     }
