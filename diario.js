@@ -817,82 +817,108 @@
     const role = couple().myRole;
     d.querySelectorAll('[data-dy-me]').forEach((el) => { el.innerHTML = character(role, { size: 34 }); });
   }
-  // The bar is an svg, like the founder's reference video (20/11/2026): a white
-  // ball floats over the bar holding the icon of the page you are on, in a
-  // round cradle cut into the bar. On a new page the ball sinks into the bar,
-  // the cradle becomes a wave that slides to the new tab, and the ball rises
-  // out of it there like a drop; then the icon comes back inside it.
-  // The ball sits deep in its cradle (founder: «deve affondare di più»): its
-  // centre 6 px below the edge, so only its top rises over the bar.
-  const BALL_R = 22, BALL_LIFT = -6, BALL_GAP = 5, CRADLE_FILLET = 10;
-  const WAVE_DEPTH = 16, WAVE_W = 30, MOVE_MS = 720;
+  // The bar is an svg, measured on the founder's reference video (20/11/2026,
+  // frame by frame, straightened, in the points of its 375 pt iPhone, where
+  // the bar is 50 like ours): a ball of 54 px
+  // in the colour of the bar sits deep in a round cradle (centre 10.5 px under the
+  // edge, 8.5 px of gap, soft shoulders), with the icon of the page inside. On a
+  // new page (600 ms) the ball sinks in 140 ms, the cradle becomes a deep wave
+  // (40 px) that runs fast to the new tab and slows down there, and the ball
+  // rises out of it like a drop while the wave closes into a cradle around it;
+  // then the icon comes back inside. The icons the wave crosses are cut by it.
+  const BALL_R = 27, BALL_DEPTH = 10.5, BALL_GAP = 8.5, CRADLE_FILLET = 21;
+  // The wave is steeper in front than behind.
+  const WAVE_DEPTH = 39.5, WAVE_SIGMA = 21, WAVE_FRONT = 17, MOVE_MS = 600;
+  const clamp01 = (v) => Math.max(0, Math.min(1, v));
+  const inOut2 = (v) => (v < 0.5 ? 2 * v * v : 1 - (-2 * v + 2) ** 2 / 2);
+  const lerpTable = (tab, p) => { let i = 1; while (i < tab.length - 1 && tab[i][0] < p) i++; const [p0, v0] = tab[i - 1], [p1, v1] = tab[i]; return v0 + (v1 - v0) * clamp01((p - p0) / (p1 - p0)); };
+  // Read off the video (p = 0–1 of the move): how far the wave/ball has gone,
+  // and how high the top of the ball is (px over the edge; positive = under it).
+  const GOCCIA_GO = [[0, 0], [0.055, 0.02], [0.11, 0.058], [0.17, 0.149], [0.22, 0.286], [0.28, 0.41], [0.33, 0.54], [0.39, 0.63], [0.445, 0.7], [0.5, 0.77], [0.557, 0.815], [0.61, 0.86], [0.668, 0.9], [0.723, 0.935], [0.78, 0.955], [0.89, 0.985], [1, 1]];
+  const GOCCIA_TOP = [[0, -16.5], [0.055, -10.5], [0.11, 9.5], [0.17, 31.5], [0.24, 53], [0.3, 53], [0.39, 29], [0.445, 16.5], [0.5, 6.5], [0.557, 0], [0.61, -4.5], [0.668, -7.5], [0.723, -10.5], [0.78, -12], [0.835, -13.5], [0.89, -14.5], [0.947, -15.5], [1, -16.5]];
+  function gocciaPose(p) {
+    const m = p < 0.4 ? inOut2(clamp01((p - 0.03) / 0.17)) : 1 - inOut2(clamp01((p - 0.6) / 0.12));
+    const wide = 3 * clamp01((p - 0.33) / 0.17);
+    return { f: lerpTable(GOCCIA_GO, p), cy: lerpTable(GOCCIA_TOP, p) + BALL_R, m, a: WAVE_DEPTH, sig: WAVE_SIGMA + wide, front: WAVE_FRONT + wide, dir: 1 };
+  }
+  // Depth below the edge of the round cradle (radius r + gap, centre BALL_DEPTH
+  // under the edge) with soft shoulders where it meets the edge.
+  function gocciaCradle(dx) {
+    const c = BALL_R + BALL_GAP, f = CRADLE_FILLET, lift = -BALL_DEPTH;
+    const s = Math.sqrt(Math.max(0, (c + f) ** 2 - (f + lift) ** 2));
+    const a = Math.abs(dx);
+    if (a >= s) return 0;
+    const tx = s * c / (c + f);
+    if (a > tx) return f - Math.sqrt(Math.max(0, f * f - (a - s) ** 2));
+    return Math.sqrt(Math.max(0, c * c - a * a)) - lift;
+  }
+  const gocciaDepth = (dx, pose) => (1 - pose.m) * gocciaCradle(dx) + pose.m * pose.a * Math.exp(-0.5 * (dx / (dx * pose.dir > 0 ? pose.front : pose.sig)) ** 2);
   function goccia() {
     const nav = d.querySelector('.dy-nav'), svg = nav?.querySelector('.dy-nav-bg');
     if (!nav || !svg) return;
     const $ = (s) => svg.querySelectorAll(s);
-    const st = { x: null, from: 0, to: 0, t0: 0, k: 1, m: 0, raf: 0, page: null };
+    const REST = gocciaPose(1);
+    const st = { x: null, from: 0, to: 0, t0: 0, p: 1, pose: REST, raf: 0, page: null };
     const up = () => parseFloat(getComputedStyle(nav).getPropertyValue('--dy-nav-svg-up')) || 34;
     const centre = (btn) => { const a = btn.getBoundingClientRect(), b = nav.getBoundingClientRect(); return a.left - b.left + a.width / 2; };
-    const clamp = (v) => Math.max(0, Math.min(1, v));
-    const ease = (v) => (v < 0.5 ? 4 * v * v * v : 1 - (-2 * v + 2) ** 3 / 2);
-    const back = (v) => 1 + 2.2 * (v - 1) ** 3 + 1.2 * (v - 1) ** 2;
-    // Depth below the edge of the round cradle around the ball (radius r + gap,
-    // centre BALL_LIFT above the edge) with fillets where it meets the edge.
-    function cradle(dx, r) {
-      const c = r + BALL_GAP, f = CRADLE_FILLET, lift = BALL_LIFT;
-      const s = Math.sqrt(Math.max(0, (c + f) ** 2 - (f + lift) ** 2));
-      const a = Math.abs(dx);
-      if (a >= s) return 0;
-      const tx = s * c / (c + f);
-      if (a > tx) return f - Math.sqrt(Math.max(0, f * f - (a - s) ** 2));
-      return Math.sqrt(Math.max(0, c * c - a * a)) - lift;
-    }
-    // The travelling wave: a soft valley, longer behind than in front.
-    function wave(dx, dir) {
-      const w = WAVE_W * (dx * dir < 0 ? 1.6 : 0.9);
-      return WAVE_DEPTH * Math.exp(-2.4 * (dx / w) ** 2);
-    }
     function draw() {
       const W = nav.clientWidth, U = up(), H = nav.clientHeight + U;
       if (!W) return;
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      const x = st.x ?? W / 2, k = st.k, m = st.m, dir = Math.sign(st.to - st.from) || 1;
-      const r = BALL_R * (0.55 + 0.45 * Math.min(1, k));
+      const x = st.x ?? W / 2, pose = st.pose;
       const n = (v) => +v.toFixed(2);
-      let top = `M0 ${U}`;
-      const a = Math.max(0, x - 80), b = Math.min(W, x + 80);
-      top += ` L${n(a)} ${U}`;
-      for (let px = a; px <= b; px += 1.5) {
-        const dx = px - x, depth = (1 - m) * cradle(dx, r) + m * wave(dx, dir);
-        top += ` L${n(px)} ${n(U + depth)}`;
-      }
-      top += ` L${n(b)} ${U} L${W} ${U}`;
+      let top = `M0 ${n(U + gocciaDepth(-x, pose))}`;
+      for (let px = 2; px < W; px += 2) top += ` L${px} ${n(U + gocciaDepth(px - x, pose))}`;
+      top += ` L${W} ${n(U + gocciaDepth(W - x, pose))}`;
       const body = `${top} L${W} ${H} L0 ${H} Z`;
       $('.dy-nav-edge').forEach((p) => p.setAttribute('d', top));
       $('.dy-nav-fill,.dy-nav-mfill').forEach((p) => p.setAttribute('d', body));
       const mr = svg.querySelector('.dy-nav-mrect');
       if (mr) { mr.setAttribute('x', -20); mr.setAttribute('y', -20); mr.setAttribute('width', W + 40); mr.setAttribute('height', H + 40); }
       // Sunk, the ball is hidden in the bar (same colour); risen, it floats.
-      const cy = U - BALL_LIFT + (1 - k) * (r + BALL_LIFT + WAVE_DEPTH + 6);
-      $('.dy-nav-ball,.dy-nav-ball-edge').forEach((c) => { c.setAttribute('cx', n(x)); c.setAttribute('cy', n(cy)); c.setAttribute('r', n(Math.max(0, r))); });
+      $('.dy-nav-ball,.dy-nav-ball-edge').forEach((c) => { c.setAttribute('cx', n(x)); c.setAttribute('cy', n(U + pose.cy)); c.setAttribute('r', BALL_R); });
+      // The wave cuts the icons it crosses (they are part of the bar).
+      const nb = nav.getBoundingClientRect();
+      const moving = st.raf && st.p < 1;
+      nav.querySelectorAll('button[data-page]:not(.active) .dy-nav-icon, .dy-nav .dy-think').forEach((el) => {
+        const btn = el.closest('button'), bb = btn.getBoundingClientRect();
+        // How deep the wave is under the icon (its middle and its sides).
+        const cx = bb.left - nb.left + bb.width / 2, half = Math.min(18, el.getBoundingClientRect().width / 2);
+        const dep = pose.m > 0.001 ? Math.max(...[-half, 0, half].map((o) => gocciaDepth(cx + o - x, pose))) : 0;
+        let o = 1 - clamp01((dep - 12) / 20);
+        // The icon you leave goes down inside the ball, then comes back in its place.
+        if (moving && btn === st.prev) {
+          if (st.p < 0.2) {
+            el.style.translate = `${(x - cx).toFixed(1)}px ${(pose.cy - BALL_DEPTH + ballDy()).toFixed(1)}px`;
+            o = 1 - clamp01((st.p - 0.1) / 0.07);
+          } else { el.style.translate = ''; o *= clamp01((st.p - 0.3) / 0.15); }
+        } else if (el.style.translate) el.style.translate = '';
+        el.style.opacity = o < 0.99 ? o.toFixed(2) : '';
+      });
+      // The icon of the new page rises inside the drop and grows (as in the video).
+      nav.querySelectorAll('button[data-page].active .dy-nav-icon').forEach((el) => {
+        if (!moving) { el.style.translate = ''; el.style.scale = ''; el.style.opacity = ''; return; }
+        const g = clamp01((st.p - 0.47) / 0.33), grow = 1 - (1 - g) ** 2;
+        el.style.translate = `${(x - st.to).toFixed(1)}px ${(pose.cy - BALL_DEPTH).toFixed(1)}px`;
+        el.style.scale = Math.max(0.01, grow).toFixed(3);
+        el.style.opacity = g > 0 ? '1' : '0';
+      });
     }
+    const ballDy = () => parseFloat(nav.style.getPropertyValue('--dy-ball-dy')) || -16;
     // Where the icon of the page you are on goes: the centre of the ball.
     function place() {
-      const any = nav.querySelector('button[data-page]:not(.active) .dy-nav-icon') || nav.querySelector('button[data-page] .dy-nav-icon');
+      const any = [...nav.querySelectorAll('button[data-page]:not(.active) .dy-nav-icon')].find((el) => !el.style.translate);
       if (!any) return;
       const a = any.getBoundingClientRect(), b = nav.getBoundingClientRect();
-      if (any.closest('.active')) return;
-      nav.style.setProperty('--dy-ball-dy', `${(-BALL_LIFT - (a.top - b.top + a.height / 2)).toFixed(1)}px`);
+      nav.style.setProperty('--dy-ball-dy', `${(BALL_DEPTH - (a.top - b.top + a.height / 2)).toFixed(1)}px`);
     }
     function step(now) {
-      const p = (now - st.t0) / MOVE_MS;
-      st.x = st.from + (st.to - st.from) * ease(clamp((p - 0.17) / 0.55));
-      // Sink 0–0.22, rise 0.66–0.94 (a little past the top, then back).
-      st.k = p < 0.5 ? 1 - ease(clamp(p / 0.22)) : back(clamp((p - 0.66) / 0.28));
-      st.m = p < 0.5 ? ease(clamp(p / 0.28)) : 1 - ease(clamp((p - 0.62) / 0.26));
-      if (p >= 0.86 && nav.classList.contains('is-moving')) nav.classList.remove('is-moving');
+      const p = Math.min(1, (now - st.t0) / MOVE_MS);
+      st.p = p; st.pose = gocciaPose(p); st.pose.dir = Math.sign(st.to - st.from) || 1;
+      st.x = st.from + (st.to - st.from) * st.pose.f;
+      if (p >= 1 && nav.classList.contains('is-moving')) nav.classList.remove('is-moving');
       draw();
-      if (p >= 1) { st.x = st.to; st.k = 1; st.m = 0; draw(); st.raf = 0; return; }
+      if (p >= 1) { st.x = st.to; st.pose = REST; draw(); st.raf = 0; return; }
       st.raf = requestAnimationFrame(step);
     }
     function go() {
@@ -902,17 +928,22 @@
       const t = centre(on), page = on.dataset.page;
       if (st.x == null || reduced() || page === st.page && !st.raf) {
         cancelAnimationFrame(st.raf); st.raf = 0;
-        st.x = st.from = st.to = t; st.k = 1; st.m = 0; st.page = page;
+        st.x = st.from = st.to = t; st.p = 1; st.pose = REST; st.page = page;
         if (nav.classList.contains('is-moving')) nav.classList.remove('is-moving'); draw(); return;
       }
       if (page === st.page) return;
-      st.page = page; st.from = st.x; st.to = t;
-      // Already sunk (a second tap while it moves): slide on from here.
-      st.t0 = performance.now() - (st.k < 0.5 ? 0.2 * MOVE_MS : 0);
+      // A second tap while it moves: if the ball is under, slide on from here.
+      const under = st.raf && st.p > 0.15 && st.p < 0.6;
+      st.prev = nav.querySelector(`button[data-page="${st.page}"]`); st.page = page; st.to = t;
+      if (under) {
+        // Keep the wave where it is: start from the point that puts it here at p = 0.2.
+        const f0 = lerpTable(GOCCIA_GO, 0.2);
+        st.from = (st.x - t * f0) / (1 - f0); st.t0 = performance.now() - 0.2 * MOVE_MS;
+      } else { st.from = st.x; st.t0 = performance.now(); }
       if (!nav.classList.contains('is-moving')) nav.classList.add('is-moving');
       if (!st.raf) st.raf = requestAnimationFrame(step);
     }
-    if (typeof MutationObserver === 'function') new MutationObserver(go).observe(nav, { attributes: true, attributeFilter: ['class'], subtree: true, attributeOldValue: false });
+    if (typeof MutationObserver === 'function') new MutationObserver(go).observe(nav, { attributes: true, attributeFilter: ['class'], subtree: true });
     w.addEventListener('resize', () => { st.x = null; go(); });
     go();
   }

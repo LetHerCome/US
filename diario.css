@@ -41,15 +41,15 @@ em.dy-em,.dy-h1 em,.dy-sheet-title em{font-family:var(--us-font-editorial);font-
 /* ---------------------------------------------------------------- bar */
 .dy-nav{position:fixed;left:0;right:0;bottom:0;z-index:var(--us-layer-chrome);display:grid;grid-template-columns:1fr 1fr 86px 1fr 1fr;height:calc(var(--us-nav-height) + max(18px,var(--us-safe-bottom)));padding:4px calc(10px + var(--us-safe-right)) max(18px,var(--us-safe-bottom)) calc(10px + var(--us-safe-left));background:transparent;--dy-nav-svg-up:34px}
 .dy-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;border:0;border-radius:14px;padding:0;background:transparent;cursor:pointer;color:var(--us-ink-60);font:600 11.5px/1.1 var(--us-font-ui);transition:color .2s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.dy-nav .dy-nav-icon{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transform-origin:50% 50%}
+.dy-nav .dy-nav-icon{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transform-origin:50% 50%}
 .dy-nav .dy-nav-scrib{width:16px;height:6px;opacity:0;fill:none;stroke:var(--us-pencil);stroke-width:2.2;stroke-linecap:round}
 .dy-nav button.active{color:var(--us-ink-100);font-weight:800}
 .dy-nav button.active .dy-nav-scrib{opacity:0}
 .dy-nav button.active .dy-nav-scrib path{stroke-dasharray:18;animation:dy-draw .38s ease-out}
 .dy-nav button[data-page] .dy-nav-icon{transition:transform .3s cubic-bezier(.3,0,.3,1),opacity .2s ease,stroke-width .2s}
-.dy-nav button.active .dy-nav-icon{transform:translateY(var(--dy-ball-dy,-34px));stroke-width:2.2;transition:transform .34s cubic-bezier(.2,1.6,.4,1),opacity .22s ease}
-/* While the ball travels it is sunk in the bar: the icon waits, then pops back inside it. */
-.dy-nav.is-moving button.active .dy-nav-icon{opacity:0;transform:translateY(var(--dy-ball-dy,-34px)) scale(.4);transition:none}
+.dy-nav button.active .dy-nav-icon{transform:translateY(var(--dy-ball-dy,-16px));stroke-width:2.2;transition:transform .34s cubic-bezier(.2,1.6,.4,1),opacity .22s ease}
+/* While the ball moves, diario.js goccia places the icons frame by frame. */
+.dy-nav.is-moving button[data-page] .dy-nav-icon,.dy-nav.is-moving .dy-think{transition:none}
 /* Icons only, like the reference: the names stay for screen readers. */
 .dy-nav .nlabel{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 @keyframes dy-draw{from{stroke-dashoffset:18}to{stroke-dashoffset:0}}

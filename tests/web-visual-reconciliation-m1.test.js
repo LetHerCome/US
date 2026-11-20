@@ -57,7 +57,7 @@ test('HUMAN-UI-02 conserva target touch >= 44px con una nav compatta', () => {
   assert.match(css, /\.dy-nav\{[^}]*grid-template-columns:1fr 1fr 86px 1fr 1fr;height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:4px /);
   assert.match(foundation(), /--us-nav-height:50px;/);
   assert.match(read('fix4.css'), /\{:root\{--us-nav-height:48px\}/);
-  assert.match(css, /\.dy-nav \.dy-nav-icon\{width:22px;height:22px;/);
+  assert.match(css, /\.dy-nav \.dy-nav-icon\{width:27px;height:27px;/);
 });
 
 test('M1 applica il top chrome APK senza introdurre fullscreen/settings o relocation Home', () => {
