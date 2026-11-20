@@ -329,7 +329,8 @@ const CALENDAR_BUILTIN_PRESETS = Object.freeze(['Lavoro', 'Università', 'Uscita
 const CALENDAR_PRESET_LIMIT = 8;
 function addCalendarPreset(list, title) {
   const own = Array.isArray(list) ? list.filter((item) => typeof item === 'string' && item.trim()) : [];
-  const clean = String(title ?? '').replace(/\s+/g, ' ').trim().slice(0, 30);
+  // By characters, not UTF-16 units: an emoji at the end is not cut in half.
+  const clean = Array.from(String(title ?? '').replace(/\s+/g, ' ').trim()).slice(0, 30).join('');
   if (!clean) return own;
   const same = (a) => a.toLocaleLowerCase('it-IT') === clean.toLocaleLowerCase('it-IT');
   if (CALENDAR_BUILTIN_PRESETS.some(same) || own.some(same)) return own;
@@ -1071,7 +1072,7 @@ function saveNewPreset() {
   const before = ownCalendarPresets();
   const next = addCalendarPreset(before, input?.value);
   if (next.length !== before.length || next.some((item, i) => item !== before[i])) saveOwnCalendarPresets(next);
-  const title = String(input?.value || '').replace(/\s+/g, ' ').trim().slice(0, 30);
+  const title = Array.from(String(input?.value || '').replace(/\s+/g, ' ').trim()).slice(0, 30).join('');
   showPresetComposer(false);
   renderOwnCalendarPresets();
   // The new type is chosen at once, as a tap on it would.

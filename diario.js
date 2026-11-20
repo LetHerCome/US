@@ -852,7 +852,7 @@
     if (a > tx) return f - Math.sqrt(Math.max(0, f * f - (a - s) ** 2));
     return Math.sqrt(Math.max(0, c * c - a * a)) - lift;
   }
-  const gocciaDepth = (dx, pose) => (1 - pose.m) * gocciaCradle(dx) + pose.m * pose.a * Math.exp(-0.5 * (dx / (dx * pose.dir > 0 ? pose.front : pose.sig)) ** 2);
+  const gocciaDepth = (dx, pose) => (1 - pose.m) * (pose.c ?? 1) * gocciaCradle(dx) + pose.m * pose.a * Math.exp(-0.5 * (dx / (dx * pose.dir > 0 ? pose.front : pose.sig)) ** 2);
   function goccia() {
     const nav = d.querySelector('.dy-nav'), svg = nav?.querySelector('.dy-nav-bg');
     if (!nav || !svg) return;
@@ -912,20 +912,50 @@
       const a = any.getBoundingClientRect(), b = nav.getBoundingClientRect();
       nav.style.setProperty('--dy-ball-dy', `${(BALL_DEPTH - (a.top - b.top + a.height / 2)).toFixed(1)}px`);
     }
+    // Off the four pages (Impostazioni): no page is yours, so the ball sinks
+    // and the cradle closes, the bar flat; back on a page, it rises there.
+    const AWAY_MS = 280;
+    const awayPose = (e) => ({ ...REST, c: 1 - e, cy: REST.cy + (lerpTable(GOCCIA_TOP, 0.3) + BALL_R - REST.cy) * e });
+    function stepAway(now) {
+      const e = inOut2(clamp01((now - st.t0) / AWAY_MS));
+      st.pose = awayPose(e);
+      draw();
+      st.raf = e < 1 ? requestAnimationFrame(stepAway) : 0;
+    }
     function step(now) {
       const p = Math.min(1, (now - st.t0) / MOVE_MS);
       st.p = p; st.pose = gocciaPose(p); st.pose.dir = Math.sign(st.to - st.from) || 1;
+      // Rising back from a flat bar: the wave opens instead of appearing at once.
+      if (st.rise0) st.pose.a *= clamp01((now - st.rise0) / 160);
       st.x = st.from + (st.to - st.from) * st.pose.f;
       if (p >= 1 && nav.classList.contains('is-moving')) nav.classList.remove('is-moving');
       draw();
-      if (p >= 1) { st.x = st.to; st.pose = REST; draw(); st.raf = 0; return; }
+      if (p >= 1) { st.x = st.to; st.pose = REST; st.rise0 = 0; draw(); st.raf = 0; return; }
       st.raf = requestAnimationFrame(step);
     }
     function go() {
       const on = nav.querySelector('button[data-page].active');
       place();
-      if (!on) return;
+      if (!on) {
+        if (st.away) return;
+        st.away = true; st.page = null; st.rise0 = 0;
+        if (nav.classList.contains('is-moving')) nav.classList.remove('is-moving');
+        cancelAnimationFrame(st.raf); st.raf = 0; st.p = 1;
+        if (st.x == null || reduced()) { st.x ??= nav.clientWidth / 2; st.pose = awayPose(1); draw(); return; }
+        st.t0 = performance.now(); st.raf = requestAnimationFrame(stepAway);
+        return;
+      }
       const t = centre(on), page = on.dataset.page;
+      if (st.away) {
+        st.away = false; cancelAnimationFrame(st.raf); st.raf = 0;
+        st.page = page; st.prev = null; st.x = st.from = st.to = t;
+        if (reduced()) { st.p = 1; st.pose = REST; draw(); return; }
+        // The ball comes up from the bar under the page, as at the end of a move.
+        st.t0 = performance.now() - 0.3 * MOVE_MS; st.rise0 = performance.now();
+        if (!nav.classList.contains('is-moving')) nav.classList.add('is-moving');
+        st.raf = requestAnimationFrame(step);
+        return;
+      }
       if (st.x == null || reduced() || page === st.page && !st.raf) {
         cancelAnimationFrame(st.raf); st.raf = 0;
         st.x = st.from = st.to = t; st.p = 1; st.pose = REST; st.page = page;
@@ -944,7 +974,7 @@
       if (!st.raf) st.raf = requestAnimationFrame(step);
     }
     if (typeof MutationObserver === 'function') new MutationObserver(go).observe(nav, { attributes: true, attributeFilter: ['class'], subtree: true });
-    w.addEventListener('resize', () => { st.x = null; go(); });
+    w.addEventListener('resize', () => { st.x = null; st.away = false; go(); });
     go();
   }
   // Ti penso in the middle of the bar: hold it, the heart fills from below and

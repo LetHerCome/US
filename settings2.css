@@ -26,10 +26,8 @@
 .us-settings2-status-list{display:flex;flex-direction:column}.us-settings2-status-list>div{min-height:58px;padding:9px 2px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,.045)}.us-settings2-status-list>div:first-child{border-top:0}.us-settings2-status-list b{display:block;font-size:var(--us-text-meta)}.us-settings2-status-list small{display:block;margin-top:3px;color:#777580;font-size:var(--us-text-meta)}.us-settings2-status-list i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--us-color-elevated);color:#777580;font-style:normal;font-size:10px}.us-settings2-status-list i.ok{background:rgba(114,201,152,.1);color:var(--us-color-positive)}
 .us-settings2-build-detail{margin-top:10px;padding:11px 12px;border-radius:15px;background:rgba(255,255,255,.025);color:#8e8b96;font-size:var(--us-text-meta)}.us-settings2-build-detail small{color:#5e5c66;font-size:var(--us-text-decorative)}
 
-/* Settings is already a control surface; don't cover it with Ti penso. */
-body:has(#settings.page.active) #thinkButton{
-  display:none!important;
-}
+/* The Ti penso lives inside the bar now (barra a goccia, 20/11/2026): it stays
+   in Settings too, so the bar never shows a hole in the middle. */
 
 /* US-SONIC-V1 — short, explicit samples inside existing centered Settings. */
 .us-feedback-preview{margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,.08)}
