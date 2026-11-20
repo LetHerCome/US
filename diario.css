@@ -62,7 +62,11 @@ body.us-keyboard-open .dy-nav{opacity:0;pointer-events:none;transform:translateY
 /* The former top bar keeps only the network badge and the profile photo input. */
 .app>.top[hidden]{display:none}
 #home.page{margin-top:0;padding-bottom:0}
-.dy-oggi{padding:0 0 calc(var(--us-nav-height) + max(18px,var(--us-safe-bottom)) + 24px)}
+/* Oggi is one page, no scrolling (founder, 20/11/2026): the column is as tall
+   as the screen (on the web .app pads the safe area; in the app
+   native-frameless.css pulls #home under the status bar), the photo takes
+   what is left. On a screen too short for the minimum photo the page scrolls. */
+.dy-oggi{box-sizing:border-box;display:flex;flex-direction:column;min-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top));padding:0 0 calc(var(--us-nav-height) + max(18px,var(--us-safe-bottom)) + 12px)}
 .dy-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:calc(var(--us-safe-top) + 6px) 20px 0}
 .dy-think-wrap{position:relative;flex:none}
 .dy-think{background:var(--us-think-soft)}
@@ -78,15 +82,15 @@ body.us-keyboard-open .dy-nav{opacity:0;pointer-events:none;transform:translateY
 .dy-envelope.is-closed .dy-dot{display:block}
 .dy-envelope.is-loading{opacity:.6}
 
-.dy-title{padding:14px 20px 0}
+.dy-title{padding:10px 20px 0}
 .dy-h1{margin:0;font:800 var(--us-text-30)/1.08 var(--us-font-ui);letter-spacing:-.025em;color:var(--us-ink-100)}
 .dy-h1 em{font-size:33px}
 .dy-pageline{margin:6px 0 0;font:600 var(--us-text-13)/1.3 var(--us-font-ui);color:var(--us-ink-60)}
 .dy-circled{position:relative;display:inline-block;padding:0 4px;color:var(--us-ink-100);font-weight:800}
 .dy-circled svg{position:absolute;left:50%;top:50%;width:40px;height:28px;transform:translate(-50%,-50%);overflow:visible;fill:none;stroke:var(--us-pencil);stroke-width:2.6;stroke-linecap:round;pointer-events:none}
 
-.dy-stage{position:relative;height:388px;margin-top:10px}
-.dy-photo{position:absolute;left:16px;right:16px;top:6px;height:362px;border:0;padding:0;margin:0;cursor:pointer;border-radius:var(--us-r-24);overflow:hidden;background:var(--us-beige);box-shadow:0 12px 28px rgba(20,18,14,.18);-webkit-tap-highlight-color:transparent}
+.dy-stage{position:relative;flex:1 1 0;min-height:220px;margin-top:10px}
+.dy-photo{position:absolute;left:16px;right:16px;top:6px;bottom:0;border:0;padding:0;margin:0;cursor:pointer;border-radius:var(--us-r-24);overflow:hidden;background:var(--us-beige);box-shadow:0 12px 28px rgba(20,18,14,.18);-webkit-tap-highlight-color:transparent}
 .dy-photo-img{display:block;width:100%;height:100%;object-fit:cover}
 .dy-photo.is-fresh{animation:dy-photo-in .5s cubic-bezier(.2,.8,.2,1)}
 @keyframes dy-photo-in{from{opacity:.35;transform:scale(1.035)}to{opacity:1;transform:none}}
@@ -94,22 +98,22 @@ body.us-keyboard-open .dy-nav{opacity:0;pointer-events:none;transform:translateY
 .dy-photo-cap{position:absolute;left:18px;right:120px;bottom:18px;font:24px/1.05 var(--us-font-hand);color:#fff;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dy-photo-who{position:absolute;left:14px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--who,var(--us-rosa));box-shadow:0 0 0 2px #fff}
 .dy-photo:not(.has-photo) .dy-photo-shade{display:none}
-.dy-photo-empty{position:absolute;left:16px;right:16px;top:6px;height:362px;border-radius:var(--us-r-24);background:var(--us-beige);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+.dy-photo-empty{position:absolute;left:16px;right:16px;top:6px;bottom:0;border-radius:var(--us-r-24);background:var(--us-beige);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
 .dy-photo-empty b{font:800 var(--us-text-20)/1.25 var(--us-font-ui);letter-spacing:-.01em;max-width:240px}
 .dy-photo-empty[hidden],.dy-frase[hidden],.dy-toast[hidden],.dy-pageline[hidden]{display:none}
 .dy-frase{position:absolute;right:26px;top:24px;display:block;max-width:224px;padding:10px 12px;border-radius:var(--us-r-12);font:700 13.5px/1.3 var(--us-font-ui);color:var(--us-ink-100);background:var(--frase,#fff);box-shadow:0 6px 14px rgba(20,18,14,.16);transform:rotate(3deg);pointer-events:none}
 .dy-frase.is-fresh{animation:dy-frase-in .45s .18s cubic-bezier(.2,1.3,.4,1) both}
 @keyframes dy-frase-in{from{opacity:0;transform:translateY(-10px) rotate(-2deg) scale(.92)}to{opacity:1;transform:rotate(3deg)}}
-.dy-duo{position:absolute;right:22px;top:322px;display:flex;align-items:flex-end;gap:0;border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dy-duo{position:absolute;right:22px;bottom:-4px;display:flex;align-items:flex-end;gap:0;border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .dy-duo:empty{display:none}
 .dy-toast{position:absolute;left:50%;top:160px;z-index:2;display:flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:var(--us-r-12);background:var(--us-ink-100);color:var(--us-paper);font:700 13.5px/1 var(--us-font-ui);white-space:nowrap;box-shadow:0 10px 24px rgba(20,18,14,.3);transform:translateX(-50%);opacity:0;animation:dy-toast 2s ease-out forwards;pointer-events:none}
 .dy-toast svg{width:14px;height:14px;flex:none}
 @keyframes dy-toast{0%{opacity:0;transform:translate(-50%,8px)}12%,78%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-6px)}}
 
-.dy-question{position:relative;margin:4px 16px 0;padding:18px;display:flex;flex-direction:column;gap:12px}
+.dy-question{position:relative;flex:none;margin:14px 16px 0;padding:16px;display:flex;flex-direction:column;gap:10px}
 .dy-question[hidden]{display:none}
 .dy-q-kicker{font:700 var(--us-text-13)/1.2 var(--us-font-ui);color:var(--us-ink-60)}
-.dy-q-text{font:700 var(--us-text-20)/1.3 var(--us-font-ui);letter-spacing:-.01em;color:var(--us-ink-100);overflow-wrap:anywhere}
+.dy-q-text{font:700 var(--us-text-20)/1.3 var(--us-font-ui);letter-spacing:-.01em;color:var(--us-ink-100);overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
 .dy-q-answers{display:flex;flex-direction:column;gap:8px;font:21px/1.25 var(--us-font-hand);color:var(--us-ink-100);overflow-wrap:anywhere}
 .dy-q-blur{display:inline-block;filter:blur(6px);user-select:none;-webkit-user-select:none}
 .dy-q-unblur{display:inline-block;animation:dy-unblur .7s ease-out}
@@ -122,7 +126,7 @@ body.us-keyboard-open .dy-nav{opacity:0;pointer-events:none;transform:translateY
 
 /* What waits for me (Ti penso received, Lasciato per te, answers ready, a
    turn) and the notifications invite: the same card, under the question. */
-.dy-more{display:flex;flex-direction:column;gap:12px;margin:12px 16px 0}
+.dy-more{flex:none;display:flex;flex-direction:column;gap:8px;margin:10px 16px 0}
 .dy-more:empty{display:none}
 .dy-more #usTodayPriorityRegion:not([hidden]){display:block}
 .dy-notice-swipe{position:relative;display:flex;align-items:stretch;gap:8px}
@@ -349,9 +353,21 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 .dy-q-sign{display:flex;align-items:flex-start;gap:10px}
 .dy-q-sign>.dy-stk{flex:none;margin-top:1px}
 .dy-q-sign-body{flex:1;min-width:0;font:21px/1.25 var(--us-font-hand);overflow-wrap:anywhere}
-.dy-q-sign.is-asleep{align-items:center}
-.dy-q-sign.is-asleep .dy-q-hint{flex:1;max-width:none}
+.dy-q-sign.is-asleep,.dy-q-sign.is-act{align-items:center}
+.dy-q-sign.is-asleep .dy-q-hint,.dy-q-sign.is-act .dy-q-hint{flex:1;max-width:none}
 .dy-q-sign .dy-btn{flex:none}
+/* On Oggi an answer is one line: the whole one is in the Foglio. */
+#dyQuestion .dy-q-sign-body{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden}
+#dyQuestion .dy-q-sign-body>span{display:inline}
+/* One page: a notice on Oggi is one quiet row (title, line, action). */
+#dyMore .dy-notice{grid-template-areas:"copy action";min-height:56px;padding:10px 12px 10px 14px}
+#dyMore .dy-notice-kind{display:none}
+#dyMore .dy-notice-copy b,#dyMore .dy-notice-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-height:700px){
+  .dy-title{padding-top:4px}
+  .dy-pageline,.dy-q-kicker{display:none}
+  .dy-stage{min-height:160px}
+}
 /* «<nome> ti ha pensato» (mockup v4.1): their character, the heart, «Ricambia». */
 .dy-notice-think{display:flex;align-items:center;gap:12px;cursor:default}
 .dy-notice-think>.dy-stk{flex:none}

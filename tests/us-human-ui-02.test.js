@@ -422,8 +422,8 @@ test('Settings density: utility rows, couple card and footer stay compact withou
 test('Oggi density: arbitration stays authoritative; the dock holds one evidence card and the daily card', () => {
   // Il diario, ma pulito (15/11/2026): the dock and the M9B card are mounted in the
   // hidden hero (their layout was pruned); the arbitration that fills them is unchanged,
-  // and the notices of Oggi sit in a 12px column under the question (#dyMore).
-  assert.match(read('diario.css'), /\.dy-more\{display:flex;flex-direction:column;gap:12px;/);
+  // and the notices of Oggi sit in an 8px column under the question (#dyMore, one page since 20/11/2026).
+  assert.match(read('diario.css'), /\.dy-more\{flex:none;display:flex;flex-direction:column;gap:8px;/);
   const app = read('app.js');
   assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink'\]\)/);
   assert.match(app, /winner\.evidence===id\?'evidence':winner\.daily===id\?'daily':'suppressed'/);

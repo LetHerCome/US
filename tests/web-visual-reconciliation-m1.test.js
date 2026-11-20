@@ -132,7 +132,8 @@ test('M1.6 rende Home full-bleed senza cambiare il padding globale delle seconda
   // Il diario, ma pulito (15/11/2026): the full-bleed photo hero is hidden; the
   // page of today clears the nav itself and its photo fills its frame.
   const diario = read('diario.css');
-  assert.match(diario, /\.dy-oggi\{padding:0 0 calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\) \+ 24px\)\}/);
+  // One page (founder, 20/11/2026): the column fills the screen and keeps the bar clearance.
+  assert.match(diario, /\.dy-oggi\{box-sizing:border-box;display:flex;flex-direction:column;min-height:[^}]*padding:0 0 calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\) \+ 12px\)\}/);
   assert.match(diario, /\.dy-photo-img\{[^}]*object-fit:cover\}/);
   assert.match(css, /\.app\{[^}]*padding-bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 34px\)!important/);
 });

@@ -28,6 +28,22 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### Oggi in una pagina sola (20/11/2026)
+
+**Stato:** branch `claude/oggi-una-pagina` (nato dal branch fisso di staging a f8d86df3). Provato nel browser col finto Supabase; non ancora su staging, non in produzione. Richiesta del founder dopo la prova dell'APK di staging: «la home deve essere una pagina unica senza scorrere».
+
+**Il problema:** a 390×844 Oggi era alto circa 1010 px. La barra in basso copriva il «Rispondi» della domanda di oggi.
+
+**Cosa cambia:**
+- Oggi è alto quanto lo schermo e la foto prende lo spazio che resta: più piccola sui telefoni bassi, più grande su quelli alti.
+- La domanda di oggi ha una sola riga d'azione: il personaggio, chi ha risposto o chi dorme, e «Rispondi» (o «Leggi», «Modifica») accanto. Le risposte su Oggi stanno su una riga; intere sono nel foglio.
+- Gli avvisi sotto la domanda sono una riga sola: titolo, riga e bottone.
+- Sui telefoni più bassi di 700 px spariscono «Pagina N» e l'etichetta «La domanda di oggi»; se lo schermo non basta per la foto minima, la pagina scorre.
+
+Solo web (`diario.css`, `diario.js`, `native-frameless.css` per l'altezza dentro l'app): niente SQL, niente Edge, niente AAB.
+
+**Test:** `tests/oggi-una-pagina-browser.test.js` (5 stati della domanda × 360×780, 390×844, 412×915: niente scorrimento, foto almeno 200 px, bottoni sopra la barra); fallisce sul vecchio staging (1012 px su 844).
+
 ### Iscrizione: prima il codice, poi la domanda (14/11)
 
 **Stato:** branch `claude/attesa-dopo-invito` (da `main` dopo la 1.5.1). Provata nel browser col finto Supabase; non ancora su staging né in produzione.
