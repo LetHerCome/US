@@ -38,21 +38,21 @@ test('nav: aria-current still follows the .active tab (ui-foundation sync is unc
   assert.match(src, /function syncNavigation\(\) \{\s*Array\.from\(documentRef\.querySelectorAll\('\.dy-nav button'\)\)\.forEach\(\(button\) => \{\s*if \(button\.classList\.contains\('active'\)\) button\.setAttribute\('aria-current', 'page'\);\s*else button\.removeAttribute\('aria-current'\);/);
 });
 
-test('nav: ~56px before the safe area, 44px+ targets, 22px icons, no looping animation', () => {
+test('nav: ~50px before the safe area, 44px+ targets, 22px icons, no looping animation', () => {
   // Il diario, ma pulito (15/11/2026): the bar is 66px before the safe area
   // (84 with the 18 below); its buttons fill the bar above the safe area, icons 24px; the current
   // tab is ink, bold, with the red scribble; one hop when it changes, never a loop.
   const tokens = read('ui-foundation.css');
-  assert.match(tokens, /--us-nav-height:56px;/);
+  assert.match(tokens, /--us-nav-height:50px;/);
   const block = read('diario.css').split('\n').filter((line) => line.includes('.dy-nav')).join('\n');
-  assert.match(block, /\.dy-nav\{[^}]*height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:6px /);
+  assert.match(block, /\.dy-nav\{[^}]*height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:4px /);
   assert.match(block, /\.dy-nav \.dy-nav-icon\{width:22px;height:22px;/);
   assert.doesNotMatch(block, /infinite/, 'no looping animation on the nav');
   assert.match(block, /\.dy-nav button\.active\{color:var\(--us-ink-100\);font-weight:800\}/, 'active is still unmistakable');
   // La barra a goccia (20/11/2026): the hill under the page marks it; its icon lifts into it.
   assert.match(block, /\.dy-nav button\.active \.dy-nav-icon\{transform:translateY\(var\(--dy-ball-dy,-34px\)\);stroke-width:2\.2;/);
   assert.match(block, /html\[data-us-motion="reduced"\] :is\(\.dy-oggi,\.dy-nav,\.dy-over\) \*\{animation:none!important;transition:none!important\}/);
-  assert.match(read('fix4.css'), /@media \(orientation:landscape\) and \(max-height:560px\)\{:root\{--us-nav-height:52px\}/);
+  assert.match(read('fix4.css'), /@media \(orientation:landscape\) and \(max-height:560px\)\{:root\{--us-nav-height:48px\}/);
 });
 
 test('top: the pill is only as tall as its 44px controls and content starts right after it', () => {

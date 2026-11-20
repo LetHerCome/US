@@ -29,7 +29,7 @@ test('Barra a goccia static: five places with the heart in the middle', () => {
   assert.match(css, /\.dy-nav \.nlabel\{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset\(50%\)/);
   assert.match(css, /\.dy-nav button\.active \.dy-nav-icon\{transform:translateY\(var\(--dy-ball-dy,-34px\)\)/);
   assert.match(css, /\.dy-nav\.is-moving button\.active \.dy-nav-icon\{opacity:0;/);
-  assert.match(read('ui-foundation.css'), /--us-nav-height:56px;/);
+  assert.match(read('ui-foundation.css'), /--us-nav-height:50px;/);
   assert.match(read('ui-foundation.css'), /--us-nav-rise:16px;/);
   // No page hides the heart any more (it was a floating button over the content).
   assert.doesNotMatch(read('games.css'), /#thinkButton\{display:none/);
@@ -76,8 +76,8 @@ test('Barra a goccia browser: the hill follows the page, the heart sends only wh
       await page.waitForTimeout(400);
       assert.ok(Math.abs(await peakX() - await centre('home')) < 3, 'the ball starts over Oggi');
       const b0 = await ball();
-      assert.ok(Math.abs(b0.d - 46) < 1, 'a ball of 46 px');
-      assert.ok(b0.y < b0.top, 'its centre is above the edge of the bar');
+      assert.ok(Math.abs(b0.d - 44) < 1, 'a ball of 44 px');
+      assert.ok(b0.y > b0.top && b0.y - b0.d / 2 < b0.top - 12, 'it sits deep in the bar, its top rising over the edge');
       assert.ok(Math.abs(b0.ix - b0.x) < 1.5 && Math.abs(b0.iy - b0.y) < 1.5, 'the icon of the page is inside the ball');
       for (const p of ['bond', 'moments', 'quiz']) {
         await page.click(`.dy-nav button[data-page="${p}"]`);

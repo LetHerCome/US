@@ -822,7 +822,9 @@
   // round cradle cut into the bar. On a new page the ball sinks into the bar,
   // the cradle becomes a wave that slides to the new tab, and the ball rises
   // out of it there like a drop; then the icon comes back inside it.
-  const BALL_R = 23, BALL_LIFT = 3, BALL_GAP = 5, CRADLE_FILLET = 10;
+  // The ball sits deep in its cradle (founder: «deve affondare di più»): its
+  // centre 6 px below the edge, so only its top rises over the bar.
+  const BALL_R = 22, BALL_LIFT = -6, BALL_GAP = 5, CRADLE_FILLET = 10;
   const WAVE_DEPTH = 16, WAVE_W = 30, MOVE_MS = 720;
   function goccia() {
     const nav = d.querySelector('.dy-nav'), svg = nav?.querySelector('.dy-nav-bg');
