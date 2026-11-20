@@ -62,6 +62,8 @@ function go(id,options={}){
     return;
   }
   if(current==='bond')window.closeNoiSection?.();
+  // Impostazioni opens from all four pages; its back arrow returns there (settings.js).
+  if(id==='settings'&&current&&current!=='settings')window.usSettingsFrom=current;
   // Focus Photo is a state of Oggi only: left on, it kept Oggi's widgets inert
   // and the PET hidden on every other page until the user came back and tapped.
   if(current==='home'&&document.getElementById('homeHero')?.classList.contains('us-oggi-focus'))setOggiFocusPhoto(false);

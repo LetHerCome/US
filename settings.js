@@ -1108,11 +1108,12 @@ async function reportModal(){
 }
 
 function logoutConfirmationModal(){
-  openModal('Scollega questo telefono',`
-    <div class="us-settings2-modal-copy">Per rientrare in US userai la tua email o Google. Gli altri dispositivi restano collegati.</div>
+  // «Esci dall’account» (20/11/2026): the plain word for what «Scollega questo telefono» did.
+  openModal('Esci dall’account',`
+    <div class="us-settings2-modal-copy">Esci solo da questo telefono. Per rientrare in US userai la tua email o Google. Gli altri dispositivi restano collegati.</div>
     <div class="us-settings2-action-stack">
       <button type="button" class="ghost" id="usCancelLogout">Annulla</button>
-      <button type="button" class="us-settings2-disconnect" id="usConfirmLogout">Scollega questo telefono</button>
+      <button type="button" class="us-settings2-disconnect" id="usConfirmLogout">Esci</button>
     </div>
   `,'QUESTO TELEFONO');
   $('usCancelLogout')?.addEventListener('click',closeModal);
@@ -1123,7 +1124,7 @@ async function logout(){
   if(logoutInFlight)return;
   logoutInFlight=true;
   const btn=$('usConfirmLogout');
-  if(btn){btn.disabled=true;btn.textContent='Scollego…';}
+  if(btn){btn.disabled=true;btn.textContent='Esco…';}
   try{await window.revokeCurrentDevice?.();}catch(error){console.warn('[US Logout] device cleanup',error);}
   try{
     const {error}=await sb.auth.signOut({scope:'local'});
@@ -1131,8 +1132,17 @@ async function logout(){
     // Session gone: drop this phone's biometric protection record too.
     try{await window.UsAppLock?.reset?.();}catch(_e){}
     location.reload();
-  }catch(error){logoutInFlight=false;if(btn){btn.disabled=false;btn.textContent='Scollega questo telefono';}console.warn(error);toast('Non riesco a scollegarlo');}
+  }catch(error){logoutInFlight=false;if(btn){btn.disabled=false;btn.textContent='Esci';}console.warn(error);toast('Non riesco a farti uscire');}
 }
+
+// The back arrow of Impostazioni (20/11/2026): back to the page you opened it
+// from (your character is top right on all four), not always to Noi.
+function usSettingsReturn(){
+  const from=window.usSettingsFrom;
+  if(from==='quiz'&&typeof window.openQuizHub==='function')return window.openQuizHub({nav:true});
+  return window.go?.(['home','bond','moments'].includes(from)?from:'home',{nav:true});
+}
+window.usSettingsReturn=usSettingsReturn;
 
 async function action(name){
   // Which sheet is open: dc-settings.css gives each one the mockup's blocks.
