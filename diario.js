@@ -820,6 +820,8 @@
   // The bar is an svg: a flat top edge with one soft hill under the page you
   // are on. The hill follows the tab with a spring, flattens and widens while
   // it travels (the drop is moving), and springs up when it gets there.
+  // The bubble: a circle of 22 px rising 13 px, with 9 px fillets.
+  const BUBBLE_R = 22, BUBBLE_UP = 13, FILLET_R = 9;
   function goccia() {
     const nav = d.querySelector('.dy-nav'), svg = nav?.querySelector('.dy-nav-bg');
     if (!nav || !svg) return;
@@ -837,8 +839,19 @@
       if (!W) return;
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
       const x = st.x ?? W / 2, h = Math.max(0, st.h);
-      const peak = R * (1 - h), half = 30 + (1 - Math.min(1, h)) * 18, a = x - half, b = x + half;
-      const top = `M0 ${R} L${a} ${R} C${a + half * 0.5} ${R} ${x - half * 0.48} ${peak} ${x} ${peak} C${x + half * 0.48} ${peak} ${b - half * 0.5} ${R} ${b} ${R} L${W} ${R}`;
+      // A round bubble (founder, 20/11/2026: «non è perfettamente rotondo»): the
+      // top of a circle (radius BUBBLE_R) rising up to BUBBLE_UP above the edge,
+      // joined to the flat edge by two small fillets (radius FILLET_R) tangent
+      // to both. While the drop travels it sinks (h < 1) and stays round.
+      const up = Math.min(BUBBLE_UP * h, BUBBLE_R * 0.95);
+      let top = `M0 ${R} L${W} ${R}`;
+      if (up > 0.4) {
+        const r = BUBBLE_R, f = FILLET_R, dy = r - up;
+        const s = Math.sqrt(Math.max(0, (r + f) ** 2 - (dy + f) ** 2));
+        const k = f / (r + f), tx = s * (1 - k), ty = R - f + (dy + f) * k;
+        const n = (v) => +v.toFixed(2);
+        top = `M0 ${R} L${n(x - s)} ${R} A${f} ${f} 0 0 0 ${n(x - tx)} ${n(ty)} A${r} ${r} 0 0 1 ${n(x + tx)} ${n(ty)} A${f} ${f} 0 0 0 ${n(x + s)} ${R} L${W} ${R}`;
+      }
       edge.setAttribute('d', top);
       fill.setAttribute('d', `${top} L${W} ${H} L0 ${H} Z`);
     }

@@ -21,7 +21,7 @@ test('M6A conserva coppie SVG OFF/ON reali senza tint o mask', () => {
   assert.match(diario, /\.dy-nav \.dy-nav-scrib\{[^}]*opacity:0;/);
   assert.match(diario, /\.dy-nav button\.active\{color:var\(--us-ink-100\);font-weight:800\}/);
   // La barra a goccia (20/11/2026): the hill marks the page; its icon lifts into it, the scribble rests.
-  assert.match(diario, /\.dy-nav button\.active \.dy-nav-icon\{transform:translateY\(-5px\);stroke-width:2\.3\}/);
+  assert.match(diario, /\.dy-nav button\.active \.dy-nav-icon\{transform:translateY\(-19px\);stroke-width:2\.3\}/);
   assert.doesNotMatch(css + diario, /filter:\s*(?:saturate|brightness)/, 'no tint filters on the icons');
 });
 

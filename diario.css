@@ -39,15 +39,15 @@ em.dy-em,.dy-h1 em,.dy-sheet-title em{font-family:var(--us-font-editorial);font-
 @keyframes dy-hop{0%{transform:none}35%{transform:translateY(-14px) rotate(-4deg)}70%{transform:none}85%{transform:translateY(-3px)}100%{transform:none}}
 
 /* ---------------------------------------------------------------- bar */
-.dy-nav{position:fixed;left:0;right:0;bottom:0;z-index:var(--us-layer-chrome);display:grid;grid-template-columns:1fr 1fr 76px 1fr 1fr;height:calc(var(--us-nav-height) + max(18px,var(--us-safe-bottom)));padding:6px calc(10px + var(--us-safe-right)) max(18px,var(--us-safe-bottom)) calc(10px + var(--us-safe-left));background:transparent}
-.dy-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;border:0;border-radius:14px;padding:0;background:transparent;cursor:pointer;color:var(--us-ink-60);font:600 11.5px/1.1 var(--us-font-ui);transition:color .2s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.dy-nav .dy-nav-icon{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.dy-nav{position:fixed;left:0;right:0;bottom:0;z-index:var(--us-layer-chrome);display:grid;grid-template-columns:1fr 1fr 86px 1fr 1fr;height:calc(var(--us-nav-height) + max(18px,var(--us-safe-bottom)));padding:6px calc(10px + var(--us-safe-right)) max(18px,var(--us-safe-bottom)) calc(10px + var(--us-safe-left));background:transparent}
+.dy-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;border:0;border-radius:14px;padding:0;background:transparent;cursor:pointer;color:var(--us-ink-60);font:600 11.5px/1.1 var(--us-font-ui);transition:color .2s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.dy-nav .dy-nav-icon{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .dy-nav .dy-nav-scrib{width:16px;height:6px;opacity:0;fill:none;stroke:var(--us-pencil);stroke-width:2.2;stroke-linecap:round}
 .dy-nav button.active{color:var(--us-ink-100);font-weight:800}
 .dy-nav button.active .dy-nav-scrib{opacity:0}
 .dy-nav button.active .dy-nav-scrib path{stroke-dasharray:18;animation:dy-draw .38s ease-out}
 .dy-nav button[data-page] .dy-nav-icon{transition:transform .42s cubic-bezier(.2,1.5,.4,1),stroke-width .2s}
-.dy-nav button.active .dy-nav-icon{transform:translateY(-5px);stroke-width:2.3}
+.dy-nav button.active .dy-nav-icon{transform:translateY(-19px);stroke-width:2.3}
 @keyframes dy-draw{from{stroke-dashoffset:18}to{stroke-dashoffset:0}}
 @keyframes dy-lift{0%{transform:none}40%{transform:translateY(-3px)}100%{transform:none}}
 body.us-keyboard-open .dy-nav{opacity:0;pointer-events:none;transform:translateY(120%)}

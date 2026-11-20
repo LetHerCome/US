@@ -54,10 +54,10 @@ test('HUMAN-UI-02 conserva target touch >= 44px con una nav compatta', () => {
   // Il diario, ma pulito (15/11/2026): four equal columns of a full-width bar;
   // each button is the bar height (--us-nav-height) minus its padding, 44px+ even in short landscape.
   const css = read('diario.css');
-  assert.match(css, /\.dy-nav\{[^}]*grid-template-columns:1fr 1fr 76px 1fr 1fr;height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:6px /);
+  assert.match(css, /\.dy-nav\{[^}]*grid-template-columns:1fr 1fr 86px 1fr 1fr;height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:6px /);
   assert.match(foundation(), /--us-nav-height:56px;/);
   assert.match(read('fix4.css'), /\{:root\{--us-nav-height:52px\}/);
-  assert.match(css, /\.dy-nav \.dy-nav-icon\{width:24px;height:24px;/);
+  assert.match(css, /\.dy-nav \.dy-nav-icon\{width:22px;height:22px;/);
 });
 
 test('M1 applica il top chrome APK senza introdurre fullscreen/settings o relocation Home', () => {

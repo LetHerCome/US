@@ -21,10 +21,10 @@ test('Barra a goccia static: five places with the heart in the middle', () => {
   assert.match(nav, /id="dyThinkFly"/);
   assert.doesNotMatch(nav, /onclick="sendThinkSignal\(\)"/, 'the heart is held, not clicked');
   const css = read('diario.css');
-  assert.match(css, /\.dy-nav\{[^}]*grid-template-columns:1fr 1fr 76px 1fr 1fr;/);
+  assert.match(css, /\.dy-nav\{[^}]*grid-template-columns:1fr 1fr 86px 1fr 1fr;/);
   assert.match(css, /\.dy-nav button\{[^}]*color:var\(--us-ink-60\)/, 'labels of the other pages are readable');
   assert.match(read('ui-foundation.css'), /--us-nav-height:56px;/);
-  assert.match(read('ui-foundation.css'), /--us-nav-rise:18px;/);
+  assert.match(read('ui-foundation.css'), /--us-nav-rise:16px;/);
   // No page hides the heart any more (it was a floating button over the content).
   assert.doesNotMatch(read('games.css'), /#thinkButton\{display:none/);
   assert.doesNotMatch(read('moments-albums.css'), /body:has\(#moments\.page\.active\) #thinkButton/);
@@ -59,11 +59,11 @@ test('Barra a goccia browser: the hill follows the page, the heart sends only wh
       });
       const peakX = () => page.evaluate(() => {
         const d = document.querySelector('.dy-nav-edge').getAttribute('d');
-        const nums = d.match(/-?[\d.]+/g).map(Number);
-        // the top of the hill: the points at the lowest y (the two handles and the peak), centred
-        const pts = []; for (let i = 0; i + 1 < nums.length; i += 2) pts.push({ x: nums[i], y: nums[i + 1] });
-        const top = Math.min(...pts.map((p) => p.y)); const at = pts.filter((p) => p.y === top);
-        return at.reduce((s, p) => s + p.x, 0) / at.length;
+        // The bubble is fillet, round arc, fillet: the round arc (the 22 px one)
+        // runs between the ends of the first fillet and of itself; its middle is the bubble.
+        const arcs = [...d.matchAll(/A([\d.]+) [\d.]+ 0 0 [01] (-?[\d.]+) (-?[\d.]+)/g)].map((m) => ({ r: Number(m[1]), x: Number(m[2]) }));
+        if (arcs.length !== 3 || arcs[1].r !== 22) return NaN;
+        return (arcs[0].x + arcs[1].x) / 2;
       });
       const centre = (page_) => page.evaluate((p) => { const b = document.querySelector(`.dy-nav button[data-page="${p}"]`).getBoundingClientRect(); return b.left + b.width / 2; }, page_);
       await page.waitForTimeout(400);
