@@ -198,8 +198,10 @@ async function hydrateUsCoupleContext(){
   try{
     [coupleResult,profilesResult]=await Promise.all([
       sb.from('couples').select('id,name,started_on,sky_city,sky_minutes,created_at').eq('id',coupleId).maybeSingle(),
-      // character_shape (diario pulito) exists after the staging migration: without it, read as before.
-      sb.from('profiles').select('id,display_name,role,couple_id,person_color,character_shape').eq('couple_id',coupleId).order('created_at',{ascending:true})
+      // character_shape (diario pulito) and the outfit (guardaroba, 20/11/2026) exist after the
+      // staging migrations: without them, read what the server has, as before.
+      sb.from('profiles').select('id,display_name,role,couple_id,person_color,character_shape,character_head,character_face').eq('couple_id',coupleId).order('created_at',{ascending:true})
+        .then(r=>r?.error?sb.from('profiles').select('id,display_name,role,couple_id,person_color,character_shape').eq('couple_id',coupleId).order('created_at',{ascending:true}):r)
         .then(r=>r?.error?sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true}):r)
     ]);
   }catch(error){

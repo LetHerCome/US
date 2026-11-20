@@ -158,7 +158,8 @@ function paintFeedbackRow(){
 function paintSettingsPage(){
   paintCoupleCard();paintCharacterRow();paintStatusRow();paintAspetto();paintDistanceUnit();paintDistanceRow();paintFeedbackRow();
 }
-window.UsSettingsPage={paint:paintSettingsPage};
+// The angolo di noi opens the shape and the colour from its wardrobe (diario.js).
+window.UsSettingsPage={paint:paintSettingsPage,action:(name)=>action(name)};
 
 async function hydrateUsSettings(){
   if(!window.usProfile)return;
