@@ -28,9 +28,24 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### Barra e tastiera: le correzioni dopo la barra a goccia (20/11/2026)
+
+**Stato:** branch `claude/barra-tastiera` (nato dal branch fisso di staging a 0539b52b). Provato nel browser col finto Supabase; non ancora su staging, non in produzione.
+
+**Cosa cambia:**
+- In Impostazioni, dove nessuna delle quattro pagine è tua, la pallina affonda e la barra torna piatta. Prima restava sull'ultima pagina, e sembrava di essere in Gioca.
+- Il cuore resta al centro della barra anche in Impostazioni. Lo nascondeva una vecchia regola, e al suo posto restava un buco.
+- Tornando su una pagina, la pallina risale lì come una goccia.
+- Tastiera:
+  - il nome del diario, all'iscrizione, ora accetta le emoji: prima Gboard le toglieva per `autocomplete="off"`;
+  - su Android i campi dove si scrive la parola di conferma (Esci dalla coppia, Elimina account) tengono le maiuscole e nessuna correzione, come chiedono;
+  - il titolo dei preset del calendario si taglia per caratteri e non spezza più un'emoji a metà.
+
+**Da sapere prima della produzione:** solo web (`diario.js`, `settings2.css`, `index.html`, `app.js`, `calendar.js`); nessuna migrazione.
+
 ### La barra a goccia, il Ti penso al centro e il tuo personaggio (20/11/2026)
 
-**Stato:** branch `claude/barra-goccia` (nato dal branch fisso di staging a de64e5c1). Provato nel browser col finto Supabase, in chiaro e in scuro, con un video della prova; non ancora su staging, non in produzione. Il founder voleva rivedere la barra (troppo alta), un'animazione nello stile di una barra a goccia vista su Pinterest, le Impostazioni fuori da Noi, e ha scelto: Ti penso al centro, Lasciato per te in alto, il proprio personaggio come profilo.
+**Stato:** in staging con la PR #268 (merge 0539b52b), il 20/11/2026; non in produzione. Il founder voleva rivedere la barra (troppo alta), un'animazione nello stile di una barra a goccia vista su Pinterest, le Impostazioni fuori da Noi, e ha scelto: Ti penso al centro, Lasciato per te in alto, il proprio personaggio come profilo.
 
 **Cosa cambia:** la barra in basso ha cinque posti: Oggi, Noi, il cuore, Ricordi, Gioca. Prima era alta 66 px. Rifatta uguale al video di riferimento del founder: solo icone (i nomi restano per i lettori di schermo), icone spente all'inchiostro 60%. La barra è alta 50 px più la striscia dei gesti (48 in orizzontale sugli schermi bassi); tasti di 46 px. Misure e tempi presi dal video, fotogramma per fotogramma (raddrizzato, nei punti del suo iPhone da 375): icone di 27 px; una pallina di 54 px del colore della barra, col centro 10,5 px sotto il bordo, in un incavo tondo con 8,5 px di spiraglio e bordi morbidi; dentro, l’icona della pagina. Cambiando pagina (600 ms) la pallina affonda con l’icona in 140 ms, l’incavo diventa un’onda profonda 40 px, più ripida davanti, che corre veloce e rallenta arrivando; lì la pallina riemerge come una goccia con l’icona nuova che cresce, e l’onda si richiude in incavo. Le icone e il cuore che l’onda attraversa spariscono mentre passa. Confronto numerico col video: scarto medio di circa 1,5 px sul profilo della barra. L’ombra avvolge barra e pallina come una forma sola. Al centro, dentro la barra, c'è il Ti penso (40 px), con un anello nel colore di noi. Si manda tenendo premuto: il cuore si riempie dal basso in 650 ms e parte quando è pieno. Un tocco veloce non manda niente e mostra «Tieni premuto il cuore per mandare un Ti penso»; tastiera e lettori di schermo lo mandano subito. In Oggi, in alto: Lasciato per te a sinistra, «us» al centro, il tuo personaggio a destra. Il personaggio sta in alto a destra in tutte e quattro le pagine e apre le Impostazioni; l'ingranaggio esce da Noi. In Ricordi la mappa passa alla fine della riga dei filtri, così il titolo resta su una riga. Gioca e Ricordi non nascondono più il cuore (erano regole del vecchio cuore che galleggiava sul contenuto). Oggi resta una pagina sola: la foto può scendere a 204 px sugli schermi più bassi.
 

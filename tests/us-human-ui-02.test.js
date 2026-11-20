@@ -413,7 +413,8 @@ test('Settings density: utility rows, couple card and footer stay compact withou
   assert.doesNotMatch(block, /#[0-9a-f]{3,6}\b/i, 'no hard-coded colours');
   assert.deepEqual(block.match(/var\(--us-(tu|partner|rosa|lilla)\)/g), ['var(--us-tu)'], 'only the dot of «Il tuo colore»');
   assert.match(block, /\.dy-set-dot\{[^}]*background:var\(--us-tu\)/);
-  assert.match(read('settings2.css'), /body:has\(#settings\.page\.active\) #thinkButton\{\s*display:none!important;/);
+  // The Ti penso lives in the bar (barra a goccia): Settings keeps it, no hole in the bar.
+  assert.doesNotMatch(read('settings2.css'), /body:has\(#settings\.page\.active\) #thinkButton\{\s*display:none!important;/);
   const page = html.match(/<main id="settings"[\s\S]*?<\/main>/)?.[0] || '';
   for (const name of ['profile-photo', 'notifications', 'location', 'feedback', 'sync-status', 'relationship-date', 'story-archive', 'together-mode']) {
     assert.match(page, new RegExp(`data-us-setting="${name}"`), name);

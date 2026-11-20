@@ -6193,6 +6193,9 @@ function normalizeAndroidNaturalTextInputs(root=document){
   root?.querySelectorAll?.('textarea,input')?.forEach?.(node=>nodes.push(node));
   for(const el of nodes){
     if(el.closest?.('.auth-overlay'))continue;
+    // A field that asked for a literal word (the CONFIRM words: capitals, no
+    // spellcheck) keeps what it asked for.
+    if(el.getAttribute?.('spellcheck')==='false'||el.getAttribute?.('autocapitalize')==='characters')continue;
     const tag=el.tagName?.toLowerCase();
     const type=String(el.getAttribute?.('type')||'text').toLowerCase();
     const mode=String(el.getAttribute?.('inputmode')||'').toLowerCase();

@@ -28,7 +28,7 @@ function fieldsWithoutSuggestions() {
 
 test('only codes, confirmation words, hours and sign-up names tell the keyboard «no suggestions»', () => {
   assert.deepEqual(fieldsWithoutSuggestions(), [
-    'mc3Code', 'mc3CoupleName', 'mc3CreateName', 'mc3JoinCode', 'mc3JoinName',
+    'mc3Code', 'mc3CreateName', 'mc3JoinCode', 'mc3JoinName',
     'usAccountDeleteConfirm', 'usCalendarEndTimeInput', 'usCalendarStartTimeInput', 'usLeaveCoupleConfirm',
   ]);
 });
