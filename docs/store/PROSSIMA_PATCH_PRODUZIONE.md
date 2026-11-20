@@ -28,9 +28,25 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### La foto del giorno (20/11/2026)
+
+**Stato:** branch `claude/foto-del-giorno` (nato dal branch fisso di staging a 1b64c236). Provato nel browser col finto Supabase; non ancora su staging, non in produzione.
+
+**Cosa cambia:**
+- **Una foto per tutta la giornata.** Prima la foto di Oggi cambiava a caso ogni ora e a ogni tocco. Ora è scelta con un senso, uguale sui due telefoni:
+  1. un Ricordo di questo stesso giorno in un anno passato, fino a 10 anni indietro, dal più vicino; viene letto anche se è più vecchio degli ultimi 120;
+  2. altrimenti una foto aggiunta nelle ultime 36 ore;
+  3. altrimenti un Ricordo che resta tutto il giorno.
+- **Il perché sulla foto:** lo dice l'etichetta, per esempio «Un anno fa, proprio oggi» o «Questa foto è di ieri». L'anniversario viene prima anche del countdown.
+- **Il tocco apre il Ricordo** in Ricordi, invece di passare alla foto successiva.
+- **Tieni premuto: «Non mostrarla più in Oggi?».** La foto resta nei Ricordi; vale per questo telefono, salvato nel telefono e non nel database. Se le foto sono tutte nascoste, Oggi ne mostra comunque una.
+- **Widget Foto e giorni:** segue la stessa foto e la cambia solo dopo mezzanotte.
+
+**Da sapere prima della produzione:** solo web (`app.js`, `diario.js`, `index.html`, `i18n-en.js`); nessuna migrazione. Una lettura in più su `moments` per gli anniversari, con al massimo 10 date esatte.
+
 ### Accessibilità: testo grande, contrasto, Ti penso col lettore di schermo (20/11/2026)
 
-**Stato:** branch `claude/accessibilita` (nato dal branch fisso di staging a 6b4f7b0f). Provato nel browser col finto Supabase, in chiaro e in scuro, simulando il testo al 130% e al 200%; non ancora su staging, non in produzione. **Da provare sui telefoni:** la parte Android vale solo da un APK nuovo, quella iPhone da una build TestFlight.
+**Stato:** in staging con la PR #271 (merge 1b64c236), il 20/11/2026; non in produzione. Android e iPhone vanno ancora provati con APK e TestFlight. **Da provare sui telefoni:** la parte Android vale solo da un APK nuovo, quella iPhone da una build TestFlight.
 
 **Cosa cambia:**
 - **Testo grande dal telefono:**

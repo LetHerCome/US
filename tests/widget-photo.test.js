@@ -61,12 +61,15 @@ test('store: up to three photos by key, only the ones the snapshot names, all go
   assert.match(read('platform.js'), /\.slice\(0, 2\)\s*\.map\(\(item\) => \(\{ key: item\.key, takenOn: safeCivilDate\(item\.takenOn\), label: safeText\(item\.label, 60\) \}\)\)/);
 });
 
+// La foto del giorno (20/11/2026): Oggi keeps one photo the whole day; the
+// widget's next photos are the ones Oggi will pick past midnight, never the one shown.
 test('app: the next two hours picked exactly as Oggi picks them, never the photo just shown', () => {
   const app = read('app.js');
-  assert.match(app, /function homeRotationPick\(rows,key,avoid\)\{/);
-  assert.match(app, /const row=homeRotationPick\(rows,homeRotationKey\(\),homePhotoPath\);/, 'Oggi uses it');
+  assert.match(app, /function homeDayPick\(rows,day=homeDayKey\(\),\{now=Date\.now\(\),hidden=homeHiddenPhotos\(\)\}=\{\}\)\{/);
+  assert.match(app, /const row=homeDayPick\(usHomePhotoRows\);/, 'Oggi uses it');
   const upcoming = app.slice(app.indexOf('  async upcomingPhotos(){'), app.indexOf('  async latestPhoto(){'));
-  assert.match(upcoming, /homeRotationPick\(rows,homeRotationKey\(new Date\(Date\.now\(\)\+hour\*3600e3\)\),avoid\)/);
+  assert.match(upcoming, /homeDayPick\(rows,homeDayKey\(new Date\(Date\.now\(\)\+hour\*3600e3\)\),\{now:Date\.now\(\)\+hour\*3600e3\}\)/);
+  assert.match(upcoming, /if\(!row\?\.storage_path\|\|row\.storage_path===avoid\)continue;/);
   assert.match(upcoming, /avoid=row\.storage_path;/);
   assert.match(upcoming, /usGetSignedUrl\(row\.storage_path,3600\)/);
   // The signed URLs stay in the WebView: native receives bytes and keys.
