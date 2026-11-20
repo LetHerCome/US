@@ -101,7 +101,8 @@ test('M8A density pass: Ricordi prioritizes memories over chrome without changin
   assert.match(css, /#moments \.ricordi-rivivi-card:not\(\.ricordi-rivivi-note\)\{[\s\S]*?grid-template-columns:108px minmax\(0,1fr\)/);
   // Mockup v5 «I fogli» (16/11/2026): Conservati's door is a row of the Lasciato per te sheets (diario.css .dy-lfy-kept).
   assert.match(css, /#moments \.ricordi-story \.moment-card\.moment-postit\.ricordi-feature img\{\s*aspect-ratio:16\/9!important;/);
-  assert.match(css, /body:has\(#moments\.page\.active\) #thinkButton\{\s*display:none!important;/);
+  // La barra a goccia (20/11/2026): Ti penso is in the bar on every page, Ricordi included.
+  assert.doesNotMatch(css, /body:has\(#moments\.page\.active\) #thinkButton/);
   const page = read('index.html').match(/<main id="moments" class="page">[\s\S]*?<\/main>/)?.[0] || '';
   const order = ['id="ricordiRivivi"', 'Mese per mese', 'id="momentsGrid"'].map((s) => page.indexOf(s));
   assert.deepEqual([...order].sort((a,b)=>a-b), order);

@@ -13,7 +13,7 @@ const { start, pageFor } = require('./helpers/countdown-browser');
 test('Oggi static: the column fills the screen and the photo takes what is left', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'diario.css'), 'utf8');
   assert.match(css, /\.dy-oggi\{box-sizing:border-box;display:flex;flex-direction:column;min-height:calc\(var\(--us-viewport-height,100dvh\) - var\(--us-safe-top\)\)/);
-  assert.match(css, /\.dy-stage\{position:relative;flex:1 1 0;min-height:220px/);
+  assert.match(css, /\.dy-stage\{position:relative;flex:1 1 0;min-height:210px/);
   // In the app #home starts under the status bar (native-frameless.css): the column is the whole screen.
   const native = fs.readFileSync(path.join(__dirname, '..', 'native-frameless.css'), 'utf8');
   assert.match(native, /html\.us-native \.dy-oggi \{\s*min-height: var\(--us-viewport-height, 100dvh\);/);

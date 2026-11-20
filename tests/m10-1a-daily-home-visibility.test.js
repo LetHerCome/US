@@ -153,7 +153,8 @@ test('M10.1B: il controllo top-left “Oggi / Domanda” (todayOrb) è rimosso',
   // Il diario, ma pulito (15/11/2026): the three zones are the header of Oggi:
   // Ti penso on the left, «us» in the centre, Lasciato per te on the right.
   const head = html.match(/<header class="dy-head">[\s\S]*?<\/header>/)?.[0] || '';
-  const zones = ['id="thinkButton"', 'class="dy-mark"', 'id="leftForYouPartnerEntry"'].map((s) => head.indexOf(s));
+  // La barra a goccia (20/11/2026): Lasciato per te on the left, «us» in the centre, you on the right; Ti penso is in the bar.
+  const zones = ['id="leftForYouPartnerEntry"', 'class="dy-mark"', 'data-dy-me'].map((s) => head.indexOf(s));
   assert.ok(zones.every((at, i) => at >= 0 && (i === 0 || at > zones[i - 1])), `header zones ${zones}`);
   assert.match(read('diario.css'), /\.dy-head\{display:flex;justify-content:space-between;/);
 });

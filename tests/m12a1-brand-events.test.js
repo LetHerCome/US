@@ -39,7 +39,8 @@ test('top bar: accessible, inert, centred, and still three balanced zones', () =
   const css = read('diario.css');
   assert.match(css, /\.dy-mark\{[^}]*user-select:none/);
   assert.match(css, /\.dy-head\{display:flex;justify-content:space-between;align-items:center;/);
-  assert.ok(topBar.indexOf('id="thinkButton"') < topBar.indexOf('dy-mark') && topBar.indexOf('dy-mark') < topBar.indexOf('id="leftForYouPartnerEntry"'));
+  // La barra a goccia (20/11/2026): Lasciato per te, «us», you.
+  assert.ok(topBar.indexOf('id="leftForYouPartnerEntry"') < topBar.indexOf('dy-mark') && topBar.indexOf('dy-mark') < topBar.indexOf('data-dy-me'));
 });
 
 // ---------------------------------------------------------------- AURORA

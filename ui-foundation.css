@@ -257,7 +257,8 @@
   --us-safe-right:var(--safe-area-inset-right,env(safe-area-inset-right,0px));
   --us-safe-bottom:var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px));
   --us-safe-left:var(--safe-area-inset-left,env(safe-area-inset-left,0px));
-  --us-nav-height:66px;               /* diario: the bar is 84 with the 18 below */
+  --us-nav-height:50px;               /* la barra a goccia (20/11/2026): 50 + the gesture strip */
+  --us-nav-rise:16px;                 /* how far the goccia hill rises above the bar */
   --us-viewport-height:100dvh;
   --us-focus:0 0 0 3px var(--us-pencil);
   --us-premium-glass:color-mix(in srgb,var(--us-color-surface) 94%,transparent);

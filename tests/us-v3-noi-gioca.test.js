@@ -21,7 +21,8 @@ test('Noi icons: well-formed markup, the approved settings icon, a real list ico
   assert.ok(noi.length > 1000, 'Noi V2 markup found');
   assert.doesNotMatch(html, /<span class="us-icon"\s+<img/, 'no half-open icon tag (the old grey square)');
   // Il diario, ma pulito (15/11/2026): Settings is the stroke gear of the Noi header «I vostri giorni».
-  assert.match(noi, /<header class="dy-hd">\s*<h2 class="dy-h2">I vostri <em>giorni<\/em><\/h2>[\s\S]*?<button type="button" class="dy-ib" onclick="go\('settings',\{nav:true\}\)" aria-label="Impostazioni"><svg viewBox="0 0 24 24"/);
+  // La barra a goccia (20/11/2026): your character, top right, opens Impostazioni (the gear left Noi).
+  assert.match(noi, /<header class="dy-hd">\s*<h2 class="dy-h2">I vostri <em>giorni<\/em><\/h2>[\s\S]*?<button type="button" class="dy-ib dy-me" data-dy-me onclick="go\('settings',\{nav:true\}\)" aria-label="Tu: profilo e impostazioni">/);
   // Noi nuova (03/11/2026): the two views are words, «Mese» and «Prossimi»; no tiles.
   assert.match(noi, /id="usNoiV2ModeList"[^>]*>Prossimi<\/button>/);
   assert.doesNotMatch(noi, /data-noi-open-link/);
@@ -172,7 +173,8 @@ test('Gioca round 3: daily first, the week, bento games, weekly question, then t
   // Il diario, ma pulito (15/11/2026): «Giochi a due» with its tag, the (hidden)
   // daily slot, the challenge of the week, «Da giocare» (Per voi first, then the
   // games, one row each), La vostra domanda, then the rest. No 7-day strip.
-  const order = ['<header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due</em></h2>${dyCountTag()}</header>', '<div class="us-gv2-daily-slot" data-gv4-daily-slot hidden></div>', 'data-wc-slot', 'class="dy-games"', 'data-gv2-action="per-voi"', '${swipe}${families}', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
+  // La barra a goccia (20/11/2026): your character follows the tag, top right.
+  const order = ['<header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due</em></h2>${dyCountTag()}<span class="dy-hd-tools">','<div class="us-gv2-daily-slot" data-gv4-daily-slot hidden></div>', 'data-wc-slot', 'class="dy-games"', 'data-gv2-action="per-voi"', '${swipe}${families}', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
   const positions = order.map((needle) => hub.indexOf(needle));
   assert.ok(positions.every((p) => p >= 0), JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a, b) => a - b), positions);

@@ -322,7 +322,9 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   const css = read('games.css') + read('identity.css');
   // Il diario, ma pulito (15/11/2026): the top chrome of Oggi is its header (.dy-head).
   const top = html.match(/<header class="dy-head">[\s\S]*?<\/header>/)?.[0] || '';
-  assert.match(top, /id="thinkButton"/);
+  // La barra a goccia (20/11/2026): Ti penso is the middle of the bottom bar.
+  assert.match(html.match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0] || '', /id="thinkButton"/);
+  assert.doesNotMatch(top, /id="thinkButton"/);
   assert.doesNotMatch(top, /id="usPerVoiTop"/, 'Per voi is a Gioca action, not a global top-bar action');
   // Il diario, ma pulito (15/11/2026): Per voi is a «Da giocare» row; what waits
   // for you is its status tag («tocca a te», «risposte pronte»), not the orbit.
