@@ -22,6 +22,10 @@ public final class UsWebView extends CapacitorWebView {
 
     public UsWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        // Accessibilità (20/11/2026): text follows the phone's font size, from
+        // 85% to 200% (a change of size recreates the activity, so it is read again).
+        float fontScale = context.getResources().getConfiguration().fontScale;
+        getSettings().setTextZoom(Math.max(85, Math.min(200, Math.round(fontScale * 100))));
     }
 
     @Override

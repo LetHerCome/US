@@ -8,6 +8,27 @@
     document.documentElement?.classList?.add('us-native');
     if (platformName === 'android' || platformName === 'ios') document.documentElement?.classList?.add(`us-native-${platformName}`);
   }
+  // Accessibilità (20/11/2026): on iPhone the WebView ignores the phone's text
+  // size (Dynamic Type). Read it from the system body font (17 px at the
+  // default size) and enlarge the text the way Android's text zoom does
+  // (UsWebView.java), from 85% to 200%; read again when US comes back.
+  function applyIosTextSize() {
+    if (platformName !== 'ios' || typeof document === 'undefined' || !document.body) return;
+    const probe = document.createElement('span');
+    probe.setAttribute('aria-hidden', 'true');
+    probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;font:-apple-system-body';
+    probe.textContent = 'x';
+    document.body.appendChild(probe);
+    const px = parseFloat(getComputedStyle(probe).fontSize) || 17;
+    probe.remove();
+    const pct = `${Math.max(85, Math.min(200, Math.round((px / 17) * 100)))}%`;
+    for (const el of [document.documentElement, document.body]) el.style.setProperty('-webkit-text-size-adjust', pct);
+  }
+  if (platformName === 'ios' && typeof document !== 'undefined') {
+    if (document.body) applyIosTextSize();
+    else document.addEventListener('DOMContentLoaded', applyIosTextSize, { once: true });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) applyIosTextSize(); });
+  }
   const plugins = new Map();
   let nativeBackListener = null;
   let nativeAppUrlListener = null;

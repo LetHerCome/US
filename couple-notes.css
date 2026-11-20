@@ -87,7 +87,7 @@
 .us-postit .us-notes-title{min-height:40px;padding:2px 0!important;font:600 20px/1.2 var(--us-font-display)}
 .us-postit .us-notes-text{min-height:48px;padding:2px 0!important;resize:none;field-sizing:content;font:400 15px/1.45 var(--us-font-ui)}
 .us-postit :is(.us-notes-title,.us-notes-text,.us-notes-item-text)::placeholder{color:rgba(26,16,32,.55)}
-.us-postit :is(.us-notes-title,.us-notes-text):focus-visible{box-shadow:inset 0 -1px 0 var(--postit-ink)!important}
+.us-postit :is(.us-notes-title,.us-notes-text,.us-notes-item-text):focus-visible{box-shadow:inset 0 -1px 0 var(--postit-ink)!important}
 .us-notes-items{display:grid;margin:0;padding:0;list-style:none}
 .us-notes-item{display:flex;align-items:center;gap:10px;min-height:46px;border-top:1px solid var(--postit-line)}
 .us-notes-item:last-child{border-bottom:1px solid var(--postit-line)}

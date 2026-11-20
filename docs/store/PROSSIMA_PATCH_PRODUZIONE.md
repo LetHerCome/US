@@ -28,9 +28,30 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### Accessibilità: testo grande, contrasto, Ti penso col lettore di schermo (20/11/2026)
+
+**Stato:** branch `claude/accessibilita` (nato dal branch fisso di staging a 6b4f7b0f). Provato nel browser col finto Supabase, in chiaro e in scuro, simulando il testo al 130% e al 200%; non ancora su staging, non in produzione. **Da provare sui telefoni:** la parte Android vale solo da un APK nuovo, quella iPhone da una build TestFlight.
+
+**Cosa cambia:**
+- **Testo grande dal telefono:**
+  - su Android il testo segue la dimensione caratteri del telefono, dall'85% al 200% (`UsWebView.java`, `setTextZoom`);
+  - su iPhone segue la dimensione testo (Dynamic Type), letta dal font di sistema e applicata con `-webkit-text-size-adjust` (`platform.js`); viene riletta quando US torna in primo piano.
+- **Pagine col testo molto grande:** i titoli vanno a capo invece di uscire dallo schermo; Gioca passa a una tessera per riga quando le parole non ci stanno più in due; Oggi si può scorrere.
+- **Contrasto:**
+  - i giorni passati del calendario passano da 3:1 a 4,5:1;
+  - le lettere dei giorni della settimana passano all'inchiostro 60% e a 12 px;
+  - la scritta «Lavagna», che era scura sulla sua etichetta scura, ora è chiara.
+- **Misure minime:**
+  - etichette piccole, giorni della settimana e date dei Ricordi passano da 11–11,5 a 12 px;
+  - la riga della versione nelle Impostazioni passa a 12 px.
+- **Ti penso:** per il lettore di schermo si chiama «Manda un Ti penso», perché TalkBack e VoiceOver lo mandano al doppio tocco. Col dito resta il tieni premuto, ed è spiegato in `aria-description`, che ora viene anche tradotto.
+- **Post-it:** le voci della lista mostrano dove sei quando ti muovi con la tastiera.
+
+**Da sapere prima della produzione:** web più un file Android (`UsWebView.java`); nessuna migrazione. Lo zoom con due dita resta bloccato di proposito: su iPhone sbloccarlo fa ingrandire la pagina da sola sui campi di testo. La strada scelta è la dimensione del testo del telefono.
+
 ### Impostazioni riordinate (20/11/2026)
 
-**Stato:** branch `claude/impostazioni` (nato dal branch fisso di staging a f6c2b266). Provato nel browser col finto Supabase, in chiaro e in scuro; non ancora su staging, non in produzione.
+**Stato:** in staging con la PR #270 (merge 6b4f7b0f), il 20/11/2026; non in produzione.
 
 **Cosa cambia:** sotto la card della coppia ci sono cinque gruppi.
 - **Tu:** personaggio, colore, Come stai («Il tuo personaggio lo mostra»), foto profilo, «Come ti scriviamo» (prima «Le tue parole»).

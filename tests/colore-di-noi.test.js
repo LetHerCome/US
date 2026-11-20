@@ -31,7 +31,8 @@ test('Colore di noi: main actions are the blend with dark text, Gioca is tiles',
   assert.match(css, /\.dy-card\.dy-question\{background:var\(--us-noi-soft\)\}/);
   assert.match(css, /\.dy-chip\[data-dy-who="tutti"\]\[aria-pressed="true"\]\{background:var\(--us-noi-grad\);color:var\(--us-on\)\}/);
   assert.match(css, /\.dy-notice-action\{[^}]*background:var\(--us-miele\);color:var\(--us-on\)/);
-  assert.match(css, /\.dy-game-list\{display:grid;grid-template-columns:1fr 1fr;gap:10px\}/);
+  // Two tiles a row; one with the phone's largest text (accessibilità, 20/11/2026).
+  assert.match(css, /\.dy-game-list\{display:grid;grid-template-columns:repeat\(auto-fit,minmax\(min\(100%,max\(140px,9\.5em\)\),1fr\)\);gap:10px\}/);
   assert.match(css, /\.dy-game:first-child\{grid-column:1\/-1;[^}]*background:var\(--us-noi-grad\)\}/);
   assert.match(read('diario.js'), /ghostBtn \? ' dy-btn-ghost' : ' dy-btn-noi'/);
   assert.match(read('couple-notes.css'), /\.us-noi-board-new\{[^}]*background:var\(--us-noi-grad\);color:var\(--us-on\)/);

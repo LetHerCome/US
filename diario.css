@@ -26,7 +26,7 @@ em.dy-em,.dy-h1 em,.dy-sheet-title em{font-family:var(--us-font-editorial);font-
 .dy-btn-xl{height:var(--us-btn-xl);border-radius:var(--us-r-16);padding:0 26px;font-size:16px}
 .dy-btn-ghost{background:transparent;color:var(--us-ink-100);box-shadow:inset 0 0 0 1.5px var(--us-ink-12)}
 .dy-tag{display:inline-flex;align-items:center;gap:6px;height:var(--us-tag-m);padding:0 10px;border-radius:var(--us-r-8);font:700 12.5px/1 var(--us-font-ui);color:var(--us-on);white-space:nowrap}
-.dy-tag-s{height:var(--us-tag-s);border-radius:6px;padding:0 8px;font-size:11.5px}
+.dy-tag-s{height:var(--us-tag-s);border-radius:6px;padding:0 8px;font-size:12px}
 .dy-tag-l{height:var(--us-tag-l);border-radius:var(--us-r-12);padding:0 14px;font-size:14px}
 .dy-card{background:var(--us-card);border-radius:var(--us-r-20);box-shadow:var(--us-card-shadow)}
 .dy-hl{background:linear-gradient(transparent 55%,var(--c) 55%,var(--c) 92%,transparent 92%);padding:0 2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
@@ -213,7 +213,7 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 /* Shared: the page header of Noi, Ricordi and Gioca (title with one word in
    italics, square icon buttons), the segmented control, section heads, rows. */
 .dy-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:6px 4px 0}
-.dy-hd .dy-h2{margin:0;font:800 var(--us-text-30)/1.08 var(--us-font-ui);letter-spacing:-.025em;color:var(--us-ink-100)}
+.dy-hd .dy-h2{min-width:0;margin:0;font:800 var(--us-text-30)/1.08 var(--us-font-ui);letter-spacing:-.025em;color:var(--us-ink-100);overflow-wrap:break-word;hyphens:auto}
 .dy-hd .dy-h2 em{font-family:var(--us-font-editorial);font-style:italic;font-weight:500;font-size:33px;letter-spacing:-.01em}
 .dy-hd-tools{display:flex;gap:8px;flex:none}
 .dy-ib svg{flex:none}
@@ -231,7 +231,7 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 .dy-row{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border:0;border-radius:var(--us-r-16);background:var(--us-card);box-shadow:var(--us-card-shadow);color:var(--us-ink-100);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .dy-row-date{flex:none;width:48px;height:48px;border-radius:var(--us-r-12);background:var(--us-miele);color:var(--us-on);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
 .dy-row-date b{font:800 17px/1 var(--us-font-ui)}
-.dy-row-date small{margin-top:2px;font:600 11px/1 var(--us-font-ui);color:var(--us-on);opacity:.7}
+.dy-row-date small{margin-top:2px;font:600 12px/1 var(--us-font-ui);color:var(--us-on);opacity:.78}
 .dy-row-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
 .dy-row-copy>b{font:700 var(--us-text-15)/1.25 var(--us-font-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dy-row-tags{display:flex;gap:6px;flex-wrap:wrap}
@@ -248,11 +248,12 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 .dy-cal-year{font-weight:500;color:var(--us-ink-60)}
 .dy-cal-nav{display:flex;gap:6px}
 .dy-cal-wds{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;padding-bottom:2px}
-.dy-cal-wd{font:700 11px/1.4 var(--us-font-ui);color:var(--us-ink-40);text-decoration:none}
+.dy-cal-wd{font:700 12px/1.4 var(--us-font-ui);color:var(--us-ink-60);text-decoration:none}
 .dy-cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
 .dy-cal-day{height:48px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0 0;border:0;background:transparent;cursor:pointer;color:var(--us-ink-100);-webkit-tap-highlight-color:transparent}
 .dy-cal-n{position:relative;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font:600 14px/1 var(--us-font-ui)}
-.dy-cal-day.is-past .dy-cal-n{color:color-mix(in srgb,var(--us-ink-100) 45%,transparent)}
+/* Past days stay readable (accessibilità, 20/11/2026: 4.5:1 in both themes). */
+.dy-cal-day.is-past .dy-cal-n{color:color-mix(in srgb,var(--us-ink-100) 64%,transparent)}
 .dy-cal-day.is-out{cursor:default}
 .dy-cal-day.is-out .dy-cal-n{color:color-mix(in srgb,var(--us-ink-100) 20%,transparent)}
 .dy-cal-day.is-today .dy-cal-n{background:var(--us-ink-100);color:var(--us-paper);font-weight:800}
@@ -286,7 +287,7 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 .dy-diary-date{flex:none;width:44px;text-align:center;padding-top:2px}
 .dy-diary-date em{display:block;font:italic 500 30px/1 var(--us-font-editorial);color:var(--us-ink-100)}
 .dy-diary-day.is-quiet .dy-diary-date em{font-size:20px;letter-spacing:-.02em}
-.dy-diary-date small{display:block;margin-top:2px;font:700 11px/1.2 var(--us-font-ui);color:var(--us-ink-60)}
+.dy-diary-date small{display:block;margin-top:2px;font:700 12px/1.2 var(--us-font-ui);color:var(--us-ink-60)}
 .dy-diary-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding-bottom:18px;border-bottom:1px solid var(--us-ink-08)}
 .dy-pic{position:relative;display:block;width:100%;height:110px;padding:0;border:0;border-radius:var(--us-r-16);overflow:hidden;background:var(--us-beige);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .dy-pic.is-big{height:190px}
@@ -440,7 +441,7 @@ html[data-us-motion="reduced"] .dy-toast{opacity:1!important;transform:translate
 .dy-set .dy-set-seg-unit{flex:none;width:120px;grid-template-columns:repeat(2,1fr)}
 .dy-set .dy-set-foot{margin:0;padding:22px 4px 8px;text-align:center;font:600 12px/1.4 var(--us-font-ui);color:var(--us-ink-40)}
 .dy-set-hand{font:15px/1 var(--us-font-hand)}
-.dy-set-foot small{display:block;margin-top:2px;font-size:11px}
+.dy-set-foot small{display:block;margin-top:2px;font-size:12px}
 .dy-set-row:focus-visible,.dy-set-main:focus-visible,.dy-sw:focus-visible,.dy-set-couple:focus-visible,.dy-shape:focus-visible{outline:3px solid var(--us-pencil);outline-offset:2px}
 /* Il tuo personaggio: the five shapes in your colour; the chosen one in ink. */
 .dy-shape-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
@@ -672,7 +673,8 @@ html[data-us-motion="reduced"] .dy-f-switch,html[data-us-motion="reduced"] .dy-f
    the first game across the whole width in the colour of noi. */
 .dy-btn-noi{background:var(--us-noi-grad);color:var(--us-on)}
 .dy-card.dy-question{background:var(--us-noi-soft)}
-.dy-game-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* Two tiles a row; with very large text (the phone's font size) one, so a word never leaves its tile. */
+.dy-game-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,max(140px,9.5em)),1fr));gap:10px}
 .dy-game{flex-direction:column;align-items:flex-start;gap:10px;min-height:120px;padding:14px;border:0;border-radius:var(--us-r-20);background:var(--us-game-1);color:var(--us-on)}
 .dy-game:nth-child(6n+3){background:var(--us-game-2)}
 .dy-game:nth-child(6n+4){background:var(--us-game-3)}
