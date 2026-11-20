@@ -1,6 +1,7 @@
 // La barra a goccia (founder, 20/11/2026): five places (Oggi, Noi, Ti penso,
-// Ricordi, Gioca), 56 px plus the gesture strip, a soft hill that follows the
-// page you are on, the Ti penso in the middle sent by holding the heart until
+// Ricordi, Gioca), 56 px plus the gesture strip, icons only, a ball floating in
+// a round cradle with the icon of the page you are on (it sinks, slides as a
+// wave and rises again under the new tab, like the founder's video), the Ti penso in the middle sent by holding the heart until
 // it is full, Lasciato per te top left on Oggi and your character top right on
 // every page (profile and Impostazioni; the gear left Noi).
 const test = require('node:test');
@@ -17,12 +18,17 @@ test('Barra a goccia static: five places with the heart in the middle', () => {
   const nav = html.match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0] || '';
   const order = [...nav.matchAll(/data-page="(\w+)"|id="(thinkButton)"/g)].map((m) => m[1] || m[2]);
   assert.deepEqual(order, ['home', 'bond', 'thinkButton', 'moments', 'quiz']);
-  assert.match(nav, /<svg class="dy-nav-bg" aria-hidden="true" focusable="false"><path class="dy-nav-fill"\/><path class="dy-nav-edge"\/><\/svg>/);
+  assert.match(nav, /<svg class="dy-nav-bg" aria-hidden="true" focusable="false">.*<g class="dy-nav-shape"><path class="dy-nav-fill"\/><circle class="dy-nav-ball"\/><\/g><path class="dy-nav-edge"\/><circle class="dy-nav-ball"\/><circle class="dy-nav-ball-edge" mask="url\(#dyNavMask\)"\/><\/svg>/);
+  // Every place keeps its name for screen readers; on screen only the icons.
+  assert.equal((nav.match(/<span class="nlabel">/g) || []).length, 4);
   assert.match(nav, /id="dyThinkFly"/);
   assert.doesNotMatch(nav, /onclick="sendThinkSignal\(\)"/, 'the heart is held, not clicked');
   const css = read('diario.css');
   assert.match(css, /\.dy-nav\{[^}]*grid-template-columns:1fr 1fr 86px 1fr 1fr;/);
-  assert.match(css, /\.dy-nav button\{[^}]*color:var\(--us-ink-60\)/, 'labels of the other pages are readable');
+  assert.match(css, /\.dy-nav button\{[^}]*color:var\(--us-ink-60\)/, 'the icons of the other pages are readable');
+  assert.match(css, /\.dy-nav \.nlabel\{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset\(50%\)/);
+  assert.match(css, /\.dy-nav button\.active \.dy-nav-icon\{transform:translateY\(var\(--dy-ball-dy,-34px\)\)/);
+  assert.match(css, /\.dy-nav\.is-moving button\.active \.dy-nav-icon\{opacity:0;/);
   assert.match(read('ui-foundation.css'), /--us-nav-height:56px;/);
   assert.match(read('ui-foundation.css'), /--us-nav-rise:16px;/);
   // No page hides the heart any more (it was a floating button over the content).
@@ -57,21 +63,28 @@ test('Barra a goccia browser: the hill follows the page, the heart sends only wh
         window.__sent = 0;
         window.sendThinkSignal = async () => { window.__sent += 1; return true; };
       });
-      const peakX = () => page.evaluate(() => {
-        const d = document.querySelector('.dy-nav-edge').getAttribute('d');
-        // The bubble is fillet, round arc, fillet: the round arc (the 22 px one)
-        // runs between the ends of the first fillet and of itself; its middle is the bubble.
-        const arcs = [...d.matchAll(/A([\d.]+) [\d.]+ 0 0 [01] (-?[\d.]+) (-?[\d.]+)/g)].map((m) => ({ r: Number(m[1]), x: Number(m[2]) }));
-        if (arcs.length !== 3 || arcs[1].r !== 22) return NaN;
-        return (arcs[0].x + arcs[1].x) / 2;
+      // The ball: where it is, and whether it floats over the bar with the icon inside.
+      const ball = () => page.evaluate(() => {
+        const nav = document.querySelector('.dy-nav');
+        const b = document.querySelector('circle.dy-nav-ball').getBoundingClientRect();
+        const n = nav.getBoundingClientRect();
+        const i = document.querySelector('.dy-nav button.active .dy-nav-icon').getBoundingClientRect();
+        return { x: b.left + b.width / 2, y: b.top + b.height / 2, d: b.width, top: n.top, ix: i.left + i.width / 2, iy: i.top + i.height / 2, moving: nav.classList.contains('is-moving') };
       });
+      const peakX = async () => (await ball()).x;
       const centre = (page_) => page.evaluate((p) => { const b = document.querySelector(`.dy-nav button[data-page="${p}"]`).getBoundingClientRect(); return b.left + b.width / 2; }, page_);
       await page.waitForTimeout(400);
-      assert.ok(Math.abs(await peakX() - await centre('home')) < 3, 'the hill starts under Oggi');
+      assert.ok(Math.abs(await peakX() - await centre('home')) < 3, 'the ball starts over Oggi');
+      const b0 = await ball();
+      assert.ok(Math.abs(b0.d - 46) < 1, 'a ball of 46 px');
+      assert.ok(b0.y < b0.top, 'its centre is above the edge of the bar');
+      assert.ok(Math.abs(b0.ix - b0.x) < 1.5 && Math.abs(b0.iy - b0.y) < 1.5, 'the icon of the page is inside the ball');
       for (const p of ['bond', 'moments', 'quiz']) {
         await page.click(`.dy-nav button[data-page="${p}"]`);
         await page.waitForTimeout(1300);
-        assert.ok(Math.abs(await peakX() - await centre(p)) < 3, `the hill settles under ${p}`);
+        const b = await ball();
+        assert.ok(Math.abs(b.x - await centre(p)) < 3, `the ball settles over ${p}`);
+        assert.ok(!b.moving && Math.abs(b.ix - b.x) < 1.5 && Math.abs(b.iy - b.y) < 1.5, `the ${p} icon is back inside the ball`);
         assert.ok(await page.locator('#thinkButton').isVisible(), `the heart is in the bar on ${p}`);
         assert.ok(await page.locator(`#${p} [data-dy-me] svg`).count() >= 1, `your character is top right on ${p}`);
       }

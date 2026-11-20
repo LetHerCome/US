@@ -817,62 +817,102 @@
     const role = couple().myRole;
     d.querySelectorAll('[data-dy-me]').forEach((el) => { el.innerHTML = character(role, { size: 34 }); });
   }
-  // The bar is an svg: a flat top edge with one soft hill under the page you
-  // are on. The hill follows the tab with a spring, flattens and widens while
-  // it travels (the drop is moving), and springs up when it gets there.
-  // The bubble: a circle of 22 px rising 13 px, with 9 px fillets.
-  const BUBBLE_R = 22, BUBBLE_UP = 13, FILLET_R = 9;
+  // The bar is an svg, like the founder's reference video (20/11/2026): a white
+  // ball floats over the bar holding the icon of the page you are on, in a
+  // round cradle cut into the bar. On a new page the ball sinks into the bar,
+  // the cradle becomes a wave that slides to the new tab, and the ball rises
+  // out of it there like a drop; then the icon comes back inside it.
+  const BALL_R = 23, BALL_LIFT = 3, BALL_GAP = 5, CRADLE_FILLET = 10;
+  const WAVE_DEPTH = 16, WAVE_W = 30, MOVE_MS = 720;
   function goccia() {
     const nav = d.querySelector('.dy-nav'), svg = nav?.querySelector('.dy-nav-bg');
     if (!nav || !svg) return;
-    const fill = svg.querySelector('.dy-nav-fill'), edge = svg.querySelector('.dy-nav-edge');
-    const st = { x: null, v: 0, h: 1, hv: 0, raf: 0 };
-    const rise = () => parseFloat(getComputedStyle(d.documentElement).getPropertyValue('--us-nav-rise')) || 14;
-    const target = () => {
-      const on = nav.querySelector('button[data-page].active');
-      if (!on) return null;
-      const a = on.getBoundingClientRect(), b = nav.getBoundingClientRect();
-      return a.left - b.left + a.width / 2;
-    };
+    const $ = (s) => svg.querySelectorAll(s);
+    const st = { x: null, from: 0, to: 0, t0: 0, k: 1, m: 0, raf: 0, page: null };
+    const up = () => parseFloat(getComputedStyle(nav).getPropertyValue('--dy-nav-svg-up')) || 34;
+    const centre = (btn) => { const a = btn.getBoundingClientRect(), b = nav.getBoundingClientRect(); return a.left - b.left + a.width / 2; };
+    const clamp = (v) => Math.max(0, Math.min(1, v));
+    const ease = (v) => (v < 0.5 ? 4 * v * v * v : 1 - (-2 * v + 2) ** 3 / 2);
+    const back = (v) => 1 + 2.2 * (v - 1) ** 3 + 1.2 * (v - 1) ** 2;
+    // Depth below the edge of the round cradle around the ball (radius r + gap,
+    // centre BALL_LIFT above the edge) with fillets where it meets the edge.
+    function cradle(dx, r) {
+      const c = r + BALL_GAP, f = CRADLE_FILLET, lift = BALL_LIFT;
+      const s = Math.sqrt(Math.max(0, (c + f) ** 2 - (f + lift) ** 2));
+      const a = Math.abs(dx);
+      if (a >= s) return 0;
+      const tx = s * c / (c + f);
+      if (a > tx) return f - Math.sqrt(Math.max(0, f * f - (a - s) ** 2));
+      return Math.sqrt(Math.max(0, c * c - a * a)) - lift;
+    }
+    // The travelling wave: a soft valley, longer behind than in front.
+    function wave(dx, dir) {
+      const w = WAVE_W * (dx * dir < 0 ? 1.6 : 0.9);
+      return WAVE_DEPTH * Math.exp(-2.4 * (dx / w) ** 2);
+    }
     function draw() {
-      const W = nav.clientWidth, R = rise(), H = nav.clientHeight + R;
+      const W = nav.clientWidth, U = up(), H = nav.clientHeight + U;
       if (!W) return;
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      const x = st.x ?? W / 2, h = Math.max(0, st.h);
-      // A round bubble (founder, 20/11/2026: «non è perfettamente rotondo»): the
-      // top of a circle (radius BUBBLE_R) rising up to BUBBLE_UP above the edge,
-      // joined to the flat edge by two small fillets (radius FILLET_R) tangent
-      // to both. While the drop travels it sinks (h < 1) and stays round.
-      const up = Math.min(BUBBLE_UP * h, BUBBLE_R * 0.95);
-      let top = `M0 ${R} L${W} ${R}`;
-      if (up > 0.4) {
-        const r = BUBBLE_R, f = FILLET_R, dy = r - up;
-        const s = Math.sqrt(Math.max(0, (r + f) ** 2 - (dy + f) ** 2));
-        const k = f / (r + f), tx = s * (1 - k), ty = R - f + (dy + f) * k;
-        const n = (v) => +v.toFixed(2);
-        top = `M0 ${R} L${n(x - s)} ${R} A${f} ${f} 0 0 0 ${n(x - tx)} ${n(ty)} A${r} ${r} 0 0 1 ${n(x + tx)} ${n(ty)} A${f} ${f} 0 0 0 ${n(x + s)} ${R} L${W} ${R}`;
+      const x = st.x ?? W / 2, k = st.k, m = st.m, dir = Math.sign(st.to - st.from) || 1;
+      const r = BALL_R * (0.55 + 0.45 * Math.min(1, k));
+      const n = (v) => +v.toFixed(2);
+      let top = `M0 ${U}`;
+      const a = Math.max(0, x - 80), b = Math.min(W, x + 80);
+      top += ` L${n(a)} ${U}`;
+      for (let px = a; px <= b; px += 1.5) {
+        const dx = px - x, depth = (1 - m) * cradle(dx, r) + m * wave(dx, dir);
+        top += ` L${n(px)} ${n(U + depth)}`;
       }
-      edge.setAttribute('d', top);
-      fill.setAttribute('d', `${top} L${W} ${H} L0 ${H} Z`);
+      top += ` L${n(b)} ${U} L${W} ${U}`;
+      const body = `${top} L${W} ${H} L0 ${H} Z`;
+      $('.dy-nav-edge').forEach((p) => p.setAttribute('d', top));
+      $('.dy-nav-fill,.dy-nav-mfill').forEach((p) => p.setAttribute('d', body));
+      const mr = svg.querySelector('.dy-nav-mrect');
+      if (mr) { mr.setAttribute('x', -20); mr.setAttribute('y', -20); mr.setAttribute('width', W + 40); mr.setAttribute('height', H + 40); }
+      // Sunk, the ball is hidden in the bar (same colour); risen, it floats.
+      const cy = U - BALL_LIFT + (1 - k) * (r + BALL_LIFT + WAVE_DEPTH + 6);
+      $('.dy-nav-ball,.dy-nav-ball-edge').forEach((c) => { c.setAttribute('cx', n(x)); c.setAttribute('cy', n(cy)); c.setAttribute('r', n(Math.max(0, r))); });
     }
-    function step() {
-      const t = target();
-      if (t == null) { st.h += (0 - st.h) * 0.2; draw(); st.raf = Math.abs(st.h) > 0.01 ? requestAnimationFrame(step) : 0; return; }
-      if (st.x == null || reduced()) { st.x = t; st.v = 0; st.h = 1; st.hv = 0; draw(); st.raf = 0; return; }
-      // A spring that overshoots a little: the drop arrives and settles.
-      st.v = (st.v + (t - st.x) * 0.16) * 0.7;
-      st.x += st.v;
-      const far = Math.abs(t - st.x) > 3;
-      st.hv = (st.hv + ((far ? 0.25 : 1) - st.h) * 0.2) * 0.72;
-      st.h += st.hv;
+    // Where the icon of the page you are on goes: the centre of the ball.
+    function place() {
+      const any = nav.querySelector('button[data-page]:not(.active) .dy-nav-icon') || nav.querySelector('button[data-page] .dy-nav-icon');
+      if (!any) return;
+      const a = any.getBoundingClientRect(), b = nav.getBoundingClientRect();
+      if (any.closest('.active')) return;
+      nav.style.setProperty('--dy-ball-dy', `${(-BALL_LIFT - (a.top - b.top + a.height / 2)).toFixed(1)}px`);
+    }
+    function step(now) {
+      const p = (now - st.t0) / MOVE_MS;
+      st.x = st.from + (st.to - st.from) * ease(clamp((p - 0.17) / 0.55));
+      // Sink 0–0.22, rise 0.66–0.94 (a little past the top, then back).
+      st.k = p < 0.5 ? 1 - ease(clamp(p / 0.22)) : back(clamp((p - 0.66) / 0.28));
+      st.m = p < 0.5 ? ease(clamp(p / 0.28)) : 1 - ease(clamp((p - 0.62) / 0.26));
+      if (p >= 0.86 && nav.classList.contains('is-moving')) nav.classList.remove('is-moving');
       draw();
-      const still = !far && Math.abs(st.v) < 0.05 && Math.abs(st.hv) < 0.003 && Math.abs(1 - st.h) < 0.004;
-      if (still) { st.x = t; st.h = 1; draw(); st.raf = 0; } else st.raf = requestAnimationFrame(step);
+      if (p >= 1) { st.x = st.to; st.k = 1; st.m = 0; draw(); st.raf = 0; return; }
+      st.raf = requestAnimationFrame(step);
     }
-    const kick = () => { if (!st.raf) st.raf = requestAnimationFrame(step); };
-    if (typeof MutationObserver === 'function') new MutationObserver(kick).observe(nav, { attributes: true, attributeFilter: ['class'], subtree: true });
-    w.addEventListener('resize', () => { st.x = null; kick(); });
-    kick();
+    function go() {
+      const on = nav.querySelector('button[data-page].active');
+      place();
+      if (!on) return;
+      const t = centre(on), page = on.dataset.page;
+      if (st.x == null || reduced() || page === st.page && !st.raf) {
+        cancelAnimationFrame(st.raf); st.raf = 0;
+        st.x = st.from = st.to = t; st.k = 1; st.m = 0; st.page = page;
+        if (nav.classList.contains('is-moving')) nav.classList.remove('is-moving'); draw(); return;
+      }
+      if (page === st.page) return;
+      st.page = page; st.from = st.x; st.to = t;
+      // Already sunk (a second tap while it moves): slide on from here.
+      st.t0 = performance.now() - (st.k < 0.5 ? 0.2 * MOVE_MS : 0);
+      if (!nav.classList.contains('is-moving')) nav.classList.add('is-moving');
+      if (!st.raf) st.raf = requestAnimationFrame(step);
+    }
+    if (typeof MutationObserver === 'function') new MutationObserver(go).observe(nav, { attributes: true, attributeFilter: ['class'], subtree: true, attributeOldValue: false });
+    w.addEventListener('resize', () => { st.x = null; go(); });
+    go();
   }
   // Ti penso in the middle of the bar: hold it, the heart fills from below and
   // leaves when it is full (650 ms). A quick tap only says how; the keyboard

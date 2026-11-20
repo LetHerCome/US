@@ -50,7 +50,7 @@ test('nav: ~56px before the safe area, 44px+ targets, 22px icons, no looping ani
   assert.doesNotMatch(block, /infinite/, 'no looping animation on the nav');
   assert.match(block, /\.dy-nav button\.active\{color:var\(--us-ink-100\);font-weight:800\}/, 'active is still unmistakable');
   // La barra a goccia (20/11/2026): the hill under the page marks it; its icon lifts into it.
-  assert.match(block, /\.dy-nav button\.active \.dy-nav-icon\{transform:translateY\(-19px\);stroke-width:2\.3\}/);
+  assert.match(block, /\.dy-nav button\.active \.dy-nav-icon\{transform:translateY\(var\(--dy-ball-dy,-34px\)\);stroke-width:2\.2;/);
   assert.match(block, /html\[data-us-motion="reduced"\] :is\(\.dy-oggi,\.dy-nav,\.dy-over\) \*\{animation:none!important;transition:none!important\}/);
   assert.match(read('fix4.css'), /@media \(orientation:landscape\) and \(max-height:560px\)\{:root\{--us-nav-height:52px\}/);
 });
