@@ -31,7 +31,8 @@ test('Accessibilità static: readable sizes and colours, wrapping titles, a one-
   assert.match(read('couple-notes.css'), /\.us-postit :is\(\.us-notes-title,\.us-notes-text,\.us-notes-item-text\):focus-visible\{/);
   const heart = /<button type="button" id="thinkButton"[^>]*>/.exec(read('index.html'))?.[0] || '';
   assert.match(heart, /aria-label="Manda un Ti penso"/, 'a screen reader activates it and it sends');
-  assert.match(heart, /aria-description="Con il dito: tieni premuto finché il cuore è pieno"/);
+  // Since 21/11/2026 a tap sends it, for everyone: nothing more to explain.
+  assert.doesNotMatch(heart, /tieni premuto/);
   assert.match(read('i18n.js'), /const ATTRS = \['placeholder', 'aria-label', 'aria-description', 'title', 'alt'\];/);
 });
 

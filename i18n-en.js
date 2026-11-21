@@ -2976,8 +2976,6 @@
     'Resta nei vostri Ricordi. Su questo telefono, in Oggi, non tornerà.': 'It stays in your Memories. On this phone it won’t come back in Today.',
     'Non mostrarla': 'Don’t show it',
     'Manda un Ti penso': 'Send a Thinking of you',
-    'Con il dito: tieni premuto finché il cuore è pieno': 'With your finger: hold until the heart is full',
-    'Ti penso: tieni premuto': 'Thinking of you: hold',
     'Account': 'Account',
     'Indietro': 'Back',
     'Come ti scriviamo': 'How we write to you',

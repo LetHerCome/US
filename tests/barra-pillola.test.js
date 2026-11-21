@@ -1,7 +1,7 @@
 // La barra (founder, 21/11/2026: «la nav bar più semplice come quella di
 // Claude»): a pill floating over the page, five places (Oggi, Noi, Ti penso,
 // Ricordi, Gioca), icon and name, the page you are on in a soft pill; the Ti
-// penso in the middle sent by holding the heart until it is full. It replaced
+// penso in the middle sent by a tap, with a burst like a like. It replaced
 // the barra a goccia of 20/11 (the ball and the wave), which is in git history.
 // Lasciato per te top left on Oggi and your character top right on every page.
 const test = require('node:test');
@@ -22,11 +22,12 @@ test('Barra a pillola static: five places with the heart in the middle', () => {
   // Every place shows its name under the icon.
   assert.equal((nav.match(/<span class="nlabel">/g) || []).length, 4);
   assert.doesNotMatch(nav, /id="dyThinkFly"/, "the dots of the burst took the place of the flying hearts");
-  assert.doesNotMatch(nav, /onclick="sendThinkSignal\(\)"/, 'the heart is held, not clicked');
+  assert.doesNotMatch(nav, /onclick="sendThinkSignal\(\)"/, 'diario.js sends it (and bursts it), not an inline onclick');
   // The pop (21/11/2026): the app-wide press held the heart's transform still and swallowed it.
   assert.match(nav, /id="thinkButton" class="dy-think" data-us-motion-tap="off"/);
   const css = read('diario.css');
-  assert.match(css, /\.dy-think\.is-filling\{transform:scale\(\.86\);/);
+  assert.match(css, /\.dy-nav \.dy-think:active\{transform:scale\(\.9\);/);
+  assert.doesNotMatch(css + read('diario.js'), /is-filling|HOLD_MS/, 'a tap sends it, no holding');
   // The burst, like a like on X (21/11/2026): the heart shrinks away, a disc opens into a ring, the heart springs back, dots spray.
   assert.match(css, /\.dy-think\.dy-pop :is\(\.dy-think-fill,\.dy-think-line\)\{animation:dy-heart-x \.8s both\}/);
   assert.match(css, /@keyframes dy-burst-ring\{0%\{transform:scale\(0\);border-width:30px;/);
@@ -57,13 +58,7 @@ test('Barra a pillola static: Lasciato per te top left, you top right on every p
   assert.doesNotMatch(html, /aria-label="Impostazioni"><svg/, 'the gear left Noi');
 });
 
-const tap = async (page, sel, hold) => {
-  const b = await page.locator(sel).boundingBox();
-  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
-  await page.mouse.down(); await page.waitForTimeout(hold); await page.mouse.up();
-};
-
-test('Barra a pillola browser: the pill follows the page, the heart sends only when held', async (t) => {
+test('Barra a pillola browser: the pill follows the page, a tap on the heart sends and bursts it', async (t) => {
   const h = await start(); if (!h) return t.skip('Playwright unavailable');
   try {
     const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
@@ -95,18 +90,11 @@ test('Barra a pillola browser: the pill follows the page, the heart sends only w
         assert.ok(await page.locator(`#${p} [data-dy-me] svg`).count() >= 1, `your character is top right on ${p}`);
       }
       await page.click('.dy-nav button[data-page="home"]'); await page.waitForTimeout(900);
-      // A quick tap does not send; it says how.
-      await tap(page, '#thinkButton', 120);
-      await page.waitForTimeout(300);
-      assert.equal(await page.evaluate(() => window.__sent), 0);
-      assert.match(await page.locator('#dyToast').innerText(), /Tieni premuto il cuore/);
-      // Holding fills the heart and sends once; full, it pops (it grows past its size).
-      const hb = await page.locator('#thinkButton').boundingBox();
-      await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2);
-      await page.mouse.down(); await page.waitForTimeout(820);
-      const popState = await page.evaluate(() => { const el = document.getElementById('thinkButton'); return { pop: el.classList.contains('dy-pop'), dots: el.querySelectorAll('.dy-burst .dy-burst-dot').length, ring: el.querySelectorAll('.dy-burst .dy-burst-ring').length, held: el.getAnimations().some((a) => a.constructor.name === 'Animation') }; });
-      await page.mouse.up();
-      assert.ok(popState.pop && popState.ring === 1 && popState.dots === 14, 'the heart bursts while still held: one ring, seven pairs of dots');
+      // A tap sends it and the heart bursts: one ring, seven pairs of dots.
+      await page.click('#thinkButton');
+      await page.waitForTimeout(120);
+      const popState = await page.evaluate(() => { const el = document.getElementById('thinkButton'); return { pop: el.classList.contains('dy-pop'), full: el.classList.contains('is-full'), dots: el.querySelectorAll('.dy-burst .dy-burst-dot').length, ring: el.querySelectorAll('.dy-burst .dy-burst-ring').length, held: el.getAnimations().some((a) => a.constructor.name === 'Animation') }; });
+      assert.ok(popState.pop && popState.full && popState.ring === 1 && popState.dots === 14, 'the heart fills and bursts on the tap');
       assert.equal(popState.held, false, 'no app-wide press holds it still');
       await page.waitForTimeout(200);
       assert.equal(await page.evaluate(() => window.__sent), 1);
