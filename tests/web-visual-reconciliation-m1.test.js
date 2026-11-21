@@ -51,13 +51,13 @@ test('HUMAN-UI-02 la nav attiva non ha animazioni in loop', () => {
 });
 
 test('HUMAN-UI-02 conserva target touch >= 44px con una nav compatta', () => {
-  // Il diario, ma pulito (15/11/2026): four equal columns of a full-width bar;
-  // each button is the bar height (--us-nav-height) minus its padding, 44px+ even in short landscape.
+  // La barra a pillola (21/11/2026): a 64px pill with 5px padding and a 1px
+  // border, so each button is 52px tall (44px+ everywhere, landscape too).
   const css = read('diario.css');
-  assert.match(css, /\.dy-nav\{[^}]*grid-template-columns:1fr 1fr 86px 1fr 1fr;height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:4px /);
+  assert.match(css, /\.dy-nav\{[^}]*grid-template-columns:1fr 1fr 60px 1fr 1fr;height:64px;padding:5px;border:1px solid/);
   assert.match(foundation(), /--us-nav-height:50px;/);
   assert.match(read('fix4.css'), /\{:root\{--us-nav-height:48px\}/);
-  assert.match(css, /\.dy-nav \.dy-nav-icon\{width:27px;height:27px;/);
+  assert.match(css, /\.dy-nav \.dy-nav-icon\{width:22px;height:22px;/);
 });
 
 test('M1 applica il top chrome APK senza introdurre fullscreen/settings o relocation Home', () => {
