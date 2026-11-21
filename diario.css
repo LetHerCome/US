@@ -692,16 +692,15 @@ html[data-us-motion="reduced"] .dy-f-switch,html[data-us-motion="reduced"] .dy-f
 .dy-think-fill,.dy-think-line{grid-area:1/1;width:26px;height:26px}
 .dy-think-fill{-webkit-mask:url("/assets/icons/think-on.svg") center/contain no-repeat;mask:url("/assets/icons/think-on.svg") center/contain no-repeat;background:linear-gradient(var(--us-think),var(--us-think)) bottom/100% 0% no-repeat;transition:background-size .22s ease-out}
 .dy-think-line path{fill:none;stroke:var(--us-think);stroke-width:18;stroke-linejoin:round}
-.dy-think.is-filling .dy-think-fill{background-size:100% 100%;transition:background-size .65s cubic-bezier(.4,0,.6,1)}
 .dy-think.is-full .dy-think-fill,.dy-think.sent .dy-think-fill{background-size:100% 100%;transition:none}
-/* Held, the circle squeezes as the heart fills. Full (founder, 21/11/2026:
-   «fluida come il like di X»), the circle eases back and the heart bursts:
+/* A tap sends it (founder, 21/11/2026: «fluida come il like di X»): pressed,
+   the circle gives a little; released, the heart fills and bursts:
    it shrinks to nothing, a rosa disc grows in its place and opens into a
    lilla ring, the heart springs out of it past its size and settles, and
    seven pairs of dots spray out and fade. The ring is a 60 px circle whose
    border thins from solid to nothing, 0.8 s in all. diario.js heartHold. */
 .dy-nav .dy-think{transition:transform .38s cubic-bezier(.2,.9,.3,1)}
-.dy-think.is-filling{transform:scale(.86);transition:transform .65s cubic-bezier(.3,0,.5,1)}
+.dy-nav .dy-think:active{transform:scale(.9);transition:transform .1s ease-out}
 .dy-think.dy-pop :is(.dy-think-fill,.dy-think-line){animation:dy-heart-x .8s both}
 @keyframes dy-heart-x{0%{transform:scale(1);animation-timing-function:cubic-bezier(.5,0,.9,.5)}12%{transform:scale(0)}22%{transform:scale(0);animation-timing-function:cubic-bezier(.2,.9,.3,1)}48%{transform:scale(1.32);animation-timing-function:cubic-bezier(.45,0,.55,1)}68%{transform:scale(.9);animation-timing-function:cubic-bezier(.45,0,.55,1)}88%{transform:scale(1.05);animation-timing-function:cubic-bezier(.45,0,.55,1)}100%{transform:scale(1)}}
 .dy-burst{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}

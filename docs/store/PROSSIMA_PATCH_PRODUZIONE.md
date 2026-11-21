@@ -28,6 +28,14 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### Il Ti penso parte al tocco (21/11/2026)
+
+**Stato:** branch `claude/ti-penso-tocco` (nato dal branch fisso di staging a af55709e, dopo la #276). Provato nel browser col finto Supabase; non ancora su staging, non in produzione.
+
+**Cosa cambia:** il founder vuole che il Ti penso parta al tocco, come un like. Basta un tocco sul cuore al centro della barra: il cuore si riempie e scoppia subito (anello e puntini), poi il Ti penso parte. Mentre lo premi il cerchio si abbassa un poco. Spariscono la pressione lunga, il riempimento lento e il suggerimento «Tieni premuto il cuore…». Tolti anche la descrizione per il lettore di schermo e il titolo «tieni premuto», con le loro traduzioni inglesi. Resta la protezione di fix4 contro il doppio tocco (650 ms).
+
+**Test:** `barra-pillola` (un tocco invia e fa scoppiare il cuore), `accessibilita`.
+
 ### Il cuore più grande e lo scoppio come un like (21/11/2026)
 
 **Stato:** branch `claude/cuore-scoppio` (nato dal branch fisso di staging a 16449b9f, dopo la #275). Provato a fotogrammi nel browser col finto Supabase; non ancora su staging, non in produzione.

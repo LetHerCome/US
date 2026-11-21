@@ -1075,19 +1075,17 @@
     const role = couple().myRole;
     d.querySelectorAll('[data-dy-me]').forEach((el) => { el.innerHTML = character(role, { size: 34, react: true }); });
   }
-  // Ti penso in the middle of the bar: hold it, the heart fills from below and
-  // leaves when it is full (650 ms). A quick tap only says how; the keyboard
-  // and screen readers (a click with no pointer) send at once.
-  const HOLD_MS = 650;
+  // Ti penso in the middle of the bar (founder, 21/11/2026): a tap sends it,
+  // like a like. The heart fills and bursts at once; the keyboard and screen
+  // readers send the same way.
   function heartHold() {
     const btn = $('thinkButton');
     if (!btn || btn.dataset.dyHold) return;
     btn.dataset.dyHold = '1';
-    let timer = 0, hinted = 0;
-    const stop = () => { clearTimeout(timer); btn.classList.remove('is-filling'); };
+    let fullTimer = 0;
     const send = () => Promise.resolve(w.sendThinkSignal?.()).catch(() => false);
-    // The burst (founder, 21/11/2026, «come il like di X»): the moment the
-    // heart is full it shrinks away, a rosa disc grows and opens into a lilla
+    // The burst (founder, 21/11/2026, «come il like di X»): on the tap the
+    // heart fills and shrinks away, a rosa disc grows and opens into a lilla
     // ring, the heart springs back out and seven pairs of dots spray out
     // (diario.css dy-heart-x, dy-burst). At once, not after the network.
     const BURST_COLORS = ['var(--us-rosa)', 'var(--us-lilla)', 'var(--us-think)'];
@@ -1106,30 +1104,13 @@
       play(btn, 'dy-pop', 820);
       setTimeout(() => burst.remove(), 950);
     };
-    btn.addEventListener('pointerdown', (e) => {
-      if (btn.disabled || (e.button != null && e.button > 0)) return;
-      try { btn.setPointerCapture(e.pointerId); } catch (_) { /* old WebView */ }
-      btn.classList.remove('is-full');
-      btn.classList.add('is-filling');
-      timer = setTimeout(() => {
-        btn.classList.remove('is-filling');
-        btn.classList.add('is-full');
-        pop();
-        send().finally(() => setTimeout(() => btn.classList.remove('is-full'), 900));
-      }, HOLD_MS);
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      clearTimeout(fullTimer);
+      btn.classList.add('is-full');
+      pop();
+      send().finally(() => { fullTimer = setTimeout(() => btn.classList.remove('is-full'), 700); });
     });
-    btn.addEventListener('pointerup', () => {
-      if (!btn.classList.contains('is-filling')) return;
-      stop();
-      if (Date.now() - hinted < 4000) return;
-      hinted = Date.now();
-      const text = 'Tieni premuto il cuore per mandare un Ti penso';
-      if ($('home')?.classList.contains('active') && $('dyToast')) notice(`${HEART}<span>${esc(text)}</span>`);
-      else w.toast?.(text, { quiet: true });
-    });
-    btn.addEventListener('pointercancel', stop);
-    btn.addEventListener('contextmenu', (e) => e.preventDefault());
-    btn.addEventListener('click', (e) => { if (e.detail === 0) { pop(); send(); } });
   }
 
   w.UsDiario = Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, shapeOf, slot, paintDiary, paintQuestion, paintVoiDue, thinkSent, openVoiDue, closeVoiDue, character, sentences, paintAll, sign, icon, paintPeople, roles: couple, reactionOf, lookOf, unlockedLook });
