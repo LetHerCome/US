@@ -432,6 +432,8 @@
     if (empty) empty.hidden = has || !w.usProfile;
     if (has && img.getAttribute('src') !== now.url) img.src = now.url;
     img.hidden = !has;
+    // Centrare le facce (21/11/2026): the point saved with the photo (photo-focus.js).
+    w.UsPhotoFocus?.apply?.(img, has ? (w.UsOggiPhoto?.rows?.() || []).find((r) => r?.storage_path === now.path) : null);
     const model = now.meta && w.UsOggiCaption?.viewModel ? w.UsOggiCaption.viewModel(now.meta) : null;
     const capEl = $('dyPhotoCap'), who = $('dyPhotoWho');
     if (capEl) capEl.textContent = model?.text || '';
@@ -741,7 +743,7 @@
   function photoMarkup(row, url, big) {
     const me = w.usProfile?.id;
     const who = row.created_by ? (row.created_by === me ? 'var(--us-tu)' : 'var(--us-partner)') : '';
-    return `<button type="button" class="dy-pic${big ? ' is-big' : ''}" data-dy-moment="${esc(row.id)}" aria-label="${esc(row.caption || 'Un ricordo')}. Apri"><img src="${esc(url)}" alt="" loading="lazy" decoding="async">${who ? `<span class="dy-pic-who" style="--who:${who}" aria-hidden="true"></span>` : ''}</button>`;
+    return `<button type="button" class="dy-pic${big ? ' is-big' : ''}" data-dy-moment="${esc(row.id)}" aria-label="${esc(row.caption || 'Un ricordo')}. Apri"><img src="${esc(url)}" alt="" loading="lazy" decoding="async"${w.UsPhotoFocus?.attr?.(row) ? ` data-us-focus="${w.UsPhotoFocus.attr(row)}"` : ''}>${who ? `<span class="dy-pic-who" style="--who:${who}" aria-hidden="true"></span>` : ''}</button>`;
   }
   function questionMarkup(k) {
     const line = (role, text) => (text ? `<span class="dy-dq-a"><span class="dy-hl" style="--c:var(--us-${role === 'francesco' ? 'rosa' : 'lilla'}-hl)" translate="no">${esc(text)}</span></span>` : '');
@@ -1063,6 +1065,7 @@
     // A new day while US stays open.
     setInterval(() => { if (!d.hidden) { paintTitle(); paintDuo(); paintMe(); } }, 60000);
     w.addEventListener('us:think-updated', () => { paintDuo(); paintMe(); });
+    w.addEventListener('us:photo-focus', () => paintPhoto());
     w.addEventListener('us:progression-updated', () => paintUnlock());
     Promise.resolve(refreshLookUnlocks()).then(() => paintUnlock());
     heartHold();

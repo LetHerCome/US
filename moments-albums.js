@@ -254,15 +254,17 @@ async function uploadAlbumPhoto(momentId,file,{caption='',position=1,onStage}={}
   onStage?.('upload');
   const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
   if(uploadError)throw uploadError;
-  const {error:rowError}=await sb.from('moment_photos').insert({
+  const {data:row,error:rowError}=await sb.from('moment_photos').insert({
     moment_id:momentId,
     couple_id:window.usProfile.couple_id,
     created_by:window.usProfile.id,
     storage_path:path,
     caption:caption||null,
     position:Math.max(1,Number(position)||1)
-  });
+  }).select('id').single();
   if(rowError){await sb.storage.from('us-media').remove([path]);throw rowError;}
+  // Centrare le facce (21/11/2026): after the upload, in the background (photo-focus.js).
+  if(row?.id)window.UsPhotoFocus?.saveFor?.('moment_photos',row.id,compressed);
   return true;
 }
 window.UsMomentAlbums=Object.freeze({
