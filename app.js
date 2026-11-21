@@ -5987,6 +5987,9 @@ async function hydrateThink(){
   const received=(rows||[]).find(r=>r.sender_id!==window.usProfile.id);
   const sent=(rows||[]).find(r=>r.sender_id===window.usProfile.id);
   const receivedReaction=received?reactions.get(received.id):null;
+  // Personaggi, fase 3: the last Ti penso I received gives my character heart eyes for a while (diario.js).
+  const lastReceivedAt=received?.created_at||'';
+  if(window.usThinkLastReceivedAt!==lastReceivedAt){window.usThinkLastReceivedAt=lastReceivedAt;window.dispatchEvent(new Event('us:think-updated'));}
   const sentReaction=sent?reactions.get(sent.id):null;
   if(received&&!receivedReaction){usIncomingThink=received;usThinkReactionFinal=null;}
   else if(!received||receivedReaction){usIncomingThink=null;usThinkReactionFinal=receivedReaction?.reaction||null;}

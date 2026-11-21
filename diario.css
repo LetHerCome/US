@@ -748,3 +748,17 @@ html[data-us-motion="reduced"] .dy-f-switch,html[data-us-motion="reduced"] .dy-f
 .dy-look-next-copy b{font-size:15px;color:var(--us-ink-100)}
 .dy-look-next .dy-meter{display:block;margin-top:4px}
 @media (prefers-reduced-motion:reduce){.dy-look-chips{scroll-behavior:auto}}
+
+/* Personaggi, fase 3: reactions and the festa of an unlock. The wave and the
+   confetti move a little, never in a loop for long, never with reduced motion. */
+.dy-wave{transform-box:fill-box;transform-origin:10% 90%;animation:dy-wave 1.4s ease-in-out 2}
+@keyframes dy-wave{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg)}75%{transform:rotate(10deg)}}
+.dy-confetto{animation:dy-confetto 1.2s ease-out both}
+@keyframes dy-confetto{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.dy-unlock{display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:12px 14px;border-radius:var(--us-r-20);background:var(--us-noi-soft);color:var(--us-ink-100)}
+.dy-unlock-char{flex:none}
+.dy-unlock-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font:600 13px/1.35 var(--us-font-ui);color:var(--us-ink-80)}
+.dy-unlock-copy b{font-size:15px;color:var(--us-ink-100)}
+.dy-unlock-acts{display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){.dy-wave,.dy-confetto{animation:none}}
+html[data-us-motion="reduced"] :is(.dy-wave,.dy-confetto){animation:none}
