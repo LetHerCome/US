@@ -51,6 +51,7 @@ const APP_SHELL = [
   versioned("/moments-albums.js"),
   versioned("/ricordi-place.css"),
   versioned("/ricordi-place.js"),
+  versioned("/photo-focus.js"),
   versioned("/partner-battery.js"),
   versioned("/member-status.js"),
   versioned("/weekly-challenge.js"),

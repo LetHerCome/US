@@ -1835,6 +1835,30 @@ async function compressImageFile(file,{maxDimension=1920,quality=.82}={}){
   return new File([blob],(file.name||'image').replace(/\.[^.]+$/,'')+'.webp',{type:'image/webp',lastModified:Date.now()});
 }
 
+// Centrare le facce (21/11/2026, D9): the photos uploaded before, each phone
+// its own (the *_update_own policies), six at a time, when US has been open
+// for a while, online and without data saver. A database without the
+// columns yet: nothing happens.
+let usPhotoFocusBackfillDone=false;
+// A point just saved: Oggi's rows take it, so the photo of the day moves to the faces at once.
+window.addEventListener?.('us:photo-focus',e=>{const d=e.detail||{};if(d.table!=='moments')return;const row=usHomePhotoRows.find(r=>r?.id===d.id);if(row){row.focus_x=d.x;row.focus_y=d.y;}});
+async function usBackfillPhotoFocus(){
+  if(usPhotoFocusBackfillDone||!window.usProfile||!window.UsPhotoFocus||!navigator.onLine)return;
+  const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  if(connection?.saveData)return;
+  usPhotoFocusBackfillDone=true;
+  const me=window.usProfile;
+  for(const table of ['moments','moment_photos']){
+    const cols=table==='moments'?'id,storage_path,thumbnail_path':'id,storage_path';
+    const {data:rows,error}=await sb.from(table).select(cols).eq('created_by',me.id).is('focus_x',null).order('created_at',{ascending:false}).limit(6);
+    if(error||!rows?.length||window.usProfile!==me)continue;
+    for(const row of rows){
+      if(window.usProfile!==me)return;
+      const url=await usGetSignedUrl(row.thumbnail_path||row.storage_path,US_MEDIA_URL_TTL_S).catch(()=>null);
+      if(url)await window.UsPhotoFocus.saveFor(table,row.id,url);
+    }
+  }
+}
 let usRicordiThumbnailBackfillBusy=false;
 async function usMissingRicordiThumbnailCount(){
   if(!window.usProfile)return 0;
@@ -2029,21 +2053,27 @@ let usHomePhotoRows=[];
 async function getHomeRotationPath(){
   if(!window.usProfile)return null;
   const viewer=window.usProfile,epoch=usAuthEpoch;
-  const {data:rows,error}=await sb.from('moments')
-    .select('id,storage_path,moment_date,created_at,caption,created_by,place_label')
+  const homeCols='id,storage_path,moment_date,created_at,caption,created_by,place_label';
+  const homeRead=columns=>sb.from('moments').select(columns)
     .eq('couple_id',window.usProfile.couple_id)
     .order('moment_date',{ascending:false})
     .order('created_at',{ascending:false})
     .limit(120);
+  let homeRes=await homeRead(`${homeCols},focus_x,focus_y`);
+  if(homeRes?.error)homeRes=await homeRead(homeCols);
+  const {data:rows,error}=homeRes||{};
   if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
   if(error){console.warn(error);return undefined;}
+  if(!usPhotoFocusBackfillDone)setTimeout(()=>usBackfillPhotoFocus().catch(e=>console.warn('[US Foto] backfill',e)),8000);
   let years=[];
   if(rows?.length){
-    const {data:older,error:olderError}=await sb.from('moments')
-      .select('id,storage_path,moment_date,created_at,caption,created_by,place_label')
+    const olderRead=columns=>sb.from('moments').select(columns)
       .eq('couple_id',window.usProfile.couple_id)
       .in('moment_date',homeAnniversaryDates())
       .limit(40);
+    let olderRes=await olderRead(`${homeCols},focus_x,focus_y`);
+    if(olderRes?.error)olderRes=await olderRead(homeCols);
+    const {data:older,error:olderError}=olderRes||{};
     if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
     if(olderError)console.warn(olderError);else years=Array.isArray(older)?older:[];
   }
@@ -3977,6 +4007,8 @@ let pendingMomentPickToken=0;
 let pendingMomentPlace=null;
 const US_MOMENT_COLUMNS='id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at';
 const US_MOMENT_PLACE_COLUMNS='place_lat,place_lon,place_label,place_source';
+// Centrare le facce (21/11/2026): the point to keep in view when the photo is cropped (photo-focus.js).
+const US_MOMENT_FOCUS_COLUMNS='focus_x,focus_y';
 const US_MOMENT_MAX_PHOTOS=10;
 const US_MOMENT_TYPES=['image/jpeg','image/png','image/webp'];
 
@@ -4306,6 +4338,8 @@ async function uploadMoment(){
     }
     // M12A — only THIS creation earns the one-shot light catch (see consumeFreshRicordo).
     if(created?.id)markFreshRicordo(created.id);
+    // Centrare le facce: after the upload, never in its way (photo-focus.js).
+    if(created?.id)window.UsPhotoFocus?.saveFor?.('moments',created.id,thumbnail);
     // R6 — the photo of something lived: one card "L'avete fatto". If the link
     // is refused the memory still exists, as a memory of its own.
     if(created?.id&&source){
@@ -4835,7 +4869,9 @@ async function hydrateMomentsCore(){
   // for every enrichment query, adding a full network round-trip to first paint.
   // Mappa dei Ricordi: the place comes with the memory; a database without it yet reads as before.
   const momentsQuery=columns=>sb.from('moments').select(columns).order('moment_date',{ascending:false}).order('created_at',{ascending:false});
-  const momentsPromise=momentsQuery(`${US_MOMENT_COLUMNS},${US_MOMENT_PLACE_COLUMNS}`).then(result=>result?.error?momentsQuery(US_MOMENT_COLUMNS):result);
+  const momentsPromise=momentsQuery(`${US_MOMENT_COLUMNS},${US_MOMENT_PLACE_COLUMNS},${US_MOMENT_FOCUS_COLUMNS}`)
+    .then(result=>result?.error?momentsQuery(`${US_MOMENT_COLUMNS},${US_MOMENT_PLACE_COLUMNS}`):result)
+    .then(result=>result?.error?momentsQuery(US_MOMENT_COLUMNS):result);
   const profilesPromise=sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id);
   const livedPromise=sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived');
   const keptPromise=usReadLocalized(columns=>sb.from('daily_question_keepsakes').select(columns).order('question_date',{ascending:false}),'id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at','question_text_localized');

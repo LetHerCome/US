@@ -28,6 +28,21 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### Centrare le facce nelle foto (21/11/2026)
+
+**Stato:** branch `claude/foto-facce`, con la migrazione `20261121092821_foto_punto_facce.sql`, **solo staging** finché non c'è un sì esplicito per la produzione. Provato nel browser col finto Supabase; non ancora su staging, non in produzione.
+
+**Cosa cambia:** sono le decisioni del grill-me D1–D13 del 21/11.
+- **Come funziona:** dopo il caricamento di un Ricordo o di una foto dell'album, il telefono cerca i volti sul telefono stesso, con il riconoscitore di Google MediaPipe 0.10.21 e il modello piccolo BlazeFace. I file stanno in `assets/vendor/mediapipe` (circa 9,7 MB) e si scaricano solo la prima volta che serve: non sono nella copia offline dell'app. Su `moments` e `moment_photos` si salva solo un punto, `focus_x` e `focus_y` da 0 a 100. Dei volti non si salva niente.
+- **Come sceglie il punto:** tutti i volti contano come un gruppo. Se il gruppo è troppo largo per un taglio, vince il volto più grande. I volti sotto il 3% della foto non contano. Senza volti il punto è 50/50, il centro come prima.
+- **Dove si vede:** nella foto del giorno su Oggi e nelle foto delle pagine di Ricordi. Dove la foto è tagliata i volti stanno centrati e a circa il 40% dall'alto, per quanto la foto lo permette. La foto aperta intera non cambia.
+- **Foto già caricate:** ogni telefono sistema le proprie, 6 alla volta, 8 secondi dopo che Oggi ha letto le foto, solo online e senza risparmio dati.
+- **Privacy:** una riga nuova nella tabella dei dati di `privacy.html` e `privacy-en.html`.
+- **Dopo:** i widget (chat Android e Apple), le foto della sfida della settimana e la correzione a mano.
+- **Nota:** l'APK cresce di circa 10 MB, perché anche l'app nativa porta con sé il riconoscitore.
+
+**Test:** nuovo `foto-facce`, con il calcolo del punto, il taglio, la migrazione su PGlite (i limiti 0–100, entrambi o nessuno, solo sulle proprie foto) e il riconoscitore che si carica e gira davvero nel browser. Aggiornato `content-1-0-catalog`, rigenerato `MIGRATION_CUTOFF`.
+
 ### Staging: una versione nuova a ogni pubblicazione (21/11/2026)
 
 **Stato:** branch `claude/staging-versione`. Riguarda solo il build del sito di staging (`build-s31-staging-preview.mjs`): in produzione non cambia niente, perché lì la versione la cambia già ogni rilascio.
