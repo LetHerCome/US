@@ -28,9 +28,25 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### Personaggi: le reazioni e la festa degli sblocchi (21/11/2026)
+
+**Stato:** branch `claude/personaggi-reazioni` (nato dal branch fisso di staging a 317459ef). Provato nel browser col finto Supabase; non ancora su staging, non in produzione.
+
+**Cosa cambia:** fase 3 dei personaggi (D9, D16). Le reazioni passano sopra la faccia di «Come stai» e si vedono su Oggi, nell'angolo di noi e nel personaggio in alto a destra.
+- **Festa, per tutti e due:** il giorno dell'anniversario o del mesiversario, cioè lo stesso giorno di «Insieme dal». Coriandoli e sorriso grande.
+- **Occhi a cuore, sul tuo personaggio:** per 3 ore dopo un Ti penso ricevuto.
+- **Saluto con la manina, sul personaggio dell'altra persona:** quando ha risposto alla domanda di oggi e tu non hai ancora visto la risposta.
+- **Assonnati, tutti e due:** dalle 22 alle 6.
+
+L'ordine è festa, cuore, saluto, sera. Le reazioni ci sono solo per quello che vi fate, mai per quello che non fate.
+
+**Festa dello sblocco.** Quando nel guardaroba arriva qualcosa di nuovo, la volta dopo che apri Oggi il tuo personaggio te lo mostra in una scheda con i coriandoli, «Mettilo» e «Dopo», una volta sola per accessorio. La prima volta su un telefono, quello che è già sbloccato conta come visto; se ne arrivano diversi insieme, si festeggia quello coi punti più alti. Nessuna notifica push. Il saluto e i coriandoli si muovono poco e si fermano col movimento ridotto.
+
+**Da sapere prima della produzione:** solo web (`diario.js`, `diario.css`, `app.js`); nessuna migrazione. Serve la fase 2 (guardaroba).
+
 ### Personaggi: il guardaroba e l'angolo di noi (21/11/2026)
 
-**Stato:** branch `claude/personaggi-guardaroba` (nato dal branch fisso di staging a 7ac76285). Provato nel browser col finto Supabase. La migrazione è stata provata su PGlite e non è ancora applicata a staging. Non è in produzione.
+**Stato:** in staging con la PR #273 (merge 317459ef), migrazione applicata a staging il 21/11/2026; non in produzione.
 
 **Cosa cambia:** è la fase 2 dei personaggi (grill-me del 20/11, tavola approvata il 21/11).
 - **Accessori.** Ognuno veste il suo personaggio in due posti:
