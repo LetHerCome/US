@@ -21,15 +21,20 @@ test('Barra a pillola static: five places with the heart in the middle', () => {
   assert.doesNotMatch(nav, /dy-nav-bg|dy-nav-ball/, 'no ball, no wave');
   // Every place shows its name under the icon.
   assert.equal((nav.match(/<span class="nlabel">/g) || []).length, 4);
-  assert.match(nav, /id="dyThinkFly"/);
+  assert.doesNotMatch(nav, /id="dyThinkFly"/, "the dots of the burst took the place of the flying hearts");
   assert.doesNotMatch(nav, /onclick="sendThinkSignal\(\)"/, 'the heart is held, not clicked');
   // The pop (21/11/2026): the app-wide press held the heart's transform still and swallowed it.
   assert.match(nav, /id="thinkButton" class="dy-think" data-us-motion-tap="off"/);
   const css = read('diario.css');
   assert.match(css, /\.dy-think\.is-filling\{transform:scale\(\.86\);/);
-  assert.match(css, /\.dy-think\.dy-pop\{animation:dy-heart-pop \.6s both\}/);
-  assert.equal((css.match(/\.dy-think\.dy-pop\{/g) || []).length, 1, 'one pop rule');
-  assert.match(css, /\.dy-nav\{position:fixed;left:calc\(14px \+ var\(--us-safe-left\)\);right:calc\(14px \+ var\(--us-safe-right\)\);bottom:max\(12px,var\(--us-safe-bottom\)\);[^}]*grid-template-columns:1fr 1fr 60px 1fr 1fr;height:64px;[^}]*border-radius:32px;/);
+  // The burst, like a like on X (21/11/2026): the heart shrinks away, a disc opens into a ring, the heart springs back, dots spray.
+  assert.match(css, /\.dy-think\.dy-pop :is\(\.dy-think-fill,\.dy-think-line\)\{animation:dy-heart-x \.8s both\}/);
+  assert.match(css, /@keyframes dy-burst-ring\{0%\{transform:scale\(0\);border-width:30px;/);
+  assert.match(css, /@keyframes dy-burst-dot\{0%\{opacity:0;/, 'the dots wait unseen for their turn');
+  // The heart stands out: 50 px in a 68 px column, the other icons 22 px.
+  assert.match(css, /\.dy-nav \.dy-think\{position:relative;width:50px;height:50px;/);
+  assert.match(css, /\.dy-think-fill,\.dy-think-line\{grid-area:1\/1;width:26px;height:26px\}/);
+  assert.match(css, /\.dy-nav\{position:fixed;left:calc\(14px \+ var\(--us-safe-left\)\);right:calc\(14px \+ var\(--us-safe-right\)\);bottom:max\(12px,var\(--us-safe-bottom\)\);[^}]*grid-template-columns:1fr 1fr 68px 1fr 1fr;height:64px;[^}]*border-radius:32px;/);
   assert.match(css, /\.dy-nav button\{[^}]*color:var\(--us-ink-60\)/, 'the icons of the other pages are readable');
   assert.match(css, /\.dy-nav \.nlabel\{font:inherit;font-size:11px;/);
   assert.match(css, /\.dy-nav button\[data-page\]\.active\{background:var\(--us-ink-08\)\}/);
@@ -99,9 +104,10 @@ test('Barra a pillola browser: the pill follows the page, the heart sends only w
       const hb = await page.locator('#thinkButton').boundingBox();
       await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2);
       await page.mouse.down(); await page.waitForTimeout(820);
-      const popScale = await page.evaluate(() => { const el = document.getElementById('thinkButton'); const m = /matrix\(([\d.]+)/.exec(getComputedStyle(el).transform); return { pop: el.classList.contains('dy-pop'), s: m ? Number(m[1]) : 1 }; });
+      const popState = await page.evaluate(() => { const el = document.getElementById('thinkButton'); return { pop: el.classList.contains('dy-pop'), dots: el.querySelectorAll('.dy-burst .dy-burst-dot').length, ring: el.querySelectorAll('.dy-burst .dy-burst-ring').length, held: el.getAnimations().some((a) => a.constructor.name === 'Animation') }; });
       await page.mouse.up();
-      assert.ok(popScale.pop && popScale.s > 1.1, `the heart pops while still held (scale ${popScale.s})`);
+      assert.ok(popState.pop && popState.ring === 1 && popState.dots === 14, 'the heart bursts while still held: one ring, seven pairs of dots');
+      assert.equal(popState.held, false, 'no app-wide press holds it still');
       await page.waitForTimeout(200);
       assert.equal(await page.evaluate(() => window.__sent), 1);
       // Keyboard and screen readers send at once (after fix4's 650 ms double-tap guard).

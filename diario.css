@@ -39,7 +39,7 @@ em.dy-em,.dy-h1 em,.dy-sheet-title em{font-family:var(--us-font-editorial);font-
 @keyframes dy-hop{0%{transform:none}35%{transform:translateY(-14px) rotate(-4deg)}70%{transform:none}85%{transform:translateY(-3px)}100%{transform:none}}
 
 /* ---------------------------------------------------------------- bar */
-.dy-nav{position:fixed;left:calc(14px + var(--us-safe-left));right:calc(14px + var(--us-safe-right));bottom:max(12px,var(--us-safe-bottom));z-index:var(--us-layer-chrome);display:grid;grid-template-columns:1fr 1fr 60px 1fr 1fr;height:64px;padding:5px;border:1px solid var(--us-ink-12);border-radius:32px;background:var(--us-card);box-shadow:0 8px 24px rgba(20,18,14,.12)}
+.dy-nav{position:fixed;left:calc(14px + var(--us-safe-left));right:calc(14px + var(--us-safe-right));bottom:max(12px,var(--us-safe-bottom));z-index:var(--us-layer-chrome);display:grid;grid-template-columns:1fr 1fr 68px 1fr 1fr;height:64px;padding:5px;border:1px solid var(--us-ink-12);border-radius:32px;background:var(--us-card);box-shadow:0 8px 24px rgba(20,18,14,.12)}
 .dy-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;border:0;border-radius:26px;padding:0;background:transparent;cursor:pointer;color:var(--us-ink-60);font:600 11.5px/1.1 var(--us-font-ui);transition:color .2s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .dy-nav .dy-nav-icon{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .dy-nav .dy-nav-scrib{display:none;width:16px;height:6px;opacity:0;fill:none;stroke:var(--us-pencil);stroke-width:2.2;stroke-linecap:round}
@@ -75,10 +75,6 @@ body.us-keyboard-open .dy-nav{opacity:0;pointer-events:none;transform:translateY
 .dy-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:calc(var(--us-safe-top) + 6px) 20px 0}
 .dy-think:disabled{opacity:1}
 @keyframes dy-pop{0%{transform:scale(1)}35%{transform:scale(1.25)}100%{transform:scale(1)}}
-.dy-fly{position:absolute;left:50%;top:-14px;width:44px;height:44px;margin-left:-22px;pointer-events:none}
-.dy-fly i{position:absolute;top:6px;opacity:0;animation:dy-fly 1.1s ease-out forwards;line-height:0}
-.dy-fly svg{width:14px;height:14px}
-@keyframes dy-fly{0%{opacity:0;transform:translateY(0) scale(.6)}20%{opacity:1}100%{opacity:0;transform:translate(18px,-26px) scale(1.15)}}
 .dy-mark{font:30px/1 var(--us-font-mark);color:var(--us-ink-100);user-select:none}
 .dy-envelope .dy-dot{position:absolute;right:9px;top:9px;width:9px;height:9px;border-radius:50%;background:var(--us-pencil);box-shadow:0 0 0 2px var(--us-beige);display:none}
 .dy-envelope.is-closed .dy-dot{display:block}
@@ -691,18 +687,29 @@ html[data-us-motion="reduced"] .dy-f-switch,html[data-us-motion="reduced"] .dy-f
 /* In the middle of the bar the Ti penso: hold it and the heart fills from
    below, full in 650 ms, then it leaves (a quick tap only says so). */
 .dy-nav-mid{position:relative;display:flex;justify-content:center;align-items:center}
-.dy-nav .dy-think{position:relative;width:40px;height:40px;flex:none;border-radius:50%;border:2.5px solid transparent;padding:0;display:grid;place-items:center;cursor:pointer;background:linear-gradient(var(--us-card),var(--us-card)) padding-box,var(--us-noi-grad) border-box;color:var(--us-think);-webkit-tap-highlight-color:transparent;touch-action:none;-webkit-touch-callout:none;user-select:none}
+.dy-nav .dy-think{position:relative;width:50px;height:50px;flex:none;border-radius:50%;border:2.5px solid transparent;padding:0;display:grid;place-items:center;cursor:pointer;background:linear-gradient(var(--us-card),var(--us-card)) padding-box,var(--us-noi-grad) border-box;color:var(--us-think);-webkit-tap-highlight-color:transparent;touch-action:none;-webkit-touch-callout:none;user-select:none}
 .dy-nav .dy-think[hidden]{display:none}
-.dy-think-fill,.dy-think-line{grid-area:1/1;width:21px;height:21px}
+.dy-think-fill,.dy-think-line{grid-area:1/1;width:26px;height:26px}
 .dy-think-fill{-webkit-mask:url("/assets/icons/think-on.svg") center/contain no-repeat;mask:url("/assets/icons/think-on.svg") center/contain no-repeat;background:linear-gradient(var(--us-think),var(--us-think)) bottom/100% 0% no-repeat;transition:background-size .22s ease-out}
 .dy-think-line path{fill:none;stroke:var(--us-think);stroke-width:18;stroke-linejoin:round}
 .dy-think.is-filling .dy-think-fill{background-size:100% 100%;transition:background-size .65s cubic-bezier(.4,0,.6,1)}
 .dy-think.is-full .dy-think-fill,.dy-think.sent .dy-think-fill{background-size:100% 100%;transition:none}
-/* Held, the heart squeezes as it fills; full, it springs out past its size,
-   back a little under, and settles (dy-heart-pop, 0.6 s). */
+/* Held, the circle squeezes as the heart fills. Full (founder, 21/11/2026:
+   «fluida come il like di X»), the circle eases back and the heart bursts:
+   it shrinks to nothing, a rosa disc grows in its place and opens into a
+   lilla ring, the heart springs out of it past its size and settles, and
+   seven pairs of dots spray out and fade. The ring is a 60 px circle whose
+   border thins from solid to nothing, 0.8 s in all. diario.js heartHold. */
+.dy-nav .dy-think{transition:transform .38s cubic-bezier(.2,.9,.3,1)}
 .dy-think.is-filling{transform:scale(.86);transition:transform .65s cubic-bezier(.3,0,.5,1)}
-.dy-think.dy-pop{animation:dy-heart-pop .6s both}
-@keyframes dy-heart-pop{0%{transform:scale(.86);animation-timing-function:cubic-bezier(.2,.9,.3,1)}28%{transform:scale(1.26);animation-timing-function:cubic-bezier(.5,0,.5,1)}52%{transform:scale(.93);animation-timing-function:cubic-bezier(.5,0,.5,1)}74%{transform:scale(1.05);animation-timing-function:cubic-bezier(.5,0,.5,1)}100%{transform:scale(1)}}
+.dy-think.dy-pop :is(.dy-think-fill,.dy-think-line){animation:dy-heart-x .8s both}
+@keyframes dy-heart-x{0%{transform:scale(1);animation-timing-function:cubic-bezier(.5,0,.9,.5)}12%{transform:scale(0)}22%{transform:scale(0);animation-timing-function:cubic-bezier(.2,.9,.3,1)}48%{transform:scale(1.32);animation-timing-function:cubic-bezier(.45,0,.55,1)}68%{transform:scale(.9);animation-timing-function:cubic-bezier(.45,0,.55,1)}88%{transform:scale(1.05);animation-timing-function:cubic-bezier(.45,0,.55,1)}100%{transform:scale(1)}}
+.dy-burst{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
+.dy-burst-ring{position:absolute;left:-30px;top:-30px;width:60px;height:60px;box-sizing:border-box;border-radius:50%;border:30px solid var(--us-rosa);animation:dy-burst-ring .48s .06s both}
+@keyframes dy-burst-ring{0%{transform:scale(0);border-width:30px;border-color:var(--us-rosa);animation-timing-function:cubic-bezier(.2,.8,.3,1)}28%{transform:scale(1);border-width:30px;border-color:var(--us-lilla);animation-timing-function:cubic-bezier(.3,.6,.4,1)}100%{transform:scale(1.06);border-width:0;border-color:var(--us-lilla)}}
+.dy-burst-dot{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:var(--c);opacity:0;animation:dy-burst-dot .55s .2s cubic-bezier(.15,.8,.3,1) both}
+.dy-burst-dot.is-small{left:-2px;top:-2px;width:4px;height:4px;animation-delay:.24s}
+@keyframes dy-burst-dot{0%{opacity:0;transform:rotate(var(--a)) translateY(-24px) scale(1)}8%{opacity:1}70%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateY(-46px) scale(.2)}}
 .dy-think:focus-visible{outline:3px solid var(--us-pencil);outline-offset:3px}
 /* You, top right on every page: your character opens profile and Impostazioni. */
 .dy-me{background:var(--us-beige);overflow:visible}
