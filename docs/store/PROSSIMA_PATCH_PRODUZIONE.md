@@ -37,7 +37,7 @@
 - **Sparisce la barra a goccia** del 20/11 (la palla, la culla e l'onda): codice e test tolti, resta nella storia di git.
 - **Oggi:** il titolo con la data passa da 30/33 px a 25/27, l'ombra della foto è più leggera. La foto prende lo spazio che resta fino a 340 px (o al 40% dello schermo, se è di più). Lo spazio libero che avanza si divide sotto la foto, tra le schede e sopra la barra, così non resta un buco. Sui telefoni piccoli non cambia niente: la foto scende fino a 210 px come prima.
 
-**Test:** `barra-goccia` diventa `barra-pillola`; aggiornati `barra-tastiera`, `m6a-premium-shell`, `us-human-ui-02`, `web-visual-reconciliation-m1`.
+**Test:** `barra-goccia` diventa `barra-pillola`; aggiornati `barra-tastiera`, `m5e-brand-icons`, `m6a-premium-shell`, `us-human-ui-02`, `vnext-foundation-01`, `web-visual-reconciliation-m1`. Suite completa: 2740 passano, restano i 13 fallimenti vecchi che falliscono anche su staging pulito.
 
 ### Personaggi: le reazioni e la festa degli sblocchi (21/11/2026)
 
