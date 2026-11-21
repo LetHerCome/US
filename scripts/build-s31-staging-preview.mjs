@@ -63,6 +63,32 @@ export function isolateStagingDeletionPage(src, publishableKey) {
   return out;
 }
 
+// Every staging deploy gets its own BUILD_ID (founder, 21/11/2026): the
+// service worker keeps the shell by BUILD_ID, and the source keeps the one of
+// the last production release until the next one, so a phone that had opened
+// staging kept the old diario.js after every merge. The preview stamps
+// <release>-s<commit> into index.html, service-worker.js, version.json and
+// the manifest, the same places as scripts/set-build-id.mjs (kept apart: the
+// placeholder test runs this script alone in a temp root).
+export function stagingBuildId(worker, commit, now = Date.now()) {
+  const base = /const BUILD_ID = "([^"]+)";/.exec(worker)?.[1];
+  if (!base) throw Error('service-worker.js is missing BUILD_ID');
+  const tag = String(commit || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) || now.toString(36);
+  return `${base}-s${tag}`.slice(0, 128);
+}
+export function stampStagingBuild({ index, worker, manifest }, buildId) {
+  if (!/^[a-z0-9][a-z0-9._-]{7,127}$/i.test(buildId)) throw Error('Bad staging BUILD_ID');
+  if (!/<meta name="us-build" content="[^"]+"\/>/.test(index)) throw Error('index.html is missing the us-build meta');
+  return {
+    index: index
+      .replace(/<meta name="us-build" content="[^"]+"\/>/, `<meta name="us-build" content="${buildId}"/>`)
+      .replace(/\?v=[^"'&\s>]+/g, `?v=${buildId}`),
+    worker: worker.replace(/const BUILD_ID = "[^"]+";/, `const BUILD_ID = "${buildId}";`),
+    manifest: manifest.replace(/\?v=[^"]+/g, `?v=${buildId}`),
+    version: JSON.stringify({ version: buildId }) + '\n',
+  };
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.env.US_S31_STAGING_PREVIEW !== 'true') throw Error('S3.1 staging preview disabled by default');
   // Dedicated Cloudflare Pages project must target this specific STAGING branch.
@@ -94,6 +120,16 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   if (hasDeletionPage !== null) {
     await writeFile(path.join(OUT,'elimina-account.js'),isolateStagingDeletionPage(hasDeletionPage,key),'utf8');
   }
+  const [stIndex, stWorker, stManifest] = await Promise.all(['index.html','service-worker.js','manifest.webmanifest'].map(f=>readFile(path.join(OUT,f),'utf8')));
+  const buildId = stagingBuildId(stWorker, process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA);
+  const stamped = stampStagingBuild({ index: stIndex, worker: stWorker, manifest: stManifest }, buildId);
+  await Promise.all([
+    writeFile(path.join(OUT,'index.html'),stamped.index,'utf8'),
+    writeFile(path.join(OUT,'service-worker.js'),stamped.worker,'utf8'),
+    writeFile(path.join(OUT,'manifest.webmanifest'),stamped.manifest,'utf8'),
+    writeFile(path.join(OUT,'version.json'),stamped.version,'utf8')
+  ]);
+  process.stdout.write(`US-STAGING BUILD_ID -> ${buildId}\n`);
   const output=await readdir(OUT);
   if (!output.includes('public-auth.js')||!output.includes('public-auth.css'))throw Error('S3.1 Auth runtime missing');
   // The build output remains in Actions artifacts: NO automatic Pages publish.
