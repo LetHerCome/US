@@ -16,7 +16,7 @@ test('Foundation 01 distribuisce quattro destinazioni bottom-nav con touch targe
   const diario = read('diario.css');
 
   assert.deepEqual([...nav.matchAll(/data-page="([^"]+)"/g)].map((match) => match[1]), ['home', 'bond', 'moments', 'quiz']);
-  assert.match(diario, /\.dy-nav\{position:fixed;left:calc\(14px \+ var\(--us-safe-left\)\);right:calc\(14px \+ var\(--us-safe-right\)\);bottom:max\(12px,var\(--us-safe-bottom\)\);[^}]*display:grid;grid-template-columns:1fr 1fr 60px 1fr 1fr;height:64px;padding:5px;border:1px solid/);
+  assert.match(diario, /\.dy-nav\{position:fixed;left:calc\(14px \+ var\(--us-safe-left\)\);right:calc\(14px \+ var\(--us-safe-right\)\);bottom:max\(12px,var\(--us-safe-bottom\)\);[^}]*display:grid;grid-template-columns:1fr 1fr 68px 1fr 1fr;height:64px;padding:5px;border:1px solid/);
   assert.match(read('ui-foundation.css'), /--us-nav-height:50px;/);
   assert.match(css, /@media \(orientation:landscape\) and \(max-height:560px\)\{:root\{--us-nav-height:48px\}/);
   assert.match(diario, /\.dy-nav button\{[^}]*min-width:0;/);

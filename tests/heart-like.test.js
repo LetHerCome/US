@@ -115,7 +115,7 @@ test('the Ti penso at the top left plays the same heart when it is sent, not whe
   // heartHold), so the send does not burst it a second time; any other Ti penso button still does.
   assert.match(send, /const popped=btn\?\.classList\.contains\('dy-think'\);/);
   assert.match(send, /if\(btn&&!result\?\.duplicate&&!popped\)usHeartLike\(btn\);else if\(!popped\)window\.UsFeedback\?\.action\?\.\(\);/);
-  assert.match(read('diario.js'), /const pop = \(\) => \{\s*play\(btn, 'dy-pop', 620\);\s*w\.UsUiFoundation\?\.heart\?\.\(btn\);/);
+  assert.match(read('diario.js'), /const pop = \(\) => \{\s*w\.UsFeedback\?\.action\?\.\(\);\s*if \(reduced\(\)\) return;/, 'it buzzes once, then bursts (diario.js)');
   assert.doesNotMatch(app, /thinkSparks/, 'the two old sparks are gone');
   assert.match(read('ui-foundation.js'), /element\.querySelector\?\.\('\.us-icon, \.think-reaction-glyph, \.us-shell-icon'\)/, 'its heart is the one that springs back');
 });

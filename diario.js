@@ -1086,17 +1086,25 @@
     let timer = 0, hinted = 0;
     const stop = () => { clearTimeout(timer); btn.classList.remove('is-filling'); };
     const send = () => Promise.resolve(w.sendThinkSignal?.()).catch(() => false);
-    // The pop (founder, 21/11/2026): the moment the heart is full it springs
-    // out of its squeeze, a rosa wave opens around it (the app's heart) and
-    // three small hearts leave it. At once, not after the network.
+    // The burst (founder, 21/11/2026, «come il like di X»): the moment the
+    // heart is full it shrinks away, a rosa disc grows and opens into a lilla
+    // ring, the heart springs back out and seven pairs of dots spray out
+    // (diario.css dy-heart-x, dy-burst). At once, not after the network.
+    const BURST_COLORS = ['var(--us-rosa)', 'var(--us-lilla)', 'var(--us-think)'];
     const pop = () => {
-      play(btn, 'dy-pop', 620);
-      w.UsUiFoundation?.heart?.(btn);
-      const fly = $('dyThinkFly');
-      if (fly && !reduced()) {
-        fly.innerHTML = [[6, 0.06], [18, 0.14], [28, 0.22]].map(([x, delay]) => `<i style="left:${x}px;animation-delay:${delay}s">${HEART}</i>`).join('');
-        setTimeout(() => { fly.innerHTML = ''; }, 1500);
-      }
+      w.UsFeedback?.action?.();
+      if (reduced()) return;
+      btn.querySelector('.dy-burst')?.remove();
+      const burst = d.createElement('span');
+      burst.className = 'dy-burst';
+      burst.setAttribute('aria-hidden', 'true');
+      burst.innerHTML = '<i class="dy-burst-ring"></i>' + Array.from({ length: 7 }, (_, i) => {
+        const a = i * (360 / 7);
+        return `<i class="dy-burst-dot" style="--a:${a}deg;--c:${BURST_COLORS[i % 3]}"></i><i class="dy-burst-dot is-small" style="--a:${a + 16}deg;--c:${BURST_COLORS[(i + 1) % 3]}"></i>`;
+      }).join('');
+      btn.prepend(burst);
+      play(btn, 'dy-pop', 820);
+      setTimeout(() => burst.remove(), 950);
     };
     btn.addEventListener('pointerdown', (e) => {
       if (btn.disabled || (e.button != null && e.button > 0)) return;

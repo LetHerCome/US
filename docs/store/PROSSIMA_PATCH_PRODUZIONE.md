@@ -28,6 +28,17 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### Il cuore più grande e lo scoppio come un like (21/11/2026)
+
+**Stato:** branch `claude/cuore-scoppio` (nato dal branch fisso di staging a 16449b9f, dopo la #275). Provato a fotogrammi nel browser col finto Supabase; non ancora su staging, non in produzione.
+
+**Cosa cambia:** il founder ha chiesto un cuore che spicchi nella barra e un'animazione fluida come il like di X.
+- **Più grande:** il cerchio passa da 40 a 50 px e il cuore dentro da 21 a 26 px (le altre icone restano a 22 px). La colonna centrale passa da 60 a 68 px.
+- **Lo scoppio:** mentre lo tieni, il cerchio si stringe e il cuore si riempie, come prima. Appena è pieno, il cuore sparisce per un attimo, un disco rosa cresce, diventa lilla e si apre in un anello che si assottiglia. Poi il cuore torna fuori più grande e si assesta, e sette coppie di puntini rosa e lilla volano via. In tutto dura 0,8 s, con una sola vibrazione, in ogni pagina e anche da tastiera. Si muovono solo trasformazioni, opacità e lo spessore di un anello di 60 px, per restare fluido. Con il movimento ridotto c'è solo la vibrazione.
+- Tolti i tre cuoricini che volavano via e l'onda di `UsUiFoundation.heart`: i puntini prendono il loro posto.
+
+**Test:** `barra-pillola` (scoppio con anello e 14 puntini mentre il dito è ancora giù, cuore da 50 px), `heart-like`, `vnext-foundation-01`, `web-visual-reconciliation-m1`.
+
 ### La barra a pillola e Oggi più leggera (21/11/2026)
 
 **Stato:** branch `claude/barra-pillola` (nato dal branch fisso di staging a 9fe06545). Provato nel browser col finto Supabase, in chiaro e in scuro, a 360×640, 402×874 e 430×932; non ancora su staging, non in produzione.
