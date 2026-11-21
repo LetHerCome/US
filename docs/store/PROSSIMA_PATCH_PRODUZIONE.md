@@ -28,6 +28,14 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### Staging: una versione nuova a ogni pubblicazione (21/11/2026)
+
+**Stato:** branch `claude/staging-versione`. Riguarda solo il build del sito di staging (`build-s31-staging-preview.mjs`): in produzione non cambia niente, perché lì la versione la cambia già ogni rilascio.
+
+**Cosa cambia:** il service worker conserva l'app per BUILD_ID, e nel sorgente il BUILD_ID resta quello dell'ultimo rilascio di produzione (`us-rilascio-20261114-109`). Così chi aveva già aperto staging continuava a vedere il codice vecchio dopo ogni unione: il founder ha trovato il cuore ancora «tieni premuto» dopo la #277. Ora ogni build di staging timbra `<rilascio>-s<commit>` in `index.html`, `service-worker.js`, `version.json` e nel manifest, e il telefono scarica la versione nuova.
+
+**Test:** nuovo `staging-build-id`.
+
 ### Il Ti penso parte al tocco (21/11/2026)
 
 **Stato:** branch `claude/ti-penso-tocco` (nato dal branch fisso di staging a af55709e, dopo la #276). Provato nel browser col finto Supabase; non ancora su staging, non in produzione.
