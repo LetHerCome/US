@@ -562,14 +562,7 @@
   // Returns true when Oggi is on screen and told it (app.js skips its own toast).
   function thinkSent({ name = '', duplicate = false } = {}) {
     if (!$('home')?.classList.contains('active') || !$('dyOggi')) return false;
-    const btn = $('thinkButton');
     if (duplicate) { notice(`${HEART}<span>Già inviato</span>`); return true; }
-    play(btn, 'dy-pop', 480);
-    const fly = $('dyThinkFly');
-    if (fly && !reduced()) {
-      fly.innerHTML = [[6, 0], [18, 0.1], [28, 0.18]].map(([x, delay]) => `<i style="left:${x}px;animation-delay:${delay}s">${HEART}</i>`).join('');
-      setTimeout(() => { fly.innerHTML = ''; }, 1400);
-    }
     notice(`${HEART}<span>${esc(`Ti penso inviato a ${name || partnerName()}`)}</span>`);
     winkUntil = Date.now() + 1200;
     paintDuo({ hop: true });
@@ -1093,6 +1086,18 @@
     let timer = 0, hinted = 0;
     const stop = () => { clearTimeout(timer); btn.classList.remove('is-filling'); };
     const send = () => Promise.resolve(w.sendThinkSignal?.()).catch(() => false);
+    // The pop (founder, 21/11/2026): the moment the heart is full it springs
+    // out of its squeeze, a rosa wave opens around it (the app's heart) and
+    // three small hearts leave it. At once, not after the network.
+    const pop = () => {
+      play(btn, 'dy-pop', 620);
+      w.UsUiFoundation?.heart?.(btn);
+      const fly = $('dyThinkFly');
+      if (fly && !reduced()) {
+        fly.innerHTML = [[6, 0.06], [18, 0.14], [28, 0.22]].map(([x, delay]) => `<i style="left:${x}px;animation-delay:${delay}s">${HEART}</i>`).join('');
+        setTimeout(() => { fly.innerHTML = ''; }, 1500);
+      }
+    };
     btn.addEventListener('pointerdown', (e) => {
       if (btn.disabled || (e.button != null && e.button > 0)) return;
       try { btn.setPointerCapture(e.pointerId); } catch (_) { /* old WebView */ }
@@ -1101,6 +1106,7 @@
       timer = setTimeout(() => {
         btn.classList.remove('is-filling');
         btn.classList.add('is-full');
+        pop();
         send().finally(() => setTimeout(() => btn.classList.remove('is-full'), 900));
       }, HOLD_MS);
     });
@@ -1115,7 +1121,7 @@
     });
     btn.addEventListener('pointercancel', stop);
     btn.addEventListener('contextmenu', (e) => e.preventDefault());
-    btn.addEventListener('click', (e) => { if (e.detail === 0) send(); });
+    btn.addEventListener('click', (e) => { if (e.detail === 0) { pop(); send(); } });
   }
 
   w.UsDiario = Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, shapeOf, slot, paintDiary, paintQuestion, paintVoiDue, thinkSent, openVoiDue, closeVoiDue, character, sentences, paintAll, sign, icon, paintPeople, roles: couple, reactionOf, lookOf, unlockedLook });
