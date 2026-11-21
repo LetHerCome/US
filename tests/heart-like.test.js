@@ -111,7 +111,11 @@ test('wired: Oggi and Ti penso play it when a heart is given, never when taken b
 test('the Ti penso at the top left plays the same heart when it is sent, not when it was already sent', () => {
   const app = read('app.js');
   const send = app.slice(app.indexOf('async function sendThinkSignal('), app.indexOf('window.sendThinkSignal=sendThinkSignal;'));
-  assert.match(send, /if\(btn&&!result\?\.duplicate\)usHeartLike\(btn\);else window\.UsFeedback\?\.action\?\.\(\);/);
+  // Since 21/11/2026 the bar heart (.dy-think) pops with the same heart the moment it is full (diario.js
+  // heartHold), so the send does not burst it a second time; any other Ti penso button still does.
+  assert.match(send, /const popped=btn\?\.classList\.contains\('dy-think'\);/);
+  assert.match(send, /if\(btn&&!result\?\.duplicate&&!popped\)usHeartLike\(btn\);else if\(!popped\)window\.UsFeedback\?\.action\?\.\(\);/);
+  assert.match(read('diario.js'), /const pop = \(\) => \{\s*play\(btn, 'dy-pop', 620\);\s*w\.UsUiFoundation\?\.heart\?\.\(btn\);/);
   assert.doesNotMatch(app, /thinkSparks/, 'the two old sparks are gone');
   assert.match(read('ui-foundation.js'), /element\.querySelector\?\.\('\.us-icon, \.think-reaction-glyph, \.us-shell-icon'\)/, 'its heart is the one that springs back');
 });

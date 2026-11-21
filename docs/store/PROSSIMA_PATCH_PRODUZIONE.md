@@ -28,6 +28,18 @@
 
 **Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
 
+### La barra a pillola e Oggi più leggera (21/11/2026)
+
+**Stato:** branch `claude/barra-pillola` (nato dal branch fisso di staging a 9fe06545). Provato nel browser col finto Supabase, in chiaro e in scuro, a 360×640, 402×874 e 430×932; non ancora su staging, non in produzione.
+
+**Cosa cambia:** il founder trovava Oggi «troppo impattante» e ha scelto la barra semplice come quella dell'app Claude, più la variante D di Oggi con lo spazio riempito.
+- **La barra** è una pillola che galleggia sopra la pagina (64 px, staccata 14 px dai lati e 12 px dal fondo o dalla zona dei gesti). Ha icona e nome sotto (Oggi, Noi, Ricordi, Gioca), icone da 22 px invece di 27, e il cuore del Ti penso al centro, che si manda tenendolo premuto come prima. La pagina in cui sei ha una piccola pillola grigia dietro.
+- **Sparisce la barra a goccia** del 20/11 (la palla, la culla e l'onda): codice e test tolti, resta nella storia di git.
+- **Oggi:** il titolo con la data passa da 30/33 px a 25/27 e l'ombra della foto è più leggera. La pagina si riempie con le misure, non con spazi vuoti: la foto prende tutto lo spazio che resta (circa 410 px su un telefono da 874), con 14 px tra foto e domanda e 10 px tra le schede, e l'ultima scheda finisce 12 px sopra la barra (prima restavano circa 36 px vuoti, misurati per la barra vecchia). Sui telefoni piccoli la foto scende fino a 210 px come prima.
+- **Il pop del cuore:** prima non si vedeva mai. Il tocco di tutta l'app, che rimpicciolisce ogni pulsante premuto, teneva fermo il cuore finché c'era il dito sopra, e il pop arriva proprio allora. Ora il cuore è fuori da quel tocco (`data-us-motion-tap="off"`). Mentre lo tieni si stringe fino all'86%. Appena è pieno scatta al 126%, rimbalza sotto e si assesta (0,6 s), con l'onda rosa del cuore di US e i tre cuoricini. Succede subito, in ogni pagina e anche da tastiera, senza aspettare la rete. L'app non fa più un secondo scoppio dopo l'invio.
+
+**Test:** `barra-goccia` diventa `barra-pillola` (con la prova che il cuore scatta oltre la sua misura mentre è ancora tenuto); aggiornati `barra-tastiera`, `m5e-brand-icons`, `m6a-premium-shell`, `us-human-ui-02`, `vnext-foundation-01`, `web-visual-reconciliation-m1`, `m12b-oggi-no-scroll`, `countdown-direct-edit-bottom-notice`, `heart-like`. Suite completa: restano i 13 fallimenti vecchi che falliscono anche su staging pulito. Tolto `--us-nav-rise`, che serviva solo alla goccia.
+
 ### Personaggi: le reazioni e la festa degli sblocchi (21/11/2026)
 
 **Stato:** branch `claude/personaggi-reazioni` (nato dal branch fisso di staging a 317459ef). Provato nel browser col finto Supabase; non ancora su staging, non in produzione.

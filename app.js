@@ -6029,11 +6029,12 @@ async function sendThinkSignal(){
   // notice says it arrived and your characters hop (diario.js). Elsewhere the
   // earlier heart and toast.
   const thinkName=partner.display_name||usIdentity().partnerName;
-  if(window.UsDiario?.thinkSent?.({name:thinkName,duplicate:Boolean(result?.duplicate)})){window.UsFeedback?.action?.();}
+  const popped=btn?.classList.contains('dy-think');
+  if(window.UsDiario?.thinkSent?.({name:thinkName,duplicate:Boolean(result?.duplicate)})){if(!popped)window.UsFeedback?.action?.();}
   else{
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),2400);
   // Il cuore (founder, 29/10/2026): the same heart as the others, counted with them.
-  if(btn&&!result?.duplicate)usHeartLike(btn);else window.UsFeedback?.action?.();
+  if(btn&&!result?.duplicate&&!popped)usHeartLike(btn);else if(!popped)window.UsFeedback?.action?.();
   if(result?.duplicate)toast('Già inviato',{quiet:true});
   else toast(`Ti penso inviato a ${thinkName}`,{icon:'heart',quiet:false});
   }

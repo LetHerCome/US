@@ -49,6 +49,6 @@ test('M5E mantiene gli SVG come asset diretti e il build marker allineato', () =
   // ink colour (diario.css); the other Phosphor icons still paint from their files.
   assert.ok(read('styles.css').includes('-webkit-mask-image:url("/assets/icons/phosphor/'));
   assert.doesNotMatch(css, /\.us-nav-icon \[data-icon\]/);
-  assert.match(read('diario.css'), /\.dy-nav \.dy-nav-icon\{width:27px;height:27px;fill:none;stroke:currentColor;/);
+  assert.match(read('diario.css'), /\.dy-nav \.dy-nav-icon\{width:22px;height:22px;fill:none;stroke:currentColor;/);
   assert.equal(build, version, 'build marker e versione devono restare allineati');
 });

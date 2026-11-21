@@ -9,14 +9,14 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 test('Foundation 01 distribuisce quattro destinazioni bottom-nav con touch target preservato', () => {
   const html = read('index.html');
   const css = read('fix4.css');
-  // Il diario, ma pulito (15/11/2026): <nav class="dy-nav">, a bar fixed to the
-  // bottom edge: 4 equal columns; each button is the bar height minus 8px of top
-  // padding (the bar height comes from --us-nav-height; 48px in short landscape, fix4.css).
+  // La barra a pillola (21/11/2026): <nav class="dy-nav">, a pill floating over
+  // the bottom edge: 4 equal columns around the heart; each button is 52px
+  // (64px minus 5px of padding and the 1px border on each side).
   const nav = html.match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0] || '';
   const diario = read('diario.css');
 
   assert.deepEqual([...nav.matchAll(/data-page="([^"]+)"/g)].map((match) => match[1]), ['home', 'bond', 'moments', 'quiz']);
-  assert.match(diario, /\.dy-nav\{position:fixed;left:0;right:0;bottom:0;[^}]*display:grid;grid-template-columns:1fr 1fr 86px 1fr 1fr;height:calc\(var\(--us-nav-height\) \+ max\(18px,var\(--us-safe-bottom\)\)\);padding:4px calc\(10px \+ var\(--us-safe-right\)\) max\(18px,var\(--us-safe-bottom\)\)/);
+  assert.match(diario, /\.dy-nav\{position:fixed;left:calc\(14px \+ var\(--us-safe-left\)\);right:calc\(14px \+ var\(--us-safe-right\)\);bottom:max\(12px,var\(--us-safe-bottom\)\);[^}]*display:grid;grid-template-columns:1fr 1fr 60px 1fr 1fr;height:64px;padding:5px;border:1px solid/);
   assert.match(read('ui-foundation.css'), /--us-nav-height:50px;/);
   assert.match(css, /@media \(orientation:landscape\) and \(max-height:560px\)\{:root\{--us-nav-height:48px\}/);
   assert.match(diario, /\.dy-nav button\{[^}]*min-width:0;/);
