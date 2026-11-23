@@ -35,9 +35,10 @@
   const LOOK_HEAD = Object.freeze(['cappello', 'fiocco', 'cuffie', 'corona', 'coroncina', 'festa', 'cento']);
   const LOOK_FACE = Object.freeze(['occhiali', 'sole', 'sciarpina', 'gala', 'macchinetta']);
   const LOOK_NAMES = Object.freeze({ cappello: 'Cappello', fiocco: 'Fiocco', cuffie: 'Cuffie', corona: 'Corona', coroncina: 'Coroncina', festa: 'Cappello da festa', cento: 'Fascia dei 100', occhiali: 'Occhiali', sole: 'Occhiali da sole', sciarpina: 'Sciarpina', gala: 'Gala', macchinetta: 'Macchinetta' });
-  // The thresholds of the couple's Sintonia points (D19, measured on the real pace of the couples, 21/11/2026),
-  // the same the server checks (migration 20261120232852), and the real moments.
-  const LOOK_POINTS = Object.freeze({ occhiali: 150, cappello: 400, fiocco: 700, sciarpina: 1000, sole: 1350, gala: 1700, cuffie: 2100, coroncina: 2550, corona: 3000 });
+  // The thresholds of the couple's Sintonia points (D19, 21/11/2026; the last four
+  // start levels 8, 11, 14 and 19 since 24/11/2026, «proposta A»), the same the
+  // server checks (migration 20261123231417), and the real moments.
+  const LOOK_POINTS = Object.freeze({ occhiali: 150, cappello: 400, fiocco: 700, sciarpina: 1000, sole: 1350, gala: 4550, cuffie: 8750, coroncina: 14300, corona: 26550 });
   const LOOK_MOMENTS = Object.freeze({ macchinetta: 'il primo Ricordo', cento: '100 giorni in US', festa: 'il primo anno in US' });
   // Where things sit on each shape: the top of the head [x, y, half width] and the sides [left, right, y].
   const ANCHOR = Object.freeze({ palla: { head: [50, 26, 19], ears: [12, 88, 56] }, quadrato: { head: [50, 25, 19], ears: [14, 86, 54] }, triangolo: { head: [50, 21, 11], ears: [23, 77, 60] }, goccia: { head: [50, 21, 10], ears: [16, 84, 60] }, nuvola: { head: [56, 22, 15], ears: [12, 88, 60] } });

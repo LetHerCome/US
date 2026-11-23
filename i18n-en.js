@@ -2114,6 +2114,8 @@
     'Occhiali da sole': 'Sunglasses',
     Macchinetta: 'Camera',
     'Avete sbloccato tutto il guardaroba della Sintonia': 'You have unlocked the whole Sync wardrobe',
+    '{name} nel guardaroba': '{name} in the wardrobe',
+    'Prova il look': 'Try the look',
     'Questo non è ancora sbloccato': 'This is not unlocked yet',
     'Non riesco a salvarlo, riprova': 'I can’t save it, try again',
     'Si sblocca con US Plus: ognuno di voi sceglie il suo colore tra 8, e lo vedete tutti e due.': 'Unlocks with US Plus: each of you picks your colour out of 8, and you both see it.',

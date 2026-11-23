@@ -704,6 +704,16 @@ function celebrateLevelUp(next, pending, fromPct = 0.86) {
   showLevelMoment({ from: seen, level, unlocks: pending.filter(presented), fromPct });
   return true;
 }
+// Proposta A (24/11/2026): the last accessories of the wardrobe start a level
+// (8, 11, 14, 19; personaggi.js LOOK_POINTS): the moment names them.
+function looksStartingLevels(from, level) {
+  const P = window.UsPersonaggi;
+  if (!P?.LOOK_POINTS) return [];
+  const starts = new Set();
+  // Level n starts at 200·(n−1) + 150·(n−1)(n−2)/2 points (app.js bondLevelInfo).
+  for (let n = Math.max(1, from) + 1; n <= level; n += 1) starts.add(200 * (n - 1) + 75 * (n - 1) * (n - 2));
+  return Object.entries(P.LOOK_POINTS).filter(([, points]) => starts.has(points)).map(([item]) => P.LOOK_NAMES?.[item]).filter(Boolean);
+}
 // sintonia.js levelMoment, inside the shared Momento (core.js momento):
 // "Livello 6", "Intesa rara. Il prossimo arriva a 950 punti.", "Un premio
 // sbloccato", Scoprilo. The beats: 1 the Sintonia ring closes, 2 the two
@@ -714,7 +724,9 @@ function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
   const need = info && info.level === level ? info.needed : 200 + (level - 1) * 150;
   const dots = Array.from({ length: 12 }, (_, i) => `<circle class="lvx-dot ${i % 2 ? 'is-b' : 'is-a'}" cx="110" cy="110" r="${i % 3 ? 2.6 : 3.6}"/>`).join('');
   const chip = unlocks.length === 1 ? 'Un premio sbloccato' : unlocks.length > 1 ? `${unlocks.length} premi sbloccati` : '';
-  const action = unlocks.length === 1 ? 'Scoprilo' : unlocks.length > 1 ? 'Scoprili' : 'Chiudi';
+  const looks = looksStartingLevels(from, level);
+  const lookChip = looks.length ? `${looks.join(', ')} nel guardaroba` : '';
+  const action = unlocks.length === 1 ? 'Scoprilo' : unlocks.length > 1 ? 'Scoprili' : looks.length ? 'Prova il look' : 'Chiudi';
   const root = document.createElement('div');
   root.className = 'us-level-moment';
   root.setAttribute('role', 'dialog');
@@ -726,6 +738,7 @@ function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
     <h2 id="usLevelMomentTitle">Livello <em>${level}</em></h2>
     <p>${esc(rank ? `${rank}. Il prossimo arriva a ${fmt(need)} punti.` : `Il prossimo arriva a ${fmt(need)} punti.`)}</p>
     ${chip ? `<span class="us-level-moment-chip"><i></i>${esc(chip)}</span>` : ''}
+    ${lookChip ? `<span class="us-level-moment-chip us-level-moment-look"><i></i>${esc(lookChip)}</span>` : ''}
     <div class="us-level-moment-actions"><button type="button" class="primary" data-us-level-go>${action}</button></div>
   </div>`;
   document.body.appendChild(root);
@@ -734,7 +747,7 @@ function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
   const visual = root.querySelector('.lvx');
   // From system Back the rewards come a moment later, once navigation.js has
   // finished unwinding history, so that same Back cannot also close them.
-  const close = ({ fromBack = false } = {}) => {
+  const close = ({ fromBack = false, look = false } = {}) => {
     if (!root.isConnected || root.dataset.closing) return;
     root.dataset.closing = '1';
     root.removeEventListener('keydown', onKey);
@@ -744,6 +757,7 @@ function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
       levelMomentClose = null;
       if (unlocks.length && fromBack) setTimeout(() => startUnlockQueue(unlocks), 120);
       else if (unlocks.length) startUnlockQueue(unlocks);
+      else if (look) window.UsAngolo?.open?.('look');
     };
     if (reduced || typeof root.animate !== 'function') return done();
     // core.js closeMoment: the Momento fades in 280 ms.
@@ -751,7 +765,7 @@ function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
   };
   const onKey = (event) => { if (event.key === 'Escape') close(); };
   root.addEventListener('keydown', onKey);
-  root.querySelector('[data-us-level-go]').addEventListener('click', () => close());
+  root.querySelector('[data-us-level-go]').addEventListener('click', () => close({ look: !unlocks.length && looks.length > 0 }));
   // S10 — system Back (navigation.js) does what the button does.
   levelMomentClose = close;
   const focusLater = (ms) => setTimeout(() => root.querySelector('[data-us-level-go]')?.focus?.({ preventScroll: true }), ms);
