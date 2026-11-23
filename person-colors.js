@@ -11,9 +11,9 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
 
-  // Il diario, ma pulito (founder, 15/11/2026): one colour, one meaning. Honey
-  // is time, sky is distance, the heart red is the Ti penso: oro, cielo and
-  // rubino left the person palette for blu, prugna and menta.
+  // Palette of 15/11/2026 (migration 20261115183900): oro, cielo and rubino
+  // left for blu, prugna and menta. Kept when staging restarted from main
+  // (founder, 23/11/2026, D8): the two colours now drive the whole app.
   const PALETTE = Object.freeze({
     rosa: '#ff7c96', lilla: '#a98bff', blu: '#6f9bff', salvia: '#8fd49b',
     pesca: '#ff9f6e', prugna: '#c98bd6', menta: '#6fd6c8', perla: '#e8e1f0',

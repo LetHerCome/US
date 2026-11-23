@@ -105,10 +105,7 @@ test('report: server errors map to messages', async () => {
 
 test('settings: rows, routes and guarded flows', () => {
   const html = read('index.html');
-  // Il diario, ma pulito (15/11/2026): the row says «Segnala un problema» (mockup);
-  // the sheet it opens still names contents too (Play UGC), checked below.
-  assert.match(html, /data-us-setting="report">[\s\S]*?<b>Segnala un problema<\/b>/);
-  assert.match(read('settings.js'), /openModal\('Segnala un problema o un contenuto'/);
+  assert.match(html, /data-us-setting="report">[\s\S]*?Segnala un problema o un contenuto/);
   assert.match(html, /data-us-setting="leave-couple">[\s\S]*?Esci dalla coppia/);
   const settings = read('settings.js');
   assert.match(settings, /if\(name==='leave-couple'\)return leaveCoupleModal\(\);/);

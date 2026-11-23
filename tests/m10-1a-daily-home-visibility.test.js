@@ -150,13 +150,9 @@ test('M10.1B: il controllo top-left “Oggi / Domanda” (todayOrb) è rimosso',
     assert.doesNotMatch(read(file), /today-orb|\.brand-row/, `${file}: CSS obsoleto rimosso`);
   }
   // M12A: le tre zone della top bar restano bilanciate: Per voi, marchio US al centro, Left for You a destra.
-  // Il diario, ma pulito (15/11/2026): the three zones are the header of Oggi:
-  // Ti penso on the left, «us» in the centre, Lasciato per te on the right.
-  const head = html.match(/<header class="dy-head">[\s\S]*?<\/header>/)?.[0] || '';
-  // La barra a goccia (20/11/2026): Lasciato per te on the left, «us» in the centre, you on the right; Ti penso is in the bar.
-  const zones = ['id="leftForYouPartnerEntry"', 'class="dy-mark"', 'data-dy-me'].map((s) => head.indexOf(s));
-  assert.ok(zones.every((at, i) => at >= 0 && (i === 0 || at > zones[i - 1])), `header zones ${zones}`);
-  assert.match(read('diario.css'), /\.dy-head\{display:flex;justify-content:space-between;/);
+  const css = read('identity.css');
+  assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*grid-column:2/);
+  assert.match(css, /\.top\.us-premium-top \.top-actions\{[^}]*grid-column:3/);
 });
 
 test('M10.1B: openToday(), target push "today" e foglio Daily Question restano vivi', () => {

@@ -54,6 +54,31 @@ test('Daily mobile: Foglio docked in the safe area, two distinct answers, long t
  }finally{await h.close();}
 });
 
+test('Daily mobile: with the iOS keyboard the Foglio covers the panned visible area, no page shows under it',async t=>{
+ const h=await start();if(!h)return t.skip('Playwright unavailable');
+ try{
+  const {page,ctx}=await pageFor(h,{width:390,height:844,reduced:true});
+  try{
+   await page.evaluate(()=>window.openToday());await page.waitForSelector('#answer:not([hidden])');
+   // iOS: keyboard up, the visible area is 400px tall and panned 300px down over the page.
+   await page.evaluate(()=>{
+    document.body.classList.add('us-keyboard-open');
+    document.documentElement.style.setProperty('--us-viewport-top','300px');
+    document.documentElement.style.setProperty('--us-viewport-height','400px');
+   });
+   await page.waitForTimeout(100);
+   const g=await page.evaluate(()=>{
+    const r=el=>{const b=el.getBoundingClientRect();return {top:Math.round(b.top),bottom:Math.round(b.bottom)};};
+    return {overlay:r(document.getElementById('today')),backdrop:r(document.querySelector('#today .us-modal-backdrop')),panel:r(document.querySelector('#today [data-us-modal-panel]'))};
+   });
+   assert.deepEqual(g.overlay,{top:300,bottom:700},JSON.stringify(g));
+   assert.deepEqual(g.backdrop,{top:300,bottom:700},JSON.stringify(g));
+   assert.equal(g.panel.bottom,700,'the sheet sits on the keyboard');
+   assert.ok(g.panel.top>=300,'the sheet top stays in the visible area');
+  }finally{await ctx.close();}
+ }finally{await h.close();}
+});
+
 test('Daily mobile: waiting, retry, keyboard-height viewport and reduced motion remain usable',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
@@ -67,8 +92,7 @@ test('Daily mobile: waiting, retry, keyboard-height viewport and reduced motion 
    assert.equal(await page.locator('#answer').inputValue(),'Una bozza da conservare');
    await page.locator('#todaySaveBtn').scrollIntoViewIfNeeded();assert.equal(await page.locator('#todaySaveBtn').isVisible(),true);
    await page.evaluate(()=>{window.__QA.rpc.get_daily_state=async()=>({data:{my_answer:'Una bozza da conservare',partner_has_answer:false,both_answered:false,partner_answer:null},error:null});return window.hydrateToday();});
-   // Mockup v5 «I fogli» (16/11/2026): the other is drawn asleep with «Aspettiamo <nome>».
-   await page.waitForFunction(()=>document.getElementById('todayPartner').textContent.includes('Aspettiamo'));
+   await page.waitForFunction(()=>document.getElementById('locked').textContent.includes('In attesa'));
    await page.evaluate(()=>{window.__QA.rpc.get_daily_state=async()=>{throw new Error('offline');};return window.hydrateToday();});
    assert.equal(await page.locator('#todayRetryBtn').isVisible(),true);
    await page.evaluate(()=>{window.__QA.rpc.get_daily_state=async()=>({data:{my_answer:null,partner_has_answer:false,both_answered:false,partner_answer:null},error:null});});
@@ -96,8 +120,7 @@ test('Daily mobile: short reveal shows question, both answers and Conserva with 
      window.UsCoupleContext.hydrate().then(()=>window.openToday());
     });
     await page.waitForSelector('[data-us-daily-answer="partner"]');await page.waitForTimeout(300);
-    // Mockup v5 «I fogli» (16/11/2026): the answer is signed by the character; the name is its label.
-    assert.equal(await page.locator('[data-us-daily-answer="partner"]').getAttribute('aria-label'),'Marco');
+    assert.equal(await page.locator('[data-us-daily-answer="partner"] b').textContent(),'Marco');
     await page.waitForSelector('[data-us-daily-keep]');
     assert.equal(await page.locator('[data-us-daily-keep]').isEnabled(),true);
     if(shots){fs.mkdirSync(shots,{recursive:true});await page.screenshot({path:path.join(shots,`daily-short-${width}x${height}.png`)});}

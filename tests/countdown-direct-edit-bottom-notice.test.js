@@ -15,7 +15,7 @@ const app = read('app.js');
 // ("Nessuno in Oggi"); it replaces the retired corner button.
 // Round 3 (mockup 032, #cdBtn): the visible countdown opens the list, where "Crea countdown" is;
 // it used to open the active editor (often "Insieme da", with no fields), and adding one seemed impossible.
-test('Countdown: the entry comes back only when Oggi shows none, and the visible countdown opens the list', { skip: 'Il diario, ma pulito (15/11/2026): il countdown non è più su Oggi (vecchio hero nascosto); l\'editor resta e si apre con USCountdown.open()' }, () => {
+test('Countdown: the entry comes back only when Oggi shows none, and the visible countdown opens the list', () => {
   const home = html.match(/<main id="home"[\s\S]*?<\/main>/)?.[0] || '';
   assert.match(home, /id="usCountdownEntry"[^>]*aria-haspopup="dialog" hidden>/);
   assert.doesNotMatch(home, /id="usCountdownEntry"[^>]*(tabindex="-1"|aria-hidden="true")/);
@@ -33,12 +33,8 @@ test('Oggi: only actionable personal priority notices survive the cleanup', () =
   assert.ok(home.indexOf('id="usTodayPriorityRegion"') < home.indexOf('id="usOggiStack"'));
 });
 
-// Il diario, ma pulito (15/11/2026): the notice is no longer fixed above the nav;
-// it sits in the page under the question of today (#dyMore), and the page clears
-// the nav. The Daily nudge still stacks above the nav while a notice shows.
 test('Oggi: actionable notice is fixed just above the nav and Daily nudge stacks above it', () => {
-  assert.match(html, /<div class="dy-more" id="dyMore">\s*<div id="usTodayPriorityRegion"/);
-  assert.match(read('diario.css'), /\.dy-oggi\{box-sizing:border-box;display:flex;flex-direction:column;min-height:[^}]*padding:0 0 calc\(64px \+ max\(12px,var\(--us-safe-bottom\)\) \+ 12px\)\}/);
+  assert.match(styles, /#home #usTodayPriorityRegion\{[\s\S]*?position:fixed!important;[\s\S]*?bottom:calc\(10px \+ var\(--us-safe-bottom\) \+ var\(--us-nav-height\) \+ 12px\)!important;/);
   assert.match(styles, /body:has\(#home\.active #usTodayPriorityRegion:not\(\[hidden\]\)\) \.us-daily-nudge\{[\s\S]*?bottom:calc\(10px \+ var\(--us-safe-bottom\) \+ var\(--us-nav-height\) \+ 82px\);/);
   assert.match(app, /target\.closest\('#usTodayPriorityRegion,/);
 });

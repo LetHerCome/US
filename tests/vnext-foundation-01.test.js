@@ -9,17 +9,13 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 test('Foundation 01 distribuisce quattro destinazioni bottom-nav con touch target preservato', () => {
   const html = read('index.html');
   const css = read('fix4.css');
-  // La barra a pillola (21/11/2026): <nav class="dy-nav">, a pill floating over
-  // the bottom edge: 4 equal columns around the heart; each button is 52px
-  // (64px minus 5px of padding and the 1px border on each side).
-  const nav = html.match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0] || '';
-  const diario = read('diario.css');
+  const nav = html.match(/<nav class="nav us-nav us-nav-premium"[\s\S]*?<\/nav>/)?.[0] || '';
 
   assert.deepEqual([...nav.matchAll(/data-page="([^"]+)"/g)].map((match) => match[1]), ['home', 'bond', 'moments', 'quiz']);
-  assert.match(diario, /\.dy-nav\{position:fixed;left:calc\(14px \+ var\(--us-safe-left\)\);right:calc\(14px \+ var\(--us-safe-right\)\);bottom:max\(12px,var\(--us-safe-bottom\)\);[^}]*display:grid;grid-template-columns:1fr 1fr 68px 1fr 1fr;height:64px;padding:5px;border:1px solid/);
-  assert.match(read('ui-foundation.css'), /--us-nav-height:50px;/);
-  assert.match(css, /@media \(orientation:landscape\) and \(max-height:560px\)\{:root\{--us-nav-height:48px\}/);
-  assert.match(diario, /\.dy-nav button\{[^}]*min-width:0;/);
+  assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)!important/);
+  assert.match(css, /\.nav button\{min-width:0;min-height:52px/);
+  assert.match(css, /bottom:max\(8px,var\(--us-safe-bottom\)\)/);
+  assert.match(css, /@media \(orientation:landscape\) and \(max-height:560px\)[\s\S]{0,1600}\.nav button\{min-height:46px/);
 });
 
 test('Foundation 01 mantiene il contratto completo di navigation e Oggi', () => {
@@ -34,9 +30,7 @@ test('Foundation 01 mantiene il contratto completo di navigation e Oggi', () => 
   assert.doesNotMatch(app, /const swipePages=/);
   assert.doesNotMatch(html, /data-page="settings"/);
   assert.match(html, /id="usTodayPriorityRegion" hidden aria-live="polite"><\/div>/);
-  // Il diario, ma pulito (15/11/2026): the region is empty in the markup (the old lazy
-  // pattern ran across the rest of the page, which now follows the region).
-  assert.doesNotMatch(html, /usTodayPriorityRegion[^>]*>(?:(?!<\/div>)[\s\S])*?(received|reveal ready|waiting for me|priority card)/i);
+  assert.doesNotMatch(html, /usTodayPriorityRegion[^>]*>[\s\S]*?(received|reveal ready|waiting for me|priority card)/i);
 });
 
 test('partner apre solo Lasciato per te e il profilo resta un controllo foto', () => {
@@ -46,8 +40,7 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,180}onclick="usEnvelopeTap\(\)"/);
   assert.doesNotMatch(html, /id="profileAvatarBtn"/, 'nessun avatar/foto legacy nel top chrome');
   assert.match(html, /id="profileAvatarFile"/, 'il flusso foto profilo resta vivo tramite Impostazioni');
-  // Il diario, ma pulito (15/11/2026): the row carries its inline stroke icon before the label.
-  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,700}<b>Foto profilo<\/b>/);
+  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);
   assert.doesNotMatch(html, /onclick="openOwnStories\(\)"/);
   assert.match(stories, /__US_LEFT_FOR_YOU_ACTIVE__/);
   assert.match(html, /id="usSettingsEntry"[\s\S]{0,160}onclick="go\('settings',\{nav:true\}\)"/);
@@ -56,10 +49,9 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   // M12A: il centro è il marchio US; "I nostri eventi" resta raggiungibile da Noi
   // (US 1.0: il vecchio calendario a schermo intero non c'è più, Eventi è il link sotto il calendario di Noi).
   assert.doesNotMatch(html, /id="usEventsTopEntry"/);
-  // Il diario, ma pulito (15/11/2026): the centre of the Oggi header is «us» (dy-mark).
-  assert.match(html, /class="dy-mark"[^>]*role="img" aria-label="US"/);
+  assert.match(html, /class="us-top-brand"[^>]*role="img" aria-label="US"/);
   // Noi nuova (03/11/2026): Eventi si apre dalle date del calendario di Noi.
   assert.match(read('noi-v2.js'), /window\.openNoiSection\?\.\('eventi'\)/);
-  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,700}<b>Foto profilo<\/b>/);
+  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);
   assert.match(read('settings.js'), /window\.pickProfilePhoto\?\.\(\)/);
 });

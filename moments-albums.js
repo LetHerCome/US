@@ -1220,17 +1220,20 @@ console.info('[US] Moments Albums attivo');
     section.insertBefore(head, originalTitle.nextSibling);
 
     const overlay = document.createElement('div');
-    // Mockup v5 «I fogli» (16/11/2026): the one sheet of the diary.
-    overlay.className = 'dy-foglio us-moment-compose-overlay';
+    overlay.className = 'us-moment-compose-overlay';
     overlay.id = 'usMomentComposeOverlay';
     overlay.setAttribute('aria-hidden', 'true');
     overlay.setAttribute('data-us-modal', '');
+    overlay.setAttribute('data-us-motion-surface', '');
     overlay.innerHTML = `
-      <div class="dy-foglio-scrim" id="usMomentComposeBackdrop"></div>
-      <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="usMomentComposeTitle" data-us-modal-panel>
-        <span class="dy-grab" aria-hidden="true"></span>
-        <div class="dy-sheet-head"><h2 class="dy-sheet-title" id="usMomentComposeTitle">Un nuovo <em>ricordo</em></h2><button type="button" class="dy-ib dy-close" id="usMomentComposeClose" aria-label="Chiudi" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-        <div id="usMomentComposeMount" class="dy-f-body"></div>
+      <div class="us-moment-compose-backdrop us-modal-backdrop" id="usMomentComposeBackdrop"></div>
+      <section class="us-moment-compose-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-label="Aggiungi un ricordo" data-us-modal-panel>
+        <div class="us-moment-compose-grabber"></div>
+        <div class="us-moment-compose-title">
+          <div><small class="tiny us-moment-compose-kicker">Ricordi</small><b>Aggiungi un ricordo</b></div>
+          <button type="button" class="us-moment-compose-close us-modal-close" id="usMomentComposeClose" aria-label="Chiudi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+        </div>
+        <div id="usMomentComposeMount"></div>
       </section>
     `;
     document.body.appendChild(overlay);

@@ -23,7 +23,7 @@ test('SystemBars Capacitor 8.5 usa inset CSS e contenuto chiaro sul shell scuro'
 
   assert.deepEqual(config.plugins.SystemBars, {
     insetsHandling: 'css',
-    style: 'LIGHT', // Il diario, ma pulito (15/11/2026): dark icons on the paper (Capacitor 8: LIGHT = dark content)
+    style: 'DARK',
     hidden: false,
     initialViewportFitValueHint: 'cover'
   });

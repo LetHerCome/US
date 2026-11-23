@@ -124,7 +124,7 @@ function canHole() {
 
 // The tab is marked at once, before the colour moves (mockup markTab/placeBlob).
 function markNav(button) {
-  doc.querySelectorAll('.dy-nav button[data-page]').forEach((b) => {
+  doc.querySelectorAll('.nav button[data-page]').forEach((b) => {
     const on = b === button;
     b.classList.toggle('active', on);
     if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
@@ -280,10 +280,7 @@ function retarget(button, self, id, options) {
 const PUSH_MS = 480;
 const POP_MS = 440;
 const PUSH_STAGGER = 140;
-// Impostazioni is a sub-page of the four pages (your character is top right on
-// each since 20/11/2026): it slides in over the page you came from and back.
-const TABS = new Set(['home', 'bond', 'moments', 'quiz']);
-const subOf = (child, parent) => child === 'settings' && TABS.has(parent);
+const PARENT = { settings: 'bond' };
 let slideJob = null;
 function finishSlide() {
   const job = slideJob;
@@ -354,7 +351,7 @@ if (typeof original === 'function') {
     if (pending) { run += 1; job = null; clear(); busy = false; flushPending(); drainAfter(); }
     if (slideJob) finishSlide(); // a programmatic go() lands the slide at once
     const sub = id && id !== from && !doc.hidden && !options?.swipe && !options?.motionCommit
-      ? (subOf(id, from) ? 'push' : (subOf(from, id) ? 'pop' : null))
+      ? (PARENT[id] === from ? 'push' : (PARENT[from] === id ? 'pop' : null))
       : null;
     if (sub) {
       if (reducedMotion()) {
@@ -390,7 +387,7 @@ window.UsDueColori = Object.freeze({
   switching: () => switching,
   // A sub-page step (Settings over Noi, either way): navigation.js lets Back
   // take it through go() so it slides as the mockup's pop().
-  isSubPage: (from, to) => Boolean(from && to && (subOf(to, from) || subOf(from, to))),
+  isSubPage: (from, to) => Boolean(from && to && (PARENT[to] === from || PARENT[from] === to)),
   // The blocks of a page rise in (mockup UP.stagger), e.g. Oggi right after
   // the intro of "Entra in US". Nothing under reduced motion.
   stagger(id, delay = 0) {

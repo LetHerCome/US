@@ -1,225 +1,31 @@
 # Prossima patch in produzione
 
-> **Regola (founder, 14/11/2026): ogni patch va in tutte e due le app.** Dalla beta Apple in poi, ogni rilascio esce dallo stesso commit di `main` sia come AAB per Play (workflow «Android Play bundle») sia come build TestFlight (workflow `ios-testflight.yml`), con **lo stesso numero di versione** (es. 1.5.2 e 1.5.2). Ordine: staging → SQL e funzioni in produzione → merge su `main` (sito) → AAB + TestFlight. Le parti native (widget, notifiche native, accesso Apple/Google) sono separate: un fix lì va fatto per ciascuna piattaforma o vale per una sola, e la nota lo dice. Le prove iOS le fa Bea da TestFlight.
+## Dopo la 1.5.1 (in raccolta)
 
-## Prossima patch (dopo la 1.5.1)
+### Staging riparte da main (23/11)
 
-### In preparazione: «Il diario, ma pulito» (15/11/2026)
+**Stato:** ramo `claude/staging-da-main`, verso il ramo fisso di staging. Il diario pulito di staging (#255–#278) è archiviato nell'etichetta `archivio/staging-diario-pulito-20261123` (`6c7aa160`) e non andrà in produzione. Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md).
 
-**SQL (staging fatto, produzione da fare col via):** `20261115183900_personaggi_forma_e_colori.sql` (forma del personaggio, `set_my_character_shape`, tavolozza nuova con i colori spostati) è applicata su US-STAGING (run 43758649805). In produzione va applicata prima del sito, perché il sito nuovo scrive le forme e i nomi nuovi dei colori.
+**Cosa porta in produzione, quando uscirà il redesign:**
+- **Migrazioni dei personaggi** `20261115183900_personaggi_forma_e_colori.sql` e `20261120232852_personaggi_guardaroba.sql` (già su US-STAGING, non in produzione): vanno applicate **prima** del sito. La prima cambia la tavolozza delle persone (oro, cielo e rubino diventano pesca, blu e prugna): prima dell'uscita contare in sola lettura chi li ha scelti.
+- **Tavolozza** in `person-colors.js`: rosa, lilla, blu, salvia, pesca, prugna, menta, perla; i nomi vecchi si leggono come il colore nuovo più vicino finché la migrazione non li sposta.
+- **Testo grande del telefono:** Android `setTextZoom` in `UsWebView.java` (vale solo da un APK nuovo), iPhone `-webkit-text-size-adjust` in `platform.js` (da provare con TestFlight); `aria-description` tradotto.
+- **Tastiera ed emoji:** i campi delle parole di conferma non vengono riscritti su Android; i titoli dei tipi del calendario si tagliano per carattere; il nome dello spazio accetta emoji e suggerimenti.
+- **Solo staging:** la versione `<rilascio>-s<commit>` a ogni pubblicazione e la pagina segnaposto dei rami di prova (script di build, nessun effetto sulla produzione).
 
-**Stato:** branch `claude/diario-pulito-c85387` (nato da `main`), provato su US LIVE con i dati di staging; non sul sito di staging, non in produzione. Missione e differenze dal mockup: [diario-pulito.md](../missions/diario-pulito.md). Solo web e una riga di config Capacitor (`SystemBars` LIGHT): niente SQL, niente Edge.
+**Test:** `tests/staging-build-id.test.js`, `tests/s3-1-public-auth.test.js`, `tests/accessibilita.test.js`, `tests/keyboard-emoji.test.js`, `tests/person-colors-*.test.js`, `tests/content-1-0-catalog.test.js`.
 
-**Cosa cambia:** tutta US passa dallo scuro alla carta chiara dello studio approvato il 15/11: Oggi come pagina del giorno (foto da Ricordi, frase del giorno, personaggi, domanda), «Voi due» al posto di Sintonia in Gioca (con «Come stai»), Noi con il calendario a stanghette e «In arrivo», Ricordi come diario per giorni, Gioca con la sfida e «Da giocare». Il countdown attivo diventa la frase del giorno e si crea da Noi. Il gatto non si vede più.
+**Novità per Play:** nessuna voce a sé finché non escono le fasi del redesign.
 
-**Da decidere prima della produzione — Atmosfere (founder, 15/11: «concordo con tutto»):** le Atmosfere sono in pausa (`ATMOSFERE_PAUSED` in progression.js). In produzione chi le ha sbloccate o scelte **le vedrà sparire**: la scelta resta salvata sul server ma non si applica più. Va deciso se dirlo nella nota della patch (Novità per Play e schermata «Novità») oppure farle tornare come colori della carta (varianti chiare) prima di uscire. Lo stesso vale per i premi del gatto, che diventeranno accessori dei personaggi.
+### Fogli con la tastiera su iPhone (17/11)
 
-**L'entrata (branch `claude/diario-entrata`):** benvenuto, account, «Da dove partite?», «Tu» con forma e colore del personaggio, «Da quando state insieme?», il codice con «Ti avviso quando entra?» e la domanda di oggi, l'arrivo «Ora siete in due». Via i passi Notifiche, Posizione e «Tutto pronto» dopo l'abbinamento. La forma si salva con `set_my_character_shape` (migrazione `20261115183900`, da applicare prima su staging e poi in produzione insieme alla patch); senza, resta sul telefono. Differenze: [diario-pulito.md, «L'entrata»](../missions/diario-pulito.md).
+**Stato:** branch `claude/whatsapp-video-review-99dc83`, da `main`. Trovato da Bea su TestFlight (video del 17/11): rispondendo alla domanda del giorno, sotto «Invia la mia risposta» ricompariva la pagina Oggi con la card della domanda. Provato col test nel browser che simula la tastiera di iPhone; da riprovare su TestFlight. Non su staging né in produzione.
 
-**Android:** i widget restano scuri per ora (lavoro a parte, dopo la prova su staging). Le icone scure della barra di stato le chiede il web (SystemBars dal JS), quindi funzionano anche senza AAB nuovo; la config `SystemBars` LIGHT entra con il prossimo AAB.
+**Cosa cambia:** con la tastiera aperta iPhone sposta in giù la parte visibile; i fogli (domanda del giorno, conto alla rovescia, eventi, Lasciato per te…) ora partono da lì e la coprono tutta. Solo sito (`fix4.js`, `dc-popup.css`), niente SQL né parti native. Su staging c'è lo stesso difetto anche col diario pulito (`dc-popup.css`, `diario.css` `.dy-foglio`): va corretto anche lì.
 
-### I fogli nel linguaggio del diario (16/11/2026)
+**Test:** `tests/us-v6-daily-reveal-browser.test.js` («with the iOS keyboard…»).
 
-**Stato:** branch `claude/fogli-diario-e7a923` (nato dal branch fisso di staging a 8f1827bc, che contiene già «Il diario, ma pulito»). Provato nel browser col finto Supabase, chiaro e scuro; non ancora su staging, non in produzione. Mockup approvato dal founder il 16/11 («Sì, come consigli»): https://claude.ai/artifact/Phwo9n9Q8sZro7jX8HAN6Y, sezione «I fogli». Differenze: [diario-pulito.md](../missions/diario-pulito.md#differenze-dal-mockup-fogli).
-
-**Cosa cambia:** i fogli che salgono dal basso hanno lo stesso disegno di «Voi due»: maniglia, titolo con una parola in corsivo, chiusura quadrata, bottone principale in inchiostro, secondari a tratto, scrittura a mano dove scrivete voi, personaggi come firma; si chiudono anche trascinando giù la maniglia. Portati: la domanda di oggi, la conferma (anche «Novità»), Ti penso ricevuto (da schermata intera a foglio corto), Lasciato per te (lettura, busta e scrittura), nuovo ricordo, nuovo impegno e dettaglio dell'impegno, la cornice dei fogli delle Impostazioni (Notifiche come modello), la cornice della partita. In tutta l'app i bottoni principali e quelli per eliminare sono in inchiostro: niente più colore della persona né rosso pieno.
-
-**Da sapere prima della produzione:** «Elimina account», «Esci dalla coppia» ed «Elimina» non sono più rossi (scelta del founder del 16/11: il rosso è del cuore e della matita); il titolo della conferma dice cosa sparisce. Restano col disegno vecchio (ma coi bottoni in inchiostro): galleria del ricordo, eventi, Come stai, countdown, idee, bacheca, lavagna, sblocco di Sintonia, distanza, widget, il vostro anno, Conservati, Dove. Solo web: nessuna migrazione, nessuna Edge, nessun AAB necessario (basta il sito; l'app installata prende il web nuovo).
-
-**Test:** `npm test` verde; aggiornate le prove che proteggevano il disegno vecchio dei fogli portati (`centered-popups-v1`, `m9e`, `m5f`, `m5g5`, `m5g6`, `m5j`, `lasciato-1-0`, `m6b`, `m6d`, `m9c`, `m10-1c`, `calendar-titoli-orari`, `us-human-ui-02`, `us-v6-daily-reveal-browser` e altri). Shell offline 3.253.222 byte (margine 102 KB, prima 46 KB): tolte circa 87 KB di regole dei fogli vecchi, aggiunte 21 KB in `diario.css`. Tolti anche markup e CSS dei fogli senza tasto «Questa settimana» e «Capitoli».
-
-### Staging: una versione nuova a ogni pubblicazione (21/11/2026)
-
-**Stato:** branch `claude/staging-versione`. Riguarda solo il build del sito di staging (`build-s31-staging-preview.mjs`): in produzione non cambia niente, perché lì la versione la cambia già ogni rilascio.
-
-**Cosa cambia:** il service worker conserva l'app per BUILD_ID, e nel sorgente il BUILD_ID resta quello dell'ultimo rilascio di produzione (`us-rilascio-20261114-109`). Così chi aveva già aperto staging continuava a vedere il codice vecchio dopo ogni unione: il founder ha trovato il cuore ancora «tieni premuto» dopo la #277. Ora ogni build di staging timbra `<rilascio>-s<commit>` in `index.html`, `service-worker.js`, `version.json` e nel manifest, e il telefono scarica la versione nuova.
-
-**Test:** nuovo `staging-build-id`.
-
-### Il Ti penso parte al tocco (21/11/2026)
-
-**Stato:** branch `claude/ti-penso-tocco` (nato dal branch fisso di staging a af55709e, dopo la #276). Provato nel browser col finto Supabase; non ancora su staging, non in produzione.
-
-**Cosa cambia:** il founder vuole che il Ti penso parta al tocco, come un like. Basta un tocco sul cuore al centro della barra: il cuore si riempie e scoppia subito (anello e puntini), poi il Ti penso parte. Mentre lo premi il cerchio si abbassa un poco. Spariscono la pressione lunga, il riempimento lento e il suggerimento «Tieni premuto il cuore…». Tolti anche la descrizione per il lettore di schermo e il titolo «tieni premuto», con le loro traduzioni inglesi. Resta la protezione di fix4 contro il doppio tocco (650 ms).
-
-**Test:** `barra-pillola` (un tocco invia e fa scoppiare il cuore), `accessibilita`.
-
-### Il cuore più grande e lo scoppio come un like (21/11/2026)
-
-**Stato:** branch `claude/cuore-scoppio` (nato dal branch fisso di staging a 16449b9f, dopo la #275). Provato a fotogrammi nel browser col finto Supabase; non ancora su staging, non in produzione.
-
-**Cosa cambia:** il founder ha chiesto un cuore che spicchi nella barra e un'animazione fluida come il like di X.
-- **Più grande:** il cerchio passa da 40 a 50 px e il cuore dentro da 21 a 26 px (le altre icone restano a 22 px). La colonna centrale passa da 60 a 68 px.
-- **Lo scoppio:** mentre lo tieni, il cerchio si stringe e il cuore si riempie, come prima. Appena è pieno, il cuore sparisce per un attimo, un disco rosa cresce, diventa lilla e si apre in un anello che si assottiglia. Poi il cuore torna fuori più grande e si assesta, e sette coppie di puntini rosa e lilla volano via. In tutto dura 0,8 s, con una sola vibrazione, in ogni pagina e anche da tastiera. Si muovono solo trasformazioni, opacità e lo spessore di un anello di 60 px, per restare fluido. Con il movimento ridotto c'è solo la vibrazione.
-- Tolti i tre cuoricini che volavano via e l'onda di `UsUiFoundation.heart`: i puntini prendono il loro posto.
-
-**Test:** `barra-pillola` (scoppio con anello e 14 puntini mentre il dito è ancora giù, cuore da 50 px), `heart-like`, `vnext-foundation-01`, `web-visual-reconciliation-m1`.
-
-### La barra a pillola e Oggi più leggera (21/11/2026)
-
-**Stato:** branch `claude/barra-pillola` (nato dal branch fisso di staging a 9fe06545). Provato nel browser col finto Supabase, in chiaro e in scuro, a 360×640, 402×874 e 430×932; non ancora su staging, non in produzione.
-
-**Cosa cambia:** il founder trovava Oggi «troppo impattante» e ha scelto la barra semplice come quella dell'app Claude, più la variante D di Oggi con lo spazio riempito.
-- **La barra** è una pillola che galleggia sopra la pagina (64 px, staccata 14 px dai lati e 12 px dal fondo o dalla zona dei gesti). Ha icona e nome sotto (Oggi, Noi, Ricordi, Gioca), icone da 22 px invece di 27, e il cuore del Ti penso al centro, che si manda tenendolo premuto come prima. La pagina in cui sei ha una piccola pillola grigia dietro.
-- **Sparisce la barra a goccia** del 20/11 (la palla, la culla e l'onda): codice e test tolti, resta nella storia di git.
-- **Oggi:** il titolo con la data passa da 30/33 px a 25/27 e l'ombra della foto è più leggera. La pagina si riempie con le misure, non con spazi vuoti: la foto prende tutto lo spazio che resta (circa 410 px su un telefono da 874), con 14 px tra foto e domanda e 10 px tra le schede, e l'ultima scheda finisce 12 px sopra la barra (prima restavano circa 36 px vuoti, misurati per la barra vecchia). Sui telefoni piccoli la foto scende fino a 210 px come prima.
-- **Il pop del cuore:** prima non si vedeva mai. Il tocco di tutta l'app, che rimpicciolisce ogni pulsante premuto, teneva fermo il cuore finché c'era il dito sopra, e il pop arriva proprio allora. Ora il cuore è fuori da quel tocco (`data-us-motion-tap="off"`). Mentre lo tieni si stringe fino all'86%. Appena è pieno scatta al 126%, rimbalza sotto e si assesta (0,6 s), con l'onda rosa del cuore di US e i tre cuoricini. Succede subito, in ogni pagina e anche da tastiera, senza aspettare la rete. L'app non fa più un secondo scoppio dopo l'invio.
-
-**Test:** `barra-goccia` diventa `barra-pillola` (con la prova che il cuore scatta oltre la sua misura mentre è ancora tenuto); aggiornati `barra-tastiera`, `m5e-brand-icons`, `m6a-premium-shell`, `us-human-ui-02`, `vnext-foundation-01`, `web-visual-reconciliation-m1`, `m12b-oggi-no-scroll`, `countdown-direct-edit-bottom-notice`, `heart-like`. Suite completa: restano i 13 fallimenti vecchi che falliscono anche su staging pulito. Tolto `--us-nav-rise`, che serviva solo alla goccia.
-
-### Personaggi: le reazioni e la festa degli sblocchi (21/11/2026)
-
-**Stato:** branch `claude/personaggi-reazioni` (nato dal branch fisso di staging a 317459ef). Provato nel browser col finto Supabase; non ancora su staging, non in produzione.
-
-**Cosa cambia:** fase 3 dei personaggi (D9, D16). Le reazioni passano sopra la faccia di «Come stai» e si vedono su Oggi, nell'angolo di noi e nel personaggio in alto a destra.
-- **Festa, per tutti e due:** il giorno dell'anniversario o del mesiversario, cioè lo stesso giorno di «Insieme dal». Coriandoli e sorriso grande.
-- **Occhi a cuore, sul tuo personaggio:** per 3 ore dopo un Ti penso ricevuto.
-- **Saluto con la manina, sul personaggio dell'altra persona:** quando ha risposto alla domanda di oggi e tu non hai ancora visto la risposta.
-- **Assonnati, tutti e due:** dalle 22 alle 6.
-
-L'ordine è festa, cuore, saluto, sera. Le reazioni ci sono solo per quello che vi fate, mai per quello che non fate.
-
-**Festa dello sblocco.** Quando nel guardaroba arriva qualcosa di nuovo, la volta dopo che apri Oggi il tuo personaggio te lo mostra in una scheda con i coriandoli, «Mettilo» e «Dopo», una volta sola per accessorio. La prima volta su un telefono, quello che è già sbloccato conta come visto; se ne arrivano diversi insieme, si festeggia quello coi punti più alti. Nessuna notifica push. Il saluto e i coriandoli si muovono poco e si fermano col movimento ridotto.
-
-**Da sapere prima della produzione:** solo web (`diario.js`, `diario.css`, `app.js`); nessuna migrazione. Serve la fase 2 (guardaroba).
-
-### Personaggi: il guardaroba e l'angolo di noi (21/11/2026)
-
-**Stato:** in staging con la PR #273 (merge 317459ef), migrazione applicata a staging il 21/11/2026; non in produzione.
-
-**Cosa cambia:** è la fase 2 dei personaggi (grill-me del 20/11, tavola approvata il 21/11).
-- **Accessori.** Ognuno veste il suo personaggio in due posti:
-  - in testa: cappello, fiocco, cuffie, corona, coroncina, cappello da festa, fascia dei 100;
-  - sul viso o al collo: occhiali, occhiali da sole, sciarpina, gala, macchinetta.
-
-  Gli accessori si vedono ovunque compare il personaggio (Oggi, in alto a destra, l'angolo), anche sul telefono dell'altra persona.
-- **Sblocchi, tutti gratis.**
-  - Con i punti della Sintonia, su soglie proprie e non sui livelli: occhiali 150, cappello 400, fiocco 700, sciarpina 1.000, da sole 1.350, gala 1.700, cuffie 2.100, coroncina 2.550, corona 3.000. Le soglie sono misurate sul ritmo vero delle coppie il 21/11.
-  - Con un momento vero: la macchinetta col primo Ricordo, la fascia dopo 100 giorni in US, il cappello da festa dopo un anno.
-- **L'angolo di noi** prende il posto di «Voi due» e si apre toccando i due personaggi su Oggi. Contiene:
-  - i due personaggi vestiti;
-  - la sbirciata sull'altra persona: come sta, cosa indossa, e da lì un Ti penso;
-  - il guardaroba, con «Cambia forma» e «Cambia colore»;
-  - il prossimo sblocco, con quanti punti mancano;
-  - come prima, la Sintonia, i giorni di fila, gli ultimi punti e «I premi che avete».
-
-**Da sapere prima della produzione:** la migrazione `20261120232852_personaggi_guardaroba.sql` aggiunge due colonne al profilo e le funzioni `set_my_character_look` e `my_character_unlocks`. Va applicata a staging con «Supabase SQL (manual)» e richiede `20261115183900` (la forma), anche lei solo su staging. Finché il server non ha la funzione, la scelta resta solo sul telefono di chi la fa. In produzione ci vogliono le due migrazioni col via del founder.
-
-### La foto del giorno (20/11/2026)
-
-**Stato:** in staging con la PR #272 (merge 7ac76285), il 20/11/2026; non in produzione.
-
-**Cosa cambia:**
-- **Una foto per tutta la giornata.** Prima la foto di Oggi cambiava a caso ogni ora e a ogni tocco. Ora è scelta con un senso, uguale sui due telefoni:
-  1. un Ricordo di questo stesso giorno in un anno passato, fino a 10 anni indietro, dal più vicino; viene letto anche se è più vecchio degli ultimi 120;
-  2. altrimenti una foto aggiunta nelle ultime 36 ore;
-  3. altrimenti un Ricordo che resta tutto il giorno.
-- **Il perché sulla foto:** lo dice l'etichetta, per esempio «Un anno fa, proprio oggi» o «Questa foto è di ieri». L'anniversario viene prima anche del countdown.
-- **Il tocco apre il Ricordo** in Ricordi, invece di passare alla foto successiva.
-- **Tieni premuto: «Non mostrarla più in Oggi?».** La foto resta nei Ricordi; vale per questo telefono, salvato nel telefono e non nel database. Se le foto sono tutte nascoste, Oggi ne mostra comunque una.
-- **Widget Foto e giorni:** segue la stessa foto e la cambia solo dopo mezzanotte.
-
-**Da sapere prima della produzione:** solo web (`app.js`, `diario.js`, `index.html`, `i18n-en.js`); nessuna migrazione. Una lettura in più su `moments` per gli anniversari, con al massimo 10 date esatte.
-
-### Accessibilità: testo grande, contrasto, Ti penso col lettore di schermo (20/11/2026)
-
-**Stato:** in staging con la PR #271 (merge 1b64c236), il 20/11/2026; non in produzione. Android e iPhone vanno ancora provati con APK e TestFlight. **Da provare sui telefoni:** la parte Android vale solo da un APK nuovo, quella iPhone da una build TestFlight.
-
-**Cosa cambia:**
-- **Testo grande dal telefono:**
-  - su Android il testo segue la dimensione caratteri del telefono, dall'85% al 200% (`UsWebView.java`, `setTextZoom`);
-  - su iPhone segue la dimensione testo (Dynamic Type), letta dal font di sistema e applicata con `-webkit-text-size-adjust` (`platform.js`); viene riletta quando US torna in primo piano.
-- **Pagine col testo molto grande:** i titoli vanno a capo invece di uscire dallo schermo; Gioca passa a una tessera per riga quando le parole non ci stanno più in due; Oggi si può scorrere.
-- **Contrasto:**
-  - i giorni passati del calendario passano da 3:1 a 4,5:1;
-  - le lettere dei giorni della settimana passano all'inchiostro 60% e a 12 px;
-  - la scritta «Lavagna», che era scura sulla sua etichetta scura, ora è chiara.
-- **Misure minime:**
-  - etichette piccole, giorni della settimana e date dei Ricordi passano da 11–11,5 a 12 px;
-  - la riga della versione nelle Impostazioni passa a 12 px.
-- **Ti penso:** per il lettore di schermo si chiama «Manda un Ti penso», perché TalkBack e VoiceOver lo mandano al doppio tocco. Col dito resta il tieni premuto, ed è spiegato in `aria-description`, che ora viene anche tradotto.
-- **Post-it:** le voci della lista mostrano dove sei quando ti muovi con la tastiera.
-
-**Da sapere prima della produzione:** web più un file Android (`UsWebView.java`); nessuna migrazione. Lo zoom con due dita resta bloccato di proposito: su iPhone sbloccarlo fa ingrandire la pagina da sola sui campi di testo. La strada scelta è la dimensione del testo del telefono.
-
-### Impostazioni riordinate (20/11/2026)
-
-**Stato:** in staging con la PR #270 (merge 6b4f7b0f), il 20/11/2026; non in produzione.
-
-**Cosa cambia:** sotto la card della coppia ci sono cinque gruppi.
-- **Tu:** personaggio, colore, Come stai («Il tuo personaggio lo mostra»), foto profilo, «Come ti scriviamo» (prima «Le tue parole»).
-- **Voi due:** Insieme dal, poi la distanza in un posto solo: La distanza, «Usa la posizione» e «Misura in» km/mi (prima erano sparse in due gruppi); in fondo Archivio Stories.
-- **App:** Notifiche, Suoni e vibrazione, Aspetto, Impronta, Ottimizza Ricordi, Widget.
-- **Aiuto:** Segnala un problema, Sincronizzazione.
-- **Account:** in fondo, come vogliono le linee guida. Contiene US Plus, Privacy e dati, «Esci dall’account» (prima «Scollega questo telefono»; anche la conferma ora dice «Esci») ed «Esci dalla coppia», con scritto «Non si può annullare».
-- **Freccia indietro:** torna alla pagina da cui hai aperto le Impostazioni, non più sempre a Noi. Le Impostazioni scorrono sopra qualsiasi delle quattro pagine.
-
-Tutti i comandi e le loro azioni restano gli stessi.
-
-**Da sapere prima della produzione:** solo web (`index.html`, `settings.js`, `app.js`, `due-colori.js`, `i18n-en.js`); nessuna migrazione.
-
-### Barra e tastiera: le correzioni dopo la barra a goccia (20/11/2026)
-
-**Stato:** in staging con la PR #269 (merge f6c2b266), il 20/11/2026; non in produzione.
-
-**Cosa cambia:**
-- In Impostazioni, dove nessuna delle quattro pagine è tua, la pallina affonda e la barra torna piatta. Prima restava sull'ultima pagina, e sembrava di essere in Gioca.
-- Il cuore resta al centro della barra anche in Impostazioni. Lo nascondeva una vecchia regola, e al suo posto restava un buco.
-- Tornando su una pagina, la pallina risale lì come una goccia.
-- Tastiera:
-  - il nome del diario, all'iscrizione, ora accetta le emoji: prima Gboard le toglieva per `autocomplete="off"`;
-  - su Android i campi dove si scrive la parola di conferma (Esci dalla coppia, Elimina account) tengono le maiuscole e nessuna correzione, come chiedono;
-  - il titolo dei preset del calendario si taglia per caratteri e non spezza più un'emoji a metà.
-
-**Da sapere prima della produzione:** solo web (`diario.js`, `settings2.css`, `index.html`, `app.js`, `calendar.js`); nessuna migrazione.
-
-### La barra a goccia, il Ti penso al centro e il tuo personaggio (20/11/2026)
-
-**Stato:** in staging con la PR #268 (merge 0539b52b), il 20/11/2026; non in produzione. Il founder voleva rivedere la barra (troppo alta), un'animazione nello stile di una barra a goccia vista su Pinterest, le Impostazioni fuori da Noi, e ha scelto: Ti penso al centro, Lasciato per te in alto, il proprio personaggio come profilo.
-
-**Cosa cambia:** la barra in basso ha cinque posti: Oggi, Noi, il cuore, Ricordi, Gioca. Prima era alta 66 px. Rifatta uguale al video di riferimento del founder: solo icone (i nomi restano per i lettori di schermo), icone spente all'inchiostro 60%. La barra è alta 50 px più la striscia dei gesti (48 in orizzontale sugli schermi bassi); tasti di 46 px. Misure e tempi presi dal video, fotogramma per fotogramma (raddrizzato, nei punti del suo iPhone da 375): icone di 27 px; una pallina di 54 px del colore della barra, col centro 10,5 px sotto il bordo, in un incavo tondo con 8,5 px di spiraglio e bordi morbidi; dentro, l’icona della pagina. Cambiando pagina (600 ms) la pallina affonda con l’icona in 140 ms, l’incavo diventa un’onda profonda 40 px, più ripida davanti, che corre veloce e rallenta arrivando; lì la pallina riemerge come una goccia con l’icona nuova che cresce, e l’onda si richiude in incavo. Le icone e il cuore che l’onda attraversa spariscono mentre passa. Confronto numerico col video: scarto medio di circa 1,5 px sul profilo della barra. L’ombra avvolge barra e pallina come una forma sola. Al centro, dentro la barra, c'è il Ti penso (40 px), con un anello nel colore di noi. Si manda tenendo premuto: il cuore si riempie dal basso in 650 ms e parte quando è pieno. Un tocco veloce non manda niente e mostra «Tieni premuto il cuore per mandare un Ti penso»; tastiera e lettori di schermo lo mandano subito. In Oggi, in alto: Lasciato per te a sinistra, «us» al centro, il tuo personaggio a destra. Il personaggio sta in alto a destra in tutte e quattro le pagine e apre le Impostazioni; l'ingranaggio esce da Noi. In Ricordi la mappa passa alla fine della riga dei filtri, così il titolo resta su una riga. Gioca e Ricordi non nascondono più il cuore (erano regole del vecchio cuore che galleggiava sul contenuto). Oggi resta una pagina sola: la foto può scendere a 204 px sugli schermi più bassi.
-
-**Da sapere prima della produzione:** solo web (`index.html`, `diario.css`, `diario.js`, `ui-foundation.css`, `games.js`, `games.css`, `moments-albums.css`); nessuna migrazione, nessuna Edge. Il Ti penso ora si manda da tutte le pagine; fuori da Oggi la conferma è quella di sempre (cuore e avviso in basso). Nell'app il tasto «indietro» e i widget non cambiano.
-
-**Test:** nuovo `tests/barra-goccia.test.js`: ordine dei cinque posti, personaggio e busta in alto e, nel browser, la gobba che si ferma sotto ogni pagina, il cuore visibile ovunque, il tocco veloce che non manda e la pressione lunga che manda una volta sola. Aggiornate le prove che fissavano la barra a 66 px e lo spazio sotto Oggi.
-
-### Il colore di noi e le scritte sulle foto (20/11/2026)
-
-**Stato:** branch `claude/colore-di-noi` (nato dal branch fisso di staging a d939f3d7). Provato nel browser col finto Supabase, in chiaro e in scuro; non ancora su staging, non in produzione. Il founder, dopo la prova dell'APK: le scritte sulle foto a volte non si leggono, e «abbiamo spento troppo l'app?». Fra tre prove affiancate sull'app vera (ora, «con misura», «più viva») ha scelto «con misura» con Gioca a tessere.
-
-**Il problema:** il visore dei ricordi scriveva con `--us-latte`, il bianco dell'app scura di prima, che dal diario punta alla carta: in scuro le scritte diventavano quasi nere sulla foto (contrasto da 1,0 a 1,6). Anche in chiaro, su una foto chiara, la frase di Oggi e il visore restavano fra 2,2 e 2,9 (servono 4,5; 3 per le scritte grandi); in produzione era già così. Gioca era sette quadrati neri uguali con «da giocare» ripetuto, e ogni azione era nera.
-
-**Cosa cambia:** l'azione principale di ogni pagina (il «Rispondi» della domanda di oggi, il «+» di Noi e Ricordi, il filtro «Tutti», «Post-it») è nel colore di noi, i due colori della coppia sfumati, con la scritta scura; la carta della domanda di oggi ha un filo dello stesso colore; il bottone dell'avviso e la data degli impegni sono miele. Gioca è a tessere pastello su due colonne, con «Per voi» largo nel colore di noi; un gioco mai iniziato non ha più l'etichetta «da giocare» (restano «nuovo», «tocca a te», «risposte pronte», «aspetti…»). In scuro la carta ha un filo di prugna (#1A1419 al posto di #16130F). Le scritte sulle foto (frase di Oggi, titolo, firma, nota, posto e «Chiedi a…» del visore) usano un bianco fisso `--us-on-photo` con un'ombra leggera e un'ombra scura più alta sotto: ora fra 5,1 e 9 anche su una foto quasi bianca, uguale in chiaro e in scuro. La regola «inchiostro = azione» del 16/11 cambia solo per queste azioni principali: gli altri bottoni dei fogli restano in inchiostro.
-
-**Da sapere prima della produzione:** solo web (`ui-foundation.css`, `diario.css`, `diario.js`, `dc-ricordi.css`, `couple-notes.css`, `games.js`); nessuna migrazione, nessuna Edge. Restano da guardare le altre ~20 regole che usano `--us-latte` fuori dal visore (Gioca, popup, lavagna, Impostazioni), se qualcuna sta sopra una foto o un fondo scuro.
-
-**Test:** nuovo `tests/colore-di-noi.test.js`: regole del colore e, nel browser, il contrasto delle scritte su una foto quasi bianca in chiaro e in scuro (sul vecchio staging fallisce: 2,83).
-
-### Oggi in una pagina sola (20/11/2026)
-
-**Stato:** in staging dal 20/11 (PR #266, merge d939f3d7); non in produzione. Richiesta del founder dopo la prova dell'APK di staging: «la home deve essere una pagina unica senza scorrere».
-
-**Il problema:** a 390×844 Oggi era alto circa 1010 px. La barra in basso copriva il «Rispondi» della domanda di oggi.
-
-**Cosa cambia:**
-- Oggi è alto quanto lo schermo e la foto prende lo spazio che resta: più piccola sui telefoni bassi, più grande su quelli alti.
-- La domanda di oggi ha una sola riga d'azione: il personaggio, chi ha risposto o chi dorme, e «Rispondi» (o «Leggi», «Modifica») accanto. Le risposte su Oggi stanno su una riga; intere sono nel foglio.
-- Gli avvisi sotto la domanda sono una riga sola: titolo, riga e bottone.
-- Sui telefoni più bassi di 700 px spariscono «Pagina N» e l'etichetta «La domanda di oggi»; se lo schermo non basta per la foto minima, la pagina scorre.
-
-Solo web (`diario.css`, `diario.js`, `native-frameless.css` per l'altezza dentro l'app): niente SQL, niente Edge, niente AAB.
-
-**Test:** `tests/oggi-una-pagina-browser.test.js` (5 stati della domanda × 360×780, 390×844, 412×915: niente scorrimento, foto almeno 200 px, bottoni sopra la barra); fallisce sul vecchio staging (1012 px su 844).
-
-### Iscrizione: prima il codice, poi la domanda (14/11)
-
-**Stato:** branch `claude/attesa-dopo-invito` (da `main` dopo la 1.5.1). Provata nel browser col finto Supabase; non ancora su staging né in produzione.
-
-**Il problema (founder, provando l'iscrizione in produzione):** appena creato lo spazio, sotto il codice d'invito c'era già «Intanto, la domanda di oggi» con il campo per rispondere: distraeva dal passo che conta, mandare il codice. E il codice si leggeva «M3WJ- NXY3- CX2G-…»: il server lo dà già coi trattini, lo schermo aggiungeva uno spazio ogni cinque caratteri.
-
-**Cosa cambia:** la domanda compare solo dopo «Condividi» o «Copia codice» riusciti (ricordato per l'account, `us:ob:invite-sent:<id>`, quindi resta anche riaprendo US), oppure se la risposta di oggi c'è già. Il codice sullo schermo è a gruppi di quattro («M3WJ NXY3 CX2G HEYB 57H3 3TTS HM») e va a capo solo tra un gruppo e l'altro; quello copiato e condiviso non cambia. Solo app (`onboarding.js`, `dc-primo.css`), niente SQL.
-
-**Test:** `tests/waiting-today-question.test.js`.
+**Novità per Play:** nessuna voce a sé («Piccole correzioni»).
 
 ## Patch 1.5.1: «La cosa di oggi» e la mascotte che non sparisce più (13/11/2026)
 

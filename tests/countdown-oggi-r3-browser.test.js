@@ -30,8 +30,6 @@ function strictSave(){
     return {data:structuredClone(qa.countdown),error:null};
   };
 }
-// Il diario, ma pulito (15/11/2026): the Oggi countdown is mounted but hidden;
-// these tests open the list with USCountdown.open(), what its tap did.
 const closed=page=>page.waitForFunction(()=>document.getElementById('usCountdownSheet').getAttribute('aria-hidden')==='true');
 
 test('a countdown is added from Oggi on a phone, in both modes, and its payload passes the server rules',async t=>{
@@ -41,7 +39,7 @@ test('a countdown is added from Oggi on a phone, in both modes, and its payload 
    const {page,ctx,errors}=await pageFor(h,{width,height,unlocked:false,active:'together'});
    await page.evaluate(strictSave);
    // Oggi's countdown opens the list (mockup 032), with "Crea countdown" right there.
-   await page.evaluate(()=>window.USCountdown.open());
+   await page.locator('#usCountdownDisplay').tap();
    await page.waitForSelector('#usCountdownCollection:not([hidden])');
    assert.equal(await page.locator('#usCountdownEditor').isHidden(),true,'not straight into the "Insieme da" editor');
    await page.locator('#usCountdownNew').tap();
@@ -65,9 +63,9 @@ test('a countdown is added from Oggi on a phone, in both modes, and its payload 
    assert.equal(saved.qa.active_id,item.id,'the new one is on Oggi');
    assert.deepEqual({title:item.title,mode:item.mode,style:item.style},{title:'Cena da Marco',mode:'clock',style:'editorial'});
    assert.equal(item.target,await page.evaluate(()=>new Date('2027-12-24T18:30').toISOString()),'the local time, as an instant');
-   assert.match(saved.toast,/^Salvato/); /* Il diario, ma pulito (15/11/2026): «Salvato» */ assert.match(saved.label,/Cena da Marco/);
+   assert.match(saved.toast,/Salvato e in Oggi/);assert.match(saved.label,/Cena da Marco/);
    // A days countdown too, with a style chosen in the editor.
-   await page.evaluate(()=>window.USCountdown.open());await page.locator('#usCountdownNew').tap();
+   await page.locator('#usCountdownDisplay').tap();await page.locator('#usCountdownNew').tap();
    await page.locator('#usCountdownTitle').fill('La laurea');await page.locator('#usCountdownDate').fill('2027-11-27');
    await page.locator('[data-countdown-style-pick="signal"]').tap();
    await page.locator('#usCountdownSave').tap();await closed(page);
@@ -84,7 +82,7 @@ test('the "Insieme da" editor says why it has no fields and offers the styles (m
  try{
   const {page,ctx,errors}=await pageFor(h,{active:'together',unlocked:true});
   await page.evaluate(strictSave);await page.evaluate(()=>{window.__QA.unlockedStyles=['aurora','orbit','chrome'];});
-  await page.evaluate(()=>window.USCountdown.open());await page.click('[data-countdown-edit="together"]');
+  await page.click('#usCountdownDisplay');await page.click('[data-countdown-edit="together"]');
   assert.equal(await page.locator('#usCountdownHeading').innerText(),'Modifica countdown');
   assert.equal(await page.locator('#usCountdownTogetherNote').isVisible(),true);
   assert.equal(await page.locator('#usCountdownFields').isHidden(),true);

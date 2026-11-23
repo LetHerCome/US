@@ -11,7 +11,7 @@ const html = () => read('index.html');
 const js = () => read('calendar.js');
 const css = () => read('calendar.css');
 const noi = () => read('noi-v2.js');
-const form = () => html().match(/<form class="dy-f-body dy-cal-form"[\s\S]*?<\/form>/)?.[0] || '';
+const form = () => html().match(/<form class="us-cal-form"[\s\S]*?<\/form>/)?.[0] || '';
 const localISO = (y, m, d, hh, mm) => new Date(y, m - 1, d, hh, mm, 0, 0).toISOString();
 
 test('M9C/US 1.0: the quick form keeps one title flow and explicit keyboard Inizio/Fine', () => {
@@ -48,8 +48,7 @@ test('M9C: manual entries default to personal ("Solo mio"); Da vivere keeps crea
   assert.match(src, /const kind = ideaLink \? 'shared' : calendarKind;/);
   assert.match(src, /calendarKind = kind === 'shared' \? 'shared' : 'personal';/);
   assert.match(src, /setFormKind\('shared'\);\s*const kindGroup = \$\('usCalendarKind'\);\s*if \(kindGroup\) kindGroup\.hidden = true;/, 'an idea is always Nostro, no choice shown');
-  // Mockup v5 «I fogli» (16/11/2026): the kinds are tiles in a row, words only.
-  assert.match(form(), />Solo mio<\/button>[\s\S]*?>Nostro<\/button>[\s\S]*?>Data speciale<\/button>/);
+  assert.match(form(), /<span>Solo mio<\/span>[\s\S]*?<span>Nostro<\/span>[\s\S]*?<span>Data speciale<\/span>/);
 });
 
 test('M9C: create uses the 60-minute default, a single day, no hidden note or place', () => {

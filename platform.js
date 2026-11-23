@@ -406,7 +406,9 @@
     if (!plugin || !WIDGET_KINDS.includes(kind) || typeof plugin.requestPin !== 'function') return { supported: false, requested: false };
     try {
       const result = await plugin.requestPin({ kind });
-      return { supported: result?.supported === true, requested: result?.requested === true };
+      // A phone that cannot place widgets by itself gives the steps instead (14/11/2026).
+      const steps = typeof result?.steps === 'string' ? result.steps.trim().slice(0, 200) : '';
+      return { supported: result?.supported === true, requested: result?.requested === true, steps };
     } catch (_) {
       return { supported: false, requested: false };
     }

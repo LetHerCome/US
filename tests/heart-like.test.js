@@ -102,7 +102,7 @@ test('wired: Oggi and Ti penso play it when a heart is given, never when taken b
   assert.match(app, /window\.todayRevealMeta=\{\.\.\.meta,my_reaction:next\};renderTodayReveal\(\);\n  if\(next==='heart'\)usHeartLike\(document\.querySelector\('#todayReveal \[data-daily-reaction="heart"\]'\)\);/);
   assert.match(app, /if\(next&&next!=='heart'\)window\.UsUiFoundation\?\.done\?\.\(/, 'the heart has its own animation');
   // The reply from the server draws the same thing: the button stays, the animation goes on.
-  assert.match(app, /if\(usTodayRevealDrawn===html&&reveal\.firstElementChild\)return;usTodayRevealDrawn=html;\s*reveal\.innerHTML=fresh\?/);
+  assert.match(app, /if\(usTodayRevealDrawn===html&&reveal\.firstElementChild\)return;usTodayRevealDrawn=html;reveal\.innerHTML=html;/);
   // Ti penso: the heart plays at the tap; the other reactions keep their «fatto!».
   assert.match(app, /if\(reaction==='heart'\)usHeartLike\(document\.querySelector\('#thinkArrival \[data-think-reaction="heart"\]'\)\);/);
   assert.match(app, /if\(usThinkReactionFinal!=='heart'\)window\.UsUiFoundation\?\.done\?\.\(/);
@@ -111,11 +111,7 @@ test('wired: Oggi and Ti penso play it when a heart is given, never when taken b
 test('the Ti penso at the top left plays the same heart when it is sent, not when it was already sent', () => {
   const app = read('app.js');
   const send = app.slice(app.indexOf('async function sendThinkSignal('), app.indexOf('window.sendThinkSignal=sendThinkSignal;'));
-  // Since 21/11/2026 the bar heart (.dy-think) pops with the same heart the moment it is full (diario.js
-  // heartHold), so the send does not burst it a second time; any other Ti penso button still does.
-  assert.match(send, /const popped=btn\?\.classList\.contains\('dy-think'\);/);
-  assert.match(send, /if\(btn&&!result\?\.duplicate&&!popped\)usHeartLike\(btn\);else if\(!popped\)window\.UsFeedback\?\.action\?\.\(\);/);
-  assert.match(read('diario.js'), /const pop = \(\) => \{\s*w\.UsFeedback\?\.action\?\.\(\);\s*if \(reduced\(\)\) return;/, 'it buzzes once, then bursts (diario.js)');
+  assert.match(send, /if\(btn&&!result\?\.duplicate\)usHeartLike\(btn\);else window\.UsFeedback\?\.action\?\.\(\);/);
   assert.doesNotMatch(app, /thinkSparks/, 'the two old sparks are gone');
   assert.match(read('ui-foundation.js'), /element\.querySelector\?\.\('\.us-icon, \.think-reaction-glyph, \.us-shell-icon'\)/, 'its heart is the one that springs back');
 });

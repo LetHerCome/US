@@ -22,7 +22,7 @@ test('daily question: the length decides the size class', () => {
   assert.match(app, /<span class="dq-q us-daily-ritual-question"\$\{dailyQuestionLengthAttr\(model\.question\)\}>/);
 });
 
-test('daily question: long and very long questions get smaller type and more lines, never wider than the card', { skip: 'Il diario, ma pulito (15/11/2026): la card M9B della Domanda resta nel vecchio hero nascosto; la domanda di Oggi è #dyQuestion e il suo stile è stato potato' }, () => {
+test('daily question: long and very long questions get smaller type and more lines, never wider than the card', () => {
   const css = read('dc-oggi.css');
   assert.match(css, /#home #usDailyRitual \.us-daily-ritual-question\{overflow-wrap:anywhere\}/);
   // App più ariosa (founder, 29/10/2026): 18 for a short question, 16 long, 15 very long.
@@ -35,8 +35,7 @@ test('Oggi photo: it fills the screen again, no whole-photo backdrop', () => {
   assert.doesNotMatch(read('index.html'), /homePhotoBackdrop/);
   assert.doesNotMatch(read('fastboot2.js'), /UsHomePhotoFit|HOME_PHOTO_CROP_LIMIT/);
   assert.doesNotMatch(read('dc-oggi.css'), /data-us-photo-whole|home-photo-backdrop/);
-  // Il diario, ma pulito (15/11/2026): the photo of the day is #dyPhotoImg, cropped to fill its frame.
-  assert.match(read('diario.css'), /\.dy-photo-img\{[^}]*object-fit:cover\}/);
+  assert.match(read('styles.css'), /\.home-photo-layer\{[^}]*background-size:cover/);
   // The widget photo keeps reusing the HTTP cache (egress), kept from #207.
   const widgets = read('widgets.js');
   assert.doesNotMatch(widgets.slice(widgets.indexOf('async function encodePhoto')), /cache: 'no-store'/);

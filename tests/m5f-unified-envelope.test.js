@@ -437,19 +437,17 @@ test('M5F no active Stories entry remains reachable', () => {
 test('M5F envelope uses the canonical Phosphor pair and a restrained trace, not a Stories ring', () => {
   const html = read('index.html');
   const css = read('left-for-you.css');
-  // Il diario, ma pulito (15/11/2026): one closed envelope drawn inline in the
-  // mockup's stroke, a square 44px button; "something for you" is a still red
-  // dot (.is-closed, set by left-for-you.js), no orbit, no Stories ring.
-  const envelope = html.match(/<button[^>]*id="leftForYouPartnerEntry"[\s\S]*?<\/button>/)?.[0] || '';
-  assert.match(envelope, /class="dy-ib dy-envelope is-loading"/);
-  assert.match(envelope, /<svg viewBox="0 0 24 24"[^>]*aria-hidden="true"/);
-  assert.match(envelope, /<span class="dy-dot" aria-hidden="true"><\/span>/);
-  assert.doesNotMatch(envelope, /us-attention-orbit|story/);
+  assert.match(html, /data-icon="\/assets\/icons\/phosphor\/envelope-simple-regular\.svg"/);
+  assert.match(html, /data-icon="\/assets\/icons\/phosphor\/envelope-open-regular\.svg"/);
+  for (const file of ['envelope-simple-regular.svg', 'envelope-open-regular.svg']) {
+    const svg = read(`assets/icons/phosphor/${file}`);
+    assert.match(svg, /viewBox="0 0 256 256"/);
+  }
+  // M10E: the restrained trace is now the shared personal attention orbit
+  // (ui-foundation.css), driven by unseenCount; reduced motion keeps a static halo.
   assert.doesNotMatch(css, /us-envelope-trace/);
-  const diario = read('diario.css');
-  assert.match(diario, /\.dy-envelope \.dy-dot\{[^}]*display:none\}/);
-  assert.match(diario, /\.dy-envelope\.is-closed \.dy-dot\{display:block\}/);
-  assert.doesNotMatch(diario.match(/\.dy-envelope[^{]*\{[^}]*\}/g).join(''), /animation/, 'the dot never loops');
+  assert.match(read('index.html'), /class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry"/);
+  assert.match(read('ui-foundation.css'), /@media \(prefers-reduced-motion:reduce\)\{\s*\.us-attention-orbit\[data-us-attention="on"\]::after,\s*\.us-attention-orbit\[data-us-attention="on"\] \[data-us-attention-icon\]\{animation:none\}/);
 });
 
 test('M5F top chrome: question icon for the daily question, no legacy avatar control', () => {
@@ -497,7 +495,7 @@ test('M5F composer surface: title, send language, five kinds, reduced-motion com
   assert.doesNotMatch(html, /Solo per lei\. Nessun feed, nessun pubblico\./);
   assert.doesNotMatch(html, /Scegli un audio/);
   assert.doesNotMatch(html, /Una nota per lei/);
-  assert.match(html, /id="leftForYouComposerTitle">Lascia qualcosa <em>alla tua persona<\/em></);
+  assert.match(html, /id="leftForYouComposerTitle">Lascia qualcosa alla tua persona</);
   assert.match(html, /id="leftForYouComposerSend" disabled>Lascia per la tua persona</);
   for (const kind of ['text', 'photo', 'audio', 'video', 'music']) {
     assert.match(html, new RegExp(`data-us-composer-kind="${kind}"`));
@@ -507,9 +505,10 @@ test('M5F composer surface: title, send language, five kinds, reduced-motion com
   assert.match(html, /id="leftForYouComposerVideoFile" accept="video\/mp4,video\/webm,video\/quicktime"/);
   assert.match(html, /id="leftForYouComposerVideoHint">Fino a 30 secondi e 20 MB\.</);
   assert.match(html, /id="leftForYouComposerAudioRecord"/);
-  // Mockup v5 «I fogli» (16/11/2026): reading and writing are the one sheet of the diary; it rises and goes in diario.css.
-  for (const id of ['leftForYouOverlay', 'leftForYouComposerOverlay']) assert.match(html, new RegExp('class="dy-foglio" id="' + id + '"'));
-  assert.match(read('diario.css'), /\.dy-foglio\[data-us-motion-exiting\] \.dy-foglio-panel\{/);
+  assert.match(css, /#leftForYouOverlay,#leftForYouComposerOverlay(?:,#leftForYouCameraOverlay)?\{position:fixed/);
+  assert.match(css, /#leftForYouOverlay\.open,#leftForYouComposerOverlay\.open(?:,#leftForYouCameraOverlay\.open)?\{opacity:1/);
+  assert.match(css, /#leftForYouOverlay\.open \.left-for-you-sheet,#leftForYouComposerOverlay\.open \.left-for-you-sheet(?:,#leftForYouCameraOverlay\.open \.left-for-you-sheet)?\{transform:none\}/);
+  assert.match(css, /#leftForYouOverlay,#leftForYouOverlay \.left-for-you-sheet,#leftForYouComposerOverlay,#leftForYouComposerOverlay \.left-for-you-sheet(?:,#leftForYouCameraOverlay,#leftForYouCameraOverlay \.left-for-you-sheet)?\{transition-duration:1ms\}/);
   assert.match(css, /\.left-for-you-composer-panel\[hidden\]\{display:none!important\}/, 'solo il pannello del kind attivo è visibile');
 });
 
@@ -517,7 +516,7 @@ test('M5G composer labels use the loaded partner profile in both directions', as
   const francesco = createHarness();
   await francesco.api.load();
   francesco.api.openComposer();
-  assert.equal(francesco.el('leftForYouComposerTitle').innerHTML, 'Lascia qualcosa <em>a Beatrice</em>'); // mockup v5 «I fogli»
+  assert.equal(francesco.el('leftForYouComposerTitle').textContent, 'Lascia qualcosa a Beatrice');
   assert.equal(francesco.el('leftForYouComposerSend').textContent, 'Lascia per Beatrice');
   assert.equal(francesco.el('leftForYouPartnerEntry').getAttribute('aria-label'), 'Lascia qualcosa a Beatrice');
 
@@ -527,7 +526,7 @@ test('M5G composer labels use the loaded partner profile in both directions', as
   });
   await beatrice.api.load();
   beatrice.api.openComposer();
-  assert.equal(beatrice.el('leftForYouComposerTitle').innerHTML, 'Lascia qualcosa <em>a Francesco</em>');
+  assert.equal(beatrice.el('leftForYouComposerTitle').textContent, 'Lascia qualcosa a Francesco');
   assert.equal(beatrice.el('leftForYouComposerSend').textContent, 'Lascia per Francesco');
   assert.equal(beatrice.el('leftForYouPartnerEntry').getAttribute('aria-label'), 'Lascia qualcosa a Francesco');
 });

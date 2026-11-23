@@ -34,10 +34,7 @@ test('a failed read at launch is transient; an account that may not enter is not
 test('app.js: a transient failure keeps this phone\'s notifications and widgets', () => {
   const app = read('app.js');
   const branch = app.slice(app.indexOf("    if(result.kind!=='PAIRED'){"), app.indexOf('    const profile=result.profile;'));
-  // Il diario, ma pulito (15/11/2026): who waits for the partner is a member of
-  // the couple and may have turned notifications on from the invite («Ti avviso
-  // quando entra?»): only the other real answers retire them.
-  assert.match(branch, /if\(!result\.transient\)\{\n(\s+\/\/[^\n]*\n)*\s+if\(result\.kind!=='MEMBER_WAITING_PARTNER'\)window\.UsNotifications\?\.signedOut\?\.\(\);\n\s+window\.UsWidgets\?\.clear\?\.\(\)\.catch\(\(\)=>\{\}\);\n\s+\}/);
+  assert.match(branch, /if\(!result\.transient\)\{\n\s+window\.UsNotifications\?\.signedOut\?\.\(\);\n\s+window\.UsWidgets\?\.clear\?\.\(\)\.catch\(\(\)=>\{\}\);\n\s+\}/);
 });
 
 // The circuit of the diagnosis: a phone with notifications already on.

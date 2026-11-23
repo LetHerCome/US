@@ -28,17 +28,12 @@ test('Gioca: Sintonia gets a real second tab using the original progression node
   const quiz=html.match(/<main id="quiz"[\s\S]*?<\/main>/)?.[0]||'';
   for(const id of ['usGiocaTabGames','usGiocaTabSintonia','usGiocaGames','usGiocaSintonia','quizHub','usGameV2Panel'])assert.match(quiz,new RegExp(`id="${id}"`));
   assert.match(quiz,/role="tablist"/);
-  // Il diario, ma pulito (15/11/2026): the switch is hidden (Sintonia lives in «Voi due»);
-  // the collection still opens in Gioca from there, through USNoiV2.openSintonia().
-  assert.match(quiz,/<div class="us-gioca-tabs" id="usGiocaTabs"[^>]*aria-label="Gioca e Sintonia" hidden>/);
-  assert.match(read('noi-v2.js'),/openSintonia:\(\)=>\{window\.openQuizHub\?\.\(\{nav:true\}\);setTab\('sintonia'\);\}/);
-  assert.match(read('diario.js'),/w\.USNoiV2\?\.openSintonia\?\.\(\)/);
   const js=read('noi-v2.js');
   for(const selector of ['.noi-resonance','.us-progression-next','.us-progression-rewards-section','.noi-resonance-history','.noi-resonance-guide'])assert.ok(js.includes(selector),selector);
   assert.match(js,/target\.appendChild\(element\)/,'original DOM nodes move; no duplicated progression state');
   assert.match(js,/window\.USProgression\?\.hydrate\?\./);
-  assert.ok(js.includes("document.querySelector('.dy-nav button[data-page=") && js.includes("setTab('giochi'),true"), 'Gioca nav returns to Giochi');
-  const nav=html.match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0]||'';
+  assert.ok(js.includes("document.querySelector('.nav button[data-page=") && js.includes("setTab('giochi'),true"), 'Gioca nav returns to Giochi');
+  const nav=html.match(/<nav class="nav us-nav[\s\S]*?<\/nav>/)?.[0]||'';
   assert.equal((nav.match(/data-page=/g)||[]).length,4,'four primary pages remain');
 });
 

@@ -21,8 +21,7 @@ test('M9D / Noi nuova: Noi opens on its calendar and its board, no tiles, no old
   assert.ok(page.indexOf('id="usNoiV2"') < page.indexOf('id="usNoiBoard"'), 'the calendar, then the board');
   assert.match(bond(), /data-noi-view="hub"/);
   assert.match(bond(), /id="noiSectionBar" hidden/);
-  // Il diario, ma pulito (15/11/2026): the bottom nav is <nav class="dy-nav">.
-  const nav = read('index.html').match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0] || '';
+  const nav = read('index.html').match(/<nav class="nav[^"]*"[\s\S]*?<\/nav>/)?.[0] || '';
   assert.deepEqual([...nav.matchAll(/data-page="([^"]+)"/g)].map((m) => m[1]), ['home', 'bond', 'moments', 'quiz'], 'bottom navigation keeps its four tabs');
 });
 

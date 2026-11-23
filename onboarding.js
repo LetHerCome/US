@@ -18,9 +18,6 @@
     const hit=text.split(/[^0-9A-Za-z]+/).find(word=>word.length===26&&validCode(word));
     return hit?normalizeCode(hit):'';
   }
-  // On screen the code reads in groups of four (14/11/2026): the server's code
-  // already carries dashes, and a space every five made «M3WJ- NXY3-».
-  const codeGroups=value=>(normalizeCode(value).match(/.{1,4}/g)||[]).join(' ');
   function romeToday(now=new Date()){
     const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
     const part=type=>parts.find(p=>p.type===type).value;
@@ -180,13 +177,10 @@
   }
 
 
-  // ---------- L'entrata (Il diario, ma pulito, 15/11/2026) ----------
-  // Mockup v4.1 «L'entrata», docs/missions/diario-pulito.md: the welcome, the
-  // account, «Da dove partite?», «Tu» (name, character, colour, birthday),
-  // «Da quando state insieme?» for whoever creates, the code for the other
-  // person («Il suo posto è pronto», with the notifications and today's
-  // question once it is sent) and the arrival «Ora siete in due». Pure
-  // helpers first (tested in Node), then the DOM wiring used by mount().
+  // ---------- First run (Due colori, dc-primo) ----------
+  // The tour before the account, the "Tu" step with an optional birthday, the
+  // person colour and the one-time phone setup after pairing. Pure helpers
+  // first (tested in Node), then the DOM wiring used by mount().
   const MONTHS=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
   const MONTH_DAYS=[31,29,31,30,31,30,31,31,30,31,30,31];
   const FIRST_RUN_KEYS=Object.freeze({
@@ -196,10 +190,7 @@
     birthdayPending:id=>`us:onboarding:v1:birthday:${id}`,
     birthdaySaved:id=>`us:onboarding:v1:birthday-saved:${id}`,
     setupPending:id=>`us:setup:v1:pending:${id}`,
-    setupDone:id=>`us:setup:v1:done:${id}`,
-    // The shape picked in «Tu» while set_my_character_shape is not on the
-    // server yet (migration 20261115183900, staging only).
-    characterShape:id=>`us:character-shape:${id}`
+    setupDone:id=>`us:setup:v1:done:${id}`
   });
   const storeGet=(store,key)=>{try{return store?.getItem?.(key)??null;}catch(_e){return null;}};
   const storeSet=(store,key,value)=>{try{store.setItem(key,value);return true;}catch(_e){return false;}};
@@ -232,8 +223,10 @@
   }
   const pad2=n=>String(n).padStart(2,'0');
   const leapYear=year=>year%4===0&&(year%100!==0||year%400===0);
+  const colourName=role=>role==='beatrice'?'il lilla':'il rosa';
+  const partnerColourName=role=>role==='beatrice'?'il rosa':'il lilla';
 
-  // The welcome is for a phone where nobody has signed in yet.
+  // The tour is for a phone where nobody has signed in yet.
   function tourWanted(storage){
     if(storeGet(storage,FIRST_RUN_KEYS.tourSeen))return false;
     try{if(JSON.parse(storeGet(storage,FIRST_RUN_KEYS.deviceProfile)||'null')?.id)return false;}catch(_e){}
@@ -296,10 +289,8 @@
     try{const result=await insertEvent(row);return result?.error?{ok:false,kind:'error'}:{ok:true,row};}
     catch(_e){return {ok:false,kind:'error'};}
   }
-  // The arrival after pairing: once per user on this phone, only after the
-  // onboarding here. A password sign-in on a new phone (mode "device") has
-  // nothing left to ask: notifications are asked on the invite or on Oggi,
-  // the position the first time the distance is opened.
+  // The phone setup after pairing: once per user on this phone, only after
+  // onboarding here or after an email and password sign-in in this tab.
   function setupMode({userId,local,session}){
     if(!userId||storeGet(local,FIRST_RUN_KEYS.setupDone(userId)))return null;
     const pending=storeGet(local,FIRST_RUN_KEYS.setupPending(userId));
@@ -307,8 +298,38 @@
     if(storeGet(session,FIRST_RUN_KEYS.passwordSignIn)===userId)return 'device';
     return null;
   }
-  function setupSteps({mode}={}){
-    return mode==='created'||mode==='joined'?['arrivo']:[];
+  function setupSteps({mode,push,place}){
+    if(!mode)return [];
+    if(mode==='device'&&!push&&!place)return [];
+    const steps=[];
+    if(mode==='created')steps.push('noi');
+    if(mode==='joined')steps.push('color');
+    if(push)steps.push('push');
+    if(place)steps.push('place');
+    steps.push('ready');
+    return steps;
+  }
+  async function pushStepState(notifications){
+    if(!notifications?.supported?.())return {wanted:false,kind:'unsupported'};
+    try{
+      const state=await notifications.getState();
+      const kind=state?.supported===false?'unsupported':state?.kind||'unknown';
+      return {wanted:!['active','unavailable','unsupported'].includes(kind),kind};
+    }catch(_e){return {wanted:false,kind:'unknown'};}
+  }
+  // "Tutto pronto" on Android: offer the Ti penso widget when the launcher can
+  // pin it and none is on the Home screen yet. Never on the web or on iOS.
+  async function widgetOfferWanted(widgets){
+    if(typeof widgets?.isAvailable!=='function'||typeof widgets.installed!=='function'||typeof widgets.requestPin!=='function')return false;
+    try{
+      if(!widgets.isAvailable())return false;
+      const device=await widgets.installed();
+      return device?.pinSupported===true&&!(Number(device?.installed?.think)>0);
+    }catch(_e){return false;}
+  }
+  function placeStepWanted(location,hasGeolocation){
+    if(!hasGeolocation||typeof location?.start!=='function')return false;
+    try{return !location.isSharing?.();}catch(_e){return false;}
   }
   function daysTogether(startedOn,now=new Date()){
     const [y,m,d]=String(startedOn||'').split('-').map(Number);
@@ -316,6 +337,7 @@
     const today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
     return Math.max(0,Math.floor((today-Date.UTC(y,m-1,d))/86400000));
   }
+  const italianDate=iso=>{const [y,m,d]=String(iso||'').split('-').map(Number);if(!(y&&m&&d))return '';const tag=globalThis.UsI18n?.tag||'it-IT';return tag==='it-IT'?`${d} ${MONTHS[m-1]} ${y}`:new Date(Date.UTC(y,m-1,d)).toLocaleDateString(tag,{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});};
   function inviteExpiry(iso){
     const date=new Date(iso);if(!Number.isFinite(+date))return '';
     try{
@@ -402,109 +424,403 @@
     }
     try{await nav.clipboard.writeText(text);return 'copied';}catch(_e){return 'failed';}
   }
-  // The characters (founder, 15/11/2026): five shapes; without a choice the
-  // ball for whoever creates, the square for whoever joins. Two people may
-  // share a shape, never a colour.
-  const SHAPES=Object.freeze(['palla','quadrato','triangolo','goccia','nuvola']);
-  const SHAPE_NAMES=Object.freeze({palla:'Tondo',quadrato:'Quadrato',triangolo:'Triangolo',goccia:'Goccia',nuvola:'Nuvola'});
-  const defaultShape=role=>role==='beatrice'?'quadrato':'palla';
-  const defaultColour=role=>role==='beatrice'?'lilla':'rosa';
-  // The colour that is saved after create or join: the one picked, unless it
-  // is the other person's (then the first free one). `colors` is UsPersonColors.
-  function lookColour(picked,profiles,meId,colors){
-    if(!colors?.choices)return picked||null;
-    const list=colors.choices(profiles,meId),theirs=list.find(c=>c.taken)?.id||null;
-    if(picked&&colors.PALETTE?.[picked]&&picked!==theirs)return picked;
-    return list.find(c=>!c.taken)?.id||null;
-  }
 
-  // ---------- DOM helpers ----------
+  // ---------- DOM: motion helpers ----------
+  const EASE={out:'cubic-bezier(.2,.8,.2,1)',io:'cubic-bezier(.7,0,.2,1)',spring:'cubic-bezier(.34,1.56,.64,1)',soft:'cubic-bezier(.22,1.15,.36,1)'};
   function reducedMotion(){
     if(document.documentElement.dataset.usMotion==='reduced')return true;
     try{if(window.UsUiFoundation?.isReducedMotion?.())return true;}catch(_e){}
     return typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
+  function animate(el,frames,options){
+    if(!el||typeof el.animate!=='function')return null;
+    try{return el.animate(frames,{fill:'both',...options});}catch(_e){return null;}
+  }
   function setTitle(el,plain,accent){
     el.textContent=plain;
     if(accent){const em=document.createElement('em');em.textContent=accent;el.append(em);}
   }
+  // ---------- DOM: one screen gives way to the next (the mockup's show()) ----------
+  // The old screen leaves first: 180 ms, 24 px towards where you came from,
+  // ease-in. Then the new one arrives block by block: 380 ms, 24 px, 30 ms
+  // apart (260 ms + 40 ms apart when the door first opens, after a 620 ms
+  // circle reveal). The page itself switches at once (ids, focus, screen
+  // readers); what leaves is a still copy without ids, painted in its place.
+  const EASE_IN='cubic-bezier(.4,0,1,1)',LEAVE_MS=180;
+  const SCREEN_ORDER={tour:0,authLogin:1,usSignup:2,usVerifyEmail:3,usForgotPassword:4,usRecovery:5,me:6,error:6,choice:7,create:8,join:9,color:10,noi:10,waiting:11,push:12,place:13,ready:14};
+  const HEADER='.tiny,.us-ob-progress';
+  const FREEZE=['display','position','top','right','bottom','left','width','height','min-width','max-width','min-height','box-sizing',
+    'margin-top','margin-right','margin-bottom','margin-left','padding-top','padding-right','padding-bottom','padding-left',
+    'order','flex-grow','flex-shrink','flex-basis','align-self','justify-self','flex-direction','flex-wrap','align-items','justify-content','align-content','justify-items',
+    'row-gap','column-gap','grid-template-columns','grid-template-rows','grid-column-start','grid-column-end','grid-row-start','grid-row-end',
+    'font-family','font-size','font-weight','font-style','font-variant-numeric','line-height','letter-spacing','word-spacing','text-transform','text-align',
+    'text-decoration-line','text-decoration-color','text-underline-offset','white-space','overflow-wrap','color','background-color','background-image',
+    'background-size','background-position','background-repeat','border-top-width','border-right-width','border-bottom-width','border-left-width',
+    'border-top-style','border-right-style','border-bottom-style','border-left-style','border-top-color','border-right-color','border-bottom-color','border-left-color',
+    'border-top-left-radius','border-top-right-radius','border-bottom-right-radius','border-bottom-left-radius','box-shadow','opacity','visibility',
+    'transform','translate','scale','rotate','object-fit','overflow-x','overflow-y','clip-path','appearance','outline-style'];
+  const isShown=el=>Boolean(el&&el.isConnected&&el.getClientRects().length);
+  // A still copy of what is on screen: computed styles written in, ids moved
+  // to data-us-gid (nothing can find it), inert and hidden from screen readers.
+  // Only what is painted is copied: a hidden part is dropped and the inside of
+  // a select or an svg keeps its classes, so the copy costs a few ms on a
+  // phone instead of a frame or more (the step holds every hidden form too).
+  function stillCopy(src,{root=false}={}){
+    const copy=src.cloneNode(true);
+    const freeze=(el,out,top)=>{
+      const cs=getComputedStyle(el);
+      if(!top&&cs.display==='none'){out.remove();return;}
+      for(const prop of FREEZE){
+        if(top&&root&&['opacity','transform','translate','position','top','left','right','bottom'].includes(prop))continue;
+        const value=cs.getPropertyValue(prop);if(value)out.style.setProperty(prop,value,'important');
+      }
+      // Fields keep what was typed (cloneNode keeps values; selects need help).
+      if(el instanceof HTMLSelectElement){out.selectedIndex=el.selectedIndex;return;}
+      const kids=[...el.children],copies=[...out.children];
+      kids.forEach((kid,i)=>{if(kid instanceof HTMLElement)freeze(kid,copies[i],false);});
+    };
+    freeze(src,copy,true);
+    for(const out of [copy,...copy.querySelectorAll('[id],[for],[name]')]){
+      if(out.id){out.dataset.usGid=out.id;out.removeAttribute('id');}
+      out.removeAttribute('for');out.removeAttribute('name');
+    }
+    copy.inert=true;copy.setAttribute('aria-hidden','true');
+    return copy;
+  }
+  function placeCopy(src,host,copy){
+    const r=src.getBoundingClientRect(),h=host.getBoundingClientRect();
+    const s=copy.style;
+    s.setProperty('position','absolute','important');
+    s.setProperty('left',`${r.left-h.left+host.scrollLeft-host.clientLeft}px`,'important');
+    s.setProperty('top',`${r.top-h.top+host.scrollTop-host.clientTop}px`,'important');
+    s.setProperty('width',`${r.width}px`,'important');s.setProperty('height',`${r.height}px`,'important');
+    s.setProperty('margin','0','important');s.setProperty('pointer-events','none','important');
+    host.append(copy);
+    // Scrolled things (the tour track) stay where they were.
+    const track=src.querySelector('.us-tour-track');
+    if(track?.scrollLeft){const still=copy.querySelector('.us-tour-track');if(still)still.scrollLeft=track.scrollLeft;}
+    return copy;
+  }
+  let swapPending=null,revealedAt=-1e9;
+  // Set by the onboarding while a paired step is kept on screen (mount: keeping).
+  let releaseKept=null;
+  // Starts a change of screen: the copy of `from` leaves, the header holds.
+  // `hold`: the copy stays still until swap.go() (the next screen is not ready yet).
+  function beginSwap({from,host,dir=1,header=[],hold=false}={}){
+    if(swapPending)return swapPending;
+    const swap={dir,after:0,first:false,gone:[]};
+    if(reducedMotion()||!from||!isShown(from)||performance.now()-revealedAt<120){
+      // Nothing on screen yet (or the door is just opening): the new screen arrives as the first one.
+      // As in the design, the first screen comes from the right, timed from the door
+      // (a screen drawn a few ms after the door starts that far into its entrance).
+      if(!reducedMotion()&&from&&performance.now()-revealedAt<120){swap.first=true;swap.dir=1;swap.door=revealedAt;stopEnter(from);}
+      swapPending=swap;return swap;
+    }
+    host=host||from.parentElement;
+    const held=[...header,...from.querySelectorAll(':scope>'+HEADER.split(',').join(',:scope>'))].filter(isShown);
+    const copy=stillCopy(from,{root:true});
+    copy.querySelectorAll(':scope>'+HEADER.split(',').join(',:scope>')).forEach(el=>el.remove());
+    copy.classList.remove('active');copy.classList.add('us-step-ghost');
+    placeCopy(from,host,copy);swap.gone.push(copy);
+    held.forEach(el=>{const still=stillCopy(el);placeCopy(el,host,still);still.style.setProperty('z-index','4','important');swap.gone.push(still);});
+    const drop=()=>swap.gone.forEach(el=>el.remove());
+    swap.drop=drop;
+    swap.go=()=>{
+      swap.go=null;
+      const out=animate(copy,[{opacity:1,translate:'0 0'},{opacity:0,translate:`${-dir*24}px 0`}],{duration:LEAVE_MS,easing:EASE_IN,fill:'forwards'});
+      if(out)out.finished.then(drop,drop);else drop();
+      setTimeout(drop,LEAVE_MS+120);
+    };
+    swap.after=LEAVE_MS;
+    if(hold)return swap;
+    swap.go();
+    swapPending=swap;setTimeout(()=>{if(swapPending===swap)swapPending=null;},LEAVE_MS);
+    return swap;
+  }
+  function stopEnter(el){try{el.getAnimations({subtree:true}).forEach(a=>{if(a.effect?.getTiming?.().fill==='backwards')a.cancel();});}catch(_e){}}
+  // What arrives, in the order it is seen: forms join the column, a pair of
+  // buttons or a split card moves as one block (data-us-enter="with-prev").
+  // The children of a display:contents wrapper are items of the column itself:
+  // they take their place by their own `order` (the cards of "Il vostro US"
+  // come after the title, "Indietro" last). A "flat" block is entered at its
+  // own place, its children in turn. An empty status line counts as a block,
+  // as in the design (data-us-enter="skip" where the design has none).
+  function enterItems(container){
+    const out=[];
+    const walk=parent=>{
+      const items=[];
+      const lift=box=>{
+        for(const el of box.children){
+          if(el.hidden||el.matches(HEADER)||el.classList.contains('us-sr-only')||el.classList.contains('us-step-ghost')||el.dataset.usEnter==='skip')continue;
+          const cs=getComputedStyle(el);
+          if(cs.display==='contents'){lift(el);continue;}
+          items.push({el,cs,i:items.length,order:Number(cs.order)||0});
+        }
+      };
+      lift(parent);
+      // `order` moves things only in a flex or grid box.
+      if(/flex|grid/.test(getComputedStyle(parent).display))items.sort((a,b)=>a.order-b.order||a.i-b.i);
+      items.forEach(({el,cs})=>{
+        if(el.dataset.usEnter==='flat'){walk(el);return;}
+        if(cs.position==='absolute'&&!el.classList.contains('auth-status'))return;
+        if(cs.display==='none'&&!el.classList.contains('auth-status'))return;
+        out.push(el);
+      });
+    };
+    walk(container);
+    return out;
+  }
+  // The new screen comes in. `still` holds things that do not slide (the two circles).
+  function arriveSwap(container,{extra=[],header=[],swap=swapPending}={}){
+    swapPending=null;
+    if(!container||!swap||reducedMotion())return swap?.after||0;
+    // A first screen drawn some ms after its door starts that far into its entrance.
+    if(swap.first&&swap.door!=null){swap.late=Math.max(0,Math.round(performance.now()-swap.door));swap.after=-swap.late;}
+    const items=[...enterItems(container),...extra.filter(isShown)];
+    let n=-1;
+    items.forEach(el=>{
+      // What does not slide takes no turn either (the design leaves .no-st out of the count).
+      if(el.classList.contains('us-ob-venn')||el.dataset.usEnter==='still'){
+        if(swap.after>0)animate(el,[{opacity:0},{opacity:0}],{duration:swap.after,fill:'none'});
+        return;
+      }
+      if(!(el.dataset.usEnter==='with-prev'&&n>=0))n++;
+      const delay=swap.after+(swap.first?260+n*40:n*30);
+      const run=animate(el,[{opacity:0,translate:`${swap.dir*24}px 0`},{opacity:1,translate:'0 0'}],{duration:380,delay:Math.max(0,delay),easing:EASE.out,fill:'backwards'});
+      // Late (the door opened before the screen was ready): start where the design already is.
+      if(run&&delay<0)run.currentTime=-delay;
+    });
+    const heads=[...header,...container.querySelectorAll(':scope>'+HEADER.split(',').join(',:scope>'))].filter(isShown);
+    if(swap.after>0)heads.forEach(el=>animate(el,[{opacity:0},{opacity:0}],{duration:swap.after,fill:'none'}));
+    // (Negative for a late first screen: what follows it is timed from the door as well.)
+    return swap.after;
+  }
+  // The door opens: a circle from the middle, 620 ms.
   // A wrong answer: the status line shakes (−4, 4, 260 ms).
   function shake(el,px=4,ms=260){
-    if(!el||reducedMotion()||typeof el.animate!=='function')return;
-    try{el.animate([{translate:'0 0'},{translate:`-${px}px 0`},{translate:`${px}px 0`},{translate:'0 0'}],{duration:ms,composite:'add'});}catch(_e){}
-  }
-  // A one-time CSS move, on purpose (the hop when you pick a shape).
-  function replay(el,cls){
     if(!el||reducedMotion())return;
-    el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);
-    el.addEventListener('animationend',()=>el.classList.remove(cls),{once:true});
+    animate(el,[{translate:'0 0'},{translate:`-${px}px 0`},{translate:`${px}px 0`},{translate:'0 0'}],{duration:ms,fill:'none',composite:'add'});
   }
-  const diary=()=>globalThis.UsDiario||null;
-  const personColors=()=>globalThis.UsPersonColors||null;
-  const hexOf=id=>personColors()?.PALETTE?.[id]||'';
-  const colourWord=id=>{const name=personColors()?.NAMES?.[id];return name?`il ${name.toLowerCase()}`:'';};
-  const shapeName=key=>diary()?.SHAPE_NAMES?.[key]||SHAPE_NAMES[key]||key;
-  // A character as a sticker, or the dashed place of who has not arrived yet.
-  function sticker(look,{size,dx=0,mood='',cls='',label=''}={}){
-    const d=diary();if(!d)return '';
-    return `<span class="dy-stk${cls?` ${cls}`:''}">${d.character({shape:look.shape,color:look.color},{size,dx,mood,label})}</span>`;
+  function revealDoor(el){
+    revealedAt=performance.now();
+    if(!el||reducedMotion())return;
+    animate(el,[{clipPath:'circle(0% at 50% 50%)'},{clipPath:'circle(150% at 50% 50%)'}],{duration:620,easing:EASE.io,fill:'none'});
   }
-  function place(shape,size,q=true){const d=diary();return d?`<span class="dy-ent-slot">${d.slot(shape,size,q)}</span>`:'';}
-  // diario.js loads after this file: anything drawn before it waits for it.
-  function whenDiary(fn){
-    let tries=0;
-    const tick=()=>{if(diary())fn();else if(tries++<60)setTimeout(tick,50);};
-    tick();
+  // The auth door (app.js showAuthStep): from what is on screen to `id`.
+  function authSwap(id){
+    const overlay=document.getElementById('authOverlay');
+    if(!overlay||overlay.classList.contains('hidden')||!isShown(overlay))return null;
+    const tour=document.getElementById('usTour');
+    const tourOn=tour&&!tour.hidden;
+    const from=tourOn?tour:overlay.querySelector('.auth-step.active');
+    const fromKey=tourOn?'tour':from?.id||'';
+    const target=document.getElementById(id);
+    if(!target)return null;
+    const firstTime=overlay.dataset.usShown!=='1';
+    if(firstTime){overlay.dataset.usShown='1';revealDoor(overlay);swapPending=null;const swap={dir:1,after:0,first:true,gone:[],door:revealedAt};swapPending=swap;return swap;}
+    if(from===target&&!swapPending)return null;
+    const dir=(SCREEN_ORDER[id]??1)<(SCREEN_ORDER[fromKey]??0)?-1:1;
+    return beginSwap({from,host:overlay.querySelector('.auth-card'),dir});
   }
-  // The reads and writes of the look (colour, character) come from app.js through mount().
-  let colourIO=null;
-  // Shape and colour picked in «Tu», saved once the couple exists: the colour
-  // with set_my_color, the shape with set_my_character_shape (on this phone
-  // only while that function is not on the server yet).
-  async function saveLook(profile,look){
-    if(!profile?.id||!profile.couple_id||!look||!colourIO)return null;
-    const colors=personColors();
-    let profiles=[{id:profile.id,role:profile.role,person_color:null}];
-    try{const {data}=await colourIO.readCouple(profile.couple_id);if(Array.isArray(data)&&data.length)profiles=data;}catch(_e){}
-    const colour=lookColour(look.colour,profiles,profile.id,colors);
-    let saved=null;
-    if(colour){
-      try{
-        const {error}=await colourIO.rpc('set_my_color',{p_color:colour});
-        if(!error){saved=colour;const me=profiles.find(p=>p.id===profile.id);if(me)me.person_color=colour;colors?.applyCoupleColors?.(profiles);}
-      }catch(_e){}
-    }
-    if(SHAPES.includes(look.shape)){
-      let ok=false;
-      try{const result=await colourIO.rpc('set_my_character_shape',{p_shape:look.shape});ok=!result?.error;}catch(_e){}
-      if(!ok)storeSet(localStorage,FIRST_RUN_KEYS.characterShape(profile.id),look.shape);
-    }
-    return saved;
+  function authArrive(id){
+    const target=document.getElementById(id),install=document.getElementById('usAuthInstall');
+    if(!swapPending)return;
+    arriveSwap(target,{extra:id==='authLogin'&&install?[install]:[]});
   }
-  // Mine on this phone: what was picked in this tab, or kept, or the default.
-  function storedShape(userId,role){
-    const kept=storeGet(localStorage,FIRST_RUN_KEYS.characterShape(userId));
-    return SHAPES.includes(kept)?kept:defaultShape(role);
+  if(typeof document==='object'&&typeof MutationObserver==='function'){
+    // Once the door closes (signed in), the next opening is a first one again.
+    const watchDoor=()=>{
+      const overlay=document.getElementById('authOverlay');if(!overlay)return;
+      new MutationObserver(()=>{if(overlay.classList.contains('hidden'))delete overlay.dataset.usShown;}).observe(overlay,{attributes:true,attributeFilter:['class']});
+    };
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watchDoor,{once:true});else watchDoor();
   }
-  // Today's answer while waiting, for the arrival's card (this tab only).
-  let answeredWhileWaiting='';
 
-  // ---------- DOM: the welcome (before the account; no network) ----------
+  // The two circles: my colour, the other person's, and the Noi where they meet.
+  // Rosa (role francesco, who created the couple) on the left, lilla on the right.
+  const LENS='M100 25.36A40 40 0 0 1 100 94.64A40 40 0 0 1 100 25.36Z';
+  function drawVenn(host,{kind,role,partner}){
+    const mine=role==='beatrice'?'b':'a',other=mine==='a'?'b':'a',x=side=>side==='a'?80:120;
+    host.dataset.kind=kind;
+    host.innerHTML=kind==='wait'
+      ?`<svg viewBox="0 0 200 120" focusable="false"><circle class="ov-${mine} ov-me" cx="${x(mine)}" cy="60" r="40"/><circle class="ov-wait ov-wait-${other}" cx="${x(other)}" cy="60" r="39"/></svg>`
+      :`<svg viewBox="0 0 200 120" focusable="false"><circle class="ov-a ${mine==='a'?'ov-me':'ov-partner'}" cx="80" cy="60" r="40"/><circle class="ov-b ${mine==='b'?'ov-me':'ov-partner'}" cx="120" cy="60" r="40"/>${kind==='joined'?`<circle class="ov-wait ov-wait-${other} is-gone" cx="${x(other)}" cy="60" r="39"/>`:''}<path class="ov-n" d="${LENS}"/><circle class="ov-halo" cx="100" cy="60" r="40"/></svg>`;
+    const legend=document.createElement('div');legend.className='ov-l';
+    for(const side of ['a','b']){
+      const item=document.createElement('span'),dot=document.createElement('i'),label=document.createElement('span');
+      dot.className=`ov-dot ov-dot-${side}`;
+      label.className=side===mine?'ov-l-me':'ov-l-partner';
+      label.textContent=side===mine?'Tu':(partner||'La tua persona');
+      // Their real name stays as written; "Tu" and "La tua persona" follow the language.
+      if(side!==mine&&partner&&partner!=='La tua persona')label.translate=false;
+      item.append(dot,label);legend.append(item);
+    }
+    host.append(legend);
+  }
+  // Founder, 29/10/2026: at the first opening each person picks their colour
+  // (free in beta, colors_free on the server). The partner's colour, chosen or
+  // by default, is taken; the circles take the choice at once.
+  // The read and the write come from app.js through mount(), as the rest of onboarding.
+  let colourIO=null;
+  async function mountColourPicker(host,{profile}){
+    const colors=globalThis.UsPersonColors;
+    if(!host)return;
+    if(!colors||!profile?.id||!profile?.couple_id||!colourIO){host.hidden=true;return;}
+    const ticket=host.dataset.ticket=String(Date.now()+Math.random());
+    let profiles=[{id:profile.id,role:profile.role,person_color:profile.person_color||null}];
+    try{
+      const {data}=await colourIO.readCouple(profile.couple_id);
+      if(host.dataset.ticket!==ticket)return;
+      if(Array.isArray(data)&&data.length)profiles=data;
+    }catch(_){/* only me: the partner's default below */}
+    // Before the partner joins, their default colour is theirs already.
+    if(!profiles.some(p=>p.id!==profile.id))profiles.push({id:'~partner',role:profile.role==='beatrice'?'francesco':'beatrice',person_color:null});
+    const paint=()=>{
+      host.innerHTML=colors.choices(profiles,profile.id).map(c=>`<button type="button" class="us-ob-swatch${c.mine?' is-on':''}" data-colour="${c.id}" aria-pressed="${c.mine}" aria-label="${c.name}"${c.taken?' disabled':''}><i style="background:${c.hex}"></i></button>`).join('');
+      host.hidden=false;
+    };
+    host.onclick=async event=>{
+      const btn=event.target.closest?.('[data-colour]');
+      if(!btn||btn.disabled||btn.classList.contains('is-on'))return;
+      const colour=btn.dataset.colour;
+      const {error}=await colourIO.rpc('set_my_color',{p_color:colour});
+      if(error){globalThis.toast?.('Non riesco a salvare il colore. Riprova.');return;}
+      const me=profiles.find(p=>p.id===profile.id);if(me)me.person_color=colour;
+      profile.person_color=colour;
+      colors.applyCoupleColors(profiles.filter(p=>p.id!=='~partner'));
+      paint();
+    };
+    paint();
+  }
+  // The colour fills the screen, then shrinks into your circle (or theirs, when they arrive).
+  // `wait`: it starts with the new step (after the old one has gone), as colorOn() in the design.
+  function playColour(overlay,host,wait=0){
+    if(!overlay||!host||reducedMotion())return;
+    const kind=host.dataset.kind,q=selector=>host.querySelector(selector);
+    const target=q(kind==='joined'?'.ov-partner':'.ov-me');
+    const rect=target?.getBoundingClientRect();
+    if(!rect?.width)return;
+    const flood=document.createElement('span');
+    flood.className='us-ob-flood';flood.setAttribute('aria-hidden','true');
+    flood.style.background=kind==='joined'?'var(--us-partner)':'var(--us-tu)';
+    overlay.append(flood);
+    // The circle is drawn in the flood's own box (the phone screen, also when
+    // the app sits in a phone-sized stage on a computer), as the design measures
+    // from its .auth.
+    const box=flood.getBoundingClientRect();
+    const W=box.width||window.innerWidth,H=box.height||window.innerHeight;
+    const cx=Math.round(rect.left+rect.width/2-box.left),cy=Math.round(rect.top+rect.height/2-box.top),at=`at ${cx}px ${cy}px`;
+    const big=Math.ceil(Math.hypot(W,H));
+    const drop=()=>flood.remove();
+    const wave=animate(flood,[{clipPath:`circle(0px ${at})`},{clipPath:`circle(${big}px ${at})`,offset:.45},{clipPath:`circle(${Math.round(rect.width/2)}px ${at})`}],{duration:1150,delay:wait,easing:EASE.io,fill:'both'});
+    if(wave)wave.finished.then(drop,drop);else drop();
+    // The design's light tap (14 ms) when the colour has filled the screen.
+    setTimeout(()=>{if(flood.isConnected)window.UsFeedback?.landing?.();},wait+500);
+    if(kind==='wait')animate(q('.ov-wait'),[{opacity:0,transform:'scale(.85)'},{opacity:1,transform:'none'}],{duration:520,delay:wait+1050,easing:EASE.out});
+    if(kind==='join'){const partner=q('.ov-partner');animate(partner,[{opacity:0,transform:`translateX(${partner?.classList.contains('ov-a')?-36:36}px)`},{opacity:1,transform:'none'}],{duration:620,delay:wait+950,easing:EASE.io});}
+    if(kind==='joined'){
+      animate(q('.ov-partner'),[{opacity:0},{opacity:0,offset:.99},{opacity:1}],{duration:520,delay:wait});
+      animate(q('.ov-wait'),[{opacity:1},{opacity:1,offset:.99},{opacity:0}],{duration:520,delay:wait});
+    }
+    if(kind!=='wait'){
+      animate(q('.ov-n'),[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1.1)',offset:.6},{opacity:1,transform:'none'}],{duration:560,delay:wait+(kind==='join'?1500:1250),easing:EASE.out});
+      animate(q('.ov-halo'),[{opacity:.8,transform:'scale(.9)'},{opacity:0,transform:'scale(1.7)'}],{duration:820,delay:wait+(kind==='join'?1560:1310),easing:EASE.out,fill:'forwards'});
+    }
+  }
+
+  // ---------- DOM: the tour (three cards, before the account; no network) ----------
+  function tourAnimations(i,slide){
+    const q=selector=>slide.querySelector(selector),list=[];
+    const an=(el,frames,options)=>{const run=animate(el,frames,options);if(run)list.push(run);};
+    if(i===0){
+      an(q('.t1-a'),[{transform:'translate(-44px,0) scale(.7)',opacity:0},{transform:'none',opacity:1}],{duration:900,delay:250,easing:EASE.io});
+      an(q('.t1-b'),[{transform:'translate(44px,0) scale(.7)',opacity:0},{transform:'none',opacity:1}],{duration:900,delay:250,easing:EASE.io});
+      an(q('.t1-n'),[{opacity:0,transform:'scale(.5)'},{opacity:1,transform:'scale(1.08)',offset:.6},{opacity:1,transform:'none'}],{duration:600,delay:1000,easing:EASE.out});
+      an(q('.t1-w'),[{opacity:.8,transform:'scale(.9)'},{opacity:0,transform:'scale(1.6)'}],{duration:900,delay:1150,easing:EASE.out,fill:'forwards'});
+    }
+    if(i===1){
+      const P=[[70,46],[120,2],[170,46]],frames=[];
+      for(let j=0;j<=8;j++){
+        const t=j/8,u=1-t;
+        frames.push({transform:`translate(${(u*u*P[0][0]+2*u*t*P[1][0]+t*t*P[2][0]-11.6).toFixed(1)}px,${(u*u*P[0][1]+2*u*t*P[1][1]+t*t*P[2][1]-9.7).toFixed(1)}px) scale(1.35)`,opacity:j===0||j===8?0:1});
+      }
+      an(q('.t2-h'),frames,{duration:1000,delay:400,easing:'ease-in-out'});
+      an(q('.t2-b'),[{transform:'scale(1)'},{transform:'scale(1.2)'},{transform:'scale(1)'}],{duration:420,delay:1350,easing:EASE.out});
+      slide.querySelectorAll('.t2-d').forEach(dot=>an(dot,[{opacity:1},{opacity:0}],{duration:240,delay:1650}));
+      slide.querySelectorAll('.t2-l').forEach(line=>an(line,[{opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'none'}],{duration:380,delay:1760,easing:EASE.out}));
+    }
+    if(i===2){
+      an(q('.t3-pl'),[{transform:'translate(0px,24px) rotate(0deg) scale(.8)',opacity:0},{transform:'translate(-82px,14px) rotate(-12deg)',opacity:1}],{duration:700,delay:250,easing:EASE.out});
+      an(q('.t3-pr'),[{transform:'translate(0px,24px) rotate(0deg) scale(.8)',opacity:0},{transform:'translate(82px,8px) rotate(10deg)',opacity:1}],{duration:700,delay:330,easing:EASE.out});
+      an(q('.t3-r'),[{strokeDashoffset:72},{strokeDashoffset:22}],{duration:1100,delay:500,easing:EASE.io});
+      an(q('.t3-x'),[{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(-4px)',offset:.3},{opacity:1,transform:'translateY(-8px)',offset:.7},{opacity:0,transform:'translateY(-14px)'}],{duration:1300,delay:700,easing:EASE.out});
+      an(q('.t3-c'),[{opacity:0,transform:'translateY(8px) scale(.9)'},{opacity:1,transform:'none'}],{duration:460,delay:1450,easing:EASE.spring});
+    }
+    return list;
+  }
+  // The two photos of the third card: painted here (sea at sunset, flowers),
+  // as in the design; no network, no real photos before the account.
+  function tourRng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  function paintTourPhoto(kind){
+    const w=540,h=720,c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');if(!g)return '';
+    const r=tourRng(kind.length*97+7);
+    const lg=(y0,y1,stops)=>{const l=g.createLinearGradient(0,y0,0,y1);stops.forEach(([o,col])=>l.addColorStop(o,col));return l;};
+    if(kind==='mare'){
+      g.fillStyle=lg(0,430,[[0,'#2a1838'],[.45,'#7c3a5c'],[.8,'#ee8a6c'],[1,'#ffc98f']]);g.fillRect(0,0,w,430);
+      const sun=g.createRadialGradient(330,420,10,330,420,190);sun.addColorStop(0,'rgba(255,224,170,.95)');sun.addColorStop(.25,'rgba(255,190,140,.5)');sun.addColorStop(1,'rgba(255,150,120,0)');g.fillStyle=sun;g.fillRect(0,200,w,240);
+      g.fillStyle='#ffe2b0';g.beginPath();g.arc(330,430,46,Math.PI,0);g.fill();
+      g.fillStyle=lg(430,h,[[0,'#5a2e4a'],[.3,'#2e1a33'],[1,'#120c18']]);g.fillRect(0,430,w,h-430);
+      for(let i=0;i<34;i++){const y=436+i*i*.32,ww=(120-i*3)*(.6+r()*.6);g.fillStyle=`rgba(255,${200-i*2},150,${.5-i*.013})`;g.fillRect(330-ww/2+(r()-.5)*20,y,ww,2);}
+      g.fillStyle='#0c0810';g.fillRect(0,640,w,80);g.beginPath();g.moveTo(0,640);g.quadraticCurveTo(270,612,540,640);g.fill();
+      [[118,0],[140,4]].forEach(([x,o])=>{g.beginPath();g.arc(x,566+o,11,0,7);g.fill();g.beginPath();if(g.roundRect)g.roundRect(x-12,578+o,24,50,10);else g.rect(x-12,578+o,24,50);g.fill();});
+    }else{
+      g.fillStyle='#24182c';g.fillRect(0,0,w,h);
+      for(let i=0;i<46;i++){const x=r()*w,y=r()*h,R=20+r()*46;g.fillStyle=['#ff7c96','#ffb3a1','#f3b76e','#d98be0','#fff1e6'][i%5];for(let p=0;p<5;p++){const a=p/5*6.283+r();g.beginPath();g.ellipse(x+Math.cos(a)*R*.45,y+Math.sin(a)*R*.45,R*.42,R*.26,a,0,7);g.fill();}g.fillStyle='#5a3a1c';g.beginPath();g.arc(x,y,R*.16,0,7);g.fill();}
+    }
+    // Film grain, as on every photo of the design.
+    const t=document.createElement('canvas');t.width=t.height=96;const x=t.getContext('2d'),d=x.createImageData(96,96);
+    for(let i=0;i<d.data.length;i+=4){const v=r()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=26;}
+    x.putImageData(d,0,0);g.save();g.globalCompositeOperation='overlay';g.fillStyle=g.createPattern(t,'repeat');g.fillRect(0,0,w,h);g.restore();
+    return c.toDataURL('image/jpeg',.86);
+  }
+  function paintTourPhotos(root){
+    for(const [selector,kind] of [['.t3-pl','mare'],['.t3-pr','fiori']]){
+      const img=root.querySelector(selector);
+      if(!img||img.getAttribute('src'))continue;
+      try{const url=paintTourPhoto(kind);if(url)img.src=url;}catch(_e){}
+    }
+  }
   function mountTour({openStep}){
     const root=document.getElementById('usTour'),overlay=document.getElementById('authOverlay');
-    const next=document.getElementById('usTourNext');
-    if(!root||!overlay||!next)return Object.freeze({maybeOpen:()=>false,show(){},close(){},markSeen(){},get open(){return false;}});
-    let isOpen=false;
+    const track=document.getElementById('usTourTrack'),next=document.getElementById('usTourNext');
+    if(!root||!overlay||!track||!next)return Object.freeze({maybeOpen:()=>false,close(){},markSeen(){},get open(){return false;}});
+    const slides=[...track.children],dots=[...root.querySelectorAll('[data-us-tour-dot]')];
+    // aria-roledescription is not one of the attributes i18n.js follows.
+    const t=window.UsI18n?.t;
+    if(typeof t==='function')root.querySelectorAll('[aria-roledescription]').forEach(el=>el.setAttribute('aria-roledescription',t(el.getAttribute('aria-roledescription'))));
+    let current=-1,runs=[],isOpen=false;
     const markSeen=()=>storeSet(localStorage,FIRST_RUN_KEYS.tourSeen,'1');
-    // The two of you, not members yet: the ball in rosa, the square in lilla, winking.
-    const paintArt=()=>{
-      const duo=document.getElementById('usTourDuo');if(!duo||duo.childElementCount)return;
-      duo.innerHTML=sticker({shape:'palla',color:'var(--us-rosa)'},{size:128,dx:3,cls:'dy-ent-tilt-l'})+sticker({shape:'quadrato',color:'var(--us-lilla)'},{size:136,dx:-3,mood:'occhiolino',cls:'dy-ent-tilt-r'});
-    };
+    function select(i){
+      if(i===current||i<0||i>=slides.length)return;
+      current=i;
+      dots.forEach((dot,j)=>{if(j===i)dot.setAttribute('aria-current','true');else dot.removeAttribute('aria-current');});
+      next.textContent=i===slides.length-1?'Iniziamo':'Avanti';
+      // Each card plays once, when it arrives.
+      (runs[i]||[]).forEach(run=>{if(run.playState==='paused'&&run.currentTime===0)run.play();});
+    }
+    const indexNow=()=>Math.round(track.scrollLeft/Math.max(1,track.clientWidth));
+    function go(i){
+      const left=Math.max(0,Math.min(slides.length-1,i))*track.clientWidth;
+      try{track.scrollTo({left,behavior:reducedMotion()?'auto':'smooth'});}catch(_e){track.scrollLeft=left;}
+      if(reducedMotion())select(indexNow());
+    }
+    track.addEventListener('scroll',()=>{if(isOpen)select(indexNow());},{passive:true});
+    dots.forEach((dot,i)=>dot.addEventListener('click',()=>go(i)));
     function close(){
       if(!isOpen)return;
       isOpen=false;markSeen();
       root.hidden=true;overlay.classList.remove('us-tour-active');
+      runs.flat().forEach(run=>{try{run.cancel();}catch(_e){}});runs=[];
       window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
     }
     function focusHeading(id){
@@ -513,37 +829,46 @@
       heading.focus({preventScroll:true});
     }
     function leave(target){
+      // The tour leaves like any step (to the right, 180 ms).
+      beginSwap({from:root,host:overlay.querySelector('.auth-card'),dir:1});
       close();
       if(target==='signup'&&window.usS31Auth?.go){window.usS31Auth.go('signup');focusHeading('usSignup');return;}
       openStep?.('authLogin');focusHeading('authLogin');
     }
-    next.addEventListener('click',()=>leave('signup'));
+    next.addEventListener('click',()=>{const i=current<0?0:current;if(i<slides.length-1)go(i+1);else leave('signup');});
+    document.getElementById('usTourSkip')?.addEventListener('click',()=>leave('login'));
     document.getElementById('usTourLogin')?.addEventListener('click',()=>leave('login'));
-    function show(){
-      if(isOpen)return true;
-      isOpen=true;
-      overlay.classList.add('us-tour-active');root.hidden=false;overlay.scrollTop=0;
-      whenDiary(paintArt);
-      window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
-      return true;
-    }
     function maybeOpen({returningDevice=false}={}){
       if(isOpen)return true;
       if(returningDevice||!tourWanted(localStorage))return false;
-      return show();
+      isOpen=true;current=-1;
+      // Opened over the sign-in: the tour arrives in its place.
+      const login=overlay.querySelector('.auth-step.active');
+      const swap=beginSwap({from:login,host:overlay.querySelector('.auth-card'),dir:-1});
+      overlay.classList.add('us-tour-active');root.hidden=false;track.scrollLeft=0;
+      paintTourPhotos(root);
+      runs=reducedMotion()?[]:slides.map((slide,i)=>{const list=tourAnimations(i,slide);list.forEach(run=>run.pause());return list;});
+      select(0);
+      arriveSwap(root,{swap});
+      // The first card's drawing is timed from the door too.
+      if(swap?.late)(runs[0]||[]).forEach(run=>{try{run.currentTime=swap.late;}catch(_e){}});
+      window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
+      return true;
     }
-    // «Indietro» on the account goes back to the welcome.
-    document.getElementById('usSignupHome')?.addEventListener('click',()=>{show();document.getElementById('usTourTitle')?.focus({preventScroll:true});});
-    return Object.freeze({maybeOpen,show,close,markSeen,get open(){return isOpen;}});
+    return Object.freeze({maybeOpen,close,markSeen,get open(){return isOpen;}});
   }
 
-  // ---------- DOM: the arrival after pairing («Ora siete in due») ----------
+  // ---------- DOM: the phone setup after pairing ----------
+  // What was typed in the "Tu" step in this tab, for the summary only.
+  let typedBirthday={userId:'',value:null};
   function mountSetup(){
     const overlay=document.getElementById('usDeviceSetup');
     const $=id=>document.getElementById(id);
     if(!overlay)return Object.freeze({maybeOpen:async()=>false,close(){},markPasswordSignIn(){},get open(){return false;}});
-    const primary=$('usSetupPrimary');
-    let isOpen=false,userId='',mode=null,profile=null,run=0,isolated=[],couple=null;
+    const primary=$('usSetupPrimary'),secondary=$('usSetupSecondary'),body=$('usSetupBody');
+    let isOpen=false,userId='',mode=null,profile=null,steps=[],index=0,busy=false,run=0,pushKind='unknown',results={push:null,place:null},isolated=[];
+    // The widget row of "Tutto pronto": idle → pending → asked → placed (or retry / missed / unsupported).
+    let widget={offer:false,state:'idle',at:0},widgetTimer=0;
     const partnerName=()=>{try{return window.UsIdentity?.current?.()?.partnerName||'La tua persona';}catch(_e){return 'La tua persona';}};
     // Modal: the app behind cannot be reached while this is open.
     function isolate(on){
@@ -561,53 +886,294 @@
         isolated=[];
       }
     }
-    // The two characters, in the order of every screen: who created, then who joined.
-    // Who arrives now drops into the place; who was waiting hops (the mockup's .drop and .hop).
-    function looks(){
-      const colors=personColors(),role=profile?.role,other=role==='beatrice'?'francesco':'beatrice';
-      const list=couple||[{id:profile?.id,role,person_color:null}];
-      const effective=p=>colors?.idOf?.(p?.person_color)||defaultColour(p?.role);
-      const meRow=list.find(p=>p.id===profile?.id)||{role},partnerRow=list.find(p=>p.id!==profile?.id)||{role:other};
-      const mine={shape:storedShape(userId,role),colour:effective(meRow)};
-      const theirs={shape:diary()?.shapeOf?.(other)||defaultShape(other),colour:effective(partnerRow)};
-      return {mine,theirs,role};
+    function status(text,kind){
+      const node=$('usSetupStatus');node.textContent=text||'';
+      if(text&&kind)node.dataset.kind=kind;else node.removeAttribute('data-kind');
+      if(text&&kind==='error')shake(node);
     }
-    function paint(play){
-      const {mine,theirs,role}=looks(),partner=partnerName();
-      const meFirst=role!=='beatrice';
-      const draw=(look,arriving,first)=>sticker({shape:look.shape,color:hexOf(look.colour)||`var(--us-${look.colour})`},{size:arriving?120:112,dx:first?3:-3,mood:arriving?'occhiolino':'',cls:play?(arriving?'dy-ent-drop':'dy-ent-hop-late'):''});
-      // created: the partner arrives; joined: I arrive.
-      const meArrive=mode==='joined';
-      const a=meFirst?draw(mine,meArrive,true):draw(theirs,!meArrive,true);
-      const b=meFirst?draw(theirs,!meArrive,false):draw(mine,meArrive,false);
-      $('usSetupPair').innerHTML=a+b;
-      const theirWord=couple?colourWord(theirs.colour):'',myWord=couple?colourWord(mine.colour):'';
-      $('usSetupCopy').textContent=mode==='joined'
-        ?`${partner} ti aspettava.${theirWord?` Il suo colore è ${theirWord}${myWord?`, il tuo ${myWord}`:''}.`:''}`
-        :`${partner} è qui, adesso.${theirWord?` Il suo colore è ${theirWord}.`:''}`;
-      const answered=mode==='created'&&answeredWhileWaiting===userId;
-      $('usSetupToday').hidden=!answered;
-      $('usSetupTodayText').textContent=answered?`Hai già risposto. La risposta di ${partner} si apre appena risponde anche ${partner}.`:'';
+    function setBusy(on){busy=on;primary.disabled=on;secondary.disabled=on;}
+    function sharingNow(){try{return Boolean(window.UsLocation?.isSharing?.());}catch(_e){return false;}}
+    function kickerFor(step){
+      if(step==='noi'||step==='color')return {text:'Voi · 2 di 4',progress:.5};
+      if(step==='push'||step==='place'){
+        const label=step==='push'?'Notifiche':'Posizione';
+        if(mode==='device'){const own=steps.filter(s=>s==='push'||s==='place'),n=own.indexOf(step)+1;return {text:`${label} · ${n} di ${own.length}`,progress:n/own.length};}
+        return {text:step==='push'?'Notifiche · 3 di 4':'Posizione · 4 di 4',progress:step==='push'?.75:1};
+      }
+      return {text:mode==='device'?'US · Questo telefono':'US · Tutto pronto',progress:1};
     }
-    async function finish(){
+    function copyFor(step){
+      const partner=partnerName(),role=profile?.role;
+      if(step==='noi')return `${partner} ha accettato l’invito ed è ${partnerColourName(role)}, tu ${colourName(role)}.`;
+      if(step==='color')return 'Scegli il tuo: lo vedete uguale tutti e due, e quello della tua persona resta suo.';
+      if(step==='push')return 'Solo per le cose vostre, anche a US chiusa. Cosa ricevere lo scegli tu.';
+      if(step==='place')return 'Se la attivi, in Oggi vedete la distanza tra voi.';
+      return mode==='device'?'Su questo telefono è tutto a posto.':'';
+    }
+    function refreshPartner(redrawReady=true){
       if(!isOpen)return;
-      const id=userId;
+      const partner=partnerName(),step=steps[index];
+      $('usSetupCopy').textContent=copyFor(step);
+      $('usSetupPushPartner').textContent=`${partner} ti pensa ♡`;
+      $('usSetupPointPartner').textContent=`${partner} vede solo la distanza, mai dove sei.`;
+      const label=$('usSetupVenn').querySelector('.ov-l-partner');if(label){label.textContent=partner;label.translate=partner==='La tua persona';}
+      if(step==='ready'&&redrawReady)drawReady(false);
+    }
+    function readyRows(){
+      const rows=[];
+      if(mode!=='device'){
+        const typed=typedBirthday.userId===userId?typedBirthday.value:null;
+        const saved=storeGet(localStorage,FIRST_RUN_KEYS.birthdaySaved(userId));
+        rows.push({icon:'user',title:profile?.display_name||'Tu',detail:typed?`Compleanno il ${typed.day} ${MONTHS[typed.month-1]}`:saved?'Compleanno nel vostro calendario':'Compleanno da aggiungere in Noi',ok:true});
+        let started='';try{started=window.UsCoupleContext?.snapshot?.()?.couple?.started_on||'';}catch(_e){}
+        const days=daysTogether(started);
+        rows.push({icon:'heart',title:days===null?'I vostri giorni insieme':`Insieme da ${days.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} ${days===1?'giorno':'giorni'}`,detail:days===null?'Li contate in Oggi':`Dal ${italianDate(started)}`,ok:true});
+      }
+      if(window.UsNotifications?.supported?.()){
+        const on=results.push===true||pushKind==='active';
+        rows.push({icon:'bell',title:on?'Notifiche attive':'Notifiche non attive',detail:on?'Le scegli dalle Impostazioni':'Le attivi quando vuoi',ok:on});
+      }
+      const place=results.place===true||sharingNow();
+      rows.push({icon:'pin',title:place?'Distanza attiva':'Distanza non attiva',detail:place?'Solo la distanza, mai dove sei':'La attivi quando vuoi da Oggi',ok:place});
+      if(widget.offer)rows.push(widgetRow());
+      return rows;
+    }
+    const WIDGET_DETAIL={
+      idle:'Un pensiero con un tocco, anche con US chiusa.',
+      pending:'Preparo il widget…',
+      asked:'Conferma sulla schermata che si è aperta.',
+      placed:'Aggiunto alla Home',
+      retry:'Il telefono non ha aperto la richiesta. Riprova.',
+      missed:'Non aggiunto. Riprova oppure usa la sezione Widget della Home Android.',
+      unsupported:'Questo telefono non aggiunge widget da solo. Usa i widget della Home.'
+    };
+    function widgetRow(){
+      const state=widget.state,placed=state==='placed';
+      const action=placed||state==='unsupported'?'':state==='retry'||state==='missed'?'Riprova':'Aggiungi il widget';
+      return {key:'widget',icon:'widget',title:placed?'Widget sulla Home':'Widget Ti penso',detail:WIDGET_DETAIL[state]||WIDGET_DETAIL.idle,ok:placed,action,waiting:state==='pending'||state==='asked'};
+    }
+    // Rows are drawn once; the widget row then changes in place, so its
+    // status line is read out and the button keeps its focus.
+    function paintRow(li,row){
+      li.className=row.ok?'is-ok':'';
+      li.querySelector('b').textContent=row.title;
+      li.querySelector('small').textContent=row.detail;
+      const mark=li.querySelector('i');mark.hidden=Boolean(row.action);
+      let button=li.querySelector('.us-setup-ready-action');
+      if(row.action){
+        if(!button){button=document.createElement('button');button.type='button';button.className='us-setup-ready-action';button.dataset.usSetupWidget='';li.insertBefore(button,mark);}
+        // aria-disabled, not disabled: the button keeps its focus while the phone asks.
+        button.textContent=row.action;if(row.waiting)button.setAttribute('aria-disabled','true');else button.removeAttribute('aria-disabled');
+      }else if(button){
+        const had=button===document.activeElement;button.remove();
+        if(had)primary.focus({preventScroll:true});
+      }
+    }
+    function drawReady(play,after=0){
+      const list=$('usSetupReady');list.replaceChildren();
+      for(const row of readyRows()){
+        const li=document.createElement('li'),icon=document.createElement('span'),text=document.createElement('span'),title=document.createElement('b'),detail=document.createElement('small'),mark=document.createElement('i');
+        icon.className=`us-setup-ready-icon us-setup-ready-icon--${row.icon}`;icon.setAttribute('aria-hidden','true');
+        if(row.icon==='user'&&profile?.display_name)title.translate=false;text.append(title,detail);mark.setAttribute('aria-hidden','true');
+        if(row.key){li.dataset.row=row.key;detail.setAttribute('aria-live','polite');}
+        li.append(icon,text,mark);paintRow(li,row);list.append(li);
+      }
+      if(play&&!reducedMotion()){
+        [...list.children].forEach((li,i)=>{if(li.classList.contains('is-ok'))animate(li.lastElementChild,[{transform:'scale(0)'},{transform:'scale(1.25)',offset:.6},{transform:'none'}],{duration:420,delay:after+520+i*150,easing:EASE.out});});
+        const ticket=run;setTimeout(()=>{if(ticket===run&&isOpen)window.UsFeedback?.success?.();},after+700);
+      }
+    }
+    function paintWidget(){
+      const li=$('usSetupReady').querySelector('[data-row="widget"]');
+      if(li)paintRow(li,widgetRow());else if(steps[index]==='ready')drawReady(false);
+    }
+    function placedWidget(){
+      clearTimeout(widgetTimer);widget.state='placed';paintWidget();
+      const mark=$('usSetupReady').querySelector('[data-row="widget"]>i');
+      if(mark&&!reducedMotion())animate(mark,[{transform:'scale(0)'},{transform:'scale(1.25)',offset:.6},{transform:'none'}],{duration:420,easing:EASE.out});
+    }
+    // Same route as Impostazioni › Widget: the launcher's own request, then a
+    // look at the Home screen every 1.5 s for 20 s.
+    function watchWidget(){
+      clearTimeout(widgetTimer);
+      const ticket=run;
+      widgetTimer=setTimeout(async()=>{
+        if(ticket!==run||!isOpen||widget.state!=='asked')return;
+        let count=0;try{count=Number((await window.UsWidgets.installed())?.installed?.think)||0;}catch(_e){}
+        if(ticket!==run||!isOpen||widget.state!=='asked')return;
+        if(count>0)return placedWidget();
+        if(Date.now()-widget.at>20000){widget.state='missed';paintWidget();return;}
+        watchWidget();
+      },1500);
+    }
+    async function addWidget(){
+      if(!isOpen||!widget.offer||['pending','asked','placed','unsupported'].includes(widget.state))return;
+      const ticket=run;
+      widget.state='pending';paintWidget();
+      let result=null;
+      try{result=await window.UsWidgets.requestPin('think');}catch(_e){}
+      if(ticket!==run||!isOpen||widget.state!=='pending')return;
+      if(!result?.requested){widget.state=result?.supported?'retry':'unsupported';paintWidget();return;}
+      widget.state='asked';widget.at=Date.now();paintWidget();watchWidget();
+    }
+    $('usSetupReady').addEventListener('click',event=>{if(event.target.closest('[data-us-setup-widget]'))addWidget();});
+    window.addEventListener('us:widget-pinned',event=>{if(isOpen&&widget.offer&&event.detail?.kind==='think'&&widget.state!=='placed')placedWidget();});
+    function playVisual(step,after=0){
+      if(reducedMotion())return;
+      if(step==='push')$('usSetupPushVis').querySelectorAll('.us-setup-note').forEach((note,i)=>animate(note,[{opacity:0,translate:'0 -20px',offset:0}],{duration:520,delay:after+320+i*170,easing:EASE.soft,fill:'backwards'}));
+      if(step==='place'){
+        const vis=$('usSetupPlaceVis');
+        vis.querySelectorAll('.pl-d').forEach((dot,i)=>animate(dot,[{transform:'scale(0)'},{transform:'none'}],{duration:460,delay:after+260+i*120,easing:EASE.spring}));
+        vis.querySelectorAll('.pl-h').forEach((halo,i)=>animate(halo,[{transform:'scale(.3)',opacity:0},{transform:'none',opacity:1}],{duration:700,delay:after+420+i*120,easing:EASE.out}));
+        animate(vis.querySelector('.pl-ln'),[{transform:'scaleX(0)'},{transform:'none'}],{duration:640,delay:after+640,easing:EASE.io});
+        animate(vis.querySelector('.pl-chip'),[{opacity:0,scale:.85},{opacity:1,scale:1}],{duration:420,delay:after+1000,easing:EASE.spring});
+      }
+    }
+    // What leaves when the setup opens: the invite (or the sign-in) under it.
+    let openSwap=null,shownStep='';
+    const card=overlay.querySelector('.us-setup-card'),head=()=>[$('usSetupKicker'),$('usSetupProgress')];
+    function show(i){
+      const step=steps[i],prevStep=shownStep;
+      // Same screen engine as the sign-in: the old step leaves, the new one comes in.
+      let swap;
+      if(prevStep&&prevStep!==step&&!overlay.classList.contains('is-pending'))swap=beginSwap({from:body,host:card,dir:(SCREEN_ORDER[step]??12)<(SCREEN_ORDER[prevStep]??12)?-1:1,header:head()});
+      else if(openSwap){openSwap.swap.go?.();swap={dir:1,first:false,gone:[],after:LEAVE_MS};swapPending=swap;}
+      else{revealDoor(overlay);swap={dir:1,first:true,gone:[],after:0,door:revealedAt};swapPending=swap;}
+      if(!prevStep){
+        // The first step: the bar is there already (where the step that left had
+        // it, or at its place when there was none), as the design's .a-prog.
+        const bar=$('usSetupProgress'),fill=bar.firstElementChild,was=openSwap?.bar;
+        if(fill){
+          fill.style.transition='none';
+          bar.style.setProperty('--us-progress',was?was.progress:String(kickerFor(step).progress));
+          if(was?.color)fill.style.backgroundColor=was.color;
+          fill.getBoundingClientRect();
+          fill.style.removeProperty('transition');fill.style.removeProperty('background-color');
+        }
+      }
+      openSwap=null;shownStep=step;
+      index=i;setBusy(false);status('');
+      const role=profile?.role,kicker=kickerFor(step);
+      overlay.classList.remove('is-pending');
+      overlay.dataset.step=step;
+      $('usSetupKicker').textContent=kicker.text;
+      $('usSetupProgress').style.setProperty('--us-ob-delay',`${Math.max(0,swap?.after||0)}ms`);
+      $('usSetupProgress').style.setProperty('--us-progress',String(kicker.progress));
+      // Your colour and "Tutto pronto" have no status line in the design.
+      if(['noi','color','ready'].includes(step))$('usSetupStatus').dataset.usEnter='skip';else delete $('usSetupStatus').dataset.usEnter;
+      const venn=$('usSetupVenn');
+      venn.hidden=!(step==='noi'||step==='color');
+      $('usSetupPushVis').hidden=step!=='push';
+      $('usSetupPlaceVis').hidden=step!=='place';
+      $('usSetupPoints').hidden=step!=='place';
+      $('usSetupReady').hidden=step!=='ready';
+      secondary.hidden=!(step==='push'||step==='place');
+      const title=$('usSetupTitle');
+      if(step==='noi'){setTitle(title,'Ora siete ','un Noi');drawVenn(venn,{kind:'joined',role,partner:partnerName()});primary.textContent='Continua';}
+      if(step==='color'){setTitle(title,'Scegli ','il tuo colore');drawVenn(venn,{kind:'join',role,partner:partnerName()});primary.textContent='Continua';mountColourPicker($('usSetupColors'),{profile});}
+      if(step!=='color')$('usSetupColors').hidden=true;
+      if(step==='push'){setTitle(title,'Non perderti ','un Ti penso');primary.textContent='Attiva le notifiche';}
+      if(step==='place'){setTitle(title,'Anche da ','lontano');primary.textContent='Attiva la posizione';}
+      if(step==='ready'){if(mode==='device')setTitle(title,'Eccoti ','di nuovo');else setTitle(title,'Il vostro US ','è pronto');primary.textContent='Entra in US';drawReady(false);}
+      refreshPartner(false);
+      overlay.scrollTop=0;
+      title.focus({preventScroll:true});
+      // While the shell reveals itself the overlay can be one frame from visible.
+      if(document.activeElement!==title)requestAnimationFrame(()=>{if(isOpen&&steps[index]===step&&!overlay.contains(document.activeElement))title.focus({preventScroll:true});});
+      const after=arriveSwap(body,{swap,header:head()});
+      if(step==='noi'||step==='color')playColour(overlay,venn,after);
+      if(step==='ready')drawReady(true,after);
+      playVisual(step,after);
+    }
+    function advance(){if(!isOpen)return;if(index<steps.length-1)show(index+1);else finish();}
+    function later(fn,ms){const ticket=run;setTimeout(()=>{if(ticket===run&&isOpen)fn();},reducedMotion()?Math.min(ms,600):ms);}
+    async function activatePush(){
+      setBusy(true);status('Attivo…');
+      const ticket=run;let result={ok:false,kind:'error'};
+      try{result=await window.UsNotifications.enable();}catch(_e){}
+      if(ticket!==run||!isOpen)return;
+      Promise.resolve().then(()=>window.refreshWebPushUi?.()).catch(()=>{});
+      if(result?.ok){results.push=true;status('Notifiche attive ♡','success');later(advance,900);return;}
+      setBusy(false);
+      if(result?.kind==='busy'){status('');return;}
+      status(result?.kind==='denied'?'Permesso negato: puoi consentirle dalle impostazioni del telefono'
+        :result?.kind==='unavailable'?'Notifiche non disponibili in questa versione di US':`${result?.kind==='network'&&result?.pending?'La rete non risponde: le attivo appena torna':result?.kind==='network'?'Rete lenta: riprova tra poco, oppure con il Wi-Fi':'Non riesco ad attivare le notifiche'}${result?.code?` · ${result.code}`:''}`,'error');
+    }
+    function activatePlace(){
+      setBusy(true);
+      let ok=false;try{ok=window.UsLocation?.start?.()===true;}catch(_e){ok=false;}
+      results.place=ok;
+      if(ok){status('Distanza attiva ♡','success');later(advance,900);return;}
+      setBusy(false);status('Non riesco ad attivare la posizione','error');
+    }
+    // "Entra in US": the setup fades (260 ms), then the two circles meet and
+    // become the logo, the words come, and a circle closes on the app.
+    const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+    async function playIntro(ticket){
+      const intro=$('usSetupIntro');
+      const [a,b]=intro.querySelectorAll('.c'),logo=intro.querySelector('.logo'),word=intro.querySelector('.word');
+      const live=()=>ticket===run;
+      if(reducedMotion()){
+        overlay.classList.add('is-intro');intro.hidden=false;logo.style.opacity='1';
+        await wait(700);logo.style.opacity='';return live();
+      }
+      try{await animate(overlay,[{opacity:1},{opacity:0}],{duration:260,fill:'forwards'})?.finished;}catch(_e){return false;}
+      if(!live())return false;
+      overlay.classList.add('is-intro');intro.hidden=false;
+      overlay.getAnimations().forEach(x=>x.cancel());
+      const fill={fill:'forwards'};
+      const meet=animate(a,[{translate:'-120px 0',scale:.6,opacity:0},{translate:'-38px 0',scale:1,opacity:1,offset:.5},{translate:'0 0',scale:1.05,opacity:1}],{duration:1100,easing:EASE.io,...fill});
+      animate(b,[{translate:'120px 0',scale:.6,opacity:0},{translate:'38px 0',scale:1,opacity:1,offset:.5},{translate:'0 0',scale:1.05,opacity:1}],{duration:1100,easing:EASE.io,...fill});
+      try{await meet?.finished;}catch(_e){return false;}
+      if(!live())return false;
+      [a,b].forEach(circle=>animate(circle,[{scale:1.05,opacity:1},{scale:.2,opacity:0}],{duration:420,easing:EASE.io,...fill}));
+      animate(logo,[{opacity:0,scale:.6},{opacity:1,scale:1.06,offset:.7},{opacity:1,scale:1}],{duration:520,delay:140,easing:'ease-out',...fill});
+      try{await animate(word,[{opacity:0,translate:'0 8px'},{opacity:1,translate:'0 0'}],{duration:420,delay:420,easing:EASE.out,...fill})?.finished;}catch(_e){return false;}
+      await wait(450);if(!live())return false;
+      try{await animate(intro,[{clipPath:'circle(150% at 50% 46%)'},{clipPath:'circle(0% at 50% 46%)'}],{duration:620,easing:EASE.io,...fill})?.finished;}catch(_e){return false;}
+      return live();
+    }
+    async function finish({silent=false}={}){
+      if(!isOpen)return;
+      const id=userId,ticket=++run;
       storeSet(localStorage,FIRST_RUN_KEYS.setupDone(id),'1');
       storeRemove(localStorage,FIRST_RUN_KEYS.setupPending(id));
       if(storeGet(sessionStorage,FIRST_RUN_KEYS.passwordSignIn)===id)storeRemove(sessionStorage,FIRST_RUN_KEYS.passwordSignIn);
+      if(!silent){setBusy(true);if(!await playIntro(ticket)&&ticket!==run)return;}
       close();
+      // Mockup UP.intro: once the circle has closed on the app, Oggi's blocks rise in.
+      if(!silent&&!reducedMotion()){try{window.UsDueColori?.stagger?.(document.querySelector('.page.active')?.id||'home',0);}catch(_e){}}
     }
     function close(){
       run++;
       const hadFocus=overlay.contains(document.activeElement);
-      isOpen=false;userId='';mode=null;profile=null;couple=null;
-      overlay.hidden=true;delete overlay.dataset.step;delete overlay.dataset.mode;
-      $('usSetupPair').innerHTML='';
+      isOpen=false;busy=false;userId='';mode=null;profile=null;steps=[];index=0;shownStep='';
+      openSwap?.swap.drop();openSwap=null;
+      overlay.classList.remove('is-intro');
+      clearTimeout(widgetTimer);widget={offer:false,state:'idle',at:0};
+      overlay.hidden=true;overlay.classList.remove('is-pending');delete overlay.dataset.step;delete overlay.dataset.mode;
+      $('usSetupIntro').hidden=true;
+      overlay.querySelectorAll('.us-ob-flood').forEach(el=>el.remove());
+      try{overlay.getAnimations({subtree:true}).forEach(a=>a.cancel());}catch(_e){}
       isolate(false);
       if(hadFocus)document.activeElement?.blur?.();
     }
-    primary.addEventListener('click',()=>{if(isOpen)finish();});
-    window.addEventListener('us-identity-change',()=>{if(isOpen)paint(false);});
+    primary.addEventListener('click',()=>{
+      if(busy||!isOpen)return;
+      const step=steps[index];
+      if(step==='push')return activatePush();
+      if(step==='place')return activatePlace();
+      if(step==='ready')return finish();
+      advance();
+    });
+    secondary.addEventListener('click',()=>{
+      if(busy||!isOpen)return;
+      const step=steps[index];
+      if(step==='push')results.push=false;
+      if(step==='place')results.place=false;
+      advance();
+    });
+    window.addEventListener('us-identity-change',()=>refreshPartner(true));
     async function maybeOpen(nextProfile){
       const id=nextProfile?.id||'';
       const nextMode=setupMode({userId:id,local:localStorage,session:sessionStorage});
@@ -618,57 +1184,60 @@
       }
       if(isOpen&&userId===id)return true;
       if(isOpen)close();
-      if(!setupSteps({mode:nextMode}).length){
-        // Nothing to show on this phone: done, quietly.
-        storeSet(localStorage,FIRST_RUN_KEYS.setupDone(id),'1');
-        storeRemove(localStorage,FIRST_RUN_KEYS.setupPending(id));
-        if(storeGet(sessionStorage,FIRST_RUN_KEYS.passwordSignIn)===id)storeRemove(sessionStorage,FIRST_RUN_KEYS.passwordSignIn);
-        return false;
-      }
       const ticket=++run;
-      isOpen=true;userId=id;mode=nextMode;profile=nextProfile;couple=null;
-      overlay.dataset.mode=nextMode;overlay.dataset.step='arrivo';overlay.hidden=false;overlay.scrollTop=0;
-      isolate(true);
-      whenDiary(()=>{if(ticket===run&&isOpen)paint(true);});
-      // The heading takes the focus; while the shell reveals itself the overlay
-      // can be a frame or two from visible, so it tries again.
-      const title=$('usSetupTitle');
-      const focusTitle=()=>{if(ticket===run&&isOpen&&!overlay.contains(document.activeElement))title.focus({preventScroll:true});};
-      let frames=0;
-      const untilShown=()=>{focusTitle();if(ticket===run&&isOpen&&document.activeElement!==title&&frames++<60)requestAnimationFrame(untilShown);};
-      untilShown();
-      // The colours of both of you, then the words say them (the characters already have them).
-      if(colourIO&&nextProfile?.couple_id){
-        try{const {data}=await colourIO.readCouple(nextProfile.couple_id);if(ticket===run&&isOpen&&Array.isArray(data)&&data.length){couple=data;paint(false);focusTitle();}}catch(_e){}
+      isOpen=true;userId=id;mode=nextMode;profile=nextProfile;steps=[];index=0;results={push:null,place:null};pushKind='unknown';
+      // The invite (or the sign-in) still on screen leaves into the setup.
+      const auth=document.getElementById('authOverlay'),onb=document.getElementById('usOnboarding');
+      const from=auth&&!auth.classList.contains('hidden')?(onb?.classList.contains('active')?onb:auth.querySelector('.auth-step.active')):null;
+      overlay.dataset.mode=nextMode;overlay.classList.add('is-pending');overlay.hidden=false;
+      overlay.scrollTop=0;isolate(true);
+      openSwap?.swap.drop();openSwap=null;
+      if(from&&isShown(from)&&!reducedMotion()){
+        // The step kept on screen has its words back before it is copied (busy() ends before show()).
+        if(from===onb)releaseKept?.();
+        swapPending=null;
+        // The bar of the step that leaves goes on in the setup (same place, same colour, then on).
+        const fromBar=from.querySelector(':scope>.us-ob-progress:not([hidden])>i');
+        const bar=fromBar&&isShown(fromBar)?{progress:fromBar.parentElement.style.getPropertyValue('--us-progress')||'0',color:getComputedStyle(fromBar).backgroundColor}:null;
+        // It stays, still, until the first step is ready, then leaves as in show().
+        const swap=beginSwap({from,host:card,dir:1,hold:true});
+        if(swap?.gone.length)openSwap={swap,bar};
       }
+      const [push,offer]=await Promise.all([pushStepState(window.UsNotifications),widgetOfferWanted(window.UsWidgets)]);
+      if(ticket!==run||!isOpen)return false;
+      widget={offer,state:'idle',at:0};
+      pushKind=push.kind;
+      steps=setupSteps({mode:nextMode,push:push.wanted,place:placeStepWanted(window.UsLocation,typeof navigator!=='undefined'&&Boolean(navigator.geolocation))});
+      if(!steps.length){await finish({silent:true});return false;}
+      show(0);
       return true;
     }
     function markPasswordSignIn(id){if(id)storeSet(sessionStorage,FIRST_RUN_KEYS.passwordSignIn,String(id));}
     return Object.freeze({maybeOpen,close,markPasswordSignIn,get open(){return isOpen;}});
   }
 
-  // ---------- DOM: from «Da dove partite?» to the code ----------
-  function mount({readProfile,readCouple,rpc,resume,signOut,openStep,insertEvent,daily,waitingPush}){
+  function mount({readProfile,readCouple,rpc,resume,signOut,openStep,insertEvent,daily}){
     colourIO=typeof readCouple==='function'&&typeof rpc==='function'?{readCouple,rpc}:null;
     const waitingDay=waitingToday(daily);
     const root=document.getElementById('usOnboarding');
     const node=id=>document.getElementById(id);
-    const fresh=()=>({name:'',birthday:null,shape:'',colour:'',code:'',path:''});
-    let mode='choice',lastKind='',lastView='',lastInvite='',hiddenPrivate=[],me=fresh(),meFor='',justCreated=false,note={text:'',kind:''},dismissed='';
-    // The button you pressed says what is happening while it works.
-    let pressed=null,releaseKept=null;
-    // Paired from a step on screen: that step stays, still, until the arrival or the app takes its place.
+    let mode='me',lastKind='',lastView='',lastInvite='',hiddenPrivate=[],me={name:'',birthday:null},meFor='',justCreated=false,note={text:'',kind:''},dismissed='';
+    // The button you pressed says what is happening while it works (the design's busy()).
+    let pressed=null;
+    // Paired from a step on screen: that step stays, still, until the setup takes its place.
     let keeping=false;
     function letGo(){
       if(!keeping)return;
       keeping=false;
       releaseKept?.();
+      const overlay=node('authOverlay');
+      overlay.style.removeProperty('--us-tu');overlay.style.removeProperty('--us-partner');
       delete root.dataset.usBusy;
-      node('mc3CodeShown').textContent='';node('mc3CodeSmall').textContent='';
+      node('mc3CodeShown').textContent='';
       if(!['SIGNED_OUT','PAIRED'].includes(controller.state.kind))return;
       root.classList.remove('active');root.dataset.view='';
     }
-    const clearForms=()=>root.querySelectorAll('input,textarea,select').forEach(el=>{el.value='';});
+    const clearForms=()=>root.querySelectorAll('input,textarea,.us-ob-together select').forEach(el=>{el.value='';});
     // An invite link opened this tab: keep its code before anything else reads the address.
     if(typeof location==='object')takeInvite({location,history:globalThis.history,session:globalThis.sessionStorage});
     function protect(active){
@@ -698,108 +1267,42 @@
       try{const saved=JSON.parse(sessionStorage.getItem('us:apple-name:v1')||'null');return saved&&uid&&saved.uid===uid&&validName(saved.name)?saved.name.trim():'';}
       catch(_){return '';}
     }
-    // ---- «Tu»: the big character takes your shape and your colour at once.
-    const pickRole=()=>me.path==='join'?'beatrice':'francesco';
-    function ensureLook(){
-      if(!SHAPES.includes(me.shape))me.shape=defaultShape(pickRole());
-      if(!personColors()?.PALETTE?.[me.colour])me.colour=defaultColour(pickRole());
-    }
-    function paintPick(){root.style.setProperty('--dy-pick',hexOf(me.colour)||'var(--us-rosa)');}
-    function paintBig(hop=false){
-      const big=node('mc3Big'),d=diary();
-      big.innerHTML=d?d.character({shape:me.shape,color:'var(--dy-pick)'},{size:104,label:'Il tuo personaggio'}):'';
-      if(hop)replay(big,'dy-hop');
-    }
-    function paintTu(){
-      ensureLook();paintPick();
-      const d=diary(),colors=personColors();
-      node('mc3Shapes').innerHTML=SHAPES.map(k=>`<button type="button" class="dy-ent-shape" data-shape="${k}" aria-pressed="${me.shape===k}"><span class="dy-ent-shape-art" aria-hidden="true">${d?d.character({shape:k,color:'var(--dy-pick)'},{size:34}):''}</span>${shapeName(k)}</button>`).join('');
-      node('mc3Colors').innerHTML=Object.entries(colors?.PALETTE||{}).map(([id,hex])=>`<button type="button" class="dy-ent-swatch" data-colour="${id}" aria-pressed="${me.colour===id}" aria-label="${colors.NAMES[id]}"><i style="background:${hex}"></i></button>`).join('');
-      paintBig(false);
-      node('mc3BigName').textContent=node('mc3Name').value||me.name||'';
-    }
     function fillMe(){
       node('mc3Name').value=me.name||appleName(meFor);
       daySelect.value=me.birthday?String(me.birthday.day):'';
       monthSelect.value=me.birthday?String(me.birthday.month):'';
-      whenDiary(paintTu);
-    }
-    node('mc3Shapes').addEventListener('click',event=>{
-      const button=event.target.closest?.('[data-shape]');if(!button||button.disabled)return;
-      me.shape=button.dataset.shape;
-      node('mc3Shapes').querySelectorAll('[data-shape]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
-      paintBig(true);
-    });
-    node('mc3Colors').addEventListener('click',event=>{
-      const button=event.target.closest?.('[data-colour]');if(!button||button.disabled)return;
-      me.colour=button.dataset.colour;
-      node('mc3Colors').querySelectorAll('[data-colour]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
-      paintPick();
-    });
-    node('mc3Name').addEventListener('input',event=>{node('mc3BigName').textContent=event.target.value;});
-    // ---- «Da quando state insieme?»: the first label counts your days as you pick.
-    function paintDays(){
-      const date=togetherDate(dateDay.value,dateMonth.value,dateYear.value),days=validDate(date)?daysTogether(date):null;
-      node('mc3DaysTag').textContent=days===null?'i vostri giorni insieme':`${days.toLocaleString(globalThis.UsI18n?.tag||'it-IT')} ${days===1?'giorno':'giorni'} insieme`;
-    }
-    for(const select of [dateDay,dateMonth,dateYear])select.addEventListener('change',paintDays);
-    // ---- The code and the people on the invite.
-    const myLook=state=>{
-      const id=state.profile?.id||'',role=state.profile?.role;
-      if(id&&id===meFor&&SHAPES.includes(me.shape))return {shape:me.shape,colour:me.colour||defaultColour(role)};
-      return {shape:storedShape(id,role),colour:waitingColour.userId===id&&waitingColour.colour||defaultColour(role)};
-    };
-    // After a reload my colour is on the server only: read once per account.
-    let waitingColour={userId:'',colour:''};
-    function readWaitingColour(profile){
-      if(!colourIO||!profile?.couple_id||waitingColour.userId===profile.id)return;
-      waitingColour={userId:profile.id,colour:''};
-      colourIO.readCouple(profile.couple_id).then(({data})=>{
-        const row=Array.isArray(data)?data.find(p=>p.id===profile.id):null;
-        const id=personColors()?.idOf?.(row?.person_color);
-        if(id&&waitingColour.userId===profile.id){waitingColour.colour=id;if(lastView==='waiting')paintPair(controller.state);}
-      }).catch(()=>{});
-    }
-    function paintPair(state){
-      const look=myLook(state),role=state.profile?.role,other=role==='beatrice'?'francesco':'beatrice';
-      const mine=sticker({shape:look.shape,color:hexOf(look.colour)||`var(--us-${look.colour})`},{size:84,dx:3});
-      const slot=place(defaultShape(other),88);
-      node('mc3Pair').innerHTML=role==='beatrice'?slot+mine:mine+slot;
     }
     function viewFor(state){
-      if(state.kind==='AUTHENTICATED_NO_PROFILE')return ['choice','join','me','create'].includes(mode)?mode:'choice';
-      if(state.kind==='MEMBER_WAITING_PARTNER')return 'waiting';
+      if(state.kind==='AUTHENTICATED_NO_PROFILE')return ['me','choice','create','join'].includes(mode)?mode:'me';
+      if(state.kind==='MEMBER_WAITING_PARTNER')return mode==='color'?'color':'waiting';
       return 'error';
-    }
-    // Back: Tu → the code (or «Da dove partite?»), the date → Tu, the code → «Da dove partite?».
-    const backOf=view=>view==='me'?(me.path==='join'?'join':'choice'):view==='create'?'me':view==='join'?'choice':'';
-    function kickerFor(view){
-      if(me.path==='join')return view==='join'?'1 di 2':view==='me'?'2 di 2':'';
-      return view==='me'?'1 di 3':view==='create'?'2 di 3':view==='waiting'?'3 di 3':'';
     }
     function render(state){
       // What was typed in "Tu" belongs to one account: never carry it across a switch.
       const uid=controller.userId;
-      if(uid&&uid!==meFor){me=fresh();justCreated=false;meFor=uid;}
+      if(uid&&uid!==meFor){me={name:'',birthday:null};justCreated=false;meFor=uid;}
       const active=!['SIGNED_OUT','PAIRED'].includes(state.kind);
       const changed=state.kind!==lastKind;
       if(changed){
         note={text:'',kind:''};dismissed='';
-        if(state.kind==='SIGNED_OUT'){me=fresh();justCreated=false;}
-        if(state.kind==='AUTHENTICATED_NO_PROFILE')mode='choice';
+        if(state.kind==='SIGNED_OUT'){me={name:'',birthday:null};justCreated=false;}
+        mode=state.kind==='MEMBER_WAITING_PARTNER'&&justCreated?'color':me.name?'choice':'me';
       }
-      // Paired from a step on screen (Tu for whoever joins, or the invite that
-      // found its partner): the step stays until the arrival or the app takes
-      // its place, never an empty screen while the app checks the couple.
-      // Nothing on it can be used meanwhile.
+      // Paired from a step on screen (the join, or the invite that found its
+      // partner): as in the design the step stays until the next one takes its
+      // place (the setup, with the usual change of screen), never an empty screen
+      // while the app checks the couple. Nothing on it can be used meanwhile.
       if(state.kind==='PAIRED'&&(keeping||(lastView&&root.classList.contains('active')&&isShown(root)))){
         if(!keeping){
           keeping=true;
+          const overlay=node('authOverlay'),cs=getComputedStyle(overlay);
+          // Its colours are the onboarding's (they follow html.us-onboarding-active).
+          for(const name of ['--us-tu','--us-partner']){const value=cs.getPropertyValue(name).trim();if(value)overlay.style.setProperty(name,value);}
           // The pressed button keeps saying what is happening until the step leaves.
           releaseKept=()=>{releaseKept=null;if(pressed){if(pressed.text)pressed.button.textContent=pressed.text;delete pressed.button.dataset.usBusy;pressed=null;}};
           root.dataset.usBusy='';
           root.querySelectorAll('button,input,select,textarea').forEach(el=>{el.disabled=true;});
-          // Nothing typed or copyable stays behind.
+          // Nothing typed or copyable stays behind (the code shown is a picture until it leaves).
           clearForms();
           protect(false);
         }
@@ -811,9 +1314,18 @@
       }
       letGo();
       const view=viewFor(state),waiting=state.kind==='MEMBER_WAITING_PARTNER',role=state.profile?.role;
+      // A new screen (or, on the invite, a new code): what is on screen leaves first.
       const inviteKey=waiting?`${state.membership?.invite?.status}|${state.code}`:'';
-      // A new code is a new screen: what was said about the old one goes with it.
-      if(active&&view===lastView&&view==='waiting'&&!state.busy&&inviteKey!==lastInvite)note={text:'',kind:''};
+      let swap=null;
+      // A new code replaces the old one in one change, once it has arrived (the old one stays while "Genero…").
+      if(active&&(view!==lastView||(view==='waiting'&&!state.busy&&inviteKey!==lastInvite))){
+        const overlay=node('authOverlay'),tourRoot=node('usTour');
+        const from=lastView?root:tourRoot&&!tourRoot.hidden?tourRoot:overlay.querySelector('.auth-step.active');
+        const dir=view===lastView?0:(SCREEN_ORDER[view]??6)<(SCREEN_ORDER[lastView||from?.id]??1)?-1:1;
+        swap=beginSwap({from,host:overlay.querySelector('.auth-card'),dir});
+        // A new code is a new screen: what was said about the old one goes with it.
+        if(view===lastView)note={text:'',kind:''};
+      }
       if(!state.busy)lastInvite=inviteKey;
       protect(active);
       root.classList.toggle('active',active);
@@ -825,110 +1337,85 @@
       }
       if(changed){
         clearForms();
-        if(state.kind!=='AUTHENTICATED_NO_PROFILE'){daySelect.value='';monthSelect.value='';}
+        if(state.kind==='AUTHENTICATED_NO_PROFILE')fillMe();else{daySelect.value='';monthSelect.value='';}
       }
       root.dataset.view=active?view:'';
-      const kicker=kickerFor(view);
-      node('mc3Kicker').textContent=kicker;node('mc3Kicker').hidden=!kicker;
-      const back=backOf(view);node('mc3Back').hidden=!back;
-      const titles={choice:['Da dove ','partite?'],join:['Il vostro ','codice'],me:['Iniziamo ','da te'],create:['Da quando ','state insieme?'],waiting:['Il suo posto ','è pronto'],error:['Verifichiamo il tuo accesso','']};
+      if(waiting&&role==='beatrice')node('authOverlay').dataset.usTone='beatrice';else delete node('authOverlay').dataset.usTone;
+      node('mc3Kicker').textContent=view==='me'?'Tu · 1 di 4':view==='error'?'US · Spazio privato':'Voi · 2 di 4';
+      node('mc3Progress').hidden=view==='error';
+      // The bar moves once the old step has gone (a copied step leaves for 180 ms).
+      node('mc3Progress').style.setProperty('--us-ob-delay',`${Math.max(0,swap?.after||0)}ms`);
+      node('mc3Progress').style.setProperty('--us-progress',view==='me'?'.25':'.5');
+      const titles={me:['Iniziamo da ','te'],choice:['Il vostro US, ','da qui'],create:['Crea il ','vostro spazio'],join:['Entra nel ','vostro US'],color:['Scegli ','il tuo colore'],waiting:['Il tuo spazio ','è pronto'],error:['Verifichiamo il tuo accesso','']};
       setTitle(node('mc3Title'),...titles[view]);
+      const ownName=waiting?state.profile.display_name.trim():me.name;
       const copy={
-        choice:'Uno dei due apre il diario, l’altro entra con il codice.',
-        join:'Scrivi o incolla il codice che ti ha mandato la tua persona.',
-        me:'',create:'',
-        waiting:state.code?'':'Crea il codice e mandalo alla tua persona: quando entra, il diario è di tutti e due.',
+        me:'Il tuo nome lo vede la tua persona, accanto a quello che fai in US.',
+        choice:me.name?`${me.name}, ora crea il vostro spazio o raggiungi la tua persona.`:'Ora crea il vostro spazio o raggiungi la tua persona.',
+        create:'Da questa data partono i giorni insieme, il mesiversario e l’anniversario.',
+        join:'Scrivi il codice che ti ha mandato la tua persona.',
+        color:'Scegli il tuo: lo vedete uguale tutti e due, e potrai cambiarlo in Impostazioni.',
+        waiting:state.code?`${ownName}, manda questo codice alla tua persona.`:`${ownName}, invita la tua persona. Quando entrerà, troverete qui il vostro spazio.`,
         error:'Il tuo accesso resta valido: puoi riprovare o uscire.'
       }[view];
-      node('mc3Copy').textContent=copy;node('mc3Copy').hidden=!copy;
-      node('mc3Choice').hidden=view!=='choice';node('mc3Me').hidden=view!=='me';node('mc3Create').hidden=view!=='create';node('mc3Join').hidden=view!=='join';
-      node('mc3Waiting').hidden=view!=='waiting';node('mc3Retry').hidden=state.kind!==ERROR;
-      // Esci only where nothing else leads back: «Da dove partite?», the invite and the error.
-      node('mc3Exit').hidden=Boolean(back);
+      // In the colour step the words follow the two circles.
+      node('mc3Copy').textContent=view==='color'?'':copy;node('mc3Copy').hidden=view==='color';
+      node('mc3ColorCopy').textContent=view==='color'?copy:'';
+      node('mc3Me').hidden=view!=='me';node('mc3Choice').hidden=view!=='choice';node('mc3Create').hidden=view!=='create';node('mc3Join').hidden=view!=='join';
+      node('mc3Color').hidden=view!=='color';node('mc3Waiting').hidden=view!=='waiting';node('mc3Retry').hidden=state.kind!==ERROR;
       const status=node('mc3Status');
       // An error stays with the screen it belongs to: moving to another step dismisses it.
       if(!state.message)dismissed='';
       const message=state.message&&state.message!==dismissed?state.message:'';
       const said=`${status.textContent}|${status.dataset.kind||''}`;
-      // Busy: the pressed button carries the words, the status line stays as it was.
+      // Busy: the pressed button carries the words, the status line stays as it was (design).
       status.textContent=message||note.text||(state.busy&&!pressed?'Verifica in corso…':'');
       if(message)status.dataset.kind='error';else if(note.text)status.dataset.kind=note.kind||'neutral';else status.removeAttribute('data-kind');
       if(status.dataset.kind==='error'&&status.textContent&&said!==`${status.textContent}|error`)shake(status);
-      const labels={none:'Nessun codice attivo',pending:'Invito in attesa',expired:'Invito scaduto',revoked:'Invito revocato',used:'Invito utilizzato'};
+      // "Il vostro US" and the colour have no status line in the design: an empty one is not a step of the entrance.
+      if(!message&&!note.text&&(view==='choice'||view==='color'))status.dataset.usEnter='skip';else delete status.dataset.usEnter;
+      const labels={none:'Nessun invito attivo',pending:'Invito in attesa',expired:'Invito scaduto',revoked:'Invito revocato',used:'Invito utilizzato'};
       const invite=state.membership?.invite;
       node('mc3InviteStatus').textContent=waiting?(labels[invite.status]||'')+(invite.status==='pending'&&invite.expires_at&&inviteExpiry(invite.expires_at)?' · '+inviteExpiry(invite.expires_at):''):'';
       node('mc3InviteStatus').dataset.status=waiting?invite.status:'';
       node('mc3Code').value=waiting?state.code:'';
       // While a new code is made the old one stays on screen (not copyable: everything waits).
       const holdCode=waiting&&state.busy&&!state.code&&lastView==='waiting'&&!node('mc3CodeArea').hidden;
-      const hasCode=Boolean(waiting&&state.code);
       if(!holdCode){
-        node('mc3CodeArea').hidden=!hasCode;
-        node('mc3CodeShown').textContent=hasCode?codeGroups(state.code):'';
-        node('mc3CodeSmall').textContent=hasCode?codeGroups(state.code):'';
-        node('mc3Waiting').classList.toggle('has-code',hasCode);
+        node('mc3CodeArea').hidden=!waiting||!state.code;
+        node('mc3CodeShown').textContent=waiting&&state.code?state.code.replace(/(.{5})/g,'$1 ').trim():'';
+        node('mc3Waiting').classList.toggle('has-code',Boolean(waiting&&state.code));
       }
-      const sent=waiting&&inviteSent(state.profile);
-      node('mc3CodeArea').toggleAttribute('data-sent',Boolean(sent));
-      node('mc3Generate').hidden=!waiting||hasCode||holdCode;
-      node('mc3Generate').textContent=invite?.status==='none'?'Crea il codice':'Genera un nuovo codice';
-      node('mc3Revoke').hidden=!waiting||invite?.status!=='pending'||!hasCode;
-      root.querySelectorAll('button,input,select,textarea').forEach(el=>{el.disabled=state.busy&&el.id!=='mc3Exit';});
+      node('mc3Generate').textContent=invite?.status==='none'?'Crea invito':'Genera nuovo codice';
+      node('mc3Revoke').hidden=!waiting||invite?.status!=='pending';
+      root.querySelectorAll('button,input,select').forEach(el=>{el.disabled=state.busy&&el.id!=='mc3Exit';});
       if(pressed&&state.busy&&active){if(pressed.label)pressed.button.textContent=pressed.label;pressed.button.dataset.usBusy='';root.dataset.usBusy='';}
       else{
         if(pressed){delete pressed.button.dataset.usBusy;if(pressed.text)pressed.button.textContent=pressed.text;pressed=null;}
         delete root.dataset.usBusy;
       }
-      if(active&&(changed||view!==lastView)){
-        if(view==='me')fillMe();
-        if(view==='create')paintDays();
-        if(view==='choice')whenDiary(paintChoice);
+      if(view==='color'&&lastView!=='color'){drawVenn(node('mc3Venn'),{kind:'wait',role,partner:''});mountColourPicker(node('mc3Colors'),{profile:state.profile});}
+      if(active&&changed){node('mc3Title').focus({preventScroll:true});node('authOverlay').scrollTop=0;}
+      if(swap){
+        const after=arriveSwap(root,{swap});
+        if(view==='color')playColour(node('authOverlay'),node('mc3Venn'),after);
       }
-      if(view==='waiting'){readWaitingColour(state.profile);whenDiary(()=>paintPair(controller.state));}
-      if(active&&(changed||view!==lastView)){node('mc3Title').focus({preventScroll:true});node('authOverlay').scrollTop=0;}
       lastKind=state.kind;lastView=active?view:'';
-      // The first code comes by itself, right after the diary is opened.
-      if(view==='waiting'&&justCreated&&!state.busy&&!state.code&&invite?.status==='none'){
-        justCreated=false;
-        setTimeout(()=>{const now=controller.state;if(lastView==='waiting'&&!now.busy&&!now.code&&now.membership?.invite?.status==='none'){press(node('mc3Generate'),'Creo il codice…');run(()=>controller.generate());}},0);
-      }
-      // Today's question and the notifications under the code: painted after
-      // the buttons above took their busy state, loaded once per account and day.
-      waitingProfile=state.profile||null;
-      paintToday(state.busy);paintNotify();
-      if(lastView==='waiting'){
-        waitingDay.load(state.profile).then(()=>paintToday(Boolean(controllerRef?.state?.busy)),()=>{});
-        loadNotify(state.profile);
-      }
+      // Today's question under the invite: painted after the buttons above
+      // took their busy state, loaded once per account and day.
+      paintToday(state.busy);
+      if(lastView==='waiting')waitingDay.load(state.profile).then(()=>paintToday(Boolean(controllerRef?.state?.busy)),()=>{});
       if(state.profile?.couple_id)saveBirthday({profile:state.profile,local:localStorage,session:sessionStorage,insertEvent}).catch(()=>{});
       scheduleCheck(state);
       window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
     }
-    // «Da dove partite?»: you and the other person's place, the place and the other person.
-    function paintChoice(){
-      const art=kind=>root.querySelector(`[data-ent-art="${kind}"]`);
-      const you={shape:'palla',color:'var(--us-rosa)'},them={shape:'quadrato',color:'var(--us-lilla)'};
-      if(art('create')&&!art('create').childElementCount)art('create').innerHTML=sticker(you,{size:50})+place('quadrato',50,false);
-      if(art('join')&&!art('join').childElementCount)art('join').innerHTML=place('palla',50,false)+sticker(them,{size:52});
-    }
-    const isShown=el=>Boolean(el&&el.isConnected&&el.getClientRects().length);
     // Waiting for the partner (09/11/2026): the card of today's question. The
     // controller does not exist yet during its first renders, hence the ref.
-    let controllerRef=null,waitingProfile=null;
-    // Shared or copied the code: remembered per account, so the question and
-    // the notifications stay after closing and reopening US.
-    const sentKey=profile=>profile?.id?`us:ob:invite-sent:${profile.id}`:'';
-    const inviteSent=profile=>Boolean(sentKey(profile)&&storeGet(localStorage,sentKey(profile)));
-    function markInviteSent(){const key=sentKey(waitingProfile);if(key)storeSet(localStorage,key,'1');if(controllerRef)render(controllerRef.state);}
+    let controllerRef=null;
     function paintToday(busy=false){
       const box=node('mc3Today');if(!box)return;
-      // 14/11/2026 (founder): first the code, then the question. It shows once
-      // the code was shared or copied (remembered for this account), or when
-      // today's answer is already there.
-      const day=waitingDay.state,ready=day.status==='answered'||inviteSent(waitingProfile);
-      const show=lastView==='waiting'&&ready&&['open','saving','answered'].includes(day.status);
+      const day=waitingDay.state,show=lastView==='waiting'&&['open','saving','answered'].includes(day.status);
       box.hidden=!show;
-      if(day.status==='answered'&&waitingProfile?.id)answeredWhileWaiting=waitingProfile.id;
       if(!show)return;
       node('mc3TodayQuestion').textContent=day.question.text;
       const field=node('mc3TodayAnswer'),button=node('mc3TodaySave'),status=node('mc3TodayStatus');
@@ -940,49 +1427,9 @@
       button.disabled=day.status==='saving'||Boolean(busy);
       button.textContent=day.status==='saving'?'Salvo…':'Rispondi';
       node('mc3TodayDone').hidden=day.status!=='answered';
-      node('mc3TodayHint').hidden=day.status==='answered';
       status.textContent=day.error||'';status.hidden=!day.error;
       if(day.error)status.dataset.kind='error';else delete status.dataset.kind;
     }
-    // «Ti avviso quando entra?» (founder, 15/11/2026): the notifications are
-    // asked here now, with the same enable flow as Oggi (app.js waitingPush).
-    let notify={userId:'',wanted:false,state:'idle',message:''};
-    async function loadNotify(profile){
-      if(!waitingPush||!profile?.id||notify.userId===profile.id)return;
-      notify={userId:profile.id,wanted:false,state:'idle',message:''};
-      let wanted=false;try{wanted=Boolean(await waitingPush.wanted(profile));}catch(_e){}
-      if(notify.userId!==profile.id)return;
-      notify.wanted=wanted;paintNotify();
-    }
-    function paintNotify(){
-      const card=node('mc3Notify');if(!card)return;
-      const show=lastView==='waiting'&&inviteSent(waitingProfile)&&notify.userId===waitingProfile?.id&&(notify.wanted||notify.state==='on');
-      card.hidden=!show;if(!show)return;
-      const on=notify.state==='on';
-      card.classList.toggle('is-on',on);
-      node('mc3NotifyTitle').textContent=on?'Ti avviso io':'Ti avviso quando entra?';
-      node('mc3NotifyText').textContent=notify.message||(on?'Quando entra, ti arriva una notifica':'Così non devi controllare tu');
-      const yes=node('mc3NotifyYes');yes.hidden=on;yes.disabled=notify.state==='asking'||Boolean(controllerRef?.state?.busy);
-      yes.textContent=notify.state==='asking'?'Attivo…':notify.state==='error'?'Riprova':'Sì';
-    }
-    node('mc3NotifyYes').addEventListener('click',async()=>{
-      const profile=waitingProfile;if(!waitingPush||!profile?.id||notify.state==='asking')return;
-      notify.state='asking';notify.message='';paintNotify();
-      let result={ok:false,kind:'error'};try{result=await waitingPush.enable(profile)||result;}catch(_e){}
-      if(notify.userId!==profile.id)return;
-      if(result.ok){notify.state='on';notify.message='';window.UsFeedback?.success?.();}
-      else{
-        notify.state=result.kind==='busy'?'idle':'error';
-        // The words of the enable flow (the old Notifiche step, Oggi): a slow
-        // network with the permission given finishes by itself later.
-        notify.message=result.kind==='denied'?'Permesso negato: puoi consentirle dalle impostazioni del telefono'
-          :result.kind==='unavailable'?'Notifiche non disponibili su questo telefono'
-          :result.kind==='busy'?''
-          :`${result?.kind==='network'&&result?.pending?'La rete non risponde: le attivo appena torna':result?.kind==='network'?'Rete lenta: riprova tra poco, oppure con il Wi-Fi':'Non riesco ad attivare le notifiche'}${result?.code?` · ${result.code}`:''}`;
-        if(result.kind==='denied'||result.kind==='unavailable')notify.wanted=false,notify.state='idle';
-      }
-      paintNotify();
-    });
     // While the invite screen is on and its code can still be used, look for
     // the partner every 10 s. Hidden or locked: suspend() stops it, the return
     // to the foreground reloads and starts it again. Paired: it stops.
@@ -1003,95 +1450,91 @@
     const controller=createController({readProfile,rpc,onChange:render,onJoined:coupleId=>{window.sendWebPushEvent?.('partner_joined',coupleId);}});
     controllerRef=controller;
     const run=async(action,kind)=>{
-      const look=kind?{shape:me.shape,colour:me.colour}:null;
       const result=await action();
       const joined=result?.profile?.couple_id&&(result.kind==='PAIRED'||result.kind==='MEMBER_WAITING_PARTNER');
-      if(kind&&joined){
-        storeSet(localStorage,FIRST_RUN_KEYS.setupPending(result.profile.id),kind==='create'?'created':'joined');
-        // The character and the colour picked in «Tu», before the app shows them.
-        await saveLook(result.profile,look);
-      }
+      if(kind&&joined)storeSet(localStorage,FIRST_RUN_KEYS.setupPending(result.profile.id),kind==='create'?'created':'joined');
       if(kind==='create'&&result?.kind!=='MEMBER_WAITING_PARTNER')justCreated=false;
-      // A code refused by the server: back to the code, with the reason.
-      if(kind==='join'&&result?.kind==='AUTHENTICATED_NO_PROFILE'&&result.message){mode='join';render(controller.state);node('mc3JoinCode').value=me.code;node('mc3JoinCode').focus();}
       if(result?.kind==='PAIRED'){if(kind==='join')takeInvite({session:sessionStorage,used:true});resume();}
     };
     const switchTo=(next,focusId)=>{
       clearForms();mode=next;note={text:'',kind:''};
       if(controller.state.kind==='AUTHENTICATED_NO_PROFILE')dismissed=controller.state.message||'';
+      if(next==='me')fillMe();
       if(next==='create')node('mc3CreateName').value=me.name;
-      if(next==='join'){node('mc3JoinName').value=me.name;node('mc3JoinCode').value=me.code||takeInvite({location,history,session:sessionStorage});}
-      render(controller.state);if(focusId)node(focusId)?.focus();
+      if(next==='join'){node('mc3JoinName').value=me.name;node('mc3JoinCode').value=takeInvite({location,history,session:sessionStorage});}
+      render(controller.state);node(focusId).focus();
     };
-    const goTo=switchTo;
-    node('mc3Back').addEventListener('click',()=>{const back=backOf(lastView);if(back)goTo(back,'mc3Title');});
-    node('mc3ChooseCreate').addEventListener('click',()=>{if(me.path!=='create'){me.path='create';me.shape='';me.colour='';}goTo('me','mc3Title');});
-    node('mc3ChooseJoin').addEventListener('click',()=>{if(me.path!=='join'){me.path='join';me.shape='';me.colour='';}goTo('join','mc3JoinCode');});
-    // The code box is a textarea (two lines): Enter still goes on.
-    node('mc3JoinCode').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();node('mc3Join').requestSubmit?.();}});
-    node('mc3Join').addEventListener('submit',event=>{
-      event.preventDefault();
-      const code=inviteCodeIn(node('mc3JoinCode').value);
-      if(!code){note={text:'Controlla il codice d’invito: sono 26 caratteri.',kind:'error'};render(controller.state);node('mc3JoinCode').focus();return;}
-      me.code=code;note={text:'',kind:''};
-      goTo('me','mc3Title');
-    });
+    // A step of this phone only (Tu, Voi, create, join, the colour to the
+    // invite) changes as in the design (show()): what is on screen leaves
+    // first, 180 ms towards where you came from, with what was typed in it,
+    // and the next step is drawn once it has gone. The tap answers at once:
+    // nothing is copied. Without motion the step changes at once.
+    let leaving=null;
+    const goTo=(next,focusId)=>{
+      if(leaving)return;
+      const dir=(SCREEN_ORDER[next]??6)<(SCREEN_ORDER[lastView]??6)?-1:1;
+      const items=next!==lastView&&lastView&&!reducedMotion()&&isShown(root)?enterItems(root).filter(isShown):[];
+      if(!items.length){switchTo(next,focusId);return;}
+      const kind=controller.state.kind,ticket={};leaving=ticket;
+      const runs=items.map(el=>animate(el,[{opacity:1,translate:'0 0'},{opacity:0,translate:`${-dir*24}px 0`}],{duration:LEAVE_MS,easing:EASE_IN,fill:'forwards'})).filter(Boolean);
+      const done=()=>{
+        if(leaving!==ticket)return;
+        leaving=null;
+        runs.forEach(run=>{try{run.cancel();}catch(_e){}});
+        // Something else took the screen meanwhile (a new state, signed out): it stays.
+        if(controller.state.kind!==kind||!root.classList.contains('active'))return;
+        swapPending={dir,after:0,first:false,gone:[]};
+        switchTo(next,focusId);
+      };
+      Promise.all(runs.map(run=>run.finished)).then(done,done);
+    };
     node('mc3Me').addEventListener('submit',event=>{
       event.preventDefault();
       const name=node('mc3Name').value,check=birthdayCheck(daySelect.value,monthSelect.value);
       if(!validName(name)){note={text:'Scrivi il tuo nome (1–40 caratteri).',kind:'error'};render(controller.state);node('mc3Name').focus();return;}
       if(!check.ok){note={text:check.message,kind:'error'};render(controller.state);(daySelect.value?monthSelect:daySelect).focus();return;}
-      me.name=name.trim();me.birthday=check.value;note={text:'',kind:''};
-      const id=controller.userId;rememberBirthday(sessionStorage,id,check.value);
-      if(me.path!=='join'){goTo('create','mc3DateDay');return;}
-      // Whoever joins enters here: the name from «Tu», the code from the step before.
-      node('mc3JoinName').value=me.name;node('mc3JoinCode').value=me.code;
-      press(event.submitter||node('mc3MeNext'),'Entro…','Entra nel diario');
-      const fields={name:node('mc3JoinName').value,code:node('mc3JoinCode').value};node('mc3JoinCode').value='';
-      run(()=>controller.join(fields),'join');
+      me={name:name.trim(),birthday:check.value};note={text:'',kind:''};
+      const id=controller.userId;rememberBirthday(sessionStorage,id,check.value);typedBirthday={userId:id,value:check.value};
+      goTo('choice','mc3Title');
     });
+    for(const [id,next,focusId] of [['mc3ChooseCreate','create','mc3DateDay'],['mc3ChooseJoin','join','mc3JoinCode'],['mc3BackCreate','choice','mc3Title'],['mc3BackJoin','choice','mc3Title'],['mc3BackMe','me','mc3Title']])node(id).addEventListener('click',()=>goTo(next,focusId));
     // App Links: an invite link opened the app (or the app was already open).
-    // The code waits for «Ho un codice»; from «Da dove partite?» it goes straight there.
+    // The code waits for «Ho un codice d’invito»; from «Voi» it goes straight there.
     const acceptInviteLink=value=>{
       const code=takeInvite({url:value,session:sessionStorage});
       if(!code||!inviteFromLink(value))return false;
       if(mode==='join'&&root.dataset.view==='join')node('mc3JoinCode').value=code;
-      else if(mode==='choice'&&root.dataset.view==='choice'){me.path='join';me.shape='';me.colour='';goTo('join','mc3JoinCode');}
+      else if(mode==='choice'&&root.dataset.view==='choice')goTo('join','mc3JoinCode');
       return true;
     };
     window.UsPlatform?.listenForNativeAppUrl?.(acceptInviteLink);
     Promise.resolve(window.UsPlatform?.getNativeLaunchUrl?.()).then(acceptInviteLink).catch(()=>{});
+    node('mc3ColorNext').addEventListener('click',()=>{justCreated=false;goTo('waiting','mc3Title');});
     const press=(button,label,text='')=>{if(button&&!controller.state.busy)pressed={button,label,text};};
-    node('mc3Create').addEventListener('submit',event=>{
-      event.preventDefault();justCreated=true;
-      node('mc3CreateName').value=me.name;
-      press(event.submitter||node('mc3CreateNext'),'Apro il diario…','Apri il nostro diario');
-      run(()=>controller.create({name:node('mc3CreateName').value,date:togetherDate(dateDay.value,dateMonth.value,dateYear.value),coupleName:node('mc3CoupleName').value}),'create');
-    });
-    node('mc3Generate').addEventListener('click',()=>{press(node('mc3Generate'),'Creo il codice…');run(()=>controller.generate());});
+    node('mc3Create').addEventListener('submit',event=>{event.preventDefault();justCreated=true;press(event.submitter||node('mc3Create').querySelector('[type=submit]'),'Creo…','Crea il nostro spazio');run(()=>controller.create({name:node('mc3CreateName').value,date:togetherDate(dateDay.value,dateMonth.value,dateYear.value),coupleName:node('mc3CoupleName').value}),'create');});
+    // The code box is a textarea (two lines, as in the design): Enter still sends.
+    node('mc3JoinCode').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();node('mc3Join').requestSubmit?.();}});
+    node('mc3Join').addEventListener('submit',event=>{event.preventDefault();press(event.submitter||node('mc3Join').querySelector('[type=submit]'),'Entro…','Entra nel nostro US');const fields={name:node('mc3JoinName').value,code:node('mc3JoinCode').value};node('mc3JoinCode').value='';run(()=>controller.join(fields),'join');});
+    node('mc3Generate').addEventListener('click',()=>{press(node('mc3Generate'),'Genero…');run(()=>controller.generate());});
     node('mc3Revoke').addEventListener('click',()=>{press(node('mc3Revoke'),'');run(()=>controller.revoke());});
     node('mc3Refresh').addEventListener('click',()=>{press(node('mc3Refresh'),'Verifico…','Verifica accesso');run(()=>controller.refresh());});
     node('mc3Retry').addEventListener('click',()=>run(()=>controller.refresh()));
     // A line under the invite that stays through the automatic checks.
     const say=(text,kind)=>{note={text,kind};render(controller.state);};
-    // No clipboard: the plain code shows in its field, selected, to copy by hand.
-    const selectCode=()=>{node('mc3CodeArea').dataset.manual='';node('mc3Code').focus();node('mc3Code').select();say('Seleziona e copia il codice.','neutral');};
-    const copyCode=async()=>{
+    const selectCode=()=>{node('mc3Code').focus();node('mc3Code').select();say('Seleziona e copia il codice.','neutral');};
+    node('mc3CopyCode').addEventListener('click',async()=>{
       const code=controller.state.code,ticket=controller.epoch;if(!code)return;
       const still=()=>controller.epoch===ticket&&controller.state.code===code;
-      try{await navigator.clipboard.writeText(code);if(still()){note={text:'Codice copiato. Condividilo soltanto con la tua persona.',kind:'success'};markInviteSent();}}
+      try{await navigator.clipboard.writeText(code);if(still())say('Codice copiato. Condividilo soltanto con la tua persona.','success');}
       catch(_error){if(still())selectCode();}
-    };
-    node('mc3CopyCode').addEventListener('click',copyCode);
-    node('mc3CopyAgain').addEventListener('click',copyCode);
+    });
     node('mc3ShareCode').addEventListener('click',async()=>{
       const code=controller.state.code,ticket=controller.epoch;if(!code)return;
       const still=()=>controller.epoch===ticket&&controller.state.code===code;
       const how=await shareInvite(inviteMessage(code,window.UsI18n?.t,undefined,{answered:waitingDay.answered()}));
       if(!still())return;
-      if(how==='shared')note={text:'Fatto. Appena la tua persona entra, lo vedi qui.',kind:'success'};
-      else if(how==='copied')note={text:'Messaggio copiato: incollalo nella chat con la tua persona.',kind:'success'};
-      if(how==='shared'||how==='copied')markInviteSent();
+      if(how==='shared')say('Fatto. Appena la tua persona entra, lo vedi qui.','success');
+      else if(how==='copied')say('Messaggio copiato: incollalo nella chat con la tua persona.','success');
       else if(how==='failed')selectCode();
     });
     // Today's question while waiting: the draft lives in memory (the onboarding
@@ -1107,19 +1550,19 @@
       if(waitingDay.answered())window.UsFeedback?.success?.();
       else if(waitingDay.state.error)window.UsFeedback?.error?.();
     });
-    node('mc3Exit').addEventListener('click',async()=>{const id=controller.userId;controller.suspend();clearForms();rememberBirthday(sessionStorage,id,null);me=fresh();justCreated=false;await signOut();});
+    node('mc3Exit').addEventListener('click',async()=>{const id=controller.userId;controller.suspend();clearForms();rememberBirthday(sessionStorage,id,null);me={name:'',birthday:null};justCreated=false;await signOut();});
     document.addEventListener('visibilitychange',()=>{
       if(document.hidden){controller.suspend();clearForms();}
-      else if(controller.state.kind!=='SIGNED_OUT'&&controller.state.kind!=='PAIRED')resume();
+      else if(controller.state.kind!== 'SIGNED_OUT'&&controller.state.kind!=='PAIRED')resume();
     });
     window.addEventListener('us-app-lock-change',event=>{if(event.detail?.locked){controller.suspend();clearForms();}else resume();});
     window.addEventListener('pagehide',()=>{controller.suspend();clearForms();});
-    // Once the sign-in closes (the arrival or the app took the screen), the kept step goes.
+    // Once the sign-in closes (the setup or the app took the screen), the kept step goes.
     if(typeof MutationObserver==='function'&&node('authOverlay'))new MutationObserver(()=>{if(keeping&&node('authOverlay').classList.contains('hidden'))letGo();}).observe(node('authOverlay'),{attributes:true,attributeFilter:['class']});
     controller.tour=tour;controller.setup=setup;
     return controller;
   }
   return Object.freeze({route,validName,validDate,normalizeCode,validCode,inviteCodeIn,inviteLink,inviteFromLink,takeInvite,togetherDate,togetherYears,romeToday,errorMessage,createController,mount,
-    FIRST_RUN_KEYS,tourWanted,birthdayCheck,nextBirthday,birthdayEvent,rememberBirthday,saveBirthday,setupMode,setupSteps,daysTogether,inviteExpiry,
-    inviteMessage,shareInvite,waitingToday,codeGroups,CHECK_MS,shake,SHAPES,lookColour});
+    FIRST_RUN_KEYS,tourWanted,birthdayCheck,nextBirthday,birthdayEvent,rememberBirthday,saveBirthday,setupMode,setupSteps,pushStepState,placeStepWanted,daysTogether,inviteExpiry,
+    inviteMessage,shareInvite,waitingToday,widgetOfferWanted,CHECK_MS,authSwap,authArrive,shake});
 });

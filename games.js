@@ -275,7 +275,7 @@ function tileRound(family) {
     || null;
 }
 function modeStatus(f, open) {
-  if (open) return { ...roundStatus(open), state: 'open', session: open.id, partnerPlayed: Boolean(open.partner_complete) };
+  if (open) return { ...roundStatus(open), state: 'open', session: open.id };
   if (playedThisWeek(f.id)) return { text: 'Giocato', tone: 'seen', state: 'played' };
   if (allowance() && !freeLeft()) return { text: 'Domani', tone: 'locked', state: 'locked' };
   return null;
@@ -354,7 +354,7 @@ function doneSection(h) {
 // in the card's line, instead of the kind of moment.
 function cardState(status) {
   if (!status) return { state: 'ready', text: 'Disponibile' };
-  if (status.state === 'open') return { state: 'open', text: status.text, tone: status.tone, session: status.session, partnerPlayed: Boolean(status.partnerPlayed) };
+  if (status.state === 'open') return { state: 'open', text: status.text, tone: status.tone, session: status.session };
   if (status.state === 'played') return { state: 'played', text: 'Giocato questa settimana' };
   return { state: 'locked', text: 'Da domani' };
 }
@@ -374,76 +374,25 @@ function gameCard({ id, name, kind, action, extraClass = '', status }) {
 // week, I vostri giochi (Per voi tall, then Questo o quello and the five
 // families), then La vostra domanda. The weekly limit stays the server's: it
 // is said in the confirm before a new round and on the tiles it locks.
-// Il diario, ma pulito (15/11/2026): «Giochi a due». The count of today's
-// rounds as a honey tag, the challenge of the week, then «Da giocare»: one
-// row per game with a black square icon, what it is, and a tag that says
-// where it stands (yours, theirs, new, tomorrow). Same data attributes, so
-// every tap still goes where it went.
-const DY_ICON = {
-  swipe: 'M4 8h12 M12 4l4 4-4 4 M20 16H8 M12 12l-4 4 4 4',
-  quanto_mi_conosci: 'M3.5 5h11v7.5h-5.5l-3.5 3v-3h-2z M14.5 9h6v7.5h-2v3l-3.5-3h-4.5v-3.5',
-  confrontatevi: 'M7.5 9a4 4 0 1 0 0 8a4 4 0 1 0 0-8 M16.5 9a4 4 0 1 0 0 8a4 4 0 1 0 0-8 M11.5 13h1',
-  per_voi: 'M7 3.5h10a1.5 1.5 0 0 1 1.5 1.5v14a1.5 1.5 0 0 1-1.5 1.5H7a1.5 1.5 0 0 1-1.5-1.5V5A1.5 1.5 0 0 1 7 3.5z M12 9l1.6 3-1.6 3-1.6-3z',
-  scopritevi: 'M6.5 10.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7 M17.5 10.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7 M10 14h4 M5 10.5l2-5h2 M19 10.5l-2-5h-2',
-  ridete: 'M12 3.5a8.5 8.5 0 1 0 0 17a8.5 8.5 0 1 0 0-17 M8.5 14c1 1.6 2.2 2.3 3.5 2.3s2.5-.7 3.5-2.3 M9 9.5v1 M15 9.5v1',
-  rivivete: 'M5.2 4.6l12.4-1.4 1.9 16.4-12.4 1.4z M7 7.2l9.5-1.1 1 8.9-9.5 1.1z',
-};
-const dyIcon = (id) => `<span class="dy-ib is-dark dy-game-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="${DY_ICON[id] || DY_ICON.per_voi}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
-// Mockup v4.1: whose turn it is, with that person's small character in the tag.
-const myRoleNow = () => (window.usProfile?.role === 'beatrice' ? 'beatrice' : 'francesco');
-const partnerRoleNow = () => (myRoleNow() === 'beatrice' ? 'francesco' : 'beatrice');
-const dyMini = (role, mood) => (window.UsDiario?.character ? `<span class="dy-mini" aria-hidden="true">${window.UsDiario.character(role, { size: 21, mood })}</span>` : '');
-function dyStatusTag(card, fresh) {
-  const t = (text, bg, mini = '') => `<span class="dy-tag dy-tag-s dy-game-tag" style="background:${bg}">${mini}${esc(text)}</span>`;
-  if (card.state === 'open') {
-    if (card.tone === 'turn') return card.partnerPlayed ? t('ha giocato', 'var(--us-partner-soft)', dyMini(partnerRoleNow())) : t('tocca a te', 'var(--us-tu-soft)', dyMini(myRoleNow()));
-    if (card.tone === 'ready') return t('risposte pronte', 'var(--us-miele)');
-    if (card.tone === 'waiting') return t(`aspetti ${knownPartner() || 'la tua persona'}`, 'var(--us-partner-soft)', dyMini(partnerRoleNow(), 'dorme'));
-    return t(String(card.text || '').toLocaleLowerCase('it-IT'), 'var(--us-beige)');
-  }
-  if (card.state === 'played') return t('giocato', 'var(--us-beige)');
-  if (card.state === 'locked') return t('domani', 'var(--us-beige)');
-  // Gioca a tessere (20/11/2026): a game not started says nothing; only news and turns get a tag.
-  return fresh ? t('nuovo', '#FFD9D2') : '';
-}
-function dyGameRow({ id, name, kind, action, status }) {
-  const card = cardState(status);
-  const locked = card.state === 'locked';
-  const data = action === 'swipe' ? 'data-gv2-action="swipe"' : `data-gv2-family="${id}"`;
-  const round = card.session ? ` data-gv2-session="${esc(card.session)}" data-tone="${esc(card.tone || '')}"` : '';
-  const line = card.state === 'ready' ? kind : card.state === 'open' ? kind : card.text;
-  return `<button type="button" data-us-tile data-us-feedback="tap" class="dy-game" ${data} data-gv2-mode-state="${esc(card.state)}"${round}${locked ? ' aria-disabled="true"' : ''} aria-label="${esc(name)}: ${esc(kind)}. ${esc(card.text)}">
-      ${dyIcon(id)}
-      <span class="dy-game-copy"><b>${esc(name)}</b><small>${esc(line)}</small></span>
-      ${dyStatusTag(card, false)}
-    </button>`;
-}
-function dyCountTag() {
-  const a = allowance();
-  if (!a) return '';
-  const limit = Math.max(1, Number(a.free_limit) || 1);
-  const left = Math.min(limit, freeLeft());
-  return `<span class="dy-tag" style="background:var(--us-miele)" role="status" data-gv2-left="${left}">${esc(left ? `${left} su ${limit} oggi` : 'Domani si rigioca')}</span>`;
-}
 function renderHub() {
  const root=byId('quizHub');if(!root)return;
  const pv=perVoiCopy(),pvState=home?.per_voi?.state||'idle';
  const onTiles=new Set();
  const tileStatus=(f)=>{const r=tileRound(f.id);if(r)onTiles.add(r.id);return modeStatus(f,r);};
- const pvTag=pvState==='reveal_ready'?'<span class="dy-tag dy-tag-s dy-game-tag" style="background:var(--us-miele)">risposte pronte</span>':pvState==='pending'?'<span class="dy-tag dy-tag-s dy-game-tag" style="background:var(--us-tu-soft)">'+dyMini(myRoleNow())+'tocca a te</span>':'';
- const swipe=dyGameRow({id:'swipe',name:SWIPE.name,kind:'8 carte · veloce e privato',action:'swipe',status:tileStatus(SWIPE)});
- const families=OFFERED.map(f=>dyGameRow({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)})).join('');
+ const swipe=gameCard({id:'swipe',name:SWIPE.name,kind:'8 carte · veloce e privato',action:'swipe',extraClass:' is-swipe',status:tileStatus(SWIPE)});
+ const families=OFFERED.map(f=>gameCard({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)})).join('');
  root.innerHTML=`
-  <header class="dy-hd"><h2 class="dy-h2">Giochi <em>a due</em></h2>${dyCountTag()}<span class="dy-hd-tools"><button type="button" class="dy-ib dy-me" data-dy-me onclick="go('settings',{nav:true})" aria-label="Tu: profilo e impostazioni">${window.UsDiario?.character?.(myRoleNow(), { size: 34 }) || ''}</button></span></header>
-  <div class="us-gv2-daily-slot" data-gv4-daily-slot hidden></div>
+  <h2 class="us-gv2-sr">Gioca</h2>
+  <div class="us-gv2-daily-slot" data-gv4-daily-slot data-s aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">La domanda di oggi</span><small>Preparo la domanda di oggi…</small></div></div>
   <div class="us-wc-slot" data-wc-slot></div>
-  <section class="dy-games" aria-labelledby="usGv2ChooseTitle">
-   <div class="dy-sec-head"><h3 id="usGv2ChooseTitle">Da giocare</h3></div>
-   <div class="dy-game-list">
-    <button type="button" data-us-tile data-us-feedback="tap" class="dy-game" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" aria-label="Per voi: ${esc(pv.line)}">
-     ${dyIcon('per_voi')}
-     <span class="dy-game-copy"><b>Per voi</b><small>${esc(pv.note||pv.line)}</small></span>
-     ${pvTag||`<span class="dy-tag dy-tag-s dy-game-tag" style="background:var(--us-beige)">${esc(String(pv.cta||'gioca').toLocaleLowerCase('it-IT'))}</span>`}
+  ${weekStrip()}
+  <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">
+   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3>${dayHint()}</div>
+   <div class="us-gv2-game-grid" data-s>
+    <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState==='pending'||pvState==='reveal_ready'?'on':'off'}">
+     <span class="us-gv2-glyph" aria-hidden="true" data-us-attention-icon>${gameArt('per_voi')}</span>
+     <span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small>${pv.note?`<small class="us-gv2-pervoi-note">${esc(pv.note)}</small>`:''}</span>
+     <span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
     </button>
     ${swipe}${families}
    </div>

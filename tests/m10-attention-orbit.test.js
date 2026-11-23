@@ -176,8 +176,7 @@ test('M10E.3: solo un Ti penso ricevuto e non gestito accende l’orbit; impegni
   const t = installOggi();
   const api = t.window.UsTodayPriority;
   api.render([{ id: 'think-received:1', factKey: 'think:1', category: 'received_ready', attention: true, title: 'Bea ti pensa', action: 'think', actionLabel: 'Apri' }]);
-  // Il diario, ma pulito (15/11/2026): the notice is .dy-notice; it keeps the attention attribute.
-  assert.match(t.region.innerHTML, /class="dy-notice" data-us-attention="on"/);
+  assert.match(t.region.innerHTML, /class="us-today-priority-card us-attention-orbit" data-us-attention="on"/);
   const event = api.eventViewModel({ id: 'e', title: 'Cena', days_left: 0, effective_date: '2026-10-05', event_time: '20:30' });
   assert.equal(event.attention, false);
   api.render([event]);
@@ -188,10 +187,7 @@ test('M10E.3: solo un Ti penso ricevuto e non gestito accende l’orbit; impegni
   const hosts = [...html.matchAll(/<[^>]+class="[^"]*us-attention-orbit[^"]*"[^>]*>/g)].map((m) => m[0].match(/id="([^"]+)"/)?.[1]);
   // Per voi is dynamically rendered inside Gioca and is covered by the Game V2 attention contract.
   // Static/global attention hosts remain only the envelope and Daily Ritual.
-  // Il diario, ma pulito (15/11/2026): the envelope keeps data-us-attention and
-  // shows it with its red dot (.dy-envelope.is-closed), not with the orbit ring.
-  assert.deepEqual(hosts.sort(), ['usDailyRitual']);
-  assert.match(html, /class="dy-ib dy-envelope is-loading" id="leftForYouPartnerEntry"[^>]*data-us-attention="off"/);
+  assert.deepEqual(hosts.sort(), ['leftForYouPartnerEntry', 'usDailyRitual']);
   for (const passive of ['renderOggiCalendarWidget', 'function renderHomeMoment', 'function refreshMyLocation']) {
     const at = app.indexOf(passive);
     if (at >= 0) assert.doesNotMatch(app.slice(at, at + 1500), /us-attention-orbit|usAttention/);
@@ -230,13 +226,11 @@ test('M10E: reduced motion → nessuna rotazione, alone statico visibile', () =>
 });
 
 test('M10E: il primitive non tocca tap, focus o aria degli host', () => {
-  // Il diario, ma pulito (15/11/2026): the notice is .dy-notice. The region is
-  // pointer-events:none (styles.css), so the notice and its dismiss must take taps back.
-  assert.match(read('styles.css'), /#usTodayPriorityRegion\{[^}]*pointer-events:none\}/);
-  assert.match(read('diario.css') + read('styles.css'), /\.dy-notice[^{]*\{[^}]*pointer-events:auto/, 'the Oggi notice takes taps');
-  // The Daily Ritual card stays mounted in the hidden hero (its styling was
-  // pruned); the question of Oggi is #dyQuestion, whose controls share the focus ring.
-  assert.match(read('diario.css'), /\.dy-ib:focus-visible,\.dy-btn:focus-visible,[^{]*\{outline:3px solid var\(--us-pencil\)/);
+  const lfyCss = read('left-for-you.css');
+  assert.match(lfyCss, /#leftForYouPartnerEntry\.us-envelope-control\{--us-attention-inset:-3px;position:relative;/);
+  assert.match(read('styles.css'), /\.us-today-priority-card\{position:relative;pointer-events:auto\}/);
+  assert.match(read('styles.css'), /\.us-daily-ritual\{position:relative;/);
+  assert.match(read('styles.css'), /\.us-daily-ritual:focus-visible\{outline/);
   assert.match(html, /id="leftForYouPartnerEntry" onclick="usEnvelopeTap\(\)" aria-label="Lasciato per te"/);
   assert.match(html, /id="usDailyRitual" hidden onclick="openToday\(\)"/);
 });

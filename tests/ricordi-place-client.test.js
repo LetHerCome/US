@@ -78,7 +78,7 @@ test('search waits for 3 letters and never asks without them', async () => {
 test('composer, upload, read and card carry the place; the staging probe is gone', () => {
   const app = read('app.js');
   const html = read('index.html');
-  assert.match(html, /id="momentPlaceField"><span>Dove<\/span>[\s\S]*onclick="editMomentPlace\(\)"/); // mockup v5 «I fogli»
+  assert.match(html, /id="momentPlaceField"[\s\S]*Dove · facoltativo[\s\S]*onclick="editMomentPlace\(\)"/);
   assert.match(html, /id="ricordiMapSwitch"[^>]*onclick="UsRicordiPlace\.toggleMap\(\)"/);
   assert.match(html, /<div class="ricordi-map" id="ricordiMap"[^>]*hidden><\/div>/);
   assert.ok(html.indexOf('/moments-albums.js?v=') < html.indexOf('/ricordi-place.js?v='));

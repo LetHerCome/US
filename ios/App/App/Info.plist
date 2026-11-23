@@ -114,5 +114,8 @@
 	<string>Dark</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!-- Widgets (W0): the Keychain group shared with the widget extension, for the Ti penso token only. -->
+	<key>UsWidgetKeychainGroup</key>
+	<string>$(AppIdentifierPrefix)app.uscouple.shared</string>
 </dict>
 </plist>

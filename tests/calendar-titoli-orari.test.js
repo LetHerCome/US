@@ -31,8 +31,7 @@ test('quick titles: yours after the three of US, no copies, at most eight', () =
 
 test('the form: «+» and its field, 00:00 as the hint, no hour filled for you', () => {
   const html = read('index.html');
-  // Mockup v5 «I fogli» (16/11/2026): the quick titles are suggestions under the field.
-  assert.match(html, /<div class="dy-cal-presets" id="usCalendarPresets" role="group" aria-label="Titoli rapidi">[\s\S]*?data-us-calendar-preset="Uscita"[\s\S]*?id="usCalendarPresetAdd" aria-label="Aggiungi un titolo rapido"[\s\S]*?id="usCalendarPresetNew" hidden><input id="usCalendarPresetNewInput"/);
+  assert.match(html, /<div class="us-cal-presets" id="usCalendarPresets" role="group" aria-label="Titoli rapidi">[\s\S]*?data-us-calendar-preset="Uscita"[\s\S]*?id="usCalendarPresetAdd" aria-label="Aggiungi un titolo rapido"[\s\S]*?id="usCalendarPresetNew" hidden><input id="usCalendarPresetNewInput"/);
   for (const id of ['usCalendarStartTimeInput', 'usCalendarEndTimeInput']) {
     assert.match(html, new RegExp(`id="${id}"[^>]*inputmode="numeric"[^>]*placeholder="00:00"`), id);
   }

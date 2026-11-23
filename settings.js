@@ -11,7 +11,7 @@ let accountDeletionDone=false;
 window.addEventListener('us-identity-change',event=>{
   if(!event.detail?.identityKey){
     settingsSnapshot=null;
-    const avatars=$('usCoupleAvatars');if(avatars)avatars.innerHTML='';
+    const avatars=$('usCoupleAvatars');if(avatars)avatars.innerHTML='<span class="us-couple-avatar"><b>US</b></span>';
     // After an account deletion the "Account eliminato" screen stays until reload.
     if(accountDeletionDone)return;
     closeModal();
@@ -26,9 +26,7 @@ function appVersion(){return Promise.resolve().then(()=>window.UsCapacitorRuntim
 
 function openModal(title,body,kicker='US.'){
   const modalBody=$('usSettingsModalBody');
-  // Mockup v5 «I fogli» (16/11/2026): the last word of the title in italics.
-  const words=String(title??'').trim().split(/\s+/),last=words.pop()||'';
-  $('usSettingsModalTitle').innerHTML=`${words.length?`${esc(words.join(' '))} `:''}<em>${esc(last)}</em>`;
+  $('usSettingsModalTitle').textContent=title;
   $('usSettingsModalKicker').textContent=kicker;
   modalBody.innerHTML=body;
   const root=$('usSettingsOverlay');
@@ -58,10 +56,27 @@ function bondLevel(totalXp=0){
   }
   return level;
 }
-function formatDate(value,month='short'){
+function daysTogether(startedOn){
+  if(!startedOn)return 0;
+  const [y,m,d]=startedOn.split('-').map(Number);
+  const start=Date.UTC(y,m-1,d);
+  const now=new Date();
+  const today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
+  return Math.max(0,Math.floor((today-start)/86400000));
+}
+function nextRelationshipLabel(startedOn){
+  if(!startedOn)return '';
+  const [,m,d]=startedOn.split('-').map(Number);
+  const now=new Date();
+  let target=new Date(now.getFullYear(),now.getMonth(),d,12);
+  if(target<new Date(now.getFullYear(),now.getMonth(),now.getDate(),0))target=new Date(now.getFullYear(),now.getMonth()+1,d,12);
+  const delta=Math.max(0,Math.ceil((target-new Date(now.getFullYear(),now.getMonth(),now.getDate(),0))/86400000));
+  return delta===0?'mesiversario oggi':delta===1?'mesiversario domani':`mesiversario tra ${delta} giorni`;
+}
+function formatDate(value){
   if(!value)return '—';
   const [y,m,d]=value.split('-').map(Number);
-  return new Date(y,m-1,d,12).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month,year:'numeric'});
+  return new Date(y,m-1,d,12).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'short',year:'numeric'});
 }
 async function locationState(){
   try{
@@ -85,90 +100,22 @@ async function pushState(){
   }
   return {permission,active};
 }
-// Il diario, ma pulito (15/11/2026, mockup v4.1): the page paints from the
-// authorities that already exist (couple context, progression, member status,
-// UsAspetto, UsDiario characters); each painter is safe to call alone.
-const myRole=()=>window.usProfile?.role==='beatrice'?'beatrice':'francesco';
-// «Insieme dal 9 aprile 2015 · livello 7»: started_on from the couple context
-// (the settings read as a fallback), the level from Sintonia (progression.js).
-function coupleLevel(){
-  const st=window.USProgression?.getState?.();
-  const xp=Number.isFinite(Number(st?.total_xp))&&st?.total_xp!=null?Number(st.total_xp):Number(settingsSnapshot?.couple?.bond_xp)||0;
-  return typeof window.bondLevelInfo==='function'?window.bondLevelInfo(xp).level:bondLevel(xp);
+function avatarMarkup(profile,url){
+  const name=profile?.display_name||'?';
+  if(url)return `<span class="us-couple-avatar"><img src="${esc(url)}" alt="${esc(name)}"></span>`;
+  return `<span class="us-couple-avatar"><b>${esc(name.trim().slice(0,1).toUpperCase()||'?')}</b></span>`;
 }
-function coupleStartedOn(){
-  try{return window.UsCoupleContext?.snapshot?.()?.couple?.started_on||settingsSnapshot?.couple?.started_on||null;}
-  catch(_){return settingsSnapshot?.couple?.started_on||null;}
-}
-function paintCoupleCard(){
-  const duo=$('usCoupleAvatars'),diary=window.UsDiario;
-  let profiles=settingsSnapshot?.profiles||[];
-  if(!profiles.length)try{profiles=window.UsCoupleContext?.snapshot?.()?.profiles||[];}catch(_){}
-  // Both phones show the same two, in the same order: who created the couple, then who joined.
-  if(duo&&diary?.character){
-    const joined=profiles.some(p=>p.role==='beatrice')||profiles.length>=2;
-    duo.innerHTML=`<span class="dy-stk">${diary.character('francesco',{size:48,dx:2})}</span><span class="dy-stk dy-set-duo-b">${joined?diary.character('beatrice',{size:52,dx:-2}):diary.slot?.(diary.shapeOf?.('beatrice')||'quadrato',52)||''}</span>`;
-  }
-  const identity=window.UsIdentity?.current?.();const pair=$('usCoupleNames');
-  if(pair){
-    if(identity&&identity.pairLabel!=='Voi due'){pair.innerHTML=`<span translate="no">${esc(identity.nameForRole('francesco'))}</span> <em class="dy-em">e</em> <span translate="no">${esc(identity.nameForRole('beatrice'))}</span>`;pair.translate=true;}
-    else pair.textContent=identity?.pairLabel||'Voi due';
-  }
-  const line=$('usTogetherLine');
-  if(line){
-    const started=coupleStartedOn(),level=coupleLevel();
-    line.textContent=started?`Insieme dal ${formatDate(started,'long')} · livello ${level}`:`Livello ${level}`;
-  }
-}
-function paintCharacterRow(){
-  const diary=window.UsDiario;if(!diary?.character)return;
-  const role=myRole(),shape=diary.shapeOf?.(role);
-  const me=$('usCharacterShapeMe');if(me)me.innerHTML=diary.character(role,{size:32});
-  const value=$('usCharacterShapeValue');if(value)value.textContent=diary.SHAPE_NAMES?.[shape]||'Tondo';
-}
-// Come stai: your word right now (undeclined until you choose a form), or an invitation.
-function paintStatusRow(){
-  const value=$('usStatusValue');if(!value)return;
-  const api=window.UsMemberStatus,me=api?.widgetState?.()?.me;
-  value.textContent=me?.status&&api?.word?api.word(me.status,me.form||null):'scegli';
-}
-function paintAspetto(){
-  const current=window.UsAspetto?.get?.()||'auto';
-  document.querySelectorAll('#settings [data-us-aspetto]').forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.usAspetto===current)));
-}
-function distanceUnit(){try{return localStorage.getItem('us:settings:distance-unit')==='mi'?'mi':'km';}catch(_){return 'km';}}
-function paintDistanceUnit(){
-  const unit=distanceUnit();
-  document.querySelectorAll('#settings [data-us-distance-unit]').forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.usDistanceUnit===unit)));
-}
-// La distanza: the km in sky, as Oggi shows them (app.js distance capsule); otherwise how you live (distance.js).
-function paintDistanceRow(){
-  const tag=$('usDistanceKmTag'),mode=$('usDistanceValue');if(!tag)return;
-  const pill=$('distanceWidget'),text=$('distanceValue')?.textContent?.trim()||'';
-  const known=Boolean(pill&&!pill.hidden&&/\d/.test(text));
-  tag.hidden=!known;tag.textContent=known?text:'';
-  if(mode)mode.hidden=known;
-}
-function feedbackOn(){const prefs=window.UsFeedback?.getPreferences?.()||{sounds:true,haptics:true};return Boolean(prefs.sounds||prefs.haptics);}
-function paintFeedbackRow(){
-  const summary=feedbackSummary();
-  const value=$('usFeedbackValue');if(value)value.textContent=summary==='Attivi'||summary==='Spenti'?'':summary;
-  $('usFeedbackSwitch')?.setAttribute('aria-checked',String(feedbackOn()));
-}
-function paintSettingsPage(){
-  paintCoupleCard();paintCharacterRow();paintStatusRow();paintAspetto();paintDistanceUnit();paintDistanceRow();paintFeedbackRow();
-}
-// The angolo di noi opens the shape and the colour from its wardrobe (diario.js).
-window.UsSettingsPage={paint:paintSettingsPage,action:(name)=>action(name)};
 
 async function hydrateUsSettings(){
   if(!window.usProfile)return;
   const identityProfile=window.usProfile;
   const cid=identityProfile.couple_id;
-  paintSettingsPage();
-  const [coupleRes,profilesRes,archiveRes,loc,push,prefsRes,plusRes]=await Promise.all([
+  const unit=localStorage.getItem('us:settings:distance-unit')||'km';
+  const [coupleRes,profilesRes,momentsRes,eventsRes,archiveRes,loc,push,prefsRes,plusRes]=await Promise.all([
     sb.from('couples').select('started_on,bond_xp').eq('id',cid).maybeSingle(),
     sb.from('profiles').select('id,display_name,role,avatar_path,person_color').eq('couple_id',cid).order('created_at',{ascending:true}),
+    sb.from('moments').select('id',{count:'exact',head:true}).eq('couple_id',cid),
+    sb.from('shared_event_completions').select('event_id',{count:'exact',head:true}).eq('couple_id',cid),
     // Stories are retired on native (the archive row is stripped from the APK web bundle).
     window.UsPlatform?.isNative?Promise.resolve({count:0}):sb.from('stories').select('id',{count:'exact',head:true}).eq('couple_id',cid).lt('expires_at',new Date().toISOString()),
     locationState(),
@@ -192,111 +139,53 @@ async function hydrateUsSettings(){
   const colorRow=$('usPersonColorSetting');
   if(colorRow){colorRow.hidden=Boolean(plusRes?.error)||!plusRes?.data;colorRow.dataset.locked=colorsOpen?'false':'true';}
   const colorValue=$('usPersonColorValue');
-  if(colorValue){colorValue.textContent=colorsOpen?(window.UsPersonColors?.nameOf?.(profiles,identityProfile.id)||''):'US Plus';colorValue.className=colorsOpen?'us-sr':'dy-set-lock';}
+  if(colorValue)colorValue.textContent=colorsOpen?(window.UsPersonColors?.nameOf?.(profiles,identityProfile.id)||''):'US Plus';
 
-  paintSettingsPage();
+  const names=profiles.map(p=>p.display_name).filter(Boolean);
+  // Mockup: "Francesco e Beatrice" — the names stay as written, "e" follows the language.
+  const identity=window.UsIdentity?.current();const pair=$('usCoupleNames');
+  if(identity&&identity.pairLabel!=='Voi due'){pair.innerHTML=`<span translate="no">${esc(identity.nameForRole('francesco'))}</span> e <span translate="no">${esc(identity.nameForRole('beatrice'))}</span>`;pair.translate=true;}
+  else pair.textContent=identity?.pairLabel || 'Voi due';
+  const days=daysTogether(couple.started_on);
+  $('usTogetherLine').textContent=couple.started_on?`Insieme da ${days===1?'1 giorno':`${days.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} giorni`} · ${nextRelationshipLabel(couple.started_on)}`:'Imposta la data della relazione';
   $('usRelationshipDateValue').textContent=formatDate(couple.started_on);
+  $('usSettingsBondLevel').textContent=String(bondLevel(couple.bond_xp));
+  $('usSettingsMomentsCount').textContent=Number(momentsRes.count||0).toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
+  $('usSettingsEventsCount').textContent=Number(eventsRes.count||0).toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
   const archiveValue=$('usStoryArchiveValue');if(archiveValue)archiveValue.textContent=Number(archiveRes.count||0)?String(archiveRes.count):'';
+  $('usDistanceUnitValue').textContent=unit==='mi'?'Miglia':'Chilometri';
+  const photoDetail=$('usProfilePhotoDetail');if(photoDetail)photoDetail.textContent=`La vede anche ${window.UsIdentity?.current().partnerName||'la tua persona'}`;
+  const feedbackValue=$('usFeedbackValue');if(feedbackValue)feedbackValue.textContent=feedbackSummary();
   // Mockup "1 attivo": the widgets already on this phone's Home (native only).
   const widgetsValue=$('usWidgetsValue');if(widgetsValue&&window.UsWidgets?.isAvailable?.())Promise.resolve(window.UsWidgets.installed?.()).then(device=>{const n=Object.values(device?.installed||{}).reduce((sum,count)=>sum+(Number(count)||0),0);widgetsValue.textContent=n===1?'1 attivo':n?`${n} attivi`:'Nessuno';}).catch(()=>{});
+  syncMauditSetting();
   syncAppLockSetting().catch(()=>{});
   syncRicordiOptimizationSetting().catch(()=>{});
   $('usSettingsBuild').textContent=currentBuild();
   appVersion().then(text=>{const el=$('usSettingsVersion');if(el)el.textContent=text;});
 
-  // Posizione: the switch says whether this phone shares it; the line says why, or that the phone blocks it.
-  const sharing=Boolean(window.UsLocation?.isSharing?.());
   const locEl=$('usLocationState');
-  if(locEl)locEl.textContent=loc==='denied'?'Bloccata dal telefono':'Solo per la distanza tra voi';
-  $('usLocationSwitch')?.setAttribute('aria-checked',String(sharing&&loc!=='denied'));
+  locEl.className='us-setting-state';
+  const sharing=Boolean(window.UsLocation?.isSharing?.());
+  if(sharing&&loc!=='denied'){locEl.textContent='Consentita';locEl.classList.add('ok');}
+  else if(loc==='denied'){locEl.textContent='Bloccata';locEl.classList.add('bad');}
+  else locEl.textContent='Non attiva';
 
-  // Notifiche: on when this phone receives them; the line names what is wrong when the phone blocks them.
   const pushEl=$('usNotificationsValue');
-  const blocked=push.native?({denied:'Permesso negato dal telefono',settings:'Da attivare nelle impostazioni del telefono',unavailable:'Non disponibili su questa versione'}[push.kind]||''):push.permission==='denied'?'Bloccate dal browser':push.permission==='unsupported'?'Non disponibili qui':'';
-  if(pushEl)pushEl.textContent=blocked||'Ti penso, risposte, turni di gioco';
-  $('usNotificationsSwitch')?.setAttribute('aria-checked',String(Boolean(push.active)));
+  pushEl.textContent=push.native?({active:'Attive',inactive:'Non attive',denied:'Permesso negato',settings:'Da attivare',unavailable:'Non disponibili'}[push.kind]||'Non disponibili'):push.active?'Attive':push.permission==='denied'?'Bloccate':'Non attive';
   $('usSyncValue').textContent=navigator.onLine&&profiles.length>=2?'Tutto ok':navigator.onLine?'Parziale':'Offline';
+  const dot=$('usSettingsDeviceDot');
+  dot.classList.toggle('ok',Boolean(navigator.onLine&&profiles.length>=2));
+  dot.classList.toggle('bad',!navigator.onLine);
+  const syncLabel=$('usSettingsSyncLabel');if(syncLabel)syncLabel.textContent=navigator.onLine&&profiles.length>=2?'Sincronizzato':navigator.onLine?'Parziale':'Offline';
 
-  // Foto profilo: optional (you are the characters); a small round preview when there is one.
-  const mine=profiles.find(p=>p.id===identityProfile.id);
-  const photoValue=$('usProfilePhotoValue');
-  if(photoValue){
-    let url=null;
-    if(mine?.avatar_path&&window.usGetSignedUrls){
-      const urls=await window.usGetSignedUrls([mine.avatar_path],window.US_MEDIA_URL_TTL_S);
-      if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==cid)return;
-      url=urls?.get?.(mine.avatar_path)||null;
-    }
-    photoValue.innerHTML=url?`<img class="dy-set-photo" src="${esc(url)}" alt="La tua foto profilo">`:'nessuna';
-  }
+  const avatarPaths=profiles.map(p=>p.avatar_path).filter(Boolean);
+  let urls=new Map();
+  if(avatarPaths.length&&window.usGetSignedUrls)urls=await window.usGetSignedUrls(avatarPaths,window.US_MEDIA_URL_TTL_S);
+  if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==cid)return;
+  $('usCoupleAvatars').innerHTML=profiles.map(p=>avatarMarkup(p,p.avatar_path?urls.get(p.avatar_path):null)).join('')||'<span class="us-couple-avatar"><b>US</b></span>';
 }
 window.hydrateUsSettings=hydrateUsSettings;
-
-// Il tuo personaggio (founder, 15/11/2026, mockup v4.1): five shapes, drawn in
-// your colour. The server keeps it (set_my_character_shape, migration
-// 20261115183900, written but NOT applied yet): while that function does not
-// exist the choice stays on this phone only (UsDiario.shapeOf reads it back).
-const CHARACTER_SHAPES=['palla','quadrato','triangolo','goccia','nuvola'];
-const MISSING_FUNCTION=error=>['PGRST202','42883'].includes(String(error?.code||''))||/could not find the function|function .* does not exist/i.test(String(error?.message||''));
-function characterShapeModal(){
-  const diary=window.UsDiario;if(!diary?.character)return;
-  const current=diary.shapeOf?.(myRole());
-  openModal('Il tuo personaggio',`<p class="us-settings2-modal-copy">Scegli la forma: il colore resta il tuo. Potete avere la stessa forma.</p><div class="dy-shape-grid" role="group" aria-label="Forma del tuo personaggio">${CHARACTER_SHAPES.map(shape=>`<button type="button" class="dy-shape" data-character-shape="${shape}" aria-pressed="${shape===current}"><span class="dy-stk">${diary.character({shape,color:'var(--us-tu)'},{size:56})}</span><span>${esc(diary.SHAPE_NAMES?.[shape]||shape)}</span></button>`).join('')}</div>`,'TU');
-  $('usSettingsModalBody').querySelectorAll('[data-character-shape]').forEach(btn=>btn.addEventListener('click',()=>saveCharacterShape(btn.dataset.characterShape,btn)));
-}
-let characterShapeSaving=false;
-async function saveCharacterShape(shape,btn){
-  if(characterShapeSaving||!CHARACTER_SHAPES.includes(shape))return;
-  const userId=window.usProfile?.id;if(!userId)return;
-  characterShapeSaving=true;
-  const buttons=[...($('usSettingsModalBody')?.querySelectorAll('[data-character-shape]')||[])];
-  buttons.forEach(b=>{b.disabled=true;});
-  let saved=false;
-  try{
-    const {error}=await sb.rpc('set_my_character_shape',{p_shape:shape});
-    if(!error){saved=true;try{localStorage.removeItem(`us:character-shape:${userId}`);}catch(_){}}
-    else if(MISSING_FUNCTION(error)){
-      // The SQL is not on this server yet: keep it on this phone only.
-      try{localStorage.setItem(`us:character-shape:${userId}`,shape);saved=true;}catch(_){}
-    }else console.warn('[US Settings] character shape',error);
-  }catch(error){console.warn('[US Settings] character shape',error);}
-  characterShapeSaving=false;
-  buttons.forEach(b=>{b.disabled=false;});
-  if(!saved){toast('Non riesco a cambiare il personaggio. Riprova.');return;}
-  buttons.forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
-  await Promise.resolve(window.UsCoupleContext?.hydrate?.()).catch(()=>{});
-  window.UsDiario?.paintAll?.();window.UsDiario?.paintVoiDue?.();
-  paintSettingsPage();
-  window.UsFeedback?.success?.();
-  closeModal();
-  toast('Personaggio aggiornato ♡');
-}
-
-// The switches of App: ink, never a person colour. Each goes through the flow
-// that already exists for that setting.
-async function toggleNotifications(){
-  const state=await pushState();
-  if(state.native){
-    if(state.kind==='active'){const result=await window.UsNotifications.disable();toast(result.ok?'Notifiche disattivate su questo dispositivo':'Non riesco a disattivarle adesso');}
-    else if(state.kind==='inactive')await window.enableWebPush?.();
-    else return notificationsModal();
-  }else if(state.permission==='denied'||state.permission==='unsupported')return notificationsModal();
-  else if(state.active)await window.disableWebPush?.();
-  else await window.enableWebPush?.();
-  setTimeout(hydrateUsSettings,250);
-}
-function toggleFeedback(){
-  const next=!feedbackOn();
-  window.UsFeedback?.setSoundsEnabled?.(next);
-  window.UsFeedback?.setHapticsEnabled?.(next);
-  paintFeedbackRow();
-  if(next)window.UsFeedback?.action?.();
-}
-function switchAction(name){
-  if(name==='notifications')return toggleNotifications();
-  if(name==='location')return locationAction();
-  if(name==='feedback')return toggleFeedback();
-}
 
 function relationshipDateModal(valueOverride){
   const current=valueOverride||settingsSnapshot?.couple?.started_on||'';
@@ -337,6 +226,31 @@ function relationshipDateConfirmation(value){
   $('usCancelRelationshipDate')?.focus({preventScroll:true});
 }
 
+// Mockup set-foto-home: the photo Oggi shows now, changed in place.
+function homePhotoModal(){
+  openModal('Foto Home',`
+    <div class="us-settings2-modal-copy">La foto di Oggi arriva dai vostri Ricordi.</div>
+    <div class="us-settings2-photo" id="usHomePhotoPreview" aria-hidden="true"></div>
+    <div class="us-settings2-action-stack">
+      <button type="button" class="primary" id="usChangeHomeNow">Cambia foto adesso</button>
+      <button type="button" class="ghost" id="usOpenMomentsFromSettings">Apri i Ricordi</button>
+    </div>
+  `,'OGGI');
+  const paint=()=>{const preview=$('usHomePhotoPreview');if(preview)preview.style.backgroundImage=document.querySelector('#homeHero .home-photo-layer.active')?.style.backgroundImage||'';};
+  paint();
+  $('usChangeHomeNow')?.addEventListener('click',async()=>{
+    const btn=$('usChangeHomeNow');btn.disabled=true;btn.textContent='Cambio…';
+    window.addEventListener('us:home-photo-changed',paint,{once:true});
+    await window.hydrateHomePhoto?.(true);
+    paint();
+    btn.innerHTML='<span class="us-icon" data-us-icon="check" aria-hidden="true"></span> Fatto';
+    setTimeout(()=>{btn.disabled=false;btn.textContent='Cambia foto adesso';},900);
+  });
+  $('usOpenMomentsFromSettings')?.addEventListener('click',()=>{
+    closeModal();window.go?.('moments',{nav:true});
+  });
+}
+
 async function showStoryArchive(){
   openModal('Archivio Stories','<div class="us-settings-loading">Carico…</div>','RICORDI');
   try{
@@ -360,6 +274,18 @@ async function showStoryArchive(){
     console.warn(error);
     $('usSettingsModalBody').innerHTML='<div class="us-settings-empty"><b>Archivio non disponibile</b><p>Riprova tra poco.</p></div>';
   }
+}
+
+function distanceModal(){
+  const unit=localStorage.getItem('us:settings:distance-unit')||'km';
+  openModal('Distanza',`<div class="us-setting-choice">
+    <button data-distance="km" class="${unit==='km'?'active':''}"><span>Chilometri</span><b>km</b></button>
+    <button data-distance="mi" class="${unit==='mi'?'active':''}"><span>Miglia</span><b>mi</b></button>
+  </div>`,'QUESTO TELEFONO');
+  $('usSettingsModalBody').querySelectorAll('[data-distance]').forEach(btn=>btn.addEventListener('click',()=>{
+    localStorage.setItem('us:settings:distance-unit',btn.dataset.distance);
+    window.hydrateDistance?.();hydrateUsSettings();closeModal();toast('Unità aggiornata');
+  }));
 }
 
 // Colori a scelta (US Plus, 29/10/2026): one of 8, never the other person's;
@@ -637,7 +563,20 @@ async function toggleAppLock(){
   }
 }
 
-// The retired cat (Compagni) and «Foto Home» left Impostazioni with «Il diario, ma pulito» (15/11/2026).
+// Maudit V1 — device-local On/Off, owned by USPet (pet.js). Off unmounts it.
+function mauditEnabled(){
+  if(typeof window.USPet?.isEnabled==='function')return window.USPet.isEnabled();
+  try{return localStorage.getItem('us:maudit:v1:enabled')!=='0';}catch(_){return true;}
+}
+function syncMauditSetting(){
+  const row=$('usMauditSetting');
+  if(row)row.setAttribute('aria-checked',mauditEnabled()?'true':'false');
+}
+function toggleMaudit(){
+  const next=!mauditEnabled();
+  window.USPet?.setEnabled?.(next); // USPet owns the device-local preference
+  syncMauditSetting();
+}
 
 // Native Notifications V1: what this phone can do, in the person's words.
 // Mockup set-notifiche / set-notifiche-negate: a banner in my colour with a
@@ -1109,12 +1048,11 @@ async function reportModal(){
 }
 
 function logoutConfirmationModal(){
-  // «Esci dall’account» (20/11/2026): the plain word for what «Scollega questo telefono» did.
-  openModal('Esci dall’account',`
-    <div class="us-settings2-modal-copy">Esci solo da questo telefono. Per rientrare in US userai la tua email o Google. Gli altri dispositivi restano collegati.</div>
+  openModal('Scollega questo telefono',`
+    <div class="us-settings2-modal-copy">Per rientrare in US userai la tua email o Google. Gli altri dispositivi restano collegati.</div>
     <div class="us-settings2-action-stack">
       <button type="button" class="ghost" id="usCancelLogout">Annulla</button>
-      <button type="button" class="us-settings2-disconnect" id="usConfirmLogout">Esci</button>
+      <button type="button" class="us-settings2-disconnect" id="usConfirmLogout">Scollega questo telefono</button>
     </div>
   `,'QUESTO TELEFONO');
   $('usCancelLogout')?.addEventListener('click',closeModal);
@@ -1125,7 +1063,7 @@ async function logout(){
   if(logoutInFlight)return;
   logoutInFlight=true;
   const btn=$('usConfirmLogout');
-  if(btn){btn.disabled=true;btn.textContent='Esco…';}
+  if(btn){btn.disabled=true;btn.textContent='Scollego…';}
   try{await window.revokeCurrentDevice?.();}catch(error){console.warn('[US Logout] device cleanup',error);}
   try{
     const {error}=await sb.auth.signOut({scope:'local'});
@@ -1133,36 +1071,26 @@ async function logout(){
     // Session gone: drop this phone's biometric protection record too.
     try{await window.UsAppLock?.reset?.();}catch(_e){}
     location.reload();
-  }catch(error){logoutInFlight=false;if(btn){btn.disabled=false;btn.textContent='Esci';}console.warn(error);toast('Non riesco a farti uscire');}
+  }catch(error){logoutInFlight=false;if(btn){btn.disabled=false;btn.textContent='Scollega questo telefono';}console.warn(error);toast('Non riesco a scollegarlo');}
 }
-
-// The back arrow of Impostazioni (20/11/2026): back to the page you opened it
-// from (your character is top right on all four), not always to Noi.
-function usSettingsReturn(){
-  const from=window.usSettingsFrom;
-  if(from==='quiz'&&typeof window.openQuizHub==='function')return window.openQuizHub({nav:true});
-  return window.go?.(['home','bond','moments'].includes(from)?from:'home',{nav:true});
-}
-window.usSettingsReturn=usSettingsReturn;
 
 async function action(name){
   // Which sheet is open: dc-settings.css gives each one the mockup's blocks.
-  const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='app-lock'&&name!=='voi-due')overlay.dataset.usSettingsSheet=name;
-  // Il diario, ma pulito: the couple card opens «Voi due» (diario.js), the character its five shapes.
-  if(name==='voi-due')return window.UsDiario?.openVoiDue?.();
-  if(name==='character-shape')return characterShapeModal();
-  if(name==='status')return window.UsMemberStatus?.open?.('status');
+  const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='maudit'&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
   if(name==='relationship-date')return relationshipDateModal();
   if(name==='plus')return plusSoonModal();
   if(name==='together-mode')return window.UsDistance?.open?.();
   if(name==='status-form')return window.UsMemberStatus?.open?.('form');
   if(name==='person-color'){if(!settingsSnapshot?.colorsOpen)return personColorLockedModal();return personColorModal();}
   if(name==='profile-photo'){closeModal();window.pickProfilePhoto?.();return;}
+  if(name==='home-photo')return homePhotoModal();
   if(name==='story-archive')return showStoryArchive();
   if(name==='notifications')return notificationsModal();
+  if(name==='distance')return distanceModal();
   if(name==='location')return locationAction();
   if(name==='feedback')return feedbackModal();
   if(name==='optimize-ricordi')return ricordiOptimizationModal();
+  if(name==='maudit')return toggleMaudit();
   if(name==='app-lock')return toggleAppLock();
   if(name==='widgets')return window.UsWidgetHub?.open?.();
   if(name==='sync-status')return syncStatusModal();
@@ -1186,20 +1114,9 @@ function hydrateWhenHomeSettles(){
 }
 
 function boot(){
+  syncMauditSetting();
   syncAppLockSetting().catch(()=>{});
   document.querySelectorAll('[data-us-setting]').forEach(row=>row.addEventListener('click',()=>action(row.dataset.usSetting)));
-  document.querySelectorAll('[data-us-switch]').forEach(sw=>sw.addEventListener('click',()=>switchAction(sw.dataset.usSwitch)));
-  // Aspetto: Automatico (the phone decides), Chiaro or Scuro, on this phone (UsAspetto, diario.js).
-  document.querySelectorAll('#settings [data-us-aspetto]').forEach(btn=>btn.addEventListener('click',()=>{window.UsAspetto?.set?.(btn.dataset.usAspetto);paintAspetto();}));
-  // Distanza in km o mi, on this phone: Oggi repaints its distance, then the row here.
-  document.querySelectorAll('#settings [data-us-distance-unit]').forEach(btn=>btn.addEventListener('click',()=>{
-    try{localStorage.setItem('us:settings:distance-unit',btn.dataset.usDistanceUnit);}catch(_){}
-    paintDistanceUnit();Promise.resolve(window.hydrateDistance?.()).catch(()=>{}).then(paintDistanceRow);
-  }));
-  window.addEventListener('us:aspetto-changed',paintAspetto);
-  window.addEventListener('us:distance-changed',paintDistanceRow);
-  window.addEventListener('us:member-status-changed',()=>{paintStatusRow();paintCoupleCard();paintCharacterRow();});
-  paintSettingsPage();
   document.querySelectorAll('[data-us-settings-close]').forEach(el=>el.addEventListener('click',closeModal));
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('usSettingsOverlay')?.classList.contains('open'))closeModal();});
   const wait=setInterval(()=>{
@@ -1211,7 +1128,7 @@ function boot(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
 window.addEventListener('online',()=>{if(document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
-// A new profile photo shows in «Foto profilo» at once.
+// A new profile photo (Foto profilo) shows on the couple card at once.
 window.addEventListener('us:noi-portraits-ready',()=>{if(document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
 window.addEventListener('offline',()=>{if(document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
 console.info('[US Settings] Settings 2 attive');

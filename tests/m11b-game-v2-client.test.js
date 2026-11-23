@@ -320,17 +320,13 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   const app = read('app.js');
   const games = read('games.js');
   const css = read('games.css') + read('identity.css');
-  // Il diario, ma pulito (15/11/2026): the top chrome of Oggi is its header (.dy-head).
-  const top = html.match(/<header class="dy-head">[\s\S]*?<\/header>/)?.[0] || '';
-  // La barra a goccia (20/11/2026): Ti penso is the middle of the bottom bar.
-  assert.match(html.match(/<nav class="dy-nav"[\s\S]*?<\/nav>/)?.[0] || '', /id="thinkButton"/);
-  assert.doesNotMatch(top, /id="thinkButton"/);
+  const top = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<main id="home"/)?.[0] || '';
+  assert.match(top, /id="thinkButton"/);
   assert.doesNotMatch(top, /id="usPerVoiTop"/, 'Per voi is a Gioca action, not a global top-bar action');
-  // Il diario, ma pulito (15/11/2026): Per voi is a «Da giocare» row; what waits
-  // for you is its status tag («tocca a te», «risposte pronte»), not the orbit.
-  assert.match(games, /class="dy-game" data-gv2-action="per-voi" data-gv2-state="\$\{esc\(pvState\)\}"/);
-  assert.match(games, /pvState==='reveal_ready'\?'<span class="dy-tag dy-tag-s dy-game-tag" style="background:var\(--us-miele\)">risposte pronte<\/span>':pvState==='pending'\?'<span class="dy-tag dy-tag-s dy-game-tag" style="background:var\(--us-tu-soft\)">'\+dyMini\(myRoleNow\(\)\)\+'tocca a te<\/span>'/); // Il diario, ma pulito (15/11/2026): with the small character (v4.1)
-  assert.match(games, /dataset\.usAttention/, 'the Per voi entry state still drives data-us-attention');
+  assert.match(games, /class="us-gv2-pervoi us-attention-orbit"/);
+  assert.match(games, /data-gv2-action="per-voi"/);
+  assert.match(games, /data-us-attention=/);
+  assert.match(games, /data-us-attention-icon/);
   assert.match(html, /<div id="quizHub" class="us-gv2-hub"/);
   assert.match(html, /<div id="usGameV2Panel" class="us-gv2-panel hidden"/);
   assert.doesNotMatch(html, /weeklyQuizGrid|usExtraGames|usCustomGamesHub|quizPlay|scoreRing/);
@@ -354,12 +350,7 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   assert.ok(artFrom > 0 && artTo > artFrom, 'the mockup art lives in one place');
   const art = games.slice(artFrom, artTo);
   assert.deepEqual([...art.matchAll(/^  ([a-z_]+): '/gm)].map((m) => m[1]).sort(), ['confrontatevi', 'per_voi', 'quanto_mi_conosci', 'ridete', 'rivivete', 'scopritevi', 'swipe']);
-  // Il diario, ma pulito (15/11/2026): the second exception is the stroke icons of the
-  // «Da giocare» rows (DY_ICON + dyIcon), also copied from the approved mockup.
-  const dyFrom = games.indexOf('const DY_ICON = {');
-  const dyTo = games.indexOf('\n', games.indexOf('const dyIcon = '));
-  assert.ok(dyFrom > artTo && dyTo > dyFrom, 'the row icons live in one place');
-  assert.doesNotMatch(games.slice(0, artFrom) + games.slice(artTo, dyFrom) + games.slice(dyTo) + read('games.css'), /<svg|<path/, 'no other hand-drawn icons');
+  assert.doesNotMatch(games.slice(0, artFrom) + games.slice(artTo) + read('games.css'), /<svg|<path/, 'no other hand-drawn icons');
 });
 
 // ---------------------------------------------------------------- Gioca: una partita al giorno
@@ -376,8 +367,7 @@ test('Gioca daily: the limit reads the server allowance, on the tiles it locks, 
   // days; the limit is said in the confirm (below) and on the locked tiles.
   const fresh = harness({ homeState: home({ allowance: allowance() }) });
   await tick();
-  // Il diario, ma pulito (15/11/2026): the week strip is gone; the header tag counts today's rounds.
-  assert.doesNotMatch(fresh.nodes.quizHub.innerHTML, /id="usGv2Week"/);
+  assert.match(fresh.nodes.quizHub.innerHTML, /id="usGv2Week"/);
   assert.doesNotMatch(fresh.nodes.quizHub.innerHTML, /QUESTA SETTIMANA|data-gv2-rhythm|Ancora \d giochi/);
   assert.doesNotMatch(fresh.nodes.quizHub.innerHTML, /data-gv2-mode-state="(?:locked|played)"/, 'a fresh day locks nothing');
   const mid = harness({ homeState: home({ allowance: allowance({ families: { per_voi: { session_id: 'p', completed: true }, ridete: { session_id: 'r', completed: true } } }) }) });

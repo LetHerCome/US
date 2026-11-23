@@ -24,7 +24,7 @@
 .us-noi-board-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .us-noi-board-head h2{margin:0;font:400 28px/1 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text)}
 .us-noi-board-head small{display:block;margin-top:4px;font-size:13px;line-height:1.35;color:var(--us-color-text-2)}
-#bond .us-noi-board .us-noi-board-new{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--us-noi-grad);color:var(--us-on);font:700 14px/1 var(--us-font-ui);box-shadow:none;--us-icon-size:16px}
+#bond .us-noi-board .us-noi-board-new{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--us-color-text);color:var(--us-inchiostro);font:700 14px/1 var(--us-font-ui);box-shadow:none;--us-icon-size:16px}
 #usNoiLavagnaSlot:empty{display:none}
 #bond .us-noi-board .us-noi-board-all{align-self:center;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text);font:600 14px/1 var(--us-font-ui);box-shadow:none;--us-icon-size:16px}
 

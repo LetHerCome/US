@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
-<meta name="theme-color" content="#FAF7F1"/>
-<meta name="color-scheme" content="light dark"/>
+<meta name="theme-color" content="#0a0a0e"/>
+<meta name="color-scheme" content="dark"/>
 <meta name="us-build" content="us-rilascio-20261114-109"/>
 <!-- Game V2 production rollout -->
 <link rel="manifest" href="/manifest.webmanifest?v=us-rilascio-20261114-109"/>
@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="US"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <script src="/i18n.js?v=us-rilascio-20261114-109"></script>
 <script src="/i18n-en.js?v=us-rilascio-20261114-109"></script>
 <title>US — Il vostro spazio</title>
@@ -32,11 +32,10 @@
 <meta property="og:image:height" content="512"/>
 <meta property="og:image:alt" content="Il simbolo di US"/>
 <meta name="twitter:card" content="summary"/>
-<!-- The first screen (diario pulito): Figtree, one word in Fraunces italic, the couple's hand and «us». -->
+<!-- The first screen is written in Fraunces and Figtree: fetch them with the CSS, not after it. -->
+<link rel="preload" href="/assets/fonts/Fraunces-Soft-Roman.woff2" as="font" type="font/woff2" crossorigin/>
 <link rel="preload" href="/assets/fonts/Fraunces-Soft-Italic.woff2" as="font" type="font/woff2" crossorigin/>
 <link rel="preload" href="/assets/fonts/Figtree-Latin.woff2" as="font" type="font/woff2" crossorigin/>
-<link rel="preload" href="/assets/fonts/GochiHand-Latin.woff2" as="font" type="font/woff2" crossorigin/>
-<link rel="preload" href="/assets/fonts/PermanentMarker-Latin.woff2" as="font" type="font/woff2" crossorigin/>
 <link rel="stylesheet" href="/styles.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/ui-foundation.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/fix4.css?v=us-rilascio-20261114-109"/>
@@ -52,6 +51,7 @@
 <link rel="stylesheet" href="/companions.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/distance.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/member-status.css?v=us-rilascio-20261114-109"/>
+<link rel="stylesheet" href="/pet.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/settings.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/identity.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/settings2.css?v=us-rilascio-20261114-109" media="print" onload="this.media='all'"/>
@@ -78,16 +78,11 @@
 <link rel="stylesheet" href="/dc-popup.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/dc-primo.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/dc-settings.css?v=us-rilascio-20261114-109"/>
-<link rel="stylesheet" href="/diario.css?v=us-rilascio-20261114-109"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
 <link rel="dns-prefetch" href="//iiakdfsxpywdkxravqjh.supabase.co">
 <link rel="preload" href="/app.js?v=us-rilascio-20261114-109" as="script">
-<script>
-// Aspetto (Impostazioni → App): «chiaro» or «scuro» fixed on this phone, before the first paint; «auto» follows the phone.
-try { const a = localStorage.getItem('us:aspetto'); if (a === 'chiaro' || a === 'scuro') document.documentElement.dataset.usAspetto = a; } catch (_) {}
-</script>
 <script>
 (() => {
   document.documentElement.classList.add('us-auth-pending');
@@ -242,17 +237,36 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     <div class="auth-logo us-brand-symbol" aria-label="US"><img class="us-brand-symbol-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true"></div>
     <div class="us-auth-context" aria-label="Il vostro spazio privato"><span>Voi</span><span aria-hidden="true">♡</span><span>due</span></div>
 
-    <!-- Il diario, ma pulito (15/11/2026, mockup v4.1 «L'entrata» 1): one welcome before the account,
-         only on a phone where nobody has signed in yet. Static, no network. The two characters are
-         drawn by diario.js (UsDiario.character), as everywhere else. -->
-    <section class="us-tour dy-ent-welcome" id="usTour" hidden aria-labelledby="usTourTitle">
-      <p class="dy-ent-mark" role="img" aria-label="US">us</p>
-      <div class="dy-ent-duo" id="usTourDuo" aria-hidden="true"></div>
-      <h2 class="dy-ent-h" id="usTourTitle" tabindex="-1">Il diario <em>della coppia</em></h2>
-      <p class="dy-ent-lead">Una pagina al giorno, scritta in due: le vostre foto, una domanda, i giochi e un ti penso quando vi mancate.</p>
-      <div class="dy-ent-foot">
-        <button type="button" class="dy-btn dy-btn-xl" id="usTourNext">Inizia</button>
-        <button type="button" class="dy-btn dy-btn-l dy-btn-ghost" id="usTourLogin">Ho già un account</button>
+    <!-- First run (dc-primo): three cards before the account, only on a phone where nobody has signed in yet. Static, no network. -->
+    <section class="us-tour" id="usTour" hidden aria-label="Come funziona US">
+      <button type="button" class="us-tour-skip" id="usTourSkip">Salta</button>
+      <div class="us-tour-view" role="region" aria-roledescription="carosello" aria-label="Come funziona US">
+        <div class="us-tour-track" id="usTourTrack" tabindex="0">
+          <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="1 di 3">
+            <div class="us-tour-vis" aria-hidden="true"><svg viewBox="0 0 240 180" focusable="false"><circle class="t1-w" cx="120" cy="90" r="60"/><circle class="t1-a" cx="92" cy="90" r="54"/><circle class="t1-b" cx="148" cy="90" r="54"/><path class="t1-n" d="M120 43.83A54 54 0 0 1 120 136.17A54 54 0 0 1 120 43.83Z"/></svg></div>
+            <h2>Uno spazio <em>solo vostro</em></h2>
+            <p class="us-auth-lede">US è per due persone e basta. Niente pubblico e niente feed: quello che condividete resta tra voi.</p>
+          </section>
+          <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="2 di 3">
+            <div class="us-tour-vis" aria-hidden="true"><svg viewBox="0 0 240 170" focusable="false"><path class="t2-arc" d="M70 46Q120 2 170 46"/><circle class="t2-a" cx="46" cy="54" r="22"/><circle class="t2-b" cx="194" cy="54" r="22"/><path class="t2-h" transform="translate(108.4 14.3) scale(1.35)" d="M8.6 14.4S0 9.8 0 4.6C0 1.9 2 0 4.4 0c1.8 0 3.4 1 4.2 2.6C9.4 1 11 0 12.8 0c2.4 0 4.4 1.9 4.4 4.6 0 5.2-8.6 9.8-8.6 9.8z"/><rect class="t2-bl" x="8" y="100" width="108" height="62" rx="18"/><rect class="t2-br" x="124" y="100" width="108" height="62" rx="18"/><rect class="t2-l" x="22" y="117" width="74" height="8" rx="4"/><rect class="t2-l" x="22" y="133" width="50" height="8" rx="4"/><rect class="t2-l" x="138" y="117" width="78" height="8" rx="4"/><rect class="t2-l" x="138" y="133" width="56" height="8" rx="4"/><circle class="t2-d" cx="50" cy="131" r="3.5"/><circle class="t2-d" cx="62" cy="131" r="3.5"/><circle class="t2-d" cx="74" cy="131" r="3.5"/><circle class="t2-d" cx="166" cy="131" r="3.5"/><circle class="t2-d" cx="178" cy="131" r="3.5"/><circle class="t2-d" cx="190" cy="131" r="3.5"/></svg></div>
+            <h2>Un gesto <em>al giorno</em></h2>
+            <p class="us-auth-lede">Una domanda ogni giorno: le risposte si svelano quando avete risposto voi due. E un Ti penso quando volete, con un tocco.</p>
+          </section>
+          <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="3 di 3">
+            <div class="us-tour-vis" aria-hidden="true"><img class="t3-p t3-pl" alt=""><img class="t3-p t3-pr" alt=""><div class="t3-ring"><svg viewBox="0 0 150 150" focusable="false"><circle class="t3-tr" cx="75" cy="75" r="64"/><circle class="t3-r" cx="75" cy="75" r="64" pathLength="100"/><circle class="us-duo-a" cx="64" cy="75" r="19"/><circle class="us-duo-b" cx="86" cy="75" r="19"/><path class="us-duo-n" d="M75 59.51A19 19 0 0 1 75 90.49A19 19 0 0 1 75 59.51Z"/></svg></div><span class="t3-x">♡</span><span class="t3-c"><i></i>Livello 5 · Intesa rara</span></div>
+            <h2>Crescete <em>insieme</em></h2>
+            <p class="us-auth-lede">Ricordi, calendario e giochi. Più cose fate insieme, più cresce la vostra Sintonia e si sbloccano sorprese.</p>
+          </section>
+        </div>
+      </div>
+      <div class="us-tour-dots" id="usTourDots">
+        <button type="button" data-us-tour-dot="0" aria-label="Scheda 1"></button>
+        <button type="button" data-us-tour-dot="1" aria-label="Scheda 2"></button>
+        <button type="button" data-us-tour-dot="2" aria-label="Scheda 3"></button>
+      </div>
+      <div class="us-tour-actions us-auth-foot" data-us-enter="flat">
+        <button type="button" class="primary us-auth-primary" id="usTourNext">Avanti</button>
+        <button type="button" class="us-auth-link" id="usTourLogin">Ho già un account</button>
       </div>
     </section>
 
@@ -275,23 +289,20 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         <button type="button" class="us-auth-link" id="usShowForgot">Password dimenticata?</button>
       </nav>
     </div>
-    <!-- Il diario, ma pulito (15/11/2026, «L'entrata» 2): Google and Apple first, then the mail. -->
     <form class="auth-step us-public-auth-form" id="usSignup" aria-labelledby="usSignupHeading">
-      <div class="dy-ent-top"><button type="button" class="dy-ib" id="usSignupHome" aria-label="Indietro"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button></div>
-      <h2 id="usSignupHeading">Il tuo <em>account</em></h2>
-      <p class="us-auth-lede">Serve per ritrovare il vostro diario anche su un altro telefono.</p>
-      <button type="button" class="us-auth-google" id="usGoogleSignUp" hidden><span class="us-auth-google-mark" data-icon="/assets/icons/phosphor/google-logo-regular.svg" aria-hidden="true"></span><span class="us-auth-google-label">Continua con Google</span></button>
-      <button type="button" class="us-auth-apple" id="usAppleSignUp" hidden><span class="us-auth-apple-mark" aria-hidden="true">&#xF8FF;</span><span class="us-auth-apple-label">Continua con Apple</span></button>
-      <p class="dy-ent-or" aria-hidden="true">oppure con la mail</p>
-      <label class="us-auth-field" for="usSignupEmail"><span>Email</span><input id="usSignupEmail" type="email" inputmode="email" autocomplete="email" maxlength="254" placeholder="nome@esempio.it" required></label>
-      <label class="us-auth-field" for="usSignupPassword"><span>Password</span><input id="usSignupPassword" type="password" autocomplete="new-password" minlength="10" maxlength="72" placeholder="almeno 10 caratteri" required></label>
+      <div class="tiny">US · INIZIA DA QUI</div>
+      <h2 id="usSignupHeading">Crea il tuo <em>account</em></h2>
+      <p class="us-auth-lede">Un account a testa. Dopo la verifica potrai creare il vostro spazio o accettare un invito.</p>
+      <label class="us-auth-field" for="usSignupEmail"><span>Email</span><input id="usSignupEmail" type="email" inputmode="email" autocomplete="email" maxlength="254" placeholder="tua@email.com" required></label>
+      <label class="us-auth-field" for="usSignupPassword"><span>Password · almeno 10 caratteri</span><input id="usSignupPassword" type="password" autocomplete="new-password" minlength="10" maxlength="72" required></label>
       <label class="us-auth-field" for="usSignupConfirm"><span>Conferma password</span><input id="usSignupConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="72" required></label>
       <!-- 18+ and the Terms: "Registrati" stays off until ticked (public-auth.js). The links get their
            href from LEGAL_URLS once the public pages exist; until then the words carry no link. -->
       <label class="us-auth-consent" for="usSignupTerms"><input id="usSignupTerms" type="checkbox" required><span>Ho almeno 18 anni e accetto i <a data-us-legal="terms">Termini</a> e la <a data-us-legal="privacy">Privacy</a></span></label>
       <p class="auth-status" id="usSignupStatus" role="status" aria-live="polite"></p>
       <button class="primary us-auth-primary" id="usSignupSubmit" type="submit">Registrati</button>
-      <p class="dy-ent-note dy-ent-center" id="usSignupNote">Con la mail ti chiediamo di confermarla. Con Google o Apple no.</p>
+      <button type="button" class="us-auth-google" id="usGoogleSignUp" hidden><span class="us-auth-google-mark" data-icon="/assets/icons/phosphor/google-logo-regular.svg" aria-hidden="true"></span><span class="us-auth-google-label">Continua con Google</span></button>
+      <button type="button" class="us-auth-apple" id="usAppleSignUp" hidden><span class="us-auth-apple-mark" aria-hidden="true">&#xF8FF;</span><span class="us-auth-apple-label">Continua con Apple</span></button>
       <button class="us-auth-link us-public-auth-back us-auth-foot" id="usSignupBack" type="button">Ho già un account</button>
     </form>
     <section class="auth-step us-public-auth-form" id="usVerifyEmail" aria-labelledby="usVerifyHeading">
@@ -332,103 +343,84 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <button type="submit" class="primary us-auth-primary" id="usRecoverySubmit">Aggiorna password</button>
     </form>
 
-    <!-- Il diario, ma pulito (15/11/2026, mockup v4.1 «L'entrata» 3–6): «Da dove partite?», «Tu»
-         (name, character, colour, birthday), «Da quando state insieme?» (whoever creates), the code
-         for the other person («Il suo posto è pronto») and, for whoever joins, the code first. -->
     <section class="auth-step us-ob-step" id="usOnboarding" aria-labelledby="mc3Title">
-      <div class="dy-ent-top"><button type="button" class="dy-ib" id="mc3Back" aria-label="Indietro" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button></div>
-      <p class="dy-ent-step" id="mc3Kicker"></p>
-      <h2 id="mc3Title" class="dy-ent-h" tabindex="-1">Da dove <em>partite?</em></h2>
+      <div class="tiny" id="mc3Kicker">US · SPAZIO PRIVATO</div>
+      <div class="us-ob-progress" id="mc3Progress" aria-hidden="true" hidden><i></i></div>
+      <h2 id="mc3Title" tabindex="-1">Il vostro US, da qui</h2>
       <p class="us-auth-lede" id="mc3Copy"></p>
-      <div id="mc3Choice" class="dy-ent-come">
-        <button type="button" id="mc3ChooseCreate" class="dy-card dy-ent-pick"><span class="dy-ent-pick-art" data-ent-art="create" aria-hidden="true"></span><span class="dy-ent-pick-copy"><b>Apro io il nostro diario</b><small>Lo crei e mandi un codice alla tua persona.</small></span><svg class="dy-ent-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg></button>
-        <button type="button" id="mc3ChooseJoin" class="dy-card dy-ent-pick"><span class="dy-ent-pick-art" data-ent-art="join" aria-hidden="true"></span><span class="dy-ent-pick-copy"><b>Ho un codice</b><small>La tua persona ti ha invitato. Se hai aperto il suo link, il codice è già scritto.</small></span><svg class="dy-ent-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg></button>
-        <p class="dy-ent-note">Il personaggio e il colore li sceglie ognuno al passo dopo. Chi entra col codice non può prendere il colore dell’altra persona.</p>
-      </div>
-      <form id="mc3Join" class="dy-ent-form" hidden novalidate>
-        <label class="us-auth-field" for="mc3JoinName" hidden><span>Come ti chiami?</span><input id="mc3JoinName" autocomplete="off" tabindex="-1"></label>
-        <label class="us-auth-field" for="mc3JoinCode"><span>Il codice</span><textarea id="mc3JoinCode" rows="2" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="26 caratteri" required aria-describedby="mc3CodeHelp"></textarea></label>
-        <p class="dy-ent-note" id="mc3CodeHelp">Puoi incollare tutto il messaggio: il codice lo trovo io.</p>
-        <button type="submit" class="dy-btn dy-btn-l" id="mc3JoinNext">Avanti</button>
-      </form>
-      <form id="mc3Me" class="dy-ent-form" hidden novalidate>
-        <div class="dy-ent-big"><span class="dy-stk" id="mc3Big"></span><span class="dy-ent-name" id="mc3BigName" translate="no"></span></div>
-        <label class="us-auth-field" for="mc3Name"><span>Come ti chiami?</span><input id="mc3Name" autocomplete="given-name" autocapitalize="words" required></label>
-        <fieldset class="dy-ent-group">
-          <legend>Il tuo personaggio</legend>
-          <div class="dy-ent-shapes" id="mc3Shapes"></div>
-        </fieldset>
-        <fieldset class="dy-ent-group" aria-describedby="mc3ColorHelp">
-          <legend>Il tuo colore</legend>
-          <div class="dy-ent-colors" id="mc3Colors"></div>
-          <p class="dy-ent-note" id="mc3ColorHelp">Il colore dice cosa hai fatto tu: le tue foto, le tue risposte, il tuo personaggio. Chi entra col codice non può prendere il tuo.</p>
-        </fieldset>
-        <fieldset class="dy-ent-group us-ob-bday" aria-describedby="mc3BirthHelp">
-          <legend>Compleanno</legend>
-          <div class="dy-ent-row">
+      <form id="mc3Me" hidden novalidate>
+        <label class="us-auth-field" for="mc3Name"><span>Il tuo nome</span><input id="mc3Name" autocomplete="given-name" autocapitalize="words" required></label>
+        <fieldset class="us-ob-bday" aria-describedby="mc3BirthHelp">
+          <legend>Il tuo compleanno · facoltativo</legend>
+          <div class="us-ob-bday-row">
             <span class="us-ob-select"><select id="mc3BirthDay" aria-label="Giorno del compleanno"><option value="">Giorno</option></select></span>
-            <span class="us-ob-select dy-ent-wide"><select id="mc3BirthMonth" aria-label="Mese del compleanno"><option value="">Mese</option></select></span>
+            <span class="us-ob-select"><select id="mc3BirthMonth" aria-label="Mese del compleanno"><option value="">Mese</option></select></span>
           </div>
-          <p class="dy-ent-note" id="mc3BirthHelp">Giorno e mese, se vuoi: lo mettiamo nel vostro calendario, ogni anno.</p>
+          <p class="mc3-help" id="mc3BirthHelp">Solo giorno e mese. Lo aggiungiamo al vostro calendario, ogni anno.</p>
         </fieldset>
-        <button type="submit" class="dy-btn dy-btn-l" id="mc3MeNext">Avanti</button>
+        <button type="submit" class="primary us-auth-primary" id="mc3MeNext">Continua</button>
       </form>
-      <form id="mc3Create" class="dy-ent-form" hidden novalidate>
+      <div id="mc3Choice" class="mc3-actions us-ob-pick">
+        <button type="button" id="mc3ChooseCreate" class="us-ob-pick-card"><svg class="us-duo-mark" viewBox="0 0 58 36" aria-hidden="true" focusable="false"><circle class="us-duo-a" cx="20" cy="18" r="15"/><circle class="us-duo-b" cx="38" cy="18" r="15"/><path class="us-duo-n" d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z"/></svg><span class="us-ob-pick-copy"><b>Crea il nostro spazio</b><small>Inizi tu, poi inviti la tua persona</small></span></button>
+        <button type="button" id="mc3ChooseJoin" class="us-ob-pick-card" data-us-enter="with-prev"><span class="us-ob-pick-icon" aria-hidden="true"></span><span class="us-ob-pick-copy"><b>Ho un codice d’invito</b><small>La tua persona ha già creato lo spazio</small></span></button>
+        <button type="button" id="mc3BackMe" class="mc3-back us-auth-link us-auth-foot">Indietro</button>
+      </div>
+      <form id="mc3Create" hidden>
         <label class="us-auth-field" for="mc3CreateName" hidden><span>Come ti chiami?</span><input id="mc3CreateName" autocomplete="off" tabindex="-1"></label>
-        <fieldset class="dy-ent-group us-ob-together" aria-describedby="mc3DateHelp">
-          <legend class="us-sr-only">Insieme dal</legend>
-          <div class="dy-ent-row dy-ent-date">
+        <fieldset class="us-ob-bday us-ob-together" aria-describedby="mc3DateHelp">
+          <legend>Insieme dal</legend>
+          <div class="us-ob-date-row">
             <span class="us-ob-select"><select id="mc3DateDay" aria-label="Giorno" required><option value="">Giorno</option></select></span>
-            <span class="us-ob-select dy-ent-wide"><select id="mc3DateMonth" aria-label="Mese" required><option value="">Mese</option></select></span>
-            <span class="us-ob-select dy-ent-year"><select id="mc3DateYear" aria-label="Anno" required><option value="">Anno</option></select></span>
+            <span class="us-ob-select"><select id="mc3DateMonth" aria-label="Mese" required><option value="">Mese</option></select></span>
+            <span class="us-ob-select"><select id="mc3DateYear" aria-label="Anno" required><option value="">Anno</option></select></span>
           </div>
         </fieldset>
-        <div class="dy-ent-why" id="mc3DateHelp"><span>Così il diario conta i vostri giorni e ve li ricorda:</span><span class="dy-ent-tags"><span class="dy-tag dy-tag-s dy-ent-miele" id="mc3DaysTag">i vostri giorni insieme</span><span class="dy-tag dy-tag-s dy-ent-miele">mesiversario</span><span class="dy-tag dy-tag-s dy-ent-miele">un anno fa oggi</span></span></div>
-        <label class="us-auth-field" for="mc3CoupleName"><span>Il nome del vostro diario</span><input id="mc3CoupleName" placeholder="facoltativo" maxlength="40" autocapitalize="sentences" enterkeyhint="done"></label>
-        <button type="submit" class="dy-btn dy-btn-l" id="mc3CreateNext">Apri il nostro diario</button>
+        <p class="mc3-help us-sr-only" id="mc3DateHelp">La vostra data, per contare i giorni insieme. Scegli una data dal 1900 a oggi.</p>
+        <label class="us-auth-field" for="mc3CoupleName"><span>Nome del vostro spazio · facoltativo</span><input id="mc3CoupleName" placeholder="US." autocapitalize="sentences" enterkeyhint="done"></label>
+        <button type="submit" class="primary us-auth-primary">Crea il nostro spazio</button>
+        <button type="button" id="mc3BackCreate" class="mc3-back" data-us-enter="with-prev">Indietro</button>
       </form>
-      <div id="mc3Waiting" class="dy-ent-wait" hidden>
-        <div class="dy-ent-pair" id="mc3Pair" aria-hidden="true"></div>
-        <div class="dy-card dy-ent-code" id="mc3CodeArea" hidden>
-          <div class="dy-ent-fresh">
-            <span class="dy-ent-kicker">Il vostro codice</span>
-            <code class="us-inv-code" id="mc3CodeShown" aria-hidden="true" translate="no"></code>
-            <label class="us-auth-field dy-ent-raw" for="mc3Code"><span>Il codice</span><textarea id="mc3Code" readonly autocomplete="off" spellcheck="false" rows="2"></textarea></label>
-            <div class="dy-ent-code-actions">
-              <button type="button" class="dy-btn dy-btn-l" id="mc3ShareCode"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 15V4 M8 7.5l4-4 4 4 M5.5 12v8h13v-8"/></svg>Condividi</button>
-              <button type="button" class="dy-btn dy-btn-l dy-btn-ghost" id="mc3CopyCode" aria-label="Copia il codice"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 9h10.5v10.5H9z M15 9V4.5H4.5V15H9"/></svg></button>
-            </div>
+      <form id="mc3Join" hidden>
+        <label class="us-auth-field" for="mc3JoinName" hidden><span>Come ti chiami?</span><input id="mc3JoinName" autocomplete="off" tabindex="-1"></label>
+        <label class="us-auth-field" for="mc3JoinCode"><span>Codice d’invito</span><textarea id="mc3JoinCode" rows="2" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="26 caratteri" required aria-describedby="mc3CodeHelp"></textarea></label>
+        <p class="mc3-help us-sr-only" id="mc3CodeHelp">Puoi incollare il codice con spazi o trattini.</p>
+        <button type="submit" class="primary us-auth-primary">Entra nel nostro US</button>
+        <button type="button" id="mc3BackJoin" class="mc3-back" data-us-enter="with-prev">Indietro</button>
+      </form>
+      <div id="mc3Color" class="us-ob-color" hidden>
+        <div class="us-ob-venn" id="mc3Venn" aria-hidden="true"></div>
+        <div class="us-ob-colors" id="mc3Colors" role="group" aria-label="Il tuo colore" hidden></div>
+        <p class="us-auth-lede" id="mc3ColorCopy"></p>
+        <button type="button" id="mc3ColorNext" class="primary us-auth-primary">Invita la tua persona</button>
+      </div>
+      <div id="mc3Waiting" data-us-enter="flat" hidden>
+        <p id="mc3InviteStatus" class="us-inv-st"></p>
+        <div id="mc3CodeArea" data-us-enter="flat" hidden>
+          <label class="us-auth-field" for="mc3Code" data-us-enter="with-prev"><span>Il nuovo codice</span><textarea id="mc3Code" readonly autocomplete="off" spellcheck="false" rows="2"></textarea><code class="us-inv-code" id="mc3CodeShown" aria-hidden="true" translate="no"></code></label>
+          <div class="mc3-code-actions">
+            <button type="button" id="mc3ShareCode">Condividi</button>
+            <button type="button" id="mc3CopyCode">Copia codice</button>
           </div>
-          <div class="dy-ent-sent">
-            <span class="dy-ent-sent-copy"><b>Codice mandato</b><span id="mc3CodeSmall" translate="no"></span></span>
-            <button type="button" class="dy-btn dy-btn-m dy-btn-ghost" id="mc3CopyAgain"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 9h10.5v10.5H9z M15 9V4.5H4.5V15H9"/></svg>Copia</button>
-          </div>
         </div>
-        <button type="button" id="mc3Revoke" class="dy-ent-link" hidden>Puoi revocarlo quando vuoi</button>
-        <p id="mc3InviteStatus" class="dy-ent-note dy-ent-center us-inv-st"></p>
-        <div class="dy-ent-invite-actions">
-          <button type="button" id="mc3Generate" class="dy-btn dy-btn-l">Crea il codice</button>
+        <p class="mc3-help us-ob-invite-help">Il codice resta qui finché non scade o chiudi US. Uno nuovo annulla il precedente. Condividilo solo con la tua persona.</p>
+        <div class="mc3-actions us-ob-invite-actions">
+          <button type="button" id="mc3Generate" class="primary us-auth-primary">Crea invito</button>
+          <button type="button" id="mc3Revoke" class="us-ob-link" hidden>Revoca codice</button>
+          <button type="button" id="mc3Refresh" class="us-ob-link">Verifica accesso</button>
         </div>
-        <div class="dy-card dy-ent-notify" id="mc3Notify" hidden>
-          <span class="dy-ib dy-ent-bell" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z M10 20.5h4"/></svg></span>
-          <span class="dy-ent-notify-copy"><b id="mc3NotifyTitle">Ti avviso quando entra?</b><span id="mc3NotifyText">Così non devi controllare tu</span></span>
-          <button type="button" class="dy-btn dy-btn-m" id="mc3NotifyYes">Sì</button>
+        <div class="us-ob-today" id="mc3Today" role="group" aria-labelledby="mc3TodayKicker" hidden>
+          <p class="us-ob-today-kicker" id="mc3TodayKicker">Intanto, la domanda di oggi</p>
+          <p class="us-ob-today-question" id="mc3TodayQuestion"></p>
+          <label class="us-auth-field" for="mc3TodayAnswer"><span>La tua risposta</span><textarea id="mc3TodayAnswer" rows="3" maxlength="1000"></textarea></label>
+          <p class="mc3-help us-ob-today-status" id="mc3TodayStatus" role="status" hidden></p>
+          <button type="button" id="mc3TodaySave">Rispondi</button>
+          <p class="mc3-help us-ob-today-done" id="mc3TodayDone" hidden>Fatto. La tua persona vedrà la tua risposta quando avrà dato la sua.</p>
         </div>
-        <div class="dy-card dy-ent-today us-ob-today" id="mc3Today" role="group" aria-labelledby="mc3TodayKicker" hidden>
-          <p class="dy-ent-kicker" id="mc3TodayKicker">Intanto, la domanda di oggi</p>
-          <p class="dy-ent-q" id="mc3TodayQuestion"></p>
-          <label class="us-auth-field dy-ent-hand" for="mc3TodayAnswer"><span class="us-sr-only">La tua risposta</span><textarea id="mc3TodayAnswer" rows="2" maxlength="1000" placeholder="scrivi qui…"></textarea></label>
-          <p class="dy-ent-note" id="mc3TodayStatus" role="status" hidden></p>
-          <button type="button" class="dy-btn dy-btn-m" id="mc3TodaySave">Rispondi</button>
-          <p class="dy-ent-note" id="mc3TodayDone" hidden>Fatto. La vedrete insieme quando avrà risposto anche la tua persona.</p>
-          <p class="dy-ent-note" id="mc3TodayHint">La vedrete insieme quando avrà risposto anche la tua persona.</p>
-        </div>
-        <p class="dy-ent-note dy-ent-center">Il codice resta qui finché non scade o chiudi US. Puoi chiudere US: quando la riapri, riprendi da qui.</p>
-        <button type="button" id="mc3Refresh" class="dy-ent-link">Verifica accesso</button>
+        <p class="mc3-help us-ob-note">Puoi chiudere US: quando la riapri, riprendi da qui.</p>
       </div>
       <p id="mc3Status" class="auth-status" role="status" aria-live="polite"></p>
-      <button type="button" id="mc3Retry" class="dy-btn dy-btn-l" hidden>Riprova</button>
-      <button type="button" id="mc3Exit" class="dy-ent-link us-auth-foot">Esci</button>
+      <button type="button" id="mc3Retry" hidden>Riprova</button>
+      <button type="button" id="mc3Exit" class="mc3-back us-auth-foot">Esci</button>
     </section>
     <section class="us-auth-install" id="usAuthInstall" hidden aria-label="Installa US">
       <div class="us-auth-install-row">
@@ -441,70 +433,45 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </div>
 </div>
 
-<!-- Il diario, ma pulito (15/11/2026, mockup v4.1 «L'entrata» 6, the arrival): once per user on this
-     phone, after onboarding here, «Ora siete in due». Notifications are asked on the invite, the
-     position the first time the distance is opened (app.js openDistanceDetail). Opens only once US
-     is unlocked and paired. -->
+<!-- First run (dc-primo): set up this phone once, after pairing (after onboarding here, or after
+     an email and password sign-in on a new phone). Opens only once US is unlocked and paired. -->
 <div class="us-setup" id="usDeviceSetup" role="dialog" aria-modal="true" aria-labelledby="usSetupTitle" hidden>
   <div class="us-setup-card">
+    <div class="us-auth-brand" aria-hidden="true"><svg class="us-duo-mark" viewBox="0 0 58 36" focusable="false"><circle class="us-duo-a" cx="20" cy="18" r="15"/><circle class="us-duo-b" cx="38" cy="18" r="15"/><path class="us-duo-n" d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z"/></svg></div>
+    <p class="tiny" id="usSetupKicker"></p>
+    <div class="us-ob-progress" id="usSetupProgress" aria-hidden="true"><i></i></div>
     <div class="us-setup-body" id="usSetupBody">
-      <div class="dy-ent-arrive">
-        <div class="dy-ent-pair dy-ent-pair-big" id="usSetupPair" aria-hidden="true"></div>
-        <h2 id="usSetupTitle" class="dy-ent-h" tabindex="-1">Ora siete <em>in due</em></h2>
-        <p class="us-auth-lede" id="usSetupCopy"></p>
+      <h2 id="usSetupTitle" tabindex="-1"></h2>
+      <div class="us-ob-venn" id="usSetupVenn" aria-hidden="true" hidden></div>
+      <div class="us-ob-colors" id="usSetupColors" role="group" aria-label="Il tuo colore" hidden></div>
+      <div class="us-setup-push" id="usSetupPushVis" aria-hidden="true" hidden>
+        <div class="us-setup-note"><span class="us-setup-note-icon"></span><span><small>US · adesso</small><b id="usSetupPushPartner">La tua persona ti pensa ♡</b>Tocca per rispondere.</span></div>
+        <div class="us-setup-note"><span class="us-setup-note-icon"></span><span><small>US · 2 min fa</small><b>Le vostre risposte sono pronte</b>Si svelano insieme.</span></div>
       </div>
-      <div class="dy-card dy-ent-today" id="usSetupToday" hidden>
-        <p class="dy-ent-kicker">La domanda di oggi</p>
-        <p class="dy-ent-q dy-ent-q-s" id="usSetupTodayText"></p>
-      </div>
+      <div class="us-setup-place" id="usSetupPlaceVis" aria-hidden="true" hidden><svg viewBox="0 14 280 92" focusable="false"><circle class="pl-h pl-hr" cx="40" cy="60" r="30"/><circle class="pl-h pl-hl" cx="240" cy="60" r="30"/><g class="pl-ln"><path class="pl-line" d="M62 60H218"/></g><circle class="pl-d us-duo-a" cx="40" cy="60" r="9"/><circle class="pl-d us-duo-b" cx="240" cy="60" r="9"/></svg><span class="pl-chip"><i class="pl-chip-icon"></i></span></div>
+      <p class="us-auth-lede" id="usSetupCopy"></p>
+      <ul class="us-setup-points" id="usSetupPoints" hidden>
+        <li><span class="us-setup-point-icon us-setup-point-icon--distance" aria-hidden="true"></span><span><b>Solo la distanza</b><span id="usSetupPointPartner">La tua persona vede solo la distanza, mai dove sei.</span></span></li>
+        <li><span class="us-setup-point-icon us-setup-point-icon--pin" aria-hidden="true"></span><span><b>Approssimata</b>Solo mentre US è aperta. Sotto i 3 km non vedete la distanza esatta.</span></li>
+        <li><span class="us-setup-point-icon us-setup-point-icon--lock" aria-hidden="true"></span><span><b>Decidi tu</b>La spegni e la cancelli quando vuoi.</span></li>
+      </ul>
+      <ul class="us-setup-ready" id="usSetupReady" hidden></ul>
       <p class="auth-status" id="usSetupStatus" role="status" aria-live="polite"></p>
-      <button type="button" class="dy-btn dy-btn-xl" id="usSetupPrimary">Entra nel diario</button>
+      <div class="us-setup-actions">
+        <button type="button" class="primary us-auth-primary" id="usSetupPrimary">Continua</button>
+        <button type="button" class="us-setup-secondary" id="usSetupSecondary" hidden>Non ora</button>
+      </div>
     </div>
+    <div class="us-setup-intro" id="usSetupIntro" aria-hidden="true" hidden><span class="c a"></span><span class="c b"></span><span class="logo"></span><span class="word">il vostro spazio</span></div>
   </div>
 </div>
 
 <div class="app">
 
-  <div class="top us-premium-top" hidden><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top us-premium-top"><span class="us-aurora" aria-hidden="true"></span><div class="us-top-left"><button type="button" id="thinkButton" class="us-top-think us-premium-control" onclick="sendThinkSignal()" aria-label="Invia Ti penso" title="Ti penso"><span class="us-shell-icon us-shell-icon--think" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/think-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/think-on.svg" alt=""></span></button></div><div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true" decoding="async" draggable="false"></div><div class="top-actions"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon" data-us-attention-icon><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span><span class="beat" aria-hidden="true"><i></i><i></i></span></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
-    <!-- Il diario, ma pulito (15/11/2026, docs/missions/diario-pulito.md):
-         the page of today. Top to bottom: the Ti penso heart, «us» and the
-         envelope; the date with one word in italics and the page number of
-         your days; the photo of the day from Ricordi, its caption in your
-         hand, the dot of who added it, a sentence built from your own facts
-         and your two characters on its corner (they open «Voi due»); then the
-         question of today. diario.js paints it from the existing authorities. -->
-    <div class="dy-oggi" id="dyOggi">
-      <header class="dy-head">
-        <button type="button" class="dy-ib dy-envelope is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M3.5 6.5h17v11h-17z M3.5 7l8.5 6 8.5-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="dy-dot" aria-hidden="true"></span></button>
-        <span class="dy-mark" role="img" aria-label="US">us</span>
-        <button type="button" class="dy-ib dy-me" data-dy-me onclick="go('settings',{nav:true})" aria-label="Tu: profilo e impostazioni"></button>
-      </header>
-      <div class="dy-title">
-        <h1 class="dy-h1" id="dyDateTitle"><span id="dyWeekday"></span><em id="dyDay" translate="no"></em></h1>
-        <p class="dy-pageline" id="dyPageLine" hidden>Pagina <b class="dy-circled"><span id="dyPageN"></span><svg viewBox="0 0 60 40" aria-hidden="true" focusable="false"><path d="M10 9 C22 1 48 2 54 16 C60 30 40 39 25 37 C9 35 2 25 6 15 C9 9 16 5 23 4"/></svg></b> dei vostri giorni</p>
-      </div>
-      <div class="dy-stage" id="dyStage">
-        <button type="button" class="dy-photo" id="dyPhoto" aria-label="La foto del giorno. Apri il ricordo" aria-description="Per non mostrarla più in Oggi, tienila premuta"><img class="dy-photo-img" id="dyPhotoImg" alt="" decoding="async" draggable="false" hidden><span class="dy-photo-shade" aria-hidden="true"></span><span class="dy-photo-cap" id="dyPhotoCap" translate="no"></span><span class="dy-photo-who" id="dyPhotoWho" aria-hidden="true" hidden></span></button>
-        <div class="dy-photo-empty" id="dyPhotoEmpty" hidden><b>La prima pagina comincia da una foto</b><button type="button" class="dy-btn dy-btn-m" onclick="openMemoryComposer('')">Aggiungi un ricordo</button></div>
-        <span class="dy-frase" id="dyFrase" hidden></span>
-        <button type="button" class="dy-duo" id="dyDuo" aria-label="L’angolo di noi"></button>
-        <div class="dy-toast" id="dyToast" role="status" aria-live="polite" hidden></div>
-      </div>
-      <section class="dy-card dy-question" id="dyQuestion" aria-label="La domanda di oggi" hidden></section>
-      <div class="dy-more" id="dyMore">
-        <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
-        <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
-          <span class="push-optin-icon" aria-hidden="true">♡</span>
-          <span class="push-optin-copy"><b id="pushOptInTitle">Attiva le notifiche</b><small id="pushOptInText">Ti penso, risposte e sfide, anche a US chiusa.</small></span>
-          <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva</button>
-        </aside>
-      </div>
-    </div>
-    <!-- The photo layers, countdown and dock of the former Oggi stay mounted for the code that
-         still writes them (photo pipeline, La cosa di oggi), never shown. -->
-    <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo" hidden>
+    <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
       <div class="home-photo-layer active" id="homePhotoLayerA"></div>
       <div class="home-photo-layer" id="homePhotoLayerB"></div>
       <div class="home-photo-shade"></div>
@@ -524,6 +491,12 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <!-- Come stai (02/11/2026): the partner's state and mine; a tap opens the twelve. -->
           <button type="button" class="og-pill us-status-pill" id="usOggiStatus" aria-haspopup="dialog" aria-label="Come stai? Scegli" hidden><span data-status-partner translate="no" hidden></span><span data-status-mine>Come stai?</span></button>
         </div>
+        <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
+        <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
+          <span class="push-optin-icon" aria-hidden="true">♡</span>
+          <span class="push-optin-copy"><b id="pushOptInTitle">Attiva le notifiche</b><small id="pushOptInText">Ti penso, risposte e sfide, anche a US chiusa.</small></span>
+          <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva</button>
+        </aside>
         <button type="button" class="us-daily-ritual us-attention-orbit" id="usDailyRitual" hidden onclick="openToday()" data-us-attention="off"></button>
       </div>
       <!-- Legacy Calendar/reveal anchors stay mounted but visually retired. -->
@@ -634,21 +607,20 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     </section>
   </div>
 
-  <main id="today" class="dy-foglio" aria-hidden="true" data-us-modal>
-    <div class="dy-foglio-scrim" onclick="closeToday()"></div>
-    <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="todayTitle" data-us-modal-panel>
-      <span class="dy-grab" aria-hidden="true"></span>
-      <div class="dy-sheet-head"><h2 class="dy-sheet-title" id="todayTitle">La domanda <em>di oggi</em></h2><button type="button" class="dy-ib dy-close" onclick="closeToday()" aria-label="Chiudi la domanda di oggi" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-      <div class="dy-f-body">
-        <div class="qtext dy-f-q">Un attimo…</div>
-        <div id="todayPartner" hidden></div>
-        <div id="todayMine" class="dy-f-sign" hidden><span class="dy-stk" id="todayMe"></span><div class="dy-f-field"><textarea id="answer" class="dy-f-in dy-f-hand" rows="4" placeholder="scrivi qui…" hidden disabled></textarea></div></div>
-        <div class="dy-f-note" id="locked" role="status" aria-live="polite"></div>
+  <main id="today" class="today-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+    <div class="today-backdrop us-modal-backdrop" onclick="closeToday()"></div>
+    <section class="today-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="La domanda di oggi" data-us-modal-panel>
+      <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close us-modal-close" onclick="closeToday()" aria-label="Chiudi la domanda di oggi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>
+      <div class="card question">
+        <div class="qtext">Un attimo…</div>
+        <textarea id="answer" rows="4" placeholder="Scrivi…" hidden disabled></textarea>
+        <div class="row"><button class="primary" id="todaySaveBtn" onclick="saveAnswer()" hidden disabled>Rispondi</button></div>
+        <div class="locked" id="locked" role="status" aria-live="polite"></div>
         <div id="todayReveal" class="hidden"></div>
-        <div id="todayKeep" class="dy-f-acts today-keep" data-us-daily-keepsake aria-live="polite" hidden></div>
+        <div id="todayKeep" class="today-keep" data-us-daily-keepsake aria-live="polite" hidden></div>
       </div>
-      <p id="todaySyncStatus" class="dy-f-note today-sync-status" role="status" hidden></p>
-      <div class="dy-f-acts"><button class="dy-btn dy-btn-l" id="todaySaveBtn" onclick="saveAnswer()" hidden disabled>Rispondi</button><button type="button" class="dy-btn dy-btn-l dy-btn-ghost" id="todayRetryBtn" onclick="hydrateToday()" hidden>Riprova</button></div>
+      <p id="todaySyncStatus" class="today-sync-status" role="status" hidden></p>
+      <button type="button" id="todayRetryBtn" onclick="hydrateToday()" hidden>Riprova</button>
       <div class="push-settings-row" id="pushSettingsRow" hidden>
         <span><b id="pushSettingsStatus">Notifiche</b><small id="pushSettingsDetail">Stato notifiche US</small></span>
         <button type="button" id="pushDisableBtn" onclick="disableWebPush()">Disattiva</button>
@@ -656,60 +628,39 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     </section>
   </main>
 
-  <main id="thinkArrival" class="dy-foglio" aria-hidden="true" data-us-modal data-us-transient>
-    <div class="dy-foglio-scrim" onclick="closeThinkArrival()"></div>
-    <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="thinkArrivalTitle" data-us-modal-panel>
-      <span class="dy-grab" aria-hidden="true"></span>
-      <div class="dy-sheet-head"><div><h2 class="dy-sheet-title" id="thinkArrivalTitle">La tua persona <em>ti pensa</em></h2><p id="thinkArrivalCopy" class="dy-sheet-sub" hidden></p></div><button type="button" class="dy-ib dy-close" onclick="closeThinkArrival()" aria-label="Chiudi" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-      <div class="dy-think-who" id="thinkArrivalWho" aria-hidden="true"></div>
-      <div class="dy-tiles dy-think-react" role="group" aria-label="Rispondi con">
-        <button type="button" class="dy-tile think-reaction-button" data-think-reaction="heart" aria-label="Rispondi con un cuore" aria-pressed="false"><span class="think-reaction-glyph dy-think-glyph" aria-hidden="true"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/></svg></span>Un cuore</button>
-        <button type="button" class="dy-tile think-reaction-button" data-think-reaction="hug" aria-label="Rispondi con un abbraccio" aria-pressed="false"><span class="think-reaction-glyph dy-think-glyph" aria-hidden="true">🫂</span>Un abbraccio</button>
-        <button type="button" class="dy-tile think-reaction-button" data-think-reaction="miss_you" aria-label="Rispondi con un pensiero" aria-pressed="false"><span class="think-reaction-glyph dy-think-glyph" aria-hidden="true">💭</span>Un pensiero</button>
+  <main id="thinkArrival" class="think-arrival-overlay" aria-hidden="true" data-us-modal data-us-transient data-us-motion-surface>
+    <div class="think-arrival-backdrop us-modal-backdrop" onclick="closeThinkArrival()"></div>
+    <section class="think-arrival-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="Ti penso ricevuto" data-us-modal-panel>
+      <header class="think-arrival-head"><div><span class="think-arrival-visual" aria-hidden="true"><i></i><i></i></span><div class="tiny">Ti penso</div><h2 id="thinkArrivalTitle">La tua persona ti pensa</h2></div></header>
+      <p id="thinkArrivalCopy" class="think-arrival-copy" hidden></p>
+      <div class="think-reaction-grid" role="group" aria-label="Rispondi con">
+        <button type="button" class="think-reaction-button" data-think-reaction="heart" aria-label="Rispondi con un cuore" aria-pressed="false"><span class="think-reaction-glyph think-reaction-heart" aria-hidden="true">♥</span><span class="sr-only">heart</span></button>
+        <button type="button" class="think-reaction-button" data-think-reaction="hug" aria-label="Rispondi con un abbraccio" aria-pressed="false"><span class="think-reaction-glyph think-reaction-hug" aria-hidden="true">🫂</span><span class="sr-only">hug</span></button>
+        <button type="button" class="think-reaction-button" data-think-reaction="miss_you" aria-label="Rispondi con un pensiero" aria-pressed="false"><span class="think-reaction-glyph think-reaction-miss" aria-hidden="true">💭</span><span class="sr-only">miss_you</span></button>
       </div>
-      <p id="thinkArrivalStatus" class="dy-f-note dy-think-status" role="status" aria-live="polite"></p>
+      <p id="thinkArrivalStatus" class="think-arrival-status" role="status" aria-live="polite"></p>
+      <div class="think-arrival-actions"><button type="button" class="think-arrival-close ghost" onclick="closeThinkArrival()">Chiudi</button></div>
     </section>
   </main>
 
   <main id="moments" class="page">
     <section class="section" style="margin-top:6px">
       <h2 class="noi-sr">Ricordi</h2>
-      <!-- Il diario, ma pulito (15/11/2026): «Il vostro diario». The days with a
-           photo or a question, the number in italics, filters by who added it
-           (diario.js). The album grid below stays mounted for the album viewer. -->
-      <header class="dy-hd">
-        <h2 class="dy-h2">Il vostro <em>diario</em></h2>
-        <span class="dy-hd-tools">
-          <button type="button" class="dy-ib is-dark" onclick="window.UsMomentComposer?.pick?.()" aria-label="Aggiungi un ricordo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
-          <button type="button" class="dy-ib dy-me" data-dy-me onclick="go('settings',{nav:true})" aria-label="Tu: profilo e impostazioni"></button>
-        </span>
-      </header>
-      <div class="dy-chips-row">
-      <div class="dy-chips" id="dyRicordiChips" role="group" aria-label="Di chi sono i ricordi">
-        <button type="button" class="dy-chip" data-dy-who="tutti" aria-pressed="true">Tutti</button>
-        <button type="button" class="dy-chip" data-dy-who="me" aria-pressed="false">Tue</button>
-        <button type="button" class="dy-chip" data-dy-who="partner" aria-pressed="false" translate="no">Di <span data-dy-partner-name></span></button>
-      </div>
-      <button type="button" class="dy-ib dy-ib-36" id="dyRicordiMap" onclick="UsRicordiPlace.toggleMap()" aria-label="Mappa dei ricordi" aria-pressed="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z M12 11h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      </div>
-      <div class="dy-diary" id="dyDiary" aria-live="polite"><p class="dy-rows-note">Carico i ricordi…</p></div>
       <section class="ricordi-rivivi" id="ricordiRivivi" aria-label="Rivivi" hidden></section>
-      <div class="dy-mc" id="momentCompose">
+      <div class="moment-compose" id="momentCompose">
         <input id="momentFile" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
-        <button type="button" class="dy-mc-pick" onclick="pickMomentPhoto()" aria-label="Scegli una foto per il ricordo">
-          <span class="dy-mc-empty"><svg class="dy-mc-cam" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h4l2-2.5h4L16 8h4v11H4z M12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg><b>Scegli le foto</b><small>Anche più di una, dal telefono</small></span>
-          <span id="momentPreview" class="dy-mc-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"><span class="dy-mc-change">Cambia foto</span></span>
+        <button type="button" class="moment-picker" onclick="pickMomentPhoto()" aria-label="Scegli una foto per il ricordo">
+          <span class="moment-picker-empty"><span class="moment-add-icon"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span><span class="moment-picker-copy"><b>Aggiungi un ricordo</b></span></span>
+          <span id="momentPreview" class="moment-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"><span class="moment-change-chip">Cambia foto</span></span>
         </button>
-        <div class="dy-mc-extra" id="momentExtra" hidden><div class="dy-mc-extra-row" id="momentExtraRow"></div><p class="dy-f-note" id="momentExtraCount"></p></div>
-        <div class="dy-mc-details">
-          <label class="dy-f-lab" for="momentCaption">Una nota · facoltativa</label>
-          <textarea id="momentCaption" class="dy-f-in dy-f-hand dy-mc-note" maxlength="180" rows="2" placeholder="due parole per ricordarlo…"></textarea>
-          <div class="dy-mc-two">
-            <label class="dy-f-lab" id="momentDetectedDate" for="momentDate"><span>Quando<span id="momentDateWhen"></span></span><input id="momentDate" class="dy-f-in" type="date" required></label>
-            <div class="dy-f-lab dy-mc-place" id="momentPlaceField"><span>Dove</span><span class="dy-mc-place-row"><button type="button" class="dy-f-in dy-mc-place-btn" id="momentPlaceBtn" onclick="editMomentPlace()"><svg class="dy-f-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z M12 11h.01"/></svg><span id="momentPlaceLabel" translate="no">Aggiungi il posto</span></button><button type="button" class="dy-ib dy-ib-36 dy-mc-place-clear" id="momentPlaceClear" aria-label="Togli il posto" onclick="clearMomentPlace()" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></div>
-          </div>
-          <div class="dy-mc-bar" id="momentUpBar" hidden><i></i></div>
-          <div class="dy-f-acts"><button id="momentUploadBtn" type="button" class="dy-btn dy-btn-l" onclick="uploadMoment()">Salva ricordo</button></div>
+        <div class="moment-extra" id="momentExtra" hidden><div class="moment-extra-row" id="momentExtraRow"></div><p class="moment-extra-count" id="momentExtraCount"></p></div>
+        <div class="moment-details">
+          <label class="moment-field-label" for="momentCaption">Nota · facoltativa</label>
+          <textarea id="momentCaption" maxlength="180" rows="3" placeholder="Che cosa volete ricordare?"></textarea>
+          <label class="moment-auto-date moment-date-field" id="momentDetectedDate" for="momentDate"><span>Data foto<span id="momentDateWhen"></span></span><input id="momentDate" type="date" required></label>
+          <div class="moment-place-field" id="momentPlaceField"><span class="moment-field-label">Dove · facoltativo</span><span class="moment-place-row"><button type="button" class="moment-place-btn" id="momentPlaceBtn" onclick="editMomentPlace()"><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><span id="momentPlaceLabel" translate="no">Aggiungi il posto</span></button><button type="button" class="moment-place-clear" id="momentPlaceClear" aria-label="Togli il posto" onclick="clearMomentPlace()" hidden><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></span></div>
+          <div class="moment-up-bar" id="momentUpBar" hidden><i></i></div>
+          <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
         </div>
       </div>
       <div class="ricordi-section-head ricordi-story-head"><h3 id="ricordiStoryTitle">Mese per mese</h3><button type="button" class="ricordi-map-switch" id="ricordiMapSwitch" aria-pressed="false" onclick="UsRicordiPlace.toggleMap()"><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><span data-switch-label>Mappa</span></button></div>
@@ -721,7 +672,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 
   <main id="bond" class="page">
     <section class="section bond-page noi-canonical-page" data-noi-view="hub" style="margin-top:6px" aria-label="Noi">
-      <header class="noi-canonical-head noi-couple-head" hidden>
+      <header class="noi-canonical-head noi-couple-head">
         <h2 class="noi-sr">Noi</h2>
         <div class="noi-couple-card" id="noiCoupleCard" role="group" aria-label="Voi due, distanza e impostazioni">
           <div class="noi-couple" id="noiCouple" role="group" aria-label="Voi due">
@@ -753,26 +704,23 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 
       <!-- NOI V2: calendar-first overview. Existing editor and older section hooks remain mounted. -->
       <section class="us-noi-v2" id="usNoiV2" aria-label="Il nostro calendario">
-        <!-- Il diario, ma pulito (15/11/2026): «I vostri giorni». The month sits in
-             one card; under it «In arrivo», a row per commitment with whose it is. -->
-        <header class="dy-hd">
-          <h2 class="dy-h2">I vostri <em>giorni</em></h2>
-          <span class="dy-hd-tools">
-            <button type="button" class="dy-ib dy-me" data-dy-me onclick="go('settings',{nav:true})" aria-label="Tu: profilo e impostazioni"></button>
-            <button type="button" class="dy-ib is-dark" id="usNoiV2AddTop" data-noi-add aria-label="Aggiungi un impegno" title="Aggiungi impegno"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
-          </span>
+        <header class="us-noi-v2-top">
+          <h2>Noi</h2>
+          <div class="us-noi-v2-tools">
+            <button type="button" class="us-noi-v2-add" id="usNoiV2AddTop" data-noi-add aria-label="Aggiungi un impegno nel giorno selezionato" title="Aggiungi impegno"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
+            <button type="button" class="us-noi-v2-settings" onclick="go('settings',{nav:true})" aria-label="Impostazioni"><img class="us-approved-custom-icon" src="/assets/derived/runtime/us-icon-settings-128-v1.png" alt="" width="22" height="22" decoding="async"></button>
+          </div>
         </header>
-        <div class="dy-seg" role="group" aria-label="Vista del calendario">
+        <div class="us-noi-v2-toggle" role="group" aria-label="Vista del calendario">
           <button type="button" id="usNoiV2ModeCalendar" class="is-active" aria-pressed="true">Mese</button>
           <button type="button" id="usNoiV2ModeList" aria-pressed="false">Prossimi</button>
         </div>
-        <div class="dy-card dy-cal-card" id="dyCalCard">
-        <div class="dy-cal-head">
+        <div class="us-noi-v2-monthbar">
           <h3 id="usNoiV2Month" aria-live="polite">—</h3>
-          <span class="dy-cal-nav">
-            <button type="button" id="usNoiV2Prev" class="dy-ib dy-ib-36" aria-label="Mese precedente"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-            <button type="button" id="usNoiV2Next" class="dy-ib dy-ib-36" aria-label="Mese successivo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          </span>
+          <div class="us-noi-v2-month-nav">
+            <button type="button" id="usNoiV2Prev" class="us-noi-v2-nav" aria-label="Mese precedente"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
+            <button type="button" id="usNoiV2Next" class="us-noi-v2-nav" aria-label="Mese successivo"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></button>
+          </div>
         </div>
         <div class="us-noi-v2-picker" id="usNoiV2IdeaPick" role="status" hidden>
           <span class="us-icon" data-us-icon="calendar-heart" aria-hidden="true"></span>
@@ -784,9 +732,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <span class="us-noi-v2-sync" id="usNoiV2Sync" role="status" aria-live="polite"></span>
         </div>
         <div id="usNoiV2Content" class="us-noi-v2-content"><div class="us-skeleton-calendar" role="status"><span class="us-sr">Carico il calendario…</span><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i></div></div>
-        </div>
         <section id="usNoiV2Detail" class="us-noi-v2-detail" aria-label="Giorno selezionato" aria-live="polite"></section>
-        <section class="dy-upcoming" id="dyNoiUpcoming" aria-labelledby="dyNoiUpcomingTitle"><div class="dy-sec-head"><h3 id="dyNoiUpcomingTitle">In arrivo</h3><span id="dyNoiUpcomingCount"></span></div><div class="dy-rows" id="dyNoiUpcomingRows"></div></section>
       </section>
 
       <!-- Bacheca (couple-notes.js): the Lavagna on top (phase 2 hooks it in the slot), then the post-its. -->
@@ -917,193 +863,172 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </main>
 
   <main id="settings" class="page">
-    <!-- Il diario, ma pulito (15/11/2026, mockup v4.1): Impostazioni is a page
-         of the diary. The couple card on top opens «Voi due»; five groups since
-         20/11/2026 (Tu, Voi due with the distance in one place, App, Aiuto,
-         Account with the two exits last), 58px rows with a hairline, stroke icons
-         on a 36px tile. Ink is what you do (switches, the chosen option), your
-         colour only says who (your dot), honey is time, sky is distance.
-         Every row keeps its data-us-setting hook: settings.js owns the actions. -->
-    <section class="section dy-set" aria-labelledby="dySetTitle">
-      <header class="dy-hd dy-set-hd">
-        <button type="button" class="dy-ib" onclick="usSettingsReturn()" aria-label="Indietro"><svg class="dy-set-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button>
-        <h2 class="dy-h2" id="dySetTitle">Impostazioni</h2>
-      </header>
+    <section class="section us-settings-page us-settings2-page">
+      <div class="us-settings2-head">
+        <div class="us-settings2-bar" data-s><button type="button" class="us-settings2-back" onclick="go('bond',{nav:true})"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span>Noi</button>
+        <div class="us-settings2-device-dot" id="usSettingsDeviceDot" role="status" aria-label="Stato sincronizzazione"><i aria-hidden="true"></i><span id="usSettingsSyncLabel">Sincronizzato</span></div></div>
+        <h2 data-s>Impostazioni</h2>
+      </div>
 
-      <button type="button" class="dy-card dy-set-couple" id="usCoupleIdCard" data-us-setting="voi-due" aria-describedby="usTogetherLine">
-        <span class="dy-set-duo" id="usCoupleAvatars" aria-hidden="true"></span>
-        <span class="dy-set-couple-copy"><b id="usCoupleNames">Voi due</b><span id="usTogetherLine">Carico il vostro tempo insieme…</span></span>
-        <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
-      </button>
-
-      <section class="dy-set-group" data-us-settings-scope="tu" aria-labelledby="usSettingsTuTitle">
-        <h3 class="dy-set-title" id="usSettingsTuTitle">Tu</h3>
-        <button type="button" class="dy-set-row" data-us-setting="character-shape">
-          <span class="dy-set-me dy-stk" id="usCharacterShapeMe" aria-hidden="true"></span>
-          <span class="dy-set-copy"><b>Il tuo personaggio</b><small><span id="usCharacterShapeValue">Tondo</span> · cambi forma quando vuoi</small></span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
+      <!-- US-SETTINGS-ORGANIZE-01: same action hooks, grouped by intent. -->
+      <section class="us-settings2-section" data-us-settings-scope="tu" aria-labelledby="usSettingsTuTitle">
+        <div class="us-settings2-section-head" data-s><h3 id="usSettingsTuTitle">Tu</h3><small>Le tue preferenze</small></div>
+        <div class="us-settings2-label" data-s>PROFILO</div>
+        <div class="us-settings2-group" data-s>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="profile-photo">
+          <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="user-circle"></span></span>
+          <span class="us-setting-main"><b>Foto profilo</b><small id="usProfilePhotoDetail">La vede anche la tua persona</small></span><span class="us-setting-value">Modifica</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
-        <!-- Colori a scelta (US Plus, 29/10/2026; free in beta): hidden when the server cannot say (settings.js). -->
-        <button type="button" class="dy-set-row" data-us-setting="person-color" id="usPersonColorSetting" hidden>
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.5 0 1.9-1.1 1.3-2.1-.7-1.2.1-2.6 1.6-2.6h1.6a3.5 3.5 0 0 0 3.5-3.5c0-4.9-3.6-8.8-8-8.8z M8 11h.01 M10.5 7.5h.01 M15 8h.01"/></svg></span>
-          <span class="dy-set-copy"><b>Il tuo colore</b></span>
-          <span class="dy-set-val"><span class="us-sr" id="usPersonColorValue"></span><i class="dy-set-dot" aria-hidden="true"></i></span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
+        <!-- Colori a scelta (US Plus, 29/10/2026): shown only while the couple has Plus (settings.js). -->
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="person-color" id="usPersonColorSetting" hidden>
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="palette"></span></span>
+          <span class="us-setting-main"><b>Il tuo colore</b><small>Lo vedete tutti e due</small></span>
+          <span class="us-setting-value" id="usPersonColorValue"></span><span class="us-icon us-person-color-lock" data-us-icon="lock" aria-hidden="true"></span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
-        <button type="button" class="dy-set-row" data-us-setting="status">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M12 20.5a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17z M8.5 14a4.5 4.5 0 0 0 7 0 M9 9.5h.01 M15 9.5h.01"/></svg></span>
-          <span class="dy-set-copy"><b>Come stai</b><small>Il tuo personaggio lo mostra</small></span>
-          <span class="dy-set-val" id="usStatusValue">dimmelo</span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="status-form">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="heart"></span></span>
+          <span class="us-setting-main"><b>Come stai</b><small>Le tue parole, al maschile o al femminile</small></span>
+          <span class="us-setting-value" id="usStatusFormValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
-        <button type="button" class="dy-set-row" data-us-setting="profile-photo">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></span>
-          <span class="dy-set-copy"><b>Foto profilo</b><small>Facoltativa: nell’app siete i personaggi</small></span>
-          <span class="dy-set-val" id="usProfilePhotoValue">nessuna</span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
-        <button type="button" class="dy-set-row" data-us-setting="status-form">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M3.5 5h11v7.5h-5.5l-3.5 3v-3h-2z M14.5 9h6v7.5h-2v3l-3.5-3h-4.5v-3.5"/></svg></span>
-          <span class="dy-set-copy"><b>Come ti scriviamo</b><small>Al maschile o al femminile</small></span>
-          <span class="dy-set-val" id="usStatusFormValue">…</span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
-      </section>
-
-      <section class="dy-set-group" data-us-settings-scope="voi" aria-labelledby="usSettingsVoiTitle">
-        <h3 class="dy-set-title" id="usSettingsVoiTitle">Voi due</h3>
-        <!-- La distanza in un posto solo (20/11/2026): la riga, la posizione che la calcola e km o miglia. -->
-        <button type="button" class="dy-set-row" data-us-setting="relationship-date">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M4.5 6.5h15v13h-15z M4.5 10.5h15 M8.5 4v4 M15.5 4v4"/></svg></span>
-          <span class="dy-set-copy"><b>Insieme dal</b></span>
-          <span class="dy-set-val" id="usRelationshipDateValue">…</span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
-        <!-- La distanza: the km in sky when known; the row opens «Vi vedete spesso o vivete a distanza?» (distance.js). -->
-        <button type="button" class="dy-set-row" data-us-setting="together-mode">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z M12 11h.01"/></svg></span>
-          <span class="dy-set-copy"><b>La distanza</b></span>
-          <span class="dy-set-val"><span class="dy-tag dy-tag-s dy-set-km" id="usDistanceKmTag" hidden></span><span id="usDistanceValue">…</span></span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
-        <div class="dy-set-row">
-          <button type="button" class="dy-set-main" data-us-setting="location">
-            <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z M12 11h.01"/></svg></span>
-            <span class="dy-set-copy"><b>Usa la posizione</b><small id="usLocationState">Solo per la distanza tra voi</small></span>
-          </button>
-          <button type="button" class="dy-sw" role="switch" aria-checked="false" aria-label="Posizione" data-us-switch="location" id="usLocationSwitch"><i></i></button>
         </div>
-        <!-- Distanza in km o miglia: on this phone (us:settings:distance-unit). -->
-        <div class="dy-set-row dy-set-row-static">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M3.5 15.5l12-12 5 5-12 12z M7 12l2 2 M10 9l2 2 M13 6l2 2"/></svg></span>
-          <span class="dy-set-copy"><b id="usDistanceUnitLabel">Misura in</b></span>
-          <span class="dy-seg dy-set-seg dy-set-seg-unit" role="group" aria-labelledby="usDistanceUnitLabel">
-            <button type="button" data-us-distance-unit="km" aria-pressed="true">km</button>
-            <button type="button" data-us-distance-unit="mi" aria-pressed="false">mi</button>
-          </span>
-        </div>
-        <button type="button" class="dy-set-row" data-us-setting="story-archive">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M5.2 4.6l12.4-1.4 1.9 16.4-12.4 1.4z M7 7.2l9.5-1.1 1 8.9-9.5 1.1z"/></svg></span>
-          <span class="dy-set-copy"><b>Archivio Stories</b><small>Solo nella versione web</small></span>
-          <span class="dy-set-val" id="usStoryArchiveValue"></span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
-      </section>
-
-      <section class="dy-set-group" data-us-settings-scope="app" aria-labelledby="usSettingsAppTitle">
-        <h3 class="dy-set-title" id="usSettingsAppTitle">App</h3>
-        <div class="dy-set-row">
-          <button type="button" class="dy-set-main" data-us-setting="notifications">
-            <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z M10 20.5h4"/></svg></span>
-            <span class="dy-set-copy"><b>Notifiche</b><small id="usNotificationsValue">Ti penso, risposte, turni di gioco</small></span>
-          </button>
-          <button type="button" class="dy-sw" role="switch" aria-checked="false" aria-label="Notifiche su questo telefono" data-us-switch="notifications" id="usNotificationsSwitch"><i></i></button>
-        </div>
-        <div class="dy-set-row">
-          <button type="button" class="dy-set-main" data-us-setting="feedback">
-            <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M4.5 9.5h3.5l4.5-4v13l-4.5-4H4.5z M16 9a4 4 0 0 1 0 6 M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg></span>
-            <span class="dy-set-copy"><b>Suoni e vibrazione</b><small id="usFeedbackValue">Attivi</small></span>
-          </button>
-          <button type="button" class="dy-sw" role="switch" aria-checked="true" aria-label="Suoni e vibrazione" data-us-switch="feedback" id="usFeedbackSwitch"><i></i></button>
-        </div>
-        <!-- Aspetto (UsAspetto, diario.js): Automatico follows the phone; on this phone only. -->
-        <div class="dy-set-block">
-          <span class="dy-set-block-head"><span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></svg></span><b id="usAspettoLabel">Aspetto</b></span>
-          <span class="dy-seg dy-set-seg" role="group" aria-labelledby="usAspettoLabel">
-            <button type="button" data-us-aspetto="auto" aria-pressed="true">Automatico</button>
-            <button type="button" data-us-aspetto="chiaro" aria-pressed="false">Chiaro</button>
-            <button type="button" data-us-aspetto="scuro" aria-pressed="false">Scuro</button>
-          </span>
-        </div>
-        <button type="button" class="dy-set-row" data-us-setting="app-lock" id="usAppLockSetting" role="switch" aria-checked="false" hidden>
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M7.5 11V8a4.5 4.5 0 0 1 9 0v3 M5.5 11h13v9.5h-13z M12 15v2"/></svg></span>
-          <span class="dy-set-copy"><b id="usAppLockSettingLabel">Proteggi con l’impronta</b><small id="usAppLockSettingDetail">Solo su questo telefono</small></span>
-          <span class="dy-sw" aria-hidden="true"><i></i></span>
-        </button>
-        <button type="button" class="dy-set-row" data-us-setting="optimize-ricordi" id="usOptimizeRicordiSetting" hidden>
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M4 6.5h16v12H4z M4 15l4.5-4 4 3.5 2.5-2 5 4"/></svg></span>
-          <span class="dy-set-copy"><b>Ottimizza Ricordi</b><small>Foto più leggere sul telefono</small></span>
-          <span class="dy-set-val" id="usOptimizeRicordiValue"></span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
-        <button type="button" class="dy-set-row" data-us-setting="widgets" hidden>
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M4.5 4.5h6.5v6.5H4.5z M13 4.5h6.5v6.5H13z M4.5 13h6.5v6.5H4.5z M13 13h6.5v6.5H13z"/></svg></span>
-          <span class="dy-set-copy"><b>Widget</b><small>Sulla schermata Home</small></span>
-          <span class="dy-set-val" id="usWidgetsValue">Home</span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
-      </section>
-
-      <section class="dy-set-group" data-us-settings-scope="aiuto" aria-labelledby="usSettingsHelpTitle">
-        <h3 class="dy-set-title" id="usSettingsHelpTitle">Aiuto</h3>
-        <button type="button" class="dy-set-row" data-us-setting="report">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M12 20.5a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17z M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .9-1 1.6 M12 16.5h.01"/></svg></span>
-          <span class="dy-set-copy"><b>Segnala un problema</b></span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
-        <button type="button" class="dy-set-row" data-us-setting="sync-status">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M7 18.5h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7 9.5a4.5 4.5 0 0 0 0 9z"/></svg></span>
-          <span class="dy-set-copy"><b>Sincronizzazione</b></span>
-          <span class="dy-set-val" id="usSyncValue">Controlla</span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
-      </section>
-
-      <section class="dy-set-group" data-us-settings-scope="account" aria-labelledby="usSettingsAccountTitle">
-        <h3 class="dy-set-title" id="usSettingsAccountTitle">Account</h3>
-        <!-- In fondo, come chiedono le linee guida: prima US Plus e i dati, poi le due uscite. -->
         <!-- US Plus, in arrivo (13/11/2026): what it will unlock and «Avvisami»; nothing to buy yet (settings.js). -->
-        <button type="button" class="dy-set-row" data-us-setting="plus">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M12 4l2.3 5 5.2.5-3.9 3.5 1.1 5.2L12 15.6 7.3 18.2l1.1-5.2L4.5 9.5l5.2-.5z"/></svg></span>
-          <span class="dy-set-copy"><b>US Plus</b></span>
-          <span class="dy-tag dy-tag-s dy-set-soon">in arrivo</span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
+        <div class="us-settings2-label" data-s>US PLUS</div>
+        <div class="us-settings2-group" data-s>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="plus">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle"></span></span>
+          <span class="us-setting-main"><b>US Plus</b><small>Partite illimitate e altro, per tutti e due</small></span>
+          <span class="us-setting-value">In arrivo</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
-        <button type="button" class="dy-set-row" data-us-setting="privacy">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M12 3.5l7 2.5v5.5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg></span>
-          <span class="dy-set-copy"><b>Privacy e dati</b><small>Cosa salviamo, eliminazione account</small></span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="us-settings2-label" data-s>NOTIFICHE E PRIVACY</div>
+        <div class="us-settings2-group" data-s>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="notifications">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="bell"></span></span>
+          <span class="us-setting-main"><b>Notifiche</b></span>
+          <span class="us-setting-value" id="usNotificationsValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
-        <button type="button" class="dy-set-row" data-us-setting="logout">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M8 3.5h8v17H8z M11 17.5h2"/></svg></span>
-          <span class="dy-set-copy"><b>Esci dall’account</b><small>Solo da questo telefono</small></span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="location">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="map-pin"></span></span>
+          <span class="us-setting-main"><b>Posizione</b><small>Solo per la distanza tra voi</small></span>
+          <span class="us-setting-state" id="usLocationState">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
-        <button type="button" class="dy-set-row" data-us-setting="leave-couple">
-          <span class="dy-set-ic" aria-hidden="true"><svg class="dy-set-svg" viewBox="0 0 24 24" focusable="false"><path d="M14 4.5h4.5v15H14 M10 8l-4 4 4 4 M6 12h9"/></svg></span>
-          <span class="dy-set-copy"><b>Esci dalla coppia</b><small>Non si può annullare</small></span>
-          <svg class="dy-set-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg>
+        <button type="button" class="us-setting-row us-settings2-row us-settings2-switch-row" data-us-setting="app-lock" id="usAppLockSetting" role="switch" aria-checked="false" hidden>
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="lock"></span></span>
+          <span class="us-setting-main"><b id="usAppLockSettingLabel">Proteggi US con l’impronta</b><small id="usAppLockSettingDetail">Solo su questo telefono</small></span>
+          <span class="us-settings2-switch" aria-hidden="true"><u></u></span>
         </button>
+        </div>
+        <div class="us-settings2-label" data-s>PERSONALIZZAZIONE</div>
+        <div class="us-settings2-group" data-s>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="distance">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-left-right"></span></span>
+          <span class="us-setting-main"><b>Distanza</b></span>
+          <span class="us-setting-value" id="usDistanceUnitValue">Chilometri</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="feedback">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle"></span></span>
+          <span class="us-setting-main"><b>Suoni e vibrazione</b></span>
+          <span class="us-setting-value" id="usFeedbackValue">Attivi</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row us-settings2-switch-row" data-us-setting="maudit" id="usMauditSetting" role="switch" aria-checked="true">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="heart"></span></span>
+          <span class="us-setting-main"><b>Compagni</b><small>Il vostro compagno sopra la barra</small></span>
+          <span class="us-settings2-switch" aria-hidden="true"><u></u></span>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="widgets" hidden>
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="squares-four"></span></span>
+          <span class="us-setting-main"><b>Widget</b><small>Sulla schermata Home</small></span>
+          <span class="us-setting-value" id="usWidgetsValue">Home</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="optimize-ricordi" id="usOptimizeRicordiSetting" hidden>
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-clockwise"></span></span>
+          <span class="us-setting-main"><b>Ottimizza Ricordi</b><small>Anteprime leggere, originali intatti</small></span>
+          <span class="us-setting-value" id="usOptimizeRicordiValue"></span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="home-photo">
+          <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="image"></span></span>
+          <span class="us-setting-main"><b>Foto Home</b><small>La foto di Oggi</small></span>
+          <span class="us-setting-value">Gestisci</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        </div>
+        <div class="us-settings2-label" data-s>APP E SUPPORTO</div>
+        <div class="us-settings2-group" data-s>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="sync-status">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-clockwise"></span></span>
+          <span class="us-setting-main"><b>Sincronizzazione</b></span>
+          <span class="us-setting-value" id="usSyncValue">Controlla</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="report">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="flag-banner"></span></span>
+          <span class="us-setting-main"><b>Segnala un problema o un contenuto</b></span>
+          <i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        </div>
       </section>
-      <!-- «US 1.5.1 · fatto in due»; the build stays under it (founder, 03/11/2026). -->
-      <p class="dy-set-foot"><span id="usSettingsVersion">US</span> · <span class="dy-set-hand">fatto in due</span><small id="usSettingsBuild">Build corrente</small></p>
+
+      <section class="us-settings2-section" data-us-settings-scope="voi" aria-labelledby="usSettingsVoiTitle">
+        <div class="us-settings2-section-head" data-s><h3 id="usSettingsVoiTitle">Voi due</h3><small>Condiviso tra voi</small></div>
+      <article class="us-couple-id-card" id="usCoupleIdCard" aria-live="polite" data-s>
+        <div class="us-couple-id-top">
+          <div class="us-couple-avatars" id="usCoupleAvatars">
+            <span>·</span><span>·</span>
+          </div>
+          <div class="us-couple-id-copy">
+            <small>IL NOSTRO US</small>
+            <b id="usCoupleNames">Voi due</b>
+            <span id="usTogetherLine">Carico il vostro tempo insieme…</span>
+          </div>
+        </div>
+        <div class="us-couple-stats">
+          <span><b id="usSettingsBondLevel">—</b><small>Sintonia</small></span>
+          <span><b id="usSettingsMomentsCount">—</b><small>Ricordi</small></span>
+          <span><b id="usSettingsEventsCount">—</b><small>Vissuti</small></span>
+        </div>
+      </article>
+        <div class="us-settings2-group" data-s>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="relationship-date">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-heart"></span></span>
+          <span class="us-setting-main"><b>Data della relazione</b><small>Giorni insieme, mesiversario, anniversario</small></span>
+          <span class="us-setting-value" id="usRelationshipDateValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="together-mode">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="map-pin"></span></span>
+          <span class="us-setting-main"><b>Vi vedete spesso?</b><small>Serve per la sfida della settimana</small></span>
+          <span class="us-setting-value" id="usDistanceValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="story-archive">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="clock-counter-clockwise"></span></span>
+          <span class="us-setting-main"><b>Archivio Stories</b><small>Solo nella versione web</small></span>
+          <span class="us-setting-value" id="usStoryArchiveValue"></span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="leave-couple">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="x"></span></span>
+          <span class="us-setting-main"><b>Esci dalla coppia</b></span>
+          <i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        </div>
+      </section>
+
+      <div class="us-settings2-label" data-s>ACCOUNT E DATI</div>
+      <div class="us-settings2-group us-settings2-account" data-s>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="privacy">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon"></span></span>
+          <span class="us-setting-main"><b>Privacy e dati</b><small>Cosa salviamo, eliminazione account</small></span>
+          <i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row is-danger" data-us-setting="logout">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon"></span></span>
+          <span class="us-setting-main"><b>Scollega questo telefono</b></span>
+          <i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+      </div>
+      <p class="us-settings2-version" data-s><span id="usSettingsVersion">US</span><small id="usSettingsBuild">Build corrente</small></p>
     </section>
   </main>
 
   <main id="quiz" class="page">
     <section class="section us-gv2-page">
-      <!-- Il diario, ma pulito (15/11/2026): Sintonia left Gioca for «Voi due» (diario.js); its collection opens from there. -->
-      <div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia" hidden>
+      <div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia">
         <button type="button" id="usGiocaTabGames" class="us-gioca-tab" role="tab" aria-controls="usGiocaGames" aria-selected="true" tabindex="0">Giochi</button>
         <button type="button" id="usGiocaTabSintonia" class="us-gioca-tab" role="tab" aria-controls="usGiocaSintonia" aria-selected="false" tabindex="-1">Sintonia</button>
       </div>
@@ -1116,20 +1041,15 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </main>
 </div>
 
-<!-- Il diario, ma pulito: four sections of one notebook. On the current tab
-     the icon hops once and the red pencil draws a scribble under it; the page
-     comes in from the side of its place in the row (app.js animatePageEntry). -->
-<nav class="dy-nav" aria-label="Navigazione principale">
-<button data-us-feedback="tap" class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Oggi" aria-current="page"><svg class="dy-nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3.5h11a1.5 1.5 0 0 1 1.5 1.5v14.5a1 1 0 0 1-1 1H6.5a1.5 1.5 0 0 1-1.5-1.5V4.5a1 1 0 0 1 1-1z M9 8h6 M9 11.5h6 M9 15h3.5"/></svg><span class="nlabel">Oggi</span><svg class="dy-nav-scrib" viewBox="0 0 16 6" aria-hidden="true" focusable="false"><path d="M1 4 C5 1 10 5 15 2"/></svg></button>
-<button data-us-feedback="tap" data-page="bond" onclick="go('bond',{nav:true})" aria-label="Noi"><svg class="dy-nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 6.5h15v13h-15z M4.5 10.5h15 M8.5 4v4 M15.5 4v4"/></svg><span class="nlabel">Noi</span><svg class="dy-nav-scrib" viewBox="0 0 16 6" aria-hidden="true" focusable="false"><path d="M1 4 C5 1 10 5 15 2"/></svg></button>
-<span class="dy-nav-mid"><button type="button" id="thinkButton" class="dy-think" data-us-motion-tap="off" aria-label="Manda un Ti penso" title="Ti penso"><span class="dy-think-fill" aria-hidden="true"></span><svg class="dy-think-line" viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/></svg></button></span>
-<button data-us-feedback="tap" data-page="moments" onclick="go('moments',{nav:true})" aria-label="Ricordi"><svg class="dy-nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.2 4.6l12.4-1.4 1.9 16.4-12.4 1.4z M7 7.2l9.5-1.1 1 8.9-9.5 1.1z"/></svg><span class="nlabel">Ricordi</span><svg class="dy-nav-scrib" viewBox="0 0 16 6" aria-hidden="true" focusable="false"><path d="M1 4 C5 1 10 5 15 2"/></svg></button>
-<button data-us-feedback="tap" data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Gioca"><svg class="dy-nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 8.5h10a4.5 4.5 0 0 1 4.3 5.8l-.9 3a2.3 2.3 0 0 1-3.9.9l-1.9-2.2h-5.2l-1.9 2.2a2.3 2.3 0 0 1-3.9-.9l-.9-3A4.5 4.5 0 0 1 7 8.5z M8 11v3 M6.5 12.5h3"/></svg><span class="nlabel">Gioca</span><svg class="dy-nav-scrib" viewBox="0 0 16 6" aria-hidden="true" focusable="false"><path d="M1 4 C5 1 10 5 15 2"/></svg></button>
+<nav class="nav us-nav us-nav-premium" aria-label="Navigazione principale">
+<span class="us-nav-track" aria-hidden="true"><span class="us-nav-indicator"></span></span>
+<button data-us-feedback="tap" class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Oggi" aria-current="page"><span class="nicon"><span class="us-nav-icon us-nav-icon--home" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/house-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/house-fill.svg"></span></span></span><span class="nlabel">Oggi</span></button>
+<button data-us-feedback="tap" data-page="bond" onclick="go('bond',{nav:true})" aria-label="Noi"><span class="nicon"><span class="us-nav-icon us-nav-icon--bond" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/heart-straight-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/heart-straight-fill.svg"></span></span></span><span class="nlabel">Noi</span></button>
+<button data-us-feedback="tap" data-page="moments" onclick="go('moments',{nav:true})" aria-label="Ricordi"><span class="nicon"><span class="us-nav-icon us-nav-icon--moments" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/images-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/images-fill.svg"></span></span></span><span class="nlabel">Ricordi</span></button>
+<button data-us-feedback="tap" data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Gioca"><span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/game-controller-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/game-controller-fill.svg"></span></span></span><span class="nlabel">Gioca</span></button>
 </nav>
-<!-- «Voi due» (diario.js): Sintonia where your characters are. -->
-<div class="dy-over" id="dyVoiDue" hidden></div>
 <!-- US PET V1: decorative layer on the nav rim; unmounted until an approved asset exists. -->
-<div class="us-pet-layer" id="usPetLayer" aria-hidden="true" data-us-ambient data-us-retired hidden><span class="us-pet-actor"></span></div>
+<div class="us-pet-layer" id="usPetLayer" aria-hidden="true" data-us-ambient hidden><span class="us-pet-actor"></span></div>
 
 
 <div class="us-events-overlay" id="usEventsOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
@@ -1199,12 +1119,12 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </section>
 </div>
 
-<div class="dy-foglio" id="usSettingsOverlay" aria-hidden="true" data-us-modal>
-  <div class="dy-foglio-scrim" data-us-settings-close></div>
-  <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="usSettingsModalTitle" data-us-modal-panel>
-    <span class="dy-grab" aria-hidden="true"></span>
-    <div class="dy-sheet-head"><div><h3 class="dy-sheet-title" id="usSettingsModalTitle">Impostazione</h3><span id="usSettingsModalKicker" hidden>US.</span></div><button type="button" class="dy-ib dy-close" data-us-settings-close data-us-modal-close aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <div class="dy-f-body us-settings-modal-body" id="usSettingsModalBody"></div>
+<div class="us-settings-overlay" id="usSettingsOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-settings-backdrop us-modal-backdrop" data-us-settings-close></div>
+  <section class="us-settings-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usSettingsModalTitle" data-us-modal-panel>
+    <div class="us-settings-sheet-grabber"></div>
+    <header><div><div class="tiny" id="usSettingsModalKicker">US.</div><h3 id="usSettingsModalTitle">Impostazione</h3></div><button type="button" class="us-settings-close us-modal-close" data-us-settings-close data-us-modal-close aria-label="Chiudi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+    <div class="us-settings-modal-body" id="usSettingsModalBody"></div>
   </section>
 </div>
 
@@ -1219,61 +1139,59 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </section>
 </div>
 
-<div class="dy-foglio" id="leftForYouOverlay" aria-hidden="true" data-us-modal>
-  <div class="dy-foglio-scrim" id="leftForYouBackdrop"></div>
-  <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="leftForYouTitle" data-us-modal-panel>
-    <span class="dy-grab" aria-hidden="true"></span>
-    <div class="dy-sheet-head">
-      <div><h2 class="dy-sheet-title" id="leftForYouTitle">Lasciato <em>per te</em></h2><p class="dy-sheet-sub" id="leftForYouKind"></p><small id="leftForYouPartnerName" translate="no" hidden>La tua persona</small></div>
-      <button type="button" class="dy-ib dy-close" id="leftForYouClose" aria-label="Chiudi Lasciato per te" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    </div>
-    <div class="dy-f-body">
+<div class="left-for-you-overlay" id="leftForYouOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouBackdrop"></div>
+  <section class="left-for-you-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouTitle" data-us-modal-panel>
+    <header class="left-for-you-head">
+      <div><div class="tiny" id="leftForYouKind">Lasciato per te</div><h2 id="leftForYouTitle">Lasciato per te</h2><small id="leftForYouPartnerName" translate="no">La tua persona</small></div>
+      <button type="button" class="left-for-you-close us-modal-close" id="leftForYouClose" aria-label="Chiudi Lasciato per te" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+    </header>
+    <div class="left-for-you-body">
       <div class="left-for-you-loading" id="leftForYouLoading" aria-busy="true"><p>Un attimo…</p></div>
       <div class="left-for-you-empty" id="leftForYouEmpty" hidden><h3>Lasciato per te</h3><p>Niente per ora.</p></div>
-      <div class="left-for-you-error" id="leftForYouError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" class="dy-btn dy-btn-m dy-btn-ghost" data-action id="leftForYouRetry">Riprova</button></div>
-      <div class="dy-f-body dy-lfy-card" id="leftForYouCard" hidden>
-        <div class="dy-f-sign dy-lfy-from"><span class="dy-stk" data-dy-who="partner" data-dy-size="36"></span><span class="dy-lfy-from-copy"><b>Da <span id="leftForYouFromName" translate="no">la tua persona</span></b><small id="leftForYouCounter"></small></span></div>
+      <div class="left-for-you-error" id="leftForYouError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" data-action id="leftForYouRetry">Riprova</button></div>
+      <div class="left-for-you-card" id="leftForYouCard" hidden>
+        <div class="left-for-you-meta"><span class="left-for-you-from"><span class="left-for-you-from-avatar" id="leftForYouFromFallback">♡</span><span>Da <b id="leftForYouFromName" translate="no">la tua persona</b></span></span><span id="leftForYouCounter"></span></div>
         <div id="leftForYouContent"></div>
-        <p class="dy-f-note" id="leftForYouOnce"><svg class="dy-f-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10v17l-5-3.5-5 3.5z"/></svg><span>Si apre una volta: conservalo se vuoi tenerlo.</span></p>
-        <div class="dy-f-acts" id="leftForYouActions"><button type="button" class="dy-btn dy-btn-l" id="leftForYouConserve">Conserva</button><div class="dy-f-acts is-row"><button type="button" class="dy-btn dy-btn-m dy-btn-ghost" id="leftForYouReply">Rispondi</button><button type="button" class="dy-btn dy-btn-m dy-btn-ghost" id="leftForYouNext" hidden>Apri il prossimo</button></div></div>
-        <div class="dy-f-note" id="leftForYouStatus" role="status" aria-live="polite"></div>
+        <p class="left-for-you-once" id="leftForYouOnce">Si apre una volta: conservalo se vuoi tenerlo.</p>
+        <div class="left-for-you-actions" id="leftForYouActions"><button type="button" id="leftForYouConserve">Conserva</button><button type="button" id="leftForYouReply">Rispondi</button><button type="button" id="leftForYouNext" hidden>Apri il prossimo</button></div>
+        <div class="left-for-you-status" id="leftForYouStatus" role="status" aria-live="polite"></div>
       </div>
-      <button type="button" class="dy-f-row dy-lfy-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
-        <span class="dy-f-row-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10v17l-5-3.5-5 3.5z"/></svg></span>
-        <span class="dy-f-row-tx"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
-        <small class="dy-lfy-count" data-conservati-count></small>
-        <svg class="dy-row-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      <button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
+        <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span></span>
+        <span class="us-conservati-entry-copy"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
+        <small class="us-conservati-entry-count" data-conservati-count></small>
+        <span class="us-conservati-entry-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></span>
       </button>
     </div>
   </section>
 </div>
 
-<div class="dy-foglio" id="leftForYouComposerOverlay" aria-hidden="true" data-us-modal>
-  <div class="dy-foglio-scrim" id="leftForYouComposerBackdrop"></div>
-  <section class="dy-foglio-panel left-for-you-composer-sheet" role="dialog" aria-modal="true" aria-labelledby="leftForYouComposerTitle" data-us-modal-panel>
-    <span class="dy-grab" aria-hidden="true"></span>
-    <div class="dy-sheet-head">
-      <div><h2 class="dy-sheet-title" id="leftForYouComposerTitle">Lascia qualcosa <em>alla tua persona</em></h2><p class="dy-sheet-sub">Lo trova nella busta, su Oggi. Si apre una volta.</p></div>
-      <button type="button" class="dy-ib dy-close" id="leftForYouComposerClose" aria-label="Chiudi il compositore" data-us-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    </div>
-    <div class="dy-f-body left-for-you-composer-body">
-      <p class="dy-f-note" id="leftForYouComposerLast" hidden></p>
-      <div class="dy-tiles" role="tablist" aria-label="Tipo di messaggio">
-        <button type="button" role="tab" aria-selected="true" class="dy-tile is-active" data-us-composer-kind="text"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14 M5 11h14 M5 15.5h9"/></svg>Testo</button>
-        <button type="button" role="tab" aria-selected="false" class="dy-tile" data-us-composer-kind="photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h4l2-2.5h4L16 8h4v11H4z M12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg>Foto</button>
-        <button type="button" role="tab" aria-selected="false" class="dy-tile" data-us-composer-kind="audio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11.5a6 6 0 0 0 12 0 M12 17.5v3"/></svg>Vocale</button>
-        <button type="button" role="tab" aria-selected="false" class="dy-tile" data-us-composer-kind="video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7h12v10h-12z M15.5 10.5l5-3v9l-5-3"/></svg>Video</button>
-        <button type="button" role="tab" aria-selected="false" class="dy-tile" data-us-composer-kind="music"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V5.5l10-2v12 M9 17.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z M19 15.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/></svg>Musica</button>
+<div class="left-for-you-overlay left-for-you-composer-overlay" id="leftForYouComposerOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouComposerBackdrop"></div>
+  <section class="left-for-you-sheet left-for-you-composer-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouComposerTitle" data-us-modal-panel>
+    <header class="left-for-you-head">
+      <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouComposerTitle">Lascia qualcosa alla tua persona</h2></div>
+      <button type="button" class="left-for-you-close us-modal-close" id="leftForYouComposerClose" aria-label="Chiudi il compositore" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+    </header>
+    <div class="left-for-you-body left-for-you-composer-body">
+      <p class="left-for-you-last" id="leftForYouComposerLast" hidden></p>
+      <div class="left-for-you-composer-kinds" role="tablist" aria-label="Tipo di messaggio">
+        <button type="button" role="tab" aria-selected="true" class="is-active" data-us-composer-kind="text">Testo</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="photo">Foto</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="audio">Vocale</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="video">Video</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="music">Musica</button>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="text">
-        <label class="sr-only" for="leftForYouComposerText">Il tuo messaggio</label><div class="dy-f-sign"><span class="dy-stk" data-dy-who="me" data-dy-size="30"></span><div class="dy-f-field"><textarea id="leftForYouComposerText" class="dy-f-in dy-f-hand" maxlength="1000" rows="5" placeholder="Scrivi qualcosa per la tua persona…"></textarea><span class="dy-f-count" id="leftForYouComposerCount">0 / 1000</span></div></div>
+        <label class="left-for-you-composer-label" for="leftForYouComposerText">Il tuo messaggio</label><textarea id="leftForYouComposerText" class="left-for-you-composer-text" maxlength="1000" rows="4" placeholder="Scrivi qualcosa per la tua persona…"></textarea><span class="left-for-you-composer-count" id="leftForYouComposerCount">0 / 1000</span>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="photo" hidden>
         <div class="left-for-you-photo-preview" id="leftForYouComposerPhotoPreview" hidden><img id="leftForYouComposerPhotoPreviewImage" alt="Anteprima della foto scelta"><button type="button" class="left-for-you-photo-change" id="leftForYouComposerPhotoChange">Cambia foto</button></div>
-        <div class="left-for-you-photo-actions" id="leftForYouComposerPhotoActions"><button type="button" class="dy-f-pick" id="leftForYouComposerPhotoCamera" data-pick="camera"><b>Scatta una foto</b><small>Resta privata, solo tra voi due</small></button><button type="button" class="dy-f-pick" id="leftForYouComposerPhotoPick" data-pick="gallery"><b>Scegli dalla galleria</b><small>Fino a 25 MB</small></button></div>
+        <div class="left-for-you-photo-actions" id="leftForYouComposerPhotoActions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoCamera" data-pick="camera"><b>Scatta una foto</b><small>Resta privata, solo tra voi due</small></button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoPick" data-pick="gallery"><b>Scegli dalla galleria</b><small>Fino a 25 MB</small></button></div>
         <input type="file" id="leftForYouComposerPhotoFile" accept="image/jpeg,image/png,image/webp" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerPhotoName"></span>
-        <input type="text" class="dy-f-in left-for-you-composer-caption" id="leftForYouComposerPhotoCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia della foto">
+        <input type="text" class="left-for-you-composer-url left-for-you-composer-caption" id="leftForYouComposerPhotoCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia della foto">
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="audio" hidden>
         <div class="left-for-you-vn-frame">
@@ -1299,15 +1217,15 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <span class="left-for-you-vn-still-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
           <span class="left-for-you-vn-hint" id="leftForYouComposerAudioHint" data-phase="idle" aria-live="polite">Tocca per registrare</span>
         </div>
-        <input type="text" class="dy-f-in left-for-you-composer-caption" id="leftForYouComposerAudioCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia del vocale">
+        <input type="text" class="left-for-you-composer-url left-for-you-composer-caption" id="leftForYouComposerAudioCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia del vocale">
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="video" hidden>
-        <button type="button" class="dy-f-pick" id="leftForYouComposerVideoPick" data-pick="video"><b>Scegli un video</b><small class="left-for-you-composer-hint" id="leftForYouComposerVideoHint">Fino a 30 secondi e 20 MB.</small></button><input type="file" id="leftForYouComposerVideoFile" accept="video/mp4,video/webm,video/quicktime" hidden>
+        <button type="button" class="left-for-you-composer-pick" id="leftForYouComposerVideoPick" data-pick="video"><b>Scegli un video</b><small class="left-for-you-composer-hint" id="leftForYouComposerVideoHint">Fino a 30 secondi e 20 MB.</small></button><input type="file" id="leftForYouComposerVideoFile" accept="video/mp4,video/webm,video/quicktime" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerVideoName"></span>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="music" hidden>
         <div class="left-for-you-music-attribution"><img class="left-for-you-spotify-attribution" src="/assets/third-party/spotify/spotify-full-logo-white.svg" alt="Spotify" width="80" height="22"></div>
-        <label class="dy-f-lab" for="leftForYouMusicSearch">Brano</label><input type="search" id="leftForYouMusicSearch" class="dy-f-in" placeholder="Cerca su Spotify…" autocomplete="off" spellcheck="false">
+        <label class="left-for-you-composer-label" for="leftForYouMusicSearch">Brano</label><input type="search" id="leftForYouMusicSearch" class="left-for-you-composer-url" placeholder="Cerca su Spotify…" autocomplete="off" spellcheck="false">
         <p class="left-for-you-music-search-status" id="leftForYouMusicSearchStatus" role="status" aria-live="polite"></p>
         <ul class="left-for-you-music-results" id="leftForYouMusicResults" aria-label="Risultati Spotify" hidden></ul>
         <div class="left-for-you-music-selected" id="leftForYouMusicSelected" hidden>
@@ -1316,16 +1234,16 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         </div>
         <details class="left-for-you-music-manual">
           <summary>Incolla link Spotify</summary>
-          <input type="url" id="leftForYouComposerMusic" class="dy-f-in" maxlength="512" placeholder="https://open.spotify.com/track/…" spellcheck="false">
+          <input type="url" id="leftForYouComposerMusic" class="left-for-you-composer-url" maxlength="512" placeholder="https://open.spotify.com/track/…" spellcheck="false">
         </details>
       </div>
-      <div class="dy-f-acts"><button type="button" class="dy-btn dy-btn-l" id="leftForYouComposerSend" disabled>Lascia per la tua persona</button></div>
-      <div class="dy-f-note" id="leftForYouComposerStatus" role="status" aria-live="polite"></div>
-      <button type="button" class="dy-f-row dy-lfy-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
-        <span class="dy-f-row-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10v17l-5-3.5-5 3.5z"/></svg></span>
-        <span class="dy-f-row-tx"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
-        <small class="dy-lfy-count" data-conservati-count></small>
-        <svg class="dy-row-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      <div class="left-for-you-actions left-for-you-composer-actions"><button type="button" id="leftForYouComposerSend" disabled>Lascia per la tua persona</button></div>
+      <div class="left-for-you-status" id="leftForYouComposerStatus" role="status" aria-live="polite"></div>
+      <button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
+        <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span></span>
+        <span class="us-conservati-entry-copy"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
+        <small class="us-conservati-entry-count" data-conservati-count></small>
+        <span class="us-conservati-entry-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></span>
       </button>
     </div>
   </section>
@@ -1338,7 +1256,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     <div class="left-for-you-body left-for-you-camera-body">
       <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden><span class="left-for-you-camera-flash" id="leftForYouCameraFlash" aria-hidden="true"></span></div>
       <div class="left-for-you-camera-status" id="leftForYouCameraStatus" role="status" aria-live="polite"></div>
-      <div class="left-for-you-camera-actions"><button type="button" class="dy-f-pick" id="leftForYouCameraSwitch">Cambia fotocamera</button><button type="button" class="left-for-you-camera-shutter" id="leftForYouCameraCapture" aria-label="Scatta foto"><span aria-hidden="true"></span></button><button type="button" class="dy-f-pick" id="leftForYouCameraUse" hidden>Usa foto</button><button type="button" class="dy-f-pick" id="leftForYouCameraRetake" hidden>Rifai</button></div>
+      <div class="left-for-you-camera-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraSwitch">Cambia fotocamera</button><button type="button" class="left-for-you-camera-shutter" id="leftForYouCameraCapture" aria-label="Scatta foto"><span aria-hidden="true"></span></button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraUse" hidden>Usa foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraRetake" hidden>Rifai</button></div>
     </div>
   </section>
 </div>
@@ -1366,7 +1284,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite">Salvato ♡</div>
-<div class="app-status-bar" id="appStatusBar" data-kind="offline" role="alert" aria-live="assertive" hidden>Siete senza rete: quello che fate parte appena torna.</div>
+<div class="app-status-bar" id="appStatusBar" data-kind="offline" role="alert" aria-live="assertive" hidden>Sei offline. Riprendo appena torni online.</div>
 <div class="app-update-bar" id="appUpdateBar" role="status" aria-live="polite" hidden><span><b>Aggiornamento disponibile</b></span><button type="button" id="appUpdateBtn">Aggiorna</button></div>
 
 <div class="moment-viewer" id="momentViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del ricordo" data-us-modal data-us-motion-surface onclick="if(event.target===this)closeMomentViewer()">
@@ -1390,53 +1308,79 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     </div>
   </section>
 </div>
+<div class="ricordi-chapter-overlay us-foglio" id="ricordiChapterOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="ricordi-chapter-backdrop us-modal-backdrop" id="ricordiChapterBackdrop"></div>
+  <section class="ricordi-chapter-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="ricordiChapterTitle" data-us-modal-panel>
+    <header class="ricordi-chapter-head">
+      <div><div class="tiny">Capitoli</div><h2 id="ricordiChapterTitle"></h2></div>
+      <button type="button" class="ricordi-chapter-close us-modal-close" id="ricordiChapterClose" aria-label="Chiudi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+    </header>
+    <p class="ricordi-chapter-lead" id="ricordiChapterLead"></p>
+    <div class="ricordi-chapter-thumbs" id="ricordiChapterThumbs"></div>
+  </section>
+</div>
 
+<!-- Lavagna: the week of both of you, a Foglio over the Noi calendar (noi-v2.js fills it). -->
+<div class="us-cal-sheet-overlay us-foglio us-noi-lavagna" id="usNoiLavagna" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-cal-sheet-backdrop us-modal-backdrop" data-noi-week-close></div>
+  <section class="us-cal-sheet us-sheet is-bottom us-noi-lavagna-sheet" role="dialog" aria-modal="true" aria-labelledby="usNoiLavagnaTitle" data-us-modal-panel>
+    <header class="us-cal-sheet-head">
+      <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Lavagna</small><h3 id="usNoiLavagnaTitle">Questa settimana</h3></div>
+      <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usNoiV2WeekBack" hidden data-us-modal-close aria-label="Chiudi la lavagna"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+    </header>
+    <div class="us-noi-lavagna-body" id="usNoiV2Week" aria-live="polite"></div>
+  </section>
+</div>
 
 <!-- Noi calendar editors: the day detail and the "+" form open over Noi. -->
-<div class="dy-foglio" id="usCalendarDetailSheet" aria-hidden="true" data-us-modal>
-  <div class="dy-foglio-scrim" id="usCalendarDetailBackdrop"></div>
-  <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="usCalendarDetailTitle" data-us-modal-panel>
-    <span class="dy-grab" aria-hidden="true"></span>
-    <div class="dy-sheet-head"><h3 class="dy-sheet-title" id="usCalendarDetailTitle">—</h3><button type="button" class="dy-ib dy-close" id="usCalendarDetailClose" aria-label="Chiudi impegno"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <div class="dy-f-body dy-cal-detail" id="usCalendarDetailBody"></div>
-    <div class="dy-f-acts is-row" id="usCalendarDetailActions" hidden>
-      <button type="button" class="dy-btn dy-btn-l dy-btn-ghost" id="usCalendarDetailDelete">Elimina</button>
-      <button type="button" class="dy-btn dy-btn-l" id="usCalendarDetailEdit">Modifica</button>
+<div class="us-cal-sheet-overlay" id="usCalendarDetailSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarDetailBackdrop"></div>
+  <section class="us-cal-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usCalendarDetailTitle" data-us-modal-panel>
+    <header class="us-cal-sheet-head">
+      <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Impegno</small><h3 id="usCalendarDetailTitle" translate="no">—</h3></div>
+      <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usCalendarDetailClose" aria-label="Chiudi impegno"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+    </header>
+    <div class="us-cal-detail-body" id="usCalendarDetailBody"></div>
+      <div class="us-cal-detail-actions" id="usCalendarDetailActions" hidden>
+      <button type="button" class="us-cal-detail-edit" id="usCalendarDetailEdit">Modifica</button>
+      <button type="button" class="us-cal-detail-delete" id="usCalendarDetailDelete">Elimina</button>
     </div>
   </section>
 </div>
 
-<div class="dy-foglio" id="usCalendarFormSheet" aria-hidden="true" data-us-modal>
-  <div class="dy-foglio-scrim" id="usCalendarFormBackdrop"></div>
-  <section class="dy-foglio-panel" role="dialog" aria-modal="true" aria-labelledby="usCalendarFormTitle" data-us-modal-panel>
-    <span class="dy-grab" aria-hidden="true"></span>
-    <div class="dy-sheet-head"><h3 class="dy-sheet-title" id="usCalendarFormTitle">Nuovo <em>impegno</em></h3><button type="button" class="dy-ib dy-close" id="usCalendarFormClose" aria-label="Chiudi modulo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <form class="dy-f-body dy-cal-form" id="usCalendarForm">
-      <div class="dy-tiles" id="usCalendarKind" role="group" aria-label="Che cosa aggiungi">
-        <button type="button" class="dy-tile" data-us-calendar-kind="personal" data-owner="tu" aria-pressed="true">Solo mio</button>
-        <button type="button" class="dy-tile" data-us-calendar-kind="shared" data-owner="noi" aria-pressed="false">Nostro</button>
-        <button type="button" class="dy-tile" data-us-calendar-kind="event" data-owner="noi" aria-pressed="false">Data speciale</button>
-        <button type="button" class="dy-tile" data-us-calendar-kind="countdown" data-owner="noi" aria-pressed="false">Countdown</button>
+<div class="us-cal-sheet-overlay" id="usCalendarFormSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarFormBackdrop"></div>
+  <section class="us-cal-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usCalendarFormTitle" data-us-modal-panel>
+    <header class="us-cal-sheet-head">
+      <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Calendario</small><h3 id="usCalendarFormTitle">Nuovo impegno</h3></div>
+      <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usCalendarFormClose" aria-label="Chiudi modulo"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+    </header>
+    <form class="us-cal-form" id="usCalendarForm">
+      <div class="us-cal-kind" id="usCalendarKind" role="group" aria-label="Che cosa aggiungi">
+        <button type="button" data-us-calendar-kind="personal" data-owner="tu" aria-pressed="true"><span class="us-icon" data-us-icon="user-circle" aria-hidden="true"></span><span>Solo mio</span></button>
+        <button type="button" data-us-calendar-kind="shared" data-owner="noi" aria-pressed="false"><span class="us-icon" data-us-icon="heart" aria-hidden="true"></span><span>Nostro</span></button>
+        <button type="button" data-us-calendar-kind="event" data-owner="noi" aria-pressed="false"><span class="us-icon" data-us-icon="calendar-heart" aria-hidden="true"></span><span>Data speciale</span></button>
       </div>
-      <p class="dy-f-note" id="usCalendarFormContext" hidden>Le vostre idee · per voi due</p>
-      <p class="dy-cal-day-line" id="usCalendarFormDay" hidden></p>
-      <div class="dy-cal-day-entries" id="usCalendarFormDayEntries" hidden></div>
-      <label class="dy-f-lab"><span>Che cosa fai?</span><input id="usCalendarTitleInput" class="dy-f-in" type="text" maxlength="200" required placeholder="Che cosa fai?"></label>
-      <div class="dy-cal-presets" id="usCalendarPresets" role="group" aria-label="Titoli rapidi">
-        <button type="button" class="dy-chip-o" id="usCalendarPresetWork" data-us-calendar-preset="Lavoro" aria-pressed="false">Lavoro</button>
-        <button type="button" class="dy-chip-o" id="usCalendarPresetUniversity" data-us-calendar-preset="Università" aria-pressed="false">Università</button>
-        <button type="button" class="dy-chip-o" id="usCalendarPresetOut" data-us-calendar-preset="Uscita" aria-pressed="false">Uscita</button>
-        <button type="button" class="dy-chip-o dy-chip-add" id="usCalendarPresetAdd" aria-label="Aggiungi un titolo rapido"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
-        <span class="dy-cal-preset-new" id="usCalendarPresetNew" hidden><input id="usCalendarPresetNewInput" class="dy-f-in" type="text" maxlength="30" enterkeyhint="done" placeholder="Nuovo titolo" aria-label="Nuovo titolo rapido"><button type="button" class="dy-btn dy-btn-m" id="usCalendarPresetNewSave">Aggiungi</button></span>
+      <p class="us-cal-form-context" id="usCalendarFormContext" hidden>Le vostre idee · per voi due</p>
+      <p class="us-cal-form-day" id="usCalendarFormDay" hidden></p>
+      <div class="us-cal-form-day-entries" id="usCalendarFormDayEntries" hidden></div>
+      <div class="us-cal-presets" id="usCalendarPresets" role="group" aria-label="Titoli rapidi">
+        <button type="button" id="usCalendarPresetWork" data-us-calendar-preset="Lavoro" aria-pressed="false">Lavoro</button>
+        <button type="button" id="usCalendarPresetUniversity" data-us-calendar-preset="Università" aria-pressed="false">Università</button>
+        <button type="button" id="usCalendarPresetOut" data-us-calendar-preset="Uscita" aria-pressed="false">Uscita</button>
+        <button type="button" class="us-cal-preset-add" id="usCalendarPresetAdd" aria-label="Aggiungi un titolo rapido"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
+        <span class="us-cal-preset-new" id="usCalendarPresetNew" hidden><input id="usCalendarPresetNewInput" type="text" maxlength="30" enterkeyhint="done" placeholder="Nuovo titolo" aria-label="Nuovo titolo rapido"><button type="button" id="usCalendarPresetNewSave">Aggiungi</button></span>
       </div>
-      <label class="dy-f-lab" id="usCalendarDateField" hidden><span>Giorno</span><input id="usCalendarDateInput" class="dy-f-in" type="date"></label>
-      <label class="dy-f-row dy-cal-allday"><span class="dy-f-row-tx"><b>Tutto il giorno</b></span><input id="usCalendarAllDayInput" class="dy-f-switch" type="checkbox" role="switch"></label>
-      <div class="dy-cal-times" id="usCalendarTimeFields">
-        <label class="dy-f-lab"><span>Inizio</span><input id="usCalendarStartTimeInput" class="dy-f-in dy-cal-time" type="text" inputmode="numeric" enterkeyhint="next" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di inizio"></label>
-        <label class="dy-f-lab"><span>Fine</span><input id="usCalendarEndTimeInput" class="dy-f-in dy-cal-time" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di fine"></label>
+      <label class="us-cal-field"><span>Che cosa fai?</span><input id="usCalendarTitleInput" type="text" maxlength="200" required placeholder="Che cosa fai?"></label>
+      <label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno</span><input id="usCalendarDateInput" type="date"></label>
+      <label class="us-cal-field us-cal-allday-field"><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
+      <div class="us-cal-time-fields" id="usCalendarTimeFields">
+        <label class="us-cal-field"><span>Inizio</span><input id="usCalendarStartTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="next" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di inizio"></label>
+        <span class="us-cal-time-arrow" aria-hidden="true">→</span>
+        <label class="us-cal-field"><span>Fine</span><input id="usCalendarEndTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di fine"></label>
       </div>
-      <div class="dy-f-note" id="usCalendarFormStatus" role="status" aria-live="polite"></div>
-      <div class="dy-f-acts"><button type="submit" class="dy-btn dy-btn-l" id="usCalendarFormSave">Salva impegno</button></div>
+      <div class="us-cal-form-status" id="usCalendarFormStatus" role="status" aria-live="polite"></div>
+      <button type="submit" class="primary us-cal-form-save" id="usCalendarFormSave">Salva impegno</button>
     </form>
   </section>
 </div>
@@ -1474,8 +1418,8 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 <script defer src="/year-recap.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/couple-notes.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/lavagna.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/pet.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/companions.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/distance.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/due-colori.js?v=us-rilascio-20261114-109"></script>
-<script defer src="/diario.js?v=us-rilascio-20261114-109"></script>
 </body></html>

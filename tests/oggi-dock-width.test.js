@@ -8,14 +8,14 @@ const path = require('node:path');
 
 const css = fs.readFileSync(path.join(__dirname, '..', 'dc-oggi.css'), 'utf8');
 
-test('Oggi dock: a single minmax(0,1fr) column, so the widest child cannot widen it', { skip: 'Il diario, ma pulito (15/11/2026): il dock e la didascalia del vecchio Oggi non si mostrano più (hero nascosto)' }, () => {
+test('Oggi dock: a single minmax(0,1fr) column, so the widest child cannot widen it', () => {
   const dock = css.match(/#home \.us-oggi-dock\{[^}]*\}/)?.[0] || '';
   assert.match(dock, /display:grid;/);
   assert.match(dock, /grid-template-columns:minmax\(0,1fr\);/);
   assert.match(dock, /width:min\(420px,calc\(100% - 28px\)\);/);
 });
 
-test('Oggi caption: may shrink, then ends with an ellipsis on one line', { skip: 'Il diario, ma pulito (15/11/2026): il dock e la didascalia del vecchio Oggi non si mostrano più (hero nascosto)' }, () => {
+test('Oggi caption: may shrink, then ends with an ellipsis on one line', () => {
   assert.match(css, /#home #usOggiCaption\.og-cap\{min-width:0;/);
   assert.match(css, /#home #usOggiCaption em\{[^}]*overflow:hidden;text-overflow:ellipsis;white-space:nowrap\}/);
 });

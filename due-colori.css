@@ -33,9 +33,8 @@ html,:root[data-us-theme]{
   background-attachment:fixed!important;
   color:var(--us-color-text);
 }
-/* Il diario, ma pulito (15/11/2026): one paper with a faint grain, the same on every tab. */
 body,:root[data-us-theme] body{
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .08 0 0 0 0 .07 0 0 0 0 .05 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")!important;
+  background:radial-gradient(70% 300px at 50% -60px,color-mix(in srgb,var(--us-tab) 13%,transparent),transparent 72%)!important;
   color:var(--us-color-text);
 }
 body{font-family:var(--us-font-ui);font-size:15px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
@@ -45,10 +44,10 @@ h1,h2,h3{font-family:var(--us-font-display);font-weight:400;letter-spacing:-.01e
 input,textarea,select,button{font-family:inherit}
 .tiny,.us-eyebrow{font-weight:700;opacity:1}
 
-/* ---------- Buttons: flat, in ink (mockup v5 «I fogli»: ink is what you do) ---------- */
+/* ---------- Buttons: flat, my colour, dark ink; pressed = a small spring ---------- */
 .primary{
-  background:var(--us-ink-100);
-  color:var(--us-paper);
+  background:var(--us-tu);
+  color:var(--us-inchiostro);
   font-weight:700;
   box-shadow:none;
 }
@@ -60,11 +59,9 @@ input,textarea,select,button{font-family:inherit}
   box-shadow:inset 0 0 0 1px var(--us-color-line-strong);
   font-weight:600;
 }
-/* Founder, 16/11/2026: no red to delete (red is the heart's and the pencil's);
-   the title says what goes and a confirmation asks first. */
 .us-btn-danger{
-  background:var(--us-ink-100);
-  color:var(--us-paper);
+  background:var(--us-rosso);
+  color:var(--us-inchiostro);
   box-shadow:none;
   font-weight:700;
 }
@@ -102,9 +99,83 @@ input,textarea,select,button{font-family:inherit}
    shadow. The blob (indicator) is the tab colour at 16%, it slides with the
    spring in 560 ms and takes the new colour at once. Active: the icon in
    the tab colour with a 28% fill, the label in latte; labels 12/600. */
-:root{--us-nav-height:66px}
-
+:root{--us-nav-height:58px}
+.us-nav.us-nav-premium{
+  left:50%!important;
+  right:auto!important;
+  bottom:max(12px,var(--us-safe-bottom))!important;
+  width:min(456px,calc(100% - 24px))!important;
+  max-width:none!important;
+  height:var(--us-nav-height)!important;
+  min-height:var(--us-nav-height)!important;
+  margin:0!important;
+  padding:5px!important;
+  display:grid!important;
+  grid-template-columns:repeat(4,1fr)!important;
+  gap:0!important;
+  box-sizing:border-box!important;
+  border:1px solid var(--us-color-line-strong)!important;
+  border-radius:28px!important;
+  background:color-mix(in srgb,var(--us-color-surface) 94%,transparent)!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:blur(16px)!important;
+  backdrop-filter:blur(16px)!important;
+  transition:translate .45s var(--us-ease-io),transform var(--us-motion-fast) var(--us-ease-standard),opacity var(--us-motion-micro) var(--us-ease-standard)!important;
+}
+.us-nav.us-nav-premium::before{display:none}
+.us-nav-premium button{
+  position:relative;
+  display:grid!important;
+  place-items:center;
+  align-content:center;
+  gap:3px!important;
+  width:auto!important;
+  min-width:0!important;
+  height:auto!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:22px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--us-color-text-3)!important;
+  font-size:12px;
+  font-weight:600;
+  transition:color .3s!important;
+}
+.us-nav-premium button .nicon{width:21px!important;height:21px!important;min-width:21px!important;min-height:21px!important;margin:0!important;transform:none!important;transition:none!important}
+.us-nav-premium .us-nav-icon{width:21px;height:21px}
+.us-nav-icon,.us-nav-icon-off{color:var(--us-color-text-3)}
+.us-nav-premium .nlabel{font-size:11px;font-weight:600;line-height:1.2;letter-spacing:0;color:var(--us-color-text-3)}
+.us-nav-premium button[data-page="home"]{--us-nav-c:var(--us-corallo)}
+.us-nav-premium button[data-page="bond"]{--us-nav-c:var(--us-noi)}
+.us-nav-premium button[data-page="moments"]{--us-nav-c:var(--us-ambra)}
+.us-nav-premium button[data-page="quiz"]{--us-nav-c:var(--us-menta)}
+/* Active icon = the outline in the tab colour over its own 28% silhouette
+   (the regular and the fill drawing of the same Phosphor icon, stacked). */
+.us-nav-premium button.active .nicon{color:var(--us-nav-c)!important}
+.us-nav-premium button.active .us-nav-icon-off{display:block!important;color:var(--us-nav-c)!important}
+.us-nav-premium button.active .us-nav-icon-on{display:block!important;color:color-mix(in srgb,var(--us-nav-c) 28%,transparent)!important}
+.us-nav-premium button.active .nlabel{font-weight:600;color:var(--us-color-text)}
+.us-nav-premium .us-nav-track{padding:5px}
+.us-nav:has(> button[data-page="home"].active){--us-nav-blob:var(--us-corallo)}
+.us-nav:has(> button[data-page="bond"].active){--us-nav-blob:var(--us-noi)}
+.us-nav:has(> button[data-page="moments"].active){--us-nav-blob:var(--us-ambra)}
+.us-nav:has(> button[data-page="quiz"].active){--us-nav-blob:var(--us-menta)}
+.us-nav-indicator{
+  border-radius:22px;
+  background:var(--us-nav-blob,var(--us-tab));
+  opacity:.16!important;
+  box-shadow:none;
+  transition:transform 560ms var(--us-ease-spring);
+}
+.us-nav:not(:has(> button.active)) .us-nav-indicator{opacity:0!important}
+:root[data-us-theme] .us-nav-indicator,:root[data-us-accent] .us-nav-indicator{background:var(--us-nav-blob,var(--us-tab))}
+:root[data-us-theme] .us-nav-premium button.active .us-nav-icon-off,:root[data-us-accent] .us-nav-premium button.active .us-nav-icon-off{color:var(--us-nav-c)}
+:root[data-us-motion="reduced"] .us-nav-indicator{transition:none}
 @media (prefers-reduced-motion:reduce){.us-nav-indicator{transition:none}}
+/* Focus Photo (a tap on the photo or on the US mark): the bar slides away. */
+body:has(#homeHero.us-oggi-focus) .us-nav.us-nav-premium{translate:0 120px}
 
 /* ---------- Colour flood between tabs (due-colori.js) ---------- */
 .us-flood{position:fixed;inset:0;z-index:19;pointer-events:none;background:var(--us-flood,var(--us-tab));clip-path:circle(0 at 50% 100%)}
@@ -127,6 +198,10 @@ input,textarea,select,button{font-family:inherit}
    (--us-slide-top: where the page starts on screen, due-colori.js), never a flat panel. */
 .page.us-slide-live.is-over::before,.page.us-slide-ghost.is-over::before{content:"";position:absolute;z-index:-1;inset:-100vh -32px;background:var(--us-atmo);background-color:var(--us-color-bg);background-size:100% 100vh;background-repeat:no-repeat;background-position:0 calc(100vh - var(--us-slide-top,0px));box-shadow:-30px 0 60px rgba(0,0,0,.45);pointer-events:none}
 .us-slide-veil{position:fixed;inset:0;z-index:2;background:#000;opacity:0;pointer-events:none}
+
+/* ---------- Focus Photo (mockup .screen.is-focus): the top bar fades away ---------- */
+.app>.top.us-premium-top{transition:opacity .45s var(--us-ease-standard)}
+body:has(#homeHero.us-oggi-focus) .app>.top.us-premium-top{opacity:0;pointer-events:none}
 
 /* ---------- No glow halos (approved notes): the one-shot arrival halo goes ----------
    The arrival itself is told by the Momento and by Maudit's hop. */

@@ -8,19 +8,17 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
 test('M5G5 camera overlay participates in the fixed modal and open selectors', () => {
   const css = read('left-for-you.css');
-  // Mockup v5 «I fogli» (16/11/2026): reading and writing are the one sheet; the camera keeps its own fixed overlay.
-  assert.match(css, /#leftForYouCameraOverlay\{position:fixed/);
-  assert.match(css, /#leftForYouCameraOverlay\.open\{opacity:1/);
+  assert.match(css, /#leftForYouOverlay,#leftForYouComposerOverlay,#leftForYouCameraOverlay\{/);
+  assert.match(css, /#leftForYouOverlay\.open,#leftForYouComposerOverlay\.open,#leftForYouCameraOverlay\.open\{/);
   // The camera stacks one step above the composer on the sheet rung of the ladder.
   assert.match(css, /#leftForYouCameraOverlay\{z-index:calc\(var\(--us-layer-sheet\) \+ 10\)\}/);
 });
 
 test('M5G5 enabled composer CTA has an explicit enabled visual state', () => {
   const css = read('left-for-you.css');
-  // Mockup v5 «I fogli» (16/11/2026): the send button is the ink button of the one sheet, muted when disabled.
-  void css;
-  assert.match(read('index.html'), /class="dy-btn dy-btn-l" id="leftForYouComposerSend" disabled/);
-  assert.match(read('diario.css'), /\.dy-btn:disabled,\.dy-btn\[aria-disabled="true"\]\{background:var\(--us-ink-12\);color:var\(--us-ink-40\)/);
+  assert.match(css, /\.left-for-you-composer-actions button:not\(:disabled\)/);
+  assert.match(css, /\.left-for-you-composer-actions button:disabled/);
+  assert.match(css, /box-shadow:/);
 });
 
 test('M5G5 location policy treats old coordinates as stale (M12A: the last value stays, marked stale)', () => {
