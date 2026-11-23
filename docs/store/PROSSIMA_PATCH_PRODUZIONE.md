@@ -2,9 +2,37 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign: la domanda esce da Gioca, la Sintonia va in «Il vostro angolo» (23/11)
+
+**Stato:** ramo `claude/redesign-angolo` (sopra quello delle mascotte), verso il ramo fisso di staging. Founder, 23/11: «ricorda di togliere la domanda di oggi e di spostare sintonia come nel redesign». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D2, D3 e D11.
+
+**Cosa cambia:**
+- **Gioca senza la domanda di oggi:** la domanda resta solo su Oggi. In Gioca restano la settimana delle risposte e i giochi; gettoni, «Vi aspetta» e i tre stati arrivano con la fase 6.
+- **Gioca senza le schede Giochi/Sintonia:** Gioca è solo i giochi.
+- **I due personaggi sulla foto di Oggi** (sopra la riga della foto, a destra), nello stesso ordine sui due telefoni: chi ha creato la coppia, poi chi è entrato. Si vedono solo quando ci siete tutti e due.
+- **«Il vostro angolo»:** toccando i personaggi si apre un foglio dal basso con i due personaggi e i loro nomi, poi la Sintonia di prima, uguale: livello, ritmo, prossimo sblocco, «I vostri sblocchi» (temi ed effetti di Oggi, stili del countdown, Ti penso, icona), ultimi progressi, «Come cresce la Sintonia». Si chiude con la X, toccando fuori, con Esc o con il tasto indietro di Android. Ha il colore di Noi, il punto di mezzo tra i vostri due.
+- Si apre l'angolo anche dai collegamenti che portavano alla scheda Sintonia, e dopo una missione completata, sulla pagina dove sei.
+- Restano per la fase 4: i cerchi del livello diventano i personaggi, il guardaroba, la scala nuova dei premi (numeri da mostrare prima).
+
+**Test:** `tests/angolo.test.js`, un test nuovo in `tests/struttura-browser.test.js` (si apre dai personaggi, la Sintonia c'è e non esce dal foglio, Gioca senza domanda e senza schede).
+
+### Redesign: via le mascotte (23/11)
+
+**Stato:** ramo `claude/redesign-via-mascotte`, verso il ramo fisso di staging. Founder, 23/11: «ricorda di togliere le mascotte». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D5 (Compagni in pensione per tutti).
+
+**Cosa cambia:**
+- **Nessuno siede più sopra la barra:** Maudit, Milo, Bea e Firix non compaiono più, per nessuno. Tolti dall'app `pet.js`, `companions.js`, `pet.css`, `companions.css` (anche dai build e dalla cache offline).
+- **Via** la riga «Compagni» dalle Impostazioni, l'avviso «È arrivato…» su Oggi, il gruppo «Compagni» e gli «Accessori» del compagno tra i premi della Sintonia (ritirati: le scelte salvate restano leggibili).
+- **Restano:** la funzione del server `get_companions_v1` con i suoi dati, e le immagini approvate in `assets/derived/pet/` (1,1 MB, ancora copiate nel pacchetto: toglierle è un asset approvato, serve il sì del founder).
+- Gli accessori già presi passeranno ai personaggi con il guardaroba (fase 4).
+
+**Novità all'uscita (D5):** una riga del tipo «I compagni sono andati in pensione: al loro posto, accessori per i vostri personaggi». Va scritta solo quando il guardaroba dei personaggi è in staging.
+
+**Test:** `tests/via-mascotte.test.js`; tolti i test che provavano solo le mascotte nel client (`pet-foundation`, `pet-foundation-browser`, `maudit-interaction`, `maudit-interaction-browser`, `companions-v1-client`, `pet-accessories`). Resta `companions-v1-db.test.js` per il server.
+
 ### Redesign, fase 3: i colori della coppia (23/11)
 
-**Stato:** ramo `claude/redesign-fase3-colori`, verso il ramo fisso di staging. Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D7 e D8.
+**Stato:** in staging dal 23/11 (PR #282, merge `7fa2ca82`, sito `…-s7fa2ca82`). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D7 e D8.
 
 **Cosa cambia:**
 - **Le quattro pagine sono quattro passi dal tuo colore a quello dell'altra persona:** Oggi è il tuo, Noi a un terzo, Ricordi a due terzi, Gioca il suo. Ogni telefono parte dal suo. I passi si mescolano in OKLCH (`person-colors.js`): anche tra due colori opposti, come blu e pesca, non passano dal grigio. Il colore di Noi (le cose di tutti e due) è il punto di mezzo.

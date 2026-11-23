@@ -158,20 +158,73 @@
     }
   }
 
+  // ---------------------------------------------------------------- voi due, on Oggi
+  // D2 and D3: the two characters on the photo of Oggi; a tap opens Il vostro
+  // angolo. Both phones show the same two in the same order: whoever created
+  // the couple, then whoever joined. Nothing until the other person is in.
+  function paintDuo() {
+    if (!d) return;
+    let identity = {};
+    try { identity = w.UsIdentity?.current?.() || {}; } catch (_) { identity = {}; }
+    const both = ['francesco', 'beatrice'].every((role) => profiles().some((p) => p?.role === role));
+    const name = (role) => identity.nameForRole?.(role) || (role === myRole() ? 'Tu' : 'La tua persona');
+    d.querySelectorAll('[data-us-duo]').forEach((el) => {
+      const big = el.dataset.usDuo === 'big';
+      if (!both || !w.usProfile?.id) { el.innerHTML = ''; if (!big) el.hidden = true; return; }
+      el.hidden = false;
+      el.innerHTML = ['francesco', 'beatrice'].map((role) => `<span class="us-duo-one">${character(role, { size: big ? 96 : 58 })}${big ? `<span class="us-duo-name" translate="no">${esc(name(role))}</span>` : ''}</span>`).join('');
+    });
+  }
+
+  // ---------------------------------------------------------------- Il vostro angolo
+  // D3: Sintonia is no longer a tab of Gioca. Its blocks (moved into
+  // #usGiocaSintonia by noi-v2.js, painted by progression.js) live in this
+  // sheet, over the page you are on. The wardrobe comes with fase 4.
+  const angolo = () => d?.getElementById('usAngolo');
+  function openAngolo() {
+    const sheet = angolo();
+    if (!sheet || !w.usProfile?.couple_id) return false;
+    paintDuo();
+    w.UsUiFoundation?.cancelSurfaceExit?.(sheet);
+    sheet.setAttribute('aria-hidden', 'false');
+    sheet.classList.add('open');
+    // What opening the Sintonia tab loaded before: the level, its history, the collection.
+    w.hydrateBond?.();
+    w.hydrateResonanceHistory?.();
+    w.USProgression?.hydrate?.({ showUnlocks: true, force: true });
+    return true;
+  }
+  function closeAngolo() {
+    const sheet = angolo();
+    if (!sheet?.classList.contains('open')) return;
+    const finish = () => { sheet.classList.remove('open'); sheet.setAttribute('aria-hidden', 'true'); };
+    sheet.classList.remove('open');
+    if (!w.UsUiFoundation?.exitSurface?.(sheet, finish)) finish();
+  }
+
+  const paintAll = () => { paintMe(); paintDuo(); };
   if (d && w.addEventListener) {
     // The couple's profiles arrive after boot, and change with the account.
-    w.addEventListener('us-identity-change', paintMe);
+    w.addEventListener('us-identity-change', () => { paintAll(); if (!w.usProfile?.couple_id) closeAngolo(); });
+    d.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!target?.closest) return;
+      if (target.closest('[data-us-angolo]')) openAngolo();
+      else if (target.closest('[data-angolo-close]')) closeAngolo();
+    });
+    d.addEventListener('keydown', (event) => { if (event.key === 'Escape' && angolo()?.classList.contains('open')) closeAngolo(); });
     const boot = () => {
-      paintMe();
+      paintAll();
       let tries = 0;
-      const wait = () => { paintMe(); if (!w.usProfile?.couple_id && tries++ < 40) setTimeout(wait, 500); };
+      const wait = () => { paintAll(); if (!w.usProfile?.couple_id && tries++ < 40) setTimeout(wait, 500); };
       wait();
       // Come stai turns twelve hours old while US stays open.
-      setInterval(() => { if (!d.hidden) paintMe(); }, 60000);
+      setInterval(() => { if (!d.hidden) paintAll(); }, 60000);
     };
     if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot, { once: true });
     else boot();
+    w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo });
   }
 
-  return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, LOOK_HEAD, LOOK_FACE, character, slot, shapeOf, lookOf, colorName, myRole, paintMe });
+  return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, LOOK_HEAD, LOOK_FACE, character, slot, shapeOf, lookOf, colorName, myRole, paintMe, paintDuo });
 });

@@ -48,10 +48,8 @@
 <link rel="stylesheet" href="/year-recap.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/couple-notes.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/lavagna.css?v=us-rilascio-20261114-109"/>
-<link rel="stylesheet" href="/companions.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/distance.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/member-status.css?v=us-rilascio-20261114-109"/>
-<link rel="stylesheet" href="/pet.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/settings.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/identity.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/settings2.css?v=us-rilascio-20261114-109" media="print" onload="this.media='all'"/>
@@ -485,8 +483,10 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
            top to bottom: the photo's caption, the next event and the distance
            (they step aside while a card waits), what is waiting for me (or the
            notifications invite), then the Domanda di oggi. A band above the
-           nav stays free for Maudit. -->
+           nav stays free (it held the companion, retired on 23/11/2026; Oggi is redone in fase 5). -->
       <div class="us-oggi-dock og-bottom" id="usOggiDock">
+        <!-- Voi due on the photo (redesign definitivo, D2 e D3): a tap opens Il vostro angolo (personaggi.js). -->
+        <button type="button" class="us-angolo-entry" data-us-angolo data-us-duo aria-label="Voi due: apri Il vostro angolo" hidden></button>
         <p class="og-cap" id="usOggiCaption" hidden><em id="usOggiCaptionText" translate="no"></em><small><span class="dot" id="usOggiCaptionDot" aria-hidden="true"></span><span id="usOggiCaptionMeta"></span></small></p>
         <div class="og-row" id="usOggiRow" hidden>
           <button type="button" class="og-next" id="usOggiNext" hidden><span class="us-icon" data-us-icon="calendar-blank" aria-hidden="true"></span><b id="usOggiNextWhen"></b><span id="usOggiNextTitle" translate="no"></span></button>
@@ -547,6 +547,17 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </div>
 
   <!-- Come stai (02/11/2026): the twelve states, or the words' form (Settings). -->
+  <!-- Il vostro angolo (redesign definitivo, 23/11/2026, D3): Sintonia, out of Gioca. noi-v2.js moves its blocks into
+       #usGiocaSintonia, progression.js paints them, personaggi.js opens and closes the sheet. -->
+  <div id="usAngolo" class="us-angolo-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+    <div class="us-modal-backdrop" data-angolo-close></div>
+    <section class="us-sheet is-bottom us-angolo-sheet" role="dialog" aria-modal="true" aria-labelledby="usAngoloHeading" data-us-modal-panel>
+      <header class="us-angolo-head"><h2 id="usAngoloHeading">Il vostro angolo</h2><button type="button" class="us-modal-close" data-us-modal-close data-angolo-close aria-label="Chiudi Il vostro angolo"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+      <div class="us-angolo-duo" data-us-duo="big"></div>
+      <section id="usGiocaSintonia" class="us-gioca-sintonia" aria-label="Sintonia"></section>
+    </section>
+  </div>
+
   <div id="usStatusSheet" class="us-status-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
     <div class="us-modal-backdrop" data-status-close></div>
     <section class="us-sheet is-bottom us-status-sheet" role="dialog" aria-modal="true" aria-labelledby="usStatusHeading" data-us-modal-panel>
@@ -938,11 +949,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <span class="us-setting-main"><b>Suoni e vibrazione</b></span>
           <span class="us-setting-value" id="usFeedbackValue">Attivi</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
-        <button type="button" class="us-setting-row us-settings2-row us-settings2-switch-row" data-us-setting="maudit" id="usMauditSetting" role="switch" aria-checked="true">
-          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="heart"></span></span>
-          <span class="us-setting-main"><b>Compagni</b><small>Il vostro compagno sopra la barra</small></span>
-          <span class="us-settings2-switch" aria-hidden="true"><u></u></span>
-        </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="widgets" hidden>
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="squares-four"></span></span>
           <span class="us-setting-main"><b>Widget</b><small>Sulla schermata Home</small></span>
@@ -1037,15 +1043,10 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   <main id="quiz" class="page">
     <section class="section us-gv2-page">
       <header class="us-page-head" data-s><h2>Gioca</h2><button type="button" class="us-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button></header>
-      <div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia">
-        <button type="button" id="usGiocaTabGames" class="us-gioca-tab" role="tab" aria-controls="usGiocaGames" aria-selected="true" tabindex="0">Giochi</button>
-        <button type="button" id="usGiocaTabSintonia" class="us-gioca-tab" role="tab" aria-controls="usGiocaSintonia" aria-selected="false" tabindex="-1">Sintonia</button>
-      </div>
-      <div id="usGiocaGames" class="us-gioca-games" role="tabpanel" aria-labelledby="usGiocaTabGames">
+      <div id="usGiocaGames" class="us-gioca-games">
         <div id="quizHub" class="us-gv2-hub" aria-live="polite"><div class="us-gv2-empty" aria-busy="true">Carico…</div></div>
         <div id="usGameV2Panel" class="us-gv2-panel hidden" aria-live="polite"></div>
       </div>
-      <section id="usGiocaSintonia" class="us-gioca-sintonia" role="tabpanel" aria-labelledby="usGiocaTabSintonia" hidden></section>
     </section>
   </main>
 </div>
@@ -1058,8 +1059,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 <button data-us-feedback="tap" data-page="moments" onclick="go('moments',{nav:true})" aria-label="Ricordi"><span class="nicon"><span class="us-nav-icon us-nav-icon--moments" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/images-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/images-fill.svg"></span></span></span><span class="nlabel">Ricordi</span></button>
 <button data-us-feedback="tap" data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Gioca"><span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/game-controller-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/game-controller-fill.svg"></span></span></span><span class="nlabel">Gioca</span></button>
 </nav>
-<!-- US PET V1: decorative layer on the nav rim; unmounted until an approved asset exists. -->
-<div class="us-pet-layer" id="usPetLayer" aria-hidden="true" data-us-ambient hidden><span class="us-pet-actor"></span></div>
 
 
 <div class="us-events-overlay" id="usEventsOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
@@ -1428,8 +1427,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 <script defer src="/year-recap.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/couple-notes.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/lavagna.js?v=us-rilascio-20261114-109"></script>
-<script defer src="/pet.js?v=us-rilascio-20261114-109"></script>
-<script defer src="/companions.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/distance.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/due-colori.js?v=us-rilascio-20261114-109"></script>
 </body></html>

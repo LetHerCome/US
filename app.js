@@ -905,7 +905,6 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.UsYearRecap?.reset?.();
   window.UsCoupleNotes?.reset?.();
   window.UsLavagna?.reset?.();
-  window.UsCompanions?.reset?.();
   window.UsDistance?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
   const storageKeys=[
@@ -2732,17 +2731,6 @@ function renderToccaATe({daily=false,game=false,challenge=false}={}){
   tab.setAttribute('aria-label',on?'Oggi, tocca a te':'Oggi');
   return on;
 }
-// S12 — Maudit hops once when something arrives for me (Ti penso, Lasciato
-// per te) and when the answers of the day are revealed. A blocked or switched
-// off Maudit does not hop, and the hop is tried again at the next refresh.
-const usOggiPetHops=new Set();
-function oggiPetHop(reason,key){
-  if(!key||usOggiPetHops.has(key))return false;
-  let hopped=false;
-  try{hopped=Boolean(window.USPet?.react?.(reason));}catch(_){hopped=false;}
-  if(hopped)usOggiPetHops.add(key);
-  return hopped;
-}
 // ===== M9B — Domanda di oggi: il rituale quotidiano su Oggi =====
 // Legge SOLO lo stato canonico di get_daily_state (window.todayState via
 // hydrateToday): nessuna copia locale delle risposte, nessun reveal anticipato.
@@ -2969,9 +2957,6 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   if(revealNotice)candidates.push(revealNotice);
   const gameTurn=gameTurnTodayPriorityViewModel();
   if(gameTurn)candidates.push(gameTurn);
-  // Compagni V1 (companions.js): a new companion, told once.
-  const companion=window.UsCompanions?.todayPriority?.();
-  if(companion)candidates.push(companion);
   // Accoglienza V1 (distance.js): one question for the couple, asked once.
   const distance=window.UsDistance?.todayPriority?.();
   if(distance)candidates.push(distance);
@@ -2996,9 +2981,6 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   if(refreshId!==usTodayPriorityRefreshId)return [];
   const priorities=composeTodayPriorities(candidates);
   renderTodayPriorities(priorities);
-  if(thinkPriority)oggiPetHop('think',thinkPriority.factKey);
-  if(leftPriority)oggiPetHop('left-for-you',leftPriority.factKey);
-  if(revealNotice)oggiPetHop('daily-question',revealNotice.factKey);
   // Un solo ingresso: il link passivo compare solo quando l'avviso non è in coda.
   renderDailyRevealLink(priorities.some(item=>item.category==='answers_ready')?null:dailyRevealLinkViewModel(dailySource));
   const dailyState=dailySource?.state;
@@ -3037,7 +3019,6 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
   }
   if(action==='challenge')window.UsWeeklyChallenge?.open?.();
   if(action==='recap')window.UsYearRecap?.open?.();
-  if(action==='companion')window.UsCompanions?.open?.();
   if(action==='distance')window.UsDistance?.open?.();
 });
 // M10.2 — nascondere l'avviso "Risposte pronte" = "non lo voglio più su Oggi",
@@ -3212,7 +3193,7 @@ function closeToday(){
 }
 window.closeToday=closeToday;
 
-// ===== 1.0 — La domanda di oggi in Gioca (was home-cleanup.js) =====
+// ===== 1.0 — La domanda di oggi in Gioca (was home-cleanup.js); since 23/11/2026 (D11) only its model and the week stay =====
 // Same question, same sheet: the Gioca card opens it where you are, like the
 // Oggi card. It only reads the canonical state hydrateToday already loaded.
 function dailyHubModel(){
@@ -3227,26 +3208,12 @@ function dailyHubModel(){
   if(state.partner_has_answer)return {...base,state:'answer',meta:`${partner} ha già risposto · tocca a te`,cta:'Rispondi'};
   return {...base,state:'answer',meta:'Una domanda per voi oggi',cta:'Rispondi'};
 }
-function dailyHubMarkup(model){
-  if(!model)return '<div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">La domanda di oggi</span><small>La domanda di oggi non è ancora disponibile.</small></div>';
-  // Never the hidden answers here: question, state and the way in.
-  return `<button type="button" class="us-gv2-daily" data-us-daily-entry data-daily-state="${escapeHtml(model.state)}">
-   <span class="us-gv4-daily-art" aria-hidden="true"><span class="us-gv4-art-ring"></span><span class="us-gv4-art-heart"></span></span>
-   <span class="us-gv2-daily-copy"><small>La domanda di oggi</small><b>${escapeHtml(model.question)}</b><span class="us-gv2-daily-state">${escapeHtml(model.meta)}</span></span>
-   <span class="us-gv4-daily-footer"><span>Una domanda, due risposte</span><span class="us-gv2-daily-cta">${escapeHtml(model.cta)} <span aria-hidden="true">›</span></span></span>
-  </button>`;
-}
+// La domanda di oggi left Gioca (redesign definitivo, 23/11/2026, D11): it
+// lives on Oggi only. Gioca keeps the week of answers, repainted here.
 function paintDailyInGioca(){
   const hub=document.getElementById('quizHub');
   if(!hub||hub.classList.contains('hidden'))return;
-  const slot=hub.querySelector('.us-gv2-daily-slot');
-  if(!slot)return;
   window.USGameV2?.paintWeek?.();
-  const model=dailyHubModel();
-  const signature=model?`${model.questionId}:${model.state}:${model.cta}:${model.meta}`:'unavailable';
-  if(slot.dataset.usDailySignature===signature)return;
-  slot.dataset.usDailySignature=signature;
-  slot.innerHTML=dailyHubMarkup(model);
 }
 // F2 — Gioca has no turn API: Oggi reads "Tocca a te" from the hub games.js
 // just rendered (a round where the other is waiting, or Per voi pending).
@@ -3264,11 +3231,6 @@ function readGameTurnFromHub(){
   usOggiGameTurnTimer=setTimeout(()=>{if(window.usProfile)refreshTodayPriorities();},120);
 }
 function paintDailyCardAndTurn(){paintDailyInGioca();readGameTurnFromHub();}
-document.getElementById('quizHub')?.addEventListener('click',event=>{
-  if(!event.target.closest?.('[data-us-daily-entry]'))return;
-  event.preventDefault();
-  openToday();
-});
 window.addEventListener('us-identity-change',()=>paintDailyInGioca());
 window.UsDailyQuestionHub=Object.freeze({model:dailyHubModel,paint:paintDailyInGioca,paintCard:paintDailyCardAndTurn,open:openToday});
 

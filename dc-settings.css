@@ -276,7 +276,6 @@
 #settings [data-us-setting="distance"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/arrows-horizontal-regular.svg")}
 #settings [data-us-setting="app-lock"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/fingerprint-regular.svg")}
 #settings [data-us-setting="feedback"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/waveform-regular.svg")}
-#settings [data-us-setting="maudit"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/cat-regular.svg")}
 #settings [data-us-setting="optimize-ricordi"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/image-regular.svg")}
 #settings [data-us-setting="home-photo"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/arrow-clockwise-regular.svg")}
 #settings [data-us-setting="sync-status"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/cloud-regular.svg")}

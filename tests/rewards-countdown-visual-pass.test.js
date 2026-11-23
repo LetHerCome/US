@@ -137,10 +137,11 @@ test('Unlock moment: tells where the piece lives; retired pieces are never annou
   assert.equal(el('usProgressionUnlockExtra').hidden, true, 'the style is the reward itself, not an extra');
   assert.match(el('usProgressionUnlockPreview').innerHTML, /class="cd" data-style="aurora"/);
   assert.equal(el('usProgressionUnlockUse').textContent, 'Usalo nel countdown');
-  assert.deepEqual(reactions, [], 'the PET waits until the moment is over');
+  assert.deepEqual(reactions, [], 'no companion reacts');
   await el('usProgressionUnlockUse').emit('click');
   assert.deepEqual(applied, ['aurora'], '"Usalo" applies the countdown style through USCountdown');
-  assert.deepEqual(reactions, ['reward']);
+  // The companions are retired (redesign definitivo, D5): nobody hops afterwards.
+  assert.deepEqual(reactions, []);
 });
 
 test('Collection: Countdown styles are a visible group whose locks follow the existing reward rows', async () => {

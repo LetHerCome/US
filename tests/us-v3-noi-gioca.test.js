@@ -161,25 +161,24 @@ test('Noi calendar: month change animates once and only without reduced motion',
 // Round 3 parity (062): the mockup's order — Sfida di oggi, the 7-day strip,
 // the bento games, La vostra domanda; rounds no tile stands for and the
 // completed ones follow. The daily slot is painted by app.js.
-test('Gioca round 3: daily first, the week, bento games, weekly question, then the rest', () => {
+// Redesign definitivo (D11): la domanda di oggi left Gioca, the week leads.
+test('Gioca round 3: the week, bento games, weekly question, then the rest', () => {
   const games = read('games.js');
   const hub = games.slice(games.indexOf('function renderHub() {'), games.indexOf('function renderHubError() {'));
-  const order = ['us-gv2-daily-slot', '${weekStrip()}', 'us-gv2-choose', 'data-gv2-action="per-voi"', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
+  assert.doesNotMatch(hub, /us-gv2-daily-slot/);
+  const order = ['${weekStrip()}', 'us-gv2-choose', 'data-gv2-action="per-voi"', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
   const positions = order.map((needle) => hub.indexOf(needle));
   assert.ok(positions.every((p) => p >= 0), JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a, b) => a - b), positions);
   assert.doesNotMatch(hub, /dayRail\(\)/);
-  assert.match(read('app.js'), /const slot=hub\.querySelector\('\.us-gv2-daily-slot'\);/);
   assert.match(games, /\$\{knownPartner\(\) \|\| 'La tua persona'\} la troverà in Gioca: risponderete tutti e due\./, 'write → discover, in one line (mockup wording)');
 });
 
-test('Sintonia: one premium segmented control, keyboard-friendly, and a page that scrolls', () => {
-  // Round 3: [data-s] so the segmented control rises first, as the mockup's .seg.
-  assert.match(html, /<div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia">/);
-  assert.match(noiJs, /\$\('usGiocaTabs'\)\?\.setAttribute\('data-active',giocaTab\)/);
-  assert.match(noiJs, /e\.key!=='ArrowLeft'&&e\.key!=='ArrowRight'/);
-  assert.match(noiCss, /#quiz \.us-gioca-tabs\[data-active="sintonia"\]::before\{transform:translateX\(100%\)\}/);
+// Redesign definitivo (D3): no segmented control in Gioca; Sintonia scrolls inside Il vostro angolo.
+test('Sintonia: no tabs in Gioca, and a sheet that scrolls without a nested scroller', () => {
+  assert.doesNotMatch(html, /id="usGiocaTabs"/);
+  assert.doesNotMatch(noiJs, /usGiocaTabs|giocaTab/);
   // The nested scroller (max-height + overflow:auto + overscroll contain) swallowed the page scroll.
-  assert.match(noiCss, /#quiz \.us-gioca-sintonia \.us-progression-rewards\{max-height:none;overflow:visible;overscroll-behavior:auto;/);
-  assert.doesNotMatch(noiCss, /#quiz \.us-gioca-sintonia[^{]*\{[^}]*overflow-y:auto/);
+  assert.match(noiCss, /#usAngolo \.us-gioca-sintonia \.us-progression-rewards\{max-height:none;overflow:visible;overscroll-behavior:auto;/);
+  assert.doesNotMatch(noiCss, /#usAngolo \.us-gioca-sintonia[^{]*\{[^}]*overflow-y:auto/);
 });

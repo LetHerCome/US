@@ -40,7 +40,9 @@ const SLOTS = Object.freeze({
   // Premi Sintonia V2: how this phone receives a Ti penso.
   ti_penso: { pref: 'ti_penso', label: 'Ti penso', place: 'quando ne ricevi uno', unlock: 'Nuovo Ti penso', where: 'Quando ricevi un Ti penso' },
   // Premi Sintonia V2, Fase 2: what the companion wears on this phone (pet.css).
-  pet_accessory: { pref: 'pet_accessory', label: 'Accessori', place: 'sul vostro compagno', unlock: 'Nuovo accessorio', where: 'Sul vostro compagno, sopra la barra' },
+  // Compagni retired for everyone (redesign definitivo, 23/11/2026, D5): their
+  // accessories go to the characters with the wardrobe (fase 4).
+  pet_accessory: { pref: 'pet_accessory', retired: true, label: 'Accessori', place: 'sul vostro compagno', unlock: 'Nuovo accessorio', where: 'Sul vostro compagno, sopra la barra' },
   // and the icon of US on this phone (native-plugins/us-app-icon, the Android app).
   app_icon: { pref: 'app_icon', label: 'Icona dell’app', place: 'sul tuo telefono', unlock: 'Nuova icona', where: 'L’icona di US sul tuo telefono, nell’app Android' },
   frame: { pref: 'frame_reward_id', retired: true, label: 'Cornici', place: 'sulla foto di Oggi', unlock: 'NUOVA CORNICE', where: 'Sulla foto di Oggi' },
@@ -313,12 +315,9 @@ function miniCount() {
 }
 // Premi Sintonia V2, Fase 2: pictures fetched only when a tile shows them.
 const REWARD_ART = '/assets/derived/rewards/';
-// An accessory tile shows this phone's companion wearing it; one not drawn on
-// the companions yet shows the accessory alone.
+// An accessory tile shows the accessory alone (the companions are retired; it
+// goes to the characters with the wardrobe, fase 4).
 function accessoryArt(id) {
-  const pet = window.USPet;
-  const who = pet?.companion?.();
-  if (id === 'none' || pet?.WORN?.includes(id)) return pet?.wornArt?.(who, id === 'none' ? '' : id) || '/assets/derived/pet/us-pet-maudit-awake-v2.webp';
   return `${REWARD_ART}us-acc-${id}-v1.webp`;
 }
 function artMarkup(item, big = false) {
@@ -501,7 +500,8 @@ function releaseCard() { gain = null; }
 const sintoniaPanel = () => $('usGiocaSintonia');
 function sintoniaVisible() {
   const panel = sintoniaPanel();
-  return Boolean(panel && !panel.hidden && $('quiz')?.classList?.contains('active') && !document.hidden);
+  // Il vostro angolo (redesign definitivo, D3): Sintonia shows while its sheet is open.
+  return Boolean(panel && $('usAngolo')?.classList?.contains('open') && !document.hidden);
 }
 // The bar: a full-width fill that slides inside its rounded track.
 function animBar(fromPct, toPct, ms) {
@@ -560,7 +560,6 @@ async function playGain(fromXp, toXp) {
   paintCard(toXp);
   const bar = $('bondPageFill');
   if (bar) bar.style.width = '100%';
-  window.USPet?.react?.('reward');
   window.UsFeedback?.success?.();
   await Promise.all([animBar(100, 0, 10), tweenLens(after.current / after.needed, 900, (t) => 1 - (1 - t) ** 4)]);
   await animBar(0, pct(after), 400);
@@ -617,13 +616,11 @@ function applyPreferences(next = state) {
   const accent = value('accent');
   const effect = value('effect');
   const think = value('ti_penso');
-  const accessory = value('pet_accessory');
   syncAppIcon(value('app_icon'));
   // A data attribute on <html> restyles the whole page: written only when it changes.
   if (root.dataset.usTheme !== (theme || undefined)) { if (theme) root.dataset.usTheme = theme; else delete root.dataset.usTheme; }
   syncSplashTheme(theme);
   if (root.dataset.usThinkFx !== (think || undefined)) { if (think) root.dataset.usThinkFx = think; else delete root.dataset.usThinkFx; }
-  window.USPet?.setAppearance?.({ accessory: accessory || '' });
   if (root.dataset.usAccent !== (accent || undefined)) { if (accent) root.dataset.usAccent = accent; else delete root.dataset.usAccent; }
   if (root.dataset.usEffect !== (effect || undefined)) { if (effect) root.dataset.usEffect = effect; else delete root.dataset.usEffect; }
   clearRetiredCosmetics(root, hero);
@@ -758,7 +755,6 @@ function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
       levelMomentClose = null;
       if (unlocks.length && fromBack) setTimeout(() => startUnlockQueue(unlocks), 120);
       else if (unlocks.length) startUnlockQueue(unlocks);
-      else window.USPet?.react?.('reward');
     };
     if (reduced || typeof root.animate !== 'function') return done();
     // core.js closeMoment: the Momento fades in 280 ms.
@@ -886,7 +882,8 @@ function paintHTML(root, markup) {
   return true;
 }
 // "Prossimo sblocco · Livello 6 / Lucciole / e Respiro · mancano 40 punti".
-// The next companion still locked (companions.js), with its level.
+// The next companion still locked. Compagni retired (23/11/2026, D5): companions.js
+// is gone, so this and the Compagni group read nothing until fase 4 rewrites the collection.
 function nextCompanion() {
   const list = window.UsCompanions?.list?.() || [];
   return list.find((c) => !c.unlocked) || null;
@@ -1240,8 +1237,6 @@ async function advanceUnlock({ used = '', oggi = false } = {}) {
   hideUnlock();
   unlockQueue = [];
   unlockIndex = 0;
-  // The moment is over and the shell is visible again: the PET may celebrate.
-  window.USPet?.react?.('reward');
   await hydrate({ showUnlocks: false, force: true });
 }
 async function dismissUnlock() {
@@ -1368,12 +1363,8 @@ function missionCompleted({ xp, questId } = {}) {
     await wait(700);
     window.closeNoiSection?.();
     await wait(280);
-    if (document.querySelector('.page.active')?.id !== 'quiz') {
-      window.openQuizHub?.({ nav: true });
-      await waitFlood();
-    }
-    const tab = $('usGiocaTabSintonia');
-    if (tab && tab.getAttribute('aria-selected') !== 'true') tab.click();
+    // Il vostro angolo opens where you are (redesign definitivo, D3).
+    window.UsAngolo?.open?.();
     await wait(500);
     window.toast?.(`Missione completata · +${points} punti ♡`, { icon: 'sparkle', quiet: false });
     await wait(700);
@@ -1494,10 +1485,6 @@ $('usProgressionRewards')?.addEventListener('click', async (event) => {
   } else if (data.progressionReward) {
     category = rewardById(data.progressionReward)?.category || '';
     ok = await equipReward(data.progressionReward);
-  } else if (data.companionPick) {
-    category = 'companion';
-    ok = Boolean(window.UsCompanions?.choose?.(data.companionPick));
-    if (ok) renderRewards(state);
   }
   if (!ok) {
     window.toast?.('Non riesco ad applicarlo ora. Riprova.');
@@ -1538,7 +1525,8 @@ $('usSintoniaGrow')?.addEventListener('click', (event) => {
   if (!target) return;
   if (target === 'daily') window.openToday?.();
   else if (target === 'games') {
-    $('usGiocaTabGames')?.click?.();
+    window.UsAngolo?.close?.();
+    window.openQuizHub?.({ nav: true });
     window.scrollTo?.({ top: 0, behavior: 'auto' });
   } else if (target === 'quest') {
     window.go?.('bond', { nav: true });

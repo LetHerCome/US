@@ -98,10 +98,10 @@ test('Rewards V2 client: motion is opt-out with reduced motion and paused when h
   const reduced = css.slice(css.lastIndexOf('@media(prefers-reduced-motion:reduce)'));
   assert.match(reduced, /:root\[data-us-effect\] \.us-top-brand::before/);
   assert.match(css, /:root\[data-us-visibility="hidden"\] \.us-top-brand::before/);
-  // US V3 — the collection lives in Gioca > Sintonia: never a nested scroller there.
+  // US V3 — the collection lives in Sintonia, in Il vostro angolo since the redesign (D3): never a nested scroller there.
   const sintonia = read('noi-v2.css');
-  assert.match(sintonia, /#quiz \.us-gioca-sintonia \.us-progression-rewards\{max-height:none;overflow:visible;overscroll-behavior:auto;/);
-  assert.match(sintonia, /#quiz \.us-gioca-sintonia \.us-reward-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(sintonia, /#usAngolo \.us-gioca-sintonia \.us-progression-rewards\{max-height:none;overflow:visible;overscroll-behavior:auto;/);
+  assert.match(sintonia, /#usAngolo \.us-gioca-sintonia \.us-reward-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(js, /<details class="us-reward-group"/);
 });
 

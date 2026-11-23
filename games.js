@@ -383,7 +383,6 @@ function renderHub() {
  const families=OFFERED.map(f=>gameCard({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)})).join('');
  root.innerHTML=`
   <h2 class="us-gv2-sr">Gioca</h2>
-  <div class="us-gv2-daily-slot" data-gv4-daily-slot data-s aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">La domanda di oggi</span><small>Preparo la domanda di oggi…</small></div></div>
   <div class="us-wc-slot" data-wc-slot></div>
   ${weekStrip()}
   <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">
@@ -1229,35 +1228,7 @@ function onSubmit(event) {
   else if (event.target.id === 'usGv2WeeklyForm') { event.preventDefault(); submitWeekly(event.target); }
 }
 
-// Giochi / Sintonia, as the mockup's setG: the pill springs across (CSS),
-// the panel arrives from its side (24px, 380ms) and Sintonia's blocks rise
-// one after the other (16px, 460ms, 50ms apart). noi-v2.js owns the switch;
-// this only watches its data-active and draws the motion.
-function bindTabMotion() {
-  const tabs = byId('usGiocaTabs');
-  if (!tabs || tabs.dataset.gv2Motion || typeof MutationObserver !== 'function') return;
-  tabs.dataset.gv2Motion = '1';
-  let last = tabs.getAttribute('data-active');
-  new MutationObserver(() => {
-    const now = tabs.getAttribute('data-active');
-    if (!now || now === last) return;
-    const had = last;
-    last = now;
-    if (!had) return;
-    const show = byId(now === 'sintonia' ? 'usGiocaSintonia' : 'usGiocaGames');
-    if (!canAnimate(show)) return;
-    show.animate([{ opacity: 0, transform: `translateX(${now === 'sintonia' ? 24 : -24}px)` }, { opacity: 1, transform: 'none' }], { duration: 380, easing: EASE.out });
-    if (now !== 'sintonia') return;
-    // Only the [hidden] attribute decides (no layout read here: this runs in
-    // the tap, right after the panel swap, and a read would force a layout).
-    Array.from(show.children).filter((el) => !el.hidden).forEach((el, i) => {
-      el.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], { duration: 460, delay: i * 50, easing: EASE.out, fill: 'backwards' });
-    });
-  }).observe(tabs, { attributes: true, attributeFilter: ['data-active'] });
-}
-
 function boot() {
-  bindTabMotion();
   const hub = byId('quizHub');
   const root = panel();
   if (!hub || !root) return;

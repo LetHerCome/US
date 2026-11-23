@@ -103,50 +103,50 @@
 #quiz .us-gioca-tabs[data-active="sintonia"]::before{transform:translateX(100%)}
 #quiz .us-gioca-tab{position:relative;z-index:1;min-height:42px;border:0;border-radius:var(--us-radius-pill);background:transparent;color:var(--us-color-text-3);font-family:var(--us-font-ui,inherit);font-size:14px;font-weight:700;transition:color var(--us-motion-fast)}
 #quiz .us-gioca-tab[aria-selected="true"]{color:var(--us-color-text)}
-#quiz .us-gioca-games[hidden],#quiz .us-gioca-sintonia[hidden]{display:none!important}
+#quiz .us-gioca-games[hidden],#usAngolo .us-gioca-sintonia[hidden]{display:none!important}
 
 /* ---- Sintonia inside Gioca. The nodes moved here from Noi, so their
    Noi-scoped recipe is re-declared for this host. Crucially the collection is
    no longer a nested scroller: the page scrolls, as on every other tab. ---- */
-#quiz .us-gioca-sintonia{display:flex;flex-direction:column;gap:14px}
-#quiz .us-gioca-sintonia>*{width:100%;box-sizing:border-box;flex:0 0 auto}
-#quiz .us-gioca-sintonia [hidden]{display:none!important}
-#quiz .us-gioca-sintonia .noi-resonance{display:block}
-#quiz .us-gioca-sintonia .us-progression-next{display:flex;gap:14px;padding:14px 15px;border-radius:var(--us-radius-card);background:linear-gradient(145deg,rgba(255,102,142,.08),rgba(169,133,255,.08)),rgba(255,255,255,.03);border-color:rgba(255,183,210,.18)}
-#quiz .us-gioca-sintonia .us-progression-next-preview{flex-basis:76px;width:76px;height:76px;border-radius:18px;filter:none;opacity:1;box-shadow:0 10px 24px rgba(0,0,0,.22)}
-#quiz .us-gioca-sintonia .us-progression-next-copy{gap:5px}
-#quiz .us-gioca-sintonia .us-progression-next-copy b{font-size:17px;line-height:1.08}
-#quiz .us-gioca-sintonia .us-progression-rewards-section{display:block;padding:16px 14px 6px;overflow:visible;border-radius:var(--us-radius-card)}
-#quiz .us-gioca-sintonia .us-progression-rewards-head{align-items:start;margin:0 2px 8px}
-#quiz .us-gioca-sintonia .us-progression-rewards-head h3{font-size:22px}
-#quiz .us-gioca-sintonia .us-progression-rewards{max-height:none;overflow:visible;overscroll-behavior:auto;mask-image:none;-webkit-mask-image:none;padding:0;gap:0}
-#quiz .us-gioca-sintonia .us-reward-group{display:block;min-width:0;padding:0;border-bottom:1px solid var(--us-color-line)}
-#quiz .us-gioca-sintonia .us-reward-group:last-child{border-bottom:0}
-#quiz .us-gioca-sintonia .us-reward-group-head{display:flex;align-items:center;min-height:52px;gap:10px;margin:0;padding:10px 4px;cursor:pointer;list-style:none}
-#quiz .us-gioca-sintonia .us-reward-group-head::-webkit-details-marker{display:none}
-#quiz .us-gioca-sintonia .us-reward-group-head::after{content:"";display:block;flex:0 0 15px;width:15px;height:15px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:transform var(--us-motion-fast) var(--us-ease-standard)}
-#quiz .us-gioca-sintonia .us-reward-group[open]>.us-reward-group-head::after{transform:rotate(90deg)}
-#quiz .us-gioca-sintonia .us-reward-group-head b{font-size:13.5px}
-#quiz .us-gioca-sintonia .us-reward-group-head span{font-size:11px}
-#quiz .us-gioca-sintonia .us-reward-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:2px 1px 16px}
+#usAngolo .us-gioca-sintonia{display:flex;flex-direction:column;gap:14px}
+#usAngolo .us-gioca-sintonia>*{width:100%;box-sizing:border-box;flex:0 0 auto}
+#usAngolo .us-gioca-sintonia [hidden]{display:none!important}
+#usAngolo .us-gioca-sintonia .noi-resonance{display:block}
+#usAngolo .us-gioca-sintonia .us-progression-next{display:flex;gap:14px;padding:14px 15px;border-radius:var(--us-radius-card);background:linear-gradient(145deg,rgba(255,102,142,.08),rgba(169,133,255,.08)),rgba(255,255,255,.03);border-color:rgba(255,183,210,.18)}
+#usAngolo .us-gioca-sintonia .us-progression-next-preview{flex-basis:76px;width:76px;height:76px;border-radius:18px;filter:none;opacity:1;box-shadow:0 10px 24px rgba(0,0,0,.22)}
+#usAngolo .us-gioca-sintonia .us-progression-next-copy{gap:5px}
+#usAngolo .us-gioca-sintonia .us-progression-next-copy b{font-size:17px;line-height:1.08}
+#usAngolo .us-gioca-sintonia .us-progression-rewards-section{display:block;padding:16px 14px 6px;overflow:visible;border-radius:var(--us-radius-card)}
+#usAngolo .us-gioca-sintonia .us-progression-rewards-head{align-items:start;margin:0 2px 8px}
+#usAngolo .us-gioca-sintonia .us-progression-rewards-head h3{font-size:22px}
+#usAngolo .us-gioca-sintonia .us-progression-rewards{max-height:none;overflow:visible;overscroll-behavior:auto;mask-image:none;-webkit-mask-image:none;padding:0;gap:0}
+#usAngolo .us-gioca-sintonia .us-reward-group{display:block;min-width:0;padding:0;border-bottom:1px solid var(--us-color-line)}
+#usAngolo .us-gioca-sintonia .us-reward-group:last-child{border-bottom:0}
+#usAngolo .us-gioca-sintonia .us-reward-group-head{display:flex;align-items:center;min-height:52px;gap:10px;margin:0;padding:10px 4px;cursor:pointer;list-style:none}
+#usAngolo .us-gioca-sintonia .us-reward-group-head::-webkit-details-marker{display:none}
+#usAngolo .us-gioca-sintonia .us-reward-group-head::after{content:"";display:block;flex:0 0 15px;width:15px;height:15px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:transform var(--us-motion-fast) var(--us-ease-standard)}
+#usAngolo .us-gioca-sintonia .us-reward-group[open]>.us-reward-group-head::after{transform:rotate(90deg)}
+#usAngolo .us-gioca-sintonia .us-reward-group-head b{font-size:13.5px}
+#usAngolo .us-gioca-sintonia .us-reward-group-head span{font-size:11px}
+#usAngolo .us-gioca-sintonia .us-reward-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:2px 1px 16px}
 /* Oggi looks are tall phone previews: three per row reads as a gallery. */
-#quiz .us-gioca-sintonia .us-reward-group[data-category^="oggi_"] .us-reward-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-#quiz .us-gioca-sintonia .us-progression-look .us-progression-reward-preview{aspect-ratio:9/13}
-#quiz .us-gioca-sintonia .us-progression-reward{gap:7px;padding:6px 6px 9px;border-radius:17px}
-#quiz .us-gioca-sintonia .us-progression-reward-preview{border-radius:13px}
-#quiz .us-gioca-sintonia .us-progression-reward-copy b{font-size:12px}
-#quiz .us-gioca-sintonia .us-progression-reward-copy small{font-size:10.5px}
-#quiz .us-gioca-sintonia details.noi-resonance-history,#quiz .us-gioca-sintonia details.noi-resonance-guide{display:block;padding:0;border-radius:18px;background:rgba(255,255,255,.025);border:1px solid var(--us-color-line)}
-#quiz .us-gioca-sintonia details>summary{display:flex;align-items:center;justify-content:space-between;min-height:52px;padding:12px 15px;cursor:pointer;list-style:none;color:var(--us-color-text);font-size:13.5px;font-weight:700}
-#quiz .us-gioca-sintonia details>summary::-webkit-details-marker{display:none}
-#quiz .us-gioca-sintonia details>summary::after{content:"";width:17px;height:17px;flex:0 0 17px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:transform var(--us-motion-fast) var(--us-ease-standard)}
-#quiz .us-gioca-sintonia details[open]>summary::after{transform:rotate(90deg)}
-#quiz .us-gioca-sintonia details.noi-resonance-history>summary span{display:flex;flex-direction:column;gap:3px}
-#quiz .us-gioca-sintonia details.noi-resonance-history>summary small{color:var(--us-color-text-3);font-size:10.5px;font-weight:450}
-#quiz .us-gioca-sintonia details>:not(summary){margin:0 13px 13px}
-#quiz .us-gioca-sintonia details:not([open])>:not(summary){display:none!important}
-#quiz .us-gioca-sintonia details>summary:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px;border-radius:16px}
-#quiz .us-gioca-sintonia .us-look-entry{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:2px 0 14px}
+#usAngolo .us-gioca-sintonia .us-reward-group[data-category^="oggi_"] .us-reward-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#usAngolo .us-gioca-sintonia .us-progression-look .us-progression-reward-preview{aspect-ratio:9/13}
+#usAngolo .us-gioca-sintonia .us-progression-reward{gap:7px;padding:6px 6px 9px;border-radius:17px}
+#usAngolo .us-gioca-sintonia .us-progression-reward-preview{border-radius:13px}
+#usAngolo .us-gioca-sintonia .us-progression-reward-copy b{font-size:12px}
+#usAngolo .us-gioca-sintonia .us-progression-reward-copy small{font-size:10.5px}
+#usAngolo .us-gioca-sintonia details.noi-resonance-history,#usAngolo .us-gioca-sintonia details.noi-resonance-guide{display:block;padding:0;border-radius:18px;background:rgba(255,255,255,.025);border:1px solid var(--us-color-line)}
+#usAngolo .us-gioca-sintonia details>summary{display:flex;align-items:center;justify-content:space-between;min-height:52px;padding:12px 15px;cursor:pointer;list-style:none;color:var(--us-color-text);font-size:13.5px;font-weight:700}
+#usAngolo .us-gioca-sintonia details>summary::-webkit-details-marker{display:none}
+#usAngolo .us-gioca-sintonia details>summary::after{content:"";width:17px;height:17px;flex:0 0 17px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:transform var(--us-motion-fast) var(--us-ease-standard)}
+#usAngolo .us-gioca-sintonia details[open]>summary::after{transform:rotate(90deg)}
+#usAngolo .us-gioca-sintonia details.noi-resonance-history>summary span{display:flex;flex-direction:column;gap:3px}
+#usAngolo .us-gioca-sintonia details.noi-resonance-history>summary small{color:var(--us-color-text-3);font-size:10.5px;font-weight:450}
+#usAngolo .us-gioca-sintonia details>:not(summary){margin:0 13px 13px}
+#usAngolo .us-gioca-sintonia details:not([open])>:not(summary){display:none!important}
+#usAngolo .us-gioca-sintonia details>summary:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px;border-radius:16px}
+#usAngolo .us-gioca-sintonia .us-look-entry{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:2px 0 14px}
 
 @media(max-width:360px){
   #bond .us-noi-v2{--noi-gap:16px;--noi-control:38px}

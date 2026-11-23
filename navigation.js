@@ -79,6 +79,13 @@ const layers=[
     close:()=>window.UsMemberStatus?.close?.()
   },
   {
+    // Il vostro angolo (redesign definitivo, D3): back closes the sheet.
+    name:'angolo',
+    find:()=>document.getElementById('usAngolo'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsAngolo?.close?.()
+  },
+  {
     name:'distance',
     find:()=>document.getElementById('usDistanceSheet'),
     open:el=>el?.classList.contains('open'),

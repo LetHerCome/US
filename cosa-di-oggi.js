@@ -169,13 +169,12 @@
     doc.body.appendChild(fx);
     setTimeout(() => fx.remove(), 3200);
     try { w.UsFeedback?.success?.(); } catch (_) {}
-    try { w.USPet?.react?.('reward'); } catch (_) {}
   }
   function celebrate(list) {
     if (!list.length || !onOggi()) return;
     const motion = !reduced();
-    if (motion && (list.includes('step') || list.includes('gesture') || list.includes('closed'))) { hearts(); try { w.USPet?.react?.('think'); } catch (_) {} try { w.UsFeedback?.action?.(); } catch (_) {} }
-    if (motion && list.includes('streak')) { setTimeout(bumpStreak, 360); try { w.USPet?.react?.('streak'); } catch (_) {} }
+    if (motion && (list.includes('step') || list.includes('gesture') || list.includes('closed'))) { hearts(); try { w.UsFeedback?.action?.(); } catch (_) {} }
+    if (motion && list.includes('streak')) { setTimeout(bumpStreak, 360); }
     const s = state;
     const day = romeToday();
     if (list.includes('finished') && once(`week:${s?.week?.started_on || ''}`)) setTimeout(() => party('Settimana finita ♡', 'Avete scoperto tutto US · +100 punti Sintonia'), 400);

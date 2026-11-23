@@ -35,10 +35,10 @@ test('Progression V1: unlock authority stays server-side while cosmetic equip is
 });
 
 test('Progression UI: collection uses two large columns, no inner scroll and collapsible categories',()=>{
-  // US V3 — Sintonia (and its collection) lives in Gioca now.
+  // US V3 — Sintonia (and its collection) lives in Il vostro angolo since the redesign (D3).
   const sintonia = read('noi-v2.css');
-  assert.match(sintonia, /#quiz \.us-gioca-sintonia \.us-reward-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(sintonia, /#quiz \.us-gioca-sintonia \.us-progression-rewards\{max-height:none;overflow:visible;/);
+  assert.match(sintonia, /#usAngolo \.us-gioca-sintonia \.us-reward-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(sintonia, /#usAngolo \.us-gioca-sintonia \.us-progression-rewards\{max-height:none;overflow:visible;/);
   assert.match(js, /<summary class="us-reward-group-head"/);
 });
 

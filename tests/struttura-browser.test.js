@@ -35,6 +35,35 @@ test('your character opens the Profilo from Ricordi, and the arrow goes back to 
   }
 });
 
+test('the two characters on Oggi open Il vostro angolo with Sintonia; Gioca has no daily question', async (t) => {
+  const h = await start();
+  if (!h) return t.skip('Playwright unavailable');
+  try {
+    const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
+    await page.waitForSelector('#home [data-us-angolo]:not([hidden]) svg');
+    assert.equal(await page.locator('#home [data-us-angolo] .us-char').count(), 2);
+    await page.click('#home [data-us-angolo]');
+    await page.waitForFunction(() => document.getElementById('usAngolo').classList.contains('open'));
+    assert.ok(await page.locator('#usAngolo #usGiocaSintonia .noi-resonance').isVisible(), 'the level is in the angolo');
+    // The cards stay inside the sheet (the reward chips scroll sideways on purpose).
+    const spill = await page.evaluate(() => {
+      const right = document.querySelector('.us-angolo-sheet').getBoundingClientRect().right;
+      return ['.noi-resonance', '.us-progression-rhythm', '.us-progression-next'].filter((sel) => document.querySelector(`#usGiocaSintonia ${sel}`)?.getBoundingClientRect().right > right + 0.5);
+    });
+    assert.deepEqual(spill, []);
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => !document.getElementById('usAngolo').classList.contains('open'));
+    await page.evaluate(() => window.openQuizHub({ nav: true }));
+    await page.waitForFunction(() => document.querySelector('.page.active')?.id === 'quiz');
+    await page.waitForSelector('#quizHub .us-gv2-game-grid');
+    assert.equal(await page.locator('#quiz .us-gv2-daily, #quiz [data-gv4-daily-slot], #usGiocaTabs').count(), 0);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  } finally {
+    await h.close();
+  }
+});
+
 test('the heart in the middle of the bar sends a Ti penso with one tap, on every page', async (t) => {
   const h = await start();
   if (!h) return t.skip('Playwright unavailable');
