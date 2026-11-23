@@ -905,7 +905,6 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.UsYearRecap?.reset?.();
   window.UsCoupleNotes?.reset?.();
   window.UsLavagna?.reset?.();
-  window.UsCompanions?.reset?.();
   window.UsDistance?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
   const storageKeys=[
@@ -2732,17 +2731,6 @@ function renderToccaATe({daily=false,game=false,challenge=false}={}){
   tab.setAttribute('aria-label',on?'Oggi, tocca a te':'Oggi');
   return on;
 }
-// S12 — Maudit hops once when something arrives for me (Ti penso, Lasciato
-// per te) and when the answers of the day are revealed. A blocked or switched
-// off Maudit does not hop, and the hop is tried again at the next refresh.
-const usOggiPetHops=new Set();
-function oggiPetHop(reason,key){
-  if(!key||usOggiPetHops.has(key))return false;
-  let hopped=false;
-  try{hopped=Boolean(window.USPet?.react?.(reason));}catch(_){hopped=false;}
-  if(hopped)usOggiPetHops.add(key);
-  return hopped;
-}
 // ===== M9B — Domanda di oggi: il rituale quotidiano su Oggi =====
 // Legge SOLO lo stato canonico di get_daily_state (window.todayState via
 // hydrateToday): nessuna copia locale delle risposte, nessun reveal anticipato.
@@ -2969,9 +2957,6 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   if(revealNotice)candidates.push(revealNotice);
   const gameTurn=gameTurnTodayPriorityViewModel();
   if(gameTurn)candidates.push(gameTurn);
-  // Compagni V1 (companions.js): a new companion, told once.
-  const companion=window.UsCompanions?.todayPriority?.();
-  if(companion)candidates.push(companion);
   // Accoglienza V1 (distance.js): one question for the couple, asked once.
   const distance=window.UsDistance?.todayPriority?.();
   if(distance)candidates.push(distance);
@@ -2996,9 +2981,6 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   if(refreshId!==usTodayPriorityRefreshId)return [];
   const priorities=composeTodayPriorities(candidates);
   renderTodayPriorities(priorities);
-  if(thinkPriority)oggiPetHop('think',thinkPriority.factKey);
-  if(leftPriority)oggiPetHop('left-for-you',leftPriority.factKey);
-  if(revealNotice)oggiPetHop('daily-question',revealNotice.factKey);
   // Un solo ingresso: il link passivo compare solo quando l'avviso non è in coda.
   renderDailyRevealLink(priorities.some(item=>item.category==='answers_ready')?null:dailyRevealLinkViewModel(dailySource));
   const dailyState=dailySource?.state;
@@ -3037,7 +3019,6 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
   }
   if(action==='challenge')window.UsWeeklyChallenge?.open?.();
   if(action==='recap')window.UsYearRecap?.open?.();
-  if(action==='companion')window.UsCompanions?.open?.();
   if(action==='distance')window.UsDistance?.open?.();
 });
 // M10.2 — nascondere l'avviso "Risposte pronte" = "non lo voglio più su Oggi",

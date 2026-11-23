@@ -2,9 +2,23 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign: via le mascotte (23/11)
+
+**Stato:** ramo `claude/redesign-via-mascotte`, verso il ramo fisso di staging. Founder, 23/11: «ricorda di togliere le mascotte». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D5 (Compagni in pensione per tutti).
+
+**Cosa cambia:**
+- **Nessuno siede più sopra la barra:** Maudit, Milo, Bea e Firix non compaiono più, per nessuno. Tolti dall'app `pet.js`, `companions.js`, `pet.css`, `companions.css` (anche dai build e dalla cache offline).
+- **Via** la riga «Compagni» dalle Impostazioni, l'avviso «È arrivato…» su Oggi, il gruppo «Compagni» e gli «Accessori» del compagno tra i premi della Sintonia (ritirati: le scelte salvate restano leggibili).
+- **Restano:** la funzione del server `get_companions_v1` con i suoi dati, e le immagini approvate in `assets/derived/pet/` (1,1 MB, ancora copiate nel pacchetto: toglierle è un asset approvato, serve il sì del founder).
+- Gli accessori già presi passeranno ai personaggi con il guardaroba (fase 4).
+
+**Novità all'uscita (D5):** una riga del tipo «I compagni sono andati in pensione: al loro posto, accessori per i vostri personaggi». Va scritta solo quando il guardaroba dei personaggi è in staging.
+
+**Test:** `tests/via-mascotte.test.js`; tolti i test che provavano solo le mascotte nel client (`pet-foundation`, `pet-foundation-browser`, `maudit-interaction`, `maudit-interaction-browser`, `companions-v1-client`, `pet-accessories`). Resta `companions-v1-db.test.js` per il server.
+
 ### Redesign, fase 3: i colori della coppia (23/11)
 
-**Stato:** ramo `claude/redesign-fase3-colori`, verso il ramo fisso di staging. Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D7 e D8.
+**Stato:** in staging dal 23/11 (PR #282, merge `7fa2ca82`, sito `…-s7fa2ca82`). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D7 e D8.
 
 **Cosa cambia:**
 - **Le quattro pagine sono quattro passi dal tuo colore a quello dell'altra persona:** Oggi è il tuo, Noi a un terzo, Ricordi a due terzi, Gioca il suo. Ogni telefono parte dal suo. I passi si mescolano in OKLCH (`person-colors.js`): anche tra due colori opposti, come blu e pesca, non passano dal grigio. Il colore di Noi (le cose di tutti e due) è il punto di mezzo.

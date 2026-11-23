@@ -1,10 +1,10 @@
 /* Due colori, un Noi — shell motion, the approved mockup's "marea" (core.js go()).
    A tap on the bottom bar: the tab is marked at once (the indicator slides
-   with the spring, the icon gives one small bounce, Maudit glances at it),
+   with the spring, the icon gives one small bounce),
    the tab colour covers the screen from the tapped button (260 ms), the page
    changes under the colour, then the new page opens from the same point
    (340 ms) while its blocks rise in, 50 ms apart. The colour sits under the
-   bottom bar and Maudit, as in the mockup. Only taps on the bottom bar
+   bottom bar, as in the mockup. Only taps on the bottom bar
    flood: swipes, back and in-page links keep the instant switch. A second
    tab tap while the colour moves is ignored (mockup: busy). Reduced motion:
    the new page simply fades in (180 ms). Presentation only, the navigation
@@ -182,12 +182,11 @@ async function flood(button, self, id, options) {
   const ticket = ++run;
   busy = true;
   const el = floodLayer();
-  // Read everything first (the tap point, the screen, the colour, Maudit's
-  // place for the glance), then write: no forced style pass in the tap.
+  // Read everything first (the tap point, the screen, the colour), then
+  // write: no forced style pass in the tap.
   const from = doc.querySelector('.page.active')?.id || 'home';
   const at = origin(button);
   const color = tabColor(button);
-  try { window.USPet?.glance?.(at.vx); } catch (_) { /* Maudit is decoration */ }
   clear();
   markNav(button);
   bounce(button);

@@ -1,6 +1,6 @@
 # Missione — Il redesign definitivo
 
-**Stato:** Fase 0 unita in staging (PR #280); tavola approvata dal founder il 23/11 («Concordo», https://claude.ai/artifact/QguykctqxueyKRwAVupf11); Fase 2 unita in staging (PR #281); Fase 3 sul ramo `claude/redesign-fase3-colori` (23/11/2026)
+**Stato:** Fase 0 unita in staging (PR #280); tavola approvata dal founder il 23/11 («Concordo», https://claude.ai/artifact/QguykctqxueyKRwAVupf11); Fase 2 unita in staging (PR #281); Fase 3 unita in staging (PR #282); mascotte tolte sul ramo `claude/redesign-via-mascotte` (anticipo della fase 4, D5, chiesto dal founder il 23/11)
 **Ramo fisso:** `mission/us-store-s3-1-public-auth-staging-20261011` (staging); un ramo corto `claude/*` per fase
 **Fonte:** founder, 23/11/2026: «dobbiamo buttare il progetto staging, dobbiamo riprendere il progetto principale che al momento è su main e riportarlo su staging» con le richieste qui sotto; «concordo» a tutte le risposte consigliate D1–D14.
 **Decisione:** [DECISIONS.md, 23/11](../DECISIONS.md)

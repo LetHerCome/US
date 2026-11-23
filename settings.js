@@ -173,7 +173,6 @@ async function hydrateUsSettings(){
   const feedbackValue=$('usFeedbackValue');if(feedbackValue)feedbackValue.textContent=feedbackSummary();
   // Mockup "1 attivo": the widgets already on this phone's Home (native only).
   const widgetsValue=$('usWidgetsValue');if(widgetsValue&&window.UsWidgets?.isAvailable?.())Promise.resolve(window.UsWidgets.installed?.()).then(device=>{const n=Object.values(device?.installed||{}).reduce((sum,count)=>sum+(Number(count)||0),0);widgetsValue.textContent=n===1?'1 attivo':n?`${n} attivi`:'Nessuno';}).catch(()=>{});
-  syncMauditSetting();
   syncAppLockSetting().catch(()=>{});
   syncRicordiOptimizationSetting().catch(()=>{});
   $('usSettingsBuild').textContent=currentBuild();
@@ -578,20 +577,6 @@ async function toggleAppLock(){
   }
 }
 
-// Maudit V1 — device-local On/Off, owned by USPet (pet.js). Off unmounts it.
-function mauditEnabled(){
-  if(typeof window.USPet?.isEnabled==='function')return window.USPet.isEnabled();
-  try{return localStorage.getItem('us:maudit:v1:enabled')!=='0';}catch(_){return true;}
-}
-function syncMauditSetting(){
-  const row=$('usMauditSetting');
-  if(row)row.setAttribute('aria-checked',mauditEnabled()?'true':'false');
-}
-function toggleMaudit(){
-  const next=!mauditEnabled();
-  window.USPet?.setEnabled?.(next); // USPet owns the device-local preference
-  syncMauditSetting();
-}
 
 // Native Notifications V1: what this phone can do, in the person's words.
 // Mockup set-notifiche / set-notifiche-negate: a banner in my colour with a
@@ -1091,7 +1076,7 @@ async function logout(){
 
 async function action(name){
   // Which sheet is open: dc-settings.css gives each one the mockup's blocks.
-  const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='maudit'&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
+  const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
   if(name==='relationship-date')return relationshipDateModal();
   if(name==='plus')return plusSoonModal();
   if(name==='together-mode')return window.UsDistance?.open?.();
@@ -1105,7 +1090,6 @@ async function action(name){
   if(name==='location')return locationAction();
   if(name==='feedback')return feedbackModal();
   if(name==='optimize-ricordi')return ricordiOptimizationModal();
-  if(name==='maudit')return toggleMaudit();
   if(name==='app-lock')return toggleAppLock();
   if(name==='widgets')return window.UsWidgetHub?.open?.();
   if(name==='sync-status')return syncStatusModal();
@@ -1129,7 +1113,6 @@ function hydrateWhenHomeSettles(){
 }
 
 function boot(){
-  syncMauditSetting();
   syncAppLockSetting().catch(()=>{});
   document.querySelectorAll('[data-us-setting]').forEach(row=>row.addEventListener('click',()=>action(row.dataset.usSetting)));
   document.querySelectorAll('[data-us-settings-close]').forEach(el=>el.addEventListener('click',closeModal));
