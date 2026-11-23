@@ -1,0 +1,114 @@
+/* La struttura (redesign definitivo, Fase 2, founder 23/11/2026, D6;
+   docs/missions/redesign-definitivo.md). Ti penso in the middle of the bottom
+   bar, the envelope top left on Oggi, your character top right on the four
+   pages (the way to the Profilo), the Profilo card. Loaded last: it wins over
+   the older layers on purpose. The page colours come with Fase 3. */
+
+/* ---------- The bottom bar: Oggi, Noi, the heart, Ricordi, Gioca ---------- */
+.us-nav.us-nav-premium{grid-template-columns:1fr 1fr 70px 1fr 1fr!important;overflow:visible!important}
+/* The blob slides over the four tabs only; the heart's 70 px sit in the middle. */
+.us-nav-indicator{width:calc((100% - 70px) / 4)!important;transform:translate3d(var(--us-nav-x,0px),0,0)!important}
+.us-nav:has(> button[data-page="home"].active){--us-nav-x:0px}
+.us-nav:has(> button[data-page="bond"].active){--us-nav-x:100%}
+.us-nav:has(> button[data-page="moments"].active){--us-nav-x:calc(200% + 70px)}
+.us-nav:has(> button[data-page="quiz"].active){--us-nav-x:calc(300% + 70px)}
+
+/* The heart: raised out of the bar, your colour into theirs, a dark heart. */
+.us-nav-premium .us-nav-think{
+  position:relative;
+  z-index:2;
+  justify-self:center;
+  align-self:center;
+  display:grid!important;
+  place-items:center;
+  width:58px!important;
+  height:58px!important;
+  min-width:58px!important;
+  min-height:58px!important;
+  margin:-30px 0 0!important;
+  padding:0!important;
+  border:4px solid var(--us-color-bg,#140c14)!important;
+  border-radius:50%!important;
+  background:linear-gradient(135deg,var(--us-tu),var(--us-partner))!important;
+  box-shadow:0 8px 20px rgba(0,0,0,.4)!important;
+  color:#1a1020!important;
+  overflow:visible;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+/* Before sign-in the slot stays, so the four tabs keep their places. */
+.us-nav-premium .us-nav-think[hidden]{display:grid!important;visibility:hidden}
+.us-nav-premium .us-nav-think:disabled{opacity:1!important;filter:none!important}
+.us-nav-premium .us-nav-think:focus-visible{outline:2px solid var(--us-color-text,#f7efe9);outline-offset:3px}
+.us-nav-think-heart{position:relative;z-index:1;display:block;width:26px;height:26px}
+.us-nav-think-heart svg{display:block;width:100%;height:100%;fill:currentColor}
+.us-nav-think:active .us-nav-think-heart{transform:scale(.9)}
+/* A Ti penso arrives: the heart beats once (app.js handleIncomingThink). */
+.us-nav-think.received .us-nav-think-heart{animation:us-nav-think-beat .9s ease-out}
+@keyframes us-nav-think-beat{0%,100%{transform:scale(1)}25%{transform:scale(1.28)}50%{transform:scale(.94)}75%{transform:scale(1.08)}}
+
+/* The burst (founder, 21/11/2026, «come il like di X»): the heart shrinks
+   away, a disc in your colour opens into a ring in theirs, the heart springs
+   back and seven pairs of dots spray out (app.js usNavHeartTap). */
+.us-nav-think.is-pop .us-nav-think-heart{animation:us-nav-heart-x .8s both}
+@keyframes us-nav-heart-x{0%{transform:scale(1);animation-timing-function:cubic-bezier(.5,0,.9,.5)}12%{transform:scale(0)}22%{transform:scale(0);animation-timing-function:cubic-bezier(.2,.9,.3,1)}48%{transform:scale(1.32);animation-timing-function:cubic-bezier(.45,0,.55,1)}68%{transform:scale(.9);animation-timing-function:cubic-bezier(.45,0,.55,1)}88%{transform:scale(1.05);animation-timing-function:cubic-bezier(.45,0,.55,1)}100%{transform:scale(1)}}
+.us-nav-burst{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
+.us-nav-burst-ring{position:absolute;left:-37px;top:-37px;width:74px;height:74px;box-sizing:border-box;border-radius:50%;border:37px solid var(--us-tu);animation:us-nav-burst-ring .48s .06s both}
+@keyframes us-nav-burst-ring{0%{transform:scale(0);border-width:37px;border-color:var(--us-tu);animation-timing-function:cubic-bezier(.2,.8,.3,1)}28%{transform:scale(1);border-width:37px;border-color:var(--us-partner);animation-timing-function:cubic-bezier(.3,.6,.4,1)}100%{transform:scale(1.06);border-width:0;border-color:var(--us-partner)}}
+.us-nav-burst-dot{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:var(--c);opacity:0;animation:us-nav-burst-dot .55s .2s cubic-bezier(.15,.8,.3,1) both}
+.us-nav-burst-dot.is-small{left:-2px;top:-2px;width:4px;height:4px;animation-delay:.24s}
+@keyframes us-nav-burst-dot{0%{opacity:0;transform:rotate(var(--a)) translateY(-30px) scale(1)}8%{opacity:1}70%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateY(-54px) scale(.2)}}
+:root[data-us-motion="reduced"] :is(.us-nav-think .us-nav-think-heart,.us-nav-burst *){animation:none!important}
+@media (prefers-reduced-motion:reduce){:is(.us-nav-think .us-nav-think-heart,.us-nav-burst *){animation:none!important}}
+
+/* While the Profilo is open the page you came from stays marked (app.js go()). */
+:root[data-us-from] body:has(#settings.page.active) .us-nav .us-nav-indicator{opacity:.16!important}
+:root[data-us-from="home"] body:has(#settings.page.active) .us-nav{--us-nav-x:0px;--us-nav-blob:var(--us-corallo)}
+:root[data-us-from="bond"] body:has(#settings.page.active) .us-nav{--us-nav-x:100%;--us-nav-blob:var(--us-noi)}
+:root[data-us-from="moments"] body:has(#settings.page.active) .us-nav{--us-nav-x:calc(200% + 70px);--us-nav-blob:var(--us-ambra)}
+:root[data-us-from="quiz"] body:has(#settings.page.active) .us-nav{--us-nav-x:calc(300% + 70px);--us-nav-blob:var(--us-menta)}
+:is(:root[data-us-from="home"] body:has(#settings.page.active) .us-nav-premium>button[data-page="home"],:root[data-us-from="bond"] body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"],:root[data-us-from="moments"] body:has(#settings.page.active) .us-nav-premium>button[data-page="moments"],:root[data-us-from="quiz"] body:has(#settings.page.active) .us-nav-premium>button[data-page="quiz"]) :is(.nicon,.us-nav-icon-off){display:block!important;color:var(--us-nav-c)!important}
+:is(:root[data-us-from="home"] body:has(#settings.page.active) .us-nav-premium>button[data-page="home"],:root[data-us-from="bond"] body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"],:root[data-us-from="moments"] body:has(#settings.page.active) .us-nav-premium>button[data-page="moments"],:root[data-us-from="quiz"] body:has(#settings.page.active) .us-nav-premium>button[data-page="quiz"]) .nlabel{font-weight:600;color:var(--us-color-text)}
+
+/* ---------- You, top right on the four pages (D6) ---------- */
+.us-me{
+  flex:none;
+  display:grid;
+  place-items:center;
+  width:46px;
+  height:46px;
+  padding:0;
+  border:1px solid var(--us-color-line,rgba(247,239,233,.14));
+  border-radius:50%;
+  background:rgba(247,239,233,.05);
+  color:var(--us-color-text,#f7efe9);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform var(--us-motion-press,120ms) var(--us-ease-standard,ease);
+}
+.us-me[hidden]{display:none!important}
+.us-me .us-char{display:block;width:34px;height:auto;overflow:visible}
+.us-me:active{transform:scale(.94)}
+.us-me:focus-visible{outline:2px solid var(--us-tu);outline-offset:3px}
+/* On Oggi it sits on the photo, like the envelope. */
+.top.us-premium-top .us-me{border-color:rgba(255,255,255,.2);background:rgba(20,12,20,.38);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+#bond .us-noi-v2 .us-noi-v2-me{width:var(--noi-control,44px);height:var(--noi-control,44px)}
+#moments .us-moments-head-actions{display:flex;align-items:center;gap:8px}
+#moments .us-moments-head-actions .us-me{width:44px;height:44px}
+
+/* A page title with you on the right (Gioca; Noi and Ricordi have theirs). */
+.us-page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}
+.us-page-head h2{margin:0;font:400 34px/1.05 var(--us-font-display,'Fraunces',serif);letter-spacing:0;color:var(--us-color-text,#f7efe9)}
+
+/* ---------- Il Profilo: your card, then the settings ---------- */
+#settings .us-profile-card{display:flex;align-items:center;gap:16px;margin:14px 0 6px;padding:16px;border:1px solid var(--us-color-line,rgba(247,239,233,.1));border-radius:24px;background:var(--us-color-surface,rgba(247,239,233,.045))}
+#settings .us-profile-char{flex:none;display:grid;place-items:center;width:108px;height:100px;border-radius:20px;background:radial-gradient(70% 70% at 50% 72%,color-mix(in srgb,var(--us-tu) 24%,transparent),transparent 76%)}
+#settings .us-profile-char .us-char{display:block;overflow:visible;filter:drop-shadow(1.5px 0 0 #f7efe9) drop-shadow(-1.5px 0 0 #f7efe9) drop-shadow(0 1.5px 0 #f7efe9) drop-shadow(0 -1.5px 0 #f7efe9)}
+#settings .us-profile-who{display:flex;flex-direction:column;gap:9px;min-width:0}
+#settings .us-profile-who b{font:400 26px/1.1 var(--us-font-display,'Fraunces',serif);color:var(--us-color-text,#f7efe9);overflow-wrap:anywhere}
+#settings .us-profile-chips{display:flex;flex-wrap:wrap;gap:6px}
+#settings .us-profile-chips>span{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0 11px;border-radius:14px;background:rgba(247,239,233,.08);font:600 13px/1.2 var(--us-font-ui,'Figtree',sans-serif);color:var(--us-color-text,#f7efe9)}
+#settings .us-profile-chips>span[hidden]{display:none}
+#settings .us-profile-color i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--us-tu)}
+/* The couple's card goes back under «Voi due»: the Profilo starts with you. */
+#settings .us-settings2-page .us-couple-id-card{order:3}

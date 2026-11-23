@@ -44,13 +44,16 @@ test('V0E conserva i master senza stretching o decorazioni CSS duplicate; il run
 
   // Perf 1.0: the masters (1.3-1.8 MB each) are never loaded or precached by the shell.
   // Settings and Stories are shown at icon size, through their 128 px derivatives.
+  // Redesign definitivo, fase 2 (D6): the gear left Noi, so the Settings
+  // derivative stays approved in the repository but is no longer loaded.
   for (const [id, runtime] of [['settings', 'assets/derived/runtime/us-icon-settings-128-v1.png'], ['stories', 'assets/derived/runtime/us-icon-stories-128-v1.png']]) {
     const derived = manifest.assets.find((entry) => entry.path === runtime);
     assert.equal(derived?.status, 'APPROVED', runtime);
     assert.equal(derived?.source, CUSTOM_ICONS[id], 'derived from the approved master, which stays untouched');
-    assert.ok(worker.includes(`"/${runtime}"`), `${runtime} is precached`);
+    assert.ok(fs.existsSync(path.join(ROOT, runtime)), `${runtime} stays in the repository`);
   }
-  assert.match(read('index.html'), /us-approved-custom-icon" src="\/assets\/derived\/runtime\/us-icon-settings-128-v1\.png"/);
+  assert.ok(worker.includes('"/assets/derived/runtime/us-icon-stories-128-v1.png"'), 'the Stories derivative is precached');
+  assert.doesNotMatch(read('index.html'), /us-icon-settings-128-v1\.png/, 'no gear since the Profilo opens from your character');
   for (const file of ['index.html', 'stories.js', 'identity.css', 'stories.css']) {
     assert.doesNotMatch(read(file), /us-icon-(settings|stories)-v1\.png/, `${file} loads no master`);
   }

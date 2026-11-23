@@ -14,11 +14,14 @@ const topBar = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<ma
 
 // ---------------------------------------------------------------- SHELL
 
-test('shell: Ti penso left, the US mark at the centre, Left for You right', () => {
-  const think = topBar.indexOf('id="thinkButton"');
-  const brand = topBar.indexOf('class="us-top-brand"');
+// Redesign definitivo, fase 2 (23/11/2026, D6): the envelope moved left, your
+// character is on the right, Ti penso is the heart in the middle of the bar.
+test('shell: Left for You left, the US mark at the centre, your character right', () => {
   const envelope = topBar.indexOf('id="leftForYouPartnerEntry"');
-  assert.ok(think > 0 && brand > think && envelope > brand, 'order: Ti penso, US, Left for You');
+  const brand = topBar.indexOf('class="us-top-brand"');
+  const me = topBar.indexOf('data-us-self');
+  assert.ok(envelope > 0 && brand > envelope && me > brand, 'order: Left for You, US, you');
+  assert.doesNotMatch(topBar, /id="thinkButton"/);
   assert.doesNotMatch(topBar, /id="usPerVoiTop"/, 'Per voi belongs to Gioca, not global chrome');
   assert.match(topBar, /<div class="us-top-brand" role="img" aria-label="US"><img[^>]+us-symbol-256-v1\.png/);
   assert.match(identityCss, /\.top\.us-premium-top \.us-top-brand\{grid-column:2;/);

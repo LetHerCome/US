@@ -17,10 +17,12 @@ const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
 const noi = bond.match(/<section class="us-noi-v2"[\s\S]*?<\/section>\s*\n\s*<article class="noi-resonance"/)?.[0] || '';
 
 // ------------------------------------------------------------------ icons
-test('Noi icons: well-formed markup, the approved settings icon, a real list icon', () => {
+test('Noi icons: well-formed markup, your character instead of the gear, a real list icon', () => {
   assert.ok(noi.length > 1000, 'Noi V2 markup found');
   assert.doesNotMatch(html, /<span class="us-icon"\s+<img/, 'no half-open icon tag (the old grey square)');
-  assert.match(noi, /class="us-noi-v2-settings"[^>]*><img class="us-approved-custom-icon" src="\/assets\/derived\/runtime\/us-icon-settings-128-v1\.png"/);
+  // Redesign definitivo, fase 2 (D6): your character opens the Profilo; no gear.
+  assert.doesNotMatch(noi, /us-noi-v2-settings/);
+  assert.match(noi, /class="us-me us-noi-v2-me" data-us-self onclick="go\('settings',\{nav:true\}\)"/);
   // Noi nuova (03/11/2026): the two views are words, «Mese» and «Prossimi»; no tiles.
   assert.match(noi, /id="usNoiV2ModeList"[^>]*>Prossimi<\/button>/);
   assert.doesNotMatch(noi, /data-noi-open-link/);

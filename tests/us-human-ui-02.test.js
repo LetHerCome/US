@@ -57,9 +57,11 @@ test('top: the pill is only as tall as its 44px controls and content starts righ
   assert.match(tokens, /--us-top-chrome-height:46px;/);
   assert.match(tokens, /--us-top-chrome-clearance:56px;/);
   assert.match(read('identity.css'), /\.top\.us-premium-top\{top:calc\(var\(--us-safe-top\) \+ 6px\);left:max\(34px,var\(--us-safe-left\)\);right:max\(34px,var\(--us-safe-right\)\);padding:0 1px!important;/);
-  // Global shell: Ti penso and Lasciato per te flank the product mark.
+  // Redesign definitivo, fase 2 (23/11/2026, D6): Lasciato per te and your
+  // character flank the product mark; Ti penso is the heart of the bottom bar.
   const top = html.split('\n').find((line) => line.includes('<div class="top us-premium-top">')) || '';
-  assert.match(top, /id="thinkButton" class="us-top-think us-premium-control" onclick="sendThinkSignal\(\)"/);
+  assert.doesNotMatch(top, /id="thinkButton"/);
+  assert.match(top, /data-us-self onclick="go\('settings',\{nav:true\}\)"/);
   assert.match(top, /id="leftForYouPartnerEntry"/);
   assert.match(top, /class="us-top-brand"/);
   assert.doesNotMatch(top, /id="usPerVoiTop"/, 'Per voi belongs to Gioca, not global chrome');
@@ -256,10 +258,11 @@ test('Noi: the couple row stays centered, "La nostra settimana" owns the week, a
   const head = bond.match(/<header class="noi-canonical-head noi-couple-head">[\s\S]*?<\/header>/)?.[0] || '';
   assert.match(head, /id="pairAvatarFrancesco"><img alt="" hidden><span class="fallback"/);
   assert.match(head, /id="pairAvatarBeatrice"><img alt="" hidden><span class="fallback"/);
-  assert.match(head, /id="noiCoupleCard" role="group" aria-label="Voi due, distanza e impostazioni"/);
+  assert.match(head, /id="noiCoupleCard" role="group" aria-label="Voi due e la distanza"/);
   assert.match(head, /id="noiCoupleLink" data-us-distance-state="unknown"/);
-  assert.match(head, /id="usSettingsEntry" onclick="go\('settings',\{nav:true\}\)"/);
-  assert.ok(head.indexOf('id="noiCoupleCard"') < head.indexOf('id="usSettingsEntry"'), 'Settings lives inside the couple card');
+  // No gear in Noi since the redesign (fase 2): your character, top right on every page, opens the Profilo.
+  assert.doesNotMatch(bond, /id="usSettingsEntry"/);
+  assert.match(bond, /class="us-me us-noi-v2-me" data-us-self/);
   assert.match(app, /if\(profile\.role==='francesco'\)setAvatarSlot\('pairAvatarFrancesco',url\);/);
   assert.match(app, /if\(profile\.role==='beatrice'\)setAvatarSlot\('pairAvatarBeatrice',url\);/);
   assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"|id="usCalendarEntry"|noi-hub-card/);
@@ -358,7 +361,8 @@ test('Gioca density: played Per voi, game grid and weekly question use compact h
   assert.match(css, /#quiz \.us-gv2-game-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(css, /#quiz \.us-gv2-game\.is-swipe\{[^}]*grid-column:1\/-1/, 'Swipe stands out without taking the page');
   assert.match(css, /#quiz \.us-gv2-weekly\.is-open\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
-  assert.match(css, /body:has\(#quiz\.page\.active\) #thinkButton\{display:none!important\}/);
+  // The Ti penso heart stays in the bar on Gioca (redesign definitivo, fase 2).
+  assert.doesNotMatch(css, /#thinkButton\{display:none/);
 });
 
 
@@ -369,7 +373,8 @@ test('Settings density: utility rows, couple card and footer stay compact withou
   assert.match(css, /#settings \.us-settings2-row\{min-height:58px!important;/);
   assert.match(css, /#settings \.us-settings2-icon\{[\s\S]*?width:28px;[\s\S]*?height:28px;/);
   assert.match(css, /#settings \.us-couple-id-card\{[\s\S]*?padding:10px 11px;/);
-  assert.match(css, /body:has\(#settings\.page\.active\) #thinkButton\{\s*display:none!important;/);
+  // The Ti penso heart stays in the bar on the Profilo (redesign definitivo, fase 2).
+  assert.doesNotMatch(css, /#thinkButton\{\s*display:none/);
   const page = html.match(/<main id="settings"[\s\S]*?<\/main>/)?.[0] || '';
   for (const name of ['profile-photo','notifications','location','distance','feedback','home-photo','sync-status','relationship-date','story-archive']) {
     assert.match(page, new RegExp(`data-us-setting="${name}"`), name);
@@ -393,9 +398,10 @@ test('Oggi density: arbitration stays authoritative; the dock holds one evidence
 });
 
 
-test('shell: Ti penso lives in top chrome and Per voi stays inside Gioca', () => {
+test('shell: Ti penso lives in the middle of the bottom bar and Per voi stays inside Gioca', () => {
   const top = html.split('\n').find((line) => line.includes('<div class="top us-premium-top">')) || '';
-  assert.match(top, /id="thinkButton"/);
+  assert.doesNotMatch(top, /id="thinkButton"/);
+  assert.match(html, /<nav class="nav us-nav[\s\S]*?id="thinkButton" class="us-nav-think"/);
   assert.match(top, /id="leftForYouPartnerEntry"/);
   assert.doesNotMatch(top, /usPerVoiTop/);
   assert.equal((html.match(/id="thinkButton"/g) || []).length, 1);

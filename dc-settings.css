@@ -807,17 +807,6 @@
 #usWidgetHub .us-wp-postit small{position:absolute;right:6px;bottom:5px;font:700 9px/1 var(--us-font-ui)}
 
 /* ==========================================================================
-   While Settings is open the Noi tab stays marked (mockup PARENT:
-   impostazioni → noi). Presentation only: navigation is still go().
-   ========================================================================== */
-body:has(#settings.page.active) .us-nav{--us-nav-index:1;--us-nav-blob:var(--us-noi)}
-body:has(#settings.page.active) .us-nav .us-nav-indicator{opacity:.16!important}
-body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nicon{color:var(--us-nav-c)!important}
-body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .us-nav-icon-off{display:block!important;color:var(--us-nav-c)!important}
-body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .us-nav-icon-on{display:block!important;color:color-mix(in srgb,var(--us-nav-c) 28%,transparent)!important}
-body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nlabel{font-weight:600;color:var(--us-color-text)}
-
-/* ==========================================================================
    360px and large text: the rows keep their 44px+ targets, nothing clips.
    ========================================================================== */
 @media (max-width:360px){

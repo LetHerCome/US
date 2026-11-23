@@ -43,8 +43,9 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);
   assert.doesNotMatch(html, /onclick="openOwnStories\(\)"/);
   assert.match(stories, /__US_LEFT_FOR_YOU_ACTIVE__/);
-  assert.match(html, /id="usSettingsEntry"[\s\S]{0,160}onclick="go\('settings',\{nav:true\}\)"/);
-  assert.match(read('identity.css'), /\.us-calendar-btn\{width:44px;min-width:44px;height:44px;min-height:44px/);
+  // Redesign definitivo, fase 2 (D6): your character opens the Profilo, on Oggi and the other pages.
+  assert.match(html, /class="us-me" data-us-self onclick="go\('settings',\{nav:true\}\)" aria-label="Il tuo profilo e le Impostazioni"/);
+  assert.doesNotMatch(html, /id="usSettingsEntry"/);
   assert.doesNotMatch(html, /id="usCalendarBtn"/);
   // M12A: il centro è il marchio US; "I nostri eventi" resta raggiungibile da Noi
   // (US 1.0: il vecchio calendario a schermo intero non c'è più, Eventi è il link sotto il calendario di Noi).

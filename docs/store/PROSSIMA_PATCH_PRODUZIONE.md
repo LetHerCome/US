@@ -2,6 +2,24 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign, fase 2: la struttura (23/11)
+
+**Stato:** ramo `claude/redesign-fase2-struttura`, verso il ramo fisso di staging. Tavola approvata dal founder il 23/11 («Concordo»). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D6.
+
+**Cosa cambia:**
+- **Ti penso al centro della barra:** un cuore rialzato con la sfumatura dal tuo colore a quello dell'altra persona. Un tocco lo fa scoppiare subito (disco nel tuo colore, anello nel suo, sette coppie di puntini) e manda il Ti penso. Con il movimento ridotto non c'è lo scoppio. Non c'è più in alto a sinistra su Oggi, e non sparisce più su Ricordi, Gioca e Impostazioni.
+- **La busta di Lasciato per te** va in alto a sinistra, solo su Oggi.
+- **Il tuo personaggio in alto a destra** su Oggi, Noi, Ricordi e Gioca (Gioca ha ora il titolo): apre il Profilo. Lo disegna il nuovo `personaggi.js` (forma, colore, accessori già indossati, faccia di Come stai), portato dai personaggi di staging senza reazioni né guardaroba (fase 4).
+- **Le Impostazioni diventano il Profilo:** in cima la tua scheda (personaggio, nome, forma, colore, Come stai), poi le Impostazioni di prima. La scheda della coppia torna sotto «Voi due». La freccia torna alla pagina da cui l'hai aperto, e la barra la tiene segnata.
+- **Via la rotella da Noi** (le due che c'erano).
+- **Lettura dei personaggi:** `profiles` legge anche `character_shape`, `character_head`, `character_face`. Se il server non li ha (produzione senza le migrazioni dei personaggi), rilegge le colonne di prima: nessun errore, solo i personaggi predefiniti.
+
+**Prima della produzione:** le migrazioni dei personaggi della sezione qui sotto. Senza, ognuno vede il tondo rosa o il quadrato lilla.
+
+**Test:** `tests/struttura.test.js` più i test aggiornati della barra, della testata di Oggi e delle Impostazioni.
+
+**Novità per Play:** da scrivere con l'uscita del redesign.
+
 ### Staging riparte da main (23/11)
 
 **Stato:** ramo `claude/staging-da-main`, verso il ramo fisso di staging. Il diario pulito di staging (#255–#278) è archiviato nell'etichetta `archivio/staging-diario-pulito-20261123` (`6c7aa160`) e non andrà in produzione. Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md).

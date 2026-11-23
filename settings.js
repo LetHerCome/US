@@ -106,7 +106,22 @@ function avatarMarkup(profile,url){
   return `<span class="us-couple-avatar"><b>${esc(name.trim().slice(0,1).toUpperCase()||'?')}</b></span>`;
 }
 
+// The back arrow of the Profilo (redesign definitivo, D6; #270): back to the
+// page you opened it from, your character being top right on all four.
+const US_SETTINGS_FROM=Object.freeze({home:'Oggi',bond:'Noi',moments:'Ricordi',quiz:'Gioca'});
+function usSettingsOrigin(){return US_SETTINGS_FROM[window.usSettingsFrom]?window.usSettingsFrom:'home';}
+function paintSettingsBack(){const label=$('usSettingsFromLabel');if(label)label.textContent=US_SETTINGS_FROM[usSettingsOrigin()];}
+function usSettingsReturn(){
+  const from=usSettingsOrigin();
+  if(from==='quiz'&&typeof window.openQuizHub==='function')return window.openQuizHub({nav:true});
+  return window.go?.(from,{nav:true});
+}
+window.usSettingsReturn=usSettingsReturn;
+window.usPaintSettingsBack=paintSettingsBack;
+
 async function hydrateUsSettings(){
+  paintSettingsBack();
+  window.UsPersonaggi?.paintMe?.();
   if(!window.usProfile)return;
   const identityProfile=window.usProfile;
   const cid=identityProfile.couple_id;
