@@ -2,6 +2,20 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign: la domanda esce da Gioca, la Sintonia va in «Il vostro angolo» (23/11)
+
+**Stato:** ramo `claude/redesign-angolo` (sopra quello delle mascotte), verso il ramo fisso di staging. Founder, 23/11: «ricorda di togliere la domanda di oggi e di spostare sintonia come nel redesign». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D2, D3 e D11.
+
+**Cosa cambia:**
+- **Gioca senza la domanda di oggi:** la domanda resta solo su Oggi. In Gioca restano la settimana delle risposte e i giochi; gettoni, «Vi aspetta» e i tre stati arrivano con la fase 6.
+- **Gioca senza le schede Giochi/Sintonia:** Gioca è solo i giochi.
+- **I due personaggi sulla foto di Oggi** (sopra la riga della foto, a destra), nello stesso ordine sui due telefoni: chi ha creato la coppia, poi chi è entrato. Si vedono solo quando ci siete tutti e due.
+- **«Il vostro angolo»:** toccando i personaggi si apre un foglio dal basso con i due personaggi e i loro nomi, poi la Sintonia di prima, uguale: livello, ritmo, prossimo sblocco, «I vostri sblocchi» (temi ed effetti di Oggi, stili del countdown, Ti penso, icona), ultimi progressi, «Come cresce la Sintonia». Si chiude con la X, toccando fuori, con Esc o con il tasto indietro di Android. Ha il colore di Noi, il punto di mezzo tra i vostri due.
+- Si apre l'angolo anche dai collegamenti che portavano alla scheda Sintonia, e dopo una missione completata, sulla pagina dove sei.
+- Restano per la fase 4: i cerchi del livello diventano i personaggi, il guardaroba, la scala nuova dei premi (numeri da mostrare prima).
+
+**Test:** `tests/angolo.test.js`, un test nuovo in `tests/struttura-browser.test.js` (si apre dai personaggi, la Sintonia c'è e non esce dal foglio, Gioca senza domanda e senza schede).
+
 ### Redesign: via le mascotte (23/11)
 
 **Stato:** ramo `claude/redesign-via-mascotte`, verso il ramo fisso di staging. Founder, 23/11: «ricorda di togliere le mascotte». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D5 (Compagni in pensione per tutti).

@@ -112,3 +112,22 @@
 #settings .us-profile-color i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--us-tu)}
 /* The couple's card goes back under «Voi due»: the Profilo starts with you. */
 #settings .us-settings2-page .us-couple-id-card{order:3}
+
+/* ---------- Voi due on the photo of Oggi, and Il vostro angolo (D2, D3) ---------- */
+#home .us-angolo-entry{justify-self:end;display:flex;align-items:flex-end;margin:0 -2px -6px 0;padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform var(--us-motion-press,120ms) var(--us-ease-standard,ease)}
+#home .us-angolo-entry[hidden]{display:none}
+#home .us-angolo-entry:active{transform:scale(.95)}
+#home .us-angolo-entry:focus-visible{outline:2px solid var(--us-color-text,#f7efe9);outline-offset:4px;border-radius:18px}
+#home .us-angolo-entry .us-duo-one+.us-duo-one{margin-left:-10px}
+:is(#home .us-angolo-entry,.us-angolo-duo) .us-char{display:block;overflow:visible;filter:drop-shadow(1.5px 0 0 #f7efe9) drop-shadow(-1.5px 0 0 #f7efe9) drop-shadow(0 1.5px 0 #f7efe9) drop-shadow(0 -1.5px 0 #f7efe9)}
+.us-angolo-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:end;justify-content:center}
+.us-angolo-overlay[aria-hidden="false"]{display:flex}
+.us-angolo-sheet{position:relative;width:min(100%,560px);max-height:calc(100% - var(--us-safe-top,0px) - 48px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:14px 16px calc(24px + var(--us-safe-bottom,0px));border-radius:28px 28px 0 0;border-top:1px solid var(--us-color-line,rgba(247,239,233,.1));background:var(--us-color-surface,#1d1119);color:var(--us-color-text,#f7efe9);box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
+.us-angolo-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.us-angolo-head h2{margin:0;font:400 27px/1.1 var(--us-font-display,'Fraunces',serif)}
+.us-angolo-duo{display:flex;justify-content:center;align-items:flex-end;gap:28px;min-height:120px;padding:12px 0 4px;border-radius:24px;background:radial-gradient(70% 90% at 50% 100%,color-mix(in srgb,var(--us-tu) 18%,transparent),color-mix(in srgb,var(--us-partner) 12%,transparent) 55%,transparent 80%)}
+.us-angolo-duo .us-duo-one{display:flex;flex-direction:column;align-items:center;gap:6px}
+.us-angolo-duo .us-duo-name{font:700 12.5px/1.2 var(--us-font-ui,'Figtree',sans-serif);color:var(--us-color-text-2,rgba(247,239,233,.8))}
+#usAngolo .us-gioca-sintonia{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
+#usAngolo .us-gioca-sintonia>*{min-width:0;max-width:100%;margin-left:0;margin-right:0;box-sizing:border-box}
+@media (prefers-reduced-motion:reduce){#home .us-angolo-entry{transition:none}}

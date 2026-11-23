@@ -23,9 +23,12 @@ function gameHub(instant='2026-10-09T22:30:00Z'){
 // game bento. The weekly budget strip is gone (the limit is said in the
 // confirm and on the tiles it locks). A day gets a dot only from data the app
 // already has: a round completed that day, and today's daily question.
-test('Round 3 G1: Sfida di oggi leads Gioca, then the 7-day strip and the existing game bento', async()=>{
+// Redesign definitivo (23/11/2026, D11): la domanda di oggi left Gioca (it
+// stays on Oggi); the week leads, then the games.
+test('Round 3 G1: the 7-day strip leads Gioca, then the existing game bento; no daily question', async()=>{
   const html=await gameHub().html();
-  const keys=['data-gv4-daily-slot','id="usGv2Week"','class="us-gv2-choose"','data-gv2-action="per-voi"','data-gv2-action="swipe"','data-gv2-family="scopritevi"'];
+  assert.doesNotMatch(html,/data-gv4-daily-slot|us-gv4-daily-pending/);
+  const keys=['id="usGv2Week"','class="us-gv2-choose"','data-gv2-action="per-voi"','data-gv2-action="swipe"','data-gv2-family="scopritevi"'];
   const positions=keys.map(k=>html.indexOf(k));
   assert.ok(positions.every(v=>v>=0),JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a,b)=>a-b),positions);
@@ -39,7 +42,6 @@ test('Round 3 G1: Sfida di oggi leads Gioca, then the 7-day strip and the existi
   assert.equal((html.match(/aria-current="date"/g)||[]).length,1);
   assert.match(html,/class="us-gv2-wd is-today" role="listitem" aria-current="date" aria-label="sabato 10 · oggi"><span aria-hidden="true" translate="no">S<\/span><b aria-hidden="true" translate="no">10<\/b>/);
   assert.doesNotMatch(html,/us-gv2-rhythm|us-gv4-week|us-gv4-day/,'no budget strip, no old rail');
-  assert.match(html,/<span class="us-gv4-daily-pending-title">La domanda di oggi<\/span><small>Preparo la domanda di oggi…<\/small>/);
   assert.doesNotMatch(html,/data-who=/,'no dot without real data');
   assert.doesNotMatch(html,/data-streak|data-completed-days|day-played/,'no fictitious past-day progress');
 });
@@ -48,45 +50,43 @@ test('1.0 G1: games.js keeps no day rail code and still hands the slot to the Da
   assert.doesNotMatch(games,/function dayRail|function romeDayISO|\$\{dayRail\(\)\}/);
   assert.match(games,/window\.UsDailyQuestionHub\?\.paintCard\?\.\(\)/);
 });
-test('V4 → 1.0: La domanda di oggi is one stable slot; only the existing Daily engine supplies question/response state',()=>{
+// Redesign definitivo (23/11/2026, D11): the card left Gioca. The model stays
+// (UsDailyQuestionHub.model), canonical and without the partner's answer; the
+// paint only repaints the week of answers.
+test('V4 → 1.0: the daily model follows the existing Daily engine; Gioca paints only its week',()=>{
   const app=read('app.js');
   const start=app.indexOf('// ===== 1.0 — La domanda di oggi in Gioca');
   const end=app.indexOf('// F2 — Gioca has no turn API',start);
   assert.ok(start>=0&&end>start);
-  const slot={dataset:{},innerHTML:'',setAttribute(){}},hub={classList:{contains:()=>false},querySelector:selector=>selector==='.us-gv2-daily-slot'?slot:null};
-  const window={};
+  let weeks=0;
+  const hub={classList:{contains:()=>false}};
+  const window={USGameV2:{paintWeek:()=>{weeks++;}}};
   const sandbox={window,document:{getElementById:id=>id==='quizHub'?hub:null},oggiPartnerName:()=>'Bea',escapeHtml:value=>String(value??'').replace(/[&<>"']/g,'?')};
   const vmContext=vm.createContext(sandbox);
   vm.runInContext(app.slice(start,end),vmContext);
   vm.runInContext('paintDailyInGioca()',vmContext);
-  assert.match(slot.innerHTML,/non è ancora disponibile/);
-  assert.match(slot.innerHTML,/La domanda di oggi/);
+  assert.equal(weeks,1,'the week of answers is repainted');
+  assert.equal(vm.runInContext('dailyHubModel()',vmContext),null);
   window.todayQuestion={id:'q-1',question:'Un ricordo speciale?'};
   window.todayState={my_answer:null,partner_has_answer:true,both_answered:false,partner_answer:'Risposta segreta'};
-  vm.runInContext('paintDailyInGioca()',vmContext);
-  assert.equal((slot.innerHTML.match(/data-us-daily-entry/g)||[]).length,1);
-  // The same name as on Oggi (founder, 13/11, visual review), uppercased by CSS.
-  assert.match(slot.innerHTML,/<small>La domanda di oggi<\/small>/);
-  assert.doesNotMatch(slot.innerHTML,/LA DOMANDA DI OGGI/);
-  assert.match(slot.innerHTML,/Un ricordo speciale/);
-  assert.match(slot.innerHTML,/Bea ha già risposto · tocca a te/);
+  const model=vm.runInContext('dailyHubModel()',vmContext);
+  assert.equal(model.meta,'Bea ha già risposto · tocca a te');
+  assert.doesNotMatch(JSON.stringify(model),/Risposta segreta/);
   window.todayState={my_answer:'Mia',partner_has_answer:false,both_answered:false};
-  vm.runInContext('paintDailyInGioca()',vmContext);
-  assert.equal((slot.innerHTML.match(/data-us-daily-entry/g)||[]).length,1);
-  assert.match(slot.innerHTML,/data-daily-state="waiting"/);
-  assert.doesNotMatch(slot.innerHTML,/partner_answer|Risposta segreta|Mia/);
-  // Tap opens the sheet where you are (no tab switch).
-  assert.match(app,/document\.getElementById\('quizHub'\)\?\.addEventListener\('click',event=>\{\n  if\(!event\.target\.closest\?\.\('\[data-us-daily-entry\]'\)\)return;\n  event\.preventDefault\(\);\n  openToday\(\);/);
+  assert.equal(vm.runInContext('dailyHubModel()',vmContext).state,'waiting');
+  assert.doesNotMatch(app,/data-us-daily-entry|function dailyHubMarkup/);
   assert.match(app,/window\.UsDailyQuestionHub=Object\.freeze\(\{model:dailyHubModel,paint:paintDailyInGioca,paintCard:paintDailyCardAndTurn,open:openToday\}\);/);
 });
-test('V4: mobile-safe bento grid with existing icons and preserved Sintonia navigation',()=>{
+test('V4: mobile-safe bento grid with existing icons; Sintonia reached from Il vostro angolo',()=>{
   const css=read('games.css'),html=read('index.html');
   assert.match(css,/#quiz \.us-gv2-pervoi,[\s\S]*?grid-column:1;grid-row:span 2;/);
   assert.match(css,/#quiz \.us-gv2-game\.is-swipe\{[\s\S]*?grid-column:2;grid-row:1;/);
   assert.match(read('dc-gioca.css'),/#quiz \.us-gv2-week\{display:grid;grid-template-columns:repeat\(7,1fr\)/);
   assert.match(css,/@media\(max-width:360px\)/);
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)/);
-  assert.match(html,/id="usGiocaTabGames"/);assert.match(html,/id="usGiocaTabSintonia"/);
+  // Redesign definitivo (D3): no tabs in Gioca; Sintonia is in Il vostro angolo.
+  assert.doesNotMatch(html,/id="usGiocaTabGames"|id="usGiocaTabSintonia"/);
+  assert.match(html,/<div id="usAngolo"[\s\S]*?id="usGiocaSintonia"/);
   assert.match(read('games.js'),/get_game_v2_home/);
   assert.match(read('games.js'),/const tileStatus=\(f\)=>\{const r=tileRound\(f\.id\);if\(r\)onTiles\.add\(r\.id\);return modeStatus\(f,r\);\};/);
 });

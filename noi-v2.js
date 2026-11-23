@@ -33,7 +33,6 @@ let pending = false;
 let error = '';
 let refreshedAt = 0;
 let identity = null;
-let giocaTab = 'giochi';
 let enterDirection = 0;
 // «Prossimi»: its own read, from today to the same day next year.
 let upcoming = null;
@@ -531,32 +530,6 @@ function chooseDay(day,{fromList=false,fromWeek=false}={}) {
   window.UsFeedback?.selection?.();
   if(fromList)$('usNoiV2Detail')?.scrollIntoView?.({block:'nearest',behavior:reducedMotion()?'auto':'smooth'});
 }
-let tabOrder=0;
-function setTab(tab){
-  giocaTab=tab==='sintonia'?'sintonia':'giochi';
-  const game=$('usGiocaGames'),syn=$('usGiocaSintonia');
-  if(!game||!syn)return;
-  const active=giocaTab==='sintonia';
-  $('usGiocaTabGames')?.setAttribute('aria-selected',String(!active));
-  $('usGiocaTabSintonia')?.setAttribute('aria-selected',String(active));
-  game.hidden=active;syn.hidden=!active;
-  $('usGiocaTabs')?.setAttribute('data-active',giocaTab);
-  // The roving tabindex once the panel is on screen: the tapped tab has
-  // focus, and a tabindex change on it makes the browser check focusability
-  // at once, a whole style pass in the middle of the tap.
-  const roving=()=>{
-    $('usGiocaTabGames')?.setAttribute('tabindex',active?'-1':'0');
-    $('usGiocaTabSintonia')?.setAttribute('tabindex',active?'0':'-1');
-  };
-  const order=++tabOrder;
-  if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>setTimeout(()=>{if(order===tabOrder)roving();},0));
-  else roving();
-  if(active){
-    window.hydrateBond?.();
-    window.hydrateResonanceHistory?.();
-    window.USProgression?.hydrate?.({showUnlocks:true,force:true});
-  }
-}
 function moveSintonia(){
   const target=$('usGiocaSintonia');
   if(!target||target.dataset.ready)return;
@@ -588,19 +561,8 @@ function openItem(item){
   chooseDay(item.dataset.day);
 }
 function boot(){
-  moveSintonia();setTab('giochi');render();
-  // Main-nav tap always returns to Giochi; explicit Sintonia deep links remain available.
-  document.querySelector('.nav button[data-page="quiz"]')?.addEventListener('click',()=>setTab('giochi'),true);
-  $('usGiocaTabGames')?.addEventListener('click',()=>setTab('giochi'));
-  $('usGiocaTabSintonia')?.addEventListener('click',()=>{window.USGameV2?.showHub?.();setTab('sintonia');});
-  $('usGiocaTabs')?.addEventListener('keydown',e=>{
-    if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
-    e.preventDefault();
-    const next=giocaTab==='giochi'?'sintonia':'giochi';
-    if(next==='sintonia')window.USGameV2?.showHub?.();
-    setTab(next);
-    $(next==='sintonia'?'usGiocaTabSintonia':'usGiocaTabGames')?.focus();
-  });
+  // Sintonia lives in Il vostro angolo since the redesign (D3): its blocks move there once.
+  moveSintonia();render();
   $('usNoiV2ModeCalendar')?.addEventListener('click',()=>setMode('calendar'));
   $('usNoiV2WeekBack')?.addEventListener('click',closeWeek);
   $('usNoiV2IdeaCancel')?.addEventListener('click',()=>{ideaPick=null;window.UsCalendarLinks?.cancelIdeaPick?.();render();});
@@ -693,8 +655,9 @@ window.USNoiV2=Object.freeze({
   getSelectedDate:()=>selected,
   closeWeek,
   addSpecialDate,
-  openGames:()=>setTab('giochi'),
-  openSintonia:()=>{window.openQuizHub?.({nav:true});setTab('sintonia');},
+  openGames:()=>window.openQuizHub?.({nav:true}),
+  // Il vostro angolo (redesign definitivo, D3), over the page you are on.
+  openSintonia:()=>window.UsAngolo?.open?.(),
   refresh:()=>refresh({force:true}),
 });
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});

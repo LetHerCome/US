@@ -3193,7 +3193,7 @@ function closeToday(){
 }
 window.closeToday=closeToday;
 
-// ===== 1.0 — La domanda di oggi in Gioca (was home-cleanup.js) =====
+// ===== 1.0 — La domanda di oggi in Gioca (was home-cleanup.js); since 23/11/2026 (D11) only its model and the week stay =====
 // Same question, same sheet: the Gioca card opens it where you are, like the
 // Oggi card. It only reads the canonical state hydrateToday already loaded.
 function dailyHubModel(){
@@ -3208,26 +3208,12 @@ function dailyHubModel(){
   if(state.partner_has_answer)return {...base,state:'answer',meta:`${partner} ha già risposto · tocca a te`,cta:'Rispondi'};
   return {...base,state:'answer',meta:'Una domanda per voi oggi',cta:'Rispondi'};
 }
-function dailyHubMarkup(model){
-  if(!model)return '<div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">La domanda di oggi</span><small>La domanda di oggi non è ancora disponibile.</small></div>';
-  // Never the hidden answers here: question, state and the way in.
-  return `<button type="button" class="us-gv2-daily" data-us-daily-entry data-daily-state="${escapeHtml(model.state)}">
-   <span class="us-gv4-daily-art" aria-hidden="true"><span class="us-gv4-art-ring"></span><span class="us-gv4-art-heart"></span></span>
-   <span class="us-gv2-daily-copy"><small>La domanda di oggi</small><b>${escapeHtml(model.question)}</b><span class="us-gv2-daily-state">${escapeHtml(model.meta)}</span></span>
-   <span class="us-gv4-daily-footer"><span>Una domanda, due risposte</span><span class="us-gv2-daily-cta">${escapeHtml(model.cta)} <span aria-hidden="true">›</span></span></span>
-  </button>`;
-}
+// La domanda di oggi left Gioca (redesign definitivo, 23/11/2026, D11): it
+// lives on Oggi only. Gioca keeps the week of answers, repainted here.
 function paintDailyInGioca(){
   const hub=document.getElementById('quizHub');
   if(!hub||hub.classList.contains('hidden'))return;
-  const slot=hub.querySelector('.us-gv2-daily-slot');
-  if(!slot)return;
   window.USGameV2?.paintWeek?.();
-  const model=dailyHubModel();
-  const signature=model?`${model.questionId}:${model.state}:${model.cta}:${model.meta}`:'unavailable';
-  if(slot.dataset.usDailySignature===signature)return;
-  slot.dataset.usDailySignature=signature;
-  slot.innerHTML=dailyHubMarkup(model);
 }
 // F2 — Gioca has no turn API: Oggi reads "Tocca a te" from the hub games.js
 // just rendered (a round where the other is waiting, or Per voi pending).
@@ -3245,11 +3231,6 @@ function readGameTurnFromHub(){
   usOggiGameTurnTimer=setTimeout(()=>{if(window.usProfile)refreshTodayPriorities();},120);
 }
 function paintDailyCardAndTurn(){paintDailyInGioca();readGameTurnFromHub();}
-document.getElementById('quizHub')?.addEventListener('click',event=>{
-  if(!event.target.closest?.('[data-us-daily-entry]'))return;
-  event.preventDefault();
-  openToday();
-});
 window.addEventListener('us-identity-change',()=>paintDailyInGioca());
 window.UsDailyQuestionHub=Object.freeze({model:dailyHubModel,paint:paintDailyInGioca,paintCard:paintDailyCardAndTurn,open:openToday});
 

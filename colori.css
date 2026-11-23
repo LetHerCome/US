@@ -44,7 +44,9 @@ html{background:radial-gradient(110% 45% at 50% 0%,color-mix(in srgb,var(--us-ta
 #bond,#usEventsOverlay{--us-pg:var(--us-pg-bond);--us-noi:var(--us-pg)}
 #moments,#ricordiChapterOverlay,#momentViewer,.us-moment-compose-overlay,#conservatiOverlay,#usAlbumOverlay{--us-pg:var(--us-pg-moments);--us-ambra:var(--us-pg)}
 #quiz{--us-pg:var(--us-pg-quiz);--us-menta:var(--us-pg);--us-noi:var(--us-pg)}
-:is(#home,#today,#usCountdownSheet,.us-look-overlay,#bond,#usEventsOverlay,#moments,#ricordiChapterOverlay,#momentViewer,.us-moment-compose-overlay,#conservatiOverlay,#usAlbumOverlay,#quiz){
+/* Il vostro angolo is yours both: the colour of Noi, the middle of the two. */
+#usAngolo{--us-pg:var(--us-noi)}
+:is(#home,#today,#usCountdownSheet,.us-look-overlay,#bond,#usEventsOverlay,#moments,#ricordiChapterOverlay,#momentViewer,.us-moment-compose-overlay,#conservatiOverlay,#usAlbumOverlay,#quiz,#usAngolo){
   --us-color-accent-ink:color-mix(in srgb,var(--us-pg) 62%,var(--us-latte));
   --us-color-accent-soft:color-mix(in srgb,var(--us-pg) 14%,transparent);
   --us-color-accent-line:color-mix(in srgb,var(--us-pg) 30%,transparent);

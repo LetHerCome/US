@@ -172,7 +172,8 @@ test('wired in: the module is loaded and cached, Gioca has its slot, Oggi its ca
   assert.match(read('service-worker.js'), /versioned\("\/weekly-challenge\.js"\)/);
   for (const f of ['scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) assert.match(read(f), /'weekly-challenge\.js'/, f);
   const games = read('games.js');
-  assert.match(games, /data-gv4-daily-slot[^\n]*\n\s*<div class="us-wc-slot" data-wc-slot><\/div>/);
+  // Redesign definitivo (D11): no daily slot before it any more.
+  assert.match(games, /<h2 class="us-gv2-sr">Gioca<\/h2>\n\s*<div class="us-wc-slot" data-wc-slot><\/div>/);
   assert.match(games, /window\.UsWeeklyChallenge\?\.paint\?\.\(\);/);
   const app = read('app.js');
   assert.match(app, /const US_TODAY_PRIORITY_ORDER=Object\.freeze\(\{[^}]*challenge:6/);

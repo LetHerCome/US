@@ -500,7 +500,8 @@ function releaseCard() { gain = null; }
 const sintoniaPanel = () => $('usGiocaSintonia');
 function sintoniaVisible() {
   const panel = sintoniaPanel();
-  return Boolean(panel && !panel.hidden && $('quiz')?.classList?.contains('active') && !document.hidden);
+  // Il vostro angolo (redesign definitivo, D3): Sintonia shows while its sheet is open.
+  return Boolean(panel && $('usAngolo')?.classList?.contains('open') && !document.hidden);
 }
 // The bar: a full-width fill that slides inside its rounded track.
 function animBar(fromPct, toPct, ms) {
@@ -1362,12 +1363,8 @@ function missionCompleted({ xp, questId } = {}) {
     await wait(700);
     window.closeNoiSection?.();
     await wait(280);
-    if (document.querySelector('.page.active')?.id !== 'quiz') {
-      window.openQuizHub?.({ nav: true });
-      await waitFlood();
-    }
-    const tab = $('usGiocaTabSintonia');
-    if (tab && tab.getAttribute('aria-selected') !== 'true') tab.click();
+    // Il vostro angolo opens where you are (redesign definitivo, D3).
+    window.UsAngolo?.open?.();
     await wait(500);
     window.toast?.(`Missione completata · +${points} punti ♡`, { icon: 'sparkle', quiet: false });
     await wait(700);
@@ -1528,7 +1525,8 @@ $('usSintoniaGrow')?.addEventListener('click', (event) => {
   if (!target) return;
   if (target === 'daily') window.openToday?.();
   else if (target === 'games') {
-    $('usGiocaTabGames')?.click?.();
+    window.UsAngolo?.close?.();
+    window.openQuizHub?.({ nav: true });
     window.scrollTo?.({ top: 0, behavior: 'auto' });
   } else if (target === 'quest') {
     window.go?.('bond', { nav: true });

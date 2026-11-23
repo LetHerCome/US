@@ -329,109 +329,109 @@ body.us-gv2-sheet-open{overflow:hidden}
 #quiz .us-gv2-flow .us-gv2-submit{width:100%;margin-top:4px}
 
 /* ---------- Sintonia: the mockup's page (sintonia.js + style.css .res … .guide), rule for rule ---------- */
-#quiz .us-gioca-sintonia{gap:10px}
+#usAngolo .us-gioca-sintonia{gap:10px}
 /* .res — the card: Sintonia, the two circles, Livello 5, Intesa rara, the bar, 760 / 800 XP · 40 XP al livello 6 */
-#quiz .us-gioca-sintonia .noi-resonance{position:relative;display:grid;justify-items:center;gap:4px;margin:0;padding:22px 18px 18px;border-radius:30px;border:1px solid var(--us-color-line);background:radial-gradient(90% 70% at 50% 0%,color-mix(in srgb,var(--us-noi) 20%,transparent),transparent 70%),var(--us-color-surface);box-shadow:none;text-align:center;overflow:hidden}
-#quiz .us-gioca-sintonia .noi-resonance-top,#quiz .us-gioca-sintonia .noi-resonance-top>div,#quiz .us-gioca-sintonia .noi-resonance-top b{display:contents}
-#quiz .us-gioca-sintonia .noi-resonance-top .tiny{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-noi)}
-#quiz .us-gioca-sintonia .us-sintonia-venn{display:block;width:210px;height:120px;margin:6px 0 2px;overflow:visible}
-#quiz .us-gioca-sintonia .us-sintonia-venn .is-a{fill:var(--us-rosa)}
-#quiz .us-gioca-sintonia .us-sintonia-venn .is-b{fill:var(--us-lilla)}
-#quiz .us-gioca-sintonia .us-sintonia-venn .is-noi{fill:var(--us-noi)}
-#quiz .us-gioca-sintonia .us-sintonia-venn .is-bloom{fill:none;stroke:var(--us-noi);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center}
-#quiz .us-gioca-sintonia #bondResonanceLevel{display:block;font:700 13px/1.5 var(--us-font-ui);letter-spacing:.06em;color:var(--us-color-text-2)}
-#quiz .us-gioca-sintonia .noi-resonance-dot,#quiz .us-gioca-sintonia .noi-resonance-mark,#quiz .us-gioca-sintonia #bondCompletedCount,#quiz .us-gioca-sintonia .noi-resonance-legacy{display:none}
-#quiz .us-gioca-sintonia #bondRankTitle{display:block;margin:0;font:italic 400 24px/1.05 var(--us-font-display);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:0;color:var(--us-color-text)}
+#usAngolo .us-gioca-sintonia .noi-resonance{position:relative;display:grid;justify-items:center;gap:4px;margin:0;padding:22px 18px 18px;border-radius:30px;border:1px solid var(--us-color-line);background:radial-gradient(90% 70% at 50% 0%,color-mix(in srgb,var(--us-noi) 20%,transparent),transparent 70%),var(--us-color-surface);box-shadow:none;text-align:center;overflow:hidden}
+#usAngolo .us-gioca-sintonia .noi-resonance-top,#usAngolo .us-gioca-sintonia .noi-resonance-top>div,#usAngolo .us-gioca-sintonia .noi-resonance-top b{display:contents}
+#usAngolo .us-gioca-sintonia .noi-resonance-top .tiny{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-noi)}
+#usAngolo .us-gioca-sintonia .us-sintonia-venn{display:block;width:210px;height:120px;margin:6px 0 2px;overflow:visible}
+#usAngolo .us-gioca-sintonia .us-sintonia-venn .is-a{fill:var(--us-rosa)}
+#usAngolo .us-gioca-sintonia .us-sintonia-venn .is-b{fill:var(--us-lilla)}
+#usAngolo .us-gioca-sintonia .us-sintonia-venn .is-noi{fill:var(--us-noi)}
+#usAngolo .us-gioca-sintonia .us-sintonia-venn .is-bloom{fill:none;stroke:var(--us-noi);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center}
+#usAngolo .us-gioca-sintonia #bondResonanceLevel{display:block;font:700 13px/1.5 var(--us-font-ui);letter-spacing:.06em;color:var(--us-color-text-2)}
+#usAngolo .us-gioca-sintonia .noi-resonance-dot,#usAngolo .us-gioca-sintonia .noi-resonance-mark,#usAngolo .us-gioca-sintonia #bondCompletedCount,#usAngolo .us-gioca-sintonia .noi-resonance-legacy{display:none}
+#usAngolo .us-gioca-sintonia #bondRankTitle{display:block;margin:0;font:italic 400 24px/1.05 var(--us-font-display);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:0;color:var(--us-color-text)}
 /* .bar: the fill slides inside the rounded track while it grows (transform only) */
-#quiz .us-gioca-sintonia .noi-resonance .bond-xp-track{width:100%;height:8px;margin:12px 0 0;border-radius:9px;background:var(--us-color-elevated);box-shadow:none;overflow:hidden}
-#quiz .us-gioca-sintonia .bond-xp-track>div{display:block;height:100%;border-radius:9px;background:var(--us-noi)!important;box-shadow:none;transition:none;will-change:auto}
-#quiz .us-gioca-sintonia .noi-resonance-foot{display:flex;justify-content:space-between;gap:8px;width:100%;margin:2px 0 0;font:600 12px/1.5 var(--us-font-ui);color:var(--us-color-text-3);font-variant-numeric:normal}
+#usAngolo .us-gioca-sintonia .noi-resonance .bond-xp-track{width:100%;height:8px;margin:12px 0 0;border-radius:9px;background:var(--us-color-elevated);box-shadow:none;overflow:hidden}
+#usAngolo .us-gioca-sintonia .bond-xp-track>div{display:block;height:100%;border-radius:9px;background:var(--us-noi)!important;box-shadow:none;transition:none;will-change:auto}
+#usAngolo .us-gioca-sintonia .noi-resonance-foot{display:flex;justify-content:space-between;gap:8px;width:100%;margin:2px 0 0;font:600 12px/1.5 var(--us-font-ui);color:var(--us-color-text-3);font-variant-numeric:normal}
 
 /* .rhythm — Ritmo: "Oggi ci siete stati." · 12 giorni · the last seven days */
-#quiz .us-gioca-sintonia .us-progression-rhythm{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 12px;margin:0;padding:14px 16px;border-radius:22px;background:var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none}
-#quiz .us-gioca-sintonia .us-progression-rhythm-kicker{grid-column:1;font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-ambra)}
-#quiz .us-gioca-sintonia .us-progression-rhythm p{grid-column:1;margin:0;font:400 14px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
-#quiz .us-gioca-sintonia .us-progression-rhythm strong{grid-row:1/3;grid-column:2;align-self:center;font:400 22px/1.5 var(--us-font-display);font-variation-settings:"SOFT" 100;white-space:nowrap;color:var(--us-color-text)}
-#quiz .us-gioca-sintonia .us-progression-rhythm-days{grid-column:1/-1;display:flex;gap:6px;margin-top:4px}
-#quiz .us-gioca-sintonia .us-progression-rhythm-days i{flex:1;height:6px;border-radius:6px;background:var(--us-color-elevated)}
-#quiz .us-gioca-sintonia .us-progression-rhythm-days i.on{background:var(--us-noi)}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 12px;margin:0;padding:14px 16px;border-radius:22px;background:var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-kicker{grid-column:1;font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-ambra)}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm p{grid-column:1;margin:0;font:400 14px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm strong{grid-row:1/3;grid-column:2;align-self:center;font:400 22px/1.5 var(--us-font-display);font-variation-settings:"SOFT" 100;white-space:nowrap;color:var(--us-color-text)}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days{grid-column:1/-1;display:flex;gap:6px;margin-top:4px}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i{flex:1;height:6px;border-radius:6px;background:var(--us-color-elevated)}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i.on{background:var(--us-noi)}
 
 /* .next-unlock — Prossimo sblocco · Livello 6 / Lucciole / e Respiro · mancano 40 XP */
-#quiz .us-gioca-sintonia .us-progression-next{display:flex;align-items:center;gap:14px;width:100%;margin:0;padding:12px;border-radius:22px;border:1px solid var(--us-color-line);background:var(--us-color-surface);box-shadow:none;color:var(--us-color-text);text-align:left;font:inherit;cursor:pointer}
-#quiz .us-gioca-sintonia .us-progression-next-preview{position:relative;flex:none;width:62px;height:80px;border-radius:14px;overflow:hidden;border:0;box-shadow:none;filter:none;opacity:1}
-#quiz .us-gioca-sintonia .us-progression-next-copy{display:block;flex:1;min-width:0}
-#quiz .us-gioca-sintonia .us-progression-next small{display:block;font:700 11px/1.5 var(--us-font-ui);letter-spacing:.12em;color:var(--us-noi)}
-#quiz .us-gioca-sintonia .us-progression-next-copy b{display:block;font:400 22px/1.1 var(--us-font-display);font-variation-settings:"SOFT" 100;color:var(--us-color-text)}
-#quiz .us-gioca-sintonia .us-progression-next-copy>span{display:block;font:400 13px/1.5 var(--us-font-ui);color:var(--us-color-text-3)}
-#quiz .us-gioca-sintonia .us-progression-next-chev{flex:none;width:18px;height:18px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat}
-#quiz .us-gioca-sintonia .us-progression-next:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+#usAngolo .us-gioca-sintonia .us-progression-next{display:flex;align-items:center;gap:14px;width:100%;margin:0;padding:12px;border-radius:22px;border:1px solid var(--us-color-line);background:var(--us-color-surface);box-shadow:none;color:var(--us-color-text);text-align:left;font:inherit;cursor:pointer}
+#usAngolo .us-gioca-sintonia .us-progression-next-preview{position:relative;flex:none;width:62px;height:80px;border-radius:14px;overflow:hidden;border:0;box-shadow:none;filter:none;opacity:1}
+#usAngolo .us-gioca-sintonia .us-progression-next-copy{display:block;flex:1;min-width:0}
+#usAngolo .us-gioca-sintonia .us-progression-next small{display:block;font:700 11px/1.5 var(--us-font-ui);letter-spacing:.12em;color:var(--us-noi)}
+#usAngolo .us-gioca-sintonia .us-progression-next-copy b{display:block;font:400 22px/1.1 var(--us-font-display);font-variation-settings:"SOFT" 100;color:var(--us-color-text)}
+#usAngolo .us-gioca-sintonia .us-progression-next-copy>span{display:block;font:400 13px/1.5 var(--us-font-ui);color:var(--us-color-text-3)}
+#usAngolo .us-gioca-sintonia .us-progression-next-chev{flex:none;width:18px;height:18px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat}
+#usAngolo .us-gioca-sintonia .us-progression-next:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
 
 /* .coll — I vostri sblocchi 18 di 33, the line under it, the chips, three tiles a row */
-#quiz .us-gioca-sintonia .us-progression-rewards-section{display:block;margin:16px 0 0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible}
-#quiz .us-gioca-sintonia .us-progression-rewards-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 12px}
-#quiz .us-gioca-sintonia .us-progression-rewards-head h3{margin:0;font:400 20px/1.5 var(--us-font-display);font-variation-settings:"SOFT" 100;color:var(--us-color-text)}
-#quiz .us-gioca-sintonia .us-progression-rewards-head b{font:400 13px/1.5 var(--us-font-ui);color:var(--us-color-text-3)}
-#quiz .us-gioca-sintonia .us-progression-rewards-sub{margin:-4px 2px 12px;font:400 13px/1.5 var(--us-font-ui);color:var(--us-color-text-3)}
-#quiz .us-gioca-sintonia .us-progression-rewards{display:block;max-height:none;overflow:visible;padding:0;gap:0}
-#quiz .us-gioca-sintonia .us-reward-cats{display:flex;gap:6px;margin:0 calc(-1 * var(--dcg-gut-r,18px)) 12px calc(-1 * var(--dcg-gut-l,18px));padding:0 var(--dcg-gut-r,18px) 0 var(--dcg-gut-l,18px);overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}
-#quiz .us-gioca-sintonia .us-reward-cats::-webkit-scrollbar{display:none}
-#quiz .us-gioca-sintonia .us-reward-cat{flex:none;min-height:38px;margin:0;padding:0 14px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text-2);font:600 13px/1.5 var(--us-font-ui);white-space:nowrap;box-shadow:none;cursor:pointer}
-#quiz .us-gioca-sintonia .us-reward-cat em{margin-left:4px;font-style:normal;opacity:.6}
-#quiz .us-gioca-sintonia .us-reward-cat[aria-pressed="true"]{background:var(--us-latte);border-color:var(--us-latte);color:var(--us-inchiostro)}
-#quiz .us-gioca-sintonia .us-reward-cat:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
-#quiz .us-gioca-sintonia .us-reward-cats~.us-reward-group:not([open]){display:none}
-#quiz .us-gioca-sintonia .us-reward-cats~.us-reward-group>summary{display:none}
-#quiz .us-gioca-sintonia .us-reward-group{display:block;margin:0;padding:0;border:0}
-#quiz .us-gioca-sintonia details>.us-reward-grid,#quiz .us-gioca-sintonia .us-reward-grid,
-#quiz .us-gioca-sintonia .us-reward-group[data-category^="oggi_"] .us-reward-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0;padding:0}
+#usAngolo .us-gioca-sintonia .us-progression-rewards-section{display:block;margin:16px 0 0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible}
+#usAngolo .us-gioca-sintonia .us-progression-rewards-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 12px}
+#usAngolo .us-gioca-sintonia .us-progression-rewards-head h3{margin:0;font:400 20px/1.5 var(--us-font-display);font-variation-settings:"SOFT" 100;color:var(--us-color-text)}
+#usAngolo .us-gioca-sintonia .us-progression-rewards-head b{font:400 13px/1.5 var(--us-font-ui);color:var(--us-color-text-3)}
+#usAngolo .us-gioca-sintonia .us-progression-rewards-sub{margin:-4px 2px 12px;font:400 13px/1.5 var(--us-font-ui);color:var(--us-color-text-3)}
+#usAngolo .us-gioca-sintonia .us-progression-rewards{display:block;max-height:none;overflow:visible;padding:0;gap:0}
+#usAngolo .us-gioca-sintonia .us-reward-cats{display:flex;gap:6px;margin:0 calc(-1 * var(--dcg-gut-r,18px)) 12px calc(-1 * var(--dcg-gut-l,18px));padding:0 var(--dcg-gut-r,18px) 0 var(--dcg-gut-l,18px);overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}
+#usAngolo .us-gioca-sintonia .us-reward-cats::-webkit-scrollbar{display:none}
+#usAngolo .us-gioca-sintonia .us-reward-cat{flex:none;min-height:38px;margin:0;padding:0 14px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text-2);font:600 13px/1.5 var(--us-font-ui);white-space:nowrap;box-shadow:none;cursor:pointer}
+#usAngolo .us-gioca-sintonia .us-reward-cat em{margin-left:4px;font-style:normal;opacity:.6}
+#usAngolo .us-gioca-sintonia .us-reward-cat[aria-pressed="true"]{background:var(--us-latte);border-color:var(--us-latte);color:var(--us-inchiostro)}
+#usAngolo .us-gioca-sintonia .us-reward-cat:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
+#usAngolo .us-gioca-sintonia .us-reward-cats~.us-reward-group:not([open]){display:none}
+#usAngolo .us-gioca-sintonia .us-reward-cats~.us-reward-group>summary{display:none}
+#usAngolo .us-gioca-sintonia .us-reward-group{display:block;margin:0;padding:0;border:0}
+#usAngolo .us-gioca-sintonia details>.us-reward-grid,#usAngolo .us-gioca-sintonia .us-reward-grid,
+#usAngolo .us-gioca-sintonia .us-reward-group[data-category^="oggi_"] .us-reward-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0;padding:0}
 /* .rw — one tile */
-#quiz .us-gioca-sintonia .us-progression-reward{position:relative;display:grid;gap:6px;width:100%;min-width:0;margin:0;padding:6px 6px 9px;border-radius:18px;border:1.5px solid var(--us-color-line);background:var(--us-color-surface);box-shadow:none;color:var(--us-color-text);text-align:left;font:inherit;cursor:pointer}
-#quiz .us-gioca-sintonia .us-progression-reward-preview,
-#quiz .us-gioca-sintonia .us-progression-look .us-progression-reward-preview{position:relative;display:block;width:auto;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:none;box-shadow:none;isolation:auto}
-#quiz .us-gioca-sintonia .us-progression-reward-copy{display:contents}
-#quiz .us-gioca-sintonia .us-progression-reward-copy b{display:block;padding:0 4px;font:600 12.5px/1.2 var(--us-font-ui);color:var(--us-color-text);overflow:visible;-webkit-line-clamp:unset;overflow-wrap:normal}
-#quiz .us-gioca-sintonia .us-progression-reward-copy small{display:flex;align-items:center;gap:4px;padding:0 4px;font:600 11px/1.5 var(--us-font-ui);color:var(--us-color-text-3);white-space:normal}
-#quiz .us-gioca-sintonia .us-progression-reward.is-equipped{border-color:var(--us-noi);background:var(--us-color-surface);box-shadow:none}
-#quiz .us-gioca-sintonia .us-progression-reward.is-equipped .us-progression-reward-copy small{color:var(--us-noi);font-weight:600}
-#quiz .us-gioca-sintonia .us-progression-reward.is-equipped .us-progression-reward-copy small::before,
-#quiz .us-gioca-sintonia .us-progression-reward.is-locked .us-progression-reward-copy small::before{content:"";flex:none;width:12px;height:12px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat}
-#quiz .us-gioca-sintonia .us-progression-reward.is-locked .us-progression-reward-copy small::before{-webkit-mask-image:url("/assets/icons/phosphor/lock-simple-regular.svg");mask-image:url("/assets/icons/phosphor/lock-simple-regular.svg")}
-#quiz .us-gioca-sintonia .us-progression-reward.is-locked .us-progression-reward-preview{filter:grayscale(.85) brightness(.55)}
-#quiz .us-gioca-sintonia .us-progression-reward.is-locked .us-progression-reward-preview>*{filter:none;opacity:1}
-#quiz .us-gioca-sintonia .us-progression-reward.is-locked .us-progression-reward-copy b{color:var(--us-color-text-3)}
-#quiz .us-gioca-sintonia .us-progression-reward:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
+#usAngolo .us-gioca-sintonia .us-progression-reward{position:relative;display:grid;gap:6px;width:100%;min-width:0;margin:0;padding:6px 6px 9px;border-radius:18px;border:1.5px solid var(--us-color-line);background:var(--us-color-surface);box-shadow:none;color:var(--us-color-text);text-align:left;font:inherit;cursor:pointer}
+#usAngolo .us-gioca-sintonia .us-progression-reward-preview,
+#usAngolo .us-gioca-sintonia .us-progression-look .us-progression-reward-preview{position:relative;display:block;width:auto;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:none;box-shadow:none;isolation:auto}
+#usAngolo .us-gioca-sintonia .us-progression-reward-copy{display:contents}
+#usAngolo .us-gioca-sintonia .us-progression-reward-copy b{display:block;padding:0 4px;font:600 12.5px/1.2 var(--us-font-ui);color:var(--us-color-text);overflow:visible;-webkit-line-clamp:unset;overflow-wrap:normal}
+#usAngolo .us-gioca-sintonia .us-progression-reward-copy small{display:flex;align-items:center;gap:4px;padding:0 4px;font:600 11px/1.5 var(--us-font-ui);color:var(--us-color-text-3);white-space:normal}
+#usAngolo .us-gioca-sintonia .us-progression-reward.is-equipped{border-color:var(--us-noi);background:var(--us-color-surface);box-shadow:none}
+#usAngolo .us-gioca-sintonia .us-progression-reward.is-equipped .us-progression-reward-copy small{color:var(--us-noi);font-weight:600}
+#usAngolo .us-gioca-sintonia .us-progression-reward.is-equipped .us-progression-reward-copy small::before,
+#usAngolo .us-gioca-sintonia .us-progression-reward.is-locked .us-progression-reward-copy small::before{content:"";flex:none;width:12px;height:12px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat}
+#usAngolo .us-gioca-sintonia .us-progression-reward.is-locked .us-progression-reward-copy small::before{-webkit-mask-image:url("/assets/icons/phosphor/lock-simple-regular.svg");mask-image:url("/assets/icons/phosphor/lock-simple-regular.svg")}
+#usAngolo .us-gioca-sintonia .us-progression-reward.is-locked .us-progression-reward-preview{filter:grayscale(.85) brightness(.55)}
+#usAngolo .us-gioca-sintonia .us-progression-reward.is-locked .us-progression-reward-preview>*{filter:none;opacity:1}
+#usAngolo .us-gioca-sintonia .us-progression-reward.is-locked .us-progression-reward-copy b{color:var(--us-color-text-3)}
+#usAngolo .us-gioca-sintonia .us-progression-reward:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
 
 /* .fold — Ultime crescite and Come cresce la Sintonia */
-#quiz .us-gioca-sintonia :is(.noi-resonance-history,.noi-resonance-guide){display:block;margin:0;padding:0;border-radius:22px;background:var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none}
-#quiz .us-gioca-sintonia .us-sintonia-fold{display:flex;align-items:center;gap:10px;width:100%;min-height:60px;margin:0;padding:0 16px;border:0;border-radius:22px;background:none;box-shadow:none;color:var(--us-color-text);font:inherit;text-align:left;cursor:pointer}
-#quiz .us-gioca-sintonia .us-sintonia-fold>b{flex:1;min-width:0;font:600 15px/1.5 var(--us-font-ui);color:var(--us-color-text)}
-#quiz .us-gioca-sintonia .us-sintonia-fold small{display:block;font:500 12px/1.5 var(--us-font-ui);color:var(--us-color-text-3)}
-#quiz .us-gioca-sintonia .us-sintonia-fold-icon{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:10px;background:var(--us-color-surface-2)}
-#quiz .us-gioca-sintonia .us-sintonia-fold-icon::before{content:"";width:16px;height:16px;background:var(--us-noi);-webkit-mask:url("/assets/icons/phosphor/star-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/star-regular.svg") center/contain no-repeat}
-#quiz .us-gioca-sintonia .us-sintonia-fold-icon.is-help::before{-webkit-mask-image:url("/assets/icons/phosphor/question-regular.svg");mask-image:url("/assets/icons/phosphor/question-regular.svg")}
-#quiz .us-gioca-sintonia .us-sintonia-fold-caret{flex:none;width:20px;height:20px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:transform .3s var(--us-ease-standard)}
-#quiz .us-gioca-sintonia [data-open="true"]>.us-sintonia-fold .us-sintonia-fold-caret{transform:rotate(90deg)}
-#quiz .us-gioca-sintonia .us-sintonia-fold:focus-visible{outline:2px solid var(--us-noi);outline-offset:-2px}
+#usAngolo .us-gioca-sintonia :is(.noi-resonance-history,.noi-resonance-guide){display:block;margin:0;padding:0;border-radius:22px;background:var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none}
+#usAngolo .us-gioca-sintonia .us-sintonia-fold{display:flex;align-items:center;gap:10px;width:100%;min-height:60px;margin:0;padding:0 16px;border:0;border-radius:22px;background:none;box-shadow:none;color:var(--us-color-text);font:inherit;text-align:left;cursor:pointer}
+#usAngolo .us-gioca-sintonia .us-sintonia-fold>b{flex:1;min-width:0;font:600 15px/1.5 var(--us-font-ui);color:var(--us-color-text)}
+#usAngolo .us-gioca-sintonia .us-sintonia-fold small{display:block;font:500 12px/1.5 var(--us-font-ui);color:var(--us-color-text-3)}
+#usAngolo .us-gioca-sintonia .us-sintonia-fold-icon{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:10px;background:var(--us-color-surface-2)}
+#usAngolo .us-gioca-sintonia .us-sintonia-fold-icon::before{content:"";width:16px;height:16px;background:var(--us-noi);-webkit-mask:url("/assets/icons/phosphor/star-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/star-regular.svg") center/contain no-repeat}
+#usAngolo .us-gioca-sintonia .us-sintonia-fold-icon.is-help::before{-webkit-mask-image:url("/assets/icons/phosphor/question-regular.svg");mask-image:url("/assets/icons/phosphor/question-regular.svg")}
+#usAngolo .us-gioca-sintonia .us-sintonia-fold-caret{flex:none;width:20px;height:20px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:transform .3s var(--us-ease-standard)}
+#usAngolo .us-gioca-sintonia [data-open="true"]>.us-sintonia-fold .us-sintonia-fold-caret{transform:rotate(90deg)}
+#usAngolo .us-gioca-sintonia .us-sintonia-fold:focus-visible{outline:2px solid var(--us-noi);outline-offset:-2px}
 /* .fold-body .hist — Missione di coppia / Guardare insieme il tramonto · 11 ott / +60 XP */
-#quiz .us-gioca-sintonia .noi-resonance-history-list,#quiz .us-gioca-sintonia .us-sintonia-guide{display:grid;gap:8px;margin:0;padding:0 16px 14px}
-#quiz .us-gioca-sintonia .noi-resonance-history-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;font:400 14px/1.5 var(--us-font-ui)}
-#quiz .us-gioca-sintonia .noi-resonance-history-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:color-mix(in srgb,var(--us-noi) 16%,transparent);box-shadow:none}
-#quiz .us-gioca-sintonia .noi-resonance-history-mark::before{content:"";width:16px;height:16px;background:var(--us-noi);-webkit-mask:url("/assets/icons/phosphor/flag-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/flag-regular.svg") center/contain no-repeat}
-#quiz .us-gioca-sintonia [data-resonance-kind="event"] .noi-resonance-history-mark::before{-webkit-mask-image:url("/assets/icons/phosphor/calendar-blank-regular.svg");mask-image:url("/assets/icons/phosphor/calendar-blank-regular.svg")}
-#quiz .us-gioca-sintonia [data-resonance-kind="milestone"] .noi-resonance-history-mark::before{-webkit-mask-image:url("/assets/icons/phosphor/heart-straight-regular.svg");mask-image:url("/assets/icons/phosphor/heart-straight-regular.svg")}
-#quiz .us-gioca-sintonia .noi-resonance-history-copy{display:block;margin:0;min-width:0;font:400 14px/1.5 var(--us-font-ui);color:var(--us-color-text);overflow-wrap:anywhere}
-#quiz .us-gioca-sintonia .noi-resonance-history-copy small{display:block;font:400 12px/1.5 var(--us-font-ui);color:var(--us-color-text-3)}
-#quiz .us-gioca-sintonia .noi-resonance-history-copy time{font:inherit;color:inherit}
-#quiz .us-gioca-sintonia .noi-resonance-history-xp{font:700 14px/1.5 var(--us-font-ui);color:var(--us-noi);font-variant-numeric:tabular-nums;white-space:nowrap}
-#quiz .us-gioca-sintonia .noi-resonance-history-empty{display:grid;gap:2px;margin:0;padding:0;border:0;background:none;font:400 14px/1.5 var(--us-font-ui)}
-#quiz .us-gioca-sintonia .noi-resonance-history-empty b{font-weight:600}
-#quiz .us-gioca-sintonia .noi-resonance-history-empty span{font-size:12px;color:var(--us-color-text-3)}
+#usAngolo .us-gioca-sintonia .noi-resonance-history-list,#usAngolo .us-gioca-sintonia .us-sintonia-guide{display:grid;gap:8px;margin:0;padding:0 16px 14px}
+#usAngolo .us-gioca-sintonia .noi-resonance-history-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;font:400 14px/1.5 var(--us-font-ui)}
+#usAngolo .us-gioca-sintonia .noi-resonance-history-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:color-mix(in srgb,var(--us-noi) 16%,transparent);box-shadow:none}
+#usAngolo .us-gioca-sintonia .noi-resonance-history-mark::before{content:"";width:16px;height:16px;background:var(--us-noi);-webkit-mask:url("/assets/icons/phosphor/flag-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/flag-regular.svg") center/contain no-repeat}
+#usAngolo .us-gioca-sintonia [data-resonance-kind="event"] .noi-resonance-history-mark::before{-webkit-mask-image:url("/assets/icons/phosphor/calendar-blank-regular.svg");mask-image:url("/assets/icons/phosphor/calendar-blank-regular.svg")}
+#usAngolo .us-gioca-sintonia [data-resonance-kind="milestone"] .noi-resonance-history-mark::before{-webkit-mask-image:url("/assets/icons/phosphor/heart-straight-regular.svg");mask-image:url("/assets/icons/phosphor/heart-straight-regular.svg")}
+#usAngolo .us-gioca-sintonia .noi-resonance-history-copy{display:block;margin:0;min-width:0;font:400 14px/1.5 var(--us-font-ui);color:var(--us-color-text);overflow-wrap:anywhere}
+#usAngolo .us-gioca-sintonia .noi-resonance-history-copy small{display:block;font:400 12px/1.5 var(--us-font-ui);color:var(--us-color-text-3)}
+#usAngolo .us-gioca-sintonia .noi-resonance-history-copy time{font:inherit;color:inherit}
+#usAngolo .us-gioca-sintonia .noi-resonance-history-xp{font:700 14px/1.5 var(--us-font-ui);color:var(--us-noi);font-variant-numeric:tabular-nums;white-space:nowrap}
+#usAngolo .us-gioca-sintonia .noi-resonance-history-empty{display:grid;gap:2px;margin:0;padding:0;border:0;background:none;font:400 14px/1.5 var(--us-font-ui)}
+#usAngolo .us-gioca-sintonia .noi-resonance-history-empty b{font-weight:600}
+#usAngolo .us-gioca-sintonia .noi-resonance-history-empty span{font-size:12px;color:var(--us-color-text-3)}
 /* .guide — four sources, each name opens its place */
-#quiz .us-gioca-sintonia .us-sintonia-guide{gap:10px;list-style:none}
-#quiz .us-gioca-sintonia .us-sintonia-guide li{display:grid;gap:2px;margin:0;padding:0;font:400 14px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
-#quiz .us-gioca-sintonia .us-sintonia-guide b{font-weight:600;color:var(--us-color-text)}
-#quiz .us-gioca-sintonia .us-sintonia-guide button{display:inline;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;font:inherit;color:inherit;text-align:inherit;cursor:pointer}
-#quiz .us-gioca-sintonia .us-sintonia-guide button:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px;border-radius:4px}
+#usAngolo .us-gioca-sintonia .us-sintonia-guide{gap:10px;list-style:none}
+#usAngolo .us-gioca-sintonia .us-sintonia-guide li{display:grid;gap:2px;margin:0;padding:0;font:400 14px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
+#usAngolo .us-gioca-sintonia .us-sintonia-guide b{font-weight:600;color:var(--us-color-text)}
+#usAngolo .us-gioca-sintonia .us-sintonia-guide button{display:inline;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;font:inherit;color:inherit;text-align:inherit;cursor:pointer}
+#usAngolo .us-gioca-sintonia .us-sintonia-guide button:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px;border-radius:4px}
 
 /* ---------- The rewards' art (sintonia.js preview): tiles, next unlock, unlock card ---------- */
 .us-gioca-sintonia .mini,#usProgressionUnlock .mini{position:absolute;inset:0;display:grid;justify-items:center;align-content:start;padding-top:16%;background:linear-gradient(180deg,#3a2140,#6a3a58 55%,#c06a6a)}
