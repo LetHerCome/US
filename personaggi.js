@@ -34,10 +34,14 @@
   // it comes back with «Il vostro angolo» (Fase 4).
   const LOOK_HEAD = Object.freeze(['cappello', 'fiocco', 'cuffie', 'corona', 'coroncina', 'festa', 'cento']);
   const LOOK_FACE = Object.freeze(['occhiali', 'sole', 'sciarpina', 'gala', 'macchinetta']);
+  const LOOK_NAMES = Object.freeze({ cappello: 'Cappello', fiocco: 'Fiocco', cuffie: 'Cuffie', corona: 'Corona', coroncina: 'Coroncina', festa: 'Cappello da festa', cento: 'Fascia dei 100', occhiali: 'Occhiali', sole: 'Occhiali da sole', sciarpina: 'Sciarpina', gala: 'Gala', macchinetta: 'Macchinetta' });
+  // The thresholds of the couple's Sintonia points (D19, measured on the real pace of the couples, 21/11/2026),
+  // the same the server checks (migration 20261120232852), and the real moments.
+  const LOOK_POINTS = Object.freeze({ occhiali: 150, cappello: 400, fiocco: 700, sciarpina: 1000, sole: 1350, gala: 1700, cuffie: 2100, coroncina: 2550, corona: 3000 });
+  const LOOK_MOMENTS = Object.freeze({ macchinetta: 'il primo Ricordo', cento: '100 giorni in US', festa: 'il primo anno in US' });
   // Where things sit on each shape: the top of the head [x, y, half width] and the sides [left, right, y].
   const ANCHOR = Object.freeze({ palla: { head: [50, 26, 19], ears: [12, 88, 56] }, quadrato: { head: [50, 25, 19], ears: [14, 86, 54] }, triangolo: { head: [50, 21, 11], ears: [23, 77, 60] }, goccia: { head: [50, 21, 10], ears: [16, 84, 60] }, nuvola: { head: [56, 22, 15], ears: [12, 88, 60] } });
   const lp = (p, fill, sw = 2.6) => `<path d="${p}" fill="${fill}" stroke="${INK}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>`;
-  let clipN = 0;
   function lookSvg(item, shape) {
     const s = SHAPES[shape], an = ANCHOR[shape];
     if (!s || !an) return '';
@@ -52,7 +56,7 @@
       case 'cento': { const k = Math.max(w0, 13) + 3, arc = `M${x - k} ${y + 3} Q${x} ${y - 7} ${x + k} ${y + 3}`; return `<path d="${arc}" fill="none" stroke="${INK}" stroke-width="6.5" stroke-linecap="round"/><path d="${arc}" fill="none" stroke="#F3D27A" stroke-width="3" stroke-linecap="round"/>` + lp(ell(x, y - 7, 10, 8), '#FFFDF9', 2.2) + `<text x="${x}" y="${y - 4.3}" text-anchor="middle" font-family="Figtree,sans-serif" font-weight="800" font-size="8.5" fill="${INK}">100</text>`; }
       case 'occhiali': return lp(`${ell(a, fy, 9.5, 8.5)} ${ell(b, fy, 9.5, 8.5)} M${a + 9.5} ${fy} H${b - 9.5}`, 'rgba(255,255,255,.28)');
       case 'sole': return lp(`M${a - 10} ${fy - 6} H${a + 9} Q${a + 9} ${fy + 8} ${a - 1} ${fy + 8} Q${a - 10} ${fy + 8} ${a - 10} ${fy - 6} Z M${b - 9} ${fy - 6} H${b + 10} Q${b + 10} ${fy + 8} ${b + 1} ${fy + 8} Q${b - 9} ${fy + 8} ${b - 9} ${fy - 6} Z M${a + 9} ${fy - 3} H${b - 9}`, '#231E2C') + `<path d="M${a - 6} ${fy - 2} l4 -2.5 M${b - 5} ${fy - 2} l4 -2.5" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linecap="round"/>`;
-      case 'sciarpina': { const id = `usc${++clipN}`; return `<defs><clipPath id="${id}"><path d="${s.body}"/></clipPath></defs><g clip-path="url(#${id})"><path d="M0 ${neck - 6} H110 V${neck + 6} H0 Z" fill="#E8604C" stroke="${INK}" stroke-width="2.6"/><path d="M8 ${neck - 1} H100" stroke="#FFE07A" stroke-width="2.4" stroke-dasharray="5 5"/></g>` + lp(`M58 ${neck + 2} L66 ${neck + 17} L58 ${neck + 19} L52 ${neck + 4} Z`, '#E8604C'); }
+      case 'sciarpina': { const id = `usc-${shape}`; return `<defs><clipPath id="${id}"><path d="${s.body}"/></clipPath></defs><g clip-path="url(#${id})"><path d="M0 ${neck - 6} H110 V${neck + 6} H0 Z" fill="#E8604C" stroke="${INK}" stroke-width="2.6"/><path d="M8 ${neck - 1} H100" stroke="#FFE07A" stroke-width="2.4" stroke-dasharray="5 5"/></g>` + lp(`M58 ${neck + 2} L66 ${neck + 17} L58 ${neck + 19} L52 ${neck + 4} Z`, '#E8604C'); }
       case 'gala': { const g = neck - 1; return lp(`M50 ${g} L38 ${g - 7} L38 ${g + 7} Z M50 ${g} L62 ${g - 7} L62 ${g + 7} Z`, '#2B2433') + lp(ell(50, g, 3.4, 3.4), '#4A3F57'); }
       case 'macchinetta': { const m = neck - 2; return `<path d="M42 ${m - 4} L${l + 10} ${fy + 12} M58 ${m - 4} L${r - 10} ${fy + 12}" stroke="${INK}" stroke-width="2.2" stroke-linecap="round" opacity=".85"/>` + lp(`M39 ${m - 6} H61 Q63 ${m - 6} 63 ${m - 4} V${m + 8} Q63 ${m + 10} 61 ${m + 10} H39 Q37 ${m + 10} 37 ${m + 8} V${m - 4} Q37 ${m - 6} 39 ${m - 6} Z`, '#FFFDF9', 2.2) + lp(ell(50, m + 2, 4.6, 4.6), '#3A3446', 1.8) + lp(ell(58, m - 2.5, 1.6, 1.6), '#FF5A7A', 1); }
       default: return '';
@@ -91,33 +95,79 @@
     return { status: pick?.status || '', form: pick?.form || '' };
   }
 
+  // ---------------------------------------------------------------- le reazioni
+  // Personaggi (founder, 20/11/2026, D9; redesign definitivo D9): a few clear
+  // reactions over the face of Come stai, only for things you do for each
+  // other. The day of your mesiversario or anniversary: festa, both. A Ti penso
+  // received in the last 3 hours: heart eyes, mine. The other answered today's
+  // question and I have not yet: their character waves. From 22 to 6: sleepy.
+  const REACTION_HOURS = 3;
+  function reactionOf(role, now = new Date()) {
+    let started = '';
+    try { started = String(w?.UsCoupleContext?.snapshot?.()?.couple?.started_on || ''); } catch (_) { started = ''; }
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(started);
+    if (m) {
+      const yy = now.getFullYear(), mo = now.getMonth() + 1, day = now.getDate();
+      const lastDay = new Date(yy, mo, 0).getDate();
+      if (day === Math.min(+m[3], lastDay) && yy * 12 + mo > +m[1] * 12 + +m[2]) return 'festa';
+    }
+    const mine = role === myRole();
+    if (mine) {
+      const at = Date.parse(w?.usThinkLastReceivedAt || '');
+      if (Number.isFinite(at) && now.getTime() - at >= 0 && now.getTime() - at < REACTION_HOURS * 3600e3) return 'cuore';
+    } else {
+      const st = w?.todayState;
+      if (w?.todayQuestion?.id && st?.partner_has_answer && st?.my_answer == null) return 'saluta';
+    }
+    const h = now.getHours();
+    return h >= 22 || h < 6 ? 'sera' : '';
+  }
+  function reactionBack(reaction, shape, color) {
+    const an = ANCHOR[shape];
+    if (reaction === 'festa') return [[6, 30, '#FF5A7A', 20], [94, 26, '#6F9BFF', -25], [2, 70, '#F3D27A', 40], [98, 66, '#8FD49B', -10], [20, 12, '#A98BFF', 15], [82, 10, '#FF9F6E', -30]].map(([cx, cy, cc, r]) => `<rect class="us-char-confetto" x="${cx - 3}" y="${cy - 1.6}" width="6" height="3.2" rx="1" fill="${cc}" transform="rotate(${r} ${cx} ${cy})"/>`).join('');
+    if (reaction === 'saluta' && an) { const [, er, ey] = an.ears, arm = `M${er - 3} ${ey + 14} Q${er + 8} ${ey + 6} ${er + 11} ${ey - 6}`; return `<g class="us-char-wave"><path d="${arm}" fill="none" stroke="${INK}" stroke-width="8.5" stroke-linecap="round"/><path d="${arm}" fill="none" style="stroke:${color}" stroke-width="4.2" stroke-linecap="round"/><path d="${ell(er + 12, ey - 9, 6, 6)}" style="fill:${color}" stroke="${INK}" stroke-width="2.8"/></g>`; }
+    return '';
+  }
+  function reactionFront(reaction, shape) {
+    const s = SHAPES[shape];
+    if (reaction !== 'cuore' || !s) return '';
+    const [a, b] = s.ex, y = s.ey;
+    const heart = (x) => `M${x} ${y + 5} C${x - 9} ${y - 1} ${x - 6} ${y - 9} ${x} ${y - 4} C${x + 6} ${y - 9} ${x + 9} ${y - 1} ${x} ${y + 5} Z`;
+    return lp(`${heart(a)} ${heart(b)}`, '#FF4F6F', 1.8);
+  }
+
   // who: a role ('francesco' | 'beatrice') or { shape, color } for a character
-  // that is not a member yet (the intro, Fase 7).
+  // that is not a member yet (the intro, Fase 7). o.react: the reaction of the
+  // moment (reactionOf); o.reaction: a given one.
   function character(who, o = {}) {
     const role = typeof who === 'string' ? who : '';
     const shape = SHAPES[o.shape] ? o.shape : SHAPES[who?.shape] ? who.shape : shapeOf(role);
     const color = o.color || who?.color || colorVar(role);
     const s = SHAPES[shape], size = o.size || 56, [a, b] = s.ex, y = s.ey;
+    const reaction = o.reaction !== undefined ? o.reaction : (o.react && role ? reactionOf(role) : '');
     const mood = o.mood !== undefined ? o.mood : (role ? moodOf(role).status : '');
-    const face = FACE[mood] || 'felice';
+    const face = reaction === 'sera' ? 'dorme' : reaction ? 'felice' : (FACE[mood] || 'felice');
     const shut = face === 'stanco' || face === 'innamorato' || face === 'dorme';
-    const open = shut ? [] : [a, b];
+    const open = reaction === 'cuore' || shut ? [] : [a, b];
+    const big = reaction === 'cuore' || reaction === 'festa';
     const lids = shut ? `<path d="${[a, b].map((x) => face === 'dorme' ? `M${x - 5} ${y} Q${x} ${y + 4.5} ${x + 5} ${y}` : face === 'innamorato' ? `M${x - 4.5} ${y + 1} Q${x} ${y - 5} ${x + 4.5} ${y + 1}` : `M${x - 4.5} ${y} Q${x} ${y + 3.5} ${x + 4.5} ${y}`).join(' ')}" fill="none" stroke="${INK}" stroke-width="2.8" stroke-linecap="round"/>` : '';
     const brows = face === 'teso' ? `<path d="M${a - 6} ${y - 10} L${a + 4} ${y - 7} M${b + 6} ${y - 10} L${b - 4} ${y - 7}" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>` : '';
-    const mouth = face === 'dorme' ? ell(50, y + 12, 2.4, 1.9) : face === 'giu' ? `M46 ${y + 14} Q50 ${y + 9.5} 54 ${y + 14}` : face === 'teso' || face === 'stanco' ? `M46.5 ${y + 11.5} H53.5` : face === 'innamorato' ? `M44.5 ${y + 9} Q50 ${y + 16.5} 55.5 ${y + 9}` : `M46 ${y + 10} Q50 ${y + 14.5} 54 ${y + 10}`;
+    const mouth = big ? `M44.5 ${y + 9} Q50 ${y + 17} 55.5 ${y + 9} Z` : face === 'dorme' ? ell(50, y + 12, 2.4, 1.9) : face === 'giu' ? `M46 ${y + 14} Q50 ${y + 9.5} 54 ${y + 14}` : face === 'teso' || face === 'stanco' ? `M46.5 ${y + 11.5} H53.5` : face === 'innamorato' ? `M44.5 ${y + 9} Q50 ${y + 16.5} 55.5 ${y + 9}` : `M46 ${y + 10} Q50 ${y + 14.5} 54 ${y + 10}`;
     const label = o.label ? ` role="img" aria-label="${esc(o.label)}"` : ' aria-hidden="true"';
     const worn = role ? lookOf(role) : { head: null, face: null };
     const head = o.head !== undefined ? o.head : worn.head;
     const faceItem = o.face !== undefined ? o.face : worn.face;
     const dress = `${faceItem ? lookSvg(faceItem, shape) : ''}${head ? lookSvg(head, shape) : ''}`;
-    return `<svg class="us-char${o.className ? ` ${esc(o.className)}` : ''}" viewBox="-4 6 108 100" overflow="visible" width="${size}" height="${Math.round(size * 100 / 108)}"${label} focusable="false">`
+    return `<svg class="us-char${o.className ? ` ${esc(o.className)}` : ''}"${reaction ? ` data-reaction="${reaction}"` : ''} viewBox="-4 6 108 100" overflow="visible" width="${size}" height="${Math.round(size * 100 / 108)}"${label} focusable="false">`
+      + reactionBack(reaction, shape, color)
       + `<path d="${ell(s.feet[0], 97, 9, 5)} ${ell(s.feet[1], 97, 9, 5)}" style="fill:${color}" stroke="${INK}" stroke-width="3"/>`
       + `<path d="${s.body}" style="fill:${color}" stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"/>`
       + `<path d="${ell(s.hl[0], s.hl[1], 8, 5)}" fill="rgba(255,255,255,.55)"/>`
       + `<path d="${ell(a - 8, y + 9, 5, 3)} ${ell(b + 8, y + 9, 5, 3)}" fill="rgba(211,64,42,.3)"/>`
       + (open.length ? `<g class="us-char-eyes"><path d="${open.map((x) => ell(x, y, 4.4, 5.8)).join(' ')}" fill="${INK}"/><path d="${open.map((x) => ell(x + 1.5, y - 2.3, 1.5, 1.5)).join(' ')}" fill="#fff"/></g>` : '')
       + lids + brows
-      + `<path d="${mouth}" fill="${face === 'dorme' ? INK : 'none'}" stroke="${face === 'dorme' ? 'none' : INK}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`
+      + `<path d="${mouth}" fill="${big ? '#7A2E3A' : face === 'dorme' ? INK : 'none'}" stroke="${face === 'dorme' && !big ? 'none' : INK}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`
+      + reactionFront(reaction, shape)
       + (face === 'dorme' ? `<text x="84" y="36" font-family="Figtree,sans-serif" font-weight="800" font-size="19" fill="currentColor">z</text><text x="97" y="22" font-family="Figtree,sans-serif" font-weight="800" font-size="13" fill="currentColor">z</text>` : '')
       + dress
       + '</svg>';
@@ -137,7 +187,7 @@
     const signedIn = Boolean(w.usProfile?.id);
     d.querySelectorAll('[data-us-self]').forEach((el) => {
       el.hidden = !signedIn;
-      el.innerHTML = signedIn ? character(role, { size: 34 }) : '';
+      el.innerHTML = signedIn ? character(role, { size: 34, react: true }) : '';
     });
     const big = d.getElementById('usProfileChar');
     if (big) big.innerHTML = signedIn ? character(role, { size: 96 }) : '';
@@ -172,7 +222,7 @@
       const big = el.dataset.usDuo === 'big';
       if (!both || !w.usProfile?.id) { el.innerHTML = ''; if (!big) el.hidden = true; return; }
       el.hidden = false;
-      el.innerHTML = ['francesco', 'beatrice'].map((role) => `<span class="us-duo-one">${character(role, { size: big ? 96 : 58 })}${big ? `<span class="us-duo-name" translate="no">${esc(name(role))}</span>` : ''}</span>`).join('');
+      el.innerHTML = ['francesco', 'beatrice'].map((role) => `<span class="us-duo-one">${character(role, { size: big ? 96 : 58, react: true })}${big ? `<span class="us-duo-name" translate="no">${esc(name(role))}</span>` : ''}</span>`).join('');
     });
   }
 
@@ -181,10 +231,14 @@
   // #usGiocaSintonia by noi-v2.js, painted by progression.js) live in this
   // sheet, over the page you are on. The wardrobe comes with fase 4.
   const angolo = () => d?.getElementById('usAngolo');
-  function openAngolo() {
+  // place 'look': straight to the wardrobe (Cambia look, in the Profilo).
+  function openAngolo(place = '') {
     const sheet = angolo();
     if (!sheet || !w.usProfile?.couple_id) return false;
     paintDuo();
+    paintWardrobe();
+    refreshLookUnlocks().then(paintWardrobe);
+    if (place === 'look') setTimeout(() => d.getElementById('usAngoloLook')?.scrollIntoView?.({ block: 'start' }), 60);
     w.UsUiFoundation?.cancelSurfaceExit?.(sheet);
     sheet.setAttribute('aria-hidden', 'false');
     sheet.classList.add('open');
@@ -202,15 +256,114 @@
     if (!w.UsUiFoundation?.exitSurface?.(sheet, finish)) finish();
   }
 
-  const paintAll = () => { paintMe(); paintDuo(); };
+  // ---------------------------------------------------------------- il guardaroba
+  // D4 (redesign definitivo) on the rules of 20–21/11/2026 (grill-me D6–D19):
+  // one thing on the head, one on the face or at the neck, all free; unlocked
+  // by the couple's Sintonia points or by a real moment. The server keeps the
+  // outfit and checks the same rule (set_my_character_look, my_character_unlocks,
+  // set_my_character_shape: migrations 20261115183900 and 20261120232852).
+  const client = () => (typeof sb !== 'undefined' ? sb : null); // eslint-disable-line no-undef
+  let lookUnlocks = null;
+  const totalPoints = () => Number(w?.USProgression?.getState?.()?.total_xp) || 0;
+  function unlockedLook() {
+    if (Array.isArray(lookUnlocks)) return new Set(lookUnlocks);
+    const out = new Set();
+    for (const [item, need] of Object.entries(LOOK_POINTS)) if (totalPoints() >= need) out.add(item);
+    return out;
+  }
+  function refreshLookUnlocks() {
+    const db = client();
+    if (!db?.rpc || !w.usProfile?.couple_id) return Promise.resolve();
+    return Promise.resolve(db.rpc('my_character_unlocks')).then((r) => { if (!r?.error && Array.isArray(r?.data)) lookUnlocks = r.data; }).catch(() => {});
+  }
+  let saving = false;
+  async function saveCharacter(rpc, args) {
+    const db = client();
+    if (!db?.rpc || saving) return false;
+    saving = true;
+    try {
+      const r = await db.rpc(rpc, args);
+      if (r?.error) {
+        w.toast?.(/locked/.test(String(r.error.message || '')) ? 'Questo non è ancora sbloccato' : 'Non riesco a salvarlo, riprova');
+        return false;
+      }
+      if (Array.isArray(r?.data?.unlocked)) lookUnlocks = r.data.unlocked;
+      await Promise.resolve(w.UsCoupleContext?.hydrate?.()).catch(() => {});
+      w.UsFeedback?.selection?.();
+      return true;
+    } catch (_) {
+      w.toast?.('Non riesco a salvarlo, riprova');
+      return false;
+    } finally {
+      saving = false;
+      paintAll();
+    }
+  }
+  function wardrobeMarkup() {
+    const role = myRole(), mine = lookOf(role), open = unlockedLook(), shapeNow = shapeOf(role);
+    const lockOf = (item) => (LOOK_POINTS[item] ? `${LOOK_POINTS[item]} punti` : LOOK_MOMENTS[item] || '');
+    const chip = (slot, item) => {
+      const on = (slot === 'head' ? mine.head : mine.face) === item;
+      const free = item === null || open.has(item);
+      const name = item === null ? 'Niente' : LOOK_NAMES[item];
+      const lock = free ? '' : lockOf(item);
+      const preview = character(role, { size: 44, reaction: '', head: slot === 'head' ? item : mine.head, face: slot === 'face' ? item : mine.face });
+      return `<button type="button" class="us-look-chip${free ? '' : ' is-locked'}" data-us-look="${slot}:${item || ''}" aria-pressed="${on}"${free ? '' : ' aria-disabled="true"'} aria-label="${esc(free ? name : `${name}: si sblocca con ${lock}`)}">${preview}<span class="us-look-name">${esc(name)}</span>${lock ? `<small>${esc(lock)}</small>` : ''}</button>`;
+    };
+    const shapeChip = (shape) => `<button type="button" class="us-look-chip" data-us-shape="${shape}" aria-pressed="${shape === shapeNow}">${character(role, { size: 44, reaction: '', shape })}<span class="us-look-name">${esc(SHAPE_NAMES[shape])}</span></button>`;
+    const next = Object.entries(LOOK_POINTS).filter(([item]) => !open.has(item)).sort((x, y) => x[1] - y[1])[0];
+    let nextRow = '<p class="us-look-next"><b>Avete sbloccato tutto il guardaroba della Sintonia</b></p>';
+    if (next) {
+      const prev = Math.max(0, ...Object.values(LOOK_POINTS).filter((v) => v < next[1]));
+      const pct = Math.max(0, Math.min(100, Math.round(((totalPoints() - prev) / Math.max(1, next[1] - prev)) * 100)));
+      const left = Math.max(0, next[1] - totalPoints());
+      nextRow = `<p class="us-look-next"><b>${esc(`Prossimo: ${LOOK_NAMES[next[0]]}`)}</b>${left > 0 ? `<span>${esc(left === 1 ? 'manca 1 punto' : `mancano ${left} punti`)}</span>` : ''}<span class="us-look-meter" role="progressbar" aria-label="${esc(`Verso ${LOOK_NAMES[next[0]]}`)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></span></p>`;
+    }
+    return `<h3 class="us-look-title">Il tuo guardaroba</h3>`
+      + `<div class="us-look-row"><b>La forma</b><div class="us-look-chips">${Object.keys(SHAPES).map(shapeChip).join('')}</div></div>`
+      + `<div class="us-look-row"><b>In testa</b><div class="us-look-chips">${[null, ...LOOK_HEAD].map((k) => chip('head', k)).join('')}</div></div>`
+      + `<div class="us-look-row"><b>Sul viso o al collo</b><div class="us-look-chips">${[null, ...LOOK_FACE].map((k) => chip('face', k)).join('')}</div></div>`
+      + nextRow;
+  }
+  function paintWardrobe() {
+    const root = d?.getElementById('usAngoloLook');
+    if (!root) return;
+    if (!w.usProfile?.couple_id) { root.innerHTML = ''; return; }
+    const rows = [...root.querySelectorAll('.us-look-chips')].map((row) => row.scrollLeft);
+    root.innerHTML = wardrobeMarkup();
+    root.querySelectorAll('.us-look-chips').forEach((row, i) => { row.scrollLeft = rows[i] || 0; });
+  }
+  function pickLook(button) {
+    if (button.getAttribute('aria-disabled') === 'true') { w.toast?.(`Si sblocca con ${button.querySelector('small')?.textContent || 'la Sintonia'}`); return; }
+    const [slot, item] = String(button.dataset.usLook).split(':');
+    const now = lookOf(myRole());
+    const next = slot === 'head' ? { head: item || null, face: now.face } : { head: now.head, face: item || null };
+    if (next.head === now.head && next.face === now.face) return;
+    saveCharacter('set_my_character_look', { p_head: next.head, p_face: next.face });
+  }
+  function pickShape(button) {
+    const shape = button.dataset.usShape;
+    if (!SHAPES[shape] || shape === shapeOf(myRole())) return;
+    saveCharacter('set_my_character_shape', { p_shape: shape });
+  }
+
+  const paintAll = () => { paintMe(); paintDuo(); paintWardrobe(); };
   if (d && w.addEventListener) {
     // The couple's profiles arrive after boot, and change with the account.
     w.addEventListener('us-identity-change', () => { paintAll(); if (!w.usProfile?.couple_id) closeAngolo(); });
+    // A Ti penso arrives (heart eyes), the points grow (the wardrobe), the question changes (a wave).
+    w.addEventListener('us:think-updated', paintAll);
+    w.addEventListener('us:progression-updated', () => { paintWardrobe(); });
     d.addEventListener('click', (event) => {
       const target = event.target;
       if (!target?.closest) return;
-      if (target.closest('[data-us-angolo]')) openAngolo();
-      else if (target.closest('[data-angolo-close]')) closeAngolo();
+      const entry = target.closest('[data-us-angolo]');
+      if (entry) { openAngolo(entry.dataset.usAngolo || ''); return; }
+      if (target.closest('[data-angolo-close]')) { closeAngolo(); return; }
+      const look = target.closest('#usAngoloLook [data-us-look]');
+      if (look) { pickLook(look); return; }
+      const shape = target.closest('#usAngoloLook [data-us-shape]');
+      if (shape) pickShape(shape);
     });
     d.addEventListener('keydown', (event) => { if (event.key === 'Escape' && angolo()?.classList.contains('open')) closeAngolo(); });
     const boot = () => {
@@ -226,5 +379,5 @@
     w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo });
   }
 
-  return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, LOOK_HEAD, LOOK_FACE, character, slot, shapeOf, lookOf, colorName, myRole, paintMe, paintDuo });
+  return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, LOOK_HEAD, LOOK_FACE, LOOK_NAMES, LOOK_POINTS, LOOK_MOMENTS, character, slot, shapeOf, lookOf, colorName, myRole, reactionOf, unlockedLook, paintMe, paintDuo, paintWardrobe });
 });

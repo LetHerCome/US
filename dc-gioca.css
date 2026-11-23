@@ -334,11 +334,6 @@ body.us-gv2-sheet-open{overflow:hidden}
 #usAngolo .us-gioca-sintonia .noi-resonance{position:relative;display:grid;justify-items:center;gap:4px;margin:0;padding:22px 18px 18px;border-radius:30px;border:1px solid var(--us-color-line);background:radial-gradient(90% 70% at 50% 0%,color-mix(in srgb,var(--us-noi) 20%,transparent),transparent 70%),var(--us-color-surface);box-shadow:none;text-align:center;overflow:hidden}
 #usAngolo .us-gioca-sintonia .noi-resonance-top,#usAngolo .us-gioca-sintonia .noi-resonance-top>div,#usAngolo .us-gioca-sintonia .noi-resonance-top b{display:contents}
 #usAngolo .us-gioca-sintonia .noi-resonance-top .tiny{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-noi)}
-#usAngolo .us-gioca-sintonia .us-sintonia-venn{display:block;width:210px;height:120px;margin:6px 0 2px;overflow:visible}
-#usAngolo .us-gioca-sintonia .us-sintonia-venn .is-a{fill:var(--us-rosa)}
-#usAngolo .us-gioca-sintonia .us-sintonia-venn .is-b{fill:var(--us-lilla)}
-#usAngolo .us-gioca-sintonia .us-sintonia-venn .is-noi{fill:var(--us-noi)}
-#usAngolo .us-gioca-sintonia .us-sintonia-venn .is-bloom{fill:none;stroke:var(--us-noi);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center}
 #usAngolo .us-gioca-sintonia #bondResonanceLevel{display:block;font:700 13px/1.5 var(--us-font-ui);letter-spacing:.06em;color:var(--us-color-text-2)}
 #usAngolo .us-gioca-sintonia .noi-resonance-dot,#usAngolo .us-gioca-sintonia .noi-resonance-mark,#usAngolo .us-gioca-sintonia #bondCompletedCount,#usAngolo .us-gioca-sintonia .noi-resonance-legacy{display:none}
 #usAngolo .us-gioca-sintonia #bondRankTitle{display:block;margin:0;font:italic 400 24px/1.05 var(--us-font-display);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:0;color:var(--us-color-text)}

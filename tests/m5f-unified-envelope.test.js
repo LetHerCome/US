@@ -455,7 +455,8 @@ test('M5F top chrome: question icon for the daily question, no legacy avatar con
   const css = read('styles.css');
   // 1.0: la card di Oggi porta i due cerchi del mockup (mio, tuo, Noi con il cuore Phosphor); il controllo top-left è rimosso.
   // Parity 2026-10: the mockup's two circles are one SVG ring (same glyph hook, decorative).
-  assert.match(read('app.js'), /<svg class="ring us-daily-ritual-ring" viewBox="0 0 48 30" data-st="\$\{st\}" data-glyph="\$\{escapeHtml\(model\.glyph\|\|'none'\)\}" data-us-attention-icon aria-hidden="true" focusable="false">/);
+  // Redesign definitivo (D2): the two characters instead of the circles, same glyph and attention hooks.
+  assert.match(read('app.js'), /<span class="ring us-daily-ritual-ring us-daily-duo" data-st="'\+st\+'" data-glyph="'\+escapeHtml\(model\.glyph\|\|'none'\)\+'" data-us-attention-icon aria-hidden="true">/);
   // The Noi heart stays the Phosphor heart-straight-fill (its path, drawn inside the ring).
   const heart = read('assets/icons/phosphor/heart-straight-fill.svg').match(/ d="([^"]+)"/)[1];
   assert.ok(read('app.js').includes(`d="${heart}"`));

@@ -2,9 +2,27 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign, fase 4: i personaggi al posto dei cerchi e il guardaroba (23/11)
+
+**Stato:** ramo `claude/redesign-fase4-personaggi`, verso il ramo fisso di staging. Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D2 e D4.
+
+**Cosa cambia:**
+- **La domanda di oggi su Oggi:** al posto dei due cerchi, i due personaggi (il tuo a sinistra, il suo a destra). Il posto di chi non ha ancora risposto è tratteggiato; quando avete risposto tutti e due si avvicinano e tra loro sale un cuore. Se rispondi per secondo, li vedi avvicinarsi.
+- **La Sintonia nell'angolo:** via i due cerchi; i due personaggi in cima all'angolo stanno più vicini quanto più siete vicini al livello successivo, e a un livello nuovo saltano insieme.
+- **La scheda della coppia nel Profilo:** i due personaggi al posto dei cerchi con l'iniziale o la foto.
+- **Le reazioni dei personaggi** (portate da staging): festa con i coriandoli nel giorno del mesiversario e dell'anniversario; occhi a cuore per 3 ore dopo un Ti penso ricevuto (il proprio personaggio); l'altro saluta con la mano quando ha già risposto alla domanda e tu no; assonnati dalle 22 alle 6. Senza animazioni con il movimento ridotto.
+- **Il guardaroba nell'angolo** («Il tuo guardaroba»): la forma (tondo, quadrato, triangolo, goccia, nuvola), una cosa in testa e una sul viso o al collo, con le soglie già decise il 21/11 e controllate dal server (occhiali 150 punti, cappello 400, fiocco 700, sciarpina 1000, occhiali da sole 1350, gala 1700, cuffie 2100, coroncina 2550, corona 3000; macchinetta al primo Ricordo, fascia dei 100 a 100 giorni, cappello da festa al primo anno). Sotto, il prossimo da sbloccare con la barra. Nel Profilo, «Cambia look» porta lì.
+- Il personaggio in alto a destra e quelli sulla foto mostrano subito il nuovo look.
+
+**Server:** usa `set_my_character_look`, `set_my_character_shape` e `my_character_unlocks` delle migrazioni dei personaggi (già su US-STAGING; in produzione vanno prima del sito, vedi sotto).
+
+**Non ancora:** la scala nuova dei premi della Sintonia (i livelli rimasti senza premio dopo Atmosfere, Colore di Noi, compagni e accessori): numeri da mostrare al founder prima di cambiarla. Il passo del colore all'iscrizione resta con i cerchi fino alla fase 7 (intro).
+
+**Test:** `tests/personaggi-fase4.test.js` più i test aggiornati.
+
 ### Redesign: la domanda esce da Gioca, la Sintonia va in «Il vostro angolo» (23/11)
 
-**Stato:** ramo `claude/redesign-angolo` (sopra quello delle mascotte), verso il ramo fisso di staging. Founder, 23/11: «ricorda di togliere la domanda di oggi e di spostare sintonia come nel redesign». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D2, D3 e D11.
+**Stato:** in staging dal 23/11 (PR #283, merge `cccc4c0d`, sito `…-scccc4c0d`). Founder, 23/11: «ricorda di togliere la domanda di oggi e di spostare sintonia come nel redesign». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D2, D3 e D11.
 
 **Cosa cambia:**
 - **Gioca senza la domanda di oggi:** la domanda resta solo su Oggi. In Gioca restano la settimana delle risposte e i giochi; gettoni, «Vi aspetta» e i tre stati arrivano con la fase 6.
@@ -18,7 +36,7 @@
 
 ### Redesign: via le mascotte (23/11)
 
-**Stato:** ramo `claude/redesign-via-mascotte`, verso il ramo fisso di staging. Founder, 23/11: «ricorda di togliere le mascotte». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D5 (Compagni in pensione per tutti).
+**Stato:** in staging dal 23/11 (PR #283, merge `cccc4c0d`). Founder, 23/11: «ricorda di togliere le mascotte». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D5 (Compagni in pensione per tutti).
 
 **Cosa cambia:**
 - **Nessuno siede più sopra la barra:** Maudit, Milo, Bea e Firix non compaiono più, per nessuno. Tolti dall'app `pet.js`, `companions.js`, `pet.css`, `companions.css` (anche dai build e dalla cache offline).

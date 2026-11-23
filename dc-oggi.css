@@ -296,21 +296,7 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
   white-space:nowrap;
 }
 #home #usDailyRitual .us-daily-ritual-arrow{display:inline-block;width:18px;height:18px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:translate .25s var(--dc-e-out)}
-/* Two circles that become one (mockup .ring, data-st tocca/pronte/svelate). */
-#home #usDailyRitual .ring{width:40px;height:25px;overflow:visible;flex:none}
-#home #usDailyRitual .ring .r-bloom{stroke:var(--us-noi)}
-#home #usDailyRitual .ring .r-you-full{fill:var(--us-partner)}
-#home #usDailyRitual .ring .r-you-wait{fill:rgba(23,17,28,.6);stroke:var(--us-partner);opacity:0}
-#home #usDailyRitual .ring .r-me-ring{fill:rgba(23,17,28,.6);stroke:var(--us-tu)}
-#home #usDailyRitual .ring .r-fill{fill:var(--us-tu);transform:translateY(26px)}
-#home #usDailyRitual .ring .r-noi circle{fill:var(--us-noi)}
-#home #usDailyRitual .ring .r-noi path{fill:var(--us-inchiostro)}
-#home #usDailyRitual .ring :is(.r-noi,.r-bloom){opacity:0;transform-box:view-box;transform-origin:24px 15px}
-#home #usDailyRitual .ring:is([data-st="vuoto"],[data-st="attesa"]) .r-you-full{opacity:0}
-#home #usDailyRitual .ring:is([data-st="vuoto"],[data-st="attesa"]) .r-you-wait{opacity:1}
-#home #usDailyRitual .ring[data-st="attesa"] .r-fill{transform:translateY(0)}
-#home #usDailyRitual .ring:is([data-st="pronte"],[data-st="svelate"]) :is(.r-me,.r-you){opacity:0}
-#home #usDailyRitual .ring:is([data-st="pronte"],[data-st="svelate"]) .r-noi{opacity:1}
+/* The two characters instead of the circles: struttura.css (redesign definitivo, D2). */
 /* La cosa di oggi (cosa-di-oggi.js, 13/11/2026): the streak with its heart, the
    first week's dots, «Domani: …», and always a button, as the
    other Oggi cards (founder, 13/11: «non c'è un tasto»). */

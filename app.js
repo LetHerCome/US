@@ -2765,17 +2765,22 @@ function dailyRitualViewModel(source){
   const felt=typeof dailyPartnerReactionLine==='function'?dailyPartnerReactionLine(source.reveal,partner):'';
   return {...base,state:'revealed',meta:felt||'Svelate · domani una nuova domanda',glyph:'noi',cta:'Rivedi',attention:false};
 }
-// The two circles of the mockup (Oggi card): theirs on the right, mine on the
-// left, dashed until I answer and filled from below when I do; together they
-// become one circle of Noi with a heart (Phosphor heart-straight-fill, its own path).
+// The two characters (redesign definitivo, 23/11/2026, D2), where the two
+// circles of the mockup were: mine on the left, theirs on the right; the place
+// of who has not answered yet is dashed; when you have both answered they come
+// close and a heart rises between them (personaggi.js draws them).
 const US_DAILY_RING_STATE=Object.freeze({answer:'vuoto',invited:'tocca',waiting:'attesa',ready:'pronte',revealed:'svelate',error:'vuoto'});
 function dailyRitualRingMarkup(model){
   const st=US_DAILY_RING_STATE[model.state]||'vuoto';
-  return `<svg class="ring us-daily-ritual-ring" viewBox="0 0 48 30" data-st="${st}" data-glyph="${escapeHtml(model.glyph||'none')}" data-us-attention-icon aria-hidden="true" focusable="false"><defs><clipPath id="usDailyRingMe"><circle cx="17" cy="15" r="11"/></clipPath></defs><circle class="r-bloom" cx="24" cy="15" r="13" fill="none" stroke-width="1.5"/><g class="r-you"><circle class="r-you-full" cx="31" cy="15" r="11"/><circle class="r-you-wait" cx="31" cy="15" r="10.2" stroke-width="1.6" stroke-dasharray="3 2.6"/></g><g class="r-me"><circle class="r-me-ring" cx="17" cy="15" r="10.2" stroke-width="1.6" stroke-dasharray="3 2.6"/><g clip-path="url(#usDailyRingMe)"><rect class="r-fill" x="4" y="2" width="26" height="26"/></g></g><g class="r-noi"><circle cx="24" cy="15" r="13"/><path transform="translate(18.4 10.3) scale(.044)" d="M240,98a57.63,57.63,0,0,1-17,41L133.7,229.62a8,8,0,0,1-11.4,0L33,139a58,58,0,0,1,82-82.1L128,69.05l13.09-12.19A58,58,0,0,1,240,98Z"/></g></svg>`;
+  const P=window.UsPersonaggi;
+  const me=P?.myRole?.()||'francesco',you=me==='beatrice'?'francesco':'beatrice';
+  const mineIn=st==='attesa'||st==='pronte'||st==='svelate',theirsIn=st==='tocca'||st==='pronte'||st==='svelate';
+  const one=(role,on)=>!P?'':on?P.character(role,{size:26,reaction:''}):P.slot(P.shapeOf(role),26,false);
+  return '<span class="ring us-daily-ritual-ring us-daily-duo" data-st="'+st+'" data-glyph="'+escapeHtml(model.glyph||'none')+'" data-us-attention-icon aria-hidden="true"><span class="r-me">'+one(me,mineIn)+'</span><span class="r-you">'+one(you,theirsIn)+'</span><span class="r-noi"><svg viewBox="0 0 256 256" focusable="false"><path d="M240,98a57.63,57.63,0,0,1-17,41L133.7,229.62a8,8,0,0,1-11.4,0L33,139a58,58,0,0,1,82-82.1L128,69.05l13.09-12.19A58,58,0,0,1,240,98Z"/></svg></span></span>';
 }
-// Mockup motion (oggi.js setDQ after "Invia"): my circle fills from below,
-// the two circles meet, one circle of Noi blooms and the card breathes once.
-// Only when I just answered, on Oggi, with motion allowed.
+// When I have just answered: my character takes my place with a small hop;
+// when we have both answered the two come close and the heart rises. Only
+// when I just answered, on Oggi, with motion allowed.
 const US_DAILY_EASE={out:'cubic-bezier(.2,.8,.2,1)',io:'cubic-bezier(.7,0,.2,1)'};
 function dailyRitualReducedMotion(){
   try{return Boolean(window.UsUiFoundation?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);}catch(_){return false;}
@@ -2783,31 +2788,19 @@ function dailyRitualReducedMotion(){
 async function playDailyRitualAnswered(card,merge){
   const ring=card?.querySelector?.('.ring');
   if(!ring||typeof ring.animate!=='function')return false;
-  const me=ring.querySelector('.r-me'),you=ring.querySelector('.r-you'),fill=ring.querySelector('.r-fill'),noi=ring.querySelector('.r-noi'),bloom=ring.querySelector('.r-bloom');
-  const final=ring.dataset.st;
-  // Start from "tocca": my circle still empty, the two apart.
-  ring.dataset.st=merge?'tocca':'vuoto';
-  // The sheet goes away first, then the circles move (one thing at a time).
+  const me=ring.querySelector('.r-me'),you=ring.querySelector('.r-you'),noi=ring.querySelector('.r-noi');
+  // The sheet goes away first, then the characters move (one thing at a time).
   const sheet=document.getElementById('today');
   for(let waited=0;sheet?.classList.contains('open')&&waited<900;waited+=50)await new Promise(r=>setTimeout(r,50));
   if(!card.isConnected||card.querySelector('.ring')!==ring)return false;
   try{
-    await fill.animate([{transform:'translateY(26px)'},{transform:'translateY(0)'}],{duration:560,easing:US_DAILY_EASE.out,fill:'forwards'}).finished;
+    await me.animate([{transform:'translateY(0) scale(.7)'},{transform:'translateY(-6px) scale(1.12)',offset:.55},{transform:'translateY(0) scale(1)'}],{duration:560,easing:US_DAILY_EASE.out}).finished;
     if(merge){
-      await Promise.all([
-        me.animate([{transform:'translateX(0)'},{transform:'translateX(7px)'}],{duration:420,easing:US_DAILY_EASE.io,fill:'forwards'}).finished,
-        you.animate([{transform:'translateX(0)'},{transform:'translateX(-7px)'}],{duration:420,easing:US_DAILY_EASE.io,fill:'forwards'}).finished
-      ]);
+      noi.animate([{opacity:0,transform:'translateY(4px) scale(.6)'},{opacity:1,transform:'translateY(-2px) scale(1.15)',offset:.6},{opacity:1,transform:'none'}],{duration:520,easing:'ease-out'});
+      card.animate([{scale:1},{scale:1.02,offset:.4},{scale:1}],{duration:500,easing:'ease-out'});
     }
   }catch(_){/* cancelled by a newer render */}
-  if(!card.isConnected||card.querySelector('.ring')!==ring){return false;}
-  ring.dataset.st=final;
-  if(merge){
-    noi.animate([{opacity:0,transform:'scale(.7)'},{opacity:1,transform:'scale(1.12)',offset:.6},{opacity:1,transform:'scale(1)'}],{duration:520,easing:'ease-out'});
-    bloom.animate([{opacity:.9,transform:'scale(1)'},{opacity:0,transform:'scale(2.2)'}],{duration:800,easing:US_DAILY_EASE.out});
-    card.animate([{scale:1},{scale:1.02,offset:.4},{scale:1}],{duration:500,easing:'ease-out'});
-  }
-  [me,you,fill].forEach(el=>el.getAnimations?.().forEach(a=>a.cancel()));
+  [me,you,noi].forEach(el=>el?.getAnimations?.().forEach(a=>a.cancel()));
   return true;
 }
 let usDailyRitualAnswerPending=false;
@@ -2922,12 +2915,13 @@ function renderDailyRitual(model){
   // Same words, same circles: leave the card (and a running animation) alone.
   if(card.hidden||card.usDailyHtml!==html){card.innerHTML=html;card.usDailyHtml=html;}
   card.hidden=false;
-  // I just sent my answer: the circles tell it (mockup), once.
-  const answered=usDailyRitualAnswerPending&&before==='answer'&&model.state==='waiting';
+  // I just sent my answer: the characters tell it, once; if the other had
+  // already answered, the two come close (redesign definitivo, D2).
+  const answered=usDailyRitualAnswerPending&&(before==='answer'||before==='invited')&&['waiting','ready','revealed'].includes(model.state);
   if(answered){
     usDailyRitualAnswerPending=false;
     const onOggi=document.getElementById('home')?.classList?.contains?.('active');
-    if(onOggi&&!dailyRitualReducedMotion())playDailyRitualAnswered(card,false);
+    if(onOggi&&!dailyRitualReducedMotion())playDailyRitualAnswered(card,model.state!=='waiting');
   }
 }
 window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
@@ -5745,6 +5739,8 @@ async function hydrateThink(){
   const romeDay=at=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(at));}catch(_){return '';}};
   const todayDate=romeDay(Date.now());
   const todayCount=(rows||[]).filter(row=>romeDay(row.created_at)===todayDate).length;
+  // The characters' heart eyes (personaggi.js reactionOf): the last Ti penso received.
+  if(window.usThinkLastReceivedAt!==(received?.created_at||'')){window.usThinkLastReceivedAt=received?.created_at||'';window.dispatchEvent(new Event('us:think-updated'));}
   window.UsWidgets?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||'',lastAnsweredAt:receivedReaction?.updated_at||'',todayCount,todayDate}).catch(()=>{});
 }
 window.hydrateThink=hydrateThink;

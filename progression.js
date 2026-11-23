@@ -553,8 +553,8 @@ async function playGain(fromXp, toXp) {
   const line = $('bondLevelXp');
   setText(line, `${fmt(before.needed)} / ${fmt(before.needed)} punti`);
   await tweenLens(86 / 46, 380, (t) => t * t);
-  const bloom = sintoniaVenn()?.querySelector?.('.is-bloom');
-  if (canAnimate(bloom)) bloom.animate([{ opacity: 0.95, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.9)' }], { duration: 900, easing: EASE.out });
+  // A new level: the two characters hop together.
+  sintoniaVenn()?.querySelectorAll?.('.us-duo-one').forEach((one, i) => { if (canAnimate(one)) one.animate([{ transform: 'none' }, { transform: 'translateY(-14px)', offset: 0.4 }, { transform: 'none' }], { duration: 620, delay: i * 80, easing: EASE.out }); });
   const label = $('bondResonanceLevel');
   if (canAnimate(label)) label.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.25)', offset: 0.4 }, { transform: 'scale(1)' }], { duration: 520, easing: EASE.spring });
   paintCard(toXp);
@@ -639,28 +639,17 @@ const levelInfo = (xp) => (typeof window.bondLevelInfo === 'function' ? window.b
 const rankTitle = (level) => (typeof window.bondRankTitle === 'function' ? window.bondRankTitle(level) : '');
 let vennProgress = null;
 let vennFrame = 0;
+// Redesign definitivo (D2): the two circles became the two characters at the
+// top of Il vostro angolo; the closer you are to the next level, the closer they stand.
 function sintoniaVenn() {
-  const card = document.querySelector?.('.noi-resonance');
-  if (!card) return null;
-  let svg = card.querySelector('.us-sintonia-venn');
-  if (!svg) {
-    const anchor = card.querySelector('.noi-resonance-top .tiny');
-    if (!anchor) return null;
-    anchor.insertAdjacentHTML('afterend', '<svg class="us-sintonia-venn" viewBox="0 0 210 120" aria-hidden="true" focusable="false"><circle class="is-a" cy="60" r="50"/><circle class="is-b" cy="60" r="50"/><path class="is-noi"/></svg>');
-    svg = card.querySelector('.us-sintonia-venn');
-  }
-  return svg;
+  return document.querySelector?.('#usAngolo .us-angolo-duo') || null;
 }
-function paintLens(svg, p) {
-  const R = 50;
-  const d = Math.max(0, 86 - 46 * Math.max(0, Math.min(86 / 46, p)));
-  const h = Math.sqrt(Math.max(0, R * R - (d / 2) ** 2));
-  const key = d.toFixed(3);
-  if (svg.__usLens === key) return;
-  svg.__usLens = key;
-  svg.querySelector('.is-a')?.setAttribute('cx', String(105 - d / 2));
-  svg.querySelector('.is-b')?.setAttribute('cx', String(105 + d / 2));
-  svg.querySelector('.is-noi')?.setAttribute('d', `M105 ${60 - h}A${R} ${R} 0 0 1 105 ${60 + h}A${R} ${R} 0 0 1 105 ${60 - h}Z`);
+function paintLens(duo, p) {
+  const near = Math.max(0, Math.min(1, p));
+  const gap = Math.round(44 - 54 * near);
+  if (duo.__usGap === gap) return;
+  duo.__usGap = gap;
+  duo.style.setProperty('--us-vicini', `${gap}px`);
 }
 function renderSintoniaArt(next = state) {
   const svg = sintoniaVenn();
