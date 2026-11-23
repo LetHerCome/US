@@ -8,7 +8,7 @@
     document.documentElement?.classList?.add('us-native');
     if (platformName === 'android' || platformName === 'ios') document.documentElement?.classList?.add(`us-native-${platformName}`);
   }
-  // Accessibilità (20/11/2026): on iPhone the WebView ignores the phone's text
+  // Accessibilità (20/11/2026): on iOS the WebView ignores the phone's text
   // size (Dynamic Type). Read it from the system body font (17 px at the
   // default size) and enlarge the text the way Android's text zoom does
   // (UsWebView.java), from 85% to 200%; read again when US comes back.
