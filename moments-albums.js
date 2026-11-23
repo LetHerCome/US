@@ -1215,9 +1215,12 @@ console.info('[US] Moments Albums attivo');
       <div class="us-moments-head-actions">
         <span class="us-moments-total" id="usMomentsTotal"></span>
         <button type="button" class="us-moments-add" id="usMomentsAdd" aria-label="Aggiungi un ricordo"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
+        <button type="button" class="us-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button>
       </div>
     `;
     section.insertBefore(head, originalTitle.nextSibling);
+    // Your character top right, as on the other pages (redesign definitivo, D6).
+    window.UsPersonaggi?.paintMe?.();
 
     const overlay = document.createElement('div');
     overlay.className = 'us-moment-compose-overlay';

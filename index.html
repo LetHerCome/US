@@ -78,6 +78,7 @@
 <link rel="stylesheet" href="/dc-popup.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/dc-primo.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/dc-settings.css?v=us-rilascio-20261114-109"/>
+<link rel="stylesheet" href="/struttura.css?v=us-rilascio-20261114-109"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -170,6 +171,7 @@ html.us-returning-device .auth-overlay{
 <script defer src="/platform.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/app-update.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/person-colors.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/personaggi.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/app-lock.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/notifications.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/auth-first-run.js?v=us-rilascio-20261114-109"></script>
@@ -468,7 +470,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 
 <div class="app">
 
-  <div class="top us-premium-top"><span class="us-aurora" aria-hidden="true"></span><div class="us-top-left"><button type="button" id="thinkButton" class="us-top-think us-premium-control" onclick="sendThinkSignal()" aria-label="Invia Ti penso" title="Ti penso"><span class="us-shell-icon us-shell-icon--think" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/think-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/think-on.svg" alt=""></span></button></div><div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true" decoding="async" draggable="false"></div><div class="top-actions"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon" data-us-attention-icon><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span><span class="beat" aria-hidden="true"><i></i><i></i></span></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top us-premium-top"><span class="us-aurora" aria-hidden="true"></span><div class="us-top-left"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon" data-us-attention-icon><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span><span class="beat" aria-hidden="true"><i></i><i></i></span></button></div><div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true" decoding="async" draggable="false"></div><div class="top-actions"><button type="button" class="us-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -674,7 +676,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     <section class="section bond-page noi-canonical-page" data-noi-view="hub" style="margin-top:6px" aria-label="Noi">
       <header class="noi-canonical-head noi-couple-head">
         <h2 class="noi-sr">Noi</h2>
-        <div class="noi-couple-card" id="noiCoupleCard" role="group" aria-label="Voi due, distanza e impostazioni">
+        <div class="noi-couple-card" id="noiCoupleCard" role="group" aria-label="Voi due e la distanza">
           <div class="noi-couple" id="noiCouple" role="group" aria-label="Voi due">
           <span class="noi-couple-person" data-noi-couple-role="francesco">
             <span class="noi-couple-avatar" id="pairAvatarFrancesco"><img alt="" hidden><span class="fallback" aria-hidden="true">·</span></span>
@@ -689,9 +691,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
             <small class="noi-couple-name" data-noi-couple-name="beatrice">La tua persona</small>
           </span>
         </div>
-          <button type="button" class="us-calendar-btn us-important-control us-premium-control noi-couple-settings" id="usSettingsEntry" onclick="go('settings',{nav:true})" aria-label="Apri impostazioni">
-          <span class="us-shell-icon" aria-hidden="true"><img class="us-shell-icon-off us-approved-custom-icon" src="/assets/derived/runtime/us-icon-settings-128-v1.png" alt=""><img class="us-shell-icon-on us-approved-custom-icon" src="/assets/derived/runtime/us-icon-settings-128-v1.png" alt=""></span>
-        </button>
         </div>
       </header>
 
@@ -708,7 +707,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <h2>Noi</h2>
           <div class="us-noi-v2-tools">
             <button type="button" class="us-noi-v2-add" id="usNoiV2AddTop" data-noi-add aria-label="Aggiungi un impegno nel giorno selezionato" title="Aggiungi impegno"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
-            <button type="button" class="us-noi-v2-settings" onclick="go('settings',{nav:true})" aria-label="Impostazioni"><img class="us-approved-custom-icon" src="/assets/derived/runtime/us-icon-settings-128-v1.png" alt="" width="22" height="22" decoding="async"></button>
+            <button type="button" class="us-me us-noi-v2-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button>
           </div>
         </header>
         <div class="us-noi-v2-toggle" role="group" aria-label="Vista del calendario">
@@ -865,9 +864,17 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   <main id="settings" class="page">
     <section class="section us-settings-page us-settings2-page">
       <div class="us-settings2-head">
-        <div class="us-settings2-bar" data-s><button type="button" class="us-settings2-back" onclick="go('bond',{nav:true})"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span>Noi</button>
+        <div class="us-settings2-bar" data-s><button type="button" class="us-settings2-back" onclick="usSettingsReturn()"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span><span id="usSettingsFromLabel">Oggi</span></button>
         <div class="us-settings2-device-dot" id="usSettingsDeviceDot" role="status" aria-label="Stato sincronizzazione"><i aria-hidden="true"></i><span id="usSettingsSyncLabel">Sincronizzato</span></div></div>
-        <h2 data-s>Impostazioni</h2>
+        <h2 data-s>Profilo</h2>
+        <!-- Profilo (redesign definitivo, 23/11/2026, D6): your character, name, shape, colour and Come stai (personaggi.js). -->
+        <div class="us-profile-card" data-s>
+          <span class="us-profile-char" id="usProfileChar"></span>
+          <span class="us-profile-who">
+            <b id="usProfileName" translate="no">Tu</b>
+            <span class="us-profile-chips"><span id="usProfileShape">Tondo</span><span class="us-profile-color"><i aria-hidden="true"></i><span id="usProfileColor">Rosa</span></span><span id="usProfileMood" hidden></span></span>
+          </span>
+        </div>
       </div>
 
       <!-- US-SETTINGS-ORGANIZE-01: same action hooks, grouped by intent. -->
@@ -1028,6 +1035,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 
   <main id="quiz" class="page">
     <section class="section us-gv2-page">
+      <header class="us-page-head" data-s><h2>Gioca</h2><button type="button" class="us-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button></header>
       <div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia">
         <button type="button" id="usGiocaTabGames" class="us-gioca-tab" role="tab" aria-controls="usGiocaGames" aria-selected="true" tabindex="0">Giochi</button>
         <button type="button" id="usGiocaTabSintonia" class="us-gioca-tab" role="tab" aria-controls="usGiocaSintonia" aria-selected="false" tabindex="-1">Sintonia</button>
@@ -1045,6 +1053,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 <span class="us-nav-track" aria-hidden="true"><span class="us-nav-indicator"></span></span>
 <button data-us-feedback="tap" class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Oggi" aria-current="page"><span class="nicon"><span class="us-nav-icon us-nav-icon--home" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/house-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/house-fill.svg"></span></span></span><span class="nlabel">Oggi</span></button>
 <button data-us-feedback="tap" data-page="bond" onclick="go('bond',{nav:true})" aria-label="Noi"><span class="nicon"><span class="us-nav-icon us-nav-icon--bond" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/heart-straight-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/heart-straight-fill.svg"></span></span></span><span class="nlabel">Noi</span></button>
+<button type="button" id="thinkButton" class="us-nav-think" data-us-motion-tap="off" onclick="usNavHeartTap(this)" aria-label="Manda un Ti penso" title="Ti penso" hidden><span class="us-nav-think-heart" aria-hidden="true"><svg viewBox="0 0 256 256" focusable="false"><path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/></svg></span></button>
 <button data-us-feedback="tap" data-page="moments" onclick="go('moments',{nav:true})" aria-label="Ricordi"><span class="nicon"><span class="us-nav-icon us-nav-icon--moments" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/images-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/images-fill.svg"></span></span></span><span class="nlabel">Ricordi</span></button>
 <button data-us-feedback="tap" data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Gioca"><span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/game-controller-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/game-controller-fill.svg"></span></span></span><span class="nlabel">Gioca</span></button>
 </nav>

@@ -321,7 +321,9 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   const games = read('games.js');
   const css = read('games.css') + read('identity.css');
   const top = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<main id="home"/)?.[0] || '';
-  assert.match(top, /id="thinkButton"/);
+  // Ti penso left the top bar for the middle of the bottom bar (redesign definitivo, fase 2).
+  assert.doesNotMatch(top, /id="thinkButton"/);
+  assert.match(html, /<nav class="nav us-nav[\s\S]*?id="thinkButton" class="us-nav-think"/);
   assert.doesNotMatch(top, /id="usPerVoiTop"/, 'Per voi is a Gioca action, not a global top-bar action');
   assert.match(games, /class="us-gv2-pervoi us-attention-orbit"/);
   assert.match(games, /data-gv2-action="per-voi"/);

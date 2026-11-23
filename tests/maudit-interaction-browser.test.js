@@ -240,7 +240,8 @@ test('geometry 320 / 390 / 412 / landscape: inside the viewport, no overflow, ev
           return { actor: { x: actor.x, y: actor.y, right: actor.right, bottom: actor.bottom }, tabs, overflow: document.scrollingElement.scrollWidth > innerWidth, vw: innerWidth, vh: innerHeight };
         });
         assert.ok(g.actor.x >= 0 && g.actor.right <= g.vw && g.actor.y >= 0 && g.actor.bottom <= g.vh, `${label} ${where}: inside viewport ${JSON.stringify(g.actor)}`);
-        assert.deepEqual(g.tabs, [true, true, true, true], `${label} ${where}: every tab keeps its tap`);
+        // Oggi, Noi, the Ti penso heart (redesign definitivo, fase 2), Ricordi, Gioca.
+        assert.deepEqual(g.tabs, [true, true, true, true, true], `${label} ${where}: every tab keeps its tap`);
         assert.equal(g.overflow, false, `${label} ${where}: no horizontal overflow`);
       };
       await check('home');

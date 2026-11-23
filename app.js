@@ -62,6 +62,9 @@ function go(id,options={}){
     return;
   }
   if(current==='bond')window.closeNoiSection?.();
+  // Il Profilo (redesign definitivo, D6) opens from all four pages: its back
+  // arrow returns there (settings.js) and the bar keeps that page marked.
+  if(id==='settings'&&current&&current!=='settings'){window.usSettingsFrom=current;document.documentElement.dataset.usFrom=current;window.usPaintSettingsBack?.();}
   // Focus Photo is a state of Oggi only: left on, it kept Oggi's widgets inert
   // and the PET hidden on every other page until the user came back and tapped.
   if(current==='home'&&document.getElementById('homeHero')?.classList.contains('us-oggi-focus'))setOggiFocusPhoto(false);
@@ -196,7 +199,10 @@ async function hydrateUsCoupleContext(){
   try{
     [coupleResult,profilesResult]=await Promise.all([
       sb.from('couples').select('id,name,started_on,sky_city,sky_minutes,created_at').eq('id',coupleId).maybeSingle(),
-      sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true})
+      // The characters' shape and outfit (migrations 20261115183900 and 20261120232852):
+      // a server without them answers what it has, as before.
+      sb.from('profiles').select('id,display_name,role,couple_id,person_color,character_shape,character_head,character_face').eq('couple_id',coupleId).order('created_at',{ascending:true})
+        .then(r=>r?.error?sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true}):r)
     ]);
   }catch(error){
     if(window.usProfile===profile&&window.usProfile?.couple_id===coupleId&&generation===usCoupleContextState.generation)clearUsCoupleContext();
@@ -5797,7 +5803,9 @@ async function sendThinkSignal(){
   // theirs, fly out of it; then "Ti penso inviato a …".
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),2400);
   // Il cuore (founder, 29/10/2026): the same heart as the others, counted with them.
-  if(btn&&!result?.duplicate)usHeartLike(btn);else window.UsFeedback?.action?.();
+  // The heart of the bar already burst at the tap (usNavHeartTap).
+  if(btn?.classList.contains('us-nav-think')){if(result?.duplicate)window.UsFeedback?.action?.();}
+  else if(btn&&!result?.duplicate)usHeartLike(btn);else window.UsFeedback?.action?.();
   if(result?.duplicate)toast('Già inviato',{quiet:true});
   else toast(`Ti penso inviato a ${partner.display_name||usIdentity().partnerName}`,{icon:'heart',quiet:false});
   await hydrateThink();
@@ -5807,6 +5815,31 @@ async function sendThinkSignal(){
   return true;
 }
 window.sendThinkSignal=sendThinkSignal;
+// Ti penso in the middle of the bar (founder, 21/11/2026, «come il like di X»):
+// one tap fills the heart and makes it burst at once, then sends. The heart
+// shrinks away, a disc in your colour opens into a ring in theirs, the heart
+// springs back and seven pairs of dots fly out (struttura.css).
+let usNavHeartTimer=0;
+function usNavHeartTap(btn){
+  if(!btn||btn.disabled)return;
+  clearTimeout(usNavHeartTimer);
+  btn.classList.add('is-full');
+  window.UsFeedback?.action?.();
+  const reduced=Boolean(window.UsUiFoundation?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  if(!reduced){
+    btn.querySelector('.us-nav-burst')?.remove();
+    const burst=document.createElement('span');
+    burst.className='us-nav-burst';
+    burst.setAttribute('aria-hidden','true');
+    const colors=['var(--us-tu)','var(--us-partner)','var(--us-think,var(--us-tu))'];
+    burst.innerHTML='<i class="us-nav-burst-ring"></i>'+Array.from({length:7},(_,i)=>{const a=i*(360/7);return `<i class="us-nav-burst-dot" style="--a:${a}deg;--c:${colors[i%3]}"></i><i class="us-nav-burst-dot is-small" style="--a:${a+16}deg;--c:${colors[(i+1)%3]}"></i>`;}).join('');
+    btn.prepend(burst);
+    btn.classList.remove('is-pop');void btn.offsetWidth;btn.classList.add('is-pop');
+    setTimeout(()=>{burst.remove();btn.classList.remove('is-pop');},950);
+  }
+  Promise.resolve(sendThinkSignal()).catch(()=>false).finally(()=>{usNavHeartTimer=setTimeout(()=>btn.classList.remove('is-full'),700);});
+}
+window.usNavHeartTap=usNavHeartTap;
 function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
   usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;

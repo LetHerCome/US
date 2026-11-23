@@ -77,7 +77,8 @@ test('PET preview sits in its home spot over the nav\'s right end, never covers 
   assert.ok(Math.abs(m.layer.right-(m.nav.right-10))<=1,`${width}×${height} pet sits at the nav's right end`);
   assert.ok(m.layer.x>=m.nav.x-.5&&m.layer.right<=m.nav.right+.5,`${width}×${height} pet stays inside the nav width`);
   assert.ok(m.actor.x>=m.nav.x&&m.actor.right<=m.nav.right,`${width}×${height} actor inside track`);
-  assert.deepEqual(m.tabs,[true,true,true,true],`${width}×${height} every tab still receives its tap`);
+  // Oggi, Noi, the Ti penso heart (redesign definitivo, fase 2), Ricordi, Gioca.
+  assert.deepEqual(m.tabs,[true,true,true,true,true],`${width}×${height} every tab still receives its tap`);
   assert.equal(m.petTakesInput,'hit','only Maudit\'s own hit target takes a touch');assert.equal(m.besideIsPet,false,'the layer around Maudit stays transparent');assert.ok(m.sw<=m.w);
   await page.evaluate(()=>window.USPet.react('reward'));
   assert.equal(await page.evaluate(()=>document.getElementById('usPetLayer').dataset.petState),'happy');

@@ -17,7 +17,9 @@ test('M3 trasforma Noi nella root canonicale a tre superfici', () => {
   assert.match(noi, /id="bondPageFill"/);
   // Sfida della settimana (03/11/2026): the weekly missions left Noi.
   assert.doesNotMatch(noi, /id="bondQuestList"|id="questWeekBoard"/);
-  assert.match(noi, /id="usSettingsEntry"/);
+  // No gear in Noi since the redesign (23/11/2026, D6): your character opens the Profilo.
+  assert.doesNotMatch(noi, /id="usSettingsEntry"/);
+  assert.match(noi, /class="us-me us-noi-v2-me" data-us-self onclick="go\('settings',\{nav:true\}\)"/);
   assert.match(noi, /id="bondCompletedCount"[^>]*aria-hidden="true"/);
   assert.doesNotMatch(noi, /Usiamo le attività già presenti in US\.|3 quest completate/);
   assert.doesNotMatch(noi, /bond-badges-section/);

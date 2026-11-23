@@ -13,9 +13,10 @@ test('Settings usa lo stesso opener ricollocato nella root Noi, non nella topbar
   const noi = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
 
   assert.doesNotMatch(top, /id="usSettingsEntry"/);
-  assert.match(noi, /id="usSettingsEntry"/);
-  assert.match(noi, /onclick="go\('settings',\{nav:true\}\)"/);
-  assert.match(noi, /us-calendar-btn/);
+  // Redesign definitivo, fase 2 (D6): no gear in Noi; your character opens the Profilo from every page.
+  assert.doesNotMatch(noi, /id="usSettingsEntry"/);
+  assert.match(noi, /data-us-self onclick="go\('settings',\{nav:true\}\)"/);
+  assert.match(top, /data-us-self onclick="go\('settings',\{nav:true\}\)"/);
   assert.doesNotMatch(html, /data-page="settings"/);
 });
 
