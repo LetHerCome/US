@@ -522,3 +522,10 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Base:** l'app di produzione (`main`). Il diario pulito di staging è archiviato nell'etichetta `archivio/staging-diario-pulito-20261123`; dei suoi pezzi restano solo i personaggi (con il loro database e la tavolozza del 15/11), il Ti penso al centro della barra, la busta e il profilo negli angoli in alto, e le correzioni senza grafica (D1).
 - **Sostituisce:** la direzione «Il diario, ma pulito» del 15/11; «Sintonia dentro Gioca» della governance V1 (ora «Il vostro angolo», aperto dai personaggi); i colori fissi delle schede (ora dai due colori della coppia, D7); la regola «niente si toglie mai» del 29/10 per i soli Compagni (D5).
 - **Procedura:** tavola approvata prima del codice, poi una fase alla volta su staging; push, unioni, SQL e produzione ciascuno col via del founder.
+
+## 2026-11-24 — Redesign: il guardaroba sui livelli vuoti, il Simbolo US resta
+
+**Fonte:** founder, 24/11/2026, sui numeri della scala dei premi: «il simbolo US il logo lo lasci, per il resto continua con proposta A».
+
+- **Guardaroba:** i primi cinque accessori restano a 150, 400, 700, 1000 e 1350 punti; gala, cuffie, coroncina e corona arrivano all'inizio dei livelli 8, 11, 14 e 19 (4550, 8750, 14300, 26550 punti), che dopo l'uscita di Atmosfere, Colore di Noi e compagni erano vuoti. Il server tiene la regola (migrazione `20261123231417_personaggi_scala_premi.sql`, solo staging finché il founder non dice altro). Il momento del nuovo livello nomina l'accessorio.
+- **Simbolo US:** resta tra i premi della Sintonia (effetti ai livelli 6, 9 e 13). Sostituisce la parte di D4 del 23/11 che lo faceva uscire.

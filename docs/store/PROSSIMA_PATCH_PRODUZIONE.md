@@ -2,21 +2,34 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign: il guardaroba sui livelli vuoti della Sintonia (24/11)
+
+**Stato:** ramo `claude/redesign-scala-premi`, verso il ramo fisso di staging. Decisione del founder del 24/11 («proposta A», tenendo il Simbolo US).
+
+**Cosa cambia:**
+- Dopo l'uscita di Atmosfere, Colore di Noi, compagni e accessori, i livelli 8, 11, 14 e 19 non davano più niente. I primi cinque accessori del guardaroba restano dove sono (occhiali 150 punti, cappello 400, fiocco 700, sciarpina 1000, occhiali da sole 1350); gli ultimi quattro arrivano con quei livelli: gala al livello 8 (4550 punti), cuffie all'11 (8750), coroncina al 14 (14300), corona al 19 (26550). I momenti (macchinetta, fascia dei 100, cappello da festa) non cambiano.
+- Il momento del nuovo livello nomina l'accessorio che arriva («Gala nel guardaroba») e, se non ci sono altri premi, il tasto «Prova il look» apre il guardaroba nell'angolo.
+- Il Simbolo US resta tra i premi della Sintonia (livelli 6, 9 e 13), come prima.
+
+**Server:** nuova migrazione `20261123231417_personaggi_scala_premi.sql` (dopo quella del guardaroba): cambia le soglie in `private.character_unlocks` e toglie a chi lo porta un accessorio che con la scala nuova non è più sbloccato. **Solo staging** finché il founder non dice altro; in produzione va con le altre due dei personaggi, prima del sito.
+
+**Test:** `tests/personaggi-scala-premi-db.test.js` (database) e `tests/personaggi-scala-premi.test.js`.
+
 ### Redesign, fase 4: i personaggi al posto dei cerchi e il guardaroba (23/11)
 
-**Stato:** ramo `claude/redesign-fase4-personaggi`, verso il ramo fisso di staging. Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D2 e D4.
+**Stato:** in staging dal 23/11 (PR #284, merge `f0bc68fe`, sito `…-sf0bc68fe`). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D2 e D4.
 
 **Cosa cambia:**
 - **La domanda di oggi su Oggi:** al posto dei due cerchi, i due personaggi (il tuo a sinistra, il suo a destra). Il posto di chi non ha ancora risposto è tratteggiato; quando avete risposto tutti e due si avvicinano e tra loro sale un cuore. Se rispondi per secondo, li vedi avvicinarsi.
 - **La Sintonia nell'angolo:** via i due cerchi; i due personaggi in cima all'angolo stanno più vicini quanto più siete vicini al livello successivo, e a un livello nuovo saltano insieme.
 - **La scheda della coppia nel Profilo:** i due personaggi al posto dei cerchi con l'iniziale o la foto.
 - **Le reazioni dei personaggi** (portate da staging): festa con i coriandoli nel giorno del mesiversario e dell'anniversario; occhi a cuore per 3 ore dopo un Ti penso ricevuto (il proprio personaggio); l'altro saluta con la mano quando ha già risposto alla domanda e tu no; assonnati dalle 22 alle 6. Senza animazioni con il movimento ridotto.
-- **Il guardaroba nell'angolo** («Il tuo guardaroba»): la forma (tondo, quadrato, triangolo, goccia, nuvola), una cosa in testa e una sul viso o al collo, con le soglie già decise il 21/11 e controllate dal server (occhiali 150 punti, cappello 400, fiocco 700, sciarpina 1000, occhiali da sole 1350, gala 1700, cuffie 2100, coroncina 2550, corona 3000; macchinetta al primo Ricordo, fascia dei 100 a 100 giorni, cappello da festa al primo anno). Sotto, il prossimo da sbloccare con la barra. Nel Profilo, «Cambia look» porta lì.
+- **Il guardaroba nell'angolo** («Il tuo guardaroba»): la forma (tondo, quadrato, triangolo, goccia, nuvola), una cosa in testa e una sul viso o al collo, con le soglie già decise il 21/11 e controllate dal server (occhiali 150 punti, cappello 400, fiocco 700, sciarpina 1000, occhiali da sole 1350, gala 1700, cuffie 2100, coroncina 2550, corona 3000, poi spostate il 24/11, vedi sopra; macchinetta al primo Ricordo, fascia dei 100 a 100 giorni, cappello da festa al primo anno). Sotto, il prossimo da sbloccare con la barra. Nel Profilo, «Cambia look» porta lì.
 - Il personaggio in alto a destra e quelli sulla foto mostrano subito il nuovo look.
 
 **Server:** usa `set_my_character_look`, `set_my_character_shape` e `my_character_unlocks` delle migrazioni dei personaggi (già su US-STAGING; in produzione vanno prima del sito, vedi sotto).
 
-**Non ancora:** la scala nuova dei premi della Sintonia (i livelli rimasti senza premio dopo Atmosfere, Colore di Noi, compagni e accessori): numeri da mostrare al founder prima di cambiarla. Il passo del colore all'iscrizione resta con i cerchi fino alla fase 7 (intro).
+**Non ancora:** la scala nuova dei premi della Sintonia (fatta il 24/11, vedi sopra). Il passo del colore all'iscrizione resta con i cerchi fino alla fase 7 (intro).
 
 **Test:** `tests/personaggi-fase4.test.js` più i test aggiornati.
 
@@ -90,7 +103,7 @@
 **Stato:** ramo `claude/staging-da-main`, verso il ramo fisso di staging. Il diario pulito di staging (#255–#278) è archiviato nell'etichetta `archivio/staging-diario-pulito-20261123` (`6c7aa160`) e non andrà in produzione. Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md).
 
 **Cosa porta in produzione, quando uscirà il redesign:**
-- **Migrazioni dei personaggi** `20261115183900_personaggi_forma_e_colori.sql` e `20261120232852_personaggi_guardaroba.sql` (già su US-STAGING, non in produzione): vanno applicate **prima** del sito. La prima cambia la tavolozza delle persone (oro, cielo e rubino diventano pesca, blu e prugna): prima dell'uscita contare in sola lettura chi li ha scelti.
+- **Migrazioni dei personaggi** `20261115183900_personaggi_forma_e_colori.sql`, `20261120232852_personaggi_guardaroba.sql` e `20261123231417_personaggi_scala_premi.sql`, in quest'ordine (su US-STAGING, non in produzione): vanno applicate **prima** del sito. La prima cambia la tavolozza delle persone (oro, cielo e rubino diventano pesca, blu e prugna): prima dell'uscita contare in sola lettura chi li ha scelti.
 - **Tavolozza** in `person-colors.js`: rosa, lilla, blu, salvia, pesca, prugna, menta, perla; i nomi vecchi si leggono come il colore nuovo più vicino finché la migrazione non li sposta.
 - **Testo grande del telefono:** Android `setTextZoom` in `UsWebView.java` (vale solo da un APK nuovo), iPhone `-webkit-text-size-adjust` in `platform.js` (da provare con TestFlight); `aria-description` tradotto.
 - **Tastiera ed emoji:** i campi delle parole di conferma non vengono riscritti su Android; i titoli dei tipi del calendario si tagliano per carattere; il nome dello spazio accetta emoji e suggerimenti.

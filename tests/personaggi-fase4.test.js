@@ -52,8 +52,9 @@ test('the couple card of the Profilo shows the two characters', () => {
 });
 
 test('the wardrobe: shape, head, face or neck; the thresholds the server checks; Cambia look', () => {
-  assert.deepEqual(P.LOOK_POINTS, { occhiali: 150, cappello: 400, fiocco: 700, sciarpina: 1000, sole: 1350, gala: 1700, cuffie: 2100, coroncina: 2550, corona: 3000 });
-  const sql = read('supabase/migrations/20261120232852_personaggi_guardaroba.sql');
+  // The last four moved to levels 8, 11, 14 and 19 on 24/11/2026 (personaggi-scala-premi.test.js).
+  assert.deepEqual(P.LOOK_POINTS, { occhiali: 150, cappello: 400, fiocco: 700, sciarpina: 1000, sole: 1350, gala: 4550, cuffie: 8750, coroncina: 14300, corona: 26550 });
+  const sql = read('supabase/migrations/20261123231417_personaggi_scala_premi.sql');
   for (const [item, points] of Object.entries(P.LOOK_POINTS)) assert.ok(sql.includes(`('${item}', ${points})`), `${item} ${points} as on the server`);
   const js = read('personaggi.js');
   assert.match(js, /saveCharacter\('set_my_character_look', \{ p_head: next\.head, p_face: next\.face \}\);/);
