@@ -97,6 +97,7 @@ const APP_SHELL = [
   versioned("/dc-primo.css"),
   versioned("/dc-settings.css"),
   versioned("/struttura.css"),
+  versioned("/colori.css"),
   versioned("/due-colori.js"),
   versioned("/i18n.js"),
   versioned("/i18n-en.js"),

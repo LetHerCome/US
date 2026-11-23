@@ -32,8 +32,10 @@ let unlockBusy = false;
 const SLOTS = Object.freeze({
   oggi_theme: { pref: 'oggi_theme', look: 'theme', label: 'Temi di Oggi', place: 'atmosfera, foto e countdown', unlock: 'Nuovo tema di Oggi', where: 'Oggi, attorno alla vostra foto' },
   oggi_effect: { pref: 'oggi_effect', look: 'effect', label: 'Effetti di Oggi', place: 'sopra la vostra foto', unlock: 'Nuovo effetto di Oggi', where: 'Oggi, sopra la vostra foto' },
-  theme: { pref: 'theme_reward_id', label: 'Atmosfera', place: 'lo sfondo di tutta US', unlock: 'Nuova atmosfera', where: 'In tutta US' },
-  accent: { pref: 'accent_reward_id', label: 'Colore di Noi', place: 'selezioni, progressi, navigazione', unlock: 'Nuovo colore di Noi', where: 'Selezioni e progressi, in tutta US' },
+  // Atmosfere and Colore di Noi retired (redesign definitivo, 23/11/2026, D7):
+  // the couple's two colours paint US now. Stored choices stay readable.
+  theme: { pref: 'theme_reward_id', retired: true, label: 'Atmosfera', place: 'lo sfondo di tutta US', unlock: 'Nuova atmosfera', where: 'In tutta US' },
+  accent: { pref: 'accent_reward_id', retired: true, label: 'Colore di Noi', place: 'selezioni, progressi, navigazione', unlock: 'Nuovo colore di Noi', where: 'Selezioni e progressi, in tutta US' },
   effect: { pref: 'effect_reward_id', label: 'Simbolo US', place: 'il simbolo in alto', unlock: 'Nuovo effetto del simbolo', where: 'Il simbolo in alto su Oggi' },
   // Premi Sintonia V2: how this phone receives a Ti penso.
   ti_penso: { pref: 'ti_penso', label: 'Ti penso', place: 'quando ne ricevi uno', unlock: 'Nuovo Ti penso', where: 'Quando ricevi un Ti penso' },
@@ -610,7 +612,7 @@ function applyPreferences(next = state) {
   const root = document.documentElement;
   const hero = $('homeHero');
   const prefs = next?.preferences || {};
-  const value = (category) => slotValue(category, rewardToken(prefs[SLOTS[category].pref]));
+  const value = (category) => (SLOTS[category].retired ? '' : slotValue(category, rewardToken(prefs[SLOTS[category].pref])));
   const theme = value('theme');
   const accent = value('accent');
   const effect = value('effect');

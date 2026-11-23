@@ -90,6 +90,7 @@ const RUNTIME_FILES = [
   'dc-primo.css',
   'dc-settings.css',
   'struttura.css',
+  'colori.css',
   'due-colori.js',
   'i18n.js',
   'i18n-en.js',
