@@ -162,37 +162,39 @@ test('Rewards V2 client: equipped slots paint locally; re-tap unequips without a
   const localPrefs = JSON.stringify({ version: 2, couple_id: 'c', profile_id: 'f', preferences: serverPrefs });
   const { api, el, root, calls, storage } = runProgression(() => state(), { storageSeed: { 'us:cosmetics:v1:c:f': localPrefs } });
   await api.hydrate({ showUnlocks: false, force: true });
-  // US V3 — only theme, accent and effect still paint; retired slots stay stored but unpainted.
-  assert.deepEqual({ ...root.dataset }, { usTheme: 'film', usAccent: 'champagne', usEffect: 'constellation' });
+  // US V3 — retired slots stay stored but unpainted. Since the redesign
+  // (23/11/2026, D7) the Atmosfere and the Colore di Noi are retired too: the
+  // couple's two colours paint US, only the symbol effect still paints here.
+  assert.deepEqual({ ...root.dataset }, { usEffect: 'constellation' });
   assert.equal(el('homeHero').dataset.usFrame, undefined);
   assert.equal(el('usCoupleBadge').hidden, true);
   assert.equal(el('usHeroSticker').hidden, true);
   const tiles = el('usProgressionRewards').innerHTML;
-  assert.equal((tiles.match(/data-progression-reward=/g) || []).length, 11, 'five atmospheres, three accents, three symbol effects');
-  // Round 3 (mockup parity): each slot also shows its free look (Notte, Orchidea, Fermo); here none is in use.
-  assert.equal((tiles.match(/data-progression-default=/g) || []).length, 3);
-  assert.equal((tiles.match(/<button type="button" class="us-progression-reward[^>]*aria-pressed="true"/g) || []).length, 3);
-  assert.equal((tiles.match(/class="us-reward-group"/g) || []).length, 3);
-  assert.doesNotMatch(tiles, /data-progression-reward="(?:frame|sticker|badge|ring)_/, 'retired rewards have no tile');
+  assert.equal((tiles.match(/data-progression-reward=/g) || []).length, 3, 'the three symbol effects');
+  // Round 3 (mockup parity): the slot also shows its free look (Fermo); here it is not in use.
+  assert.equal((tiles.match(/data-progression-default=/g) || []).length, 1);
+  assert.equal((tiles.match(/<button type="button" class="us-progression-reward[^>]*aria-pressed="true"/g) || []).length, 1);
+  assert.equal((tiles.match(/class="us-reward-group"/g) || []).length, 1);
+  assert.doesNotMatch(tiles, /data-progression-reward="(?:frame|sticker|badge|ring|theme|accent)_/, 'retired rewards have no tile');
   // Round 3 (mockup .rw.is-locked): a locked reward is a real button that presses and says its level.
-  assert.match(tiles, /data-progression-reward="theme_graphite"[^>]*data-locked="true" data-level="14"[^>]*aria-label="Grafite, si sblocca al livello 14"/, 'locked rewards are marked locked');
+  assert.match(tiles, /data-progression-reward="effect_shimmer"[^>]*data-locked="true" data-level="13"[^>]*aria-label="[^"]+, si sblocca al livello 13"/, 'locked rewards are marked locked');
 
   const tap = (id) => el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionReward: id }, getAttribute: () => null }) } });
-  // Round 3 (mockup parity): the free look "Orchidea" clears only this phone accent.
-  await el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionDefault: 'accent' }, getAttribute: () => null }) } });
-  assert.equal(root.dataset.usAccent, undefined, 'choosing Orchidea clears only this phone accent');
-  assert.equal(root.dataset.usTheme, 'film');
+  // Round 3 (mockup parity): the free look "Fermo" clears only this phone's symbol effect.
+  await el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionDefault: 'effect' }, getAttribute: () => null }) } });
+  assert.equal(root.dataset.usEffect, undefined, 'choosing Fermo clears only this phone effect');
   await tap('badge_day_one');
   assert.equal(el('usCoupleBadge').hidden, true, 'a retired reward cannot be equipped any more');
 
   const stored = JSON.parse(storage.get('us:cosmetics:v1:c:f'));
-  assert.equal(stored.preferences.accent_reward_id, null);
+  assert.equal(stored.preferences.effect_reward_id, null);
   assert.equal(stored.preferences.badge_reward_id, 'badge_still_here', 'the stored legacy choice is kept, not erased');
+  assert.equal(stored.preferences.theme_reward_id, 'theme_film', 'the retired Atmosfera stays stored, unpainted');
   assert.equal(calls.some((call) => call.name === 'equip_progression_reward'), false, 'partner-facing server preference is never touched');
 });
 
 test('Rewards V2 client: V1 compatibility seed is cleared once for Bea but preserved for Francesco', async () => {
-  const serverPrefs = { frame_reward_id: 'frame_polaroid', theme_reward_id: 'theme_film', accent_reward_id: 'accent_champagne', effect_reward_id: null, badge_reward_id: null, sticker_reward_id: null, ring_reward_id: null };
+  const serverPrefs = { frame_reward_id: 'frame_polaroid', theme_reward_id: 'theme_film', accent_reward_id: 'accent_champagne', effect_reward_id: 'effect_constellation', badge_reward_id: null, sticker_reward_id: null, ring_reward_id: null };
   const sharedState = () => ({
     total_xp: 6000, level: 9, rhythm_days: 2, rhythm_today: true,
     rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 9, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
@@ -212,15 +214,16 @@ test('Rewards V2 client: V1 compatibility seed is cleared once for Bea but prese
   await francesco.api.hydrate({ showUnlocks: false, force: true });
   await bea.api.hydrate({ showUnlocks: false, force: true });
 
-  assert.equal(francesco.root.dataset.usTheme, 'film', 'Francesco keeps his existing local look');
-  assert.equal(bea.root.dataset.usTheme, undefined, 'Bea legacy inherited look is reset to standard');
+  assert.equal(francesco.root.dataset.usEffect, 'constellation', 'Francesco keeps his existing local look');
+  assert.equal(bea.root.dataset.usEffect, undefined, 'Bea legacy inherited look is reset to standard');
+  assert.equal(francesco.root.dataset.usTheme, undefined, 'the Atmosfera is retired (redesign definitivo, D7)');
   assert.equal(JSON.parse(francesco.storage.get('us:cosmetics:v1:c:f')).version, 2);
   assert.equal(JSON.parse(bea.storage.get('us:cosmetics:v1:c:b')).version, 2);
-  assert.equal(JSON.parse(bea.storage.get('us:cosmetics:v1:c:b')).preferences.theme_reward_id, null);
+  assert.equal(JSON.parse(bea.storage.get('us:cosmetics:v1:c:b')).preferences.effect_reward_id, null);
 });
 
 test('Rewards V2 client: two phones can equip different cosmetics from the same shared progression state', async () => {
-  const serverPrefs = { frame_reward_id: null, theme_reward_id: 'theme_film', accent_reward_id: null, effect_reward_id: null, badge_reward_id: null, sticker_reward_id: null, ring_reward_id: null };
+  const serverPrefs = { frame_reward_id: null, theme_reward_id: null, accent_reward_id: null, effect_reward_id: 'effect_constellation', badge_reward_id: null, sticker_reward_id: null, ring_reward_id: null };
   const sharedState = () => ({
     total_xp: 12000, level: 12, rhythm_days: 2, rhythm_today: true,
     rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 12, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
@@ -236,16 +239,16 @@ test('Rewards V2 client: two phones can equip different cosmetics from the same 
   const phoneB = runProgression(() => sharedState());
   await phoneA.api.hydrate({ showUnlocks: false, force: true });
   await phoneB.api.hydrate({ showUnlocks: false, force: true });
-  assert.equal(phoneA.root.dataset.usTheme, 'film');
-  assert.equal(phoneB.root.dataset.usTheme, undefined, 'a fresh phone starts with the standard US look');
+  assert.equal(phoneA.root.dataset.usEffect, 'constellation');
+  assert.equal(phoneB.root.dataset.usEffect, undefined, 'a fresh phone starts with the standard US look');
 
   const tapA = (id) => phoneA.el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionReward: id }, getAttribute: () => null }) } });
-  await tapA('theme_blue_hour');
-  assert.equal(phoneA.root.dataset.usTheme, 'blue_hour');
-  assert.equal(phoneB.root.dataset.usTheme, undefined, 'phone B keeps its own standard local appearance');
+  await tapA('effect_pulse');
+  assert.equal(phoneA.root.dataset.usEffect, 'pulse');
+  assert.equal(phoneB.root.dataset.usEffect, undefined, 'phone B keeps its own standard local appearance');
 
   await phoneB.api.hydrate({ showUnlocks: false, force: true });
-  assert.equal(phoneB.root.dataset.usTheme, undefined, 'server refresh never imports couple-level legacy cosmetics');
+  assert.equal(phoneB.root.dataset.usEffect, undefined, 'server refresh never imports couple-level legacy cosmetics');
   assert.equal(phoneA.calls.some((call) => call.name === 'equip_progression_reward'), false);
   assert.equal(phoneB.calls.some((call) => call.name === 'equip_progression_reward'), false);
 });
@@ -253,11 +256,12 @@ test('Rewards V2 client: two phones can equip different cosmetics from the same 
 test('Rewards V2 client: the unlock card previews the real cosmetic and "Usalo ora" stays device-local', async () => {
   const serverPrefs = { frame_reward_id: null, theme_reward_id: null, accent_reward_id: null, effect_reward_id: null, badge_reward_id: 'badge_day_one', sticker_reward_id: null, ring_reward_id: null };
   const seen = new Set();
-  // US V3 — the badge and the sticker are retired: only the atmosphere and the accent are announced.
-  const pending = ['badge_day_one', 'theme_rose', 'sticker_ours', 'accent_cherry'];
+  // US V3 — the badge and the sticker are retired; since the redesign (D7) the
+  // atmosphere and the accent too: only the symbol effect is announced.
+  const pending = ['badge_day_one', 'theme_rose', 'sticker_ours', 'accent_cherry', 'effect_pulse'];
   const state = () => ({
-    total_xp: 600, level: 3, rhythm_days: 0, rhythm_today: false,
-    rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 3, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
+    total_xp: 2000, level: 6, rhythm_days: 0, rhythm_today: false,
+    rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 6, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
     pending_unlocks: catalog.filter((r) => pending.includes(r.id) && !seen.has(r.id)), next_reward: null, preferences: { ...serverPrefs }
   });
   const { api, el, calls, storage } = runProgression((name, args) => {
@@ -265,18 +269,11 @@ test('Rewards V2 client: the unlock card previews the real cosmetic and "Usalo o
     return state();
   });
   await api.hydrate({ showUnlocks: true, force: true });
-  assert.equal(el('usProgressionUnlockKicker').textContent, 'Nuova atmosfera');
-  assert.equal(el('usProgressionUnlockCount').textContent, '1 di 2');
-  // Round 3 (mockup parity): the mockup's art — the night of theme_rose with its
-  // light; since 04/11/2026 that reward is Prugna.
-  assert.match(el('usProgressionUnlockPreview').innerHTML, /swatch-pv atm" style="background:radial-gradient\(90% 60% at 50% 0%,rgba\(197,110,190,\.55\)/);
+  assert.equal(el('usProgressionUnlockKicker').textContent, 'Nuovo effetto del simbolo');
+  assert.equal(el('usProgressionUnlockCount').textContent, '');
   await el('usProgressionUnlockUse').emit('click');
-  assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.theme_reward_id, 'theme_rose');
-  assert.equal(el('usProgressionUnlockKicker').textContent, 'Nuovo colore di Noi');
-  assert.match(el('usProgressionUnlockPreview').innerHTML, /fill="#F0566C"/);
-  await el('usProgressionUnlockUse').emit('click');
-  assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.accent_reward_id, 'accent_cherry');
-  assert.ok(seen.has('theme_rose') && seen.has('accent_cherry'));
-  assert.ok(!seen.has('badge_day_one') && !seen.has('sticker_ours'), 'retired pieces are neither shown nor acknowledged');
+  assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.effect_reward_id, 'effect_pulse');
+  assert.ok(seen.has('effect_pulse'));
+  assert.ok(!['badge_day_one', 'sticker_ours', 'theme_rose', 'accent_cherry'].some((id) => seen.has(id)), 'retired pieces are neither shown nor acknowledged');
   assert.equal(calls.some((call) => call.name === 'equip_progression_reward'), false);
 });

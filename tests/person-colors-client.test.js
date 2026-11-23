@@ -35,8 +35,12 @@ test('each person\'s token takes their chosen colour, or stays the usual one', (
 test('applied on the page root, and removed back to the design tokens', () => {
   const set = new Map();
   const style = { setProperty: (k, v) => set.set(k, v), removeProperty: (k) => set.delete(k) };
-  C.applyCoupleColors([{ ...F, person_color: 'oro' }, B], { style });
-  assert.deepEqual([...set], [['--us-rosa', '#ff9f6e']], 'oro reads as pesca');
+  C.applyCoupleColors([{ ...F, person_color: 'oro' }, B], { style }, 'francesco');
+  assert.equal(set.get('--us-rosa'), '#ff9f6e', 'oro reads as pesca');
+  assert.equal(set.has('--us-lilla'), false);
+  // Redesign definitivo, fase 3 (D7): the four page steps follow, from pesca to lilla.
+  assert.equal(set.get('--us-pg-home'), '#ff9f6e');
+  assert.equal(set.get('--us-pg-quiz'), '#a98bff');
   C.applyCoupleColors([], { style });
   assert.equal(set.size, 0);
 });

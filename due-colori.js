@@ -80,7 +80,7 @@ function flushPending() {
 // reading it at the tap would force a style pass in the tap's own frame.
 const colors = new Map();
 function tabColor(button) {
-  const key = `${button.dataset.page}|${root.dataset.usAccent || ''}|${root.dataset.usTheme || ''}|${root.dataset.usMe || ''}`;
+  const key = `${button.dataset.page}|${root.dataset.usAccent || ''}|${root.dataset.usTheme || ''}|${root.dataset.usMe || ''}|${root.dataset.usPagine || ''}`;
   if (!colors.has(key)) {
     const value = getComputedStyle(button).getPropertyValue('--us-nav-c').trim();
     colors.set(key, value || getComputedStyle(root).getPropertyValue('--us-noi').trim());

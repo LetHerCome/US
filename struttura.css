@@ -63,10 +63,10 @@
 
 /* While the Profilo is open the page you came from stays marked (app.js go()). */
 :root[data-us-from] body:has(#settings.page.active) .us-nav .us-nav-indicator{opacity:.16!important}
-:root[data-us-from="home"] body:has(#settings.page.active) .us-nav{--us-nav-x:0px;--us-nav-blob:var(--us-corallo)}
-:root[data-us-from="bond"] body:has(#settings.page.active) .us-nav{--us-nav-x:100%;--us-nav-blob:var(--us-noi)}
-:root[data-us-from="moments"] body:has(#settings.page.active) .us-nav{--us-nav-x:calc(200% + 70px);--us-nav-blob:var(--us-ambra)}
-:root[data-us-from="quiz"] body:has(#settings.page.active) .us-nav{--us-nav-x:calc(300% + 70px);--us-nav-blob:var(--us-menta)}
+:root[data-us-from="home"] body:has(#settings.page.active) .us-nav{--us-nav-x:0px;--us-nav-blob:var(--us-pg-home)}
+:root[data-us-from="bond"] body:has(#settings.page.active) .us-nav{--us-nav-x:100%;--us-nav-blob:var(--us-pg-bond)}
+:root[data-us-from="moments"] body:has(#settings.page.active) .us-nav{--us-nav-x:calc(200% + 70px);--us-nav-blob:var(--us-pg-moments)}
+:root[data-us-from="quiz"] body:has(#settings.page.active) .us-nav{--us-nav-x:calc(300% + 70px);--us-nav-blob:var(--us-pg-quiz)}
 :is(:root[data-us-from="home"] body:has(#settings.page.active) .us-nav-premium>button[data-page="home"],:root[data-us-from="bond"] body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"],:root[data-us-from="moments"] body:has(#settings.page.active) .us-nav-premium>button[data-page="moments"],:root[data-us-from="quiz"] body:has(#settings.page.active) .us-nav-premium>button[data-page="quiz"]) :is(.nicon,.us-nav-icon-off){display:block!important;color:var(--us-nav-c)!important}
 :is(:root[data-us-from="home"] body:has(#settings.page.active) .us-nav-premium>button[data-page="home"],:root[data-us-from="bond"] body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"],:root[data-us-from="moments"] body:has(#settings.page.active) .us-nav-premium>button[data-page="moments"],:root[data-us-from="quiz"] body:has(#settings.page.active) .us-nav-premium>button[data-page="quiz"]) .nlabel{font-weight:600;color:var(--us-color-text)}
 

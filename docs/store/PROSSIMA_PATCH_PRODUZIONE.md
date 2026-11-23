@@ -2,9 +2,28 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign, fase 3: i colori della coppia (23/11)
+
+**Stato:** ramo `claude/redesign-fase3-colori`, verso il ramo fisso di staging. Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D7 e D8.
+
+**Cosa cambia:**
+- **Le quattro pagine sono quattro passi dal tuo colore a quello dell'altra persona:** Oggi è il tuo, Noi a un terzo, Ricordi a due terzi, Gioca il suo. Ogni telefono parte dal suo. I passi si mescolano in OKLCH (`person-colors.js`): anche tra due colori opposti, come blu e pesca, non passano dal grigio. Il colore di Noi (le cose di tutti e due) è il punto di mezzo.
+- **Cosa prende il colore della pagina:** la barra (icona e sfondo della scheda aperta), il colore che riempie lo schermo cambiando pagina, il bagliore in cima alla notte, le scritte, le icone e i contorni dentro ogni pagina. Le regole di prima non sono state riscritte: corallo, orchidea, ambra e menta ora vogliono dire «il colore di questa pagina» (`colori.css`).
+- **I tasti principali** sono la sfumatura dei due colori, invece del solo tuo.
+- **Ciò che fa ognuno resta nel suo colore** (la tua risposta, la sua, il cuore del Ti penso).
+- **Leggibilità:** ogni passo di ogni coppia della tavolozza ha almeno 7:1 di contrasto sulla notte e 6,8:1 sotto l'inchiostro scuro dei tasti. Per questo il colore stesso fa da colore delle scritte, senza una seconda versione.
+- **Via le Atmosfere e il Colore di Noi:** non si vedono più tra i premi e non si dipingono. Le scelte salvate restano leggibili nel database. I livelli che davano un'Atmosfera o un Colore di Noi restano senza premio visibile finché non arriva la scala nuova (fase 4).
+- Lo sfondo resta vino: cambia solo la luce in cima, nel colore della pagina.
+
+**Prima della produzione:** niente di nuovo sul server. Con le migrazioni dei personaggi già annotate qui sotto, i colori scelti con US Plus si leggono nella tavolozza nuova.
+
+**Test:** `tests/colori-coppia.test.js` (contrasto di tutte le coppie, niente grigio a metà, i passi sui due telefoni, Atmosfere e Colore di Noi ritirati) più i test aggiornati dei colori fissi e delle Atmosfere.
+
+**Novità per Play:** da scrivere con l'uscita del redesign.
+
 ### Redesign, fase 2: la struttura (23/11)
 
-**Stato:** ramo `claude/redesign-fase2-struttura`, verso il ramo fisso di staging. Tavola approvata dal founder il 23/11 («Concordo»). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D6.
+**Stato:** in staging dal 23/11 (PR #281, merge `38ff0468`, sito `…-s38ff0468`). Tavola approvata dal founder il 23/11 («Concordo»). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D6.
 
 **Cosa cambia:**
 - **Ti penso al centro della barra:** un cuore rialzato con la sfumatura dal tuo colore a quello dell'altra persona. Un tocco lo fa scoppiare subito (disco nel tuo colore, anello nel suo, sette coppie di puntini) e manda il Ti penso. Con il movimento ridotto non c'è lo scoppio. Non c'è più in alto a sinistra su Oggi, e non sparisce più su Ricordi, Gioca e Impostazioni.
