@@ -38,7 +38,7 @@ test('Il vostro angolo: a sheet with the two characters and Sintonia inside', ()
 
 test('who opens it: the characters, the Sintonia links, a finished mission; Back closes it', () => {
   const p = read('personaggi.js');
-  assert.match(p, /if \(target\.closest\('\[data-us-angolo\]'\)\) openAngolo\(\);/);
+  assert.match(p, /const entry = target\.closest\('\[data-us-angolo\]'\);\n      if \(entry\) \{ openAngolo\(entry\.dataset\.usAngolo \|\| ''\); return; \}/);
   assert.match(p, /w\.UsAngolo = Object\.freeze\(\{ open: openAngolo, close: closeAngolo \}\);/);
   // What the Sintonia tab loaded before.
   assert.match(p, /w\.hydrateBond\?\.\(\);\n    w\.hydrateResonanceHistory\?\.\(\);\n    w\.USProgression\?\.hydrate\?\.\(\{ showUnlocks: true, force: true \}\);/);

@@ -100,8 +100,12 @@ async function pushState(){
   }
   return {permission,active};
 }
+// The couple card (redesign definitivo, D2): the two characters instead of the circles with photo or initial.
 function avatarMarkup(profile,url){
   const name=profile?.display_name||'?';
+  const role=profile?.role==='beatrice'?'beatrice':'francesco';
+  const drawn=window.UsPersonaggi?.character?.(role,{size:48,react:true,label:name});
+  if(drawn)return `<span class="us-couple-avatar us-couple-char">${drawn}</span>`;
   if(url)return `<span class="us-couple-avatar"><img src="${esc(url)}" alt="${esc(name)}"></span>`;
   return `<span class="us-couple-avatar"><b>${esc(name.trim().slice(0,1).toUpperCase()||'?')}</b></span>`;
 }

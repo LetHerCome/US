@@ -131,3 +131,52 @@
 #usAngolo .us-gioca-sintonia{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
 #usAngolo .us-gioca-sintonia>*{min-width:0;max-width:100%;margin-left:0;margin-right:0;box-sizing:border-box}
 @media (prefers-reduced-motion:reduce){#home .us-angolo-entry{transition:none}}
+
+/* ---------- Fase 4: the two characters instead of the circles (D2) ---------- */
+/* The daily question on Oggi: mine left, theirs right; dashed until answered;
+   together, with a heart between them, once you have both answered (app.js). */
+#home #usDailyRitual .ring.us-daily-duo{position:relative;display:flex;align-items:flex-end;justify-content:center;width:56px;height:30px;overflow:visible;flex:none}
+#home #usDailyRitual .us-daily-duo :is(.r-me,.r-you){display:block;line-height:0;transition:transform .42s cubic-bezier(.7,0,.2,1)}
+#home #usDailyRitual .us-daily-duo .us-char{display:block;overflow:visible}
+#home #usDailyRitual .us-daily-duo .r-noi{position:absolute;left:50%;top:-11px;width:12px;height:12px;margin-left:-6px;color:var(--us-noi);opacity:0;transition:opacity .3s ease}
+#home #usDailyRitual .us-daily-duo .r-noi svg{display:block;width:100%;height:100%;fill:currentColor}
+#home #usDailyRitual .us-daily-duo:is([data-st="pronte"],[data-st="svelate"]) .r-me{transform:translateX(5px)}
+#home #usDailyRitual .us-daily-duo:is([data-st="pronte"],[data-st="svelate"]) .r-you{transform:translateX(-5px)}
+#home #usDailyRitual .us-daily-duo:is([data-st="pronte"],[data-st="svelate"]) .r-noi{opacity:1}
+
+/* Il vostro angolo: the closer to the next level, the closer they stand (progression.js). */
+.us-angolo-duo{gap:0}
+.us-angolo-duo .us-duo-one+.us-duo-one{margin-left:var(--us-vicini,28px);transition:margin-left .7s cubic-bezier(.2,.8,.2,1)}
+
+/* The couple card in the Profilo: the two characters, no circles. */
+#settings .us-couple-id-card .us-couple-avatar.us-couple-char{display:grid;place-items:end center;padding:0!important;background:none!important;box-shadow:none!important;overflow:visible;border-radius:0}
+#settings .us-couple-id-card .us-couple-avatar.us-couple-char .us-char{overflow:visible;filter:drop-shadow(1.2px 0 0 #f7efe9) drop-shadow(-1.2px 0 0 #f7efe9) drop-shadow(0 1.2px 0 #f7efe9) drop-shadow(0 -1.2px 0 #f7efe9)}
+#settings .us-profile-look{justify-self:start;align-self:flex-start;min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--us-color-line-strong,rgba(247,239,233,.17));background:none;color:var(--us-color-text,#f7efe9);font:600 13px/1 var(--us-font-ui,'Figtree',sans-serif);cursor:pointer}
+#settings .us-profile-look:focus-visible{outline:2px solid var(--us-tu);outline-offset:3px}
+
+/* ---------- Fase 4: il guardaroba, in the angolo (D4) ---------- */
+.us-angolo-look{display:grid;gap:12px;padding:14px;border-radius:24px;border:1px solid var(--us-color-line,rgba(247,239,233,.09));background:rgba(247,239,233,.03);min-width:0}
+.us-angolo-look:empty{display:none}
+.us-look-title{margin:0;font:400 20px/1.2 var(--us-font-display,'Fraunces',serif);color:var(--us-color-text,#f7efe9)}
+.us-look-row{display:grid;gap:8px;min-width:0}
+.us-look-row>b{font:700 11.5px/1.4 var(--us-font-ui,'Figtree',sans-serif);letter-spacing:.12em;text-transform:uppercase;color:var(--us-color-accent-ink)}
+.us-look-chips{display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:2px;margin:0 -2px}
+.us-look-chips::-webkit-scrollbar{display:none}
+.us-look-chip{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;width:78px;min-height:98px;padding:8px 4px;box-sizing:border-box;border-radius:18px;border:1px solid var(--us-color-line,rgba(247,239,233,.09));background:rgba(247,239,233,.04);color:var(--us-color-text,#f7efe9);font:600 11.5px/1.2 var(--us-font-ui,'Figtree',sans-serif);text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.us-look-chip .us-char{display:block;overflow:visible}
+.us-look-chip[aria-pressed="true"]{border:2px solid var(--us-pg,var(--us-noi));background:color-mix(in srgb,var(--us-pg,var(--us-noi)) 12%,transparent)}
+.us-look-chip.is-locked{opacity:.6}
+.us-look-chip small{font:600 10.5px/1.2 var(--us-font-ui,'Figtree',sans-serif);color:var(--us-color-text-2,rgba(247,239,233,.72))}
+.us-look-chip:focus-visible{outline:2px solid var(--us-color-text,#f7efe9);outline-offset:2px}
+.us-look-next{margin:0;display:grid;gap:4px;font:500 13px/1.35 var(--us-font-ui,'Figtree',sans-serif);color:var(--us-color-text-2,rgba(247,239,233,.72))}
+.us-look-next b{color:var(--us-color-text,#f7efe9)}
+.us-look-meter{display:block;height:8px;border-radius:4px;background:rgba(247,239,233,.1);overflow:hidden}
+.us-look-meter i{display:block;height:100%;border-radius:4px;background:var(--us-accent-gradient)}
+
+/* ---------- Fase 4: the reactions of the characters ---------- */
+.us-char-wave{transform-box:fill-box;transform-origin:15% 90%;animation:us-char-wave 1.6s ease-in-out infinite}
+@keyframes us-char-wave{0%,100%{transform:rotate(0)}50%{transform:rotate(-16deg)}}
+.us-char-confetto{animation:us-char-confetto 2.4s ease-in-out infinite}
+@keyframes us-char-confetto{0%,100%{opacity:.95}50%{opacity:.35}}
+:root[data-us-motion="reduced"] :is(.us-char-wave,.us-char-confetto,.us-angolo-duo .us-duo-one,#home #usDailyRitual .us-daily-duo *){animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){:is(.us-char-wave,.us-char-confetto,.us-angolo-duo .us-duo-one,#home #usDailyRitual .us-daily-duo *){animation:none!important;transition:none!important}}

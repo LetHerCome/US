@@ -1,6 +1,6 @@
 # Missione — Il redesign definitivo
 
-**Stato:** Fase 0 unita in staging (PR #280); tavola approvata dal founder il 23/11 («Concordo», https://claude.ai/artifact/QguykctqxueyKRwAVupf11); Fase 2 unita in staging (PR #281); Fase 3 unita in staging (PR #282); mascotte tolte, domanda fuori da Gioca e Sintonia in «Il vostro angolo» sul ramo `claude/redesign-angolo` (anticipi delle fasi 4 e 6, D3 D5 D11, chiesti dal founder il 23/11)
+**Stato:** Fase 0 unita in staging (PR #280); tavola approvata dal founder il 23/11 («Concordo», https://claude.ai/artifact/QguykctqxueyKRwAVupf11); Fase 2 unita in staging (PR #281); Fase 3 unita in staging (PR #282); mascotte, domanda fuori da Gioca e «Il vostro angolo» in staging (PR #283); Fase 4 (personaggi al posto dei cerchi, reazioni, guardaroba) sul ramo `claude/redesign-fase4-personaggi`; scala dei premi da proporre al founder
 **Ramo fisso:** `mission/us-store-s3-1-public-auth-staging-20261011` (staging); un ramo corto `claude/*` per fase
 **Fonte:** founder, 23/11/2026: «dobbiamo buttare il progetto staging, dobbiamo riprendere il progetto principale che al momento è su main e riportarlo su staging» con le richieste qui sotto; «concordo» a tutte le risposte consigliate D1–D14.
 **Decisione:** [DECISIONS.md, 23/11](../DECISIONS.md)

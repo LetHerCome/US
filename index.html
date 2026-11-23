@@ -554,6 +554,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     <section class="us-sheet is-bottom us-angolo-sheet" role="dialog" aria-modal="true" aria-labelledby="usAngoloHeading" data-us-modal-panel>
       <header class="us-angolo-head"><h2 id="usAngoloHeading">Il vostro angolo</h2><button type="button" class="us-modal-close" data-us-modal-close data-angolo-close aria-label="Chiudi Il vostro angolo"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
       <div class="us-angolo-duo" data-us-duo="big"></div>
+      <section class="us-angolo-look" id="usAngoloLook" aria-label="Il tuo guardaroba"></section>
       <section id="usGiocaSintonia" class="us-gioca-sintonia" aria-label="Sintonia"></section>
     </section>
   </div>
@@ -759,7 +760,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 
       <article class="noi-resonance" aria-label="Sintonia attuale" data-s>
         <!-- Sintonia (moved into Gioca > Sintonia by noi-v2.js): the mockup's blocks, in its order. -->
-        <div class="noi-resonance-top"><div><div class="tiny">SINTONIA</div><svg class="us-sintonia-venn" viewBox="0 0 210 120" aria-hidden="true" focusable="false"><circle class="is-a" cx="62" cy="60" r="50"/><circle class="is-b" cx="148" cy="60" r="50"/><path class="is-noi"/><circle class="is-bloom" cx="105" cy="60" r="50"/></svg><b><span id="bondResonanceLevel" class="noi-resonance-level">Livello 1</span><span class="noi-resonance-dot" aria-hidden="true"> · </span><span id="bondRankTitle">Primo legame</span></b></div><span class="noi-resonance-mark" aria-hidden="true">∞</span></div>
+        <div class="noi-resonance-top"><div><div class="tiny">SINTONIA</div><b><span id="bondResonanceLevel" class="noi-resonance-level">Livello 1</span><span class="noi-resonance-dot" aria-hidden="true"> · </span><span id="bondRankTitle">Primo legame</span></b></div><span class="noi-resonance-mark" aria-hidden="true">∞</span></div>
         <div class="bond-xp-track" id="bondProgressTrack" role="progressbar" aria-label="Progresso Sintonia verso il prossimo livello" aria-valuemin="0" aria-valuemax="200" aria-valuenow="0" aria-valuetext="0 di 200 punti nel livello 1"><div id="bondPageFill"></div></div>
         <div class="noi-resonance-foot"><span id="bondLevelXp">0 / 200 punti</span><span id="bondNextXp">200 punti al livello 2</span><span id="bondCompletedCount" aria-hidden="true">0 esperienze</span></div>
         <div class="noi-resonance-legacy" aria-hidden="true"><span id="bondLevelValue">1</span><span id="bondTotalXp">0 punti</span><span id="bondRerollsLeft">3</span><span id="bondWeekReset">Nuove esperienze ogni lunedì</span><span id="bondBadges"></span></div>
@@ -885,6 +886,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <span class="us-profile-who">
             <b id="usProfileName" translate="no">Tu</b>
             <span class="us-profile-chips"><span id="usProfileShape">Tondo</span><span class="us-profile-color"><i aria-hidden="true"></i><span id="usProfileColor">Rosa</span></span><span id="usProfileMood" hidden></span></span>
+            <button type="button" class="us-profile-look" data-us-angolo="look">Cambia look</button>
           </span>
         </div>
       </div>
