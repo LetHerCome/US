@@ -211,7 +211,7 @@ test('PET gate: APPROVED requires a manifest entry and a sprite renderer, never 
   assert.throws(() => Pet.registerRenderer({ id: 'x' }), /invalid_pet_renderer/);
 });
 
-test('PET layer: never takes input, never covers the nav, steps aside and respects motion preferences', { skip: 'Il diario, ma pulito (15/11/2026): il gatto Maudit esce dall\'app: index.html non carica più pet.js e pet.css e il suo livello è ritirato' }, () => {
+test('PET layer: never takes input, never covers the nav, steps aside and respects motion preferences', () => {
   assert.match(html, /<\/nav>\n<!-- US PET V1[^\n]*-->\n<div class="us-pet-layer" id="usPetLayer" aria-hidden="true" data-us-ambient hidden><span class="us-pet-actor"><\/span><\/div>/);
   assert.ok(html.indexOf('src="/pet.js') > html.indexOf('src="/ui-foundation.js'), 'pet reads the foundation motion authority');
   assert.match(petCss, /\.us-pet-layer,\.us-pet-layer \*\{pointer-events:none!important/);
@@ -234,18 +234,15 @@ test('PET layer: never takes input, never covers the nav, steps aside and respec
   for (const state of Pet.STATES.filter((name) => name !== 'idle')) assert.match(petCss, new RegExp(`\\[data-pet-state="${state}"\\]`), state);
 });
 
-// Il diario, ma pulito (15/11/2026): «il gatto esce». The PET is no longer in
-// the shell nor in the web builds; its layer stays marked retired and pet.js
-// refuses to mount on it. Reward unlocks still call it safely (optional chain).
-test('PET is retired from the PWA shell and both web builds; the layer refuses to mount', () => {
+test('PET ships in the atomic PWA shell and both web builds; reward unlocks are its first reaction', () => {
   const worker = read('service-worker.js');
-  assert.doesNotMatch(worker, /versioned\("\/pet\.(css|js)"\)/);
+  assert.match(worker, /versioned\("\/pet\.css"\),\n  versioned\("\/pet\.js"\)/);
   for (const file of ['scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) {
-    assert.doesNotMatch(read(file), /'pet\.(css|js)',/, file);
+    assert.match(read(file), /'pet\.css',\n  'pet\.js',/, file);
   }
-  assert.doesNotMatch(html, /href="\/pet\.css|src="\/pet\.js/);
-  assert.match(html, /id="usPetLayer"[^>]*data-us-retired/);
-  assert.match(read('pet.js'), /const retired=Boolean\(layer\?\.hasAttribute\?\.\('data-us-retired'\)\);\s*const available=Boolean\(layer&&actor&&nav&&!disabled&&!retired&&/);
+  const build = JSON.parse(read('version.json')).version;
+  assert.match(html, new RegExp(`href="/pet\\.css\\?v=${build}"`));
+  assert.match(html, new RegExp(`src="/pet\\.js\\?v=${build}"`));
   assert.match(read('progression.js'), /window\.USPet\?\.react\?\.\('reward'\)/);
 });
 

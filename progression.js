@@ -606,15 +606,12 @@ function syncAppIcon(icon) {
     .then((current) => (current?.icon === name ? null : plugin.set({ icon: name })))
     .catch(() => { appIconSent = undefined; });
 }
-const ATMOSFERE_PAUSED = true;
 function applyPreferences(next = state) {
   const root = document.documentElement;
   const hero = $('homeHero');
   const prefs = next?.preferences || {};
   const value = (category) => slotValue(category, rewardToken(prefs[SLOTS[category].pref]));
-  // Il diario, ma pulito (founder, 15/11/2026): the Atmosfere are paused,
-  // only the paper shows. The choice stays saved on the server, untouched.
-  const theme = ATMOSFERE_PAUSED ? '' : value('theme');
+  const theme = value('theme');
   const accent = value('accent');
   const effect = value('effect');
   const think = value('ti_penso');

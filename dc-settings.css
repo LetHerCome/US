@@ -12,10 +12,315 @@
 /* The "Foto profilo aggiornata" Avviso carries the mockup's user drawing. */
 .us-icon[data-us-icon="user"]{--us-icon-src:url("/assets/icons/phosphor/user-regular.svg")}
 
-/* The page itself is «Il diario, ma pulito» (diario.css, .dy-set, 15/11/2026):
-   its former rules left with the former markup. The sheets below stay. */
+/* ==========================================================================
+   Page (081): .view padding 20px 18px (.app already gives 16px a side, so
+   2px here, as Noi does), blocks in the mockup order.
+   The couple card stays in the "Voi" section in the markup (it is shared
+   state); the sections become transparent boxes so it can sit under the
+   title, as in the mockup.
+   ========================================================================== */
 #settings{padding-top:0;letter-spacing:0}
-#usWidgetHub{letter-spacing:0}
+#usSettingsOverlay,#usWidgetHub{letter-spacing:0}
+#settings>.us-settings2-page.section{
+  display:flex!important;
+  flex-direction:column;
+  margin:0!important;
+  padding:20px 2px calc(var(--us-nav-height,68px) + var(--us-safe-bottom,0px) + 82px)!important;
+  text-align:left;
+}
+#settings>.us-settings2-page>.us-settings2-section{display:contents}
+#settings .us-settings2-page>.us-settings2-head{order:0}
+#settings .us-settings2-page .us-couple-id-card{order:1}
+#settings .us-settings2-page>[data-us-settings-scope="tu"]>*{order:2}
+#settings .us-settings2-page>[data-us-settings-scope="voi"]>*:not(.us-couple-id-card){order:3}
+#settings .us-settings2-page>:not(.us-settings2-section):not(.us-settings2-head){order:4}
+
+/* .set-hd: back to Noi on the left, the sync pill on the right; title under. */
+#settings .us-settings2-page>.us-settings2-head{
+  display:block;
+  margin:0!important;
+  gap:0;
+}
+#settings .us-settings2-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+#settings .us-settings2-back{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  min-height:44px;
+  margin-left:-6px;
+  padding:0 14px 0 8px;
+  border:0;
+  border-radius:999px;
+  background:none;
+  box-shadow:none;
+  color:var(--us-color-text-2);
+  font:600 15px/1.5 var(--us-font-ui);
+}
+#settings .us-settings2-back .us-icon{--us-icon-size:22px}
+#settings .us-settings2-head .us-settings2-device-dot{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  width:auto;
+  height:auto;
+  min-height:34px;
+  padding:0 12px;
+  border-radius:999px;
+  background:var(--us-color-surface);
+  border:1px solid var(--us-color-line);
+  box-shadow:none;
+  color:var(--us-color-text-2);
+  font:600 12px/1.5 var(--us-font-ui);
+}
+#settings .us-settings2-device-dot>i{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--us-color-text-3);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--us-color-text-3) 22%,transparent);
+}
+#settings .us-settings2-device-dot.ok>i{background:var(--us-verde);box-shadow:0 0 0 3px color-mix(in srgb,var(--us-verde) 22%,transparent)}
+#settings .us-settings2-device-dot.bad>i{background:var(--us-rosso);box-shadow:0 0 0 3px color-mix(in srgb,var(--us-rosso) 22%,transparent)}
+/* .pg-title */
+#settings .us-settings2-page>.us-settings2-head>h2{
+  margin:0!important;
+  font-family:var(--us-font-display)!important;
+  font-weight:400!important;
+  font-size:28px!important;
+  line-height:.95!important;
+  letter-spacing:-.02em!important;
+  color:var(--us-color-text);
+}
+
+/* .couple: the two of you, days together, three numbers. */
+#settings .us-settings2-page .us-couple-id-card{
+  margin:14px 0 0;
+  padding:18px;
+  border-radius:28px;
+  background:radial-gradient(80% 90% at 0% 0%,color-mix(in srgb,var(--us-noi) 18%,transparent),transparent 70%),var(--us-color-surface);
+  border:1px solid var(--us-color-line);
+  box-shadow:none;
+}
+#settings .us-couple-id-card .us-couple-id-top{display:flex;align-items:center;gap:16px}
+#settings .us-couple-id-card .us-couple-avatars{position:relative;flex:none;width:92px;min-width:92px;height:56px;display:block}
+#settings .us-couple-id-card .us-couple-avatar{
+  position:absolute;
+  top:0;
+  left:0;
+  width:56px;
+  height:56px;
+  margin:0;
+  border:0;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:var(--us-rosa);
+  color:var(--us-inchiostro);
+  font-family:var(--us-font-display);
+  font-size:24px;
+  font-weight:400;
+  overflow:hidden;
+}
+#settings .us-couple-id-card .us-couple-avatar:first-child{padding-right:12px}
+#settings .us-couple-id-card .us-couple-avatar+.us-couple-avatar{left:36px;margin:0;padding:0;background:var(--us-lilla);box-shadow:-4px 0 0 var(--us-color-surface)}
+#settings .us-couple-id-card .us-couple-avatar:only-child{padding:0}
+#settings .us-couple-id-card .us-couple-avatar b{font:inherit;color:inherit}
+#settings .us-couple-id-card .us-couple-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#settings .us-couple-id-card .us-couple-id-copy>small{display:none}
+#settings .us-couple-id-card .us-couple-id-copy>b{
+  margin:0;
+  font-family:var(--us-font-display);
+  font-weight:400;
+  font-size:18px;
+  line-height:1.1;
+  letter-spacing:0;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+  color:var(--us-color-text);
+}
+#settings .us-couple-id-card .us-couple-id-copy>span{margin:0;font-size:13px;line-height:1.5;color:var(--us-color-text-2)}
+#settings .us-couple-id-card .us-couple-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 0;padding:0;border:0}
+#settings .us-couple-id-card .us-couple-stats>span{padding:10px 12px;border:0;border-radius:16px;background:var(--us-color-surface-2);text-align:left}
+#settings .us-couple-id-card .us-couple-stats b{display:block;font-family:var(--us-font-display);font-weight:400;font-size:18px;line-height:1.1}
+#settings .us-couple-id-card .us-couple-stats small{display:block;margin:0;font-size:11px;font-weight:600;line-height:1.5;color:var(--us-color-text-3)}
+
+/* .part: "Tu" and "Voi", each with its colour dot. */
+#settings .us-settings2-page .us-settings2-section-head{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin:26px 2px 6px;
+}
+#settings .us-settings2-page .us-settings2-section-head::before{
+  content:"";
+  flex:none;
+  align-self:center;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:var(--us-tu);
+}
+#settings [data-us-settings-scope="voi"]>.us-settings2-section-head::before{background:var(--us-noi)}
+#settings .us-settings2-page .us-settings2-section-head h3{
+  margin:0;
+  font-family:var(--us-font-display);
+  font-weight:400;
+  font-size:20px;
+  line-height:1;
+  letter-spacing:-.01em;
+  color:var(--us-color-text);
+}
+#settings .us-settings2-page .us-settings2-section-head small{font-size:13px;line-height:1.5;color:var(--us-color-text-3)}
+
+/* .grp-l / .grp */
+#settings .us-settings2-page .us-settings2-label{
+  margin:18px 4px 8px;
+  font-family:var(--us-font-ui);
+  font-size:11px;
+  font-weight:700;
+  line-height:1.5;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--us-color-text-3);
+}
+#settings .us-settings2-page .us-settings2-section-head+.us-settings2-label{margin-top:12px}
+#settings .us-settings2-page .us-settings2-group{
+  margin:0;
+  overflow:hidden;
+  border-radius:22px;
+  background:var(--us-color-surface);
+  border:1px solid var(--us-color-line);
+  box-shadow:none;
+}
+
+/* .row: 34px icon tile, title + line, value, chevron; 60px tall.
+   (.us-settings2-group raises it over settings2.css's :has(small) 56px.) */
+#settings .us-settings2-page .us-settings2-group .us-settings2-row{
+  display:flex!important;
+  align-items:center;
+  gap:12px!important;
+  width:100%;
+  min-height:60px!important;
+  padding:8px 14px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--us-color-text);
+  font-weight:400;
+  line-height:1.5;
+  text-align:left;
+}
+#settings .us-settings2-page .us-settings2-row+.us-settings2-row{border-top:1px solid var(--us-color-line)!important}
+#settings .us-settings2-page .us-settings2-row[hidden]{display:none!important}
+#settings .us-settings2-page .us-settings2-row[hidden]:first-child+.us-settings2-row{border-top:0!important}
+#settings .us-settings2-page .us-settings2-row:active{background:transparent!important}
+#settings .us-settings2-page .us-settings2-icon{
+  width:34px;
+  height:34px;
+  flex:none;
+  border:0;
+  border-radius:11px;
+  display:grid;
+  place-items:center;
+  background:var(--us-color-surface-2);
+  color:var(--us-color-text-2);
+  font-size:inherit;
+  --us-icon-size:19px;
+}
+#settings .us-settings2-page .us-setting-main{flex:1;min-width:0;display:block}
+#settings .us-settings2-page .us-settings2-row .us-setting-main b{
+  display:block;
+  margin:0;
+  font-size:15px!important;
+  font-weight:600!important;
+  line-height:1.5!important;
+  letter-spacing:0;
+  color:var(--us-color-text);
+}
+#settings .us-settings2-page .us-settings2-row .us-setting-main small{
+  display:block;
+  margin:0!important;
+  font-weight:400;
+  font-size:12px!important;
+  line-height:1.3!important;
+  color:var(--us-color-text-3)!important;
+}
+#settings .us-settings2-page .us-settings2-row :is(.us-setting-value,.us-setting-state){
+  flex:none;
+  width:auto;
+  height:auto;
+  min-width:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+  font-size:13px!important;
+  font-weight:600;
+  line-height:1.5;
+  color:var(--us-color-text-3)!important;
+  white-space:nowrap;
+}
+#settings .us-settings2-page .us-settings2-row .us-setting-value:empty{display:none}
+#settings .us-settings2-page .us-setting-chevron{flex:none;display:grid;place-items:center;width:18px;height:18px;color:var(--us-color-text-3);--us-icon-size:18px!important}
+#settings .us-settings2-page .us-setting-chevron .us-icon{width:18px;height:18px}
+/* .row.danger */
+#settings .us-settings2-page .us-settings2-row.is-danger .us-setting-main b{color:var(--us-rosso)}
+#settings .us-settings2-page .us-settings2-row.is-danger .us-settings2-icon{color:var(--us-rosso);background:color-mix(in srgb,var(--us-rosso) 12%,transparent)}
+
+/* The mockup's drawings for each row (core.js IC), Phosphor files. */
+#settings [data-us-setting="profile-photo"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/user-regular.svg")}
+#settings [data-us-setting="oggi-effect"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/star-four-regular.svg")}
+#settings [data-us-setting="distance"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/arrows-horizontal-regular.svg")}
+#settings [data-us-setting="app-lock"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/fingerprint-regular.svg")}
+#settings [data-us-setting="feedback"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/waveform-regular.svg")}
+#settings [data-us-setting="maudit"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/cat-regular.svg")}
+#settings [data-us-setting="optimize-ricordi"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/image-regular.svg")}
+#settings [data-us-setting="home-photo"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/arrow-clockwise-regular.svg")}
+#settings [data-us-setting="sync-status"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/cloud-regular.svg")}
+#settings [data-us-setting="relationship-date"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/calendar-blank-regular.svg")}
+#settings [data-us-setting="story-archive"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/book-regular.svg")}
+#settings [data-us-setting="privacy"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/shield-regular.svg")}
+#settings [data-us-setting="logout"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/sign-out-regular.svg")}
+/* The mockup's "scollega" arrow leaves the door towards the left: the same
+   Phosphor sign-out, drawn mirrored. */
+#settings [data-us-setting="logout"] .us-settings2-icon .us-icon{transform:scaleX(-1)}
+
+/* .sw: 50×30 track, 24px knob, the spring on the knob. */
+#settings .us-settings2-page .us-settings2-switch{
+  position:relative;
+  display:block;
+  flex:none;
+  width:50px;
+  height:30px;
+  border-radius:30px;
+  background:var(--us-color-elevated);
+  transition:background .25s;
+}
+#settings .us-settings2-page .us-settings2-switch u{
+  position:absolute;
+  top:3px;
+  left:3px;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:var(--us-latte);
+  box-shadow:0 2px 6px rgba(0,0,0,.35);
+  transform:none;
+  translate:0 0;
+  transition:translate .38s var(--us-ease-spring),width .2s;
+}
+#settings .us-settings2-page .us-settings2-switch-row[aria-checked="true"] .us-settings2-switch{background:var(--us-tu)}
+#settings .us-settings2-page .us-settings2-switch-row[aria-checked="true"] .us-settings2-switch u{transform:none;translate:20px 0;background:var(--us-latte)}
+#settings .us-settings2-page .us-settings2-switch-row:active .us-settings2-switch u{width:28px}
+#settings .us-settings2-page .us-settings2-switch-row[aria-checked="true"]:active .us-settings2-switch u{translate:16px 0}
+
+/* .ver */
+#settings .us-settings2-page .us-settings2-version{margin:20px 0 0;text-align:center;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
+/* The build under «US 1.0»: which version this phone runs (03/11/2026). */
+#settings .us-settings2-page .us-settings2-version small{display:block;font-size:11px;opacity:.8}
 
 /* ==========================================================================
    Sheets (082–095): the mockup's Foglio body. Header chrome, scrim and the
@@ -24,12 +329,17 @@
    ========================================================================== */
 /* .sheet: 10px + handle 5px + 2px + 12px gap = the header 29px under the
    top edge; 20px sides; 24px at the bottom. */
-#usWidgetHub>.us-settings-sheet{padding:29px 20px calc(24px + var(--us-safe-bottom,0px))!important}
+:is(#usSettingsOverlay,#usWidgetHub)>.us-settings-sheet{padding:29px 20px calc(24px + var(--us-safe-bottom,0px))!important}
 /* .sh-head: eyebrow 16.5px + 2px + title, then the 12px gap of .sheet. */
-#usWidgetHub>.us-settings-sheet>header{padding:0 0 12px!important;margin:0}
-#usWidgetHub>.us-settings-sheet[data-us-modal-panel]>header .tiny{line-height:1.5}
+:is(#usSettingsOverlay,#usWidgetHub)>.us-settings-sheet>header{padding:0 0 12px!important;margin:0}
+:is(#usSettingsOverlay,#usWidgetHub)>.us-settings-sheet[data-us-modal-panel]>header .tiny{line-height:1.5}
 /* .sheet.tall: 86% of the screen. */
+#usSettingsOverlay[data-us-settings-sheet="notifications"]>.us-settings-sheet,
+#usSettingsOverlay[data-us-settings-sheet="story-archive"]>.us-settings-sheet,
 #usWidgetHub>.us-settings-sheet{min-height:calc(var(--us-viewport-height,100dvh) * .86)}
+/* The eyebrow takes the colour of what the sheet is about (mockup k:). */
+#usSettingsOverlay[data-us-settings-sheet="relationship-date"]{--us-sheet-k:var(--us-noi)}
+#usSettingsOverlay[data-us-settings-sheet="story-archive"]{--us-sheet-k:var(--us-ambra)}
 #usSettingsModalBody{display:grid;gap:12px;align-content:start}
 #usSettingsModalBody>*{margin:0}
 /* .lead and .note-s */
@@ -45,7 +355,7 @@
 }
 #usSettingsModalBody .us-settings2-note{margin:0;font-size:12px;line-height:1.5;text-align:center;color:var(--us-color-text-3)}
 #usSettingsModalBody .us-settings2-note:empty{display:none}
-#usSettingsModalBody .us-settings2-group-label{margin:6px 0 0;font:800 var(--us-text-13)/1.3 var(--us-font-ui);letter-spacing:0;text-transform:none;color:var(--us-ink-60)}
+#usSettingsModalBody .us-settings2-group-label{margin:6px 2px 0;font-size:11px;font-weight:700;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;color:var(--us-color-text-3)}
 
 /* .banner: tinted with my colour; .banner.warn with amber. */
 #usSettingsModalBody .us-settings2-push-master{
@@ -53,13 +363,13 @@
   align-items:center;
   gap:12px;
   padding:14px;
-  border:0;
-  border-radius:var(--us-r-16);
-  background:var(--us-beige);
+  border:1px solid color-mix(in srgb,var(--us-tu) 30%,transparent);
+  border-radius:20px;
+  background:color-mix(in srgb,var(--us-tu) 12%,var(--us-color-surface-2));
 }
 #usSettingsModalBody .us-settings2-push-master.is-warn{
-  background:var(--us-beige);
-  border-color:transparent;
+  background:color-mix(in srgb,var(--us-ambra) 12%,var(--us-color-surface-2));
+  border-color:color-mix(in srgb,var(--us-ambra) 35%,transparent);
 }
 #usSettingsModalBody .us-settings2-push-master>span{flex:1;min-width:0}
 #usSettingsModalBody .us-settings2-push-master b{display:block;font-size:15px;font-weight:600;line-height:1.5;color:var(--us-color-text)}
@@ -78,28 +388,28 @@
   line-height:1;
   white-space:nowrap;
 }
-#usSettingsModalBody .us-settings2-push-master>button.primary{background:var(--us-ink-100);color:var(--us-paper);box-shadow:none}
+#usSettingsModalBody .us-settings2-push-master>button.primary{background:var(--us-tu);color:var(--us-inchiostro);box-shadow:none}
 #usSettingsModalBody .us-settings2-push-master>button.ghost{background:transparent;color:var(--us-color-text-2);box-shadow:inset 0 0 0 1px var(--us-color-line-strong)}
 
 /* .list of .row with .sw (toggles) */
-#usSettingsModalBody .us-settings2-toggle-list{display:block;margin:0;border-radius:0;background:none;overflow:visible}
+#usSettingsModalBody .us-settings2-toggle-list{display:block;margin:0;border-radius:20px;background:var(--us-color-surface-2);overflow:hidden}
 #usSettingsModalBody .us-settings2-toggle-row{
   display:flex;
   align-items:center;
   gap:12px;
   width:100%;
-  min-height:58px;
-  padding:7px 0;
+  min-height:56px;
+  padding:8px 14px;
   border:0;
   border-radius:0;
   background:none;
   box-shadow:none;
-  color:var(--us-ink-100);
+  color:var(--us-color-text);
   font-weight:400;
   line-height:1.5;
   text-align:left;
 }
-#usSettingsModalBody .us-settings2-toggle-row+.us-settings2-toggle-row{border-top:1px solid var(--us-ink-08)}
+#usSettingsModalBody .us-settings2-toggle-row+.us-settings2-toggle-row{border-top:1px solid var(--us-color-line)}
 #usSettingsModalBody .us-settings2-toggle-row>span{flex:1;min-width:0}
 #usSettingsModalBody .us-settings2-toggle-row span b{display:block;font-size:15px;font-weight:600;line-height:1.5}
 #usSettingsModalBody .us-settings2-toggle-row span small{display:block;margin:0;font-size:12px;line-height:1.3;color:var(--us-color-text-3)}
@@ -125,7 +435,7 @@
   translate:0 0;
   transition:translate .38s var(--us-ease-spring),width .2s;
 }
-#usSettingsModalBody .us-settings2-toggle-row>i.on{background:var(--us-ink-100)}
+#usSettingsModalBody .us-settings2-toggle-row>i.on{background:var(--us-tu)}
 #usSettingsModalBody .us-settings2-toggle-row>i.on u{transform:none;translate:20px 0;background:var(--us-latte)}
 #usSettingsModalBody .us-settings2-toggle-row:active>i u{width:28px}
 #usSettingsModalBody .us-settings2-toggle-row:active>i.on u{translate:16px 0}
@@ -200,10 +510,12 @@
 #usSettingsModalBody .us-settings2-field{display:grid;gap:6px;margin:0}
 #usSettingsModalBody .us-settings2-field>span,#usSettingsModalBody .us-settings2-field>legend{
   margin:0;
-  font:700 var(--us-text-13)/1.3 var(--us-font-ui);
-  letter-spacing:0;
-  text-transform:none;
-  color:var(--us-ink-60);
+  font-size:12px;
+  font-weight:700;
+  line-height:1.5;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--us-color-text-3);
 }
 /* Text fields only: a radio or checkbox inside a field keeps its own size. */
 #usSettingsModalBody .us-settings2-field :is(input:not([type="radio"]):not([type="checkbox"]),textarea){
@@ -264,7 +576,7 @@
   color:var(--us-color-text);
   box-shadow:inset 0 0 0 1px var(--us-color-line-strong);
 }
-#usSettingsModalBody :is(.us-settings2-action-stack,#usSettingsModalBody) .ghost.is-danger{color:var(--us-ink-100);box-shadow:inset 0 0 0 1.5px var(--us-ink-12)}
+#usSettingsModalBody :is(.us-settings2-action-stack,#usSettingsModalBody) .ghost.is-danger{color:var(--us-rosso);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--us-rosso) 40%,transparent)}
 /* A lone main button keeps the .btns 4px above it. */
 #usSettingsModalBody>button.us-settings-main-action{margin-top:4px}
 #usSettingsModalBody .us-settings2-disconnect{
@@ -272,11 +584,11 @@
   min-height:52px;
   margin:0;
   border:0;
-  border-radius:var(--us-r-16);
-  background:var(--us-ink-100);
-  color:var(--us-paper);
-  font-size:15px;
-  font-weight:800;
+  border-radius:999px;
+  background:var(--us-rosso);
+  color:var(--us-inchiostro);
+  font-size:16px;
+  font-weight:700;
 }
 #usSettingsModalBody .us-settings2-disconnect:disabled{opacity:.45}
 
@@ -309,6 +621,9 @@
 #usSettingsModalBody .us-settings2-progress .us-settings2-bar-track{height:8px;border-radius:9px;background:var(--us-color-elevated);overflow:hidden}
 #usSettingsModalBody .us-settings2-progress .us-settings2-bar-track>i{display:block;height:100%;width:0;border-radius:9px;background:var(--us-ambra);transition:width .12s linear}
 #usSettingsModalBody .us-settings2-progress small,#usSettingsModalBody #usOptimizeRicordiProgress{margin:0;padding:0;border:0;background:none;font-size:12px;font-weight:600;line-height:1.5;font-variant-numeric:tabular-nums;color:var(--us-color-text-3)}
+
+/* .nr-photo.sm (Foto Home) */
+#usSettingsModalBody .us-settings2-photo{height:170px;border-radius:22px;background:var(--us-color-surface-2) center/cover no-repeat;overflow:hidden}
 
 /* .thumbs (Archivio Stories) */
 #usSettingsModalBody .us-story-archive{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
@@ -419,8 +734,8 @@
   padding:0 14px;
   border:0;
   border-radius:999px;
-  background:var(--us-ink-100);
-  color:var(--us-paper);
+  background:var(--us-tu);
+  color:var(--us-inchiostro);
   box-shadow:none;
   font-size:14px;
   font-weight:700;
@@ -496,11 +811,24 @@
    impostazioni → noi). Presentation only: navigation is still go().
    ========================================================================== */
 body:has(#settings.page.active) .us-nav{--us-nav-index:1;--us-nav-blob:var(--us-noi)}
+body:has(#settings.page.active) .us-nav .us-nav-indicator{opacity:.16!important}
+body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nicon{color:var(--us-nav-c)!important}
+body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .us-nav-icon-off{display:block!important;color:var(--us-nav-c)!important}
+body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .us-nav-icon-on{display:block!important;color:color-mix(in srgb,var(--us-nav-c) 28%,transparent)!important}
+body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nlabel{font-weight:600;color:var(--us-color-text)}
+
+/* ==========================================================================
+   360px and large text: the rows keep their 44px+ targets, nothing clips.
+   ========================================================================== */
+@media (max-width:360px){
+  #settings .us-settings2-page .us-settings2-group .us-settings2-row{padding-left:12px!important;padding-right:12px!important;gap:10px!important}
+  #settings .us-couple-id-card .us-couple-id-top{gap:12px}
+}
 
 /* Reduced motion: the knob and the track change at once. */
-:root[data-us-motion="reduced"] :is(#usSettingsModalBody .us-settings2-toggle-row>i,#usSettingsModalBody .us-settings2-toggle-row>i u){transition:none!important}
+:root[data-us-motion="reduced"] :is(#settings .us-settings2-switch,#settings .us-settings2-switch u,#usSettingsModalBody .us-settings2-toggle-row>i,#usSettingsModalBody .us-settings2-toggle-row>i u){transition:none!important}
 @media (prefers-reduced-motion:reduce){
-  :is(#usSettingsModalBody .us-settings2-toggle-row>i,#usSettingsModalBody .us-settings2-toggle-row>i u){transition:none!important}
+  :is(#settings .us-settings2-switch,#settings .us-settings2-switch u,#usSettingsModalBody .us-settings2-toggle-row>i,#usSettingsModalBody .us-settings2-toggle-row>i u){transition:none!important}
 }
 
 /* Privacy e dati: links to the public Privacy and Terms pages. */
@@ -511,7 +839,8 @@ body:has(#settings.page.active) .us-nav{--us-nav-index:1;--us-nav-blob:var(--us-
 .us-person-colors .us-person-swatch{display:inline-block;width:14px;height:14px;margin-right:10px;border-radius:50%;vertical-align:-2px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
 .us-person-colors button:disabled{opacity:.5}
 .us-person-color-reset{display:block;margin:14px auto 0}
-
+#usPersonColorSetting:not([data-locked="true"]) .us-person-color-lock{display:none}
+#usPersonColorSetting .us-person-color-lock{width:14px;height:14px;margin-left:6px;opacity:.7}
 .us-person-color-locked{margin:0 0 12px;color:var(--us-color-text-2);line-height:1.45}
 #usSettingsModalBody .us-person-colors.is-locked button::before{display:none}
 #usSettingsModalBody .us-person-colors.is-locked button{opacity:.6}

@@ -1,4 +1,3 @@
-// Il diario, ma pulito (15/11/2026): US is rendered when its bottom nav is there (<nav class="dy-nav">; older installed builds still have <nav class="nav">).
 // PWA startup soak — the real service worker in real Chromium, served the way
 // Cloudflare Pages serves US: "/index.html" answers 308 -> "/", unknown paths
 // fall back to the SPA document. Regression for the installed Android PWA
@@ -106,7 +105,7 @@ async function launch(page, url) {
   const shown = await page.evaluate(() => ({
     href: location.href,
     build: document.querySelector('meta[name="us-build"]')?.content || null,
-    nav: Boolean(document.querySelector('nav.dy-nav, nav.nav')),
+    nav: Boolean(document.querySelector('.nav')),
     offlinePage: /US non è raggiungibile/.test(document.body?.textContent || '')
   })).catch(() => ({ href: 'chrome-error', build: null, nav: false, offlinePage: false }));
   return { failure, ...shown };
@@ -287,5 +286,5 @@ test('no usable shell and no network: a real US page that recovers when the conn
   assert.deepEqual({ failure: down.failure, offlinePage: down.offlinePage }, { failure: null, offlinePage: true });
   h.state.offline = false;
   await Promise.all([h.page.waitForNavigation({ waitUntil: 'load' }), h.page.click('#usRetry')]);
-  assert.equal(await h.page.evaluate(() => Boolean(document.querySelector('nav.dy-nav, nav.nav'))), true);
+  assert.equal(await h.page.evaluate(() => Boolean(document.querySelector('.nav'))), true);
 });

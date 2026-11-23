@@ -12,9 +12,8 @@ const read = (name) => fs.readFileSync(path.join(__dirname, '..', name), 'utf8')
 const F = { id: 'f', role: 'francesco', display_name: 'Francesco', person_color: null };
 const B = { id: 'b', role: 'beatrice', display_name: 'Beatrice', person_color: null };
 
-// Il diario, ma pulito (15/11/2026): «un colore, un significato» (honey is time,
-// sky is distance, the heart is the Ti penso): oro, cielo and rubino left the
-// person palette for blu, prugna and menta (migration 20261115183900, staging only).
+// Palette of 15/11/2026: oro, cielo and rubino left for blu, prugna and menta
+// (migration 20261115183900, staging only; kept on 23/11/2026, D8).
 test('the 8 colours match the server, rosa and lilla are the usual ones', () => {
   assert.deepEqual(Object.keys(C.PALETTE), ['rosa', 'lilla', 'blu', 'salvia', 'pesca', 'prugna', 'menta', 'perla']);
   const sql = read('supabase/migrations/20261115183900_personaggi_forma_e_colori.sql');
@@ -78,14 +77,13 @@ test('without Plus the row is there, locked: it shows that Plus unlocks it, with
   const settings = read('settings.js');
   // Shown once Plus can be read; hidden only when it cannot (server not ready).
   assert.match(settings, /if\(colorRow\)\{colorRow\.hidden=Boolean\(plusRes\?\.error\)\|\|!plusRes\?\.data;colorRow\.dataset\.locked=colorsOpen\?'false':'true';\}/);
-  // Il diario, ma pulito (15/11/2026): open, the dot in your colour (its name for screen readers); locked, «US Plus» in words.
-  assert.match(settings, /if\(colorValue\)\{colorValue\.textContent=colorsOpen\?\(window\.UsPersonColors\?\.nameOf\?\.\(profiles,identityProfile\.id\)\|\|''\):'US Plus';colorValue\.className=colorsOpen\?'us-sr':'dy-set-lock';\}/);
+  assert.match(settings, /if\(colorValue\)colorValue\.textContent=colorsOpen\?\(window\.UsPersonColors\?\.nameOf\?\.\(profiles,identityProfile\.id\)\|\|''\):'US Plus';/);
   assert.match(settings, /if\(!settingsSnapshot\?\.colorsOpen\)return personColorLockedModal\(\);/);
   const locked = settings.slice(settings.indexOf('function personColorLockedModal'), settings.indexOf('function personColorModal'));
   assert.match(locked, /Si sblocca con US Plus/);
   assert.doesNotMatch(locked, /acquist|compra|prezzo|€|abbonati/i, 'no purchase while Plus is not on sale');
-  assert.match(read('index.html'), /<span class="dy-set-val"><span class="us-sr" id="usPersonColorValue"><\/span><i class="dy-set-dot" aria-hidden="true"><\/i><\/span>/);
-  assert.match(read('diario.css'), /\.dy-set-row\[data-locked="true"\] \.dy-set-dot\{opacity:\.45\}/);
+  assert.match(read('index.html'), /<span class="us-setting-value" id="usPersonColorValue"><\/span><span class="us-icon us-person-color-lock" data-us-icon="lock" aria-hidden="true"><\/span>/);
+  assert.match(read('dc-settings.css'), /#usPersonColorSetting:not\(\[data-locked="true"\]\) \.us-person-color-lock\{display:none\}/);
 });
 
 test('locked colours look locked, and a tap says why', () => {

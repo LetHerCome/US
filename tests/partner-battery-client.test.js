@@ -99,15 +99,11 @@ test('wiring: launch and foreground only, the one Realtime channel, distance cap
   assert.match(slot, /<b data-battery-level><\/b>/);
   assert.doesNotMatch(html, /usPartnerBattery/);
   assert.doesNotMatch(read('noi-v2.css'), /partner-battery/);
-  // Il diario, ma pulito (15/11/2026): the distance capsule stays mounted (and
-  // filled) in the hidden hero; its Oggi styling was pruned. The reading is
-  // still shown in the Distanza sheet (note below) and in the widget.
-  assert.doesNotMatch(read('dc-oggi.css'), /\.og-row \.home-distance-pill \.us-distance-battery\{/);
+  assert.match(read('dc-oggi.css'), /\.og-row \.home-distance-pill \.us-distance-battery\{/);
   // The Distanza sheet: one line under the title (UsUiFoundation.notice note).
   assert.match(app, /note:battery\|\|undefined/);
   assert.match(read('ui-foundation.js'), /if \(options\.note\)/);
-  // Mockup v5 «I fogli» (16/11/2026): the note is a line under the title of the one sheet.
-  assert.match(read('ui-foundation.js'), /note\.className = 'dy-sheet-sub us-confirm-note'/);
+  assert.match(read('ui-foundation.css'), /\.us-confirm-sheet \.us-confirm-note\{/);
   assert.match(html, /<script defer src="\/partner-battery\.js\?v=[^"]+"><\/script>/);
   for (const list of ['scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) assert.match(read(list), /'partner-battery\.js',/, list);
   assert.match(read('service-worker.js'), /versioned\("\/partner-battery\.js"\)/);

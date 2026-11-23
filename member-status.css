@@ -1,4 +1,23 @@
-
+/* Come stai (02/11/2026): the pill in Oggi beside the distance, and the sheet
+   with the twelve states (or the words' form, from Settings). */
+#home #homeHero .og-row .us-status-pill:not([hidden]){
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:40px;
+  padding:0 13px;
+  border:1px solid var(--us-color-line-strong);
+  border-radius:999px;
+  background:var(--dc-oggi-glass);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  color:var(--us-color-text);
+  font:600 13px/1 var(--us-font-ui);
+  white-space:nowrap;
+}
+#home #homeHero .og-row .us-status-pill [hidden]{display:none}
+#home #homeHero .og-row .us-status-pill [data-status-partner]:not([hidden])+[data-status-mine]::before{content:"·";content:"·" / "";margin-right:6px;color:var(--us-color-text-2)}
+#home #homeHero .og-row .us-status-pill[data-mine="none"] [data-status-mine]{color:var(--us-color-text-2)}
 
 .us-status-overlay [hidden]{display:none!important}
 .us-status-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:end;justify-content:center}

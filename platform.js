@@ -8,7 +8,7 @@
     document.documentElement?.classList?.add('us-native');
     if (platformName === 'android' || platformName === 'ios') document.documentElement?.classList?.add(`us-native-${platformName}`);
   }
-  // Accessibilità (20/11/2026): on iPhone the WebView ignores the phone's text
+  // Accessibilità (20/11/2026): on iOS the WebView ignores the phone's text
   // size (Dynamic Type). Read it from the system body font (17 px at the
   // default size) and enlarge the text the way Android's text zoom does
   // (UsWebView.java), from 85% to 200%; read again when US comes back.
@@ -406,7 +406,9 @@
     if (!plugin || !WIDGET_KINDS.includes(kind) || typeof plugin.requestPin !== 'function') return { supported: false, requested: false };
     try {
       const result = await plugin.requestPin({ kind });
-      return { supported: result?.supported === true, requested: result?.requested === true };
+      // A phone that cannot place widgets by itself gives the steps instead (14/11/2026).
+      const steps = typeof result?.steps === 'string' ? result.steps.trim().slice(0, 200) : '';
+      return { supported: result?.supported === true, requested: result?.requested === true, steps };
     } catch (_) {
       return { supported: false, requested: false };
     }

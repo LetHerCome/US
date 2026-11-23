@@ -1,4 +1,3 @@
-// Il diario, ma pulito (15/11/2026): the bottom nav is <nav class="dy-nav"> (same buttons, data-page and handlers).
 // Navigation soak — the real app in Chromium (fake Supabase from the shared
 // fixture), driven with real taps and the system Back, several full cycles:
 // Oggi → Noi → Gioca → Ricordi → Oggi → Ti penso → Back → Lasciato per te →
@@ -20,8 +19,8 @@ function shellState() {
   const pet = document.getElementById('usPetLayer');
   return {
     pages: [...document.querySelectorAll('.page.active')].map((page) => page.id),
-    navActive: [...document.querySelectorAll('.dy-nav button.active')].map((button) => button.dataset.page),
-    navCount: document.querySelectorAll('nav.dy-nav').length,
+    navActive: [...document.querySelectorAll('.nav button.active')].map((button) => button.dataset.page),
+    navCount: document.querySelectorAll('nav.nav').length,
     openModals: [...document.querySelectorAll('[data-us-modal]')]
       .filter((modal) => !modal.hidden && modal.getAttribute('aria-hidden') !== 'true').map((modal) => modal.id || modal.className),
     visibleOverlays: [...document.querySelectorAll('.open,.show')].filter(visible).map((el) => el.id || el.className),
@@ -53,7 +52,7 @@ test('navigation soak: repeated cycles through every primary surface leave one c
     const consoleErrors = [];
     page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
     // A tab tap plays the mockup's colour flood (~1 s, a second tap meanwhile is ignored): wait for it to land.
-    const tab = async (name) => { await page.click(`.dy-nav button[data-page="${name}"]`); await page.waitForFunction(() => !window.UsDueColori?.isFlooding?.()); await settle(page); };
+    const tab = async (name) => { await page.click(`.nav button[data-page="${name}"]`); await page.waitForFunction(() => !window.UsDueColori?.isFlooding?.()); await settle(page); };
     const back = async () => { await page.goBack(); await settle(page, 600); };
     const expectPage = async (label, id) => {
       const state = await page.evaluate(shellState);
@@ -127,7 +126,7 @@ test('navigation: Back unwinds a three-deep stack one level at a time (Noi → L
       week: Boolean(document.getElementById('usLavagna')?.classList.contains('open')),
       form: Boolean(document.getElementById('usCalendarFormSheet')?.classList.contains('open'))
     }));
-    await page.click('.dy-nav button[data-page="bond"]'); await page.waitForFunction(() => !window.UsDueColori?.isFlooding?.()); await settle(page);
+    await page.click('.nav button[data-page="bond"]'); await page.waitForFunction(() => !window.UsDueColori?.isFlooding?.()); await settle(page);
     // Noi nuova (03/11/2026): the Lavagna opens full screen from its tile on the
     // bacheca, so the stack is Noi → Lavagna, then Noi → form; Back unwinds each one level.
     await page.click('[data-lav-open]'); await settle(page);

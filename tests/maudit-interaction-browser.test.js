@@ -64,7 +64,7 @@ const pointerFootprint = (page) => page.evaluate(() => {
   return { swallowed: points.length, outside };
 });
 
-test('Maudit toggle: on by default; Off removes renderer, hit target and activity; persists across reload; On restores', { skip: 'Il diario, ma pulito (15/11/2026): il gatto Maudit esce dall\'app (pet.js non è più caricato da index.html)' }, async (t) => {
+test('Maudit toggle: on by default; Off removes renderer, hit target and activity; persists across reload; On restores', async (t) => {
   const h = await start(); if (!h) return t.skip('Playwright unavailable');
   try {
     const view = await open(h, {});
@@ -106,7 +106,7 @@ test('Maudit toggle: on by default; Off removes renderer, hit target and activit
   } finally { await h.close(); }
 });
 
-test('tap pets Maudit, every third tap is happy, and the control underneath is never reached', { skip: 'Il diario, ma pulito (15/11/2026): il gatto Maudit esce dall\'app (pet.js non è più caricato da index.html)' }, async (t) => {
+test('tap pets Maudit, every third tap is happy, and the control underneath is never reached', async (t) => {
   const h = await start(); if (!h) return t.skip('Playwright unavailable');
   try {
     const view = await open(h, {});
@@ -136,7 +136,7 @@ test('tap pets Maudit, every third tap is happy, and the control underneath is n
   } finally { await h.close(); }
 });
 
-test('Maudit never moves: a long press or a drag on it leaves it in its home spot; vertical swipes still scroll', { skip: 'Il diario, ma pulito (15/11/2026): il gatto Maudit esce dall\'app (pet.js non è più caricato da index.html)' }, async (t) => {
+test('Maudit never moves: a long press or a drag on it leaves it in its home spot; vertical swipes still scroll', async (t) => {
   const h = await start(); if (!h) return t.skip('Playwright unavailable');
   try {
     const view = await open(h, { width: 320, height: 568 });
@@ -159,7 +159,7 @@ test('Maudit never moves: a long press or a drag on it leaves it in its home spo
   } finally { await h.close(); }
 });
 
-test('home spot on every tab: one instance, same place, stable listeners/observers, no invisible blocker', { skip: 'Il diario, ma pulito (15/11/2026): il gatto Maudit esce dall\'app (pet.js non è più caricato da index.html)' }, async (t) => {
+test('home spot on every tab: one instance, same place, stable listeners/observers, no invisible blocker', async (t) => {
   const h = await start(); if (!h) return t.skip('Playwright unavailable');
   try {
     const view = await open(h, {});
@@ -199,7 +199,7 @@ test('home spot on every tab: one instance, same place, stable listeners/observe
   } finally { await h.close(); }
 });
 
-test('layering: notices and sheets leave Maudit in place; the keyboard sends it off its spot', { skip: 'Il diario, ma pulito (15/11/2026): il gatto Maudit esce dall\'app (pet.js non è più caricato da index.html)' }, async (t) => {
+test('layering: notices and sheets leave Maudit in place; the keyboard sends it off its spot', async (t) => {
   const h = await start(); if (!h) return t.skip('Playwright unavailable');
   try {
     const view = await open(h, {});
@@ -226,7 +226,7 @@ test('layering: notices and sheets leave Maudit in place; the keyboard sends it 
   } finally { await h.close(); }
 });
 
-test('geometry 320 / 390 / 412 / landscape: inside the viewport, no overflow, every nav tab keeps its tap', { skip: 'Il diario, ma pulito (15/11/2026): il gatto Maudit esce dall\'app (pet.js non è più caricato da index.html)' }, async (t) => {
+test('geometry 320 / 390 / 412 / landscape: inside the viewport, no overflow, every nav tab keeps its tap', async (t) => {
   const h = await start(); if (!h) return t.skip('Playwright unavailable');
   try {
     for (const [width, height] of [[320, 568], [390, 844], [412, 915], [844, 390]]) {
@@ -254,7 +254,7 @@ test('geometry 320 / 390 / 412 / landscape: inside the viewport, no overflow, ev
   } finally { await h.close(); }
 });
 
-test('reduced motion: tap and the toggle still work; no hop', { skip: 'Il diario, ma pulito (15/11/2026): il gatto Maudit esce dall\'app (pet.js non è più caricato da index.html)' }, async (t) => {
+test('reduced motion: tap and the toggle still work; no hop', async (t) => {
   const h = await start(); if (!h) return t.skip('Playwright unavailable');
   try {
     const view = await open(h, { reduced: true });

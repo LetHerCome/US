@@ -17,5 +17,17 @@
 	<array>
 		<string>applinks:www.uscouple.app</string>
 	</array>
+	<!-- Widgets (W0, 14/11/2026): the App Group the widget extension reads. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.app.uscouple.shared</string>
+	</array>
+	<!-- The app's own group stays first, so the app lock keeps its records there;
+	     the shared group holds only the widgets' Ti penso token. -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)app.uscouple</string>
+		<string>$(AppIdentifierPrefix)app.uscouple.shared</string>
+	</array>
 </dict>
 </plist>

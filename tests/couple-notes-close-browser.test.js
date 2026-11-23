@@ -1,4 +1,3 @@
-// Il diario, ma pulito (15/11/2026): the bottom nav is <nav class="dy-nav"> (same buttons, data-page and handlers).
 // Post-it che sparisce (staging, 04/11/2026): every way the open post-it
 // «ciao» can be closed, in the real app with the fake Supabase. None takes it
 // away unless someone empties it by hand and says yes to «Staccare il
@@ -51,7 +50,7 @@ const PATHS = {
   'a tap on another post-it': async (p) => { await open(p); await open(p, 'solo'); await done(p); },
   '«Nuovo post-it» while it is open': async (p) => { await open(p); await p.locator('#usNoiBoardGrid [data-notes-new]').tap(); await p.waitForTimeout(200); await done(p); },
   '«Tutti i post-it», then Back': async (p) => { await open(p); await p.evaluate(() => window.UsCoupleNotes.open()); await p.waitForTimeout(300); await p.evaluate(() => window.UsCoupleNotes.back()); },
-  'another tab and back': async (p) => { await open(p); await p.locator('.dy-nav button[data-page="home"]').tap(); await p.waitForTimeout(400); await p.locator('.dy-nav button[data-page="bond"]').tap(); await p.waitForTimeout(600); await done(p); },
+  'another tab and back': async (p) => { await open(p); await p.locator('.nav button[data-page="home"]').tap(); await p.waitForTimeout(400); await p.locator('.nav button[data-page="bond"]').tap(); await p.waitForTimeout(600); await done(p); },
   'Android Back': async (p) => { await open(p); await p.evaluate(() => window.UsCoupleNotes.back()); await p.waitForTimeout(200); await done(p); },
   'the partner changes it': async (p) => { await open(p); await partner(p, 'ciao', { color: 'pink' }); await done(p); },
   'the partner ticks another one': async (p) => { await open(p); await partner(p, 'spesa', {}); await done(p); },
@@ -76,7 +75,7 @@ test('no way of closing the post-it «ciao» takes it away', async (t) => {
     await p.goto(`${base}/?us-dev=1`, { waitUntil: 'load' });
     await p.waitForFunction(() => window.usProfile && window.UsCoupleNotes?.onChange);
     await p.waitForTimeout(1000);
-    await p.locator('.dy-nav button[data-page="bond"]').tap();
+    await p.locator('.nav button[data-page="bond"]').tap();
     await p.waitForSelector('#usNoiBoardGrid .us-postit[data-note-id="ciao"]');
     return { p, ctx, errors };
   };

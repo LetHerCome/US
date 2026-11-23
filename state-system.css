@@ -13,7 +13,11 @@
 
 @keyframes us-state-sweep{to{transform:translateX(110%)}}
 
-:is(.empty-state,.us-gv2-empty,.us-gv2-error,.us-events-empty,.us-cal-empty,.us-cal-day-empty,.us-album-empty,.conservati-empty,.conservati-error,.left-for-you-empty,.left-for-you-error,.us-settings-empty,.noi-resonance-history-empty){
+:is(
+  .empty-state,.us-gv2-empty,.us-gv2-error,.us-events-empty,.us-cal-empty,.us-cal-day-empty,
+  .us-album-empty,.conservati-empty,.conservati-error,.left-for-you-empty,.left-for-you-error,
+  .us-settings-empty,.noi-resonance-history-empty
+){
   min-height:74px;padding:16px 14px!important;border-radius:18px!important;
   border:var(--us-state-border-soft)!important;background:var(--us-state-bg)!important;
   color:var(--us-color-text-2)!important;box-shadow:none!important;text-align:center
@@ -23,12 +27,20 @@
   border:var(--us-state-error-border)!important;background:var(--us-state-error-bg)!important
 }
 
-:is(.empty-state,.us-gv2-empty,.us-gv2-error,.us-events-empty,.us-cal-empty,.us-album-empty,.conservati-empty,.conservati-error,.left-for-you-empty,.left-for-you-error,.us-settings-empty,.noi-resonance-history-empty) :is(h3,b){
+:is(
+  .empty-state,.us-gv2-empty,.us-gv2-error,.us-events-empty,.us-cal-empty,.us-album-empty,
+  .conservati-empty,.conservati-error,.left-for-you-empty,.left-for-you-error,
+  .us-settings-empty,.noi-resonance-history-empty
+) :is(h3,b){
   color:var(--us-color-text)!important;font-family:var(--us-font-editorial)!important;
   font-size:18px!important;font-weight:500!important;line-height:1.15!important
 }
 
-:is(.empty-state,.us-gv2-empty,.us-gv2-error,.us-events-empty,.us-cal-empty,.us-album-empty,.conservati-empty,.conservati-error,.left-for-you-empty,.left-for-you-error,.us-settings-empty,.noi-resonance-history-empty) :is(p,small,span){
+:is(
+  .empty-state,.us-gv2-empty,.us-gv2-error,.us-events-empty,.us-cal-empty,.us-album-empty,
+  .conservati-empty,.conservati-error,.left-for-you-empty,.left-for-you-error,
+  .us-settings-empty,.noi-resonance-history-empty
+) :is(p,small,span){
   color:var(--us-color-text-2);font-size:11.5px;line-height:1.4
 }
 
@@ -37,26 +49,42 @@
   border:1px solid rgba(255,255,255,.075)!important;text-align:center
 }
 
-:is(.empty-state[aria-busy="true"],.us-gv2-empty[aria-busy="true"],.us-album-loading,.conservati-loading,.left-for-you-loading,.left-for-you-loading-inline,.moment-loading){
+:is(
+  .empty-state[aria-busy="true"],.us-gv2-empty[aria-busy="true"],.us-album-loading,
+  .conservati-loading,.left-for-you-loading,.left-for-you-loading-inline,.moment-loading
+){
   position:relative;overflow:hidden;border-color:rgba(255,255,255,.075)!important;
   background:rgba(255,255,255,.022)!important;color:var(--us-color-text-3)!important;box-shadow:none!important
 }
-:is(.empty-state[aria-busy="true"],.us-gv2-empty[aria-busy="true"],.us-album-loading,.conservati-loading,.left-for-you-loading,.left-for-you-loading-inline,.moment-loading)::after{
+:is(
+  .empty-state[aria-busy="true"],.us-gv2-empty[aria-busy="true"],.us-album-loading,
+  .conservati-loading,.left-for-you-loading,.left-for-you-loading-inline,.moment-loading
+)::after{
   content:"";position:absolute;inset:0;pointer-events:none;transform:translateX(-110%);
   background:linear-gradient(105deg,transparent 24%,rgba(255,255,255,.05) 48%,transparent 72%);
   animation:us-state-sweep 1.55s ease-in-out infinite
 }
 
-:is(.us-gv2-empty,.us-gv2-error,.conservati-error,.left-for-you-error,.us-cal-empty,.noi-idea-error,.us-settings-empty) button{
+:is(
+  .us-gv2-empty,.us-gv2-error,.conservati-error,.left-for-you-error,.us-cal-empty,
+  .noi-idea-error,.us-settings-empty
+) button{
   min-height:44px!important;margin-top:10px;padding:0 14px!important;border-radius:14px!important;
   border:1px solid rgba(255,255,255,.11)!important;background:rgba(255,255,255,.055)!important;
   color:var(--us-color-text)!important;box-shadow:none!important;font:650 11.5px/1 var(--us-font-ui)!important
 }
 
-:is(.auth-status,.us-event-status,.left-for-you-camera-status,.left-for-you-music-search-status,.noi-idea-form-status,.today-outcome-status,.today-keep-status){
+:is(
+  .auth-status,.us-event-status,.us-cal-form-status,.left-for-you-status,.left-for-you-camera-status,
+  .left-for-you-music-search-status,.noi-idea-form-status,.today-outcome-status,.today-keep-status
+){
   min-height:15px;color:var(--us-color-text-3);font-size:10.5px;line-height:1.35
 }
-:is(.left-for-you-camera-status[data-kind="error"],.left-for-you-music-search-status[data-kind="error"],.today-outcome-status.error){color:var(--us-color-danger-ink)!important}
+:is(
+  .left-for-you-status[data-kind="error"],.left-for-you-camera-status[data-kind="error"],
+  .left-for-you-music-search-status[data-kind="error"],.today-outcome-status.error
+){color:var(--us-color-danger-ink)!important}
+.left-for-you-status[data-kind="success"]{color:var(--us-color-positive)!important}
 
 .app-status-bar{
   min-height:44px;padding:9px 12px!important;border-radius:15px!important;
@@ -79,7 +107,10 @@
 :is(.empty-state,.us-gv2-empty,.us-gv2-error,.us-settings-empty)>.emoji{display:none!important}
 
 @media(prefers-reduced-motion:reduce){
-  :is(.empty-state[aria-busy="true"],.us-gv2-empty[aria-busy="true"],.us-album-loading,.conservati-loading,.left-for-you-loading,.left-for-you-loading-inline,.moment-loading)::after{animation:none!important;display:none}
+  :is(
+    .empty-state[aria-busy="true"],.us-gv2-empty[aria-busy="true"],.us-album-loading,
+    .conservati-loading,.left-for-you-loading,.left-for-you-loading-inline,.moment-loading
+  )::after{animation:none!important;display:none}
 }
 
 /* Aggiorna US (app-update.js, 29/10/2026): below the server's minimum version

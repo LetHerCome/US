@@ -31,8 +31,7 @@ test('Foundation 01 conserva quattro tab primarie e Stories fuori dalla bottom n
   const stories = read('stories.js');
 
   ['home', 'bond', 'moments', 'quiz'].forEach((name) => {
-    // Il diario, ma pulito (15/11/2026): each tab draws its own stroke icon inline.
-    assert.match(html, new RegExp(`data-page="${name}"[^>]*><svg class="dy-nav-icon"`));
+    assert.match(html, new RegExp(`data-page="${name}"[\\s\\S]{0,420}us-nav-icon--${name}`));
   });
   assert.match(stories, /us-brand-icon--stories/);
   assert.doesNotMatch(html, /data-page="settings"/, 'Settings resta fuori dalla bottom navigation');
@@ -45,10 +44,6 @@ test('M5E mantiene gli SVG come asset diretti e il build marker allineato', () =
   const version = JSON.parse(read('version.json')).version;
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
 
-  // Il diario, ma pulito (15/11/2026): the nav icons are inline stroke SVGs in the
-  // ink colour (diario.css); the other Phosphor icons still paint from their files.
-  assert.ok(read('styles.css').includes('-webkit-mask-image:url("/assets/icons/phosphor/'));
-  assert.doesNotMatch(css, /\.us-nav-icon \[data-icon\]/);
-  assert.match(read('diario.css'), /\.dy-nav \.dy-nav-icon\{width:22px;height:22px;fill:none;stroke:currentColor;/);
+  assert.ok(css.includes('.us-nav-icon [data-icon]') && css.includes('-webkit-mask-image:url("/assets/icons/phosphor/'));
   assert.equal(build, version, 'build marker e versione devono restare allineati');
 });

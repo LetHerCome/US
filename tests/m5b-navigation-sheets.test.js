@@ -20,12 +20,7 @@ test('la navigazione usa un ingresso direzionale M5B senza riattivare il fade le
   assert.match(app, /isReducedMotion/);
   assert.match(css, /\.page\.active\.us-motion5-enter-next/);
   assert.match(css, /\.page\.active\.us-motion5-enter-prev/);
-  // Il diario, ma pulito (15/11/2026): 260 ms, ±28px and a fade from 0; the timer in app.js waits 280 ms.
-  assert.match(css, /animation:usMotion5PageEnter 260ms cubic-bezier\(\.2,\.8,\.2,1\) both/);
-  assert.match(css, /\.page\.active\.us-motion5-enter-next\{--us-motion5-enter-x:28px\}/);
-  assert.match(css, /\.page\.active\.us-motion5-enter-prev\{--us-motion5-enter-x:-28px\}/);
-  assert.match(css, /from\{opacity:0;transform:translate3d\(var\(--us-motion5-enter-x\),0,0\)\}/);
-  assert.match(app, /\},280\); \/\/ the 260 ms entry of styles\.css, plus a frame/);
+  assert.match(css, /animation:usMotion5PageEnter 240ms var\(--us-ease-enter\) both/);
 });
 
 test('le superfici concordate adottano l opt-in motion', () => {
@@ -33,13 +28,10 @@ test('le superfici concordate adottano l opt-in motion', () => {
   const albums = read('moments-albums.js');
   const foundation = read('ui-foundation.css');
 
-  // Mockup v5 «I fogli» (16/11/2026): the question of today moves in diario.css (.dy-foglio).
-  assert.match(index, /id=["']today["'] class="dy-foglio"/);
-  assert.match(index, /class="dy-foglio" id=["']usSettingsOverlay["']/);
-  ['usEventsOverlay'].forEach((id) => {
+  ['today', 'usEventsOverlay', 'usSettingsOverlay'].forEach((id) => {
     assert.match(index, new RegExp(`id=["']${id}["'][^>]*data-us-motion-surface`));
   });
-  assert.match(albums, /overlay\.className = 'dy-foglio us-moment-compose-overlay'/); // mockup v5 «I fogli»: the one sheet moves itself
+  assert.match(albums, /overlay\.setAttribute\('data-us-motion-surface',\s*''\)/);
   assert.match(index, /id=["']momentViewer["'][^>]*data-us-motion-surface/);
   assert.match(foundation, /\[data-us-motion-surface\]\[data-us-motion-exiting\]/);
   assert.match(foundation, /\[data-us-motion-surface\] \.us-modal-backdrop/);

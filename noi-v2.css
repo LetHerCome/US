@@ -99,7 +99,6 @@
 
 /* ---- Gioca: one premium segmented control for Giochi | Sintonia. ---- */
 #quiz .us-gioca-tabs{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;padding:4px;margin:2px 0 18px;border-radius:var(--us-radius-pill);background:rgba(255,255,255,.05);border:1px solid var(--us-color-line)}
-#quiz .us-gioca-tabs[hidden]{display:none}
 #quiz .us-gioca-tabs::before{content:"";position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:var(--us-radius-pill);background:rgba(255,255,255,.12);box-shadow:0 3px 14px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.08);transition:transform var(--us-motion-surface) var(--us-ease-standard)}
 #quiz .us-gioca-tabs[data-active="sintonia"]::before{transform:translateX(100%)}
 #quiz .us-gioca-tab{position:relative;z-index:1;min-height:42px;border:0;border-radius:var(--us-radius-pill);background:transparent;color:var(--us-color-text-3);font-family:var(--us-font-ui,inherit);font-size:14px;font-weight:700;transition:color var(--us-motion-fast)}

@@ -213,7 +213,6 @@ test('M6D (12): review fixes hold — savedId declared before the branch, cronKe
   assert.match(js(), /let savedId = null; \/\/ M6D/, 'savedId lives in the try scope, before the branch');
   assert.doesNotMatch(js(), /const savedId = Array.isArray(result.data)/, 'no const re-declaration inside the else branch');
   assert.match(worker(), /const cronKey = /, 'cronKey constant is defined before use');
-  // Mockup v5 «I fogli» (16/11/2026): the form's labels are the column labels of the one sheet.
-  assert.match(read('diario.css'), /\.dy-f-lab\{display:flex;flex-direction:column/);
+  assert.match(css(), /.us-cal-field>span{display:block}/);
   assert.doesNotMatch(css(), /.us-cal-reminder-target>span,.us-cal-field>span/);
 });

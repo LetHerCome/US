@@ -181,17 +181,13 @@ test('UI: «Continua con Apple» right after Google, hidden until the iPhone plu
   const css = read('auth-first-run.css');
   assert.match(css, /:is\(#usAppleSignIn,#usAppleSignUp\)\{[^}]*min-height:48px[^}]*background:#fff;color:#000/, 'Apple\'s white button on the dark card');
   assert.match(css, /:is\(#usAppleSignIn,#usAppleSignUp\)\[hidden\]\{display:none\}/);
-  // Il diario, ma pulito (15/11/2026): on paper the button is ink (black on the light page, white on «carta di notte»), as Apple's rules allow.
-  assert.match(read('dc-primo.css'), /html \.auth-overlay :is\(#usAppleSignIn,#usAppleSignUp\)\{[^}]*height:var\(--us-btn-l\)[^}]*background:var\(--us-ink-100\);color:var\(--us-paper\)/);
 });
 
 test('UI: the onboarding starts from the name Apple gave, still editable', () => {
   const onboarding = read('onboarding.js');
   assert.match(onboarding, /node\('mc3Name'\)\.value=me\.name\|\|appleName\(meFor\);/);
   assert.match(onboarding, /saved\.uid===uid&&validName\(saved\.name\)/, 'only for this account, only a valid name');
-  // Il diario, ma pulito (15/11/2026): «Da dove partite?» first, then always «Tu» (name, character, colour, birthday).
-  assert.match(onboarding, /if\(state\.kind==='AUTHENTICATED_NO_PROFILE'\)mode='choice';/, 'every new account starts from «Da dove partite?»');
-  assert.match(onboarding, /node\('mc3ChooseCreate'\)\.addEventListener\('click',\(\)=>\{[^\n]*goTo\('me','mc3Title'\);\}\);/, 'the step with the name and the birthday is never skipped');
+  assert.match(onboarding, /mode=state\.kind==='MEMBER_WAITING_PARTNER'&&justCreated\?'color':me\.name\?'choice':'me';/, 'the step with the birthday is not skipped');
 });
 
 test('deletion and leaving: an Apple account confirms with Apple, in Apple\'s words', async () => {

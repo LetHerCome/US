@@ -94,7 +94,7 @@ test('M9B: una sola autorità — get_daily_state, foglio esistente, niente dupl
   assert.doesNotMatch(app.slice(app.indexOf('function dailyRitualViewModel'), app.indexOf('function renderDailyRitual')), /partner_answer/);
 });
 
-test('M9B: stile premium con icona Phosphor approvata e rispetto di focus/reduced motion', { skip: 'Il diario, ma pulito (15/11/2026): la card M9B della Domanda resta montata nel vecchio hero nascosto; la domanda di Oggi è #dyQuestion e il suo stile è stato potato' }, () => {
+test('M9B: stile premium con icona Phosphor approvata e rispetto di focus/reduced motion', () => {
   const css = read('styles.css');
   // The "Due colori" card replaced the old question mark (us-daily-ritual-mark): its icon rule left with it (25/10 trim).
   assert.doesNotMatch(css, /\.us-daily-ritual-mark::before\{[^}]*question-regular/);

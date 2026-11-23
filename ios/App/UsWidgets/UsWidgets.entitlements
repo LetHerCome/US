@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The widget snapshot and pictures the app writes (DECISIONS.md, Native iOS). -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.app.uscouple.shared</string>
+	</array>
+	<!-- The Ti penso token, shared with the app; never a Supabase session. -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)app.uscouple.shared</string>
+	</array>
+</dict>
+</plist>

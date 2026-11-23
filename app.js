@@ -20,7 +20,7 @@ function animatePageEntry(page,direction){
     if(usEntryTimers.get(page)!==timer)return;
     page.classList.remove(entry);
     usEntryTimers.delete(page);
-  },280); // the 260 ms entry of styles.css, plus a frame
+  },US_MOTION_FAST_MS);
   usEntryTimers.set(page,timer);
 }
 let usPageHydrationTicket=0;
@@ -62,8 +62,6 @@ function go(id,options={}){
     return;
   }
   if(current==='bond')window.closeNoiSection?.();
-  // Impostazioni opens from all four pages; its back arrow returns there (settings.js).
-  if(id==='settings'&&current&&current!=='settings')window.usSettingsFrom=current;
   // Focus Photo is a state of Oggi only: left on, it kept Oggi's widgets inert
   // and the PET hidden on every other page until the user came back and tapped.
   if(current==='home'&&document.getElementById('homeHero')?.classList.contains('us-oggi-focus'))setOggiFocusPhoto(false);
@@ -76,7 +74,7 @@ function go(id,options={}){
     el.classList.toggle('active',pageId===id);
   });
   if(options.nav&&!options.motionCommit&&direction)animatePageEntry(document.getElementById(id),direction);
-  document.querySelectorAll('.dy-nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   if(options.swipe&&!options.motionCommit)setTimeout(()=>document.getElementById(id)?.classList.remove('swipe-next','swipe-prev'),190);
   scrollTo({top:0,behavior:(options.swipe||options.motionCommit)?'auto':'smooth'});
   schedulePageHydration(id);
@@ -165,7 +163,7 @@ function refreshUsIdentityLabels(){
   for(const id of ['noiCoupleCard','noiCouple'])document.getElementById(id)?.setAttribute('aria-label',identity.pairLabel);
   const pair=document.getElementById('usCoupleNames');if(pair){pair.textContent=identity.pairLabel;pair.translate=identity.pairLabel==='Voi due';}
   const ownInitial=document.getElementById('profileAvatarFallback');if(ownInitial)ownInitial.textContent=identity.initialForRole(window.usProfile?.role);
-  const title=document.getElementById('thinkArrivalTitle');if(title)title.innerHTML=`${escapeHtml(identity.partnerName)} <em>ti pensa</em>`;
+  const title=document.getElementById('thinkArrivalTitle');if(title)title.textContent=`${identity.partnerName} ti pensa`;
   window.dispatchEvent(new CustomEvent('us-identity-change',{detail:{identityKey:usCoupleContextState.identityKey}}));
 }
 const usCoupleContextState={couple:null,profiles:[],identityKey:'',generation:0};
@@ -198,11 +196,7 @@ async function hydrateUsCoupleContext(){
   try{
     [coupleResult,profilesResult]=await Promise.all([
       sb.from('couples').select('id,name,started_on,sky_city,sky_minutes,created_at').eq('id',coupleId).maybeSingle(),
-      // character_shape (diario pulito) and the outfit (guardaroba, 20/11/2026) exist after the
-      // staging migrations: without them, read what the server has, as before.
-      sb.from('profiles').select('id,display_name,role,couple_id,person_color,character_shape,character_head,character_face').eq('couple_id',coupleId).order('created_at',{ascending:true})
-        .then(r=>r?.error?sb.from('profiles').select('id,display_name,role,couple_id,person_color,character_shape').eq('couple_id',coupleId).order('created_at',{ascending:true}):r)
-        .then(r=>r?.error?sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true}):r)
+      sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true})
     ]);
   }catch(error){
     if(window.usProfile===profile&&window.usProfile?.couple_id===coupleId&&generation===usCoupleContextState.generation)clearUsCoupleContext();
@@ -353,9 +347,8 @@ window.UsWidgetDataApi=Object.freeze({
     const out=[];
     let avoid=homePhotoPath;
     for(let hour=1;hour<=2;hour++){
-      // One photo a day: in the next two hours it changes only past midnight.
-      const row=homeDayPick(rows,homeDayKey(new Date(Date.now()+hour*3600e3)),{now:Date.now()+hour*3600e3});
-      if(!row?.storage_path||row.storage_path===avoid)continue;
+      const row=homeRotationPick(rows,homeRotationKey(new Date(Date.now()+hour*3600e3)),avoid);
+      if(!row?.storage_path)break;
       const url=await usGetSignedUrl(row.storage_path,3600);
       if(window.usProfile!==viewer||epoch!==usAuthEpoch||!url)return out;
       out.push({id:row.id,path:row.storage_path,url,takenOn:row.moment_date||'',label:row.place_label||row.caption||''});
@@ -788,55 +781,6 @@ async function enableWebPush(){
 }
 window.enableWebPush=enableWebPush;
 
-// Il diario, ma pulito (founder, 15/11/2026): «Ti avviso quando entra?» on the
-// invite. Who waits for the partner is already a member of the couple (the
-// only thing the push registrations ask the server), so the same flows run
-// here before the shell exists: the native one (notifications.js) for this
-// member, the browser one with the same subscription and the same RPC.
-async function usWaitingPushWanted(profile){
-  if(!profile?.id||!profile.couple_id)return false;
-  if(window.UsNotifications?.supported?.()){
-    try{await window.UsNotifications.authReady(profile);}catch(_e){return false;}
-    try{const state=await window.UsNotifications.getState();return state?.kind==='inactive';}catch(_e){return false;}
-  }
-  if(!isWebPushSupported()||(isIosDevice()&&!isStandaloneUs())||Notification.permission==='denied')return false;
-  if(Notification.permission!=='granted')return true;
-  const subscription=await getCurrentPushSubscription();
-  if(!subscription)return true;
-  try{return localStorage.getItem(`us:push:subscription:${profile.id}`)===null;}catch(_e){return true;}
-}
-async function usEnableWaitingPush(profile){
-  if(!profile?.id||!profile.couple_id)return {ok:false,kind:'unavailable'};
-  if(window.UsNotifications?.supported?.()){
-    try{await window.UsNotifications.authReady(profile);return await window.UsNotifications.enable();}
-    catch(_e){return {ok:false,kind:'error'};}
-  }
-  if(!isWebPushSupported())return {ok:false,kind:'unavailable'};
-  if(usPushUiBusy)return {ok:false,kind:'busy'};
-  usPushUiBusy=true;
-  try{
-    let permission=Notification.permission;
-    if(permission==='default')permission=await Notification.requestPermission();
-    if(permission!=='granted')return {ok:false,kind:'denied'};
-    const reg=await getUsServiceWorkerRegistration();
-    if(!reg)return {ok:false,kind:'unavailable'};
-    const subscription=await reg.pushManager.getSubscription()||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(US_VAPID_PUBLIC_KEY)});
-    const json=subscription.toJSON();
-    if(usRetiredWebPush().some(entry=>entry.endpoint===json.endpoint))return {ok:false,kind:'error'};
-    const {error}=await sb.rpc('register_web_push_subscription',{
-      target_endpoint:json.endpoint,
-      target_p256dh:json.keys?.p256dh||'',
-      target_auth:json.keys?.auth||'',
-      target_expiration_time:json.expirationTime??null,
-      target_user_agent:(navigator.userAgent||'').slice(0,500)
-    });
-    if(error){console.warn('[US Push] waiting subscription failed',error);return {ok:false,kind:'network'};}
-    try{localStorage.setItem(`us:push:subscription:${profile.id}`,JSON.stringify([json.endpoint,json.keys?.p256dh||'',json.keys?.auth||'',json.expirationTime??null]));}catch(_e){}
-    return {ok:true,kind:'active'};
-  }catch(error){console.warn('[US Push] waiting enable failed',error);return {ok:false,kind:'error'};}
-  finally{usPushUiBusy=false;}
-}
-
 async function disableWebPush(options={}){
   const silent=options?.silent===true;
   const priorOperation=Object.hasOwn(options,'waitForOperation')?options.waitForOperation:usPushOperationInFlight;
@@ -1043,8 +987,6 @@ const usOnboarding=window.UsOnboarding.mount({
   // the "Tu" step is one yearly event, through the same insert as events.js.
   openStep:id=>showAuthStep(id),
   insertEvent:row=>sb.from('shared_events').insert(row),
-  // «Ti avviso quando entra?» on the invite (Il diario, ma pulito, 15/11/2026).
-  waitingPush:{wanted:profile=>usWaitingPushWanted(profile),enable:profile=>usEnableWaitingPush(profile)},
   // Waiting for the partner (09/11/2026): today's question on the invite
   // screen, through the same RPC and the same answer row as Oggi (saveAnswer).
   daily:{
@@ -1257,10 +1199,7 @@ async function initCloud(){
       // phone: its notifications and widgets stay. Only a real answer (no couple,
       // an account that may not enter) retires them.
       if(!result.transient){
-        // Il diario, ma pulito (15/11/2026): who waits for the partner is a
-        // member of the couple and may have said yes to «Ti avviso quando
-        // entra?» on the invite: this phone's notifications stay.
-        if(result.kind!=='MEMBER_WAITING_PARTNER')window.UsNotifications?.signedOut?.();
+        window.UsNotifications?.signedOut?.();
         window.UsWidgets?.clear?.().catch(()=>{});
       }
       window.usProfile = null;
@@ -1339,12 +1278,13 @@ function setAuthStatus(id,message='',kind='neutral'){
 window.setAuthStatus=setAuthStatus;
 
 function showAuthStep(id){
-  // Il diario, ma pulito (15/11/2026): the steps change at once (the mockup
-  // moves only the characters).
+  // The step on screen leaves as in the design; the page itself switches now.
+  window.UsOnboarding?.authSwap?.(id);
   if(id!=='authLogin')usOnboarding.tour?.close?.();
   document.querySelectorAll('.auth-step').forEach(x=>x.classList.remove('active'));
   const next=document.getElementById(id);
   if(next)next.classList.add('active');
+  window.UsOnboarding?.authArrive?.(id);
   window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
 }
 
@@ -1980,52 +1920,14 @@ function homeStableIndex(seed,count){
   return count?((h>>>0)%count):0;
 }
 
-// La foto del giorno (founder, 20/11/2026: «le foto che scorrono hanno poco
-// senso»): one photo for the whole day, chosen for a reason, on both phones
-// alike. First a Ricordo of this very day in a past year (the nearest year),
-// then one just added (the last 36 hours), else one of your Ricordi that
-// stays the whole day. Photos hidden on this phone («Non mostrarla più in
-// Oggi») are skipped. The sentence on the photo says why (diario.js).
-function homeDayKey(d=new Date()){
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-// The same day in the ten years before (29 February only when it exists).
-function homeAnniversaryDates(day=homeDayKey()){
-  const [y,m,d]=day.split('-').map(Number),out=[];
-  for(let k=1;k<=10;k++){const t=new Date(y-k,m-1,d);if(t.getMonth()===m-1)out.push(homeDayKey(t));}
-  return out;
-}
-const US_OGGI_HIDDEN_KEY='us:oggi:hidden-photos:v1:';
-function homeHiddenPhotos(){
-  try{const list=JSON.parse(localStorage.getItem(US_OGGI_HIDDEN_KEY+(window.usProfile?.couple_id||''))||'[]');return new Set(Array.isArray(list)?list:[]);}catch(_e){return new Set();}
-}
-function homeHidePhoto(id){
-  if(!id||!window.usProfile?.couple_id)return;
-  const list=[...homeHiddenPhotos()].filter(x=>x!==id);list.push(id);
-  try{localStorage.setItem(US_OGGI_HIDDEN_KEY+window.usProfile.couple_id,JSON.stringify(list.slice(-500)));}catch(_e){}
-}
-function homeDayPick(rows,day=homeDayKey(),{now=Date.now(),hidden=homeHiddenPhotos()}={}){
-  const all=(rows||[]).filter(r=>r?.storage_path);
-  const usable=all.filter(r=>!hidden.has(r.id));
-  const pool=usable.length?usable:all;
-  if(!pool.length)return null;
-  const dates=homeAnniversaryDates(day);
-  for(const date of dates){
-    const same=pool.filter(r=>r.moment_date===date);
-    if(same.length)return same[homeStableIndex(`${window.usProfile?.couple_id}|${day}|year`,same.length)];
-  }
-  const fresh=pool.filter(r=>{const t=Date.parse(r.created_at||'');return Number.isFinite(t)&&now-t<36*3600e3&&now-t>=0;})
-    .sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
-  if(fresh.length)return fresh[0];
-  return pool[homeStableIndex(`${window.usProfile?.couple_id}|${day}|home`,pool.length)];
-}
-function homeRotationPick(rows,key){
-  return homeDayPick(rows,String(key||'').slice(0,10)||homeDayKey());
+// The hour's Ricordo, never the one just shown. Foto & giorni (widget) asks
+// the same for the next two hours, so it changes with Oggi while US is closed.
+function homeRotationPick(rows,key,avoid){
+  let idx=homeStableIndex(`${window.usProfile.couple_id}|${key}|home`,rows.length);
+  if(rows.length>1&&rows[idx]?.storage_path===avoid)idx=(idx+1)%rows.length;
+  return rows[idx]||null;
 }
 
-// The Ricordi read for the photo of the day, kept for «the next one» (a tap on
-// the photo, diario.js) and for the sentence of the day.
-let usHomePhotoRows=[];
 async function getHomeRotationPath(){
   if(!window.usProfile)return null;
   const viewer=window.usProfile,epoch=usAuthEpoch;
@@ -2037,21 +1939,9 @@ async function getHomeRotationPath(){
     .limit(120);
   if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
   if(error){console.warn(error);return undefined;}
-  let years=[];
   if(rows?.length){
-    const {data:older,error:olderError}=await sb.from('moments')
-      .select('id,storage_path,moment_date,created_at,caption,created_by,place_label')
-      .eq('couple_id',window.usProfile.couple_id)
-      .in('moment_date',homeAnniversaryDates())
-      .limit(40);
-    if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
-    if(olderError)console.warn(olderError);else years=Array.isArray(older)?older:[];
-  }
-  const seenIds=new Set((rows||[]).map(r=>r.id));
-  usHomePhotoRows=[...(Array.isArray(rows)?rows:[]),...years.filter(r=>!seenIds.has(r.id))];
-  if(usHomePhotoRows.length){
-    const row=homeDayPick(usHomePhotoRows);
-    usHomePhotoMeta=row?.storage_path?{id:row.id,path:row.storage_path,caption:row.caption||'',date:row.moment_date||'',author:row.created_by||'',place:row.place_label||''}:null;
+    const row=homeRotationPick(rows,homeRotationKey(),homePhotoPath);
+    usHomePhotoMeta=row?.storage_path?{path:row.storage_path,caption:row.caption||'',date:row.moment_date||'',author:row.created_by||'',place:row.place_label||''}:null;
     return row?.storage_path||null;
   }
   const {data:couple,error:coupleError}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
@@ -2173,63 +2063,6 @@ async function hydrateHomePhoto(force=false){
   crossfadeHomePhoto(signedUrl,{path,hourKey});
 }
 window.hydrateHomePhoto=hydrateHomePhoto;
-// Il diario, ma pulito (diario.js): the photo Oggi shows now, with what US
-// knows of it, and the next Ricordo on a tap. Same signing and crossfade.
-function usOggiPhotoMeta(){
-  if(!homePhotoPath)return null;
-  if(usHomePhotoMeta?.path===homePhotoPath)return usHomePhotoMeta;
-  const row=usHomePhotoRows.find(r=>r?.storage_path===homePhotoPath);
-  return row?{id:row.id,path:row.storage_path,caption:row.caption||"",date:row.moment_date||"",author:row.created_by||"",place:row.place_label||""}:null;
-}
-function usOggiPhotoCurrent(){
-  const layer=document.getElementById(`homePhotoLayer${homePhotoActiveLayer}`);
-  const bg=String(layer?.style?.backgroundImage||"");
-  const url=bg.startsWith("url(")?bg.slice(4,-1).replace(/^["']|["']$/g,""):"";
-  return {url:homePhotoHasPainted?url:"",path:homePhotoPath||"",meta:usOggiPhotoMeta()};
-}
-async function usOggiPhotoNext(){
-  const viewer=window.usProfile,epoch=usAuthEpoch,rows=usHomePhotoRows.filter(row=>row?.storage_path);
-  if(!viewer||rows.length<2)return false;
-  const at=rows.findIndex(row=>row.storage_path===homePhotoPath);
-  const row=rows[(at+1)%rows.length];
-  const url=await usGetSignedUrl(row.storage_path,US_MEDIA_URL_TTL_S);
-  if(window.usProfile!==viewer||epoch!==usAuthEpoch||!url)return false;
-  usHomePhotoMeta={id:row.id,path:row.storage_path,caption:row.caption||"",date:row.moment_date||"",author:row.created_by||"",place:row.place_label||""};
-  crossfadeHomePhoto(url,{path:row.storage_path,hourKey:homeRotationKey()});
-  return true;
-}
-// The photo may come from the boot cache (no read of Ricordi yet): read the
-// rows once, so its caption, its author and «the next one» are known.
-let usOggiPhotoLoading=null;
-function usOggiPhotoLoad(){
-  if(usOggiPhotoLoading||!window.usProfile)return usOggiPhotoLoading;
-  usOggiPhotoLoading=getHomeRotationPath().then(()=>{window.dispatchEvent(new Event("us:home-photo-changed"));}).catch(()=>{}).finally(()=>{usOggiPhotoLoading=null;});
-  return usOggiPhotoLoading;
-}
-// The photo's Ricordo, opened in Ricordi (its grid may still be loading).
-function usOggiPhotoOpen(){
-  const meta=usOggiPhotoMeta();
-  const id=meta?.id||usHomePhotoRows.find(r=>r?.storage_path===homePhotoPath)?.id;
-  if(!id)return false;
-  const find=()=>[...document.querySelectorAll('#momentsGrid .moment-card[data-moment-id]')].find(c=>c.dataset.momentId===id);
-  go('moments',{nav:true});
-  let tries=0;
-  const attempt=()=>{const card=find();if(card){card.click();return;}if(++tries<30)setTimeout(attempt,100);};
-  setTimeout(attempt,60);
-  return true;
-}
-// «Non mostrarla più in Oggi» (on this phone): the Ricordo stays in Ricordi.
-async function usOggiPhotoHide(){
-  const meta=usOggiPhotoMeta();
-  const id=meta?.id||usHomePhotoRows.find(r=>r?.storage_path===homePhotoPath)?.id;
-  if(!id)return false;
-  const ok=await usConfirm({title:'Non mostrarla più in Oggi?',body:'Resta nei vostri Ricordi. Su questo telefono, in Oggi, non tornerà.',kicker:'OGGI',confirmLabel:'Non mostrarla'});
-  if(!ok)return false;
-  homeHidePhoto(id);
-  await hydrateHomePhoto(true);
-  return true;
-}
-window.UsOggiPhoto=Object.freeze({current:usOggiPhotoCurrent,next:usOggiPhotoNext,open:usOggiPhotoOpen,hide:usOggiPhotoHide,load:usOggiPhotoLoad,rows:()=>usHomePhotoRows.slice(),pick:(...a)=>homeDayPick(...a),dayKey:(...a)=>homeDayKey(...a)});
 
 function startHomePhotoRotation(){
   if(homePhotoRotationTimer)clearInterval(homePhotoRotationTimer);
@@ -2767,17 +2600,10 @@ function renderTodayPriorityItem(item,total=0){
   if(!region)return;
   if(!item){region.innerHTML='';region.hidden=true;return;}
   const queueLabel=total>1?` · 1/${total}`:'';
-  // A Ti penso received: the partner's character, the heart, «Ricambia» (mockup v4.1).
-  if(item.arrivalType==='think-received'&&window.UsDiario?.character){
-    const role=window.usProfile?.role==='beatrice'?'francesco':'beatrice';
-    region.innerHTML=`<div class="dy-notice dy-notice-think" data-us-attention="on" data-us-arrival-type="think-received"><span class="dy-stk">${window.UsDiario.character(role,{size:40,mood:'occhiolino'})}</span><span class="dy-notice-copy"><b><svg viewBox="0 0 256 256" width="14" height="14" aria-hidden="true" focusable="false"><path fill="#FF5477" d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/></svg>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><button type="button" class="dy-btn dy-btn-m" data-us-today-action="think-back">${escapeHtml(item.actionLabel)}</button></div>`;
-    region.hidden=false;
-    return;
-  }
-  const card=`<button type="button" class="dy-notice" data-us-attention="${item.attention?'on':'off'}" data-us-today-action="${escapeHtml(item.action)}" data-us-arrival-type="${escapeHtml(item.arrivalType||item.category||'arrival')}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="dy-notice-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}${queueLabel}</span><span class="dy-notice-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="dy-notice-action">${escapeHtml(item.actionLabel)}</span></button>`;
+  const card=`<button type="button" class="us-today-priority-card us-attention-orbit" data-us-attention="${item.attention?'on':'off'}" data-us-today-action="${escapeHtml(item.action)}" data-us-arrival-type="${escapeHtml(item.arrivalType||item.category||'arrival')}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="us-today-priority-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}${queueLabel}</span><span class="us-today-priority-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="us-today-priority-action">${escapeHtml(item.actionLabel)}</span></button>`;
   // M10.2 — avviso nascondibile: swipe orizzontale O bottone accessibile, stessa autorità.
   region.innerHTML=item.dismissLabel
-    ?`<div class="dy-notice-swipe" data-us-swipe-item data-us-question-id="${escapeHtml(item.questionId||'')}">${card}<button type="button" class="dy-notice-dismiss" data-us-today-dismiss aria-label="${escapeHtml(item.dismissLabel)}"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>`
+    ?`<div class="us-today-priority-swipe has-dismiss" data-us-swipe-item data-us-question-id="${escapeHtml(item.questionId||'')}">${card}<button type="button" class="us-today-priority-dismiss" data-us-today-dismiss aria-label="${escapeHtml(item.dismissLabel)}"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>`
     :card;
   region.hidden=false;
 }
@@ -2814,13 +2640,11 @@ function thinkTodayPriorityViewModel(now=Date.now()){
     // M10E.3 — un Ti penso ricevuto e non ancora gestito (nessuna reazione
     // finale) è un'azione reale per CHI lo riceve.
     attention:true,
-    // Il diario, ma pulito (mockup v4.1): «<nome> ti ha pensato», with their
-    // character, and «Ricambia» sends a Ti penso back.
-    title:`${partner?.display_name||'La tua persona'} ti ha pensato`,
-    detail:Number.isFinite(at)?`alle ${new Date(at).toLocaleTimeString((globalThis.UsI18n?.tag||'it-IT'),{hour:'2-digit',minute:'2-digit'})}`:(age||'Ti ha mandato un Ti penso.'),
+    title:`${partner?.display_name||'La tua persona'} ti pensa`,
+    detail:age||'Ti ha mandato un Ti penso.',
     recency:Number.isFinite(at)?at:0,
-    action:'think-back',
-    actionLabel:'Ricambia'
+    action:'think',
+    actionLabel:'Apri'
   };
 }
 // L4 — something new in Lasciato per te. The envelope (left-for-you.js) is the
@@ -2895,7 +2719,7 @@ function oggiTodayISO(){
 // F2 — a dot on the Oggi tab while the other is waiting for me: the Domanda di
 // oggi they already answered, a game round, the other one's photo of the challenge.
 function renderToccaATe({daily=false,game=false,challenge=false}={}){
-  const tab=document.querySelector?.('.dy-nav button[data-page="home"]');
+  const tab=document.querySelector?.('.nav button[data-page="home"]');
   if(!tab)return false;
   const on=Boolean(daily||game||challenge);
   if(on)tab.setAttribute('data-us-tocca','on');else tab.removeAttribute('data-us-tocca');
@@ -3134,8 +2958,6 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   // M9B: la Domanda di oggi ha la sua card su Oggi (renderDailyRitual):
   // non entra nella coda priority, così non compare due volte.
   renderDailyRitual(dailyRitualViewModel(dailySource));
-  // Il diario, ma pulito: the question card of Oggi (diario.js) reads the same source.
-  window.UsDiario?.paintQuestion?.(dailySource);
   // M10.2 — "Risposte pronte": piccolo avviso personale, mai la card Daily.
   const revealNotice=dailyTodayPriorityViewModel(dailySource);
   if(revealNotice)candidates.push(revealNotice);
@@ -3200,7 +3022,6 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
   if(action==='today')window.openToday?.();
   if(action==='events')window.openEvents?.();
   if(action==='think')window.openThinkArrival?.();
-  if(action==='think-back')window.sendThinkSignal?.();
   if(action==='left')window.openLeftForYou?.();
   if(action==='game'){
     // The round itself lives in Gioca: open the hub, then that round.
@@ -3485,7 +3306,7 @@ function renderThinkReactionUi(){
   const buttons=root.querySelectorAll('[data-think-reaction]');
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
   // Momento: the name on one line, "ti pensa" in italic in their colour (same words).
-  if(title)title.innerHTML=`<span${partner?.display_name?' translate="no"':''}>${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>ti pensa</em>`;
+  if(title)title.innerHTML=`<span class="think-arrival-name"${partner?.display_name?' translate="no"':''}>${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>ti pensa</em>`;
   // Mockup: when it arrived, in plain words ("adesso", "5 min fa").
   if(copy){const at=usIncomingThink?.created_at;const fresh=at&&Date.now()-Date.parse(at)<60000;copy.textContent=at?(fresh?'adesso':relativeSignalAge(at)):'';copy.hidden=!copy.textContent;}
   buttons.forEach(button=>{
@@ -3502,10 +3323,6 @@ function openThinkArrival(){
   window.UsUiFoundation?.cancelSurfaceExit?.(root);
   root.classList.add('open');
   root.setAttribute('aria-hidden','false');
-  // Mockup v5 «I fogli»: who thought of you winks and hops once, the heart
-  // pops: «it arrived». Drawn on opening only, so a reaction does not replay it.
-  const who=document.getElementById('thinkArrivalWho'),D=window.UsDiario;
-  if(who)who.innerHTML=D?.character&&D.roles?`<span class="dy-stk dy-hop">${D.character(D.roles().partnerRole,{size:96,mood:'occhiolino'})}</span><span class="dy-think-heart"><svg viewBox="0 0 256 256"><path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/></svg></span>`:'';
   renderThinkReactionUi();
 }
 window.openThinkArrival=openThinkArrival;
@@ -3575,12 +3392,12 @@ function dailyKeepsakeRuntime(){
   const active=()=>Boolean(state.owner===identity()&&state.questionId&&state.questionId===window.todayQuestion?.id&&window.todayState?.both_answered);
   // Mockup #sheetReveal: Conserva (sparkle) → Conservo… → ✓ Conservato nei
   // Ricordi, with one line under it that says where it goes.
-  const note='<p class="dy-f-note today-keep-note">Conservata, la domanda di oggi resta nei vostri Ricordi.</p>';
+  const note='<p class="today-keep-note">Conservata, la domanda di oggi resta nei vostri Ricordi.</p>';
   let fresh=false;
   const view=()=>{
-    if(state.status==='kept'){const html=`<p class="dy-f-note today-keep-done${fresh?' is-fresh':''}" role="status"><span class="us-icon" data-us-icon="check" aria-hidden="true"></span>Conservato nei Ricordi</p>${note}`;fresh=false;return html;}
+    if(state.status==='kept'){const html=`<p class="today-keep-done${fresh?' is-fresh':''}" role="status"><span class="us-icon" data-us-icon="check" aria-hidden="true"></span>Conservato nei Ricordi</p>${note}`;fresh=false;return html;}
     const saving=state.status==='saving',failed=state.status==='error';
-    return `<button type="button" class="dy-btn dy-btn-l dy-btn-ghost today-keep-button" data-us-daily-keep ${saving?'disabled aria-busy="true"':''}>${saving?'Conservo…':failed?'Riprova':'Conserva'}</button>${failed?'<p class="dy-f-note today-keep-status" role="status">Non conservata. Riprova quando torni online.</p>':note}`;
+    return `<button type="button" class="today-keep-button" data-us-daily-keep ${saving?'disabled aria-busy="true"':''}>${saving?'Conservo…':failed?'Riprova':'Conserva'}</button>${failed?'<p class="today-keep-status" role="status">Non conservata. Riprova quando torni online.</p>':note}`;
   };
   const render=()=>{
     const root=document.getElementById('todayKeep');
@@ -3673,7 +3490,6 @@ function renderTodayQuestionUnavailable(status){
     btn.dataset.usTodayMode=failed?'retry':'loading';
     btn.hidden=!failed; btn.disabled=!failed; btn.textContent=failed?'Riprova':'Un attimo…';
   }
-  paintTodayPeople('none');
 }
 // M10.2 — reveal Daily: risposte da get_daily_state (invariata), stato PERSONALE
 // (ricevuta, avviso nascosto, reazione) da get_daily_reveal_meta. Il server è
@@ -3699,50 +3515,21 @@ function dailyPartnerReactionLine(meta,partner){
   if(meta?.partner_reaction==='cry')return `${partner}: mi hai fatto commuovere`;
   return '';
 }
-let usTodayRevealDrawn='',usTodayRevealFocused='';
-// Il diario, ma pulito (fogli, 16/11/2026): who is in the sheet of the
-// question. Your character beside your answer; the other beside theirs,
-// blurred until you answer (their words never reach this phone before), or
-// asleep while they have not answered. 'none' while loading and on reveal.
-function paintTodayPeople(mode,text){
-  const D=window.UsDiario;
-  const mine=document.getElementById('todayMine'),me=document.getElementById('todayMe');
-  const them=document.getElementById('todayPartner'),answerEl=document.getElementById('answer');
-  if(mine)mine.hidden=Boolean(answerEl?.hidden);
-  if(me)me.innerHTML=D?.character&&D.roles?D.character(D.roles().myRole,{size:30}):'';
-  if(them){
-    const html=!D?.sign||mode==='none'?''
-      :mode==='answered'?D.sign('partner','felice','<div class="dy-f-sign-body"><span class="dy-q-blur" aria-hidden="true"><span class="dy-hl" style="--c:var(--us-partner-hl)">la sua risposta si apre dopo la tua</span></span></div>')
-      :D.sign('partner','dorme',`<span class="dy-f-wait">${escapeHtml(text||'')}</span>`);
-    them.innerHTML=html;them.hidden=!html;
-  }
-  // Waiting for the other: changing your answer is the quiet action.
-  const save=document.getElementById('todaySaveBtn')?.classList;
-  if(save)save[mode==='asleep'&&window.todayState?.my_answer?'add':'remove']('dy-btn-ghost');
-}
+let usTodayRevealDrawn='';
 function renderTodayReveal(){
   const reveal=document.getElementById('todayReveal'),state=window.todayState;
   if(!reveal||!state?.both_answered)return;
   const partner=dailyRevealPartnerLabel(),meta=window.todayRevealMeta;
   const mine=US_DAILY_REACTIONS[meta?.my_reaction]?meta.my_reaction:null;
   const felt=dailyPartnerReactionLine(meta,partner);
-  const note=felt?`<p class="dy-f-note today-reaction-note" data-us-daily-partner-reaction="${escapeHtml(meta.partner_reaction)}">${escapeHtml(felt)}</p>`:'';
+  const note=felt?`<p class="today-reaction-note" data-us-daily-partner-reaction="${escapeHtml(meta.partner_reaction)}">${escapeHtml(felt)}</p>`:'';
   // Without the personal meta (offline) there is nothing to react on.
-  const controls=meta?`<div class="dy-f-react today-reactions" role="group" aria-label="La tua reazione"><button type="button" class="dy-btn dy-btn-s dy-btn-ghost dy-hit today-reaction" data-daily-reaction="heart" aria-label="${escapeHtml(US_DAILY_REACTIONS.heart.label)}" aria-pressed="${mine==='heart'}"><span class="us-icon" data-us-icon="${mine==='heart'?'heart-fill':'heart'}" aria-hidden="true"></span></button><button type="button" class="dy-btn dy-btn-s dy-btn-ghost dy-hit today-reaction today-reaction--words" data-daily-reaction="cry" aria-pressed="${mine==='cry'}">${escapeHtml(US_DAILY_REACTIONS.cry.label)}</button></div>`:'';
-  reveal.className='dy-f-body today-reveal today-reveal--simple';
-  // Mockup v5 «I fogli»: each answer signed by who wrote it, in their
-  // highlighter; the other's comes into focus the first time it opens.
-  const qid=window.todayQuestion?.id||'',fresh=usTodayRevealFocused!==qid;
-  const answer=(who,text,cls)=>{
-    const body=`<div class="dy-f-sign-body"><span class="${cls}"><span class="dy-hl" style="--c:var(--us-${who==='me'?'tu':'partner'}-hl)" translate="no">${escapeHtml(text)}</span></span></div>`;
-    return window.UsDiario?.sign?window.UsDiario.sign(who,'felice',body):body;
-  };
-  const html='<div class="today-answer" data-us-daily-answer="mine" aria-label="Tu">'+answer('me',state.my_answer||'','')+note+'</div>'+
-    '<div class="today-answer" data-us-daily-answer="partner" aria-label="'+escapeHtml(partner)+'">'+answer('partner',state.partner_answer||'','')+controls+'</div>';
+  const controls=meta?`<div class="today-reactions" role="group" aria-label="La tua reazione"><button type="button" class="today-reaction" data-daily-reaction="heart" aria-label="${escapeHtml(US_DAILY_REACTIONS.heart.label)}" aria-pressed="${mine==='heart'}"><span class="us-icon" data-us-icon="${mine==='heart'?'heart-fill':'heart'}" aria-hidden="true"></span></button><button type="button" class="today-reaction today-reaction--words" data-daily-reaction="cry" aria-pressed="${mine==='cry'}">${escapeHtml(US_DAILY_REACTIONS.cry.label)}</button></div>`:'';
+  reveal.className='today-reveal today-reveal--simple';
+  const html='<div class="today-answer" data-us-daily-answer="mine"><b>Tu</b><p translate="no">'+escapeHtml(state.my_answer||'')+'</p>'+note+'</div>'+
+    '<div class="today-answer" data-us-daily-answer="partner"><b translate="no">'+escapeHtml(partner)+'</b><p translate="no">'+escapeHtml(state.partner_answer||'')+'</p>'+controls+'</div>';
   // The same drawing stays: the heart animating on the button is not cut by the server's reply.
-  if(usTodayRevealDrawn===html&&reveal.firstElementChild)return;usTodayRevealDrawn=html;
-  reveal.innerHTML=fresh?html.replace('<span class=""><span class="dy-hl" style="--c:var(--us-partner-hl)"','<span class="dy-q-unblur"><span class="dy-hl" style="--c:var(--us-partner-hl)"'):html;
-  usTodayRevealFocused=qid;
+  if(usTodayRevealDrawn===html&&reveal.firstElementChild)return;usTodayRevealDrawn=html;reveal.innerHTML=html;
 }
 // Il cuore (founder, 29/10/2026): one animation for every heart given; every third is the big one.
 function usHeartLike(button){const turn=window.UsUiFoundation?.heartTurn?.(window.usProfile?.id);window.UsUiFoundation?.heart?.(button,{big:Boolean(turn?.big)});}
@@ -3889,20 +3676,19 @@ async function hydrateToday(){
   delete btn.dataset.usTodayMode;
   if(state?.my_answer&&!hasDraft){
     document.getElementById('answer').value=state.my_answer;
-    btn.textContent='Aggiorna la risposta';
+    btn.textContent='Aggiorna risposta';
   }else{
-    btn.textContent='Rispondi';
+    btn.textContent='Invia la mia risposta';
   }
   // The sheet's eyebrow names what it shows (mockup): the question, then the two answers.
-  const head=document.getElementById('todayTitle');
-  if(head)head.innerHTML=state?.both_answered?'Le vostre <em>risposte</em>':'La domanda <em>di oggi</em>';
+  const head=document.querySelector('#today .today-sheet-head h2');
+  if(head)head.textContent=state?.both_answered?'Le vostre risposte':'La domanda di oggi';
   if(state?.both_answered){
     // Reveal is strictly question + two answers. Do not leave a duplicate,
     // disabled composer or "Risposte sbloccate" banner above the real answers.
     locked.hidden=true;locked.textContent='';
     answerEl.hidden=true;answerEl.disabled=true;
     btn.hidden=true;btn.disabled=true;
-    paintTodayPeople('none');
     // M10.2 — stato personale (ricevuta, avviso, reazioni) dal server; mai testo qui.
     renderTodayReveal();
     const meta=await loadDailyRevealMeta(q.id);
@@ -3918,23 +3704,18 @@ async function hydrateToday(){
   }else{
     locked.hidden=false;
     answerEl.hidden=false;answerEl.disabled=false;btn.hidden=false;btn.disabled=todayAnswerIsSaving();
-    btn.textContent=todayAnswerIsSaving()?'Salvo…':state.my_answer?'Aggiorna la risposta':'Rispondi';
+    btn.textContent=todayAnswerIsSaving()?'Salvo…':state.my_answer?'Aggiorna risposta':'Invia la mia risposta';
     window.todayRevealMeta=null;
     reveal.classList.add('hidden');reveal.innerHTML='';
     window.UsDailyKeepsake?.hide?.();
-    // Mockup v5 «I fogli»: who is waiting is drawn (the other asleep, or
-    // their answer already there and blurred), and one line under it.
+    // Mockup: a dot in the colour of whoever the line is about, then plain words.
     const partner=usIdentity().partnerName;
-    const lock=window.UsDiario?.icon?.('lock')||'';
     if(state?.my_answer){
-      locked.innerHTML='';
-      paintTodayPeople('asleep',`Aspettiamo ${partner}. Quando risponde ti arriva un avviso e le due risposte si aprono.`);
+      locked.innerHTML='<span class="dot" data-who="tu" aria-hidden="true"></span><span>'+escapeHtml(`Hai risposto. In attesa di ${partner}…`)+'</span>';
     }else if(state?.partner_has_answer){
-      locked.innerHTML=lock+'<span>'+escapeHtml(`${partner} ha risposto. Le due risposte si aprono insieme quando rispondi.`)+'</span>';
-      paintTodayPeople('answered');
+      locked.innerHTML='<span class="dot" data-who="partner" aria-hidden="true"></span><span>'+escapeHtml(`${partner} ha già risposto. Vedrete le risposte insieme appena invii la tua.`)+'</span>';
     }else{
-      locked.innerHTML=lock+'<span>Una domanda, due risposte: si aprono insieme.</span>';
-      paintTodayPeople('asleep',`${partner} non ha ancora risposto`);
+      locked.innerHTML='<span class="dot" data-who="noi" aria-hidden="true"></span><span>Le risposte si svelano quando avete risposto voi due.</span>';
     }
   }
   updateHomeStatus();
@@ -4425,7 +4206,7 @@ function ricordiNewRows(rows,state){
   });
 }
 function ricordiPaintTabDot(on){
-  const tab=document.querySelector('.dy-nav button[data-page="moments"]');
+  const tab=document.querySelector('.nav button[data-page="moments"]');
   if(!tab)return;
   tab.toggleAttribute('data-ricordi-new',Boolean(on));
   tab.setAttribute('aria-label',on?'Ricordi, c’è qualcosa di nuovo':'Ricordi');
@@ -4882,7 +4663,6 @@ async function hydrateMomentsCore(){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
     renderRicordiChapters([],new Map(),today);
-    window.UsDiario?.paintDiary?.({timeline:[],urls:new Map(),names:new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi'])),kept:keptRows});
     grid.dataset.loaded='1';grid.dataset.signature=signature;window.dispatchEvent(new CustomEvent('us:moments-updated'));return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
@@ -4921,8 +4701,6 @@ async function hydrateMomentsCore(){
     // R7 — Rivivi also brings back "X mesi fa", not only anniversaries.
     renderRicordiRivivi(ricordiPickRivivi(timeline,today),displayUrls,names);
     ricordiArchiveState={timeline,urls:displayUrls,names};
-    // Il diario, ma pulito: Ricordi as a diary of days (diario.js) reads the same rows.
-    window.UsDiario?.paintDiary?.({timeline,urls:displayUrls,names,kept:keptRows});
     // The year chapters left with the album (founder, 04/11/2026).
     renderRicordiChapters([],displayUrls,today);
     usRicordiKeepMedia(thumbPaths.filter(path=>!localMedia.has(path)).map(path=>[path,signedUrls.get(path)]));
@@ -5246,12 +5024,7 @@ function resonanceHistoryWhat(entry){
   }
   return {title:entry.kind==='quest'?'Missione di coppia':'Evento vissuto',detail:entry.title,own:entry.kind==='event'&&entry.titleSource!=='missing',live:entry.kind==='event'&&entry.titleSource==='live'};
 }
-// «Voi due» (diario.js) shows the last of these rows.
-let usResonanceEntries=null;
-window.UsResonance=Object.freeze({entries:()=>usResonanceEntries,what:(entry)=>resonanceHistoryWhat(entry),date:(at)=>resonanceHistoryDate(at),hydrate:()=>hydrateResonanceHistory()});
 function renderResonanceHistory(entries){
-  usResonanceEntries=Array.isArray(entries)?entries.slice():[];
-  window.UsDiario?.paintVoiDue?.();
   const root=document.getElementById('noiResonanceHistory');
   if(!root)return;
   root.setAttribute('aria-busy','false');
@@ -5911,7 +5684,7 @@ window.openNoiSection=openNoiSection;
 window.closeNoiSection=closeNoiSection;
 document.getElementById('noiSectionBack')?.addEventListener('click',closeNoiSection);
 document.getElementById('noiQuestSheet')?.addEventListener('click',(event)=>{if(event.target.closest('[data-noi-sheet-close]'))closeNoiSection();});
-document.addEventListener?.('keydown',(event)=>{if(event.key==='Escape'&&document.getElementById('noiQuestSheet')?.classList.contains('open')&&!document.querySelector('.us-cal-sheet-overlay.open,#usCalendarDetailSheet.open,#usCalendarFormSheet.open,#usEventsOverlay.open,.us-confirm.open'))closeNoiSection();});
+document.addEventListener?.('keydown',(event)=>{if(event.key==='Escape'&&document.getElementById('noiQuestSheet')?.classList.contains('open')&&!document.querySelector('.us-cal-sheet-overlay.open,#usEventsOverlay.open,.us-confirm.open'))closeNoiSection();});
 document.getElementById('noiIdeaAddToggle')?.addEventListener('click',()=>{
   toggleNoiIdeaQuickForm(Boolean(document.getElementById('noiIdeaQuickForm')?.hidden));
 });
@@ -5987,9 +5760,6 @@ async function hydrateThink(){
   const received=(rows||[]).find(r=>r.sender_id!==window.usProfile.id);
   const sent=(rows||[]).find(r=>r.sender_id===window.usProfile.id);
   const receivedReaction=received?reactions.get(received.id):null;
-  // Personaggi, fase 3: the last Ti penso I received gives my character heart eyes for a while (diario.js).
-  const lastReceivedAt=received?.created_at||'';
-  if(window.usThinkLastReceivedAt!==lastReceivedAt){window.usThinkLastReceivedAt=lastReceivedAt;window.dispatchEvent(new Event('us:think-updated'));}
   const sentReaction=sent?reactions.get(sent.id):null;
   if(received&&!receivedReaction){usIncomingThink=received;usThinkReactionFinal=null;}
   else if(!received||receivedReaction){usIncomingThink=null;usThinkReactionFinal=receivedReaction?.reaction||null;}
@@ -6025,19 +5795,11 @@ async function sendThinkSignal(){
   if(messageId)sendWebPushEvent('think',messageId).catch(()=>{});
   // Mockup: the heart takes my colour for a moment and two sparks, mine and
   // theirs, fly out of it; then "Ti penso inviato a …".
-  // Il diario, ma pulito: the heart pulses, three small hearts leave it, the
-  // notice says it arrived and your characters hop (diario.js). Elsewhere the
-  // earlier heart and toast.
-  const thinkName=partner.display_name||usIdentity().partnerName;
-  const popped=btn?.classList.contains('dy-think');
-  if(window.UsDiario?.thinkSent?.({name:thinkName,duplicate:Boolean(result?.duplicate)})){if(!popped)window.UsFeedback?.action?.();}
-  else{
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),2400);
   // Il cuore (founder, 29/10/2026): the same heart as the others, counted with them.
-  if(btn&&!result?.duplicate&&!popped)usHeartLike(btn);else if(!popped)window.UsFeedback?.action?.();
+  if(btn&&!result?.duplicate)usHeartLike(btn);else window.UsFeedback?.action?.();
   if(result?.duplicate)toast('Già inviato',{quiet:true});
-  else toast(`Ti penso inviato a ${thinkName}`,{icon:'heart',quiet:false});
-  }
+  else toast(`Ti penso inviato a ${partner.display_name||usIdentity().partnerName}`,{icon:'heart',quiet:false});
   await hydrateThink();
   // La cosa di oggi: my Ti penso of today, at once.
   window.UsCosaDiOggi?.refresh?.({force:true})?.catch?.(()=>{});

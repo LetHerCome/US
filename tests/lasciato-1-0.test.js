@@ -138,8 +138,7 @@ const seenCalls = (log) => log.rpcs.filter(({ name }) => name === 'mark_left_ite
 
 test('L1 viewer says it opens once, shows the oldest first and hides "Apri il prossimo" on the last one', async () => {
   const html = read('index.html');
-  // Mockup v5 «I fogli» (16/11/2026): the line has the stroke icon of keeping before it.
-  assert.match(html, /id="leftForYouOnce"><svg[\s\S]{0,200}?<\/svg><span>Si apre una volta: conservalo se vuoi tenerlo\.</);
+  assert.match(html, /id="leftForYouOnce">Si apre una volta: conservalo se vuoi tenerlo\.</);
   assert.match(read('left-for-you.js'), /order\('created_at', \{ ascending: true \}\)/);
 
   const { api, el, log } = createHarness({ rows: [
@@ -201,7 +200,7 @@ test('L1 a photo that loads after the viewer was closed or skipped stays waiting
 
 test('L2 Rispondi closes the viewer and opens the composer on text, addressed to the partner', async () => {
   const html = read('index.html');
-  assert.match(html, /<button type="button" class="dy-btn dy-btn-m dy-btn-ghost" id="leftForYouReply">Rispondi<\/button>/);
+  assert.match(html, /<button type="button" id="leftForYouReply">Rispondi<\/button>/);
   const { api, el } = createHarness({ rows: [{ id: 't1', sender_id: 'bea-id', kind: 'text', body: 'Ciao', created_at: '2026-10-14T08:00:00Z', seen_at: null }] });
   await api.open();
   api.setComposerKind('music');
@@ -209,7 +208,7 @@ test('L2 Rispondi closes the viewer and opens the composer on text, addressed to
   assert.equal(el('leftForYouOverlay').classList.contains('open'), false);
   assert.equal(el('leftForYouComposerOverlay').classList.contains('open'), true);
   assert.equal(api.composer.kind, 'text');
-  assert.equal(el('leftForYouComposerTitle').innerHTML, 'Lascia qualcosa <em>a Bea</em>'); // mockup v5 «I fogli»
+  assert.equal(el('leftForYouComposerTitle').textContent, 'Lascia qualcosa a Bea');
 });
 
 test('Composer API: openComposer() is unchanged, {kind} picks a tab, {text} opens the text composer prefilled', () => {
@@ -266,7 +265,7 @@ test('L3 the outcome line is read from the sender rows and Conserva, and hidden 
 
 test('L5/L6 voice is "un vocale"; photo and vocale send an optional caption, the photo shows a preview', async () => {
   const html = read('index.html');
-  assert.match(html, /data-us-composer-kind="audio"><svg[\s\S]{0,300}?<\/svg>Vocale</);
+  assert.match(html, /data-us-composer-kind="audio">Vocale</);
   assert.match(html, /id="leftForYouComposerPhotoCaption" maxlength="280"/);
   assert.match(html, /id="leftForYouComposerAudioCaption" maxlength="280"/);
   assert.match(html, /id="leftForYouComposerPhotoPreviewImage"/);

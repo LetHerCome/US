@@ -1,9 +1,6 @@
-// First run in the browser. Il diario, ma pulito (15/11/2026, mockup v4.1
-// «L'entrata»): the welcome before the account, «Da dove partite?», «Tu» with
-// the character, the colour and the birthday, «Da quando state insieme?», the
-// code with the notifications and today's question once it is sent, and the
-// arrival «Ora siete in due» once after pairing (never for a session restored
-// at launch).
+// Due colori — first run in the browser: the tour before the account, the
+// "Tu" step with the birthday, the person colour, and the phone setup that
+// opens once after pairing (never for a session restored at launch).
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const {start,qaFixture}=require('./helpers/countdown-browser');
@@ -28,11 +25,6 @@ function backend(){
       const entry=[...invites].find(([,i])=>i.code===args.p_code&&i.status==='pending');
       if(!entry||p)error={code:'P0001',message:'invite_invalid'};
       else{const [cid,i]=entry;i.status='used';profiles.push({id:user,couple_id:cid,display_name:args.p_display_name,role:'francesco'});data={status:'joined',couple_id:cid};}
-    }else if(name==='set_my_color'){
-      if(p)p.person_color=args.p_color;data={color:args.p_color};
-    }else if(name==='set_my_character_shape'){
-      // Written, not applied yet (supabase/migrations/20261115183900): the app keeps the shape on the phone.
-      error={code:'PGRST202',message:'Could not find the function public.set_my_character_shape'};
     }
     return {data,error,tables:{profiles:structuredClone(profiles),couples:structuredClone(couples)}};
   }};
@@ -62,7 +54,7 @@ async function pageFor(h,b,{user='u1',signedOut=false,deviceProfile=null,reduced
   await page.addInitScript(({user,profiles,couples,signedOut,deviceProfile})=>{
     window.__QA.me=user;window.__QA.signedOut=signedOut;window.__QA.tables.profiles=profiles;window.__QA.tables.couples=couples;
     if(deviceProfile)localStorage.setItem('us:fix4:last-profile',JSON.stringify(deviceProfile));
-    for(const name of ['create_couple','create_partner_invite','revoke_partner_invite','accept_partner_invite','get_couple_membership','set_my_color','set_my_character_shape'])window.__QA.rpc[name]=async args=>{
+    for(const name of ['create_couple','create_partner_invite','revoke_partner_invite','accept_partner_invite','get_couple_membership'])window.__QA.rpc[name]=async args=>{
       const r=await window.__dcRpc(name,args,window.__QA.me);Object.assign(window.__QA.tables,r.tables);return {data:r.data,error:r.error};
     };
   },{user,profiles:b.profiles,couples:b.couples,signedOut,deviceProfile});
@@ -76,27 +68,7 @@ const visible=(page,id)=>page.waitForFunction(id=>{const el=document.getElementB
 const refreshIfWaiting=page=>page.evaluate(()=>{const b=document.getElementById('mc3Refresh');if(b&&b.getClientRects().length&&!b.disabled)b.click();});
 const text=(page,selector)=>page.locator(selector).evaluate(el=>el.textContent.replace(/\s+/g,' ').trim());
 
-// Il diario, ma pulito (15/11/2026): from «Da dove partite?» to the code.
-// Whoever creates: «Tu», «Da quando state insieme?», then the code (it comes by itself).
-async function createUntilCode(page,name,{date=['1','1','2024']}={}){
-  await visible(page,'mc3Choice');
-  await page.click('#mc3ChooseCreate');await visible(page,'mc3Me');
-  await page.fill('#mc3Name',name);await page.click('#mc3MeNext');
-  await visible(page,'mc3Create');
-  await page.selectOption('#mc3DateDay',date[0]);await page.selectOption('#mc3DateMonth',date[1]);await page.selectOption('#mc3DateYear',date[2]);
-  await page.click('#mc3CreateNext');
-  await visible(page,'mc3Waiting');await page.waitForFunction(()=>document.getElementById('mc3Code').value.length>0);
-  return page.inputValue('#mc3Code');
-}
-// Whoever joins: the code first, then «Tu», and «Entra nel diario».
-async function joinWith(page,name,token){
-  await visible(page,'mc3Choice');
-  await page.click('#mc3ChooseJoin');await visible(page,'mc3Join');
-  await page.fill('#mc3JoinCode',token);await page.click('#mc3JoinNext');
-  await visible(page,'mc3Me');await page.fill('#mc3Name',name);await page.click('#mc3MeNext');
-}
-
-test('first run welcome: only on a phone where nobody signed in, one screen, no network, then login',async t=>{
+test('first run tour: only on a phone where nobody signed in, three cards, no network, then login',async t=>{
   const h=await start();if(!h)return t.skip('Playwright unavailable');const b=backend();
   try{
     const {page,ctx,errors,outside}=await pageFor(h,b,{signedOut:true});
@@ -104,13 +76,15 @@ test('first run welcome: only on a phone where nobody signed in, one screen, no 
     assert.equal(await page.locator('#loginEmail').isVisible(),false);
     assert.equal(await page.locator('.app').evaluate(el=>getComputedStyle(el).visibility),'hidden');
     const before=b.calls.length,outsideBefore=outside.length;
-    assert.equal(await text(page,'#usTourTitle'),'Il diario della coppia');
-    assert.equal(await text(page,'#usTourNext'),'Inizia');assert.equal(await text(page,'#usTourLogin'),'Ho già un account');
-    // The two characters, drawn by diario.js.
-    await page.waitForFunction(()=>document.querySelectorAll('#usTourDuo .dy-char').length===2);
-    for(const button of await page.locator('#usTour button').all()){const box=await button.boundingBox();assert.ok(box.height>=44&&box.width>=44,`44px targets: ${await button.evaluate(el=>el.id)} ${box.width}x${box.height}`);}
-    assert.equal(b.calls.length,before,'no backend call on the welcome');assert.equal(outside.length,outsideBefore,'no network on the welcome');
-    await page.click('#usTourLogin');
+    assert.equal(await page.getAttribute('[data-us-tour-dot]:nth-of-type(1)','aria-current'),'true');
+    assert.equal(await text(page,'#usTourNext'),'Avanti');
+    await page.click('#usTourNext');await page.waitForFunction(()=>document.querySelectorAll('[data-us-tour-dot]')[1].getAttribute('aria-current')==='true');
+    await page.click('#usTourNext');await page.waitForFunction(()=>document.querySelectorAll('[data-us-tour-dot]')[2].getAttribute('aria-current')==='true');
+    assert.equal(await text(page,'#usTourNext'),'Iniziamo');
+    await page.click('[data-us-tour-dot]:nth-of-type(1)');await page.waitForFunction(()=>document.querySelectorAll('[data-us-tour-dot]')[0].getAttribute('aria-current')==='true');
+    for(const button of await page.locator('#usTour button').all()){const box=await button.boundingBox();assert.ok(box.height>=44&&box.width>=44,`44px targets: ${await button.evaluate(el=>el.id||el.outerHTML.slice(0,80))} ${box.width}x${box.height}`);}
+    assert.equal(b.calls.length,before,'no backend call during the tour');assert.equal(outside.length,outsideBefore,'no network during the tour');
+    await page.click('#usTourSkip');
     await visible(page,'authLogin');assert.equal(await page.locator('#usTour').isHidden(),true);
     assert.equal(await page.evaluate(()=>document.activeElement?.closest('#authLogin')!==null),true,'focus moves to the login');
     assert.equal(await page.evaluate(()=>localStorage.getItem('us:tour:v1:seen')),'1');
@@ -125,40 +99,26 @@ test('first run welcome: only on a phone where nobody signed in, one screen, no 
   }finally{await h.close();}
 });
 
-test('first run: Tu with character, colour and birthday, the date, the code; the partner joins; each phone sees the arrival once',async t=>{
+test('first run: Tu with birthday, create, colour, invite; the partner joins; each phone sets up once',async t=>{
   const h=await start();if(!h)return t.skip('Playwright unavailable');const b=backend();
   try{
     const creator=await pageFor(h,b,{user:'u1'});const page=creator.page;
-    await visible(page,'mc3Choice');
-    assert.equal(await text(page,'#mc3Title'),'Da dove partite?');
+    await visible(page,'mc3Me');
+    assert.equal(await text(page,'#mc3Kicker'),'Tu · 1 di 4');
     assert.equal(await page.locator('.app').evaluate(el=>el.inert),true,'the app stays inert during onboarding');
-    await page.click('#mc3ChooseCreate');await visible(page,'mc3Me');
-    assert.equal(await text(page,'#mc3Kicker'),'1 di 3');assert.equal(await text(page,'#mc3Title'),'Iniziamo da te');
-    // Five shapes, eight colours; the big character takes them at once.
-    await page.waitForFunction(()=>document.querySelectorAll('#mc3Shapes [data-shape]').length===5&&document.querySelectorAll('#mc3Colors [data-colour]').length===8);
-    await page.click('[data-shape="nuvola"]');await page.click('[data-colour="menta"]');
-    assert.equal(await page.getAttribute('[data-shape="nuvola"]','aria-pressed'),'true');assert.equal(await page.getAttribute('[data-colour="menta"]','aria-pressed'),'true');
-    assert.equal(await page.locator('#usOnboarding').evaluate(el=>el.style.getPropertyValue('--dy-pick')),'#6fd6c8');
     // Validation of the birthday pair, then a valid choice.
     await page.fill('#mc3Name','Mira');await page.selectOption('#mc3BirthDay','12');await page.click('#mc3MeNext');
     await page.waitForFunction(()=>document.getElementById('mc3Status').textContent.includes('giorno e mese'));
     assert.equal(await page.locator('#mc3Me').isVisible(),true);
     await page.selectOption('#mc3BirthMonth','3');await page.click('#mc3MeNext');
-    await visible(page,'mc3Create');assert.equal(await text(page,'#mc3Kicker'),'2 di 3');assert.equal(await text(page,'#mc3Title'),'Da quando state insieme?');
+    await visible(page,'mc3Choice');assert.equal(await text(page,'#mc3Kicker'),'Voi · 2 di 4');
     assert.equal(await page.evaluate(()=>sessionStorage.getItem('us:onboarding:v1:birthday:u1')),'{"day":12,"month":3}');
-    // Back keeps what was typed and picked.
-    await page.click('#mc3Back');await visible(page,'mc3Me');
-    assert.equal(await page.inputValue('#mc3Name'),'Mira');assert.equal(await page.inputValue('#mc3BirthMonth'),'3');
-    assert.equal(await page.getAttribute('[data-shape="nuvola"]','aria-pressed'),'true');
-    await page.click('#mc3MeNext');await visible(page,'mc3Create');
-    await page.selectOption('#mc3DateDay','1');await page.selectOption('#mc3DateMonth','1');await page.selectOption('#mc3DateYear','2024');
-    assert.match(await text(page,'#mc3DaysTag'),/^[\d.]+ giorni insieme$/);
-    await page.click('#mc3CreateNext');
-    await visible(page,'mc3Waiting');assert.equal(await text(page,'#mc3Title'),'Il suo posto è pronto');assert.equal(await text(page,'#mc3Kicker'),'3 di 3');
-    // The first code comes by itself.
-    await page.waitForFunction(()=>document.getElementById('mc3Code').value.length>0);
-    assert.match(await text(page,'#mc3InviteStatus'),/^Invito in attesa · scade il \d+ \S+ alle \d\d:\d\d$/);
-    assert.equal(b.calls.filter(c=>c.name==='create_partner_invite').length,1,'one code, once');
+    // Back keeps what was typed.
+    await page.click('#mc3BackMe');await visible(page,'mc3Me');assert.equal(await page.inputValue('#mc3Name'),'Mira');assert.equal(await page.inputValue('#mc3BirthMonth'),'3');
+    await page.click('#mc3MeNext');await visible(page,'mc3Choice');
+    await page.click('#mc3ChooseCreate');await page.selectOption('#mc3DateDay','1');await page.selectOption('#mc3DateMonth','1');await page.selectOption('#mc3DateYear','2024');await page.locator('#mc3Create button[type=submit]').click();
+    await visible(page,'mc3Color');
+    assert.equal(await text(page,'#mc3Title'),'Il tuo colore è il lilla');
     await page.waitForFunction(()=>(window.__QA.inserts||[]).length===1);
     const today=await page.evaluate(()=>new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Rome'}));
     assert.deepEqual(await page.evaluate(()=>window.__QA.inserts),[{table:'shared_events',row:{title:'Compleanno di Mira',event_date:OB.nextBirthday(12,3,today),event_time:null,location:null,note:null,recurs_yearly:true,couple_id:'c2',created_by:'u1'}}]);
@@ -166,31 +126,36 @@ test('first run: Tu with character, colour and birthday, the date, the code; the
     assert.equal(await page.evaluate(()=>localStorage.getItem('us:onboarding:v1:birthday-saved:u1')),'1');
     assert.equal(await page.evaluate(()=>localStorage.getItem('us:setup:v1:pending:u1')),'created');
     assert.deepEqual(b.calls.find(c=>c.name==='create_couple').args,{p_display_name:'Mira',p_started_on:'2024-01-01',p_couple_name:'US.'});
-    // The look: the colour on the server, the shape kept on this phone while its function is not there.
-    await page.waitForFunction(()=>localStorage.getItem('us:character-shape:u1')==='nuvola');
-    assert.deepEqual(b.calls.find(c=>c.name==='set_my_color').args,{p_color:'menta'});
-    assert.deepEqual(b.calls.find(c=>c.name==='set_my_character_shape').args,{p_shape:'nuvola'});
+    await page.click('#mc3ColorNext');await visible(page,'mc3Waiting');
+    await page.click('#mc3Generate');await page.waitForFunction(()=>document.getElementById('mc3Code').value.length>0);
+    assert.match(await text(page,'#mc3InviteStatus'),/^Invito in attesa · scade il \d+ \S+ alle \d\d:\d\d$/);
     const token=await page.inputValue('#mc3Code');
 
-    // The partner: the code, then «Tu» without a birthday, and in.
+    // The partner: no birthday, joins, sees their colour once.
     const partner=await pageFor(h,b,{user:'u2'});
-    await visible(partner.page,'mc3Choice');await partner.page.click('#mc3ChooseJoin');await visible(partner.page,'mc3Join');
-    assert.equal(await text(partner.page,'#mc3Kicker'),'1 di 2');
-    await partner.page.fill('#mc3JoinCode','not a code');await partner.page.click('#mc3JoinNext');
-    await partner.page.waitForFunction(()=>document.getElementById('mc3Status').textContent.includes('26 caratteri'));
-    await partner.page.fill('#mc3JoinCode',`Ti aspetto su US ♡\n${token}`);await partner.page.click('#mc3JoinNext');
-    await visible(partner.page,'mc3Me');assert.equal(await text(partner.page,'#mc3Kicker'),'2 di 2');
-    await partner.page.fill('#mc3Name','Nico');await partner.page.click('#mc3MeNext');
+    await visible(partner.page,'mc3Me');await partner.page.fill('#mc3Name','Nico');await partner.page.click('#mc3MeNext');
+    await partner.page.click('#mc3ChooseJoin');await partner.page.fill('#mc3JoinCode',token);await partner.page.locator('#mc3Join button[type=submit]').click();
     await partner.page.waitForFunction(()=>window.usProfile?.id==='u2');
-    assert.deepEqual(b.calls.find(c=>c.name==='accept_partner_invite').args,{p_code:token,p_display_name:'Nico'});
-    await visible(partner.page,'usDeviceSetup');await partner.page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='arrivo');
-    assert.equal(await text(partner.page,'#usSetupTitle'),'Ora siete in due');
-    await partner.page.waitForFunction(()=>/^Mira ti aspettava\. Il suo colore è il menta, il tuo il lilla\.$/.test(document.getElementById('usSetupCopy').textContent));
-    await partner.page.waitForFunction(()=>document.activeElement?.id==='usSetupTitle',null,{timeout:3000});
+    await visible(partner.page,'usDeviceSetup');await partner.page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='color');
+    assert.equal(await text(partner.page,'#usSetupTitle'),'Il tuo colore è il rosa');
+    assert.equal(await text(partner.page,'#usSetupKicker'),'Voi · 2 di 4');
+    assert.equal(await partner.page.evaluate(()=>document.activeElement?.id),'usSetupTitle');
     assert.equal(await partner.page.locator('.app').evaluate(el=>el.inert&&el.getAttribute('aria-hidden')==='true'),true,'the app behind is unreachable');
-    assert.equal(await partner.page.locator('#usSetupPair .dy-char').count(),2);
     assert.equal(await partner.page.evaluate(()=>(window.__QA.inserts||[]).length),0,'no birthday, no event');
-    assert.equal(await text(partner.page,'#usSetupPrimary'),'Entra nel diario');
+    await partner.page.click('#usSetupPrimary');
+    // On the web there are no native notifications: the next step is the distance.
+    await partner.page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='place');
+    assert.equal(await text(partner.page,'#usSetupKicker'),'Posizione · 4 di 4');
+    assert.equal(await text(partner.page,'#usSetupTitle'),'Anche da lontano');
+    const points=await text(partner.page,'#usSetupPoints');
+    assert.match(points,/Mira vede solo la distanza, mai dove sei\./);assert.match(points,/Sotto i 3 km non vedete la distanza esatta/);assert.match(points,/Solo mentre US è aperta/);
+    assert.doesNotMatch(points+await text(partner.page,'#usSetupBody'),/circa 1 km/);
+    await partner.page.click('#usSetupSecondary');
+    await partner.page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='ready');
+    assert.equal(await text(partner.page,'#usSetupTitle'),'Il vostro US è pronto');
+    const ready=await text(partner.page,'#usSetupReady');
+    assert.match(ready,/Nico/);assert.match(ready,/Compleanno da aggiungere in Noi/);assert.match(ready,/Insieme da/);assert.match(ready,/Distanza non attiva/);
+    assert.doesNotMatch(ready,/Notifiche/);
     await partner.page.click('#usSetupPrimary');
     await partner.page.waitForFunction(()=>document.getElementById('usDeviceSetup').hidden);
     assert.equal(await partner.page.locator('.app').evaluate(el=>el.inert||el.hasAttribute('aria-hidden')),false);
@@ -199,34 +164,46 @@ test('first run: Tu with character, colour and birthday, the date, the code; the
     assert.equal(await partner.page.evaluate(()=>usOnboarding.setup.maybeOpen(window.usProfile)),false,'once per user');
     assert.equal(await partner.page.locator('#usDeviceSetup').isHidden(),true);
 
-    // The creator learns it on the next refresh, or the automatic check got there first: «Ora siete in due».
+    // The creator learns it on the next refresh, or the automatic check got there first: "Ora siete un Noi".
     await refreshIfWaiting(page);await page.waitForFunction(()=>window.usProfile?.id==='u1');
-    await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='arrivo');
-    await page.waitForFunction(()=>/^Nico è qui, adesso\. Il suo colore è il lilla\.$/.test(document.getElementById('usSetupCopy').textContent));
+    await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='noi');
+    assert.equal(await text(page,'#usSetupTitle'),'Ora siete un Noi');
+    await page.click('#usSetupPrimary');await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='place');
+    await page.click('#usSetupSecondary');await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='ready');
+    assert.match(await text(page,'#usSetupReady'),/Compleanno il 12 marzo/);
     await page.click('#usSetupPrimary');await page.waitForFunction(()=>document.getElementById('usDeviceSetup').hidden);
     assert.equal(await page.evaluate(()=>(window.__QA.inserts||[]).length),1,'the birthday is written once');
     for(const x of [creator,partner]){assert.deepEqual(x.errors,[]);await x.ctx.close();}
   }finally{await h.close();}
 });
 
-test('first run: a session restored at launch never sees the arrival; a password sign-in on a new phone has nothing left to ask',async t=>{
+test('first run: a session restored at launch never sees the setup; a password sign-in on a new phone does, once',async t=>{
   const h=await start();if(!h)return t.skip('Playwright unavailable');const b=backend();
   try{
     const restored=await pageFor(h,b,{user:'f1'});
     await restored.page.waitForFunction(()=>window.usProfile?.id==='f1');await restored.page.waitForTimeout(300);
     assert.equal(await restored.page.locator('#usDeviceSetup').isHidden(),true);assert.equal(await restored.page.locator('#usTour').isHidden(),true);
-    assert.equal(await restored.page.evaluate(()=>localStorage.getItem('us:tour:v1:seen')),'1','a signed-in phone never shows the welcome later');
+    assert.equal(await restored.page.evaluate(()=>localStorage.getItem('us:tour:v1:seen')),'1','a signed-in phone never shows the tour later');
     assert.deepEqual(restored.errors,[]);await restored.ctx.close();
 
     const fresh=await pageFor(h,b,{user:'f1',signedOut:true,deviceProfile:{id:'f1',couple_id:'c1',display_name:'Francesco',role:'francesco'}});const page=fresh.page;
     await page.waitForFunction(()=>document.getElementById('authLogin').classList.contains('active')&&!document.documentElement.classList.contains('us-auth-pending'));
     await page.fill('#loginEmail','qa@example.test');await page.fill('#loginPassword','synthetic-local-password');await page.click('#loginBtn');
-    await page.waitForFunction(()=>window.usProfile?.id==='f1');await page.waitForTimeout(300);
-    // Il diario, ma pulito (15/11/2026): no Notifiche or Posizione steps after pairing any more.
-    assert.equal(await page.locator('#usDeviceSetup').isHidden(),true);
-    assert.equal(await page.evaluate(()=>sessionStorage.getItem('us:setup:v1:password-sign-in')),null,'the sign-in marker is spent');
+    await page.waitForFunction(()=>window.usProfile?.id==='f1');
+    await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='place');
+    assert.equal(await text(page,'#usSetupKicker'),'Posizione · 1 di 1');
+    await page.click('#usSetupPrimary');
+    await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='ready');
+    assert.equal(await text(page,'#usSetupTitle'),'Eccoti di nuovo');
+    const ready=await text(page,'#usSetupReady');assert.match(ready,/Distanza attiva/);assert.doesNotMatch(ready,/Compleanno|Insieme da/);
+    assert.equal(await page.evaluate(()=>window.UsLocation.isSharing()),true);
+    await page.click('#usSetupPrimary');await page.waitForFunction(()=>document.getElementById('usDeviceSetup').hidden);
+    assert.equal(await page.evaluate(()=>sessionStorage.getItem('us:setup:v1:password-sign-in')),null);
     assert.equal(await page.evaluate(()=>localStorage.getItem('us:setup:v1:done:f1')),'1');
-    assert.equal(await page.evaluate(()=>window.UsLocation.isSharing()),false,'the position is never turned on by the first run');
+    // Distance already on and nothing else to ask: a new sign-in shows nothing.
+    await page.evaluate(()=>{localStorage.removeItem('us:setup:v1:done:f1');usOnboarding.setup.markPasswordSignIn('f1');});
+    assert.equal(await page.evaluate(()=>usOnboarding.setup.maybeOpen(window.usProfile)),false);
+    assert.equal(await page.locator('#usDeviceSetup').isHidden(),true);
     assert.deepEqual(fresh.errors,[]);await fresh.ctx.close();
   }finally{await h.close();}
 });
@@ -236,17 +213,15 @@ test('1.0 A1: sign-up waits for the 18+ and Terms box and records it with the ac
   try{
     const {page,ctx,errors}=await pageFor(h,b,{signedOut:true,releaseSignup:true});
     await visible(page,'usTour');
-    // Il diario, ma pulito (15/11/2026): one welcome, «Inizia», then «Il tuo account».
-    await page.click('#usTourNext');
+    for(let i=0;i<3;i++)await page.click('#usTourNext');
     await page.waitForFunction(()=>document.getElementById('usSignup').classList.contains('active'));
-    assert.equal(await text(page,'#usSignupHeading'),'Il tuo account');
     const submit=page.locator('#usSignupSubmit');
     assert.equal(await submit.isDisabled(),true,'off before anything');
     await page.fill('#usSignupEmail','new@example.test');await page.fill('#usSignupPassword','synthetic-pass-123');await page.fill('#usSignupConfirm','synthetic-pass-123');
     assert.equal(await submit.isDisabled(),true,'off until the box is ticked');
     assert.equal(await text(page,'#usSignup .us-auth-consent'),'Ho almeno 18 anni e accetto i Termini e la Privacy');
-    // The public pages exist (public-auth.js LEGAL_URLS): the words link to them, in a new tab.
-    assert.deepEqual(await page.locator('#usSignup a[data-us-legal]').evaluateAll(links=>links.map(a=>[a.getAttribute('href'),a.target,a.rel])),[['https://www.uscouple.app/termini','_blank','noopener noreferrer'],['https://www.uscouple.app/privacy','_blank','noopener noreferrer']]);
+    // No public page yet: the words carry no link.
+    assert.equal(await page.locator('#usSignup a[data-us-legal]').evaluateAll(links=>links.filter(a=>a.hasAttribute('href')).length),0);
     const box=await page.locator('#usSignup .us-auth-consent').boundingBox();assert.ok(box.height>=44,'44px target');
     await page.click('#usSignup .us-auth-consent span');assert.equal(await page.isChecked('#usSignupTerms'),true,'the sentence ticks the box');
     assert.equal(await submit.isDisabled(),false);
@@ -258,9 +233,6 @@ test('1.0 A1: sign-up waits for the 18+ and Terms box and records it with the ac
     assert.ok(Math.abs(Date.parse(call.options.data.terms_accepted_at)-Date.now())<60000);
     assert.equal(await page.isChecked('#usSignupTerms'),false,'a next account asks again');
     assert.equal(await page.evaluate(()=>JSON.stringify({...localStorage,...sessionStorage}).includes('new@example.test')),false);
-    // «Indietro» on the account goes back to the welcome.
-    await page.click('#usVerifyBack');await page.waitForFunction(()=>document.getElementById('authLogin').classList.contains('active'));
-    await page.click('#usShowSignup');await page.click('#usSignupHome');await visible(page,'usTour');
     assert.deepEqual(errors,[]);await ctx.close();
   }finally{await h.close();}
 });
@@ -276,20 +248,19 @@ test('1.0 A2: Condividi, the code through a trip to another app, and the partner
       Object.defineProperty(Document.prototype,'visibilityState',{configurable:true,get:()=>hidden?'hidden':'visible'});
     }});
     const page=creator.page;
-    const token=await createUntilCode(page,'Mira');
-    for(const id of ['mc3ShareCode','mc3CopyCode']){const box=await page.locator('#'+id).boundingBox();assert.ok(box.height>=44&&box.width>=44,id);}
-    // First the code, then the question and the notifications.
-    assert.equal(await page.locator('#mc3Today').isHidden(),true);assert.equal(await page.locator('#mc3Notify').isHidden(),true);
+    await visible(page,'mc3Me');await page.fill('#mc3Name','Mira');await page.click('#mc3MeNext');
+    await page.click('#mc3ChooseCreate');await page.selectOption('#mc3DateDay','1');await page.selectOption('#mc3DateMonth','1');await page.selectOption('#mc3DateYear','2024');await page.locator('#mc3Create button[type=submit]').click();
+    await visible(page,'mc3Color');await page.click('#mc3ColorNext');await visible(page,'mc3Waiting');
+    assert.equal(await page.locator('#mc3ShareCode').isVisible(),false,'nothing to share before a code');
+    await page.click('#mc3Generate');await page.waitForFunction(()=>document.getElementById('mc3Code').value.length>0);
+    const token=await page.inputValue('#mc3Code');
+    for(const id of ['mc3ShareCode','mc3CopyCode']){const box=await page.locator('#'+id).boundingBox();assert.ok(box.height>=44&&box.width>=120,id);}
     await page.click('#mc3ShareCode');
     await page.waitForFunction(()=>document.getElementById('mc3Status').textContent.includes('Fatto.'));
-    await page.waitForFunction(()=>document.getElementById('mc3CodeArea').hasAttribute('data-sent'));
-    assert.equal(await text(page,'#mc3CodeArea .dy-ent-sent b'),'Codice mandato');
     const [shared]=await page.evaluate(()=>window.__shared);
     assert.deepEqual(Object.keys(shared),['text']);
-    const lines=shared.text.split('\n');
-    assert.equal(lines[0],'Ti aspetto su US ♡');assert.equal(lines.at(-2),'Apri il mio invito:');
-    assert.equal(OB.inviteFromLink(lines.at(-1)),token);
-    await page.waitForFunction(()=>!document.getElementById('mc3Today').hidden);
+    assert.match(shared.text,/^Ti aspetto su US ♡\nScegli «Ho un codice d’invito» e incolla questo codice:\n/);
+    assert.ok(shared.text.split('\n')[2]===token);assert.match(shared.text,/\nScade il \d+ \S+ alle \d\d:\d\d\.$/);
     // Off to WhatsApp and back: off the screen while away, back on return.
     await page.evaluate(()=>window.__setHidden(true));assert.equal(await page.inputValue('#mc3Code'),'');
     await page.evaluate(()=>window.__setHidden(false));
@@ -299,9 +270,10 @@ test('1.0 A2: Condividi, the code through a trip to another app, and the partner
     const membership=()=>b.calls.filter(c=>c.name==='get_couple_membership'&&c.user==='u1').length;
     const before=membership();
     const partner=await pageFor(h,b,{user:'u2'});
-    await joinWith(partner.page,'Nico',token);
+    await visible(partner.page,'mc3Me');await partner.page.fill('#mc3Name','Nico');await partner.page.click('#mc3MeNext');
+    await partner.page.click('#mc3ChooseJoin');await partner.page.fill('#mc3JoinCode',token);await partner.page.locator('#mc3Join button[type=submit]').click();
     await partner.page.waitForFunction(()=>window.usProfile?.id==='u2');
-    await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='arrivo',null,{timeout:25000});
+    await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='noi',null,{timeout:25000});
     assert.ok(membership()>before,'found by the automatic check');
     assert.equal(await page.evaluate(()=>window.usProfile?.id),'u1');
     // Paired: no more checks.
@@ -310,30 +282,48 @@ test('1.0 A2: Condividi, the code through a trip to another app, and the partner
   }finally{await h.close();}
 });
 
-test('Il diario, ma pulito (15/11/2026): «Ti avviso quando entra?» after the code is sent, with the existing enable flow',async t=>{
+test('1.0 F5: on Android "Tutto pronto" offers the Ti penso widget once the launcher can pin it',async t=>{
   const h=await start();if(!h)return t.skip('Playwright unavailable');const b=backend();
   try{
-    const creator=await pageFor(h,b,{user:'u1'});const page=creator.page;
-    // A phone with native notifications not yet on (the flow itself is notifications.js, tested on its own).
-    await page.evaluate(()=>{window.__push=[];window.UsNotifications={supported:()=>true,authReady:async p=>{window.__push.push('ready:'+p.id);},getState:async()=>({supported:true,kind:'inactive'}),enable:async()=>{window.__push.push('enable');return {ok:true,kind:'active'};},signedOut(){window.__push.push('signedOut');},resume:async()=>{},onNavigate(){}};});
-    await createUntilCode(page,'Mira');
-    assert.equal(await page.locator('#mc3Notify').isHidden(),true,'not before the code leaves');
-    await page.click('#mc3CopyCode');
-    await page.waitForFunction(()=>!document.getElementById('mc3Notify').hidden);
-    assert.equal(await text(page,'#mc3NotifyTitle'),'Ti avviso quando entra?');
-    await page.click('#mc3NotifyYes');
-    await page.waitForFunction(()=>document.getElementById('mc3NotifyTitle').textContent==='Ti avviso io');
-    assert.equal(await page.locator('#mc3NotifyYes').isHidden(),true);
-    const push=await page.evaluate(()=>window.__push);
-    assert.ok(push.includes('ready:u1'),'the native flow, for this member');assert.equal(push.filter(x=>x==='enable').length,1);
-    // Back from another app: who waits keeps this phone's notifications.
-    await page.evaluate(()=>{window.__push.length=0;document.dispatchEvent(new Event('visibilitychange'));});
-    await page.waitForTimeout(800);
-    assert.equal(await page.evaluate(()=>window.__push.includes('signedOut')),false);
-    assert.deepEqual(creator.errors,[]);await creator.ctx.close();
+    // The creator waits; the partner (this phone) joins with an Android launcher that can pin.
+    const creator=await pageFor(h,b,{user:'u1'});const c=creator.page;
+    await visible(c,'mc3Me');await c.fill('#mc3Name','Mira');await c.click('#mc3MeNext');
+    await c.click('#mc3ChooseCreate');await c.selectOption('#mc3DateDay','1');await c.selectOption('#mc3DateMonth','1');await c.selectOption('#mc3DateYear','2024');await c.locator('#mc3Create button[type=submit]').click();
+    await visible(c,'mc3Color');await c.click('#mc3ColorNext');await c.click('#mc3Generate');await c.waitForFunction(()=>document.getElementById('mc3Code').value.length>0);
+    const token=await c.inputValue('#mc3Code');
+    const partner=await pageFor(h,b,{user:'u2'});const page=partner.page;
+    await page.evaluate(()=>{
+      window.__pins=[];
+      window.UsWidgets={...window.UsWidgets,isAvailable:()=>true,installed:async()=>({installed:{think:window.__placed?1:0},pinSupported:true,vendor:'android'}),requestPin:async kind=>{window.__pins.push(kind);return {supported:true,requested:true};}};
+    });
+    await visible(page,'mc3Me');await page.fill('#mc3Name','Nico');await page.click('#mc3MeNext');
+    await page.click('#mc3ChooseJoin');await page.fill('#mc3JoinCode',token);await page.locator('#mc3Join button[type=submit]').click();
+    await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='color');
+    await page.click('#usSetupPrimary');await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='place');
+    await page.click('#usSetupSecondary');await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='ready');
+    const row=page.locator('#usSetupReady [data-row="widget"]');
+    assert.equal(await text(page,'#usSetupReady [data-row="widget"] b'),'Widget Ti penso');
+    assert.equal(await text(page,'#usSetupReady [data-row="widget"] small'),'Un pensiero con un tocco, anche con US chiusa.');
+    const add=row.locator('button');assert.equal(await text(page,'#usSetupReady [data-row="widget"] button'),'Aggiungi il widget');
+    const box=await add.boundingBox();assert.ok(box.height>=44);
+    await add.click();
+    await page.waitForFunction(()=>document.querySelector('#usSetupReady [data-row="widget"] small').textContent==='Conferma sulla schermata che si è aperta.');
+    assert.deepEqual(await page.evaluate(()=>window.__pins),['think']);
+    assert.equal(await page.evaluate(()=>document.activeElement?.matches('[data-us-setup-widget]')),true,'focus stays on the row');
+    // The launcher confirms.
+    await page.evaluate(()=>{window.__placed=true;window.dispatchEvent(new CustomEvent('us:widget-pinned',{detail:{kind:'think',placed:true}}));});
+    await page.waitForFunction(()=>document.querySelector('#usSetupReady [data-row="widget"]').classList.contains('is-ok'));
+    assert.equal(await text(page,'#usSetupReady [data-row="widget"] b'),'Widget sulla Home');
+    assert.equal(await row.locator('button').count(),0);
+    assert.equal(await page.evaluate(()=>document.activeElement?.id),'usSetupPrimary');
+    await page.click('#usSetupPrimary');await page.waitForFunction(()=>document.getElementById('usDeviceSetup').hidden);
+    // The creator, on the web: no widget row.
+    await refreshIfWaiting(c);
+    await c.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='noi');
+    await c.click('#usSetupPrimary');await c.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='place');
+    await c.click('#usSetupSecondary');await c.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='ready');
+    assert.equal(await c.locator('#usSetupReady [data-row="widget"]').count(),0);
+    assert.doesNotMatch(await text(c,'#usSetupReady'),/Widget/);
+    for(const x of [creator,partner]){assert.deepEqual(x.errors,[]);await x.ctx.close();}
   }finally{await h.close();}
 });
-
-// Il diario, ma pulito (15/11/2026): «Tutto pronto» (and its widget offer) left the
-// first run with the steps after pairing; the widget is added from Impostazioni › Widget.
-test.skip('Il diario, ma pulito (15/11/2026): «Tutto pronto» and its widget offer left the first run',()=>{});

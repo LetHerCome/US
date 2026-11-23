@@ -59,12 +59,9 @@ test('copy: empty, loading and error states are a title, not a paragraph', () =>
 test('copy: Noi and Settings rows carry a label, not a description', () => {
   const html = read('index.html');
   assert.doesNotMatch(html, /<p>Quello che state costruendo/);
-  // Il diario, ma pulito (15/11/2026): Notifiche carries the mockup's one line
-  // (or what the phone blocks); the distance unit is «Misura in» km / mi
-  // (20/11/2026: next to La distanza, in Voi due).
-  assert.match(html, /<b>Notifiche<\/b><small id="usNotificationsValue">Ti penso, risposte, turni di gioco<\/small><\/span>/);
+  assert.match(html, /<b>Notifiche<\/b><\/span>/);
   assert.match(html, /<b>Sincronizzazione<\/b><\/span>/);
-  assert.match(html, /<b id="usDistanceUnitLabel">Misura in<\/b><\/span>/);
+  assert.match(html, /<b>Distanza<\/b><\/span>/);
   // Noi nuova (03/11/2026): no tiles; the board under the calendar has a title.
   assert.doesNotMatch(html, /data-noi-open-link/);
   assert.match(html, /<h2 id="usNoiBoardTitle">Bacheca<\/h2><small>Per le cose senza data<\/small>/);

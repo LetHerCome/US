@@ -126,25 +126,18 @@ test('M10.1C: assistive text names the owner, never only the initial', () => {
 // Noi nuova (founder, 03/11/2026): no dots any more; every commitment is a
 // label with its name in the colour of whoever put it, at most two, then +n.
 test('M10.1C / Noi nuova: the month cell is the day number and a label per commitment, in its owner colour', () => {
-  // Il diario, ma pulito (15/11/2026): the cell is the day number (.dy-cal-n, with the
-  // red circle on the couple's dates) and a short bar per person, in that person's
-  // colour (both for what is shared); no text labels in the cell.
-  const cell = noi.match(/const days=Array\.from\(\{length:slots\}[\s\S]*?return `<div class="dy-cal"/)?.[0] || '';
-  assert.match(cell, /<span class="dy-cal-n">\$\{n\}\$\{ours\?SCRIBBLE_CIRCLE:''\}<\/span><span class="dy-cal-bars" aria-hidden="true">\$\{dayBars\(items,past\)\}<\/span>/);
-  const bars = noi.match(/function dayBars\(items,past\)\{[\s\S]*?\n\}/)?.[0] || '';
-  assert.match(bars, /for\(const who of owner==='noi'\?\['tu','partner'\]:\[owner\]\)/, 'shared gives both colours');
-  assert.match(bars, /<i class="dy-bar" data-owner="\$\{who\}"/, 'each bar in the colour of whose it is');
-  assert.doesNotMatch(cell, /us-noi-v2-day-marks|us-noi-v2-bar/, 'no dots, no text labels');
+  const cell = noi.match(/const days=Array\.from\(\{length:slots\}[\s\S]*?return `<div class="us-noi-v2-calendar"/)?.[0] || '';
+  assert.match(cell, /<span class="us-noi-v2-day-number">\$\{n\}<\/span><span class="us-noi-v2-day-bars" aria-hidden="true">\$\{bars\}\$\{more\}<\/span>/);
+  assert.match(cell, /items\.slice\(0,BAR_MAX\)\.map\(item=>`<span class="us-noi-v2-bar\$\{item\.kind==='relationship'\?' is-milestone':''\}" data-owner="\$\{ownerOf\(item\)\}"/, 'each label in the colour of whose it is');
+  assert.doesNotMatch(cell, /us-noi-v2-day-marks|<i data-owner/, 'no dots');
   assert.equal(cal.monthCellMarks([]).chips.length, 0);
   assert.deepEqual(cal.monthCellMarks(['B', 'Noi', 'F']), { chips: ['B', 'F', 'Noi'], more: 0 }, 'fixed marker order');
 });
 
 test('M10.1C: the month cell label says how many commitments and marks the selected day', () => {
-  // Il diario, ma pulito (15/11/2026): the grid is .dy-cal.
-  const cell = noi.match(/const days=Array\.from\(\{length:slots\}[\s\S]*?return `<div class="dy-cal"/)?.[0] || '';
+  const cell = noi.match(/const days=Array\.from\(\{length:slots\}[\s\S]*?return `<div class="us-noi-v2-calendar"/)?.[0] || '';
   assert.match(cell, /const plans=items\.length===1\?'1 impegno':items\.length\?`\$\{items\.length\} impegni`:'niente in programma';/);
-  // Il diario, ma pulito (15/11/2026): today too says when it is the chosen day.
-  assert.match(cell, /aria-pressed="\$\{pressed\}"/);
+  assert.match(cell, /aria-pressed="\$\{active\}"/);
   assert.match(cell, /is-selected/);
 });
 
@@ -183,19 +176,16 @@ test('M10.1C: tapping an event opens the existing detail → edit flow, never a 
 });
 
 test('M10.1C: the Noi "+" is the one explicit create affordance; no floating +', () => {
-  // Il diario, ma pulito (15/11/2026): the + is the dark square button of the Noi
-  // header; render() names the selected day in its label.
-  assert.match(html, /<button type="button" class="dy-ib is-dark" id="usNoiV2AddTop" data-noi-add aria-label="Aggiungi un impegno"/);
-  assert.match(noi, /\$\('usNoiV2AddTop'\)\?\.setAttribute\('aria-label',`Aggiungi un impegno il \$\{dayLabel\(selected\)\}`\)/);
+  assert.match(html, /<button type="button" class="us-noi-v2-add" id="usNoiV2AddTop" data-noi-add aria-label="Aggiungi un impegno nel giorno selezionato"/);
   assert.doesNotMatch(html, /usCalendarAddBtn|us-cal-fab|id="usCalendarAddEntry"/);
   assert.doesNotMatch(calSrc, /us-cal-fab/);
 });
 
 test('M10.1C/US 1.0: quick create collects presets/title, all-day and explicit start/end; authority is unchanged', () => {
-  const form = html.match(/<form class="dy-f-body dy-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)[0];
+  const form = html.match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)[0];
   const inputs = [...form.matchAll(/<(?:input|textarea|select)[^>]*id="([^"]+)"/g)].map((m) => m[1]);
   // 04/11/2026: «+» opens a field for a quick title of your own, among the presets.
-  assert.deepEqual(inputs, ['usCalendarTitleInput', 'usCalendarPresetNewInput', 'usCalendarDateInput', 'usCalendarAllDayInput', 'usCalendarStartTimeInput', 'usCalendarEndTimeInput'], 'date input is edit-only; timed entries expose a compact range');
+  assert.deepEqual(inputs, ['usCalendarPresetNewInput', 'usCalendarTitleInput', 'usCalendarDateInput', 'usCalendarAllDayInput', 'usCalendarStartTimeInput', 'usCalendarEndTimeInput'], 'date input is edit-only; timed entries expose a compact range');
   assert.doesNotMatch(form, /Durata|duration|Ricordamelo|reminder|<textarea|Nota/i);
   assert.match(calSrc, /setFormKind\(mode === 'edit' \? entry\.entry_type : 'personal'\);/);
   assert.match(calSrc, /const kind = ideaLink \? 'shared' : calendarKind;/);

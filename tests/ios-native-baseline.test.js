@@ -42,15 +42,16 @@ test('M15 iOS: identità Capacitor stabile com.usapp.us, edge-to-edge, nessun se
 test('M15 iOS: progetto Xcode con bundle id, deployment target 16.0 e nessun team/firma committati', () => {
   const pbx = read('ios/App/App.xcodeproj/project.pbxproj');
   const bundleIds = [...pbx.matchAll(/PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/g)].map((match) => match[1]);
-  assert.deepEqual(bundleIds, ['app.uscouple', 'app.uscouple']);
+  // The app and, since W0 (14/11/2026), its WidgetKit extension.
+  assert.deepEqual(bundleIds, ['app.uscouple', 'app.uscouple', 'app.uscouple.widgets', 'app.uscouple.widgets']);
   const targets = [...pbx.matchAll(/IPHONEOS_DEPLOYMENT_TARGET = ([^;]+);/g)].map((match) => match[1]);
-  assert.equal(targets.length, 4);
+  assert.equal(targets.length, 6);
   assert.ok(targets.every((value) => value === '16.0'), `deployment target: ${targets.join(',')}`);
   assert.doesNotMatch(pbx, /DEVELOPMENT_TEAM\s*=/, 'nessun Apple Team ID nel repo');
   assert.doesNotMatch(pbx, /PROVISIONING_PROFILE/);
-  // Native Notifications V1: the only signed capability is Push (aps-environment).
+  // The app's entitlements and, since W0, the widget extension's (App Group and shared Keychain only).
   const entitlements = [...pbx.matchAll(/CODE_SIGN_ENTITLEMENTS = ([^;]+);/g)].map((match) => match[1]);
-  assert.deepEqual(entitlements, ['App/App.entitlements', 'App/App.entitlements']);
+  assert.deepEqual(entitlements, ['App/App.entitlements', 'App/App.entitlements', 'UsWidgets/UsWidgets.entitlements', 'UsWidgets/UsWidgets.entitlements']);
 
   for (const file of ['UsBridgeViewController.swift', 'UsAppConfiguration.swift', 'UsPrivateStorage.swift']) {
     assert.match(pbx, new RegExp(`/\\* ${file.replace('.', '\\.')} in Sources \\*/,`), `${file} deve compilare nel target App`);
@@ -79,10 +80,10 @@ test('M15 iOS: Info.plist dichiara scheme, permessi reali e nessuna capability p
   const privacy = read('ios/App/App/PrivacyInfo.xcprivacy');
   assert.match(privacy, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
   assert.deepEqual(fs.readdirSync(IOS_APP).filter((name) => name.endsWith('.entitlements')), ['App.entitlements']);
-  // Push (Native Notifications V1) and, since iOS Store V1, Sign in with Apple
-  // and Universal Links for /invito. No App Group, Keychain sharing or other
-  // capability yet (widgets: W0).
-  assert.deepEqual(plistKeys(read('ios/App/App/App.entitlements')), ['aps-environment', 'com.apple.developer.applesignin', 'com.apple.developer.associated-domains']);
+  // Push (Native Notifications V1), Sign in with Apple and Universal Links for
+  // /invito (iOS Store V1), and since the widgets (W0) the App Group and the
+  // Keychain group shared with the extension.
+  assert.deepEqual(plistKeys(read('ios/App/App/App.entitlements')), ['aps-environment', 'com.apple.developer.applesignin', 'com.apple.developer.associated-domains', 'com.apple.security.application-groups', 'keychain-access-groups']);
 });
 
 test('M15 iOS: Back nativo = swipe dal bordo sinistro sulla stessa history di Android, mai uscita', () => {
@@ -100,7 +101,7 @@ test('M15 iOS: Back nativo = swipe dal bordo sinistro sulla stessa history di An
   assert.match(read('ios/App/App/Base.lproj/Main.storyboard'), /customClass="UsBridgeViewController" customModule="App"/);
 });
 
-test('M15 iOS: sessione fuori dai backup e App Group riservato ma non attivato', () => {
+test('M15 iOS: sessione fuori dai backup; dal W0 l’App Group riservato è quello dei widget', () => {
   const delegate = read('ios/App/App/AppDelegate.swift');
   const storage = read('ios/App/App/UsPrivateStorage.swift');
   const config = read('ios/App/App/UsAppConfiguration.swift');
@@ -110,7 +111,9 @@ test('M15 iOS: sessione fuori dai backup e App Group riservato ma non attivato',
   assert.match(storage, /isExcludedFromBackup = true/);
   assert.match(config, /appGroupIdentifier = "group\.app\.uscouple\.shared"/);
   assert.match(config, /bundleIdentifier = "app\.uscouple"/);
-  assert.equal(fs.existsSync(path.join(ROOT, 'ios', 'App', 'UsWidgets')), false, 'nessuna WidgetKit extension in M15');
+  // W0 (14/11/2026): the WidgetKit extension uses the same reserved group, never the session.
+  assert.equal(fs.existsSync(path.join(ROOT, 'ios', 'App', 'UsWidgets')), true, 'estensione WidgetKit dal W0');
+  assert.match(read('native-plugins/us-widget-bridge/ios/Sources/UsWidgetBridgePlugin/Core/UsWidgetShared.swift'), /appGroup = "group\.app\.uscouple\.shared"/);
 });
 
 test('M15 iOS: icone 1024 opache e launch screen derivate dagli asset APPROVED, verificate per hash', () => {
@@ -226,14 +229,15 @@ test('M15 regressione Android: widget system, minSdk 26 e allowBackup=false inva
   assert.match(read('android/variables.gradle'), /minSdkVersion = 26\b/);
   assert.match(read('android/app/src/main/AndroidManifest.xml'), /android:allowBackup="false"/);
   const bridge = JSON.parse(read('native-plugins/us-widget-bridge/package.json'));
-  assert.deepEqual(Object.keys(bridge.capacitor), ['android'], 'il bridge widget resta solo Android');
+  assert.deepEqual(Object.keys(bridge.capacitor), ['android', 'ios'], 'dal W0 il bridge widget c’è anche su iOS');
   const widgets = read('widgets.js');
   assert.match(widgets, /url\.protocol !== 'us:' \|\| url\.hostname !== 'widget'/);
   assert.match(widgets, /const nativeEnabled = Boolean\(platform\?\.isNative && platform\?\.hasWidgetBridge\?\.\(\) !== false\)/,
-    'su iOS (bridge assente) Widget Hub e widget restano spenti');
+    'Widget Hub e widget si accendono solo dove c’è il bridge (Android e, dal W0, iOS)');
   assert.match(read('platform.js'), /return isPluginAvailable\('UsWidgetBridge'\)/);
   const swiftPackage = read('ios/App/CapApp-SPM/Package.swift');
-  assert.doesNotMatch(swiftPackage, /widget-bridge|UsWidgetBridge/);
+  assert.match(swiftPackage, /\.package\(name: "UsWidgetBridge", path: "\.\.\/\.\.\/\.\.\/native-plugins\/us-widget-bridge"\)/);
+  assert.match(swiftPackage, /\.product\(name: "UsWidgetBridge", package: "UsWidgetBridge"\)/);
 });
 
 test('M15 CI macOS: npm ci, build web, cap sync ios e build Xcode simulator senza firma', () => {

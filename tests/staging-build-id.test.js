@@ -22,7 +22,7 @@ test('staging BUILD_ID: release plus commit, stamped in index, worker, manifest 
   const out = stampStagingBuild({ index: read('index.html'), worker, manifest: read('manifest.webmanifest') }, id);
   assert.match(out.index, new RegExp(`<meta name="us-build" content="${id}"/>`));
   assert.doesNotMatch(out.index, new RegExp(`\\?v=${base}(?!-s)`), 'no asset keeps the release id');
-  assert.match(out.index, new RegExp(`/diario\\.js\\?v=${id}"`));
+  assert.match(out.index, new RegExp(`/app\\.js\\?v=${id}"`));
   assert.match(out.worker, new RegExp(`const BUILD_ID = "${id}";`));
   assert.doesNotMatch(out.manifest, new RegExp(`\\?v=${base}(?!-s)`));
   assert.deepEqual(JSON.parse(out.version), { version: id });

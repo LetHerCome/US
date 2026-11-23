@@ -59,12 +59,35 @@
 .us-cal-day-section h4{margin:0 0 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(247,242,248,.55)}
 .us-cal-day-empty{margin:0;padding:12px;border-radius:14px;border:1px dashed rgba(255,255,255,.10);color:rgba(247,242,248,.5);font-size:12px;text-align:center}
 
+.us-cal-detail-body{padding:8px 18px 4px;display:grid;gap:8px}
+.us-cal-detail-body p{margin:0;font-size:12px;line-height:1.5;color:rgba(247,242,248,.78)}
+.us-cal-detail-kind{color:#c8b6ff!important;font-weight:650}
+.us-cal-detail-note{white-space:pre-wrap}
+.us-cal-detail-actions{display:flex;gap:9px;padding:14px 18px 2px}
+.us-cal-detail-actions[hidden]{display:none!important}
+.us-cal-detail-actions button{flex:1;min-height:46px;border-radius:15px;font-size:12px;font-weight:700}
+.us-cal-detail-edit{border:1px solid rgba(169,133,255,.26);background:rgba(169,133,255,.12);color:var(--us-color-text)}
+.us-cal-detail-delete{border:1px solid rgba(255,94,126,.18);background:rgba(255,94,126,.09);color:var(--us-color-rose-2)}
+
+.us-cal-form{padding:8px 18px 2px}
+
+.us-cal-field>span{display:block}
 .us-cal-detail-reminders{padding:6px 18px 0;display:grid;gap:6px}
 .us-cal-detail-reminders:empty{display:none}
 .us-cal-detail-reminders h4{margin:4px 0 2px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(247,242,248,.55)}
 .us-cal-detail-reminder{margin:0;padding:9px 11px;border-radius:13px;border:1px solid rgba(255,158,182,.14);background:rgba(255,158,182,.05);font-size:12px;color:rgba(247,242,248,.82);display:flex;align-items:center;justify-content:space-between;gap:8px}
 .us-cal-detail-reminder small{color:rgba(247,242,248,.5);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
 /* hidden must always win: the global stylesheet styles these as block/flex. */
+.us-cal-field[hidden]{display:none!important}
+.us-cal-field{display:block;margin-top:12px}
+.us-cal-field>span{display:block;margin:0 0 7px 3px;font-size:11px;font-weight:750;color:var(--us-color-text-2)}
+.us-cal-field>span i{font-style:normal;color:var(--us-color-text-3);font-weight:500}
+.us-cal-field input,.us-cal-field textarea{width:100%;padding:11px 13px;font-size:13px;font-family:inherit;border-radius:var(--us-radius-control)}
+.us-cal-allday-field{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:15px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
+.us-cal-allday-field input{width:20px;height:20px;flex:0 0 auto;accent-color:var(--us-color-violet)}
+.us-cal-allday-field span{font-size:12px;font-weight:650;color:var(--us-text)}
+.us-cal-form-status{min-height:18px;margin-top:9px;color:var(--us-color-text-2);font-size:11px}
+.us-cal-form-save{width:100%;min-height:48px;margin-top:14px;border-radius:16px}
 
 body.us-cal-open{overflow:hidden}
 
@@ -120,6 +143,8 @@ body.us-cal-open{overflow:hidden}
 .us-cal-tempo-copy ul{margin:4px 0 0;padding:0;list-style:none;display:grid;gap:2px}
 .us-cal-tempo-copy li{font-size:13px;color:rgba(247,242,248,.85);font-variant-numeric:tabular-nums}
 .us-cal-tempo-copy p{margin:4px 0 0;font-size:12px;color:rgba(247,242,248,.55)}
+.us-cal-form-context{margin:0 2px;font-size:11.5px;font-style:italic;color:var(--muted)}
+.us-cal-form-context[hidden]{display:none}
 
 /* M9C — il calendario sceglie la data: tocco su un giorno = nuova voce. */
 .us-cal-day{cursor:pointer}
@@ -132,6 +157,13 @@ body.us-cal-open{overflow:hidden}
 .us-cal-pick-banner small{font-size:10.5px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,205,225,.8)}
 .us-cal-pick-banner b{font-size:13.5px;color:var(--us-color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .us-cal-pick-banner button{flex:0 0 auto;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--us-color-text);font-size:12px;font-weight:700}
+.us-cal-form-day{margin:0 2px 2px;font:500 19px/1.2 var(--us-font-editorial);color:var(--us-color-text)}
+.us-cal-form-day[hidden],.us-cal-form-day-entries[hidden]{display:none!important}
+.us-cal-form-day-entries{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+.us-cal-form-day-kicker{width:100%;font-size:var(--us-type-eyebrow);font-weight:750;letter-spacing:var(--us-type-eyebrow-tracking);text-transform:uppercase;color:var(--us-color-accent-ink)}
+.us-cal-form-day-entry{display:inline-flex;gap:6px;max-width:100%;color:var(--us-color-text);font-size:12px;text-align:left;align-items:center;min-height:44px;padding:0 12px;border-radius:var(--us-radius-control);border:var(--us-glass-1-border);background:var(--us-glass-1-bg)}
+.us-cal-form-day-entry b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.us-cal-form-day-entry small{flex:0 0 auto;color:rgba(247,242,248,.55);font-size:11px}
 
 /* M10.1C — selected day: the real agenda sits right under the month grid. */
 .us-cal-day-detail{margin-top:14px;padding:16px 14px 14px;border-radius:22px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02) 55%),rgba(20,16,26,.72);box-shadow:0 14px 34px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06)}
@@ -162,7 +194,7 @@ body.us-cal-open{overflow:hidden}
 .us-cal-event-time{font-size:12px;font-weight:650;color:rgba(247,242,248,.62);font-variant-numeric:tabular-nums}
 .us-cal-event-title{font-size:15.5px;line-height:1.28;font-weight:650;color:var(--us-color-text);overflow-wrap:anywhere;word-break:break-word}
 .us-cal-event-place{font-size:12.5px;line-height:1.35;color:rgba(247,242,248,.58);overflow-wrap:anywhere}
-
+.us-cal-form-day-entry .us-cal-chip{align-self:center}
 .us-cal-legend-item .us-cal-chip{font-size:9px;height:15px;min-width:14px}
 @media(max-width:360px){
   .us-cal-add{padding:0 12px;font-size:12px}
@@ -189,6 +221,7 @@ body.us-cal-open{overflow:hidden}
 .us-cal-head-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .us-cal-events-link{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:var(--us-glass-1-bg);color:var(--us-color-text);font-size:12px;font-weight:700;--us-icon-size:16px}
 
+
 /* ===== US-SECONDARY-SURFACES-01 · Calendar density ===== */
 .us-cal-head{padding:14px 16px 9px}
 .us-cal-head h2{font-size:21px}
@@ -209,7 +242,27 @@ body.us-cal-open{overflow:hidden}
 .us-cal-day-sections{padding:5px 15px 3px;gap:12px}
 .us-cal-day-section h4{margin-bottom:6px;font-size:10px}
 .us-cal-day-empty{padding:10px;border-radius:12px;font-size:11px}
-
+.us-cal-detail-body{padding:7px 15px 3px;gap:6px}
+.us-cal-detail-body p{font-size:11.5px;line-height:1.4}
 .us-cal-detail-reminders{padding:5px 15px 0}
+.us-cal-detail-actions{padding:10px 15px 2px}
+.us-cal-form{padding:6px 15px 2px}
+.us-cal-field{margin-top:9px}
+.us-cal-field>span{margin-bottom:5px;font-size:10.5px}
+.us-cal-field input,.us-cal-field textarea{padding:10px 12px}
+
 
 /* ===== US-1.0 QUICK CALENDAR · presets + keyboard time entry ===== */
+.us-cal-presets{display:flex;gap:7px;margin:8px 0 2px;overflow-x:auto;scrollbar-width:none}
+.us-cal-presets::-webkit-scrollbar{display:none}
+.us-cal-presets button{flex:0 0 auto;min-height:38px;padding:0 13px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);color:var(--us-color-text-2);font-size:10.5px;font-weight:800;letter-spacing:.055em;text-transform:uppercase}
+.us-cal-presets button[aria-pressed="true"]{border-color:rgba(255,158,182,.30);background:rgba(255,158,182,.12);color:#ffd3de}
+.us-cal-time-fields{display:grid;grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);align-items:end;gap:8px}
+.us-cal-time-fields[hidden]{display:none!important}
+.us-cal-time-fields .us-cal-field{min-width:0}
+.us-cal-time-input{text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.05em;font-size:16px!important}
+.us-cal-time-arrow{display:grid;place-items:center;height:42px;padding-bottom:2px;color:var(--us-color-text-3);font-size:15px}
+@media(max-width:340px){
+  .us-cal-time-fields{gap:5px;grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr)}
+  .us-cal-presets button{padding:0 10px}
+}

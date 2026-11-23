@@ -368,10 +368,10 @@ function install(w){
     }
     fieldError('');
     if(!(await persist(next)))return;
-    // Il diario, ma pulito: «Salvato»; the countdown becomes the sentence of the day on Oggi.
+    // Mockup: the sheet closes on the editor, "Salvato e in Oggi", and the time arrives on Oggi.
     // The next open() starts from the list again.
     draft=null;close();
-    w.toast?.('Salvato',{quiet:false,icon:'check'});
+    w.toast?.('Salvato e in Oggi',{quiet:false,icon:'check'});
     if(!surface.hidden&&!reduced()&&typeof surface.animate==='function')surface.animate([{opacity:0,scale:.9},{opacity:1,scale:1}],{duration:480,easing:'cubic-bezier(.22,1.15,.36,1)'});
   });
   $('usCountdownDelete').addEventListener('click',async()=>{

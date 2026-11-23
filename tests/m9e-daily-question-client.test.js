@@ -58,7 +58,7 @@ test('M9E client: hydrateToday usa get_or_create_daily_question, poi get_daily_s
   assert.deepEqual({ ...t.calls[1][1] }, { target_question_id: 'q-today' });
   assert.equal(t.nodes.qtext.textContent, Q().question);
   assert.equal(t.nodes.answer.hidden, false); assert.equal(t.nodes.answer.disabled, false);
-  assert.equal(t.nodes.todaySaveBtn.hidden, false); assert.equal(t.nodes.todaySaveBtn.textContent, 'Rispondi'); // mockup v5 «I fogli» (16/11/2026)
+  assert.equal(t.nodes.todaySaveBtn.hidden, false); assert.equal(t.nodes.todaySaveBtn.textContent, 'Invia la mia risposta'); // parity 2026-10 (mockup sheet button)
   assert.equal(t.window.todayQuestion.id, 'q-today');
   assert.equal(t.refreshes.at(-1).daily.question.id, 'q-today', 'M9B card is fed by the new authority');
 });
@@ -149,7 +149,7 @@ test('M9E client: una risposta lenta superata da una più recente viene ignorata
 test('M9E client: reveal e partner nascosto restano quelli di get_daily_state', async () => {
   const waiting = install({ rpc: ok(Q(), { my_answer: null, partner_has_answer: true, both_answered: false, partner_answer: null }) });
   await waiting.hydrate();
-  assert.match(waiting.nodes.locked.innerHTML, /Le due risposte si aprono insieme quando rispondi\./); // mockup v5 «I fogli» (16/11/2026)
+  assert.match(waiting.nodes.locked.innerHTML, /Vedrete le risposte insieme appena invii la tua\./); // parity 2026-10 (mockup locked line)
   assert.equal(waiting.nodes.todayReveal.innerHTML, '');
   const reveal = install({ rpc: ok(Q(), { my_answer: 'Mia', partner_has_answer: true, both_answered: true, partner_answer: 'Sua' }) });
   await reveal.hydrate();
@@ -208,15 +208,10 @@ test('M9E client: una sola authority, niente fallback da seed scaduto, card M9B 
   assert.equal(window.UsDailyRitual.viewModel({ daily: null }), null);
 
   const css = read('styles.css');
-  // Il diario, ma pulito (15/11/2026): the M9B card stays mounted in the hidden
-  // hero; the question card of Oggi (diario.js) says the error and offers Riprova.
-  assert.match(read('diario.js'), /if \(source\?\.status === 'error'\) \{[\s\S]{0,300}La domanda di oggi non è arrivata\.[\s\S]{0,200}>Riprova<\/button>/);
-  // Mockup v5 «I fogli» (16/11/2026): the sheet is a .dy-foglio; hidden fields and buttons go away there.
-  assert.match(read('diario.css'), /\.dy-f-in\[hidden\]\{display:none\}/);
-  assert.match(read('diario.css'), /\.dy-btn\[hidden\]\{display:none\}/);
-  void css;
+  assert.match(css, /\.us-daily-ritual\[data-state="error"\]/);
+  assert.match(css, /#answer\[hidden\],#todaySaveBtn\[hidden\]\{display:none!important\}/);
   const html = read('index.html');
-  assert.match(html, /<textarea id="answer" class="dy-f-in dy-f-hand" rows="4" placeholder="scrivi qui…" hidden disabled><\/textarea>/);
+  assert.match(html, /<textarea id="answer" rows="4" placeholder="Scrivi…" hidden disabled><\/textarea>/);
   assert.match(html, /id="todaySaveBtn" onclick="saveAnswer\(\)" hidden disabled>/);
   assert.doesNotMatch(html, /Qual è una cosa che vorresti rifare insieme per la prima volta\?/, 'no hard-coded fake question before hydration');
 });

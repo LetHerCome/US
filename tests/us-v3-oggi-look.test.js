@@ -95,7 +95,7 @@ test('Oggi looks: six curated themes and eight effects (Aurora since Sintonia V2
   assert.doesNotMatch(copy, /\bcoin|monet|gettoni|crediti|premium|acquista/);
 });
 
-test('Oggi looks: every theme is ONE token block shared by the real Oggi and its preview', { skip: 'Il diario, ma pulito (15/11/2026): i temi e gli effetti di Oggi sono in pausa con le Atmosfere: le loro regole sul vecchio hero sono state potate' }, () => {
+test('Oggi looks: every theme is ONE token block shared by the real Oggi and its preview', () => {
   for (const id of THEMES.slice(1)) {
     assert.match(lookCss, new RegExp(`html\\[data-us-oggi-theme="${id}"\\],\\s*\\.us-look-phone\\[data-oggi-theme="${id}"\\]\\{`), id);
   }
@@ -103,7 +103,7 @@ test('Oggi looks: every theme is ONE token block shared by the real Oggi and its
   for (const id of EFFECTS.slice(1)) assert.match(lookCss, new RegExp(`\\.us-oggi-fx\\[data-fx="${id}"\\]>i\\{`), id);
 });
 
-test('Oggi looks: themes never restyle global US — only --oggi-* tokens consumed by Oggi selectors', { skip: 'Il diario, ma pulito (15/11/2026): i temi e gli effetti di Oggi sono in pausa con le Atmosfere: le loro regole sul vecchio hero sono state potate' }, () => {
+test('Oggi looks: themes never restyle global US — only --oggi-* tokens consumed by Oggi selectors', () => {
   const blocks = [...lookCss.matchAll(/html\[data-us-oggi-theme="[a-z]+"\],[^{]*\{([^}]*)\}/g)].map((m) => m[1]);
   assert.equal(blocks.length, 6);
   for (const body of blocks) {
@@ -119,7 +119,7 @@ test('Oggi looks: themes never restyle global US — only --oggi-* tokens consum
   assert.match(read('progression.css'), /:root\[data-us-theme="rose"\]/, 'and keeps working');
 });
 
-test('Oggi effects: above the photo, below every control, never blocking touches, still under reduced motion', { skip: 'Il diario, ma pulito (15/11/2026): i temi e gli effetti di Oggi sono in pausa con le Atmosfere: le loro regole sul vecchio hero sono state potate' }, () => {
+test('Oggi effects: above the photo, below every control, never blocking touches, still under reduced motion', () => {
   assert.match(lookCss, /#homeHero>\.us-oggi-tint,#homeHero>\.us-oggi-deco,#homeHero>\.us-oggi-fx\{position:absolute;inset:0;pointer-events:none\}/);
   assert.match(lookCss, /#homeHero>\.us-oggi-fx\{z-index:3\}/);
   assert.match(read('countdown.css'), /\.us-countdown-display\{position:relative;z-index:4;/, 'the countdown stays above effects');

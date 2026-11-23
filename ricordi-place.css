@@ -2,6 +2,14 @@
    album, the place search sheet and the map in Ricordi. */
 
 /* Composer: "Dove · facoltativo" under the date. */
+.us-moment-compose-sheet .moment-place-field{display:block;margin:0}
+.moment-place-row{display:flex;gap:8px;align-items:stretch}
+.moment-place-btn{flex:1;min-width:0;min-height:52px;display:flex;align-items:center;gap:10px;padding:0 14px;border:1px dashed var(--us-color-line-strong);border-radius:16px;background:var(--us-color-bg);color:var(--us-color-text-3,rgba(247,239,233,.62));font:400 16px/1.2 var(--us-font-ui);text-align:left;--us-icon-size:18px}
+.moment-place-btn>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.moment-place-field.has-place .moment-place-btn{border-style:solid;color:var(--us-color-text)}
+.moment-place-field.has-place .moment-place-btn .us-icon{color:var(--us-color-accent-ink)}
+.moment-place-clear{flex:0 0 52px;min-height:52px;display:grid;place-items:center;border:1px solid var(--us-color-line-strong);border-radius:16px;background:var(--us-color-bg);color:var(--us-color-text);--us-icon-size:16px}
+.moment-place-btn:focus-visible,.moment-place-clear:focus-visible{outline:none;border-color:var(--us-ambra);box-shadow:0 0 0 3px color-mix(in srgb,var(--us-ambra) 28%,transparent)}
 
 /* Album: the place under the date, a tap changes it. */
 .us-album-place{display:inline-flex;align-items:center;gap:7px;max-width:100%;min-height:36px;margin:6px 0 2px;padding:0 12px 0 10px;border:1px dashed var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text-3,rgba(247,239,233,.62));font:500 13px/1.2 var(--us-font-ui);--us-icon-size:15px}

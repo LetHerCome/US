@@ -21,8 +21,7 @@ test('Noi is the only user-facing calendar; legacy launchers delegate rather tha
 });
 test('Noi add uses existing date-aware editor directly, preserving all-day, start/end, edit and reminders',()=>{
   assert.match(html,/id="usNoiV2AddTop" data-noi-add/);
-  // Il diario, ma pulito (15/11/2026): the one + of the Noi header is a dark square button.
-  assert.equal((html.match(/class="dy-ib is-dark" id="usNoiV2AddTop" data-noi-add/g)||[]).length,1);
+  assert.equal((html.match(/class="us-noi-v2-add"[^>]*data-noi-add/g)||[]).length,1);
   assert.match(noi,/window\.UsCalendarLinks\.createForDate\(selected\)/);
   assert.match(calendar,/startCreateForDate\(dateISO\);\s*void prepareNoiEntryDate\(dateISO\)\.then/,'editor opens before waiting on reads');
   assert.match(calendar,/ensureNoiEditorSheets\(\)/);
@@ -40,8 +39,7 @@ test('La nostra settimana is in Noi and restores month, linked-idea picker remai
   // Noi nuova (03/11/2026): no Lavagna tile; the week opens through openCalendar.
   assert.match(noi,/mode=requestedMode==='week'\?'week':'calendar';/);
   assert.doesNotMatch(html,/data-noi-open-link/);
-  // Founder, 16/11/2026 (mockup v5 «I fogli», D5): no button opened the week sheet any more; its markup left.
-  assert.doesNotMatch(html,/id="usNoiLavagna"/);
+  assert.match(html,/id="usNoiV2WeekBack" hidden/);
   assert.match(noi,/window\.UsCalendarLinks\?\.createForIdeaDate/);
   assert.match(calendar,/async function createCalendarEntryForIdeaDate\(dateISO\)/);
   assert.match(calendar,/openIdeaForm\(pick,dateISO\)/);
@@ -72,8 +70,7 @@ test('Noi: external date opens selected month and plus calls create on that exac
   const document={readyState:'complete',hidden:false,getElementById:node,querySelector:()=>null,addEventListener(){}};
   vm.runInNewContext(noi,{window,document,console:{warn(){}},MutationObserver:class{observe(){}},Promise,Date,setTimeout,Set,Map});
   window.USNoiV2.openCalendar({date:'2026-12-24'});
-  // Il diario, ma pulito (15/11/2026): the year sits beside the month as .dy-cal-year.
-  assert.match(node('usNoiV2Month').innerHTML,/^Dicembre <span class="dy-cal-year">2026<\/span>$/,'Due colori: the year is set smaller beside the month');
+  assert.match(node('usNoiV2Month').innerHTML,/^Dicembre <span class="us-noi-v2-year">2026<\/span>$/,'Due colori: the year is set smaller beside the month');
   assert.equal(node('usNoiV2AddTop').getAttribute?.('aria-label'),undefined); // fake attribute intentionally ignored
   node('usNoiV2').emit('click',{target:{closest:selector=>selector==='[data-noi-add]'?{}:null}});
   assert.deepEqual(opened,['2026-12-24']);
