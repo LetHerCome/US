@@ -2,6 +2,17 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Transizioni: come in produzione, col colore sfumato (25/11)
+
+**Stato:** ramo `claude/transizioni-ogni-tocco`, verso il ramo fisso di staging. Founder, 25/11: «se passo velocemente da una pagina all'altra non è reattivo, non rifà una nuova transizione», poi «vedi su produzione com'è reattivo, devi fare la stessa cosa qui in staging solo con il gradiente che abbiamo».
+
+**Cosa cambia:**
+- **La logica di produzione:** il colore copre in 260 ms; mentre sale, un tocco su un'altra scheda gli fa cambiare subito colore e pagina di arrivo (sulla scheda di partenza il colore torna indietro); a pagina cambiata, un tocco fa partire subito una transizione nuova. Prima ogni tocco a metà cambiava pagina di colpo.
+- **Col colore sfumato:** il cerchio che copre ha il bordo morbido, e la pagina nuova si apre da un buco morbido che si allarga dal tasto (in produzione entrambi hanno il bordo netto). Sui telefoni che non sanno animare il buco, il colore si dissolve.
+- **Giorno e Notte:** i colori delle schede si ricordano anche per tema; prima, dopo un cambio di Aspetto (o Automatico al tramonto), il colore tra le pagine restava quello del tema di prima.
+
+**Server:** niente.
+
 ### Noi, Fase A: il vostro tempo insieme (24/11)
 
 **Stato:** ramo `claude/revisione-temi-transizioni`, verso il ramo fisso di staging; la migrazione va applicata a US-STAGING col via del founder. Founder, 24/11: «noi è ancora uguale a prima»; decisioni del grill-me D1–D16 e tavola «US · Noi, il vostro tempo» (https://claude.ai/artifact/WZ1Q5PgRMq6VaJmuY9gpUh).

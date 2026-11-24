@@ -21,21 +21,19 @@ window.__usDueColoriInstalled = true;
 const doc = document;
 const root = doc.documentElement;
 const original = window.go;
-// Durations in ms. Fluidità 2 (founder, 24/11/2026): «un po' troppo veloci»
-// at 300 ms, the colour flashed on in two frames. Now it is seen growing
-// from the tab and slows as it arrives. Its edge is soft (founder: «eliminare
-// il bordo netto e fare sì che prendesse piano piano la pagina»): the colour
-// takes the page little by little; the whole change takes ~0.8 s, and a
-// tap during it lands at once (rush).
-const COVER_MS = 460;
-const REVEAL_MS = 300;
-const GROW = 'cubic-bezier(.4,.05,.45,1)';
+// The production tide (founder, 25/11/2026: «vedi su produzione com'è
+// reattivo, devi fare la stessa cosa qui in staging solo con il gradiente»):
+// its times, its curve (the mockup's E.io) and its way with a second tap,
+// with the soft-edged colour of staging («eliminare il bordo netto»). The
+// colour covers in 260 ms, the new page opens through a soft hole from the
+// tap in 340 ms while its blocks rise in, 50 ms apart.
+const COVER_MS = 260;
+const REVEAL_MS = 340;
+const IO = 'cubic-bezier(.7,0,.2,1)';
 const GLIDE = 'cubic-bezier(.45,0,.15,1)';
-// The new page's blocks rise quickly (founder, 24/11/2026: «lentine»):
-// right away, 30 ms apart, 320 ms each.
-const STAGGER_DELAY = 0;
-const STAGGER_STEP = 30;
-const STAGGER_MS = 320;
+const STAGGER_DELAY = 160;
+const STAGGER_STEP = 50;
+const STAGGER_MS = 460;
 const FADE_MS = 180;
 const BOUNCE_MS = 480;
 const OUT = 'cubic-bezier(.2,.8,.2,1)';
@@ -69,6 +67,17 @@ function floodLayer() {
     doc.body.appendChild(layer);
   }
   return layer;
+}
+// The soft hole that opens the new page: a mask on the colour, its radius a
+// registered length the browser can animate (due-colori.css .is-opening).
+// Without it (older webviews) the colour simply dissolves.
+const HOLE_EDGE = 140;
+let holeSupport = null;
+function canHole() {
+  if (holeSupport !== null) return holeSupport;
+  try { window.CSS?.registerProperty?.({ name: '--us-hole', syntax: '<length>', inherits: false, initialValue: '0px' }); } catch (_) { /* already registered */ }
+  try { holeSupport = Boolean(window.CSS?.supports?.('mask-image', 'radial-gradient(circle, #000, transparent)') || window.CSS?.supports?.('-webkit-mask-image', 'radial-gradient(circle, #000, transparent)')) && typeof window.CSS?.registerProperty === 'function'; } catch (_) { holeSupport = false; }
+  return holeSupport;
 }
 // The disc is solid to 52 % of its radius, then fades out (due-colori.css).
 // It is small (DISC px) and drawn once: the layer always stays in the page,
@@ -106,6 +115,7 @@ function clear() {
   entering = null;
   if (!layer) return;
   layer.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
+  layer.classList.remove('is-opening');
   delete layer.dataset.on;
 }
 
@@ -122,7 +132,8 @@ function flushPending() {
 // reading it at the tap would force a style pass in the tap's own frame.
 const colors = new Map();
 function tabColor(button) {
-  const key = `${button.dataset.page}|${root.dataset.usAccent || ''}|${root.dataset.usTheme || ''}|${root.dataset.usMe || ''}|${root.dataset.usPagine || ''}`;
+  // Giorno or Notte (aspetto.js) changes every tab's colour too.
+  const key = `${button.dataset.page}|${root.dataset.usLuce || ''}|${root.dataset.usAccent || ''}|${root.dataset.usTheme || ''}|${root.dataset.usMe || ''}|${root.dataset.usPagine || ''}`;
   if (!colors.has(key)) {
     const value = getComputedStyle(button).getPropertyValue('--us-nav-c').trim();
     colors.set(key, value || getComputedStyle(root).getPropertyValue('--us-noi').trim());
@@ -217,60 +228,84 @@ async function flood(button, self, id, options) {
   clear();
   markNav(button);
   bounce(button);
-  el.style.setProperty('--us-flood', color);
+  disc.style.setProperty('--us-flood', color);
   const grown = placeDisc(at);
   el.dataset.on = '1';
-  const current = { ticket, id, from, at, button, cover: null };
+  const current = { ticket, id, from, at, button, back: false, cover: null };
   job = current;
   pending = { self, args: [id, { ...options, motionCommit: true }] };
   try {
-    current.cover = disc.animate([{ transform: 'scale(0.002)' }, { transform: `scale(${grown.toFixed(3)})` }],
-      { duration: COVER_MS, easing: GROW, fill: 'both' });
+    current.cover = disc.animate([{ transform: 'scale(0.002)', opacity: 1 }, { transform: `scale(${grown.toFixed(3)})`, opacity: 1 }],
+      { duration: COVER_MS, easing: IO, fill: 'both' });
     await covered(current.cover);
+    if (current.back) await current.cover.finished;
   } catch (_) { /* cancelled by a programmatic go() */ }
-  if (ticket !== run) return; // a tap took over (rush) or a programmatic go() landed
+  if (ticket !== run) return;
+  if (current.back) { // the tab it left was tapped again: the colour went back
+    job = null;
+    clear();
+    busy = false;
+    drainAfter();
+    return;
+  }
   // The screen is all colour now: the page changes under it (its own fade
-  // is off, the mockup's view opens fully opaque), then the colour
-  // dissolves. The fade starts on the frame after the change, so the
-  // change's style and layout never eat into it.
+  // is off, the mockup's view opens fully opaque), then opens from the tap
+  // (from the last tab tapped, if another came while the colour rose)
+  // through a soft hole. The reveal starts on the frame after the change, so
+  // the change's style and layout never eat into it.
   const to = current.id;
+  const { x, y, radius } = current.at;
   entering = doc.getElementById(to);
   entering?.classList.add('us-marea-in');
   flushPending();
   stagger(doc.getElementById(to), STAGGER_DELAY);
-  // The disc may still be growing off screen: it goes on while it dissolves.
   try {
-    await el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: REVEAL_MS, easing: OUT, fill: 'forwards' }).finished;
+    if (canHole()) {
+      el.style.setProperty('--us-hole-x', `${x}px`);
+      el.style.setProperty('--us-hole-y', `${y}px`);
+      el.classList.add('is-opening');
+      await el.animate([{ '--us-hole': '0px' }, { '--us-hole': `${radius + HOLE_EDGE}px` }], { duration: REVEAL_MS, easing: IO, fill: 'forwards' }).finished;
+    } else {
+      await el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: REVEAL_MS, easing: IO, fill: 'forwards' }).finished;
+    }
   } catch (_) { /* cancelled */ }
   if (ticket === run) { job = null; clear(); busy = false; drainAfter(); }
 }
 
-// A tab tapped while the colour moves answers at once (founder, 24/11/2026:
-// «se cambi velocemente le pagine non reagiscono»): no second flood to wait
-// for, the page changes now and the colour still on screen fades out in a
-// moment. Tap after tap, each one lands straight away.
-const RUSH_MS = 160;
-function rush(button, self, id, options) {
-  const ticket = ++run;
-  busy = true;
-  pending = null;
-  job = null;
-  markNav(button);
-  bounce(button);
-  entering?.classList.remove('us-marea-in');
-  entering = null;
-  // Back to the page the colour was leaving (it had not changed yet): it stays
-  // as it is, nothing reloads; only the colour goes.
-  if (doc.querySelector('.page.active')?.id !== id) {
-    switching = true;
-    try { original.call(self, id, { ...options, motionCommit: true }); } finally { switching = false; }
+// A tab tapped while the colour moves is never lost (as in production).
+// While the colour rises the flood turns to the new tab: its colour, its
+// mark, and the page opens from it; the tab it left turns the colour back.
+// Once the page has changed, the new tab starts a flood of its own at once.
+function retarget(button, self, id, options) {
+  const current = job;
+  if (!current || current.back) return false;
+  if (pending) {
+    if (id === current.id) return true;
+    if (id === current.from) {
+      current.back = true;
+      pending = null; // the page it left never changes
+      markNav(button);
+      bounce(button);
+      try { current.cover?.reverse(); } catch (_) { current.cover?.cancel(); }
+      return true;
+    }
+    current.id = id;
+    current.button = button;
+    current.at = origin(button);
+    pending.self = self;
+    pending.args = [id, { ...options, motionCommit: true }];
+    markNav(button);
+    bounce(button);
+    disc.style.setProperty('--us-flood', tabColor(button));
+    return true;
   }
-  const el = floodLayer();
-  const done = () => { if (ticket === run) { clear(); busy = false; drainAfter(); } };
-  if (!flooding() || !el.animate) { done(); return; }
-  const from = Number(getComputedStyle(el).opacity) || 1;
-  el.getAnimations().forEach((animation) => animation.cancel()); // the layer's own fade; the disc stays where it is
-  el.animate([{ opacity: from }, { opacity: 0 }], { duration: RUSH_MS, easing: OUT, fill: 'forwards' }).finished.then(done, done);
+  if (id === current.id) return true;
+  run += 1;
+  job = null;
+  clear();
+  busy = false;
+  flood(button, self, id, options);
+  return true;
 }
 
 // ---------- Sub-page: the Profilo over the page you came from (mockup UP.push / pop) ----------
@@ -353,7 +388,7 @@ if (typeof original === 'function') {
     const button = options && options.nav && !options.swipe && !options.motionCommit
       ? doc.querySelector(`.us-nav button[data-page="${id}"]`)
       : null;
-    if (button && busy && !slideJob) { rush(button, this, id, options); return undefined; }
+    if (button && busy && !slideJob && retarget(button, this, id, options)) return undefined;
     if (pending) { run += 1; job = null; clear(); busy = false; flushPending(); drainAfter(); }
     if (slideJob) finishSlide(); // a programmatic go() lands the slide at once
     const sub = id && id !== from && !doc.hidden && !options?.swipe && !options?.motionCommit
