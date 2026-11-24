@@ -674,8 +674,9 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
         </div>
       </div>
-      <div class="ricordi-section-head ricordi-story-head"><h3 id="ricordiStoryTitle">Mese per mese</h3><button type="button" class="ricordi-map-switch" id="ricordiMapSwitch" aria-pressed="false" onclick="UsRicordiPlace.toggleMap()"><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><span data-switch-label>Mappa</span></button></div>
+      <div class="ricordi-section-head ricordi-story-head"><h3 id="ricordiStoryTitle" class="noi-sr">Mese per mese</h3><div class="ricordi-views" role="tablist" aria-label="Come vedere i Ricordi"><button type="button" role="tab" data-ricordi-view="story" aria-selected="true">Raccolta</button><button type="button" role="tab" data-ricordi-view="board" aria-selected="false">Bacheca</button><button type="button" role="tab" data-ricordi-view="map" aria-selected="false">Mappa</button></div></div>
       <div class="ricordi-map" id="ricordiMap" aria-label="Mappa dei Ricordi" hidden></div>
+      <div class="ricordi-bacheca" id="ricordiBacheca" aria-label="Bacheca dei Ricordi" hidden></div>
       <div id="momentsGrid" class="moment-grid ricordi-story" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div></div>
       <section class="ricordi-chapters" id="ricordiChapters" aria-label="Capitoli" hidden></section>
     </section>

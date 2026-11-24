@@ -2,6 +2,19 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign, fase 8: Ricordi a polaroid e la bacheca (24/11)
+
+**Stato:** ramo `claude/redesign-fase8-ricordi` (sopra le fasi 6 e 7), verso il ramo fisso di staging. Founder, 24/11: «Vai allora andiamo avanti». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D12; tavole «Ricordi», «Bacheca» e «Bacheca intera» approvate il 23/11.
+
+**Cosa cambia:**
+- **La Raccolta a polaroid:** due per riga, mese per mese, un po' storte, col nastro nel colore di chi ha messo la foto, la didascalia scritta sotto (in corsivo) e il giorno.
+- **Raccolta · Bacheca · Mappa** in cima a Ricordi al posto del tasto «Mappa».
+- **La bacheca da detective:** i posti sono cartellini appuntati, messi come su una cartina vera (nord in alto), con fino a tre polaroid intorno e «+N» se ce ne sono di più; un filo rosso unisce i posti nell'ordine in cui ci siete stati la prima volta. Il cartellino apre la mappa lì, la polaroid apre il Ricordo.
+- **«Da appuntare»:** i Ricordi senza posto, con «Aggiungi il posto».
+- Si dispone da sola con quello che la pagina ha già: nessun dato nuovo, nessuna lettura in più.
+
+**Server:** niente. **Da sapere:** la didascalia è in Fraunces corsivo, perché l'app non ha un carattere scritto a mano (Caveat, nella tavola, andrebbe aggiunto). Il centraggio delle facce (#279) non c'è ancora: le polaroid tagliano la foto al centro.
+
 ### Redesign, fase 7: l'intro con i personaggi (24/11)
 
 **Stato:** ramo `claude/redesign-fase7-intro` (sopra la fase 6), verso il ramo fisso di staging. Founder, 24/11: «Vai allora andiamo avanti». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D14; tavole dell'intro approvate il 23/11.
