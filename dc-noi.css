@@ -516,3 +516,40 @@
   #bond .us-noi-v2-day-number{font-size:13px}
   #bond .us-noi-v2 .us-noi-v2-item{grid-template-columns:46px minmax(0,1fr) auto;gap:10px;padding:12px}
 }
+
+/* ---------- Noi, Fase A (founder, 24/11/2026; board «US · Noi, il vostro tempo») ---------- */
+/* «Vi rivedete tra»: the two characters either side of a timer, for couples apart. */
+#bond .us-noi-v2-meet{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;margin:4px 0 14px;padding:14px 12px 12px;border-radius:26px;border:1px solid var(--us-color-line);background:linear-gradient(120deg,color-mix(in srgb,var(--us-tu) 12%,transparent),color-mix(in srgb,var(--us-partner) 12%,transparent)),var(--us-color-surface)}
+#bond .us-noi-v2-meet[hidden]{display:none}
+#bond .us-noi-v2-meet-char{flex:none;display:grid;place-items:end center;width:62px}
+#bond .us-noi-v2-meet-mid{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding-bottom:4px;text-align:center}
+#bond .us-noi-v2-meet-k{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--us-color-text-2)}
+#bond .us-noi-v2-meet[data-today="1"] .us-noi-v2-meet-k{font-family:var(--us-font-editorial);font-size:22px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--us-color-text)}
+#bond .us-noi-v2-meet-timer{display:flex;gap:6px}
+#bond .us-noi-v2-meet-box{width:56px;padding:6px 0 5px;border-radius:12px;border:1px solid var(--us-color-line);background:var(--us-color-surface-2);display:flex;flex-direction:column;align-items:center}
+#bond .us-noi-v2-meet-box b{font-family:var(--us-font-editorial);font-weight:400;font-size:24px;line-height:1;color:var(--us-color-text)}
+#bond .us-noi-v2-meet-box small{font-size:9.5px;font-weight:700;letter-spacing:.06em;color:var(--us-color-text-2)}
+#bond .us-noi-v2-meet-what{font-size:12.5px;line-height:1.35;color:var(--us-color-text-2);overflow-wrap:anywhere}
+/* A special day: the two characters, dressed for it, and one line. */
+#bond .us-noi-v2-special{display:flex;align-items:center;gap:12px;margin:10px 0 2px;padding:12px 14px;border-radius:20px;border:1px solid var(--us-color-line);background:linear-gradient(120deg,color-mix(in srgb,var(--us-tu) 10%,transparent),color-mix(in srgb,var(--us-partner) 10%,transparent))}
+#bond .us-noi-v2-duo{flex:none;display:flex;align-items:flex-end}
+#bond .us-noi-v2-duo .us-char+.us-char{margin-left:-10px}
+#bond .us-noi-v2-special-copy{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+#bond .us-noi-v2-special-line{font-size:14.5px;line-height:1.35;font-weight:700;color:var(--us-color-text)}
+#bond .us-noi-v2-special-open{min-height:44px;padding:0 16px;border:0;border-radius:var(--us-radius-pill,999px);background:var(--us-color-text);color:var(--us-color-bg);font:700 13.5px/1 var(--us-font-ui);cursor:pointer}
+/* The form: Quando and the time side by side; Ci vediamo and Ogni anno as switches. */
+.us-cal-sheet .us-cal-when{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:10px}
+.us-cal-sheet .us-cal-switches{display:flex;flex-direction:column;gap:8px}
+.us-cal-sheet .us-cal-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;padding:8px 14px 8px 16px;border-radius:16px;background:var(--us-color-surface-2);cursor:pointer}
+.us-cal-sheet .us-cal-switch[hidden]{display:none}
+.us-cal-sheet .us-cal-switch-copy{min-width:0;display:flex;flex-direction:column;gap:2px}
+.us-cal-sheet .us-cal-switch-copy b{font-size:15px;font-weight:700;color:var(--us-color-text)}
+.us-cal-sheet .us-cal-switch-copy small{font-size:12.5px;color:var(--us-color-text-2)}
+.us-cal-sheet .us-cal-switch input{-webkit-appearance:none;appearance:none;position:relative;width:50px;height:30px;min-height:0;margin:0;padding:0;flex:none;border:0;border-radius:30px;background:var(--us-color-elevated);box-shadow:inset 0 0 0 1px var(--us-color-line-strong);cursor:pointer;transition:background .25s var(--us-ease-standard)}
+.us-cal-sheet .us-cal-switch input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .38s var(--us-ease-spring)}
+.us-cal-sheet .us-cal-switch input:checked{background:var(--us-accent-gradient,var(--us-tu));box-shadow:none}
+.us-cal-sheet .us-cal-switch input:checked::after{transform:translateX(20px)}
+.us-cal-sheet .us-cal-switch input:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+:root[data-us-motion="reduced"] .us-cal-sheet .us-cal-switch input::after{transition:none}
+@media (prefers-reduced-motion:reduce){.us-cal-sheet .us-cal-switch input::after{transition:none}}
+.us-cal-sheet #usCalendarTimeFields[hidden],.us-cal-sheet .us-cal-allday-field[hidden]{display:none!important}

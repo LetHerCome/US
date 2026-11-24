@@ -162,14 +162,16 @@ test('M7C UI: Da vivere has no date/time editor of its own — "Metti in calenda
 
 test('M7C UI: the entry created from an idea is always shared, and never writes shared_events', () => {
   const src = calendar();
-  assert.match(src, /const kind = ideaLink \? 'shared' : calendarKind;/);
+  assert.match(src, /const kind = ideaLink \|\| meet \? 'shared' : calendarKind;/);
   // M9C: the idea first becomes a pick (banner), then the tapped day opens the shared form.
   assert.match(src, /pendingIdeaPick = \{ bucketItemId: idea\.id, title: idea\.title \|\| '', note: idea\.note \|\| null, \.\.\.identity \};/);
   assert.match(src, /if \(pendingIdeaPick\) \{ openIdeaForm\(pendingIdeaPick, dateISO\); return; \}/);
   assert.match(src, /pendingIdeaLink = \{ bucketItemId: pick\.bucketItemId, userId: pick\.userId, coupleId: pick\.coupleId, note: pick\.note \};\s*setFormKind\('shared'\);/);
   assert.match(src, /function setFormKind\(kind\) \{\n  calendarKind = kind === 'shared' \? 'shared' : 'personal';/);
-  // Noi Calendar V4 reads shared_events for the month view; it never writes it.
-  assert.doesNotMatch(src, /from\('shared_events'\)\s*\.(insert|update|upsert|delete)\(/);
+  // Noi Calendar V4 reads shared_events for the month view; it writes it only
+  // for «Ogni anno» (Noi, Fase A), never from an idea (saveYearly is skipped then).
+  assert.equal([...src.matchAll(/from\('shared_events'\)\s*\.(insert|update|upsert|delete)\(/g)].length, 1);
+  assert.match(src, /if \(!editingFormEntry && !pendingIdeaLink && \$\('usCalendarYearlyInput'\)\?\.checked\)/);
   assert.doesNotMatch(src, /from\('bucket_items'\)/, 'Calendar never writes bucket_items: Da vivere owns the link');
 });
 

@@ -22,13 +22,14 @@ test('M9C/US 1.0: the quick form keeps one title flow and explicit keyboard Iniz
   assert.match(f, /id="usCalendarStartTimeInput"[^>]*inputmode="numeric"/);
   assert.match(f, /id="usCalendarEndTimeInput"[^>]*inputmode="numeric"/);
   assert.doesNotMatch(f, /type="time"/);
-  assert.match(f, /id="usCalendarDateField"[^>]*hidden/);
+  // Noi, Fase A (24/11/2026): «Quando» is always there, the tapped day by default.
+  assert.match(f, /<label class="us-cal-field" id="usCalendarDateField"><span>Quando<\/span>/);
   for (const gone of [/Quanto dura/, /Ricordamelo/, /Ricorda a/, /Una nota/, /usCalendarNoteInput/, /usCalendarKindPicker/, /data-us-cal-duration/, /data-us-cal-reminder/]) {
     assert.doesNotMatch(f, gone);
   }
   assert.doesNotMatch(html(), /id="usCalendarAddBtn"|us-cal-fab/);
   assert.doesNotMatch(css(), /\.us-cal-fab|\.us-cal-kind-picker|\.us-cal-reminder-picker/);
-  assert.match(js(), /if \(dateField\) dateField\.hidden = mode !== 'edit';/);
+  assert.match(js(), /\/\/ Quando: the day tapped on the calendar, which can be changed \(Fase A\)\.\n  \$\('usCalendarDateInput'\)\.value = formDateISO;/);
 });
 
 // US 1.0 (N10): the old overlay is gone; the Noi calendar selects, its "+" creates.
@@ -45,10 +46,11 @@ test('M9C/M10.1C: a Noi day selects, the "+" creates for that day; tapping an ev
 test('M9C: manual entries default to personal ("Solo mio"); Da vivere keeps creating shared entries', () => {
   const src = js();
   assert.match(src, /setFormKind\(mode === 'edit' \? entry\.entry_type : 'personal'\);/);
-  assert.match(src, /const kind = ideaLink \? 'shared' : calendarKind;/);
+  assert.match(src, /const kind = ideaLink \|\| meet \? 'shared' : calendarKind;/);
   assert.match(src, /calendarKind = kind === 'shared' \? 'shared' : 'personal';/);
   assert.match(src, /setFormKind\('shared'\);\s*const kindGroup = \$\('usCalendarKind'\);\s*if \(kindGroup\) kindGroup\.hidden = true;/, 'an idea is always Nostro, no choice shown');
-  assert.match(form(), /<span>Solo mio<\/span>[\s\S]*?<span>Nostro<\/span>[\s\S]*?<span>Data speciale<\/span>/);
+  // Noi, Fase A (24/11/2026): «Data speciale» became the «Ogni anno» switch.
+  assert.match(form(), /<span>Solo mio<\/span>[\s\S]*?<span>Nostro<\/span>[\s\S]*?<b>Ogni anno<\/b>/);
 });
 
 test('M9C: create uses the 60-minute default, a single day, no hidden note or place', () => {

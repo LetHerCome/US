@@ -652,6 +652,11 @@ let profilesById = new Map();
 // The "+" form: "Solo mio" is a personal entry, "Nostro" a shared one (the
 // entry_type the table already has). "Data speciale" hands over to Eventi.
 let calendarKind = 'personal';
+// Noi, Fase A (24/11/2026): «Ci vediamo» lives in calendar_entries.ci_vediamo
+// (migration 20261124233000, staging first). Until a database has it, the
+// reads and writes go on without it, as before.
+let ciVediamoColumn = true;
+const missingCiVediamo = (error) => Boolean(error) && /ci_vediamo/.test(String(error.message || error.details || error.hint || ''));
 let editingFormEntry = null;
 let noiEditorReadSeq = 0;
 let formDateISO = null; // M9C — il giorno scelto toccando il calendario
@@ -773,10 +778,10 @@ const US_OGGI_NEXT_TOGETHER_HORIZON_DAYS = 7;
 async function fetchEntriesForRange(coupleId, startDateISO, endDateISOExclusive) {
   const win = windowForGrid(parseISODate(startDateISO), parseISODate(endDateISOExclusive));
   const filter = UsCalendarDomain.buildRangeOverlapFilter(win);
-  const { data, error } = await sb.from('calendar_entries')
-    .select('id,couple_id,entry_type,owner_id,title,is_all_day,starts_at,ends_at,start_date,end_date')
-    .eq('couple_id', coupleId)
-    .or(filter);
+  const columns = 'id,couple_id,entry_type,owner_id,title,is_all_day,starts_at,ends_at,start_date,end_date';
+  const read = (withMeet) => sb.from('calendar_entries').select(withMeet ? `${columns},ci_vediamo` : columns).eq('couple_id', coupleId).or(filter);
+  let { data, error } = await read(ciVediamoColumn);
+  if (error && ciVediamoColumn && missingCiVediamo(error)) { ciVediamoColumn = false; ({ data, error } = await read(false)); }
   if (error) throw error;
   return UsCalendarDomain.filterEntriesInWindow(data || [], win);
 }
@@ -985,10 +990,10 @@ async function deleteEntry() {
   }
 }
 
+// Noi, Fase A: one time, «se c'è»; the end stays hidden and keeps the length.
 function toggleAllDayFields() {
-  const allDay = Boolean($('usCalendarAllDayInput')?.checked);
   const timeFields = $('usCalendarTimeFields');
-  if (timeFields) timeFields.hidden = allDay;
+  if (timeFields) timeFields.hidden = true;
 }
 function longDayLabel(dateISO) {
   const d = parseISODate(dateISO);
@@ -1093,19 +1098,11 @@ function setFormKind(kind) {
   const sheet = $('usCalendarFormSheet');
   if (sheet?.dataset) sheet.dataset.kind = calendarKind;
 }
-// "Data speciale" is an Eventi date: the form hands the day (and what was
-// already typed) to Noi, which opens the Eventi editor in its place.
+// Solo mio or Nostro (a new entry only: entry_type never changes). «Data
+// speciale» left with Noi, Fase A: a date that comes back is «Ogni anno».
 function chooseFormKind(kind) {
   if (editingFormEntry || pendingIdeaLink || busy) return;
-  if (kind !== 'event') { setFormKind(kind); return; }
-  const open = window.USNoiV2?.addSpecialDate;
-  if (typeof open !== 'function') return;
-  const date = formDateISO || selectedDate || todayISO();
-  const title = $('usCalendarTitleInput')?.value.trim() || '';
-  const allDay = Boolean($('usCalendarAllDayInput')?.checked);
-  const time = allDay ? '' : normalizeQuickTime($('usCalendarStartTimeInput')?.value);
-  closeCalendarFormSheet();
-  open({ date, title, time });
+  setFormKind(kind);
 }
 
 function openForm(mode, entry, dateISO) {
@@ -1128,6 +1125,13 @@ function openForm(mode, entry, dateISO) {
   showPresetComposer(false);
   renderOwnCalendarPresets();
   $('usCalendarAllDayInput').checked = Boolean(entry?.is_all_day);
+  // Ci vediamo: the entry's own; Ogni anno: only a new one, not from an idea.
+  const meet = $('usCalendarMeetInput');
+  if (meet) meet.checked = Boolean(entry?.ci_vediamo);
+  const yearly = $('usCalendarYearlyInput');
+  if (yearly) yearly.checked = false;
+  const yearlyRow = $('usCalendarYearlyRow');
+  if (yearlyRow) yearlyRow.hidden = mode === 'edit';
   const startInput = $('usCalendarStartTimeInput');
   const endInput = $('usCalendarEndTimeInput');
   if (entry?.is_all_day) {
@@ -1145,10 +1149,7 @@ function openForm(mode, entry, dateISO) {
     if (startInput) startInput.value = '';
     if (endInput) endInput.value = '';
   }
-  // Giorno resta solo in modifica, per spostare un impegno esistente: in
-  // creazione la data è quella toccata sul calendario.
-  const dateField = $('usCalendarDateField');
-  if (dateField) dateField.hidden = mode !== 'edit';
+  // Quando: the day tapped on the calendar, which can be changed (Fase A).
   $('usCalendarDateInput').value = formDateISO;
   toggleAllDayFields();
   renderFormDay(formDateISO, mode);
@@ -1182,22 +1183,21 @@ async function saveEntry(event) {
   if (busy || !window.usProfile) return;
   if (!navigator.onLine) { toast('Sei offline. Riprova quando torni online.'); return; }
   const title = $('usCalendarTitleInput').value.trim();
-  const date = editingFormEntry ? ($('usCalendarDateInput').value || formDateISO) : formDateISO;
+  const date = $('usCalendarDateInput').value || formDateISO;
   if (!title || !date) return;
-  const allDay = $('usCalendarAllDayInput').checked;
-  const startTime = allDay ? '' : normalizeTimeField('usCalendarStartTimeInput');
-  const endTime = allDay ? '' : normalizeTimeField('usCalendarEndTimeInput');
-  const timeError = quickEntryError({ allDay, startTime, endTime });
-  if (timeError) {
-    setFormStatus(timeError === 'start' ? 'Inserisci l’ora di inizio.' : timeError === 'end' ? 'Inserisci l’ora di fine.' : 'Inizio e fine non possono coincidere.');
-    return;
-  }
+  // One time, «se c'è» (Fase A): none is all day; a time keeps the entry's own
+  // length when it had one, an hour otherwise.
+  const startTime = normalizeTimeField('usCalendarStartTimeInput');
+  const allDay = !startTime;
+  $('usCalendarAllDayInput').checked = allDay;
+  const meet = Boolean($('usCalendarMeetInput')?.checked);
+  if (!editingFormEntry && !pendingIdeaLink && $('usCalendarYearlyInput')?.checked) { await saveYearly({ title, date, time: startTime }); return; }
   const hidden = quickEntryHiddenFields({
     editingEntry: editingFormEntry,
     allDay,
     ideaNote: pendingIdeaLink ? pendingIdeaLink.note : null
   });
-  const durationMinutes = allDay ? hidden.durationMinutes : durationMinutesFromTimes(startTime, endTime);
+  const durationMinutes = hidden.durationMinutes;
 
   const payload = buildEntryPayload({
     title,
@@ -1210,21 +1210,29 @@ async function saveEntry(event) {
     spanDays: hidden.spanDays
   });
 
+  if (ciVediamoColumn) payload.ci_vediamo = meet;
   busy = true;
   const saveBtn = $('usCalendarFormSave');
   if (saveBtn) saveBtn.disabled = true;
   setFormStatus('Salvo…');
+  // A database without ci_vediamo yet: the same write without it.
+  const write = async (run) => {
+    let result = await run();
+    if (result.error && 'ci_vediamo' in payload && missingCiVediamo(result.error)) { ciVediamoColumn = false; delete payload.ci_vediamo; result = await run(); }
+    return result;
+  };
   try {
     let savedId = null; // M6D — id della riga creata (create-only)
     if (editingFormEntry) {
-      const { data, error } = await sb.from('calendar_entries').update(payload).eq('id', editingFormEntry.id).select('id');
+      const { data, error } = await write(() => sb.from('calendar_entries').update(payload).eq('id', editingFormEntry.id).select('id'));
       const outcome = classifyMutationResult({ data, error });
       if (outcome === 'error') throw error;
       if (outcome === 'not_authorized') throw new Error('update matched 0 rows');
     } else {
       const ideaLink = pendingIdeaLink;
-      const kind = ideaLink ? 'shared' : calendarKind;
-      const result = await sb.from('calendar_entries').insert(withCreateAuthority(payload, kind, window.usProfile)).select('id');
+      // A meeting is the two of you: Ci vediamo makes it Nostro.
+      const kind = ideaLink || meet ? 'shared' : calendarKind;
+      const result = await write(() => sb.from('calendar_entries').insert(withCreateAuthority(payload, kind, window.usProfile)).select('id'));
       if (result.error) throw result.error;
       savedId = Array.isArray(result.data) && result.data[0]?.id ? result.data[0].id : null;
       if (ideaLink) {
@@ -1247,6 +1255,29 @@ async function saveEntry(event) {
     toast(wasEditing ? 'Impegno aggiornato' : (linkedIdea ? 'In calendario' : 'Impegno aggiunto'));
   } catch (error) {
     console.warn('[US Calendar] save', error);
+    setFormStatus('Non riesco a salvarlo. Riprova.');
+  } finally {
+    busy = false;
+    if (saveBtn) saveBtn.disabled = false;
+  }
+}
+
+// «Ogni anno» (Fase A): a date that comes back every year is an Eventi date
+// (shared_events, recurs_yearly), saved from the same form.
+async function saveYearly({ title, date, time }) {
+  busy = true;
+  const saveBtn = $('usCalendarFormSave');
+  if (saveBtn) saveBtn.disabled = true;
+  setFormStatus('Salvo…');
+  try {
+    const { error } = await sb.from('shared_events').insert({ title, event_date: date, event_time: time || null, recurs_yearly: true, couple_id: window.usProfile.couple_id, created_by: window.usProfile.id });
+    if (error) throw error;
+    closeCalendarFormSheet();
+    window.USNoiV2?.refresh?.();
+    window.UsOggiNext?.refresh?.({ calendar: 'fresh' });
+    toast('Aggiunto, torna ogni anno');
+  } catch (error) {
+    console.warn('[US Calendar] save yearly', error);
     setFormStatus('Non riesco a salvarlo. Riprova.');
   } finally {
     busy = false;

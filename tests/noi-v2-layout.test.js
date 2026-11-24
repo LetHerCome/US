@@ -11,7 +11,9 @@ test('Noi V2: calendar-first overview, full-size day detail, list toggle and ret
   assert.match(bond, /id="usNoiV2"/);
   // 1.0 (N10): the old invisible Lavagna and hub are gone; Noi V2 is the page.
   assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"/);
-  for (const id of ['usNoiV2Month','usNoiV2ModeCalendar','usNoiV2ModeList','usNoiV2Content','usNoiV2Detail','usNoiV2Today','usNoiBoard']) {
+  // Noi, Fase A (24/11/2026): one calendar, «Vi rivedete tra» above it; no «Mese / Prossimi».
+  assert.doesNotMatch(bond, /usNoiV2ModeCalendar|usNoiV2ModeList/);
+  for (const id of ['usNoiV2Meet','usNoiV2Month','usNoiV2Content','usNoiV2Detail','usNoiV2Today','usNoiBoard']) {
     assert.match(bond,new RegExp(`id="${id}"`));
   }
   // Noi nuova (founder, 03/11/2026): no tiles and no «Il nostro giorno» (the

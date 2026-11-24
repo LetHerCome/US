@@ -2,9 +2,31 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Noi, Fase A: il vostro tempo insieme (24/11)
+
+**Stato:** ramo `claude/revisione-temi-transizioni`, verso il ramo fisso di staging; la migrazione va applicata a US-STAGING col via del founder. Founder, 24/11: «noi è ancora uguale a prima»; decisioni del grill-me D1–D16 e tavola «US · Noi, il vostro tempo» (https://claude.ai/artifact/WZ1Q5PgRMq6VaJmuY9gpUh).
+
+**Cosa cambia:**
+- **Un calendario solo:** escono «Mese / Prossimi» e la vista «Prossimi». Il calendario del mese resta com'è (D1–D2).
+- **«Vi rivedete tra»:** per le coppie a distanza (`couples.distance_mode = far`) una scheda in cima con i due personaggi ai lati e un timer in giorni, ore e minuti, verso il prossimo impegno con «Ci vediamo» acceso. Il giorno stesso dice «Oggi vi vedete» e i personaggi hanno il cuore (D6).
+- **Un modulo solo:** «Che cosa», «Quando» (si può cambiare anche creando), «Ora · se c'è» (senza ora è tutto il giorno; con l'ora dura un'ora, o quanto durava se lo modifichi), «Solo mio / Nostro», gli interruttori «Ci vediamo» (lo rende Nostro) e «Ogni anno» (lo salva tra le date che tornano ogni anno, negli eventi). «Data speciale» non c'è più. Nel database impegni ed eventi restano separati (D7–D8).
+- **Giorni speciali:** nel giorno scelto i due personaggi vestiti per l'occasione: compleanno (cappello da festa), mesiversario e cento giorni (festa), «Ci vediamo» (cuore). Il giorno dell'anno in US dice «il vostro anno è pronto da sfogliare» con «Apri Il vostro anno» (D10, D14).
+- **Non in questa fase:** il promemoria nel modulo; la lavagna con post-it e idee, gli avvisi (Fase B); «Bacheca» di Noi resta col suo nome fino alla Fase B.
+
+**Server:** nuova migrazione `20261124233000_calendario_ci_vediamo.sql`: colonna `calendar_entries.ci_vediamo boolean not null default false` e un indice parziale. Finché non c'è, l'app legge e scrive come prima (senza «Ci vediamo»).
+
+### Revisione di transizioni e temi (24/11)
+
+**Stato:** ramo `claude/revisione-temi-transizioni`, verso il ramo fisso di staging. Founder, 24/11: «le transizioni non vanno ancora bene e i temi light e dark hanno un po' di problemi».
+
+**Cosa cambia:**
+- **Transizioni:** il cerchio di colore è piccolo (480 px), disegnato una volta su un livello che resta sempre nella pagina, e la GPU lo ingrandisce: prima era un livello da circa 4000 px che il telefono ridisegnava a pezzi mentre cresceva. I colori delle schede si leggono in un momento quieto, così il primo tocco non paga un ricalcolo. I blocchi della pagina nuova entrano subito, 30 ms l'uno dall'altro.
+- **Giorno:** scritte piccole e testo d'esempio nei campi più scuri; il titoletto sopra i fogli in ceralacca (prima era rosa pastello e non si leggeva); scritte nei colori della coppia più scure; verde più scuro. I visori delle foto e la fotocamera restano scuri, come la galleria del telefono.
+- **Controllato:** contrasto di ogni scritta su 18 fogli, di giorno e di notte.
+
 ### Aspetto: Giorno e Notte (24/11)
 
-**Stato:** ramo `claude/tema-giorno-notte`, verso il ramo fisso di staging. Founder, 24/11, dalla tavola «US · Quaderno, giorno e notte»: «Mi vanno bene i consigli sulle tre scelte, mi piace, applica il tema light e quello dark con la possibilità di scelta nelle impostazioni».
+**Stato:** in staging dal 24/11 (PR #293, merge `6e568df5`, sito `…-s6e568df5`). Founder, 24/11, dalla tavola «US · Quaderno, giorno e notte»: «Mi vanno bene i consigli sulle tre scelte, mi piace, applica il tema light e quello dark con la possibilità di scelta nelle impostazioni».
 
 **Cosa cambia:**
 - **Giorno, il Quaderno:** carta (`#f3ece1`) per le pagine, fogli (`#fbf7f0`) per le schede, inchiostro (`#231b1d`) per le parole, ceralacca (`#b8452f`) per i tasti, per la scheda aperta nella barra e per le scritte piccole sopra i titoli. I vostri colori sono gli stessi che avete scelto, più polverosi, perché sulla carta si leggano: personaggi, «chi l'ha messo», nastri.
