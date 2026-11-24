@@ -2,9 +2,21 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Transizioni fluide (24/11)
+
+**Stato:** ramo `claude/transizioni-fluide`, verso il ramo fisso di staging. Founder, 24/11: le transizioni «al momento sono veloci ma se ci fai caso non fluide».
+
+**Cosa cambia:**
+- **Cambio pagina dalla barra:** il colore che copre lo schermo ora è un disco che si allarga con una trasformazione, sulla GPU. Prima era un ritaglio (clip-path) ridisegnato a ogni frame dal processore, e si fermava quando il telefono era occupato. La pagina cambia appena il colore copre lo schermo, poi il colore si dissolve mentre salgono i blocchi della pagina nuova. Al posto del «buco» che si apriva dal tasto c'è la dissolvenza; i tempi sono simili (300 + 320 ms) e la curva è più morbida.
+- **Profilo:** stesso scorrimento di prima, con la curva più morbida.
+- **Suoni:** la preparazione dell'audio (la prima volta costa un frame lungo) non cade più in mezzo a un cambio pagina.
+- **Misurato** con la CPU rallentata 4 volte (un telefono medio): alla prima apertura di Noi il colore pieno resta fermo circa 120 ms (il tempo di preparare la pagina), poi si dissolve; la marea non si blocca più a metà.
+
+**Server:** niente.
+
 ### Redesign: uno stile solo (24/11)
 
-**Stato:** ramo `claude/redesign-stile-unico`, verso il ramo fisso di staging. Founder, 24/11, dalla tavola «Una mano sola» (fogli «Gioca · com'è adesso», «Gioca · una mano sola», «Le regole di disegno»): «Concordo».
+**Stato:** in staging dal 24/11 (PR #290, merge `449d3bda`). Founder, 24/11, dalla tavola «Una mano sola» (fogli «Gioca · com'è adesso», «Gioca · una mano sola», «Le regole di disegno»): «Concordo».
 
 **Cosa cambia:**
 - **Personaggi:** contorno sottile nel colore scuro della loro forma, mai nero, e niente più alone chiaro intorno (Oggi, angolo, Profilo, Gioca, intro). Le guance prendono lo stesso tono.

@@ -178,7 +178,9 @@ input,textarea,select,button{font-family:inherit}
 body:has(#homeHero.us-oggi-focus) .us-nav.us-nav-premium{translate:0 120px}
 
 /* ---------- Colour flood between tabs (due-colori.js) ---------- */
-.us-flood{position:fixed;inset:0;z-index:19;pointer-events:none;background:var(--us-flood,var(--us-tab));clip-path:circle(0 at 50% 100%)}
+/* Fluidità 2 (24/11/2026): a disc that grows with transform, on the compositor. */
+.us-flood{position:fixed;inset:0;z-index:19;pointer-events:none;overflow:hidden;contain:strict}
+.us-flood-disc{position:absolute;display:block;border-radius:50%;background:var(--us-flood,var(--us-tab));transform:scale(0.001);will-change:transform}
 .us-flood[hidden]{display:none}
 /* Under the colour the new page opens fully opaque, as the mockup's view
    (its own short fade would show it translucent in the growing circle). */

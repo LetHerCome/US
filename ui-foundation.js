@@ -511,7 +511,9 @@
     function warmUp() {
       if (warming || context || !preferences.sounds) return;
       warming = true;
-      const build = () => { warming = false; if (preferences.sounds && !context) audioContext(); };
+      // Never in the middle of a page change (Fluidità 2): it waits for the motion to end.
+      const make = () => { warming = false; if (preferences.sounds && !context) audioContext(); };
+      const build = () => { const later = environment.UsDueColori?.afterMotion; if (typeof later === 'function') later(make); else make(); };
       const idle = environment.requestIdleCallback;
       if (typeof idle === 'function') {
         const started = now();
