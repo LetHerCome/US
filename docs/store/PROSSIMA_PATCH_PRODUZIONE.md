@@ -2,13 +2,14 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
-### Transizioni: una nuova a ogni tocco (25/11)
+### Transizioni: come in produzione, col colore sfumato (25/11)
 
-**Stato:** ramo `claude/transizioni-ogni-tocco`, verso il ramo fisso di staging. Founder, 25/11: «se passo velocemente da una pagina all'altra non è reattivo, non rifà una nuova transizione».
+**Stato:** ramo `claude/transizioni-ogni-tocco`, verso il ramo fisso di staging. Founder, 25/11: «se passo velocemente da una pagina all'altra non è reattivo, non rifà una nuova transizione», poi «vedi su produzione com'è reattivo, devi fare la stessa cosa qui in staging solo con il gradiente che abbiamo».
 
 **Cosa cambia:**
-- **Ogni tocco, la sua transizione:** un tocco sulla barra mentre il colore si muove fa partire subito un cerchio nuovo dal tasto toccato, col suo colore, sopra quello di prima, che finisce sotto. La pagina diventa quella dell'ultimo tocco appena lo schermo è coperto; tornando alla pagina che c'era già non si ricarica niente. Prima la pagina cambiava di colpo, senza transizione.
-- **Giorno e Notte:** i colori delle schede si ricordano anche per tema; prima, dopo un cambio di Aspetto (o il passaggio di Automatico al tramonto), il colore tra le pagine restava quello del tema di prima.
+- **La logica di produzione:** il colore copre in 260 ms; mentre sale, un tocco su un'altra scheda gli fa cambiare subito colore e pagina di arrivo (sulla scheda di partenza il colore torna indietro); a pagina cambiata, un tocco fa partire subito una transizione nuova. Prima ogni tocco a metà cambiava pagina di colpo.
+- **Col colore sfumato:** il cerchio che copre ha il bordo morbido, e la pagina nuova si apre da un buco morbido che si allarga dal tasto (in produzione entrambi hanno il bordo netto). Sui telefoni che non sanno animare il buco, il colore si dissolve.
+- **Giorno e Notte:** i colori delle schede si ricordano anche per tema; prima, dopo un cambio di Aspetto (o Automatico al tramonto), il colore tra le pagine restava quello del tema di prima.
 
 **Server:** niente.
 
