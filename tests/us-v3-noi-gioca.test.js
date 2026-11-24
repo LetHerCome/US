@@ -162,11 +162,11 @@ test('Noi calendar: month change animates once and only without reduced motion',
 // the bento games, La vostra domanda; rounds no tile stands for and the
 // completed ones follow. The daily slot is painted by app.js.
 // Redesign definitivo (D11): la domanda di oggi left Gioca, the week leads.
-test('Gioca round 3: the week, bento games, weekly question, then the rest', () => {
+test('Gioca fase 6: tokens, Vi aspetta, the games, weekly question, then the rest', () => {
   const games = read('games.js');
   const hub = games.slice(games.indexOf('function renderHub() {'), games.indexOf('function renderHubError() {'));
   assert.doesNotMatch(hub, /us-gv2-daily-slot/);
-  const order = ['${weekStrip()}', 'us-gv2-choose', 'data-gv2-action="per-voi"', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
+  const order = ['${tokensCard()}', '${waitingSection(home)}', 'us-gv2-choose', '${perVoi}', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
   const positions = order.map((needle) => hub.indexOf(needle));
   assert.ok(positions.every((p) => p >= 0), JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a, b) => a - b), positions);

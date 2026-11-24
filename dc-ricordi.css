@@ -591,10 +591,10 @@
 /* La sfida della settimana (03/11/2026): the «Sfida» sign on the Ricordo a challenge photo went into (weekly-challenge.js). */
 #moments #momentsGrid .moment-card>.us-wc-mark{position:absolute;z-index:4;top:10px;left:10px;padding:3px 9px;border-radius:999px;background:var(--us-ambra);color:var(--us-inchiostro);font:700 11px/1.5 var(--us-font-ui);letter-spacing:.06em;text-transform:uppercase;pointer-events:none}
 
-/* Ricordi is the album (founder, 04/11/2026; tavola Ricordi.dc.html): only the
-   photos, three a row, all square, month by month. Caption, day and author
-   stay on the card for the viewer, never drawn on the grid. */
-#moments #momentsGrid.moment-grid.ricordi-story{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important}
+/* Ricordi is the album (founder, 04/11/2026): only the photos, month by month.
+   Since the redesign (fase 8, D12) they are polaroids, two a row, with the
+   caption and the day written on them: see the block at the end. */
+#moments #momentsGrid.moment-grid.ricordi-story{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important}
 #moments #momentsGrid.ricordi-story .ricordi-period{margin:22px 0 6px}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit,
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide){grid-column:auto!important;min-height:0!important;border-radius:10px!important}
@@ -603,3 +603,57 @@
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit>.moment-meta{display:none!important}
 #moments #momentsGrid.ricordi-story .moment-card .ricordi-new-label{top:6px;left:6px;max-width:calc(100% - 12px);min-height:20px;padding:0 7px;font-size:10px}
 #moments #momentsGrid .moment-card>.us-wc-mark{top:auto;bottom:6px;left:6px;padding:2px 7px;font-size:10px}
+
+/* ===== Redesign definitivo, fase 8 (D12): la raccolta a polaroid, la bacheca =====
+   The approved tavole «Ricordi», «Bacheca» and «Bacheca intera» (23/11/2026).
+   The caption is Fraunces italic (the app has no handwriting font). */
+#moments .ricordi-story-head{display:grid!important;grid-template-columns:minmax(0,1fr);gap:8px;margin:4px 0 14px}
+#moments .ricordi-views{width:100%;min-width:100%;justify-self:stretch;box-sizing:border-box;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:4px;border-radius:22px;background:rgba(247,239,233,.06)}
+#moments .ricordi-views button{min-height:40px;margin:0;padding:0;border:0;border-radius:18px;background:none;color:var(--us-color-text-2);font:600 13.5px/1 var(--us-font-ui);box-shadow:none}
+#moments .ricordi-views button[aria-selected="true"]{background:var(--us-pg);color:var(--us-color-text-on-accent,#1a1020);font-weight:700}
+#moments .ricordi-views button:focus-visible{outline:2px solid var(--us-pg);outline-offset:2px}
+#moments .ricordi-count{margin:0 4px;font-size:13px;color:var(--us-color-text-2)}
+#moments .ricordi-count[hidden]{display:none}
+#moments #momentsGrid.moment-grid.ricordi-story{gap:24px 14px!important;padding:8px 6px 0!important}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit{padding:8px 8px 0!important;border-radius:3px!important;overflow:visible!important;background:#f6f0e6!important;box-shadow:0 10px 22px rgba(0,0,0,.45)!important;transform:rotate(var(--pol-tilt,-1.5deg))!important}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:nth-of-type(4n+1){--pol-tilt:-2.5deg}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:nth-of-type(4n+2){--pol-tilt:2deg}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:nth-of-type(4n+3){--pol-tilt:1.5deg}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:nth-of-type(4n){--pol-tilt:-1.5deg}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:active{transform:rotate(var(--pol-tilt,-1.5deg)) scale(.98)!important}
+/* the tape, in the colour of who put the photo there */
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit::before{content:"";position:absolute;z-index:4;left:50%;top:-9px;width:60px;height:18px;margin-left:-30px;background:color-mix(in srgb,var(--us-partner) 78%,transparent);transform:rotate(-4deg);pointer-events:none}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit[data-moment-by="tu"]::before{background:color-mix(in srgb,var(--us-tu) 78%,transparent);transform:rotate(3deg)}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit>img{aspect-ratio:1/1!important;border-radius:1px!important}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide)>img{aspect-ratio:4/3!important}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit>.moment-meta{position:static!important;display:flex!important;align-items:center;justify-content:space-between;gap:6px;min-height:40px!important;padding:4px 2px 6px!important;background:none!important;color:#2a1f2a}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit .moment-meta p{flex:1;min-width:0;-webkit-line-clamp:1!important;font-family:var(--us-font-display)!important;font-style:italic;font-weight:400;font-size:16px!important;line-height:1.2!important;color:#2a1f2a!important}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit .moment-meta .ricordi-moment-source{display:none}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit .moment-line{flex:none;margin-left:auto;font-size:10.5px;font-weight:700;color:#7a6a73}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit .moment-line :is(.moment-dot,.moment-by,[aria-hidden="true"]){display:none}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit .moment-line b{font-weight:700;color:#7a6a73}
+
+/* La bacheca: a cork-dark board, tags pinned where the places are, a red string. */
+#moments .ricordi-bacheca[hidden]{display:none}
+#moments .ricordi-bacheca{display:grid;gap:18px;margin:0 -4px}
+#moments .rb-board{position:relative;overflow:hidden;border-radius:22px;background:radial-gradient(120% 80% at 50% 0%,rgba(209,129,230,.10),transparent 70%),repeating-linear-gradient(45deg,rgba(247,239,233,.018) 0 2px,transparent 2px 9px),#1d1219;border:1px solid rgba(247,239,233,.08)}
+#moments .rb-string{position:absolute;inset:0;pointer-events:none}
+#moments .rb-string path{fill:none;stroke:#d9435a;stroke-width:2.2;stroke-linecap:round;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
+#moments .rb-tag{position:absolute;z-index:3;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:1px;min-width:86px;max-width:132px;min-height:44px;margin:0;padding:12px 10px 7px;border:0;border-radius:4px;background:#f3e3b8;color:#2a1f2a;box-shadow:0 6px 14px rgba(0,0,0,.45);font:inherit;text-align:center}
+#moments .rb-tag b{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 12.5px/1.25 var(--us-font-ui)}
+#moments .rb-tag small{font-size:10.5px;font-weight:600;color:#6b5a52}
+#moments .rb-pin{position:absolute;left:50%;top:-6px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff8b9c,#c62f4a 70%);box-shadow:0 2px 3px rgba(0,0,0,.5)}
+#moments .rb-pol{position:absolute;z-index:2;transform:translate(-50%,-50%) rotate(var(--t,0deg));width:58px;margin:0;padding:4px 4px 10px;border:0;border-radius:2px;background:#f6f0e6;box-shadow:0 6px 12px rgba(0,0,0,.45)}
+#moments .rb-pol img,#moments .rb-pol .rb-pol-empty{display:block;width:50px;height:50px;object-fit:cover;background:#cdbfb4}
+#moments .rb-pol:focus-visible,#moments .rb-tag:focus-visible{outline:2px solid var(--us-pg);outline-offset:3px}
+#moments .rb-more{position:absolute;z-index:2;transform:translate(-50%,-50%);min-width:28px;height:22px;padding:0 6px;border-radius:11px;background:rgba(247,239,233,.14);color:var(--us-color-text);font:700 11px/22px var(--us-font-ui);text-align:center}
+#moments .rb-empty{margin:0;padding:22px 16px;border-radius:20px;border:1px dashed rgba(247,239,233,.16);color:var(--us-color-text-2);font-size:13.5px;line-height:1.45}
+#moments .rb-loose{padding:14px;border-radius:20px;background:rgba(247,239,233,.04);border:1px dashed rgba(247,239,233,.16)}
+#moments .rb-loose h4{margin:0 0 12px;font:800 11.5px/1.2 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-pg)}
+#moments .rb-loose-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:14px 10px}
+#moments .rb-loose-item{display:grid;justify-items:center;gap:8px}
+#moments .rb-pol.is-loose{position:relative;transform:rotate(-2deg);width:74px}
+#moments .rb-pol.is-loose img,#moments .rb-pol.is-loose .rb-pol-empty{width:66px;height:66px}
+#moments .rb-add{min-height:36px;margin:0;padding:0 10px;border-radius:18px;border:1px solid color-mix(in srgb,var(--us-pg) 45%,transparent);background:color-mix(in srgb,var(--us-pg) 10%,transparent);color:var(--us-color-text);font:700 11.5px/1 var(--us-font-ui);box-shadow:none}
+#moments .rb-loose-more{margin:12px 0 0;font-size:12.5px;color:var(--us-color-text-2)}
+@media(prefers-reduced-motion:reduce){#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:active{transform:rotate(var(--pol-tilt,-1.5deg))!important}}

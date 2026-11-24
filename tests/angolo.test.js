@@ -18,8 +18,9 @@ test('Gioca: no daily question and no Giochi/Sintonia tabs', () => {
   assert.doesNotMatch(read('games.js'), /us-gv2-daily-slot|bindTabMotion/);
   const app = read('app.js');
   assert.doesNotMatch(app, /function dailyHubMarkup|data-us-daily-entry/);
-  // The week of answers stays, repainted when the daily question changes.
-  assert.match(app, /function paintDailyInGioca\(\)\{\n  const hub=document\.getElementById\('quizHub'\);\n  if\(!hub\|\|hub\.classList\.contains\('hidden'\)\)return;\n  window\.USGameV2\?\.paintWeek\?\.\(\);\n\}/);
+  // Fase 6 (D11): no week strip either; the painter stays as a name for its callers.
+  assert.match(app, /function paintDailyInGioca\(\)\{\}/);
+  assert.doesNotMatch(read('games.js'), /paintWeek|id="usGv2Week"/);
   // La domanda di oggi stays on Oggi.
   assert.match(block('<main id="home"', '</main>'), /id="usDailyRitual"/);
 });

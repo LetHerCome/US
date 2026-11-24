@@ -636,15 +636,32 @@
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watchDoor,{once:true});else watchDoor();
   }
 
-  // The two circles: my colour, the other person's, and the Noi where they meet.
-  // Rosa (role francesco, who created the couple) on the left, lilla on the right.
-  const LENS='M100 25.36A40 40 0 0 1 100 94.64A40 40 0 0 1 100 25.36Z';
-  function drawVenn(host,{kind,role,partner}){
-    const mine=role==='beatrice'?'b':'a',other=mine==='a'?'b':'a',x=side=>side==='a'?80:120;
+  // Redesign definitivo, fase 7 (D14): the two characters where the two
+  // circles were. `wait`: mine waits beside the other one's empty place;
+  // `join`: the two of us; `joined`: the other one has just arrived, festa.
+  // Rosa (role francesco, who created the couple) on the left, lilla on the
+  // right, in each person's colour; my shape as I chose it.
+  const DUO_SIZE=92;
+  function duoChar(side,{shape,reaction=''}={}){
+    const draw=globalThis.UsPersonaggi?.character;
+    const color=side==='a'?'var(--us-rosa)':'var(--us-lilla)';
+    if(typeof draw!=='function')return '';
+    try{return draw({shape,color},{size:DUO_SIZE,reaction});}catch(_e){return '';}
+  }
+  const defaultShape=side=>side==='a'?'palla':'quadrato';
+  function drawVenn(host,{kind,role,partner,shape='',partnerShape=''}){
+    const mine=role==='beatrice'?'b':'a',other=mine==='a'?'b':'a';
+    const known=r=>globalThis.UsPersonaggi?.shapeOf?.(r);
+    const myShape=shape||known(role==='beatrice'?'beatrice':'francesco')||defaultShape(mine),theirShape=partnerShape||known(role==='beatrice'?'francesco':'beatrice')||defaultShape(other);
+    const festa=kind==='joined'?'festa':'';
+    const slot=globalThis.UsPersonaggi?.slot?.(theirShape,DUO_SIZE)||'';
+    const cell=(side)=>side===mine
+      ?`<span class="ov-char ov-${side} ov-me">${duoChar(side,{shape:myShape,reaction:festa})}</span>`
+      :kind==='wait'
+        ?`<span class="ov-char ov-wait ov-wait-${side}">${slot}</span>`
+        :`<span class="ov-char ov-${side} ov-partner">${duoChar(side,{shape:theirShape,reaction:festa})}</span>`;
     host.dataset.kind=kind;
-    host.innerHTML=kind==='wait'
-      ?`<svg viewBox="0 0 200 120" focusable="false"><circle class="ov-${mine} ov-me" cx="${x(mine)}" cy="60" r="40"/><circle class="ov-wait ov-wait-${other}" cx="${x(other)}" cy="60" r="39"/></svg>`
-      :`<svg viewBox="0 0 200 120" focusable="false"><circle class="ov-a ${mine==='a'?'ov-me':'ov-partner'}" cx="80" cy="60" r="40"/><circle class="ov-b ${mine==='b'?'ov-me':'ov-partner'}" cx="120" cy="60" r="40"/>${kind==='joined'?`<circle class="ov-wait ov-wait-${other} is-gone" cx="${x(other)}" cy="60" r="39"/>`:''}<path class="ov-n" d="${LENS}"/><circle class="ov-halo" cx="100" cy="60" r="40"/></svg>`;
+    host.innerHTML=`<div class="ov-duo">${cell('a')}${kind==='wait'?'':'<span class="ov-n" aria-hidden="true"></span>'}${cell('b')}${kind==='wait'?'':'<span class="ov-halo" aria-hidden="true"></span>'}</div>`;
     const legend=document.createElement('div');legend.className='ov-l';
     for(const side of ['a','b']){
       const item=document.createElement('span'),dot=document.createElement('i'),label=document.createElement('span');
@@ -656,6 +673,33 @@
       item.append(dot,label);legend.append(item);
     }
     host.append(legend);
+  }
+  // D14: at the first opening each of you makes their character — the shape
+  // here, the colour with the picker below (set_my_character_shape, the same
+  // rule as the guardaroba). `redraw` paints the characters again.
+  const SHAPE_ORDER=['palla','quadrato','triangolo','goccia','nuvola'];
+  const SHAPE_LABEL={palla:'Tondo',quadrato:'Quadrato',triangolo:'Triangolo',goccia:'Goccia',nuvola:'Nuvola'};
+  function mountShapePicker(host,{profile,redraw=()=>{}}){
+    if(!host)return;
+    const draw=globalThis.UsPersonaggi?.character;
+    if(typeof draw!=='function'||!profile?.id||!profile?.couple_id||!colourIO){host.hidden=true;return;}
+    const side=profile.role==='beatrice'?'b':'a';
+    const now=()=>SHAPE_ORDER.includes(profile.character_shape)?profile.character_shape:defaultShape(side);
+    const paint=()=>{
+      host.innerHTML=SHAPE_ORDER.map(shape=>`<button type="button" class="us-ob-shape" data-shape="${shape}" aria-pressed="${shape===now()}">${duoChar(side,{shape}).replace(/width="\d+" height="\d+"/,'width="40" height="37"')}<span>${SHAPE_LABEL[shape]}</span></button>`).join('');
+      host.hidden=false;
+    };
+    host.onclick=async event=>{
+      const btn=event.target.closest?.('[data-shape]');
+      if(!btn||btn.getAttribute('aria-pressed')==='true')return;
+      const shape=btn.dataset.shape,before=profile.character_shape;
+      profile.character_shape=shape;paint();redraw();
+      const {error}=await colourIO.rpc('set_my_character_shape',{p_shape:shape});
+      if(error){profile.character_shape=before;paint();redraw();globalThis.toast?.('Non riesco a salvare la forma. Riprova.');return;}
+      globalThis.UsFeedback?.selection?.();
+      Promise.resolve(globalThis.UsCoupleContext?.hydrate?.()).catch(()=>{});
+    };
+    paint();
   }
   // Founder, 29/10/2026: at the first opening each person picks their colour
   // (free in beta, colors_free on the server). The partner's colour, chosen or
@@ -729,14 +773,32 @@
   }
 
   // ---------- DOM: the tour (three cards, before the account; no network) ----------
+  // Redesign definitivo, fase 7 (D14): the tour's three scenes are the two
+  // characters (a round pink one and a square lilac one, as in the tavola):
+  // side by side, a Ti penso flying from one to the other, then in festa
+  // inside the Sintonia ring. Drawn by personaggi.js, no network.
+  const TOUR_CHAR={a:{shape:'palla',color:'var(--us-rosa)'},b:{shape:'quadrato',color:'var(--us-lilla)'}};
+  const TOUR_REACTION=[['',''],['','cuore'],['festa','festa']];
+  function paintTourDuos(root){
+    const draw=window.UsPersonaggi?.character;
+    if(typeof draw!=='function')return;
+    [...root.querySelectorAll('.us-tour-slide')].forEach((slide,i)=>{
+      slide.querySelectorAll('.us-tour-char').forEach(el=>{
+        if(el.firstChild)return;
+        const side=el.dataset.tourChar==='b'?'b':'a';
+        const size=Number(el.dataset.size)||56;el.style.width=`${size}px`;try{el.innerHTML=draw(TOUR_CHAR[side],{size,reaction:TOUR_REACTION[i]?.[side==='a'?0:1]||''});}catch(_e){}
+      });
+    });
+  }
   function tourAnimations(i,slide){
     const q=selector=>slide.querySelector(selector),list=[];
     const an=(el,frames,options)=>{const run=animate(el,frames,options);if(run)list.push(run);};
+    const ca=q('[data-tour-char="a"]'),cb=q('[data-tour-char="b"]');
     if(i===0){
-      an(q('.t1-a'),[{transform:'translate(-44px,0) scale(.7)',opacity:0},{transform:'none',opacity:1}],{duration:900,delay:250,easing:EASE.io});
-      an(q('.t1-b'),[{transform:'translate(44px,0) scale(.7)',opacity:0},{transform:'none',opacity:1}],{duration:900,delay:250,easing:EASE.io});
-      an(q('.t1-n'),[{opacity:0,transform:'scale(.5)'},{opacity:1,transform:'scale(1.08)',offset:.6},{opacity:1,transform:'none'}],{duration:600,delay:1000,easing:EASE.out});
-      an(q('.t1-w'),[{opacity:.8,transform:'scale(.9)'},{opacity:0,transform:'scale(1.6)'}],{duration:900,delay:1150,easing:EASE.out,fill:'forwards'});
+      an(ca,[{transform:'translate(-50%,-50%) translateX(-44px) scale(.7)',opacity:0},{transform:'translate(-50%,-50%)',opacity:1}],{duration:900,delay:250,easing:EASE.io});
+      an(cb,[{transform:'translate(-50%,-50%) translateX(44px) scale(.7)',opacity:0},{transform:'translate(-50%,-50%)',opacity:1}],{duration:900,delay:250,easing:EASE.io});
+      an(q('.t1-h'),[{opacity:0,transform:'translateY(10px) scale(.5)'},{opacity:1,transform:'scale(1.15)',offset:.6},{opacity:1,transform:'none'}],{duration:600,delay:1000,easing:EASE.out});
+      an(q('.t1-w'),[{opacity:.8,transform:'scale(.9)'},{opacity:0,transform:'scale(1.5)'}],{duration:900,delay:1150,easing:EASE.out,fill:'forwards'});
     }
     if(i===1){
       const P=[[70,46],[120,2],[170,46]],frames=[];
@@ -745,7 +807,7 @@
         frames.push({transform:`translate(${(u*u*P[0][0]+2*u*t*P[1][0]+t*t*P[2][0]-11.6).toFixed(1)}px,${(u*u*P[0][1]+2*u*t*P[1][1]+t*t*P[2][1]-9.7).toFixed(1)}px) scale(1.35)`,opacity:j===0||j===8?0:1});
       }
       an(q('.t2-h'),frames,{duration:1000,delay:400,easing:'ease-in-out'});
-      an(q('.t2-b'),[{transform:'scale(1)'},{transform:'scale(1.2)'},{transform:'scale(1)'}],{duration:420,delay:1350,easing:EASE.out});
+      an(cb,[{transform:'translate(-50%,-50%) scale(1)'},{transform:'translate(-50%,-50%) scale(1.18)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:420,delay:1350,easing:EASE.out});
       slide.querySelectorAll('.t2-d').forEach(dot=>an(dot,[{opacity:1},{opacity:0}],{duration:240,delay:1650}));
       slide.querySelectorAll('.t2-l').forEach(line=>an(line,[{opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'none'}],{duration:380,delay:1760,easing:EASE.out}));
     }
@@ -753,6 +815,7 @@
       an(q('.t3-pl'),[{transform:'translate(0px,24px) rotate(0deg) scale(.8)',opacity:0},{transform:'translate(-82px,14px) rotate(-12deg)',opacity:1}],{duration:700,delay:250,easing:EASE.out});
       an(q('.t3-pr'),[{transform:'translate(0px,24px) rotate(0deg) scale(.8)',opacity:0},{transform:'translate(82px,8px) rotate(10deg)',opacity:1}],{duration:700,delay:330,easing:EASE.out});
       an(q('.t3-r'),[{strokeDashoffset:72},{strokeDashoffset:22}],{duration:1100,delay:500,easing:EASE.io});
+      for(const el of [ca,cb])an(el,[{transform:'translate(-50%,-50%)'},{transform:'translate(-50%,-50%) translateY(-7px)',offset:.35},{transform:'translate(-50%,-50%)',offset:.7},{transform:'translate(-50%,-50%) translateY(-4px)',offset:.85},{transform:'translate(-50%,-50%)'}],{duration:1100,delay:el===cb?820:700,easing:EASE.out});
       an(q('.t3-x'),[{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(-4px)',offset:.3},{opacity:1,transform:'translateY(-8px)',offset:.7},{opacity:0,transform:'translateY(-14px)'}],{duration:1300,delay:700,easing:EASE.out});
       an(q('.t3-c'),[{opacity:0,transform:'translateY(8px) scale(.9)'},{opacity:1,transform:'none'}],{duration:460,delay:1450,easing:EASE.spring});
     }
@@ -846,7 +909,7 @@
       const login=overlay.querySelector('.auth-step.active');
       const swap=beginSwap({from:login,host:overlay.querySelector('.auth-card'),dir:-1});
       overlay.classList.add('us-tour-active');root.hidden=false;track.scrollLeft=0;
-      paintTourPhotos(root);
+      paintTourPhotos(root);paintTourDuos(root);
       runs=reducedMotion()?[]:slides.map((slide,i)=>{const list=tourAnimations(i,slide);list.forEach(run=>run.pause());return list;});
       select(0);
       arriveSwap(root,{swap});
@@ -904,8 +967,8 @@
     }
     function copyFor(step){
       const partner=partnerName(),role=profile?.role;
-      if(step==='noi')return `${partner} ha accettato l’invito ed è ${partnerColourName(role)}, tu ${colourName(role)}.`;
-      if(step==='color')return 'Scegli il tuo: lo vedete uguale tutti e due, e quello della tua persona resta suo.';
+      if(step==='noi')return 'Da qui vi trovate i Ricordi, la domanda di oggi e i vostri giochi.';
+      if(step==='color')return 'Scegli forma e colore: sarà il tuo personaggio, in tutta l’app.';
       if(step==='push')return 'Solo per le cose vostre, anche a US chiusa. Cosa ricevere lo scegli tu.';
       if(step==='place')return 'Se la attivi, in Oggi vedete la distanza tra voi.';
       return mode==='device'?'Su questo telefono è tutto a posto.':'';
@@ -1069,9 +1132,11 @@
       $('usSetupReady').hidden=step!=='ready';
       secondary.hidden=!(step==='push'||step==='place');
       const title=$('usSetupTitle');
-      if(step==='noi'){setTitle(title,'Ora siete ','un Noi');drawVenn(venn,{kind:'joined',role,partner:partnerName()});primary.textContent='Continua';}
-      if(step==='color'){setTitle(title,'Scegli ','il tuo colore');drawVenn(venn,{kind:'join',role,partner:partnerName()});primary.textContent='Continua';mountColourPicker($('usSetupColors'),{profile});}
-      if(step!=='color')$('usSetupColors').hidden=true;
+      // D14: the other one has arrived, the two characters meet and make festa.
+      if(step==='noi'){setTitle(title,'Ora siete ','in due');drawVenn(venn,{kind:'joined',role,partner:partnerName(),shape:profile?.character_shape});primary.textContent='Continua';}
+      // D14: who joined makes their character here: shape and colour.
+      if(step==='color'){setTitle(title,'Chi sei in ','US?');const redraw=()=>drawVenn(venn,{kind:'join',role,partner:partnerName(),shape:profile?.character_shape});redraw();primary.textContent='Continua';mountColourPicker($('usSetupColors'),{profile});mountShapePicker($('usSetupShapes'),{profile,redraw});}
+      if(step!=='color'){$('usSetupColors').hidden=true;$('usSetupShapes').hidden=true;}
       if(step==='push'){setTitle(title,'Non perderti ','un Ti penso');primary.textContent='Attiva le notifiche';}
       if(step==='place'){setTitle(title,'Anche da ','lontano');primary.textContent='Attiva la posizione';}
       if(step==='ready'){if(mode==='device')setTitle(title,'Eccoti ','di nuovo');else setTitle(title,'Il vostro US ','è pronto');primary.textContent='Entra in US';drawReady(false);}
@@ -1346,7 +1411,7 @@
       // The bar moves once the old step has gone (a copied step leaves for 180 ms).
       node('mc3Progress').style.setProperty('--us-ob-delay',`${Math.max(0,swap?.after||0)}ms`);
       node('mc3Progress').style.setProperty('--us-progress',view==='me'?'.25':'.5');
-      const titles={me:['Iniziamo da ','te'],choice:['Il vostro US, ','da qui'],create:['Crea il ','vostro spazio'],join:['Entra nel ','vostro US'],color:['Scegli ','il tuo colore'],waiting:['Il tuo spazio ','è pronto'],error:['Verifichiamo il tuo accesso','']};
+      const titles={me:['Iniziamo da ','te'],choice:['Il vostro US, ','da qui'],create:['Crea il ','vostro spazio'],join:['Entra nel ','vostro US'],color:['Chi sei in ','US?'],waiting:['Il tuo spazio ','è pronto'],error:['Verifichiamo il tuo accesso','']};
       setTitle(node('mc3Title'),...titles[view]);
       const ownName=waiting?state.profile.display_name.trim():me.name;
       const copy={
@@ -1354,11 +1419,11 @@
         choice:me.name?`${me.name}, ora crea il vostro spazio o raggiungi la tua persona.`:'Ora crea il vostro spazio o raggiungi la tua persona.',
         create:'Da questa data partono i giorni insieme, il mesiversario e l’anniversario.',
         join:'Scrivi il codice che ti ha mandato la tua persona.',
-        color:'Scegli il tuo: lo vedete uguale tutti e due, e potrai cambiarlo in Impostazioni.',
+        color:'Scegli forma e colore: sarà il tuo personaggio, in tutta l’app.',
         waiting:state.code?`${ownName}, manda questo codice alla tua persona.`:`${ownName}, invita la tua persona. Quando entrerà, troverete qui il vostro spazio.`,
         error:'Il tuo accesso resta valido: puoi riprovare o uscire.'
       }[view];
-      // In the colour step the words follow the two circles.
+      // In the noi and colour steps the words follow the two characters.
       node('mc3Copy').textContent=view==='color'?'':copy;node('mc3Copy').hidden=view==='color';
       node('mc3ColorCopy').textContent=view==='color'?copy:'';
       node('mc3Me').hidden=view!=='me';node('mc3Choice').hidden=view!=='choice';node('mc3Create').hidden=view!=='create';node('mc3Join').hidden=view!=='join';
@@ -1394,7 +1459,9 @@
         if(pressed){delete pressed.button.dataset.usBusy;if(pressed.text)pressed.button.textContent=pressed.text;pressed=null;}
         delete root.dataset.usBusy;
       }
-      if(view==='color'&&lastView!=='color'){drawVenn(node('mc3Venn'),{kind:'wait',role,partner:''});mountColourPicker(node('mc3Colors'),{profile:state.profile});}
+      if(view==='color'&&lastView!=='color'){const redraw=()=>drawVenn(node('mc3Venn'),{kind:'wait',role,partner:'',shape:state.profile?.character_shape});redraw();mountColourPicker(node('mc3Colors'),{profile:state.profile});mountShapePicker(node('mc3Shapes'),{profile:state.profile,redraw});}
+      // D14: while you wait, your character waits beside the other one's empty place.
+      if(view==='waiting'&&lastView!=='waiting'&&node('mc3WaitDuo'))drawVenn(node('mc3WaitDuo'),{kind:'wait',role,partner:'',shape:state.profile?.character_shape});
       if(active&&changed){node('mc3Title').focus({preventScroll:true});node('authOverlay').scrollTop=0;}
       if(swap){
         const after=arriveSwap(root,{swap});

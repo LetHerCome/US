@@ -950,9 +950,9 @@ let usAuthEpoch=0;
 let usAuthUserId='';
 let usInitCloudAgain=false;
 const usOnboarding=window.UsOnboarding.mount({
-  readProfile:id=>usWithDeadline(sb.from('profiles').select('id,display_name,role,couple_id,avatar_path').eq('id',id).maybeSingle(),5000),
+  readProfile:id=>usWithDeadline(sb.from('profiles').select('id,display_name,role,couple_id,avatar_path,character_shape').eq('id',id).maybeSingle(),5000),
   // The first-run colour picker reads both of you, to leave the partner's colour taken.
-  readCouple:coupleId=>usWithDeadline(sb.from('profiles').select('id,role,person_color').eq('couple_id',coupleId),5000),
+  readCouple:coupleId=>usWithDeadline(sb.from('profiles').select('id,role,person_color,character_shape').eq('couple_id',coupleId),5000),
   // A mutation retains its guard until the real request settles: a local timer
   // cannot cancel a database transaction or safely authorize another rotation.
   rpc:(name,args)=>{
@@ -2517,9 +2517,9 @@ function oggiTodayISO(){
   return typeof usDailyQuestionDay==='function'?usDailyQuestionDay():new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome'}).format(new Date());
 }
 // F2, redesign D9 — "Tocca a te": a dot on Gioca while the other waits for me
-// in a game (a round, Per voi, until fase 6 the other one's photo of the
-// challenge); on Oggi while they answered the Domanda di oggi and I have not.
-function renderToccaATe({daily=false,game=false,challenge=false}={}){
+// in a game (a round or Per voi; the weekly challenge is hidden since fase 6,
+// D10); on Oggi while they answered the Domanda di oggi and I have not.
+function renderToccaATe({daily=false,game=false}={}){
   const mark=(page,on,label)=>{
     const tab=document.querySelector?.(`.nav button[data-page="${page}"]`);
     if(!tab)return false;
@@ -2528,7 +2528,7 @@ function renderToccaATe({daily=false,game=false,challenge=false}={}){
     return on;
   };
   const oggi=mark('home',Boolean(daily),'Oggi');
-  const gioca=mark('quiz',Boolean(game||challenge),'Gioca');
+  const gioca=mark('quiz',Boolean(game),'Gioca');
   return oggi||gioca;
 }
 // ===== M9B — Domanda di oggi: il rituale quotidiano su Oggi =====
@@ -2751,12 +2751,9 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
     // The calendar's next commitment still reaches the pill when Events fails.
     if(refreshId===usTodayPriorityRefreshId&&typeof refreshOggiNext==='function')refreshOggiNext({event:'failed'});
   }
-  // La sfida della settimana (weekly-challenge.js): only the other one's photo, for the dot on Gioca.
-  let challenge=null;
-  try{challenge=await window.UsWeeklyChallenge?.todayPriority?.();}catch(_){challenge=null;}
   if(refreshId!==usTodayPriorityRefreshId)return;
   const dailyState=dailySource?.state;
-  renderToccaATe({daily:Boolean(dailyState&&dailyState.my_answer==null&&dailyState.partner_has_answer),game:Boolean(usOggiGameTurn?.game),challenge:challenge?.category==='waiting_for_me'});
+  renderToccaATe({daily:Boolean(dailyState&&dailyState.my_answer==null&&dailyState.partner_has_answer),game:Boolean(usOggiGameTurn?.game)});
   window.UsDailyQuestionHub?.paint?.();
 }
 window.UsTodayPriority=Object.freeze({
@@ -2846,7 +2843,7 @@ function closeToday(){
 }
 window.closeToday=closeToday;
 
-// ===== 1.0 — La domanda di oggi in Gioca (was home-cleanup.js); since 23/11/2026 (D11) only its model and the week stay =====
+// ===== 1.0 — La domanda di oggi in Gioca (was home-cleanup.js); since 23/11/2026 (D11) only its model stays =====
 // Same question, same sheet: the Gioca card opens it where you are, like the
 // Oggi card. It only reads the canonical state hydrateToday already loaded.
 function dailyHubModel(){
@@ -2862,12 +2859,9 @@ function dailyHubModel(){
   return {...base,state:'answer',meta:'Una domanda per voi oggi',cta:'Rispondi'};
 }
 // La domanda di oggi left Gioca (redesign definitivo, 23/11/2026, D11): it
-// lives on Oggi only. Gioca keeps the week of answers, repainted here.
-function paintDailyInGioca(){
-  const hub=document.getElementById('quizHub');
-  if(!hub||hub.classList.contains('hidden'))return;
-  window.USGameV2?.paintWeek?.();
-}
+// lives on Oggi only, and since fase 6 Gioca has no week strip either. The
+// name stays for the callers (Oggi repaints after a daily change).
+function paintDailyInGioca(){}
 // F2 — Gioca has no turn API: Oggi reads "Tocca a te" from the hub games.js
 // just rendered (a round where the other is waiting, or Per voi pending).
 let usOggiGameTurnTimer=0;
@@ -4012,7 +4006,7 @@ function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priori
   const title=row.caption||sourceTitle;
   const kicker=done?`<small class="ricordi-moment-source ricordi-done-kicker" data-source-key="${escapeHtml(source.sourceKey)}">L’avete fatto${row.caption&&sourceTitle&&sourceTitle!==row.caption?`<span translate="no"> · ${escapeHtml(sourceTitle)}</span>`:''}</small>`:'';
   const freshLabel=fresh?`<span class="ricordi-new-label">${escapeHtml(ricordiNewLabel(author))}</span>`:'';
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}${done?' ricordi-done ricordi-wide':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}"${row.created_by==null?' data-moment-orphan="1"':''} data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(title)}"${ricordiPlaceAttrs(row)}${fresh?' data-ricordi-new':''} onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${freshLabel}${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${kicker}${title?`<p translate="no">${escapeHtml(title)}</p>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by" translate="no">${escapeHtml(author||'Noi')}</span></span></div></article>`;
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}${done?' ricordi-done ricordi-wide':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-moment-by="${row.created_by===window.usProfile?.id?'tu':'partner'}"${row.created_by==null?' data-moment-orphan="1"':''} data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(title)}"${ricordiPlaceAttrs(row)}${fresh?' data-ricordi-new':''} onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${freshLabel}${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${kicker}${title?`<p translate="no">${escapeHtml(title)}</p>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by" translate="no">${escapeHtml(author||'Noi')}</span></span></div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);

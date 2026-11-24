@@ -663,3 +663,55 @@ body.us-gv2-sheet-open{overflow:hidden}
 :root[data-us-motion="reduced"] #quiz .us-wc-actions button{transition:none}
 :root[data-us-motion="reduced"] #quiz .us-wc-actions button:active{transform:none}
 @media (prefers-reduced-motion:reduce){#quiz .us-wc-actions button{transition:none}#quiz .us-wc-actions button:active{transform:none}}
+
+/* ===== Redesign definitivo, fase 6 (D10, D11): gettoni, Vi aspetta, tre stati =====
+   The approved tavola «Gioca» and «Gioca, gettoni finiti» (23/11/2026). The
+   colours are the page's (--us-pg: on Gioca the other one's colour) and the
+   two-colour gradient of the main keys. No weekly challenge, no week strip. */
+#quiz #quizHub .us-gv2-tokens{display:flex;flex-direction:column;gap:14px;padding:16px 18px;border-radius:24px;border:1px solid color-mix(in srgb,var(--us-pg) 30%,transparent);background:color-mix(in srgb,var(--us-pg) 8%,transparent)}
+#quiz #quizHub .us-gv2-tokens[data-gv2-left="0"]{padding:18px;border-color:rgba(247,239,233,.12);background:rgba(247,239,233,.04)}
+#quiz #quizHub .us-gv2-tokens-row{display:flex;align-items:center;gap:16px}
+#quiz #quizHub .us-gv2-token-row{display:flex;gap:8px;flex:0 0 auto}
+.us-gv2-token{width:44px;height:44px;box-sizing:border-box;border-radius:50%;border:2px dashed rgba(247,239,233,.3);display:grid;place-items:center;transition:background-color .25s ease,border-color .25s ease}
+.us-gv2-token.is-on{border:0;background:var(--us-accent-gradient);color:var(--us-color-text-on-accent,#1a1020);box-shadow:inset 0 -3px 0 rgba(26,16,32,.25),0 4px 10px rgba(0,0,0,.3)}
+.us-gv2-token.is-flying{position:fixed;z-index:9999;margin:0;pointer-events:none;will-change:transform,opacity}
+#quiz #quizHub .us-gv2-tokens-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+#quiz #quizHub .us-gv2-tokens-copy b{font-size:16px;font-weight:700;line-height:1.25;color:var(--us-color-text)}
+#quiz #quizHub .us-gv2-tokens-copy small{font-size:13px;line-height:1.35;color:var(--us-color-text-2)}
+#quiz #quizHub .us-gv2-tokens-plus{display:flex;align-items:center;gap:12px;padding-top:14px;border-top:1px solid rgba(247,239,233,.08)}
+#quiz #quizHub .us-gv2-tokens-plus .us-gv2-tokens-copy{flex:1}
+#quiz #quizHub .us-gv2-tokens-plus .us-gv2-tokens-copy b{font-size:14.5px}
+#quiz #quizHub .us-gv2-tokens-plus button{flex:0 0 auto;min-height:44px;padding:0 16px;border-radius:22px;border:1px solid color-mix(in srgb,var(--us-pg) 50%,transparent);background:color-mix(in srgb,var(--us-pg) 10%,transparent);color:var(--us-color-text);font:700 13.5px/1 var(--us-font-ui)}
+#quiz #quizHub :is(.us-gv2-vi-aspetta,.us-gv2-choose,.us-gv2-continue) .us-gv2-section-title{margin:0;font:800 11.5px/1.2 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-pg)}
+#quiz #quizHub .us-gv2-choose .us-gv2-section-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
+#quiz #quizHub .us-gv2-choose .us-gv2-section-head small{font-size:12.5px;color:var(--us-color-text-2)}
+#quiz #quizHub .us-gv2-vi-aspetta{display:flex;flex-direction:column;gap:10px}
+#quiz #quizHub .us-gv2-vi-aspetta-rows{display:flex;flex-direction:column;gap:8px}
+#quiz #quizHub .us-gv2-aspetta{display:flex;align-items:center;gap:12px;width:100%;min-height:70px;padding:12px 14px;border-radius:22px;border:1px solid rgba(247,239,233,.1);background:rgba(247,239,233,.05);color:var(--us-color-text);text-align:left;font:inherit;transition:transform var(--us-motion-press,.12s) ease}
+#quiz #quizHub .us-gv2-aspetta:active{transform:scale(.98)}
+#quiz #quizHub .us-gv2-aspetta:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px}
+#quiz #quizHub .us-gv2-aspetta-face{flex:0 0 50px;display:grid;place-items:center}
+#quiz #quizHub .us-gv2-aspetta-face .us-char{display:block;width:50px;height:auto;overflow:visible;filter:drop-shadow(1.5px 0 0 #f7efe9) drop-shadow(-1.5px 0 0 #f7efe9) drop-shadow(0 1.5px 0 #f7efe9) drop-shadow(0 -1.5px 0 #f7efe9)}
+#quiz #quizHub .us-gv2-aspetta-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#quiz #quizHub .us-gv2-aspetta-copy b{font-size:15px;font-weight:700}
+#quiz #quizHub .us-gv2-aspetta-copy small{font-size:13px;line-height:1.35;color:var(--us-color-text-2)}
+#quiz #quizHub .us-gv2-aspetta-cta{flex:0 0 auto;min-height:44px;display:inline-flex;align-items:center;padding:0 18px;border-radius:22px;background:var(--us-accent-gradient);color:var(--us-color-text-on-accent,#1a1020);font-size:14px;font-weight:700}
+#quiz #quizHub .us-gv2-game-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip]{grid-column:auto;grid-row:auto;display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;gap:10px;min-height:112px;padding:14px;border-radius:20px;border:1px solid rgba(247,239,233,.1);background:rgba(247,239,233,.05);box-shadow:none}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip]::after{display:none}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game.is-pervoi[data-gv2-chip]{border-color:color-mix(in srgb,var(--us-pg) 35%,transparent);background:color-mix(in srgb,var(--us-pg) 10%,transparent)}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game.is-swipe[data-gv2-chip]{grid-column:1/-1;min-height:96px}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip="played"],#quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip="tomorrow"]{border-color:rgba(247,239,233,.07);background:rgba(247,239,233,.025)}
+#quiz #quizHub .us-gv2-game-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip] .us-gv2-glyph,#quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip] .us-gv2-art{width:36px;height:36px}
+#quiz #quizHub .us-gv2-stato{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:11px;font:700 11.5px/1 var(--us-font-ui);background:color-mix(in srgb,var(--us-pg) 20%,transparent);color:var(--us-color-text)}
+#quiz #quizHub .us-gv2-game:is([data-gv2-chip="played"],[data-gv2-chip="tomorrow"]) .us-gv2-stato{background:rgba(247,239,233,.08);color:var(--us-color-text-2)}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip] .us-gv2-game-copy{align-self:stretch;gap:2px}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip] .us-gv2-game-copy b{font:700 15px/1.2 var(--us-font-ui);color:var(--us-color-text)}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip] .us-gv2-game-copy small{display:block;font-size:12.5px;line-height:1.3;color:var(--us-color-text-2)}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game:is([data-gv2-chip="played"],[data-gv2-chip="tomorrow"]) .us-gv2-game-copy b{color:var(--us-color-text-2)}
+@media(prefers-reduced-motion:reduce){.us-gv2-token{transition:none}#quiz #quizHub .us-gv2-aspetta{transition:none}#quiz #quizHub .us-gv2-aspetta:active{transform:none}}
+#quiz #quizHub .us-gv2-tokens,#quiz #quizHub .us-gv2-vi-aspetta{margin:0 0 22px}
+#quiz #quizHub .us-gv2-token:not(.is-on) .us-gv2-icon{display:none}
+.us-gv2-token .us-gv2-icon{width:20px;height:20px}
+#quiz #quizHub .us-gv2-stato .us-gv2-icon{width:11px;height:11px}

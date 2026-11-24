@@ -2,9 +2,50 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign, fase 8: Ricordi a polaroid e la bacheca (24/11)
+
+**Stato:** ramo `claude/redesign-fase8-ricordi` (sopra le fasi 6 e 7), verso il ramo fisso di staging. Founder, 24/11: «Vai allora andiamo avanti». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D12; tavole «Ricordi», «Bacheca» e «Bacheca intera» approvate il 23/11.
+
+**Cosa cambia:**
+- **La Raccolta a polaroid:** due per riga, mese per mese, un po' storte, col nastro nel colore di chi ha messo la foto, la didascalia scritta sotto (in corsivo) e il giorno.
+- **Raccolta · Bacheca · Mappa** in cima a Ricordi al posto del tasto «Mappa».
+- **La bacheca da detective:** i posti sono cartellini appuntati, messi come su una cartina vera (nord in alto), con fino a tre polaroid intorno e «+N» se ce ne sono di più; un filo rosso unisce i posti nell'ordine in cui ci siete stati la prima volta. Il cartellino apre la mappa lì, la polaroid apre il Ricordo.
+- **«Da appuntare»:** i Ricordi senza posto, con «Aggiungi il posto».
+- Si dispone da sola con quello che la pagina ha già: nessun dato nuovo, nessuna lettura in più.
+
+**Server:** niente. **Da sapere:** la didascalia è in Fraunces corsivo, perché l'app non ha un carattere scritto a mano (Caveat, nella tavola, andrebbe aggiunto). Il centraggio delle facce (#279) non c'è ancora: le polaroid tagliano la foto al centro.
+
+### Redesign, fase 7: l'intro con i personaggi (24/11)
+
+**Stato:** ramo `claude/redesign-fase7-intro` (sopra la fase 6), verso il ramo fisso di staging. Founder, 24/11: «Vai allora andiamo avanti». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D14; tavole dell'intro approvate il 23/11.
+
+**Cosa cambia:**
+- **Il giro prima dell'accesso** sono tre scene con i due personaggi (un tondo rosa e un quadrato lilla): uno accanto all'altro con «Un posto solo per voi due», un Ti penso che vola dall'uno all'altro (occhi a cuore), la festa dentro l'anello della Sintonia.
+- **«Chi sei in US?»** al posto del passo coi cerchi: chi crea la coppia e chi entra scelgono la forma (Tondo, Quadrato, Triangolo, Goccia, Nuvola) e il colore, e vedono subito il loro personaggio. La forma si salva come nel guardaroba.
+- **Nell'attesa** il tuo personaggio aspetta accanto al posto vuoto dell'altra persona, sopra il codice.
+- **Quando l'altra persona entra**, chi aspettava vede «Ora siete in due» coi due personaggi che fanno festa.
+
+**Server:** niente di nuovo (usa `set_my_character_shape`, già su US-STAGING con le migrazioni dei personaggi, non in produzione).
+
+### Redesign, fase 6: Gioca con i gettoni (24/11)
+
+**Stato:** ramo `claude/redesign-fase6-gioca`, verso il ramo fisso di staging. Founder, 24/11: «Vai allora andiamo avanti» (le fasi 6–8, poi un controllo insieme). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D10 e D11; tavole «Gioca» e «Gioca, gettoni finiti» approvate il 23/11.
+
+**Cosa cambia:**
+- **Tre gettoni grandi in cima a Gioca** al posto del contatore con i tre pallini: «Ancora 2 su 3 oggi · Ogni partita nuova usa un gettone». Il numero resta quello del server.
+- **Il gettone vola nel gioco** quando parte una partita nuova, al posto della finestra «Userete 1 delle 3 partite di oggi» (anche quella per rigiocare un gioco della settimana). Con «Riduci movimento» il gettone si spegne e basta.
+- **A zero gettoni:** «Domani altre 3» con l'ora del rinnovo («tra 6 ore e 12 minuti», mezzanotte di Roma) e, solo lì, la riga «Partite illimitate con US Plus · In arrivo» con «Avvisami».
+- **«Vi aspetta» in alto:** le partite dove tocca a te o dove le risposte sono pronte, col personaggio dell'altra persona, il gioco, «Bea ha giocato, tocca a te» e un tasto («Gioca» o «Scopri»).
+- **I vostri giochi:** Per voi è la prima casella (nel colore della pagina), poi i cinque giochi e Questo o quello in fondo. Ogni casella dice una cosa sola: **Pronto**, **Giocato** o **Domani**; sotto, il tipo di gioco o a che punto siete.
+- **Esce la sfida della settimana** (D10): niente più scheda in Gioca né pallino su Gioca per la foto dell'altra persona. I dati restano, si nasconde soltanto.
+- **Esce la striscia dei 7 giorni** in cima a Gioca: era legata alla domanda di oggi, che è già uscita da Gioca.
+- Restano «La vostra domanda», «Da continuare» (solo per le partite che nessuna casella rappresenta) e «Partite completate».
+
+**Server:** niente. **Da decidere:** le notifiche della sfida della settimana (lunedì e sabato) partono ancora dal server: vanno fermate prima della produzione, e su staging col via del founder.
+
 ### Redesign, fase 5: Oggi senza schede di suggerimento (24/11)
 
-**Stato:** ramo `claude/redesign-fase5-oggi`, verso il ramo fisso di staging. Founder, 24/11: «Fase 5 vai». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D9.
+**Stato:** in staging dal 24/11 (PR #286, merge `48335bb5`, sito `…-s48335bb5`). Founder, 24/11: «Fase 5 vai». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D9.
 
 **Cosa cambia:**
 - **Via la zona delle schede su Oggi.** Sopra la barra restano la didascalia della foto, la riga (prossimo impegno, distanza, Come stai) e la domanda di oggi. Ogni avviso che passava di lì ha ora il suo posto.

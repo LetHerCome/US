@@ -25,10 +25,10 @@ function gameHub(instant='2026-10-09T22:30:00Z'){
 // already has: a round completed that day, and today's daily question.
 // Redesign definitivo (23/11/2026, D11): la domanda di oggi left Gioca (it
 // stays on Oggi); the week leads, then the games.
-test('Round 3 G1: the 7-day strip leads Gioca, then the existing game bento; no daily question', async()=>{
+test('Fase 6 (D11): the tokens lead Gioca, then the games (Per voi first, Questo o quello last); no week, no daily question', async()=>{
   const html=await gameHub().html();
-  assert.doesNotMatch(html,/data-gv4-daily-slot|us-gv4-daily-pending/);
-  const keys=['id="usGv2Week"','class="us-gv2-choose"','data-gv2-action="per-voi"','data-gv2-action="swipe"','data-gv2-family="scopritevi"'];
+  assert.doesNotMatch(html,/data-gv4-daily-slot|us-gv4-daily-pending|id="usGv2Week"|us-gv2-wd/);
+  const keys=['class="us-gv2-choose"','data-gv2-action="per-voi"','data-gv2-family="scopritevi"','data-gv2-action="swipe"'];
   const positions=keys.map(k=>html.indexOf(k));
   assert.ok(positions.every(v=>v>=0),JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a,b)=>a-b),positions);
@@ -36,13 +36,7 @@ test('Round 3 G1: the 7-day strip leads Gioca, then the existing game bento; no 
   assert.equal((html.match(/data-gv2-action="swipe"/g)||[]).length,1);
   // G7 1.0 — "E se…?" is no longer offered as a tile.
   assert.equal((html.match(/data-gv2-family="/g)||[]).length,5);
-  // 2026-10-09T22:30Z is Saturday 10 October in Rome: the week is 5 … 11.
-  const days=[...html.matchAll(/<b aria-hidden="true" translate="no">(\d+)<\/b>/g)].map(m=>Number(m[1]));
-  assert.deepEqual(days,[5,6,7,8,9,10,11]);
-  assert.equal((html.match(/aria-current="date"/g)||[]).length,1);
-  assert.match(html,/class="us-gv2-wd is-today" role="listitem" aria-current="date" aria-label="sabato 10 · oggi"><span aria-hidden="true" translate="no">S<\/span><b aria-hidden="true" translate="no">10<\/b>/);
   assert.doesNotMatch(html,/us-gv2-rhythm|us-gv4-week|us-gv4-day/,'no budget strip, no old rail');
-  assert.doesNotMatch(html,/data-who=/,'no dot without real data');
   assert.doesNotMatch(html,/data-streak|data-completed-days|day-played/,'no fictitious past-day progress');
 });
 test('1.0 G1: games.js keeps no day rail code and still hands the slot to the Daily engine',()=>{
@@ -53,7 +47,7 @@ test('1.0 G1: games.js keeps no day rail code and still hands the slot to the Da
 // Redesign definitivo (23/11/2026, D11): the card left Gioca. The model stays
 // (UsDailyQuestionHub.model), canonical and without the partner's answer; the
 // paint only repaints the week of answers.
-test('V4 → 1.0: the daily model follows the existing Daily engine; Gioca paints only its week',()=>{
+test('V4 → 1.0: the daily model follows the existing Daily engine; Gioca paints nothing of it (fase 6)',()=>{
   const app=read('app.js');
   const start=app.indexOf('// ===== 1.0 — La domanda di oggi in Gioca');
   const end=app.indexOf('// F2 — Gioca has no turn API',start);
@@ -65,7 +59,7 @@ test('V4 → 1.0: the daily model follows the existing Daily engine; Gioca paint
   const vmContext=vm.createContext(sandbox);
   vm.runInContext(app.slice(start,end),vmContext);
   vm.runInContext('paintDailyInGioca()',vmContext);
-  assert.equal(weeks,1,'the week of answers is repainted');
+  assert.equal(weeks,0,'no week strip since fase 6');
   assert.equal(vm.runInContext('dailyHubModel()',vmContext),null);
   window.todayQuestion={id:'q-1',question:'Un ricordo speciale?'};
   window.todayState={my_answer:null,partner_has_answer:true,both_answered:false,partner_answer:'Risposta segreta'};
