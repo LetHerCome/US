@@ -1,3 +1,15 @@
+// Redesign (24/11/2026): the founder compares the backgrounds on staging. Marea
+// by default; ?sfondo=luci|aurora|notte switches it and this phone keeps it.
+(function (w) {
+  if (!w || !w.document) return;
+  try {
+    const ok = ['marea', 'luci', 'aurora', 'notte'];
+    const asked = new URLSearchParams(w.location.search).get('sfondo');
+    if (ok.includes(asked)) w.localStorage.setItem('us:sfondo:v1', asked);
+    const kept = w.localStorage.getItem('us:sfondo:v1');
+    if (ok.includes(kept) && kept !== 'marea') w.document.documentElement.dataset.usSfondo = kept;
+  } catch (_) { /* no storage: Marea */ }
+})(typeof window !== 'undefined' ? window : null);
 // US — colori a scelta (founder, 29/10/2026, docs/DECISIONS.md). With US Plus
 // each person picks their colour from 8; both phones show it. The design
 // reads two tokens (ui-foundation.css): --us-rosa for whoever created the

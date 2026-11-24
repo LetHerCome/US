@@ -261,6 +261,9 @@
 #bond .noi-ev-row.is-lived>.us-icon{--us-icon-size:14px;width:24px;height:24px;padding:5px;border-radius:50%;box-sizing:border-box;background:color-mix(in srgb,var(--us-verde) 20%,transparent);color:var(--us-verde);-webkit-mask:none;mask:none}
 #bond .noi-ev-row.is-lived>.us-icon::before{content:"";display:block;width:100%;height:100%;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat}
 #bond .noi-ev-row.is-lived>.us-icon{background-color:color-mix(in srgb,var(--us-verde) 20%,transparent)}
+/* Icone a due toni (24/11/2026): this one draws its own check in ::before. */
+#bond .noi-ev-row.is-lived>.us-icon::before{position:absolute;inset:5px;width:auto;height:auto;opacity:1}
+#bond .noi-ev-row.is-lived>.us-icon::after{display:none}
 #bond :is(.noi-ev-card,.noi-ev-row).is-system{font:inherit;text-align:left;color:inherit;cursor:pointer}
 #bond .us-events-empty{padding:28px 16px;border-radius:22px;border:1px dashed var(--us-color-line-strong);text-align:center;color:var(--us-color-text-2)}
 #bond .us-events-empty b{font-family:var(--us-font-display);font-weight:400;font-size:21px;color:var(--us-color-text)}
