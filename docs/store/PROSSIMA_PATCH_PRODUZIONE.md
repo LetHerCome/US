@@ -2,6 +2,14 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Oggi: il velo in fondo alla foto (25/11)
+
+**Stato:** ramo `claude/oggi-velo`, verso il ramo fisso di staging. Founder, 25/11: «il velo è carino, lo farei un po' meno accentuato e lo metterei anche alla dark mode, ovviamente nera».
+
+**Cosa cambia:** in Oggi la foto sfuma in fondo, sopra la barra, con la stessa forma di giorno e di notte: trasparente fino a metà, poi un velo che sale piano senza mai coprire del tutto. Di giorno è color carta e più leggero di prima; di notte è nero e sostituisce la fascia scura di prima, che diventava nero pieno. Anche nell'app nativa.
+
+**Server:** niente.
+
 ### Transizioni: come in produzione, col colore sfumato (25/11)
 
 **Stato:** ramo `claude/transizioni-ogni-tocco`, verso il ramo fisso di staging. Founder, 25/11: «se passo velocemente da una pagina all'altra non è reattivo, non rifà una nuova transizione», poi «vedi su produzione com'è reattivo, devi fare la stessa cosa qui in staging solo con il gradiente che abbiamo».
