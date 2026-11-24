@@ -1,13 +1,10 @@
 /* Due colori, un Noi — shell motion, the approved mockup's "marea" (core.js go()).
    A tap on the bottom bar: the tab is marked at once (the indicator slides
    with the spring, the icon gives one small bounce),
-   a tide of the tab colour floods the page from the bottom, its wavy edge
-   flowing sideways, higher on the side of the tapped tab (a lighter wave
-   just ahead of it); once the screen is under, the page changes, then the
-   tide goes on up and out, and the new page surfaces behind its wavy tail
-   while its blocks rise in, 50 ms apart. Founder, 24/11/2026: «una vera
-   marea di colore… un'onda che pixel dopo pixel mangia la pagina».
-   Fluidità 2 (24/11/2026, «veloci ma non fluide»): every moving part is
+   the tab colour grows from the tapped button and covers the screen
+   (~330 ms visible), the page changes under it, then the colour dissolves
+   (360 ms) while the new page's blocks rise in, 50 ms apart. Fluidità 2
+   (founder, 24/11/2026, «veloci ma non fluide»): every moving part is
    transform and opacity, so it runs on the compositor and a busy phone
    cannot stop it halfway (the old clip-path circle and hole were repainted
    on the main thread at every frame). The colour sits under the
@@ -24,15 +21,14 @@ window.__usDueColoriInstalled = true;
 const doc = document;
 const root = doc.documentElement;
 const original = window.go;
-// Durations in ms: the tide rises (the full wave 70 ms behind the light
-// one), the page changes under it, the tide leaves; about 1 s in all.
-const RISE_MS = 520;
-const LEAVE_MS = 480;
-const WAVE_LAG = 70;
-const RISE = 'cubic-bezier(.3,.1,.25,1)';
-const LEAVE = 'cubic-bezier(.25,.1,.25,1)';
+// Durations in ms. Fluidità 2 (founder, 24/11/2026): «un po' troppo veloci»
+// at 300 ms, the colour flashed on in two frames. Now it is seen growing
+// from the tab and slows as it arrives; the whole change takes ~0.8 s.
+const COVER_MS = 500;
+const REVEAL_MS = 360;
+const GROW = 'cubic-bezier(.35,.1,.25,1)';
 const GLIDE = 'cubic-bezier(.45,0,.15,1)';
-const STAGGER_DELAY = 180;
+const STAGGER_DELAY = 60;
 const STAGGER_STEP = 50;
 const STAGGER_MS = 460;
 const FADE_MS = 180;
@@ -56,76 +52,42 @@ let job = null;
 // a sub-page starts to slide): work done now costs no frame of the motion.
 let switching = false;
 
-// The tide: a band as wide as the screen and a bit (it leans), a wavy crest
-// on top, the colour, a wavy tail below (due-colori.css). The crest is one
-// SVG twice the width, its pattern repeating at half, so sliding it by half
-// loops without a seam. Sizes in px, as in the CSS.
-const CREST = 48;      // the crest and the tail
-const EXTRA = 100;     // the body is the screen plus this (half above, half below when over)
-const TILT = 10;       // degrees from one side of the bar to the other
-const WAVE = 'M0 30C50 30 100 10 150 10S250 34 300 34S400 4 450 4S550 30 600 30S700 10 750 10S850 34 900 34S1000 4 1050 4S1150 30 1200 30L1200 48L0 48Z';
-const svgNS = 'http://www.w3.org/2000/svg';
-function crest(kind) {
-  const box = doc.createElement('i');
-  box.className = `us-tide-${kind}`;
-  const svg = doc.createElementNS(svgNS, 'svg');
-  svg.setAttribute('viewBox', '0 0 1200 48');
-  svg.setAttribute('preserveAspectRatio', 'none');
-  const p = doc.createElementNS(svgNS, 'path');
-  p.setAttribute('d', WAVE);
-  svg.appendChild(p);
-  box.appendChild(svg);
-  return box;
-}
-function tide(kind) {
-  const band = doc.createElement('i');
-  band.className = `us-tide is-${kind}`;
-  const body = doc.createElement('i');
-  body.className = 'us-tide-body';
-  band.append(crest('crest'), body, crest('tail'));
-  return band;
-}
-const tides = { back: null, front: null };
+let disc = null;
 function floodLayer() {
   if (!layer) {
     layer = doc.createElement('div');
     layer.className = 'us-flood';
     layer.hidden = true;
     layer.setAttribute('aria-hidden', 'true');
-    tides.back = tide('back');
-    tides.front = tide('front');
-    layer.append(tides.back, tides.front);
+    disc = doc.createElement('i');
+    disc.className = 'us-flood-disc';
+    layer.appendChild(disc);
     doc.body.appendChild(layer);
   }
   return layer;
 }
-// Where the tide stands: just under the screen, over it (the crest out of
-// sight above), and gone past the top. It leans up towards the tapped tab.
-function tidePlaces(at) {
-  const lean = (0.5 - at.x / at.w) * TILT;
-  const t = (y) => `translateY(${Math.round(y)}px) rotate(${lean.toFixed(2)}deg)`;
-  return { start: t(at.h + 24), over: t(-(CREST + EXTRA / 2)), gone: t(-(at.h + EXTRA + 2 * CREST + 48)),
-    // Share of the rise at which the screen is all colour, with a margin for the lean.
-    covered: (at.h + 24 + CREST + 20) / (at.h + 24 + CREST + EXTRA / 2) };
-}
-// The crests flow sideways the way you travel along the bar, the light one against it.
-const PAGES = ['home', 'bond', 'moments', 'quiz'];
-function flow(to, from) {
-  const dir = Math.sign(PAGES.indexOf(to) - PAGES.indexOf(from)) || 1;
-  [[tides.front, 1300, dir], [tides.back, 1700, -dir]].forEach(([band, ms, d]) => {
-    band.querySelectorAll('svg').forEach((svg) => svg.animate(
-      [{ transform: `translateX(${d > 0 ? 0 : -50}%)` }, { transform: `translateX(${d > 0 ? -50 : 0}%)` }],
-      { duration: ms, iterations: Infinity }));
-  });
+// The disc reaches past the farthest corner from the tap (x1.1), centred on
+// it: the screen is all colour before the disc stops growing, so the page
+// changes then, and the change's long frame passes while the disc still
+// grows off screen (on the compositor, unseen).
+const OVERSIZE = 1.1;
+const COVERED = 0.95; // the corners are covered at 1/1.1 = .91; a few frames of margin
+function placeDisc(at) {
+  const r = Math.ceil(at.radius * OVERSIZE);
+  const d = r * 2;
+  disc.style.left = `${at.x - r}px`;
+  disc.style.top = `${at.y - r}px`;
+  disc.style.width = `${d}px`;
+  disc.style.height = `${d}px`;
 }
 
-// Resolves once the tide covers the whole screen (or stops rising).
-function covered(animation, share) {
+// Resolves once the growing disc covers the whole screen (or stops growing).
+function covered(animation) {
   return new Promise((resolve) => {
     const check = () => {
       if (animation.playState !== 'running' || animation.playbackRate < 0) { resolve(); return; }
       const p = animation.effect?.getComputedTiming?.().progress;
-      if (p == null || p >= share) resolve(); else requestAnimationFrame(check);
+      if (p == null || p >= COVERED) resolve(); else requestAnimationFrame(check);
     };
     requestAnimationFrame(check);
   });
@@ -166,8 +128,8 @@ function stageBox() {
 }
 
 // Heavy work (a page's hydration, its renders) waits until the colour has
-// finished, so the page under the tide is ready and nothing competes with
-// the motion. Runs at once otherwise.
+// finished: the reveal is a main-thread clip-path, it must run on an idle
+// thread (the mockup's views are already built). Runs at once otherwise.
 const afterQueue = [];
 function afterMotion(fn) {
   if (typeof fn !== 'function') return;
@@ -248,18 +210,15 @@ async function flood(button, self, id, options) {
   markNav(button);
   bounce(button);
   el.style.setProperty('--us-flood', color);
-  const place = tidePlaces(at);
+  placeDisc(at);
   el.hidden = false;
-  const current = { ticket, id, from, at, button, back: false, cover: null, covers: [] };
+  const current = { ticket, id, from, at, button, back: false, cover: null };
   job = current;
   pending = { self, args: [id, { ...options, motionCommit: true }] };
   try {
-    flow(id, from);
-    const rise = (band, delay) => band.animate([{ transform: place.start }, { transform: place.over }],
-      { duration: RISE_MS, delay, easing: RISE, fill: 'both' });
-    current.covers = [rise(tides.back, 0), rise(tides.front, WAVE_LAG)];
-    current.cover = current.covers[1];
-    await covered(current.cover, place.covered);
+    current.cover = disc.animate([{ transform: 'scale(0.001)' }, { transform: 'scale(1)' }],
+      { duration: COVER_MS, easing: GROW, fill: 'forwards' });
+    await covered(current.cover);
     if (current.back) await current.cover.finished;
   } catch (_) { /* cancelled by a programmatic go() */ }
   if (ticket !== run) return;
@@ -271,18 +230,17 @@ async function flood(button, self, id, options) {
     return;
   }
   // The screen is all colour now: the page changes under it (its own fade
-  // is off, the mockup's view opens fully opaque), then the tide goes on up
-  // and out. It leaves on the frame after the change, so the change's style
-  // and layout never eat into it.
+  // is off, the mockup's view opens fully opaque), then the colour
+  // dissolves. The fade starts on the frame after the change, so the
+  // change's style and layout never eat into it.
   const to = current.id;
   entering = doc.getElementById(to);
   entering?.classList.add('us-marea-in');
   flushPending();
   stagger(doc.getElementById(to), STAGGER_DELAY);
+  // The disc may still be growing off screen: it goes on while it dissolves.
   try {
-    const leave = (band) => band.animate([{ transform: place.over }, { transform: place.gone }],
-      { duration: LEAVE_MS, easing: LEAVE, fill: 'forwards' });
-    await Promise.all([leave(tides.back).finished, leave(tides.front).finished]);
+    await el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: REVEAL_MS, easing: OUT, fill: 'forwards' }).finished;
   } catch (_) { /* cancelled */ }
   if (ticket === run) { job = null; clear(); busy = false; drainAfter(); }
 }
@@ -302,9 +260,10 @@ function retarget(button, self, id, options) {
       pending = null; // the page it left never changes
       markNav(button);
       bounce(button);
-      current.covers.forEach((a) => { try { a.reverse(); } catch (_) { a.cancel(); } });
+      try { current.cover?.reverse(); } catch (_) { current.cover?.cancel(); }
       return true;
     }
+    const before = getComputedStyle(disc).backgroundColor;
     current.id = id;
     current.button = button;
     current.at = origin(button);
@@ -313,6 +272,7 @@ function retarget(button, self, id, options) {
     markNav(button);
     bounce(button);
     el.style.setProperty('--us-flood', tabColor(button));
+    disc.animate?.([{ backgroundColor: before }, { backgroundColor: getComputedStyle(disc).backgroundColor }], { duration: 160, easing: OUT });
     return true;
   }
   if (id === current.id) return true;

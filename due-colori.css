@@ -178,17 +178,9 @@ input,textarea,select,button{font-family:inherit}
 body:has(#homeHero.us-oggi-focus) .us-nav.us-nav-premium{translate:0 120px}
 
 /* ---------- Colour flood between tabs (due-colori.js) ---------- */
-/* La marea a onde (founder, 24/11/2026): two bands of colour rise from the
-   bottom with transform (on the compositor), each a wavy crest, the colour
-   and a wavy tail; the light one runs just ahead. Sizes match due-colori.js
-   (crest 48, body = screen + 100). */
+/* Fluidità 2 (24/11/2026): a disc that grows with transform, on the compositor. */
 .us-flood{position:fixed;inset:0;z-index:19;pointer-events:none;overflow:hidden;contain:strict}
-.us-tide{position:absolute;left:-15%;top:0;display:flex;flex-direction:column;width:130%;height:calc(100% + 196px);transform:translateY(110vh);will-change:transform}
-.us-tide.is-back{opacity:.45}
-.us-tide-crest,.us-tide-tail{position:relative;display:block;flex:none;height:48px;overflow:hidden}
-.us-tide-tail{margin-top:-1px;transform:scaleY(-1)}
-.us-tide-crest svg,.us-tide-tail svg{position:absolute;left:0;top:0;width:200%;height:100%;fill:var(--us-flood,var(--us-tab));will-change:transform}
-.us-tide-body{display:block;flex:1;margin-top:-1px;background:var(--us-flood,var(--us-tab))}
+.us-flood-disc{position:absolute;display:block;border-radius:50%;background:var(--us-flood,var(--us-tab));transform:scale(0.001);will-change:transform}
 .us-flood[hidden]{display:none}
 /* Under the colour the new page opens fully opaque, as the mockup's view
    (its own short fade would show it translucent in the growing circle). */
