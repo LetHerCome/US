@@ -57,8 +57,11 @@ test('the interface says «voi due», never «entrambi»', () => {
 // changes as soon as the colour covers the screen.
 test('tab change: the tide is quick and runs on the compositor', () => {
   const js = read('due-colori.js');
-  assert.match(js, /const COVER_MS = 600;/);
-  assert.match(js, /const REVEAL_MS = 360;/);
+  assert.match(js, /const COVER_MS = 460;/);
+  assert.match(js, /const REVEAL_MS = 300;/);
+  // «Se cambi velocemente le pagine non reagiscono» (founder, 24/11/2026): a tap during the motion lands at once.
+  assert.match(js, /if \(button && busy && !slideJob\) \{ rush\(button, this, id, options\); return undefined; \}/);
+  assert.match(js, /function rush\(button, self, id, options\) \{[\s\S]*?original\.call\(self, id, \{ \.\.\.options, motionCommit: true \}\)/);
   assert.match(js, /const GROW = 'cubic-bezier\(\.4,\.05,\.45,1\)';/);
   // No sharp edge (founder, 24/11/2026): the colour takes the page little by little.
   assert.match(read('due-colori.css'), /\.us-flood-disc\{[^}]*background:radial-gradient\(circle closest-side,var\(--c\) 52%,[^}]*transparent 100%\)/);

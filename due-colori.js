@@ -25,9 +25,10 @@ const original = window.go;
 // at 300 ms, the colour flashed on in two frames. Now it is seen growing
 // from the tab and slows as it arrives. Its edge is soft (founder: «eliminare
 // il bordo netto e fare sì che prendesse piano piano la pagina»): the colour
-// takes the page little by little; the whole change takes ~1 s.
-const COVER_MS = 600;
-const REVEAL_MS = 360;
+// takes the page little by little; the whole change takes ~0.8 s, and a
+// tap during it lands at once (rush).
+const COVER_MS = 460;
+const REVEAL_MS = 300;
 const GROW = 'cubic-bezier(.4,.05,.45,1)';
 const GLIDE = 'cubic-bezier(.45,0,.15,1)';
 const STAGGER_DELAY = 60;
@@ -215,23 +216,15 @@ async function flood(button, self, id, options) {
   el.style.setProperty('--us-flood', color);
   placeDisc(at);
   el.hidden = false;
-  const current = { ticket, id, from, at, button, back: false, cover: null };
+  const current = { ticket, id, from, at, button, cover: null };
   job = current;
   pending = { self, args: [id, { ...options, motionCommit: true }] };
   try {
     current.cover = disc.animate([{ transform: 'scale(0.001)' }, { transform: 'scale(1)' }],
       { duration: COVER_MS, easing: GROW, fill: 'forwards' });
     await covered(current.cover);
-    if (current.back) await current.cover.finished;
   } catch (_) { /* cancelled by a programmatic go() */ }
-  if (ticket !== run) return;
-  if (current.back) { // the tab it left was tapped again: the colour went back
-    job = null;
-    clear();
-    busy = false;
-    drainAfter();
-    return;
-  }
+  if (ticket !== run) return; // a tap took over (rush) or a programmatic go() landed
   // The screen is all colour now: the page changes under it (its own fade
   // is off, the mockup's view opens fully opaque), then the colour
   // dissolves. The fade starts on the frame after the change, so the
@@ -248,41 +241,32 @@ async function flood(button, self, id, options) {
   if (ticket === run) { job = null; clear(); busy = false; drainAfter(); }
 }
 
-// A tab tapped while the colour moves is never lost (the mockup ignored it).
-// While the colour rises the flood turns to the new tab: its colour, its
-// mark, and the page opens from it; the tab it left turns the colour back.
-// Once the page has changed, the new tab starts a flood of its own.
-function retarget(button, self, id, options) {
-  const current = job;
-  if (!current || current.back) return false;
-  const el = floodLayer();
-  if (pending) {
-    if (id === current.id) return true;
-    if (id === current.from) {
-      current.back = true;
-      pending = null; // the page it left never changes
-      markNav(button);
-      bounce(button);
-      try { current.cover?.reverse(); } catch (_) { current.cover?.cancel(); }
-      return true;
-    }
-    current.id = id;
-    current.button = button;
-    current.at = origin(button);
-    pending.self = self;
-    pending.args = [id, { ...options, motionCommit: true }];
-    markNav(button);
-    bounce(button);
-    el.style.setProperty('--us-flood', tabColor(button));
-    return true;
-  }
-  if (id === current.id) return true;
-  run += 1;
+// A tab tapped while the colour moves answers at once (founder, 24/11/2026:
+// «se cambi velocemente le pagine non reagiscono»): no second flood to wait
+// for, the page changes now and the colour still on screen fades out in a
+// moment. Tap after tap, each one lands straight away.
+const RUSH_MS = 160;
+function rush(button, self, id, options) {
+  const ticket = ++run;
+  busy = true;
+  pending = null;
   job = null;
-  clear();
-  busy = false;
-  flood(button, self, id, options);
-  return true;
+  markNav(button);
+  bounce(button);
+  entering?.classList.remove('us-marea-in');
+  entering = null;
+  // Back to the page the colour was leaving (it had not changed yet): it stays
+  // as it is, nothing reloads; only the colour goes.
+  if (doc.querySelector('.page.active')?.id !== id) {
+    switching = true;
+    try { original.call(self, id, { ...options, motionCommit: true }); } finally { switching = false; }
+  }
+  const el = floodLayer();
+  const done = () => { if (ticket === run) { clear(); busy = false; drainAfter(); } };
+  if (el.hidden || !el.animate) { done(); return; }
+  const from = Number(getComputedStyle(el).opacity) || 1;
+  el.getAnimations().forEach((animation) => animation.cancel()); // the layer's own fade; the disc stays where it is
+  el.animate([{ opacity: from }, { opacity: 0 }], { duration: RUSH_MS, easing: OUT, fill: 'forwards' }).finished.then(done, done);
 }
 
 // ---------- Sub-page: the Profilo over the page you came from (mockup UP.push / pop) ----------
@@ -365,7 +349,7 @@ if (typeof original === 'function') {
     const button = options && options.nav && !options.swipe && !options.motionCommit
       ? doc.querySelector(`.us-nav button[data-page="${id}"]`)
       : null;
-    if (button && busy && !slideJob && retarget(button, this, id, options)) return undefined;
+    if (button && busy && !slideJob) { rush(button, this, id, options); return undefined; }
     if (pending) { run += 1; job = null; clear(); busy = false; flushPending(); drainAfter(); }
     if (slideJob) finishSlide(); // a programmatic go() lands the slide at once
     const sub = id && id !== from && !doc.hidden && !options?.swipe && !options?.motionCommit
