@@ -12,6 +12,12 @@
     rosa: '#ff7c96', lilla: '#a98bff', blu: '#6f9bff', salvia: '#8fd49b',
     pesca: '#ff9f6e', prugna: '#c98bd6', menta: '#6fd6c8', perla: '#e8e1f0',
   });
+  // Aspetto Giorno (founder, 24/11/2026): the same colour on paper, dustier so
+  // ink reads on it (6.5 to 13:1) and it does not glare on carta (giorno.css).
+  const PALETTE_GIORNO = Object.freeze({
+    rosa: '#e7a1ab', lilla: '#ab9ddb', blu: '#8faad6', salvia: '#a2c29c',
+    pesca: '#e9ab80', prugna: '#bb93bf', menta: '#8ac6ba', perla: '#ddd5de',
+  });
   const NAMES = Object.freeze({
     rosa: 'Rosa', lilla: 'Lilla', blu: 'Blu', salvia: 'Salvia',
     pesca: 'Pesca', prugna: 'Prugna', menta: 'Menta', perla: 'Perla',
@@ -84,6 +90,9 @@
     for (const token of ['rosa', 'lilla']) {
       if (colors[token]) style.setProperty(`--us-${token}`, colors[token]);
       else style.removeProperty(`--us-${token}`);
+      const id = Object.keys(PALETTE).find((key) => PALETTE[key] === colors[token]);
+      if (id) style.setProperty(`--us-${token}-giorno`, PALETTE_GIORNO[id]);
+      else style.removeProperty(`--us-${token}-giorno`);
     }
     // The usual rosa and lilla: colori.css already holds their steps, for either phone.
     if (!colors.rosa && !colors.lilla) {
@@ -106,5 +115,5 @@
   }
   const nameOf = (profiles, id) => NAMES[effective((profiles || []).find((p) => p?.id === id))] || '';
 
-  return Object.freeze({ PALETTE, NAMES, RETIRED, idOf, coupleColors, applyCoupleColors, choices, nameOf, mix, pageColors });
+  return Object.freeze({ PALETTE, PALETTE_GIORNO, NAMES, RETIRED, idOf, coupleColors, applyCoupleColors, choices, nameOf, mix, pageColors });
 });

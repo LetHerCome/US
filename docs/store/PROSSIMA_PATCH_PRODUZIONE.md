@@ -2,6 +2,22 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Aspetto: Giorno e Notte (24/11)
+
+**Stato:** ramo `claude/tema-giorno-notte`, verso il ramo fisso di staging. Founder, 24/11, dalla tavola «US · Quaderno, giorno e notte»: «Mi vanno bene i consigli sulle tre scelte, mi piace, applica il tema light e quello dark con la possibilità di scelta nelle impostazioni».
+
+**Cosa cambia:**
+- **Giorno, il Quaderno:** carta (`#f3ece1`) per le pagine, fogli (`#fbf7f0`) per le schede, inchiostro (`#231b1d`) per le parole, ceralacca (`#b8452f`) per i tasti, per la scheda aperta nella barra e per le scritte piccole sopra i titoli. I vostri colori sono gli stessi che avete scelto, più polverosi, perché sulla carta si leggano: personaggi, «chi l'ha messo», nastri.
+- **Notte:** è la notte di adesso, identica.
+- **Profilo › Aspetto:** Automatico (segue il tema chiaro o scuro del telefono), Giorno o Notte. Vale per quel telefono. Il tema si applica prima che la pagina si disegni, quindi niente lampo scuro.
+- **Oggi:** la foto resta una foto. Scritte e icone sopra restano chiare, la foto sfuma nella carta, la scheda della domanda è di carta, «Come stai?» è un'etichetta di carta.
+- **Polaroid e post-it:** restano di carta anche di notte, come prima.
+- **Per ora sempre di notte:** accesso, primo avvio, il giro con i personaggi, l'attesa del partner e il blocco con l'impronta, che hanno un disegno notturno approvato.
+- **Controllato:** il contrasto di ogni scritta visibile, di giorno e di notte, su Oggi, Noi, Ricordi, Gioca, Profilo e sui fogli (domanda, Come stai, countdown, angolo, nuovo impegno, Prossimi, nuovo ricordo, bacheca, Ti penso).
+- **Da fare a parte:** su Android ora, batteria e notifiche in alto restano bianche anche di giorno (serve un plugin nativo e un APK nuovo); i widget e l'anteprima nel Profilo restano scuri; non ho ancora controllato tutti i fogli rari (giochi in corso, lettere, album, Il vostro anno).
+
+**Server:** niente.
+
 ### Transizioni fluide (24/11)
 
 **Stato:** in staging dal 24/11 (PR #291, merge `cb9d0c11`, sito `…-scb9d0c11`); la parte «reattiva» sul ramo `claude/transizioni-reattive`, verso il ramo fisso di staging. Founder, 24/11: le transizioni «al momento sono veloci ma se ci fai caso non fluide», poi, provate su staging: «se cambi velocemente le pagine non reagiscono, forse sono un po' lentine».

@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
+<!-- Aspetto (24/11/2026): Giorno or Notte before the first paint (aspetto.js keeps it in step). -->
+<script>(function(){try{var c=localStorage.getItem("us:aspetto:v1");var d=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches;var l=c==="giorno"||c==="notte"?c:(d?"notte":"giorno");document.documentElement.dataset.usLuce=l;if(l==="giorno"){document.querySelector('meta[name="theme-color"]').setAttribute("content","#f3ece1");document.querySelector('meta[name="color-scheme"]').setAttribute("content","light");}}catch(e){document.documentElement.dataset.usLuce="notte";}})();</script>
 <meta name="us-build" content="us-rilascio-20261114-109"/>
 <!-- Game V2 production rollout -->
 <link rel="manifest" href="/manifest.webmanifest?v=us-rilascio-20261114-109"/>
@@ -78,6 +80,7 @@
 <link rel="stylesheet" href="/dc-settings.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/struttura.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/colori.css?v=us-rilascio-20261114-109"/>
+<link rel="stylesheet" href="/giorno.css?v=us-rilascio-20261114-109"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -170,6 +173,7 @@ html.us-returning-device .auth-overlay{
 <script defer src="/platform.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/app-update.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/person-colors.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/aspetto.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/personaggi.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/app-lock.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/notifications.js?v=us-rilascio-20261114-109"></script>
@@ -935,6 +939,13 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <span class="us-setting-main"><b id="usAppLockSettingLabel">Proteggi US con l’impronta</b><small id="usAppLockSettingDetail">Solo su questo telefono</small></span>
           <span class="us-settings2-switch" aria-hidden="true"><u></u></span>
         </button>
+        </div>
+        <!-- Aspetto (24/11/2026): Giorno, the Quaderno, and Notte; per phone (aspetto.js). -->
+        <div class="us-settings2-label" data-s id="usAspettoTitle">ASPETTO</div>
+        <div class="us-aspetto" role="radiogroup" aria-labelledby="usAspettoTitle" data-s>
+          <button type="button" class="us-aspetto-choice" role="radio" aria-checked="true" data-us-aspetto="auto"><span class="us-aspetto-mini is-auto" aria-hidden="true"><i class="g"></i><i class="n"></i></span><b>Automatico</b><small>come il telefono</small></button>
+          <button type="button" class="us-aspetto-choice" role="radio" aria-checked="false" data-us-aspetto="giorno"><span class="us-aspetto-mini is-giorno" aria-hidden="true"><i class="g"></i></span><b>Giorno</b><small>sempre carta</small></button>
+          <button type="button" class="us-aspetto-choice" role="radio" aria-checked="false" data-us-aspetto="notte"><span class="us-aspetto-mini is-notte" aria-hidden="true"><i class="n"></i></span><b>Notte</b><small>sempre scuro</small></button>
         </div>
         <div class="us-settings2-label" data-s>PERSONALIZZAZIONE</div>
         <div class="us-settings2-group" data-s>
