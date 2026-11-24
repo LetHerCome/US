@@ -2,6 +2,16 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Transizioni: una nuova a ogni tocco (25/11)
+
+**Stato:** ramo `claude/transizioni-ogni-tocco`, verso il ramo fisso di staging. Founder, 25/11: «se passo velocemente da una pagina all'altra non è reattivo, non rifà una nuova transizione».
+
+**Cosa cambia:**
+- **Ogni tocco, la sua transizione:** un tocco sulla barra mentre il colore si muove fa partire subito un cerchio nuovo dal tasto toccato, col suo colore, sopra quello di prima, che finisce sotto. La pagina diventa quella dell'ultimo tocco appena lo schermo è coperto; tornando alla pagina che c'era già non si ricarica niente. Prima la pagina cambiava di colpo, senza transizione.
+- **Giorno e Notte:** i colori delle schede si ricordano anche per tema; prima, dopo un cambio di Aspetto (o il passaggio di Automatico al tramonto), il colore tra le pagine restava quello del tema di prima.
+
+**Server:** niente.
+
 ### Noi, Fase A: il vostro tempo insieme (24/11)
 
 **Stato:** ramo `claude/revisione-temi-transizioni`, verso il ramo fisso di staging; la migrazione va applicata a US-STAGING col via del founder. Founder, 24/11: «noi è ancora uguale a prima»; decisioni del grill-me D1–D16 e tavola «US · Noi, il vostro tempo» (https://claude.ai/artifact/WZ1Q5PgRMq6VaJmuY9gpUh).

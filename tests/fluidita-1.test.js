@@ -59,20 +59,25 @@ test('tab change: the tide is quick and runs on the compositor', () => {
   const js = read('due-colori.js');
   assert.match(js, /const COVER_MS = 460;/);
   assert.match(js, /const REVEAL_MS = 300;/);
-  // «Se cambi velocemente le pagine non reagiscono» (founder, 24/11/2026): a tap during the motion lands at once.
-  assert.match(js, /if \(button && busy && !slideJob\) \{ rush\(button, this, id, options\); return undefined; \}/);
-  assert.match(js, /function rush\(button, self, id, options\) \{[\s\S]*?original\.call\(self, id, \{ \.\.\.options, motionCommit: true \}\)/);
+  // «Non rifà una nuova transizione» (founder, 25/11/2026): a tap while the
+  // colour moves is a new flood at once, with its own disc from the new tab.
+  assert.match(js, /if \(button && busy && !slideJob && flooding\(\)\) \{ flood\(button, this, id, options\); return undefined; \}/);
+  assert.match(js, /turn = 1 - turn;\n  const disc = discs\[turn\];/);
+  assert.match(js, /if \(doc\.querySelector\('\.page\.active'\)\?\.id === to\) pending = null;/, 'back to the page on screen: nothing reloads');
+  assert.doesNotMatch(js, /function rush\(/);
   assert.match(js, /const GROW = 'cubic-bezier\(\.4,\.05,\.45,1\)';/);
   // No sharp edge (founder, 24/11/2026): the colour takes the page little by little.
   assert.match(read('due-colori.css'), /\.us-flood-disc\{[^}]*background:radial-gradient\(circle closest-side,var\(--c\) 52%,[^}]*transparent 100%\)/);
   assert.match(js, /const FADE_MS = 180;/, 'reduced motion keeps its short fade');
-  assert.match(js, /disc\.animate\(\[\{ transform: 'scale\(0\.002\)' \}, \{ transform: `scale\(\$\{grown\.toFixed\(3\)\}\)` \}\]/, 'the colour grows with transform');
+  assert.match(js, /disc\.animate\(\[\{ transform: 'scale\(0\.002\)', opacity: 1 \}, \{ transform: `scale\(\$\{grown\.toFixed\(3\)\}\)`, opacity: 1 \}\]/, 'the colour grows with transform');
   // Revisione (24/11/2026): a small disc drawn once, on a layer that stays in the page.
   assert.match(js, /const DISC = 480;/);
   assert.match(js, /if \(doc\.body\) prepare\(\); else doc\.addEventListener\('DOMContentLoaded', prepare, \{ once: true \}\);/);
   assert.match(read('due-colori.css'), /\.us-flood\{[^}]*opacity:0;will-change:opacity\}\n\.us-flood\[data-on="1"\]\{opacity:1\}/);
   assert.match(js, /await covered\(current\.cover\);/, 'the page changes once the screen is covered');
-  assert.match(js, /el\.animate\(\[\{ opacity: 1 \}, \{ opacity: 0 \}\]/, 'the colour dissolves with opacity');
+  assert.match(js, /return d\.animate\(\[\{ opacity: Number\.isFinite\(now\) \? now : 1 \}, \{ opacity: 0 \}\]/, 'each disc dissolves with opacity');
+  // The tabs' colours are kept per Giorno and Notte too.
+  assert.match(js, /\$\{button\.dataset\.page\}\|\$\{root\.dataset\.usLuce \|\| ''\}\|/);
   assert.doesNotMatch(js, /clipPath/, 'no clip-path repainted at every frame');
   assert.match(read('due-colori.css'), /\.us-flood-disc\{[^}]*border-radius:50%[^}]*will-change:transform\}/);
   assert.match(read('ui-foundation.js'), /const later = environment\.UsDueColori\?\.afterMotion;/, 'the sound engine is never built mid-motion');

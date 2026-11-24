@@ -57,15 +57,21 @@ let job = null;
 // a sub-page starts to slide): work done now costs no frame of the motion.
 let switching = false;
 
-let disc = null;
+// Two discs take turns: a tap while the colour moves starts a new disc from
+// the new tab, on top of the one before, which finishes underneath.
+const discs = [];
+let turn = 0;
 function floodLayer() {
   if (!layer) {
     layer = doc.createElement('div');
     layer.className = 'us-flood';
     layer.setAttribute('aria-hidden', 'true');
-    disc = doc.createElement('i');
-    disc.className = 'us-flood-disc';
-    layer.appendChild(disc);
+    for (let i = 0; i < 2; i += 1) {
+      const disc = doc.createElement('i');
+      disc.className = 'us-flood-disc';
+      layer.appendChild(disc);
+      discs.push(disc);
+    }
     doc.body.appendChild(layer);
   }
   return layer;
@@ -81,8 +87,8 @@ function floodLayer() {
 const DISC = 480;
 const OVERSIZE = 2;
 const COVERED = 0.93; // the farthest corner is 97 % colour by then (the core reaches it at .962): the change is unseen
-// Centres the disc on the tap; returns the scale that makes it big enough.
-function placeDisc(at) {
+// Centres a disc on the tap; returns the scale that makes it big enough.
+function placeDisc(disc, at) {
   disc.style.left = `${at.x - DISC / 2}px`;
   disc.style.top = `${at.y - DISC / 2}px`;
   return (at.radius * OVERSIZE * 2) / DISC;
@@ -122,7 +128,8 @@ function flushPending() {
 // reading it at the tap would force a style pass in the tap's own frame.
 const colors = new Map();
 function tabColor(button) {
-  const key = `${button.dataset.page}|${root.dataset.usAccent || ''}|${root.dataset.usTheme || ''}|${root.dataset.usMe || ''}|${root.dataset.usPagine || ''}`;
+  // Giorno or Notte (aspetto.js) changes every tab's colour too.
+  const key = `${button.dataset.page}|${root.dataset.usLuce || ''}|${root.dataset.usAccent || ''}|${root.dataset.usTheme || ''}|${root.dataset.usMe || ''}|${root.dataset.usPagine || ''}`;
   if (!colors.has(key)) {
     const value = getComputedStyle(button).getPropertyValue('--us-nav-c').trim();
     colors.set(key, value || getComputedStyle(root).getPropertyValue('--us-noi').trim());
@@ -205,8 +212,11 @@ function origin(button) {
   return { vx, x, y, w, h, radius: Math.ceil(Math.hypot(Math.max(x, w - x), Math.max(y, h - y))) };
 }
 
+// A tap while the colour moves (again) is a new flood: its own disc, from
+// the new tab, on top; the page changes to the last tab tapped.
 async function flood(button, self, id, options) {
   const ticket = ++run;
+  const again = busy && flooding();
   busy = true;
   const el = floodLayer();
   // Read everything first (the tap point, the screen, the colour), then
@@ -214,63 +224,48 @@ async function flood(button, self, id, options) {
   const from = doc.querySelector('.page.active')?.id || 'home';
   const at = origin(button);
   const color = tabColor(button);
-  clear();
+  if (!again) clear();
   markNav(button);
   bounce(button);
-  el.style.setProperty('--us-flood', color);
-  const grown = placeDisc(at);
+  turn = 1 - turn;
+  const disc = discs[turn];
+  disc.getAnimations().forEach((animation) => animation.cancel());
+  disc.style.setProperty('--us-flood', color);
+  disc.style.zIndex = '2';
+  discs[1 - turn].style.zIndex = '1';
+  const grown = placeDisc(disc, at);
   el.dataset.on = '1';
   const current = { ticket, id, from, at, button, cover: null };
   job = current;
   pending = { self, args: [id, { ...options, motionCommit: true }] };
   try {
-    current.cover = disc.animate([{ transform: 'scale(0.002)' }, { transform: `scale(${grown.toFixed(3)})` }],
+    current.cover = disc.animate([{ transform: 'scale(0.002)', opacity: 1 }, { transform: `scale(${grown.toFixed(3)})`, opacity: 1 }],
       { duration: COVER_MS, easing: GROW, fill: 'both' });
     await covered(current.cover);
   } catch (_) { /* cancelled by a programmatic go() */ }
-  if (ticket !== run) return; // a tap took over (rush) or a programmatic go() landed
+  if (ticket !== run) return; // a newer tap took over, or a programmatic go() landed
   // The screen is all colour now: the page changes under it (its own fade
   // is off, the mockup's view opens fully opaque), then the colour
   // dissolves. The fade starts on the frame after the change, so the
   // change's style and layout never eat into it.
   const to = current.id;
-  entering = doc.getElementById(to);
-  entering?.classList.add('us-marea-in');
-  flushPending();
-  stagger(doc.getElementById(to), STAGGER_DELAY);
-  // The disc may still be growing off screen: it goes on while it dissolves.
+  // Back to the page already on screen (the colour had not changed it yet):
+  // it stays as it is, nothing reloads; only the colour goes.
+  if (doc.querySelector('.page.active')?.id === to) pending = null;
+  else {
+    entering = doc.getElementById(to);
+    entering?.classList.add('us-marea-in');
+    flushPending();
+    stagger(doc.getElementById(to), STAGGER_DELAY);
+  }
+  // The discs may still be growing off screen: they go on while they dissolve.
   try {
-    await el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: REVEAL_MS, easing: OUT, fill: 'forwards' }).finished;
+    await Promise.all(discs.map((d) => {
+      const now = parseFloat(getComputedStyle(d).opacity);
+      return d.animate([{ opacity: Number.isFinite(now) ? now : 1 }, { opacity: 0 }], { duration: REVEAL_MS, easing: OUT, fill: 'forwards' }).finished;
+    }));
   } catch (_) { /* cancelled */ }
   if (ticket === run) { job = null; clear(); busy = false; drainAfter(); }
-}
-
-// A tab tapped while the colour moves answers at once (founder, 24/11/2026:
-// «se cambi velocemente le pagine non reagiscono»): no second flood to wait
-// for, the page changes now and the colour still on screen fades out in a
-// moment. Tap after tap, each one lands straight away.
-const RUSH_MS = 160;
-function rush(button, self, id, options) {
-  const ticket = ++run;
-  busy = true;
-  pending = null;
-  job = null;
-  markNav(button);
-  bounce(button);
-  entering?.classList.remove('us-marea-in');
-  entering = null;
-  // Back to the page the colour was leaving (it had not changed yet): it stays
-  // as it is, nothing reloads; only the colour goes.
-  if (doc.querySelector('.page.active')?.id !== id) {
-    switching = true;
-    try { original.call(self, id, { ...options, motionCommit: true }); } finally { switching = false; }
-  }
-  const el = floodLayer();
-  const done = () => { if (ticket === run) { clear(); busy = false; drainAfter(); } };
-  if (!flooding() || !el.animate) { done(); return; }
-  const from = Number(getComputedStyle(el).opacity) || 1;
-  el.getAnimations().forEach((animation) => animation.cancel()); // the layer's own fade; the disc stays where it is
-  el.animate([{ opacity: from }, { opacity: 0 }], { duration: RUSH_MS, easing: OUT, fill: 'forwards' }).finished.then(done, done);
 }
 
 // ---------- Sub-page: the Profilo over the page you came from (mockup UP.push / pop) ----------
@@ -353,7 +348,7 @@ if (typeof original === 'function') {
     const button = options && options.nav && !options.swipe && !options.motionCommit
       ? doc.querySelector(`.us-nav button[data-page="${id}"]`)
       : null;
-    if (button && busy && !slideJob) { rush(button, this, id, options); return undefined; }
+    if (button && busy && !slideJob && flooding()) { flood(button, this, id, options); return undefined; }
     if (pending) { run += 1; job = null; clear(); busy = false; flushPending(); drainAfter(); }
     if (slideJob) finishSlide(); // a programmatic go() lands the slide at once
     const sub = id && id !== from && !doc.hidden && !options?.swipe && !options?.motionCommit
