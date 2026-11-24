@@ -74,7 +74,7 @@ test('M10.2 nessuna notifica per reazioni/receipt: send-web-push invariato, ness
   // Lavagna V1 (founder, 03/11/2026) adds the lavagna event (tests/lavagna-push.test.js); La sfida della settimana (03/11/2026) adds challenge_photo. Pinned again:
   assert.equal(crypto.createHash('sha256').update(beforeF2C, 'utf8').digest('hex'), 'c5163bdf7b438d817961d15c9cc30fd6f6b6904b667c9623b557a989b822985e', 'send-web-push content is the US 1.0 source plus only the F2C VAPID edit');
   assert.match(edge, /const EVENT_TYPES: EventType\[\] = \["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "challenge_photo"\];/, 'the US 1.0 event types, the board and the challenge photo (03/11/2026), no other');
-  const newPaths = [slice('// M10.2 — reveal Daily', 'let usTodayHydrateSeq=0;'), slice('installTodayNoticeSwipe(', 'window.UsTodayPriority=Object.freeze')].join('\n');
+  const newPaths = slice('// M10.2 — reveal Daily', 'let usTodayHydrateSeq=0;');
   // US 1.0 (O2): the reveal may ask for the one reaction push, nothing else.
   assert.doesNotMatch(newPaths.replace(/sendWebPushEvent\('daily_reaction',[^)]*\)/g, ''), /sendWebPushEvent|push_event_log|sendNotification/);
   assert.match(app, /sendWebPushEvent\('daily_answer',window\.todayQuestion\.id\)/, 'the second-answer push still originates from the saved answer');

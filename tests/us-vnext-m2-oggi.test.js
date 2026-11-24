@@ -8,7 +8,7 @@ const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 function priorityRuntimeSource() {
   const source = read('app.js');
-  const start = source.indexOf('const US_TODAY_PRIORITY_ORDER=');
+  const start = source.indexOf('let usTodayPriorityRefreshId=0;');
   const end = source.indexOf('function localDateISO()', start);
   assert.notEqual(start, -1, 'app.js deve implementare il runtime M2');
   assert.notEqual(end, -1, 'il runtime M2 deve restare un blocco focalizzato');
@@ -41,110 +41,6 @@ function installPriorityRuntime({ eventSource } = {}) {
   vm.runInContext(priorityRuntimeSource(), context);
   return { api: window.UsTodayPriority, calls, listeners, region, window };
 }
-
-test('M2 follow-up: la priority region resta in Oggi ma fuori dallo stack ritirato', () => {
-  const html = read('index.html');
-  const home = html.match(/<main id="home"[\s\S]*?<\/main>/)?.[0] || '';
-  const region = '<div id="usTodayPriorityRegion" hidden aria-live="polite"></div>';
-  const stack = home.match(/<div class="us-oggi-stack" id="usOggiStack">[\s\S]*?\n      <\/div>/)?.[0] || '';
-
-  assert.ok(home.indexOf(region) >= 0);
-  assert.equal(stack.indexOf(region), -1, 'la notice personale non torna nello stack legacy');
-  assert.ok(home.indexOf(region) < home.indexOf('id="usOggiStack"'));
-  assert.match(read('styles.css'), /\.us-today-priority-card[\s\S]{0,500}min-height:44px/);
-  assert.match(read('styles.css'), /#home #usTodayPriorityRegion\{[\s\S]*?position:fixed!important;[\s\S]*?pointer-events:none/);
-});
-
-test('M2 compone le priorita in ordine P1 P2 P3 ma il renderer ne mostra una sola', () => {
-  const { api } = installPriorityRuntime();
-  const candidates = [
-    { id: 'context-late', factKey: 'event:late', category: 'couple_context', urgency: 30, recency: 90 },
-    { id: 'waiting', factKey: 'daily:waiting', category: 'waiting_for_me', urgency: 20, recency: 10 },
-    { id: 'ready', factKey: 'daily:ready', category: 'received_ready', urgency: 40, recency: 5 },
-    { id: 'context-soon', factKey: 'event:soon', category: 'couple_context', urgency: 10, recency: 1 },
-    { id: 'extra', factKey: 'extra', category: 'received_ready', urgency: 50, recency: 100 },
-  ];
-
-  assert.deepEqual(
-    Array.from(api.compose(candidates), (item) => item.id),
-    ['ready', 'waiting', 'context-soon'],
-  );
-});
-
-test('M2 usa urgenza, recency e id come tie-break deterministico', () => {
-  const { api } = installPriorityRuntime();
-  const candidates = [
-    { id: 'z', factKey: 'z', category: 'couple_context', urgency: 10, recency: 20 },
-    { id: 'b', factKey: 'b', category: 'couple_context', urgency: 10, recency: 30 },
-    { id: 'a', factKey: 'a', category: 'couple_context', urgency: 10, recency: 30 },
-  ];
-
-  const first = Array.from(api.compose(candidates), (item) => item.id);
-  const second = Array.from(api.compose([...candidates].reverse()), (item) => item.id);
-  assert.deepEqual(first, ['a']);
-  assert.deepEqual(second, first);
-});
-
-test('M2/M10.2 deriva Daily Question soltanto da reveal pronto e non ancora aperto/nascosto da me', () => {
-  const { api } = installPriorityRuntime();
-  const question = { id: 'q-1', question: 'Una domanda reale', question_date: '2026-09-01' };
-  const meta = (extra = {}) => ({ question_id: 'q-1', both_answered: true, my_reveal_seen_at: null, my_notice_dismissed_at: null, ...extra });
-
-  const ready = api.dailyViewModel({ question, state: { both_answered: true, my_answer: 'A' }, reveal: meta(), partnerName: 'Bea' });
-  assert.equal(ready.category, 'answers_ready');
-  assert.equal(ready.action, 'today');
-  assert.equal(ready.canonical, true);
-
-  // M10.1A: "aspetta te" non è più una priorità: è la card Daily (my_answer == null).
-  assert.equal(api.dailyViewModel({ question, state: { partner_has_answer: true, my_answer: null }, partnerName: 'Bea' }), null);
-  assert.equal(api.dailyViewModel({ question, state: { my_answer: 'A', both_answered: false }, reveal: meta(), partnerName: 'Bea' }), null);
-  assert.equal(api.dailyViewModel({ question, state: { partner_has_answer: false }, partnerName: 'Bea' }), null);
-  assert.equal(api.dailyViewModel({ question: null, state: null, partnerName: 'Bea' }), null);
-  // Senza stato personale caricato non si inventa nulla.
-  assert.equal(api.dailyViewModel({ question, state: { both_answered: true, my_answer: 'A' }, partnerName: 'Bea' }), null);
-});
-
-test('M2 accetta Events soltanto oggi o entro 48 ore e conserva openEvents come action', () => {
-  const { api } = installPriorityRuntime();
-  const base = { id: 'event-1', title: 'Cena', effective_date: '2026-09-03', created_at: '2026-08-01T10:00:00Z' };
-
-  const relevant = api.eventViewModel({ ...base, days_left: 2 });
-  assert.equal(relevant.category, 'couple_context');
-  assert.equal(relevant.action, 'events');
-  assert.equal(api.eventViewModel({ ...base, days_left: 3 }), null);
-  assert.equal(api.eventViewModel({ ...base, days_left: -1 }), null);
-  assert.equal(api.eventViewModel({ ...base, days_left: null }), null);
-  assert.equal(api.eventViewModel({ ...base, effective_date: null, days_left: 0 }), null);
-});
-
-test('M2 follow-up: la region resta hidden senza placeholder per fatti passivi e usa gli opener esistenti per azioni personali', () => {
-  const { api, calls, listeners, region } = installPriorityRuntime();
-  api.render([]);
-  assert.equal(region.hidden, true);
-  assert.equal(region.innerHTML, '');
-
-  api.render([
-    { id: 'daily', category: 'received_ready', attention: true, title: 'Risposte pronte', detail: 'Ora potete leggerle.', action: 'today', actionLabel: 'Apri' },
-    { id: 'event', category: 'couple_context', attention: false, title: 'Cena', detail: 'Domani', action: 'events', actionLabel: 'Apri' },
-  ]);
-  assert.equal(region.hidden, false);
-  assert.match(region.innerHTML, /data-us-today-action="today"/);
-  assert.doesNotMatch(region.innerHTML, /data-us-today-action="events"/);
-
-  const click = listeners.get('click');
-  click({ target: { closest: () => ({ dataset: { usTodayAction: 'today' } }) } });
-  assert.equal(region.hidden, true, 'dopo l’azione non resta il fatto passivo Eventi');
-  assert.equal(region.innerHTML, '');
-  assert.deepEqual(calls, ['today']);
-});
-
-test('M2 mantiene il renderer estendibile a future arrival type senza impilarle', () => {
-  const { api, region } = installPriorityRuntime();
-  api.render([{ id: 'future-1', category: 'received_ready', attention: true, arrivalType: 'partner-reaction', title: 'Una reaction', detail: 'Dal partner', action: 'future', actionLabel: 'Apri' }]);
-  assert.match(region.innerHTML, /data-us-arrival-type="partner-reaction"/);
-  assert.equal((region.innerHTML.match(/class="us-today-priority-card[ "]/g) || []).length, 1);
-  assert.match(region.innerHTML, /data-us-attention="on"/);
-});
 
 test('M2 isola una failure Events e non trasforma errori o assenza dati in priorita false', async () => {
   const { api, region } = installPriorityRuntime({ eventSource: async () => { throw new Error('offline'); } });

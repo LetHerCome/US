@@ -62,50 +62,39 @@ test('before the answers the card is the question; the streak replaces the gener
   assert.equal(api.decorate(null, s()), null);
 });
 
-test('first week: the step after the question, «Fatto» with tomorrow, the end', () => {
+// Redesign definitivo, fase 5 (D9): the steps of the first week left Oggi;
+// the server still counts them, the card shows the day as after the week.
+test('redesign D9: no steps of the first week on Oggi', () => {
   const { api } = load();
-  const step = api.decorate(revealed, s({ week: week() }), { partner: 'Bea', today: TODAY });
-  assert.deepEqual([step.look, step.kicker, step.question, step.action], ['step', 'La vostra prima settimana', 'Fate la vostra prima partita', 'step:game']);
-  assert.match(step.footHtml, /2 passi su 7/);
-  assert.equal((step.footHtml.match(/class="on"/g) || []).length, 2);
-  assert.equal((step.footHtml.match(/class="now"/g) || []).length, 1);
-  const think = api.decorate(revealed, s({ week: week({ current: 'think', done: 1 }) }), { partner: 'Bea', today: TODAY });
-  assert.equal(think.question, 'Manda il primo Ti penso a Bea');
-  assert.equal(think.action, 'step:think');
-  const left = api.decorate(revealed, s({ week: week({ current: 'left', done: 5 }) }), { partner: 'Bea', today: TODAY });
-  assert.equal(left.question, 'Lascia qualcosa da aprire a Bea');
-  const done = api.decorate(revealed, s({ week: week({ current: 'moment', done: 3, ready: false, done_today: true }) }), { partner: 'Bea', today: TODAY });
-  assert.deepEqual([done.look, done.question, done.action], ['done', 'Fatto ♡', undefined]);
-  assert.equal(text(done.subHtml), 'Domani: il primo ricordo');
-  const end = api.decorate(revealed, s({ week: week({ current: null, all_done: true, done: 7, finished_on: TODAY }) }), { partner: 'Bea', today: TODAY });
-  assert.deepEqual([end.look, end.question], ['finished', 'Settimana finita ♡']);
-  assert.match(text(end.subHtml), /\+100 punti Sintonia/);
-  // The day after it ended, back to the usual card.
-  const after = api.decorate(revealed, s({ week: week({ current: null, all_done: true, done: 7, finished_on: '2026-11-19' }) }), { partner: 'Bea', today: TODAY });
-  assert.equal(after.look, 'think');
-  // During the week the question keeps the dots, never «giorno 3 di 7».
+  for (const w of [week(), week({ current: 'think', done: 1 }), week({ current: 'moment', done: 3, ready: false, done_today: true }), week({ current: null, all_done: true, done: 7, finished_on: TODAY })]) {
+    const m = api.decorate(revealed, s({ week: w }), { partner: 'Bea', today: TODAY });
+    assert.deepEqual([m.look, m.kicker, m.action], ['think', 'La cosa di oggi', 'think']);
+    assert.doesNotMatch(m.footHtml || '', /us-cdo-dots|passi su/);
+  }
   const q = api.decorate(answer, s({ week: week() }), { today: TODAY });
-  assert.match(q.footHtml, /us-cdo-dots/);
-  assert.doesNotMatch(text(q.footHtml), /giorno/i);
+  assert.doesNotMatch(q.footHtml || '', /us-cdo-dots/);
+  assert.equal(api.STEPS, undefined);
+  assert.equal(api.weekOn, undefined);
+  assert.doesNotMatch(read('cosa-di-oggi.js'), /La vostra prima settimana|Settimana finita|step:/);
 });
 
 test('names and words are escaped', () => {
   const { api } = load();
-  const m = api.decorate(revealed, s({ week: week({ current: 'left' }) }), { partner: '<img src=x>', today: TODAY });
-  assert.equal(m.question, 'Lascia qualcosa da aprire a <img src=x>', 'plain text: app.js escapes the question');
-  assert.doesNotMatch(m.ctaHtml + m.footHtml, /<img/);
+  const m = api.decorate(revealed, s(), { partner: '<img src=x>', today: TODAY });
+  assert.equal(m.question, 'Manda un Ti penso a <img src=x>', 'plain text: app.js escapes the question');
+  assert.doesNotMatch(m.ctaHtml + (m.footHtml || ''), /<img/);
 });
 
-test('what is celebrated: streak +1, the closed day, a step, the end, a record, a milestone', () => {
+test('what is celebrated: streak +1, the closed day, a record, a milestone', () => {
   const { api } = load();
   const a = s({ streak: 6, best_before: 6, today: { counted: false, me: true, partner: false, my_think: true }, week: week({ done: 2 }) });
   const b = s({ streak: 7, best_before: 6, today: { counted: true, me: true, partner: true, my_think: true }, week: week({ done: 3 }) });
-  assert.deepEqual(plain(api.changes(a, b, TODAY)), ['streak', 'closed', 'step', 'record', 'milestone:7']);
-  assert.deepEqual(plain(api.changes(b, b, TODAY)), []);
-  assert.deepEqual(plain(api.changes(null, b, TODAY)), [], 'the first read celebrates nothing');
+  assert.deepEqual(plain(api.changes(a, b)), ['streak', 'closed', 'record', 'milestone:7'], 'a step of the first week is not celebrated any more');
+  assert.deepEqual(plain(api.changes(b, b)), []);
+  assert.deepEqual(plain(api.changes(null, b)), [], 'the first read celebrates nothing');
   const fin = s({ week: week({ all_done: true, finished_on: TODAY, done: 7 }) });
-  assert.ok(api.changes(s({ week: week({ done: 6 }) }), fin, TODAY).includes('finished'));
-  assert.deepEqual(plain(api.changes(s({ streak: 2, best_before: 1 }), s({ streak: 3, best_before: 1 }), TODAY)), ['streak'], 'no record party for short streaks');
+  assert.ok(!api.changes(s({ week: week({ done: 6 }) }), fin).includes('finished'));
+  assert.deepEqual(plain(api.changes(s({ streak: 2, best_before: 1 }), s({ streak: 3, best_before: 1 }))), ['streak'], 'no record party for short streaks');
 });
 
 test('the server is read with the widget state, at most every 20 s unless forced', async () => {

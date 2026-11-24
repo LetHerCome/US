@@ -1,5 +1,5 @@
 // Accoglienza V1 (docs/missions/accoglienza-v1.md): the one question for the
-// couple, asked once on Oggi and changeable in Settings; and the new widget
+// couple, chosen in Settings (Oggi asked it once until the redesign, fase 5 D9); and the new widget
 // «La domanda di oggi» (widgets.js daily, Android provider), never an answer.
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -14,12 +14,8 @@ const js = read('distance.js');
 const widgets = read('widgets.js');
 const W = 'native-plugins/us-widget-bridge/android/src/main';
 
-test('Oggi asks once: only when the answer is known to be missing and this member has not opened it', () => {
-  assert.equal(D.todayPriority({ known: false, mode: null }, false), null, 'not before the couple is read');
-  const card = D.todayPriority({ known: true, mode: null }, false);
-  assert.deepEqual([card.title, card.detail, card.action, card.category], ['Una domanda per voi', 'Vi vedete spesso o vivete a distanza?', 'distance', 'waiting_for_me']);
-  assert.equal(D.todayPriority({ known: true, mode: null }, true), null, 'opened once on this phone');
-  assert.equal(D.todayPriority({ known: true, mode: 'far' }, false), null, 'answered by either member');
+test('redesign D9: Oggi no longer asks, the question is in Settings › Voi', () => {
+  assert.equal(D.todayPriority, undefined, 'no card on Oggi');
   assert.deepEqual(['near', 'far', null].map(D.settingValue), ['Spesso', 'A distanza', 'Da scegliere']);
 });
 
@@ -40,14 +36,13 @@ test('copy: two plain answers, inclusive Italian, English aligned', () => {
   for (const key of ['Vi vedete spesso?', 'Ci vediamo spesso', 'Viviamo a distanza', 'Da scegliere', 'Grazie: ora la sfida è scelta per voi']) assert.ok(en.includes(`'${key}':`), key);
 });
 
-test('shell: Settings row, sheet, native back, Oggi card, reset, precache and both builds', () => {
+test('shell: Settings row, sheet, native back, reset, precache and both builds', () => {
   assert.match(html, /data-us-setting="together-mode">[\s\S]*?<b>Vi vedete spesso\?<\/b>[\s\S]*?id="usDistanceValue"/);
   assert.match(html, /<div id="usDistanceSheet" class="us-distance-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>/);
   assert.match(read('settings.js'), /if\(name==='together-mode'\)return window\.UsDistance\?\.open\?\.\(\);/);
   assert.match(read('navigation.js'), /name:'distance',\n    find:\(\)=>document\.getElementById\('usDistanceSheet'\)/);
   const app = read('app.js');
-  assert.match(app, /const distance=window\.UsDistance\?\.todayPriority\?\.\(\);\n  if\(distance\)candidates\.push\(distance\);/);
-  assert.match(app, /if\(action==='distance'\)window\.UsDistance\?\.open\?\.\(\);/);
+  assert.doesNotMatch(app, /UsDistance\?\.todayPriority/, 'redesign D9: no card on Oggi');
   assert.match(app, /window\.UsDistance\?\.reset\?\.\(\);/);
   assert.match(read('service-worker.js'), /versioned\("\/distance\.css"\),\n  versioned\("\/distance\.js"\),/);
   for (const file of ['scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) assert.match(read(file), /'distance\.js',\n\s*'distance\.css',/, file);

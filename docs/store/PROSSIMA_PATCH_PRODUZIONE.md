@@ -2,9 +2,29 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign, fase 5: Oggi senza schede di suggerimento (24/11)
+
+**Stato:** ramo `claude/redesign-fase5-oggi`, verso il ramo fisso di staging. Founder, 24/11: «Fase 5 vai». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D9.
+
+**Cosa cambia:**
+- **Via la zona delle schede su Oggi.** Sopra la barra restano la didascalia della foto, la riga (prossimo impegno, distanza, Come stai) e la domanda di oggi. Ogni avviso che passava di lì ha ora il suo posto.
+- **Ti penso ricevuto:** un avviso breve in alto, «Bea ti pensa ♡» con «Apri» (le reazioni), una sola volta per ogni Ti penso su quel telefono: subito se US è aperta, altrimenti la prima volta che la apri entro un giorno. Restano gli occhi a cuore del tuo personaggio per 3 ore. Dalla notifica il foglio delle reazioni si apre da solo, senza avviso sopra.
+- **Lasciato per te:** il pallino sulla busta, uno solo, nel colore di chi l'ha lasciato (prima erano due, rosa e lilla).
+- **Tocca a te:** quando l'altra persona vi aspetta in una partita (o in «Per voi»), il pallino è su Gioca; quando ha già risposto alla domanda di oggi e tu no, resta su Oggi.
+- **Risposte pronte:** lo dice la scheda della domanda («Risposte pronte · Scopri», i due personaggi vicini con il cuore) finché non le apri; prima era una scheda a parte, che si poteva nascondere scorrendo. La funzione del server che la nascondeva resta per le app già uscite.
+- **Mesiversario, anniversario e ogni 100 giorni insieme:** la festa dei personaggi (per i 100 giorni è nuova; prima era una scheda).
+- **Notifiche:** niente invito su Oggi. Le chiede l'iscrizione; dopo, Profilo › Notifiche mostra lo stato e le attiva. Sul telefono, se dopo «Attiva» la rete non risponde, lì si legge «In attivazione · Le attivo appena la rete risponde» con «Riprova» (prima lo diceva la scheda di Oggi).
+- **«La cosa di oggi»:** via i passi della prima settimana (pallini, «Fatto ♡ · Domani: …», «Settimana finita»). Il server li conta ancora. Restano la serie, «Manda un Ti penso» e «Oggi c'eravate voi due ♡».
+- **La domanda «Vi vedete spesso?»** non compare più su Oggi: si sceglie in Impostazioni › Voi.
+- **La sfida della settimana** non è più su Oggi (D10). In Gioca resta fino alla fase 6, e la foto dell'altra persona accende ancora il pallino su Gioca.
+
+**Server:** niente.
+
+**Test:** `tests/oggi-pulita-fase5.test.js` e `tests/m12a-oggi-priority.test.js` (riscritto); aggiornati i test che descrivevano le schede.
+
 ### Redesign: il guardaroba sui livelli vuoti della Sintonia (24/11)
 
-**Stato:** ramo `claude/redesign-scala-premi`, verso il ramo fisso di staging. Decisione del founder del 24/11 («proposta A», tenendo il Simbolo US).
+**Stato:** in staging dal 24/11 (PR #285, merge `58bac1b0`, sito `…-s58bac1b0`); migrazione applicata su US-STAGING il 24/11 (run 45288670020), non in produzione. Decisione del founder del 24/11 («proposta A», tenendo il Simbolo US).
 
 **Cosa cambia:**
 - Dopo l'uscita di Atmosfere, Colore di Noi, compagni e accessori, i livelli 8, 11, 14 e 19 non davano più niente. I primi cinque accessori del guardaroba restano dove sono (occhiali 150 punti, cappello 400, fiocco 700, sciarpina 1000, occhiali da sole 1350); gli ultimi quattro arrivano con quei livelli: gala al livello 8 (4550 punti), cuffie all'11 (8750), coroncina al 14 (14300), corona al 19 (26550). I momenti (macchinetta, fascia dei 100, cappello da festa) non cambiano.

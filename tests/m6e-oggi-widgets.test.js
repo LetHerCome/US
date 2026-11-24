@@ -146,7 +146,7 @@ test('M6E (7): the Oggi hero gains exactly one new widget region, positioned ins
   const hero = html().match(/<section class="hero home-hero-only" id="homeHero"[\s\S]*?<\/section>/)?.[0] || '';
   assert.match(hero, /id="usOggiCalendarWidget"/);
   assert.match(hero, /id="distanceWidget"/, 'the existing distance widget must still be present');
-  assert.match(hero, /id="pushOptInCard"/, 'the existing push opt-in card must still be present');
+  assert.doesNotMatch(hero, /id="pushOptInCard"/, 'redesign D9: the notifications invite left Oggi');
   assert.equal((hero.match(/id="usOggiCalendarWidget"/g) || []).length, 1);
 });
 
@@ -253,12 +253,12 @@ test('M6E (10): tapping the rendered widget opens the Calendar on the exact date
   assert.deepEqual(rt.calls, [['open', '2026-10-02']]);
 });
 
-test('M6E (11): a click on the hero background toggles Focus Photo; widget/distance/push taps never toggle it', () => {
+test('M6E (11): a click on the hero background toggles Focus Photo; widget/distance taps never toggle it', () => {
   assert.match(oggiWidgetRuntimeSource(), /function oggiIsWidgetTarget\(/);
   assert.match(oggiWidgetRuntimeSource(), /function toggleOggiFocusPhoto\(/);
   assert.match(oggiWidgetRuntimeSource(), /us-oggi-widgets/);
   assert.match(oggiWidgetRuntimeSource(), /home-distance-pill/);
-  assert.match(oggiWidgetRuntimeSource(), /push-optin-card/);
+  assert.doesNotMatch(oggiWidgetRuntimeSource(), /push-optin-card|usTodayPriorityRegion/);
 });
 
 test('M6E (12): Focus Photo makes the widget layer inert (no pointer/keyboard interaction) and restores it on the second tap', () => {

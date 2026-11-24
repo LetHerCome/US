@@ -479,11 +479,10 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <span class="us-hero-sticker" id="usHeroSticker" aria-hidden="true" hidden></span>
       <button type="button" id="usCountdownEntry" class="us-countdown-entry" aria-label="Gestisci countdown" aria-haspopup="dialog" hidden><span class="us-icon" data-us-icon="clock-counter-clockwise" aria-hidden="true"></span><span class="us-countdown-entry-label">Countdown</span></button>
       <button type="button" id="usCountdownDisplay" class="us-countdown-display" aria-haspopup="dialog" hidden></button>
-      <!-- Oggi (parity with the approved mockup): one column above the nav,
-           top to bottom: the photo's caption, the next event and the distance
-           (they step aside while a card waits), what is waiting for me (or the
-           notifications invite), then the Domanda di oggi. A band above the
-           nav stays free (it held the companion, retired on 23/11/2026; Oggi is redone in fase 5). -->
+      <!-- Oggi (redesign definitivo, fase 5, D9): one column above the nav, top to
+           bottom: the photo's caption, the row event/distance/Come stai, then the
+           Domanda di oggi. No cards of suggestions and no notifications invite:
+           each thing has its own place (the envelope, Gioca, the characters, the Profilo). -->
       <div class="us-oggi-dock og-bottom" id="usOggiDock">
         <!-- Voi due on the photo (redesign definitivo, D2 e D3): a tap opens Il vostro angolo (personaggi.js). -->
         <button type="button" class="us-angolo-entry" data-us-angolo data-us-duo aria-label="Voi due: apri Il vostro angolo" hidden></button>
@@ -494,12 +493,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <!-- Come stai (02/11/2026): the partner's state and mine; a tap opens the twelve. -->
           <button type="button" class="og-pill us-status-pill" id="usOggiStatus" aria-haspopup="dialog" aria-label="Come stai? Scegli" hidden><span data-status-partner translate="no" hidden></span><span data-status-mine>Come stai?</span></button>
         </div>
-        <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
-        <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
-          <span class="push-optin-icon" aria-hidden="true">♡</span>
-          <span class="push-optin-copy"><b id="pushOptInTitle">Attiva le notifiche</b><small id="pushOptInText">Ti penso, risposte e sfide, anche a US chiusa.</small></span>
-          <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva</button>
-        </aside>
         <button type="button" class="us-daily-ritual us-attention-orbit" id="usDailyRitual" hidden onclick="openToday()" data-us-attention="off"></button>
       </div>
       <!-- Legacy Calendar/reveal anchors stay mounted but visually retired. -->

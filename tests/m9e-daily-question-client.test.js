@@ -193,7 +193,7 @@ test('M9E client: una sola authority, niente fallback da seed scaduto, card M9B 
   assert.doesNotMatch(app, /La prossima domanda sta arrivando/);
   assert.doesNotMatch(hydrate, /localDateISO/);
 
-  const source = app.slice(app.indexOf('const US_TODAY_PRIORITY_ORDER='), app.indexOf('function localDateISO()'));
+  const source = app.slice(app.indexOf('let usTodayPriorityRefreshId=0;'), app.indexOf('function localDateISO()'));
   const card = { hidden: true, innerHTML: '', dataset: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, removeAttribute(k) { delete this.attrs[k]; } };
   const window = { usProfile: { role: 'francesco' }, usBondProfiles: [] };
   const ctx = vm.createContext({ console, window, Promise, document: { getElementById: (id) => (id === 'usDailyRitual' ? card : null) }, escapeHtml: (v) => String(v), partnerFromProfiles: () => null });

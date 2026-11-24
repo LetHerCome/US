@@ -99,7 +99,8 @@
   // ---------------------------------------------------------------- le reazioni
   // Personaggi (founder, 20/11/2026, D9; redesign definitivo D9): a few clear
   // reactions over the face of Come stai, only for things you do for each
-  // other. The day of your mesiversario or anniversary: festa, both. A Ti penso
+  // other. The day of your mesiversario or anniversary, or of 100, 200… days
+  // together (it was a card on Oggi until fase 5, D9): festa, both. A Ti penso
   // received in the last 3 hours: heart eyes, mine. The other answered today's
   // question and I have not yet: their character waves. From 22 to 6: sleepy.
   const REACTION_HOURS = 3;
@@ -111,6 +112,8 @@
       const yy = now.getFullYear(), mo = now.getMonth() + 1, day = now.getDate();
       const lastDay = new Date(yy, mo, 0).getDate();
       if (day === Math.min(+m[3], lastDay) && yy * 12 + mo > +m[1] * 12 + +m[2]) return 'festa';
+      const iso = `${yy}-${String(mo).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      if (w?.UsCalendarDomain?.daysMilestoneOn?.(started, iso)) return 'festa';
     }
     const mine = role === myRole();
     if (mine) {

@@ -103,8 +103,8 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 #thinkButton.sent .us-shell-icon--think{animation:dc-oggi-heart .7s ease-out}
 @keyframes dc-oggi-heart{0%{scale:1}25%{scale:1.3}50%{scale:.92}70%{scale:1.12}100%{scale:1}}
 
-/* Envelope: the icon stays still; "there is something for you" is two small
-   dots, rosa and lilla, that beat (mockup .beat). Same hook (data-us-attention). */
+/* Envelope: the icon stays still; "there is something for you" is a small
+   dot that beats (mockup .beat, redesign D9: one, in their colour). Same hook (data-us-attention). */
 #leftForYouPartnerEntry .us-envelope-mark{display:grid;place-items:center;width:100%;height:100%}
 #leftForYouPartnerEntry .us-envelope-icon{width:22px;height:22px}
 /* One envelope, always closed (mockup): the dots say there is something inside. */
@@ -114,8 +114,9 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 #leftForYouPartnerEntry.us-attention-orbit::after{display:none!important;animation:none!important}
 #leftForYouPartnerEntry .beat{position:absolute;top:6px;right:5px;display:none}
 #leftForYouPartnerEntry .beat i{display:block;width:8px;height:8px;border-radius:50%;box-shadow:0 0 0 2px #2a1a2a}
-#leftForYouPartnerEntry .beat i:first-child{background:var(--us-rosa)}
-#leftForYouPartnerEntry .beat i:last-child{margin-left:-3px;background:var(--us-lilla)}
+/* Redesign D9: one dot, in the colour of who left it (the board). */
+#leftForYouPartnerEntry .beat i:first-child{display:none}
+#leftForYouPartnerEntry .beat i:last-child{background:var(--us-partner)}
 #leftForYouPartnerEntry[data-us-attention="on"] .beat{display:flex;animation:dc-oggi-beat 2.6s var(--dc-e-out) infinite}
 @keyframes dc-oggi-beat{0%,70%,100%{scale:1}78%{scale:1.25}86%{scale:1}92%{scale:1.15}}
 :root[data-us-motion="reduced"] #leftForYouPartnerEntry[data-us-attention="on"] .beat{animation:none}
@@ -123,9 +124,8 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 #leftForYouPartnerEntry.is-loading .us-envelope-icon{animation:none}
 
 /* ---------- 3 · The column above the nav (mockup .og-bottom) ----------
-   Caption, next event + distance (hidden while a card waits), the card that
-   waits for me or the notifications invite, the Domanda di oggi. The band
-   right above the nav stays free: Maudit stands there, never over the cards. */
+   Caption, the row (next event, distance, Come stai), the Domanda di oggi
+   (redesign D9: no cards of suggestions). */
 #home .us-oggi-dock{
   position:fixed;
   z-index:19;
@@ -145,30 +145,6 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-safe-bottom) + var(--us-nav-height) + 14px)}
 #home .us-oggi-dock>*{pointer-events:auto}
 #home .us-oggi-dock>[hidden]{display:none!important}
-#home #usOggiDock #usTodayPriorityRegion{
-  position:static!important;
-  left:auto!important;
-  right:auto!important;
-  top:auto!important;
-  bottom:auto!important;
-  width:auto!important;
-  transform:none!important;
-}
-#home #usOggiDock .push-optin-card{
-  position:relative!important;
-  left:auto!important;
-  right:auto!important;
-  top:auto!important;
-  bottom:auto!important;
-  width:auto;
-  max-width:none;
-  margin:0;
-}
-/* A card that waits for me no longer takes the row's place: distance, battery
-   and Come stai stay on Oggi (founder, 03/11/2026; mockup card() said otherwise). */
-#home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-card-in .42s var(--dc-e-out) both}
-@keyframes dc-oggi-card-in{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
-
 /* Caption: Fraunces italic 30px, then the day and who, with their colour. */
 #home #usOggiCaption.og-cap{min-width:0;margin:0 4px;font:400 22px/1.05 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text);pointer-events:none}
 #home #usOggiCaption em{font-style:italic;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -297,19 +273,14 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 }
 #home #usDailyRitual .us-daily-ritual-arrow{display:inline-block;width:18px;height:18px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:translate .25s var(--dc-e-out)}
 /* The two characters instead of the circles: struttura.css (redesign definitivo, D2). */
-/* La cosa di oggi (cosa-di-oggi.js, 13/11/2026): the streak with its heart, the
-   first week's dots, «Domani: …», and always a button, as the
-   other Oggi cards (founder, 13/11: «non c'è un tasto»). */
+/* La cosa di oggi (cosa-di-oggi.js, 13/11/2026): the streak with its heart and
+   always a button (founder, 13/11: «non c'è un tasto»). The first week's dots
+   left with the redesign (fase 5, D9). */
 #home #usDailyRitual .us-cdo-left{display:inline-flex;align-items:center;gap:10px;min-width:0}
 #home #usDailyRitual .us-cdo-streak{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--us-color-text-2)}
 #home #usDailyRitual .us-cdo-streak .us-cdo-heart{width:14px;height:14px;flex:none;color:var(--us-noi)}
 #home #usDailyRitual .us-cdo-streak-n{display:inline-block}
 #home #usDailyRitual .us-daily-ritual-cta .us-cdo-heart{width:16px;height:16px;flex:none}
-#home #usDailyRitual .us-cdo-dots{display:inline-flex;align-items:center;gap:5px;flex:none}
-#home #usDailyRitual .us-cdo-dots i{width:7px;height:7px;border-radius:50%;border:1.5px solid rgba(247,239,233,.38);box-sizing:border-box}
-#home #usDailyRitual .us-cdo-dots i.on{border-color:var(--us-tu);background:var(--us-tu)}
-#home #usDailyRitual .us-cdo-dots i.now{border-color:var(--us-tu);box-shadow:0 0 0 3px rgba(255,124,150,.18)}
-#home #usDailyRitual .us-cdo-sub{grid-column:1/-1;margin-top:-4px;font:400 14px/1.4 var(--us-font-ui);color:var(--us-color-text-2)}
 #home #usDailyRitual[data-look] .us-daily-ritual-swipe{display:none}
 /* The moments: hearts and a check over the card, the party over Oggi. */
 .us-cdo-fx{position:fixed;z-index:var(--us-layer-transient);pointer-events:none;overflow:visible}
@@ -363,9 +334,9 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 }
 @keyframes dc-oggi-rise{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
 
-/* ---------- 4c · "Tocca a te": a dot on the Oggi tab while the other waits for me ---------- */
-.nav button[data-page="home"][data-us-tocca="on"]:not(.active) .nicon{position:relative}
-.nav button[data-page="home"][data-us-tocca="on"]:not(.active) .nicon::after{
+/* ---------- 4c · "Tocca a te": a dot on Gioca (a game) or Oggi (the Domanda di oggi) while the other waits for me ---------- */
+.nav button:is([data-page="home"],[data-page="quiz"])[data-us-tocca="on"]:not(.active) .nicon{position:relative}
+.nav button:is([data-page="home"],[data-page="quiz"])[data-us-tocca="on"]:not(.active) .nicon::after{
   content:"";
   position:absolute;
   top:2px;
@@ -401,108 +372,6 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 }
 #home #homeHero .us-countdown-entry .us-icon{--us-icon-size:18px}
 #home #homeHero .us-countdown-entry:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
-
-/* ---------- 5 · Priority card: what waits for me, in their colour (mockup .prio) ---------- */
-#home #usTodayPriorityRegion .us-today-priority-card{
-  position:relative;
-  width:100%;
-  min-height:0;
-  display:grid;
-  grid-template-columns:9px minmax(0,1fr) auto;
-  grid-template-areas:"dot kind action" "dot copy action";
-  align-items:center;
-  gap:0 12px;
-  padding:12px 12px 12px 14px;
-  border:1px solid color-mix(in srgb,var(--us-partner) 40%,transparent);
-  border-radius:22px;
-  background:color-mix(in srgb,var(--us-partner) 18%,color-mix(in srgb,var(--us-color-surface) 88%,transparent));
-  -webkit-backdrop-filter:blur(12px);
-  backdrop-filter:blur(12px);
-  box-shadow:none;
-  color:var(--us-color-text);
-  font:inherit;
-  text-align:left;
-}
-#home #usTodayPriorityRegion .us-today-priority-card::before{content:"";grid-area:dot;width:9px;height:9px;border-radius:50%;background:var(--us-partner)}
-#home #usTodayPriorityRegion .us-today-priority-card.us-attention-orbit::after{display:none}
-#home #usTodayPriorityRegion .us-today-priority-kind{grid-area:kind;align-self:end;font:700 11px/1.5 var(--us-font-ui)!important;letter-spacing:.12em;text-transform:uppercase;color:var(--us-partner)}
-#home #usTodayPriorityRegion .us-today-priority-copy{grid-area:copy;align-self:start;display:block;min-width:0;font-size:13px;color:var(--us-color-text-2)}
-#home #usTodayPriorityRegion .us-today-priority-copy b{display:block;font:600 15px/1.5 var(--us-font-ui)!important;color:var(--us-color-text)}
-#home #usTodayPriorityRegion .us-today-priority-copy small{display:block;font:400 13px/1.5 var(--us-font-ui)!important;color:var(--us-color-text-2)}
-#home #usTodayPriorityRegion .us-today-priority-copy small:empty{display:none}
-#home #usTodayPriorityRegion .us-today-priority-action{
-  grid-area:action;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:40px;
-  padding:0 14px;
-  border-radius:999px;
-  background:var(--us-tu);
-  color:var(--us-inchiostro);
-  font:700 14px/1 var(--us-font-ui)!important;
-  white-space:nowrap;
-}
-#home #usTodayPriorityRegion .us-today-priority-swipe.has-dismiss{position:relative}
-#home #usTodayPriorityRegion .us-today-priority-swipe.has-dismiss .us-today-priority-card{padding-right:58px}
-#home #usTodayPriorityRegion .us-today-priority-dismiss{
-  position:absolute;
-  top:50%;
-  right:12px;
-  width:34px;
-  height:34px;
-  margin-top:-17px;
-  display:grid;
-  place-items:center;
-  border:0;
-  border-radius:50%;
-  background:none;
-  color:var(--us-color-text-3);
-  box-shadow:none;
-}
-#home #usTodayPriorityRegion .us-today-priority-dismiss .us-icon{--us-icon-size:16px}
-
-/* ---------- 6 · Push opt-in: a quiet card, the bell in amber (mockup .push-card) ---------- */
-#home .push-optin-card{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:12px 12px 12px 14px;
-  border:1px solid var(--us-color-line);
-  border-radius:22px;
-  background:color-mix(in srgb,var(--us-color-surface) 80%,transparent);
-  -webkit-backdrop-filter:blur(12px);
-  backdrop-filter:blur(12px);
-  box-shadow:none;
-}
-#home .push-optin-icon,#home .push-optin-card.install-only .push-optin-icon,#home .push-optin-card.denied .push-optin-icon{
-  flex:none;
-  width:22px;
-  height:22px;
-  border-radius:0;
-  font-size:0;
-  color:transparent;
-  background:var(--us-ambra);
-  box-shadow:none;
-  -webkit-mask:url("/assets/icons/phosphor/bell-regular.svg") center/contain no-repeat;
-  mask:url("/assets/icons/phosphor/bell-regular.svg") center/contain no-repeat;
-}
-#home .push-optin-copy{display:block;flex:1;min-width:0;font-size:13px;color:var(--us-color-text-2)}
-#home .push-optin-card .push-optin-copy b{display:block;font:600 14px/1.5 var(--us-font-ui)!important;color:var(--us-color-text)}
-#home .push-optin-card .push-optin-copy small{display:block!important;font:400 13px/1.5 var(--us-font-ui)!important;color:var(--us-color-text-2)}
-#home .push-optin-card .push-optin-action{
-  flex:none;
-  width:auto;
-  min-height:40px!important;
-  padding:0 14px!important;
-  border:0;
-  border-radius:999px;
-  background:var(--us-tu);
-  color:var(--us-inchiostro);
-  font:700 14px/1 var(--us-font-ui)!important;
-  box-shadow:none;
-}
-#home .push-optin-card.denied{border-color:color-mix(in srgb,var(--us-rosso) 30%,transparent)}
 
 /* ---------- 7 · Legacy calendar widget (kept mounted, hidden by the Home decisions) ---------- */
 #home .us-oggi-card{border:1px solid var(--us-color-line-strong);border-radius:999px;background:var(--dc-oggi-scrim);box-shadow:none;color:var(--us-color-text-2);font-size:13px}
@@ -1079,22 +948,14 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
 :root[data-us-motion="reduced"] :is(#thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-head>div>*,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-visual i,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind){animation:none!important}
 :root[data-us-motion="reduced"] #home .us-daily-ritual-ring *{transition:none!important}
 :root[data-us-motion="reduced"] #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
-:root[data-us-motion="reduced"] #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-fade .2s linear both!important}
 @media (prefers-reduced-motion:reduce){
   #thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-head>div>*,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-visual i,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind{animation:none!important}
   #home .us-daily-ritual-ring *{transition:none!important}
   #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
-  #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-fade .2s linear both!important}
   #leftForYouPartnerEntry.us-attention-orbit[data-us-attention="on"]::after{animation:none;transition:none}
   #home .home-photo-shade{transition:none}
 }
 @keyframes dc-oggi-fade{from{opacity:0}to{opacity:1}}
-
-/* La sfida della settimana on Oggi (board SfidaOggi, 03/11/2026): the challenge's amber. */
-#home #usTodayPriorityRegion .us-today-priority-card[data-us-arrival-type="challenge"]{border-color:color-mix(in srgb,var(--us-ambra) 40%,transparent);background:color-mix(in srgb,var(--us-ambra) 10%,color-mix(in srgb,var(--us-color-surface) 90%,transparent))}
-#home #usTodayPriorityRegion .us-today-priority-card[data-us-arrival-type="challenge"]::before{background:var(--us-ambra)}
-#home #usTodayPriorityRegion .us-today-priority-card[data-us-arrival-type="challenge"] .us-today-priority-kind{color:var(--us-ambra)}
-#home #usTodayPriorityRegion .us-today-priority-card[data-us-arrival-type="challenge"] .us-today-priority-action{background:var(--us-ambra)}
 
 /* Conservati's door at the bottom of Lasciato per te (04/11/2026): Ricordi is only the album. */
 .left-for-you-kept.us-conservati-entry{min-height:60px;margin:16px 0 0}
