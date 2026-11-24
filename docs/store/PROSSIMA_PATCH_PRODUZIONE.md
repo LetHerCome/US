@@ -7,10 +7,11 @@
 **Stato:** ramo `claude/transizioni-fluide`, verso il ramo fisso di staging. Founder, 24/11: le transizioni «al momento sono veloci ma se ci fai caso non fluide».
 
 **Cosa cambia:**
-- **Cambio pagina dalla barra:** il colore che copre lo schermo ora è un disco che si allarga con una trasformazione, sulla GPU. Prima era un ritaglio (clip-path) ridisegnato a ogni frame dal processore, e si fermava quando il telefono era occupato. La pagina cambia appena il colore copre lo schermo, poi il colore si dissolve mentre salgono i blocchi della pagina nuova. Al posto del «buco» che si apriva dal tasto c'è la dissolvenza; il colore si vede crescere dal tasto e rallenta arrivando (500 ms, la pagina cambia verso i 360), poi si dissolve in 360 ms: circa 0,8 secondi in tutto. Founder, 24/11, su una prima versione a 300 ms: «non sono un po' troppo veloci?».
+- **Cambio pagina dalla barra, una marea a onde:** al posto del cerchio, un'onda del colore della scheda sale dal basso e allaga la pagina, con il bordo ondulato che scorre di lato (nel verso in cui ti muovi sulla barra) e un'onda più chiara appena davanti; sale un po' più in fretta dal lato del tasto toccato. Quando lo schermo è sommerso la pagina cambia, poi l'acqua passa oltre ed esce dall'alto, e la pagina nuova riemerge dal basso dietro la coda ondulata. Circa 1 secondo in tutto. Founder, 24/11: «una vera marea di colore… un'onda che pixel dopo pixel mangia la pagina» (prima, su un disco a 300 ms: «non sono un po' troppo veloci?»).
+- **Sulla GPU:** tutto si muove con trasformazioni, quindi un telefono occupato non ferma più la marea a metà. Prima era un ritaglio (clip-path) ridisegnato dal processore a ogni frame.
 - **Profilo:** stesso scorrimento di prima, con la curva più morbida.
 - **Suoni:** la preparazione dell'audio (la prima volta costa un frame lungo) non cade più in mezzo a un cambio pagina.
-- **Misurato** con la CPU rallentata 4 volte (un telefono medio): alla prima apertura di Noi il colore pieno resta fermo circa 80 ms (il tempo di preparare la pagina), poi si dissolve; la marea non si blocca più a metà.
+- **Misurato:** il colore pieno resta circa 100 ms con la CPU normale e 130–165 ms con la CPU rallentata 4 volte (un telefono medio): è il tempo di preparare la pagina sotto l'acqua.
 
 **Server:** niente.
 

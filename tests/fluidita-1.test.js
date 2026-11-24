@@ -55,16 +55,20 @@ test('the interface says «voi due», never «entrambi»', () => {
 // Fluidità 2 (founder, 24/11/2026: «veloci ma non fluide»): still quick, but
 // on the compositor (transform and opacity), with a softer curve; the page
 // changes as soon as the colour covers the screen.
-test('tab change: the tide is quick and runs on the compositor', () => {
+test('tab change: a tide of colour floods the page, on the compositor', () => {
   const js = read('due-colori.js');
-  assert.match(js, /const COVER_MS = 500;/);
-  assert.match(js, /const REVEAL_MS = 360;/);
-  assert.match(js, /const GROW = 'cubic-bezier\(\.35,\.1,\.25,1\)';/);
+  // Founder, 24/11/2026: «una vera marea di colore… un'onda che pixel dopo pixel mangia la pagina».
+  assert.match(js, /const RISE_MS = 520;/);
+  assert.match(js, /const LEAVE_MS = 480;/);
   assert.match(js, /const FADE_MS = 180;/, 'reduced motion keeps its short fade');
-  assert.match(js, /disc\.animate\(\[\{ transform: 'scale\(0\.001\)' \}, \{ transform: 'scale\(1\)' \}\]/, 'the colour grows with transform');
-  assert.match(js, /await covered\(current\.cover\);/, 'the page changes once the screen is covered');
-  assert.match(js, /el\.animate\(\[\{ opacity: 1 \}, \{ opacity: 0 \}\]/, 'the colour dissolves with opacity');
+  assert.match(js, /const WAVE = 'M0 30C50 30 100 10 150 10S250 34 300 34/, 'a wavy crest, repeating at half its width');
+  assert.match(js, /band\.animate\(\[\{ transform: place\.start \}, \{ transform: place\.over \}\]/, 'the tide rises with transform');
+  assert.match(js, /await covered\(current\.cover, place\.covered\);/, 'the page changes once the screen is under');
+  assert.match(js, /band\.animate\(\[\{ transform: place\.over \}, \{ transform: place\.gone \}\]/, 'then it goes on up and out');
+  assert.match(js, /const lean = \(0\.5 - at\.x \/ at\.w\) \* TILT;/, 'higher on the side of the tapped tab');
   assert.doesNotMatch(js, /clipPath/, 'no clip-path repainted at every frame');
-  assert.match(read('due-colori.css'), /\.us-flood-disc\{[^}]*border-radius:50%[^}]*will-change:transform\}/);
+  const css = read('due-colori.css');
+  assert.match(css, /\.us-tide\{[^}]*will-change:transform\}/);
+  assert.match(css, /\.us-tide\.is-back\{opacity:\.45\}/, 'a lighter wave runs ahead');
   assert.match(read('ui-foundation.js'), /const later = environment\.UsDueColori\?\.afterMotion;/, 'the sound engine is never built mid-motion');
 });
