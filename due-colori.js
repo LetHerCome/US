@@ -23,10 +23,12 @@ const root = doc.documentElement;
 const original = window.go;
 // Durations in ms. Fluidità 2 (founder, 24/11/2026): «un po' troppo veloci»
 // at 300 ms, the colour flashed on in two frames. Now it is seen growing
-// from the tab and slows as it arrives; the whole change takes ~0.8 s.
-const COVER_MS = 500;
+// from the tab and slows as it arrives. Its edge is soft (founder: «eliminare
+// il bordo netto e fare sì che prendesse piano piano la pagina»): the colour
+// takes the page little by little; the whole change takes ~1 s.
+const COVER_MS = 600;
 const REVEAL_MS = 360;
-const GROW = 'cubic-bezier(.35,.1,.25,1)';
+const GROW = 'cubic-bezier(.4,.05,.45,1)';
 const GLIDE = 'cubic-bezier(.45,0,.15,1)';
 const STAGGER_DELAY = 60;
 const STAGGER_STEP = 50;
@@ -66,12 +68,13 @@ function floodLayer() {
   }
   return layer;
 }
-// The disc reaches past the farthest corner from the tap (x1.1), centred on
-// it: the screen is all colour before the disc stops growing, so the page
-// changes then, and the change's long frame passes while the disc still
-// grows off screen (on the compositor, unseen).
-const OVERSIZE = 1.1;
-const COVERED = 0.95; // the corners are covered at 1/1.1 = .91; a few frames of margin
+// The disc is solid to 52 % of its radius, then fades out (due-colori.css).
+// Its solid core reaches past the farthest corner from the tap (x2 the
+// distance, centred on it): the screen is all colour before the disc stops
+// growing, so the page changes then, and the change's long frame passes
+// while the disc still grows off screen (on the compositor, unseen).
+const OVERSIZE = 2;
+const COVERED = 0.93; // the farthest corner is 97 % colour by then (the core reaches it at .962): the change is unseen
 function placeDisc(at) {
   const r = Math.ceil(at.radius * OVERSIZE);
   const d = r * 2;
@@ -263,7 +266,6 @@ function retarget(button, self, id, options) {
       try { current.cover?.reverse(); } catch (_) { current.cover?.cancel(); }
       return true;
     }
-    const before = getComputedStyle(disc).backgroundColor;
     current.id = id;
     current.button = button;
     current.at = origin(button);
@@ -272,7 +274,6 @@ function retarget(button, self, id, options) {
     markNav(button);
     bounce(button);
     el.style.setProperty('--us-flood', tabColor(button));
-    disc.animate?.([{ backgroundColor: before }, { backgroundColor: getComputedStyle(disc).backgroundColor }], { duration: 160, easing: OUT });
     return true;
   }
   if (id === current.id) return true;
