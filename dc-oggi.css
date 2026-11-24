@@ -20,8 +20,11 @@
 /* ---------- 1 · Photo: full screen, night at the top and at the bottom (.og-scrim) ---------- */
 /* The photo starts at the very top of the screen (no -2px pull from the legacy layer). */
 #home.page{margin-top:0}
+/* Il velo (founder, 25/11/2026): the photo sinks softly into the page at
+   the bottom, the same shape by night (black) and by day (paper, giorno.css),
+   never a full band: the words on the photo keep a soft dark under them. */
 #home .home-photo-shade{
-  background:linear-gradient(180deg,rgba(15,11,19,.6) 0%,rgba(15,11,19,.18) 24%,rgba(15,11,19,0) 38%,rgba(15,11,19,.12) 50%,rgba(15,11,19,.86) 76%,var(--us-color-bg) 100%)!important;
+  background:linear-gradient(180deg,rgba(15,11,19,.6) 0%,rgba(15,11,19,.18) 24%,rgba(15,11,19,0) 38%,rgba(18,13,17,0) 50%,rgba(18,13,17,.42) 72%,rgba(18,13,17,.8) 100%)!important;
   transition:opacity .45s var(--dc-e-out);
 }
 /* Readable on any photo (founder, 13/11, visual review): a soft night behind

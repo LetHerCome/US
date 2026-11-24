@@ -101,8 +101,9 @@
    of paper; «Come stai?» is a paper label, readable wherever it falls. */
 :root[data-us-luce="giorno"] #home #homeHero,:root[data-us-luce="giorno"] .app>.top.us-premium-top{--us-latte:#f7efe9;--us-color-text:#f7efe9;--us-color-text-2:rgba(247,239,233,.8);--us-color-text-3:rgba(247,239,233,.72);--us-inchiostro:#1a1020;color:#f7efe9}
 :root[data-us-luce="giorno"] #home #homeHero #usOggiDock{--us-latte:#231b1d;--us-color-text:#231b1d;--us-color-text-2:#6b5f5a;--us-color-text-3:#72655f;--us-inchiostro:#fbf7f0;color:#231b1d}
-:root[data-us-luce="giorno"] #home .home-photo-shade{background:linear-gradient(180deg,rgba(15,11,19,.5) 0%,rgba(15,11,19,.14) 22%,rgba(15,11,19,0) 36%,rgba(15,11,19,0) 56%,rgba(243,236,225,.55) 70%,#f3ece1 84%)!important}
-:root[data-us-luce="giorno"] html.us-native #home .home-photo-shade,:root[data-us-luce="giorno"].us-native #home .home-photo-shade{background:linear-gradient(180deg,rgba(15,11,19,.5) 0%,rgba(15,11,19,.14) 22%,rgba(15,11,19,0) 36%,rgba(15,11,19,0) 56%,rgba(243,236,225,.55) 70%,#f3ece1 84%)!important}
+/* Il velo di carta (founder, 25/11/2026: «carino, un po' meno accentuato»). */
+:root[data-us-luce="giorno"] #home .home-photo-shade{background:linear-gradient(180deg,rgba(15,11,19,.5) 0%,rgba(15,11,19,.14) 22%,rgba(15,11,19,0) 36%,rgba(243,236,225,0) 54%,rgba(243,236,225,.32) 76%,rgba(243,236,225,.66) 100%)!important}
+:root[data-us-luce="giorno"] html.us-native #home .home-photo-shade,:root[data-us-luce="giorno"].us-native #home .home-photo-shade{background:linear-gradient(180deg,rgba(15,11,19,.5) 0%,rgba(15,11,19,.14) 22%,rgba(15,11,19,0) 36%,rgba(243,236,225,0) 54%,rgba(243,236,225,.32) 76%,rgba(243,236,225,.66) 100%)!important}
 :root[data-us-luce="giorno"] #home #usOggiStatus{background:#fbf7f0!important;border-color:rgba(35,27,29,.12)!important;color:#231b1d!important;box-shadow:0 4px 12px rgba(35,27,29,.12)}
 :root[data-us-luce="giorno"] #home #usOggiStatus *{color:#231b1d!important}
 :root[data-us-luce="giorno"] #home #usDailyRitual{background:#fbf7f0!important;border-color:rgba(35,27,29,.12)!important;box-shadow:0 8px 22px rgba(35,27,29,.12)}
