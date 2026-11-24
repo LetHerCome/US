@@ -531,13 +531,12 @@ html .auth-overlay .us-tour-slide .us-auth-lede{max-width:31ch;text-align:center
 html .auth-overlay .us-tour-actions{display:grid;gap:10px;justify-items:stretch;text-align:center}
 html .auth-overlay .us-tour-actions .us-auth-primary{margin:0}
 html .auth-overlay .us-tour-actions .us-auth-link{justify-self:center;margin:-2px 0}
-.t1-a{fill:var(--us-rosa)}
-.t1-b{fill:var(--us-lilla)}
-.t1-n{fill:var(--us-noi)}
-.t1-a,.t1-b,.t1-n,.t1-w,.t2-a,.t2-b,.t2-l{transform-box:fill-box;transform-origin:center}
+/* Redesign definitivo, fase 7 (D14): the characters stand where the circles were. */
+.us-tour-char{position:absolute;display:block;transform:translate(-50%,-50%);line-height:0;pointer-events:none}
+.us-tour-char .us-char{display:block;overflow:visible;filter:drop-shadow(1.5px 0 0 #f7efe9) drop-shadow(-1.5px 0 0 #f7efe9) drop-shadow(0 1.5px 0 #f7efe9) drop-shadow(0 -1.5px 0 #f7efe9)}
+.t1-h{fill:var(--us-rosa)}
+.t1-h,.t1-w,.t2-l{transform-box:fill-box;transform-origin:center}
 .t1-w{fill:none;stroke:var(--us-noi);stroke-width:2;opacity:0}
-.t2-a{fill:var(--us-rosa)}
-.t2-b{fill:var(--us-lilla)}
 .t2-arc{fill:none;stroke:var(--us-color-text-3);stroke-width:1.6;stroke-dasharray:2 6;stroke-linecap:round}
 .t2-h{fill:var(--us-rosa)}
 .t2-bl{fill:color-mix(in srgb,var(--us-rosa) 14%,var(--us-color-surface));stroke:color-mix(in srgb,var(--us-rosa) 40%,transparent)}
@@ -1102,3 +1101,23 @@ html.us-app-lock-leaving .us-app-lock{background:var(--us-color-bg)}
 @media (prefers-reduced-motion:reduce){
   :is(#appStatusBar,#appUpdateBar):not([hidden]){animation:us-pill-fade .2s linear both}
 }
+
+/* ===== Redesign definitivo, fase 7 (D14): the characters where the circles were ===== */
+.us-ob-venn .ov-duo{position:relative;display:flex;align-items:flex-end;justify-content:center;gap:16px;min-height:92px;padding-top:14px}
+.us-ob-venn .ov-char{display:block;line-height:0}
+.us-ob-venn .ov-char svg{width:92px;height:85px;overflow:visible}
+.us-ob-venn .ov-char:not(.ov-wait) .us-char{filter:drop-shadow(1.5px 0 0 #f7efe9) drop-shadow(-1.5px 0 0 #f7efe9) drop-shadow(0 1.5px 0 #f7efe9) drop-shadow(0 -1.5px 0 #f7efe9)}
+.us-ob-venn .ov-duo .ov-n{position:absolute;left:50%;top:0;width:18px;height:16px;margin-left:-9px;background:var(--us-noi);-webkit-mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat}
+.us-ob-venn .ov-duo .ov-halo{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-70px 0 0 -75px;border-radius:50%;border:2px solid var(--us-noi);opacity:0;pointer-events:none}
+.us-ob-shapes{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:2px 0 4px}
+.us-ob-shapes[hidden]{display:none}
+.us-ob-shape{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:58px;min-height:66px;padding:8px 6px 6px;border-radius:16px;border:1px solid var(--us-color-line);background:var(--us-color-surface);color:var(--us-color-text-2);font:600 11.5px/1.2 var(--us-font-ui)}
+.us-ob-shape[aria-pressed="true"]{border-color:var(--us-color-text);background:var(--us-color-surface-2);color:var(--us-color-text)}
+.us-ob-shape .us-char{display:block;overflow:visible}
+.us-ob-shape:focus-visible{outline:2px solid var(--us-tu);outline-offset:2px}
+/* «Chi sei in US?»: the title, the words, your character, then the shape and the colour (tavola «Intro, personaggio»). */
+html .auth-overlay .us-ob-step .us-ob-color>.us-auth-lede{order:2}
+html .auth-overlay .us-ob-step :is(.us-ob-shapes,.us-ob-colors){order:3}
+html .auth-overlay #usOnboarding .us-ob-shapes button.us-ob-shape,html .auth-overlay .us-ob-shapes button.us-ob-shape,.us-setup .us-ob-shapes button.us-ob-shape{width:auto;min-width:58px;min-height:66px;margin:0;padding:8px 6px 6px;flex:0 0 auto;border-radius:16px;font:600 11.5px/1.2 var(--us-font-ui);box-shadow:none}
+#mc3Waiting #mc3WaitDuo{order:0;margin:0 0 6px}
+.us-tour-vis .us-tour-char svg{width:100%;height:auto}

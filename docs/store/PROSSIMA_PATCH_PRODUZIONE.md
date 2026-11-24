@@ -2,6 +2,18 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign, fase 7: l'intro con i personaggi (24/11)
+
+**Stato:** ramo `claude/redesign-fase7-intro` (sopra la fase 6), verso il ramo fisso di staging. Founder, 24/11: «Vai allora andiamo avanti». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D14; tavole dell'intro approvate il 23/11.
+
+**Cosa cambia:**
+- **Il giro prima dell'accesso** sono tre scene con i due personaggi (un tondo rosa e un quadrato lilla): uno accanto all'altro con «Un posto solo per voi due», un Ti penso che vola dall'uno all'altro (occhi a cuore), la festa dentro l'anello della Sintonia.
+- **«Chi sei in US?»** al posto del passo coi cerchi: chi crea la coppia e chi entra scelgono la forma (Tondo, Quadrato, Triangolo, Goccia, Nuvola) e il colore, e vedono subito il loro personaggio. La forma si salva come nel guardaroba.
+- **Nell'attesa** il tuo personaggio aspetta accanto al posto vuoto dell'altra persona, sopra il codice.
+- **Quando l'altra persona entra**, chi aspettava vede «Ora siete in due» coi due personaggi che fanno festa.
+
+**Server:** niente di nuovo (usa `set_my_character_shape`, già su US-STAGING con le migrazioni dei personaggi, non in produzione).
+
 ### Redesign, fase 6: Gioca con i gettoni (24/11)
 
 **Stato:** ramo `claude/redesign-fase6-gioca`, verso il ramo fisso di staging. Founder, 24/11: «Vai allora andiamo avanti» (le fasi 6–8, poi un controllo insieme). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D10 e D11; tavole «Gioca» e «Gioca, gettoni finiti» approvate il 23/11.

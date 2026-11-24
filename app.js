@@ -950,9 +950,9 @@ let usAuthEpoch=0;
 let usAuthUserId='';
 let usInitCloudAgain=false;
 const usOnboarding=window.UsOnboarding.mount({
-  readProfile:id=>usWithDeadline(sb.from('profiles').select('id,display_name,role,couple_id,avatar_path').eq('id',id).maybeSingle(),5000),
+  readProfile:id=>usWithDeadline(sb.from('profiles').select('id,display_name,role,couple_id,avatar_path,character_shape').eq('id',id).maybeSingle(),5000),
   // The first-run colour picker reads both of you, to leave the partner's colour taken.
-  readCouple:coupleId=>usWithDeadline(sb.from('profiles').select('id,role,person_color').eq('couple_id',coupleId),5000),
+  readCouple:coupleId=>usWithDeadline(sb.from('profiles').select('id,role,person_color,character_shape').eq('couple_id',coupleId),5000),
   // A mutation retains its guard until the real request settles: a local timer
   // cannot cancel a database transaction or safely authorize another rotation.
   rpc:(name,args)=>{
