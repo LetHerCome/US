@@ -7,10 +7,10 @@
 **Stato:** ramo `claude/transizioni-fluide`, verso il ramo fisso di staging. Founder, 24/11: le transizioni «al momento sono veloci ma se ci fai caso non fluide».
 
 **Cosa cambia:**
-- **Cambio pagina dalla barra:** il colore che copre lo schermo ora è un disco che si allarga con una trasformazione, sulla GPU. Prima era un ritaglio (clip-path) ridisegnato a ogni frame dal processore, e si fermava quando il telefono era occupato. La pagina cambia appena il colore copre lo schermo, poi il colore si dissolve mentre salgono i blocchi della pagina nuova. Al posto del «buco» che si apriva dal tasto c'è la dissolvenza; i tempi sono simili (300 + 320 ms) e la curva è più morbida.
+- **Cambio pagina dalla barra:** il colore che copre lo schermo ora è un disco che si allarga con una trasformazione, sulla GPU. Prima era un ritaglio (clip-path) ridisegnato a ogni frame dal processore, e si fermava quando il telefono era occupato. La pagina cambia appena il colore copre lo schermo, poi il colore si dissolve mentre salgono i blocchi della pagina nuova. Al posto del «buco» che si apriva dal tasto c'è la dissolvenza; il colore si vede crescere dal tasto e rallenta arrivando (500 ms, la pagina cambia verso i 360), poi si dissolve in 360 ms: circa 0,8 secondi in tutto. Founder, 24/11, su una prima versione a 300 ms: «non sono un po' troppo veloci?».
 - **Profilo:** stesso scorrimento di prima, con la curva più morbida.
 - **Suoni:** la preparazione dell'audio (la prima volta costa un frame lungo) non cade più in mezzo a un cambio pagina.
-- **Misurato** con la CPU rallentata 4 volte (un telefono medio): alla prima apertura di Noi il colore pieno resta fermo circa 120 ms (il tempo di preparare la pagina), poi si dissolve; la marea non si blocca più a metà.
+- **Misurato** con la CPU rallentata 4 volte (un telefono medio): alla prima apertura di Noi il colore pieno resta fermo circa 80 ms (il tempo di preparare la pagina), poi si dissolve; la marea non si blocca più a metà.
 
 **Server:** niente.
 

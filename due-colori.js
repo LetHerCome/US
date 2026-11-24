@@ -1,9 +1,9 @@
 /* Due colori, un Noi — shell motion, the approved mockup's "marea" (core.js go()).
    A tap on the bottom bar: the tab is marked at once (the indicator slides
    with the spring, the icon gives one small bounce),
-   the tab colour covers the screen from the tapped button (300 ms), the page
-   changes under the colour as soon as it covers the screen, then the colour
-   dissolves (320 ms) while the new page's blocks rise in, 50 ms apart. Fluidità 2
+   the tab colour grows from the tapped button and covers the screen
+   (~330 ms visible), the page changes under it, then the colour dissolves
+   (360 ms) while the new page's blocks rise in, 50 ms apart. Fluidità 2
    (founder, 24/11/2026, «veloci ma non fluide»): every moving part is
    transform and opacity, so it runs on the compositor and a busy phone
    cannot stop it halfway (the old clip-path circle and hole were repainted
@@ -21,11 +21,12 @@ window.__usDueColoriInstalled = true;
 const doc = document;
 const root = doc.documentElement;
 const original = window.go;
-// Durations in ms. Fluidità 1 (founder, 22/10) made the tide quicker than
-// the mockup; Fluidità 2 keeps it quick but glides: a softer curve than the
-// mockup's E.io, which crawled, then snapped through the middle.
-const COVER_MS = 300;
-const REVEAL_MS = 320;
+// Durations in ms. Fluidità 2 (founder, 24/11/2026): «un po' troppo veloci»
+// at 300 ms, the colour flashed on in two frames. Now it is seen growing
+// from the tab and slows as it arrives; the whole change takes ~0.8 s.
+const COVER_MS = 500;
+const REVEAL_MS = 360;
+const GROW = 'cubic-bezier(.35,.1,.25,1)';
 const GLIDE = 'cubic-bezier(.45,0,.15,1)';
 const STAGGER_DELAY = 60;
 const STAGGER_STEP = 50;
@@ -65,12 +66,12 @@ function floodLayer() {
   }
   return layer;
 }
-// The disc reaches past the farthest corner from the tap (x1.3), centred on
+// The disc reaches past the farthest corner from the tap (x1.1), centred on
 // it: the screen is all colour before the disc stops growing, so the page
 // changes then, and the change's long frame passes while the disc still
 // grows off screen (on the compositor, unseen).
-const OVERSIZE = 1.3;
-const COVERED = 0.86; // the corners are covered at 1/1.3 = .77; a frame of margin
+const OVERSIZE = 1.1;
+const COVERED = 0.95; // the corners are covered at 1/1.1 = .91; a few frames of margin
 function placeDisc(at) {
   const r = Math.ceil(at.radius * OVERSIZE);
   const d = r * 2;
@@ -216,7 +217,7 @@ async function flood(button, self, id, options) {
   pending = { self, args: [id, { ...options, motionCommit: true }] };
   try {
     current.cover = disc.animate([{ transform: 'scale(0.001)' }, { transform: 'scale(1)' }],
-      { duration: COVER_MS, easing: GLIDE, fill: 'forwards' });
+      { duration: COVER_MS, easing: GROW, fill: 'forwards' });
     await covered(current.cover);
     if (current.back) await current.cover.finished;
   } catch (_) { /* cancelled by a programmatic go() */ }

@@ -57,9 +57,9 @@ test('the interface says «voi due», never «entrambi»', () => {
 // changes as soon as the colour covers the screen.
 test('tab change: the tide is quick and runs on the compositor', () => {
   const js = read('due-colori.js');
-  assert.match(js, /const COVER_MS = 300;/);
-  assert.match(js, /const REVEAL_MS = 320;/);
-  assert.match(js, /const GLIDE = 'cubic-bezier\(\.45,0,\.15,1\)';/);
+  assert.match(js, /const COVER_MS = 500;/);
+  assert.match(js, /const REVEAL_MS = 360;/);
+  assert.match(js, /const GROW = 'cubic-bezier\(\.35,\.1,\.25,1\)';/);
   assert.match(js, /const FADE_MS = 180;/, 'reduced motion keeps its short fade');
   assert.match(js, /disc\.animate\(\[\{ transform: 'scale\(0\.001\)' \}, \{ transform: 'scale\(1\)' \}\]/, 'the colour grows with transform');
   assert.match(js, /await covered\(current\.cover\);/, 'the page changes once the screen is covered');
