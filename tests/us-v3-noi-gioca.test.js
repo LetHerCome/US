@@ -23,8 +23,8 @@ test('Noi icons: well-formed markup, your character instead of the gear, a real 
   // Redesign definitivo, fase 2 (D6): your character opens the Profilo; no gear.
   assert.doesNotMatch(noi, /us-noi-v2-settings/);
   assert.match(noi, /class="us-me us-noi-v2-me" data-us-self onclick="go\('settings',\{nav:true\}\)"/);
-  // Noi nuova (03/11/2026): the two views are words, «Mese» and «Prossimi»; no tiles.
-  assert.match(noi, /id="usNoiV2ModeList"[^>]*>Prossimi<\/button>/);
+  // Noi, Fase A (24/11/2026): one calendar, no «Mese / Prossimi»; no tiles.
+  assert.doesNotMatch(noi, /id="usNoiV2ModeList"|>Prossimi<\/button>/);
   assert.doesNotMatch(noi, /data-noi-open-link/);
 });
 
@@ -141,16 +141,13 @@ test('Noi calendar: only the weeks the month spans, today selected, a label per 
   assert.equal(node('usNoiV2Today').hidden, true, '"Torna a oggi" only when you are elsewhere');
 });
 
-test('Noi calendar: a failed read keeps the grid and offers Riprova; list mode has a real empty state', async () => {
+test('Noi calendar: a failed read keeps the grid and offers Riprova', async () => {
   const { node } = await noiRender({ fail: true });
   const content = node('usNoiV2Content').innerHTML;
   assert.match(content, /role="alert"[\s\S]*data-noi-retry/);
   assert.match(content, /class="us-noi-v2-grid"/, 'the month is still readable');
   assert.equal(node('usNoiV2Content').dataset.state, 'error');
-  // Noi nuova: «Prossimi» has its own read; without one it says it cannot load.
-  node('usNoiV2ModeList').emit('click');
-  assert.match(node('usNoiV2Content').innerHTML, /Carico i prossimi impegni…/);
-  assert.equal(node('usNoiV2Detail').hidden, true, 'list mode does not repeat the day detail');
+  assert.equal(node('usNoiV2Detail').hidden, false, 'the chosen day stays under the grid');
 });
 
 test('Noi calendar: month change animates once and only without reduced motion', () => {

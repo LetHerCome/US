@@ -90,7 +90,8 @@ test('the pill refreshes after calendar and event writes and on the way back to 
   const calendar = read('calendar.js');
   const events = read('events.js');
   assert.match(calendar, /async function getOggiNextCommitmentSource\(\{ fresh = false \} = \{\}\)\{?[\s\S]*?fetchEntriesForRange\(coupleId, today, shiftISODate\(today, 3\)\)/);
-  assert.equal((calendar.match(/window\.UsOggiNext\?\.refresh\?\.\(\{ calendar: 'fresh' \}\);/g) || []).length, 2, 'after a save and after a delete');
+  // Noi, Fase A (24/11/2026): a third, after «Ogni anno» saves its Eventi date.
+  assert.equal((calendar.match(/window\.UsOggiNext\?\.refresh\?\.\(\{ calendar: 'fresh' \}\);/g) || []).length, 3, 'after a save, a yearly save and a delete');
   assert.match(events, /await hydrateEvents\(\);refreshOggiNextFromEvents\(\);[\s\S]*await hydrateEvents\(\);refreshOggiNextFromEvents\(\);[\s\S]*await hydrateEvents\(\);refreshOggiNextFromEvents\(\);/);
   assert.match(app, /if\(id==='home'\)\{[^\n]*window\.UsOggiNext\?\.refresh\?\.\(\{event:'read',calendar:'read'\}\)/);
   assert.match(app, /data\.usNextKind==='calendar'[^\n]*window\.UsCalendarLinks\.openEntry\(data\.usEventId\)/);

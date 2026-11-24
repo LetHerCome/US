@@ -724,10 +724,8 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
             <button type="button" class="us-me us-noi-v2-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button>
           </div>
         </header>
-        <div class="us-noi-v2-toggle" role="group" aria-label="Vista del calendario">
-          <button type="button" id="usNoiV2ModeCalendar" class="is-active" aria-pressed="true">Mese</button>
-          <button type="button" id="usNoiV2ModeList" aria-pressed="false">Prossimi</button>
-        </div>
+        <!-- Noi, Fase A (24/11/2026): «Vi rivedete tra» for couples apart (noi-v2.js renderMeet). -->
+        <section class="us-noi-v2-meet" id="usNoiV2Meet" aria-label="Il prossimo incontro" hidden></section>
         <div class="us-noi-v2-monthbar">
           <h3 id="usNoiV2Month" aria-live="polite">—</h3>
           <div class="us-noi-v2-month-nav">
@@ -1378,7 +1376,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <div class="us-cal-kind" id="usCalendarKind" role="group" aria-label="Che cosa aggiungi">
         <button type="button" data-us-calendar-kind="personal" data-owner="tu" aria-pressed="true"><span class="us-icon" data-us-icon="user-circle" aria-hidden="true"></span><span>Solo mio</span></button>
         <button type="button" data-us-calendar-kind="shared" data-owner="noi" aria-pressed="false"><span class="us-icon" data-us-icon="heart" aria-hidden="true"></span><span>Nostro</span></button>
-        <button type="button" data-us-calendar-kind="event" data-owner="noi" aria-pressed="false"><span class="us-icon" data-us-icon="calendar-heart" aria-hidden="true"></span><span>Data speciale</span></button>
       </div>
       <p class="us-cal-form-context" id="usCalendarFormContext" hidden>Le vostre idee · per voi due</p>
       <p class="us-cal-form-day" id="usCalendarFormDay" hidden></p>
@@ -1390,12 +1387,19 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         <button type="button" class="us-cal-preset-add" id="usCalendarPresetAdd" aria-label="Aggiungi un titolo rapido"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
         <span class="us-cal-preset-new" id="usCalendarPresetNew" hidden><input id="usCalendarPresetNewInput" type="text" maxlength="30" enterkeyhint="done" placeholder="Nuovo titolo" aria-label="Nuovo titolo rapido"><button type="button" id="usCalendarPresetNewSave">Aggiungi</button></span>
       </div>
-      <label class="us-cal-field"><span>Che cosa fai?</span><input id="usCalendarTitleInput" type="text" maxlength="200" required placeholder="Che cosa fai?"></label>
-      <label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno</span><input id="usCalendarDateInput" type="date"></label>
-      <label class="us-cal-field us-cal-allday-field"><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
-      <div class="us-cal-time-fields" id="usCalendarTimeFields">
-        <label class="us-cal-field"><span>Inizio</span><input id="usCalendarStartTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="next" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di inizio"></label>
-        <span class="us-cal-time-arrow" aria-hidden="true">→</span>
+      <label class="us-cal-field"><span>Che cosa</span><input id="usCalendarTitleInput" type="text" maxlength="200" required placeholder="Che cosa fate?"></label>
+      <!-- Noi, Fase A (24/11/2026): Quando and one time, «se c'è»; no time = all day. -->
+      <div class="us-cal-when">
+        <label class="us-cal-field" id="usCalendarDateField"><span>Quando</span><input id="usCalendarDateInput" type="date"></label>
+        <label class="us-cal-field us-cal-when-time"><span>Ora · se c'è</span><input id="usCalendarStartTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora, se c'è"></label>
+      </div>
+      <label class="us-cal-field us-cal-allday-field" hidden><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
+      <!-- Ci vediamo: your next meeting («Vi rivedete tra» in Noi). Ogni anno: a date that comes back (Eventi). -->
+      <div class="us-cal-switches" id="usCalendarSwitches">
+        <label class="us-cal-switch" id="usCalendarMeetRow"><span class="us-cal-switch-copy"><b>Ci vediamo</b><small>diventa il vostro prossimo incontro</small></span><input id="usCalendarMeetInput" type="checkbox" role="switch" aria-label="Ci vediamo"></label>
+        <label class="us-cal-switch" id="usCalendarYearlyRow"><span class="us-cal-switch-copy"><b>Ogni anno</b><small>per compleanni e anniversari</small></span><input id="usCalendarYearlyInput" type="checkbox" role="switch" aria-label="Ogni anno"></label>
+      </div>
+      <div class="us-cal-time-fields" id="usCalendarTimeFields" hidden>
         <label class="us-cal-field"><span>Fine</span><input id="usCalendarEndTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di fine"></label>
       </div>
       <div class="us-cal-form-status" id="usCalendarFormStatus" role="status" aria-live="polite"></div>

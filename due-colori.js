@@ -31,9 +31,11 @@ const COVER_MS = 460;
 const REVEAL_MS = 300;
 const GROW = 'cubic-bezier(.4,.05,.45,1)';
 const GLIDE = 'cubic-bezier(.45,0,.15,1)';
-const STAGGER_DELAY = 60;
-const STAGGER_STEP = 50;
-const STAGGER_MS = 460;
+// The new page's blocks rise quickly (founder, 24/11/2026: «lentine»):
+// right away, 30 ms apart, 320 ms each.
+const STAGGER_DELAY = 0;
+const STAGGER_STEP = 30;
+const STAGGER_MS = 320;
 const FADE_MS = 180;
 const BOUNCE_MS = 480;
 const OUT = 'cubic-bezier(.2,.8,.2,1)';
@@ -60,7 +62,6 @@ function floodLayer() {
   if (!layer) {
     layer = doc.createElement('div');
     layer.className = 'us-flood';
-    layer.hidden = true;
     layer.setAttribute('aria-hidden', 'true');
     disc = doc.createElement('i');
     disc.className = 'us-flood-disc';
@@ -70,20 +71,23 @@ function floodLayer() {
   return layer;
 }
 // The disc is solid to 52 % of its radius, then fades out (due-colori.css).
-// Its solid core reaches past the farthest corner from the tap (x2 the
-// distance, centred on it): the screen is all colour before the disc stops
-// growing, so the page changes then, and the change's long frame passes
-// while the disc still grows off screen (on the compositor, unseen).
+// It is small (DISC px) and drawn once: the layer always stays in the page,
+// transparent while idle, so the phone never redraws a screen-sized circle
+// while it grows; the GPU only enlarges it (soft edges hide the scaling).
+// Grown, its solid core reaches past the farthest corner from the tap (x2
+// the distance, centred on it): the screen is all colour before the disc
+// stops growing, so the page changes then, and the change's long frame
+// passes while the disc still grows off screen (on the compositor, unseen).
+const DISC = 480;
 const OVERSIZE = 2;
 const COVERED = 0.93; // the farthest corner is 97 % colour by then (the core reaches it at .962): the change is unseen
+// Centres the disc on the tap; returns the scale that makes it big enough.
 function placeDisc(at) {
-  const r = Math.ceil(at.radius * OVERSIZE);
-  const d = r * 2;
-  disc.style.left = `${at.x - r}px`;
-  disc.style.top = `${at.y - r}px`;
-  disc.style.width = `${d}px`;
-  disc.style.height = `${d}px`;
+  disc.style.left = `${at.x - DISC / 2}px`;
+  disc.style.top = `${at.y - DISC / 2}px`;
+  return (at.radius * OVERSIZE * 2) / DISC;
 }
+const flooding = () => Boolean(layer && layer.dataset.on === '1');
 
 // Resolves once the growing disc covers the whole screen (or stops growing).
 function covered(animation) {
@@ -102,7 +106,7 @@ function clear() {
   entering = null;
   if (!layer) return;
   layer.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
-  layer.hidden = true;
+  delete layer.dataset.on;
 }
 
 // A programmatic go() that arrives while the colour is moving lands at once.
@@ -214,14 +218,14 @@ async function flood(button, self, id, options) {
   markNav(button);
   bounce(button);
   el.style.setProperty('--us-flood', color);
-  placeDisc(at);
-  el.hidden = false;
+  const grown = placeDisc(at);
+  el.dataset.on = '1';
   const current = { ticket, id, from, at, button, cover: null };
   job = current;
   pending = { self, args: [id, { ...options, motionCommit: true }] };
   try {
-    current.cover = disc.animate([{ transform: 'scale(0.001)' }, { transform: 'scale(1)' }],
-      { duration: COVER_MS, easing: GROW, fill: 'forwards' });
+    current.cover = disc.animate([{ transform: 'scale(0.002)' }, { transform: `scale(${grown.toFixed(3)})` }],
+      { duration: COVER_MS, easing: GROW, fill: 'both' });
     await covered(current.cover);
   } catch (_) { /* cancelled by a programmatic go() */ }
   if (ticket !== run) return; // a tap took over (rush) or a programmatic go() landed
@@ -263,7 +267,7 @@ function rush(button, self, id, options) {
   }
   const el = floodLayer();
   const done = () => { if (ticket === run) { clear(); busy = false; drainAfter(); } };
-  if (el.hidden || !el.animate) { done(); return; }
+  if (!flooding() || !el.animate) { done(); return; }
   const from = Number(getComputedStyle(el).opacity) || 1;
   el.getAnimations().forEach((animation) => animation.cancel()); // the layer's own fade; the disc stays where it is
   el.animate([{ opacity: from }, { opacity: 0 }], { duration: RUSH_MS, easing: OUT, fill: 'forwards' }).finished.then(done, done);
@@ -377,9 +381,20 @@ if (typeof original === 'function') {
   };
 }
 
+// The colour layer is made (and its small disc drawn) at start, before the
+// first tap; the tabs' colours are read in a quiet moment, so the first tap
+// does not pay for a style pass either.
+function prepare() {
+  floodLayer();
+  const warm = () => doc.querySelectorAll('.us-nav button[data-page]').forEach((button) => { try { tabColor(button); } catch (_) { /* later */ } });
+  if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: 3000 });
+  else setTimeout(warm, 1200);
+}
+if (doc.body) prepare(); else doc.addEventListener('DOMContentLoaded', prepare, { once: true });
+
 window.UsDueColori = Object.freeze({
   // Tests and other surfaces can ask whether a flood is on screen.
-  isFlooding: () => Boolean(layer && !layer.hidden),
+  isFlooding: flooding,
   // Run heavy work once the colour between tabs has finished (at once when
   // nothing moves). app.js schedules each page's hydration through it.
   afterMotion,

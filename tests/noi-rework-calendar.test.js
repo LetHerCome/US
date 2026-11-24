@@ -3,7 +3,8 @@
 // protagonist. Big squares without circles, dots or key; every commitment is
 // a label with its name in the colour of whoever put it; a day with a Ricordo
 // is its photo; today bold, the chosen day framed; under it the agenda of that
-// day; the views «Mese» and «Prossimi», with the recurring dates too.
+// day. Noi, Fase A (founder, 24/11/2026): «Mese / Prossimi» left; «Vi
+// rivedete tra» on top for couples apart; the characters on special days.
 // noi-v2.js runs in a vm with a tiny DOM and a fixed "now".
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -38,7 +39,7 @@ function makeEl(id) {
   };
 }
 
-function load({ now, month = () => null, range = () => null, domain = null }) {
+function load({ now, month = () => null, range = () => null, domain = null, extra = {} }) {
   const els = new Map();
   const $ = (id) => { if (!els.has(id)) els.set(id, makeEl(id)); return els.get(id); };
   const calls = [];
@@ -54,6 +55,7 @@ function load({ now, month = () => null, range = () => null, domain = null }) {
     openMomentViewer: (card) => calls.push(['openMomentViewer', card.dataset.momentId]),
     UsCalendarLinks: { openEntry: (...args) => calls.push(['openEntry', ...args]), createForDate: (day) => calls.push(['createForDate', day]) },
     ...(domain ? { UsCalendarDomain: domain } : {}),
+    ...extra,
     USNoiCalendarRead: {
       readMonth: async (year, m) => { reads.push(['month', year, m]); return month(year, m); },
       readRange: async (from, to) => { reads.push(['range', from, to]); return range(from, to); },
@@ -64,7 +66,7 @@ function load({ now, month = () => null, range = () => null, domain = null }) {
   window.document = document;
   const context = vm.createContext({
     window, document, console: { info() {}, warn() {} }, Date: fixedDate(now), Intl, Math, Map, Set, Array, Object, String, Number, Promise, JSON,
-    MutationObserver: class { observe() {} }, setTimeout: () => 0, clearTimeout() {}
+    MutationObserver: class { observe() {} }, setTimeout: () => 0, clearTimeout() {}, setInterval: () => 1, clearInterval() {}
   });
   context.globalThis = context;
   vm.runInContext(read('noi-v2.js'), context, { filename: 'noi-v2.js' });
@@ -125,11 +127,9 @@ test('the couple\'s dates in a square say how much; a hundred-days milestone doe
   assert.match(detail, /<b>4100 giorni ♡<\/b>/);
   assert.doesNotMatch(detail, /4100 giorni insieme/, 'the title says it once');
 
-  h.tap('usNoiV2ModeList');
-  await settle();
-  const list = h.$('usNoiV2Content').innerHTML;
-  assert.equal((list.match(/4100 giorni/g) || []).length, 1, '«Prossimi»: «4100 giorni ♡» and nothing else about it');
-  assert.match(list, /<b>Mesiversario<\/b>[\s\S]*?135 mesi insieme/, 'a mesiversario keeps its line');
+  // The special day (Fase A, D10): the characters, and the number said once more at most.
+  assert.match(detail, /<div class="us-noi-v2-special" data-special="festa">/);
+  assert.match(detail, /<span class="us-noi-v2-special-line">Oggi: 4100 giorni ♡<\/span>/);
 
   const css = read('dc-noi.css');
   assert.match(css, /#bond \.us-noi-v2-bar\.is-milestone\{[^}]*white-space:normal[^}]*-webkit-line-clamp:2/);
@@ -184,61 +184,64 @@ test('the agenda of the chosen day: its Ricordo, the commitments with time and w
   assert.match(h.$('usNoiV2Detail').innerHTML, /Niente in programma\. Un giorno libero, tutto vostro\./);
 });
 
-test('«Prossimi»: from today, one year ahead, with birthdays, mesiversari and the anniversary; nothing past', async () => {
-  const year = {
-    appointments: [timed('Volo Roma', 'you', 'personal', '2026-11-30', '07:15', '09:00'), timed('Ieri', 'me', 'personal', '2026-11-23', '10:00', '11:00')],
-    events: [{ id: 'bd', title: 'Compleanno Sara', event_date: '1998-03-02', event_time: null, recurs_yearly: true }, { id: 'old', title: 'Cena passata', event_date: '2026-11-01', event_time: null, recurs_yearly: false }],
-    profiles: PROFILES, startedOn: '2024-01-31'
-  };
-  const h = load({ now: '2026-11-24T10:00:00', month: () => NOVEMBER, range: () => year });
-  h.api.openCalendar({ date: '2026-11-24' });
-  await settle();
-  h.tap('usNoiV2ModeList');
-  await settle();
-  assert.deepEqual(h.reads.at(-1), ['range', '2026-11-24', '2027-11-25'], 'from today to the same day next year');
-  assert.equal(h.$('usNoiV2').dataset.mode, 'list');
-  const list = h.$('usNoiV2Content').innerHTML;
-  const days = [...list.matchAll(/data-noi-day="([^"]+)" data-noi-focus-list/g)].map((m) => m[1]);
-  assert.deepEqual(days.slice(0, 4), ['2026-11-30', '2026-12-31', '2027-01-31', '2027-02-28']);
-  assert.ok(days.includes('2027-03-02'), 'the birthday, months away');
-  assert.ok(!days.some((d) => d < '2026-11-24'), 'nothing before today');
-  assert.match(list, /Compleanno Sara/);
-  assert.match(list, /<b>Anniversario<\/b>[\s\S]*?3 anni insieme/);
-  assert.match(list, /lunedì 30 novembre/, 'the day says its month');
-  assert.doesNotMatch(list, /Cena passata|>Ieri</);
-  // No dashes (founder, 04/11/2026): a date without an hour carries a mark.
-  assert.doesNotMatch(list, /—/);
-  assert.match(list, /us-noi-v2-item-time is-mark" aria-hidden="true"><span class="us-icon" data-us-icon="heart"/);
-  assert.match(list, /us-noi-v2-item-time">07:15</);
-  assert.equal(h.$('usNoiV2Detail').hidden, true);
+const DUO = { character: (role, o = {}) => `<svg data-role="${role}" data-reaction="${o.reaction || ''}" data-head="${o.head || ''}"></svg>` };
 
-  h.tap('usNoiV2ModeCalendar');
+test('«Vi rivedete tra»: for couples apart, the next Ci vediamo with a timer; never near, never a past one', async () => {
+  const meet = { ...timed('Treno per Padova', 'me', 'shared', '2026-12-05', '18:10', '19:10'), ci_vediamo: true };
+  const past = { ...timed('Ieri insieme', 'me', 'shared', '2026-11-20', '18:00', '19:00'), ci_vediamo: true };
+  const plain = timed('Cena', 'me', 'shared', '2026-11-28', '20:00', '21:00');
+  const year = { appointments: [past, plain, meet], events: [], profiles: PROFILES, startedOn: null };
+  const far = load({ now: '2026-11-24T10:00:00', month: () => NOVEMBER, range: () => year, extra: { UsDistance: { current: () => 'far' }, UsPersonaggi: DUO } });
+  far.api.openCalendar({ date: '2026-11-24' });
   await settle();
-  assert.equal(h.$('usNoiV2').dataset.mode, 'calendar');
+  const card = far.$('usNoiV2Meet');
+  assert.equal(card.hidden, false);
+  assert.match(card.innerHTML, /<span class="us-noi-v2-meet-k">Vi rivedete tra<\/span>/);
+  assert.match(card.innerHTML, /role="timer" aria-label="11 giorni, 8 ore e 10 minuti"/);
+  assert.match(card.innerHTML, /<b>11<\/b><small>GIORNI<\/small>[\s\S]*<b>08<\/b><small>ORE<\/small>[\s\S]*<b>10<\/b><small>MIN<\/small>/);
+  assert.match(card.innerHTML, /sabato 5 dicembre · 18:10 · Treno per Padova/);
+  assert.equal((card.innerHTML.match(/<svg data-role=/g) || []).length, 2, 'the two characters either side');
+  assert.ok(far.reads.some((r) => r[0] === 'range'), 'a year ahead is read');
+
+  const near = load({ now: '2026-11-24T10:00:00', month: () => NOVEMBER, range: () => year, extra: { UsDistance: { current: () => 'near' }, UsPersonaggi: DUO } });
+  near.api.openCalendar({ date: '2026-11-24' });
+  await settle();
+  assert.equal(near.$('usNoiV2Meet').hidden, true, 'couples near: no card');
+  assert.ok(!near.reads.some((r) => r[0] === 'range'), 'and no year read');
+
+  const day = load({ now: '2026-12-05T18:40:00', month: () => NOVEMBER, range: () => year, extra: { UsDistance: { current: () => 'far' }, UsPersonaggi: DUO } });
+  day.api.openCalendar({ date: '2026-12-05' });
+  await settle();
+  assert.match(day.$('usNoiV2Meet').innerHTML, /<span class="us-noi-v2-meet-k">Oggi vi vedete<\/span>/);
+  assert.match(day.$('usNoiV2Meet').innerHTML, /data-reaction="cuore"/, 'together, a heart');
 });
 
-test('«Prossimi» shows at most 30 dates, and a quiet line when nothing is coming', async () => {
-  const many = { appointments: Array.from({ length: 40 }, (_, i) => timed(`Corso ${i}`, 'me', 'personal', `2026-12-${String((i % 28) + 1).padStart(2, '0')}`, '18:00', '19:00')), events: [], profiles: PROFILES, startedOn: null };
-  const h = load({ now: '2026-11-24T10:00:00', month: () => NOVEMBER, range: () => many });
+test('special days: the characters dressed for it; the day of the year in US opens «Il vostro anno»', async () => {
+  const data = { appointments: [], events: [{ id: 'bd', title: 'Compleanno Sara', event_date: '1998-11-26', event_time: null, recurs_yearly: true }], profiles: PROFILES, startedOn: '2024-11-24', moments: [] };
+  const calls = [];
+  const h = load({ now: '2026-11-24T10:00:00', month: () => data, range: () => data, extra: { UsPersonaggi: DUO, UsYearRecap: { open: () => calls.push('year') } } });
   h.api.openCalendar({ date: '2026-11-24' });
   await settle();
-  h.tap('usNoiV2ModeList');
+  const year = h.$('usNoiV2Detail').innerHTML;
+  assert.match(year, /<div class="us-noi-v2-special" data-special="anno">/);
+  assert.match(year, /2 anni insieme: il vostro anno è pronto da sfogliare\./);
+  assert.match(year, /<button type="button" class="us-noi-v2-special-open" data-noi-year>Apri Il vostro anno<\/button>/);
+  h.click((sel) => (sel === '[data-noi-year]' ? {} : null));
+  assert.deepEqual(calls, ['year']);
+  h.api.openCalendar({ date: '2026-11-26' });
   await settle();
-  assert.equal((h.$('usNoiV2Content').innerHTML.match(/class="us-noi-v2-item"/g) || []).length, 30);
-
-  const none = load({ now: '2026-11-24T10:00:00', month: () => NOVEMBER, range: () => ({ appointments: [], events: [], profiles: PROFILES, startedOn: null }) });
-  none.api.openCalendar({ date: '2026-11-24' });
+  assert.match(h.$('usNoiV2Detail').innerHTML, /data-special="compleanno"[\s\S]*data-head="festa"/, 'a birthday: the party hat');
+  h.api.openCalendar({ date: '2026-11-25' });
   await settle();
-  none.tap('usNoiV2ModeList');
-  await settle();
-  assert.match(none.$('usNoiV2Content').innerHTML, /Niente in arrivo/);
+  assert.doesNotMatch(h.$('usNoiV2Detail').innerHTML, /us-noi-v2-special/, 'an ordinary day: no characters');
 });
 
-test('the page: «Mese» and «Prossimi», no tiles, no «Il nostro giorno», the board under the calendar with the Lavagna slot', () => {
+test('the page: no «Mese / Prossimi», «Vi rivedete tra» above the month, no tiles, the board under the calendar with the Lavagna slot', () => {
   const html = read('index.html');
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.match(bond, /id="usNoiV2ModeCalendar"[^>]*>Mese<\/button>/);
-  assert.match(bond, /id="usNoiV2ModeList"[^>]*>Prossimi<\/button>/);
+  assert.doesNotMatch(bond, /usNoiV2ModeCalendar|usNoiV2ModeList|>Prossimi</, 'Noi, Fase A: one calendar');
+  assert.match(bond, /<section class="us-noi-v2-meet" id="usNoiV2Meet" aria-label="Il prossimo incontro" hidden><\/section>/);
+  assert.ok(bond.indexOf('id="usNoiV2Meet"') < bond.indexOf('id="usNoiV2Month"'), 'above the month');
   assert.doesNotMatch(bond, /data-noi-open-link|us-noi-v2-links/, 'Lavagna, Missioni, Eventi and Note tiles are gone');
   assert.doesNotMatch(bond, /id="usNoiV2First"|Il nostro giorno/);
   const board = bond.match(/<section class="us-noi-board" id="usNoiBoard"[\s\S]*?<\/section>/)?.[0] || '';
