@@ -25,7 +25,14 @@
 /* The night keeps its wine; its glow on top is the open page's step (only <html>
    reads --us-tab, so changing page restyles nothing else, as in due-colori.css). */
 :root{--us-atmo:radial-gradient(110% 45% at 50% 0%,color-mix(in srgb,var(--us-tu) 24%,transparent),transparent 70%),linear-gradient(180deg,#3a1426 0%,#22101d 50%,#140c14 100%)}
-html{background:radial-gradient(110% 45% at 50% 0%,color-mix(in srgb,var(--us-tab) 24%,transparent),transparent 70%),linear-gradient(180deg,#3a1426 0%,#22101d 50%,#140c14 100%),var(--us-color-bg)!important;background-attachment:fixed!important}
+html[data-us-sfondo="notte"]{background:radial-gradient(110% 45% at 50% 0%,color-mix(in srgb,var(--us-tab) 24%,transparent),transparent 70%),linear-gradient(180deg,#3a1426 0%,#22101d 50%,#140c14 100%),var(--us-color-bg)!important;background-attachment:fixed!important}
+/* Sfondi della coppia (founder, 24/11/2026, tavola «US · icone e colori»):
+   Marea by default, the page slides from your colour to theirs through the open
+   page's step; «Due luci» and «Aurora» stay to compare on staging (?sfondo=luci,
+   ?sfondo=aurora; ?sfondo=notte is the night before; person-colors.js keeps it). */
+html{background:linear-gradient(165deg,color-mix(in srgb,var(--us-tu) 40%,transparent) 0%,color-mix(in srgb,var(--us-tab) 24%,transparent) 48%,color-mix(in srgb,var(--us-partner) 38%,transparent) 100%),#140c14!important;background-attachment:fixed!important}
+html[data-us-sfondo="luci"]{background:radial-gradient(85% 55% at 0% 0%,color-mix(in srgb,var(--us-tu) 34%,transparent),transparent 70%),radial-gradient(85% 55% at 100% 100%,color-mix(in srgb,var(--us-partner) 34%,transparent),transparent 70%),radial-gradient(50% 30% at 70% 45%,color-mix(in srgb,var(--us-tab) 12%,transparent),transparent 70%),#140c14!important;background-attachment:fixed!important}
+html[data-us-sfondo="aurora"]{background:radial-gradient(70% 40% at 15% 8%,color-mix(in srgb,var(--us-tu) 60%,transparent),transparent 72%),radial-gradient(60% 38% at 95% 30%,color-mix(in srgb,var(--us-tab) 42%,transparent),transparent 72%),radial-gradient(80% 45% at 30% 75%,color-mix(in srgb,var(--us-partner) 55%,transparent),transparent 72%),radial-gradient(60% 35% at 100% 100%,color-mix(in srgb,var(--us-tu) 34%,transparent),transparent 72%),#1a0f1a!important;background-attachment:fixed!important}
 
 /* ---------- The bottom bar: each tab in its step; the blob in the open one's ---------- */
 .us-nav-premium button[data-page="home"]{--us-nav-c:var(--us-pg-home)}
@@ -52,3 +59,9 @@ html{background:radial-gradient(110% 45% at 50% 0%,color-mix(in srgb,var(--us-ta
   --us-color-accent-line:color-mix(in srgb,var(--us-pg) 30%,transparent);
   --us-color-accent-strong:var(--us-pg);
 }
+
+/* Icone a due toni nella barra (24/11/2026): every tab shows its fill in the
+   other one's colour under the outline; the open one stronger. */
+.us-nav-premium button .us-nav-icon-on{display:block!important;z-index:0;color:color-mix(in srgb,var(--us-partner) 26%,transparent)!important}
+.us-nav-premium button .us-nav-icon-off{display:block!important;z-index:1}
+.us-nav-premium button.active .us-nav-icon-on{color:color-mix(in srgb,var(--us-partner) 55%,transparent)!important}

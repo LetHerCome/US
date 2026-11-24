@@ -2,9 +2,21 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign: icone a due toni e sfondo Marea (24/11)
+
+**Stato:** ramo `claude/redesign-icone-marea`, verso il ramo fisso di staging. Founder, 24/11, dalla tavola «US · icone e colori»: «Possiamo provare B e marea» (Marea ancora da confermare).
+
+**Cosa cambia:**
+- **Icone a due toni:** sotto il contorno di ogni icona c'è la sua versione piena ufficiale di Phosphor nel colore dell'altra persona, a metà. Le icone senza versione piena (croce, più, frecce) restano a una linea; sui tasti colorati il riempimento non c'è. Anche la barra in basso: il riempimento dell'altra persona sotto ogni icona, più forte su quella aperta.
+- **Sfondo Marea:** ogni pagina scivola dal tuo colore a quello dell'altra persona passando dal colore della pagina aperta (su Oggi resta la foto).
+- **Per confrontare sul sito di staging:** `?sfondo=luci` (Due luci), `?sfondo=aurora` (Aurora), `?sfondo=notte` (lo sfondo di prima), `?sfondo=marea` per tornare; il telefono ricorda la scelta. Prima della produzione resta solo quello scelto.
+- 27 icone piene nuove in `assets/icons/phosphor/` (file ufficiali Phosphor, licenza MIT), in cache.
+
+**Server:** niente.
+
 ### Redesign, fase 8: Ricordi a polaroid e la bacheca (24/11)
 
-**Stato:** ramo `claude/redesign-fase8-ricordi` (sopra le fasi 6 e 7), verso il ramo fisso di staging. Founder, 24/11: «Vai allora andiamo avanti». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D12; tavole «Ricordi», «Bacheca» e «Bacheca intera» approvate il 23/11.
+**Stato:** in staging dal 24/11 (PR #287, merge `19bddbbf`, sito `…-s19bddbbf`). Founder, 24/11: «Vai allora andiamo avanti». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D12; tavole «Ricordi», «Bacheca» e «Bacheca intera» approvate il 23/11.
 
 **Cosa cambia:**
 - **La Raccolta a polaroid:** due per riga, mese per mese, un po' storte, col nastro nel colore di chi ha messo la foto, la didascalia scritta sotto (in corsivo) e il giorno.
@@ -17,7 +29,7 @@
 
 ### Redesign, fase 7: l'intro con i personaggi (24/11)
 
-**Stato:** ramo `claude/redesign-fase7-intro` (sopra la fase 6), verso il ramo fisso di staging. Founder, 24/11: «Vai allora andiamo avanti». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D14; tavole dell'intro approvate il 23/11.
+**Stato:** in staging dal 24/11 (PR #287, merge `19bddbbf`). Founder, 24/11: «Vai allora andiamo avanti». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D14; tavole dell'intro approvate il 23/11.
 
 **Cosa cambia:**
 - **Il giro prima dell'accesso** sono tre scene con i due personaggi (un tondo rosa e un quadrato lilla): uno accanto all'altro con «Un posto solo per voi due», un Ti penso che vola dall'uno all'altro (occhi a cuore), la festa dentro l'anello della Sintonia.
@@ -29,7 +41,7 @@
 
 ### Redesign, fase 6: Gioca con i gettoni (24/11)
 
-**Stato:** ramo `claude/redesign-fase6-gioca`, verso il ramo fisso di staging. Founder, 24/11: «Vai allora andiamo avanti» (le fasi 6–8, poi un controllo insieme). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D10 e D11; tavole «Gioca» e «Gioca, gettoni finiti» approvate il 23/11.
+**Stato:** in staging dal 24/11 (PR #287, merge `19bddbbf`). Founder, 24/11: «Vai allora andiamo avanti» (le fasi 6–8, poi un controllo insieme). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D10 e D11; tavole «Gioca» e «Gioca, gettoni finiti» approvate il 23/11.
 
 **Cosa cambia:**
 - **Tre gettoni grandi in cima a Gioca** al posto del contatore con i tre pallini: «Ancora 2 su 3 oggi · Ogni partita nuova usa un gettone». Il numero resta quello del server.

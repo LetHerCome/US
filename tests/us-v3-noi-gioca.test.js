@@ -37,10 +37,15 @@ test('Icons: every data-us-icon used by the shell is mapped to an official Phosp
   }
   assert.ok(used.size > 15);
   for (const name of used) {
-    const rule = css.match(new RegExp(`\\.us-icon\\[data-us-icon="${name}"\\]\\{--us-icon-src:url\\("(\\/assets\\/icons\\/phosphor\\/[a-z-]+\\.svg)"\\)\\}`));
+    const rule = css.match(new RegExp(`\\.us-icon\\[data-us-icon="${name}"\\]\\{--us-icon-src:url\\("(\\/assets\\/icons\\/phosphor\\/[a-z-]+\\.svg)"\\)(?:;--us-icon-fill:url\\("(\\/assets\\/icons\\/phosphor\\/[a-z-]+-fill\\.svg)"\\);--us-icon-tint-alpha:\\.5)?\\}`));
     assert.ok(rule, `${name} has a mapping`);
     assert.ok(fs.existsSync(path.join(ROOT, rule[1].slice(1))), `${rule[1]} exists`);
     assert.ok(worker.includes(`"${rule[1]}"`), `${rule[1]} is precached for offline/native`);
+    // Icone a due toni (24/11/2026): the fill under the outline is the official Phosphor file too, precached.
+    if (rule[2]) {
+      assert.ok(fs.existsSync(path.join(ROOT, rule[2].slice(1))), `${rule[2]} exists`);
+      assert.ok(worker.includes(`"${rule[2]}"`), `${rule[2]} is precached`);
+    }
   }
   for (const file of ['list-bullets', 'chalkboard-simple', 'palette']) {
     const svg = read(`assets/icons/phosphor/${file}-regular.svg`);
