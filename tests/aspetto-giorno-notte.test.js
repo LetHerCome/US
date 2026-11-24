@@ -88,7 +88,8 @@ test('Giorno is the Quaderno: carta, foglio, inchiostro, ceralacca; the couple d
   assert.doesNotMatch(css.replace(/\/\*[\s\S]*?\*\//g, ''), /(^|\})\s*:root\{/, 'nothing outside Giorno, except the shared Aspetto control');
   // The photo of Oggi stays a photo; the first steps keep their night.
   assert.match(css, /#home #homeHero,:root\[data-us-luce="giorno"\] \.app>\.top\.us-premium-top\{--us-latte:#f7efe9/);
-  assert.match(css, /:root\[data-us-luce="giorno"\] :is\(\.auth-overlay,\.us-setup,\.us-tour,#usOnboarding,\.us-app-lock,#mc3Waiting\)\{/);
+  // The photo viewers and the camera stay dark, as a phone's gallery.
+  assert.match(css, /:root\[data-us-luce="giorno"\] :is\(\.auth-overlay,\.us-setup,\.us-tour,#usOnboarding,\.us-app-lock,#mc3Waiting,#usAlbumOverlay,#momentViewer,#leftForYouCameraOverlay,#usStoryViewer,\.us-story-viewer\)\{/);
   // Actions painted in my colour become ceralacca in Giorno.
   assert.match(css, /:root\[data-us-luce="giorno"\] \.primary\{background:var\(--us-ceralacca\)!important;color:var\(--us-foglio\)!important\}/);
 });

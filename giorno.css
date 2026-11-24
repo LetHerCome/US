@@ -38,7 +38,7 @@
   --us-atmo:linear-gradient(#f3ece1,#f3ece1);
   --us-color-text:#231b1d;
   --us-color-text-2:#6b5f5a;
-  --us-color-text-3:#72655f;
+  --us-color-text-3:#665a54;
   --us-color-accent-ink:#b8452f;
   --us-color-accent-soft:rgba(184,69,47,.10);
   --us-color-accent-line:rgba(184,69,47,.30);
@@ -64,8 +64,9 @@
 /* ---------- The first steps stay night (for now) ----------
    Sign-in, setup, the tour with the characters, the waiting room and the
    fingerprint lock have their own approved night drawing: under Giorno
-   they keep the night's tokens until they get a day pass of their own. */
-:root[data-us-luce="giorno"] :is(.auth-overlay,.us-setup,.us-tour,#usOnboarding,.us-app-lock,#mc3Waiting){
+   they keep the night's tokens until they get a day pass of their own.
+   The photo viewers and the camera stay dark too, as a phone's gallery. */
+:root[data-us-luce="giorno"] :is(.auth-overlay,.us-setup,.us-tour,#usOnboarding,.us-app-lock,#mc3Waiting,#usAlbumOverlay,#momentViewer,#leftForYouCameraOverlay,#usStoryViewer,.us-story-viewer){
   color-scheme:dark;
   --us-latte:#f7efe9;--us-inchiostro:#1a1020;
   --us-rosa:#ff7c96!important;--us-lilla:#a98bff!important;
@@ -113,7 +114,12 @@
 :root[data-us-luce="giorno"] .us-cal-sheet .us-cal-allday-field input::after,:root[data-us-luce="giorno"] #usEventForm .us-event-repeat input::after{background:#fff!important;box-shadow:0 1px 3px rgba(35,27,29,.3)}
 
 /* ---------- Small words: the third grey and the ambra, darker on paper ---------- */
-:root[data-us-luce="giorno"]{--us-color-text-3:#72655f;--us-ambra:#7a4f12}
+:root[data-us-luce="giorno"]{--us-color-text-3:#665a54;--us-ambra:#7a4f12}
+/* Sheet kickers (the small word above a sheet's title) speak with the ceralacca. */
+:root[data-us-luce="giorno"] :is(#leftForYouOverlay,#leftForYouComposerOverlay,#usSettingsOverlay,#usWidgetHub,#usCalendarDetailSheet,.us-notes-overlay,#usNoiLavagna,.noi-sheet,#usCountdownSheet,#today,#usEventsOverlay,#usCalendarOverlay,#usCalendarFormSheet,#conservatiOverlay,.us-moment-compose-overlay,#ricordiChapterOverlay){--us-sheet-k:#b8452f!important}
+:root[data-us-luce="giorno"]{--us-verde:#2a6b46}
+/* Placeholders in fields: the third grey of the page, never a light one. */
+:root[data-us-luce="giorno"] :is(input,textarea)::placeholder{color:#857771!important;opacity:1}
 
 /* ---------- Generated from the stylesheets (scripts: scratchpad giorno/regole.js) ---------- */
 /* Actions painted in my colour: in Giorno they are ceralacca, with paper ink (5:1). */
@@ -179,6 +185,9 @@
 :root[data-us-luce="giorno"] .us-lav-who [data-who="tu"] i{color:#231b1d!important}
 :root[data-us-luce="giorno"] #settings .us-profile-color i{color:#231b1d!important}
 /* Words in a couple colour: the pastel would not read on paper, so a darker ink of it. */
+:root[data-us-luce="giorno"] .us-auth-context span[aria-hidden="true"]{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-cal-detail-delete{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-cal-tempo-heart{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] #quiz #quizHub .us-gv2-pervoi-copy small.us-gv2-pervoi-note{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] .us-cal-sheet .us-cal-sheet-kicker{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] #home #usDailyRitual .us-daily-ritual-kicker{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
@@ -194,4 +203,30 @@
 :root[data-us-luce="giorno"] .auth-overlay .auth-card h2 em,:root[data-us-luce="giorno"] .us-setup h2 em{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] #leftForYouOverlay #leftForYouKind{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] .us-plus-soon-list .us-icon{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-event-datebox small{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-event-add span{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-event-delete{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-event-heart-date b{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .noi-ev-icon{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .noi-ev-when small{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .noi-ev-row.is-lived>.us-icon{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .noi-ev-row.is-system .noi-ev-when b{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-gv2-row-state[data-tone="turn"],:root[data-us-luce="giorno"] .us-gv2-row-state[data-tone="ready"]{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #quiz .us-gv5-reveal-group[data-gv5-group="same"] .us-gv5-reveal-group-head strong{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .heart{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-noi-v2-shortcuts .us-icon{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-noi-v2-notice button,:root[data-us-luce="giorno"] .us-noi-v2-text-action{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-noi-v2-item-icon{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-noi-v2-item-icon[data-type="calendar"]{color:color-mix(in srgb,var(--us-color-violet) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-noi-v2-list-date em{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-noi-v2-empty-month>.us-icon{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-look-chip.is-current{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-look-apply.is-current{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-setting-danger .us-setting-main b{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-setting-state.bad{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-settings-copy p.warn{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-setting-choice button b{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-settings2-device-dot.bad{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-settings2-disconnect{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-account-delete-status{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] .us-confirm-list li::marker{color:color-mix(in srgb,var(--us-rosa) 45%,#231b1d)!important}
