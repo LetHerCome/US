@@ -533,7 +533,7 @@ html .auth-overlay .us-tour-actions .us-auth-primary{margin:0}
 html .auth-overlay .us-tour-actions .us-auth-link{justify-self:center;margin:-2px 0}
 /* Redesign definitivo, fase 7 (D14): the characters stand where the circles were. */
 .us-tour-char{position:absolute;display:block;transform:translate(-50%,-50%);line-height:0;pointer-events:none}
-.us-tour-char .us-char{display:block;overflow:visible;filter:drop-shadow(1.5px 0 0 #f7efe9) drop-shadow(-1.5px 0 0 #f7efe9) drop-shadow(0 1.5px 0 #f7efe9) drop-shadow(0 -1.5px 0 #f7efe9)}
+.us-tour-char .us-char{display:block;overflow:visible}
 .t1-h{fill:var(--us-rosa)}
 .t1-h,.t1-w,.t2-l{transform-box:fill-box;transform-origin:center}
 .t1-w{fill:none;stroke:var(--us-noi);stroke-width:2;opacity:0}
@@ -1106,7 +1106,6 @@ html.us-app-lock-leaving .us-app-lock{background:var(--us-color-bg)}
 .us-ob-venn .ov-duo{position:relative;display:flex;align-items:flex-end;justify-content:center;gap:16px;min-height:92px;padding-top:14px}
 .us-ob-venn .ov-char{display:block;line-height:0}
 .us-ob-venn .ov-char svg{width:92px;height:85px;overflow:visible}
-.us-ob-venn .ov-char:not(.ov-wait) .us-char{filter:drop-shadow(1.5px 0 0 #f7efe9) drop-shadow(-1.5px 0 0 #f7efe9) drop-shadow(0 1.5px 0 #f7efe9) drop-shadow(0 -1.5px 0 #f7efe9)}
 .us-ob-venn .ov-duo .ov-n{position:absolute;left:50%;top:0;width:18px;height:16px;margin-left:-9px;background:var(--us-noi);-webkit-mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat}
 .us-ob-venn .ov-duo .ov-halo{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-70px 0 0 -75px;border-radius:50%;border:2px solid var(--us-noi);opacity:0;pointer-events:none}
 .us-ob-shapes{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:2px 0 4px}

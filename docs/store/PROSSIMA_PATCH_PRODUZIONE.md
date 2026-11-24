@@ -2,9 +2,21 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign: uno stile solo (24/11)
+
+**Stato:** ramo `claude/redesign-stile-unico`, verso il ramo fisso di staging. Founder, 24/11, dalla tavola «Una mano sola» (fogli «Gioca · com'è adesso», «Gioca · una mano sola», «Le regole di disegno»): «Concordo».
+
+**Cosa cambia:**
+- **Personaggi:** contorno sottile nel colore scuro della loro forma, mai nero, e niente più alone chiaro intorno (Oggi, angolo, Profilo, Gioca, intro). Le guance prendono lo stesso tono.
+- **Icone dei giochi ridisegnate:** sono i due personaggi che giocano (Per voi, Scopritevi con la lente, Confrontatevi coi due fumetti, Ridete, Quanto mi conosci, Rivivete con la polaroid, Questo o quello con le due carte), solo nei vostri due colori più il chiaro della carta; esce l'ambra.
+- **Via «Pronto»:** una casella pronta non ha etichetta; restano «Giocato» e «Domani».
+- **Da decidere:** i temi e gli effetti di Oggi e i countdown oro e cromo hanno colori loro (ricolorarli coi vostri due, o tenerne pochi).
+
+**Server:** niente.
+
 ### Redesign: icone a due toni e sfondo nero caldo (24/11)
 
-**Stato:** icone e Marea in staging dal 24/11 (PR #288, merge `64660439`); il nero caldo sul ramo `claude/redesign-nero-caldo`. Founder, 24/11, dalla tavola «US · icone e colori»: «Possiamo provare B e marea», poi, provati Marea, Due luci e Aurora: «Nero caldo».
+**Stato:** icone in staging dal 24/11 (PR #288, merge `64660439`), nero caldo dal 24/11 (PR #289, merge `ed27d331`). Founder, 24/11, dalla tavola «US · icone e colori»: «Possiamo provare B e marea», poi, provati Marea, Due luci e Aurora: «Nero caldo».
 
 **Cosa cambia:**
 - **Icone a due toni:** sotto il contorno di ogni icona c'è la sua versione piena ufficiale di Phosphor nel colore dell'altra persona, a metà. Le icone senza versione piena (croce, più, frecce) restano a una linea; sui tasti colorati il riempimento non c'è. Anche la barra in basso: il riempimento dell'altra persona sotto ogni icona, più forte su quella aperta.

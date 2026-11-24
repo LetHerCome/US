@@ -691,7 +691,7 @@ body.us-gv2-sheet-open{overflow:hidden}
 #quiz #quizHub .us-gv2-aspetta:active{transform:scale(.98)}
 #quiz #quizHub .us-gv2-aspetta:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px}
 #quiz #quizHub .us-gv2-aspetta-face{flex:0 0 50px;display:grid;place-items:center}
-#quiz #quizHub .us-gv2-aspetta-face .us-char{display:block;width:50px;height:auto;overflow:visible;filter:drop-shadow(1.5px 0 0 #f7efe9) drop-shadow(-1.5px 0 0 #f7efe9) drop-shadow(0 1.5px 0 #f7efe9) drop-shadow(0 -1.5px 0 #f7efe9)}
+#quiz #quizHub .us-gv2-aspetta-face .us-char{display:block;width:50px;height:auto;overflow:visible}
 #quiz #quizHub .us-gv2-aspetta-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 #quiz #quizHub .us-gv2-aspetta-copy b{font-size:15px;font-weight:700}
 #quiz #quizHub .us-gv2-aspetta-copy small{font-size:13px;line-height:1.35;color:var(--us-color-text-2)}
@@ -715,3 +715,19 @@ body.us-gv2-sheet-open{overflow:hidden}
 #quiz #quizHub .us-gv2-token:not(.is-on) .us-gv2-icon{display:none}
 .us-gv2-token .us-gv2-icon{width:20px;height:20px}
 #quiz #quizHub .us-gv2-stato .us-gv2-icon{width:11px;height:11px}
+
+/* ===== Stile unico (founder, 24/11/2026, tavola «Una mano sola») =====
+   The games' marks: the two of you playing, in your two colours and the
+   paper, with the characters' thin outline in the dark of each colour. */
+.us-gv2-art .f-tu{fill:var(--us-tu)}
+.us-gv2-art .s-tu{stroke:color-mix(in srgb,var(--us-tu) 42%,#1a1020)}
+.us-gv2-art .f-pa{fill:var(--us-partner)}
+.us-gv2-art .s-pa{stroke:color-mix(in srgb,var(--us-partner) 42%,#1a1020)}
+.us-gv2-art .f-ink{fill:#1a1020}
+.us-gv2-art .s-ink{stroke:#1a1020}
+.us-gv2-art .f-carta{fill:#f7efe9}
+.us-gv2-art .s-carta{stroke:#8a7d78}
+.us-gv2-art .f-bocca{fill:#7a2e3a}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip] .us-gv2-glyph,#quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip] .us-gv2-art{width:40px;height:40px}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game.is-swipe[data-gv2-chip]{flex-direction:row;align-items:center;justify-content:flex-start;gap:14px;min-height:88px}
+#quiz #quizHub .us-gv2-game-grid .us-gv2-game.is-swipe[data-gv2-chip] .us-gv2-game-top{flex:none}
