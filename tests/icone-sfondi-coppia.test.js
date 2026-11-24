@@ -1,12 +1,10 @@
-// Founder, 24/11/2026 (tavola «US · icone e colori»): «B e Marea». The icons are
-// two-tone, the outline in the icon's colour over the official Phosphor fill in
-// the other one's colour; the backgrounds slide from your colour to theirs.
-// Due luci and Aurora stay to compare on staging (?sfondo=…).
+// Founder, 24/11/2026 (tavola «US · icone e colori»): icons B, two-tone, the
+// outline in the icon's colour over the official Phosphor fill in the other
+// one's colour. No coloured background in the end: a warm black.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -25,21 +23,9 @@ test('icons: the outline on top, the official fill under it in the other one\'s 
   assert.match(nav, /\.us-nav-premium button\.active \.us-nav-icon-on\{color:color-mix\(in srgb,var\(--us-partner\) 55%,transparent\)!important\}/);
 });
 
-test('backgrounds: Marea by default, Due luci, Aurora and the night before on request', () => {
+test('the background: a warm black, no colour behind; no switch left (founder 24/11: «Nero caldo»)', () => {
   const css = read('colori.css');
-  assert.match(css, /html\{background:linear-gradient\(165deg,color-mix\(in srgb,var\(--us-tu\) 40%,transparent\) 0%,color-mix\(in srgb,var\(--us-tab\) 24%,transparent\) 48%,color-mix\(in srgb,var\(--us-partner\) 38%,transparent\) 100%\),#140c14!important;/);
-  for (const v of ['luci', 'aurora', 'notte']) assert.match(css, new RegExp(`html\\[data-us-sfondo="${v}"\\]\\{background:`), v);
-  const run = (search, stored = null) => {
-    const store = stored ? { 'us:sfondo:v1': stored } : {};
-    const html = { dataset: {} };
-    const window = { document: { documentElement: html }, location: { search }, localStorage: { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = v; } } };
-    const src = read('person-colors.js');
-    vm.runInNewContext(src.slice(0, src.indexOf('(function (root, factory)')), { window, URLSearchParams });
-    return { attr: html.dataset.usSfondo, store };
-  };
-  assert.equal(run('').attr, undefined, 'Marea needs no attribute');
-  assert.deepEqual(run('?sfondo=luci'), { attr: 'luci', store: { 'us:sfondo:v1': 'luci' } });
-  assert.equal(run('', 'aurora').attr, 'aurora', 'this phone keeps the choice');
-  assert.equal(run('?sfondo=marea', 'aurora').attr, undefined, 'back to Marea');
-  assert.equal(run('?sfondo=<x>').attr, undefined);
+  assert.match(css, /html{background:#120d11!important;background-attachment:fixed!important}/);
+  assert.doesNotMatch(css, /data-us-sfondo/);
+  assert.doesNotMatch(read('person-colors.js'), /sfondo/);
 });

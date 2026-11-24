@@ -2,14 +2,13 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
-### Redesign: icone a due toni e sfondo Marea (24/11)
+### Redesign: icone a due toni e sfondo nero caldo (24/11)
 
-**Stato:** ramo `claude/redesign-icone-marea`, verso il ramo fisso di staging. Founder, 24/11, dalla tavola «US · icone e colori»: «Possiamo provare B e marea» (Marea ancora da confermare).
+**Stato:** icone e Marea in staging dal 24/11 (PR #288, merge `64660439`); il nero caldo sul ramo `claude/redesign-nero-caldo`. Founder, 24/11, dalla tavola «US · icone e colori»: «Possiamo provare B e marea», poi, provati Marea, Due luci e Aurora: «Nero caldo».
 
 **Cosa cambia:**
 - **Icone a due toni:** sotto il contorno di ogni icona c'è la sua versione piena ufficiale di Phosphor nel colore dell'altra persona, a metà. Le icone senza versione piena (croce, più, frecce) restano a una linea; sui tasti colorati il riempimento non c'è. Anche la barra in basso: il riempimento dell'altra persona sotto ogni icona, più forte su quella aperta.
-- **Sfondo Marea:** ogni pagina scivola dal tuo colore a quello dell'altra persona passando dal colore della pagina aperta (su Oggi resta la foto).
-- **Per confrontare sul sito di staging:** `?sfondo=luci` (Due luci), `?sfondo=aurora` (Aurora), `?sfondo=notte` (lo sfondo di prima), `?sfondo=marea` per tornare; il telefono ricorda la scelta. Prima della produzione resta solo quello scelto.
+- **Sfondo nero caldo:** nessuno sfondo colorato e niente più luce colorata in alto: un nero appena caldo (`#120d11`) su tutte le pagine; il colore della coppia sta nelle cose (personaggi, icone, nastri, gettoni). Marea e le varianti per confrontarle (`?sfondo=…`) sono state tolte.
 - 27 icone piene nuove in `assets/icons/phosphor/` (file ufficiali Phosphor, licenza MIT), in cache.
 
 **Server:** niente.
