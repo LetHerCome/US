@@ -1,9 +1,13 @@
 /* Due colori, un Noi — shell motion, the approved mockup's "marea" (core.js go()).
    A tap on the bottom bar: the tab is marked at once (the indicator slides
    with the spring, the icon gives one small bounce),
-   the tab colour covers the screen from the tapped button (260 ms), the page
-   changes under the colour, then the new page opens from the same point
-   (340 ms) while its blocks rise in, 50 ms apart. The colour sits under the
+   the tab colour grows from the tapped button and covers the screen
+   (~330 ms visible), the page changes under it, then the colour dissolves
+   (360 ms) while the new page's blocks rise in, 50 ms apart. Fluidità 2
+   (founder, 24/11/2026, «veloci ma non fluide»): every moving part is
+   transform and opacity, so it runs on the compositor and a busy phone
+   cannot stop it halfway (the old clip-path circle and hole were repainted
+   on the main thread at every frame). The colour sits under the
    bottom bar, as in the mockup. Only taps on the bottom bar
    flood: swipes, back and in-page links keep the instant switch. A second
    tab tap while the colour moves is ignored (mockup: busy). Reduced motion:
@@ -17,17 +21,20 @@ window.__usDueColoriInstalled = true;
 const doc = document;
 const root = doc.documentElement;
 const original = window.go;
-// Copied from the mockup (core.js): E.io, E.out, durations in ms. The tide
-// itself is quicker than the mockup (founder, 22/10, Fluidità 1): the new
-// page shows after ~280 ms instead of ~490 ms, same shape and easing.
-const COVER_MS = 260;
-const REVEAL_MS = 340;
-const STAGGER_DELAY = 160;
+// Durations in ms. Fluidità 2 (founder, 24/11/2026): «un po' troppo veloci»
+// at 300 ms, the colour flashed on in two frames. Now it is seen growing
+// from the tab and slows as it arrives. Its edge is soft (founder: «eliminare
+// il bordo netto e fare sì che prendesse piano piano la pagina»): the colour
+// takes the page little by little; the whole change takes ~1 s.
+const COVER_MS = 600;
+const REVEAL_MS = 360;
+const GROW = 'cubic-bezier(.4,.05,.45,1)';
+const GLIDE = 'cubic-bezier(.45,0,.15,1)';
+const STAGGER_DELAY = 60;
 const STAGGER_STEP = 50;
 const STAGGER_MS = 460;
 const FADE_MS = 180;
 const BOUNCE_MS = 480;
-const IO = 'cubic-bezier(.7,0,.2,1)';
 const OUT = 'cubic-bezier(.2,.8,.2,1)';
 
 function reducedMotion() {
@@ -47,24 +54,54 @@ let job = null;
 // a sub-page starts to slide): work done now costs no frame of the motion.
 let switching = false;
 
+let disc = null;
 function floodLayer() {
   if (!layer) {
     layer = doc.createElement('div');
     layer.className = 'us-flood';
     layer.hidden = true;
     layer.setAttribute('aria-hidden', 'true');
+    disc = doc.createElement('i');
+    disc.className = 'us-flood-disc';
+    layer.appendChild(disc);
     doc.body.appendChild(layer);
   }
   return layer;
+}
+// The disc is solid to 52 % of its radius, then fades out (due-colori.css).
+// Its solid core reaches past the farthest corner from the tap (x2 the
+// distance, centred on it): the screen is all colour before the disc stops
+// growing, so the page changes then, and the change's long frame passes
+// while the disc still grows off screen (on the compositor, unseen).
+const OVERSIZE = 2;
+const COVERED = 0.93; // the farthest corner is 97 % colour by then (the core reaches it at .962): the change is unseen
+function placeDisc(at) {
+  const r = Math.ceil(at.radius * OVERSIZE);
+  const d = r * 2;
+  disc.style.left = `${at.x - r}px`;
+  disc.style.top = `${at.y - r}px`;
+  disc.style.width = `${d}px`;
+  disc.style.height = `${d}px`;
+}
+
+// Resolves once the growing disc covers the whole screen (or stops growing).
+function covered(animation) {
+  return new Promise((resolve) => {
+    const check = () => {
+      if (animation.playState !== 'running' || animation.playbackRate < 0) { resolve(); return; }
+      const p = animation.effect?.getComputedTiming?.().progress;
+      if (p == null || p >= COVERED) resolve(); else requestAnimationFrame(check);
+    };
+    requestAnimationFrame(check);
+  });
 }
 
 function clear() {
   entering?.classList.remove('us-marea-in');
   entering = null;
   if (!layer) return;
-  layer.getAnimations().forEach((animation) => animation.cancel());
+  layer.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
   layer.hidden = true;
-  layer.style.removeProperty('clip-path');
 }
 
 // A programmatic go() that arrives while the colour is moving lands at once.
@@ -106,21 +143,6 @@ function drainAfter() {
   afterQueue.splice(0).forEach((fn) => { try { fn(); } catch (error) { console.warn('[US Due colori] after motion', error); } });
 }
 
-const circle = (r, x, y) => `circle(${r}px at ${x}px ${y}px)`;
-// The new page opening from the tap point = a growing hole in the colour.
-// path() with evenodd keeps the hole a true circle and lets the browser
-// interpolate the radius with the mockup's easing (no stepped mask).
-function hole(r, x, y, w, h) {
-  const R = Math.max(0, r);
-  return `path(evenodd, "M0 0H${w}V${h}H0Z M${x - R} ${y}a${R} ${R} 0 1 0 ${2 * R} 0a${R} ${R} 0 1 0 ${-2 * R} 0Z")`;
-}
-let holeSupport = null;
-function canHole() {
-  if (holeSupport === null) {
-    try { holeSupport = Boolean(window.CSS?.supports?.('clip-path', 'path(evenodd, "M0 0H1V1H0Z")')); } catch (_) { holeSupport = false; }
-  }
-  return holeSupport;
-}
 
 // The tab is marked at once, before the colour moves (mockup markTab/placeBlob).
 function markNav(button) {
@@ -191,14 +213,16 @@ async function flood(button, self, id, options) {
   markNav(button);
   bounce(button);
   el.style.setProperty('--us-flood', color);
+  placeDisc(at);
   el.hidden = false;
   const current = { ticket, id, from, at, button, back: false, cover: null };
   job = current;
   pending = { self, args: [id, { ...options, motionCommit: true }] };
   try {
-    current.cover = el.animate([{ clipPath: circle(0, at.x, at.y) }, { clipPath: circle(at.radius, at.x, at.y) }],
-      { duration: COVER_MS, easing: IO, fill: 'forwards' });
-    await current.cover.finished;
+    current.cover = disc.animate([{ transform: 'scale(0.001)' }, { transform: 'scale(1)' }],
+      { duration: COVER_MS, easing: GROW, fill: 'forwards' });
+    await covered(current.cover);
+    if (current.back) await current.cover.finished;
   } catch (_) { /* cancelled by a programmatic go() */ }
   if (ticket !== run) return;
   if (current.back) { // the tab it left was tapped again: the colour went back
@@ -209,23 +233,17 @@ async function flood(button, self, id, options) {
     return;
   }
   // The screen is all colour now: the page changes under it (its own fade
-  // is off, the mockup's view opens fully opaque), then opens from the tap
-  // (from the last tab tapped, if another came while the colour rose).
-  // The reveal starts on the frame after the change, so the change's style
-  // and layout never eat into it.
+  // is off, the mockup's view opens fully opaque), then the colour
+  // dissolves. The fade starts on the frame after the change, so the
+  // change's style and layout never eat into it.
   const to = current.id;
-  const { x, y, w, h, radius } = current.at;
   entering = doc.getElementById(to);
   entering?.classList.add('us-marea-in');
   flushPending();
   stagger(doc.getElementById(to), STAGGER_DELAY);
+  // The disc may still be growing off screen: it goes on while it dissolves.
   try {
-    if (canHole()) {
-      await el.animate([{ clipPath: hole(0, x, y, w, h) }, { clipPath: hole(radius, x, y, w, h) }],
-        { duration: REVEAL_MS, easing: IO, fill: 'forwards' }).finished;
-    } else {
-      await el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: REVEAL_MS, easing: IO, fill: 'forwards' }).finished;
-    }
+    await el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: REVEAL_MS, easing: OUT, fill: 'forwards' }).finished;
   } catch (_) { /* cancelled */ }
   if (ticket === run) { job = null; clear(); busy = false; drainAfter(); }
 }
@@ -248,7 +266,6 @@ function retarget(button, self, id, options) {
       try { current.cover?.reverse(); } catch (_) { current.cover?.cancel(); }
       return true;
     }
-    const before = getComputedStyle(el).backgroundColor;
     current.id = id;
     current.button = button;
     current.at = origin(button);
@@ -257,7 +274,6 @@ function retarget(button, self, id, options) {
     markNav(button);
     bounce(button);
     el.style.setProperty('--us-flood', tabColor(button));
-    el.animate?.([{ backgroundColor: before }, { backgroundColor: getComputedStyle(el).backgroundColor }], { duration: 160, easing: OUT });
     return true;
   }
   if (id === current.id) return true;
@@ -323,7 +339,7 @@ async function slide(kind, self, id, options) {
   const W = Math.round(sb.w);
   const back = Math.round(sb.w * -0.24);
   const T = push ? PUSH_MS : POP_MS;
-  const timing = { duration: T, easing: IO, fill: 'forwards' };
+  const timing = { duration: T, easing: GLIDE, fill: 'forwards' };
   const over = push ? live : ghost;
   const under = push ? ghost : live;
   // Its Atmosfera panel lines up with the screen's (due-colori.css).

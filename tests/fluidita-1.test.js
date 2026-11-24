@@ -52,10 +52,21 @@ test('the interface says «voi due», never «entrambi»', () => {
   }
 });
 
-test('tab change: the Due colori tide is quicker (founder, 22/10), same shape and easing', () => {
+// Fluidità 2 (founder, 24/11/2026: «veloci ma non fluide»): still quick, but
+// on the compositor (transform and opacity), with a softer curve; the page
+// changes as soon as the colour covers the screen.
+test('tab change: the tide is quick and runs on the compositor', () => {
   const js = read('due-colori.js');
-  assert.match(js, /const COVER_MS = 260;/);
-  assert.match(js, /const REVEAL_MS = 340;/);
-  assert.match(js, /const IO = 'cubic-bezier\(\.7,0,\.2,1\)';/, 'same easing as the mockup');
+  assert.match(js, /const COVER_MS = 600;/);
+  assert.match(js, /const REVEAL_MS = 360;/);
+  assert.match(js, /const GROW = 'cubic-bezier\(\.4,\.05,\.45,1\)';/);
+  // No sharp edge (founder, 24/11/2026): the colour takes the page little by little.
+  assert.match(read('due-colori.css'), /\.us-flood-disc\{[^}]*background:radial-gradient\(circle closest-side,var\(--c\) 52%,[^}]*transparent 100%\)/);
   assert.match(js, /const FADE_MS = 180;/, 'reduced motion keeps its short fade');
+  assert.match(js, /disc\.animate\(\[\{ transform: 'scale\(0\.001\)' \}, \{ transform: 'scale\(1\)' \}\]/, 'the colour grows with transform');
+  assert.match(js, /await covered\(current\.cover\);/, 'the page changes once the screen is covered');
+  assert.match(js, /el\.animate\(\[\{ opacity: 1 \}, \{ opacity: 0 \}\]/, 'the colour dissolves with opacity');
+  assert.doesNotMatch(js, /clipPath/, 'no clip-path repainted at every frame');
+  assert.match(read('due-colori.css'), /\.us-flood-disc\{[^}]*border-radius:50%[^}]*will-change:transform\}/);
+  assert.match(read('ui-foundation.js'), /const later = environment\.UsDueColori\?\.afterMotion;/, 'the sound engine is never built mid-motion');
 });
