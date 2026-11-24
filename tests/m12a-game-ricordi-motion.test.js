@@ -235,14 +235,14 @@ test('ricordi: reduced motion disables the settle and the light catch', () => {
   assert.match(css, /:root\[data-us-motion="reduced"\] #moments \.moment-card\.ricordi-new/);
 });
 
-test('ti penso: one soft pulse, the shared attention state and the attention tone — no loop', () => {
+test('ti penso: the short notice, the shared attention state and the attention tone — no loop', () => {
   const app = read('app.js');
   const at = app.indexOf('function handleIncomingThink');
   const body = app.slice(at, app.indexOf('const usRealtimeRefreshTimers', at));
   assert.match(body, /window\.UsFeedback\?\.attention\?\.\(\)/);
   assert.match(body, /window\.UsUiFoundation\?\.auroraPulse\?\.\(\)/);
-  assert.match(body, /playOnce\?\.\(card,'us-attention-pulse',900\)/);
-  assert.match(body, /\[data-us-arrival-type="think-received"\]/);
+  // Redesign D9: no card to pulse; the notice once (noticeIncomingThink).
+  assert.match(body, /noticeIncomingThink\(row\);/);
   const css = read('ui-foundation.css');
   assert.match(css, /\.us-attention-pulse::before\{[^}]*animation:us-attention-pulse 900ms [^}]* 1 both\}/);
   assert.doesNotMatch(css.slice(css.indexOf('.us-attention-pulse::before')).split('\n')[0], /infinite/);

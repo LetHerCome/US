@@ -33,11 +33,11 @@ test('shell: Events no longer owns the global centre slot but stays reachable', 
   assert.doesNotMatch(identityCss, /us-events-top/);
   // Contextual homes: the dates of the Noi calendar (Noi nuova, 03/11/2026: no
   // Eventi tile; an event opens its editor, a mesiversario opens Eventi) and
-  // the Oggi event priority card.
+  // the og-next pill on Oggi (the event priority card left with the redesign, D9).
   assert.doesNotMatch(html, /data-noi-open-link/);
   assert.match(read('noi-v2.js'), /if\(kind==='anniversary'&&item\.dataset\.months!=='0'\)\{window\.openNoiSection\?\.\('eventi'\);return;\}/);
   assert.doesNotMatch(html, /id="usCalendarEventsLink"/);
-  assert.match(read('app.js'), /if\(action==='events'\)window\.openEvents\?\.\(\)/);
+  assert.match(read('app.js'), /if\(data\.usNextKind==='event'&&data\.usEventId&&typeof window\.openEventEditor==='function'\)/);
 });
 
 test('shell: the canonical PWA/launcher mark is used as-is (display cropping only)', () => {

@@ -58,7 +58,7 @@ test('names are escaped; no written text ever reaches the cards', () => {
   assert.match(html, /translate="no"/, 'names are never translated');
 });
 
-test('shell: loaded, precached, built, back-closable, reset; Oggi and Noi open it', () => {
+test('shell: loaded, precached, built, back-closable, reset; Noi opens it', () => {
   const html = read('index.html');
   assert.match(html, /<script defer src="\/year-recap\.js\?v=[^"]+"/);
   assert.match(html, /<link rel="stylesheet" href="\/year-recap\.css\?v=[^"]+"/);
@@ -72,9 +72,10 @@ test('shell: loaded, precached, built, back-closable, reset; Oggi and Noi open i
   assert.match(read('navigation.js'), /name:'year-recap'[\s\S]{0,200}usRecapSheet[\s\S]{0,200}UsYearRecap\?\.close/);
   const app = read('app.js');
   assert.match(app, /UsYearRecap\?\.reset\?\.\(\)/);
-  assert.match(app, /action==='recap'\)window\.UsYearRecap\?\.open\?\.\(\)/);
-  // Founder, 29/10/2026: the recap has its own day (a year on US), not the relationship anniversary.
-  assert.match(app, /title,detail:day\.years\?'Il vostro anniversario':'Il vostro mesiversario',[\s\S]{0,140}action:'events',actionLabel:'Apri'/);
+  // Redesign D9: no card on Oggi any more; the Noi row stays.
+  assert.doesNotMatch(app, /action==='recap'/);
+  // Founder, 29/10/2026: the recap has its own day (a year on US), not the relationship anniversary
+  // (that one was an Oggi card until the redesign; now the characters' festa, personaggi.js reactionOf).
   const js = read('year-recap.js');
   assert.ok(js.includes("'get_couple_year_recap'"));
   assert.doesNotMatch(js, /\.from\(/, 'one RPC, no direct table read');

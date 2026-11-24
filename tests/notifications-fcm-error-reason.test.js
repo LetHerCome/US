@@ -98,10 +98,14 @@ test('a server refusal (not the network) stays an error and never becomes a sile
   assert.equal(p.store.get('us:notifications:v1:wanted:A'), undefined);
 });
 
-test('app.js and onboarding say US finishes by itself, and refresh the card when it does', () => {
+test('app.js, onboarding and Profilo › Notifiche say US finishes by itself, and refresh when it does', () => {
   const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   assert.ok(app.includes("result.kind==='network'&&result.pending)toast(`La rete non risponde: le attivo appena torna"));
-  assert.ok(app.includes("state.pending?'Le attivo appena la rete risponde. Con il Wi-Fi è subito.'"));
+  // Redesign D9: the Oggi card is gone; Profilo › Notifiche says it.
+  const settings = fs.readFileSync(path.join(__dirname, '..', 'settings.js'), 'utf8');
+  assert.ok(settings.includes("pending:{title:'In attivazione',detail:'Le attivo appena la rete risponde. Con il Wi-Fi è subito.',action:'Riprova',kind:'primary'}"));
+  assert.ok(settings.includes("state.kind==='inactive'&&state.pending?US_NATIVE_PUSH_COPY.pending"));
+  assert.ok(settings.includes("pending:Boolean(state.pending)"));
   assert.ok(app.includes("window.addEventListener('us-notifications-changed',()=>{refreshWebPushUi().catch(()=>{});toast('Notifiche attive ♡');});"));
   const onboarding = fs.readFileSync(path.join(__dirname, '..', 'onboarding.js'), 'utf8');
   assert.ok(onboarding.includes("result?.kind==='network'&&result?.pending?'La rete non risponde: le attivo appena torna'"));

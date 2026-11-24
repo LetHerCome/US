@@ -382,9 +382,9 @@ test('Settings density: utility rows, couple card and footer stay compact withou
 });
 
 
-// 1.0: the dock above the nav holds one evidence card and the Domanda di oggi;
-// arbitration stays authoritative, the cards keep the mockup geometry (dc-oggi.css).
-test('Oggi density: arbitration stays authoritative; the dock holds one evidence card and the daily card', () => {
+// Redesign D9: the dock above the nav holds the Domanda di oggi only;
+// arbitration stays authoritative, the card keeps the mockup geometry (dc-oggi.css).
+test('Oggi density: arbitration stays authoritative; the dock holds the daily card', () => {
   const dcOggi = read('dc-oggi.css');
   // Parity 2026-10 (mockup .og-bottom / .dq): a 12px column; the card is ring + kicker,
   // the question across, then the status line and the button; short screens keep it smaller (03/11/2026).
@@ -393,7 +393,7 @@ test('Oggi density: arbitration stays authoritative; the dock holds one evidence
   assert.match(dcOggi, /#home #usDailyRitual \.dq-foot\{grid-column:1\/-1;display:flex;/);
   assert.match(dcOggi, /@media\(max-height:600px\)\{\n  #home #usDailyRitual \.us-daily-ritual-question\{font-size:15px\}/);
   const app = read('app.js');
-  assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink'\]\)/);
+  assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usDailyRitual','usOggiCalendarWidget','usDailyRevealLink'\]\)/);
   assert.match(app, /winner\.evidence===id\?'evidence':winner\.daily===id\?'daily':'suppressed'/);
 });
 

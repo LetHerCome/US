@@ -24,12 +24,11 @@ test('M4B send Web usa send_think con operation id stabile e retry-safe', () => 
   assert.match(block, /sendWebPushEvent\('think'/);
 });
 
-test('M4B integra Ti Penso ricevuto nella Arrival Surface M2', () => {
+// Redesign D9: the Arrival Surface card left Oggi; a short notice opens the reactions.
+test('M4B: il Ti penso ricevuto apre le reazioni dall’avviso breve', () => {
   const app = read('app.js');
-  assert.match(app, /arrivalType.*think-received|think-received.*arrivalType/);
-  assert.match(app, /action.*think|think.*action/);
+  assert.match(app, /toast\(`\$\{who\} ti pensa ♡`,\{action:\{label:'Apri',onClick:\(\)=>openThinkArrival\(\)\}\}\);/);
   assert.match(app, /openThinkArrival/);
-  assert.match(app, /refreshTodayPriorities/);
   assert.match(app, /table:'think_reactions'/);
   assert.match(read('navigation.js'), /name:'think-arrival'/);
 });

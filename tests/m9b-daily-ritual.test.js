@@ -11,7 +11,7 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
 function installRitual({ profiles = [], role = 'francesco' } = {}) {
   const source = read('app.js');
-  const start = source.indexOf('const US_TODAY_PRIORITY_ORDER=');
+  const start = source.indexOf('let usTodayPriorityRefreshId=0;');
   const end = source.indexOf('function localDateISO()', start);
   const card = { hidden: true, innerHTML: '', dataset: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, removeAttribute(k) { delete this.attrs[k]; } };
   const region = { hidden: true, innerHTML: '', addEventListener() {} };

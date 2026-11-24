@@ -35,10 +35,10 @@ test('the words: 1000 has its own name', () => {
   assert.equal(D.daysMilestoneLine(300), '300 giorni insieme');
 });
 
-test('Oggi: on the day the days milestone takes the celebration slot, before a mesiversario', () => {
-  const app = read('app.js');
-  assert.match(app, /const daysMilestone=window\.UsCalendarDomain\?\.daysMilestoneOn\?\.\(startedOn,todayISO\)\|\|0;/);
-  assert.match(app, /if\(daysMilestone\)return \{\n\s+id:`celebration:\$\{todayISO\}`[\s\S]*?title:daysMilestone===1000\?'Oggi sono mille giorni ♡':`Oggi sono \$\{daysMilestone\} giorni ♡`/);
+// Redesign D9: on the day it was a card on Oggi; now the characters' festa.
+test('Oggi: on the day of a days milestone the characters have their festa', () => {
+  assert.doesNotMatch(read('app.js'), /celebrationTodayPriorityViewModel/);
+  assert.match(read('personaggi.js'), /if \(w\?\.UsCalendarDomain\?\.daysMilestoneOn\?\.\(started, iso\)\) return 'festa';/);
 });
 
 test('Eventi lists the next days milestone; it reads its own awarded row', () => {

@@ -1,26 +1,16 @@
 /* «La cosa di oggi» (founder, 13/11/2026, docs/DECISIONS.md): the Domanda di
    oggi card on Oggi (app.js renderDailyRitual) goes on after the answers.
    Instead of «Rivedi» it offers the next gesture (a Ti penso), then closes the
-   day («Oggi c’eravate voi due ♡»); in the first week it brings the
-   day's step after the question; the gentle streak takes the place of «Una
+   day («Oggi c’eravate voi due ♡»); the gentle streak takes the place of «Una
    domanda, due risposte». The server counts everything (public.cosa_di_oggi);
-   this file only reads it, words it and celebrates it. */
+   this file only reads it, words it and celebrates it. The steps of the first
+   week left Oggi with the redesign (fase 5, D9): the server still counts them. */
 (function () {
   'use strict';
   const w = typeof window !== 'undefined' ? window : globalThis;
   const db = () => w.sb || (typeof sb !== 'undefined' ? sb : null); // eslint-disable-line no-undef
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 
-  // The six steps of the couple and the widget, in order (docs/DECISIONS.md D5).
-  const STEPS = Object.freeze({
-    daily: { text: () => 'Rispondete alla vostra prima domanda', cta: 'Rispondi', next: 'la prima domanda' },
-    think: { text: (p) => `Manda il primo Ti penso a ${p}`, cta: 'Ti penso', next: 'il primo Ti penso', heart: true },
-    game: { text: () => 'Fate la vostra prima partita', cta: 'Gioca', next: 'la prima partita' },
-    moment: { text: () => 'Salvate il vostro primo ricordo', cta: 'Aggiungi', next: 'il primo ricordo' },
-    calendar: { text: () => 'Mettete un impegno nel calendario', cta: 'Aggiungi', next: 'un impegno nel calendario' },
-    left: { text: (p) => `Lascia qualcosa da aprire a ${p}`, cta: 'Lascia', next: 'Lasciato per te' },
-    widget: { text: () => 'Metti US sulla tua Home', cta: 'Widget', next: 'il widget sulla Home' },
-  });
   const MILESTONES = Object.freeze([7, 14, 21, 30, 50, 100, 150, 200, 300, 365]);
   const HEART = '<svg class="us-cdo-heart" viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path fill="currentColor" d="M240,98a57.63,57.63,0,0,1-17,41L133.7,229.62a8,8,0,0,1-11.4,0L33,139a58,58,0,0,1,82-82.1L128,69.05l13.09-12.19A58,58,0,0,1,240,98Z"/></svg>';
 
@@ -38,57 +28,31 @@
   function streakHtml(n) {
     return n >= 2 ? `<span class="dq-sub us-daily-ritual-meta us-cdo-streak">${HEART}<span class="us-cdo-streak-n">${esc(`${n} giorni di fila`)}</span></span>` : '';
   }
-  function dotsHtml(week) {
-    const total = Math.max(0, Number(week?.total) || 0);
-    const done = Math.min(total, Math.max(0, Number(week?.done) || 0));
-    const now = week?.current && week.ready ? done : -1;
-    const dots = Array.from({ length: total }, (_, i) => `<i${i < done ? ' class="on"' : i === now ? ' class="now"' : ''}></i>`).join('');
-    return `<span class="us-cdo-dots" role="img" aria-label="${esc(`${done} passi su ${total}`)}">${dots}</span>`;
-  }
   function ctaHtml(label, heart) {
     return `<span class="btn-primary us-daily-ritual-cta">${heart ? HEART : ''}${esc(label)}${heart ? '' : '<span class="us-daily-ritual-arrow" aria-hidden="true"></span>'}</span>`;
   }
 
-  // The first week is on while it has a step left, or on the day it ended.
-  function weekOn(s, today) {
-    const week = s?.week;
-    if (!week) return false;
-    return !week.all_done || week.finished_on === today;
-  }
-
   // The card's model (app.js dailyRitualViewModel) with today's next thing.
-  function decorate(model, s = state, { partner = partnerName(), today = romeToday() } = {}) {
+  function decorate(model, s = state, { partner = partnerName() } = {}) {
     if (!model || !s || model.state === 'error') return model;
-    const streak = Number(s.streak) || 0;
-    const week = weekOn(s, today) ? s.week : null;
-    const left = (html) => (html ? `<span class="us-cdo-left">${html}</span>` : '');
-    const foot = left(week ? `${dotsHtml(week)}${streakHtml(streak)}` : streakHtml(streak));
+    const streak = streakHtml(Number(s.streak) || 0);
+    const foot = streak ? `<span class="us-cdo-left">${streak}</span>` : '';
     if (model.state === 'answer') return foot ? { ...model, footHtml: foot } : model;
     if (model.state !== 'revealed') return model;
-    const base = { ...model, kicker: week ? 'La vostra prima settimana' : 'La cosa di oggi', footHtml: foot, attention: false };
-    if (week) {
-      if (week.all_done) return { ...base, look: 'finished', question: 'Settimana finita ♡', subHtml: `<span class="us-cdo-sub">${esc('Avete scoperto tutto US · +100 punti Sintonia')}</span>`, footHtml: left(`${dotsHtml({ total: week.total, done: week.total })}${streakHtml(streak)}`), cta: 'Rivedi', ctaHtml: ctaHtml('Rivedi') };
-      const step = STEPS[week.current];
-      if (step && week.current !== 'daily') {
-        if (week.ready) return { ...base, look: 'step', step: week.current, question: step.text(partner), cta: step.cta, ctaHtml: ctaHtml(step.cta, step.heart), action: `step:${week.current}` };
-        return { ...base, look: 'done', question: 'Fatto ♡', subHtml: `<span class="us-cdo-sub">${esc(`Domani: ${step.next}`)}</span>`, cta: 'Rivedi', ctaHtml: ctaHtml('Rivedi') };
-      }
-    }
+    const base = { ...model, kicker: 'La cosa di oggi', footHtml: foot, attention: false };
     if (!s.today?.my_think) return { ...base, look: 'think', question: `Manda un Ti penso a ${partner}`, cta: 'Ti penso', ctaHtml: ctaHtml('Ti penso', true), action: 'think' };
     if (s.today?.counted) return { ...base, look: 'closed', question: 'Oggi c’eravate voi due ♡', cta: 'Rivedi', ctaHtml: ctaHtml('Rivedi') };
     return model;
   }
 
   // What changed between two reads, to celebrate (each once).
-  function changes(prev, next, today = romeToday()) {
+  function changes(prev, next) {
     const out = [];
     if (!prev || !next) return out;
     const a = Number(prev.streak) || 0, b = Number(next.streak) || 0;
     if (b > a) out.push('streak');
     if (!prev.today?.counted && next.today?.counted) out.push('closed');
     if (!prev.today?.my_think && next.today?.my_think) out.push('gesture');
-    if (prev.week && next.week && (Number(next.week.done) || 0) > (Number(prev.week.done) || 0)) out.push('step');
-    if (next.week?.all_done && next.week.finished_on === today && !(prev.week?.all_done && prev.week.finished_on === today)) out.push('finished');
     const best = Number(next.best_before) || 0;
     if (b > a && best >= 3 && b === best + 1) out.push('record');
     if (b > a && MILESTONES.includes(b)) out.push(`milestone:${b}`);
@@ -173,12 +137,11 @@
   function celebrate(list) {
     if (!list.length || !onOggi()) return;
     const motion = !reduced();
-    if (motion && (list.includes('step') || list.includes('gesture') || list.includes('closed'))) { hearts(); try { w.UsFeedback?.action?.(); } catch (_) {} }
+    if (motion && (list.includes('gesture') || list.includes('closed'))) { hearts(); try { w.UsFeedback?.action?.(); } catch (_) {} }
     if (motion && list.includes('streak')) { setTimeout(bumpStreak, 360); }
     const s = state;
     const day = romeToday();
-    if (list.includes('finished') && once(`week:${s?.week?.started_on || ''}`)) setTimeout(() => party('Settimana finita ♡', 'Avete scoperto tutto US · +100 punti Sintonia'), 400);
-    else if (list.includes('record') && once(`record:${s?.streak}:${day}`)) setTimeout(() => party('Nuovo record ♡', `${s.streak} giorni di fila insieme`), 400);
+    if (list.includes('record') && once(`record:${s?.streak}:${day}`)) setTimeout(() => party('Nuovo record ♡', `${s.streak} giorni di fila insieme`), 400);
     else {
       const m = list.find((x) => x.startsWith('milestone:'));
       if (m && once(`${m}:${day}`)) setTimeout(() => party(`${m.slice(10)} giorni di fila ♡`, 'Continuate così'), 400);
@@ -245,18 +208,10 @@
   }
 
   // ---------------------------------------------------------------- taps
-  const today = () => romeToday();
-  const OPEN = Object.freeze({
-    game: () => { if (typeof w.openQuizHub === 'function') w.openQuizHub({ nav: true }); else w.go?.('quiz', { nav: true }); },
-    moment: () => { w.go?.('moments', { nav: true }); setTimeout(() => w.UsMomentComposer?.show?.(), 320); },
-    calendar: () => { if (w.UsCalendarLinks?.createForDate) w.UsCalendarLinks.createForDate(today()); else w.openCalendarSurface?.(today()); },
-    left: () => w.UsLeftForYou?.openComposer?.(),
-    widget: () => w.UsWidgetHub?.open?.(),
-  });
   let busy = false;
   async function act(action) {
     if (busy) return false;
-    if (action === 'think' || action === 'step:think') {
+    if (action === 'think') {
       busy = true;
       try {
         const sent = typeof w.sendThinkSignal === 'function' ? await w.sendThinkSignal() : false;
@@ -264,12 +219,10 @@
         return Boolean(sent);
       } finally { busy = false; }
     }
-    const step = String(action || '').replace(/^step:/, '');
-    if (OPEN[step]) { OPEN[step](); return true; }
     return false;
   }
 
-  const api = { limits: LIMITS, decorate, changes, refresh, act, celebrate, party, weekOn, romeToday, STEPS, MILESTONES, get state() { return state; } };
+  const api = { limits: LIMITS, decorate, changes, refresh, act, celebrate, party, romeToday, MILESTONES, get state() { return state; } };
   w.UsCosaDiOggi = Object.freeze(api);
   // Back on the app: the day may have moved on, the other person may have done something.
   w.document?.addEventListener?.('visibilitychange', () => { if (w.document.visibilityState === 'visible') refresh(); });

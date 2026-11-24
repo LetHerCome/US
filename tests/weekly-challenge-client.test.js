@@ -166,7 +166,7 @@ test('one change: asked first, then the server picks; its refusals in plain word
   assert.deepEqual(calls, [['confirm', 'Cambiare la sfida?'], ['change_weekly_challenge', { target_challenge_id: ID }], ['toast', 'Con una foto già messa la sfida non si cambia']]);
 });
 
-test('wired in: the module is loaded and cached, Gioca has its slot, Oggi its category, Realtime its lines', () => {
+test('wired in: the module is loaded and cached, Gioca has its slot and its dot, Realtime its lines', () => {
   const index = read('index.html');
   assert.match(index, /<script defer src="\/weekly-challenge\.js\?v=[^"]+"><\/script>/);
   assert.match(read('service-worker.js'), /versioned\("\/weekly-challenge\.js"\)/);
@@ -176,11 +176,10 @@ test('wired in: the module is loaded and cached, Gioca has its slot, Oggi its ca
   assert.match(games, /<h2 class="us-gv2-sr">Gioca<\/h2>\n\s*<div class="us-wc-slot" data-wc-slot><\/div>/);
   assert.match(games, /window\.UsWeeklyChallenge\?\.paint\?\.\(\);/);
   const app = read('app.js');
-  assert.match(app, /const US_TODAY_PRIORITY_ORDER=Object\.freeze\(\{[^}]*challenge:6/);
-  assert.match(app, /challenge:'Sfida · scade domenica'/);
-  assert.match(app, /const US_OGGI_PRIMARY_RANK=Object\.freeze\(\{[^}]*challenge:40\}/);
+  // Redesign D9/D10: no card on Oggi; the other one's photo only lights the dot on Gioca.
+  assert.doesNotMatch(app, /Sfida · scade domenica|action==='challenge'/);
   assert.match(app, /challenge=await window\.UsWeeklyChallenge\?\.todayPriority\?\.\(\)/);
-  assert.match(app, /if\(action==='challenge'\)window\.UsWeeklyChallenge\?\.open\?\.\(\);/);
+  assert.match(app, /challenge:challenge\?\.category==='waiting_for_me'\}\);/);
   assert.match(app, /table:'couple_weekly_challenges'[^\n]*UsWeeklyChallenge\?\.onChange/);
   assert.match(app, /table:'couple_weekly_challenge_photos'[^\n]*UsWeeklyChallenge\?\.onChange/);
 });

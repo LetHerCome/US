@@ -19,7 +19,7 @@ test('Home cleanup: Oggi keeps photo/countdown dominant and retires the dashboar
   assert.match(home, /id="usCountdownDisplay"/);
   assert.match(home, /id="usOggiStack"/, 'legacy state anchors remain mounted for existing authorities');
   assert.match(styles, /#home #usOggiStack\{height:0!important;[^}]*visibility:hidden!important;[^}]*pointer-events:none!important\}/);
-  assert.ok(home.indexOf('id="usTodayPriorityRegion"') < home.indexOf('id="usOggiStack"'), 'actionable notice lives outside the retired dashboard stack');
+  assert.equal(home.indexOf('id="usTodayPriorityRegion"'), -1, 'redesign D9: no cards of suggestions on Oggi');
   assert.match(read('dc-oggi.css'), /#home \.us-oggi-dock\{[\s\S]*?position:fixed;/, 'the actionable notice and the Domanda di oggi share one dock above the nav');
   assert.doesNotMatch(home, /noi-week-board|us-gv2-daily/, 'new destinations do not leak back into Oggi');
 });

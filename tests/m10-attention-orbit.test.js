@@ -30,7 +30,7 @@ function installOggi({ role = 'francesco' } = {}) {
     escapeHtml: (v) => String(v),
     partnerFromProfiles: () => null,
   });
-  vm.runInContext(app.slice(app.indexOf('const US_TODAY_PRIORITY_ORDER='), app.indexOf('function localDateISO()')), context);
+  vm.runInContext(app.slice(app.indexOf('let usTodayPriorityRefreshId=0;'), app.indexOf('function localDateISO()')), context);
   return { window, card, region, context };
 }
 const question = { id: 'q-1', question: 'Cosa ti farebbe partire bene questa settimana?', question_date: '2026-10-05' };
@@ -172,18 +172,10 @@ test('M10E.1: lo stato non letto del partner non accende mai la busta dell’ute
 });
 
 // --- Other personal priorities ----------------------------------------------
-test('M10E.3: solo un Ti penso ricevuto e non gestito accende l’orbit; impegni e card passive mai', () => {
-  const t = installOggi();
-  const api = t.window.UsTodayPriority;
-  api.render([{ id: 'think-received:1', factKey: 'think:1', category: 'received_ready', attention: true, title: 'Bea ti pensa', action: 'think', actionLabel: 'Apri' }]);
-  assert.match(t.region.innerHTML, /class="us-today-priority-card us-attention-orbit" data-us-attention="on"/);
-  const event = api.eventViewModel({ id: 'e', title: 'Cena', days_left: 0, effective_date: '2026-10-05', event_time: '20:30' });
-  assert.equal(event.attention, false);
-  api.render([event]);
-  assert.equal(t.region.hidden, true, 'passive calendar/event facts no longer render on Oggi after Home cleanup');
-  assert.equal(t.region.innerHTML, '');
-  assert.match(app, /arrivalType:'think-received',\s*category:'received_ready',[\s\S]{0,200}attention:true/);
-  // Calendar widget, distance, push opt-in, empty state, memories: never hosts.
+// Redesign D9: a Ti penso received is a short notice, not a card with the orbit.
+test('M10E.3: gli host dell’orbit sono la busta e la Domanda di oggi; impegni e card passive mai', () => {
+  assert.doesNotMatch(app, /us-today-priority-card|thinkTodayPriorityViewModel/);
+  // Calendar widget, distance, empty state, memories: never hosts.
   const hosts = [...html.matchAll(/<[^>]+class="[^"]*us-attention-orbit[^"]*"[^>]*>/g)].map((m) => m[0].match(/id="([^"]+)"/)?.[1]);
   // Per voi is dynamically rendered inside Gioca and is covered by the Game V2 attention contract.
   // Static/global attention hosts remain only the envelope and Daily Ritual.
@@ -215,7 +207,6 @@ test('M10E: un solo primitive condiviso, in ui-foundation, senza animazioni para
   assert.doesNotMatch(block.match(/@keyframes us-attention-orbit\{[\s\S]*?64%,100%\{[^}]*\}/)[0], /scale/);
   // Every host writes the same attribute from its own canonical state.
   assert.match(app, /card\.dataset\.usAttention=model\.attention\?'on':'off';/);
-  assert.match(app, /data-us-attention="\$\{item\.attention\?'on':'off'\}"/);
 });
 
 test('M10E: reduced motion → nessuna rotazione, alone statico visibile', () => {

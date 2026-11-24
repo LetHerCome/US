@@ -90,7 +90,7 @@ async function pushState(){
   if(window.UsNotifications?.supported?.()){
     // Native app: state of THIS installation (FCM on Android, APNs on iOS).
     const state=await window.UsNotifications.getState();
-    return {native:true,kind:state.kind,active:state.kind==='active',permission:state.kind==='denied'?'denied':'native'};
+    return {native:true,kind:state.kind,active:state.kind==='active',pending:Boolean(state.pending),permission:state.kind==='denied'?'denied':'native'};
   }
   if(!('Notification' in window))return {permission:'unsupported',active:false};
   const permission=Notification.permission;
@@ -589,6 +589,8 @@ async function toggleAppLock(){
 const US_NATIVE_PUSH_COPY=Object.freeze({
   active:{title:'Attive su questo telefono',detail:'Ricevi i Ti penso anche a US chiusa.',action:'Disattiva',kind:'ghost'},
   inactive:{title:'Non attive',detail:'Non ricevi niente quando US è chiusa.',action:'Attiva',kind:'primary'},
+  // 25/10/2026: «Attiva» tapped but Google's token did not come; US finishes by itself (on Oggi until the redesign, D9).
+  pending:{title:'In attivazione',detail:'Le attivo appena la rete risponde. Con il Wi-Fi è subito.',action:'Riprova',kind:'primary'},
   denied:{title:'Permesso negato',detail:'Il telefono blocca le notifiche di US.',action:'Apri impostazioni di sistema',kind:'primary',warn:true},
   settings:{title:'Da attivare nelle impostazioni',detail:'Le notifiche di US sono spente nel telefono.',action:'Apri impostazioni di sistema',kind:'primary',warn:true},
   unavailable:{title:'Configurazione non disponibile',detail:'Questa versione di US non può ancora ricevere notifiche.',action:'',kind:'ghost',warn:true}
@@ -596,7 +598,7 @@ const US_NATIVE_PUSH_COPY=Object.freeze({
 const US_PUSH_BLOCKED_LEAD='<div class="us-settings2-modal-copy">Per ricevere i Ti penso anche a US chiusa, consenti le notifiche dalle impostazioni del telefono.</div>';
 function pushMasterMarkup(state){
   if(state.native){
-    const copy=US_NATIVE_PUSH_COPY[state.kind]||US_NATIVE_PUSH_COPY.unavailable;
+    const copy=(state.kind==='inactive'&&state.pending?US_NATIVE_PUSH_COPY.pending:US_NATIVE_PUSH_COPY[state.kind])||US_NATIVE_PUSH_COPY.unavailable;
     if(copy.warn)return `<div class="us-settings2-push-master is-warn" data-push-state="${esc(state.kind||'unavailable')}">
       <span><b>${copy.title}</b><small>${copy.detail}</small></span>
     </div>${copy.action?`${US_PUSH_BLOCKED_LEAD}<div class="us-settings2-action-stack"><button type="button" class="${copy.kind}" id="usSettingsPushAction">${copy.action}</button></div>`:''}`;

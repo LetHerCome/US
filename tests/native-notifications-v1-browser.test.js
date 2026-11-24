@@ -206,8 +206,8 @@ test('N2 browser: permission only after "Attiva"; registration per installation;
   await page.waitForFunction(() => window.usProfile);
   await page.waitForTimeout(1600);
   assert.deepEqual(await page.evaluate(() => window.__PUSH.calls), [], 'nothing asked or registered at boot');
-  assert.equal(await page.evaluate(() => document.getElementById('pushOptInCard')?.hidden), false, 'the Oggi card invites');
-  assert.equal(await page.evaluate(() => document.getElementById('pushEnableBtn')?.textContent), 'Attiva');
+  // Redesign D9: no invite on Oggi; the intro and Profilo › Notifiche ask.
+  assert.equal(await page.evaluate(() => document.getElementById('pushOptInCard')), null);
 
   const result = await page.evaluate(() => window.enableWebPush());
   assert.equal(result.ok, true);
@@ -221,7 +221,6 @@ test('N2 browser: permission only after "Attiva"; registration per installation;
   } });
   assert.match(first.installation, /^[0-9a-f-]{36}$/);
   assert.equal(await page.evaluate(async () => (await window.UsNotifications.getState()).kind), 'active');
-  await page.waitForFunction(() => document.getElementById('pushOptInCard')?.hidden === true);
 
   // Logout while offline: the server row cannot be removed now → retired, retried later.
   await page.evaluate(() => { window.__PUSH.rpcError = 'offline'; });
@@ -376,7 +375,7 @@ test('N2 browser: without a Firebase configuration nothing native is touched and
   const { page, ctx, errors } = await h.page({ configured: false });
   await page.waitForFunction(() => window.usProfile);
   await page.waitForTimeout(1600);
-  assert.equal(await page.evaluate(() => document.getElementById('pushOptInCard')?.hidden), true, 'no invitation that cannot work');
+  assert.equal(await page.evaluate(() => document.getElementById('pushOptInCard')), null, 'no invitation on Oggi (redesign D9)');
   assert.equal(await page.evaluate(async () => (await window.UsNotifications.getState()).kind), 'unavailable');
   assert.deepEqual(await page.evaluate(async () => ({ ...(await window.UsNotifications.enable()) })), { ok: false, kind: 'unavailable' });
   await page.evaluate(() => window.revokeCurrentDevice());

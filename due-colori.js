@@ -141,7 +141,7 @@ function bounce(button) {
 // The blocks that rise in. An area marks them with [data-s] (as in the
 // mockup); until it does, the page's top-level blocks stand in for them.
 const STAGGER_FALLBACK = {
-  home: '.app>.top,#usCountdownDisplay,#usCountdownEntry,#usOggiCalendarWidget,#distanceWidget,.home-distance-pill,#usTodayPriorityRegion,#pushOptInCard,#homeEmptyState,#usOggiDock',
+  home: '.app>.top,#usCountdownDisplay,#usCountdownEntry,#usOggiCalendarWidget,#distanceWidget,.home-distance-pill,#homeEmptyState,#usOggiDock',
   bond: '#usNoiV2>*,#usNoiSection>*',
   moments: '#moments>.section>*:not(#momentsGrid),#momentsGrid>*',
   quiz: '#usGiocaTabs,#quizHub>*,#usGiocaSintonia>*',
