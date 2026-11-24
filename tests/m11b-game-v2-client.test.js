@@ -325,10 +325,9 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   assert.doesNotMatch(top, /id="thinkButton"/);
   assert.match(html, /<nav class="nav us-nav[\s\S]*?id="thinkButton" class="us-nav-think"/);
   assert.doesNotMatch(top, /id="usPerVoiTop"/, 'Per voi is a Gioca action, not a global top-bar action');
-  assert.match(games, /class="us-gv2-pervoi us-attention-orbit"/);
+  // Fase 6 (D11): Per voi is the first tile of the grid, no orbit.
+  assert.match(games, /action:'per-voi',extraClass:' is-pervoi'/);
   assert.match(games, /data-gv2-action="per-voi"/);
-  assert.match(games, /data-us-attention=/);
-  assert.match(games, /data-us-attention-icon/);
   assert.match(html, /<div id="quizHub" class="us-gv2-hub"/);
   assert.match(html, /<div id="usGameV2Panel" class="us-gv2-panel hidden"/);
   assert.doesNotMatch(html, /weeklyQuizGrid|usExtraGames|usCustomGamesHub|quizPlay|scoreRing/);
@@ -364,18 +363,17 @@ const allowance = (over = {}) => ({ period: 'day', day: '2026-10-01', week_start
   used: 0, limit: 1, per_voi_available: true, free_available: true, open_count: 0, open_limit: 3, families: {}, ...over });
 const spentToday = (over = {}) => allowance({ used: 1, per_voi_used: 1, free_used: 1, per_voi_available: false, free_available: false, ...over });
 
-test('Gioca daily: the limit reads the server allowance, on the tiles it locks, restrained, never a counter game', async () => {
-  // Round 3 parity (062): the budget strip gave way to the mockup's seven
-  // days; the limit is said in the confirm (below) and on the locked tiles.
+test('Gioca daily: the limit reads the server allowance, on the tokens and the tiles it locks, never a counter game', async () => {
+  // Fase 6 (D11): three tokens at the top; the tiles say Pronto, Giocato or Domani.
   const fresh = harness({ homeState: home({ allowance: allowance() }) });
   await tick();
-  assert.match(fresh.nodes.quizHub.innerHTML, /id="usGv2Week"/);
-  assert.doesNotMatch(fresh.nodes.quizHub.innerHTML, /QUESTA SETTIMANA|data-gv2-rhythm|Ancora \d giochi/);
+  assert.match(fresh.nodes.quizHub.innerHTML, /id="usGv2Tokens"/);
+  assert.doesNotMatch(fresh.nodes.quizHub.innerHTML, /id="usGv2Week"|QUESTA SETTIMANA|data-gv2-rhythm|Ancora \d giochi/);
   assert.doesNotMatch(fresh.nodes.quizHub.innerHTML, /data-gv2-mode-state="(?:locked|played)"/, 'a fresh day locks nothing');
   const mid = harness({ homeState: home({ allowance: allowance({ families: { per_voi: { session_id: 'p', completed: true }, ridete: { session_id: 'r', completed: true } } }) }) });
   await tick();
   const html = mid.nodes.quizHub.innerHTML;
-  assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"[\s\S]*?<small>Giocato questa settimana<\/small>/, 'US V3: the card names the real state');
+  assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played" data-gv2-chip="played" aria-label="Ridete: [^"]+\. Giocato questa settimana"[\s\S]*?<small>questa settimana<\/small>/, 'the card names the real state');
   assert.doesNotMatch(html, /data-gv2-mode-state="locked"/, 'today\'s game still free: nothing locked');
   assert.doesNotMatch(html, /vite|energia|stamina|streak|serie/i, 'no game-energy language');
   const done = harness({ homeState: home({ per_voi: { state: 'played', session_id: 'p' }, allowance: spentToday({ families: { per_voi: { session_id: 'p', completed: true } } }) }) });
@@ -383,7 +381,7 @@ test('Gioca daily: the limit reads the server allowance, on the tiles it locks, 
   const dh = done.nodes.quizHub.innerHTML;
   assert.doesNotMatch(dh, /Tutti giocati|Da lunedì|Giocato questa settimana/);
   assert.match(dh, /Per oggi avete giocato/, 'Per voi says the day is spent');
-  assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"[\s\S]*?<small>Da domani<\/small>/, 'modes stay visible, locked until tomorrow');
+  assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" data-gv2-chip="tomorrow" aria-disabled="true"[\s\S]*?<small>torna domani<\/small>/, 'modes stay visible, locked until tomorrow');
   assert.equal(done.nodes.usPerVoiTop.dataset.gv2State, 'played');
   assert.equal(done.nodes.usPerVoiTop.dataset.usAttention, 'off');
   assert.match(done.nodes.usPerVoiTop.getAttribute('aria-label'), /la prossima partita domani/);
@@ -413,36 +411,27 @@ test('Gioca daily: a spent day starts nothing; played modes open their reveal; s
   assert.match(pile.notices.join('|'), /Prima finite uno dei giochi in corso/);
 });
 
-test('Gioca daily: a first round of a mode also asks, and says it is today\'s game', async () => {
+test('Gioca daily (fase 6, D11): a first round starts at once, a token flies instead of the confirm window', async () => {
   const asked = [];
   const h = harness({ homeState: home({ allowance: allowance() }) });
   h.window.UsUiFoundation = { confirm: async (opts) => { asked.push(opts); return false; } };
   await tick();
   await h.api.chooseMode('scopritevi');
   await h.api.chooseSwipe();
-  assert.equal(h.calls.some(([n]) => n === 'start_game_round' || n === 'start_swipe_round'), false, 'declined: nothing started');
-  assert.equal(asked.length, 2);
-  assert.equal(asked[0].title, 'Scopritevi');
-  assert.equal(asked[0].kicker, 'OGGI');
-  assert.equal(asked[0].body, 'Userete la partita di oggi.');
-  assert.equal(asked[0].confirmLabel, 'Inizia');
-  assert.equal(asked[1].title, 'Questo o quello');
+  assert.equal(asked.length, 0, 'no confirm window');
+  assert.ok(h.calls.some(([n, a]) => n === 'start_game_round' && a.target_family === 'scopritevi'));
+  assert.ok(h.calls.some(([n]) => n === 'start_swipe_round'));
 });
 
-test('Gioca daily: repeating a mode played this week asks once through the shared US confirm; an open round just resumes', async () => {
+test('Gioca daily: repeating a mode played this week starts a new round at once; an open round just resumes', async () => {
   const asked = [];
   const h = harness({ homeState: home({ open_rounds: [{ id: 'open-1', game_family: 'e_se', item_count: 5, my_answered_count: 1 }],
     allowance: allowance({ families: { ridete: { session_id: 'r1', completed: true } } }) }) });
-  h.window.UsUiFoundation = { confirm: async (opts) => { asked.push(opts); return asked.length > 1; } };
+  h.window.UsUiFoundation = { confirm: async (opts) => { asked.push(opts); return true; } };
   await tick();
   await h.api.chooseMode('ridete');
-  assert.equal(h.calls.some(([n]) => n === 'start_game_round'), false, 'declined: nothing started');
-  await h.api.chooseMode('ridete');
   assert.ok(h.calls.some(([n, a]) => n === 'start_game_round' && a.target_family === 'ridete'));
-  assert.match(asked[0].title, /Avete già giocato a Ridete questa settimana/);
-  // Round 3 parity (073): the mockup's line, then what it costs today.
-  assert.equal(asked[0].body, 'Potete fare un’altra partita, con domande nuove. Userete la partita di oggi.', 'the mockup line and what it costs');
   await h.api.chooseMode('e_se');
   assert.ok(h.calls.some(([n, a]) => n === 'get_game_session' && a.target_session_id === 'open-1'), 'an old E se…? round still opens');
-  assert.equal(asked.length, 2, 'resuming never asks');
+  assert.equal(asked.length, 0, 'never asks');
 });

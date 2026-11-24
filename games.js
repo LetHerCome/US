@@ -164,107 +164,79 @@ const allowance = () => home?.allowance || null;
 const freeLeft = () => { const a = allowance(); return a ? Math.max(0, a.free_limit - a.free_used) : 1; };
 const playedThisWeek = (family) => allowance()?.families?.[family] || null;
 const EXHAUSTED = 'Nuove partite domani.';
-// Under I vostri giochi: how many rounds are left today, once the server said
-// (three a day since 13/11/2026). A visible counter: one dot per round of the
-// day, lit while it is still there.
-function dayHint() {
-  if (!allowance()) return '<small>Bastano pochi minuti</small>';
+// Redesign definitivo, fase 6 (D11, founder 23/11/2026): the day's rounds are
+// three big tokens at the top of Gioca, lit while they are still there. At
+// zero the card says when they come back (00:00 Europe/Rome on the server's
+// resets_on) and only there the US Plus row («In arrivo», «Avvisami»: nothing
+// to buy yet). The server still decides; the tokens only read its allowance.
+const DAY_ZONE = 'Europe/Rome';
+let zoneParts = null;
+// The epoch of 00:00 in Europe/Rome on an ISO date (two passes cover the
+// summer-time change).
+function romeMidnight(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+  if (!m) return NaN;
+  const want = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+  try {
+    zoneParts ||= new Intl.DateTimeFormat('en-GB', { timeZone: DAY_ZONE, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    let at = want;
+    for (let i = 0; i < 2; i += 1) {
+      const p = Object.fromEntries(zoneParts.formatToParts(at).map((x) => [x.type, x.value]));
+      at += want - Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute);
+    }
+    return at;
+  } catch (_) { return want; }
+}
+// «tra 6 ore e 12 minuti», «tra 1 ora», «tra 40 minuti».
+function resetLine(iso, now = Date.now()) {
+  const at = romeMidnight(iso);
+  if (!Number.isFinite(at)) return '';
+  const minutes = Math.ceil((at - now) / 60000);
+  if (minutes <= 1) return 'tra poco';
+  const h = Math.floor(minutes / 60), m = minutes % 60;
+  const hours = h === 1 ? '1 ora' : `${h} ore`, mins = m === 1 ? '1 minuto' : `${m} minuti`;
+  return `tra ${h && m ? `${hours} e ${mins}` : h ? hours : mins}`;
+}
+const TOKEN_HEART = icon('heart-straight-fill');
+function tokensCard() {
   const a = allowance();
+  if (!a) return '';
   const limit = Math.max(1, Number(a.free_limit) || 1);
   const left = Math.min(limit, freeLeft());
-  const text = left ? `Ancora ${left} su ${limit} oggi` : (limit === 1 ? 'Domani un’altra partita' : `Domani altre ${limit}`);
-  const dots = Array.from({ length: limit }, (_, i) => `<i data-on="${i < left ? 'true' : 'false'}"></i>`).join('');
-  return `<span class="us-gv2-daycount" data-gv2-left="${left}" role="status"><span class="us-gv2-daycount-dots" aria-hidden="true">${dots}</span><small>${esc(text)}</small></span>`;
+  const tokens = Array.from({ length: limit }, (_, i) => (i < left ? `<span class="us-gv2-token is-on" data-gv2-token>${TOKEN_HEART}</span>` : '<span class="us-gv2-token"></span>')).join('');
+  const aria = left ? `${left} ${left === 1 ? 'gettone' : 'gettoni'} su ${limit}` : 'Nessun gettone rimasto';
+  const title = left ? `Ancora ${left} su ${limit} oggi` : (limit === 1 ? 'Domani un’altra partita' : `Domani altre ${limit}`);
+  const line = left ? 'Ogni partita nuova usa un gettone' : resetLine(a.resets_on);
+  const plus = !left && window.UsPlusSoon?.open ? '<div class="us-gv2-tokens-plus"><span class="us-gv2-tokens-copy"><b>Partite illimitate con US Plus</b><small>In arrivo</small></span><button type="button" data-us-feedback="tap" data-gv2-action="plus-soon">Avvisami</button></div>' : '';
+  return `<section class="us-gv2-tokens" id="usGv2Tokens" data-gv2-left="${left}" data-s aria-label="Le partite di oggi">
+    <div class="us-gv2-tokens-row"><span class="us-gv2-token-row" role="img" aria-label="${esc(aria)}">${tokens}</span><span class="us-gv2-tokens-copy" role="status"><b>${esc(title)}</b>${line ? `<small>${esc(line)}</small>` : ''}</span></div>${plus}
+  </section>`;
 }
-// Once today's rounds are spent: unlimited rounds are US Plus, coming (D4 §4).
-// Nothing to buy yet: the tap opens «US Plus, in arrivo» with «Avvisami».
-function plusSoonRow() {
-  if (!allowance() || freeLeft() || !window.UsPlusSoon?.open) return '';
-  return `<button type="button" class="us-gv2-plus-soon" data-us-feedback="tap" data-gv2-action="plus-soon" data-s>${glyph('sparkle')}<span class="us-gv2-plus-soon-copy"><b>Partite illimitate con US Plus</b><small>In arrivo · Avvisami</small></span>${icon('caret-right')}</button>`;
-}
-
-// ---------------------------------------------------------------- the week
-
-// Round 3 parity: under the Sfida di oggi, the mockup's seven days of this
-// week (Monday first, the Europe/Rome day the daily question uses), today in
-// milk. A dot says who was there that day, only from what the app already
-// has: a round you both completed that day (get_game_v2_home), and for today
-// la domanda di oggi (the state Oggi loaded). Earlier days' daily answers are
-// not loaded by the app, so they never show a dot of their own.
-const WEEK_ZONE = 'Europe/Rome';
-// Intl formatters are slow to build: one of each, kept (per language for the labels).
-const weekFormats = new Map();
-function weekFormat(key, locale, options) {
-  const id = `${key}|${locale}`;
-  if (!weekFormats.has(id)) weekFormats.set(id, new Intl.DateTimeFormat(locale, options));
-  return weekFormats.get(id);
-}
-function zoneDay(at) {
-  try { return weekFormat('zone', 'en-CA', { timeZone: WEEK_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).format(at); }
-  catch (_) { return null; }
-}
-function weekDays() {
-  const today = zoneDay(new Date());
-  if (!today) return [];
-  const base = new Date(`${today}T12:00:00Z`);
-  const back = (base.getUTCDay() + 6) % 7;
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(base.getTime());
-    d.setUTCDate(base.getUTCDate() - back + i);
-    return { iso: d.toISOString().slice(0, 10), today: i === back };
-  });
-}
-function weekMarks(days) {
-  const marks = {};
-  const inWeek = new Set(days.map((d) => d.iso));
-  for (const r of (home?.recent || []).concat(home?.open_rounds || [])) {
-    if (!r?.completed_at) continue;
-    const day = zoneDay(new Date(r.completed_at));
-    if (inWeek.has(day)) marks[day] = 'noi';
-  }
-  const today = days.find((d) => d.today)?.iso;
-  const q = window.todayQuestion;
-  const st = window.todayState;
-  if (today && q?.id && st && (!q.question_date || String(q.question_date) === today)) {
-    if (st.both_answered) marks[today] = 'noi';
-    else if (marks[today] !== 'noi') {
-      if (st.my_answer != null) marks[today] = 'tu';
-      else if (st.partner_has_answer) marks[today] = 'partner';
-    }
-  }
-  return marks;
-}
-function weekDayLabel(d, mark) {
-  const tag = globalThis.UsI18n?.tag || 'it-IT';
-  const date = weekFormat('label', tag, { timeZone: 'UTC', weekday: 'long', day: 'numeric' }).format(new Date(`${d.iso}T12:00:00Z`));
-  const who = mark === 'noi' ? 'tutti e due' : mark === 'tu' ? 'solo tu' : mark === 'partner' ? `solo ${partnerName()}` : '';
-  return [date, d.today ? 'oggi' : '', who].filter(Boolean).join(' · ');
-}
-function weekMarkup() {
-  const days = weekDays();
-  if (!days.length) return '';
-  const marks = weekMarks(days);
-  const tag = globalThis.UsI18n?.tag || 'it-IT';
-  return days.map((d) => {
-    const mark = marks[d.iso] || '';
-    const letter = weekFormat('letter', tag, { timeZone: 'UTC', weekday: 'narrow' }).format(new Date(`${d.iso}T12:00:00Z`));
-    return `<div class="us-gv2-wd${d.today ? ' is-today' : ''}" role="listitem"${d.today ? ' aria-current="date"' : ''} aria-label="${esc(weekDayLabel(d, mark))}"><span aria-hidden="true" translate="no">${esc(letter)}</span><b aria-hidden="true" translate="no">${Number(d.iso.slice(8))}</b><span class="us-gv2-wd-pair" aria-hidden="true">${mark ? `<i data-who="${mark}"></i>` : ''}</span></div>`;
-  }).join('');
-}
-let weekPainted = '';
-function weekStrip() {
-  weekPainted = weekMarkup();
-  return weekPainted ? `<div class="us-gv2-week" id="usGv2Week" data-s role="list" aria-label="Questa settimana">${weekPainted}</div>` : '';
-}
-// Oggi calls this when la domanda di oggi changes (UsDailyQuestionHub.paint):
-// only a real change touches the strip.
-function paintWeek() {
-  const el = byId('usGv2Week');
-  if (!el) return;
-  const next = weekMarkup();
-  if (next === weekPainted) return;
-  weekPainted = next;
-  el.innerHTML = next;
+// A new round: the last lit token flies into the game (D11), in place of the
+// old confirm window before each new round. Motion only: the server spends it,
+// and the next read of the hub paints the real number again.
+function flyToken(target) {
+  const tokens = document.querySelectorAll?.('#usGv2Tokens [data-gv2-token]');
+  const token = tokens && tokens[tokens.length - 1];
+  if (!token) return;
+  token.classList.remove('is-on');
+  token.removeAttribute('data-gv2-token');
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  if (reduce || typeof token.animate !== 'function' || !target?.getBoundingClientRect) return;
+  const from = token.getBoundingClientRect(), to = target.getBoundingClientRect();
+  const ghost = document.createElement('span');
+  ghost.className = 'us-gv2-token is-on is-flying';
+  ghost.innerHTML = TOKEN_HEART;
+  ghost.setAttribute('aria-hidden', 'true');
+  Object.assign(ghost.style, { left: `${from.left}px`, top: `${from.top}px`, width: `${from.width}px`, height: `${from.height}px` });
+  document.body.appendChild(ghost);
+  const dx = to.left + to.width / 2 - (from.left + from.width / 2), dy = to.top + to.height / 2 - (from.top + from.height / 2);
+  const run = ghost.animate([
+    { transform: 'translate(0,0) scale(1)', opacity: 1 },
+    { transform: `translate(${dx * 0.5}px,${dy * 0.5 - 56}px) scale(1.15)`, opacity: 1, offset: 0.55 },
+    { transform: `translate(${dx}px,${dy}px) scale(.4)`, opacity: 0 },
+  ], { duration: 640, easing: 'cubic-bezier(.3,.7,.2,1)' });
+  run.onfinish = run.oncancel = () => ghost.remove();
 }
 
 // The round a tile stands for: the family's open round, or its finished
@@ -319,25 +291,51 @@ function weeklyCard(w) {
   </section>`;
 }
 
-// V3 — rounds that need you are shown on their game's tile (as the mockup's
-// tiles say "Aspetti Beatrice"); only a round no tile stands for (a retired
-// family, a second round) keeps a row. Completed rounds stay one tap away at
-// the end. Every row is a plain reading of the server's open_rounds / recent.
+// Rounds that need you. D11: the ones where the other one is waiting (it is
+// your turn, or your answers are ready) are «Vi aspetta», at the top; every
+// round still shows on its game's tile; only a round no tile stands for and
+// that is not waiting for you (a retired family, a second round) keeps a row
+// in «Da continuare». Completed rounds stay one tap away at the end. Every
+// row is a plain reading of the server's open_rounds / recent.
 const continueRounds = (h) => (h?.open_rounds || []).concat((h?.recent || []).filter((r) => r.reveal_ready && !r.my_reveal_seen_at));
 const doneRounds = (h) => (h?.recent || []).filter((r) => r.reveal_ready && r.my_reveal_seen_at);
 const ROUND_ICON = (family) => (family === 'per_voi' ? PER_VOI.icon : family === 'swipe' ? SWIPE.icon : FAMILY[family]?.icon || 'sparkle');
 const TONE_ORDER = { ready: 0, turn: 1, progress: 2, waiting: 3, seen: 4 };
+const byTone = (a, b) => (TONE_ORDER[roundStatus(a)?.tone] ?? 9) - (TONE_ORDER[roundStatus(b)?.tone] ?? 9);
+const waitsForMe = (r) => ['turn', 'ready'].includes(roundStatus(r)?.tone);
 
 function roundRow(r) {
   const status = roundStatus(r);
   const when = r.completed_at ? romeDate(String(r.completed_at).slice(0, 10), { day: 'numeric', month: 'long' }) : '';
   return `<button type="button" class="us-gv2-row" data-gv2-session="${esc(r.id)}" data-tone="${esc(status?.tone || '')}">${glyph(ROUND_ICON(r.game_family))}<span class="us-gv2-row-copy"><b>${esc(familyName(r.game_family))}</b>${when ? `<small>${esc(when)}</small>` : ''}</span>${status ? `<small class="us-gv2-row-state" data-tone="${esc(status.tone)}">${esc(status.text)}</small>` : ''}</button>`;
 }
+// «Vi aspetta»: the other one's character, the game, what happened, one action.
+function waitingRow(r) {
+  const ready = roundStatus(r)?.tone === 'ready';
+  const who = knownPartner() || 'L’altra persona';
+  const line = ready ? 'Le vostre risposte sono pronte' : r.partner_complete ? `${who} ha giocato, tocca a te` : `${who} ha iniziato, tocca a te`;
+  const partnerRole = home?.partner_role || (myRole() === 'beatrice' ? 'francesco' : 'beatrice');
+  let face = '';
+  try { face = window.UsPersonaggi?.character?.(partnerRole, { size: 46 }) || ''; } catch (_) { face = ''; }
+  return `<button type="button" class="us-gv2-aspetta" data-us-feedback="tap" data-gv2-session="${esc(r.id)}" data-tone="${ready ? 'ready' : 'turn'}">
+      <span class="us-gv2-aspetta-face" aria-hidden="true">${face || glyph(ROUND_ICON(r.game_family))}</span>
+      <span class="us-gv2-aspetta-copy"><b>${esc(familyName(r.game_family))}</b><small>${esc(line)}</small></span>
+      <span class="us-gv2-aspetta-cta" aria-hidden="true">${ready ? 'Scopri' : 'Gioca'}</span>
+    </button>`;
+}
+function waitingSection(h) {
+  const rounds = continueRounds(h).filter(waitsForMe).sort(byTone);
+  if (!rounds.length) return '';
+  return `<section class="us-gv2-vi-aspetta" data-s aria-labelledby="usGv2WaitingTitle">
+    <h3 class="us-gv2-section-title" id="usGv2WaitingTitle">Vi aspetta</h3>
+    <div class="us-gv2-vi-aspetta-rows">${rounds.map(waitingRow).join('')}</div>
+  </section>`;
+}
 function continueSection(h, onTiles) {
   const rounds = continueRounds(h)
     .filter((r) => r.game_family !== 'per_voi' || r.id !== h?.per_voi?.session_id)
-    .filter((r) => !onTiles.has(r.id))
-    .sort((a, b) => (TONE_ORDER[roundStatus(a)?.tone] ?? 9) - (TONE_ORDER[roundStatus(b)?.tone] ?? 9));
+    .filter((r) => !onTiles.has(r.id) && !waitsForMe(r))
+    .sort(byTone);
   if (!rounds.length) return '';
   return `<section class="us-gv2-continue" aria-labelledby="usGv2ContinueTitle">
     <h3 class="us-gv2-section-title" id="usGv2ContinueTitle">Da continuare</h3>
@@ -350,58 +348,66 @@ function doneSection(h) {
   return `<details class="us-gv2-done"><summary><span>Partite completate</span><b>${rounds.length}</b></summary><div class="us-gv2-rows">${rounds.map(roundRow).join('')}</div></details>`;
 }
 
-// One status vocabulary for every game card, said where the mockup says it:
-// in the card's line, instead of the kind of moment.
+// D11: every tile says one of three things on its chip — Pronto, Giocato,
+// Domani — and its line says the rest (the kind of moment, how far you are,
+// whom you are waiting for). The full state stays in the label.
+const CHIP_CHECK = icon('check-bold');
 function cardState(status) {
-  if (!status) return { state: 'ready', text: 'Disponibile' };
-  if (status.state === 'open') return { state: 'open', text: status.text, tone: status.tone, session: status.session };
-  if (status.state === 'played') return { state: 'played', text: 'Giocato questa settimana' };
-  return { state: 'locked', text: 'Da domani' };
+  if (!status) return { state: 'ready', chip: 'ready', text: 'Disponibile' };
+  if (status.state === 'open') return { state: 'open', chip: status.tone === 'waiting' || status.tone === 'seen' ? 'played' : 'ready', text: status.text, tone: status.tone, session: status.session };
+  if (status.state === 'played') return { state: 'played', chip: 'played', text: status.label || 'Giocato questa settimana' };
+  return { state: 'locked', chip: 'tomorrow', text: 'Da domani' };
 }
-function gameCard({ id, name, kind, action, extraClass = '', status }) {
+const CHIP_TEXT = { ready: 'Pronto', played: 'Giocato', tomorrow: 'Domani' };
+function gameCard({ id, name, kind, action, extraClass = '', status, line: own = '', attrs = '' }) {
   const card = cardState(status);
   const locked = card.state === 'locked';
-  const data = action === 'swipe' ? 'data-gv2-action="swipe"' : `data-gv2-family="${id}"`;
+  const data = action === 'swipe' ? 'data-gv2-action="swipe"' : action === 'per-voi' ? 'data-gv2-action="per-voi"' : `data-gv2-family="${id}"`;
   const round = card.session ? ` data-gv2-session="${esc(card.session)}" data-tone="${esc(card.tone || '')}"` : '';
-  const line = card.state === 'ready' ? kind : card.text;
-  return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-game${extraClass}" ${data} data-gv2-mode-state="${esc(card.state)}"${round}${locked ? ' aria-disabled="true"' : ''} aria-label="${esc(name)}: ${esc(kind)}. ${esc(card.text)}">
-      <span class="us-gv2-glyph" aria-hidden="true">${gameArt(id)}</span>
+  const line = own || (card.state === 'ready' ? kind : card.state === 'played' ? 'questa settimana' : locked ? 'torna domani' : card.text);
+  return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-game${extraClass}" ${data} data-gv2-mode-state="${esc(card.state)}" data-gv2-chip="${card.chip}"${round}${attrs}${locked ? ' aria-disabled="true"' : ''} aria-label="${esc(name)}: ${esc(kind)}. ${esc(card.text)}">
+      <span class="us-gv2-game-top"><span class="us-gv2-glyph" aria-hidden="true">${gameArt(id)}</span><span class="us-gv2-stato" aria-hidden="true">${card.chip === 'played' ? CHIP_CHECK : ''}${CHIP_TEXT[card.chip]}</span></span>
       <span class="us-gv2-game-copy"><b>${esc(name)}</b><small>${esc(line)}</small></span>
     </button>`;
 }
+// Per voi is the first tile, in the page's colour: its state is the server's
+// per_voi (one line, and the note when the other one's question is inside).
+function perVoiStatus(state) {
+  const sid = home?.per_voi?.session_id;
+  if (state === 'idle') return allowance() && !freeLeft() ? { state: 'locked' } : null;
+  if (state === 'played') return { state: 'played', label: 'Per oggi avete giocato' };
+  const tone = { pending: 'turn', reveal_ready: 'ready', waiting: 'waiting', in_progress: 'progress' }[state] || 'progress';
+  return { state: 'open', text: perVoiCopy().line, tone, session: sid };
+}
 
-// Round 3 parity — the mockup's Giochi, in its order: Sfida di oggi, the
-// week, I vostri giochi (Per voi tall, then Questo o quello and the five
-// families), then La vostra domanda. The weekly limit stays the server's: it
-// is said in the confirm before a new round and on the tiles it locks.
+// Redesign definitivo, fase 6 (D10, D11; the approved tavola «Gioca» and
+// «Gioca, gettoni finiti»): the tokens, «Vi aspetta», then I vostri giochi
+// (Per voi and the five families, Questo o quello under them), then La vostra
+// domanda. No weekly challenge (it is hidden, its data stays), no week strip
+// and no Domanda di oggi (Oggi has it).
 function renderHub() {
  const root=byId('quizHub');if(!root)return;
  const pv=perVoiCopy(),pvState=home?.per_voi?.state||'idle';
  const onTiles=new Set();
  const tileStatus=(f)=>{const r=tileRound(f.id);if(r)onTiles.add(r.id);return modeStatus(f,r);};
+ const spent=Boolean(allowance()&&!freeLeft());
+ const perVoi=gameCard({id:'per_voi',name:PER_VOI.name,kind:'Una partita preparata apposta',action:'per-voi',extraClass:' is-pervoi',status:perVoiStatus(pvState),line:pvState==='idle'&&spent?'':(pv.note||pv.line),attrs:` data-gv2-state="${esc(pvState)}"`});
  const swipe=gameCard({id:'swipe',name:SWIPE.name,kind:'8 carte · veloce e privato',action:'swipe',extraClass:' is-swipe',status:tileStatus(SWIPE)});
  const families=OFFERED.map(f=>gameCard({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)})).join('');
  root.innerHTML=`
   <h2 class="us-gv2-sr">Gioca</h2>
-  <div class="us-wc-slot" data-wc-slot></div>
-  ${weekStrip()}
+  ${tokensCard()}
+  ${waitingSection(home)}
   <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">
-   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3>${dayHint()}</div>
+   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3><small>${spent?'tornano domani':'bastano pochi minuti'}</small></div>
    <div class="us-gv2-game-grid" data-s>
-    <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState==='pending'||pvState==='reveal_ready'?'on':'off'}">
-     <span class="us-gv2-glyph" aria-hidden="true" data-us-attention-icon>${gameArt('per_voi')}</span>
-     <span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small>${pv.note?`<small class="us-gv2-pervoi-note">${esc(pv.note)}</small>`:''}</span>
-     <span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
-    </button>
-    ${swipe}${families}
+    ${perVoi}${families}${swipe}
    </div>
-   ${plusSoonRow()}
   </section>
   ${weeklyCard(home?.weekly)}
   ${continueSection(home,onTiles)}
   ${doneSection(home)}`;
  window.UsDailyQuestionHub?.paintCard?.();
- window.UsWeeklyChallenge?.paint?.();
 }
 
 function renderHubError() {
@@ -569,28 +575,7 @@ async function startSwipe() {
   } finally { busy = false; }
 }
 
-// 1.0 — a new round spends today's game for both of you: it is always
-// confirmed first, with the real number the server says is left.
-async function confirmSpend({ family, played, title, confirmLabel, again = '' }) {
-  const a = allowance();
-  if (!a) return true;
-  const ask = window.UsUiFoundation?.confirm;
-  if (typeof ask !== 'function') return true;
-  const left = Math.max(1, a.limit - Math.min(a.used, a.limit));
-  const name = familyName(family);
-  const spend = left === 1 ? 'Userete la partita di oggi.' : `Userete 1 delle ${left} partite di oggi.`;
-  return ask({
-    kicker: played ? name.toUpperCase() : 'OGGI',
-    title: played ? title : name,
-    // Played already: the mockup's line, then what it costs today.
-    body: played && again ? `${again} ${spend}` : spend,
-    confirmLabel: played ? confirmLabel : 'Inizia',
-    cancelLabel: 'Non ora',
-    icon: played ? 'arrows-clockwise' : 'info',
-  });
-}
-
-async function chooseSwipe() {
+async function chooseSwipe(from) {
   if (busy) return;
   const open = tileRound('swipe');
   if (open) return openSession(open.id);
@@ -599,12 +584,11 @@ async function chooseSwipe() {
     if (played?.completed) return openSession(played.session_id);
     return toast(EXHAUSTED);
   }
-  const ok = await confirmSpend({ family: 'swipe', played, title: 'Avete già fatto Questo o quello questa settimana', confirmLabel: 'Altre 8', again: 'Volete altre otto carte?' });
-  if (!ok) return;
+  flyToken(from);
   return startSwipe();
 }
 
-async function chooseMode(family) {
+async function chooseMode(family, from) {
   if (busy) return;
   const open = tileRound(family);
   if (open) return openSession(open.id);
@@ -613,8 +597,7 @@ async function chooseMode(family) {
     if (played?.completed) return openSession(played.session_id);
     return toast(EXHAUSTED);
   }
-  const ok = await confirmSpend({ family, played, title: `Avete già giocato a ${familyName(family)} questa settimana`, confirmLabel: 'Gioca ancora', again: 'Potete fare un’altra partita, con domande nuove.' });
-  if (!ok) return;
+  flyToken(from);
   return startRound(family);
 }
 
@@ -628,11 +611,13 @@ async function openSession(id) {
   } catch (error) { console.warn('[US Gioca] session', error); toast('Non riesco ad aprire la partita.'); }
 }
 
-async function openPerVoi() {
+async function openPerVoi(from) {
   if (document.querySelector('.page.active')?.id !== 'quiz') window.go?.('quiz', { nav: true });
   if (!home) await load();
   const sid = home?.per_voi?.session_id;
   if (sid) return openSession(sid);
+  if (busy) return;
+  if (!allowance() || freeLeft()) flyToken(from);
   return startRound('per_voi');
 }
 
@@ -1201,8 +1186,8 @@ function onClick(event) {
   const button = event.target.closest('button');
   if (!button) return;
   const action = button.dataset.gv2Action;
-  if (action === 'per-voi') openPerVoi();
-  else if (action === 'swipe') chooseSwipe();
+  if (action === 'per-voi') openPerVoi(button);
+  else if (action === 'swipe') chooseSwipe(button);
   else if (button.dataset.gv2SwipeChoice != null) commitSwipeChoice(Number(button.dataset.gv2SwipeChoice), 'tap');
   else if (action === 'weekly-create') renderWeeklyForm();
   else if (action === 'leave-something') window.UsLeftForYou?.openComposer?.();
@@ -1219,7 +1204,7 @@ function onClick(event) {
   }
   else if (action === 'retry') load();
   else if (action === 'plus-soon') window.UsPlusSoon?.open?.({ from: 'gioca' });
-  else if (button.dataset.gv2Family) chooseMode(button.dataset.gv2Family);
+  else if (button.dataset.gv2Family) chooseMode(button.dataset.gv2Family, button);
   else if (button.dataset.gv2Session) openSession(button.dataset.gv2Session);
 }
 
@@ -1249,7 +1234,7 @@ function boot() {
 }
 
 window.USGameV2 = {
-  load, refresh, showHub, openPerVoi, startRound, startSwipe, openSession, chooseMode, chooseSwipe, paintWeek,
+  load, refresh, showHub, openPerVoi, startRound, startSwipe, openSession, chooseMode, chooseSwipe,
   isOpen: () => view !== 'hub',
   close: showHub,
 };

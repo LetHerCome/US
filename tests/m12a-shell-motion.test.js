@@ -184,16 +184,13 @@ test('aurora: reduced motion never pulses', () => {
 
 // ---------------------------------------------------------------- ATTENTION
 
-test('attention: global Left for You and Gioca Per voi share the same primitive', () => {
+test('attention: the global Left for You owns the attention primitive in the top bar', () => {
   const envelope = topBar.match(/<button[^>]*id="leftForYouPartnerEntry"[^>]*>/)?.[0] || '';
   assert.match(envelope, /us-attention-orbit/);
   assert.match(envelope, /data-us-attention="off"/);
   assert.equal((topBar.match(/data-us-attention-icon/g) || []).length, 1, 'only the global envelope owns an attention glyph in the top bar');
-  const games = read('games.js');
-  assert.match(games, /us-gv2-pervoi us-attention-orbit/);
-  assert.match(games, /data-gv2-action="per-voi"/);
-  assert.match(games, /data-us-attention=/);
-  assert.match(games, /data-us-attention-icon/);
+  // Fase 6 (D11): Per voi is a tile with a chip; «Vi aspetta» says the turn, no orbit.
+  assert.doesNotMatch(read('games.js'), /us-attention-orbit/);
 });
 
 test('attention: the primitive is generic (no envelope/Per voi selectors), slow with a rest, and reduced-motion aware', () => {
@@ -236,7 +233,7 @@ test('tiles: Gioca destinations share one press + destination primitive', () => 
   assert.doesNotMatch(html, /class="noi-hub-card|id="noiWeekBoardOpen"/);
   const games = read('games.js');
   assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-game/);
-  assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-pervoi/);
+  assert.match(games, /action:'per-voi',extraClass:' is-pervoi'/, 'Per voi is one of the tiles');
   assert.match(foundationCss, /\[data-us-tile\]:active\{transform:scale\(\.975\)\}/);
   assert.match(foundationCss, /@keyframes us-content-enter\{from\{opacity:0;transform:translate3d\(0,8px,0\)\}/);
   assert.match(read('styles.css'), /#bond \.noi-canonical-page:not\(\[data-noi-view="hub"\]\)>:is\(/);

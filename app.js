@@ -2517,9 +2517,9 @@ function oggiTodayISO(){
   return typeof usDailyQuestionDay==='function'?usDailyQuestionDay():new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome'}).format(new Date());
 }
 // F2, redesign D9 — "Tocca a te": a dot on Gioca while the other waits for me
-// in a game (a round, Per voi, until fase 6 the other one's photo of the
-// challenge); on Oggi while they answered the Domanda di oggi and I have not.
-function renderToccaATe({daily=false,game=false,challenge=false}={}){
+// in a game (a round or Per voi; the weekly challenge is hidden since fase 6,
+// D10); on Oggi while they answered the Domanda di oggi and I have not.
+function renderToccaATe({daily=false,game=false}={}){
   const mark=(page,on,label)=>{
     const tab=document.querySelector?.(`.nav button[data-page="${page}"]`);
     if(!tab)return false;
@@ -2528,7 +2528,7 @@ function renderToccaATe({daily=false,game=false,challenge=false}={}){
     return on;
   };
   const oggi=mark('home',Boolean(daily),'Oggi');
-  const gioca=mark('quiz',Boolean(game||challenge),'Gioca');
+  const gioca=mark('quiz',Boolean(game),'Gioca');
   return oggi||gioca;
 }
 // ===== M9B — Domanda di oggi: il rituale quotidiano su Oggi =====
@@ -2751,12 +2751,9 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
     // The calendar's next commitment still reaches the pill when Events fails.
     if(refreshId===usTodayPriorityRefreshId&&typeof refreshOggiNext==='function')refreshOggiNext({event:'failed'});
   }
-  // La sfida della settimana (weekly-challenge.js): only the other one's photo, for the dot on Gioca.
-  let challenge=null;
-  try{challenge=await window.UsWeeklyChallenge?.todayPriority?.();}catch(_){challenge=null;}
   if(refreshId!==usTodayPriorityRefreshId)return;
   const dailyState=dailySource?.state;
-  renderToccaATe({daily:Boolean(dailyState&&dailyState.my_answer==null&&dailyState.partner_has_answer),game:Boolean(usOggiGameTurn?.game),challenge:challenge?.category==='waiting_for_me'});
+  renderToccaATe({daily:Boolean(dailyState&&dailyState.my_answer==null&&dailyState.partner_has_answer),game:Boolean(usOggiGameTurn?.game)});
   window.UsDailyQuestionHub?.paint?.();
 }
 window.UsTodayPriority=Object.freeze({
@@ -2846,7 +2843,7 @@ function closeToday(){
 }
 window.closeToday=closeToday;
 
-// ===== 1.0 — La domanda di oggi in Gioca (was home-cleanup.js); since 23/11/2026 (D11) only its model and the week stay =====
+// ===== 1.0 — La domanda di oggi in Gioca (was home-cleanup.js); since 23/11/2026 (D11) only its model stays =====
 // Same question, same sheet: the Gioca card opens it where you are, like the
 // Oggi card. It only reads the canonical state hydrateToday already loaded.
 function dailyHubModel(){
@@ -2862,12 +2859,9 @@ function dailyHubModel(){
   return {...base,state:'answer',meta:'Una domanda per voi oggi',cta:'Rispondi'};
 }
 // La domanda di oggi left Gioca (redesign definitivo, 23/11/2026, D11): it
-// lives on Oggi only. Gioca keeps the week of answers, repainted here.
-function paintDailyInGioca(){
-  const hub=document.getElementById('quizHub');
-  if(!hub||hub.classList.contains('hidden'))return;
-  window.USGameV2?.paintWeek?.();
-}
+// lives on Oggi only, and since fase 6 Gioca has no week strip either. The
+// name stays for the callers (Oggi repaints after a daily change).
+function paintDailyInGioca(){}
 // F2 — Gioca has no turn API: Oggi reads "Tocca a te" from the hub games.js
 // just rendered (a round where the other is waiting, or Per voi pending).
 let usOggiGameTurnTimer=0;

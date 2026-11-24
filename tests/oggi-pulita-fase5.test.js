@@ -91,13 +91,14 @@ test('«Tocca a te»: a game lights Gioca, the Domanda di oggi lights Oggi, noth
   assert.deepEqual([t.nav.quiz.attrs['data-us-tocca'], t.nav.quiz.attrs['aria-label']], ['on', 'Gioca, tocca a te']);
   assert.deepEqual([t.nav.home.attrs['data-us-tocca'], t.nav.home.attrs['aria-label']], [undefined, 'Oggi']);
   t.render({ challenge: true });
-  assert.equal(t.nav.quiz.attrs['data-us-tocca'], 'on', 'until fase 6 the other one\'s photo of the challenge');
+  assert.equal(t.nav.quiz.attrs['data-us-tocca'], undefined, 'fase 6 (D10): the weekly challenge is hidden, it lights nothing');
   t.render({ daily: true });
   assert.deepEqual([t.nav.home.attrs['data-us-tocca'], t.nav.home.attrs['aria-label']], ['on', 'Oggi, tocca a te']);
   assert.deepEqual([t.nav.quiz.attrs['data-us-tocca'], t.nav.quiz.attrs['aria-label']], [undefined, 'Gioca']);
   assert.equal(t.render(), false);
   assert.equal(t.nav.home.attrs['data-us-tocca'], undefined);
-  assert.match(app, /renderToccaATe\(\{daily:Boolean\(dailyState&&dailyState\.my_answer==null&&dailyState\.partner_has_answer\),game:Boolean\(usOggiGameTurn\?\.game\),challenge:challenge\?\.category==='waiting_for_me'\}\);/);
+  assert.match(app, /renderToccaATe\(\{daily:Boolean\(dailyState&&dailyState\.my_answer==null&&dailyState\.partner_has_answer\),game:Boolean\(usOggiGameTurn\?\.game\)\}\);/);
+  assert.doesNotMatch(app, /UsWeeklyChallenge\?\.todayPriority/);
   assert.match(read('dc-oggi.css'), /\.nav button:is\(\[data-page="home"\],\[data-page="quiz"\]\)\[data-us-tocca="on"\]:not\(\.active\) \.nicon::after\{[\s\S]*?background:var\(--us-partner\);/);
   assert.match(read('i18n-en.js'), /'Gioca, tocca a te': 'Play, your turn',/);
 });

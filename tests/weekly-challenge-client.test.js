@@ -166,20 +166,17 @@ test('one change: asked first, then the server picks; its refusals in plain word
   assert.deepEqual(calls, [['confirm', 'Cambiare la sfida?'], ['change_weekly_challenge', { target_challenge_id: ID }], ['toast', 'Con una foto già messa la sfida non si cambia']]);
 });
 
-test('wired in: the module is loaded and cached, Gioca has its slot and its dot, Realtime its lines', () => {
+test('wired in: the module is loaded and cached, Realtime its lines; hidden from Gioca since fase 6 (D10)', () => {
   const index = read('index.html');
   assert.match(index, /<script defer src="\/weekly-challenge\.js\?v=[^"]+"><\/script>/);
   assert.match(read('service-worker.js'), /versioned\("\/weekly-challenge\.js"\)/);
   for (const f of ['scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) assert.match(read(f), /'weekly-challenge\.js'/, f);
   const games = read('games.js');
-  // Redesign definitivo (D11): no daily slot before it any more.
-  assert.match(games, /<h2 class="us-gv2-sr">Gioca<\/h2>\n\s*<div class="us-wc-slot" data-wc-slot><\/div>/);
-  assert.match(games, /window\.UsWeeklyChallenge\?\.paint\?\.\(\);/);
+  // Redesign definitivo (D10): the challenge is hidden, its data stays: no slot, no paint, no dot.
+  assert.doesNotMatch(games, /data-wc-slot|UsWeeklyChallenge/);
   const app = read('app.js');
-  // Redesign D9/D10: no card on Oggi; the other one's photo only lights the dot on Gioca.
   assert.doesNotMatch(app, /Sfida · scade domenica|action==='challenge'/);
-  assert.match(app, /challenge=await window\.UsWeeklyChallenge\?\.todayPriority\?\.\(\)/);
-  assert.match(app, /challenge:challenge\?\.category==='waiting_for_me'\}\);/);
+  assert.doesNotMatch(app, /UsWeeklyChallenge\?\.todayPriority|challenge:challenge/);
   assert.match(app, /table:'couple_weekly_challenges'[^\n]*UsWeeklyChallenge\?\.onChange/);
   assert.match(app, /table:'couple_weekly_challenge_photos'[^\n]*UsWeeklyChallenge\?\.onChange/);
 });

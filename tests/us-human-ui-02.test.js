@@ -80,9 +80,10 @@ test('page labels: Ricordi and Gioca stay accessible without a visible top-left 
   assert.doesNotMatch(moments, /<h2>Ricordi<\/h2>/);
   const games = read('games.js');
   assert.match(games, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
-  // Redesign definitivo (D11): la domanda di oggi left Gioca; the hub starts with the week.
+  // Redesign definitivo (D11): la domanda di oggi left Gioca; since fase 6 the hub starts with the tokens.
   assert.doesNotMatch(games, /us-gv4-daily-pending-title/);
-  assert.match(games, /<div class="us-gv2-week" id="usGv2Week" data-s role="list" aria-label="Questa settimana">/);
+  assert.match(games, /<section class="us-gv2-tokens" id="usGv2Tokens"/);
+  assert.doesNotMatch(games, /id="usGv2Week"/);
   assert.doesNotMatch(games, /rhythmStrip|us-gv2-head"/);
 });
 
@@ -157,8 +158,13 @@ test('Gioca: rounds are plain readings of open_rounds / recent, on their tiles; 
   const rows = [...section.matchAll(/data-gv2-session="([^"]+)" data-tone="([a-z]+)"/g)].map((m) => [m[1], m[2]]);
   assert.deepEqual(rows, [['o2', 'progress']]);
   assert.match(section, /<b>E se…\?<\/b>/);
-  const tiles = [...html.matchAll(/data-gv2-family="([a-z_]+)" data-gv2-mode-state="open" data-gv2-session="([^"]+)" data-tone="([a-z]+)"[^>]*>[\s\S]*?<small>([^<]+)<\/small>/g)].map((m) => m.slice(1));
+  const tiles = [...html.matchAll(/data-gv2-family="([a-z_]+)" data-gv2-mode-state="open" data-gv2-chip="[a-z]+" data-gv2-session="([^"]+)" data-tone="([a-z]+)"[^>]*>[\s\S]*?<small>([^<]+)<\/small>/g)].map((m) => m.slice(1));
   assert.deepEqual(tiles, [['scopritevi', 'o3', 'waiting', 'Aspetti Beatrice'], ['ridete', 'o1', 'turn', 'Tocca a te'], ['rivivete', 'r1', 'ready', 'Risposte pronte']]);
+  // Fase 6 (D11): what waits for me is «Vi aspetta», first, the answers ready before my turn.
+  const waiting = html.match(/<section class="us-gv2-vi-aspetta"[\s\S]*?<\/section>/)?.[0] || '';
+  assert.deepEqual([...waiting.matchAll(/data-gv2-session="([^"]+)" data-tone="([a-z]+)"/g)].map((m) => [m[1], m[2]]), [['r1', 'ready'], ['o1', 'turn']]);
+  assert.match(waiting, /<b>Ridete<\/b><small>Beatrice ha giocato, tocca a te<\/small>/);
+  assert.ok(html.indexOf('us-gv2-vi-aspetta') < html.indexOf('us-gv2-choose'), 'Vi aspetta before the games');
   assert.ok(html.indexOf('us-gv2-continue') > html.indexOf('us-gv2-choose'), 'the rest comes after the games');
   const done = html.match(/<details class="us-gv2-done">[\s\S]*?<\/details>/)?.[0] || '';
   assert.match(done, /<summary><span>Partite completate<\/span><b>1<\/b><\/summary>/);

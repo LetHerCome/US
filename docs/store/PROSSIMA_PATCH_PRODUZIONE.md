@@ -2,9 +2,25 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Redesign, fase 6: Gioca con i gettoni (24/11)
+
+**Stato:** ramo `claude/redesign-fase6-gioca`, verso il ramo fisso di staging. Founder, 24/11: «Vai allora andiamo avanti» (le fasi 6–8, poi un controllo insieme). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D10 e D11; tavole «Gioca» e «Gioca, gettoni finiti» approvate il 23/11.
+
+**Cosa cambia:**
+- **Tre gettoni grandi in cima a Gioca** al posto del contatore con i tre pallini: «Ancora 2 su 3 oggi · Ogni partita nuova usa un gettone». Il numero resta quello del server.
+- **Il gettone vola nel gioco** quando parte una partita nuova, al posto della finestra «Userete 1 delle 3 partite di oggi» (anche quella per rigiocare un gioco della settimana). Con «Riduci movimento» il gettone si spegne e basta.
+- **A zero gettoni:** «Domani altre 3» con l'ora del rinnovo («tra 6 ore e 12 minuti», mezzanotte di Roma) e, solo lì, la riga «Partite illimitate con US Plus · In arrivo» con «Avvisami».
+- **«Vi aspetta» in alto:** le partite dove tocca a te o dove le risposte sono pronte, col personaggio dell'altra persona, il gioco, «Bea ha giocato, tocca a te» e un tasto («Gioca» o «Scopri»).
+- **I vostri giochi:** Per voi è la prima casella (nel colore della pagina), poi i cinque giochi e Questo o quello in fondo. Ogni casella dice una cosa sola: **Pronto**, **Giocato** o **Domani**; sotto, il tipo di gioco o a che punto siete.
+- **Esce la sfida della settimana** (D10): niente più scheda in Gioca né pallino su Gioca per la foto dell'altra persona. I dati restano, si nasconde soltanto.
+- **Esce la striscia dei 7 giorni** in cima a Gioca: era legata alla domanda di oggi, che è già uscita da Gioca.
+- Restano «La vostra domanda», «Da continuare» (solo per le partite che nessuna casella rappresenta) e «Partite completate».
+
+**Server:** niente. **Da decidere:** le notifiche della sfida della settimana (lunedì e sabato) partono ancora dal server: vanno fermate prima della produzione, e su staging col via del founder.
+
 ### Redesign, fase 5: Oggi senza schede di suggerimento (24/11)
 
-**Stato:** ramo `claude/redesign-fase5-oggi`, verso il ramo fisso di staging. Founder, 24/11: «Fase 5 vai». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D9.
+**Stato:** in staging dal 24/11 (PR #286, merge `48335bb5`, sito `…-s48335bb5`). Founder, 24/11: «Fase 5 vai». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D9.
 
 **Cosa cambia:**
 - **Via la zona delle schede su Oggi.** Sopra la barra restano la didascalia della foto, la riga (prossimo impegno, distanza, Come stai) e la domanda di oggi. Ogni avviso che passava di lì ha ora il suo posto.
