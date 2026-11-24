@@ -32,19 +32,20 @@ const myRole = () => window.usProfile?.role || null;
 const partnerName = () => window.UsIdentity?.current().partnerName || 'La tua persona';
 const familyName = (id) => (id === 'per_voi' ? PER_VOI.name : id === 'swipe' ? SWIPE.name : FAMILY[id]?.name || 'Gioca');
 const icon = (name) => `<span class="us-gv2-icon" data-gv2-icon="${esc(name)}" aria-hidden="true"></span>`;
-// Round 3 parity: each game's mark is the approved mockup art (gioca body.html,
-// copied shape for shape); colours come from the tokens through classes, so
-// Noi follows the Accenti like everywhere else.
+// Stile unico (founder, 24/11/2026, tavola «Una mano sola»): each game's mark
+// is the two of you playing it, drawn with the characters' hand (thin outline
+// in the dark of each colour, the same eyes) and only your two colours plus the
+// paper: f-tu/s-tu yours, f-pa/s-pa the other one's (dc-gioca.css).
 const GAME_ART = Object.freeze({
-  per_voi: '<circle class="f-rosa" cx="17" cy="22" r="12"/><circle class="f-lilla is-screen" cx="27" cy="22" r="12"/>',
-  swipe: '<rect class="f-night" x="10" y="9" width="20" height="27" rx="5"/><rect class="f-ambra" x="15" y="7" width="20" height="27" rx="5" transform="rotate(12 25 20)"/>',
-  scopritevi: '<circle class="s-menta" cx="15" cy="24" r="8" fill="none" stroke-width="4"/><circle class="s-menta" cx="30" cy="24" r="8" fill="none" stroke-width="4"/><path class="s-menta" d="M20 22h4" stroke-width="4"/>',
-  confrontatevi: '<path class="s-noi" d="M8 16h22l-5-5M36 28H14l5 5" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>',
-  ridete: '<circle class="f-ambra" cx="22" cy="22" r="14"/><circle class="f-ink" cx="17" cy="19" r="2"/><circle class="f-ink" cx="27" cy="19" r="2"/><path class="s-ink" d="M15 25c3 5 11 5 14 0" fill="none" stroke-width="2.4" stroke-linecap="round"/>',
-  quanto_mi_conosci: '<circle class="s-rosa" cx="22" cy="22" r="14" fill="none" stroke-width="4"/><path class="s-rosa" d="M18 18.5a4 4 0 1 1 5.6 3.7c-1 .4-1.6 1.2-1.6 2.3v1" fill="none" stroke-width="3.2" stroke-linecap="round"/><circle class="f-rosa" cx="22" cy="30" r="2"/>',
-  rivivete: '<rect class="f-night" x="8" y="12" width="22" height="22" rx="5"/><rect class="f-ambra" x="14" y="8" width="22" height="22" rx="5"/><path class="s-ink" d="M19 23l4-4 3 3 2-2 4 4" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+  per_voi: '<path class="f-tu s-tu" d="M24 4.5c1.6-2.4 5.4-1.2 5.4 1.7 0 2.6-3.4 4.6-5.4 5.8-2-1.2-5.4-3.2-5.4-5.8 0-2.9 3.8-4.1 5.4-1.7Z" stroke-width="1.6" stroke-linejoin="round"/><circle class="f-tu s-tu" cx="15" cy="30" r="12" stroke-width="2.2"/><rect class="f-pa s-pa" x="24" y="18" width="21" height="24" rx="8" stroke-width="2.2"/><circle class="f-ink" cx="11.5" cy="30" r="1.8"/><circle class="f-ink" cx="18" cy="30" r="1.8"/><circle class="f-ink" cx="31" cy="30" r="1.8"/><circle class="f-ink" cx="38" cy="30" r="1.8"/>',
+  swipe: '<rect class="f-tu s-tu" x="6" y="9" width="20" height="28" rx="6" stroke-width="2.2" transform="rotate(-10 16 23)"/><rect class="f-pa s-pa" x="22" y="11" width="20" height="28" rx="6" stroke-width="2.2" transform="rotate(10 32 25)"/><circle class="f-ink" cx="13.5" cy="22" r="1.7"/><circle class="f-ink" cx="19" cy="21" r="1.7"/><circle class="f-ink" cx="29.5" cy="23.5" r="1.7"/><circle class="f-ink" cx="35" cy="24.5" r="1.7"/>',
+  scopritevi: '<path class="s-pa" d="M31 31 L42 42" fill="none" stroke-width="5.5" stroke-linecap="round"/><circle class="f-pa s-pa" cx="21" cy="21" r="14" stroke-width="2.2"/><circle class="f-carta s-pa" cx="21" cy="21" r="9.5" stroke-width="1.6"/><circle class="f-ink" cx="17.5" cy="21" r="2"/><circle class="f-ink" cx="24.5" cy="21" r="2"/>',
+  confrontatevi: '<path class="f-tu s-tu" d="M12 5h16a7 7 0 0 1 7 7v6a7 7 0 0 1-7 7h-9l-6 5v-5.3A7 7 0 0 1 5 18v-6a7 7 0 0 1 7-7Z" stroke-width="2.2" stroke-linejoin="round"/><path class="f-pa s-pa" d="M36 21h-14a7 7 0 0 0-7 7v5a7 7 0 0 0 7 7h8l6 5v-5.3A7 7 0 0 0 43 33v-5a7 7 0 0 0-7-7Z" stroke-width="2.2" stroke-linejoin="round"/><circle class="f-ink" cx="25" cy="30.5" r="1.7"/><circle class="f-ink" cx="33" cy="30.5" r="1.7"/>',
+  ridete: '<circle class="f-tu s-tu" cx="24" cy="25" r="17" stroke-width="2.2"/><path class="s-ink" d="M14 21q3.5-4 7 0M27 21q3.5-4 7 0" fill="none" stroke-width="2.2" stroke-linecap="round"/><path class="f-bocca s-ink" d="M16 27h16a8 8 0 0 1-16 0Z" stroke-width="2" stroke-linejoin="round"/>',
+  quanto_mi_conosci: '<rect class="f-pa s-pa" x="5" y="14" width="30" height="30" rx="10" stroke-width="2.2"/><circle class="f-ink" cx="15" cy="29" r="2"/><circle class="f-ink" cx="25" cy="29" r="2"/><circle class="f-tu s-tu" cx="37" cy="12" r="9.5" stroke-width="2.2"/><path class="s-ink" d="M34.3 10.3a2.8 2.8 0 1 1 3.9 2.6c-.7.3-1.1.8-1.1 1.6" fill="none" stroke-width="2" stroke-linecap="round"/><circle class="f-ink" cx="37.1" cy="17.2" r="1.2"/>',
+  rivivete: '<g transform="rotate(-6 24 26)"><rect class="f-carta s-carta" x="8" y="7" width="32" height="37" rx="3" stroke-width="2"/><rect class="f-pa" x="12" y="11" width="24" height="22" rx="1.5"/><circle class="f-tu s-tu" cx="19" cy="27" r="6" stroke-width="1.6"/><circle class="f-ink" cx="17.2" cy="27" r="1.1"/><circle class="f-ink" cx="20.8" cy="27" r="1.1"/></g><rect class="f-tu" x="17" y="2.5" width="14" height="6" opacity=".85" transform="rotate(-9 24 5)"/>',
 });
-const gameArt = (id) => `<svg class="us-gv2-art" viewBox="0 0 44 44" focusable="false">${GAME_ART[id] || ''}</svg>`;
+const gameArt = (id) => `<svg class="us-gv2-art" viewBox="0 0 48 48" focusable="false">${GAME_ART[id] || ''}</svg>`;
 const uuid = () => window.crypto.randomUUID();
 const romeDate = (iso, opts) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'), { timeZone: 'UTC', ...opts }) : '');
 const mondayLabel = (iso) => romeDate(iso, { weekday: 'long', day: 'numeric', month: 'long' });
@@ -366,7 +367,7 @@ function gameCard({ id, name, kind, action, extraClass = '', status, line: own =
   const round = card.session ? ` data-gv2-session="${esc(card.session)}" data-tone="${esc(card.tone || '')}"` : '';
   const line = own || (card.state === 'ready' ? kind : card.state === 'played' ? 'questa settimana' : locked ? 'torna domani' : card.text);
   return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-game${extraClass}" ${data} data-gv2-mode-state="${esc(card.state)}" data-gv2-chip="${card.chip}"${round}${attrs}${locked ? ' aria-disabled="true"' : ''} aria-label="${esc(name)}: ${esc(kind)}. ${esc(card.text)}">
-      <span class="us-gv2-game-top"><span class="us-gv2-glyph" aria-hidden="true">${gameArt(id)}</span><span class="us-gv2-stato" aria-hidden="true">${card.chip === 'played' ? CHIP_CHECK : ''}${CHIP_TEXT[card.chip]}</span></span>
+      <span class="us-gv2-game-top"><span class="us-gv2-glyph" aria-hidden="true">${gameArt(id)}</span>${card.chip === 'ready' ? '' : `<span class="us-gv2-stato" aria-hidden="true">${card.chip === 'played' ? CHIP_CHECK : ''}${CHIP_TEXT[card.chip]}</span>`}</span>
       <span class="us-gv2-game-copy"><b>${esc(name)}</b><small>${esc(line)}</small></span>
     </button>`;
 }

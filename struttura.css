@@ -103,7 +103,7 @@
 /* ---------- Il Profilo: your card, then the settings ---------- */
 #settings .us-profile-card{display:flex;align-items:center;gap:16px;margin:14px 0 6px;padding:16px;border:1px solid var(--us-color-line,rgba(247,239,233,.1));border-radius:24px;background:var(--us-color-surface,rgba(247,239,233,.045))}
 #settings .us-profile-char{flex:none;display:grid;place-items:center;width:108px;height:100px;border-radius:20px;background:radial-gradient(70% 70% at 50% 72%,color-mix(in srgb,var(--us-tu) 24%,transparent),transparent 76%)}
-#settings .us-profile-char .us-char{display:block;overflow:visible;filter:drop-shadow(1.5px 0 0 #f7efe9) drop-shadow(-1.5px 0 0 #f7efe9) drop-shadow(0 1.5px 0 #f7efe9) drop-shadow(0 -1.5px 0 #f7efe9)}
+#settings .us-profile-char .us-char{display:block;overflow:visible}
 #settings .us-profile-who{display:flex;flex-direction:column;gap:9px;min-width:0}
 #settings .us-profile-who b{font:400 26px/1.1 var(--us-font-display,'Fraunces',serif);color:var(--us-color-text,#f7efe9);overflow-wrap:anywhere}
 #settings .us-profile-chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -119,7 +119,7 @@
 #home .us-angolo-entry:active{transform:scale(.95)}
 #home .us-angolo-entry:focus-visible{outline:2px solid var(--us-color-text,#f7efe9);outline-offset:4px;border-radius:18px}
 #home .us-angolo-entry .us-duo-one+.us-duo-one{margin-left:-10px}
-:is(#home .us-angolo-entry,.us-angolo-duo) .us-char{display:block;overflow:visible;filter:drop-shadow(1.5px 0 0 #f7efe9) drop-shadow(-1.5px 0 0 #f7efe9) drop-shadow(0 1.5px 0 #f7efe9) drop-shadow(0 -1.5px 0 #f7efe9)}
+:is(#home .us-angolo-entry,.us-angolo-duo) .us-char{display:block;overflow:visible}
 .us-angolo-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:end;justify-content:center}
 .us-angolo-overlay[aria-hidden="false"]{display:flex}
 .us-angolo-sheet{position:relative;width:min(100%,560px);max-height:calc(100% - var(--us-safe-top,0px) - 48px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:14px 16px calc(24px + var(--us-safe-bottom,0px));border-radius:28px 28px 0 0;border-top:1px solid var(--us-color-line,rgba(247,239,233,.1));background:var(--us-color-surface,#1d1119);color:var(--us-color-text,#f7efe9);box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
@@ -150,7 +150,7 @@
 
 /* The couple card in the Profilo: the two characters, no circles. */
 #settings .us-couple-id-card .us-couple-avatar.us-couple-char{display:grid;place-items:end center;padding:0!important;background:none!important;box-shadow:none!important;overflow:visible;border-radius:0}
-#settings .us-couple-id-card .us-couple-avatar.us-couple-char .us-char{overflow:visible;filter:drop-shadow(1.2px 0 0 #f7efe9) drop-shadow(-1.2px 0 0 #f7efe9) drop-shadow(0 1.2px 0 #f7efe9) drop-shadow(0 -1.2px 0 #f7efe9)}
+#settings .us-couple-id-card .us-couple-avatar.us-couple-char .us-char{overflow:visible}
 #settings .us-profile-look{justify-self:start;align-self:flex-start;min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--us-color-line-strong,rgba(247,239,233,.17));background:none;color:var(--us-color-text,#f7efe9);font:600 13px/1 var(--us-font-ui,'Figtree',sans-serif);cursor:pointer}
 #settings .us-profile-look:focus-visible{outline:2px solid var(--us-tu);outline-offset:3px}
 

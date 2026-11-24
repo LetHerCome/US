@@ -45,7 +45,8 @@ test('Gioca tiles: a fresh week is six cards of icon, name, kind of moment and "
     assert.match(tile, /<b>[^<]+<\/b><small>[^<]+<\/small>/, 'then its name and the kind of moment');
     // Round 3 parity (062): the mockup's tile is its art, name and kind; a
     // ready card says "Disponibile" to assistive tech, not with a badge.
-    assert.match(tile, /<svg class="us-gv2-art" viewBox="0 0 44 44"/, 'the mockup art, not a Phosphor glyph');
+    assert.match(tile, /<svg class="us-gv2-art" viewBox="0 0 48 48"/, 'the drawn mark (stile unico), not a Phosphor glyph');
+    assert.doesNotMatch(tile, /us-gv2-stato/, 'a ready tile says nothing: no «Pronto»');
     assert.match(tile, /data-gv2-mode-state="ready"[^>]*aria-label="[^"]+\. Disponibile"/, 'a ready card says it is available');
     assert.doesNotMatch(tile, /us-gv2-game-state/);
   }
@@ -64,7 +65,7 @@ test('Gioca hub (fase 6): tokens, then the games; no week strip, every tile one 
   for (const gone of ['Scopritevi, giocando', 'Cinque domande alla volta', 'IN CORSO', 'SCEGLIETE VOI', 'usGv2Week', 'us-gv2-wd', 'data-wc-slot', 'us-gv2-daycount', 'us-gv2-pervoi-cta']) assert.doesNotMatch(html, new RegExp(gone));
   assert.match(html, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
   assert.ok(html.indexOf('id="usGv2Tokens"') < html.indexOf('us-gv2-choose'), 'the tokens first');
-  assert.match(html, /data-gv2-family="confrontatevi" data-gv2-mode-state="open" data-gv2-chip="ready" data-gv2-session="o1" data-tone="progress"[\s\S]*?Pronto<\/span><\/span>\s*<span class="us-gv2-game-copy"><b>Confrontatevi<\/b><small>2 di 5<\/small>/, 'an open round shows on its own card');
+  assert.match(html, /data-gv2-family="confrontatevi" data-gv2-mode-state="open" data-gv2-chip="ready" data-gv2-session="o1" data-tone="progress"[\s\S]*?<\/svg><\/span><\/span>\s*<span class="us-gv2-game-copy"><b>Confrontatevi<\/b><small>2 di 5<\/small>/, 'an open round shows on its own card');
   assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played" data-gv2-chip="played"[\s\S]*?Giocato<\/span>[\s\S]*?<small>questa settimana<\/small>/);
   const chips = [...html.matchAll(/data-gv2-chip="([a-z]+)"/g)].map((m) => m[1]);
   assert.equal(chips.length, 7, 'Per voi, five families, Questo o quello');

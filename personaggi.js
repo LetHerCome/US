@@ -28,6 +28,9 @@
   });
   const SHAPE_NAMES = Object.freeze({ palla: 'Tondo', quadrato: 'Quadrato', triangolo: 'Triangolo', goccia: 'Goccia', nuvola: 'Nuvola' });
   const INK = '#14120E';
+  // Stile unico (founder, 24/11/2026, tavola «Una mano sola»): the outline is
+  // thin and in the dark of the character's own colour, never black; no halo.
+  const edge = (color) => `color-mix(in srgb, ${color} 42%, #1a1020)`;
 
   // Il guardaroba (founder, 20–21/11/2026): one thing on the head, one on the
   // face or at the neck. Drawn here so what is already worn shows; choosing
@@ -164,10 +167,10 @@
     const dress = `${faceItem ? lookSvg(faceItem, shape) : ''}${head ? lookSvg(head, shape) : ''}`;
     return `<svg class="us-char${o.className ? ` ${esc(o.className)}` : ''}"${reaction ? ` data-reaction="${reaction}"` : ''} viewBox="-4 6 108 100" overflow="visible" width="${size}" height="${Math.round(size * 100 / 108)}"${label} focusable="false">`
       + reactionBack(reaction, shape, color)
-      + `<path d="${ell(s.feet[0], 97, 9, 5)} ${ell(s.feet[1], 97, 9, 5)}" style="fill:${color}" stroke="${INK}" stroke-width="3"/>`
-      + `<path d="${s.body}" style="fill:${color}" stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"/>`
-      + `<path d="${ell(s.hl[0], s.hl[1], 8, 5)}" fill="rgba(255,255,255,.55)"/>`
-      + `<path d="${ell(a - 8, y + 9, 5, 3)} ${ell(b + 8, y + 9, 5, 3)}" fill="rgba(211,64,42,.3)"/>`
+      + `<path d="${ell(s.feet[0], 97, 9, 5)} ${ell(s.feet[1], 97, 9, 5)}" style="fill:${color};stroke:${edge(color)}" stroke-width="2.4"/>`
+      + `<path d="${s.body}" style="fill:${color};stroke:${edge(color)}" stroke-width="2.6" stroke-linejoin="round"/>`
+      + `<path d="${ell(s.hl[0], s.hl[1], 8, 5)}" fill="rgba(255,255,255,.5)"/>`
+      + `<path d="${ell(a - 8, y + 9, 5, 3)} ${ell(b + 8, y + 9, 5, 3)}" style="fill:${edge(color)}" opacity=".3"/>`
       + (open.length ? `<g class="us-char-eyes"><path d="${open.map((x) => ell(x, y, 4.4, 5.8)).join(' ')}" fill="${INK}"/><path d="${open.map((x) => ell(x + 1.5, y - 2.3, 1.5, 1.5)).join(' ')}" fill="#fff"/></g>` : '')
       + lids + brows
       + `<path d="${mouth}" fill="${big ? '#7A2E3A' : face === 'dorme' ? INK : 'none'}" stroke="${face === 'dorme' && !big ? 'none' : INK}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`

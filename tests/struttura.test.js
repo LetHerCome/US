@@ -85,13 +85,15 @@ test('personaggi.js draws a role in its colour, its shape and what it wears', ()
   const api = require('../personaggi.js');
   const ball = api.character('francesco', { size: 34 });
   assert.match(ball, /^<svg class="us-char" viewBox="-4 6 108 100"/);
-  assert.match(ball, /style="fill:var\(--us-rosa\)"/);
+  // Stile unico (24/11/2026): the outline in the dark of its own colour, never black.
+  assert.match(ball, /style="fill:var\(--us-rosa\);stroke:color-mix\(in srgb, var\(--us-rosa\) 42%, #1a1020\)"/);
+  assert.doesNotMatch(ball, /stroke="#14120E" stroke-width="3\.4"/);
   assert.match(ball, /M12 60 a38 36/); // the ball, without a chosen shape
   const square = api.character('beatrice', { size: 56 });
-  assert.match(square, /style="fill:var\(--us-lilla\)"/);
+  assert.match(square, /style="fill:var\(--us-lilla\);stroke:/);
   assert.match(square, /M36 24 H64/);
   const drop = api.character({ shape: 'goccia', color: '#6f9bff' }, { head: 'cappello', mood: 'stanco' });
-  assert.match(drop, /style="fill:#6f9bff"/);
+  assert.match(drop, /style="fill:#6f9bff;stroke:/);
   assert.match(drop, /M50 14 C61 30/);
   assert.match(drop, /fill="#F7B58E"/); // the hat
   assert.doesNotMatch(drop, /us-char-eyes/); // tired: eyes closed
