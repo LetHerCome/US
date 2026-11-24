@@ -61,6 +61,10 @@ test('Noi return: the calendar keeps resolved content visible while it refreshes
     const { page } = view;
     await page.evaluate(() => window.go('bond', { nav: true }));
     await page.waitForFunction(() => document.getElementById('usNoiV2Content')?.dataset.state === 'ready');
+    // Fluidità 2 (24/11/2026): a tap during a motion lands at once, so the
+    // snapshot waits for the first change to settle (its hydration included).
+    await page.waitForFunction(() => !window.UsDueColori?.isFlooding?.());
+    await page.waitForTimeout(400);
     const before = await page.locator('#usNoiV2Content').innerHTML();
     await page.evaluate(() => window.go('home', { nav: true }));
     await page.waitForTimeout(80);
