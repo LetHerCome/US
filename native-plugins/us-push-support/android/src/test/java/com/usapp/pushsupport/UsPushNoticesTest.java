@@ -39,6 +39,15 @@ public class UsPushNoticesTest {
     }
 
     @Test
+    public void aPostItSaysWhoLeftItAndOpensNoi() {
+        UsPushNotices.Notice it = UsPushNotices.forKind("postit", "Bea", IT);
+        assertEquals("US. · Lavagna", it.title);
+        assertEquals("Bea ti ha lasciato un post-it", it.body);
+        assertEquals("noi", it.page);
+        assertEquals("Bea left you a sticky note", UsPushNotices.forKind("postit", "Bea", EN).body);
+    }
+
+    @Test
     public void unknownOrMissingKindIsTheGenericNotice() {
         for (String kind : new String[] { null, "", "drop_table", "THINK" }) {
             UsPushNotices.Notice notice = UsPushNotices.forKind(kind, "Bea", IT);

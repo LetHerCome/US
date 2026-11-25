@@ -638,8 +638,11 @@ function install(w){
         // Deleted meanwhile by the partner: kept, as a new note.
         if(!res.error&&!res.data){target.id=null;res=null;}
       }
-      if(!res)res=await client.from('couple_notes').insert({...data,couple_id:w.usProfile.couple_id}).select(cols()).single();
+      let created=false;
+      if(!res){res=await client.from('couple_notes').insert({...data,couple_id:w.usProfile.couple_id}).select(cols()).single();created=true;}
       if(res.error)throw res.error;
+      // Noi, Fase B.3 (D15): a new post-it tells your person once it is closed.
+      if(created)target.fresh=true;
       const row=res.data;
       if(editing===target){Object.assign(editing,{id:row.id,revision:row.revision,updated_by:row.updated_by,updated_at:row.updated_at,created_by:row.created_by});if(fields)fields.host.dataset.noteId=row.id;paintMeta();status('Salvato');}
       notes=[row,...notes.filter(n=>n.id!==row.id)];
@@ -682,7 +685,9 @@ function install(w){
       else{clearTimeout(timer);dirty=false;}
     }
     else if(verdict==='drop'){clearTimeout(timer);dirty=false;}
-    else{await save({keep:false});if(dirty){status('Non salvato: controlla la connessione');return false;}}
+    else{await save({keep:false});if(dirty){status('Non salvato: controlla la connessione');return false;}
+      // «X ti ha lasciato un post-it» (send-web-push decides: the same 2 hours and switch as the lavagna).
+      if(target.fresh&&target.id&&!isEmpty(target)){target.fresh=false;try{w.sendWebPushEvent?.('postit',target.id)?.catch?.(()=>{});}catch(_){}}}
     editing=null;fields=null;
     if(repaint)paint();
     return true;

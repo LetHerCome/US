@@ -15,6 +15,12 @@
 //     column, before the SQL, is the default: on);
 //   * delivery goes through the shared dispatcher: Web Push and the native
 //     apps under one key, released when no device received it.
+//
+// Noi, Fase B.3 (founder, 24/11/2026, D15): «Bea ti ha lasciato un post-it»
+// follows the same rule (dispatchPostitPush): the new post-it must be the
+// caller's and fresh, the same switch, and the same 2-hour window as the
+// drawing (one 'lavagna' line for the board), so a drawing and a post-it in
+// the same hour notify once.
 
 import { buildNotification, deliverNotification, recipientLocale } from './notification-core.mjs';
 
@@ -24,6 +30,23 @@ export const LAVAGNA_STROKE_MAX_AGE_MS = 30 * 60 * 1000;
 
 export function lavagnaDedupeKey(recipientId, now = Date.now()) {
   return `lavagna:${recipientId}:${Math.floor(now / LAVAGNA_PUSH_GAP_MS)}`;
+}
+
+/**
+ * Noi, Fase B.3: options.noteId = the post-it the caller just wrote; the rest
+ * as dispatchLavagnaPush below.
+ */
+export async function dispatchPostitPush(admin, options) {
+  const { noteId, sender, partnerId, web = null, native = null, now = Date.now() } = options || {};
+  const { data: note, error: noteError } = await admin.from('couple_notes')
+    .select('id,couple_id,created_by,created_at')
+    .eq('id', noteId)
+    .maybeSingle();
+  if (noteError) throw noteError;
+  if (!note || !sender?.id || note.created_by !== sender.id || note.couple_id !== sender.couple_id || !partnerId || partnerId === sender.id) {
+    return { forbidden: true };
+  }
+  return boardPush(admin, { kind: 'postit', args: { noteId: note.id }, coupleId: note.couple_id, madeAt: note.created_at, sender, partnerId, web, native, now });
 }
 
 /**
@@ -46,8 +69,13 @@ export async function dispatchLavagnaPush(admin, options) {
   if (!stroke || !sender?.id || stroke.author_id !== sender.id || stroke.couple_id !== sender.couple_id || !partnerId || partnerId === sender.id) {
     return { forbidden: true };
   }
-  const drawnAt = Date.parse(stroke.created_at || '');
-  if (!Number.isFinite(drawnAt) || now - drawnAt > LAVAGNA_STROKE_MAX_AGE_MS) return { delivered: 0, failed: 0, reason: 'stale' };
+  return boardPush(admin, { kind: 'lavagna', args: { strokeId: stroke.id }, coupleId: stroke.couple_id, madeAt: stroke.created_at, sender, partnerId, web, native, now });
+}
+
+// The rule both share: fresh, the partner's switch, one line every 2 hours.
+async function boardPush(admin, { kind, args, coupleId, madeAt, sender, partnerId, web, native, now }) {
+  const madeMs = Date.parse(madeAt || '');
+  if (!Number.isFinite(madeMs) || now - madeMs > LAVAGNA_STROKE_MAX_AGE_MS) return { delivered: 0, failed: 0, reason: 'stale' };
 
   const { data: preference, error: preferenceError } = await admin.from('notification_preferences')
     .select('lavagna')
@@ -57,16 +85,16 @@ export async function dispatchLavagnaPush(admin, options) {
 
   const since = new Date(now - LAVAGNA_PUSH_GAP_MS).toISOString();
   const { data: recent, error: recentError } = await admin.from('push_event_log').select('dedupe_key')
-    .eq('event_type', LAVAGNA_EVENT_TYPE).eq('couple_id', stroke.couple_id).eq('sender_id', sender.id)
+    .eq('event_type', LAVAGNA_EVENT_TYPE).eq('couple_id', coupleId).eq('sender_id', sender.id)
     .gte('created_at', since)
     .limit(1);
   if (recentError) throw recentError;
   if ((recent || []).length) return { delivered: 0, failed: 0, reason: 'throttled' };
 
   return deliverNotification(admin, {
-    notification: buildNotification('lavagna', { senderName: sender.display_name, strokeId: stroke.id, locale: await recipientLocale(admin, partnerId) }),
+    notification: buildNotification(kind, { ...args, senderName: sender.display_name, locale: await recipientLocale(admin, partnerId) }),
     recipientIds: [partnerId],
-    coupleId: stroke.couple_id,
+    coupleId,
     senderId: sender.id,
     dedupeKey: lavagnaDedupeKey(partnerId, now),
     eventType: LAVAGNA_EVENT_TYPE,

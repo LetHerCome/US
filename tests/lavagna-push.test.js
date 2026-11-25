@@ -119,6 +119,41 @@ test('send-web-push: only a fresh stroke of the caller, on the caller\'s board; 
 test('Impostazioni › Notifiche: a Lavagna switch with its own line', () => {
   const settings = read('settings.js');
   assert.match(settings, /preferenceToggle\('lavagna','Lavagna',p\.lavagna!==false\)/);
-  assert.match(settings, /key==='lavagna'\?'Quando la tua persona disegna sulla lavagna'/);
-  assert.match(read('i18n-en.js'), /'Quando la tua persona disegna sulla lavagna': 'When your person draws on the board'/);
+  assert.match(settings, /key==='lavagna'\?'Quando la tua persona disegna o ti lascia un post-it'/, 'Fase B.3: the same switch for the post-its');
+  assert.match(read('i18n-en.js'), /'Quando la tua persona disegna o ti lascia un post-it': 'When your person draws or leaves you a sticky note'/);
+});
+
+// Noi, Fase B.3 (founder, 24/11/2026, D15): «Bea ti ha lasciato un post-it»,
+// the same rule as the drawing: her own fresh post-it, the same switch, the
+// same 2-hour window (a drawing and a post-it in the same hour: one line).
+const NOTE = UUID(80);
+const note = (extra = {}) => ({ id: NOTE, couple_id: COUPLE, created_by: B, created_at: ago(4000), ...extra });
+test('Fase B.3: a new post-it tells the partner once, in the same window as the drawing', async () => {
+  const core = await shared('notification-core.mjs');
+  const it = core.buildNotification('postit', { senderName: 'Bea', noteId: NOTE });
+  assert.deepEqual([it.title, it.body, it.target, it.ref, it.tag], ['US. · Lavagna', 'Bea ti ha lasciato un post-it', 'lavagna', NOTE, 'us-lavagna']);
+  assert.equal(core.buildNotification('postit', { senderName: 'Bea', locale: 'en' }).body, 'Bea left you a sticky note');
+  const { ANDROID_NOTICE_KINDS } = await shared('native-push-transport.mjs');
+  assert.equal(ANDROID_NOTICE_KINDS.postit, 'postit');
+  assert.match(read('native-plugins/us-push-support/android/src/main/java/com/usapp/pushsupport/UsPushNotices.java'), /case "postit":\s*return notice\(en, "US\. · Lavagna", "US\. · Board",\s*who \+ " ti ha lasciato un post-it", who \+ " left you a sticky note", "noi"\);/);
+
+  const w = world({ tables: { couple_notes: [note()] } });
+  assert.deepEqual((await post(w, 'jwt-b', { type: 'postit', reference_id: NOTE })).body, { delivered: 1, failed: 0 });
+  assert.deepEqual(w.webpush.sent.map((s) => [s.payload.body, s.payload.target]), [['Bea ti ha lasciato un post-it', 'lavagna']]);
+  assert.ok(w.admin.db.push_event_log.some((row) => row.event_type === 'lavagna' && row.dedupe_key === `lavagna:${F}:${Math.floor(Date.now() / (2 * HOUR))}`));
+  // A drawing right after: the same window, nothing more.
+  assert.deepEqual((await post(w, 'jwt-b', { type: 'lavagna', reference_id: S })).body, { delivered: 0, failed: 0, deduplicated: true });
+  // After a drawing two hours ago is over, yes; within them, no.
+  assert.deepEqual((await post(world({ tables: { couple_notes: [note()], push_event_log: [lastPush(HOUR)] } }), 'jwt-b', { type: 'postit', reference_id: NOTE })).body, { delivered: 0, failed: 0, reason: 'throttled' });
+});
+
+test('Fase B.3: only a fresh post-it of the caller, of the caller\'s couple; the switch turns it off', async () => {
+  assert.equal((await post(world({ tables: { couple_notes: [note()] } }), 'jwt-f', { type: 'postit', reference_id: NOTE })).status, 403, 'someone else\'s post-it');
+  assert.equal((await post(world({ tables: { couple_notes: [note({ couple_id: OTHER })] } }), 'jwt-b', { type: 'postit', reference_id: NOTE })).status, 403);
+  assert.equal((await post(world({ tables: { couple_notes: [] } }), 'jwt-b', { type: 'postit', reference_id: NOTE })).status, 403);
+  assert.equal((await post(world(), 'jwt-b', { type: 'postit', reference_id: 'x' })).status, 400);
+  assert.deepEqual((await post(world({ tables: { couple_notes: [note({ created_at: ago(31 * 60 * 1000) })] } }), 'jwt-b', { type: 'postit', reference_id: NOTE })).body, { delivered: 0, failed: 0, reason: 'stale' });
+  assert.deepEqual((await post(world({ tables: { couple_notes: [note()], notification_preferences: [{ user_id: F, lavagna: false }] } }), 'jwt-b', { type: 'postit', reference_id: NOTE })).body, { delivered: 0, failed: 0, reason: 'disabled-by-preference' });
+  const js = read('couple-notes.js');
+  assert.ok(js.includes("if(target.fresh&&target.id&&!isEmpty(target)){target.fresh=false;try{w.sendWebPushEvent?.('postit',target.id)"), 'the app tells it when a new post-it is closed with words on it');
 });
