@@ -4756,7 +4756,7 @@ async function hydrateNoiIdeas(){
     list.innerHTML='<div class="empty-state" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div>';
   }
   const {data,error}=await sb.from('bucket_items')
-    .select('id,title,note,link_url,status,calendar_entry_id,completed_at,created_at,lived_proposed_by')
+    .select('id,title,note,link_url,status,calendar_entry_id,completed_at,created_at,lived_proposed_by,created_by')
     .eq('couple_id',coupleId)
     .neq('status','archived')
     .order('created_at',{ascending:false});
@@ -5121,7 +5121,19 @@ async function markNoiIdeaLivedFromBoard(id){
     noiIdeaState.busy=false;
   }
 }
-window.UsDaVivere=Object.freeze({linkCalendarEntry:linkNoiIdeaToCalendar,snapshot:noiIdeaSnapshot,hydrate:hydrateNoiIdeas,add:addNoiIdeaFromBoard,markLived:markNoiIdeaLivedFromBoard});
+// Noi, Fase B.2 (D13): the board's ideas say when they are fixed, «Scegli il
+// giorno» starts the same calendar pick as the detail, «L'avete fatto?»
+// reads the day of the commitment.
+function noiIdeaEntry(id){const item=noiIdeaFindItem(id);return item?.calendar_entry_id?noiIdeaState.calendarById.get(item.calendar_entry_id)||null:null;}
+function scheduleNoiIdeaFromBoard(id){
+  const item=noiIdeaFindItem(id);
+  if(!item||item.status!=='idea')return false;
+  const opener=window.UsCalendarLinks?.openForIdea;
+  if(typeof opener!=='function'){toast('Il calendario non è pronto. Riprova.');return false;}
+  opener({id:item.id,title:item.title,note:item.note});
+  return true;
+}
+window.UsDaVivere=Object.freeze({linkCalendarEntry:linkNoiIdeaToCalendar,snapshot:noiIdeaSnapshot,hydrate:hydrateNoiIdeas,add:addNoiIdeaFromBoard,markLived:markNoiIdeaLivedFromBoard,when:id=>noiIdeaWhen(noiIdeaFindItem(id)),entry:noiIdeaEntry,schedule:scheduleNoiIdeaFromBoard});
 function scheduleNoiIdea(){
   const item=noiIdeaState.selectedId?noiIdeaFindItem(noiIdeaState.selectedId):null;
   if(!item||item.status!=='idea'||noiIdeaState.busy)return;

@@ -160,3 +160,33 @@
 .us-postits.is-focus .us-postit-heading{font-size:24px;margin-bottom:4px}
 .us-postit-focus button:focus-visible{outline:2px solid var(--postit-ink,var(--us-noi));outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.us-postit.is-pin{transition:none}}
+
+/* ---------- Noi, Fase B.2: «Le vostre idee» (board Idee) ---------- */
+.us-idea-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.us-postit .us-idea-close{display:grid;place-items:center;flex:none;width:40px;height:40px;min-height:0;margin:-6px -6px 0 0;padding:0;border:0;border-radius:50%;background:rgba(42,31,42,.08);color:var(--postit-ink);box-shadow:none;--us-icon-size:16px}
+.us-idea-intro{margin:0;font-size:13.5px;line-height:1.4;color:#5a4a40}
+.us-idea-rows{display:flex;flex-direction:column;margin:2px 0 0;padding:0;list-style:none}
+.us-idea-row{display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 0;border-bottom:1px dashed rgba(42,31,42,.25)}
+.us-idea-row .us-notes-dot{width:10px;height:10px}
+.us-idea-main{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.us-postit .us-idea-title{display:block;min-height:0;margin:0;padding:0;border:0;background:transparent;box-shadow:none;color:var(--postit-ink);text-align:left;font:400 18px/1.2 var(--us-font-display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.us-idea-main small{font-size:12px;line-height:1.3;color:#6b5a52}
+.us-postit .us-idea-go{flex:none;min-height:36px;margin:0;padding:0 12px;border:0;border-radius:999px;background:var(--postit-ink);color:var(--postit-paper);box-shadow:none;font:700 12.5px/1 var(--us-font-ui)}
+.us-idea-chip{flex:none;display:inline-flex;align-items:center;height:30px;padding:0 10px;border-radius:999px;background:color-mix(in oklab,var(--us-partner) 30%,transparent);color:var(--postit-ink);font:700 12px/1 var(--us-font-ui)}
+.us-idea-new{display:flex;flex-direction:column;gap:6px;margin-top:4px;font-size:12px;font-weight:700;color:#6b5a52}
+.us-postit .us-idea-input{width:100%;min-height:46px;margin:0;padding:0 12px!important;border:1px solid rgba(42,31,42,.2)!important;border-radius:12px!important;background:rgba(255,255,255,.45)!important;box-shadow:none!important;color:var(--postit-ink);font:500 15px/1.2 var(--us-font-ui)}
+.us-postit .us-idea-input::placeholder{color:rgba(26,16,32,.5)}
+.us-postits.is-focus .us-postit.is-ideas{gap:14px;padding:24px 20px 18px}
+
+/* ---------- Noi, Fase B.2: «L'avete fatto?» (board Fatto), a sheet from the bottom ---------- */
+.us-postit-focus.is-sheet{align-items:flex-end;padding:0}
+.us-postit-focus.is-sheet .us-postit-focus-panel{width:min(100%,560px)}
+.us-fatto{display:flex;flex-direction:column;align-items:center;gap:16px;padding:12px 20px calc(28px + var(--us-safe-bottom,0px));border-top:1px solid var(--us-color-line);border-radius:28px 28px 0 0;background:var(--us-color-surface,#1b1219);color:var(--us-color-text);text-align:center;list-style:none}
+.us-fatto-grab{width:40px;height:5px;border-radius:3px;background:var(--us-color-line-strong)}
+.us-fatto-duo{display:flex;align-items:flex-end;gap:4px;margin-top:6px}
+.us-fatto-title{margin:0;font:400 28px/1.15 var(--us-font-display);color:var(--us-color-text)}
+.us-fatto-q{margin:-8px 0 0;font-size:15px;line-height:1.4;color:var(--us-color-text-2)}
+.us-fatto-actions{display:flex;flex-direction:column;gap:10px;align-self:stretch}
+.us-fatto .us-fatto-yes{min-height:54px;border:0;border-radius:999px;background:linear-gradient(90deg,var(--us-tu),var(--us-partner));color:#1a1020;font:800 15px/1 var(--us-font-ui);box-shadow:none}
+.us-fatto .us-fatto-no{min-height:50px;border:1px solid var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text);font:700 14.5px/1 var(--us-font-ui);box-shadow:none}
+.us-fatto-note{margin:0;font-size:12.5px;line-height:1.45;color:var(--us-color-text-2)}

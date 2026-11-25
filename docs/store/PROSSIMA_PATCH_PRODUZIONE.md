@@ -2,9 +2,20 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Noi, Fase B.2: le idee diventano impegni, «L'avete fatto?», le penne della coppia (25/11)
+
+**Stato:** ramo `claude/noi-fase-b2`, verso il ramo fisso di staging. Founder, 25/11: «Push e unione poi andiamo avanti con il resto». Decisioni D12 e D13 del grill-me di Noi; tavola «US · Noi, il vostro tempo» (schermate Idee e Fatto).
+
+**Cosa cambia:**
+- **Le vostre idee:** in primo piano, ogni idea ha il pallino del colore di chi l'ha avuta. Accanto c'è «Scegli il giorno», che chiude il post-it e fa scegliere il giorno nel calendario di Noi (la stessa scelta del dettaglio dell'idea); poi l'idea diventa un impegno e mostra «Fissata» col suo giorno. Se la tua persona dice che l'avete fatta, c'è «Sì, fatto» per confermare. In fondo c'è il campo «Un'idea nuova» e quante ne avete già fatte. Esce la spunta «vissuta» sul post-it (D13).
+- **«L'avete fatto?»:** il giorno dopo un impegno nato da un'idea (o dopo l'ultimo giorno, se durava di più), aprendo Noi sale un foglio coi due personaggi. «Sì, l'abbiamo fatto» segna l'idea come fatta, con la stessa regola in due di prima, e propone una foto in Ricordi. «Non ancora, scegliamo un altro giorno» apre l'impegno per spostarlo. Lo chiede una volta sola per idea e solo per la settimana dopo (D13).
+- **Le penne della lavagna:** sono il tuo colore, quello della tua persona, quello di Noi e il bianco, nei colori scelti dalla coppia. L'ambra esce: i tratti già fatti in ambra prendono il colore di Noi, quelli in rosa e lilla il colore di Francesco e di Beatrice. Anche il widget della lavagna disegna coi colori della coppia (D12).
+
+**Server:** niente. Le penne usano le stesse chiavi che il server già tiene (rosa, lilla, ambra, latte), con un significato nuovo.
+
 ### Noi, Fase B.1: La lavagna con i post-it sopra (25/11)
 
-**Stato:** ramo `claude/noi-fase-b`, verso il ramo fisso di staging; la migrazione va applicata a US-STAGING col via del founder. Founder, 25/11: «non abbiamo ancora inserito i post-it all'interno di lavagna», poi «si concordo» al piano (Fase B dopo gli interruttori). Decisioni D3–D5, D11, D12 del grill-me di Noi e tavola «US · Noi, il vostro tempo» (schermate Main e Lavagna).
+**Stato:** in staging il 25/11 (PR #298, merge a436904f, sito …-sa436904f); la migrazione va applicata a US-STAGING col via del founder. Founder, 25/11: «non abbiamo ancora inserito i post-it all'interno di lavagna», poi «si concordo» al piano (Fase B dopo gli interruttori). Decisioni D3–D5, D11, D12 del grill-me di Noi e tavola «US · Noi, il vostro tempo» (schermate Main e Lavagna).
 
 **Cosa cambia:**
 - **«La lavagna» al posto di «Bacheca»:** in Noi, sotto il giorno scelto, il disegno della lavagna più grande, con «+ Post-it» e «Apri». Sopra il disegno, i tre post-it più recenti e, nell'angolo in alto a destra, «Le vostre idee» con quante ne restano da vivere. Senza disegno e senza post-it, i due personaggi invitano a disegnare (D3, D5, D11).
