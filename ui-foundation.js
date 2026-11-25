@@ -33,8 +33,11 @@
   // Safety only: normal completion comes from the panel's real transform transition.
   const SURFACE_EXIT_FALLBACK_MS = 1000;
 
+  // A surface on its way out (data-us-motion-exiting) is closed already: the
+  // page under it takes taps at once instead of after the exit (25/11/2026,
+  // founder: «i tap non sono reattivi sul calendario»).
   function isOpen(modal) {
-    return !modal.hidden && modal.getAttribute('aria-hidden') !== 'true';
+    return !modal.hidden && modal.getAttribute('aria-hidden') !== 'true' && !modal.hasAttribute('data-us-motion-exiting');
   }
 
   function canFocus(element) {
@@ -373,7 +376,7 @@
       subtree: true,
       childList: true,
       attributes: true,
-      attributeFilter: ['aria-hidden', 'class', 'hidden']
+      attributeFilter: ['aria-hidden', 'class', 'hidden', 'data-us-motion-exiting']
     });
     documentRef.addEventListener('keydown', onKeydown);
     sync();
