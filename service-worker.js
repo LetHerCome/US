@@ -75,6 +75,7 @@ const APP_SHELL = [
   versioned("/person-colors.js"),
   versioned("/aspetto.js"),
   versioned("/personaggi.js"),
+  versioned("/us-ricorda.js"),
   versioned("/settings.css"),
   versioned("/settings.js"),
   versioned("/identity.css"),

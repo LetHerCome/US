@@ -40,10 +40,15 @@ test('the island opens Il vostro angolo with Sintonia in three tabs; Gioca has n
   if (!h) return t.skip('Playwright unavailable');
   try {
     const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
-    // L'isola (founder, 25/11/2026): it opens by itself the first time, then closes.
+    // L'isola (founder, 25/11/2026): the first time it opens by itself; since US vi ricorda the
+    // characters introduce themselves in the bubble (us-ricorda.js), within the hours they speak.
     await page.waitForFunction(() => localStorage.getItem(`us:isola:v1:${window.usProfile?.id}`), null, { timeout: 15000 });
+    await page.evaluate(() => { window.UsAngolo.isola(false); window.__usRicordaNow = { day: '2026-11-25', hour: 10 }; window.UsRicorda.say(); });
+    await page.waitForFunction(() => !document.getElementById('usFumetto').hidden, null, { timeout: 8000 });
     assert.equal(await page.locator('#usIsola').getAttribute('aria-expanded'), 'true', 'the first time it opens by itself');
+    assert.match(await page.locator('[data-us-fumetto-text]').innerText(), /^Ciao! Da oggi ogni tanto vi ricordiamo le vostre cose/);
     await page.evaluate(() => window.UsAngolo.isola(false));
+    assert.equal(await page.locator('#usFumetto').isHidden(), true, 'the bubble closes with the island');
     assert.equal(await page.locator('#home .us-angolo-entry').count(), 0, 'no characters on the photo');
     await page.click('#usIsola');
     await page.waitForFunction(() => document.getElementById('usIsola').getAttribute('aria-expanded') === 'true');

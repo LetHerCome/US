@@ -2529,6 +2529,8 @@ function renderToccaATe({daily=false,game=false}={}){
   };
   const oggi=mark('home',Boolean(daily),'Oggi');
   const gioca=mark('quiz',Boolean(game),'Gioca');
+  // US vi ricorda (25/11/2026): «ti aspetta» is said by your character too (us-ricorda.js).
+  if(typeof window!=='undefined')window.dispatchEvent?.(new CustomEvent('us:tocca-a-te',{detail:{daily:Boolean(daily),game:Boolean(game)}}));
   return oggi||gioca;
 }
 // ===== M9B — Domanda di oggi: il rituale quotidiano su Oggi =====

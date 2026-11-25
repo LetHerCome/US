@@ -18,6 +18,8 @@ async function seedTenant(db,cid,u,v,n){
     insert into public.member_status(user_id,couple_id,status,form) values('${u}','${cid}','felice','m'),('${v}','${cid}','stanco',null);
     insert into public.lavagna_strokes(id,couple_id,author_id,color,points) values('${id(11)}','${cid}','${u}','rosa','{100,200,300,400}');
     insert into public.lavagna_boards(couple_id,revision,cleared_at) values('${cid}',${n},now());
+    insert into public.us_battute(couple_id,recipient_id,day,kind,ref_key,vars) values('${cid}','${u}','2026-01-0${n}','compleanno','private-${n}-u','{"name":"Private ${n}"}'),('${cid}','${v}','2026-01-0${n}','un_anno_fa','private-${n}-v','{"place":"Private ${n}"}');
+    insert into public.us_battute_mute(user_id,kind) values('${u}','traguardo'),('${v}','*');
     insert into public.daily_answers(question_id,user_id,couple_id,answer) values('${qid}','${u}','${cid}','PRIVATE-${n}-one'),('${qid}','${v}','${cid}','PRIVATE-${n}-two');
     insert into public.daily_question_keepsakes(couple_id,question_id,question_text,question_date,francesco_answer,beatrice_answer,revealed_at,kept_by_role)
       values('${cid}','${qid}','Private kept ${n}','2026-01-01','Private one','Private two',now(),'francesco');

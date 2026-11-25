@@ -396,7 +396,8 @@
     if (words) words.textContent = level ? `Livello ${level} · tocca qui` : 'Tocca qui';
     labelIsola();
     const duo = button.querySelector('[data-us-isola-duo]');
-    if (duo) duo.innerHTML = ['francesco', 'beatrice'].map((role) => character(role, { size: 42, ...(reaction ? { reaction } : { react: true }) })).join('');
+    const mine = myRole(), duoRoles = [mine, mine === 'beatrice' ? 'francesco' : 'beatrice'];
+    if (duo) duo.innerHTML = duoRoles.map((role) => character(role, { size: 42, ...(reaction ? { reaction } : { react: true }) })).join('');
   }
   function labelIsola() {
     const button = isola(), level = levelNow();
@@ -414,7 +415,36 @@
     button.setAttribute('aria-expanded', String(open));
     if (top?.dataset) { if (open) top.dataset.usIsola = 'open'; else delete top.dataset.usIsola; }
     if (open) { labelIsola(); isolaTimer = setTimeout(() => setIsola(false), ms); }
-    else if (was) paintIsola();
+    else { hideFumetto(); if (was) paintIsola(); }
+  }
+  // US vi ricorda (founder, 25/11/2026, D11/D17; tavola «US · US vi ricorda»):
+  // the island opens and a speech bubble comes out of the character who
+  // speaks, yours (speaker 'me') or both ('both', from between them). A tap
+  // on the bubble is onTap, a long press onHold; 8 s and both close.
+  const fumetto = () => d?.getElementById('usFumetto');
+  let fumettoTap = null, fumettoHold = null, holdTimer = 0, held = false;
+  function hideFumetto() {
+    const f = fumetto();
+    if (!f) return;
+    f.removeAttribute('data-open');
+    f.hidden = true;
+    fumettoTap = null; fumettoHold = null;
+  }
+  function parla({ text, speaker = 'me', cta = '', reaction, onTap, onHold, ms = 8000 } = {}) {
+    const f = fumetto();
+    if (!f || !text || !paired()) return false;
+    setIsola(true, { ms, reaction: reaction || (speaker === 'both' ? 'cuore' : undefined) });
+    if (isola()?.getAttribute('aria-expanded') !== 'true') return false;
+    f.querySelector('[data-us-fumetto-text]').textContent = text;
+    const hint = f.querySelector('[data-us-fumetto-cta]');
+    if (hint) { hint.textContent = cta ? `${cta} ›` : ''; hint.hidden = !cta; }
+    f.dataset.speaker = speaker === 'both' ? 'both' : 'me';
+    fumettoTap = typeof onTap === 'function' ? onTap : null;
+    fumettoHold = typeof onHold === 'function' ? onHold : null;
+    f.hidden = false;
+    void f.offsetWidth;
+    f.setAttribute('data-open', '');
+    return true;
   }
   function tapIsola() {
     if (!paired()) return;
@@ -439,8 +469,13 @@
       if (busy) { if (tries < 12) maybePeek(tries + 1); return; }
       if (isola()?.getAttribute('aria-expanded') === 'true') return;
       const seen = readSeen();
-      if (!seen) { writeSeen(level); setIsola(true, { ms: PEEK_MS, reaction: 'cuore' }); return; }
-      if (level > (Number(seen.level) || 0)) { writeSeen(level); setIsola(true, { ms: PEEK_MS, reaction: 'festa' }); return; }
+      if (!seen) { writeSeen(level); if (!w.UsRicorda) setIsola(true, { ms: PEEK_MS, reaction: 'cuore' }); return; }
+      if (level > (Number(seen.level) || 0)) {
+        writeSeen(level);
+        const rank = typeof w.bondRankTitle === 'function' ? w.bondRankTitle(level) : '';
+        if (!parla({ text: rank ? `Siete al livello ${level}: ${rank}!` : `Siete al livello ${level}!`, speaker: 'both', reaction: 'festa', cta: 'Il vostro angolo', onTap: () => { setIsola(false); openAngolo(); } })) setIsola(true, { ms: PEEK_MS, reaction: 'festa' });
+        return;
+      }
       if (level < (Number(seen.level) || 0)) writeSeen(level);
     }, 900);
   }
@@ -455,7 +490,14 @@
     d.addEventListener('click', (event) => {
       const target = event.target;
       if (!target?.closest) return;
-      if (target.closest('[data-us-isola]')) { tapIsola(); return; }
+      if (target.closest('button[data-us-isola]')) { tapIsola(); return; }
+      if (target.closest('[data-us-fumetto]')) {
+        if (held) { held = false; return; }
+        const go = fumettoTap;
+        setIsola(false);
+        if (go) go();
+        return;
+      }
       const entry = target.closest('[data-us-angolo]');
       if (entry) { openAngolo(entry.dataset.usAngolo || ''); return; }
       const tab = target.closest('#usAngolo [data-angolo-tab]');
@@ -475,6 +517,13 @@
         showTab(TABS[(at + (event.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length]);
       }
     });
+    // A long press on the bubble: «Non dirmelo più» (D8).
+    d.addEventListener('pointerdown', (event) => {
+      if (!event.target?.closest?.('[data-us-fumetto]')) return;
+      held = false; clearTimeout(holdTimer);
+      holdTimer = setTimeout(() => { held = true; const hold = fumettoHold; if (hold) { clearTimeout(isolaTimer); hold(); } }, 600);
+    });
+    for (const type of ['pointerup', 'pointercancel', 'pointerleave']) d.addEventListener(type, () => clearTimeout(holdTimer), true);
     // Back on Oggi, back in the app: maybe a new level to show.
     const home = d.getElementById('home');
     if (home && typeof w.MutationObserver === 'function') new w.MutationObserver(() => { if (home.classList.contains('active')) maybePeek(); else setIsola(false); }).observe(home, { attributes: true, attributeFilter: ['class'] });
@@ -490,7 +539,7 @@
     };
     if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot, { once: true });
     else boot();
-    w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola });
+    w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla });
   }
 
   return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, LOOK_HEAD, LOOK_FACE, LOOK_NAMES, LOOK_POINTS, LOOK_MOMENTS, character, slot, shapeOf, lookOf, colorName, myRole, reactionOf, unlockedLook, paintMe, paintDuo, paintWardrobe });

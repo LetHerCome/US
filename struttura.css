@@ -232,3 +232,48 @@
 #usAngolo .us-gioca-sintonia .us-progression-rhythm-days i.on::after{content:"";position:absolute;inset:8px;background:#1a1020;-webkit-mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat}
 #usAngolo .us-gioca-sintonia .us-progression-rhythm-days i.today{box-shadow:0 0 0 2px var(--us-color-bg,#1b1219),0 0 0 4px var(--us-color-text,#f7efe9)}
 #usAngolo .us-gioca-sintonia .us-progression-rhythm-days i.today:not(.on){background:transparent;border:1.5px dashed var(--us-color-line-strong,rgba(247,239,233,.25));box-shadow:none}
+
+/* ---------- US vi ricorda (founder, 25/11/2026; tavola «US · US vi ricorda»): the speech bubble out of the
+   island, from your character (me) or from between the two (both). Fixed colours: it sits on the photo. ---------- */
+.top.us-premium-top .us-fumetto{position:absolute;left:50%;top:calc(50% + 34px);z-index:3;width:min(262px,calc(100vw - 48px));margin-left:calc(min(262px,calc(100vw - 48px)) / -2);transform-origin:var(--us-fumetto-tail,49px) -8px;transform:scale(.4) translateY(-10px);opacity:0;pointer-events:none;transition:transform .42s cubic-bezier(.2,.9,.25,1.15),opacity .2s ease}
+.top.us-premium-top .us-fumetto[hidden]{display:none}
+.top.us-premium-top .us-fumetto[data-speaker="me"]{--us-fumetto-tail:49px}
+.top.us-premium-top .us-fumetto[data-speaker="both"]{--us-fumetto-tail:64px}
+.top.us-premium-top .us-fumetto[data-open]{transform:none;opacity:1;pointer-events:auto;transition-delay:.4s}
+.us-fumetto-body{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;min-height:0;margin:0;padding:12px 14px 11px;border:0;border-radius:18px;background:#f7efe9;box-shadow:0 12px 28px rgba(0,0,0,.35);color:#1a1020;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.us-fumetto-body::before{content:"";position:absolute;left:calc(var(--us-fumetto-tail,49px) - 8px);top:-7px;width:16px;height:16px;border-radius:3px;background:#f7efe9;transform:rotate(45deg)}
+.us-fumetto-text{position:relative;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font:600 14.5px/1.35 var(--us-font-ui,'Figtree',sans-serif)}
+.us-fumetto-cta{position:relative;font:800 12px/1 var(--us-font-ui,'Figtree',sans-serif);color:#8f3048}
+.us-fumetto-cta[hidden]{display:none}
+.us-fumetto-body:focus-visible{outline:2px solid #f7efe9;outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.top.us-premium-top .us-fumetto{transition:none!important}}
+
+/* The line's sheet (tavola, «La scheda della battuta»). */
+#usBattuta{--us-sheet-k:var(--us-noi)}
+#usBattuta>.us-battuta-sheet{display:grid;align-content:start;gap:14px;width:min(100%,560px);max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top,0px) - 48px);overflow-y:auto;overscroll-behavior:contain;padding:18px 20px calc(24px + var(--us-safe-bottom,0px));box-sizing:border-box}
+.us-battuta-body{display:flex;flex-direction:column;gap:14px}
+.us-battuta-who{display:flex;align-items:flex-end;gap:12px}
+.us-battuta-chars{display:flex;align-items:flex-end;flex:none}
+.us-battuta-chars .us-char+.us-char{margin-left:-10px}
+.us-battuta-text{flex:1;margin:0;padding:12px 14px;border-radius:18px 18px 18px 4px;background:#f7efe9;color:#1a1020;font:600 15px/1.4 var(--us-font-ui,'Figtree',sans-serif)}
+.us-battuta-photo{display:flex;flex-direction:column;gap:8px;margin:0}
+.us-battuta-img{display:flex;align-items:flex-end;height:220px;padding:12px;box-sizing:border-box;border-radius:18px;background:linear-gradient(160deg,#e9b48f 0%,#cf7f84 55%,#4a2e45 100%) center/cover no-repeat}
+.us-battuta-img span{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:13px;background:rgba(18,13,17,.6);color:#f7efe9;font:700 12px/1 var(--us-font-ui,'Figtree',sans-serif)}
+.us-battuta-img span:empty{display:none}
+.us-battuta-photo figcaption{font:italic 400 15px/1.4 var(--us-font-display,'Fraunces',serif);color:var(--us-color-text-2,rgba(247,239,233,.82))}
+.us-battuta-actions{display:flex;flex-direction:column;gap:10px}
+#usBattuta .us-battuta-go{min-height:54px;margin:0;border:0;border-radius:999px;background:linear-gradient(90deg,var(--us-tu,#ff7c96),var(--us-partner,#a98bff));color:#1a1020;font:800 15px/1 var(--us-font-ui,'Figtree',sans-serif);box-shadow:none}
+#usBattuta .us-battuta-later{min-height:50px;margin:0;border:1px solid var(--us-color-line-strong,rgba(247,239,233,.18));border-radius:999px;background:transparent;color:var(--us-color-text,#f7efe9);font:700 14.5px/1 var(--us-font-ui,'Figtree',sans-serif);box-shadow:none}
+.us-battuta-note{margin:0;font-size:12.5px;line-height:1.45;text-align:center;color:var(--us-color-text-2,rgba(247,239,233,.6))}
+#usBattuta .us-battuta-never{align-self:center;min-height:40px;margin:0;padding:0 12px;border:0;background:transparent;color:var(--us-color-text-2,rgba(247,239,233,.6));font:600 12.5px/1 var(--us-font-ui,'Figtree',sans-serif);text-decoration:underline;box-shadow:none}
+
+/* Voi: «Oggi ti ho detto», until the evening. */
+#usAngolo .us-angolo-oggi[hidden]{display:none}
+#usAngolo .us-angolo-oggi-row{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;margin:0;padding:10px 14px;border-radius:20px;border:1px solid var(--us-color-line,rgba(247,239,233,.1));background:color-mix(in srgb,var(--us-color-text,#f7efe9) 5%,transparent);box-shadow:none;color:var(--us-color-text,#f7efe9);text-align:left;cursor:pointer}
+.us-angolo-oggi-char{flex:none;display:flex}
+.us-angolo-oggi-copy{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.us-angolo-oggi-copy small{font:800 11px/1.2 var(--us-font-ui,'Figtree',sans-serif);letter-spacing:.12em;text-transform:uppercase;color:var(--us-tu,#ff9fb3)}
+.us-angolo-oggi-copy span{font:500 13.5px/1.35 var(--us-font-ui,'Figtree',sans-serif)}
+#usAngolo .us-angolo-oggi-row em{flex:none;font:800 12.5px/1 var(--us-font-ui,'Figtree',sans-serif);font-style:normal;color:var(--us-tu,#ff9fb3)}
+:root[data-us-luce="giorno"] .us-angolo-oggi-copy small,:root[data-us-luce="giorno"] #usAngolo .us-angolo-oggi-row em{color:#b8452f}
+:root[data-us-luce="giorno"] .us-battuta-text{background:#ece0cf}

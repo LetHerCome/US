@@ -652,7 +652,7 @@ function moveSintonia(){
       const element=document.querySelector(`#bond .noi-canonical-page > ${selector}`);
       if(!element)continue;
       // The week comes first in Voi, before «Per crescere insieme».
-      if(selector==='.us-progression-rhythm'&&host.firstElementChild)host.insertBefore(element,host.firstElementChild);
+      if(selector==='.us-progression-rhythm'&&host.querySelector('#usAngoloCresci'))host.insertBefore(element,host.querySelector('#usAngoloCresci'));
       else host.appendChild(element);
     }
   }

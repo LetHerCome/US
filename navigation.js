@@ -120,6 +120,13 @@ const layers=[
     close:()=>window.UsCoupleNotes?.back?.()
   },
   {
+    // US vi ricorda (25/11/2026): the sheet of the characters' line.
+    name:'battuta',
+    find:()=>document.getElementById('usBattuta'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsRicorda?.close?.()
+  },
+  {
     name:'year-recap',
     find:()=>document.getElementById('usRecapSheet'),
     open:el=>el?.classList.contains('open'),
