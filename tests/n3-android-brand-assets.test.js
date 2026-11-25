@@ -81,8 +81,13 @@ windowsTest('launcher e splash Android usano soltanto il nuovo set brand', () =>
   assert.match(manifest, /android:icon="@mipmap\/ic_launcher"/);
   assert.match(manifest, /android:roundIcon="@mipmap\/ic_launcher_round"/);
   assert.match(adaptive, /@color\/ic_launcher_background/);
-  // 25/11/2026 (founder): the icon of the staging PWA, the framed symbol on white.
+  // 25/11/2026 (founder): the icon of the staging PWA, the framed symbol on white…
   assert.match(adaptive, /@drawable\/us_adaptive_foreground_v3/);
+  // …and on phones with round icons (they load roundIcon) the logo without the frame:
+  // founder, 25/11: «in quella tonda non si veda il quadrato esterno».
+  const round = fs.readFileSync(path.join(ROOT, 'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml'), 'utf8');
+  assert.match(round, /@color\/ic_launcher_background/);
+  assert.match(round, /@drawable\/us_adaptive_foreground_v2/);
   assert.match(baseStyles, /@drawable\/us_splash_background/);
   assert.match(v31Styles, /windowSplashScreenAnimatedIcon/);
   assert.match(v31Styles, /@drawable\/us_splash_symbol/);
