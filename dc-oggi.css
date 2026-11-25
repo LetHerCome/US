@@ -133,8 +133,9 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
   position:fixed;
   z-index:19;
   left:50%;
-  /* Mockup .og-bottom: 130px from the bottom of the screen (above the safe area). */
-  bottom:calc(var(--us-safe-bottom) + 130px);
+  /* Founder 25/11/2026 (APK): down near the nav. The band above it was kept for
+     Maudit, gone with the redesign (via la mascotte): nav + the heart + a breath. */
+  bottom:calc(var(--us-safe-bottom) + var(--us-nav-height) + 44px);
   width:min(420px,calc(100% - 28px));
   transform:translateX(-50%);
   display:grid;
@@ -145,7 +146,6 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
   gap:12px;
   pointer-events:none;
 }
-body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-safe-bottom) + var(--us-nav-height) + 14px)}
 #home .us-oggi-dock>*{pointer-events:auto}
 #home .us-oggi-dock>[hidden]{display:none!important}
 /* Caption: Fraunces italic 30px, then the day and who, with their colour. */
@@ -322,7 +322,6 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 }
 @media(max-height:600px){
   #home #usDailyRitual .us-daily-ritual-question{font-size:15px}
-  #home .us-oggi-dock{bottom:calc(var(--us-safe-bottom) + 112px)}
   /* No photo yet on a tiny phone: the invitation needs the band; the distance stays in Noi. */
   #home #homeHero.is-empty #usOggiRow{display:none!important}
   #home #usOggiCaption{display:none!important}

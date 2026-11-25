@@ -2,6 +2,13 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Oggi più in basso, vicino alla barra (25/11)
+
+**Stato:** ramo `claude/oggi-giu`, verso il ramo fisso di staging. Founder, 25/11, dall'APK: «la domanda del giorno e le altre barre sopra possono scendere un po' sotto vicino alla nav bar».
+
+**Cosa cambia:**
+- **Oggi:** la colonna in basso (la didascalia della foto, distanza e batteria, Come stai, la domanda di oggi) scende vicino alla barra, appena sopra il cuore. La striscia vuota che c'era sopra la barra era tenuta per Maudit, il gattino, che non c'è più dal redesign; la regola che doveva toglierla cercava un elemento sparito e non scattava mai. La foto resta più libera in alto.
+
 ### US vi ricorda: i personaggi parlano (25/11)
 
 **Stato:** ramo `claude/us-ricorda`, verso il ramo fisso di staging; la migrazione va applicata a US-STAGING col via del founder. Su staging prova solo il founder; in produzione forse direttamente con la seconda versione (founder, 25/11). Progetto: `docs/product/2026-11-25-us-vi-ricorda.md`, tavola «US · US vi ricorda» (https://claude.ai/artifact/DTNvLPsQM8ZVATXuhxUUpv), approvata: «Approvo la tavola».
