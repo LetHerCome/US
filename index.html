@@ -770,7 +770,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <span class="us-noi-v2-sync" id="usNoiV2Sync" role="status" aria-live="polite"></span>
         </div>
         <div id="usNoiV2Content" class="us-noi-v2-content"><div class="us-skeleton-calendar" role="status"><span class="us-sr">Carico il calendario…</span><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i></div></div>
-        <section id="usNoiV2Detail" class="us-noi-v2-detail" aria-label="Giorno selezionato" aria-live="polite"></section>
       </section>
 
       <!-- La lavagna (Noi, Fase B; lavagna.js draws in the slot, couple-notes.js pins the post-its on top). -->
@@ -1378,6 +1377,15 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usNoiV2WeekBack" hidden data-us-modal-close aria-label="Chiudi la lavagna"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="us-noi-lavagna-body" id="usNoiV2Week" aria-live="polite"></div>
+  </section>
+</div>
+
+<!-- Il giorno (founder, 25/11/2026): a tap on a day of Noi opens its things here, over the calendar;
+     the day card under the calendar is gone. noi-v2.js fills it. -->
+<div class="us-cal-sheet-overlay us-noi-day" id="usNoiDay" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-cal-sheet-backdrop us-modal-backdrop" data-noi-day-close></div>
+  <section class="us-cal-sheet us-sheet is-bottom us-noi-day-sheet" role="dialog" aria-modal="true" aria-labelledby="usNoiDayTitle" data-us-modal-panel>
+    <section id="usNoiV2Detail" class="us-noi-v2-detail" aria-label="Giorno selezionato" aria-live="polite"></section>
   </section>
 </div>
 

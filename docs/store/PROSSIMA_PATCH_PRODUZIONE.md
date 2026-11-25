@@ -2,9 +2,20 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Icone a un tono e il giorno in un riquadro (25/11)
+
+**Stato:** ramo `claude/icone-calendario`, verso il ramo fisso di staging. Founder, 25/11: «togliamo ora il doppio colore dalle icone che non mi piace più», poi «premendo il giorno si apra una sorta di popup con scritto gli impegni di quel giorno, togliendo la barra di sotto inutile».
+
+**Cosa cambia:**
+- **Icone a un tono:** le icone tornano a un solo tratto nel loro colore. Esce il pieno nel colore dell'altra persona sotto il contorno (le «icone a due toni» del 24/11), anche nella barra in basso: la pagina aperta torna un'icona piena in un colore solo.
+- **Il giorno in un riquadro:** in Noi la scheda del giorno scelto sotto il calendario esce. Toccando un giorno sale dal basso un riquadro con il giorno, i suoi ricordi, gli impegni, i giorni speciali coi personaggi e «Aggiungi a questo giorno». Si chiude con la X, toccando fuori o col tasto indietro. Quello che apri da lì (un impegno, un ricordo, il modulo per aggiungere) sale al posto del riquadro.
+- **Noi** ora va dal prossimo incontro al calendario e poi alla lavagna.
+
+**Server:** niente.
+
 ### L'isola e Il vostro angolo in tre parti (25/11)
 
-**Stato:** ramo `claude/sintonia-isola`, verso il ramo fisso di staging. Founder, 25/11, sulla tavola «US · Oggi e il vostro angolo» (https://claude.ai/artifact/QtAJmuJTt6cRvertx7ycJm): «Voi, guardaroba, premi mi piace perché divide il tutto», ma i personaggi grandi sulla foto «coprono la foto»; poi la sua idea dell'isola, provata sulla tavola: «Molto bello, proviamo come hai consigliato».
+**Stato:** in staging il 25/11 (PR #301, merge bc1a92cb, sito …-sbc1a92cb). Founder, 25/11, sulla tavola «US · Oggi e il vostro angolo» (https://claude.ai/artifact/QtAJmuJTt6cRvertx7ycJm): «Voi, guardaroba, premi mi piace perché divide il tutto», ma i personaggi grandi sulla foto «coprono la foto»; poi la sua idea dell'isola, provata sulla tavola: «Molto bello, proviamo come hai consigliato».
 
 **Cosa cambia:**
 - **L'isola:** il simbolo US in alto sta in una piccola capsula. Toccandolo, la capsula si allarga in «Il vostro angolo · Livello N · tocca qui» e i due personaggi si affacciano da dentro, uno dopo l'altro. Un secondo tocco apre l'angolo; se non la tocchi, dopo 6 secondi torna il simbolo. Il disegno del simbolo è lo stesso, e gli effetti del simbolo (premi della Sintonia) restano. Senza la coppia completa resta solo il simbolo.

@@ -147,7 +147,7 @@ test('M10.1C: the day already in the form shows title, time and owner of each co
   const out = dayList(load({ entries: [timed(BE.id, 'personal', 9, 'Università', { location: 'Aula 3' }), timed(FR.id, 'personal', 15, 'Lavoro'), timed(FR.id, 'shared', 21, 'Cena')] }));
   for (const needle of ['09:00 → 10:00', 'Università', '15:00 → 16:00', 'Lavoro', '21:00 → 22:00', 'Cena', 'Già quel giorno']) assert.ok(out.includes(needle), needle);
   // Parity: the day title is the mockup's (with the year only outside the current one).
-  assert.match(noi, /<h3>\$\{esc\(dayTitle\(selected\)\)\}<\/h3>/, 'the Noi day detail names the day');
+  assert.match(noi, /<h3 id="usNoiDayTitle">\$\{esc\(dayTitle\(selected\)\)\}<\/h3>/, 'the Noi day detail names the day');
 });
 
 test('M10.1C: empty lanes are never fabricated; an empty day says so once', () => {

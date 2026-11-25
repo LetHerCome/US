@@ -382,7 +382,7 @@ function specialMarkup(active){
 function detailMarkup(index) {
   const active=index.get(selected)||[];
   const ricordi=ricordiByDay().get(selected)||[];
-  const head=`<div class="us-noi-v2-detail-head"><h3>${esc(dayTitle(selected))}</h3>${selected===today()?'<span class="us-noi-v2-today-pill">Oggi</span>':''}</div>${specialMarkup(active)}`;
+  const head=`<div class="us-noi-v2-detail-head"><h3 id="usNoiDayTitle">${esc(dayTitle(selected))}</h3>${selected===today()?'<span class="us-noi-v2-today-pill">Oggi</span>':''}<button type="button" class="us-modal-close us-icon-center" data-noi-day-close aria-label="Chiudi il giorno">${icon('x')}</button></div>${specialMarkup(active)}`;
   const add='<button type="button" class="us-noi-v2-add-day" data-noi-add><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Aggiungi a questo giorno</span></button>';
   if(active.length||ricordi.length)return `${head}<div class="us-noi-v2-day-items">${ricordi.map(ricordoMarkup).join('')}${active.map(item=>itemMarkup(selected,item)).join('')}</div>${add}`;
   if(pending&&!snapshot)return `${head}<div class="us-skeleton-rows" role="status"><span class="us-sr">Carico i vostri momenti…</span><i class="us-skeleton"></i><i class="us-skeleton"></i></div>`;
@@ -417,6 +417,45 @@ function continueEnter(container){
 function flushLeaving(){
   if(!leaving)return;
   const {anim,apply}=leaving;leaving=null;anim.cancel();apply();
+}
+// Il giorno (founder, 25/11/2026): «premendo il giorno si apra una sorta di
+// popup con gli impegni di quel giorno, togliendo la barra di sotto». The
+// detail now lives in #usNoiDay, over the calendar; render() keeps it fresh.
+const daySheet=()=>$('usNoiDay');
+const dayOpen=()=>Boolean(daySheet()?.classList.contains('open'));
+function openDay(){
+  const sheet=daySheet();
+  if(!sheet||mode==='list')return;
+  window.UsUiFoundation?.cancelSurfaceExit?.(sheet);
+  sheet.classList.add('open');sheet.setAttribute('aria-hidden','false');
+  riseDetail();
+}
+function closeDay(){
+  const sheet=daySheet();
+  if(!sheet?.classList.contains('open'))return;
+  const finish=()=>{sheet.classList.remove('open');sheet.setAttribute('aria-hidden','true');};
+  sheet.classList.remove('open');
+  if(!window.UsUiFoundation?.exitSurface?.(sheet,finish))finish();
+}
+// What is tapped inside the day: a Ricordo, «Aggiungi a questo giorno», an
+// item. The day steps aside first, so what opens is on top.
+function onDayAction(e){
+  if(e.target.closest('[data-noi-day-close]')){closeDay();return true;}
+  if(e.target.closest('[data-noi-year]')){closeDay();window.UsYearRecap?.open?.();return true;}
+  const ricordo=e.target.closest('[data-noi-ricordo]');
+  if(ricordo){closeDay();window.openMomentViewer?.(ricordo);return true;}
+  if(e.target.closest('[data-noi-add]')){
+    closeDay();
+    if(ideaPick){
+      Promise.resolve(window.UsCalendarLinks?.createForIdeaDate?.(selected)).then(ok=>{if(ok){ideaPick=null;render();}});
+      return true;
+    }
+    if(window.UsCalendarLinks?.createForDate)window.UsCalendarLinks.createForDate(selected);
+    return true;
+  }
+  const item=e.target.closest('[data-noi-item]');
+  if(item){closeDay();openItem(item);return true;}
+  return false;
 }
 function riseDetail(){
   if(reducedMotion())return;
@@ -598,9 +637,8 @@ function chooseDay(day,{fromList=false,fromWeek=false}={}) {
   if(fromList)mode='calendar';
   if(differentMonth){goToMonth(d.getFullYear(),d.getMonth(),day,Math.sign(d.getFullYear()*12+d.getMonth()-(year*12+month)));return;}
   render();
-  riseDetail();
+  openDay();
   window.UsFeedback?.selection?.();
-  if(fromList)$('usNoiV2Detail')?.scrollIntoView?.({block:'nearest',behavior:reducedMotion()?'auto':'smooth'});
 }
 function moveSintonia(){
   const target=$('usGiocaSintonia');
@@ -656,6 +694,8 @@ function boot(){
     if(direction===0){selected=today();render();riseDetail();return;}
     goToMonth(y,m,today(),Math.sign(direction));
   });
+  daySheet()?.addEventListener('click',onDayAction);
+  daySheet()?.addEventListener('keydown',e=>{if(e.key==='Escape'&&!e.defaultPrevented&&dayOpen()){e.preventDefault();closeDay();}});
   $('usNoiV2')?.addEventListener('click',e=>{
     const day=e.target.closest('[data-noi-day]');if(day){chooseDay(day.dataset.noiDay,{fromList:day.hasAttribute('data-noi-focus-list')});return;}
     if(e.target.closest('[data-noi-retry]')){refresh({force:true});return;}
@@ -731,6 +771,7 @@ function openMainCalendar(dateISO,requestedMode='calendar'){
   render();refresh();
 }
 window.USNoiV2=Object.freeze({
+  openDay,closeDay,
   openCalendar:({date,mode:requestedMode}={})=>openMainCalendar(date,requestedMode),
   beginIdeaPick:(idea)=>{ideaPick=idea;openMainCalendar(null,'calendar');},
   clearIdeaPick:()=>{ideaPick=null;render();},

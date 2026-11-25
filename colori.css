@@ -25,7 +25,7 @@
 /* --us-atmo: the old night (wine and a glow), still read by a few sheets. */
 :root{--us-atmo:radial-gradient(110% 45% at 50% 0%,color-mix(in srgb,var(--us-tu) 24%,transparent),transparent 70%),linear-gradient(180deg,#3a1426 0%,#22101d 50%,#140c14 100%)}
 /* Lo sfondo (founder, 24/11/2026): nessuno sfondo colorato, un nero appena caldo;
-   il colore della coppia sta nelle cose (personaggi, icone a due toni, nastri). */
+   il colore della coppia sta nelle cose (personaggi, nastri). */
 html{background:#120d11!important;background-attachment:fixed!important}
 
 /* ---------- The bottom bar: each tab in its step; the blob in the open one's ---------- */
@@ -54,8 +54,4 @@ html{background:#120d11!important;background-attachment:fixed!important}
   --us-color-accent-strong:var(--us-pg);
 }
 
-/* Icone a due toni nella barra (24/11/2026): every tab shows its fill in the
-   other one's colour under the outline; the open one stronger. */
-.us-nav-premium button .us-nav-icon-on{display:block!important;z-index:0;color:color-mix(in srgb,var(--us-partner) 26%,transparent)!important}
-.us-nav-premium button .us-nav-icon-off{display:block!important;z-index:1}
-.us-nav-premium button.active .us-nav-icon-on{color:color-mix(in srgb,var(--us-partner) 55%,transparent)!important}
+/* La barra (25/11/2026): the two tones are gone; each tab is its own icon again. */

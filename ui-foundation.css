@@ -554,15 +554,13 @@ h1,h2,h3{font-family:var(--us-font-editorial)}
   height:var(--us-icon-size,20px);
   pointer-events:none;
 }
-/* Icone a due toni (founder, 24/11/2026, tavola «US · icone e colori», B):
-   the outline in the icon's own colour on top, the official fill weight under
-   it in the other one's colour. Both are the Phosphor files, never redrawn;
-   an icon without a fill (x, plus, arrows) stays one line. */
+/* Icone a un tono (founder, 25/11/2026: «togliamo il doppio colore dalle
+   icone che non mi piace più»): one line in the icon's own colour. The fill
+   under it (icone a due toni, 24/11/2026) is never shown; ::before stays for
+   the few icons that draw their own mark in it (Eventi: a lived one). */
 .us-icon::before,.us-icon::after{content:"";position:absolute;inset:0;-webkit-mask:var(--us-icon-src) center/contain no-repeat;mask:var(--us-icon-src) center/contain no-repeat}
-.us-icon::before{-webkit-mask-image:var(--us-icon-fill,none);mask-image:var(--us-icon-fill,none);background-color:var(--us-icon-tint,var(--us-partner,#a98bff));opacity:var(--us-icon-tint-alpha,0)}
+.us-icon::before{-webkit-mask-image:var(--us-icon-fill,none);mask-image:var(--us-icon-fill,none);background-color:var(--us-icon-tint,var(--us-partner,#a98bff));opacity:0}
 .us-icon::after{background-color:currentColor}
-/* On a coloured key the tint would fight the background: one line there. */
-:is(.primary,[class*="-primary"],.us-accent-btn) .us-icon::before{display:none}
 .us-icon[data-us-icon="x"]{--us-icon-src:url("/assets/icons/phosphor/x-regular.svg")}
 .us-icon[data-us-icon="question"]{--us-icon-src:url("/assets/icons/phosphor/question-regular.svg")}
 .us-icon[data-us-icon="game-controller"]{--us-icon-src:url("/assets/icons/phosphor/game-controller-regular.svg")}

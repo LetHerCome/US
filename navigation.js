@@ -64,6 +64,13 @@ const layers=[
     close:()=>window.USNoiV2?.closeWeek?.()
   },
   {
+    // Il giorno (25/11/2026): the day tapped in Noi, over the calendar.
+    name:'noi-day',
+    find:()=>document.getElementById('usNoiDay'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.USNoiV2?.closeDay?.()
+  },
+  {
     // M9D — a Noi section open in place (Missioni, Eventi): its bar is shown.
     // Low in the list: an Eventi editor or an idea opened from it sits above.
     name:'noi-section',
