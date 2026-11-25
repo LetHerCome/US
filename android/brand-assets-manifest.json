@@ -99,8 +99,8 @@
                         },
                         {
                             "path":  "android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v3.png",
-                            "sha256":  "4fc9221e3b9c6eaa6de5ea94a59d6475b07c341ed3ad4c7cf1df023bc1be07d9",
-                            "operation":  "FIT_CIRCLE_SAFE_TRANSPARENT",
+                            "sha256":  "e0630e86f1e9fde99726fe98cd84cd3c74df9e2c1f8229307fe6724e1ac94458",
+                            "operation":  "FIT_EDGE_TRANSPARENT",
                             "sources":  [
                                             "assets/source/brand/us-symbol-master-v1.png"
                                         ]

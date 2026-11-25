@@ -104,7 +104,7 @@ windowsTest('foreground Android deriva dal master trasparente e il launcher ha l
   // 25/11/2026 (founder): «prendendo questa che é quella della pwa di staging la voglio anche come icona dell'apk».
   const pwa = brand.derivatives.find((entry) => entry.path.endsWith('/us_adaptive_foreground_v3.png'));
   assert.deepEqual(pwa.sources, ['assets/source/brand/us-symbol-master-v1.png']);
-  assert.equal(pwa.operation, 'FIT_CIRCLE_SAFE_TRANSPARENT');
+  assert.equal(pwa.operation, 'FIT_EDGE_TRANSPARENT');
 
   const colors = fs.readFileSync(path.join(ROOT, 'android/app/src/main/res/values/colors.xml'), 'utf8');
   assert.match(colors, /<color name="ic_launcher_background">#FFFFFF<\/color>/);

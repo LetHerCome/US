@@ -103,9 +103,9 @@ Write-AdaptiveForeground 'assets/source/brand/us-symbol-master-v1.png' 'android/
 # splash keeps the framed symbol below.
 Write-AdaptiveForeground 'assets/source/brand/app-icon/us-launcher-symbol-v2.png' 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v2.png'
 # 25/11/2026 (founder): the launcher icon is the one of the staging PWA again, the
-# framed symbol on white, as big as on the PWA home icon (85% of the box): the
-# frame spans about half the box and its corners just stay inside round masks.
-Write-AdaptiveForeground 'assets/source/brand/us-symbol-master-v1.png' 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v3.png' 0.85 'FIT_CIRCLE_SAFE_TRANSPARENT'
+# framed symbol on white, with the frame on the edge of the icon as on the PWA
+# (founder: «voglio il quadrato al confine dell'icona»); round masks cut its corners.
+Write-AdaptiveForeground 'assets/source/brand/us-symbol-master-v1.png' 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v3.png' 1.09 'FIT_EDGE_TRANSPARENT'
 
 $symbol = [System.Drawing.Image]::FromFile($sourceFiles['assets/source/brand/app-icon/us-launcher-symbol-v2.png'])
 try {
