@@ -160,7 +160,7 @@ test('the agenda of the chosen day: its Ricordo, the commitments with time and w
   h.api.openCalendar({ date: '2026-11-24' });
   await settle();
   let detail = h.$('usNoiV2Detail').innerHTML;
-  assert.match(detail, /<h3>martedì 24 novembre<\/h3><span class="us-noi-v2-today-pill">Oggi<\/span>/);
+  assert.match(detail, /<h3 id="usNoiDayTitle">martedì 24 novembre<\/h3><span class="us-noi-v2-today-pill">Oggi<\/span><button type="button" class="us-modal-close us-icon-center" data-noi-day-close aria-label="Chiudi il giorno">/);
   assert.match(detail, /19:00[\s\S]*Yoga[\s\S]*Solo Sara[\s\S]*<span class="us-noi-v2-who" data-owner="partner" translate="no">Sara<\/span>/);
   assert.match(detail, /21:00[\s\S]*Cena da noi[\s\S]*<span class="us-noi-v2-who" data-owner="noi">Insieme<\/span>/);
   assert.match(detail, /<button type="button" class="us-noi-v2-add-day" data-noi-add>/);

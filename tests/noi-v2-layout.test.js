@@ -13,7 +13,10 @@ test('Noi V2: calendar-first overview, full-size day detail, list toggle and ret
   assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"/);
   // Noi, Fase A (24/11/2026): one calendar, «Vi rivedete tra» above it; no «Mese / Prossimi».
   assert.doesNotMatch(bond, /usNoiV2ModeCalendar|usNoiV2ModeList/);
-  for (const id of ['usNoiV2Meet','usNoiV2Month','usNoiV2Content','usNoiV2Detail','usNoiV2Today','usNoiBoard']) {
+  // Il giorno (founder, 25/11/2026): no day card under the calendar; the day opens in #usNoiDay.
+  assert.doesNotMatch(bond,/id="usNoiV2Detail"/);
+  assert.match(html,/<div class="us-cal-sheet-overlay us-noi-day" id="usNoiDay" aria-hidden="true" data-us-modal data-us-motion-surface>[\s\S]*?<section id="usNoiV2Detail"/);
+  for (const id of ['usNoiV2Meet','usNoiV2Month','usNoiV2Content','usNoiV2Today','usNoiBoard']) {
     assert.match(bond,new RegExp(`id="${id}"`));
   }
   // Noi nuova (founder, 03/11/2026): no tiles and no «Il nostro giorno» (the

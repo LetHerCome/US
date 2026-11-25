@@ -294,7 +294,8 @@ test('M6B (30): a failed refresh shows an error/retry banner and keeps existing 
 // (31) Back closes form/detail, then the week view, through navigation.js layers only.
 test('M6B (31): browser Back is wired exclusively through navigation.js layers, in nesting order', () => {
   const layerNames = [...nav().matchAll(/name:'((?:calendar|noi)[\w-]*)'/g)].map((m) => m[1]);
-  assert.deepEqual(layerNames, ['noi-week', 'noi-section', 'noi-idea-detail', 'calendar-detail', 'calendar-form']);
+  // Il giorno (25/11/2026): the day tapped in Noi is a sheet over the calendar.
+  assert.deepEqual(layerNames, ['noi-week', 'noi-day', 'noi-section', 'noi-idea-detail', 'calendar-detail', 'calendar-form']);
   assert.doesNotMatch(js(), /history\.(push|replace)State|addEventListener\('popstate'/, 'no parallel history system inside calendar.js');
 });
 
