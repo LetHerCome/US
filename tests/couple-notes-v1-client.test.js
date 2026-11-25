@@ -42,7 +42,7 @@ test('wired into Noi: board, Foglio, back, realtime, reset, cache and builds', (
   assert.match(html, /id="usNotesSheet" class="us-notes-overlay us-foglio"[^>]*data-us-modal/);
   // Noi nuova (03/11/2026): the notes are post-its on the Noi page; the whole
   // board opens from «Tutti i post-it (n)».
-  assert.match(html, /<ul class="us-postits" id="usNoiBoardGrid"/);
+  assert.match(html, /<ul class="us-postits is-board" id="usNoiBoardGrid"/);
   assert.match(html, /id="usNoiBoardAll" data-board-all hidden/);
   assert.match(read('couple-notes.js'), /if\(t\.closest\('\[data-board-all\]'\)\)return open\(\);/);
   assert.match(read('navigation.js'), /name:'notes'[\s\S]{0,200}usNotesSheet[\s\S]{0,200}UsCoupleNotes\?\.back/);

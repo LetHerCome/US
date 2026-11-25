@@ -106,6 +106,13 @@ const layers=[
     close:()=>window.UsCoupleNotes?.back?.()
   },
   {
+    // Noi, Fase B: the post-it in front (over Noi or the lavagna) is above both: listed after them.
+    name:'postit',
+    find:()=>document.getElementById('usPostitFocus'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsCoupleNotes?.back?.()
+  },
+  {
     name:'year-recap',
     find:()=>document.getElementById('usRecapSheet'),
     open:el=>el?.classList.contains('open'),

@@ -2,6 +2,19 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Noi, Fase B.1: La lavagna con i post-it sopra (25/11)
+
+**Stato:** ramo `claude/noi-fase-b`, verso il ramo fisso di staging; la migrazione va applicata a US-STAGING col via del founder. Founder, 25/11: «non abbiamo ancora inserito i post-it all'interno di lavagna», poi «si concordo» al piano (Fase B dopo gli interruttori). Decisioni D3–D5, D11, D12 del grill-me di Noi e tavola «US · Noi, il vostro tempo» (schermate Main e Lavagna).
+
+**Cosa cambia:**
+- **«La lavagna» al posto di «Bacheca»:** in Noi, sotto il giorno scelto, il disegno della lavagna più grande, con «+ Post-it» e «Apri». Sopra il disegno, i tre post-it più recenti e, nell'angolo in alto a destra, «Le vostre idee» con quante ne restano da vivere. Senza disegno e senza post-it, i due personaggi invitano a disegnare (D3, D5, D11).
+- **La lavagna a schermo intero:** si chiama «La lavagna». Mostra i sei post-it più recenti sopra il disegno e il tasto «+ Post-it» sul tabellone. Ogni post-it si trascina con un dito e resta dove lo lasci, per tutti e due (D4). Quelli mai spostati prendono un posto libero, in due colonne.
+- **Il post-it in primo piano:** toccato, un post-it viene davanti sopra un velo scuro, e lì si scrive, si spunta la lista e si stacca. Lo stesso vale per «Le vostre idee». Il tasto indietro e un tocco fuori lo chiudono salvando.
+- **La carta di chi scrive:** il post-it ha il colore di chi l'ha scritto, tu o la tua persona. Esce la scelta della carta (giallo, rosa, azzurro, verde). In «Tutti i post-it» i filtri sono Tutti, Tuoi e quelli della tua persona (D12).
+- **Non in questa fase:** «Scegli il giorno» per le idee, «L'avete fatto?», le penne tu/partner/Noi/bianco senza ambra e il widget (B.2); l'avviso «X ti ha lasciato un post-it» (B.3).
+
+**Server:** nuova migrazione `20261125120000_couple_notes_posto.sql`, con le colonne `couple_notes.board_x` e `board_y` (da 0 a 1, vuote finché il post-it non si sposta) e un vincolo. Il controllo dei post-it (`private.couple_notes_guard`) fa crescere la revisione anche per uno spostamento, ma lascia com'erano chi l'ha cambiato e quando: il post-it continua a dire «Bea · ieri». Finché la migrazione non c'è, l'app legge i post-it senza posto e lo spostamento resta solo sul telefono. L'esportazione dei dati non cambia.
+
 ### Interruttori più chiari (25/11)
 
 **Stato:** ramo `claude/interruttori`, verso il ramo fisso di staging. Founder, 25/11 (screenshot del nuovo impegno): «studia questi bottoni on/off, fai vedere meglio il bordo e quando sono accesi colorali».

@@ -304,7 +304,7 @@ function install(w){
   root.innerHTML=`<section class="us-lav-sheet" role="dialog" aria-modal="true" aria-labelledby="usLavagnaTitle" data-us-modal-panel>
     <header class="us-lav-head">
       <button type="button" class="us-lav-back" data-lav-close aria-label="Torna a Noi"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
-      <div class="us-lav-titles"><h2 id="usLavagnaTitle">Lavagna</h2><small class="us-lav-last" id="usLavagnaLast" aria-live="polite"></small></div>
+      <div class="us-lav-titles"><h2 id="usLavagnaTitle">La lavagna</h2><small class="us-lav-last" id="usLavagnaLast" aria-live="polite"></small></div>
       <button type="button" class="us-lav-clear" data-lav-clear>Pulisci</button>
     </header>
     <div class="us-lav-stage" id="usLavagnaStage">
@@ -312,6 +312,8 @@ function install(w){
         <canvas class="us-lav-canvas" id="usLavagnaCanvas" role="img" aria-label="La vostra lavagna"></canvas>
         <p class="us-lav-hint" id="usLavagnaHint" hidden><b>La lavagna è vuota</b><span>Disegnate qualcosa: lo vedete tutti e due</span></p>
         <span class="us-lav-who" id="usLavagnaWho" aria-hidden="true"></span>
+        <ul class="us-postits is-board is-big" id="usLavagnaNotes" aria-label="Post-it"></ul>
+        <button type="button" class="us-lav-postit" data-lav-postit><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Post-it</span></button>
       </div>
     </div>
     <div class="us-lav-tools" role="toolbar" aria-label="Strumenti della lavagna">
@@ -417,6 +419,8 @@ function install(w){
   root.addEventListener('click',e=>{
     const t=e.target;
     if(t.closest('[data-lav-close]'))return close();
+    // Noi, Fase B: the post-its are on the board (couple-notes.js).
+    if(t.closest('[data-lav-postit]'))return w.UsCoupleNotes?.write?.();
     if(t.closest('[data-lav-clear]'))return clearAll();
     if(t.closest('[data-lav-undo]'))return undo();
     const c=t.closest('[data-lav-color]');
@@ -435,6 +439,7 @@ function install(w){
     w.UsUiFoundation?.cancelSurfaceExit?.(root);
     root.classList.add('open');root.setAttribute('aria-hidden','false');
     layout();paintHead();paintTools();
+    w.UsCoupleNotes?.showBoard?.();
     load().then(()=>{if(opened())repaintLayer();});
   }
   function close(){
@@ -453,9 +458,7 @@ function install(w){
     slot.dataset.lavMounted='1';
     slot.innerHTML=`<button type="button" class="us-lav-tile" data-lav-open aria-label="Apri la lavagna">
       <canvas class="us-lav-tile-canvas" aria-hidden="true"></canvas>
-      <span class="us-lav-tile-label"><b>Lavagna</b><span class="us-lav-tile-by"></span></span>
-      <span class="us-lav-tile-empty" hidden>Disegnate qualcosa: lo vedete tutti e due</span>
-      <span class="us-lav-tile-go"><span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span><span>Disegna</span></span>
+      <span class="us-lav-tile-empty" hidden><span class="us-lav-tile-duo" aria-hidden="true"></span><span>Disegnate qualcosa o lasciate un post-it</span></span>
     </button>`;
     tileCanvas=slot.querySelector('canvas');
     slot.addEventListener('click',e=>{if(e.target.closest('[data-lav-open]'))open();});
@@ -472,7 +475,11 @@ function install(w){
     if(!tileCanvas)return;
     const last=lastLine(),by=slot.querySelector('.us-lav-tile-by');
     if(by)by.innerHTML=last?`<span translate="no">${esc(last.who)}</span><span>${esc(last.when)}</span>`:'';
-    slot.querySelector('.us-lav-tile-empty').hidden=!loaded||strokes.length>0;
+    const empty=slot.querySelector('.us-lav-tile-empty');
+    empty.hidden=!loaded||strokes.length>0;
+    // D5: empty, the two characters invite you to draw.
+    const duo=empty.querySelector('.us-lav-tile-duo');
+    if(!empty.hidden&&duo&&!duo.firstChild&&w.UsPersonaggi?.character){try{duo.innerHTML=['francesco','beatrice'].map(role=>w.UsPersonaggi.character(role,{size:52})).join('');}catch(_){}}
     const r=tileCanvas.getBoundingClientRect();
     if(!r.width||!r.height||!tileSeen)return;
     const ratio=Math.min(3,w.devicePixelRatio||1);

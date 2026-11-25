@@ -617,8 +617,16 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   <div id="usNotesSheet" class="us-notes-overlay us-foglio" aria-hidden="true" data-us-modal data-us-motion-surface>
     <div class="us-notes-scrim us-modal-backdrop" data-notes-close></div>
     <section class="us-notes-panel" role="dialog" aria-modal="true" aria-labelledby="usNotesTitle" data-us-modal-panel>
-      <header class="us-notes-head"><div><h3 id="usNotesTitle">Bacheca</h3><small id="usNotesCount"></small></div><button type="button" class="us-modal-close" data-us-modal-close data-notes-close aria-label="Chiudi la bacheca"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+      <header class="us-notes-head"><div><h3 id="usNotesTitle">Tutti i post-it</h3><small id="usNotesCount"></small></div><button type="button" class="us-modal-close" data-us-modal-close data-notes-close aria-label="Chiudi i post-it"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
       <div id="usNotesBody" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <!-- Il post-it in primo piano (couple-notes.js, Noi Fase B): written on, over Noi or over the lavagna; also «Le vostre idee». -->
+  <div id="usPostitFocus" class="us-postit-focus" aria-hidden="true" data-us-modal>
+    <div class="us-postit-focus-scrim us-modal-backdrop" data-focus-close></div>
+    <section class="us-postit-focus-panel" role="dialog" aria-modal="true" aria-label="Post-it" data-us-modal-panel>
+      <ul class="us-postits is-focus" id="usPostitFocusList"></ul>
     </section>
   </div>
 
@@ -746,14 +754,19 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         <section id="usNoiV2Detail" class="us-noi-v2-detail" aria-label="Giorno selezionato" aria-live="polite"></section>
       </section>
 
-      <!-- Bacheca (couple-notes.js): the Lavagna on top (phase 2 hooks it in the slot), then the post-its. -->
+      <!-- La lavagna (Noi, Fase B; lavagna.js draws in the slot, couple-notes.js pins the post-its on top). -->
       <section class="us-noi-board" id="usNoiBoard" aria-labelledby="usNoiBoardTitle">
         <header class="us-noi-board-head">
-          <div><h2 id="usNoiBoardTitle">Bacheca</h2><small>Per le cose senza data</small></div>
-          <button type="button" class="us-noi-board-new" data-board-new><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Post-it</span></button>
+          <div><h2 id="usNoiBoardTitle">La lavagna</h2><small>Disegni, post-it e le vostre idee</small></div>
+          <div class="us-noi-board-actions">
+            <button type="button" class="us-noi-board-new" data-board-new><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Post-it</span></button>
+            <button type="button" class="us-noi-board-open" data-lav-board-open>Apri</button>
+          </div>
         </header>
-        <div id="usNoiLavagnaSlot" class="us-lav-slot"></div>
-        <ul class="us-postits" id="usNoiBoardGrid" aria-label="Post-it" aria-live="polite"></ul>
+        <div class="us-noi-lav" id="usNoiLav">
+          <div id="usNoiLavagnaSlot" class="us-lav-slot"></div>
+          <ul class="us-postits is-board" id="usNoiBoardGrid" aria-label="Post-it" aria-live="polite"></ul>
+        </div>
         <button type="button" class="us-noi-board-all" id="usNoiBoardAll" data-board-all hidden><span>Tutti i post-it</span><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></button>
       </section>
 

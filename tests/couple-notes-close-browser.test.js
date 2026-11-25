@@ -36,8 +36,9 @@ function fixture() {
   try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
 }
 
-const EDITOR = '#usNoiBoardGrid .is-editing';
-const open = async (p, id = 'ciao') => { await p.locator(`#usNoiBoardGrid .us-postit[data-note-id="${id}"] .us-postit-text`).first().tap(); await p.waitForSelector(`${EDITOR} .us-notes-title`); };
+// Noi, Fase B: a post-it tapped on the lavagna comes forward (#usPostitFocus).
+const EDITOR = '#usPostitFocus .is-editing';
+const open = async (p, id = 'ciao') => { await p.locator(`#usNoiBoardGrid .us-postit[data-note-id="${id}"] .us-postit-pin`).first().tap(); await p.waitForSelector(`${EDITOR} .us-notes-title`); };
 const done = (p) => p.locator(`${EDITOR} [data-notes-done]`).tap();
 const partner = (p, id, patch) => p.evaluate(([id, patch]) => {
   const row = { ...window.__QA.tables.couple_notes.find((n) => n.id === id), updated_by: 'b1', revision: 2, ...patch };
@@ -47,11 +48,11 @@ const partner = (p, id, patch) => p.evaluate(([id, patch]) => {
 
 const PATHS = {
   'opened and closed at once': async (p) => { await open(p); await done(p); },
-  'a tap on another post-it': async (p) => { await open(p); await open(p, 'solo'); await done(p); },
-  '«Nuovo post-it» while it is open': async (p) => { await open(p); await p.locator('#usNoiBoardGrid [data-notes-new]').tap(); await p.waitForTimeout(200); await done(p); },
+  'a tap outside it': async (p) => { await open(p); await p.locator('#usPostitFocus [data-focus-close]').tap({ position: { x: 8, y: 8 } }); await p.waitForTimeout(300); await open(p, 'solo'); await done(p); },
+  '«+ Post-it» while it is open': async (p) => { await open(p); await p.evaluate(() => window.UsCoupleNotes.write()); await p.waitForTimeout(200); await done(p); },
   '«Tutti i post-it», then Back': async (p) => { await open(p); await p.evaluate(() => window.UsCoupleNotes.open()); await p.waitForTimeout(300); await p.evaluate(() => window.UsCoupleNotes.back()); },
-  'another tab and back': async (p) => { await open(p); await p.locator('.nav button[data-page="home"]').tap(); await p.waitForTimeout(400); await p.locator('.nav button[data-page="bond"]').tap(); await p.waitForTimeout(600); await done(p); },
-  'Android Back': async (p) => { await open(p); await p.evaluate(() => window.UsCoupleNotes.back()); await p.waitForTimeout(200); await done(p); },
+  'another tab and back': async (p) => { await open(p); await p.evaluate(() => document.querySelector('.nav button[data-page="home"]').click()); await p.waitForTimeout(400); await p.evaluate(() => document.querySelector('.nav button[data-page="bond"]').click()); await p.waitForTimeout(600); await done(p); },
+  'Android Back': async (p) => { await open(p); await p.evaluate(() => window.UsCoupleNotes.back()); await p.waitForTimeout(300); },
   'the partner changes it': async (p) => { await open(p); await partner(p, 'ciao', { color: 'pink' }); await done(p); },
   'the partner ticks another one': async (p) => { await open(p); await partner(p, 'spesa', {}); await done(p); },
   'a Realtime row without its text': async (p) => { await open(p); await partner(p, 'ciao', { title: undefined, body: undefined, items: undefined }); await p.waitForTimeout(200); await done(p); },
@@ -103,7 +104,7 @@ test('no way of closing the post-it «ciao» takes it away', async (t) => {
     assert.deepEqual(s.deletes, []);
     assert.equal(s.ciao?.body, '😀🥰🎉', 'kept as it was');
     assert.equal(await p.locator(EDITOR).count(), 0, 'the post-it is closed');
-    assert.match(await p.locator('#usNoiBoardGrid .us-postit[data-note-id="ciao"]').innerText(), /ciao[\s\S]*😀🥰🎉/);
+    assert.match(await p.locator('#usNoiBoardGrid .us-postit[data-note-id="ciao"]').innerText(), /ciao/);
     await empty();
     await p.locator('.us-confirm [data-us-confirm="ok"]').tap();
     await p.waitForTimeout(400);
@@ -114,7 +115,7 @@ test('no way of closing the post-it «ciao» takes it away', async (t) => {
     // A new post-it never filled: it goes by itself, nothing reached the server.
     const notes = () => p.evaluate(() => window.__QA.tables.couple_notes.length);
     const before = await notes();
-    await p.locator('#usNoiBoardGrid [data-notes-new]').tap();
+    await p.evaluate(() => window.UsCoupleNotes.write());
     await p.waitForSelector(`${EDITOR} .us-notes-title`);
     await done(p);
     await p.waitForTimeout(400);
@@ -124,7 +125,7 @@ test('no way of closing the post-it «ciao» takes it away', async (t) => {
     assert.equal(await p.locator(EDITOR).count(), 0);
 
     // Written a moment ago in this opening (so on the server), then emptied: it asks too.
-    await p.locator('#usNoiBoardGrid [data-notes-new]').tap();
+    await p.locator('#usNoiBoard [data-board-new]').tap();
     await p.locator(`${EDITOR} .us-notes-title`).fill('Prova');
     await p.waitForFunction(() => window.__QA.tables.couple_notes.some((n) => n.title === 'Prova'));
     await p.waitForTimeout(100);
