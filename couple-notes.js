@@ -133,6 +133,34 @@ function ideaLines(snap,me,{limit=Infinity,lived=2}={}){
   return {lines,hidden:active.length+all.length-lines.length};
 }
 
+// Noi, Fase B.2 (D13): the day of a commitment made from an idea, as Rome
+// sees it (the last day, for one lasting several days).
+function entryDay(e){
+  if(!e)return '';
+  const d=e.end_date||e.start_date;
+  if(d)return String(d).slice(0,10);
+  return e.ends_at||e.starts_at?romeDay(e.ends_at||e.starts_at):'';
+}
+const dayGap=(a,b)=>Math.round((Date.parse(`${b}T12:00:00Z`)-Date.parse(`${a}T12:00:00Z`))/864e5);
+// «L'avete fatto?»: the first idea fixed on a day already gone (at most a
+// week ago), not yet said lived by me, never asked before. Once only.
+function dueDone(snap,entryOf,me,today,asked){
+  if(!snap?.loaded)return null;
+  for(const i of snap.active||[]){
+    if(i.status!=='scheduled'||!i.calendar_entry_id||i.lived_proposed_by===me||asked(i.id))continue;
+    const day=entryDay(entryOf(i.id));
+    if(!day||day>=today||dayGap(day,today)>7)continue;
+    return {id:i.id,title:String(i.title||''),day,entryId:i.calendar_entry_id,partnerSaid:Boolean(i.lived_proposed_by)};
+  }
+  return null;
+}
+// How an idea stands on the board: to fix (Scegli il giorno), fixed, said
+// lived by me (waiting) or by my person (to confirm).
+function ideaState(i,me){
+  if(i.lived_proposed_by)return i.lived_proposed_by===me?'mine':'partner';
+  return i.status==='scheduled'?'fixed':'todo';
+}
+
 function install(w){
   const d=w.document,$=id=>d.getElementById(id),root=$('usNotesSheet'),page=$('usNoiBoard');
   if(!root&&!page)return;
@@ -209,25 +237,106 @@ function install(w){
       <button type="button" class="us-postit-pin" data-ideas-open aria-label="Le vostre idee${todo.length?`: ${todo.length} da vivere`:''}"><b class="us-postit-heading">Le vostre idee</b><span class="us-postit-lines">${lines}</span></button>
     </li>`;
   }
-  // «Da vivere», fixed on top: the ideas (app.js, UsDaVivere), ticked when
-  // lived; a new idea at the foot. Tapping an idea opens its detail.
-  function ideaLine(l){
-    const note=l.state==='mine'?`aspetta ${partnerName()}`:l.state==='partner'?`${partnerName()} dice che l’avete vissuta`:'';
-    return `<li class="is-${l.state}"><label class="us-notes-check is-small"><input type="checkbox" data-idea="${esc(l.id)}" data-state="${l.state}"${l.state==='lived'?' checked disabled':''} aria-label="${esc(l.title)}: vissuta"><span aria-hidden="true"></span></label><span class="us-postit-idea"><button type="button" class="us-postit-item" data-idea-open="${esc(l.id)}" translate="no">${esc(l.title)}</button>${note?`<small>${esc(note)}</small>`:''}</span></li>`;
+  // «Le vostre idee» (board Idee, D13): each idea with the colour of who
+  // had it; «Scegli il giorno» picks the day in the calendar of Noi and makes
+  // it a commitment («Fissata», with its day). Tapping the title opens its
+  // detail. Lived ones are counted at the foot.
+  function ideaRow(i){
+    const state=ideaState(i,me()),who=!i.created_by?'noi':i.created_by===me()?'tu':'partner';
+    const when=state==='fixed'?(w.UsDaVivere?.when?.(i.id)||''):'';
+    const sub=state==='fixed'?(when?`${when.split(',')[0]}, in calendario`:'In calendario'):state==='mine'?`aspetta ${partnerName()}`:state==='partner'?`${partnerName()} dice che l’avete fatto`:'';
+    const action=state==='todo'?`<button type="button" class="us-idea-go" data-idea-pick="${esc(i.id)}">Scegli il giorno</button>`
+      :state==='fixed'?'<span class="us-idea-chip">Fissata</span>'
+      :state==='partner'?`<button type="button" class="us-idea-go" data-idea-confirm="${esc(i.id)}">Sì, fatto</button>`:'';
+    return `<li class="us-idea-row is-${state}"><i class="us-notes-dot" data-who="${who}" aria-hidden="true"></i><span class="us-idea-main"><button type="button" class="us-idea-title" data-idea-open="${esc(i.id)}" translate="no">${esc(i.title)}</button>${sub?`<small>${esc(sub)}</small>`:''}</span>${action}</li>`;
   }
   function daVivere(host){
     const snap=w.UsDaVivere?.snapshot?.();
     if(!snap)return '';
-    const {lines}=ideaLines(snap,me(),{lived:host==='focus'?2:Infinity});
+    const active=snap.loaded?(snap.active||[]):[],lived=snap.loaded?(snap.lived||[]).length:0;
     const list=!snap.loaded
       ?`<p class="us-postit-text">${snap.error?'Non riesco a caricare le idee.':'Carico…'}</p>`
-      :lines.length?`<ul class="us-postit-items">${lines.map(ideaLine).join('')}</ul>`:'<p class="us-postit-text">Le cose da fare insieme, un giorno.</p>';
+      :active.length?`<ul class="us-idea-rows">${active.map(ideaRow).join('')}</ul>`:'<p class="us-postit-text">Ancora nessuna idea: scrivete la prima.</p>';
+    const close=host==='focus'?'<button type="button" class="us-idea-close" data-focus-close aria-label="Chiudi le vostre idee"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>':'';
     return `<li class="us-postit is-pinned is-ideas" data-davivere>
-      <h3 class="us-postit-heading">Le vostre idee</h3>
+      <div class="us-idea-head"><h3 class="us-postit-heading">Le vostre idee</h3>${close}</div>
+      <p class="us-idea-intro">Le cose da fare insieme, un giorno. Quando decidete quando, diventano un impegno.</p>
       ${list}
-      <input type="text" class="us-postit-add" data-davivere-add maxlength="120" placeholder="Aggiungi…" aria-label="Aggiungi alle vostre idee" enterkeyhint="done">
-      <small class="us-postit-by"><i class="us-notes-dot" data-who="noi" aria-hidden="true"></i><span>Insieme · fisso in cima</span></small>
+      <label class="us-idea-new"><span>Un’idea nuova</span><input type="text" class="us-idea-input" data-davivere-add maxlength="120" placeholder="Che cosa vi piacerebbe fare?" enterkeyhint="done"></label>
+      ${lived?`<small class="us-postit-by"><span>${lived===1?'1 già fatta':`${lived} già fatte`}, con un ricordo in Ricordi</span></small>`:''}
     </li>`;
+  }
+  // «L'avete fatto?» (board Fatto, D13): the morning after, once, the two
+  // characters ask; yes says it lived (the two-person rule of the ideas)
+  // and offers a photo in Ricordi; «not yet» opens the commitment to move it.
+  let fatto=null;
+  const ASKED=()=>`us:fatto:v1:${me()}`;
+  const askedList=()=>{try{return JSON.parse(w.localStorage?.getItem(ASKED())||'[]');}catch(_){return [];}};
+  const asked=id=>askedList().includes(id);
+  function markAsked(id){try{w.localStorage?.setItem(ASKED(),JSON.stringify([...askedList().filter(x=>x!==id),id].slice(-60)));}catch(_){}}
+  function fattoMarkup(){
+    const f=fatto,today=romeDay(Date.now()),yesterday=romeDay(Date.now()-864e5);
+    let label='Ieri';
+    if(f.day!==yesterday){try{label=new Date(`${f.day}T12:00:00Z`).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',timeZone:'Europe/Rome'});label=label.charAt(0).toUpperCase()+label.slice(1);}catch(_){label=f.day;}}
+    const duo=w.UsPersonaggi?.character?['francesco','beatrice'].map(r=>w.UsPersonaggi.character(r,{size:72,reaction:f.step==='photo'?'cuore':undefined})).join(''):'';
+    void today;
+    if(f.step==='photo')return `<li class="us-fatto" data-fatto>
+      <span class="us-fatto-grab" aria-hidden="true"></span>
+      <div class="us-fatto-duo" aria-hidden="true">${duo}</div>
+      <h2 class="us-fatto-title">Che bello</h2>
+      <p class="us-fatto-q">Aggiungete una foto di «${esc(f.title)}» in Ricordi?</p>
+      <div class="us-fatto-actions"><button type="button" class="us-fatto-yes" data-fatto-photo>Aggiungi una foto</button><button type="button" class="us-fatto-no" data-focus-close>Più tardi</button></div>
+    </li>`;
+    return `<li class="us-fatto" data-fatto>
+      <span class="us-fatto-grab" aria-hidden="true"></span>
+      <div class="us-fatto-duo" aria-hidden="true">${duo}</div>
+      <h2 class="us-fatto-title" translate="no">${esc(label)}, ${esc(f.title)}</h2>
+      <p class="us-fatto-q">${f.partnerSaid?`L’avete fatto? ${esc(partnerName())} dice di sì.`:'L’avete fatto?'}</p>
+      <div class="us-fatto-actions"><button type="button" class="us-fatto-yes" data-fatto-yes>Sì, l’abbiamo fatto</button><button type="button" class="us-fatto-no" data-fatto-later>Non ancora, scegliamo un altro giorno</button></div>
+      <p class="us-fatto-note">Con un sì l’idea diventa fatta e vi propone una foto in Ricordi. Ve lo chiede una volta sola.</p>
+    </li>`;
+  }
+  let askTimer=0;
+  function maybeAskDone(){
+    clearTimeout(askTimer);
+    askTimer=setTimeout(()=>{
+      if(!key()||fatto||editing||focusOpen()||opened()||d.hidden)return;
+      if(!$('bond')?.classList.contains('active')||d.body?.getAttribute?.('data-us-surface')==='open')return;
+      const due=dueDone(w.UsDaVivere?.snapshot?.(),id=>w.UsDaVivere?.entry?.(id),me(),romeDay(Date.now()),asked);
+      if(!due)return;
+      markAsked(due.id);
+      fatto={...due,step:'ask'};paintFocus();
+    },700);
+  }
+  async function fattoYes(){
+    const f=fatto;if(!f)return;
+    const ok=await w.UsDaVivere?.markLived?.(f.id);
+    if(fatto!==f)return;
+    if(ok===false){fatto=null;paintFocus();return;}
+    fatto={...f,step:'photo'};
+    if(focusList)focusList.innerHTML='';
+    paintFocus();
+  }
+  function fattoLater(){
+    const f=fatto;fatto=null;paintFocus();
+    if(f?.entryId)w.UsCalendarLinks?.openEntry?.(f.entryId);
+  }
+  function fattoPhoto(){
+    const f=fatto;fatto=null;paintFocus();
+    if(f)w.openMemoryComposer?.(f.title,{kind:'da_vivere',ref:f.id,date:f.day});
+  }
+  // «Scegli il giorno»: what is over Noi goes, then the calendar of Noi asks
+  // for the day (the same pick as the idea's detail).
+  async function pickIdeaDay(id){
+    if(focusIdeas){focusIdeas=false;paintFocus();}
+    w.UsLavagna?.close?.();
+    if(opened())await close();
+    w.UsDaVivere?.schedule?.(id);
+  }
+  async function confirmIdea(id){
+    const ok=await w.UsUiFoundation?.confirm?.({title:'L’avete fatto?',body:`${partnerName()} dice di sì: se confermi, va tra le idee fatte.`,confirmLabel:'Sì, fatto'});
+    if(ok===false)return;
+    await w.UsDaVivere?.markLived?.(id);
   }
   const addTile='<li><button type="button" class="us-postit-new" data-notes-new><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Nuovo post-it</span></button></li>';
   const slot=()=>`<li class="us-postit is-editing" data-editor data-color="${colorOf(editing)}" data-who="${whoOf(editing)}"></li>`;
@@ -274,11 +383,14 @@ function install(w){
   function paintFocus(){
     if(!focusRoot||!focusList)return;
     const writing=editing&&editHost==='page';
-    if(!writing&&!focusIdeas){
+    focusRoot.classList.toggle('is-sheet',Boolean(fatto&&!writing));
+    if(!writing&&!focusIdeas&&!fatto){
       if(focusOpen()){focusRoot.classList.remove('open');focusRoot.setAttribute('aria-hidden','true');focusList.innerHTML='';}
       return;
     }
-    if(writing){
+    if(fatto&&!writing){
+      if(!focusList.querySelector('[data-fatto]'))focusList.innerHTML=fattoMarkup();
+    }else if(writing){
       if(!focusList.querySelector('[data-editor]')){focusList.innerHTML=slot();mountEditor(focusList.firstElementChild);}
     }else if(!focusList.querySelector('[data-davivere]'))focusList.innerHTML=daVivere('focus');
     focusRoot.classList.add('open');focusRoot.setAttribute('aria-hidden','false');
@@ -440,6 +552,7 @@ function install(w){
     if(force||!loaded||Date.now()-loadedAt>60000)load();
     const ideas=w.UsDaVivere?.snapshot?.();
     if(ideas&&!ideas.loaded)w.UsDaVivere?.hydrate?.();
+    else maybeAskDone();
   }
 
   // ---------------------------------------------------------------- editor
@@ -588,17 +701,7 @@ function install(w){
   }
 
   // ---------------------------------------------------------------- ideas
-  // Ticking an idea means «vissuta»: the first tap proposes, the partner's
-  // confirms (app.js); the confirmation that closes it asks once more.
-  async function tickIdea(box){
-    const id=box.dataset.idea,state=box.dataset.state;
-    box.checked=state==='lived';
-    if(state==='partner'){
-      const ok=await w.UsUiFoundation?.confirm?.({title:'L’avete vissuta?',body:`${partnerName()} dice di sì: se confermi, va tra le idee vissute.`,confirmLabel:'Sì, vissuta'});
-      if(ok===false)return;
-    }
-    await w.UsDaVivere?.markLived?.(id);
-  }
+  // A new idea, written at the foot of «Le vostre idee».
   async function addIdea(input){
     const text=input.value.trim();
     if(!text)return;
@@ -615,14 +718,14 @@ function install(w){
   // «Le vostre idee» in front, from the corner of a lavagna.
   async function openIdeas(){
     if(editing&&!await closeEditor({repaint:false}))return;
-    focusIdeas=true;
+    focusIdeas=true;fatto=null;
     if(focusList)focusList.innerHTML='';
     ensure();paintFocus();
   }
   // Closing what is in front: the post-it (saved first) or the ideas.
   async function closeFocus(){
     if(editing&&editHost==='page')return closeEditor();
-    focusIdeas=false;paintFocus();
+    focusIdeas=false;fatto=null;paintFocus();
     return true;
   }
 
@@ -673,7 +776,7 @@ function install(w){
     paintPage();
   }
   function reset(){
-    token++;notes=[];loaded=false;loadedAt=0;owner='';editing=null;fields=null;dirty=false;remote=null;filter='all';focusIdeas=false;drag=null;clearTimeout(timer);
+    token++;notes=[];loaded=false;loadedAt=0;owner='';editing=null;fields=null;dirty=false;remote=null;filter='all';focusIdeas=false;fatto=null;drag=null;clearTimeout(timer);
     if(opened()){root.classList.remove('open');root.setAttribute('aria-hidden','true');}
     paintPage();
   }
@@ -684,6 +787,13 @@ function install(w){
     if(t.closest('[data-notes-retry]'))return load();
     if(t.closest('[data-focus-close]'))return closeFocus();
     if(t.closest('[data-ideas-open]'))return openIdeas();
+    const pick=t.closest('[data-idea-pick]');
+    if(pick)return pickIdeaDay(pick.dataset.ideaPick);
+    const sure=t.closest('[data-idea-confirm]');
+    if(sure)return confirmIdea(sure.dataset.ideaConfirm);
+    if(t.closest('[data-fatto-yes]'))return fattoYes();
+    if(t.closest('[data-fatto-later]'))return fattoLater();
+    if(t.closest('[data-fatto-photo]'))return fattoPhoto();
     if(t.closest('[data-lav-board-open]'))return w.UsLavagna?.open?.();
     if(t.closest('[data-board-all]'))return open();
     if(t.closest('[data-board-new],[data-notes-new]'))return openEditor(null,'title',host);
@@ -727,7 +837,6 @@ function install(w){
     const box=t.closest?.('[data-tick]');
     const square=box?.closest('.us-postit[data-note-id]:not(.is-editing)');
     if(square){tick(square.dataset.noteId,box.dataset.tick,box.checked);return;}
-    if(t.matches?.('[data-idea]')){tickIdea(t);return;}
     // A new item or idea: Enter or leaving the field (both fire "change").
     if(t.matches?.('[data-add-item]')){const id=t.closest('[data-note-id]')?.dataset.noteId,text=t.value;t.value='';addItem(id,text);return;}
     if(t.matches?.('[data-davivere-add]'))addIdea(t);
@@ -770,7 +879,7 @@ function install(w){
     el.addEventListener('keydown',onKeydown);
   }
   focusRoot?.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.defaultPrevented&&focusOpen()){event.preventDefault();closeFocus();}});
-  w.addEventListener('us-ideas-change',repaintIdeas);
+  w.addEventListener('us-ideas-change',()=>{repaintIdeas();maybeAskDone();});
   // Noi open, coming back to the app: read what changed meanwhile.
   const bond=$('bond');
   if(bond&&typeof w.MutationObserver==='function'){
@@ -794,5 +903,5 @@ function install(w){
   // The full-screen lavagna (lavagna.js): its post-its, and «+ Post-it» there.
   api.showBoard=()=>{ensure();paintBoard();};api.write=()=>openEditor(null,'title','page');api.focusOpen=focusOpen;
 }
-return {when,isEmpty,closeVerdict,fullRow,summary,payload,sortNotes,boardNotes,byColor,byAuthor,tilt,ideaLines,colorOf,placesFor,placePayload,sameWords,missingPlace,COLORS,LIMITS,ON_NOI,ON_BOARD,SPOTS,NOI_SPOTS,install};
+return {entryDay,dueDone,ideaState,when,isEmpty,closeVerdict,fullRow,summary,payload,sortNotes,boardNotes,byColor,byAuthor,tilt,ideaLines,colorOf,placesFor,placePayload,sameWords,missingPlace,COLORS,LIMITS,ON_NOI,ON_BOARD,SPOTS,NOI_SPOTS,install};
 });

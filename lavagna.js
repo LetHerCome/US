@@ -19,6 +19,24 @@ const COLORS=Object.freeze({rosa:'#ff7c96',lilla:'#a98bff',ambra:'#f3b76e',latte
 // The widget on a light Home (Pastello): the same four, deep enough for cream paper.
 const PASTEL=Object.freeze({rosa:'#e0567a',lilla:'#7a5ad9',ambra:'#d98a2e',latte:'#1a1020'});
 const COLOR_NAMES=Object.freeze({rosa:'Rosa',lilla:'Lilla',ambra:'Ambra',latte:'Latte'});
+// Noi, Fase B.2 (D12): the pens are you, your person, Noi and white. The
+// keys the server keeps stay the same (no migration): rosa is the colour of
+// «francesco», lilla of «beatrice» (person-colors.js TOKEN), ambra is now
+// the colour of Noi, latte the white. The board is black in both themes, so
+// the night colours; the widget on a light Home gets them deeper.
+function deepen(hex,k=.3){
+  const m=/^#?([0-9a-f]{6})$/i.exec(String(hex||'').trim());
+  if(!m)return hex;
+  const n=parseInt(m[1],16),ink=[26,16,32];
+  return '#'+[(n>>16)&255,(n>>8)&255,n&255].map((c,i)=>Math.round(c*(1-k)+ink[i]*k).toString(16).padStart(2,'0')).join('');
+}
+function couplePalette(tokens={}){
+  const pick=(v,d)=>/^#[0-9a-f]{6}$/i.test(String(v||'').trim())?String(v).trim():d;
+  return Object.freeze({rosa:pick(tokens.rosa,COLORS.rosa),lilla:pick(tokens.lilla,COLORS.lilla),ambra:pick(tokens.noi,'#e17dd5'),latte:COLORS.latte});
+}
+function pastelOf(palette){return Object.freeze({rosa:deepen(palette.rosa),lilla:deepen(palette.lilla),ambra:deepen(palette.ambra),latte:PASTEL.latte});}
+// The four pens in their order: yours, your person's, Noi, white.
+const pensFor=role=>role==='beatrice'?['lilla','rosa','ambra','latte']:['rosa','lilla','ambra','latte'];
 const PEN=Object.freeze({1:7,2:16}),ERASER=Object.freeze({1:40,2:90});
 const LIMITS=Object.freeze({points:600,strokes:1500});
 const PUSH_GAP_MS=2*60*60*1000,PUSH_IDLE_MS=8000;
@@ -143,12 +161,18 @@ function install(w){
   if(!d?.body)return;
   const api=w.UsLavagna,$=id=>d.getElementById(id);
   const db=()=>typeof sb!=='undefined'?sb:null;
+  // The couple's colours as person-colors.js puts them on <html> (inline,
+  // so the day theme's dustier ones never reach the black board).
+  function palette(){
+    const st=d.documentElement?.style;
+    return couplePalette({rosa:st?.getPropertyValue?.('--us-rosa'),lilla:st?.getPropertyValue?.('--us-lilla'),noi:st?.getPropertyValue?.('--us-noi')});
+  }
   const me=()=>w.usProfile?.id||'';
   const key=()=>w.usProfile?`${w.usProfile.id}:${w.usProfile.couple_id}`:'';
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   // gone: ids taken back here (undo, «Pulisci»), so their late Realtime echo never brings them back.
   let strokes=[],loaded=false,loading=null,owner='',board={revision:0,clearedAt:''},gone=new Set();
-  let tool='pen',color='rosa',width=2,active=null,current=null,frameAsked=false;
+  let tool='pen',color='rosa',width=2,active=null,current=null,frameAsked=false,penPicked=false;
   let saveChain=Promise.resolve(),failed=0,pushTimer=0,pushStroke='',pushedAt=0;
   let widgetTimer=0,widgetSignature='',dpr=1,scale=1;
   const PUSH_KEY=()=>`us:lavagna:v1:push:${me()}`;
@@ -300,7 +324,7 @@ function install(w){
   const root=d.createElement('div');
   root.id='usLavagna';root.className='us-lav-overlay';
   root.setAttribute('aria-hidden','true');root.setAttribute('data-us-modal','');root.setAttribute('data-us-motion-surface','');
-  const swatch=c=>`<button type="button" class="us-lav-swatch" data-lav-color="${c}" aria-label="${COLOR_NAMES[c]}" aria-pressed="false"><span style="--c:${COLORS[c]}"></span></button>`;
+  const swatch=(c,i)=>`<button type="button" class="us-lav-swatch" data-lav-color="${c}" data-lav-pen="${i}" aria-label="${COLOR_NAMES[c]}" aria-pressed="false"><span style="--c:${COLORS[c]}"></span></button>`;
   root.innerHTML=`<section class="us-lav-sheet" role="dialog" aria-modal="true" aria-labelledby="usLavagnaTitle" data-us-modal-panel>
     <header class="us-lav-head">
       <button type="button" class="us-lav-back" data-lav-close aria-label="Torna a Noi"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
@@ -317,7 +341,7 @@ function install(w){
       </div>
     </div>
     <div class="us-lav-tools" role="toolbar" aria-label="Strumenti della lavagna">
-      ${Object.keys(COLORS).map(swatch).join('')}
+      ${pensFor('').map(swatch).join('')}
       <span class="us-lav-sep" aria-hidden="true"></span>
       <button type="button" class="us-lav-size" data-lav-width="1" aria-label="Tratto sottile" aria-pressed="false"><span></span></button>
       <button type="button" class="us-lav-size is-thick" data-lav-width="2" aria-label="Tratto spesso" aria-pressed="false"><span></span></button>
@@ -333,7 +357,19 @@ function install(w){
   const opened=()=>root.classList.contains('open');
 
   function say(text){const el=$('usLavagnaStatus');if(el)el.textContent=text||'';if(text)setTimeout(()=>{if(el?.textContent===text)el.textContent='';},4000);}
+  // The pens: yours first, then your person's, Noi, white (D12).
+  function paintPens(){
+    const pens=pensFor(w.usProfile?.role),pal=palette();
+    let partner='La tua persona';try{partner=w.usIdentity?.()?.partnerName||partner;}catch(_){}
+    const names={[pens[0]]:'Il tuo colore',[pens[1]]:`Il colore di ${partner}`,ambra:'Il colore di Noi',latte:'Bianco'};
+    root.querySelectorAll('[data-lav-pen]').forEach(b=>{
+      const c=pens[Number(b.dataset.lavPen)]||'latte';
+      b.dataset.lavColor=c;b.setAttribute('aria-label',names[c]);
+      b.querySelector('span')?.style.setProperty('--c',pal[c]);
+    });
+  }
   function paintTools(){
+    paintPens();
     root.querySelectorAll('[data-lav-color]').forEach(b=>b.setAttribute('aria-pressed',String(tool==='pen'&&b.dataset.lavColor===color)));
     root.querySelectorAll('[data-lav-width]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.lavWidth)===width)));
     root.querySelector('[data-lav-eraser]')?.setAttribute('aria-pressed',String(tool==='eraser'));
@@ -362,7 +398,7 @@ function install(w){
   function repaintLayer(){
     if(!layerCtx)return;
     layerCtx.setTransform(1,0,0,1,0,0);layerCtx.clearRect(0,0,layer.width,layer.height);
-    paint(layerCtx,strokes,{x:0,y:0,scale:scale*dpr,palette:COLORS});
+    paint(layerCtx,strokes,{x:0,y:0,scale:scale*dpr,palette:palette()});
     draw();
   }
   function draw(){
@@ -370,13 +406,13 @@ function install(w){
     if(!ctx)return;
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.drawImage(layer,0,0);
-    if(current&&current.raw.length)paint(ctx,[{tool:current.tool,color:current.color,width:current.width,points:current.raw}],{x:0,y:0,scale:scale*dpr,palette:COLORS});
+    if(current&&current.raw.length)paint(ctx,[{tool:current.tool,color:current.color,width:current.width,points:current.raw}],{x:0,y:0,scale:scale*dpr,palette:palette()});
   }
   const askFrame=()=>{if(!frameAsked){frameAsked=true;(w.requestAnimationFrame||setTimeout)(draw);}};
   function changed({widget=false,added=null,quiet=false}={}){
     if(opened()){
       // A new stroke on top is painted on the layer; anything else repaints it.
-      if(added&&added===strokes[strokes.length-1]&&layerCtx){paint(layerCtx,[added],{x:0,y:0,scale:scale*dpr,palette:COLORS});draw();}
+      if(added&&added===strokes[strokes.length-1]&&layerCtx){paint(layerCtx,[added],{x:0,y:0,scale:scale*dpr,palette:palette()});draw();}
       else if(!quiet)repaintLayer();
       paintHead();paintTools();
     }
@@ -424,7 +460,7 @@ function install(w){
     if(t.closest('[data-lav-clear]'))return clearAll();
     if(t.closest('[data-lav-undo]'))return undo();
     const c=t.closest('[data-lav-color]');
-    if(c){tool='pen';color=c.dataset.lavColor;paintTools();return;}
+    if(c){tool='pen';color=c.dataset.lavColor;penPicked=true;paintTools();return;}
     const s=t.closest('[data-lav-width]');
     if(s){width=Number(s.dataset.lavWidth)===1?1:2;paintTools();return;}
     if(t.closest('[data-lav-eraser]')){tool=tool==='eraser'?'pen':'eraser';paintTools();}
@@ -438,6 +474,8 @@ function install(w){
     if(owner&&owner!==key())reset();
     w.UsUiFoundation?.cancelSurfaceExit?.(root);
     root.classList.add('open');root.setAttribute('aria-hidden','false');
+    // Your pen first, the first time.
+    if(!penPicked)color=pensFor(w.usProfile?.role)[0];
     layout();paintHead();paintTools();
     w.UsCoupleNotes?.showBoard?.();
     load().then(()=>{if(opened())repaintLayer();});
@@ -486,7 +524,7 @@ function install(w){
     tileCanvas.width=Math.round(r.width*ratio);tileCanvas.height=Math.round(r.height*ratio);
     const c=tileCanvas.getContext?.('2d');
     if(!c)return;
-    renderInto(c,tileCanvas.width,tileCanvas.height,strokes,COLORS,1);
+    renderInto(c,tileCanvas.width,tileCanvas.height,strokes,palette(),1);
   }
   // The drawing framed for a small surface (the tile, the widget).
   function renderInto(c,cw,ch,list,palette,k){
@@ -520,7 +558,7 @@ function install(w){
     const state=saved.length?'ready':'empty';
     let light='',dark='';
     if(saved.length){
-      try{[light,dark]=await Promise.all([picture(saved,PASTEL),picture(saved,COLORS)]);}
+      try{const pal=palette();[light,dark]=await Promise.all([picture(saved,pastelOf(pal)),picture(saved,pal)]);}
       catch(error){console.warn('[US Lavagna] widget',error);return false;}
     }
     const ok=await widgets.syncLavagna({state,by:!last?.author_id?'':last.author_id===me()?'me':'partner',at:last?.created_at||'',light,dark});
@@ -547,7 +585,7 @@ function install(w){
       const c=d.createElement('canvas');c.width=240;c.height=192;
       const g=c.getContext('2d');
       if(!g)return '';
-      renderInto(g,c.width,c.height,saved,COLORS,1.6);
+      renderInto(g,c.width,c.height,saved,palette(),1.6);
       return c.toDataURL('image/png');
     }catch(_){return '';}
   }
@@ -569,5 +607,5 @@ function install(w){
   // mount: for a Noi that draws #usNoiLavagnaSlot after this script ran.
   api.open=open;api.close=close;api.reset=reset;api.onStroke=onStroke;api.onBoard=onBoard;api.syncWidget=syncWidget;api.load=load;api.mount=paintTile;api.preview=preview;
 }
-return {BOARD,COLORS,PASTEL,LIMITS,pack,unpack,simplify,contentBox,frame,ago,newest,applyBoard,pushDue,paint,install};
+return {BOARD,COLORS,PASTEL,LIMITS,deepen,couplePalette,pastelOf,pensFor,pack,unpack,simplify,contentBox,frame,ago,newest,applyBoard,pushDue,paint,install};
 });

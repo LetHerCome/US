@@ -67,6 +67,32 @@ test('Fase B: places on the lavagna, the move that is not a change, the filter b
   assert.equal(N.byAuthor(list, 'all', 'me').length, 4);
 });
 
+// Fase B.2 (D13): an idea fixed on a day already gone asks «L'avete fatto?»
+// the day after, once, for a week at most; a multi-day plan after its end.
+test('Fase B.2: «L\'avete fatto?» and how an idea stands', () => {
+  assert.equal(N.entryDay({ start_date: '2026-11-20', end_date: '2026-11-22' }), '2026-11-22');
+  assert.equal(N.entryDay({ starts_at: '2026-11-20T22:30:00Z' }), '2026-11-20', 'Rome day of a timed plan');
+  assert.equal(N.entryDay({ starts_at: '2026-11-20T23:30:00Z' }), '2026-11-21', 'past midnight in Rome');
+  assert.equal(N.entryDay(null), '');
+  const entries = { e1: { start_date: '2026-11-24' }, e2: { start_date: '2026-11-25' }, e3: { start_date: '2026-11-10' } };
+  const snap = (active) => ({ loaded: true, active, lived: [] });
+  const idea = (id, entry, extra = {}) => ({ id, title: id, status: 'scheduled', calendar_entry_id: entry, lived_proposed_by: null, ...extra });
+  const entryOf = (id) => entries[{ a: 'e1', b: 'e2', c: 'e3', d: 'e1' }[id]];
+  const never = () => false;
+  assert.deepEqual(N.dueDone(snap([idea('a', 'e1')]), entryOf, 'me', '2026-11-25', never), { id: 'a', title: 'a', day: '2026-11-24', entryId: 'e1', partnerSaid: false });
+  assert.equal(N.dueDone(snap([idea('b', 'e2')]), entryOf, 'me', '2026-11-25', never), null, 'today is not gone yet');
+  assert.equal(N.dueDone(snap([idea('c', 'e3')]), entryOf, 'me', '2026-11-25', never), null, 'more than a week ago');
+  assert.equal(N.dueDone(snap([idea('a', 'e1')]), entryOf, 'me', '2026-11-25', (id) => id === 'a'), null, 'asked once');
+  assert.equal(N.dueDone(snap([idea('a', 'e1', { lived_proposed_by: 'me' })]), entryOf, 'me', '2026-11-25', never), null, 'I already said yes');
+  assert.equal(N.dueDone(snap([idea('d', 'e1', { lived_proposed_by: 'you' })]), entryOf, 'me', '2026-11-25', never).partnerSaid, true);
+  assert.equal(N.dueDone(snap([idea('a', 'e1', { status: 'idea' })]), entryOf, 'me', '2026-11-25', never), null);
+  assert.equal(N.dueDone({ loaded: false }, entryOf, 'me', '2026-11-25', never), null);
+  assert.equal(N.ideaState({ status: 'idea' }, 'me'), 'todo');
+  assert.equal(N.ideaState({ status: 'scheduled' }, 'me'), 'fixed');
+  assert.equal(N.ideaState({ status: 'scheduled', lived_proposed_by: 'me' }, 'me'), 'mine');
+  assert.equal(N.ideaState({ status: 'idea', lived_proposed_by: 'you' }, 'me'), 'partner');
+});
+
 test('each post-it leans a little, always the same way', () => {
   const a = N.tilt('0b7c2a4e-1111-4111-8111-111111111111');
   assert.equal(a, N.tilt('0b7c2a4e-1111-4111-8111-111111111111'));
@@ -128,13 +154,19 @@ test('wired into Noi: the board under the calendar, the whole board in its Fogli
   assert.doesNotMatch(js, /\.channel\(|from\('bucket_items'\)|sb\.rpc/, 'no second channel, ideas only through app.js');
 
   const app = read('app.js');
-  assert.match(app, /window\.UsDaVivere=Object\.freeze\(\{linkCalendarEntry:linkNoiIdeaToCalendar,snapshot:noiIdeaSnapshot,hydrate:hydrateNoiIdeas,add:addNoiIdeaFromBoard,markLived:markNoiIdeaLivedFromBoard\}\)/);
+  assert.match(app, /window\.UsDaVivere=Object\.freeze\(\{linkCalendarEntry:linkNoiIdeaToCalendar,snapshot:noiIdeaSnapshot,hydrate:hydrateNoiIdeas,add:addNoiIdeaFromBoard,markLived:markNoiIdeaLivedFromBoard,when:id=>noiIdeaWhen\(noiIdeaFindItem\(id\)\),entry:noiIdeaEntry,schedule:scheduleNoiIdeaFromBoard\}\)/);
+  // Fase B.2: «Scegli il giorno» is the same calendar pick as the idea's detail.
+  assert.match(app, /function scheduleNoiIdeaFromBoard\(id\)\{[\s\S]*?window\.UsCalendarLinks\?\.openForIdea[\s\S]*?opener\(\{id:item\.id,title:item\.title,note:item\.note\}\)/);
+  assert.match(js, /data-idea-pick="\$\{esc\(i\.id\)\}">Scegli il giorno<\/button>/);
+  assert.match(js, /<span class="us-idea-chip">Fissata<\/span>/);
+  assert.match(js, /w\.openMemoryComposer\?\.\(f\.title,\{kind:'da_vivere',ref:f\.id,date:f\.day\}\)/, 'a yes offers the photo in Ricordi');
+  assert.match(js, /w\.UsCalendarLinks\?\.openEntry\?\.\(f\.entryId\)/, '«not yet» opens the commitment');
   assert.match(app, /window\.dispatchEvent\?\.\(new CustomEvent\('us-ideas-change'\)\)/);
   assert.match(app, /async function confirmNoiIdeaLived\(id\)\{[\s\S]*?sb\.rpc\('confirm_bucket_item_lived',\{p_item_id:id\}\)/);
 
   const en = read('i18n-en.js');
   // A key is quoted, or a bare word (Bacheca: 'Board').
-  for (const it of ['La lavagna', 'Nuovo post-it', 'Tutti i post-it ({n})', 'Disegni, post-it e le vostre idee', 'Insieme · fisso in cima', 'Filtra per chi l’ha scritto', 'Tuoi', 'Non spostato. Riprova.', 'Disegnate qualcosa o lasciate un post-it']) {
+  for (const it of ['La lavagna', 'Nuovo post-it', 'Tutti i post-it ({n})', 'Disegni, post-it e le vostre idee', 'Insieme · fisso in cima', 'Filtra per chi l’ha scritto', 'Tuoi', 'Non spostato. Riprova.', 'Disegnate qualcosa o lasciate un post-it', 'Scegli il giorno', 'Fissata', 'L’avete fatto?', 'Sì, l’abbiamo fatto', 'Non ancora, scegliamo un altro giorno', 'Aggiungi una foto']) {
     assert.ok(en.includes(`'${it}':`) || en.includes(`\n    ${it}:`), it);
   }
 });

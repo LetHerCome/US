@@ -33,7 +33,8 @@ test('app: two pictures and who drew last reach native, the link opens the board
   assert.match(platform, /lavagna: widgetLavagna\(input\?\.lavagna\)/);
   const lavagna = read('lavagna.js');
   assert.match(lavagna, /widgets\.syncLavagna\(\{state,by:/);
-  assert.match(lavagna, /picture\(saved,PASTEL\),picture\(saved,COLORS\)/, 'Pastello and Midnight inks');
+  // Noi, Fase B.2 (D12): the couple's colours, deeper on the light Home.
+  assert.ok(lavagna.includes('const pal=palette();[light,dark]=await Promise.all([picture(saved,pastelOf(pal)),picture(saved,pal)]);'), 'Pastello and Midnight inks');
   assert.match(lavagna, /c\.toBlob\(resolve,'image\/webp',0\.92\)/, 'transparent: the paper is the widget\'s');
 });
 
