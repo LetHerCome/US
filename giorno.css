@@ -179,7 +179,6 @@
 :root[data-us-luce="giorno"] #thinkButton.sent .us-shell-icon--think::before{color:#231b1d!important}
 :root[data-us-luce="giorno"] #home #usOggiCaption .dot[data-who="tu"],:root[data-us-luce="giorno"] #today .question .locked .dot[data-who="tu"]{color:#231b1d!important}
 :root[data-us-luce="giorno"] #today .today-reveal--simple .today-answer[data-us-daily-answer="mine"]{color:#231b1d!important}
-:root[data-us-luce="giorno"] #thinkArrival .think-arrival-visual i:last-child{color:#231b1d!important}
 :root[data-us-luce="giorno"] .us-tour-dots button[aria-current="true"]::before{color:#231b1d!important}
 :root[data-us-luce="giorno"] #usAlbumOverlay[data-us-galleria] .us-album-byline[data-owner="tu"]::before{color:#231b1d!important}
 :root[data-us-luce="giorno"] #usWidgetHub .us-wp-think{color:#231b1d!important}
@@ -194,7 +193,7 @@
 :root[data-us-luce="giorno"] #home #usDailyRitual .us-daily-ritual-kicker{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] #today>.today-sheet.us-sheet[data-us-modal-panel]>.today-sheet-head h2{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] #today .today-reveal--simple .today-reaction[aria-pressed="true"]{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
-:root[data-us-luce="giorno"] #thinkArrival .think-arrival-head .tiny{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #thinkArrival .think-arrival-kicker{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] #thinkArrival #thinkArrivalTitle em{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] #usCountdownSheet .us-countdown-row em{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] .us-look-card small{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}

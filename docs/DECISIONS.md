@@ -539,3 +539,11 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Regole fisse:** parla il tuo personaggio; al massimo una battuta al giorno, 9–21; solo dati che entrambi vedono già, con una lista di parole delicate; sorprese a senso unico; ogni battuta prepara il gesto, mai lo fa al posto di nessuno; «Non ora», «Non dirmelo più» e un interruttore unico.
 - **Staging e produzione:** su staging prova solo il founder; in produzione si va eventualmente direttamente con la seconda versione, perché US è in beta. Ogni passo con tavola prima, migrazione e lavoro notturno su staging col suo sì.
 - **Sostituisce** la parte di Cupido del 13/11 che legava la voce ai Compagni, a US Plus e al livello 3: i Compagni non ci sono più e la crescita è gratis.
+
+## 2026-11-25 — Ti penso ricevuto coi personaggi
+
+**Fonte:** founder, 25/11/2026, dall'APK: «studia la schermata di quando viene ricevuto il ti penso che é ancora quella vecchia… falla più carina nella nuova us fammela vedere prima»; tavola «US · Ti penso ricevuto» (https://claude.ai/artifact/YQ12MPCHsZUiqiRd4ZXCUL) approvata («Approvo»), icona dell'abbraccio A («La A»).
+
+- **La schermata:** il personaggio dell'altra persona scende dall'alto con gli occhi a cuore e dice «Ti penso!» in un fumetto; sotto il nome e «ti pensa». Tre risposte a un tono con il loro nome: Un cuore, Un abbraccio (i due personaggi guancia a guancia), Anch'io (la nuvola). Niente più cerchi e reazioni senza nome.
+- **La risposta:** al tocco arriva il tuo personaggio e risponde (un cuore che vola, l'abbraccio, una nuvoletta col cuore), poi la schermata si chiude da sola. Le parole non dicono lui o lei.
+- **Restano** le tre reazioni del server (`heart`, `hug`, `miss_you`) e il loro invio: cambia solo l'aspetto.

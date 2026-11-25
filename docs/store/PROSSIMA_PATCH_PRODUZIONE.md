@@ -2,6 +2,24 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Ti penso ricevuto coi personaggi (25/11)
+
+**Stato:** ramo `claude/oggi-giu`, verso il ramo fisso di staging. Tavola «US · Ti penso ricevuto» (https://claude.ai/artifact/YQ12MPCHsZUiqiRd4ZXCUL) approvata dal founder il 25/11, icona dell'abbraccio «A».
+
+**Cosa cambia:**
+- **Quando arriva un Ti penso** e lo apri, il personaggio dell'altra persona scende dall'alto con gli occhi a cuore, ondeggia tra cuoricini che salgono e dice «Ti penso!» in un fumetto. Sotto: il nome e «ti pensa», e quando è arrivato.
+- **Tre risposte** grandi, a un tono e col loro nome: «Un cuore», «Un abbraccio» (icona nuova: i vostri due personaggi guancia a guancia), «Anch'io» (la nuvola). Al posto di «Chiudi» c'è «Più tardi», e la X in alto.
+- **Al tocco arriva il tuo personaggio** e risponde: col cuore gli manda un cuore che vola, con l'abbraccio vi stringete guancia a guancia con un cuore sopra (niente braccia, founder 25/11), con «Anch'io» sopra di voi sale una nuvoletta con un cuore. Poi la schermata si chiude da sola dopo circa due secondi.
+- **Di giorno** usa la luce chiara come il resto dell'app. Con «Riduci animazioni» non c'è movimento.
+- Le tre reazioni mandate al server sono le stesse di prima.
+
+### Oggi più in basso, vicino alla barra (25/11)
+
+**Stato:** ramo `claude/oggi-giu`, verso il ramo fisso di staging. Founder, 25/11, dall'APK: «la domanda del giorno e le altre barre sopra possono scendere un po' sotto vicino alla nav bar».
+
+**Cosa cambia:**
+- **Oggi:** la colonna in basso (la didascalia della foto, distanza e batteria, Come stai, la domanda di oggi) scende vicino alla barra, appena sopra il cuore. La striscia vuota che c'era sopra la barra era tenuta per Maudit, il gattino, che non c'è più dal redesign; la regola che doveva toglierla cercava un elemento sparito e non scattava mai. La foto resta più libera in alto.
+
 ### US vi ricorda: i personaggi parlano (25/11)
 
 **Stato:** ramo `claude/us-ricorda`, verso il ramo fisso di staging; la migrazione va applicata a US-STAGING col via del founder. Su staging prova solo il founder; in produzione forse direttamente con la seconda versione (founder, 25/11). Progetto: `docs/product/2026-11-25-us-vi-ricorda.md`, tavola «US · US vi ricorda» (https://claude.ai/artifact/DTNvLPsQM8ZVATXuhxUUpv), approvata: «Approvo la tavola».

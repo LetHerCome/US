@@ -113,5 +113,7 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // by ~5 KB: 3.2 -> 3.25 MB.
   // L'isola and the angolo in three tabs (25/11/2026) add ~12 KB of code and
   // two icons on top of Noi, Fase B: 3.25 -> 3.3 MB.
-  assert.ok(total <= 3.3 * 1024 * 1024, `precache is ${total} bytes: stays under 3.3 MB`);
+  // Ti penso ricevuto coi personaggi (25/11/2026) adds ~12 KB (the stage, the
+  // three named replies, their motion) and drops ~2 KB of the old sheet: 3.3 -> 3.35 MB.
+  assert.ok(total <= 3.35 * 1024 * 1024, `precache is ${total} bytes: stays under 3.35 MB`);
 });

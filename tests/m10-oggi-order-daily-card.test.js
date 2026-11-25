@@ -45,8 +45,9 @@ test('M10A follow-up → redesign D9: Oggi keeps the Domanda di oggi outside the
   assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), `dock order ${order}`);
   assert.ok(hero.indexOf('id="usOggiDock"') < hero.indexOf('id="usOggiStack"'));
   const dcOggi = read('dc-oggi.css');
-  // Parity 2026-10: the mockup's .og-bottom sits 130px from the bottom edge (nav + Maudit's band).
-  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?position:fixed;[\s\S]*?bottom:calc\(var\(--us-safe-bottom\) \+ 130px\);/, 'a band above the nav stays free for Maudit');
+  // Founder 25/11/2026: Maudit is gone, so the column sits down near the nav (above the heart).
+  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?position:fixed;[\s\S]*?bottom:calc\(var\(--us-safe-bottom\) \+ var\(--us-nav-height\) \+ 44px\);/, 'down near the nav');
+  assert.doesNotMatch(dcOggi, /usPetLayer/);
   assert.equal((html.match(/id="usOggiCalendarWidget"/g) || []).length, 1);
   assert.match(app, /const fact=await window\.getOggiCalendarInsightSource\?\.\(\);/);
   assert.match(app, /target\.closest\('\.us-oggi-dock,\.us-oggi-stack,/);
