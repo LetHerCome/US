@@ -731,3 +731,45 @@ body.us-gv2-sheet-open{overflow:hidden}
 #quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip] .us-gv2-glyph,#quiz #quizHub .us-gv2-game-grid .us-gv2-game[data-gv2-chip] .us-gv2-art{width:40px;height:40px}
 #quiz #quizHub .us-gv2-game-grid .us-gv2-game.is-swipe[data-gv2-chip]{flex-direction:row;align-items:center;justify-content:flex-start;gap:14px;min-height:88px}
 #quiz #quizHub .us-gv2-game-grid .us-gv2-game.is-swipe[data-gv2-chip] .us-gv2-game-top{flex:none}
+
+/* ===== La giostra (25/11/2026): i giochi come carte da scorrere =====
+   One big card in the middle, the next ones peeking at the sides, smaller and
+   leaning (--d, --ad painted by games.js from the scroll). Snap to the middle;
+   the dots follow. Colours are the page's own tokens, day and night. */
+#quiz #quizHub .us-gv2-giostra{--carta-w:min(72vw,290px);position:relative;margin:0 calc(-1 * var(--dcg-gut-r,16px)) 0 calc(-1 * var(--dcg-gut-l,16px))}
+#quiz #quizHub .us-gv2-giostra-track{position:relative;display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:16px calc((100% - var(--carta-w)) / 2) 30px;margin:-6px 0 -14px}
+#quiz #quizHub .us-gv2-giostra-track::-webkit-scrollbar{display:none}
+#quiz #quizHub .us-gv2-giostra .us-gv2-game{flex:0 0 var(--carta-w);scroll-snap-align:center;scroll-snap-stop:always;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;min-height:0;margin:0;padding:0 0 18px;overflow:hidden;isolation:isolate;border-radius:28px;border:1px solid var(--us-color-line);background:var(--us-color-surface);box-shadow:0 4px 14px rgba(26,16,32,.08);color:var(--us-color-text);text-align:left;font:400 15px/1.5 var(--us-font-ui);transform:scale(calc(1 - var(--ad,0) * .09)) rotate(calc(var(--d,0) * 3deg));opacity:calc(1 - var(--ad,0) * .3);transform-origin:50% 90%;will-change:transform;transition:box-shadow .3s ease}
+#quiz #quizHub .us-gv2-giostra .us-gv2-game::after{display:none}
+#quiz #quizHub .us-gv2-giostra .us-gv2-game[data-gv2-active="true"]{box-shadow:0 8px 20px rgba(26,16,32,.13)}
+#quiz #quizHub .us-gv2-giostra .us-gv2-game:active{transform:scale(calc(.97 - var(--ad,0) * .09)) rotate(calc(var(--d,0) * 3deg))}
+/* the stage: the drawn mark, big, on a wash of the page's colour */
+#quiz #quizHub .us-gv2-giostra .us-gv2-game-top{position:relative;display:grid;grid-template-columns:1fr;justify-content:center;place-items:center;height:150px;margin:0 0 16px;background:radial-gradient(70% 90% at 50% 100%,color-mix(in srgb,var(--us-pg) 30%,transparent),transparent 72%),color-mix(in srgb,var(--us-pg) 9%,var(--us-color-surface))}
+#quiz #quizHub .us-gv2-giostra .us-gv2-game.is-pervoi .us-gv2-game-top{background:radial-gradient(70% 90% at 50% 100%,color-mix(in srgb,var(--us-tu) 42%,transparent),transparent 72%),color-mix(in srgb,var(--us-tu) 14%,var(--us-color-surface))}
+#quiz #quizHub .us-gv2-giostra .us-gv2-glyph,#quiz #quizHub .us-gv2-giostra .us-gv2-art{width:96px;height:96px}
+#quiz #quizHub .us-gv2-giostra .us-gv2-game[data-gv2-active="true"] .us-gv2-art{animation:us-gv2-carta-su .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes us-gv2-carta-su{from{transform:translateY(8px) scale(.92)}to{transform:none}}
+#quiz #quizHub .us-gv2-giostra .us-gv2-stato{position:absolute;top:14px;right:14px}
+#quiz #quizHub .us-gv2-giostra .us-gv2-game-copy{display:block;margin:0;padding:0 20px}
+#quiz #quizHub .us-gv2-giostra .us-gv2-game-copy b{display:block;font:500 24px/1.12 var(--us-font-display);color:var(--us-color-text)}
+#quiz #quizHub .us-gv2-giostra .us-gv2-game-copy small{display:block;margin:4px 0 0;font-size:13.5px;line-height:1.35;font-weight:600;color:var(--us-pg)}
+#quiz #quizHub .us-gv2-giostra .us-gv2-carta-desc{display:block;flex:1;margin:10px 0 0;padding:0 20px;font-size:14px;line-height:1.45;color:var(--us-color-text-2)}
+#quiz #quizHub .us-gv2-giostra .us-gv2-carta-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0 0;padding:0 16px 0 20px}
+#quiz #quizHub .us-gv2-giostra .us-gv2-carta-meta{font-size:12.5px;line-height:1.3;color:var(--us-color-text-3)}
+#quiz #quizHub .us-gv2-giostra .us-gv2-carta-cta{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 8px 0 18px;border-radius:22px;background:var(--us-accent-gradient);color:var(--us-color-text-on-accent,#1a1020);font:700 15px/1 var(--us-font-ui);white-space:nowrap}
+#quiz #quizHub .us-gv2-giostra .us-gv2-carta-cta[data-cost="false"]{padding:0 18px}
+#quiz #quizHub .us-gv2-giostra .us-gv2-costo{display:inline-flex;align-items:center;gap:3px;height:30px;padding:0 9px 0 4px;border-radius:15px;background:rgba(26,16,32,.16);font-size:13px}
+#quiz #quizHub .us-gv2-giostra .us-gv2-costo i{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.85);color:#b8452f}
+#quiz #quizHub .us-gv2-giostra .us-gv2-costo .us-gv2-icon{width:12px;height:12px}
+/* played / tomorrow: the card stays, quieter, and says so on its button */
+#quiz #quizHub .us-gv2-giostra .us-gv2-game[data-gv2-chip="tomorrow"] .us-gv2-carta-cta{background:var(--us-color-surface-2,rgba(128,128,128,.12));color:var(--us-color-text-2)}
+#quiz #quizHub .us-gv2-giostra .us-gv2-game[aria-disabled="true"] :is(.us-gv2-glyph,.us-gv2-game-copy){opacity:.55}
+#quiz #quizHub .us-gv2-giostra .us-gv2-game:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+#quiz #quizHub .us-gv2-giostra-dots{display:flex;justify-content:center;gap:6px;margin:2px 0 0}
+#quiz #quizHub .us-gv2-giostra-dots i{width:6px;height:6px;border-radius:3px;background:var(--us-color-text-3);opacity:.45;transition:width .25s ease,opacity .25s ease,background-color .25s ease}
+#quiz #quizHub .us-gv2-giostra-dots i[data-on="true"]{width:18px;opacity:1;background:var(--us-pg)}
+@media (prefers-reduced-motion:reduce){
+  #quiz #quizHub .us-gv2-giostra .us-gv2-game{transform:none;opacity:1;transition:none}
+  #quiz #quizHub .us-gv2-giostra .us-gv2-game[data-gv2-active="true"] .us-gv2-art{animation:none}
+  #quiz #quizHub .us-gv2-giostra-dots i{transition:none}
+}

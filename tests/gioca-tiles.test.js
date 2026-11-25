@@ -51,7 +51,8 @@ test('Gioca tiles: a fresh week is six cards of icon, name, kind of moment and "
     assert.doesNotMatch(tile, /us-gv2-game-state/);
   }
   assert.doesNotMatch(html, /is-wide|us-gv2-deck/);
-  assert.match(html, /<div class="us-gv2-game-grid" data-s>/);
+  // La giostra (25/11/2026): the cards ride one sideways track that snaps to the middle.
+  assert.match(html, /<div class="us-gv2-giostra" data-s>\s*<div class="us-gv2-giostra-track" role="group" aria-roledescription="carosello"/);
   for (const gone of ['Quello che forse non sapete ancora', 'Stessa situazione, due sguardi', 'Scenari assurdi', 'Uno risponde, l’altro indovina', 'Lo stesso momento, due memorie', 'Scelte, futuri, possibilità']) {
     assert.doesNotMatch(html, new RegExp(gone));
   }
@@ -134,7 +135,7 @@ test('Gioca hub: an older one-a-day server still reads well', async () => {
 test('Gioca hub: no allowance yet, no tokens; the title keeps the low-friction hint', async () => {
   const html = await hub(homeOf()).html();
   assert.doesNotMatch(html, /us-gv2-tokens/);
-  assert.match(html, /<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3><small>bastano pochi minuti<\/small>/);
+  assert.match(html, /<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3><small>scorri e scegli<\/small>/);
 });
 
 test('Gioca tokens: the time to midnight in Rome reads as hours and minutes', () => {
@@ -153,8 +154,67 @@ test('Gioca tokens: the time to midnight in Rome reads as hours and minutes', ()
 test('Gioca: a new round flies a token instead of the confirm window (D11)', () => {
   const src = read('games.js');
   assert.doesNotMatch(src, /confirmSpend|Userete 1 delle|Userete la partita/);
-  assert.match(src, /flyToken\(from\);\n  return startRound\(family\);/);
-  assert.match(src, /flyToken\(from\);\n  return startSwipe\(\);/);
-  assert.match(src, /if \(!allowance\(\) \|\| freeLeft\(\)\) flyToken\(from\);\n  return startRound\('per_voi'\);/);
+  // 25/11/2026: it flies only when the server can open a round (one left and
+  // room for another open round), and the count drops only on resumed === false.
+  assert.match(src, /if \(canSpend\(\)\) flyToken\(from\);\n  return startRound\(family\);/);
+  assert.match(src, /if \(canSpend\(\)\) flyToken\(from\);\n  return startSwipe\(\);/);
+  assert.match(src, /if \(canSpend\(\)\) flyToken\(from\);\n  return startRound\('per_voi'\);/);
+  assert.match(src, /if \(a && state\?\.resumed === false\)/);
+  assert.match(src, /settleToken\(data\);\n    await present\(data\);\n    load\(\);/);
   assert.match(src, /prefers-reduced-motion: reduce/, 'no flight with reduced motion: the token just goes out');
+});
+
+// 25/11/2026 (founder: «i gettoni non vengono utilizzati quando parte un
+// gioco»): the server spent the token, but the hub kept saying «Ancora 3 su 3»
+// and lit the token again on closing the round, until the next read. A round
+// the server really opened (resumed: false) drops the count at once and the
+// hub is read again; a resumed round spends nothing.
+function startHarness({ resumed }) {
+  const nodes = {};
+  const node = (id) => (nodes[id] ||= {
+    id, innerHTML: '', outerHTML: '', dataset: {}, classList: { add() {}, remove() {}, contains: () => false },
+    setAttribute() {}, removeAttribute() {}, addEventListener() {}, querySelector: () => null, querySelectorAll: () => [],
+  });
+  const calls = [];
+  let used = 0;
+  const home = () => homeOf({ allowance: allowance({ free_used: used, free_limit: 3, used, limit: 3, free_available: used < 3, open_count: 0 }) });
+  const session = { id: 's1', game_family: 'ridete', my_complete: false, reveal_ready: false, items: [{ id: 'i1', question_text: 'Q', answer_kind: 'open', my_answer_text: null }] };
+  const window = { usProfile: { role: 'francesco' }, crypto: { randomUUID: () => 'r' }, go() {} };
+  const sandbox = {
+    window,
+    document: { readyState: 'complete', hidden: false, getElementById: node, addEventListener() {}, querySelector: () => ({ id: 'quiz' }), querySelectorAll: () => [] },
+    sb: { rpc: async (name) => {
+      calls.push(name);
+      if (name === 'start_game_round') { if (!resumed) used += 1; return { data: { ...session, resumed }, error: null }; }
+      if (name === 'get_game_session') return { data: session, error: null };
+      return { data: home(), error: null };
+    } },
+    toast() {}, FormData: class {}, console: { warn() {} }, setTimeout: () => 1, setInterval: () => 1,
+  };
+  node('quizHub'); node('usGameV2Panel'); node('usPerVoiTop'); node('usGv2Tokens');
+  require('./helpers/identity-fixture').install(sandbox);
+  vm.runInNewContext(read('games.js'), sandbox);
+  return { nodes, calls, window };
+}
+
+test('Gioca tokens: a round the server opens drops the count at once and reads the hub again', async () => {
+  const h = startHarness({ resumed: false });
+  await tick();
+  assert.match(h.nodes.quizHub.innerHTML, /aria-label="3 gettoni su 3"/);
+  await h.window.USGameV2.chooseMode('ridete');
+  await tick();
+  assert.match(h.nodes.usGv2Tokens.outerHTML, /aria-label="2 gettoni su 3"/, 'the token row says 2 before any new read');
+  assert.match(h.nodes.usGv2Tokens.outerHTML, /<b>Ancora 2 su 3 oggi<\/b>/);
+  assert.equal(h.calls.filter((c) => c === 'get_game_v2_home').length, 2, 'the hub is read again behind the sheet');
+  h.window.USGameV2.showHub();
+  await tick();
+  assert.match(h.nodes.quizHub.innerHTML, /aria-label="2 gettoni su 3"/, 'closing the round never lights the spent token again');
+});
+
+test('Gioca tokens: a resumed round spends nothing', async () => {
+  const h = startHarness({ resumed: true });
+  await tick();
+  await h.window.USGameV2.chooseMode('ridete');
+  await tick();
+  assert.match(h.nodes.usGv2Tokens.outerHTML, /aria-label="3 gettoni su 3"/, 'the token that flew is lit again');
 });

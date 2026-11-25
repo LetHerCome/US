@@ -573,3 +573,11 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Spazio:** bacheca infinita con profondità (CSS 3D, niente motore 3D), strada nel tempo, «Adesso» e «Tutta la storia».
 - **Limite:** 12 cose gratis, US Plus senza limite. Sostituisce «la bacheca dei posti» del redesign fase 8 (D12) e, per la sola bacheca, «gratis per tutti» (D8 del grill).
 - **Dopo:** post-it vostri (fase 2), ricerca in Ricordi con «Appendi» (fase 3), «Da appuntare» nella Mappa, il gioco «Ti ricordi?».
+
+## 2026-11-25 — Gioca: gettoni che scendono davvero e la giostra dei giochi
+
+**Fonte:** founder, 25/11/2026: «nella sezione gioca i gettoni non vengono utilizzati quando parte un gioco… ne abbiamo 3 giornalieri, aggiungiamo poi una sorta di carosello per i giochi, o un card swapper… rendere la schermata un po' più interattiva».
+
+- **Gettoni:** il server li spendeva già (3 partite nuove al giorno, ora di Roma; riprendere una partita aperta non costa), ma l'app non rileggeva Gioca dopo l'avvio: la scritta restava «Ancora 3 su 3» e chiudendo la partita il gettone tornava acceso. Ora il gettone vola al tocco solo se il server può aprire una partita (ne resta uno e c'è posto fra le 3 aperte); il conto scende quando il server risponde `resumed: false`; con `resumed: true` o un errore il gettone torna acceso; Gioca si rilegge dietro il foglio. Il server resta l'autorità.
+- **La giostra:** «I vostri giochi» non è più una griglia ma una fila di carte grandi da scorrere (agganciate al centro, quelle ai lati più piccole e inclinate, i pallini sotto). Ogni carta dice cosa si fa, quanto dura e cosa costa il suo tasto («Gioca» col gettone, «Continua»/«Rispondi»/«Scopri» senza costo, «Domani» a zero). Un tocco su una carta di lato la porta al centro; solo quella al centro parte. Sostituisce «games are one grid (no sideways deck)» del 2026-10.
+- **Di giorno:** i gettoni spenti e il riquadro a zero hanno l'inchiostro tenue (prima erano tratteggi chiari invisibili sulla carta).

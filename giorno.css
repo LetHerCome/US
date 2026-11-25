@@ -230,3 +230,8 @@
 :root[data-us-luce="giorno"] .us-settings2-disconnect{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] .us-account-delete-status{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
 :root[data-us-luce="giorno"] .us-confirm-list li::marker{color:color-mix(in srgb,var(--us-rosa) 45%,#231b1d)!important}
+/* Gioca di giorno (25/11/2026): i gettoni spenti e il riquadro a zero erano
+   tratteggi chiari su carta, quasi invisibili. Inchiostro tenue al loro posto. */
+:root[data-us-luce="giorno"] .us-gv2-token:not(.is-on){border-color:color-mix(in srgb,#231b1d 28%,transparent)!important}
+:root[data-us-luce="giorno"] #quiz #quizHub .us-gv2-tokens[data-gv2-left="0"]{border-color:color-mix(in srgb,#231b1d 14%,transparent)!important;background:var(--us-foglio,#fbf7f0)!important}
+:root[data-us-luce="giorno"] #quiz #quizHub .us-gv2-tokens-plus{border-top-color:color-mix(in srgb,#231b1d 10%,transparent)!important}

@@ -168,7 +168,7 @@ test('Gioca fase 6: tokens, Vi aspetta, the games, weekly question, then the res
   const games = read('games.js');
   const hub = games.slice(games.indexOf('function renderHub() {'), games.indexOf('function renderHubError() {'));
   assert.doesNotMatch(hub, /us-gv2-daily-slot/);
-  const order = ['${tokensCard()}', '${waitingSection(home)}', 'us-gv2-choose', '${perVoi}', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
+  const order = ['${tokensCard()}', '${waitingSection(home)}', 'us-gv2-choose', 'giostra([perVoi', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
   const positions = order.map((needle) => hub.indexOf(needle));
   assert.ok(positions.every((p) => p >= 0), JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a, b) => a - b), positions);
