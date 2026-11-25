@@ -31,6 +31,8 @@ const PERSONAL_CASCADE=new Set([
 const OPERATIONAL_SET_NULL=new Set([
   'auth.users>activity.actor_id','auth.users>couple_invites.used_by','auth.users>user_reports.reporter_id','profiles>couple_invites.created_by',
   'profiles>couple_progression_preferences.updated_by','profiles>progression_events.actor_id',
+  // La vostra bacheca (25/11/2026): who pinned or banned a thing is forgotten; the board stays the couple's.
+  'profiles>us_bacheca_pins.pinned_by','profiles>us_bacheca_bans.banned_by',
 ]);
 const SHARED_FAIL_CLOSED=new Set([
   'auth.users>shared_messages.sender_id','auth.users>shared_messages.recipient_id','auth.users>bucket_items.created_by',
@@ -65,7 +67,8 @@ test('every user reference is classified, and shared content fails closed',async
       else assert.fail('unclassified user reference: '+key+' — decide what account deletion does with it');
     }
     for(const key of [...PERSONAL_CASCADE,...OPERATIONAL_SET_NULL,...SHARED_FAIL_CLOSED])assert.ok(seen.has(key),'stale classification '+key);
-    assert.equal(seen.size,47);
+    // La vostra bacheca (25/11/2026): +2 (who pinned, who banned).
+    assert.equal(seen.size,49);
   }finally{await db.close();}
 });
 

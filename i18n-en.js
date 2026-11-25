@@ -1843,6 +1843,25 @@
 
     // ------------------------------------------------------------ Left for you 1.0
     'Si apre una volta: conservalo se vuoi tenerlo.': 'It opens only once: keep it if you want to hold on to it.',
+    // La vostra bacheca (25/11/2026).
+    'La vostra bacheca, tenuta da US': 'Your board, kept by US',
+    'Fissa: US non la toglie più': 'Pin it: US will not take it down',
+    'Lascia decidere a US': 'Let US decide',
+    'Stacca: torna al suo posto': 'Take it down: it goes back to its place',
+    'Non appenderla più': 'Never pin it again',
+    Adesso: 'Now',
+    'Tutta la storia': 'The whole story',
+    'Bacheca piena': 'Board full',
+    'Con US Plus la strada continua senza limite': 'With US Plus the road goes on without limit',
+    'Il vostro primo ricordo': 'Your first memory',
+    'Un pezzo della vostra storia': 'A piece of your story',
+    'Il ricordo della settimana': 'The memory of the week',
+    'Tenuta da voi': 'Kept by you',
+    'Fissata: resta in bacheca': 'Pinned: it stays on the board',
+    'Spostata: ora è vostra': 'Moved: now it is yours',
+    'Non la riappenderò': 'I will not pin it again',
+    'La vostra bacheca la tiene US: appena mettete un ricordo, ci appende la vostra storia.': 'US keeps your board: as soon as you add a memory, it pins your story here.',
+    'Apri la bacheca': 'Open the board',
     // Lasciato per te nuovo (25/11/2026).
     'Si apre una volta sola. Se vuoi, tienila.': 'It opens only once. Keep it if you like.',
     'Si apre una volta sola. Se vuoi, tienilo.': 'It opens only once. Keep it if you like.',

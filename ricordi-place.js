@@ -450,17 +450,9 @@
     map.on('render', refreshMarkers);
   }
 
-  // ---- La bacheca (redesign definitivo, fase 8, D12) ----------------------
-  // A detective board laid out like a real map (north up): each place is a
-  // pinned tag, its polaroids around it, a red string joins the places in the
-  // order you first went there. A tag opens the map there, a polaroid opens
-  // its Ricordo; the Ricordi with no place wait in «Da appuntare». It lays
-  // itself out from the cards already drawn in the Raccolta: no new data, no
-  // new reads (the photos are the ones already on screen).
-  const BOARD_PAD = 86;
-  const BOARD_GAP = 150;
-  const BOARD_POLAROIDS = 3;
-  const LOOSE_MAX = 12;
+  // ---- Places counted for the switch (the board is bacheca.js since 25/11/2026) ----
+  // «42 ricordi · 9 posti»: the places of the Ricordi, one per ~100 m, in the
+  // order you first went there (from the cards already drawn in the Raccolta).
   const placeKey = (p) => `${round3(p.lat).toFixed(3)},${round3(p.lon).toFixed(3)}`;
   function boardPlaces(items) {
     const groups = new Map();
@@ -479,55 +471,6 @@
     }
     return list.sort((a, b) => String(a.first).localeCompare(String(b.first)) || a.key.localeCompare(b.key));
   }
-  // Positions in px on a board `width` wide: the real proportions (longitude
-  // shortened by the latitude), then the tags pushed apart so none covers another.
-  function boardLayout(places, width) {
-    const list = places || [];
-    if (!list.length) return { height: 0, nodes: [] };
-    const lats = list.map((p) => p.lat);
-    const mid = (Math.max(...lats) + Math.min(...lats)) / 2;
-    const k = Math.cos((mid * Math.PI) / 180) || 1;
-    const xs = list.map((p) => p.lon * k), ys = list.map((p) => -p.lat);
-    const x0 = Math.min(...xs), y0 = Math.min(...ys);
-    const spanX = Math.max(...xs) - x0, spanY = Math.max(...ys) - y0;
-    const inner = Math.max(120, width - 2 * BOARD_PAD);
-    const span = Math.max(spanX, spanY);
-    let scale = span > 1e-6 ? inner / Math.max(spanX, 1e-6) : 0;
-    const tallest = Math.max(560, BOARD_GAP * 2 * list.length);
-    if (spanY * scale > tallest) scale = tallest / spanY;
-    const nodes = list.map((place, i) => ({
-      place,
-      x: spanX > 1e-6 ? BOARD_PAD + (xs[i] - x0) * scale : width / 2,
-      y: BOARD_PAD + 30 + (spanY > 1e-6 ? (ys[i] - y0) * scale : 0),
-    }));
-    for (let round = 0; round < 60; round += 1) {
-      let moved = false;
-      for (let a = 0; a < nodes.length; a += 1) {
-        for (let b = a + 1; b < nodes.length; b += 1) {
-          const A = nodes[a], B = nodes[b];
-          let dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy);
-          if (d >= BOARD_GAP) continue;
-          if (d < 0.01) { dx = b % 2 ? 0.6 : -0.6; dy = 1; d = Math.hypot(dx, dy); }
-          const push = (BOARD_GAP - d) / 2, ux = dx / d, uy = dy / d;
-          A.x -= ux * push; A.y -= uy * push; B.x += ux * push; B.y += uy * push;
-          moved = true;
-        }
-      }
-      for (const n of nodes) { n.x = Math.min(width - BOARD_PAD, Math.max(BOARD_PAD, n.x)); n.y = Math.max(BOARD_PAD, n.y); }
-      if (!moved) break;
-    }
-    return { height: Math.round(Math.max(...nodes.map((n) => n.y)) + BOARD_PAD + 60), nodes };
-  }
-  // The red string, sagging a little between two places.
-  function boardString(nodes) {
-    if (nodes.length < 2) return '';
-    let d = `M${nodes[0].x.toFixed(1)} ${nodes[0].y.toFixed(1)}`;
-    for (let i = 1; i < nodes.length; i += 1) {
-      const a = nodes[i - 1], b = nodes[i];
-      d += ` Q${((a.x + b.x) / 2).toFixed(1)} ${((a.y + b.y) / 2 + 26).toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
-    }
-    return d;
-  }
   // The Ricordi as the Raccolta drew them.
   function boardItems() {
     return cards().map((card) => {
@@ -540,41 +483,6 @@
       };
     });
   }
-  const FAN = [[-40, 52, -8], [2, 68, 4], [42, 50, 9]];
-  const polaroid = (it, cls, style) => `<button type="button" class="rb-pol${cls}" data-board-moment="${esc(it.id)}"${it.by ? ` data-by="${esc(it.by)}"` : ''}${style ? ` style="${style}"` : ''} aria-label="${esc(it.caption || 'Apri il ricordo')}">${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy" decoding="async">` : '<span class="rb-pol-empty"></span>'}</button>`;
-  function boardMarkup(items, width) {
-    const placed = items.filter((it) => validCoord(it.lat, it.lon));
-    const loose = items.filter((it) => !validCoord(it.lat, it.lon));
-    const { height, nodes } = boardLayout(boardPlaces(placed), width);
-    let html = '';
-    if (nodes.length) {
-      const path = boardString(nodes);
-      html += `<div class="rb-board" style="height:${height}px">`;
-      html += `<svg class="rb-string" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" aria-hidden="true" focusable="false">${path ? `<path d="${path}"/>` : ''}</svg>`;
-      for (const n of nodes) {
-        const { place } = n, count = place.items.length;
-        const shown = place.items.slice(-BOARD_POLAROIDS);
-        html += shown.map((it, i) => polaroid(it, '', `left:${(n.x + FAN[i][0]).toFixed(1)}px;top:${(n.y + FAN[i][1]).toFixed(1)}px;--t:${FAN[i][2]}deg`)).join('');
-        if (count > shown.length) html += `<span class="rb-more" style="left:${(n.x + 76).toFixed(1)}px;top:${(n.y + 70).toFixed(1)}px" aria-hidden="true">+${count - shown.length}</span>`;
-        const label = place.label || 'Un posto';
-        html += `<button type="button" class="rb-tag" data-board-lat="${place.lat}" data-board-lon="${place.lon}" style="left:${n.x.toFixed(1)}px;top:${n.y.toFixed(1)}px" aria-label="${esc(`${label}: ${count} ${count === 1 ? 'ricordo' : 'ricordi'}. Apri la mappa`)}"><i class="rb-pin" aria-hidden="true"></i><b translate="no">${esc(label)}</b><small>${count} ${count === 1 ? 'ricordo' : 'ricordi'}</small></button>`;
-      }
-      html += '</div>';
-    } else {
-      html += '<p class="rb-empty">Ancora nessun posto sulla bacheca: aggiungilo a un Ricordo e comparirà qui.</p>';
-    }
-    if (loose.length) {
-      const shown = loose.slice(0, LOOSE_MAX);
-      html += `<section class="rb-loose" aria-labelledby="rbLooseTitle"><h4 id="rbLooseTitle">Da appuntare</h4><div class="rb-loose-row">${shown.map((it) => `<div class="rb-loose-item">${polaroid(it, ' is-loose', '')}<button type="button" class="rb-add" data-board-add="${esc(it.id)}">Aggiungi il posto</button></div>`).join('')}</div>${loose.length > shown.length ? `<p class="rb-loose-more">${esc(`E altri ${loose.length - shown.length} nella Raccolta`)}</p>` : ''}</section>`;
-    }
-    return html;
-  }
-  function drawBoard() {
-    const box = w.document.getElementById('ricordiBacheca');
-    if (!box) return;
-    const width = Math.max(300, Math.round(box.clientWidth || 360));
-    box.innerHTML = boardMarkup(boardItems(), width);
-  }
   // «42 ricordi · 9 posti» under the switch.
   function paintCount() {
     const el = w.document.getElementById('ricordiCount');
@@ -585,24 +493,6 @@
     el.textContent = `${items.length} ${items.length === 1 ? 'ricordo' : 'ricordi'}${places ? ` · ${places} ${places === 1 ? 'posto' : 'posti'}` : ''}`;
     el.hidden = false;
   }
-  async function addPlaceFromBoard(id, button) {
-    const place = await choose({});
-    if (!place) return;
-    if (button) button.disabled = true;
-    try {
-      await save(id, place);
-      w.toast?.('Posto salvato');
-      await Promise.resolve(w.hydrateMoments?.()).catch(() => {});
-    } catch (error) {
-      console.warn('[US Bacheca] posto', error);
-      w.toast?.('Non riesco a salvare il posto. Riprova.');
-    } finally { if (button?.isConnected) button.disabled = false; }
-  }
-  function openFromBoard(id) {
-    const card = w.document.querySelector(`#momentsGrid .moment-card[data-moment-id="${String(id).replace(/"/g, '')}"]`);
-    card?.click?.();
-  }
-
   // Fase 8 (D12): Ricordi opens on the Raccolta (the polaroids month by
   // month); the switch shows the Bacheca or the Mappa. The month grid and the
   // chapters stay in the page (the pins and the board open their cards), only hidden.
@@ -620,7 +510,8 @@
     const title = doc.getElementById('ricordiStoryTitle');
     if (title) title.textContent = VIEW_TITLE[next];
     for (const tab of doc.querySelectorAll('#moments [data-ricordi-view]')) tab.setAttribute('aria-selected', String(tab.dataset.ricordiView === next));
-    if (next === 'board') drawBoard();
+    // La vostra bacheca (25/11/2026): the board kept by US (bacheca.js).
+    if (next === 'board') w.UsBacheca?.show?.();
     if (next === 'map') {
       Promise.resolve(drawMap()).then(() => {
         if (!focus || !map) return;
@@ -638,25 +529,19 @@
     // The grid was redrawn (a place added, a new Ricordo): the open map and board follow.
     w.addEventListener('us:moments-updated', () => {
       if (w.document.getElementById('ricordiMap')?.hidden === false) drawMap();
-      if (w.document.getElementById('ricordiBacheca')?.hidden === false) drawBoard();
+      if (w.document.getElementById('ricordiBacheca')?.hidden === false) w.UsBacheca?.refresh?.();
       paintCount();
     });
     w.document?.addEventListener?.('click', (event) => {
       const target = event.target;
       if (!target?.closest) return;
       const tab = target.closest('#moments [data-ricordi-view]');
-      if (tab) { setView(tab.dataset.ricordiView); return; }
-      const add = target.closest('#ricordiBacheca [data-board-add]');
-      if (add) { addPlaceFromBoard(add.dataset.boardAdd, add); return; }
-      const pol = target.closest('#ricordiBacheca [data-board-moment]');
-      if (pol) { openFromBoard(pol.dataset.boardMoment); return; }
-      const tag = target.closest('#ricordiBacheca [data-board-lat]');
-      if (tag) setView('map', { focus: { lat: Number(tag.dataset.boardLat), lon: Number(tag.dataset.boardLon) } });
+      if (tab) setView(tab.dataset.ricordiView);
     });
   }
 
   return Object.freeze({
     normalize, labelFrom, placesFrom, pointsFrom, viewFor, italianLabel, search, nameOf, fromCoords, fromCard,
-    pickWithPlaces, photoConsent, choose, save, setView, toggleMap, boardPlaces, boardLayout, boardString, boardMarkup,
+    pickWithPlaces, photoConsent, choose, save, setView, toggleMap, boardPlaces,
   });
 });

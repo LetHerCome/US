@@ -563,3 +563,13 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Scrivere:** un foglio sempre presente e una sola cosa da aggiungere (foto, vocale, video, musica); le parole del foglio vanno con la cosa aggiunta. Il server resta uguale (un tipo per messaggio, parole fino a 280 con una cosa aggiunta).
 - **Parole:** «Tienila/Tienilo» al posto di «Conserva»; niente lui/lei nelle frasi nuove.
 - **Dopo:** Conservati come scatola di lettere e polaroid (seconda fase, da disegnare).
+
+## 2026-11-25 — La vostra bacheca, tenuta da US
+
+**Fonte:** founder, 25/11/2026: «studiare bacheca dentro a ricordi… dargli più senso… può essere utilizzata anche dal nostro "cupido"», grill-me D1–D27 («Cupido… è il detentore della bacheca, poi noi abbiamo l'ultima parola»; «uno spazio 3D navigabile… un limite per i free… il resto con il premium»), tavola «US · La vostra bacheca» (https://claude.ai/artifact/8LuLvzRzMcVTDmsHdKnUWG), «Approvo, vai».
+
+- **Cos'è:** la Bacheca in Ricordi è l'anta del frigo della coppia, tenuta da US a regole (niente AI): la prima volta la storia (fino a 8), poi un anno fa, traguardi, il ricordo della settimana e le cose tenute; post-it del perché; fumetto dentro il limite di una battuta al giorno.
+- **Ultima parola alla coppia:** fissa, stacca, non appenderla più, sposta (diventa vostra); appendere da sé arriva con la ricerca.
+- **Spazio:** bacheca infinita con profondità (CSS 3D, niente motore 3D), strada nel tempo, «Adesso» e «Tutta la storia».
+- **Limite:** 12 cose gratis, US Plus senza limite. Sostituisce «la bacheca dei posti» del redesign fase 8 (D12) e, per la sola bacheca, «gratis per tutti» (D8 del grill).
+- **Dopo:** post-it vostri (fase 2), ricerca in Ricordi con «Appendi» (fase 3), «Da appuntare» nella Mappa, il gioco «Ti ricordi?».

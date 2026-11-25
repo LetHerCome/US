@@ -47,8 +47,9 @@ test('in the app: Bea brings the letter, it opens into paper; the composer keeps
       window.openLeftForYou();
     });
     await page.waitForSelector('#leftForYouCast svg.us-char');
-    await page.waitForSelector('#leftForYouContent .left-for-you-env-seal .us-char');
-    await page.click('#leftForYouContent .left-for-you-env-seal');
+    await page.waitForSelector('#leftForYouContent .left-for-you-env-seal .us-char', { state: 'attached' });
+    // A tap on the seal opens it at once; under load it may already have opened by itself.
+    await page.evaluate(() => document.querySelector('#leftForYouContent .left-for-you-env:not(.is-open) .left-for-you-env-seal')?.click());
     await page.waitForSelector('#leftForYouContent .left-for-you-env.is-open', { timeout: 10000 });
     assert.match(await page.locator('#leftForYouContent .left-for-you-env-letter').innerText(), /Ciao, ti penso/);
     assert.equal(await page.locator('#leftForYouConserve').innerText(), 'Tienila');

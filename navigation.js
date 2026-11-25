@@ -121,6 +121,12 @@ const layers=[
   },
   {
     // US vi ricorda (25/11/2026): the sheet of the characters' line.
+    name:'bacheca',
+    find:()=>document.getElementById('usBachecaSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsBacheca?.closeSheet?.()
+  },
+  {
     name:'battuta',
     find:()=>document.getElementById('usBattuta'),
     open:el=>el?.classList.contains('open'),
