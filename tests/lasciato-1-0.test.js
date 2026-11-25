@@ -138,7 +138,8 @@ const seenCalls = (log) => log.rpcs.filter(({ name }) => name === 'mark_left_ite
 
 test('L1 viewer says it opens once, shows the oldest first and hides "Apri il prossimo" on the last one', async () => {
   const html = read('index.html');
-  assert.match(html, /id="leftForYouOnce">Si apre una volta: conservalo se vuoi tenerlo\.</);
+  // Lasciato per te nuovo (25/11/2026): «Tienila» for a letter, «Tienilo» for a vocale.
+  assert.match(html, /id="leftForYouOnce">Si apre una volta sola\. Se vuoi, tienila\.</);
   assert.match(read('left-for-you.js'), /order\('created_at', \{ ascending: true \}\)/);
 
   const { api, el, log } = createHarness({ rows: [
@@ -265,7 +266,7 @@ test('L3 the outcome line is read from the sender rows and Conserva, and hidden 
 
 test('L5/L6 voice is "un vocale"; photo and vocale send an optional caption, the photo shows a preview', async () => {
   const html = read('index.html');
-  assert.match(html, /data-us-composer-kind="audio">Vocale</);
+  assert.match(html, /data-us-composer-kind="audio"><span class="us-icon" data-us-icon="microphone" aria-hidden="true"><\/span>Vocale</);
   assert.match(html, /id="leftForYouComposerPhotoCaption" maxlength="280"/);
   assert.match(html, /id="leftForYouComposerAudioCaption" maxlength="280"/);
   assert.match(html, /id="leftForYouComposerPhotoPreviewImage"/);
@@ -336,7 +337,12 @@ test('every new Italian text has its English in i18n-en.js', () => {
   const i18n = require(path.join(ROOT, 'i18n.js'));
   const dict = i18n.compile(entries);
   const samples = [
-    'Si apre una volta: conservalo se vuoi tenerlo.',
+    'Si apre una volta sola. Se vuoi, tienila.',
+    'Si apre una volta sola. Se vuoi, tienilo.',
+    'Tienila',
+    'Tienilo',
+    'Nei vostri Conservati.',
+    'Aggiungi una cosa, se vuoi',
     'Un vocale',
     'Vocale',
     'Didascalia (facoltativa)',

@@ -49,9 +49,10 @@ test('M5E integrates server-authoritative seen and Conserva RPCs', () => {
   assert.match(source, /rpc\('mark_left_item_seen'/);
   assert.match(source, /rpc\('conserve_left_for_you'/);
   assert.match(source, /status.*existing|existing.*status/);
-  assert.match(source, /Conservato/);
-  assert.ok(/setStatus\(['"]Conservato nei Ricordi\./.test(source),
-    'successful conservation must identify Ricordi as the destination');
+  // Lasciato per te nuovo (25/11/2026): «Tienila», and the place it goes is named.
+  assert.match(source, /Tenuta|Tenuto/);
+  assert.ok(/setStatus\(data\?\.status === 'existing' \? 'Era già nei vostri Conservati\.' : 'Nei vostri Conservati\.'/.test(source),
+    'successful conservation must identify Conservati as the destination');
 });
 
 test('M5E has loading, empty, retry and no Stories semantics in the UI owner', () => {

@@ -554,3 +554,12 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 
 - **Icona Android:** il logo con la cornice su bianco, come la PWA, con la cornice sul bordo; l'icona tonda (`roundIcon`) tiene il logo senza cornice. Sostituisce la decisione del 29/10 sull'icona senza cornice, che resta solo per le icone tonde.
 - **Apertura A:** dopo la splash di Android, i due personaggi escono da dietro il logo, un cuore e «il vostro spazio», poi l'app (circa 2 s). I personaggi vengono dal telefono (salvati all'ultima apertura, cancellati all'uscita dall'account); senza, solo il logo. Il colore della splash resta #26142E, anche su iPhone.
+
+## 2026-11-25 — Lasciato per te nuovo
+
+**Fonte:** founder, 25/11/2026: «revamp di lasciato per te sempre nel nostro nuovo stile», tavola «US · Lasciato per te» (https://claude.ai/artifact/95kvj2AwMbwjXgRtiPbSmL), «perfetto puoi unire».
+
+- **Ricevere:** un momento a schermo intero col personaggio di chi l'ha lasciato; busta nel suo colore col sigillo della sua forma; la lettera diventa un foglio, la foto una polaroid, il vocale un fumetto. La busta si apre da sola dopo un attimo o al tocco del sigillo, così «si apre una volta» resta com'era (conta quando si vede).
+- **Scrivere:** un foglio sempre presente e una sola cosa da aggiungere (foto, vocale, video, musica); le parole del foglio vanno con la cosa aggiunta. Il server resta uguale (un tipo per messaggio, parole fino a 280 con una cosa aggiunta).
+- **Parole:** «Tienila/Tienilo» al posto di «Conserva»; niente lui/lei nelle frasi nuove.
+- **Dopo:** Conservati come scatola di lettere e polaroid (seconda fase, da disegnare).

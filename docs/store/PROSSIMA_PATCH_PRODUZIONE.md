@@ -2,6 +2,19 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Lasciato per te nuovo (25/11)
+
+**Stato:** ramo `claude/lasciato-nuovo`, verso il ramo fisso di staging. Tavola «US · Lasciato per te» (https://claude.ai/artifact/95kvj2AwMbwjXgRtiPbSmL) approvata: «perfetto puoi unire».
+
+**Cosa cambia:**
+- **Quando arriva qualcosa** si apre a schermo intero, come il Ti penso. In alto c'è il personaggio di chi l'ha lasciato e, sopra, «Lasciato per te · stamattina» (o oggi pomeriggio, stasera, ieri, una data).
+- **La lettera** arriva in una busta del colore di chi la manda, chiusa da un sigillo con il suo personaggio. Si apre da sola dopo un attimo, o subito toccando il sigillo, e diventa un foglio di carta: «Da Beatrice · oggi alle 9:12», il testo scritto grande e la firma col suo personaggio.
+- **La foto** diventa una polaroid con la didascalia scritta a mano; toccandola si vede grande come prima. **Il vocale** esce da un fumetto sopra il personaggio. **Video e musica** stanno in una cornice bianca, con le loro parole.
+- **«Conserva» diventa «Tienila»** (per lettera e foto) o «Tienilo» (vocale, video, brano); poi «✓ Tenuta» e «Nei vostri Conservati.». Sotto: «Si apre una volta sola. Se vuoi, tienila.»
+- **Per scrivere** c'è un foglio di carta che comincia col nome dell'altra persona e finisce con la tua firma. Sotto, «Aggiungi una cosa, se vuoi»: Foto, Vocale, Video, Musica, con le icone a un tono. Le parole scritte sul foglio viaggiano con la cosa aggiunta (al massimo 280 caratteri, 1000 per la lettera sola); toccando di nuovo la cosa scelta torna la lettera da sola.
+- **Quando lasci qualcosa** il foglio si piega e il tuo personaggio porta la busta fino a quella in alto.
+- Niente cambia sul server: stessi tipi, stessi limiti, stessa regola «si apre una volta».
+
 ### Icona dell'app e apertura nuove (25/11)
 
 **Stato:** ramo `claude/icona-splash`, verso il ramo fisso di staging. Tavola «US · Icona e apertura» (https://claude.ai/artifact/JyMuw3y4fXnP3PCmQuxKbF): il founder ha scelto l'apertura «A».
