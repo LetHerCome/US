@@ -27,15 +27,18 @@ function gameHub(instant='2026-10-09T22:30:00Z'){
 // stays on Oggi); the week leads, then the games.
 test('Fase 6 (D11): the tokens lead Gioca, then the games (Per voi first, Questo o quello last); no week, no daily question', async()=>{
   const html=await gameHub().html();
+  const all = html.slice(html.indexOf('class="us-gv2-all"'));
   assert.doesNotMatch(html,/data-gv4-daily-slot|us-gv4-daily-pending|id="usGv2Week"|us-gv2-wd/);
-  const keys=['class="us-gv2-choose"','data-gv2-action="per-voi"','data-gv2-family="scopritevi"','data-gv2-action="swipe"'];
+  const keys=['class="us-gv2-choose"','data-gv2-action="per-voi"','data-gv2-action="swipe"','class="us-gv2-all"'];
   const positions=keys.map(k=>html.indexOf(k));
   assert.ok(positions.every(v=>v>=0),JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a,b)=>a-b),positions);
   assert.equal((html.match(/data-gv2-action="per-voi"/g)||[]).length,1);
   assert.equal((html.match(/data-gv2-action="swipe"/g)||[]).length,1);
   // G7 1.0 — "E se…?" is no longer offered as a tile.
-  assert.equal((html.match(/data-gv2-family="/g)||[]).length,5);
+  assert.equal((all.match(/data-gv2-family="/g)||[]).length,5);
+  // 25/11/2026: plus «Il gioco di oggi», one of them, in the giostra.
+  assert.equal((html.match(/data-gv2-family="/g)||[]).length,6);
   assert.doesNotMatch(html,/us-gv2-rhythm|us-gv4-week|us-gv4-day/,'no budget strip, no old rail');
   assert.doesNotMatch(html,/data-streak|data-completed-days|day-played/,'no fictitious past-day progress');
 });

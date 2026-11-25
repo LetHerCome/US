@@ -2,6 +2,18 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Gioca: gettoni e giostra dei giochi (25/11)
+
+**Stato:** ramo `claude/gestioni-giochi-carosello-8d958b`, verso il ramo fisso di staging. Solo app (niente SQL).
+
+**Cosa cambia:**
+- **I gettoni scendono davvero:** quando parte una partita nuova il gettone vola e la scritta passa subito a «Ancora 2 su 3 oggi»; chiudendo la partita non torna più a 3. Riprendere una partita già aperta non costa niente e il gettone resta acceso.
+- **Oggi per voi:** in cima ai giochi, tre carte grandi da scorrere col dito: Per voi, «Il gioco di oggi» (cambia ogni giorno) e Questo o quello. Ogni carta ha il disegno del gioco, due righe su cosa si fa, la durata e il tasto: «Gioca» col gettone che costa, «Continua», «Rispondi» o «Scopri» quando la partita è già aperta, «Domani» quando i gettoni sono finiti. La carta al centro è quella che parte.
+- **Tutti i giochi:** sotto restano le schede di sempre, due per riga. Quando arriveranno altri giochi si divideranno da sole per genere (Per conoscervi, Per parlarvi, Per ridere, Per ricordare).
+- **Di giorno** i gettoni spenti e il riquadro «Domani altre 3» ora si vedono.
+
+**In produzione:** solo sito e app (stessa versione su AAB e TestFlight); nessuna migrazione.
+
 ### La vostra bacheca, tenuta da US (25/11) — fase 1
 
 **Stato:** ramo `claude/bacheca-us`, verso il ramo fisso di staging. Grill-me D1–D27 e tavola «US · La vostra bacheca» (https://claude.ai/artifact/8LuLvzRzMcVTDmsHdKnUWG) approvata: «Approvo, vai». La migrazione `20261125230000_us_bacheca_v1.sql` va applicata a US-STAGING col via del founder. Fasi dopo: i vostri post-it, la ricerca in Ricordi (con «Appendi»), «Da appuntare» nella Mappa.

@@ -9,11 +9,11 @@ if (window.USGameV2) return;
 
 // V3 — each family says in a few words what kind of moment it is.
 const FAMILIES = [
-  { id: 'scopritevi', name: 'Scopritevi', icon: 'binoculars', kind: 'Quanto vi conoscete' },
-  { id: 'confrontatevi', name: 'Confrontatevi', icon: 'arrows-left-right', kind: 'Due punti di vista' },
-  { id: 'ridete', name: 'Ridete', icon: 'smiley', kind: 'Leggero e un po’ assurdo' },
-  { id: 'quanto_mi_conosci', name: 'Quanto mi conosci?', icon: 'question', kind: 'Chi conosce meglio chi' },
-  { id: 'rivivete', name: 'Rivivete', icon: 'images', kind: 'I vostri momenti' },
+  { id: 'scopritevi', name: 'Scopritevi', icon: 'binoculars', kind: 'Quanto vi conoscete', genre: 'conoscervi' },
+  { id: 'confrontatevi', name: 'Confrontatevi', icon: 'arrows-left-right', kind: 'Due punti di vista', genre: 'parlarvi' },
+  { id: 'ridete', name: 'Ridete', icon: 'smiley', kind: 'Leggero e un po’ assurdo', genre: 'ridere' },
+  { id: 'quanto_mi_conosci', name: 'Quanto mi conosci?', icon: 'question', kind: 'Chi conosce meglio chi', genre: 'conoscervi' },
+  { id: 'rivivete', name: 'Rivivete', icon: 'images', kind: 'I vostri momenti', genre: 'ricordare' },
   // 1.0: E se…? is no longer offered (its questions live in Confrontatevi);
   // the entry stays so old rounds still open with their name and icon.
   { id: 'e_se', name: 'E se…?', icon: 'signpost', kind: 'Scenari, futuri, possibilità', retired: true },
@@ -239,6 +239,33 @@ function flyToken(target) {
   ], { duration: 640, easing: 'cubic-bezier(.3,.7,.2,1)' });
   run.onfinish = run.oncancel = () => ghost.remove();
 }
+// The token row painted again from the allowance this phone knows: after a
+// spent token, or to light again one that flew for a round the server resumed
+// or refused.
+function paintTokens() {
+  const card = byId('usGv2Tokens');
+  if (!card || typeof card.outerHTML !== 'string') return;
+  const html = tokensCard();
+  if (html) card.outerHTML = html;
+}
+// The server answered a start (25/11/2026: the token flew but the count stayed
+// at 3 until the next read of the hub, and came back lit on closing the round).
+// Only a round the server really opened (resumed === false) spends one: the
+// count drops now, the hub is read again behind the sheet, and the next read
+// is still the authority.
+function settleToken(state) {
+  const a = allowance();
+  if (a && state?.resumed === false) {
+    const used = (Number(a.free_used) || 0) + 1;
+    const limit = Number(a.free_limit) || 1;
+    Object.assign(a, { free_used: used, used, per_voi_used: used, free_available: used < limit, per_voi_available: used < limit, open_count: (Number(a.open_count) || 0) + 1 });
+    if (state.game_family) a.families = { ...(a.families || {}), [state.game_family]: { session_id: state.id, completed: false } };
+  }
+  paintTokens();
+}
+// A token flies at the tap only when the server can open a round: one left
+// and room for another open round.
+const canSpend = () => { const a = allowance(); return !a || (freeLeft() > 0 && (Number(a.open_count) || 0) < (Number(a.open_limit) || 3)); };
 
 // The round a tile stands for: the family's open round, or its finished
 // round whose answers you have not opened yet.
@@ -360,16 +387,146 @@ function cardState(status) {
   return { state: 'locked', chip: 'tomorrow', text: 'Da domani' };
 }
 const CHIP_TEXT = { ready: 'Pronto', played: 'Giocato', tomorrow: 'Domani' };
-function gameCard({ id, name, kind, action, extraClass = '', status, line: own = '', attrs = '' }) {
+// La giostra (25/11/2026, founder: «un carosello o un card swapper per
+// rendere la schermata più interattiva»): every game is a big card that says
+// what you do in it, how long it is and what its button costs — a new round
+// shows the token it spends, a round already open spends nothing.
+const GAME_DESC = Object.freeze({
+  per_voi: 'Un po’ di tutti i giochi, scelto da US per voi due. Dentro può esserci la domanda della settimana.',
+  scopritevi: 'Le cose che ancora non sapete l’uno dell’altra, una domanda alla volta.',
+  confrontatevi: 'La stessa situazione, due risposte: scoprite dove la pensate uguale.',
+  ridete: 'Domande leggere e un po’ assurde, per ridere insieme.',
+  quanto_mi_conosci: 'Uno risponde su di sé, l’altro prova a indovinare. Poi si scambia.',
+  rivivete: 'Domande sui vostri momenti, per ricordarli in due.',
+  swipe: 'Una carta, due scelte: trascinala da una parte. Alla fine vedete dove coincidete.',
+});
+const GAME_META = Object.freeze({ swipe: '8 carte · 2 min' });
+const TOKEN_MINI = `<span class="us-gv2-costo" aria-hidden="true"><i>${icon('heart-straight-fill')}</i>1</span>`;
+function cardAction(card, id) {
+  if (card.state === 'locked') return { text: 'Domani', cost: false };
+  if (card.state === 'open') {
+    const t = card.tone;
+    return { text: t === 'ready' ? 'Scopri' : t === 'turn' ? 'Rispondi' : t === 'waiting' || t === 'seen' ? 'Apri' : 'Continua', cost: false };
+  }
+  if (card.state === 'played') return id === 'per_voi' && home?.per_voi?.session_id ? { text: 'Rivedi', cost: false } : { text: 'Gioca ancora', cost: true };
+  return { text: 'Gioca', cost: true };
+}
+// big: a card of the giostra (description, length, the button and its cost);
+// otherwise the small tile of «Tutti i giochi», as before.
+function gameCard({ id, name, kind, action, extraClass = '', status, line: own = '', attrs = '', big = false, badge = '' }) {
   const card = cardState(status);
   const locked = card.state === 'locked';
   const data = action === 'swipe' ? 'data-gv2-action="swipe"' : action === 'per-voi' ? 'data-gv2-action="per-voi"' : `data-gv2-family="${id}"`;
   const round = card.session ? ` data-gv2-session="${esc(card.session)}" data-tone="${esc(card.tone || '')}"` : '';
   const line = own || (card.state === 'ready' ? kind : card.state === 'played' ? 'questa settimana' : locked ? 'torna domani' : card.text);
-  return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-game${extraClass}" ${data} data-gv2-mode-state="${esc(card.state)}" data-gv2-chip="${card.chip}"${round}${attrs}${locked ? ' aria-disabled="true"' : ''} aria-label="${esc(name)}: ${esc(kind)}. ${esc(card.text)}">
-      <span class="us-gv2-game-top"><span class="us-gv2-glyph" aria-hidden="true">${gameArt(id)}</span>${card.chip === 'ready' ? '' : `<span class="us-gv2-stato" aria-hidden="true">${card.chip === 'played' ? CHIP_CHECK : ''}${CHIP_TEXT[card.chip]}</span>`}</span>
-      <span class="us-gv2-game-copy"><b>${esc(name)}</b><small>${esc(line)}</small></span>
+  const act = cardAction(card, id);
+  const first = card.tone === 'ready' || card.tone === 'turn' ? ' data-gv2-first' : '';
+  const slide = big ? ` data-gv2-slide="${esc(id)}"${first}` : '';
+  const chip = card.chip === 'ready' ? '' : `<span class="us-gv2-stato" aria-hidden="true">${card.chip === 'played' ? CHIP_CHECK : ''}${CHIP_TEXT[card.chip]}</span>`;
+  const extra = big ? `
+      <span class="us-gv2-carta-desc" aria-hidden="true">${esc(GAME_DESC[id] || '')}</span>
+      <span class="us-gv2-carta-foot" aria-hidden="true"><span class="us-gv2-carta-meta">${esc(GAME_META[id] || '5 domande · 3 min')}</span><span class="us-gv2-carta-cta" data-cost="${act.cost}">${esc(act.text)}${act.cost ? TOKEN_MINI : ''}</span></span>` : '';
+  return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-game${extraClass}" ${data} data-gv2-mode-state="${esc(card.state)}" data-gv2-chip="${card.chip}"${round}${attrs}${locked ? ' aria-disabled="true"' : ''} aria-label="${esc(name)}: ${esc(kind)}. ${esc(card.text)}"${act.cost ? ' aria-description="Usa un gettone"' : ''}${slide}>
+      <span class="us-gv2-game-top">${badge ? `<span class="us-gv2-carta-badge" aria-hidden="true">${esc(badge)}</span>` : ''}<span class="us-gv2-glyph" aria-hidden="true">${gameArt(id)}</span>${chip}</span>
+      <span class="us-gv2-game-copy"><b>${esc(name)}</b><small>${esc(line)}</small></span>${extra}
     </button>`;
+}
+
+// «Il gioco di oggi» (25/11/2026, founder: «alcuni a carosello e gli altri
+// come prima»): one of the question games in the giostra, the same for both
+// phones all day (the Rome day of the server's allowance), the next one tomorrow.
+function dailyPick() {
+  const day = allowance()?.day || new Date().toLocaleDateString('en-CA', { timeZone: DAY_ZONE });
+  const n = Math.floor(Date.parse(`${day}T12:00:00Z`) / 86400000);
+  return OFFERED[((Number.isFinite(n) ? n : 0) % OFFERED.length + OFFERED.length) % OFFERED.length];
+}
+// So more games never turn «Tutti i giochi» into a heap: past six question
+// games, the list splits by kind of moment, each with its own small title.
+const GENRES = Object.freeze([
+  { id: 'conoscervi', name: 'Per conoscervi' },
+  { id: 'parlarvi', name: 'Per parlarvi' },
+  { id: 'ridere', name: 'Per ridere' },
+  { id: 'ricordare', name: 'Per ricordare' },
+]);
+const GENRE_SPLIT_AT = 6;
+function allGames(tiles) {
+  const grid = (list) => `<div class="us-gv2-game-grid" data-s>${list.map((t) => t.html).join('')}</div>`;
+  if (tiles.length <= GENRE_SPLIT_AT) return grid(tiles);
+  return GENRES.map((g) => {
+    const list = tiles.filter((t) => t.genre === g.id);
+    return list.length ? `<div class="us-gv2-genre"><h4 class="us-gv2-genre-title">${esc(g.name)}</h4>${grid(list)}</div>` : '';
+  }).join('');
+}
+
+// The cards ride a horizontal track that snaps each one to the middle; the
+// scroll paints how far every card is from the middle (--d, --ad) so the ones
+// at the sides shrink and lean, and the dots follow. The card in the middle is
+// the one a tap plays; a tap on a side card brings it to the middle first.
+let activeSlide = null;
+let lastHubHtml = '';
+let giostraFrame = 0;
+let giostraSizer = null;
+const giostraTrack = () => byId('quizHub')?.querySelector?.('.us-gv2-giostra-track') || null;
+function paintGiostra() {
+  giostraFrame = 0;
+  const track = giostraTrack();
+  if (!track?.getBoundingClientRect) return;
+  const box = track.getBoundingClientRect();
+  if (!box.width) return;
+  const mid = box.left + box.width / 2;
+  const cards = Array.from(track.children);
+  let best = null, bestD = Infinity;
+  for (const c of cards) {
+    const r = c.getBoundingClientRect();
+    const d = (r.left + r.width / 2 - mid) / (r.width || 1);
+    const k = Math.max(-1.5, Math.min(1.5, d));
+    c.style.setProperty('--d', k.toFixed(3));
+    c.style.setProperty('--ad', Math.abs(k).toFixed(3));
+    if (Math.abs(d) < bestD) { bestD = Math.abs(d); best = c; }
+  }
+  cards.forEach((c) => { c.dataset.gv2Active = c === best ? 'true' : 'false'; });
+  if (best) activeSlide = best.dataset.gv2Slide || activeSlide;
+  const at = cards.indexOf(best);
+  track.parentElement?.querySelectorAll?.('.us-gv2-giostra-dots i').forEach((dot, i) => { dot.dataset.on = String(i === at); });
+}
+function centerSlide(card, smooth = true) {
+  const track = card?.parentElement;
+  if (!track?.scrollTo) return;
+  const left = card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2;
+  track.scrollTo({ left, behavior: smooth && !reduced() ? 'smooth' : 'auto' });
+}
+// After each paint of the hub (every 45 s too) the card you were on stays in
+// the middle; the first time, the card waiting for you, or Per voi.
+function settleGiostra() {
+  const track = giostraTrack();
+  if (!track?.querySelector) return;
+  const keep = activeSlide && track.querySelector(`[data-gv2-slide="${activeSlide}"]`);
+  const want = keep || track.querySelector('[data-gv2-first]') || track.firstElementChild;
+  if (want) centerSlide(want, false);
+  paintGiostra();
+  // Painted while Gioca was hidden (no width yet): settle again once it shows.
+  if (typeof ResizeObserver === 'function') {
+    giostraSizer?.disconnect();
+    let seen = track.clientWidth;
+    giostraSizer = new ResizeObserver(() => {
+      if (track.clientWidth === seen) return;
+      seen = track.clientWidth;
+      const card = (activeSlide && track.querySelector(`[data-gv2-slide="${activeSlide}"]`)) || want;
+      if (card) centerSlide(card, false);
+      paintGiostra();
+    });
+    giostraSizer.observe(track);
+  }
+}
+function onGiostraScroll(event) {
+  if (!event.target?.classList?.contains('us-gv2-giostra-track')) return;
+  if (!giostraFrame) giostraFrame = (window.requestAnimationFrame || setTimeout)(paintGiostra);
+}
+function giostra(cards) {
+  return `<div class="us-gv2-giostra" data-s>
+    <div class="us-gv2-giostra-track" role="group" aria-roledescription="carosello" aria-label="I vostri giochi: scorri per sceglierne uno">${cards.join('')}</div>
+    <div class="us-gv2-giostra-dots" aria-hidden="true">${cards.map(() => '<i></i>').join('')}</div>
+  </div>`;
 }
 // Per voi is the first tile, in the page's colour: its state is the server's
 // per_voi (one line, and the note when the other one's question is inside).
@@ -392,22 +549,33 @@ function renderHub() {
  const onTiles=new Set();
  const tileStatus=(f)=>{const r=tileRound(f.id);if(r)onTiles.add(r.id);return modeStatus(f,r);};
  const spent=Boolean(allowance()&&!freeLeft());
- const perVoi=gameCard({id:'per_voi',name:PER_VOI.name,kind:'Una partita preparata apposta',action:'per-voi',extraClass:' is-pervoi',status:perVoiStatus(pvState),line:pvState==='idle'&&spent?'':(pv.note||pv.line),attrs:` data-gv2-state="${esc(pvState)}"`});
- const swipe=gameCard({id:'swipe',name:SWIPE.name,kind:'8 carte · veloce e privato',action:'swipe',extraClass:' is-swipe',status:tileStatus(SWIPE)});
- const families=OFFERED.map(f=>gameCard({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)})).join('');
- root.innerHTML=`
+ // The giostra holds the few games in the spotlight: Per voi, the game of the
+ // day and Questo o quello; every question game stays a tile below, as before.
+ const perVoi=gameCard({id:'per_voi',name:PER_VOI.name,kind:'Una partita preparata apposta',action:'per-voi',extraClass:' is-pervoi',status:perVoiStatus(pvState),line:pvState==='idle'&&spent?'':(pv.note||pv.line),attrs:` data-gv2-state="${esc(pvState)}"`,big:true});
+ const swipe=gameCard({id:'swipe',name:SWIPE.name,kind:'8 carte · veloce e privato',action:'swipe',extraClass:' is-swipe',status:tileStatus(SWIPE),big:true});
+ const pick=dailyPick();
+ const today=gameCard({id:pick.id,name:pick.name,kind:pick.kind,status:tileStatus(pick),big:true,badge:'Il gioco di oggi',extraClass:' is-oggi'});
+ const tiles=OFFERED.map(f=>({genre:f.genre,html:gameCard({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)})}));
+ const html=`
   <h2 class="us-gv2-sr">Gioca</h2>
   ${tokensCard()}
   ${waitingSection(home)}
   <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">
-   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3><small>${spent?'tornano domani':'bastano pochi minuti'}</small></div>
-   <div class="us-gv2-game-grid" data-s>
-    ${perVoi}${families}${swipe}
-   </div>
+   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">Oggi per voi</h3><small>${spent?'tornano domani':'scorri e scegli'}</small></div>
+   ${giostra([perVoi,today,swipe])}
+  </section>
+  <section class="us-gv2-all" aria-labelledby="usGv2AllTitle">
+   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2AllTitle">Tutti i giochi</h3><small>${spent?'tornano domani':'bastano pochi minuti'}</small></div>
+   ${allGames(tiles)}
   </section>
   ${weeklyCard(home?.weekly)}
   ${continueSection(home,onTiles)}
   ${doneSection(home)}`;
+ // The 45 s refresh paints the same hub again: keep the cards where they are.
+ if(html===lastHubHtml&&root.querySelector?.('.us-gv2-giostra'))return void window.UsDailyQuestionHub?.paintCard?.();
+ lastHubHtml=html;
+ root.innerHTML=html;
+ settleGiostra();
  window.UsDailyQuestionHub?.paintCard?.();
 }
 
@@ -533,9 +701,12 @@ async function startRound(family) {
     if(!sameIdentity())return false;
     if (error) throw error;
     startRequestIds.delete(family);
+    settleToken(data);
     await present(data);
+    load();
   } catch (error) {
     console.warn('[US Gioca] start', error);
+    paintTokens();
     const msg = error?.message || '';
     if (/weekly per voi played|weekly allowance exhausted|too many open rounds/.test(msg)) startRequestIds.delete(family);
     // The server keeps the old "weekly" error names for installed clients;
@@ -563,9 +734,12 @@ async function startSwipe() {
     if(!sameIdentity())return false;
     if (error) throw error;
     startRequestIds.delete('swipe');
+    settleToken(data);
     await present(data);
+    load();
   } catch (error) {
     console.warn('[US Gioca] swipe start', error);
+    paintTokens();
     const msg = error?.message || '';
     if (/weekly allowance exhausted|too many open rounds|not enough swipe content/.test(msg)) startRequestIds.delete('swipe');
     toast(/weekly allowance exhausted/.test(msg) ? EXHAUSTED
@@ -585,7 +759,7 @@ async function chooseSwipe(from) {
     if (played?.completed) return openSession(played.session_id);
     return toast(EXHAUSTED);
   }
-  flyToken(from);
+  if (canSpend()) flyToken(from);
   return startSwipe();
 }
 
@@ -598,7 +772,7 @@ async function chooseMode(family, from) {
     if (played?.completed) return openSession(played.session_id);
     return toast(EXHAUSTED);
   }
-  flyToken(from);
+  if (canSpend()) flyToken(from);
   return startRound(family);
 }
 
@@ -618,7 +792,7 @@ async function openPerVoi(from) {
   const sid = home?.per_voi?.session_id;
   if (sid) return openSession(sid);
   if (busy) return;
-  if (!allowance() || freeLeft()) flyToken(from);
+  if (canSpend()) flyToken(from);
   return startRound('per_voi');
 }
 
@@ -1186,6 +1360,8 @@ function onClick(event) {
   if (event.target?.hasAttribute?.('data-gv2-scrim')) { showHub(); return; }
   const button = event.target.closest('button');
   if (!button) return;
+  // La giostra: a side card comes to the middle; only the middle one plays.
+  if (button.dataset.gv2Slide && button.dataset.gv2Active === 'false') { centerSlide(button); return; }
   const action = button.dataset.gv2Action;
   if (action === 'per-voi') openPerVoi(button);
   else if (action === 'swipe') chooseSwipe(button);
@@ -1221,6 +1397,13 @@ function boot() {
   if (!hub.dataset.gv2Bound) {
     hub.dataset.gv2Bound = '1';
     hub.addEventListener('click', onClick);
+    // Scroll does not bubble: the track's scroll is caught on the way down.
+    hub.addEventListener('scroll', onGiostraScroll, { capture: true, passive: true });
+    // A card reached with the keyboard comes to the middle, so Enter plays it.
+    hub.addEventListener('focusin', (event) => {
+      const card = event.target?.closest?.('[data-gv2-slide]');
+      if (card && card.dataset.gv2Active === 'false' && card.matches?.(':focus-visible')) centerSlide(card);
+    });
     root.addEventListener('click', onClick);
     root.addEventListener('submit', onSubmit);
     // A choice enables "Avanti", as in the mockup.

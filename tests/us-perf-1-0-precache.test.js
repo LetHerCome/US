@@ -115,5 +115,8 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // two icons on top of Noi, Fase B: 3.25 -> 3.3 MB.
   // Ti penso ricevuto coi personaggi (25/11/2026) adds ~12 KB (the stage, the
   // three named replies, their motion) and drops ~2 KB of the old sheet: 3.3 -> 3.35 MB.
-  assert.ok(total <= 3.35 * 1024 * 1024, `precache is ${total} bytes: stays under 3.35 MB`);
+  // Gioca, gettoni e giostra (25/11/2026): the carousel of the games, the token
+  // that drops on the server's answer, the descriptions in two languages and the
+  // day colours of the tokens (~13 KB) cross it: 3.35 -> 3.4 MB.
+  assert.ok(total <= 3.4 * 1024 * 1024, `precache is ${total} bytes: stays under 3.4 MB`);
 });

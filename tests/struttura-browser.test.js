@@ -73,7 +73,7 @@ test('the island opens Il vostro angolo with Sintonia in three tabs; Gioca has n
     await page.waitForFunction(() => !document.getElementById('usAngolo').classList.contains('open'));
     await page.evaluate(() => window.openQuizHub({ nav: true }));
     await page.waitForFunction(() => document.querySelector('.page.active')?.id === 'quiz');
-    await page.waitForSelector('#quizHub .us-gv2-game-grid');
+    await page.waitForSelector('#quizHub .us-gv2-giostra');
     assert.equal(await page.locator('#quiz .us-gv2-daily, #quiz [data-gv4-daily-slot], #usGiocaTabs').count(), 0);
     assert.deepEqual(errors, []);
     await ctx.close();

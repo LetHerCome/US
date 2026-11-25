@@ -127,16 +127,19 @@ const round = (id, family, over = {}) => ({ id, game_family: family, item_count:
 // directly in "Da continuare", completed ones in one disclosure at the end.
 test('Gioca V4: six existing game IDs and hero are in one bento grid', async () => {
   const html = await gioca(homeOf()).hubHtml();
-  const ids = [...html.matchAll(/data-gv2-family="([a-z_]+)"/g)].map((m) => m[1]);
+  const all = html.slice(html.indexOf('class="us-gv2-all"'));
+  const ids = [...all.matchAll(/data-gv2-family="([a-z_]+)"/g)].map((m) => m[1]);
   // G7 1.0 — "E se…?" is no longer offered (old rounds still open by id).
   assert.deepEqual(ids, ['scopritevi', 'confrontatevi', 'ridete', 'quanto_mi_conosci', 'rivivete']);
-  assert.ok(html.indexOf('us-gv2-game-grid') < html.indexOf('data-gv2-action="per-voi"'), 'Per voi is the first bento tile inside the game grid');
+  assert.ok(html.indexOf('us-gv2-giostra-track') < html.indexOf('data-gv2-action="per-voi"'), 'Per voi is the first card of the giostra');
   assert.ok(html.indexOf('data-gv2-action="per-voi"') < html.indexOf('data-gv2-action="swipe"'), 'Per voi precedes Swipe in visual and keyboard order');
   assert.equal((html.match(/data-gv2-action="per-voi"/g) || []).length, 1);
   assert.equal((html.match(/data-gv2-action="swipe"/g) || []).length, 1, 'Swipe has exactly one entry');
-  assert.match(html, /<section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">[\s\S]*?<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3>[\s\S]*?<div class="us-gv2-game-grid" data-s>/);
+  assert.match(html, /<section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">[\s\S]*?<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">Oggi per voi<\/h3>[\s\S]*?<div class="us-gv2-giostra" data-s>/);
+  assert.match(html, /<section class="us-gv2-all" aria-labelledby="usGv2AllTitle">[\s\S]*?id="usGv2AllTitle">Tutti i giochi<\/h3>[\s\S]*?<div class="us-gv2-game-grid" data-s>/);
   assert.doesNotMatch(html, /us-gv2-deck|us-gv2-filters|data-gv2-filter/);
-  assert.doesNotMatch(read('games.css'), /\.us-gv2-game-grid\{[^}]*overflow-x/, 'discovering games never needs a sideways scroll');
+  // La giostra (founder, 25/11/2026) replaces «no sideways deck»: one track, snap to the middle, dots.
+  assert.match(read('dc-gioca.css'), /\.us-gv2-giostra-track\{[^}]*overflow-x:auto[^}]*scroll-snap-type:x mandatory/);
 });
 
 test('Gioca: a fresh week shows no "Da continuare" and no completed list (nothing is invented)', async () => {
@@ -158,7 +161,8 @@ test('Gioca: rounds are plain readings of open_rounds / recent, on their tiles; 
   const rows = [...section.matchAll(/data-gv2-session="([^"]+)" data-tone="([a-z]+)"/g)].map((m) => [m[1], m[2]]);
   assert.deepEqual(rows, [['o2', 'progress']]);
   assert.match(section, /<b>E se…\?<\/b>/);
-  const tiles = [...html.matchAll(/data-gv2-family="([a-z_]+)" data-gv2-mode-state="open" data-gv2-chip="[a-z]+" data-gv2-session="([^"]+)" data-tone="([a-z]+)"[^>]*>[\s\S]*?<small>([^<]+)<\/small>/g)].map((m) => m.slice(1));
+  const all = html.slice(html.indexOf('class="us-gv2-all"'));
+  const tiles = [...all.matchAll(/data-gv2-family="([a-z_]+)" data-gv2-mode-state="open" data-gv2-chip="[a-z]+" data-gv2-session="([^"]+)" data-tone="([a-z]+)"[^>]*>[\s\S]*?<small>([^<]+)<\/small>/g)].map((m) => m.slice(1));
   assert.deepEqual(tiles, [['scopritevi', 'o3', 'waiting', 'Aspetti Beatrice'], ['ridete', 'o1', 'turn', 'Tocca a te'], ['rivivete', 'r1', 'ready', 'Risposte pronte']]);
   // Fase 6 (D11): what waits for me is «Vi aspetta», first, the answers ready before my turn.
   const waiting = html.match(/<section class="us-gv2-vi-aspetta"[\s\S]*?<\/section>/)?.[0] || '';
