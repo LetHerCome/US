@@ -553,3 +553,11 @@
 :root[data-us-motion="reduced"] .us-cal-sheet .us-cal-switch input::after{transition:none}
 @media (prefers-reduced-motion:reduce){.us-cal-sheet .us-cal-switch input::after{transition:none}}
 .us-cal-sheet #usCalendarTimeFields[hidden],.us-cal-sheet .us-cal-allday-field[hidden]{display:none!important}
+
+/* ---------- Interruttori (founder, 25/11/2026: «fai vedere meglio il bordo e quando sono accesi colorali») ----------
+   identity.css paints every input with the field colour (!important), which
+   hid the «on» colour: here a clear edge when off, the main colour when on
+   (the two of you by night, ceralacca by day), a white knob. */
+.us-cal-sheet :is(.us-cal-switch,.us-cal-allday-field) input[type="checkbox"],#usEventForm .us-event-repeat input[type="checkbox"]{background:var(--us-color-elevated)!important;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--us-color-text) 32%,transparent)!important}
+.us-cal-sheet :is(.us-cal-switch,.us-cal-allday-field) input[type="checkbox"]:checked,#usEventForm .us-event-repeat input[type="checkbox"]:checked{background:var(--us-accent-gradient)!important;box-shadow:none!important}
+.us-cal-sheet :is(.us-cal-switch,.us-cal-allday-field) input[type="checkbox"]::after,#usEventForm .us-event-repeat input[type="checkbox"]::after{background:#fff!important;box-shadow:0 1px 4px rgba(0,0,0,.35)!important}

@@ -2,6 +2,14 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Interruttori più chiari (25/11)
+
+**Stato:** ramo `claude/interruttori`, verso il ramo fisso di staging. Founder, 25/11 (screenshot del nuovo impegno): «studia questi bottoni on/off, fai vedere meglio il bordo e quando sono accesi colorali».
+
+**Cosa cambia:** gli interruttori hanno un bordo ben visibile da spenti e si colorano da accesi: di notte con la sfumatura dei vostri due colori, di giorno in ceralacca; il pallino è bianco con un'ombra. Vale per il nuovo impegno («Ci vediamo», «Ogni anno»), gli eventi, il Profilo e le sue finestre. Prima l'acceso restava scuro: una regola generale dei campi copriva il colore.
+
+**Server:** niente.
+
 ### Oggi: il velo in fondo alla foto (25/11)
 
 **Stato:** ramo `claude/oggi-velo`, verso il ramo fisso di staging. Founder, 25/11: «il velo è carino, lo farei un po' meno accentuato e lo metterei anche alla dark mode, ovviamente nera».
