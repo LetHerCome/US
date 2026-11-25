@@ -2,9 +2,20 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Noi, Fase B.3: «Bea ti ha lasciato un post-it» (25/11)
+
+**Stato:** ramo `claude/noi-fase-b3`, verso il ramo fisso di staging; poi la funzione `send-web-push` va pubblicata su staging col via del founder. Founder, 25/11: «Chiudiamo Noi come hai proposto». Decisione D15 del grill-me di Noi.
+
+**Cosa cambia:**
+- **L'avviso:** chi scrive un post-it nuovo, quando lo chiude con qualcosa scritto, fa arrivare alla sua persona «Bea ti ha lasciato un post-it». Toccato, apre la lavagna.
+- **La stessa regola della lavagna:** stesso interruttore in Profilo › Notifiche, che ora dice «Quando la tua persona disegna o ti lascia un post-it». Al massimo un avviso ogni 2 ore, condiviso col disegno: se in un'ora disegni e lasci un post-it, arriva un avviso solo. Contano solo i post-it scritti da te negli ultimi 30 minuti.
+- **Android:** il telefono scrive l'avviso da sé, dal tipo «postit». Le app installate prima di questa versione mostrano l'avviso generico di US finché non si aggiornano.
+
+**Server:** la funzione `send-web-push` accetta il tipo `postit` (`dispatchPostitPush` in `_shared/lavagna-push-core.mjs`) e registra l'avviso come uno della lavagna. Nessuna migrazione.
+
 ### Noi, Fase B.2: le idee diventano impegni, «L'avete fatto?», le penne della coppia (25/11)
 
-**Stato:** ramo `claude/noi-fase-b2`, verso il ramo fisso di staging. Founder, 25/11: «Push e unione poi andiamo avanti con il resto». Decisioni D12 e D13 del grill-me di Noi; tavola «US · Noi, il vostro tempo» (schermate Idee e Fatto).
+**Stato:** in staging il 25/11 (PR #299, merge fafe2b95, sito …-sfafe2b95). Founder, 25/11: «Push e unione poi andiamo avanti con il resto». Decisioni D12 e D13 del grill-me di Noi; tavola «US · Noi, il vostro tempo» (schermate Idee e Fatto).
 
 **Cosa cambia:**
 - **Le vostre idee:** in primo piano, ogni idea ha il pallino del colore di chi l'ha avuta. Accanto c'è «Scegli il giorno», che chiude il post-it e fa scegliere il giorno nel calendario di Noi (la stessa scelta del dettaglio dell'idea); poi l'idea diventa un impegno e mostra «Fissata» col suo giorno. Se la tua persona dice che l'avete fatta, c'è «Sì, fatto» per confermare. In fondo c'è il campo «Un'idea nuova» e quante ne avete già fatte. Esce la spunta «vissuta» sul post-it (D13).
@@ -15,7 +26,7 @@
 
 ### Noi, Fase B.1: La lavagna con i post-it sopra (25/11)
 
-**Stato:** in staging il 25/11 (PR #298, merge a436904f, sito …-sa436904f); la migrazione va applicata a US-STAGING col via del founder. Founder, 25/11: «non abbiamo ancora inserito i post-it all'interno di lavagna», poi «si concordo» al piano (Fase B dopo gli interruttori). Decisioni D3–D5, D11, D12 del grill-me di Noi e tavola «US · Noi, il vostro tempo» (schermate Main e Lavagna).
+**Stato:** in staging il 25/11 (PR #298, merge a436904f, sito …-sa436904f); migrazione applicata a US-STAGING il 25/11 con «Supabase SQL (manual)» (run 45568004170), in produzione no. Founder, 25/11: «non abbiamo ancora inserito i post-it all'interno di lavagna», poi «si concordo» al piano (Fase B dopo gli interruttori). Decisioni D3–D5, D11, D12 del grill-me di Noi e tavola «US · Noi, il vostro tempo» (schermate Main e Lavagna).
 
 **Cosa cambia:**
 - **«La lavagna» al posto di «Bacheca»:** in Noi, sotto il giorno scelto, il disegno della lavagna più grande, con «+ Post-it» e «Apri». Sopra il disegno, i tre post-it più recenti e, nell'angolo in alto a destra, «Le vostre idee» con quante ne restano da vivere. Senza disegno e senza post-it, i due personaggi invitano a disegnare (D3, D5, D11).

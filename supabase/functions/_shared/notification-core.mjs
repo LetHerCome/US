@@ -108,6 +108,9 @@ const CATALOGUE = Object.freeze({
   relationship: (a, en) => ({ ...relationshipCopy(a, en), target: a.kind ? 'events' : 'home', tag: a.tag, channel: 'reminders', urgency: 'normal', ttl: 60 * 60 * 24 }),
   // Lavagna V1: the partner drew; one tag, so a newer line replaces the older.
   lavagna: (a, en) => ({ title: pick(en, 'US. · Lavagna', 'US. · Board'), body: pick(en, `${name(a.senderName)} ha disegnato sulla lavagna`, `${name(a.senderName, true)} drew on the board`), target: 'lavagna', ref: a.strokeId, tag: 'us-lavagna', channel: 'partner', urgency: 'normal' }),
+  // Noi, Fase B.3 (D15): a new post-it on the lavagna, same tag as the drawing
+  // (one line for the board), it opens the board too.
+  postit: (a, en) => ({ title: pick(en, 'US. · Lavagna', 'US. · Board'), body: pick(en, `${name(a.senderName)} ti ha lasciato un post-it`, `${name(a.senderName, true)} left you a sticky note`), target: 'lavagna', ref: a.noteId, tag: 'us-lavagna', channel: 'partner', urgency: 'normal' }),
   // La sfida della settimana (03/11/2026): Monday its title, Saturday a
   // reminder, and for a couple apart the other one's photo. They open Gioca.
   challenge_new: (a, en) => ({ title: CHALLENGE_TITLE(en), body: a.title || pick(en, 'C’è una nuova sfida per voi ♡', 'There is a new challenge for you two ♡'), target: 'quiz', ref: a.challengeId, tag: `challenge-new-${a.challengeId}`, channel: 'reminders', urgency: 'normal' }),

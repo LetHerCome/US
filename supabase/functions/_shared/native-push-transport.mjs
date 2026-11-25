@@ -136,6 +136,8 @@ export const ANDROID_NOTICE_KINDS = Object.freeze({
   relationship: 'anniversary',
   partner_joined: 'partner_joined',
   lavagna: 'lavagna',
+  // Noi, Fase B.3: an older app shows the generic line until it knows the kind.
+  postit: 'postit',
   challenge_new: 'challenge',
   challenge_reminder: 'challenge_reminder',
   challenge_photo: 'challenge_photo',

@@ -2818,6 +2818,7 @@
     'Tratto non salvato. Riprova tra poco.': 'Stroke not saved. Try again in a moment.',
     'Non riesco a pulire la lavagna adesso.': 'I can’t clean the board right now.',
     'Quando la tua persona disegna sulla lavagna': 'When your person draws on the board',
+    'Quando la tua persona disegna o ti lascia un post-it': 'When your person draws or leaves you a sticky note',
     'L’ultimo disegno sulla vostra lavagna. Toccalo per disegnare.': 'The last drawing on your board. Tap it to draw.',
 
     // ------------------------------------------------------- Il vostro anno

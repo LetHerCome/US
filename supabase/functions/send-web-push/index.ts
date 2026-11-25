@@ -4,7 +4,7 @@ import webpush from "npm:web-push@3.6.7";
 import { vapidSubject } from "../_shared/web-push-vapid.mjs";
 import { dispatchThinkReactionWebPush, dispatchThinkWebPush } from "../_shared/think-web-push.ts";
 import { dispatchLeftForYouPush } from "../_shared/left-for-you-push-core.mjs";
-import { dispatchLavagnaPush } from "../_shared/lavagna-push-core.mjs";
+import { dispatchLavagnaPush, dispatchPostitPush } from "../_shared/lavagna-push-core.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 import { buildNotification, deliverNotification, recipientLocale } from "../_shared/notification-core.mjs";
 import { nativeTransport } from "../_shared/native-push-env.ts";
@@ -12,8 +12,8 @@ import { nativeTransport } from "../_shared/native-push-env.ts";
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,x-client-info,apikey,content-type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Content-Type": "application/json" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
-type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "lavagna" | "challenge_photo";
-const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "challenge_photo"];
+type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "lavagna" | "postit" | "challenge_photo";
+const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "postit", "challenge_photo"];
 // US 1.0 (A2): a join older than this is not "just joined" (legacy couples, stale retries).
 const PARTNER_JOINED_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -101,13 +101,16 @@ Deno.serve(async (request) => {
       }));
     }
 
-    if (type === "lavagna") {
+    if (type === "lavagna" || type === "postit") {
       // Lavagna V1 (03/11/2026): reference_id = the stroke the caller just
       // saved. At most one push every 2 hours for the partner (lavagna-push-core).
+      // Noi, Fase B.3 (D15): or the post-it the caller just wrote, same rule.
       if (!partner || typeof body.reference_id !== "string" || !UUID.test(body.reference_id)) return json({ error: "Missing lavagna reference" }, 400);
       try {
-        const result = await dispatchLavagnaPush(admin, {
+        const dispatch = type === "postit" ? dispatchPostitPush : dispatchLavagnaPush;
+        const result = await dispatch(admin, {
           strokeId: body.reference_id,
+          noteId: body.reference_id,
           sender,
           partnerId: partner.id,
           web: {

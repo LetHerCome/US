@@ -36,7 +36,7 @@ public final class UsPushNotices {
     public static final String[] KINDS = {
         "test", "think", "think_reply", "daily_turn", "daily_ready", "daily_reaction", "daily_new",
         "quest", "left_for_you", "game_turn", "game_ready", "game_weekly", "game_weekly_turn",
-        "calendar", "anniversary", "partner_joined", "lavagna", "challenge", "challenge_reminder", "challenge_photo",
+        "calendar", "anniversary", "partner_joined", "lavagna", "postit", "challenge", "challenge_reminder", "challenge_photo",
     };
 
     /** A display name: no control characters, trimmed, at most 40 characters. */
@@ -105,6 +105,9 @@ public final class UsPushNotices {
             case "lavagna":
                 return notice(en, "US. · Lavagna", "US. · Board",
                     who + " ha disegnato sulla lavagna", who + " drew on the board", "noi");
+            case "postit":
+                return notice(en, "US. · Lavagna", "US. · Board",
+                    who + " ti ha lasciato un post-it", who + " left you a sticky note", "noi");
             case "challenge":
                 return notice(en, "US. · La sfida della settimana", "US. · This week's challenge",
                     "C’è una nuova sfida per voi ♡", "There is a new challenge for you two ♡", "gioca");
