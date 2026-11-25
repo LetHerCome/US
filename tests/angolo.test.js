@@ -49,12 +49,15 @@ test('Il vostro angolo: a sheet with the two characters and Sintonia inside', ()
 test('who opens it: the characters, the Sintonia links, a finished mission; Back closes it', () => {
   const p = read('personaggi.js');
   assert.match(p, /const entry = target\.closest\('\[data-us-angolo\]'\);\n      if \(entry\) \{ openAngolo\(entry\.dataset\.usAngolo \|\| ''\); return; \}/);
-  assert.match(p, /w\.UsAngolo = Object\.freeze\(\{ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola \}\);/);
+  assert.match(p, /w\.UsAngolo = Object\.freeze\(\{ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla \}\);/);
   // L'isola (25/11/2026): first tap opens it, second opens the angolo; by itself the first time and at a new level.
-  assert.match(p, /if \(target\.closest\('\[data-us-isola\]'\)\) \{ tapIsola\(\); return; \}/);
+  // Only the island's button: the open bar carries data-us-isola too, and a tap on the envelope or the bubble is not a tap on the island.
+  assert.match(p, /if \(target\.closest\('button\[data-us-isola\]'\)\) \{ tapIsola\(\); return; \}/);
   assert.match(p, /if \(isola\(\)\?\.getAttribute\('aria-expanded'\) === 'true'\) \{ setIsola\(false\); openAngolo\(\); \}/);
-  assert.match(p, /if \(!seen\) \{ writeSeen\(level\); setIsola\(true, \{ ms: PEEK_MS, reaction: 'cuore' \}\); return; \}/);
-  assert.match(p, /if \(level > \(Number\(seen\.level\) \|\| 0\)\) \{ writeSeen\(level\); setIsola\(true, \{ ms: PEEK_MS, reaction: 'festa' \}\); return; \}/);
+  // US vi ricorda (25/11/2026, D19): the first time is the characters' introduction (us-ricorda.js);
+  // a new level is said in the bubble, with the party.
+  assert.match(p, /if \(!seen\) \{ writeSeen\(level\); if \(!w\.UsRicorda\) setIsola\(true, \{ ms: PEEK_MS, reaction: 'cuore' \}\); return; \}/);
+  assert.match(p, /if \(level > \(Number\(seen\.level\) \|\| 0\)\) \{\s*writeSeen\(level\);[\s\S]{0,200}parla\(\{ text: rank \? `Siete al livello \$\{level\}: \$\{rank\}!`/);
   assert.match(p, /showTab\(place === 'look' \? 'look' : 'voi', \{ focus: false \}\);/, 'Cambia look opens the Guardaroba');
   // What the Sintonia tab loaded before.
   assert.match(p, /w\.hydrateBond\?\.\(\);\n    w\.hydrateResonanceHistory\?\.\(\);\n    w\.USProgression\?\.hydrate\?\.\(\{ showUnlocks: true, force: true \}\);/);

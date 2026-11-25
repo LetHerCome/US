@@ -175,6 +175,7 @@ html.us-returning-device .auth-overlay{
 <script defer src="/person-colors.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/aspetto.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/personaggi.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/us-ricorda.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/app-lock.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/notifications.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/auth-first-run.js?v=us-rilascio-20261114-109"></script>
@@ -476,7 +477,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 
 <div class="app">
 
-  <div class="top us-premium-top"><span class="us-aurora" aria-hidden="true"></span><div class="us-top-left"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon" data-us-attention-icon><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span><span class="beat" aria-hidden="true"><i></i><i></i></span></button></div><div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true" decoding="async" draggable="false"></div><button type="button" class="us-isola" id="usIsola" aria-expanded="false" aria-label="US: tocca per Il vostro angolo" data-us-isola hidden><span class="us-isola-window" aria-hidden="true" data-us-isola-duo></span><span class="us-isola-words" aria-hidden="true"><b>Il vostro angolo</b><span data-us-isola-level>Tocca qui</span></span></button><div class="top-actions"><button type="button" class="us-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top us-premium-top"><span class="us-aurora" aria-hidden="true"></span><div class="us-top-left"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon" data-us-attention-icon><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span><span class="beat" aria-hidden="true"><i></i><i></i></span></button></div><div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true" decoding="async" draggable="false"></div><button type="button" class="us-isola" id="usIsola" aria-expanded="false" aria-label="US: tocca per Il vostro angolo" data-us-isola hidden><span class="us-isola-window" aria-hidden="true" data-us-isola-duo></span><span class="us-isola-words" aria-hidden="true"><b>Il vostro angolo</b><span data-us-isola-level>Tocca qui</span></span></button><div class="us-fumetto" id="usFumetto" data-speaker="me" hidden><button type="button" class="us-fumetto-body" data-us-fumetto><span class="us-fumetto-text" data-us-fumetto-text></span><span class="us-fumetto-cta" data-us-fumetto-cta hidden></span></button></div><div class="top-actions"><button type="button" class="us-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -564,6 +565,8 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <button type="button" role="tab" id="usAngoloTabPremi" aria-selected="false" aria-controls="usAngoloPremi" data-angolo-tab="premi" tabindex="-1">Premi</button>
         </div>
         <div class="us-angolo-panel" id="usAngoloVoi" role="tabpanel" aria-labelledby="usAngoloTabVoi" data-angolo-panel="voi" data-angolo-slot="voi">
+          <!-- US vi ricorda (25/11/2026): the line of today, until the evening (us-ricorda.js). -->
+          <section class="us-angolo-oggi" id="usAngoloOggi" aria-label="Oggi ti ho detto" hidden></section>
           <section class="us-angolo-cresci" id="usAngoloCresci" aria-labelledby="usAngoloCresciTitle">
             <h3 id="usAngoloCresciTitle">Per crescere insieme</h3>
             <button type="button" data-sintonia-go="daily" data-tone="tu"><span class="us-angolo-cresci-mark" aria-hidden="true"><span class="us-icon" data-us-icon="question"></span></span><span><b>La domanda di oggi</b><small>Conta ogni risposta condivisa</small></span><em>Rispondi</em></button>
@@ -1377,6 +1380,14 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usNoiV2WeekBack" hidden data-us-modal-close aria-label="Chiudi la lavagna"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="us-noi-lavagna-body" id="usNoiV2Week" aria-live="polite"></div>
+  </section>
+</div>
+
+<!-- US vi ricorda (founder, 25/11/2026): the sheet of the characters' line, with the gesture ready (us-ricorda.js). -->
+<div class="us-cal-sheet-overlay us-battuta" id="usBattuta" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-cal-sheet-backdrop us-modal-backdrop" data-battuta-close></div>
+  <section class="us-cal-sheet us-sheet is-bottom us-battuta-sheet" role="dialog" aria-modal="true" aria-labelledby="usBattutaText" data-us-modal-panel>
+    <div class="us-battuta-body" id="usBattutaBody"></div>
   </section>
 </div>
 

@@ -59,7 +59,8 @@
     "20261120232852_personaggi_guardaroba.sql",
     "20261123231417_personaggi_scala_premi.sql",
     "20261124233000_calendario_ci_vediamo.sql",
-    "20261125120000_couple_notes_posto.sql"
+    "20261125120000_couple_notes_posto.sql",
+    "20261125200000_us_vi_ricorda_v1.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
@@ -114,7 +115,8 @@
     "20261120232852_personaggi_guardaroba.sql",
     "20261123231417_personaggi_scala_premi.sql",
     "20261124233000_calendario_ci_vediamo.sql",
-    "20261125120000_couple_notes_posto.sql"
+    "20261125120000_couple_notes_posto.sql",
+    "20261125200000_us_vi_ricorda_v1.sql"
   ],
   "counts": {
     "repo_files": 47,

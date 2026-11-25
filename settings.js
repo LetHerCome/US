@@ -399,6 +399,15 @@ async function locationAction(){
   setTimeout(hydrateUsSettings,450);
 }
 
+// US vi ricorda (25/11/2026, D22): the characters' lines, on by default; off is the '*' mute (us-ricorda.js).
+function vociToggle(){
+  if(!window.UsRicorda?.setVoci)return '';
+  const on=window.UsRicorda.voci?.()!==false;
+  return `<button type="button" class="us-settings2-toggle-row" data-us-voci aria-pressed="${on?'true':'false'}">
+    <span><b>Le voci dei personaggi</b><small>Ogni tanto vi ricordano le vostre cose</small></span>
+    <i class="${on?'on':''}"><u></u></i>
+  </button>`;
+}
 function preferenceToggle(key,label,checked){
   return `<button type="button" class="us-settings2-toggle-row" data-pref="${key}" aria-pressed="${checked?'true':'false'}">
     <span><b>${label}</b><small>${key==='think'?'Quando la tua persona ti pensa':key==='today'?'Quando arriva e quando le risposte sono pronte':key==='bond'?'Il lunedì la nuova, il sabato un promemoria':key==='left_for_you'?'Quando la tua persona ti lascia qualcosa':key==='games'?'Quando tocca a te':key==='lavagna'?'Quando la tua persona disegna o ti lascia un post-it':'Mesiversario, anniversario ed eventi'}</small></span>
@@ -642,6 +651,7 @@ async function notificationsModal(){
       ${preferenceToggle('left_for_you','Lasciato per te',p.left_for_you!==false)}
       ${preferenceToggle('games','Gioca',p.games!==false)}
       ${preferenceToggle('lavagna','Lavagna',p.lavagna!==false)}
+      ${vociToggle()}
     </div>
     <p class="us-settings2-note">Valgono per il tuo account, su ogni telefono.</p>
   `,state.native?(state.kind==='denied'||state.kind==='settings'?'PERMESSO':'NOTIFICHE'):state.permission==='denied'?'PERMESSO':'NOTIFICHE');
@@ -653,6 +663,14 @@ async function notificationsModal(){
     closeModal();setTimeout(()=>{hydrateUsSettings();notificationsModal();},250);
   });
 
+  $('usSettingsModalBody').querySelector('[data-us-voci]')?.addEventListener('click',async e=>{
+    const btn=e.currentTarget,next=btn.getAttribute('aria-pressed')!=='true';
+    btn.disabled=true;
+    const ok=await window.UsRicorda?.setVoci?.(next);
+    btn.disabled=false;
+    if(!ok){window.toast?.('Non riesco a salvarlo. Riprova.');return;}
+    btn.setAttribute('aria-pressed',String(next));btn.querySelector('i')?.classList.toggle('on',next);
+  });
   $('usSettingsModalBody').querySelectorAll('[data-pref]').forEach(btn=>btn.addEventListener('click',async()=>{
     const key=btn.dataset.pref;
     const next=btn.getAttribute('aria-pressed')!=='true';

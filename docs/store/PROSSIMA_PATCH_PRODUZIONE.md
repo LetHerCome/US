@@ -2,9 +2,31 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### US vi ricorda: i personaggi parlano (25/11)
+
+**Stato:** ramo `claude/us-ricorda`, verso il ramo fisso di staging; la migrazione va applicata a US-STAGING col via del founder. Su staging prova solo il founder; in produzione forse direttamente con la seconda versione (founder, 25/11). Progetto: `docs/product/2026-11-25-us-vi-ricorda.md`, tavola «US · US vi ricorda» (https://claude.ai/artifact/DTNvLPsQM8ZVATXuhxUUpv), approvata: «Approvo la tavola».
+
+**Cosa cambia:**
+- **US si ricorda le vostre cose e ogni tanto ve le dice**, al massimo una volta al giorno e solo quando c'è qualcosa di vero, dalle 9 alle 21 (i ricordi dalle 17):
+  - il compleanno dell'altra persona, 7 giorni prima, il giorno prima e il giorno stesso, detto solo a te;
+  - l'anniversario, una settimana prima a ognuno come sorpresa e il giorno stesso a tutti e due;
+  - i mesiversari e i giorni tondi (100, 200…);
+  - «un anno fa»: un ricordo (col luogo), un «Ci vediamo» o un'idea fatta, a uno dei due a turno;
+  - le prime volte in un posto nuovo e i numeri tondi dei ricordi;
+  - «ti aspetta», quando l'altro ha risposto o giocato e tu no;
+  - una domanda per conoscervi quando manca qualcosa (il tuo compleanno, il primo ricordo), mai due giorni di fila.
+- **Il fumetto:** quando c'è una battuta l'isola si apre da sola, i personaggi si affacciano e dal tuo esce un fumetto con la frase; per le cose di coppia parlano tutti e due. La prima volta si presentano. Il livello nuovo ora si dice anche lui col fumetto, coi personaggi in festa. Dopo 8 secondi si richiude.
+- **La scheda:** toccando il fumetto si apre la scheda con la frase, la foto del ricordo se c'è, il tasto del gesto già pronto (Lasciato per te col testo o con la foto dentro, Ricordi, il calendario per il compleanno, la domanda, Gioca) e «Non ora». Si manda sempre da sé: US non manda niente per nessuno.
+- **Dire di no:** tenendo premuto il fumetto, o dalla scheda, «Non dirmelo più» spegne quel tipo di battuta. In Profilo › Notifiche c'è «Le voci dei personaggi», acceso di base.
+- **Nella scheda Voi** dell'angolo, «Oggi ti ho detto» tiene la battuta del giorno fino a sera.
+- **Isola:** quando era aperta, un tocco sulla busta o sul profilo apriva l'angolo; ora lo apre solo il tocco sull'isola.
+- **Le frasi** sono scritte a mano, 5 varianti per tipo, solo in italiano per ora.
+
+**Server:** nuova migrazione `20261125200000_us_vi_ricorda_v1.sql`: le tabelle `us_battute` (la battuta del giorno di ognuno: tipo e pochi valori, mai il testo), `us_battute_planned` e `us_battute_mute`; le regole in `private.us_ricorda_plan_couple` (solo dati che entrambi vedono già, con una lista di parole delicate escluse); le funzioni `get_my_battuta_v1`, `mark_my_battuta_v1`, `set_my_battute_mute_v1`. La giornata della coppia si prepara alla prima apertura dell'app di quel giorno, senza lavori programmati. Nessuna AI: i dati non escono da US.
+
 ### Tocchi pronti dopo ogni foglio (25/11)
 
-**Stato:** ramo `claude/calendario-tap`, verso il ramo fisso di staging. Founder, 25/11: «i tap non sono reattivi sul calendario».
+**Stato:** in staging il 25/11 (PR #303, merge 55c88bcf). Founder, 25/11: «i tap non sono reattivi sul calendario».
 
 **Cosa cambia:**
 - **La causa:** chiuso un foglio (il giorno di Noi, ma anche gli altri), l'app restava bloccata finché il foglio non finiva di sparire. Per il giorno di Noi, che non aveva una sua animazione d'uscita, il blocco durava un secondo intero: il tocco sul giorno dopo si perdeva.

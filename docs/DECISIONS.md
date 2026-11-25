@@ -529,3 +529,13 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 
 - **Guardaroba:** i primi cinque accessori restano a 150, 400, 700, 1000 e 1350 punti; gala, cuffie, coroncina e corona arrivano all'inizio dei livelli 8, 11, 14 e 19 (4550, 8750, 14300, 26550 punti), che dopo l'uscita di Atmosfere, Colore di Noi e compagni erano vuoti. Il server tiene la regola (migrazione `20261123231417_personaggi_scala_premi.sql`, solo staging finché il founder non dice altro). Il momento del nuovo livello nomina l'accessorio.
 - **Simbolo US:** resta tra i premi della Sintonia (effetti ai livelli 6, 9 e 13). Sostituisce la parte di D4 del 23/11 che lo faceva uscire.
+
+## 2026-11-25 — La crescita di US: US vi ricorda, i personaggi parlano
+
+**Fonte:** founder, 25/11/2026: «US deve essere un'app che cresce insieme alla coppia… al momento come cresce?», poi «tutto quanto US pian piano ricorda… e facciamo parlare i personaggini, raramente»; /grill-me D1–D22 confermato con «Tutto okay possiamo partire». Progetto: [`docs/product/2026-11-25-us-vi-ricorda.md`](product/2026-11-25-us-vi-ricorda.md).
+
+- **Crescere** vuol dire che US conosce sempre di più la coppia e le restituisce le sue cose (date, un anno fa, ti aspetta, traguardi, il gioco «Ti ricordi?») per bocca dei personaggi; la crescita si vede in «Cosa US sa di voi». È gratis per tutti.
+- **A regole, senza AI** nella prima versione: i dati non escono da US. L'AI si valuta dopo, col sì di tutti e due e un nuovo fornitore dichiarato.
+- **Regole fisse:** parla il tuo personaggio; al massimo una battuta al giorno, 9–21; solo dati che entrambi vedono già, con una lista di parole delicate; sorprese a senso unico; ogni battuta prepara il gesto, mai lo fa al posto di nessuno; «Non ora», «Non dirmelo più» e un interruttore unico.
+- **Staging e produzione:** su staging prova solo il founder; in produzione si va eventualmente direttamente con la seconda versione, perché US è in beta. Ogni passo con tavola prima, migrazione e lavoro notturno su staging col suo sì.
+- **Sostituisce** la parte di Cupido del 13/11 che legava la voce ai Compagni, a US Plus e al livello 3: i Compagni non ci sono più e la crescita è gratis.

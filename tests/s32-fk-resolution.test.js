@@ -19,6 +19,8 @@ const PERSONAL_CASCADE=new Set([
   'profiles>couple_batteries.user_id','profiles>device_push_tokens.user_id',
   // Come stai (02/11/2026): the state and its form go with the person.
   'profiles>member_status.user_id',
+  // US vi ricorda (25/11/2026): the lines said to a person and their «Non dirmelo più» go with them.
+  'profiles>us_battute.recipient_id','profiles>us_battute_mute.user_id',
   // La sfida della settimana (03/11/2026): who sent which photo goes with the person (the Ricordo follows its own rule).
   'profiles>couple_weekly_challenge_photos.user_id',
   'profiles>notification_preferences.user_id','profiles>partner_knowledge_attempts.user_id','profiles>progression_reward_views.profile_id',
@@ -63,7 +65,7 @@ test('every user reference is classified, and shared content fails closed',async
       else assert.fail('unclassified user reference: '+key+' — decide what account deletion does with it');
     }
     for(const key of [...PERSONAL_CASCADE,...OPERATIONAL_SET_NULL,...SHARED_FAIL_CLOSED])assert.ok(seen.has(key),'stale classification '+key);
-    assert.equal(seen.size,45);
+    assert.equal(seen.size,47);
   }finally{await db.close();}
 });
 
