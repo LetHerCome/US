@@ -682,9 +682,9 @@ body.us-gv2-sheet-open{overflow:hidden}
 #quiz #quizHub .us-gv2-tokens-plus .us-gv2-tokens-copy{flex:1}
 #quiz #quizHub .us-gv2-tokens-plus .us-gv2-tokens-copy b{font-size:14.5px}
 #quiz #quizHub .us-gv2-tokens-plus button{flex:0 0 auto;min-height:44px;padding:0 16px;border-radius:22px;border:1px solid color-mix(in srgb,var(--us-pg) 50%,transparent);background:color-mix(in srgb,var(--us-pg) 10%,transparent);color:var(--us-color-text);font:700 13.5px/1 var(--us-font-ui)}
-#quiz #quizHub :is(.us-gv2-vi-aspetta,.us-gv2-choose,.us-gv2-continue) .us-gv2-section-title{margin:0;font:800 11.5px/1.2 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-pg)}
-#quiz #quizHub .us-gv2-choose .us-gv2-section-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
-#quiz #quizHub .us-gv2-choose .us-gv2-section-head small{font-size:12.5px;color:var(--us-color-text-2)}
+#quiz #quizHub :is(.us-gv2-vi-aspetta,.us-gv2-choose,.us-gv2-all,.us-gv2-continue) .us-gv2-section-title{margin:0;font:800 11.5px/1.2 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-pg)}
+#quiz #quizHub :is(.us-gv2-choose,.us-gv2-all) .us-gv2-section-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
+#quiz #quizHub :is(.us-gv2-choose,.us-gv2-all) .us-gv2-section-head small{font-size:12.5px;color:var(--us-color-text-2)}
 #quiz #quizHub .us-gv2-vi-aspetta{display:flex;flex-direction:column;gap:10px}
 #quiz #quizHub .us-gv2-vi-aspetta-rows{display:flex;flex-direction:column;gap:8px}
 #quiz #quizHub .us-gv2-aspetta{display:flex;align-items:center;gap:12px;width:100%;min-height:70px;padding:12px 14px;border-radius:22px;border:1px solid rgba(247,239,233,.1);background:rgba(247,239,233,.05);color:var(--us-color-text);text-align:left;font:inherit;transition:transform var(--us-motion-press,.12s) ease}
@@ -773,3 +773,12 @@ body.us-gv2-sheet-open{overflow:hidden}
   #quiz #quizHub .us-gv2-giostra .us-gv2-game[data-gv2-active="true"] .us-gv2-art{animation:none}
   #quiz #quizHub .us-gv2-giostra-dots i{transition:none}
 }
+/* La giostra in evidenza e «Tutti i giochi» sotto (25/11/2026): the game of
+   the day wears its label; the tiles stay the ones from before, and an odd
+   last tile takes the whole row (lying down, as Questo o quello did). */
+#quiz #quizHub .us-gv2-giostra .us-gv2-carta-badge{position:absolute;top:14px;left:14px;display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:12px;background:var(--us-color-surface);color:var(--us-pg);font:700 11.5px/1 var(--us-font-ui);letter-spacing:.02em;box-shadow:0 1px 4px rgba(26,16,32,.12)}
+#quiz #quizHub .us-gv2-all{display:block;margin:26px 0 0}
+#quiz #quizHub .us-gv2-all .us-gv2-game-grid .us-gv2-game:last-child:nth-child(odd){grid-column:1/-1;flex-direction:row;align-items:center;justify-content:flex-start;gap:14px;min-height:88px}
+#quiz #quizHub .us-gv2-all .us-gv2-game-grid .us-gv2-game:last-child:nth-child(odd) .us-gv2-game-top{flex:none}
+#quiz #quizHub .us-gv2-genre+.us-gv2-genre{margin-top:18px}
+#quiz #quizHub .us-gv2-genre-title{margin:0 2px 8px;font:700 12px/1.4 var(--us-font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--us-color-text-3)}

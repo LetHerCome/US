@@ -8,7 +8,8 @@
 
 **Cosa cambia:**
 - **I gettoni scendono davvero:** quando parte una partita nuova il gettone vola e la scritta passa subito a «Ancora 2 su 3 oggi»; chiudendo la partita non torna più a 3. Riprendere una partita già aperta non costa niente e il gettone resta acceso.
-- **La giostra:** «I vostri giochi» diventa una fila di carte grandi da scorrere col dito, con il disegno del gioco, due righe su cosa si fa, la durata e il tasto: «Gioca» col gettone che costa, «Continua», «Rispondi» o «Scopri» quando la partita è già aperta, «Domani» quando i gettoni sono finiti. Si sceglie scorrendo: la carta al centro è quella che parte.
+- **Oggi per voi:** in cima ai giochi, tre carte grandi da scorrere col dito: Per voi, «Il gioco di oggi» (cambia ogni giorno) e Questo o quello. Ogni carta ha il disegno del gioco, due righe su cosa si fa, la durata e il tasto: «Gioca» col gettone che costa, «Continua», «Rispondi» o «Scopri» quando la partita è già aperta, «Domani» quando i gettoni sono finiti. La carta al centro è quella che parte.
+- **Tutti i giochi:** sotto restano le schede di sempre, due per riga. Quando arriveranno altri giochi si divideranno da sole per genere (Per conoscervi, Per parlarvi, Per ridere, Per ricordare).
 - **Di giorno** i gettoni spenti e il riquadro «Domani altre 3» ora si vedono.
 
 **In produzione:** solo sito e app (stessa versione su AAB e TestFlight); nessuna migrazione.

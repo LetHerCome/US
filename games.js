@@ -9,11 +9,11 @@ if (window.USGameV2) return;
 
 // V3 — each family says in a few words what kind of moment it is.
 const FAMILIES = [
-  { id: 'scopritevi', name: 'Scopritevi', icon: 'binoculars', kind: 'Quanto vi conoscete' },
-  { id: 'confrontatevi', name: 'Confrontatevi', icon: 'arrows-left-right', kind: 'Due punti di vista' },
-  { id: 'ridete', name: 'Ridete', icon: 'smiley', kind: 'Leggero e un po’ assurdo' },
-  { id: 'quanto_mi_conosci', name: 'Quanto mi conosci?', icon: 'question', kind: 'Chi conosce meglio chi' },
-  { id: 'rivivete', name: 'Rivivete', icon: 'images', kind: 'I vostri momenti' },
+  { id: 'scopritevi', name: 'Scopritevi', icon: 'binoculars', kind: 'Quanto vi conoscete', genre: 'conoscervi' },
+  { id: 'confrontatevi', name: 'Confrontatevi', icon: 'arrows-left-right', kind: 'Due punti di vista', genre: 'parlarvi' },
+  { id: 'ridete', name: 'Ridete', icon: 'smiley', kind: 'Leggero e un po’ assurdo', genre: 'ridere' },
+  { id: 'quanto_mi_conosci', name: 'Quanto mi conosci?', icon: 'question', kind: 'Chi conosce meglio chi', genre: 'conoscervi' },
+  { id: 'rivivete', name: 'Rivivete', icon: 'images', kind: 'I vostri momenti', genre: 'ricordare' },
   // 1.0: E se…? is no longer offered (its questions live in Confrontatevi);
   // the entry stays so old rounds still open with their name and icon.
   { id: 'e_se', name: 'E se…?', icon: 'signpost', kind: 'Scenari, futuri, possibilità', retired: true },
@@ -400,7 +400,7 @@ const GAME_DESC = Object.freeze({
   rivivete: 'Domande sui vostri momenti, per ricordarli in due.',
   swipe: 'Una carta, due scelte: trascinala da una parte. Alla fine vedete dove coincidete.',
 });
-const GAME_META = Object.freeze({ swipe: '8 carte · 2 minuti' });
+const GAME_META = Object.freeze({ swipe: '8 carte · 2 min' });
 const TOKEN_MINI = `<span class="us-gv2-costo" aria-hidden="true"><i>${icon('heart-straight-fill')}</i>1</span>`;
 function cardAction(card, id) {
   if (card.state === 'locked') return { text: 'Domani', cost: false };
@@ -411,7 +411,9 @@ function cardAction(card, id) {
   if (card.state === 'played') return id === 'per_voi' && home?.per_voi?.session_id ? { text: 'Rivedi', cost: false } : { text: 'Gioca ancora', cost: true };
   return { text: 'Gioca', cost: true };
 }
-function gameCard({ id, name, kind, action, extraClass = '', status, line: own = '', attrs = '' }) {
+// big: a card of the giostra (description, length, the button and its cost);
+// otherwise the small tile of «Tutti i giochi», as before.
+function gameCard({ id, name, kind, action, extraClass = '', status, line: own = '', attrs = '', big = false, badge = '' }) {
   const card = cardState(status);
   const locked = card.state === 'locked';
   const data = action === 'swipe' ? 'data-gv2-action="swipe"' : action === 'per-voi' ? 'data-gv2-action="per-voi"' : `data-gv2-family="${id}"`;
@@ -419,12 +421,41 @@ function gameCard({ id, name, kind, action, extraClass = '', status, line: own =
   const line = own || (card.state === 'ready' ? kind : card.state === 'played' ? 'questa settimana' : locked ? 'torna domani' : card.text);
   const act = cardAction(card, id);
   const first = card.tone === 'ready' || card.tone === 'turn' ? ' data-gv2-first' : '';
-  return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-game${extraClass}" ${data} data-gv2-mode-state="${esc(card.state)}" data-gv2-chip="${card.chip}"${round}${attrs}${locked ? ' aria-disabled="true"' : ''} aria-label="${esc(name)}: ${esc(kind)}. ${esc(card.text)}"${act.cost ? ' aria-description="Usa un gettone"' : ''} data-gv2-slide="${esc(id)}"${first}>
-      <span class="us-gv2-game-top"><span class="us-gv2-glyph" aria-hidden="true">${gameArt(id)}</span>${card.chip === 'ready' ? '' : `<span class="us-gv2-stato" aria-hidden="true">${card.chip === 'played' ? CHIP_CHECK : ''}${CHIP_TEXT[card.chip]}</span>`}</span>
-      <span class="us-gv2-game-copy"><b>${esc(name)}</b><small>${esc(line)}</small></span>
+  const slide = big ? ` data-gv2-slide="${esc(id)}"${first}` : '';
+  const chip = card.chip === 'ready' ? '' : `<span class="us-gv2-stato" aria-hidden="true">${card.chip === 'played' ? CHIP_CHECK : ''}${CHIP_TEXT[card.chip]}</span>`;
+  const extra = big ? `
       <span class="us-gv2-carta-desc" aria-hidden="true">${esc(GAME_DESC[id] || '')}</span>
-      <span class="us-gv2-carta-foot" aria-hidden="true"><span class="us-gv2-carta-meta">${esc(GAME_META[id] || '5 domande · 3 minuti')}</span><span class="us-gv2-carta-cta" data-cost="${act.cost}">${esc(act.text)}${act.cost ? TOKEN_MINI : ''}</span></span>
+      <span class="us-gv2-carta-foot" aria-hidden="true"><span class="us-gv2-carta-meta">${esc(GAME_META[id] || '5 domande · 3 min')}</span><span class="us-gv2-carta-cta" data-cost="${act.cost}">${esc(act.text)}${act.cost ? TOKEN_MINI : ''}</span></span>` : '';
+  return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-game${extraClass}" ${data} data-gv2-mode-state="${esc(card.state)}" data-gv2-chip="${card.chip}"${round}${attrs}${locked ? ' aria-disabled="true"' : ''} aria-label="${esc(name)}: ${esc(kind)}. ${esc(card.text)}"${act.cost ? ' aria-description="Usa un gettone"' : ''}${slide}>
+      <span class="us-gv2-game-top">${badge ? `<span class="us-gv2-carta-badge" aria-hidden="true">${esc(badge)}</span>` : ''}<span class="us-gv2-glyph" aria-hidden="true">${gameArt(id)}</span>${chip}</span>
+      <span class="us-gv2-game-copy"><b>${esc(name)}</b><small>${esc(line)}</small></span>${extra}
     </button>`;
+}
+
+// «Il gioco di oggi» (25/11/2026, founder: «alcuni a carosello e gli altri
+// come prima»): one of the question games in the giostra, the same for both
+// phones all day (the Rome day of the server's allowance), the next one tomorrow.
+function dailyPick() {
+  const day = allowance()?.day || new Date().toLocaleDateString('en-CA', { timeZone: DAY_ZONE });
+  const n = Math.floor(Date.parse(`${day}T12:00:00Z`) / 86400000);
+  return OFFERED[((Number.isFinite(n) ? n : 0) % OFFERED.length + OFFERED.length) % OFFERED.length];
+}
+// So more games never turn «Tutti i giochi» into a heap: past six question
+// games, the list splits by kind of moment, each with its own small title.
+const GENRES = Object.freeze([
+  { id: 'conoscervi', name: 'Per conoscervi' },
+  { id: 'parlarvi', name: 'Per parlarvi' },
+  { id: 'ridere', name: 'Per ridere' },
+  { id: 'ricordare', name: 'Per ricordare' },
+]);
+const GENRE_SPLIT_AT = 6;
+function allGames(tiles) {
+  const grid = (list) => `<div class="us-gv2-game-grid" data-s>${list.map((t) => t.html).join('')}</div>`;
+  if (tiles.length <= GENRE_SPLIT_AT) return grid(tiles);
+  return GENRES.map((g) => {
+    const list = tiles.filter((t) => t.genre === g.id);
+    return list.length ? `<div class="us-gv2-genre"><h4 class="us-gv2-genre-title">${esc(g.name)}</h4>${grid(list)}</div>` : '';
+  }).join('');
 }
 
 // The cards ride a horizontal track that snaps each one to the middle; the
@@ -518,16 +549,24 @@ function renderHub() {
  const onTiles=new Set();
  const tileStatus=(f)=>{const r=tileRound(f.id);if(r)onTiles.add(r.id);return modeStatus(f,r);};
  const spent=Boolean(allowance()&&!freeLeft());
- const perVoi=gameCard({id:'per_voi',name:PER_VOI.name,kind:'Una partita preparata apposta',action:'per-voi',extraClass:' is-pervoi',status:perVoiStatus(pvState),line:pvState==='idle'&&spent?'':(pv.note||pv.line),attrs:` data-gv2-state="${esc(pvState)}"`});
- const swipe=gameCard({id:'swipe',name:SWIPE.name,kind:'8 carte · veloce e privato',action:'swipe',extraClass:' is-swipe',status:tileStatus(SWIPE)});
- const families=OFFERED.map(f=>gameCard({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)}));
+ // The giostra holds the few games in the spotlight: Per voi, the game of the
+ // day and Questo o quello; every question game stays a tile below, as before.
+ const perVoi=gameCard({id:'per_voi',name:PER_VOI.name,kind:'Una partita preparata apposta',action:'per-voi',extraClass:' is-pervoi',status:perVoiStatus(pvState),line:pvState==='idle'&&spent?'':(pv.note||pv.line),attrs:` data-gv2-state="${esc(pvState)}"`,big:true});
+ const swipe=gameCard({id:'swipe',name:SWIPE.name,kind:'8 carte · veloce e privato',action:'swipe',extraClass:' is-swipe',status:tileStatus(SWIPE),big:true});
+ const pick=dailyPick();
+ const today=gameCard({id:pick.id,name:pick.name,kind:pick.kind,status:tileStatus(pick),big:true,badge:'Il gioco di oggi',extraClass:' is-oggi'});
+ const tiles=OFFERED.map(f=>({genre:f.genre,html:gameCard({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)})}));
  const html=`
   <h2 class="us-gv2-sr">Gioca</h2>
   ${tokensCard()}
   ${waitingSection(home)}
   <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">
-   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3><small>${spent?'tornano domani':'scorri e scegli'}</small></div>
-   ${giostra([perVoi,...families,swipe])}
+   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">Oggi per voi</h3><small>${spent?'tornano domani':'scorri e scegli'}</small></div>
+   ${giostra([perVoi,today,swipe])}
+  </section>
+  <section class="us-gv2-all" aria-labelledby="usGv2AllTitle">
+   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2AllTitle">Tutti i giochi</h3><small>${spent?'tornano domani':'bastano pochi minuti'}</small></div>
+   ${allGames(tiles)}
   </section>
   ${weeklyCard(home?.weekly)}
   ${continueSection(home,onTiles)}

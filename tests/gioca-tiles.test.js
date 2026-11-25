@@ -36,7 +36,8 @@ const allowance = (over = {}) => ({ week_start: '2026-09-28', resets_on: '2026-1
 
 test('Gioca tiles: a fresh week is six cards of icon, name, kind of moment and "Disponibile"', async () => {
   const html = await hub(homeOf({ allowance: allowance() })).html();
-  const tiles = html.match(/<button type="button" (?:data-us-[a-z-]+(?:="[a-z]+")? )*class="us-gv2-game[^"]*" data-gv2-family="[a-z_]+"[\s\S]*?<\/button>/g) || [];
+  const all = html.slice(html.indexOf('class="us-gv2-all"'));
+  const tiles = all.match(/<button type="button" (?:data-us-[a-z-]+(?:="[a-z]+")? )*class="us-gv2-game[^"]*" data-gv2-family="[a-z_]+"[\s\S]*?<\/button>/g) || [];
   // G7 1.0 — "E se…?" is no longer offered: Swipe plus five families.
   assert.equal(tiles.length, 5);
   assert.doesNotMatch(html, /data-gv2-family="e_se"/);
@@ -63,13 +64,14 @@ test('Gioca tiles: a fresh week is six cards of icon, name, kind of moment and "
 test('Gioca hub (fase 6): tokens, then the games; no week strip, every tile one of three chips', async () => {
   const html = await hub(homeOf({ allowance: allowance({ used: 1, free_used: 1, families: { ridete: { session_id: 'r', completed: true } } }),
     open_rounds: [{ id: 'o1', game_family: 'confrontatevi', item_count: 5, my_answered_count: 2 }] })).html();
+  const all = html.slice(html.indexOf('class="us-gv2-all"'));
   for (const gone of ['Scopritevi, giocando', 'Cinque domande alla volta', 'IN CORSO', 'SCEGLIETE VOI', 'usGv2Week', 'us-gv2-wd', 'data-wc-slot', 'us-gv2-daycount', 'us-gv2-pervoi-cta']) assert.doesNotMatch(html, new RegExp(gone));
   assert.match(html, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
   assert.ok(html.indexOf('id="usGv2Tokens"') < html.indexOf('us-gv2-choose'), 'the tokens first');
-  assert.match(html, /data-gv2-family="confrontatevi" data-gv2-mode-state="open" data-gv2-chip="ready" data-gv2-session="o1" data-tone="progress"[\s\S]*?<\/svg><\/span><\/span>\s*<span class="us-gv2-game-copy"><b>Confrontatevi<\/b><small>2 di 5<\/small>/, 'an open round shows on its own card');
-  assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played" data-gv2-chip="played"[\s\S]*?Giocato<\/span>[\s\S]*?<small>questa settimana<\/small>/);
+  assert.match(all, /data-gv2-family="confrontatevi" data-gv2-mode-state="open" data-gv2-chip="ready" data-gv2-session="o1" data-tone="progress"[\s\S]*?<\/svg><\/span><\/span>\s*<span class="us-gv2-game-copy"><b>Confrontatevi<\/b><small>2 di 5<\/small>/, 'an open round shows on its own card');
+  assert.match(all, /data-gv2-family="ridete" data-gv2-mode-state="played" data-gv2-chip="played"[\s\S]*?Giocato<\/span>[\s\S]*?<small>questa settimana<\/small>/);
   const chips = [...html.matchAll(/data-gv2-chip="([a-z]+)"/g)].map((m) => m[1]);
-  assert.equal(chips.length, 7, 'Per voi, five families, Questo o quello');
+  assert.equal(chips.length, 8, 'the giostra (Per voi, the game of the day, Questo o quello), then five tiles');
   assert.ok(chips.every((c) => ['ready', 'played', 'tomorrow'].includes(c)));
 });
 
@@ -78,7 +80,7 @@ test('Gioca hub: a spent day locks unplayed tiles until tomorrow', async () => {
     allowance: allowance({ used: 1, limit: 1, per_voi_used: 1, free_used: 1, free_limit: 1, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) })).html();
   assert.doesNotMatch(html, /Nuove partite domani/, 'the hub does not duplicate exhaustion prose; tiles carry the state');
   assert.match(html, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" data-gv2-chip="tomorrow" aria-disabled="true" aria-label="Scopritevi: [^"]+\. Da domani"[\s\S]*?Domani<\/span>[\s\S]*?<small>torna domani<\/small>/);
-  assert.match(html, /id="usGv2ChooseTitle">I vostri giochi<\/h3><small>tornano domani<\/small>/);
+  assert.match(html, /id="usGv2ChooseTitle">Oggi per voi<\/h3><small>tornano domani<\/small>/);
 });
 
 test('Gioca hub: Per voi is the first tile, its line the server\'s state', async () => {
@@ -135,7 +137,8 @@ test('Gioca hub: an older one-a-day server still reads well', async () => {
 test('Gioca hub: no allowance yet, no tokens; the title keeps the low-friction hint', async () => {
   const html = await hub(homeOf()).html();
   assert.doesNotMatch(html, /us-gv2-tokens/);
-  assert.match(html, /<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3><small>scorri e scegli<\/small>/);
+  assert.match(html, /<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">Oggi per voi<\/h3><small>scorri e scegli<\/small>/);
+  assert.match(html, /id="usGv2AllTitle">Tutti i giochi<\/h3><small>bastano pochi minuti<\/small>/);
 });
 
 test('Gioca tokens: the time to midnight in Rome reads as hours and minutes', () => {
@@ -217,4 +220,49 @@ test('Gioca tokens: a resumed round spends nothing', async () => {
   await h.window.USGameV2.chooseMode('ridete');
   await tick();
   assert.match(h.nodes.usGv2Tokens.outerHTML, /aria-label="3 gettoni su 3"/, 'the token that flew is lit again');
+});
+
+// 25/11/2026 (founder: «non tutti a carosello… alcuni a carosello e gli altri
+// come prima»): the giostra is Per voi, «Il gioco di oggi» and Questo o quello;
+// the game of the day is one family, the same all day, the next one tomorrow.
+test('Gioca giostra: Per voi, the game of the day, Questo o quello; the tiles stay below', async () => {
+  const at = async (day) => {
+    const html = await hub(homeOf({ allowance: allowance({ day }) })).html();
+    const track = html.match(/<div class="us-gv2-giostra-track"[\s\S]*?<div class="us-gv2-giostra-dots"/)?.[0] || '';
+    return { html, track, slides: [...track.matchAll(/data-gv2-slide="([a-z_]+)"/g)].map((m) => m[1]) };
+  };
+  const a = await at('2026-11-25');
+  assert.deepEqual(a.slides, ['per_voi', 'ridete', 'swipe']);
+  assert.match(a.track, /<span class="us-gv2-carta-badge" aria-hidden="true">Il gioco di oggi<\/span>/);
+  assert.equal((a.track.match(/us-gv2-carta-badge/g) || []).length, 1);
+  assert.match(a.track, /<span class="us-gv2-carta-cta" data-cost="true">Gioca<span class="us-gv2-costo"/);
+  assert.deepEqual((await at('2026-11-26')).slides, ['per_voi', 'quanto_mi_conosci', 'swipe'], 'tomorrow, the next one');
+  const all = a.html.slice(a.html.indexOf('class="us-gv2-all"'));
+  assert.doesNotMatch(all, /data-gv2-slide|us-gv2-carta-desc|us-gv2-carta-cta/, 'the tiles are the ones from before');
+  assert.doesNotMatch(all, /us-gv2-genre/, 'five games: one grid, no genre titles yet');
+});
+
+// More games later: past six question games «Tutti i giochi» splits by kind of
+// moment, so the list never turns into a heap (founder, 25/11/2026).
+test('Gioca: past six question games the tiles split by genre, each with its title', async () => {
+  const more = "  { id: 'indovinate', name: 'Indovinate', icon: 'x', kind: 'Prova', genre: 'conoscervi' },\n  { id: 'cantate', name: 'Cantate', icon: 'x', kind: 'Prova', genre: 'ridere' },\n  { id: 'e_se'";
+  const src = read('games.js').replace("  { id: 'e_se'", more);
+  assert.notEqual(src, read('games.js'));
+  const nodes = {};
+  const node = (id) => (nodes[id] ||= { id, innerHTML: '', dataset: {}, classList: { add() {}, remove() {}, contains: () => false }, setAttribute() {}, removeAttribute() {}, addEventListener() {}, querySelector: () => null });
+  const sandbox = {
+    window: { usProfile: { role: 'francesco' }, crypto: { randomUUID: () => 'r' }, go() {} },
+    document: { readyState: 'complete', hidden: false, getElementById: node, addEventListener() {}, querySelector: () => ({ id: 'quiz' }) },
+    sb: { rpc: async () => ({ data: homeOf({ allowance: allowance({ day: '2026-11-25' }) }), error: null }) },
+    toast() {}, FormData: class {}, console: { warn() {} }, setTimeout: () => 1, setInterval: () => 1,
+  };
+  node('quizHub'); node('usGameV2Panel'); node('usPerVoiTop');
+  require('./helpers/identity-fixture').install(sandbox);
+  vm.runInNewContext(src, sandbox);
+  await tick();
+  const all = nodes.quizHub.innerHTML.slice(nodes.quizHub.innerHTML.indexOf('class="us-gv2-all"'));
+  const titles = [...all.matchAll(/<h4 class="us-gv2-genre-title">([^<]+)<\/h4>/g)].map((m) => m[1]);
+  assert.deepEqual(titles, ['Per conoscervi', 'Per parlarvi', 'Per ridere', 'Per ricordare']);
+  const first = all.slice(all.indexOf('Per conoscervi'), all.indexOf('Per parlarvi'));
+  assert.deepEqual([...first.matchAll(/data-gv2-family="([a-z_]+)"/g)].map((m) => m[1]), ['scopritevi', 'quanto_mi_conosci', 'indovinate']);
 });
