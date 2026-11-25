@@ -883,7 +883,9 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
     'us:fix4:last-profile',
     US_SIGNED_URL_STORAGE_KEY,
     US_HOME_BOOT_CACHE_KEY,
-    'us:home-photo:boot:v1'
+    'us:home-photo:boot:v1',
+    // Apertura A: the two characters of the opening.
+    'us:launch-duo:v1'
   ];
   if(profileId)storageKeys.push(`us:push:subscription:${profileId}`);
   for(const key of storageKeys){

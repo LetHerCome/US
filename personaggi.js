@@ -480,7 +480,20 @@
     }, 900);
   }
 
-  const paintAll = () => { paintMe(); paintDuo(); paintWardrobe(); paintIsola(); };
+  // Apertura A (25/11/2026): the opening shows your two characters before anything loads,
+  // so they are kept here, with their colours resolved (the page has no couple colours yet then).
+  function keepLaunchDuo() {
+    try {
+      if (!w.localStorage || !w.usProfile?.id) return;
+      const me = myRole(), them = me === 'beatrice' ? 'francesco' : 'beatrice';
+      if (!profileOf(me) || !profileOf(them)) return;
+      const css = w.getComputedStyle?.(d.documentElement);
+      const solid = (svg) => svg.replace(/var\((--us-[a-z-]+)\)/g, (all, name) => (css?.getPropertyValue(name) || '').trim() || all);
+      const duo = { me: solid(character(me, { size: 50, reaction: '', mood: '' })), them: solid(character(them, { size: 50, reaction: '', mood: '' })) };
+      w.localStorage.setItem('us:launch-duo:v1', JSON.stringify(duo));
+    } catch (_) {}
+  }
+  const paintAll = () => { paintMe(); paintDuo(); paintWardrobe(); paintIsola(); keepLaunchDuo(); };
   if (d && w.addEventListener) {
     // The couple's profiles arrive after boot, and change with the account.
     w.addEventListener('us-identity-change', () => { paintAll(); maybePeek(); if (!w.usProfile?.couple_id) closeAngolo(); });

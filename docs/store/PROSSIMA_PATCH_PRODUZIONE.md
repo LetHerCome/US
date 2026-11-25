@@ -2,6 +2,15 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Icona dell'app e apertura nuove (25/11)
+
+**Stato:** ramo `claude/icona-splash`, verso il ramo fisso di staging. Tavola «US · Icona e apertura» (https://claude.ai/artifact/JyMuw3y4fXnP3PCmQuxKbF): il founder ha scelto l'apertura «A».
+
+**Cosa cambia:**
+- **Icona Android:** torna quella della PWA di staging, il logo con la cornice su bianco, con la cornice sul bordo dell'icona (founder: «voglio il quadrato al confine dell'icona»). Sui telefoni con le icone tonde, che usano l'icona tonda dell'app, c'è il logo senza cornice («in quella tonda non si veda il quadrato esterno»). Le icone a scelta Notte, Oro e Neon non cambiano. Serve un APK nuovo; chi aggiorna vede l'icona nuova dopo l'aggiornamento.
+- **Apertura (app installata, solo all'avvio):** parte dal colore e dal logo della splash di Android; da dietro il logo escono i vostri due personaggi, uno per lato, poi un cuoricino sopra e «il vostro spazio» sotto, e l'app si apre su Oggi. Circa due secondi (prima uno). I personaggi sono quelli dell'ultima volta, salvati sul telefono con forme e colori; alla primissima apertura, o dopo essere usciti dall'account, c'è solo il logo. Con «Riduci animazioni» non c'è.
+- **Il primo istante** resta quello di Android (colore e logo con la cornice): Android non permette di disegnarci altro.
+
 ### Ti penso ricevuto coi personaggi (25/11)
 
 **Stato:** ramo `claude/oggi-giu`, verso il ramo fisso di staging. Tavola «US · Ti penso ricevuto» (https://claude.ai/artifact/YQ12MPCHsZUiqiRd4ZXCUL) approvata dal founder il 25/11, icona dell'abbraccio «A».

@@ -547,3 +547,10 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **La schermata:** il personaggio dell'altra persona scende dall'alto con gli occhi a cuore e dice «Ti penso!» in un fumetto; sotto il nome e «ti pensa». Tre risposte a un tono con il loro nome: Un cuore, Un abbraccio (i due personaggi guancia a guancia), Anch'io (la nuvola). Niente più cerchi e reazioni senza nome.
 - **La risposta:** al tocco arriva il tuo personaggio e risponde (un cuore che vola, l'abbraccio, una nuvoletta col cuore), poi la schermata si chiude da sola. Le parole non dicono lui o lei.
 - **Restano** le tre reazioni del server (`heart`, `hug`, `miss_you`) e il loro invio: cambia solo l'aspetto.
+
+## 2026-11-25 — Icona con la cornice e apertura coi personaggi
+
+**Fonte:** founder, 25/11/2026: «rifare anche sia la splash art… e anche l'icona prendendo questa che é quella della pwa di staging la voglio anche come icona dell'apk», poi «voglio il quadrato al confine dell'icona», «in quella tonda non si veda il quadrato esterno» e, sulla tavola «US · Icona e apertura» (https://claude.ai/artifact/JyMuw3y4fXnP3PCmQuxKbF), «La A».
+
+- **Icona Android:** il logo con la cornice su bianco, come la PWA, con la cornice sul bordo; l'icona tonda (`roundIcon`) tiene il logo senza cornice. Sostituisce la decisione del 29/10 sull'icona senza cornice, che resta solo per le icone tonde.
+- **Apertura A:** dopo la splash di Android, i due personaggi escono da dietro il logo, un cuore e «il vostro spazio», poi l'app (circa 2 s). I personaggi vengono dal telefono (salvati all'ultima apertura, cancellati all'uscita dall'account); senza, solo il logo. Il colore della splash resta #26142E, anche su iPhone.

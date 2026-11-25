@@ -184,25 +184,33 @@ html.us-returning-device .auth-overlay{
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js" integrity="sha384-ysv13JVP3fufiEXfjML9OdCa/rRbMJvUBOWyor82wfuK8INNZAvmbxHgKIHi+oqz" crossorigin="anonymous"></script>
 <script>window.__US_LEFT_FOR_YOU_ACTIVE__ = true;</script>
 <style id="usLaunchIntroStyle">
-/* 19/10/2026 — opening animation (cold start only, never on resume): it starts
-   where the Android splash ends (same colour, same logo, same place), the two
-   colours meet behind the logo, then everything opens onto the app. ~0.9 s. */
+/* Apertura A (founder 25/11/2026, tavola «US · Icona e apertura»): cold start of
+   the installed app only, never on resume. It starts where the Android splash ends
+   (same colour, same logo, same place); your two characters lean out from behind
+   the logo, a heart and «il vostro spazio» arrive, then it opens onto the app. ~1.9 s. */
 .us-launch-intro{position:fixed;inset:0;z-index:2147483000;display:none;place-items:center;background:var(--us-launch-bg,#26142E);pointer-events:none;contain:strict}
-html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cubic-bezier(.4,0,.2,1) .56s both}
-.us-launch-intro .c{position:absolute;left:50%;top:50%;width:148px;height:148px;margin:-74px 0 0 -74px;border-radius:50%;mix-blend-mode:screen;opacity:0;filter:blur(1px)}
-.us-launch-intro .c.a{background:#ff8fab;animation:usLaunchA .56s cubic-bezier(.2,.8,.2,1) both}
-.us-launch-intro .c.b{background:#a985ff;animation:usLaunchB .56s cubic-bezier(.2,.8,.2,1) both}
-.us-launch-intro .logo{position:relative;width:112px;height:112px;background:url("/icon-512.png") center/contain no-repeat;animation:usLaunchLogo .9s cubic-bezier(.2,.8,.2,1) both}
-@keyframes usLaunchA{0%{opacity:0;transform:translateX(-58px) scale(.55)}60%{opacity:.55}100%{opacity:.34;transform:translateX(-22px) scale(1)}}
-@keyframes usLaunchB{0%{opacity:0;transform:translateX(58px) scale(.55)}60%{opacity:.55}100%{opacity:.34;transform:translateX(22px) scale(1)}}
-@keyframes usLaunchLogo{0%{transform:scale(1)}55%{transform:scale(1.06)}100%{transform:scale(1.14)}}
-@keyframes usLaunchOut{to{opacity:0;transform:scale(1.04)}}
+.us-launch-intro::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 34% at 50% 50%,rgba(225,125,213,.24),rgba(225,125,213,0))}
+html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubic-bezier(.4,0,.2,1) 1.5s both}
+.us-launch-intro .stage{position:relative;width:112px;height:112px}
+.us-launch-intro .logo{position:absolute;inset:0;background:url("/icon-512.png") center/contain no-repeat;animation:usLaunchLogo .5s cubic-bezier(.2,.9,.25,1.2) .8s both}
+.us-launch-intro .duo>span{position:absolute;bottom:6px;width:50px;height:47px;opacity:0;transform-origin:50% 100%}
+.us-launch-intro .duo svg{display:block;width:50px;height:47px;overflow:visible}
+.us-launch-intro .duo .me{left:31px;animation:usLaunchMe .55s cubic-bezier(.2,.9,.25,1.2) .3s both}
+.us-launch-intro .duo .them{right:31px;animation:usLaunchThem .55s cubic-bezier(.2,.9,.25,1.2) .36s both}
+.us-launch-intro .heart{position:absolute;left:50%;top:-34px;width:22px;height:22px;margin-left:-11px;fill:#ff7c96;opacity:0;animation:usLaunchHeart .45s cubic-bezier(.2,.9,.25,1.2) .85s both}
+.us-launch-intro .word{position:absolute;left:0;right:0;top:calc(50% + 74px);margin:0;text-align:center;font:italic 400 20px/1.2 var(--us-font-display,Georgia,serif);color:#f0b3e8;opacity:0;animation:usLaunchWord .45s cubic-bezier(.2,.8,.2,1) .95s both}
+@keyframes usLaunchMe{from{opacity:0;transform:translateX(0) scale(.6)}to{opacity:1;transform:translateX(-58px) rotate(-8deg)}}
+@keyframes usLaunchThem{from{opacity:0;transform:translateX(0) scale(.6)}to{opacity:1;transform:translateX(58px) rotate(8deg)}}
+@keyframes usLaunchLogo{0%{transform:scale(1)}60%{transform:scale(1.06)}100%{transform:scale(1.04)}}
+@keyframes usLaunchHeart{from{opacity:0;transform:translateY(12px) scale(.4)}to{opacity:1;transform:none}}
+@keyframes usLaunchWord{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes usLaunchOut{to{opacity:0;transform:scale(1.05)}}
 @media (prefers-reduced-motion:reduce){html.us-launch-play .us-launch-intro{display:none}}
 </style>
 </head>
 <body>
-<!-- 19/10/2026: opening animation, cold start of the installed app only. -->
-<div class="us-launch-intro" id="usLaunchIntro" aria-hidden="true"><span class="c a"></span><span class="c b"></span><span class="logo"></span></div>
+<!-- Apertura A (25/11/2026): cold start of the installed app only. -->
+<div class="us-launch-intro" id="usLaunchIntro" aria-hidden="true"><span class="stage"><span class="duo"><span class="me"></span><span class="them"></span></span><span class="logo"></span><svg class="heart" viewBox="0 0 256 256" focusable="false"><path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"/></svg></span><p class="word">il vostro spazio</p></div>
 <script>
 (() => {
   // Only the installed app (native shell or home-screen PWA), never a browser tab.
@@ -216,10 +224,17 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   let theme = '';
   try { theme = localStorage.getItem('us:splash-theme:v1') || ''; } catch (_) {}
   intro.style.setProperty('--us-launch-bg', colors[theme] || '#26142E');
+  // Your two characters as they were last time (personaggi.js keeps them); none yet: the logo alone.
+  let duo = null;
+  try { duo = JSON.parse(localStorage.getItem('us:launch-duo:v1') || 'null'); } catch (_) { duo = null; }
+  const safe = (svg) => typeof svg === 'string' && svg.length < 20000 && svg.startsWith('<svg class="us-char') && !/<script|<foreignObject|<image|\son[a-z]+\s*=|javascript:|href\s*=/i.test(svg);
+  const slots = intro.querySelector('.duo');
+  if (slots && duo && safe(duo.me) && safe(duo.them)) { slots.querySelector('.me').innerHTML = duo.me; slots.querySelector('.them').innerHTML = duo.them; }
+  else slots?.remove();
   document.documentElement.classList.add('us-launch-play');
   const done = () => { document.documentElement.classList.remove('us-launch-play'); intro.remove(); };
   intro.addEventListener('animationend', (event) => { if (event.animationName === 'usLaunchOut') done(); });
-  setTimeout(done, 1600);
+  setTimeout(done, 2400);
 })();
 </script>
 <!-- Native Security V1: lock screen (native app only; app-lock.js). Painted before

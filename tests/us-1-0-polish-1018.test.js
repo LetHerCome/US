@@ -102,13 +102,15 @@ test('notifications: a failed "Attiva" says at which step and why (19/10, still 
   assert.ok(read('app.js').includes("toast(`Non riesco ad attivare le notifiche${result.code?` · ${result.code}`:''}`)"));
 });
 
-test('opening animation: installed app only, at load (never on resume), from the splash colour, under a second', () => {
+test('opening animation: installed app only, at load (never on resume), from the splash colour, about two seconds', () => {
   const html = read('index.html');
   const has = (text) => assert.ok(html.includes(text), text);
   has('<div class="us-launch-intro" id="usLaunchIntro" aria-hidden="true">');
   has("if (!intro || (!native && !standalone) || reduced) { intro?.remove(); return; }");
   has("localStorage.getItem('us:splash-theme:v1')");
-  has('setTimeout(done, 1600);');
+  // Apertura A (founder 25/11/2026): the two characters lean out from the logo, ~1.9 s.
+  has('setTimeout(done, 2400);');
+  has("localStorage.getItem('us:launch-duo:v1')");
   has('@media (prefers-reduced-motion:reduce){html.us-launch-play .us-launch-intro{display:none}}');
   // It lives in the page markup: a resume does not reload the page, so it never replays.
   assert.ok(html.indexOf('id="usLaunchIntro"') < html.indexOf('id="usAppLock"'));
