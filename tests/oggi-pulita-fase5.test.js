@@ -71,7 +71,7 @@ test('a Ti penso received: a short notice with «Apri», once per Ti penso on th
 
 test('the notice is wired: live arrival, the first read, never over the sheet a push opens', () => {
   const live = slice('function handleIncomingThink(row){', 'const usRealtimeRefreshTimers=');
-  assert.match(live, /usIncomingThink=\{\.\.\.row\};usThinkReactionFinal=null;usThinkReactionInFlight=false;\n  noticeIncomingThink\(row\);/);
+  assert.match(live, /usIncomingThink=\{\.\.\.row\};usThinkReactionFinal=null;usThinkReactionInFlight=false;usThinkReactionPicked='';\n  noticeIncomingThink\(row\);/);
   assert.doesNotMatch(live, /UsTodayPriority|toast\(/);
   assert.match(app, /if\(received&&!receivedReaction\)\{usIncomingThink=received;usThinkReactionFinal=null;noticeIncomingThink\(received,\{name:partnerName\}\);\}/);
   assert.match(app, /if\(ref\)usMarkThinkNoticed\(ref\);\n    try\{await hydrateThink\(\);\}/);

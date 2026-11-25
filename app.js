@@ -2466,6 +2466,8 @@ let usIncomingThink=null;
 let usThinkOperationId=null;
 let usThinkReactionFinal=null;
 let usThinkReactionInFlight=false;
+// Ti penso ricevuto (tavola del 25/11/2026): the reply chosen at the tap, so the characters answer before the server does.
+let usThinkReactionPicked='';
 let usThinkKnownReactionSignature='';
 
 // Redesign definitivo, fase 5 (founder 23/11/2026, D9): Oggi has no cards of
@@ -2912,23 +2914,41 @@ async function loadOggiLeftItems(){
 
 
 function thinkReactionLabel(reaction){return ({heart:'con un cuore',hug:'con un abbraccio',miss_you:'con un pensiero'})[reaction]||reaction||'';}
+// Ti penso ricevuto (founder 25/11/2026, tavola «US · Ti penso ricevuto»): their character
+// with heart eyes, yours that arrives when you answer; the hug is the two of you cheek to
+// cheek with a heart above (founder 25/11: no hands).
+function thinkArrivalCast(root){
+  const P=window.UsPersonaggi;
+  if(!root||!P?.character)return;
+  const me=P.myRole?.()==='beatrice'?'beatrice':'francesco';
+  const them=me==='beatrice'?'francesco':'beatrice';
+  const meEl=root.querySelector('[data-think-me]'),themEl=root.querySelector('[data-think-them]'),hugEl=root.querySelector('[data-think-hug]');
+  if(meEl)meEl.innerHTML=P.character(me,{size:150,reaction:'',mood:''});
+  if(themEl)themEl.innerHTML=P.character(them,{size:170,reaction:'cuore',mood:''});
+  if(hugEl)hugEl.innerHTML=`<span class="think-arrival-hug-me">${P.character(me,{size:150,reaction:'',mood:'innamorato'})}</span><span class="think-arrival-hug-them">${P.character(them,{size:150,reaction:'',mood:'innamorato'})}</span><svg class="think-arrival-hug-heart" viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"/></svg>`;
+}
 function renderThinkReactionUi(){
   const root=document.getElementById('thinkArrival');
   if(!root)return;
   const title=document.getElementById('thinkArrivalTitle');
   const copy=document.getElementById('thinkArrivalCopy');
   const status=document.getElementById('thinkArrivalStatus');
+  const sheet=root.querySelector('.think-arrival-sheet');
   const buttons=root.querySelectorAll('[data-think-reaction]');
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
-  // Momento: the name on one line, "ti pensa" in italic in their colour (same words).
-  if(title)title.innerHTML=`<span class="think-arrival-name"${partner?.display_name?' translate="no"':''}>${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>ti pensa</em>`;
-  // Mockup: when it arrived, in plain words ("adesso", "5 min fa").
+  const chosen=usThinkReactionFinal||usThinkReactionPicked||'';
+  const state=({heart:'heart',hug:'hug',miss_you:'miss'})[chosen]||'ask';
+  if(sheet&&sheet.dataset.thinkState!==state)sheet.dataset.thinkState=state;
+  // The name on one line, then what happens in italic in their colour: «ti pensa», then your answer (no he/she needed).
+  const line=({heart:'e tu ricambi',hug:'e tu l\u2019abbracci',miss:'e vi pensate'})[state]||'ti pensa';
+  if(title)title.innerHTML=`<span class="think-arrival-name"${partner?.display_name?' translate="no"':''}>${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>${line}</em>`;
+  // When it arrived, in plain words ("adesso", "5 min fa").
   if(copy){const at=usIncomingThink?.created_at;const fresh=at&&Date.now()-Date.parse(at)<60000;copy.textContent=at?(fresh?'adesso':relativeSignalAge(at)):'';copy.hidden=!copy.textContent;}
   buttons.forEach(button=>{
     const reaction=button.dataset.thinkReaction;
-    button.classList.toggle('selected',reaction===usThinkReactionFinal);
+    button.classList.toggle('selected',reaction===chosen);
     button.disabled=Boolean(usThinkReactionFinal||usThinkReactionInFlight);
-    button.setAttribute('aria-pressed',String(reaction===usThinkReactionFinal));
+    button.setAttribute('aria-pressed',String(reaction===chosen));
   });
   if(status)status.textContent=usThinkReactionFinal?`Hai risposto ${thinkReactionLabel(usThinkReactionFinal)}.`:usThinkReactionInFlight?'Invio…':'';
 }
@@ -2938,6 +2958,7 @@ function openThinkArrival(){
   window.UsUiFoundation?.cancelSurfaceExit?.(root);
   root.classList.add('open');
   root.setAttribute('aria-hidden','false');
+  thinkArrivalCast(root);
   renderThinkReactionUi();
 }
 window.openThinkArrival=openThinkArrival;
@@ -2951,7 +2972,7 @@ window.closeThinkArrival=closeThinkArrival;
 async function sendThinkReaction(reaction){
   if(!usIncomingThink?.id||usThinkReactionFinal||usThinkReactionInFlight)return false;
   if(!['heart','hug','miss_you'].includes(reaction))return false;
-  usThinkReactionInFlight=true;renderThinkReactionUi();
+  usThinkReactionInFlight=true;usThinkReactionPicked=reaction;renderThinkReactionUi();
   if(reaction==='heart')usHeartLike(document.querySelector('#thinkArrival [data-think-reaction="heart"]'));
   const {data,error}=await sb.rpc('set_think_reaction',{target_message_id:usIncomingThink.id,target_reaction:reaction});
   if(error){
@@ -2970,7 +2991,7 @@ async function sendThinkReaction(reaction){
         return true;
       }
     }
-    console.warn('[US Think] reaction',error);usThinkReactionInFlight=false;renderThinkReactionUi();toast('Non riesco a inviare la reazione');return false;
+    console.warn('[US Think] reaction',error);usThinkReactionInFlight=false;usThinkReactionPicked='';renderThinkReactionUi();toast('Non riesco a inviare la reazione');return false;
   }
   const result=Array.isArray(data)?data[0]:data;
   if(result?.status==='saved'||result?.status==='duplicate'){
@@ -2983,10 +3004,11 @@ async function sendThinkReaction(reaction){
     // Fluidità 2: the chosen reaction answers the tap (the heart already has its own animation).
     if(usThinkReactionFinal!=='heart')window.UsUiFoundation?.done?.(document.querySelector(`[data-think-reaction="${usThinkReactionFinal}"]`),{feel:'action'});
     toast('Reazione inviata',{icon:'check',quiet:false});
-    setTimeout(()=>closeThinkArrival(),1300);
+    // The characters answer first (about 1.5 s), then it closes by itself.
+    setTimeout(()=>closeThinkArrival(),2300);
     return true;
   }
-  usThinkReactionInFlight=false;renderThinkReactionUi();return false;
+  usThinkReactionInFlight=false;usThinkReactionPicked='';renderThinkReactionUi();return false;
 }
 window.sendThinkReaction=sendThinkReaction;
 document.getElementById('thinkArrival')?.addEventListener('click',event=>{
@@ -5469,7 +5491,7 @@ function noticeIncomingThink(row,{name='',now=Date.now()}={}){
 }
 function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
-  usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;
+  usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;usThinkReactionPicked='';
   noticeIncomingThink(row);
   const heart=document.getElementById('thinkButton');heart?.classList.add('received');setTimeout(()=>heart?.classList.remove('received'),900);
   hydrateThink().catch(()=>{});

@@ -2,6 +2,17 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Ti penso ricevuto coi personaggi (25/11)
+
+**Stato:** ramo `claude/oggi-giu`, verso il ramo fisso di staging. Tavola «US · Ti penso ricevuto» (https://claude.ai/artifact/YQ12MPCHsZUiqiRd4ZXCUL) approvata dal founder il 25/11, icona dell'abbraccio «A».
+
+**Cosa cambia:**
+- **Quando arriva un Ti penso** e lo apri, il personaggio dell'altra persona scende dall'alto con gli occhi a cuore, ondeggia tra cuoricini che salgono e dice «Ti penso!» in un fumetto. Sotto: il nome e «ti pensa», e quando è arrivato.
+- **Tre risposte** grandi, a un tono e col loro nome: «Un cuore», «Un abbraccio» (icona nuova: i vostri due personaggi guancia a guancia), «Anch'io» (la nuvola). Al posto di «Chiudi» c'è «Più tardi», e la X in alto.
+- **Al tocco arriva il tuo personaggio** e risponde: col cuore gli manda un cuore che vola, con l'abbraccio vi stringete guancia a guancia con un cuore sopra (niente braccia, founder 25/11), con «Anch'io» sopra di voi sale una nuvoletta con un cuore. Poi la schermata si chiude da sola dopo circa due secondi.
+- **Di giorno** usa la luce chiara come il resto dell'app. Con «Riduci animazioni» non c'è movimento.
+- Le tre reazioni mandate al server sono le stesse di prima.
+
 ### Oggi più in basso, vicino alla barra (25/11)
 
 **Stato:** ramo `claude/oggi-giu`, verso il ramo fisso di staging. Founder, 25/11, dall'APK: «la domanda del giorno e le altre barre sopra possono scendere un po' sotto vicino alla nav bar».
