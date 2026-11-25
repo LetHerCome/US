@@ -2,9 +2,20 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Tocchi pronti dopo ogni foglio (25/11)
+
+**Stato:** ramo `claude/calendario-tap`, verso il ramo fisso di staging. Founder, 25/11: «i tap non sono reattivi sul calendario».
+
+**Cosa cambia:**
+- **La causa:** chiuso un foglio (il giorno di Noi, ma anche gli altri), l'app restava bloccata finché il foglio non finiva di sparire. Per il giorno di Noi, che non aveva una sua animazione d'uscita, il blocco durava un secondo intero: il tocco sul giorno dopo si perdeva.
+- **Ora:** un foglio che sta uscendo conta già come chiuso, e la pagina sotto risponde subito, ovunque nell'app. Nel calendario ogni tocco apre il giorno in circa 25 millisecondi, anche subito dopo averne chiuso un altro.
+- **Il giorno di Noi** sale e scende come gli altri fogli del calendario, con la maniglia in alto.
+
+**Server:** niente.
+
 ### Icone a un tono e il giorno in un riquadro (25/11)
 
-**Stato:** ramo `claude/icone-calendario`, verso il ramo fisso di staging. Founder, 25/11: «togliamo ora il doppio colore dalle icone che non mi piace più», poi «premendo il giorno si apra una sorta di popup con scritto gli impegni di quel giorno, togliendo la barra di sotto inutile».
+**Stato:** in staging il 25/11 (PR #302, merge afbe1ecc, sito …-safbe1ecc). Founder, 25/11: «togliamo ora il doppio colore dalle icone che non mi piace più», poi «premendo il giorno si apra una sorta di popup con scritto gli impegni di quel giorno, togliendo la barra di sotto inutile».
 
 **Cosa cambia:**
 - **Icone a un tono:** le icone tornano a un solo tratto nel loro colore. Esce il pieno nel colore dell'altra persona sotto il contorno (le «icone a due toni» del 24/11), anche nella barra in basso: la pagina aperta torna un'icona piena in un colore solo.
