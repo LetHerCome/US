@@ -635,25 +635,56 @@
 
 /* La bacheca: a cork-dark board, tags pinned where the places are, a red string. */
 #moments .ricordi-bacheca[hidden]{display:none}
-#moments .ricordi-bacheca{display:grid;gap:18px;margin:0 -4px}
-#moments .rb-board{position:relative;overflow:hidden;border-radius:22px;background:radial-gradient(120% 80% at 50% 0%,rgba(209,129,230,.10),transparent 70%),repeating-linear-gradient(45deg,rgba(247,239,233,.018) 0 2px,transparent 2px 9px),#1d1219;border:1px solid rgba(247,239,233,.08)}
-#moments .rb-string{position:absolute;inset:0;pointer-events:none}
-#moments .rb-string path{fill:none;stroke:#d9435a;stroke-width:2.2;stroke-linecap:round;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
-#moments .rb-tag{position:absolute;z-index:3;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:1px;min-width:86px;max-width:132px;min-height:44px;margin:0;padding:12px 10px 7px;border:0;border-radius:4px;background:#f3e3b8;color:#2a1f2a;box-shadow:0 6px 14px rgba(0,0,0,.45);font:inherit;text-align:center}
-#moments .rb-tag b{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 12.5px/1.25 var(--us-font-ui)}
-#moments .rb-tag small{font-size:10.5px;font-weight:600;color:#6b5a52}
-#moments .rb-pin{position:absolute;left:50%;top:-6px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff8b9c,#c62f4a 70%);box-shadow:0 2px 3px rgba(0,0,0,.5)}
-#moments .rb-pol{position:absolute;z-index:2;transform:translate(-50%,-50%) rotate(var(--t,0deg));width:58px;margin:0;padding:4px 4px 10px;border:0;border-radius:2px;background:#f6f0e6;box-shadow:0 6px 12px rgba(0,0,0,.45)}
-#moments .rb-pol img,#moments .rb-pol .rb-pol-empty{display:block;width:50px;height:50px;object-fit:cover;background:#cdbfb4}
-#moments .rb-pol:focus-visible,#moments .rb-tag:focus-visible{outline:2px solid var(--us-pg);outline-offset:3px}
-#moments .rb-more{position:absolute;z-index:2;transform:translate(-50%,-50%);min-width:28px;height:22px;padding:0 6px;border-radius:11px;background:rgba(247,239,233,.14);color:var(--us-color-text);font:700 11px/22px var(--us-font-ui);text-align:center}
-#moments .rb-empty{margin:0;padding:22px 16px;border-radius:20px;border:1px dashed rgba(247,239,233,.16);color:var(--us-color-text-2);font-size:13.5px;line-height:1.45}
-#moments .rb-loose{padding:14px;border-radius:20px;background:rgba(247,239,233,.04);border:1px dashed rgba(247,239,233,.16)}
-#moments .rb-loose h4{margin:0 0 12px;font:800 11.5px/1.2 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-pg)}
-#moments .rb-loose-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:14px 10px}
-#moments .rb-loose-item{display:grid;justify-items:center;gap:8px}
-#moments .rb-pol.is-loose{position:relative;transform:rotate(-2deg);width:74px}
-#moments .rb-pol.is-loose img,#moments .rb-pol.is-loose .rb-pol-empty{width:66px;height:66px}
-#moments .rb-add{min-height:36px;margin:0;padding:0 10px;border-radius:18px;border:1px solid color-mix(in srgb,var(--us-pg) 45%,transparent);background:color-mix(in srgb,var(--us-pg) 10%,transparent);color:var(--us-color-text);font:700 11.5px/1 var(--us-font-ui);box-shadow:none}
-#moments .rb-loose-more{margin:12px 0 0;font-size:12.5px;color:var(--us-color-text-2)}
+/* La vostra bacheca (founder 25/11/2026, tavola «US · La vostra bacheca»): an endless corkboard
+   kept by US, moved with the fingers; the red string is the road of your story (bacheca.js). */
+#moments .ricordi-bacheca{position:relative;margin:0 -12px;height:calc(100dvh - var(--us-safe-top) - var(--us-nav-height) - var(--us-safe-bottom) - 190px);min-height:420px}
+#moments .ub-view{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:grab;border-radius:22px;background:#2e1f18;perspective:1100px;outline:none;user-select:none;-webkit-user-select:none}
+#moments .ub-view:focus-visible{box-shadow:0 0 0 2px var(--us-pg)}
+#moments .ub-tilt{position:absolute;inset:0;transform-style:preserve-3d;transform-origin:50% 40%;transition:transform .3s ease}
+#moments .ub-world{position:absolute;left:0;top:0;transform-origin:0 0;transform-style:preserve-3d;will-change:transform}
+#moments .ub-cork{position:absolute;background-color:#4a3428;background-image:radial-gradient(rgba(0,0,0,.2) 1.2px,transparent 1.7px),radial-gradient(rgba(255,255,255,.06) 1px,transparent 1.5px);background-size:10px 10px,15px 15px;background-position:0 0,5px 7px}
+#moments .ub-year{position:absolute;top:620px;font:400 120px/1 var(--us-font-display);color:rgba(255,255,255,.07);pointer-events:none}
+#moments .ub-road{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+#moments .ub-road path{fill:none;stroke:#c0392b;stroke-width:3;stroke-linecap:round}
+#moments .ub-item{position:absolute;margin:0;padding:0;border:0;border-radius:4px;background:none;box-shadow:0 12px 24px rgba(0,0,0,.45);color:inherit;text-align:left;cursor:grab;transform:translateZ(24px) rotate(var(--r,0deg));transition:transform .25s ease,box-shadow .25s ease;touch-action:none}
+#moments .ub-item.is-dragging{z-index:5;cursor:grabbing;transform:translateZ(60px) rotate(var(--r,0deg)) scale(1.06);box-shadow:0 26px 40px rgba(0,0,0,.5);transition:none}
+#moments .ub-item:focus-visible{outline:3px solid #f7efe9;outline-offset:5px}
+#moments .ub-pin{position:absolute;left:50%;top:-8px;z-index:2;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8,var(--ub-pin,#f3d27a) 60%);box-shadow:0 3px 5px rgba(0,0,0,.45)}
+#moments .ub-item[data-who="me"]{--ub-pin:var(--us-tu)}
+#moments .ub-item[data-who="you"]{--ub-pin:var(--us-partner)}
+#moments .ub-date{position:absolute;left:50%;top:-30px;padding:2px 7px;border-radius:6px;background:rgba(0,0,0,.5);color:#f7efe9;font:700 11px/1.4 var(--us-font-ui);white-space:nowrap;transform:translateX(-50%)}
+#moments .ub-pol{display:block;padding:7px 7px 10px;border-radius:2px;background:#fff}
+#moments .ub-photo{display:block;aspect-ratio:1/0.9;background:linear-gradient(160deg,#f6c38a,#e8829a 60%,#8a5fc2);overflow:hidden}
+#moments .ub-photo img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+#moments .ub-cap{display:block;margin-top:6px;overflow:hidden;font:italic 400 15px/1.15 var(--us-font-display);color:#2c2420;white-space:nowrap;text-overflow:ellipsis}
+#moments .ub-letter{position:relative;display:block;height:112px;overflow:hidden;border-radius:6px;background:color-mix(in srgb,var(--us-partner) 22%,#fff)}
+#moments .ub-flap{position:absolute;left:0;right:0;top:0;height:54px;background:color-mix(in srgb,var(--us-partner) 45%,#fff);clip-path:polygon(0 0,100% 0,50% 100%)}
+#moments .ub-letter-text{position:absolute;left:12px;right:12px;bottom:12px;font:italic 400 14px/1.25 var(--us-font-display);color:#2c2030}
+#moments .ub-note{display:grid;gap:6px;padding:14px 12px;background:#fff3c4;font:italic 400 15px/1.25 var(--us-font-display);color:#3a2a18}
+#moments .ub-note b{font:800 11px/1.3 var(--us-font-ui);letter-spacing:.06em;text-transform:uppercase;color:#7a5a20}
+#moments .ub-stamp{display:grid;place-items:center;width:120px;height:120px;border-radius:50%;border:3px dashed #f3d27a;background:rgba(0,0,0,.2);color:#f3d27a;font:800 15px/1.15 var(--us-font-ui);text-align:center}
+#moments .ub-item.ub-stamp-item,#moments .ub-item:has(.ub-stamp){box-shadow:none}
+#moments .ub-postit{position:absolute;left:38%;bottom:-30px;padding:6px 9px;background:#ffd6e2;box-shadow:0 6px 12px rgba(0,0,0,.35);font:italic 400 14px/1.1 var(--us-font-display);color:#5a1f33;white-space:nowrap;transform:rotate(3deg)}
+#moments .ub-flag{position:absolute;left:-10px;top:-12px;padding:3px 8px;border-radius:10px;background:#1d1119;color:#f7efe9;font:800 10.5px/1.3 var(--us-font-ui);letter-spacing:.06em;text-transform:uppercase}
+#moments .ub-end{position:absolute;display:grid;gap:6px;width:150px;padding:16px 14px;border:2px dashed rgba(247,239,233,.4);border-radius:8px;color:rgba(247,239,233,.85);font:700 13px/1.3 var(--us-font-ui);text-align:center}
+#moments .ub-end span{font-weight:600;color:rgba(247,239,233,.65)}
+#moments .ub-controls{position:absolute;left:12px;bottom:12px;z-index:2;display:flex;gap:8px}
+#moments .ub-controls button{min-height:42px;padding:0 16px;border-radius:21px;font:800 13.5px/1 var(--us-font-ui);box-shadow:0 8px 18px rgba(0,0,0,.35)}
+#moments .ub-now{border:0;background:#f7efe9;color:#1a1020}
+#moments .ub-all{border:1px solid rgba(247,239,233,.3);background:rgba(29,17,25,.85);color:#f7efe9}
+#moments .ub-count{position:absolute;right:12px;bottom:62px;z-index:2;padding:3px 8px;border-radius:8px;background:rgba(29,17,25,.85);color:rgba(247,239,233,.85);font:700 11px/1.4 var(--us-font-ui)}
+#moments .ub-mini{position:absolute;right:12px;bottom:12px;z-index:2;width:104px;height:42px;overflow:hidden;border:1px solid rgba(247,239,233,.2);border-radius:10px;background:rgba(29,17,25,.85);pointer-events:none}
+#moments .ub-mini svg{position:absolute;inset:0;width:100%;height:100%}
+#moments .ub-mini path{fill:none;stroke:#c0392b;stroke-width:40}
+#moments .ub-mini-frame{position:absolute;border:1.5px solid #f7efe9;border-radius:3px;box-sizing:border-box}
+#moments .ub-empty{display:grid;place-items:center;height:100%;padding:24px;border-radius:22px;border:1px dashed rgba(247,239,233,.25);text-align:center;color:var(--us-color-text-2);font-size:14px;line-height:1.45}
+#usBachecaSheet .ub-sheet-title{margin:4px 0 0;font:400 24px/1.15 var(--us-font-display);color:var(--us-color-text)}
+#usBachecaSheet .ub-sheet-why{margin:6px 0 14px;font-size:13.5px;line-height:1.4;color:var(--us-color-text-2)}
+#usBachecaSheet .ub-sheet-actions{display:grid;gap:8px}
+#usBachecaSheet .ub-sheet-actions button{min-height:50px;padding:0 16px;border:0;border-radius:16px;background:color-mix(in srgb,var(--us-color-text) 8%,transparent);color:var(--us-color-text);font:700 15px/1.2 var(--us-font-ui);text-align:left}
+#usBachecaSheet .ub-sheet-actions [hidden]{display:none}
+#usBachecaSheet .ub-sheet-actions .is-never{color:color-mix(in srgb,#ff7c96 80%,var(--us-color-text))}
+@media (prefers-reduced-motion:reduce){#moments .ub-tilt,#moments .ub-item{transition:none}}
 @media(prefers-reduced-motion:reduce){#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:active{transform:rotate(var(--pol-tilt,-1.5deg))!important}}
+#usBachecaSheet{--us-sheet-k:var(--us-pg-moments)}
+#usBachecaSheet>[data-us-modal-panel]{display:grid;align-content:start;width:min(100%,560px);max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top,0px) - 48px);overflow-y:auto;overscroll-behavior:contain;padding:18px 20px calc(24px + var(--us-safe-bottom,0px));box-sizing:border-box}

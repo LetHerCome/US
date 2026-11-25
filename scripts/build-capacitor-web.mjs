@@ -32,6 +32,7 @@ const RUNTIME_FILES = [
   'aspetto.js',
   'personaggi.js',
   'us-ricorda.js',
+  'bacheca.js',
   'app-lock.js',
   'app-lock.css',
   'notifications.js',

@@ -2,6 +2,21 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### La vostra bacheca, tenuta da US (25/11) — fase 1
+
+**Stato:** ramo `claude/bacheca-us`, verso il ramo fisso di staging. Grill-me D1–D27 e tavola «US · La vostra bacheca» (https://claude.ai/artifact/8LuLvzRzMcVTDmsHdKnUWG) approvata: «Approvo, vai». La migrazione `20261125230000_us_bacheca_v1.sql` va applicata a US-STAGING col via del founder. Fasi dopo: i vostri post-it, la ricerca in Ricordi (con «Appendi»), «Da appuntare» nella Mappa.
+
+**Cosa cambia:**
+- **La Bacheca in Ricordi** non è più la mappa dei posti disegnata a bacheca: è la vostra «anta del frigo», **tenuta da US**. Ci appende le vostre cose: ricordi, lettere tenute di Lasciato per te, risposte tenute della domanda di oggi, timbri dei traguardi.
+- **La prima volta** la riempie con la vostra storia (fino a 8: il primo ricordo, le prime volte nei posti nuovi, un ricordo per alcuni mesi, il ricordo della settimana). Poi al massimo una cosa al giorno (un anno fa, l'anniversario, i ricordi tondi) e due il lunedì (il ricordo della settimana, una cosa tenuta). Mai una didascalia con parole delicate.
+- **È uno spazio infinito**: un dito trascina, due dita (o la rotella) avvicinano, doppio tocco su una cosa la avvicina; «Adesso» porta alle cose più nuove, «Tutta la storia» allontana; la piccola mappa in basso dice dove sei. Il filo rosso è la strada della vostra storia, con gli anni scritti sul sughero.
+- **Ogni cosa di US ha il suo post-it** che dice perché è lì («Un anno fa, a Padova», «Il ricordo della settimana»). Le puntine: gialle per US, nel tuo colore per le tue, nel colore dell'altra persona per le sue.
+- **L'ultima parola è vostra**: toccando una cosa si apre il foglio con «Apri il ricordo», «Fissa» (US non la toglie più), «Stacca» (torna al suo posto, l'originale resta) e «Non appenderla più». Trascinandola la sposti, e diventa vostra.
+- **12 cose gratis** (quelle di US e le vostre insieme); con US Plus senza limite. Quando la bacheca è piena, US fa posto solo togliendo una delle sue non fissate.
+- **US lo dice col fumetto**: quando appende una cosa nuova, il fumetto dall'isola lo dice («Vi ho appeso una foto in bacheca: un anno fa eravate a Padova») e toccandolo si apre la bacheca. Conta come la battuta del giorno; le date importanti vengono prima.
+
+**Server:** tabelle `us_bacheca_pins` (riferimento alla cosa, motivo, valori del post-it, fissata, posizione, chi l'ha spostata), `us_bacheca_bans`, `us_bacheca_planned`; regole in `private.us_bacheca_plan`; funzioni `get_bacheca_v1`, `bacheca_pin_action_v1`, `bacheca_pin_v1`. Il contenuto si legge sempre dal vivo: un ricordo cancellato esce dalla bacheca da solo. Nessuna AI.
+
 ### Lasciato per te nuovo (25/11)
 
 **Stato:** ramo `claude/lasciato-nuovo`, verso il ramo fisso di staging. Tavola «US · Lasciato per te» (https://claude.ai/artifact/95kvj2AwMbwjXgRtiPbSmL) approvata: «perfetto puoi unire».

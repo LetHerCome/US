@@ -14,7 +14,7 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
 
-  const PRIORITY = Object.freeze({ presentazione: 0, compleanno: 1, anniversario: 1, ti_aspetta: 2, un_anno_fa: 3, mesiversario: 4, giorni: 4, traguardo: 4, conoscervi: 5 });
+  const PRIORITY = Object.freeze({ presentazione: 0, compleanno: 1, anniversario: 1, ti_aspetta: 2, bacheca: 2.5, un_anno_fa: 3, mesiversario: 4, giorni: 4, traguardo: 4, conoscervi: 5 });
   const hash = (s) => { let h = 2166136261; for (const c of String(s || '')) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; };
   const pick = (list, key) => list[hash(key) % list.length];
   const years = (n) => (n === 1 ? 'un anno' : `${n} anni`);
@@ -45,6 +45,12 @@
       case 'conoscervi':
         if (v.ask === 'primo_ricordo') return ['Mettete il vostro primo ricordo: da lì comincio a conoscervi.', 'Una foto per cominciare? Il vostro primo ricordo.', 'Il primo ricordo è il più bello da mettere.'];
         return ['Quando è il tuo compleanno? Così me lo ricordo.', 'Non so ancora il tuo compleanno. Me lo dici?', 'Mettiamo il tuo compleanno? Poi ci penso io a ricordarlo.'];
+      case 'bacheca':
+        // La vostra bacheca (25/11/2026): what US pinned on the board.
+        if (v.reason === 'un_anno_fa') return v.place ? [`Vi ho appeso una foto in bacheca: un anno fa eravate a ${v.place}.`, `In bacheca c'è ${v.place}, un anno fa.`, `Ho messo in bacheca un ricordo di un anno fa: ${v.place}.`] : ['Vi ho appeso in bacheca un ricordo di un anno fa.', "In bacheca c'è una foto di un anno fa.", 'Un anno fa, oggi: ve l\'ho appeso in bacheca.'];
+        if (v.reason === 'traguardo') return v.what === 'anni' ? [`In bacheca c'è un timbro nuovo: ${years(v.count)} insieme.`, `Ho appeso i vostri ${years(v.count)} in bacheca.`] : [`In bacheca c'è un timbro nuovo: ${v.count} ricordi.`, `Ho appeso i vostri ${v.count} ricordi in bacheca.`];
+        if (v.reason === 'tenuta') return ['Ho appeso in bacheca una cosa che avete tenuto.', "In bacheca c'è una cosa vostra di questa settimana."];
+        return ['Ho appeso in bacheca il ricordo della settimana.', "In bacheca c'è il ricordo più bello della settimana.", 'Ho sistemato la bacheca: guarda il ricordo della settimana.'];
       case 'ti_aspetta':
         if (v.what === 'game') return [`${p} ha giocato e aspetta te.`, `C'è una partita che ti aspetta: tocca a te.`, `${p} ha fatto la sua mossa. Tocca a te.`];
         return [`${p} ha già risposto alla domanda di oggi. Tocca a te.`, `La risposta di ${p} c'è già: manca la tua.`, `${p} ti aspetta sulla domanda di oggi.`];
@@ -65,6 +71,7 @@
       case 'giorni': return { label: `Scrivi a ${partner}`, go: 'lfy', text: `${v.days} giorni di noi ♡` };
       case 'un_anno_fa': return { label: `Mandalo a ${partner}`, go: v.source === 'moment' && v.path ? 'lfy-photo' : 'lfy', text: `Ti ricordi? ${v.place || v.title || ''}${v.date ? ` · ${longDate(v.date)}` : ''} ♡`.replace('?  ·', '?') };
       case 'traguardo': return { label: 'Apri Ricordi', go: 'moments' };
+      case 'bacheca': return { label: 'Apri la bacheca', go: 'bacheca' };
       case 'conoscervi': return v.ask === 'primo_ricordo' ? { label: 'Metti un ricordo', go: 'compose' } : { label: 'Aggiungilo', go: 'birthday', name: v.name };
       case 'ti_aspetta': return v.what === 'game' ? { label: 'Gioca', go: 'games' } : { label: 'Rispondi', go: 'daily' };
       case 'presentazione': return { label: 'Va bene', go: 'close' };
@@ -77,10 +84,11 @@
     return b.slot !== 'sera' || hour >= 17;
   }
   // The line of the moment: the introduction first, then the strongest.
-  function choose({ server, tocca, introduced, mutedKinds }) {
+  function choose({ server, tocca, introduced, mutedKinds, bacheca = null }) {
     const list = [];
     if (!introduced) list.push({ kind: 'presentazione', ref_key: 'presentazione', speaker: 'both', slot: 'mattina', vars: {} });
     if (server) list.push(server);
+    if (bacheca && !mutedKinds.has('bacheca')) list.push(bacheca);
     if (tocca && !mutedKinds.has('ti_aspetta')) list.push({ kind: 'ti_aspetta', ref_key: `ti_aspetta:${tocca}`, speaker: 'me', slot: 'mattina', vars: { what: tocca } });
     return list.sort((a, b) => (PRIORITY[a.kind] ?? 9) - (PRIORITY[b.kind] ?? 9))[0] || null;
   }
@@ -132,15 +140,17 @@
         await load();
         if (muted || saidToday()) return;
         const { hour, day } = romeNow();
-        const b = choose({ server: server && !server.seen ? server : null, tocca, introduced: Boolean(store(INTRO())), mutedKinds });
+        const b = choose({ server: server && !server.seen ? server : null, tocca, introduced: Boolean(store(INTRO())), mutedKinds, bacheca: w.UsBacheca?.news?.() || null });
         if (!b || !inWindow(b, hour)) return;
         const text = sentence(b, partnerName());
         if (!text) return;
-        const ok = w.UsAngolo.parla({ text, speaker: b.speaker, cta: action(b, partnerName()).label, onTap: () => openSheet(b), onHold: () => askMute(b) });
+        // The board's news opens the board itself; the others open the line's sheet.
+        const ok = w.UsAngolo.parla({ text, speaker: b.speaker, cta: action(b, partnerName()).label, onTap: () => (b.kind === 'bacheca' ? run(b) : openSheet(b)), onHold: b.kind === 'bacheca' ? undefined : () => askMute(b) });
         if (!ok) return;
         current = b;
         store(SAID(), JSON.stringify({ day, kind: b.kind, ref: b.ref_key, id: b.id || null }));
         if (b.kind === 'presentazione') store(INTRO(), '1');
+        if (b.kind === 'bacheca') w.UsBacheca?.markSeen?.();
         if (b.id) db()?.rpc('mark_my_battuta_v1', { p_id: b.id, p_action: 'seen' }).then(() => {}, () => {});
         paintVoi();
       }, 1400);
@@ -216,6 +226,7 @@
         case 'birthday': w.go?.('bond', { nav: true }); setTimeout(() => w.openEventEditor?.(null, null, { title: `Compleanno di ${a.name || ''}`.trim() }), 80); break;
         case 'daily': w.openToday?.(); break;
         case 'games': w.openQuizHub?.({ nav: true }); break;
+        case 'bacheca': w.go?.('moments', { nav: true }); setTimeout(() => w.UsRicordiPlace?.setView?.('board'), 80); break;
         default: break;
       }
     }
