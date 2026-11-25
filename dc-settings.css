@@ -843,3 +843,8 @@
 .us-plus-soon-cta{width:100%}
 .us-plus-soon-state{color:var(--us-color-text)}
 .us-plus-soon-leave{justify-self:center}
+
+/* ---------- Interruttori (founder, 25/11/2026): a clear edge when off, the main colour when on, a white knob ---------- */
+#settings .us-settings2-page .us-settings2-switch,#usSettingsModalBody .us-settings2-toggle-row>i{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--us-color-text) 32%,transparent)}
+#settings .us-settings2-page .us-settings2-switch-row[aria-checked="true"] .us-settings2-switch,#usSettingsModalBody .us-settings2-toggle-row>i.on{background:var(--us-accent-gradient);box-shadow:none}
+#settings .us-settings2-page .us-settings2-switch u,#usSettingsModalBody .us-settings2-toggle-row>i u,#settings .us-settings2-page .us-settings2-switch-row[aria-checked="true"] .us-settings2-switch u,#usSettingsModalBody .us-settings2-toggle-row>i.on u{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
