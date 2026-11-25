@@ -1234,10 +1234,12 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
       <div class="left-for-you-empty" id="leftForYouEmpty" hidden><h3>Lasciato per te</h3><p>Niente per ora.</p></div>
       <div class="left-for-you-error" id="leftForYouError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" data-action id="leftForYouRetry">Riprova</button></div>
       <div class="left-for-you-card" id="leftForYouCard" hidden>
+        <!-- Lasciato per te nuovo (tavola del 25/11/2026): who left it, painted by left-for-you.js. -->
+        <div class="left-for-you-cast" id="leftForYouCast" aria-hidden="true"></div>
         <div class="left-for-you-meta"><span class="left-for-you-from"><span class="left-for-you-from-avatar" id="leftForYouFromFallback">♡</span><span>Da <b id="leftForYouFromName" translate="no">la tua persona</b></span></span><span id="leftForYouCounter"></span></div>
         <div id="leftForYouContent"></div>
-        <p class="left-for-you-once" id="leftForYouOnce">Si apre una volta: conservalo se vuoi tenerlo.</p>
-        <div class="left-for-you-actions" id="leftForYouActions"><button type="button" id="leftForYouConserve">Conserva</button><button type="button" id="leftForYouReply">Rispondi</button><button type="button" id="leftForYouNext" hidden>Apri il prossimo</button></div>
+        <p class="left-for-you-once" id="leftForYouOnce">Si apre una volta sola. Se vuoi, tienila.</p>
+        <div class="left-for-you-actions" id="leftForYouActions"><button type="button" id="leftForYouConserve">Tienila</button><button type="button" id="leftForYouReply">Rispondi</button><button type="button" id="leftForYouNext" hidden>Apri il prossimo</button></div>
         <div class="left-for-you-status" id="leftForYouStatus" role="status" aria-live="polite"></div>
       </div>
       <button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
@@ -1254,20 +1256,22 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
   <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouComposerBackdrop"></div>
   <section class="left-for-you-sheet left-for-you-composer-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouComposerTitle" data-us-modal-panel>
     <header class="left-for-you-head">
-      <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouComposerTitle">Lascia qualcosa alla tua persona</h2></div>
+      <div><div class="tiny" id="leftForYouComposerKicker">PER VOI DUE</div><h2 id="leftForYouComposerTitle">Lascia qualcosa alla tua persona</h2></div>
       <button type="button" class="left-for-you-close us-modal-close" id="leftForYouComposerClose" aria-label="Chiudi il compositore" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="left-for-you-body left-for-you-composer-body">
       <p class="left-for-you-last" id="leftForYouComposerLast" hidden></p>
-      <div class="left-for-you-composer-kinds" role="tablist" aria-label="Tipo di messaggio">
-        <button type="button" role="tab" aria-selected="true" class="is-active" data-us-composer-kind="text">Testo</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="photo">Foto</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="audio">Vocale</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="video">Video</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="music">Musica</button>
-      </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="text">
         <label class="left-for-you-composer-label" for="leftForYouComposerText">Il tuo messaggio</label><textarea id="leftForYouComposerText" class="left-for-you-composer-text" maxlength="1000" rows="4" placeholder="Scrivi qualcosa per la tua persona…"></textarea><span class="left-for-you-composer-count" id="leftForYouComposerCount">0 / 1000</span>
+        <span class="left-for-you-sign" id="leftForYouComposerSign" translate="no"></span>
+      </div>
+      <p class="left-for-you-add-hint" id="leftForYouComposerAddHint">Aggiungi una cosa, se vuoi</p>
+      <div class="left-for-you-composer-kinds" role="tablist" aria-label="Aggiungi alla lettera">
+        <button type="button" role="tab" aria-selected="true" class="is-active" data-us-composer-kind="text" hidden>Testo</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="photo"><span class="us-icon" data-us-icon="image" aria-hidden="true"></span>Foto</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="audio"><span class="us-icon" data-us-icon="microphone" aria-hidden="true"></span>Vocale</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="video"><span class="us-icon" data-us-icon="video-camera" aria-hidden="true"></span>Video</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="music"><span class="us-icon" data-us-icon="music-note" aria-hidden="true"></span>Musica</button>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="photo" hidden>
         <div class="left-for-you-photo-preview" id="leftForYouComposerPhotoPreview" hidden><img id="leftForYouComposerPhotoPreviewImage" alt="Anteprima della foto scelta"><button type="button" class="left-for-you-photo-change" id="leftForYouComposerPhotoChange">Cambia foto</button></div>

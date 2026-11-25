@@ -1843,6 +1843,23 @@
 
     // ------------------------------------------------------------ Left for you 1.0
     'Si apre una volta: conservalo se vuoi tenerlo.': 'It opens only once: keep it if you want to hold on to it.',
+    // Lasciato per te nuovo (25/11/2026).
+    'Si apre una volta sola. Se vuoi, tienila.': 'It opens only once. Keep it if you like.',
+    'Si apre una volta sola. Se vuoi, tienilo.': 'It opens only once. Keep it if you like.',
+    Tienila: 'Keep it',
+    Tienilo: 'Keep it',
+    '✓ Tenuta': '✓ Kept',
+    '✓ Tenuto': '✓ Kept',
+    'Nei vostri Conservati.': 'In your Kept.',
+    'Era già nei vostri Conservati.': 'It was already in your Kept.',
+    'Aggiungi una cosa, se vuoi': 'Add one thing, if you like',
+    'Aggiungi alla lettera': 'Add to the letter',
+    'Per voi due': 'For you two',
+    'Con una cosa aggiunta, le parole stanno in 280 caratteri.': 'With something added, the words fit in 280 characters.',
+    stamattina: 'this morning',
+    'oggi pomeriggio': 'this afternoon',
+    stasera: 'this evening',
+    ieri: 'yesterday',
     'Un vocale': 'A voice note',
     Vocale: 'Voice',
     'Apri: Un vocale, da {name}': 'Open a voice note from {name}',

@@ -293,7 +293,7 @@
       content = renderLetterMarkup(item, `<button type="button" class="left-for-you-env-photo" aria-expanded="false" aria-label="Apri la foto"><img ${media} alt="" loading="eager"></button>${body}`)
         + `<img class="left-for-you-photo" ${media} alt="Foto lasciata per te" loading="eager">`;
     }
-    if (kind === 'audio') content = `${renderAudioStepPlayerMarkup(mediaUrl)}${body}`;
+    if (kind === 'audio') content = `<div class="left-for-you-fumetto">${renderAudioStepPlayerMarkup(mediaUrl)}</div>${body}`;
     if (kind === 'video') content = `<video class="left-for-you-video" controls preload="metadata" playsinline src="${escapeHtml(mediaUrl)}"></video>${body}`;
     if (kind === 'music') {
       const trackId = extractSpotifyTrackId(item?.media_path || '');
@@ -301,53 +301,76 @@
         ? `<div class="left-for-you-music-embed"><iframe src="${escapeHtml(spotifyEmbedUrl(trackId))}" width="100%" height="152" frameborder="0" allow="encrypted-media" loading="lazy" title="Brano Spotify"></iframe><a class="left-for-you-music-fallback" href="${escapeHtml(canonicalSpotifyTrackUrl(trackId))}" target="_blank" rel="noreferrer noopener">Apri su Spotify ↗</a></div>${body}`
         : `<a class="left-for-you-music" href="${escapeHtml(item?.media_path || '')}" target="_blank" rel="noreferrer noopener"><span class="left-for-you-music-mark" aria-hidden="true">♪</span><span><b>Apri il brano</b><small>${escapeHtml(item?.media_path || '')}</small></span><span aria-hidden="true">↗</span></a>${body}`;
     }
+    if (kind === 'music') content += body;
     const letter = kind === 'text' || kind === 'photo';
     return `<article class="left-for-you-item${letter ? ' is-letter' : ''}" data-left-kind="${kind}"><div class="left-for-you-kind">${labelForKind(kind)}</div>${content}</article>`;
   }
 
-  // Mockup 039: an envelope with a wax seal; the seal fades, the flap opens and the letter rises.
+  // Lasciato per te nuovo (founder 25/11/2026, tavola «US · Lasciato per te»): the sender's
+  // character brings an envelope in their colour, sealed with their own shape; it opens
+  // by itself after a moment (or at a tap on the seal) and the letter becomes a sheet of
+  // paper, a photo a polaroid. Signed with their name and their character.
+  function senderOf(item) {
+    const profile = profiles.get(item?.sender_id);
+    const name = profile?.display_name || (typeof window === 'undefined' ? PARTNER_FALLBACK : partnerName());
+    const role = profile?.role === 'beatrice' || profile?.role === 'francesco' ? profile.role : '';
+    return { name, role };
+  }
+  function characterOf(role, size) {
+    if (typeof window === 'undefined' || !role) return '';
+    try { return window.UsPersonaggi?.character?.(role, { size, reaction: '', mood: '' }) || ''; } catch (_) { return ''; }
+  }
+  // "oggi alle 9:12", "ieri alle 21:40", "il 3 novembre".
+  function leftWhen(value, now = new Date()) {
+    const at = new Date(value || '');
+    if (Number.isNaN(at.getTime())) return '';
+    const time = at.toLocaleTimeString(localeTag(), { hour: 'numeric', minute: '2-digit' });
+    const days = Math.round((dayStart(now) - dayStart(at)) / 86400000);
+    if (days <= 0) return `oggi alle ${time}`;
+    if (days === 1) return `ieri alle ${time}`;
+    return `il ${at.toLocaleDateString(localeTag(), { day: 'numeric', month: 'long' })}`;
+  }
+  // The words on top: "stamattina", "oggi pomeriggio", "stasera", "ieri", "il 3 novembre".
+  function leftMoment(value, now = new Date()) {
+    const at = new Date(value || '');
+    if (Number.isNaN(at.getTime())) return '';
+    const days = Math.round((dayStart(now) - dayStart(at)) / 86400000);
+    if (days <= 0) return at.getHours() < 12 ? 'stamattina' : at.getHours() < 18 ? 'oggi pomeriggio' : 'stasera';
+    if (days === 1) return 'ieri';
+    return `il ${at.toLocaleDateString(localeTag(), { day: 'numeric', month: 'long' })}`;
+  }
   function renderLetterMarkup(item, inner) {
-    const from = escapeHtml(profiles.get(item?.sender_id)?.display_name || (typeof window === 'undefined' ? PARTNER_FALLBACK : partnerName()));
+    const { name, role } = senderOf(item);
+    const from = escapeHtml(name);
+    const when = escapeHtml(leftWhen(item?.created_at));
     return `<div class="left-for-you-env-stage"><div class="left-for-you-env"><div class="left-for-you-env-back"></div>`
-      + `<div class="left-for-you-env-letter"><small>Da <span translate="no">${from}</span></small>${inner}</div>`
+      + `<div class="left-for-you-env-letter"><small>Da <span translate="no">${from}</span>${when ? ` · ${when}` : ''}</small>${inner}`
+      + `<span class="left-for-you-sign"><span translate="no">${from}</span>${characterOf(role, 26)}</span></div>`
       + '<div class="left-for-you-env-front"></div><div class="left-for-you-env-flap"></div>'
-      + '<svg class="left-for-you-env-seal" viewBox="0 0 30 20" aria-hidden="true"><circle cx="11" cy="10" r="9" fill="var(--us-rosa,#ff8fa3)"/><circle cx="19" cy="10" r="9" fill="var(--us-lilla,#b69cff)" style="mix-blend-mode:screen"/></svg></div></div>';
+      + `<button type="button" class="left-for-you-env-seal" aria-label="Apri la lettera di ${from}"><span class="left-for-you-env-wax">${characterOf(role, 30) || '<svg viewBox="0 0 30 20" aria-hidden="true"><circle cx="11" cy="10" r="9" fill="var(--us-rosa,#ff8fa3)"/><circle cx="19" cy="10" r="9" fill="var(--us-lilla,#b69cff)" style="mix-blend-mode:screen"/></svg>'}</span></button></div></div>`;
   }
 
-  const LETTER_HEIGHT = 118;
-  // A letter longer than the mockup's rises further, so all of it stays readable above the envelope.
-  function fitLetter(env) {
-    const letter = env?.querySelector?.('.left-for-you-env-letter');
-    if (!letter || !env.style?.setProperty) return 0;
-    const extra = Math.max(0, Math.ceil((letter.scrollHeight || 0) - LETTER_HEIGHT));
-    env.style.setProperty('--letter-extra', `${extra}px`);
-    return extra;
-  }
-
+  // The seal pops, the flap turns, then the envelope steps away and the paper unfolds (CSS).
   function openLetter(scope) {
     const env = scope?.querySelector?.('.left-for-you-env');
-    if (!env || typeof env.animate !== 'function' || !env.classList?.contains('left-for-you-env')) return;
-    const letter = env.querySelector('.left-for-you-env-letter');
+    if (!env || !env.classList?.contains('left-for-you-env') || env.dataset?.opening) return;
+    if (env.dataset) env.dataset.opening = '1';
     const flap = env.querySelector('.left-for-you-env-flap');
     const seal = env.querySelector('.left-for-you-env-seal');
-    const extra = fitLetter(env);
-    if (reducedMotion() || !letter || !flap || !seal) { env.classList.add('is-open', 'is-still'); return; }
-    seal.animate([{ opacity: 1, scale: 1 }, { opacity: 0, scale: 1.4 }], { duration: 260, delay: 420, fill: 'forwards' });
-    flap.animate([{ transform: 'rotateX(0deg)' }, { transform: 'rotateX(180deg)' }], { duration: 520, delay: 560, easing: 'cubic-bezier(.7,0,.2,1)', fill: 'forwards' })
+    if (reducedMotion() || typeof env.animate !== 'function' || !flap || !seal) { env.classList.add('is-open', 'is-still'); return; }
+    seal.animate([{ opacity: 1, scale: 1 }, { opacity: 0, scale: 1.5 }], { duration: 240, fill: 'forwards' });
+    flap.animate([{ transform: 'rotateX(0deg)' }, { transform: 'rotateX(180deg)' }], { duration: 420, delay: 120, easing: 'cubic-bezier(.7,0,.2,1)', fill: 'forwards' })
       .finished.then(() => {
-        if (!env.isConnected) return;
-        flap.style.zIndex = '0';
-        return letter.animate([
-          { translate: '0 0', height: `${LETTER_HEIGHT}px` },
-          { translate: `0 ${-64 - extra}px`, height: `${LETTER_HEIGHT + extra}px` },
-        ], { duration: 620, easing: 'cubic-bezier(.22,1.15,.36,1)', fill: 'forwards' }).finished;
-      })
-      .then(() => {
         if (!env.isConnected) return;
         env.classList.add('is-open');
         env.getAnimations?.({ subtree: true }).forEach((animation) => animation.cancel());
       })
       .catch(() => {});
+  }
+  let letterTimer = null;
+  function scheduleLetter(scope) {
+    clearTimeout(letterTimer);
+    letterTimer = setTimeout(() => openLetter(scope), 950);
   }
 
   function toggleLetterPhoto(button) {
@@ -517,6 +540,16 @@
     if (counter) counter.textContent = items.length > 1 ? `${currentIndex + 1} di ${items.length}` : '';
     if (next) next.hidden = currentIndex >= items.length - 1;
     if (once) once.hidden = !item || Boolean(item.conserved);
+    if (once && item) once.textContent = `Si apre una volta sola. Se vuoi, ${keepWord(item.kind).toLowerCase()}.`;
+  }
+  // A letter, a photo: «Tienila»; a vocale, a video, a song: «Tienilo».
+  function keepWord(kind) { return kind === 'text' || kind === 'photo' ? 'Tienila' : 'Tienilo'; }
+  function keptWord(kind) { return kind === 'text' || kind === 'photo' ? '✓ Tenuta' : '✓ Tenuto'; }
+  function paintCast(item) {
+    const cast = document.getElementById('leftForYouCast');
+    const card = document.getElementById('leftForYouCard');
+    if (card?.dataset) card.dataset.leftKind = item?.kind || '';
+    if (cast) cast.innerHTML = characterOf(senderOf(item).role, item?.kind === 'audio' ? 120 : 104);
   }
 
   async function renderCurrent() {
@@ -530,15 +563,17 @@
     stopActiveAudioPlayer();
     content.innerHTML = renderItemMarkup(item, url);
     const kindLabel = document.getElementById('leftForYouKind');
-    if (kindLabel) kindLabel.textContent = `Lasciato per te · ${labelForKind(item.kind)}`;
+    const when = leftMoment(item.created_at);
+    if (kindLabel) kindLabel.textContent = when ? `Lasciato per te · ${when}` : `Lasciato per te · ${labelForKind(item.kind)}`;
+    paintCast(item);
     if (item.kind === 'audio') bindAudioStepPlayer(content);
-    openLetter(content);
+    scheduleLetter(content);
     lastRenderedItemId = item.id;
     updateViewerControls();
     if (conserve) {
       conserve.disabled = false;
       conserve.classList.toggle('is-conserved', Boolean(item.conserved));
-      conserve.innerHTML = item.conserved ? '✓ Conservato' : 'Conserva';
+      conserve.innerHTML = item.conserved ? keptWord(item.kind) : keepWord(item.kind);
     }
     await markSeenWhenShown(item, content);
   }
@@ -586,6 +621,7 @@
   function close() {
     const modal = root();
     if (!modal) return;
+    clearTimeout(letterTimer);
     stopActiveAudioPlayer();
     modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true');
     activeItem = null;
@@ -603,13 +639,13 @@
       const { data, error } = await client.rpc('conserve_left_for_you', { target_item_id: item.id });
       if (error) throw error;
       item.conserved = true;
-      if (button) { button.classList.add('is-conserved'); button.textContent = data?.status === 'existing' ? '✓ Già conservato' : '✓ Conservato'; }
+      if (button) { button.classList.add('is-conserved'); button.textContent = keptWord(item.kind); }
       announceOpened();
       if (items[currentIndex] === item) updateViewerControls();
-      setStatus('Conservato nei Ricordi.', 'success');
+      setStatus(data?.status === 'existing' ? 'Era già nei vostri Conservati.' : 'Nei vostri Conservati.', 'success');
     } catch (error) {
       console.warn('[US Left for You] conserve', error);
-      if (button) { button.disabled = false; button.textContent = 'Conserva'; }
+      if (button) { button.disabled = false; button.textContent = keepWord(item.kind); }
       setStatus('Non riesco a conservarlo. Riprova.', 'error');
     } finally { busy = false; }
   }
@@ -695,6 +731,12 @@
     const send = document.getElementById('leftForYouComposerSend');
     const audioRecord = document.getElementById('leftForYouComposerAudioRecord');
     if (title) title.textContent = `Lascia qualcosa ${toPartner()}`;
+    const kicker = document.getElementById('leftForYouComposerKicker');
+    if (kicker) kicker.textContent = knownPartnerName() ? `Per ${knownPartnerName()}` : 'Per voi due';
+    const label = document.querySelector('label[for="leftForYouComposerText"]');
+    if (label) label.textContent = knownPartnerName() ? `${knownPartnerName()},` : 'Il tuo messaggio';
+    const sign = document.getElementById('leftForYouComposerSign');
+    if (sign) sign.textContent = typeof window !== 'undefined' ? (window.usProfile?.display_name || '') : '';
     if (send && !composer.sending) send.textContent = `Lascia per ${composerPartnerName()}`;
     const text = document.getElementById('leftForYouComposerText');
     if (text) text.placeholder = `Scrivi qualcosa per ${composerPartnerName()}…`;
@@ -791,8 +833,11 @@
       tab.setAttribute('aria-selected', kind === tab.dataset.usComposerKind ? 'true' : 'false');
     });
     document.querySelectorAll('[data-us-composer-panel]').forEach((panel) => {
-      panel.hidden = panel.dataset.usComposerPanel !== kind;
+      // The sheet of paper stays: what is written travels with the photo, the vocale, the video or the song.
+      panel.hidden = panel.dataset.usComposerPanel !== kind && panel.dataset.usComposerPanel !== 'text';
     });
+    const text = document.getElementById('leftForYouComposerText');
+    if (text) text.maxLength = kind === 'text' ? 1000 : CAPTION_MAX;
     updateComposerValidity();
   }
 
@@ -846,8 +891,9 @@
   function composerCaption(kind = composer.kind) {
     const id = CAPTION_FIELDS[kind];
     const value = id ? String(document.getElementById(id)?.value || '').trim() : '';
-    return value || null;
+    return value || paperText() || null;
   }
+  function paperText() { return String(document.getElementById('leftForYouComposerText')?.value || '').trim(); }
 
   // ---- L6: the chosen photo is shown, not just its file name ----
   function releasePhotoPreview() {
@@ -1088,7 +1134,7 @@
 
   function updateComposerValidity() {
     const count = document.getElementById('leftForYouComposerCount');
-    if (count) count.textContent = `${(document.getElementById('leftForYouComposerText')?.value || '').length} / 1000`;
+    if (count) count.textContent = `${(document.getElementById('leftForYouComposerText')?.value || '').length} / ${composer.kind === 'text' ? 1000 : CAPTION_MAX}`;
     const button = document.getElementById('leftForYouComposerSend');
     if (button) button.disabled = !composerCanSend();
     updateRecorderUi();
@@ -1684,6 +1730,8 @@
         if (problem) { setComposerStatus(problem, 'error'); return; }
       } else if (file.size > 25 * 1024 * 1024) { setComposerStatus('La foto è troppo grande (massimo 25 MB).', 'error'); return; }
     }
+    if (kind === 'video' || kind === 'music') body = paperText() || null;
+    if (body && kind !== 'text' && body.length > CAPTION_MAX) { setComposerStatus('Con una cosa aggiunta, le parole stanno in 280 caratteri.', 'error'); return; }
     if (CAPTION_FIELDS[kind]) {
       body = composerCaption(kind);
       if (body && body.length > CAPTION_MAX) { setComposerStatus('La didascalia è troppo lunga (massimo 280 caratteri).', 'error'); return; }
@@ -1709,15 +1757,42 @@
       if (error) throw error;
       if (inserted?.id) window.sendWebPushEvent?.('left_for_you', inserted.id).catch?.(() => {});
       setComposerStatus(`Lasciato per ${personName} ♡`, 'success');
+      carryAway();
       resetComposerInputs();
       refreshLastOutcome();
-      setTimeout(() => { if (!composer.sending) closeComposer(); }, 900);
+      setTimeout(() => { if (!composer.sending) closeComposer(); }, 1100);
     } catch (error) {
       console.warn('[US Left for You] send', error);
       setComposerStatus(`Non riesco a lasciarlo ${toPartner()} ora. Riprova, è ancora qui.`, 'error');
     } finally {
       setComposerBusy(false);
     }
+  }
+
+  function carryAway() {
+    try {
+      const sheet = document.querySelector('#leftForYouComposerOverlay .left-for-you-composer-sheet');
+      const target = envelopeEl()?.getBoundingClientRect?.();
+      if (!sheet || !target || reducedMotion() || typeof document.createElement !== 'function') return;
+      const me = window.UsPersonaggi?.myRole?.();
+      const carrier = document.createElement('div');
+      carrier.className = 'left-for-you-carrier';
+      carrier.setAttribute('aria-hidden', 'true');
+      carrier.innerHTML = `<span class="left-for-you-carrier-env"></span>${characterOf(me, 84)}`;
+      document.body.appendChild(carrier);
+      sheet.classList.add('is-folding');
+      const from = carrier.getBoundingClientRect();
+      const dx = target.left + target.width / 2 - (from.left + from.width / 2);
+      const dy = target.top + target.height / 2 - (from.top + from.height / 2);
+      const flight = carrier.animate([
+        { transform: 'translateY(60px) scale(.6)', opacity: 0 },
+        { transform: 'translateY(0) scale(1)', opacity: 1, offset: 0.35 },
+        { transform: `translate(${dx}px, ${dy}px) scale(.2)`, opacity: 0.9, offset: 0.95 },
+        { transform: `translate(${dx}px, ${dy}px) scale(.1)`, opacity: 0 }
+      ], { duration: 1100, easing: 'cubic-bezier(.4,0,.2,1)' });
+      const done = () => { carrier.remove(); sheet.classList.remove('is-folding'); };
+      flight.finished.then(done, done);
+    } catch (_) { /* the letter left anyway */ }
   }
 
   function bindComposer() {
@@ -1730,7 +1805,8 @@
     });
     document.getElementById('leftForYouComposerSend')?.addEventListener('click', send);
     document.querySelectorAll('[data-us-composer-kind]').forEach((tab) => {
-      tab.addEventListener('click', () => setComposerKind(tab.dataset.usComposerKind));
+      // A second tap on what was added takes it away: back to the letter alone.
+      tab.addEventListener('click', () => setComposerKind(composer.kind === tab.dataset.usComposerKind ? 'text' : tab.dataset.usComposerKind));
     });
     const pickBindings = [
       ['leftForYouComposerPhotoPick', 'leftForYouComposerPhotoFile', 'leftForYouComposerPhotoName'],
@@ -1842,6 +1918,8 @@
     document.getElementById('leftForYouConserve')?.addEventListener('click', conserve);
     document.getElementById('leftForYouReply')?.addEventListener('click', reply);
     document.getElementById('leftForYouContent')?.addEventListener('click', (event) => {
+      const seal = event.target?.closest?.('.left-for-you-env-seal');
+      if (seal) { clearTimeout(letterTimer); openLetter(document.getElementById('leftForYouContent')); return; }
       const strip = event.target?.closest?.('.left-for-you-env-photo');
       if (strip) toggleLetterPhoto(strip);
     });
