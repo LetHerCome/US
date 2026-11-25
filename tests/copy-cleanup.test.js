@@ -64,5 +64,6 @@ test('copy: Noi and Settings rows carry a label, not a description', () => {
   assert.match(html, /<b>Distanza<\/b><\/span>/);
   // Noi nuova (03/11/2026): no tiles; the board under the calendar has a title.
   assert.doesNotMatch(html, /data-noi-open-link/);
-  assert.match(html, /<h2 id="usNoiBoardTitle">Bacheca<\/h2><small>Per le cose senza data<\/small>/);
+  // Noi, Fase B (D3): the board on Noi is «La lavagna»; «Bacheca» is Ricordi's.
+  assert.match(html, /<h2 id="usNoiBoardTitle">La lavagna<\/h2><small>Disegni, post-it e le vostre idee<\/small>/);
 });

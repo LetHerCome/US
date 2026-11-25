@@ -282,7 +282,7 @@ test('Noi: the couple row stays centered, "La nostra settimana" owns the week, a
 test('Noi density: the one calendar comes first, then the board; no second hero', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
   assert.ok(bond.indexOf('id="usNoiV2Content"') < bond.indexOf('id="usNoiBoard"'), 'the calendar sits above the board');
-  assert.match(bond, /<h2 id="usNoiBoardTitle">Bacheca<\/h2>/);
+  assert.match(bond, /<h2 id="usNoiBoardTitle">La lavagna<\/h2>/);
   assert.doesNotMatch(bond, /data-noi-open-link/);
   assert.doesNotMatch(bond, /class="noi-week-board"|noi-hub-card--resonance/);
 });

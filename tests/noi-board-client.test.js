@@ -23,13 +23,16 @@ test('four papers, yellow when unknown; the paper goes to the server with the no
   assert.equal(N.payload({ title: 'Spesa', color: 'viola' }).color, 'yellow');
 });
 
-test('on Noi at most six post-its, the most recent first; the rest behind «Tutti i post-it (n)»', () => {
+test('on Noi the three newest post-its, six on the full-screen lavagna; the rest behind «Tutti i post-it (n)»', () => {
   const nine = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => note(i, i));
-  const board = N.boardNotes(nine);
+  assert.equal(N.ON_NOI, 3);
+  assert.equal(N.ON_BOARD, 6);
+  assert.deepEqual(N.boardNotes(nine).shown.map((n) => n.id), [9, 8, 7], 'Noi (Fase B)');
+  const board = N.boardNotes(nine, { max: N.ON_BOARD });
   assert.deepEqual(board.shown.map((n) => n.id), [9, 8, 7, 6, 5, 4]);
   assert.equal(board.total, 9);
   assert.equal(board.more, true);
-  const few = N.boardNotes(nine.slice(0, 4));
+  const few = N.boardNotes(nine.slice(0, 4), { max: N.ON_BOARD });
   assert.equal(few.shown.length, 4);
   assert.equal(few.more, false);
   assert.equal(N.boardNotes(nine, { max: 5 }).shown.length, 5, 'a new post-it being written takes a place');
@@ -41,6 +44,27 @@ test('the whole board filters by paper', () => {
   assert.deepEqual(N.byColor(list, 'pink').map((n) => n.id), [1, 3]);
   assert.deepEqual(N.byColor(list, 'yellow').map((n) => n.id), [2], 'no colour is yellow');
   assert.deepEqual(N.byColor(list, 'blue'), []);
+});
+
+// Noi, Fase B (D4, D12): the post-its sit where they were left on La lavagna;
+// the ones never moved take free spots in the order they were written; the
+// whole board filters by who wrote it.
+test('Fase B: places on the lavagna, the move that is not a change, the filter by author', () => {
+  const at = (id, created, place = {}) => ({ id, title: id, body: '', items: [], color: 'yellow', created_by: id.startsWith('m') ? 'me' : 'you', created_at: `2026-11-2${created}T10:00:00Z`, ...place });
+  const list = [at('m1', 3), at('y1', 1), at('m2', 2, { board_x: 0.81, board_y: 0.12 }), at('y2', 4)];
+  const places = N.placesFor(list);
+  assert.deepEqual(places.get('m2'), { x: 0.81, y: 0.12, moved: true });
+  assert.deepEqual([places.get('y1'), places.get('m1'), places.get('y2')].map((p) => [p.x, p.y]), N.SPOTS.slice(0, 3).map(([x, y]) => [x, y]), 'oldest first');
+  assert.equal(N.placesFor([at('a', 1, { board_x: 3, board_y: -1 })]).get('a').x, 1, 'kept inside the board');
+  assert.equal(N.placesFor([at('a', 1, { board_x: 0.5, board_y: null })]).get('a').moved, false, 'half a place is no place');
+  assert.deepEqual(N.placePayload(0.12345, 1.4), { board_x: 0.123, board_y: 1 });
+  assert.ok(N.sameWords({ title: 'a', body: 'b', items: [], color: 'pink', board_x: 0.1 }, { title: 'a', body: 'b', items: [], color: 'pink', board_x: 0.9 }));
+  assert.equal(N.sameWords({ title: 'a' }, { title: 'b' }), false);
+  assert.ok(N.missingPlace({ code: '42703', message: 'column couple_notes.board_x does not exist' }));
+  assert.equal(N.missingPlace({ code: '42501', message: 'denied' }), false);
+  assert.deepEqual(N.byAuthor(list, 'me', 'me').map((n) => n.id), ['m1', 'm2']);
+  assert.deepEqual(N.byAuthor(list, 'partner', 'me').map((n) => n.id), ['y1', 'y2']);
+  assert.equal(N.byAuthor(list, 'all', 'me').length, 4);
 });
 
 test('each post-it leans a little, always the same way', () => {
@@ -81,16 +105,22 @@ test('wired into Noi: the board under the calendar, the whole board in its Fogli
   const html = read('index.html');
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
   const board = bond.match(/<section class="us-noi-board" id="usNoiBoard"[\s\S]*?<\/section>/)?.[0] || '';
-  assert.match(board, /<h2 id="usNoiBoardTitle">Bacheca<\/h2>/);
+  assert.match(board, /<h2 id="usNoiBoardTitle">La lavagna<\/h2>/);
   assert.match(board, /data-board-new/);
-  assert.match(board, /<ul class="us-postits" id="usNoiBoardGrid"/);
+  assert.match(board, /data-lav-board-open/);
+  assert.match(board, /<div class="us-noi-lav" id="usNoiLav">\s*<div id="usNoiLavagnaSlot"[^>]*><\/div>\s*<ul class="us-postits is-board" id="usNoiBoardGrid"/, 'the post-its over the drawing');
   assert.match(board, /id="usNoiBoardAll"[^>]*hidden/);
   assert.match(html, /id="usNotesSheet" class="us-notes-overlay us-foglio"[^>]*data-us-modal/);
-  assert.match(html, /<h3 id="usNotesTitle">Bacheca<\/h3>/);
+  assert.match(html, /<h3 id="usNotesTitle">Tutti i post-it<\/h3>/);
+  assert.match(html, /<div id="usPostitFocus" class="us-postit-focus" aria-hidden="true" data-us-modal>/);
 
   const js = read('couple-notes.js');
-  assert.match(js, /const COLS='id,couple_id,title,body,items,color,created_by,updated_by,created_at,updated_at,revision'/);
-  assert.match(js, /role="group" aria-label="Filtra per colore"/);
+  assert.ok(js.includes("const COLS_BASE='id,couple_id,title,body,items,color,created_by,updated_by,created_at,updated_at,revision';\nconst COLS=`${COLS_BASE},board_x,board_y`;"));
+  assert.ok(js.includes('if(!placeless&&missingPlace(error)){placeless=true;return load();}'), 'a database without the places still reads the post-its');
+  assert.match(js, /role="group" aria-label="Filtra per chi l’ha scritto"/);
+  assert.ok(js.includes("from('couple_notes').update(place)"), 'a move saves only the place');
+  assert.ok(read('lavagna.js').includes('<ul class="us-postits is-board is-big" id="usLavagnaNotes" aria-label="Post-it"></ul>'));
+  assert.match(read('navigation.js'), /name:'notes'[\s\S]*?name:'postit',\s*find:\(\)=>document\.getElementById\('usPostitFocus'\)/, 'back closes the post-it in front first');
   assert.match(js, /data-davivere/);
   assert.match(js, /w\.UsDaVivere\?\.markLived\?\./);
   assert.match(js, /w\.UsDaVivere\?\.add\?\./);
@@ -104,7 +134,7 @@ test('wired into Noi: the board under the calendar, the whole board in its Fogli
 
   const en = read('i18n-en.js');
   // A key is quoted, or a bare word (Bacheca: 'Board').
-  for (const it of ['Bacheca', 'Nuovo post-it', 'Tutti i post-it ({n})', 'Carta gialla', 'Insieme · fisso in cima', 'Per le cose senza data']) {
+  for (const it of ['La lavagna', 'Nuovo post-it', 'Tutti i post-it ({n})', 'Disegni, post-it e le vostre idee', 'Insieme · fisso in cima', 'Filtra per chi l’ha scritto', 'Tuoi', 'Non spostato. Riprova.', 'Disegnate qualcosa o lasciate un post-it']) {
     assert.ok(en.includes(`'${it}':`) || en.includes(`\n    ${it}:`), it);
   }
 });
