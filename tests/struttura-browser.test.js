@@ -35,16 +35,29 @@ test('your character opens the Profilo from Ricordi, and the arrow goes back to 
   }
 });
 
-test('the two characters on Oggi open Il vostro angolo with Sintonia; Gioca has no daily question', async (t) => {
+test('the island opens Il vostro angolo with Sintonia in three tabs; Gioca has no daily question', async (t) => {
   const h = await start();
   if (!h) return t.skip('Playwright unavailable');
   try {
     const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
-    await page.waitForSelector('#home [data-us-angolo]:not([hidden]) svg');
-    assert.equal(await page.locator('#home [data-us-angolo] .us-char').count(), 2);
-    await page.click('#home [data-us-angolo]');
+    // L'isola (founder, 25/11/2026): it opens by itself the first time, then closes.
+    await page.waitForFunction(() => localStorage.getItem(`us:isola:v1:${window.usProfile?.id}`), null, { timeout: 15000 });
+    assert.equal(await page.locator('#usIsola').getAttribute('aria-expanded'), 'true', 'the first time it opens by itself');
+    await page.evaluate(() => window.UsAngolo.isola(false));
+    assert.equal(await page.locator('#home .us-angolo-entry').count(), 0, 'no characters on the photo');
+    await page.click('#usIsola');
+    await page.waitForFunction(() => document.getElementById('usIsola').getAttribute('aria-expanded') === 'true');
+    assert.equal(await page.locator('#usIsola [data-us-isola-duo] .us-char').count(), 2, 'the two characters lean out');
+    assert.match(await page.locator('#usIsola [data-us-isola-level]').innerText(), /^Livello \d+ · tocca qui$/);
+    await page.click('#usIsola');
     await page.waitForFunction(() => document.getElementById('usAngolo').classList.contains('open'));
+    assert.equal(await page.locator('#usIsola').getAttribute('aria-expanded'), 'false', 'the island closes as the angolo opens');
     assert.ok(await page.locator('#usAngolo #usGiocaSintonia .noi-resonance').isVisible(), 'the level is in the angolo');
+    assert.ok(await page.locator('#usAngoloVoi .us-progression-rhythm').isVisible(), 'Voi: the week');
+    assert.equal(await page.locator('#usAngoloPremi').isVisible(), false, 'Premi waits behind its tab');
+    await page.click('#usAngoloTabPremi');
+    assert.ok(await page.locator('#usAngoloPremi .us-progression-rewards-section').isVisible(), 'Premi: the rewards');
+    await page.click('#usAngoloTabVoi');
     // The cards stay inside the sheet (the reward chips scroll sideways on purpose).
     const spill = await page.evaluate(() => {
       const right = document.querySelector('.us-angolo-sheet').getBoundingClientRect().right;

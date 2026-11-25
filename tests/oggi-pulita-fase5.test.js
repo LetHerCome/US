@@ -22,7 +22,9 @@ test('Oggi: the dock is the caption, the row, Voi due and the Domanda di oggi; n
   assert.ok(dock, 'the dock');
   const ids = [...dock.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]).filter((id) => ['usOggiCaption', 'usOggiRow', 'usDailyRitual', 'usTodayPriorityRegion', 'pushOptInCard'].includes(id));
   assert.deepEqual(ids, ['usOggiCaption', 'usOggiRow', 'usDailyRitual']);
-  assert.match(dock, /data-us-angolo data-us-duo/, 'the two characters on the photo');
+  // 25/11/2026: the characters left the photo (founder: they cover it); the island at the top opens the angolo.
+  assert.doesNotMatch(dock, /data-us-angolo data-us-duo/, 'no characters on the photo');
+  assert.match(html, /class="us-isola" id="usIsola"/, 'the island');
   for (const id of ['usOggiNext', 'distanceWidget', 'usOggiStatus']) assert.match(dock, new RegExp(`id="${id}"`), `${id} in the row`);
   for (const gone of [/usTodayPriorityRegion/, /pushOptInCard|push-optin/, /us-today-priority/]) {
     assert.doesNotMatch(html, gone);

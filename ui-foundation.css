@@ -564,6 +564,8 @@ h1,h2,h3{font-family:var(--us-font-editorial)}
 /* On a coloured key the tint would fight the background: one line there. */
 :is(.primary,[class*="-primary"],.us-accent-btn) .us-icon::before{display:none}
 .us-icon[data-us-icon="x"]{--us-icon-src:url("/assets/icons/phosphor/x-regular.svg")}
+.us-icon[data-us-icon="question"]{--us-icon-src:url("/assets/icons/phosphor/question-regular.svg")}
+.us-icon[data-us-icon="game-controller"]{--us-icon-src:url("/assets/icons/phosphor/game-controller-regular.svg")}
 .us-icon[data-us-icon="camera"]{--us-icon-src:url("/assets/icons/phosphor/camera-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/camera-fill.svg");--us-icon-tint-alpha:.5}
 .us-icon[data-us-icon="video-camera"]{--us-icon-src:url("/assets/icons/phosphor/video-camera-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/video-camera-fill.svg");--us-icon-tint-alpha:.5}
 .us-icon[data-us-icon="microphone"]{--us-icon-src:url("/assets/icons/phosphor/microphone-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/microphone-fill.svg");--us-icon-tint-alpha:.5}

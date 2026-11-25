@@ -111,5 +111,7 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // Aspetto Giorno e Notte and Noi, Fase A (24/11/2026): giorno.css and
   // aspetto.js, «Vi rivedete tra», the special days and the one form cross it
   // by ~5 KB: 3.2 -> 3.25 MB.
-  assert.ok(total <= 3.25 * 1024 * 1024, `precache is ${total} bytes: stays under 3.25 MB`);
+  // L'isola and the angolo in three tabs (25/11/2026) add ~12 KB of code and
+  // two icons on top of Noi, Fase B: 3.25 -> 3.3 MB.
+  assert.ok(total <= 3.3 * 1024 * 1024, `precache is ${total} bytes: stays under 3.3 MB`);
 });
