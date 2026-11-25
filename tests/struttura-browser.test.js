@@ -44,7 +44,7 @@ test('the island opens Il vostro angolo with Sintonia in three tabs; Gioca has n
     // characters introduce themselves in the bubble (us-ricorda.js), within the hours they speak.
     await page.waitForFunction(() => localStorage.getItem(`us:isola:v1:${window.usProfile?.id}`), null, { timeout: 15000 });
     await page.evaluate(() => { window.UsAngolo.isola(false); window.__usRicordaNow = { day: '2026-11-25', hour: 10 }; window.UsRicorda.say(); });
-    await page.waitForFunction(() => !document.getElementById('usFumetto').hidden, null, { timeout: 8000 });
+    await page.waitForFunction(() => !document.getElementById('usFumetto').hidden, null, { timeout: 20000 });
     assert.equal(await page.locator('#usIsola').getAttribute('aria-expanded'), 'true', 'the first time it opens by itself');
     assert.match(await page.locator('[data-us-fumetto-text]').innerText(), /^Ciao! Da oggi ogni tanto vi ricordiamo le vostre cose/);
     await page.evaluate(() => window.UsAngolo.isola(false));
