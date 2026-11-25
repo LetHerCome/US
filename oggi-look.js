@@ -11,28 +11,39 @@
 if (window.USOggiLook) return;
 
 // O11 (1.0) — Italian names; the seasonal theme speaks of no month.
+// Premi di Oggi (grill D4, D9, D14, 25/11/2026): Sogno pastello, Cinema and
+// Il vostro cielo left; whoever had them is back on Originale.
 const THEMES = Object.freeze([
   { id: 'original', name: 'Originale', note: 'Il vostro Oggi di sempre, senza aggiunte.', reward: null },
   { id: 'romantic', name: 'Romantico', note: 'Rosa delicato e luce morbida sulla vostra foto.', reward: null },
-  { id: 'pastel', name: 'Sogno pastello', note: 'Colori chiari e leggeri, come un acquerello.', reward: null },
-  { id: 'cinematic', name: 'Cinema', note: 'Bande nere, grana e il tempo come titoli di testa.', reward: 'oggi_theme_cinematic', level: 4 },
   { id: 'moonlight', name: 'Chiaro di luna', note: 'Notte blu, stelle e un riflesso di luna.', reward: 'oggi_theme_moonlight', level: 6 },
-  // Premi Sintonia V2 (29/10/2026): the seasonal theme follows the season by itself.
-  // Premi Sintonia V2: the headline of level 20, the couple's own sky.
-  { id: 'sky', name: 'Il vostro cielo', kicker: 'Leggenda', note: 'Le stelle della sera in cui è iniziata la vostra storia, sopra la vostra città.', reward: 'sky_ours', level: 20 },
-  { id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: 'Cambia da solo: fiori in primavera, sole d’estate, foglie d’autunno, neve d’inverno.', reward: 'oggi_theme_seasonal', level: 10 }
+  { id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: 'Cambia da solo: fiori in primavera, sole d’estate, foglie d’autunno, neve d’inverno.', reward: 'oggi_theme_seasonal', level: 12 }
 ]);
+// Premi di Oggi (grill D3, D8, D14 and the tavola, 25/11/2026): three steps
+// that grow with the level, drawn by oggi-fx.js. Stelle luminose, Lucciole,
+// Luci sfocate and Aurora left; whoever had them is back on Nessuno.
 const EFFECTS = Object.freeze([
-  { id: 'none', name: 'Nessuno', note: 'Solo la vostra foto.', reward: null, count: 0 },
-  { id: 'hearts', name: 'Cuori delicati', note: 'Piccoli cuori salgono piano.', reward: null, count: 9 },
-  { id: 'stars', name: 'Stelle luminose', note: 'Stelle che brillano a turno.', reward: null, count: 12 },
-  { id: 'petals', name: 'Petali fluttuanti', note: 'Petali rosa scendono nel vento.', reward: 'oggi_effect_petals', level: 2, count: 10 },
-  { id: 'fireflies', name: 'Lucciole', note: 'Punti di luce calda vagano lenti.', reward: 'oggi_effect_fireflies', level: 4, count: 10 },
-  { id: 'bokeh', name: 'Luci sfocate', note: 'Come le luci di una sera in città.', reward: 'oggi_effect_bokeh', level: 8, count: 7 },
-  { id: 'snow', name: 'Neve', note: 'Fiocchi leggeri, mai una bufera.', reward: 'oggi_effect_snow', level: 11, count: 16 },
-  // Premi Sintonia V2: the Plus extra of level 4 (the server says it needs Plus).
-  { id: 'aurora', name: 'Aurora', note: 'Una luce che danza sopra la vostra foto, come un’aurora boreale.', reward: 'oggi_effect_aurora', level: 4, count: 4 }
+  { id: 'none', name: 'Nessuno', note: 'Solo la vostra foto.', reward: null },
+  { id: 'hearts', name: 'Cuori', step: 'Base', note: 'Coppie di cuori nei vostri due colori che si cercano salendo e si incontrano.', reward: null },
+  { id: 'petals', name: 'Petali', step: 'Base', note: 'Tre forme vere di petalo che girano mentre cadono nel vento.', reward: null },
+  { id: 'dandelions', name: 'Soffioni', step: 'Natura', note: 'Semi di tarassaco col loro ombrellino di fili, uno per colore, che salgono piano.', reward: 'oggi_effect_dandelions', level: 4 },
+  { id: 'snow', name: 'Neve', step: 'Natura', note: 'Fiocchi disegnati su tre profondità, lontani, a metà e vicini.', reward: 'oggi_effect_snow', level: 7 },
+  { id: 'leaves', name: 'Foglie', step: 'Natura', note: 'Foglie d’acero e d’autunno che ondeggiano, si posano e svaniscono.', reward: 'oggi_effect_leaves', level: 10 },
+  { id: 'shooting', name: 'Stelle cadenti', step: 'Vostri', note: 'Un cielo che brilla piano e ogni tanto una scia nei vostri colori.', reward: 'oggi_effect_shooting', level: 13 },
+  { id: 'lanterns', name: 'Lanterne', step: 'Vostri', note: 'Lanterne di carta che salgono, ognuna con la luce di uno di voi due.', reward: 'oggi_effect_lanterns', level: 16 },
+  { id: 'memories', name: 'Ricordi in volo', step: 'Vostri', kicker: 'Il più vostro', note: 'Piccole polaroid delle vostre foto galleggiano dietro il conto, col nastro di chi le ha aggiunte.', reward: 'oggi_effect_memories', level: 20 }
 ]);
+// What the finger does in Foto a fuoco, said once in the preview.
+const TOUCH = Object.freeze({
+  hearts: 'Tocca un cuore: scoppia. Tocca il vuoto: parte una coppia dal dito.',
+  petals: 'Tocca: i petali vicini volano via girando.',
+  dandelions: 'Tocca: soffi via i semi vicini e ne liberi altri.',
+  snow: 'Tocca: un soffio sul vetro e un po’ di neve fine.',
+  leaves: 'Tocca: le foglie vicine saltano e ruzzolano.',
+  shooting: 'Tocca: parte una stella. Scorri: la lanci tu.',
+  lanterns: 'Tocca: una lanterna parte dal dito. Scorri: fai vento.',
+  memories: 'Tocca una polaroid: si apre quel ricordo. Scorri: le lanci.'
+});
 const CATALOG = { theme: THEMES, effect: EFFECTS };
 const DEFAULTS = { theme: 'original', effect: 'none' };
 const $ = (id) => document.getElementById(id);
@@ -40,12 +51,6 @@ const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&
 const icon = (name) => `<span class="us-icon" data-us-icon="${name}" aria-hidden="true"></span>`;
 const find = (slot, id) => (CATALOG[slot] || []).find((look) => look.id === id) || null;
 const reducedMotion = () => Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
-
-// Fewer particles where the phone is modest or the user asked to save data.
-function lowPower() {
-  const nav = window.navigator || {};
-  return Boolean(nav.connection?.saveData || (nav.deviceMemory && nav.deviceMemory <= 3) || (nav.hardwareConcurrency && nav.hardwareConcurrency <= 4));
-}
 
 // ---------- entitlement (read-only view of the Rewards V2 state) ----------
 function rewardFor(look) {
@@ -75,98 +80,6 @@ function seasonFor(day) {
   return month >= 3 && month <= 5 ? 'spring' : month >= 6 && month <= 8 ? 'summer' : month >= 9 && month <= 11 ? 'autumn' : 'winter';
 }
 
-// ---------- Il vostro cielo (Premi Sintonia V2, livello 20) ----------
-// The stars of «Insieme dal» at their hour (22:00 unless they say) over the
-// couple's city (sky.js), as the decoration of the theme. The catalogue is
-// fetched only when the sky is shown.
-let skyStars = null;
-let skyLoading = null;
-let skyKey = '';
-let skyMap = '';
-// City and hour chosen on this phone, ahead of the next couple reload.
-let skyChosen = null;
-function skyContext() {
-  const couple = window.UsCoupleContext?.snapshot?.()?.couple || {};
-  const level = Number(window.USProgression?.getState?.()?.level) || 20;
-  const cityId = skyChosen?.city || couple.sky_city || '';
-  const minutes = skyChosen ? skyChosen.minutes : (couple.sky_minutes ?? null);
-  return { day: couple.started_on || '', cityId, minutes, level };
-}
-function loadStars() {
-  if (skyStars || skyLoading || !window.UsSky?.loadStars) return skyLoading;
-  skyLoading = window.UsSky.loadStars().then((stars) => {
-    skyLoading = null;
-    skyStars = stars;
-    if (skyStars) { apply(applied); refreshOpenSheet(); }
-  });
-  return skyLoading;
-}
-// A CSS url() of the map, or '' while the stars load or without a date.
-function skyMapUrl() {
-  const { day, cityId, minutes, level } = skyContext();
-  const city = window.UsSky?.cityById?.(cityId) || window.UsSky?.cityById?.('roma');
-  if (!window.UsSky || !day || !city) return '';
-  if (!skyStars) { loadStars(); return ''; }
-  const key = `${day}|${city.id}|${minutes}|${level}`;
-  if (key !== skyKey) {
-    const stars = skyStars;
-    // Over the photo, never instead of it (founder, 29/10): the overlay variant.
-    const svg = window.UsSky.skySvg({ stars, day, city, level, minutes, overlay: true });
-    skyMap = svg ? `url("data:image/svg+xml,${encodeURIComponent(svg)}")` : '';
-    skyKey = key;
-  }
-  return skyMap;
-}
-// The hour can come before the city: it is kept here and saved with the city.
-async function setSky(cityId, minutes) {
-  if (!window.UsSky?.saveSky) return;
-  if (cityId && !(await window.UsSky.saveSky(cityId, minutes))) { $('usLookStatus').textContent = 'Non riesco a salvare il vostro cielo. Riprova.'; return; }
-  skyChosen = { city: cityId, minutes };
-  skyKey = '';
-  apply(applied);
-  renderDetail();
-}
-// «Salva l'immagine»: the map with its title, date, city and hour (sky.js).
-function saveSkyPicture() {
-  const { day, cityId, minutes, level } = skyContext();
-  const city = window.UsSky?.cityById?.(cityId);
-  if (!skyStars || !city || !day) return Promise.resolve(false);
-  return window.UsSky.savePicture({ stars: skyStars, day, city, level, minutes });
-}
-
-// ---------- particles: deterministic per effect, so a preview matches Oggi ----------
-function seeded(text) {
-  let h = 2166136261;
-  for (const ch of text) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
-  return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-}
-const RANGES = {
-  hearts: { s: [10, 18], d: [13, 21], o: [0.5, 0.85], drift: [-26, 26] },
-  stars: { s: [7, 14], d: [3.2, 6.4], o: [0.55, 1], drift: [0, 0], y: [3, 62] },
-  petals: { s: [9, 15], d: [11, 18], o: [0.6, 0.9], drift: [-60, 40] },
-  fireflies: { s: [3, 5], d: [7, 12], o: [0.55, 0.95], drift: [-30, 30], y: [38, 92] },
-  bokeh: { s: [44, 110], d: [16, 26], o: [0.35, 0.7], drift: [-24, 24] },
-  snow: { s: [3, 6.5], d: [9, 17], o: [0.5, 0.95], drift: [-28, 28] },
-  aurora: { s: [170, 240], d: [10, 16], o: [0.75, 1], drift: [-40, 40], y: [-8, 18] }
-};
-function fxMarkup(effect, { scale = 1 } = {}) {
-  const look = find('effect', effect);
-  const range = RANGES[effect];
-  if (!look || !range || !look.count) return '';
-  const count = Math.max(3, Math.round(look.count * scale * (lowPower() ? 0.55 : 1)));
-  const rand = seeded(effect);
-  const pick = ([a, b]) => a + (b - a) * rand();
-  const parts = [];
-  for (let i = 0; i < count; i += 1) {
-    const x = ((i + rand() * 0.8) / count) * 100;
-    const y = range.y ? pick(range.y) : rand() * 100;
-    const d = pick(range.d);
-    const style = `--x:${x.toFixed(1)}%;--y:${y.toFixed(1)}%;--s:${pick(range.s).toFixed(1)}px;--d:${d.toFixed(1)}s;--delay:${(-rand() * d).toFixed(1)}s;--o:${pick(range.o).toFixed(2)};--drift:${pick(range.drift).toFixed(0)}px;--r:${Math.round(rand() * 360)}deg`;
-    parts.push(`<i style="${style}"></i>`);
-  }
-  return parts.join('');
-}
-
 // ---------- applying to the real Oggi hero ----------
 let applied = { theme: DEFAULTS.theme, effect: DEFAULTS.effect };
 function ensureLayers() {
@@ -187,25 +100,72 @@ function ensureLayers() {
     hero.insertBefore(deco, fx);
     hero.insertBefore(tint, deco);
   }
+  // Foto a fuoco with an effect on: a tap plays with the effect, so the way
+  // back to Oggi is this pill (and the back gesture).
+  let exit = hero.querySelector(':scope > .us-oggi-focus-exit');
+  if (!exit) {
+    exit = document.createElement('button');
+    exit.type = 'button';
+    exit.className = 'us-oggi-focus-exit';
+    exit.textContent = 'Torna a Oggi';
+    exit.addEventListener('click', (event) => { event.stopPropagation(); window.toggleOggiFocusPhoto?.(); });
+    hero.appendChild(exit);
+  }
   return { hero, fx: hero.querySelector(':scope > .us-oggi-fx') };
 }
+let heroFx = null;
 function apply(next = {}) {
   const theme = find('theme', next.theme) ? next.theme : DEFAULTS.theme;
   const effect = find('effect', next.effect) ? next.effect : DEFAULTS.effect;
   const root = document.documentElement;
   if (theme === DEFAULTS.theme) delete root.dataset.usOggiTheme; else root.dataset.usOggiTheme = theme;
   if (theme === 'seasonal') root.dataset.usOggiSeason = seasonFor(); else delete root.dataset.usOggiSeason;
-  const map = theme === 'sky' ? skyMapUrl() : '';
-  if (map) root.style.setProperty('--oggi-sky-map', map); else root.style?.removeProperty?.('--oggi-sky-map');
   if (effect === DEFAULTS.effect) delete root.dataset.usOggiEffect; else root.dataset.usOggiEffect = effect;
   const layers = ensureLayers();
   if (layers?.fx && (layers.fx.dataset.fx || DEFAULTS.effect) !== effect) {
     layers.fx.dataset.fx = effect;
-    layers.fx.innerHTML = effect === DEFAULTS.effect ? '' : fxMarkup(effect);
+    if (effect === DEFAULTS.effect) { heroFx?.destroy(); heroFx = null; layers.fx.innerHTML = ''; }
+    else if (heroFx && heroFx.canvas.isConnected) heroFx.set(effect);
+    else heroFx = window.UsOggiFx?.mount(layers.fx, effect, { hero: true }) || null;
   }
   applied = { theme, effect };
   paintSettings();
   return applied;
+}
+// Grill D12: the effect shines brighter for a few seconds on a Ti penso
+// received, a special day and a new level. Nothing with reduced motion.
+function burst() { if (applied.effect !== DEFAULTS.effect) heroFx?.burst(); }
+
+// ---------- Foto a fuoco: the finger plays with the effect ----------
+const inFocus = () => Boolean($('homeHero')?.classList.contains('us-oggi-focus'));
+const touchActive = () => inFocus() && applied.effect !== DEFAULTS.effect && Boolean(heroFx);
+let gesture = null;
+function local(event) { const r = heroFx.canvas.getBoundingClientRect(); return [event.clientX - r.left, event.clientY - r.top]; }
+function bindTouch(hero) {
+  if (!hero || hero.dataset.usOggiTouch) return;
+  hero.dataset.usOggiTouch = '1';
+  hero.addEventListener('pointerdown', (event) => {
+    if (!touchActive() || event.button > 0 || event.target.closest?.('button,a,input')) return;
+    const [x, y] = local(event);
+    gesture = { x0: x, y0: y, pts: [[x, y, performance.now()]], moved: false };
+    hero.setPointerCapture?.(event.pointerId);
+  });
+  hero.addEventListener('pointermove', (event) => {
+    if (!gesture || !touchActive()) return;
+    const [x, y] = local(event);
+    gesture.pts.push([x, y, performance.now()]); if (gesture.pts.length > 30) gesture.pts.shift();
+    if (!gesture.moved && Math.hypot(x - gesture.x0, y - gesture.y0) > 14) gesture.moved = true;
+    if (gesture.moved && heroFx.answersSwipe()) heroFx.drag(x, y);
+  });
+  hero.addEventListener('pointerup', (event) => {
+    if (!gesture || !touchActive()) { gesture = null; return; }
+    const [x, y] = local(event), g = gesture; gesture = null;
+    if (g.moved && heroFx.answersSwipe()) {
+      const a = g.pts[Math.max(0, g.pts.length - 6)], ms = Math.max(16, performance.now() - a[2]);
+      heroFx.swipe(g.x0, g.y0, x, y, (x - a[0]) / ms * 1000, (y - a[1]) / ms * 1000);
+    } else heroFx.tap(g.x0, g.y0);
+  });
+  hero.addEventListener('pointercancel', () => { gesture = null; });
 }
 function paintSettings() {
   const theme = $('usOggiThemeValue');
@@ -218,6 +178,18 @@ function syncPause() {
   const home = $('home');
   const paused = document.hidden || !home?.classList.contains('active') || document.documentElement.classList.contains('us-app-locked');
   document.documentElement.classList.toggle('us-oggi-fx-paused', paused);
+  if (!paused) { window.UsOggiFx?.wake(); specialDayBurst(); }
+}
+// Grill D12: on a special day (mesiversario, anniversary, 100, 200… days: the
+// characters' festa) the effect shines brighter once, the first time Oggi shows.
+function specialDayBurst() {
+  if (applied.effect === DEFAULTS.effect) return;
+  let festa = false;
+  try { festa = window.UsPersonaggi?.reactionOf?.(window.usProfile?.role || '') === 'festa'; } catch (_) { festa = false; }
+  if (!festa) return;
+  const key = `us:oggi-fx:festa:${new Date().toISOString().slice(0, 10)}`;
+  try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (_) { /* no storage: still once per open */ }
+  setTimeout(burst, 900);
 }
 
 // ---------- shared preview (gallery tiles and full preview) ----------
@@ -235,11 +207,10 @@ function heroSnapshot() {
   };
 }
 function phoneMarkup(theme, effect, snapshot, { compact = false } = {}) {
-  const vars = [snapshot.photo ? `--look-photo:${snapshot.photo}` : '', theme === 'sky' && skyMapUrl() ? `--oggi-sky-map:${skyMapUrl()}` : ''].filter(Boolean).join(';');
-  const photo = vars ? ` style="${esc(vars)}"` : '';
+  const photo = snapshot.photo ? ` style="${esc(`--look-photo:${snapshot.photo}`)}"` : '';
   return `<span class="us-look-phone${compact ? ' is-compact' : ''}" data-oggi-theme="${esc(theme)}"${theme === 'seasonal' ? ` data-oggi-season="${esc(seasonFor())}"` : ''}${photo}>
     <span class="us-look-photo"></span><span class="us-look-shade"></span><span class="us-oggi-tint"></span><span class="us-oggi-deco"></span>
-    <span class="us-oggi-fx" data-fx="${esc(effect)}">${effect === 'none' ? '' : fxMarkup(effect, { scale: compact ? 0.6 : 1 })}</span>
+    <span class="us-oggi-fx" data-fx="${esc(effect)}" data-fx-scale="${compact ? '0.55' : '0.9'}"></span>
     <span class="us-look-chrome"><i></i><b></b><i></i></span>
     <span class="us-look-count" data-countdown-style="editorial"><small>${esc(snapshot.title)}</small><b>${esc(snapshot.value)}</b><em>${esc(snapshot.unit)}</em></span>
     <span class="us-look-card"><small>DOMANDA DI OGGI</small><i></i><i></i></span>
@@ -287,25 +258,17 @@ function detailMarkup() {
   const theme = tab === 'theme' ? look.id : applied.theme;
   const effect = tab === 'effect' ? look.id : applied.effect;
   const current = applied[tab] === look.id;
-  // Il vostro cielo: the city and the hour first («Dove eravate quella sera?»,
-  // «A che ora è iniziata la vostra storia?», 22:00 unless they say), then the picture to keep.
-  const sky = tab === 'theme' && look.id === 'sky' && s.state !== 'locked';
-  const { cityId, minutes } = sky ? skyContext() : { cityId: '', minutes: null };
-  const cities = sky && window.UsSky ? `<label class="us-look-sky-city"><span>Dove eravate quella sera?</span><select id="usSkyCity">${cityId ? '' : '<option value="">Scegli la città</option>'}${window.UsSky.CITIES.map((c) => `<option value="${esc(c.id)}"${c.id === cityId ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
-      <label class="us-look-sky-city"><span>A che ora è iniziata la vostra storia?</span><input type="time" id="usSkyTime" value="${window.UsSky.clock(minutes)}"></label>` : '';
-  const save = sky && cityId && skyStars ? '<button type="button" class="us-look-save" data-look-save-sky>Salva l’immagine</button>' : '';
-  const action = sky && !cityId
-    ? `<button type="button" class="us-look-apply" disabled>Scegli prima la città</button>`
-    : s.state === 'locked'
+  const touch = tab === 'effect' && TOUCH[look.id] ? `<p class="us-look-touch">${esc(TOUCH[look.id])} In Foto a fuoco.</p>` : '';
+  const action = s.state === 'locked'
     ? `<button type="button" class="us-look-apply" disabled>${icon('lock-simple')}Si sblocca al livello ${s.level} di Sintonia${s.plus ? ' con US Plus' : ''}</button>`
     : current
       ? `<button type="button" class="us-look-apply is-current" disabled>${icon('check')}In uso su Oggi</button>`
       : `<button type="button" class="us-look-apply primary" data-look-apply="${esc(look.id)}">Usa su Oggi</button>`;
   return `<div class="us-look-detail-stage">${phoneMarkup(theme, effect, heroSnapshot())}</div>
     <div class="us-look-detail-copy">
-      <small>${esc(look.kicker || (tab === 'theme' ? 'TEMA DI OGGI' : 'EFFETTO DI OGGI'))}</small>
+      <small>${esc(look.kicker || (tab === 'theme' ? 'TEMA DI OGGI' : look.step ? `EFFETTO DI OGGI · ${look.step.toUpperCase()}` : 'EFFETTO DI OGGI'))}</small>
       <h3>${esc(look.name)}</h3><p>${esc(look.note)}</p>
-      ${cities}${action}${save}
+      ${touch}${action}
     </div>`;
 }
 function build() {
@@ -336,11 +299,6 @@ function build() {
     </section>`;
   document.body.appendChild(sheet);
   sheet.addEventListener('click', onClick);
-  sheet.addEventListener('change', (event) => {
-    if (event.target?.id !== 'usSkyCity' && event.target?.id !== 'usSkyTime') return;
-    const time = /^(\d{2}):(\d{2})/.exec($('usSkyTime')?.value || '');
-    setSky($('usSkyCity')?.value || '', time ? Number(time[1]) * 60 + Number(time[2]) : null);
-  });
   sheet.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') { event.preventDefault(); back(); }
   });
@@ -354,12 +312,13 @@ function renderGallery() {
   const body = $('usLookBody');
   body.setAttribute('aria-labelledby', tab === 'theme' ? 'usLookTabTheme' : 'usLookTabEffect');
   body.innerHTML = galleryMarkup();
+  mountPreviews(body);
   const reset = sheet.querySelector('[data-look-reset]');
   reset.disabled = applied.theme === DEFAULTS.theme && applied.effect === DEFAULTS.effect;
 }
 function renderDetail() {
   const body = $('usLookDetailBody');
-  if (body) body.innerHTML = detailMarkup();
+  if (body) { body.innerHTML = detailMarkup(); mountPreviews(body); }
   const title = $('usLookDetailTitle');
   if (title) title.textContent = find(tab, focus)?.name || 'Anteprima';
 }
@@ -429,7 +388,6 @@ async function onClick(event) {
     return;
   }
   if (target.dataset.lookOpen) return openDetail(target.dataset.lookOpen);
-  if (target.hasAttribute('data-look-save-sky')) return saveSkyPicture().catch(() => { $('usLookStatus').textContent = 'Non riesco a salvare l’immagine. Riprova.'; });
   if (target.dataset.lookApply) {
     const ok = await choose(tab, target.dataset.lookApply);
     if (ok) { renderDetail(); $('usLookStatus').textContent = `${find(tab, applied[tab])?.name || ''} è su Oggi.`; }
@@ -442,6 +400,14 @@ async function onClick(event) {
     renderGallery();
   }
 }
+// The previews are painted by the same engine as Oggi, so a preview is what lands on Oggi.
+function mountPreviews(root) {
+  if (!window.UsOggiFx || !root?.querySelectorAll) return;
+  for (const el of root.querySelectorAll('.us-oggi-fx[data-fx]')) {
+    const id = el.dataset.fx;
+    if (id && id !== DEFAULTS.effect && window.UsOggiFx.supports(id)) window.UsOggiFx.mount(el, id, { scale: Number(el.dataset.fxScale) || 0.6 });
+  }
+}
 function refreshOpenSheet() {
   if (!sheet?.classList.contains('open')) return;
   if ($('usLookDetail')?.classList.contains('open')) renderDetail();
@@ -450,22 +416,22 @@ function refreshOpenSheet() {
 
 function boot() {
   ensureLayers();
+  bindTouch($('homeHero'));
   syncPause();
   document.addEventListener('visibilitychange', syncPause);
   const home = $('home');
   if (home && typeof MutationObserver === 'function') new MutationObserver(syncPause).observe(home, { attributes: true, attributeFilter: ['class'] });
   window.addEventListener('us:progression-updated', refreshOpenSheet);
-  // Reduced motion can change while US is open; particles re-render static.
+  // Reduced motion can change while US is open: the effect starts again, still or moving.
   window.matchMedia?.('(prefers-reduced-motion: reduce)')?.addEventListener?.('change', () => {
-    const fx = document.querySelector('#homeHero > .us-oggi-fx');
-    if (fx) { fx.dataset.fx = ''; apply(applied); }
+    if (heroFx) heroFx.set(applied.effect); else window.UsOggiFx?.wake();
   });
   paintSettings();
 }
 
 window.USOggiLook = Object.freeze({
   THEMES, EFFECTS, DEFAULTS,
-  find, status, usable, apply,
+  find, status, usable, apply, burst, touchActive, mountPreviews,
   current: () => ({ ...applied }),
   previewMarkup: (slot, id) => phoneMarkup(slot === 'theme' ? id : applied.theme, slot === 'effect' ? id : 'none', heroSnapshot(), { compact: true }),
   openGallery, closeGallery, back,

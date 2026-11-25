@@ -44,42 +44,6 @@ html[data-us-oggi-theme="romantic"],
   --oggi-card-kicker:#ffb8cf;
   --oggi-chrome-tint:rgba(255,130,175,.14);
 }
-html[data-us-oggi-theme="pastel"],
-.us-look-phone[data-oggi-theme="pastel"]{
-  --oggi-photo-filter:saturate(.82) brightness(1.09) contrast(.92);
-  --oggi-tint:linear-gradient(165deg,rgba(255,220,236,.30) 0%,rgba(214,226,255,.20) 48%,rgba(210,250,236,.14) 70%,rgba(112,92,158,.46) 100%);
-  --oggi-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg opacity='.85'%3E%3Ccircle cx='160' cy='26' r='14' fill='%23ffd9e8'/%3E%3Ccircle cx='176' cy='30' r='10' fill='%23ffd9e8'/%3E%3Ccircle cx='146' cy='32' r='9' fill='%23ffd9e8'/%3E%3Ccircle cx='28' cy='60' r='5' fill='%23d4f5e6'/%3E%3Ccircle cx='186' cy='92' r='4' fill='%23e3dcff'/%3E%3Ccircle cx='14' cy='22' r='3' fill='%23fff1b8'/%3E%3Ccircle cx='120' cy='12' r='2.5' fill='%23e3dcff'/%3E%3C/g%3E%3C/svg%3E") right 0 top 11%/min(64%,300px) auto no-repeat;
-  --oggi-deco-2:radial-gradient(80% 40% at 50% 104%,rgba(232,214,255,.34),transparent 72%);
-  --oggi-ink:#fffdf8;
-  --oggi-ink-soft:#fbeaff;
-  --oggi-glow:0 3px 18px rgba(130,100,190,.55);
-  --oggi-hairline:rgba(250,232,255,.85);
-  --oggi-num-weight:400;
-  --oggi-card-bg:rgba(78,62,120,.40);
-  --oggi-card-line:rgba(238,226,255,.38);
-  --oggi-card-kicker:#ffd2e6;
-  --oggi-card-radius:24px;
-  --oggi-chrome-tint:rgba(232,214,255,.16);
-}
-html[data-us-oggi-theme="cinematic"],
-.us-look-phone[data-oggi-theme="cinematic"]{
-  --oggi-photo-filter:contrast(1.08) saturate(.86) brightness(.96);
-  --oggi-tint:linear-gradient(180deg,rgba(0,52,72,.24) 0%,rgba(0,0,0,0) 46%,rgba(255,138,64,.08) 70%,rgba(0,0,0,.62) 100%),radial-gradient(120% 80% at 50% 45%,transparent 55%,rgba(0,0,0,.45) 100%);
-  --oggi-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/160px 160px repeat;
-  --oggi-ink:#f4efe6;
-  --oggi-ink-soft:#e8dcc8;
-  --oggi-glow:0 2px 18px rgba(0,0,0,.7);
-  --oggi-hairline:rgba(244,232,210,.7);
-  --oggi-title-tracking:.58em;
-  --oggi-unit-font:500 10.5px/1 var(--us-font-ui,Inter,sans-serif);
-  --oggi-num-weight:200;
-  --oggi-card-bg:rgba(6,6,8,.62);
-  --oggi-card-line:rgba(244,232,210,.16);
-  --oggi-card-kicker:#e8c48e;
-  --oggi-card-radius:12px;
-  --oggi-chrome-tint:rgba(0,0,0,.22);
-  --oggi-bars:clamp(30px,6.5svh,58px);
-}
 html[data-us-oggi-theme="moonlight"],
 .us-look-phone[data-oggi-theme="moonlight"]{
   --oggi-photo-filter:brightness(.74) saturate(.6) contrast(1.06) hue-rotate(-14deg);
@@ -122,8 +86,6 @@ html:not([data-us-oggi-effect]) #homeHero>.us-oggi-fx{display:none}
 .us-oggi-deco{background:var(--oggi-deco),var(--oggi-deco-2)}
 .us-oggi-deco::before,.us-oggi-deco::after{content:"";position:absolute;left:0;right:0;height:var(--oggi-bars);background:#050506;display:none}
 .us-oggi-deco::before{top:0}.us-oggi-deco::after{bottom:0}
-html[data-us-oggi-theme="cinematic"] #homeHero>.us-oggi-deco,.us-look-phone[data-oggi-theme="cinematic"] .us-oggi-deco{opacity:.16}
-html[data-us-oggi-theme="cinematic"] #homeHero::after,.us-look-phone[data-oggi-theme="cinematic"]::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;box-shadow:inset 0 var(--oggi-bars) 0 #050506,inset 0 calc(var(--oggi-bars) * -1) 0 #050506}
 html[data-us-oggi-theme] #homeHero .home-photo-layer,.us-look-phone .us-look-photo{filter:var(--oggi-photo-filter)}
 
 /* Countdown: color, glow and typography follow the theme where the style is
@@ -134,36 +96,11 @@ html[data-us-oggi-theme] #homeHero [data-countdown-style="editorial"] .us-countd
 html[data-us-oggi-theme] #homeHero [data-countdown-style="editorial"] .us-countdown-unit{font:var(--oggi-unit-font);color:var(--oggi-ink-soft)}
 html[data-us-oggi-theme] #homeHero [data-countdown-style="editorial"] .us-countdown-unit::before,
 html[data-us-oggi-theme] #homeHero [data-countdown-style="editorial"] .us-countdown-unit::after{background:var(--oggi-hairline)}
-html[data-us-oggi-theme="cinematic"] #homeHero [data-countdown-style="editorial"] .us-countdown-unit{letter-spacing:.42em;text-transform:uppercase;gap:14px}
-html[data-us-oggi-theme="cinematic"] #homeHero [data-countdown-style="editorial"] .us-countdown-unit::before,
-html[data-us-oggi-theme="cinematic"] #homeHero [data-countdown-style="editorial"] .us-countdown-unit::after{width:34px}
 html[data-us-oggi-theme="romantic"] #homeHero [data-countdown-style="editorial"] .us-countdown-deco{inset:auto 0 -30px;height:26px;background:var(--oggi-ornament) center/96px 32px no-repeat;opacity:.9}
 
 /* Daily card and the top chrome while Oggi is the page on screen. */
 html[data-us-oggi-theme] #home .us-daily-ritual,.us-look-phone .us-look-card{background:var(--oggi-card-bg)!important;border-color:var(--oggi-card-line)!important;border-radius:var(--oggi-card-radius)!important}
 html[data-us-oggi-theme] #home .us-daily-ritual .us-daily-ritual-kicker{color:var(--oggi-card-kicker)}
-/* Il vostro cielo (Premi Sintonia V2, livello 20): the night over the photo
-   and the couple's star map (--oggi-sky-map, set by oggi-look.js). */
-html[data-us-oggi-theme="sky"],
-.us-look-phone[data-oggi-theme="sky"]{
-  --oggi-photo-filter:brightness(.74) saturate(.88) contrast(1.04);
-  --oggi-tint:linear-gradient(180deg,rgba(8,12,40,.62) 0%,rgba(12,18,52,.32) 34%,rgba(10,14,40,.08) 58%,rgba(5,7,20,.66) 100%);
-  --oggi-deco:var(--oggi-sky-map,linear-gradient(transparent,transparent)) center/cover no-repeat;
-  --oggi-deco-2:radial-gradient(70% 34% at 50% 0%,rgba(110,130,255,.16),transparent 70%);
-  --oggi-ink:#f4f1ff;
-  --oggi-ink-soft:#c9cdf5;
-  --oggi-glow:0 0 20px rgba(140,160,255,.45),0 2px 14px rgba(0,0,20,.7);
-  --oggi-hairline:rgba(200,206,255,.7);
-  --oggi-card-bg:rgba(10,14,40,.55);
-  --oggi-card-line:rgba(170,180,255,.28);
-  --oggi-card-kicker:#c3c9ff;
-  --oggi-chrome-tint:rgba(80,100,220,.12);
-}
-.us-look-sky-city{display:grid;gap:6px;width:min(100%,260px);margin:12px auto 4px}
-.us-look-sky-city span{font-size:13px;color:var(--us-color-text-2,#cfc8d6)}
-.us-look-sky-city select,.us-look-sky-city input{box-sizing:border-box;width:100%;min-height:44px;padding:0 12px;border-radius:14px;border:1px solid var(--us-color-line,rgba(255,255,255,.12));background:var(--us-color-surface-2,#1d1622);color:inherit;font:inherit;color-scheme:dark}
-.us-look-save{margin-top:10px;width:100%;min-height:44px;border-radius:999px;border:1px solid var(--us-color-line-strong,rgba(255,255,255,.2));background:transparent;color:inherit;font:inherit;font-weight:600}
-
 /* Tema delle stagioni (Premi Sintonia V2, 29/10/2026): the block above is
    autumn; spring, summer and winter change only what differs. The season is
    the Rome month (oggi-look.js seasonFor). */
@@ -213,47 +150,19 @@ html[data-us-oggi-theme="seasonal"][data-us-oggi-season="winter"],
   --oggi-chrome-tint:rgba(160,200,255,.12);
 }
 html[data-us-oggi-theme] body:has(#home.page.active) .us-premium-top{box-shadow:inset 0 0 0 999px var(--oggi-chrome-tint)}
-html[data-us-oggi-theme="cinematic"] #homeHero[data-us-countdown]{padding-top:calc(var(--us-top-chrome-height) + 22px + var(--oggi-bars) * .4)}
 
 /* ---------- background effects ---------- */
+/* Premi di Oggi, fase 1 (25/11/2026): oggi-fx.js draws every effect on one canvas. */
+.us-oggi-fx>canvas.us-oggi-fx-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.mini>.us-oggi-fx.mini-fx{position:absolute;inset:0;pointer-events:none}
+/* Foto a fuoco with an effect on: a tap plays, the pill goes back to Oggi. */
+#homeHero>.us-oggi-focus-exit{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 26px);z-index:30;transform:translate(-50%,12px);min-height:44px;padding:0 20px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(18,13,17,.55);color:#fff;font:700 14px/1 var(--us-font-ui,Figtree,sans-serif);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease}
+html[data-us-oggi-effect] #homeHero.us-oggi-focus>.us-oggi-focus-exit{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+html[data-us-oggi-effect] #homeHero.us-oggi-focus{touch-action:none}
+.us-look-touch{margin:4px 0 0;font-size:13px;line-height:1.45;color:var(--us-color-text-2,#cfc8d6)}
 .us-oggi-fx{overflow:hidden;contain:strict;container-type:size}
 .us-oggi-fx>i{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);opacity:0;will-change:transform,opacity;animation-duration:var(--d);animation-delay:var(--delay);animation-iteration-count:infinite;animation-timing-function:linear}
 html.us-oggi-fx-paused #homeHero .us-oggi-fx>i{animation-play-state:paused}
-
-/* Cuori delicati: rise slowly from the bottom, a soft sway. */
-.us-oggi-fx[data-fx="hearts"]>i{top:100%;background:rgba(255,186,210,.95);-webkit-mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;animation-name:us-fx-rise;animation-timing-function:ease-in-out}
-@keyframes us-fx-rise{0%{opacity:0;transform:translate3d(0,0,0) rotate(-10deg)}12%{opacity:var(--o)}50%{transform:translate3d(var(--drift),-56cqh,0) rotate(8deg)}86%{opacity:var(--o)}100%{opacity:0;transform:translate3d(0,-112cqh,0) rotate(-6deg)}}
-
-/* Stelle luminose: still points that take turns to shine. */
-.us-oggi-fx[data-fx="stars"]>i{background:radial-gradient(circle,rgba(255,250,235,.55),transparent 62%);animation-name:us-fx-twinkle;animation-timing-function:ease-in-out}
-.us-oggi-fx[data-fx="stars"]>i::after{content:"";position:absolute;inset:16%;background:#fffaf0;-webkit-mask:url("/assets/icons/phosphor/sparkle-fill.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/sparkle-fill.svg") center/contain no-repeat}
-@keyframes us-fx-twinkle{0%,100%{opacity:.08;transform:scale(.55) rotate(0deg)}50%{opacity:var(--o);transform:scale(1) rotate(18deg)}}
-
-/* Petali fluttuanti: fall diagonally, turning. */
-.us-oggi-fx[data-fx="petals"]>i{top:-6%;height:calc(var(--s) * .72);border-radius:80% 0 80% 0;background:linear-gradient(135deg,#ffe0e8,#ff9fbb);animation-name:us-fx-fall-turn}
-@keyframes us-fx-fall-turn{0%{opacity:0;transform:translate3d(0,0,0) rotate(var(--r))}10%{opacity:var(--o)}88%{opacity:var(--o)}100%{opacity:0;transform:translate3d(var(--drift),112cqh,0) rotate(calc(var(--r) + 300deg))}}
-
-/* Lucciole: warm points wandering low in the frame. */
-.us-oggi-fx[data-fx="fireflies"]>i{border-radius:50%;background:#fff3a6;box-shadow:0 0 6px 2px rgba(255,230,110,.7),0 0 16px 5px rgba(255,214,90,.28);animation-name:us-fx-wander;animation-timing-function:ease-in-out}
-@keyframes us-fx-wander{0%{opacity:0;transform:translate3d(0,0,0)}22%{opacity:var(--o)}50%{opacity:calc(var(--o) * .45);transform:translate3d(var(--drift),calc(var(--drift) * -.9),0)}78%{opacity:var(--o)}100%{opacity:0;transform:translate3d(calc(var(--drift) * -.5),calc(var(--drift) * -1.8 - 18px),0)}}
-
-/* Neve: light flakes, slow drift. */
-.us-oggi-fx[data-fx="snow"]>i{top:-4%;border-radius:50%;background:rgba(255,255,255,.95);animation-name:us-fx-fall}
-@keyframes us-fx-fall{0%{opacity:0;transform:translate3d(0,0,0)}8%{opacity:var(--o)}90%{opacity:var(--o)}100%{opacity:0;transform:translate3d(var(--drift),110cqh,0)}}
-
-/* Bokeh romantico: large out-of-focus lights breathing slowly. */
-.us-oggi-fx[data-fx="bokeh"]>i{margin:calc(var(--s) * -.5) 0 0 calc(var(--s) * -.5);border-radius:50%;background:radial-gradient(circle,rgba(255,206,220,.34) 0,rgba(255,180,200,.16) 48%,rgba(255,180,200,0) 70%);animation-name:us-fx-breathe;animation-timing-function:ease-in-out;animation-direction:alternate}
-.us-oggi-fx[data-fx="bokeh"]>i:nth-child(3n){background:radial-gradient(circle,rgba(255,226,170,.30) 0,rgba(255,206,140,.12) 48%,rgba(255,206,140,0) 70%)}
-@keyframes us-fx-breathe{0%{opacity:calc(var(--o) * .4);transform:translate3d(0,0,0) scale(.86)}100%{opacity:var(--o);transform:translate3d(var(--drift),calc(var(--drift) * -.6),0) scale(1.12)}}
-
-/* Aurora (Premi Sintonia V2, extra US Plus): wide ribbons of light swaying slowly. */
-.us-oggi-fx[data-fx="aurora"]>i{left:calc(var(--x) - var(--s) * .6);width:calc(var(--s) * 1.5);height:calc(var(--s) * .7);border-radius:46% 54% 50% 50% / 60% 60% 40% 40%;background:linear-gradient(100deg,transparent 2%,rgba(80,255,170,.85) 28%,rgba(70,210,255,.7) 54%,rgba(170,110,255,.7) 78%,transparent 98%);filter:blur(10px) saturate(1.3);mix-blend-mode:screen;animation-name:us-fx-aurora;animation-timing-function:ease-in-out;animation-direction:alternate}
-@keyframes us-fx-aurora{0%{opacity:calc(var(--o) * .35);transform:translate3d(0,0,0) skewX(-12deg) scaleY(.8)}50%{opacity:var(--o)}100%{opacity:calc(var(--o) * .7);transform:translate3d(var(--drift),calc(var(--drift) * .3),0) skewX(14deg) scaleY(1.15)}}
-
-/* Reduced motion: the same composition, perfectly still. */
-@media(prefers-reduced-motion:reduce){
-  .us-oggi-fx>i{animation:none!important;top:var(--y)!important;opacity:calc(var(--o) * .75)!important;transform:none!important}
-}
 
 /* ---------- preview phone (gallery) ---------- */
 .us-look-phone{--look-photo:linear-gradient(170deg,#f2a58c 0%,#c96f8f 46%,#5e4675 74%,#251c30 100%);position:relative;display:block;width:100%;aspect-ratio:9/18.5;border-radius:18px;overflow:hidden;isolation:isolate;background:#0b0810;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 26px rgba(0,0,0,.26);container-type:inline-size}
@@ -264,8 +173,6 @@ html.us-oggi-fx-paused #homeHero .us-oggi-fx>i{animation-play-state:paused}
 .us-look-phone>.us-oggi-tint{z-index:1}
 .us-look-phone>.us-oggi-deco{z-index:2}
 .us-look-phone>.us-oggi-fx{z-index:3}
-.us-look-phone[data-oggi-theme="cinematic"]{--oggi-bars:6.5cqw}
-.us-look-phone[data-oggi-theme="cinematic"]::after{box-shadow:inset 0 9cqw 0 #050506,inset 0 -9cqw 0 #050506}
 .us-look-chrome{z-index:4;top:4cqw;left:7cqw;right:7cqw;height:11cqw;border-radius:99px;background:rgba(30,22,40,.45);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 0 0 99px var(--oggi-chrome-tint);display:flex;align-items:center;justify-content:space-between;padding:0 2.6cqw}
 .us-look-chrome i{width:6.4cqw;height:6.4cqw;border-radius:50%;background:rgba(255,255,255,.18)}
 .us-look-chrome b{width:8cqw;height:8cqw;border-radius:2.4cqw;background:linear-gradient(135deg,#ff8fb0,#a985ff);opacity:.9}
@@ -275,7 +182,6 @@ html.us-oggi-fx-paused #homeHero .us-oggi-fx>i{animation-play-state:paused}
 .us-look-count em{display:flex;align-items:center;gap:2.4cqw;font:italic 400 5cqw/1 var(--us-font-editorial,Georgia,serif);color:var(--oggi-ink-soft)}
 .us-look-count em::before,.us-look-count em::after{content:"";width:6cqw;height:1px;background:var(--oggi-hairline)}
 .us-look-phone[data-oggi-theme="romantic"] .us-look-count::after{content:"";width:26cqw;height:9cqw;margin-top:1cqw;background:var(--oggi-ornament) center/contain no-repeat}
-.us-look-phone[data-oggi-theme="cinematic"] .us-look-count em{font:500 2.6cqw/1 var(--us-font-ui,Inter,sans-serif);letter-spacing:.42em;text-transform:uppercase}
 .us-look-card{z-index:4;left:5cqw;right:5cqw;bottom:21cqw;height:15cqw;border:1px solid;border-radius:5cqw;padding:2.6cqw 3.4cqw;display:flex;flex-direction:column;gap:1.4cqw}
 .us-look-phone .us-look-card{border-radius:calc(var(--oggi-card-radius) * .25)!important}
 .us-look-card small{font:800 2.2cqw/1 var(--us-font-ui,Inter,sans-serif);letter-spacing:.14em;color:var(--oggi-card-kicker)}

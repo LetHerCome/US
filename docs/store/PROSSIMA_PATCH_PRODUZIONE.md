@@ -2,6 +2,19 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Premi di Oggi, fase 1: effetti e temi (25/11)
+
+**Stato:** ramo `claude/premi-fase1-effetti`, verso il ramo fisso di staging. Grill D1–D25 e tavola «Premi di Oggi» (https://claude.ai/artifact/M8dY8C3Rvu4Mwvb6Rnw362) approvata: «Approvo, vai». La migrazione `20261126000000_premi_oggi_effetti.sql` va applicata a US-STAGING col via del founder; in produzione solo con un sì separato.
+
+**Cosa cambia:**
+- **Effetti di Oggi nuovi, disegnati a mano nei vostri due colori**, di giorno e di notte. Subito e gratis: **Cuori** (coppie che si cercano salendo e si incontrano) e **Petali**. Poi **Soffioni** (livello 4), **Neve** (7), **Foglie** (10), **Stelle cadenti** (13), **Lanterne** (16) e in cima **Ricordi in volo** (20): piccole polaroid delle vostre foto vere che galleggiano su Oggi.
+- **Gli effetti rispondono al dito** in Foto a fuoco: i cuori scoppiano, i petali e la neve volano via, le stelle e le lanterne partono dal dito, una polaroid apre il suo ricordo. Gli ultimi tre rispondono anche allo swipe. Con un effetto acceso si torna a Oggi con «Torna a Oggi».
+- **L'effetto brilla di più** quando arriva un Ti penso, nei giorni speciali e quando salite di livello.
+- **Escono** gli effetti Stelle luminose, Lucciole, Luci sfocate e Aurora, e i temi Cinema, Sogno pastello e Il vostro cielo: chi li aveva torna a «Nessuno» e «Originale».
+- In Personalizza Oggi le etichette «In uso», «Incluso» e «Sbloccato» tornano piccole (erano diventate riquadri vuoti).
+
+**In produzione:** migrazione del catalogo (col sì), sito e app (stessa versione su AAB e TestFlight).
+
 ### Gioca: gettoni e giostra dei giochi (25/11)
 
 **Stato:** ramo `claude/gestioni-giochi-carosello-8d958b`, verso il ramo fisso di staging. Solo app (niente SQL).
