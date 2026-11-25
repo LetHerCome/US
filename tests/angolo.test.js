@@ -32,15 +32,30 @@ test('Il vostro angolo: a sheet with the two characters and Sintonia inside', ()
   assert.match(sheet, /<h2 id="usAngoloHeading">Il vostro angolo<\/h2>/);
   assert.match(sheet, /data-angolo-close aria-label="Chiudi Il vostro angolo"/);
   assert.match(sheet, /<div class="us-angolo-duo" data-us-duo="big"><\/div>/);
-  assert.match(sheet, /<section id="usGiocaSintonia" class="us-gioca-sintonia" aria-label="Sintonia"><\/section>/);
-  // Oggi: the two characters on the photo open it.
-  assert.match(block('<main id="home"', '</main>'), /<button type="button" class="us-angolo-entry" data-us-angolo data-us-duo aria-label="Voi due: apri Il vostro angolo" hidden><\/button>/);
+  assert.match(sheet, /<section id="usGiocaSintonia" class="us-gioca-sintonia" aria-label="Sintonia">/);
+  // Tavola «US · Oggi e il vostro angolo» (25/11/2026): the level, then Voi · Guardaroba · Premi.
+  assert.match(sheet, /<div class="us-angolo-livello" data-angolo-slot="livello"><\/div>/);
+  assert.match(sheet, /role="tablist" aria-label="Il vostro angolo"/);
+  for (const [tab, panel] of [['Voi', 'usAngoloVoi'], ['Look', 'usAngoloLook'], ['Premi', 'usAngoloPremi']]) {
+    assert.match(sheet, new RegExp(`role="tab" id="usAngoloTab${tab}" aria-selected="(true|false)" aria-controls="${panel}"`), tab);
+    assert.match(sheet, new RegExp(`id="${panel}" role="tabpanel" aria-labelledby="usAngoloTab${tab}"`), panel);
+  }
+  for (const go of ['daily', 'games', 'memory', 'ideas']) assert.match(sheet, new RegExp(`id="usAngoloCresci"[\\s\\S]*data-sintonia-go="${go}"`), go);
+  // Oggi: no characters on the photo any more (founder: they cover it); the island at the top opens it.
+  assert.doesNotMatch(block('<main id="home"', '</main>'), /us-angolo-entry/);
+  assert.match(read('index.html'), /<div class="us-top-brand" role="img" aria-label="US">[^\n]*?<\/div><button type="button" class="us-isola" id="usIsola" aria-expanded="false" aria-label="US: tocca per Il vostro angolo" data-us-isola hidden>/);
 });
 
 test('who opens it: the characters, the Sintonia links, a finished mission; Back closes it', () => {
   const p = read('personaggi.js');
   assert.match(p, /const entry = target\.closest\('\[data-us-angolo\]'\);\n      if \(entry\) \{ openAngolo\(entry\.dataset\.usAngolo \|\| ''\); return; \}/);
-  assert.match(p, /w\.UsAngolo = Object\.freeze\(\{ open: openAngolo, close: closeAngolo \}\);/);
+  assert.match(p, /w\.UsAngolo = Object\.freeze\(\{ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola \}\);/);
+  // L'isola (25/11/2026): first tap opens it, second opens the angolo; by itself the first time and at a new level.
+  assert.match(p, /if \(target\.closest\('\[data-us-isola\]'\)\) \{ tapIsola\(\); return; \}/);
+  assert.match(p, /if \(isola\(\)\?\.getAttribute\('aria-expanded'\) === 'true'\) \{ setIsola\(false\); openAngolo\(\); \}/);
+  assert.match(p, /if \(!seen\) \{ writeSeen\(level\); setIsola\(true, \{ ms: PEEK_MS, reaction: 'cuore' \}\); return; \}/);
+  assert.match(p, /if \(level > \(Number\(seen\.level\) \|\| 0\)\) \{ writeSeen\(level\); setIsola\(true, \{ ms: PEEK_MS, reaction: 'festa' \}\); return; \}/);
+  assert.match(p, /showTab\(place === 'look' \? 'look' : 'voi', \{ focus: false \}\);/, 'Cambia look opens the Guardaroba');
   // What the Sintonia tab loaded before.
   assert.match(p, /w\.hydrateBond\?\.\(\);\n    w\.hydrateResonanceHistory\?\.\(\);\n    w\.USProgression\?\.hydrate\?\.\(\{ showUnlocks: true, force: true \}\);/);
   const noi = read('noi-v2.js');

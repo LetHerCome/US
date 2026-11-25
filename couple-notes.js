@@ -907,6 +907,8 @@ function install(w){
   const api=w.UsCoupleNotes;api.open=open;api.close=close;api.back=back;api.reset=reset;api.onChange=onChange;api.refresh=()=>ensure({force:true});api.widgetState=widgetState;
   // The full-screen lavagna (lavagna.js): its post-its, and «+ Post-it» there.
   api.showBoard=()=>{ensure();paintBoard();};api.write=()=>openEditor(null,'title','page');api.focusOpen=focusOpen;
+  // «Le vostre idee» in front, from Il vostro angolo (Per crescere insieme).
+  api.ideas=openIdeas;
 }
 return {entryDay,dueDone,ideaState,when,isEmpty,closeVerdict,fullRow,summary,payload,sortNotes,boardNotes,byColor,byAuthor,tilt,ideaLines,colorOf,placesFor,placePayload,sameWords,missingPlace,COLORS,LIMITS,ON_NOI,ON_BOARD,SPOTS,NOI_SPOTS,install};
 });

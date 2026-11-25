@@ -476,7 +476,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 
 <div class="app">
 
-  <div class="top us-premium-top"><span class="us-aurora" aria-hidden="true"></span><div class="us-top-left"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon" data-us-attention-icon><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span><span class="beat" aria-hidden="true"><i></i><i></i></span></button></div><div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true" decoding="async" draggable="false"></div><div class="top-actions"><button type="button" class="us-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top us-premium-top"><span class="us-aurora" aria-hidden="true"></span><div class="us-top-left"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon" data-us-attention-icon><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span><span class="beat" aria-hidden="true"><i></i><i></i></span></button></div><div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true" decoding="async" draggable="false"></div><button type="button" class="us-isola" id="usIsola" aria-expanded="false" aria-label="US: tocca per Il vostro angolo" data-us-isola hidden><span class="us-isola-window" aria-hidden="true" data-us-isola-duo></span><span class="us-isola-words" aria-hidden="true"><b>Il vostro angolo</b><span data-us-isola-level>Tocca qui</span></span></button><div class="top-actions"><button type="button" class="us-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -492,7 +492,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
            each thing has its own place (the envelope, Gioca, the characters, the Profilo). -->
       <div class="us-oggi-dock og-bottom" id="usOggiDock">
         <!-- Voi due on the photo (redesign definitivo, D2 e D3): a tap opens Il vostro angolo (personaggi.js). -->
-        <button type="button" class="us-angolo-entry" data-us-angolo data-us-duo aria-label="Voi due: apri Il vostro angolo" hidden></button>
+        
         <p class="og-cap" id="usOggiCaption" hidden><em id="usOggiCaptionText" translate="no"></em><small><span class="dot" id="usOggiCaptionDot" aria-hidden="true"></span><span id="usOggiCaptionMeta"></span></small></p>
         <div class="og-row" id="usOggiRow" hidden>
           <button type="button" class="og-next" id="usOggiNext" hidden><span class="us-icon" data-us-icon="calendar-blank" aria-hidden="true"></span><b id="usOggiNextWhen"></b><span id="usOggiNextTitle" translate="no"></span></button>
@@ -554,8 +554,27 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     <section class="us-sheet is-bottom us-angolo-sheet" role="dialog" aria-modal="true" aria-labelledby="usAngoloHeading" data-us-modal-panel>
       <header class="us-angolo-head"><h2 id="usAngoloHeading">Il vostro angolo</h2><button type="button" class="us-modal-close" data-us-modal-close data-angolo-close aria-label="Chiudi Il vostro angolo"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
       <div class="us-angolo-duo" data-us-duo="big"></div>
-      <section class="us-angolo-look" id="usAngoloLook" aria-label="Il tuo guardaroba"></section>
-      <section id="usGiocaSintonia" class="us-gioca-sintonia" aria-label="Sintonia"></section>
+      <!-- Tavola «US · Oggi e il vostro angolo» (founder, 25/11/2026): the level on top, then Voi, Guardaroba, Premi.
+           noi-v2.js moves the Sintonia blocks into their slots; the tabs are personaggi.js. -->
+      <section id="usGiocaSintonia" class="us-gioca-sintonia" aria-label="Sintonia">
+        <div class="us-angolo-livello" data-angolo-slot="livello"></div>
+        <div class="us-angolo-tabs" role="tablist" aria-label="Il vostro angolo">
+          <button type="button" role="tab" id="usAngoloTabVoi" aria-selected="true" aria-controls="usAngoloVoi" data-angolo-tab="voi">Voi</button>
+          <button type="button" role="tab" id="usAngoloTabLook" aria-selected="false" aria-controls="usAngoloLook" data-angolo-tab="look" tabindex="-1">Guardaroba</button>
+          <button type="button" role="tab" id="usAngoloTabPremi" aria-selected="false" aria-controls="usAngoloPremi" data-angolo-tab="premi" tabindex="-1">Premi</button>
+        </div>
+        <div class="us-angolo-panel" id="usAngoloVoi" role="tabpanel" aria-labelledby="usAngoloTabVoi" data-angolo-panel="voi" data-angolo-slot="voi">
+          <section class="us-angolo-cresci" id="usAngoloCresci" aria-labelledby="usAngoloCresciTitle">
+            <h3 id="usAngoloCresciTitle">Per crescere insieme</h3>
+            <button type="button" data-sintonia-go="daily" data-tone="tu"><span class="us-angolo-cresci-mark" aria-hidden="true"><span class="us-icon" data-us-icon="question"></span></span><span><b>La domanda di oggi</b><small>Conta ogni risposta condivisa</small></span><em>Rispondi</em></button>
+            <button type="button" data-sintonia-go="games" data-tone="partner"><span class="us-angolo-cresci-mark" aria-hidden="true"><span class="us-icon" data-us-icon="game-controller"></span></span><span><b>Gioca</b><small>Conta ogni partita finita</small></span><em>Una partita</em></button>
+            <button type="button" data-sintonia-go="memory" data-tone="noi"><span class="us-angolo-cresci-mark" aria-hidden="true"><span class="us-icon" data-us-icon="camera"></span></span><span><b>Ricordi e Ti penso</b><small>Conta il primo gesto di ogni giorno</small></span><em>Un ricordo</em></button>
+            <button type="button" data-sintonia-go="ideas" data-tone="carta"><span class="us-angolo-cresci-mark" aria-hidden="true"><span class="us-icon" data-us-icon="list-bullets"></span></span><span><b>Le vostre idee</b><small>Contano quelle che fate davvero</small></span><em>Apri</em></button>
+          </section>
+        </div>
+        <section class="us-angolo-look us-angolo-panel" id="usAngoloLook" role="tabpanel" aria-labelledby="usAngoloTabLook" aria-label="Il tuo guardaroba" data-angolo-panel="look" hidden></section>
+        <div class="us-angolo-panel" id="usAngoloPremi" role="tabpanel" aria-labelledby="usAngoloTabPremi" data-angolo-panel="premi" data-angolo-slot="premi" hidden></div>
+      </section>
     </section>
   </div>
 
@@ -779,7 +798,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       </article>
 
       <section class="us-progression-rhythm" id="usProgressionRhythm" aria-labelledby="usProgressionRhythmTitle" data-s>
-        <span class="us-progression-rhythm-kicker" id="usProgressionRhythmTitle">Ritmo</span>
+        <span class="us-progression-rhythm-kicker" id="usProgressionRhythmTitle">La vostra settimana</span>
         <p id="usProgressionRhythmCopy">Fate una piccola cosa insieme per iniziare.</p>
         <strong id="usProgressionRhythmValue">0 giorni</strong>
         <span class="us-progression-rhythm-days" id="usProgressionRhythmDays" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>

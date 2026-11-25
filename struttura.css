@@ -180,3 +180,55 @@
 @keyframes us-char-confetto{0%,100%{opacity:.95}50%{opacity:.35}}
 :root[data-us-motion="reduced"] :is(.us-char-wave,.us-char-confetto,.us-angolo-duo .us-duo-one,#home #usDailyRitual .us-daily-duo *){animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){:is(.us-char-wave,.us-char-confetto,.us-angolo-duo .us-duo-one,#home #usDailyRitual .us-daily-duo *){animation:none!important;transition:none!important}}
+
+/* ---------- L'isola (founder, 25/11/2026; tavola «US · Oggi e il vostro angolo», «Oggi · L'isola»):
+   the US symbol in a small capsule; a tap widens it into «Il vostro angolo · Livello N» and the two
+   characters lean out of it (personaggi.js). Fixed night colours: the bar is always on the photo. ---------- */
+.top.us-premium-top>.us-top-brand{z-index:2;transition:opacity .2s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
+.top.us-premium-top[data-us-isola="open"]>.us-top-brand{opacity:0;transform:scale(.6)}
+.top.us-premium-top .us-isola{position:absolute;left:50%;top:50%;z-index:1;width:56px;height:40px;min-height:0;margin:0;padding:0;overflow:hidden;transform:translate(-50%,-50%);border-radius:999px;border:1px solid rgba(247,239,233,.12);background:rgba(18,13,17,.3);box-shadow:none;color:#f7efe9;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:width .46s cubic-bezier(.2,.8,.2,1),height .46s cubic-bezier(.2,.8,.2,1),background-color .3s ease,box-shadow .3s ease,border-color .3s ease}
+.top.us-premium-top .us-isola[hidden]{display:none}
+.top.us-premium-top[data-us-isola="open"] .us-isola{width:220px;height:50px;background:rgba(18,13,17,.8);border-color:rgba(247,239,233,.24);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.top.us-premium-top .us-isola:focus-visible{outline:2px solid #f7efe9;outline-offset:3px}
+.us-isola-window{position:absolute;left:8px;bottom:0;width:70px;height:46px;display:flex;align-items:flex-end;overflow:hidden;pointer-events:none}
+.us-isola-window .us-char{display:block;flex:none;margin-bottom:-5px;transform:translateY(50px);transition:transform .5s cubic-bezier(.2,.9,.25,1.15)}
+.us-isola-window .us-char+.us-char{margin-left:-12px}
+[data-us-isola="open"] .us-isola-window .us-char{transform:none;transition-delay:.12s}
+[data-us-isola="open"] .us-isola-window .us-char+.us-char{transition-delay:.2s}
+.us-isola-words{position:absolute;left:80px;top:50%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;opacity:0;transform:translate(8px,-50%);white-space:nowrap;text-align:left;pointer-events:none;transition:opacity .2s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
+.us-isola-words b{font:800 13.5px/1.1 var(--us-font-ui,'Figtree',sans-serif);color:#f7efe9}
+.us-isola-words span{font:600 11.5px/1.2 var(--us-font-ui,'Figtree',sans-serif);color:rgba(247,239,233,.78)}
+[data-us-isola="open"] .us-isola-words{opacity:1;transform:translate(0,-50%);transition-delay:.18s}
+@media (prefers-reduced-motion:reduce){.top.us-premium-top .us-isola,.us-isola-window .us-char,.us-isola-words,.top.us-premium-top>.us-top-brand{transition:none!important}}
+
+/* ---------- Il vostro angolo: the level, then Voi · Guardaroba · Premi (tavola, 25/11/2026) ---------- */
+#usAngolo .us-angolo-livello{display:grid;grid-template-columns:minmax(0,1fr);min-width:0}
+#usAngolo .us-angolo-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:999px;border:1px solid var(--us-color-line,rgba(247,239,233,.08));background:color-mix(in srgb,var(--us-color-text,#f7efe9) 6%,transparent)}
+#usAngolo .us-angolo-tabs [role="tab"]{min-height:40px;margin:0;padding:0 6px;border:0;border-radius:999px;background:transparent;box-shadow:none;color:var(--us-color-text,#f7efe9);font:700 13.5px/1 var(--us-font-ui,'Figtree',sans-serif);cursor:pointer;transition:background-color .2s ease,color .2s ease}
+#usAngolo .us-angolo-tabs [role="tab"][aria-selected="true"]{background:var(--us-color-text,#f7efe9);color:var(--us-color-bg,#120d11);font-weight:800}
+#usAngolo .us-angolo-tabs [role="tab"]:focus-visible{outline:2px solid var(--us-color-text,#f7efe9);outline-offset:2px}
+#usAngolo .us-angolo-panel{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
+#usAngolo .us-angolo-panel[hidden]{display:none}
+/* Per crescere insieme: one row for each way the Sintonia grows, each opens its place. */
+#usAngolo .us-angolo-cresci{display:grid;gap:8px;min-width:0}
+#usAngolo .us-angolo-cresci h3{margin:4px 2px 0;font:400 20px/1.2 var(--us-font-display,'Fraunces',serif);color:var(--us-color-text,#f7efe9)}
+#usAngolo .us-angolo-cresci button{display:flex;align-items:center;gap:12px;min-height:58px;margin:0;padding:0 14px;border-radius:18px;border:1px solid var(--us-color-line,rgba(247,239,233,.08));background:color-mix(in srgb,var(--us-color-text,#f7efe9) 4%,transparent);box-shadow:none;color:var(--us-color-text,#f7efe9);text-align:left;cursor:pointer}
+#usAngolo .us-angolo-cresci [data-tone="tu"]{--tone:var(--us-tu,#ff7c96)}
+#usAngolo .us-angolo-cresci [data-tone="partner"]{--tone:var(--us-partner,#a98bff)}
+#usAngolo .us-angolo-cresci [data-tone="noi"]{--tone:var(--us-noi,#e17dd5)}
+#usAngolo .us-angolo-cresci [data-tone="carta"]{--tone:#f3e3b8}
+.us-angolo-cresci-mark{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:12px;background:color-mix(in srgb,var(--tone) 20%,transparent);color:var(--tone);--us-icon-size:17px}
+#usAngolo .us-angolo-cresci button>span:not(.us-angolo-cresci-mark){display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+#usAngolo .us-angolo-cresci b{font:700 14px/1.2 var(--us-font-ui,'Figtree',sans-serif)}
+#usAngolo .us-angolo-cresci small{font-size:12px;line-height:1.3;color:var(--us-color-text-2,rgba(247,239,233,.7))}
+#usAngolo .us-angolo-cresci em{flex:none;font:800 12.5px/1 var(--us-font-ui,'Figtree',sans-serif);font-style:normal;color:var(--tone)}
+:root[data-us-luce="giorno"] #usAngolo .us-angolo-cresci [data-tone="carta"]{--tone:#8a6a2a}
+:root[data-us-luce="giorno"] #usAngolo .us-angolo-cresci em,:root[data-us-luce="giorno"] .us-angolo-cresci-mark{color:color-mix(in srgb,var(--tone) 55%,#231b1d)}
+/* La vostra settimana: a heart for each day lived together, the weekday on top, today ringed. */
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i{position:relative;justify-self:center;width:30px;height:30px;margin-top:16px;border-radius:50%;background:color-mix(in srgb,var(--us-color-text,#f7efe9) 8%,transparent)}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i::before{content:attr(data-day);position:absolute;left:0;right:0;top:-17px;text-align:center;font:700 11px/1 var(--us-font-ui,'Figtree',sans-serif);font-style:normal;color:var(--us-color-text-2,rgba(247,239,233,.6))}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i.on{background:linear-gradient(135deg,var(--us-tu,#ff7c96),var(--us-partner,#a98bff))}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i.on::after{content:"";position:absolute;inset:8px;background:#1a1020;-webkit-mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i.today{box-shadow:0 0 0 2px var(--us-color-bg,#1b1219),0 0 0 4px var(--us-color-text,#f7efe9)}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i.today:not(.on){background:transparent;border:1.5px dashed var(--us-color-line-strong,rgba(247,239,233,.25));box-shadow:none}

@@ -36,7 +36,9 @@ test('Sintonia lives in Il vostro angolo, using the original progression nodes',
   assert.match(angolo,/id="usGiocaSintonia"/);
   const js=read('noi-v2.js');
   for(const selector of ['.noi-resonance','.us-progression-next','.us-progression-rewards-section','.noi-resonance-history','.noi-resonance-guide'])assert.ok(js.includes(selector),selector);
-  assert.match(js,/target\.appendChild\(element\)/,'original DOM nodes move; no duplicated progression state');
+  assert.match(js,/host\.appendChild\(element\)/,'original DOM nodes move; no duplicated progression state');
+  // 25/11/2026: into the angolo's slots: the level on top, Voi, Premi.
+  assert.ok(js.includes("const slots={livello:['.noi-resonance'],voi:['.us-progression-rhythm','.noi-resonance-history','.noi-resonance-guide'],premi:['.us-progression-next','.us-progression-rewards-section']};"));
   assert.match(read('personaggi.js'),/w\.USProgression\?\.hydrate\?\./);
   const nav=html.match(/<nav class="nav us-nav[\s\S]*?<\/nav>/)?.[0]||'';
   assert.equal((nav.match(/data-page=/g)||[]).length,4,'four primary pages remain');

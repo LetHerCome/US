@@ -821,13 +821,22 @@ function renderRhythm(next = state) {
   const compact = days === 1 ? '1 giorno' : `${days} giorni`;
   const value = $('usProgressionRhythmValue');
   const copy = $('usProgressionRhythmCopy');
-  setText(value, compact);
+  // La vostra settimana (Il vostro angolo, 25/11/2026): «3 giorni di fila»,
+  // a heart for each day; with none, an invitation, never an empty score.
+  setText(value, days > 0 ? `${compact} di fila` : '');
   setText(copy, next.rhythm_today
     ? 'Oggi c’eravate.'
-    : days > 0 ? 'Una piccola cosa oggi mantiene il Ritmo.' : 'Fate una piccola cosa insieme per iniziare.');
+    : days > 0 ? 'Una piccola cosa oggi mantiene il Ritmo.' : 'Iniziate oggi: basta una risposta alla domanda.');
   const segments = Array.from($('usProgressionRhythmDays')?.children || []);
   const last = next.rhythm_today ? segments.length - 1 : segments.length - 2;
   segments.forEach((segment, i) => segment.classList?.toggle?.('on', i <= last && i > last - days));
+  // The seven days end today: each knows its weekday (L M M G V S D), today is marked.
+  const today = new Date();
+  segments.forEach((segment, i) => {
+    const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (segments.length - 1 - i));
+    segment.dataset && (segment.dataset.day = 'DLMMGVS'[day.getDay()]);
+    segment.classList?.toggle?.('today', i === segments.length - 1);
+  });
   const hub = $('noiHubResonanceMeta');
   setText(hub, `Livello ${next.level} · Ritmo ${days}`);
 }
@@ -1522,11 +1531,17 @@ document.querySelectorAll?.('[data-sintonia-fold]')?.forEach?.((button) => butto
   if (open && canAnimate(body)) body.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: EASE.out });
 }));
 
-// S5 — inside "Come cresce la Sintonia" each source opens its own place.
-$('usSintoniaGrow')?.addEventListener('click', (event) => {
+// S5 — inside "Come cresce la Sintonia" each source opens its own place;
+// «Per crescere insieme» in Il vostro angolo (25/11/2026) does the same, and
+// the angolo steps aside first.
+function goGrow(event) {
   const target = event.target.closest?.('[data-sintonia-go]')?.dataset?.sintoniaGo;
   if (!target) return;
-  if (target === 'daily') window.openToday?.();
+  if (target !== 'games') window.UsAngolo?.close?.();
+  if (target === 'ideas') {
+    window.go?.('bond', { nav: true });
+    setTimeout(() => window.UsCoupleNotes?.ideas?.(), 60);
+  } else if (target === 'daily') window.openToday?.();
   else if (target === 'games') {
     window.UsAngolo?.close?.();
     window.openQuizHub?.({ nav: true });
@@ -1538,7 +1553,9 @@ $('usSintoniaGrow')?.addEventListener('click', (event) => {
     window.go?.('moments', { nav: true });
     setTimeout(() => window.UsMomentComposer?.open?.(), 60);
   }
-});
+}
+$('usSintoniaGrow')?.addEventListener('click', goGrow);
+$('usAngoloCresci')?.addEventListener('click', goGrow);
 
 // S10 — system Back closes the reward window and the level moment exactly
 // like their own buttons (navigation.js layers).

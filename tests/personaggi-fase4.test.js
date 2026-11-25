@@ -61,7 +61,9 @@ test('the wardrobe: shape, head, face or neck; the thresholds the server checks;
   assert.match(js, /saveCharacter\('set_my_character_shape', \{ p_shape: shape \}\);/);
   assert.match(js, /db\.rpc\('my_character_unlocks'\)/);
   const html = read('index.html');
-  assert.match(html, /<section class="us-angolo-look" id="usAngoloLook" aria-label="Il tuo guardaroba"><\/section>/);
+  // 25/11/2026: the wardrobe is the Guardaroba tab of the angolo.
+  assert.match(html, /<section class="us-angolo-look us-angolo-panel" id="usAngoloLook" role="tabpanel" aria-labelledby="usAngoloTabLook" aria-label="Il tuo guardaroba" data-angolo-panel="look" hidden><\/section>/);
   assert.match(html, /<button type="button" class="us-profile-look" data-us-angolo="look">Cambia look<\/button>/);
-  assert.match(js, /if \(place === 'look'\) setTimeout\(\(\) => d\.getElementById\('usAngoloLook'\)\?\.scrollIntoView/);
+  // 25/11/2026: Cambia look opens the Guardaroba tab of the angolo.
+  assert.match(js, /showTab\(place === 'look' \? 'look' : 'voi', \{ focus: false \}\);/);
 });

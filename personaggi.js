@@ -245,7 +245,9 @@
     paintDuo();
     paintWardrobe();
     refreshLookUnlocks().then(paintWardrobe);
-    if (place === 'look') setTimeout(() => d.getElementById('usAngoloLook')?.scrollIntoView?.({ block: 'start' }), 60);
+    // Cambia look (Profilo) opens the Guardaroba; anything else opens Voi.
+    showTab(place === 'look' ? 'look' : 'voi', { focus: false });
+    setIsola(false);
     w.UsUiFoundation?.cancelSurfaceExit?.(sheet);
     sheet.setAttribute('aria-hidden', 'false');
     sheet.classList.add('open');
@@ -354,36 +356,141 @@
     saveCharacter('set_my_character_shape', { p_shape: shape });
   }
 
-  const paintAll = () => { paintMe(); paintDuo(); paintWardrobe(); };
+  // ---------------------------------------------------------------- the tabs
+  // Tavola «US · Oggi e il vostro angolo» (founder, 25/11/2026): Voi,
+  // Guardaroba, Premi under the level. Arrow keys move between the tabs.
+  const TABS = ['voi', 'look', 'premi'];
+  function showTab(name, { focus = true } = {}) {
+    const sheet = angolo();
+    if (!sheet || !TABS.includes(name)) return;
+    sheet.querySelectorAll('[data-angolo-tab]').forEach((tab) => {
+      const on = tab.dataset.angoloTab === name;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      if (on && focus) tab.focus({ preventScroll: true });
+    });
+    sheet.querySelectorAll('[data-angolo-panel]').forEach((panel) => { panel.hidden = panel.dataset.angoloPanel !== name; });
+    sheet.dataset.angoloTab = name;
+  }
+
+  // ---------------------------------------------------------------- l'isola
+  // Founder, 25/11/2026 (tavola, «Oggi · L'isola»): the US symbol at the top
+  // is an island. A tap widens it into «Il vostro angolo · Livello N» and the
+  // two characters lean out of it; a second tap opens the angolo; left alone
+  // it closes after 6 s. It opens by itself once, the first time, and again
+  // when you reach a new level (with a party). Not for a phone without the
+  // couple yet: then it is only the symbol.
+  const ISOLA_MS = 6000, PEEK_MS = 4200;
+  const isola = () => d?.getElementById('usIsola');
+  let isolaTimer = 0;
+  const paired = () => Boolean(w.usProfile?.couple_id) && ['francesco', 'beatrice'].every((role) => profiles().some((p) => p?.role === role));
+  const levelNow = () => Number(w.USProgression?.getState?.()?.level) || 0;
+  function paintIsola({ reaction } = {}) {
+    const button = isola();
+    if (!button) return;
+    const on = paired();
+    button.hidden = !on;
+    if (!on) { setIsola(false); return; }
+    const level = levelNow();
+    const words = button.querySelector('[data-us-isola-level]');
+    if (words) words.textContent = level ? `Livello ${level} · tocca qui` : 'Tocca qui';
+    labelIsola();
+    const duo = button.querySelector('[data-us-isola-duo]');
+    if (duo) duo.innerHTML = ['francesco', 'beatrice'].map((role) => character(role, { size: 42, ...(reaction ? { reaction } : { react: true }) })).join('');
+  }
+  function labelIsola() {
+    const button = isola(), level = levelNow();
+    button?.setAttribute('aria-label', button.getAttribute('aria-expanded') === 'true' ? (level ? `Il vostro angolo, livello ${level}: tocca per entrare` : 'Il vostro angolo: tocca per entrare') : 'US: tocca per Il vostro angolo');
+  }
+  function setIsola(open, { ms = ISOLA_MS, reaction } = {}) {
+    const button = isola();
+    clearTimeout(isolaTimer);
+    if (!button) return;
+    const top = button.closest('.top');
+    const was = button.getAttribute('aria-expanded') === 'true';
+    if (open && !paired()) open = false;
+    // Painted closed first, then opened: the characters rise from below.
+    if (open && !was) { paintIsola({ reaction }); void button.offsetWidth; }
+    button.setAttribute('aria-expanded', String(open));
+    if (top?.dataset) { if (open) top.dataset.usIsola = 'open'; else delete top.dataset.usIsola; }
+    if (open) { labelIsola(); isolaTimer = setTimeout(() => setIsola(false), ms); }
+    else if (was) paintIsola();
+  }
+  function tapIsola() {
+    if (!paired()) return;
+    if (isola()?.getAttribute('aria-expanded') === 'true') { setIsola(false); openAngolo(); }
+    else { setIsola(true); w.UsFeedback?.selection?.(); }
+  }
+  // Once, the first time; then at every new level. Only on Oggi, in view,
+  // with nothing else open.
+  const ISOLA_KEY = () => `us:isola:v1:${w.usProfile?.id || ''}`;
+  function readSeen() { try { return JSON.parse(w.localStorage?.getItem(ISOLA_KEY()) || 'null'); } catch (_) { return null; } }
+  function writeSeen(level) { try { w.localStorage?.setItem(ISOLA_KEY(), JSON.stringify({ level })); } catch (_) {} }
+  let peekTimer = 0;
+  // At launch the couple, the level and the first screens arrive in any
+  // order: a moment that is not ready yet is tried again, a few times.
+  function maybePeek(tries = 0) {
+    clearTimeout(peekTimer);
+    peekTimer = setTimeout(() => {
+      if (!d || d.hidden || !w.usProfile?.id) return;
+      if (!d.getElementById('home')?.classList.contains('active')) return;
+      const level = levelNow();
+      const busy = !paired() || !level || d.body?.getAttribute?.('data-us-surface') === 'open';
+      if (busy) { if (tries < 12) maybePeek(tries + 1); return; }
+      if (isola()?.getAttribute('aria-expanded') === 'true') return;
+      const seen = readSeen();
+      if (!seen) { writeSeen(level); setIsola(true, { ms: PEEK_MS, reaction: 'cuore' }); return; }
+      if (level > (Number(seen.level) || 0)) { writeSeen(level); setIsola(true, { ms: PEEK_MS, reaction: 'festa' }); return; }
+      if (level < (Number(seen.level) || 0)) writeSeen(level);
+    }, 900);
+  }
+
+  const paintAll = () => { paintMe(); paintDuo(); paintWardrobe(); paintIsola(); };
   if (d && w.addEventListener) {
     // The couple's profiles arrive after boot, and change with the account.
-    w.addEventListener('us-identity-change', () => { paintAll(); if (!w.usProfile?.couple_id) closeAngolo(); });
+    w.addEventListener('us-identity-change', () => { paintAll(); maybePeek(); if (!w.usProfile?.couple_id) closeAngolo(); });
     // A Ti penso arrives (heart eyes), the points grow (the wardrobe), the question changes (a wave).
     w.addEventListener('us:think-updated', paintAll);
-    w.addEventListener('us:progression-updated', () => { paintWardrobe(); });
+    w.addEventListener('us:progression-updated', () => { paintWardrobe(); paintIsola(); maybePeek(); });
     d.addEventListener('click', (event) => {
       const target = event.target;
       if (!target?.closest) return;
+      if (target.closest('[data-us-isola]')) { tapIsola(); return; }
       const entry = target.closest('[data-us-angolo]');
       if (entry) { openAngolo(entry.dataset.usAngolo || ''); return; }
+      const tab = target.closest('#usAngolo [data-angolo-tab]');
+      if (tab) { showTab(tab.dataset.angoloTab); return; }
       if (target.closest('[data-angolo-close]')) { closeAngolo(); return; }
       const look = target.closest('#usAngoloLook [data-us-look]');
       if (look) { pickLook(look); return; }
       const shape = target.closest('#usAngoloLook [data-us-shape]');
       if (shape) pickShape(shape);
     });
-    d.addEventListener('keydown', (event) => { if (event.key === 'Escape' && angolo()?.classList.contains('open')) closeAngolo(); });
+    d.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && angolo()?.classList.contains('open')) { closeAngolo(); return; }
+      const tab = event.target?.closest?.('#usAngolo [data-angolo-tab]');
+      if (tab && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
+        event.preventDefault();
+        const at = TABS.indexOf(tab.dataset.angoloTab);
+        showTab(TABS[(at + (event.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length]);
+      }
+    });
+    // Back on Oggi, back in the app: maybe a new level to show.
+    const home = d.getElementById('home');
+    if (home && typeof w.MutationObserver === 'function') new w.MutationObserver(() => { if (home.classList.contains('active')) maybePeek(); else setIsola(false); }).observe(home, { attributes: true, attributeFilter: ['class'] });
+    d.addEventListener('visibilitychange', () => { if (d.hidden) setIsola(false); else maybePeek(); });
     const boot = () => {
       paintAll();
       let tries = 0;
-      const wait = () => { paintAll(); if (!w.usProfile?.couple_id && tries++ < 40) setTimeout(wait, 500); };
+      // The island's first time waits for the couple and the level, whichever comes last.
+      const wait = () => { paintAll(); maybePeek(); if (!w.usProfile?.couple_id && tries++ < 40) setTimeout(wait, 500); };
       wait();
       // Come stai turns twelve hours old while US stays open.
       setInterval(() => { if (!d.hidden) paintAll(); }, 60000);
     };
     if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot, { once: true });
     else boot();
-    w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo });
+    w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola });
   }
 
   return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, LOOK_HEAD, LOOK_FACE, LOOK_NAMES, LOOK_POINTS, LOOK_MOMENTS, character, slot, shapeOf, lookOf, colorName, myRole, reactionOf, unlockedLook, paintMe, paintDuo, paintWardrobe });

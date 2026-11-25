@@ -605,11 +605,22 @@ function chooseDay(day,{fromList=false,fromWeek=false}={}) {
 function moveSintonia(){
   const target=$('usGiocaSintonia');
   if(!target||target.dataset.ready)return;
-  const selectors=['.noi-resonance','.us-progression-rhythm','.us-progression-next','.us-progression-rewards-section','.noi-resonance-history','.noi-resonance-guide'];
-  for(const selector of selectors){
-    const element=document.querySelector(`#bond .noi-canonical-page > ${selector}`);
-    if(element)target.appendChild(element);
+  // Tavola «US · Oggi e il vostro angolo» (25/11/2026): the level on top; in
+  // Voi the week, how to grow and the last steps; in Premi what you unlocked.
+  const slots={livello:['.noi-resonance'],voi:['.us-progression-rhythm','.noi-resonance-history','.noi-resonance-guide'],premi:['.us-progression-next','.us-progression-rewards-section']};
+  for(const [slot,selectors] of Object.entries(slots)){
+    const host=target.querySelector(`[data-angolo-slot="${slot}"]`)||target;
+    for(const selector of selectors){
+      const element=document.querySelector(`#bond .noi-canonical-page > ${selector}`);
+      if(!element)continue;
+      // The week comes first in Voi, before «Per crescere insieme».
+      if(selector==='.us-progression-rhythm'&&host.firstElementChild)host.insertBefore(element,host.firstElementChild);
+      else host.appendChild(element);
+    }
   }
+  // «Ultimi progressi» is open in Voi.
+  const history=target.querySelector('.noi-resonance-history');
+  if(history){history.dataset.open='true';history.querySelector('[data-sintonia-fold]')?.setAttribute('aria-expanded','true');const list=document.getElementById('noiResonanceHistory');if(list)list.hidden=false;}
   target.dataset.ready='1';
 }
 // Back (navigation.js) and leaving Noi bring the week view back to the month.

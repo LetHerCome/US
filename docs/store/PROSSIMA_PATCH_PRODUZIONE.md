@@ -2,9 +2,25 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### L'isola e Il vostro angolo in tre parti (25/11)
+
+**Stato:** ramo `claude/sintonia-isola`, verso il ramo fisso di staging. Founder, 25/11, sulla tavola «US · Oggi e il vostro angolo» (https://claude.ai/artifact/QtAJmuJTt6cRvertx7ycJm): «Voi, guardaroba, premi mi piace perché divide il tutto», ma i personaggi grandi sulla foto «coprono la foto»; poi la sua idea dell'isola, provata sulla tavola: «Molto bello, proviamo come hai consigliato».
+
+**Cosa cambia:**
+- **L'isola:** il simbolo US in alto sta in una piccola capsula. Toccandolo, la capsula si allarga in «Il vostro angolo · Livello N · tocca qui» e i due personaggi si affacciano da dentro, uno dopo l'altro. Un secondo tocco apre l'angolo; se non la tocchi, dopo 6 secondi torna il simbolo. Il disegno del simbolo è lo stesso, e gli effetti del simbolo (premi della Sintonia) restano. Senza la coppia completa resta solo il simbolo.
+- **Si apre da sola:** la prima volta in Oggi, coi personaggi che mandano un cuore, e ogni volta che arrivate a un livello nuovo, coi personaggi in festa. Ogni telefono se lo ricorda per conto suo.
+- **Via i personaggi dalla foto:** il bottone dei personaggi sopra la data in Oggi esce, perché ora la strada è l'isola.
+- **Il vostro angolo:** in cima i personaggi e il livello, poi tre schede.
+  - **Voi:** «La vostra settimana», con un cuore per ogni giorno fatto insieme, l'iniziale del giorno e oggi cerchiato; senza giorni dice «Iniziate oggi: basta una risposta alla domanda». Poi «Per crescere insieme»: la domanda di oggi, Gioca, Ricordi e Ti penso, Le vostre idee, ognuna col tasto che porta lì. Poi gli ultimi progressi, aperti, e come cresce la Sintonia.
+  - **Guardaroba:** forma, testa, viso, come prima. «Cambia look» dal Profilo apre direttamente questa scheda.
+  - **Premi:** il prossimo sblocco e i vostri sblocchi.
+- **Il ritmo** diventa «3 giorni di fila»; a zero giorni non mostra più «0 giorni».
+
+**Server:** niente.
+
 ### Noi, Fase B.3: «Bea ti ha lasciato un post-it» (25/11)
 
-**Stato:** ramo `claude/noi-fase-b3`, verso il ramo fisso di staging; poi la funzione `send-web-push` va pubblicata su staging col via del founder. Founder, 25/11: «Chiudiamo Noi come hai proposto». Decisione D15 del grill-me di Noi.
+**Stato:** in staging il 25/11 (PR #300, merge 6e0aa473); `send-web-push` pubblicata su staging (run 45569314713). Founder, 25/11: «Chiudiamo Noi come hai proposto». Decisione D15 del grill-me di Noi.
 
 **Cosa cambia:**
 - **L'avviso:** chi scrive un post-it nuovo, quando lo chiude con qualcosa scritto, fa arrivare alla sua persona «Bea ti ha lasciato un post-it». Toccato, apre la lavagna.
