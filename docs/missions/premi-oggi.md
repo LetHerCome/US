@@ -19,5 +19,8 @@ Countdown: escono Aurora, Orbita, Cromo (chi li aveva torna a Editoriale); entra
 ## Fase 4 — Guardaroba
 Dal livello 8 accessori più grandi e con un dettaglio animato (Gala papillon e colletto con luccichio, Cuffie con la nota, Coroncina coi fiori che ondeggiano, Corona con le gemme), ritocco di Occhiali e Sciarpina; animazioni solo dove il personaggio è grande. Le soglie per punti restano quelle di `personaggi.js`.
 
+## Fase 5 — Temi di Oggi e countdown (fatta)
+Tavola «Temi e countdown di Oggi» approvata il 26/11 dopo sette giri. Temi: Originale e Pellicola gratis, Ora d’oro 6 (`oggi_theme_golden`, nuovo), Stagioni 12 disegnata in `oggi-look.js` (SEASON_ART: ogni pezzo è un'immagine SVG ferma, chiome di ciliegio o d'acero dagli angoli in alto, sole, brina, castagne, e dietro la domanda petali, mare, foglie o neve). Escono Romantico e Chiaro di luna. Countdown sugli id di sempre: aurora = Post-it (3), orbit = Biglietto (9), chrome = Filo rosso (18, coi personaggi di `personaggi.js`). Calendario, Cartolina, Neon e Notte blu scartati sulla tavola. Restano da fare a parte i widget nativi dei tre countdown.
+
 ## Poi
 Icone dell'app solo US Plus (fuori scala), fondo di Oro da ritoccare; icone alternative su iPhone più avanti. Pulizia: `sky.js` e `tests/sky.test.js` non più caricati, colonne `couples.sky_city/sky_minutes` inutilizzate.

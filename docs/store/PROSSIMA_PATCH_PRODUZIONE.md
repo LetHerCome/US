@@ -2,6 +2,17 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Premi, fase 5: temi di Oggi e countdown (26/11)
+
+**Stato:** ramo `claude/premi-fase5-countdown-temi` (sopra le fasi 1–4). Tavola «Temi e countdown di Oggi» (https://claude.ai/artifact/Gh85EKBZ7bsKTJ72qNnZUY) approvata: «Sì, vai al codice». Migrazione `20261126020000_premi_temi_countdown.sql` solo su staging col sì; in produzione solo con un sì separato.
+
+**Cosa cambia:**
+- **Temi di Oggi**: Originale e **Pellicola** gratis (grana, una luce che entra di lato, la data di oggi stampata in arancione), **Ora d'oro** al livello 6 (luce calda e un riflesso di sole che si muove piano), **Stagioni** al 12 disegnata di nuovo: in primavera i ciliegi giapponesi in fiore dagli angoli in alto e i petali dietro la domanda di oggi, in estate il sole in alto a destra e il mare dietro la domanda, in autunno gli alberi rossi e oro, le castagne sui bordi e un letto di foglie, in inverno il vetro ghiacciato agli angoli e la neve. Non cade niente: quello lo fanno gli effetti.
+- Escono **Romantico** e **Chiaro di luna**: chi li aveva torna su Originale.
+- **Countdown**: Editoriale, Partenze e Vetro restano gratis. Escono Aurora, Orbita e Cromo; sugli stessi premi arrivano **Post-it** (livello 3: il tuo post-it attaccato con lo scotch, sotto quello dell'altra persona col cuoricino), **Biglietto** (9: un biglietto del treno, andata per due) e **Filo rosso** (18: i vostri due personaggi ai capi di un filo che si accorcia man mano che il giorno arriva). Tutti piccoli. Chi usava Aurora, Orbita o Cromo trova il nuovo disegno sullo stesso premio.
+- Nei Premi l'anteprima dei tre countdown è quella vera.
+- I widget del telefono (Android e iPhone) disegnano ancora gli stili vecchi per Post-it, Biglietto e Filo rosso: da rifare a parte.
+
 ### Premi, fase 3a e 4: Simbolo US e guardaroba (26/11)
 
 **Stato:** rami `claude/premi-fase3-countdown-simbolo` e `claude/premi-fase4-guardaroba` (sopra le fasi 1–2). Migrazione `20261126010000_premi_simbolo.sql` solo su staging col sì.

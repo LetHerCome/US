@@ -50,7 +50,7 @@ test('Progression V1: cosmetic preferences map only to explicit theme/frame/effe
   assert.match(css,/:root\[data-us-theme="midnight"\]/);
   // US V3 — frames are retired; Oggi looks use their own scoped attribute.
   assert.doesNotMatch(css,/#homeHero\[data-us-frame=/);
-  assert.match(read('oggi-look.css'),/html\[data-us-oggi-theme="romantic"\]/);
+  assert.match(read('oggi-look.css'),/html\[data-us-oggi-theme="film"\]/);
   assert.match(css,/:root\[data-us-effect="pulse"\] \.us-top-brand-art/);
 });
 

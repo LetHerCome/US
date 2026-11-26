@@ -43,7 +43,7 @@ test('shared editor creates, edits, selects, hides and deletes without lost or f
   assert.equal(await page.locator('#usCountdownStyles .is-locked').count(),3);
   assert.equal(await page.locator('[data-countdown-style-pick="editorial"]').getAttribute('aria-pressed'),'true');
   await page.click('[data-countdown-style-pick="aurora"]');assert.equal(await page.locator('[data-countdown-style-pick="aurora"]').getAttribute('aria-pressed'),'false','a locked style is not chosen');
-  assert.match(await page.locator('#toast').innerText(),/Si sblocca al livello 4 di Sintonia/);
+  assert.match(await page.locator('#toast').innerText(),/Si sblocca al livello 3 di Sintonia/);
   await page.click('[data-countdown-style-pick="glass"]');assert.equal(await page.locator('[data-countdown-style-pick="glass"] small').innerText(),'Scelto');
   assert.equal(await page.locator('#usCountdownPreview .us-countdown-art').getAttribute('data-countdown-style'),'glass');
   assert.equal(await page.locator('[data-countdown-pick]').count(),0,'editor has no duplicate cosmetic picker');

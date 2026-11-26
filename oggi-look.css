@@ -12,8 +12,6 @@
   --oggi-photo-filter:none;
   --oggi-tint:none;
   --oggi-deco:none;
-  --oggi-deco-2:none;
-  --oggi-ornament:none;
   --oggi-ink:#fff;
   --oggi-ink-soft:rgba(255,255,255,.92);
   --oggi-glow:0 2px 24px rgba(0,0,0,.55);
@@ -26,45 +24,40 @@
   --oggi-card-kicker:#ffb0c8;
   --oggi-card-radius:20px;
   --oggi-chrome-tint:transparent;
-  --oggi-bars:0px;
 }
-html[data-us-oggi-theme="romantic"],
-.us-look-phone[data-oggi-theme="romantic"]{
-  --oggi-photo-filter:saturate(1.06) brightness(1.03);
-  --oggi-tint:linear-gradient(180deg,rgba(255,170,198,.20) 0%,rgba(255,150,185,.06) 38%,rgba(255,120,160,.05) 62%,rgba(96,18,56,.42) 100%);
-  --oggi-deco:radial-gradient(60% 34% at 96% 4%,rgba(255,196,214,.42),transparent 72%),radial-gradient(70% 30% at 0% 100%,rgba(255,112,160,.30),transparent 70%);
-  --oggi-deco-2:radial-gradient(90% 30% at 50% 100%,rgba(255,120,170,.18),transparent 70%);
-  --oggi-ornament:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40'%3E%3Cg fill='none' stroke='%23ffd6e4' stroke-width='1.3' stroke-linecap='round' opacity='.9'%3E%3Cpath d='M4 20h38'/%3E%3Cpath d='M78 20h38'/%3E%3Cpath d='M60 30c-9-6-15-11-15-17a6 6 0 0 1 15-3 6 6 0 0 1 15 3c0 6-6 11-15 17z' fill='%23ffd6e4' fill-opacity='.22'/%3E%3C/g%3E%3C/svg%3E");
-  --oggi-ink:#fff6f9;
-  --oggi-ink-soft:#ffe1ec;
-  --oggi-glow:0 0 26px rgba(255,112,160,.55),0 2px 14px rgba(70,8,36,.5);
-  --oggi-hairline:rgba(255,200,222,.8);
-  --oggi-card-bg:rgba(72,18,46,.44);
-  --oggi-card-line:rgba(255,190,214,.30);
-  --oggi-card-kicker:#ffb8cf;
-  --oggi-chrome-tint:rgba(255,130,175,.14);
+/* Temi di Oggi (tavola approved 26/11/2026): Pellicola free, Ora d'oro at 6. */
+html[data-us-oggi-theme="film"],
+.us-look-phone[data-oggi-theme="film"]{
+  --oggi-photo-filter:contrast(1.06) saturate(1.18) sepia(.16);
+  --oggi-tint:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(0,0,0,.45) 100%);
+  --oggi-ink:#fff8ee;
+  --oggi-ink-soft:#ffe6cc;
+  --oggi-glow:0 2px 18px rgba(40,16,0,.55);
+  --oggi-hairline:rgba(255,214,170,.75);
+  --oggi-card-bg:rgba(40,22,12,.46);
+  --oggi-card-line:rgba(255,200,150,.26);
+  --oggi-card-kicker:#ffb27a;
+  --oggi-chrome-tint:rgba(255,140,60,.10);
 }
-html[data-us-oggi-theme="moonlight"],
-.us-look-phone[data-oggi-theme="moonlight"]{
-  --oggi-photo-filter:brightness(.74) saturate(.6) contrast(1.06) hue-rotate(-14deg);
-  --oggi-tint:linear-gradient(180deg,rgba(26,42,128,.56) 0%,rgba(30,44,120,.30) 44%,rgba(8,12,40,.40) 70%,rgba(4,6,22,.74) 100%);
-  --oggi-deco:radial-gradient(26% 16% at 84% 9%,rgba(232,238,255,.55),rgba(190,206,255,.16) 52%,transparent 74%),radial-gradient(1.4px 1.4px at 12% 14%,#fff 60%,transparent),radial-gradient(1px 1px at 26% 6%,#fff 60%,transparent),radial-gradient(1.2px 1.2px at 40% 19%,#e7edff 60%,transparent),radial-gradient(1px 1px at 58% 8%,#fff 60%,transparent),radial-gradient(1.6px 1.6px at 66% 24%,#fff 60%,transparent),radial-gradient(1px 1px at 8% 32%,#dfe6ff 60%,transparent),radial-gradient(1.2px 1.2px at 92% 30%,#fff 60%,transparent),radial-gradient(1px 1px at 34% 36%,#fff 60%,transparent),radial-gradient(1.3px 1.3px at 76% 40%,#e7edff 60%,transparent);
-  --oggi-deco-2:linear-gradient(180deg,transparent 72%,rgba(150,176,255,.10) 86%,transparent 100%);
-  --oggi-ink:#eef3ff;
-  --oggi-ink-soft:#c9d6ff;
-  --oggi-glow:0 0 22px rgba(150,182,255,.62),0 2px 12px rgba(0,4,30,.6);
-  --oggi-hairline:rgba(200,214,255,.75);
-  --oggi-card-bg:rgba(12,18,48,.52);
-  --oggi-card-line:rgba(170,190,255,.26);
-  --oggi-card-kicker:#bccbff;
-  --oggi-chrome-tint:rgba(70,96,200,.16);
+html[data-us-oggi-theme="golden"],
+.us-look-phone[data-oggi-theme="golden"]{
+  --oggi-photo-filter:saturate(1.15) contrast(1.04) brightness(1.04);
+  --oggi-tint:linear-gradient(180deg,rgba(255,170,80,.5),rgba(255,120,60,.16) 55%,rgba(60,20,40,.42));
+  --oggi-tint-blend:soft-light;
+  --oggi-ink:#fff6e4;
+  --oggi-ink-soft:#ffe2b4;
+  --oggi-glow:0 0 18px rgba(255,190,90,.75),0 2px 10px rgba(80,30,0,.4);
+  --oggi-hairline:rgba(255,214,150,.8);
+  --oggi-card-kicker:#ffc477;
+  --oggi-chrome-tint:rgba(255,170,80,.12);
 }
+/* Stagioni (tavola v7, 26/11/2026): the light of the season here; what is
+   drawn on the edges is built by oggi-look.js (SEASON_ART). The season is the
+   Rome month (seasonFor). Nothing falls: that is what the effects do. */
 html[data-us-oggi-theme="seasonal"],
 .us-look-phone[data-oggi-theme="seasonal"]{
-  --oggi-photo-filter:sepia(.18) saturate(1.1) brightness(.98) contrast(1.03);
-  --oggi-tint:linear-gradient(180deg,rgba(255,170,80,.20) 0%,rgba(230,120,40,.06) 44%,rgba(120,50,12,.12) 70%,rgba(50,18,4,.62) 100%);
-  --oggi-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Cdefs%3E%3Cpath id='l' d='M0-14C10-8 11 5 0 14-11 5-10-8 0-14Z'/%3E%3C/defs%3E%3Cg opacity='.9'%3E%3Cuse href='%23l' transform='translate(172 18) rotate(32)' fill='%23e88a3a'/%3E%3Cuse href='%23l' transform='translate(150 40) rotate(-24) scale(.7)' fill='%23c9572b'/%3E%3Cuse href='%23l' transform='translate(188 58) rotate(70) scale(.6)' fill='%23f0b14a'/%3E%3Cuse href='%23l' transform='translate(18 92) rotate(-50) scale(.55)' fill='%23d9702f'/%3E%3C/g%3E%3Cg stroke='%237a3410' stroke-width='.8' opacity='.55'%3E%3Cpath d='M172 18l7-11'/%3E%3C/g%3E%3C/svg%3E") right 0 top 10%/min(58%,280px) auto no-repeat;
-  --oggi-deco-2:radial-gradient(70% 34% at 100% 0%,rgba(255,176,88,.30),transparent 70%);
+  --oggi-photo-filter:sepia(.3) saturate(1.15) contrast(1.05) brightness(.98);
+  --oggi-tint:linear-gradient(200deg,rgba(255,160,70,.3),transparent 55%),radial-gradient(120% 80% at 50% 50%,transparent 55%,rgba(70,22,6,.42));
   --oggi-ink:#fff4e4;
   --oggi-ink-soft:#ffdcb0;
   --oggi-glow:0 0 22px rgba(255,140,50,.42),0 2px 14px rgba(40,12,0,.6);
@@ -74,6 +67,41 @@ html[data-us-oggi-theme="seasonal"],
   --oggi-card-kicker:#ffc485;
   --oggi-chrome-tint:rgba(255,150,60,.12);
 }
+html[data-us-oggi-theme="seasonal"][data-us-oggi-season="spring"],
+.us-look-phone[data-oggi-theme="seasonal"][data-oggi-season="spring"]{
+  --oggi-photo-filter:saturate(1.08) brightness(1.08) hue-rotate(-8deg);
+  --oggi-tint:radial-gradient(90% 55% at 0% 30%,rgba(255,205,222,.4),transparent 70%),linear-gradient(180deg,rgba(255,226,236,.2),rgba(200,240,200,.12));
+  --oggi-tint-blend:screen;
+  --oggi-ink:#fff6f9;
+  --oggi-ink-soft:#ffd6e4;
+  --oggi-glow:0 0 22px rgba(255,160,200,.4),0 2px 14px rgba(40,10,24,.6);
+  --oggi-hairline:rgba(255,200,222,.8);
+  --oggi-card-kicker:#ffb8d0;
+  --oggi-chrome-tint:rgba(255,170,200,.12);
+}
+html[data-us-oggi-theme="seasonal"][data-us-oggi-season="summer"],
+.us-look-phone[data-oggi-theme="seasonal"][data-oggi-season="summer"]{
+  --oggi-photo-filter:saturate(1.3) contrast(1.08) brightness(1.06);
+  --oggi-tint:radial-gradient(70% 40% at 86% 12%,rgba(255,244,200,.6),rgba(255,214,110,.2) 45%,transparent 75%),linear-gradient(200deg,rgba(255,226,150,.22),transparent 55%);
+  --oggi-tint-blend:screen;
+  --oggi-ink:#fffaf0;
+  --oggi-ink-soft:#ffe6b0;
+  --oggi-glow:0 0 24px rgba(255,200,90,.45),0 2px 14px rgba(30,20,0,.55);
+  --oggi-hairline:rgba(255,226,160,.85);
+  --oggi-card-kicker:#ffd479;
+  --oggi-chrome-tint:rgba(255,200,100,.12);
+}
+html[data-us-oggi-theme="seasonal"][data-us-oggi-season="winter"],
+.us-look-phone[data-oggi-theme="seasonal"][data-oggi-season="winter"]{
+  --oggi-photo-filter:saturate(.5) brightness(1.04) hue-rotate(-16deg) contrast(1.05);
+  --oggi-tint:radial-gradient(120% 90% at 50% 45%,transparent 50%,rgba(225,238,255,.34)),linear-gradient(180deg,rgba(150,190,255,.2),transparent 60%);
+  --oggi-ink:#f4f9ff;
+  --oggi-ink-soft:#cfe2ff;
+  --oggi-glow:0 0 22px rgba(160,200,255,.42),0 2px 14px rgba(0,10,30,.6);
+  --oggi-hairline:rgba(200,224,255,.8);
+  --oggi-card-kicker:#b8d4ff;
+  --oggi-chrome-tint:rgba(160,200,255,.12);
+}
 
 /* ---------- layers on the real hero (and the same classes in previews) ---------- */
 #homeHero>.us-oggi-tint,#homeHero>.us-oggi-deco,#homeHero>.us-oggi-fx{position:absolute;inset:0;pointer-events:none}
@@ -82,73 +110,48 @@ html[data-us-oggi-theme="seasonal"],
 #homeHero>.us-oggi-fx{z-index:3}
 html:not([data-us-oggi-theme]) #homeHero>.us-oggi-tint,html:not([data-us-oggi-theme]) #homeHero>.us-oggi-deco{display:none}
 html:not([data-us-oggi-effect]) #homeHero>.us-oggi-fx{display:none}
-.us-oggi-tint{background:var(--oggi-tint)}
-.us-oggi-deco{background:var(--oggi-deco),var(--oggi-deco-2)}
-.us-oggi-deco::before,.us-oggi-deco::after{content:"";position:absolute;left:0;right:0;height:var(--oggi-bars);background:#050506;display:none}
-.us-oggi-deco::before{top:0}.us-oggi-deco::after{bottom:0}
+.us-oggi-tint{background:var(--oggi-tint);mix-blend-mode:var(--oggi-tint-blend,normal)}
+.us-oggi-deco{background:var(--oggi-deco)}
+:root[data-us-motion="reduced"] .us-oggi-deco::before{animation:none!important}
 html[data-us-oggi-theme] #homeHero .home-photo-layer,.us-look-phone .us-look-photo{filter:var(--oggi-photo-filter)}
+/* Pellicola: a light leak that breathes, grain and the date stamped in orange. */
+:is(html[data-us-oggi-theme="film"] #homeHero,.us-look-phone[data-oggi-theme="film"])>.us-oggi-deco::before,
+:is(html[data-us-oggi-theme="golden"] #homeHero,.us-look-phone[data-oggi-theme="golden"])>.us-oggi-deco::before{content:"";position:absolute;inset:0;mix-blend-mode:screen}
+:is(html[data-us-oggi-theme="film"] #homeHero,.us-look-phone[data-oggi-theme="film"])>.us-oggi-deco::before{background:radial-gradient(45% 30% at 0% 8%,rgba(255,120,60,.55),transparent 70%),radial-gradient(30% 22% at 100% 30%,rgba(255,60,90,.28),transparent 70%);animation:us-oggi-leak 7s ease-in-out infinite alternate}
+:is(html[data-us-oggi-theme="film"] #homeHero,.us-look-phone[data-oggi-theme="film"])>.us-oggi-deco::after{content:"";position:absolute;inset:0;opacity:.3;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+@keyframes us-oggi-leak{to{opacity:.55;transform:translateX(6px)}}
+.us-film-stamp{position:absolute;right:20px;bottom:33%;font:700 17px/1 ui-monospace,"SF Mono","Roboto Mono",Menlo,monospace;letter-spacing:.06em;color:#ff8a3d;text-shadow:0 0 6px rgba(255,120,40,.85),0 0 1px #ffb27a}
+.us-look-phone .us-film-stamp{right:5cqw;font-size:4.4cqw}
+/* Ora d'oro: a reflection of the sun that moves slowly. */
+:is(html[data-us-oggi-theme="golden"] #homeHero,.us-look-phone[data-oggi-theme="golden"])>.us-oggi-deco::before{background:radial-gradient(14% 9% at 70% 50%,rgba(255,240,200,.9),transparent 70%),radial-gradient(5% 3% at 52% 40%,rgba(255,220,160,.5),transparent 70%),radial-gradient(9% 5.5% at 36% 30%,rgba(255,200,150,.32),transparent 70%),radial-gradient(3% 2% at 22% 22%,rgba(255,230,190,.55),transparent 70%);animation:us-oggi-flare 6s ease-in-out infinite alternate}
+@keyframes us-oggi-flare{to{opacity:.7}}
+html.us-oggi-fx-paused #homeHero>.us-oggi-deco::before{animation-play-state:paused}
+/* Stagioni: every piece is one still image (oggi-look.js SEASON_ART). */
+.us-season-art{position:absolute;inset:0;pointer-events:none}
+.us-season-art>span{position:absolute;background-position:center;background-size:100% 100%;background-repeat:no-repeat}
+.us-season-tl,.us-season-tr{top:0;width:40%;aspect-ratio:120/100}
+.us-season-tl{left:0}
+.us-season-tr{right:0;transform:scaleX(-1)}
+.us-season-art>.is-frost{width:34%;aspect-ratio:1}
+.us-season-sun{right:5%;top:9.5%;width:15%;aspect-ratio:1;filter:drop-shadow(0 0 16px rgba(255,232,160,.95))}
+.us-season-nut{width:12%;aspect-ratio:46/40}
+.us-season-nut.l1{left:2%;top:34%}
+.us-season-nut.r1{right:2%;top:44%}
+.us-season-nut.r2{right:3%;top:23%}
+.us-season-art>.us-season-ground{left:0;right:0;bottom:0;height:36%;background-size:cover;background-position:center top}
+
 
 /* Countdown: color, glow and typography follow the theme where the style is
    compatible (Editoriale / Vetro). Aurora, Orbita, Cromo keep their own art. */
 html[data-us-oggi-theme] #homeHero :is([data-countdown-style="editorial"],[data-countdown-style="glass"]).us-countdown-art{color:var(--oggi-ink);text-shadow:var(--oggi-glow)}
-html[data-us-oggi-theme] #homeHero [data-countdown-style="editorial"] .us-countdown-title{letter-spacing:var(--oggi-title-tracking);color:var(--oggi-ink-soft)}
 html[data-us-oggi-theme] #homeHero [data-countdown-style="editorial"] .us-countdown-number{font-weight:var(--oggi-num-weight)}
 html[data-us-oggi-theme] #homeHero [data-countdown-style="editorial"] .us-countdown-unit{font:var(--oggi-unit-font);color:var(--oggi-ink-soft)}
 html[data-us-oggi-theme] #homeHero [data-countdown-style="editorial"] .us-countdown-unit::before,
 html[data-us-oggi-theme] #homeHero [data-countdown-style="editorial"] .us-countdown-unit::after{background:var(--oggi-hairline)}
-html[data-us-oggi-theme="romantic"] #homeHero [data-countdown-style="editorial"] .us-countdown-deco{inset:auto 0 -30px;height:26px;background:var(--oggi-ornament) center/96px 32px no-repeat;opacity:.9}
 
 /* Daily card and the top chrome while Oggi is the page on screen. */
 html[data-us-oggi-theme] #home .us-daily-ritual,.us-look-phone .us-look-card{background:var(--oggi-card-bg)!important;border-color:var(--oggi-card-line)!important;border-radius:var(--oggi-card-radius)!important}
 html[data-us-oggi-theme] #home .us-daily-ritual .us-daily-ritual-kicker{color:var(--oggi-card-kicker)}
-/* Tema delle stagioni (Premi Sintonia V2, 29/10/2026): the block above is
-   autumn; spring, summer and winter change only what differs. The season is
-   the Rome month (oggi-look.js seasonFor). */
-html[data-us-oggi-theme="seasonal"][data-us-oggi-season="spring"],
-.us-look-phone[data-oggi-theme="seasonal"][data-oggi-season="spring"]{
-  --oggi-photo-filter:saturate(1.08) brightness(1.03) contrast(1.02);
-  --oggi-tint:linear-gradient(180deg,rgba(255,190,214,.20) 0%,rgba(255,214,228,.05) 44%,rgba(110,150,90,.10) 70%,rgba(40,30,40,.58) 100%);
-  --oggi-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Cdefs%3E%3Cg id='f'%3E%3Ccircle cx='0' cy='-6' r='5'/%3E%3Ccircle cx='5.7' cy='-1.9' r='5'/%3E%3Ccircle cx='3.5' cy='4.9' r='5'/%3E%3Ccircle cx='-3.5' cy='4.9' r='5'/%3E%3Ccircle cx='-5.7' cy='-1.9' r='5'/%3E%3C/g%3E%3C/defs%3E%3Cg opacity='.92'%3E%3Cuse href='%23f' transform='translate(170 20)' fill='%23ffc2d4'/%3E%3Cuse href='%23f' transform='translate(150 44) scale(.7)' fill='%23ff9fbb'/%3E%3Cuse href='%23f' transform='translate(186 60) scale(.6)' fill='%23ffd9e4'/%3E%3Cuse href='%23f' transform='translate(20 92) scale(.55)' fill='%23ffb3c8'/%3E%3C/g%3E%3Cg fill='%23fff1a8'%3E%3Ccircle cx='170' cy='20' r='2.2'/%3E%3Ccircle cx='150' cy='44' r='1.5'/%3E%3Ccircle cx='186' cy='60' r='1.3'/%3E%3C/g%3E%3C/svg%3E") right 0 top 10%/min(58%,280px) auto no-repeat;
-  --oggi-deco-2:radial-gradient(70% 34% at 100% 0%,rgba(255,196,220,.30),transparent 70%);
-  --oggi-ink:#fff6f9;
-  --oggi-ink-soft:#ffd6e4;
-  --oggi-glow:0 0 22px rgba(255,160,200,.40),0 2px 14px rgba(40,10,24,.6);
-  --oggi-hairline:rgba(255,200,222,.8);
-  --oggi-card-bg:rgba(60,26,44,.46);
-  --oggi-card-line:rgba(255,190,214,.30);
-  --oggi-card-kicker:#ffb8d0;
-  --oggi-chrome-tint:rgba(255,170,200,.12);
-}
-html[data-us-oggi-theme="seasonal"][data-us-oggi-season="summer"],
-.us-look-phone[data-oggi-theme="seasonal"][data-oggi-season="summer"]{
-  --oggi-photo-filter:saturate(1.14) brightness(1.04) contrast(1.04);
-  --oggi-tint:linear-gradient(180deg,rgba(255,214,120,.22) 0%,rgba(255,190,90,.06) 44%,rgba(40,120,150,.10) 70%,rgba(20,30,46,.56) 100%);
-  --oggi-deco:radial-gradient(42% 30% at 92% 4%,rgba(255,236,170,.75),rgba(255,206,110,.28) 42%,transparent 72%);
-  --oggi-deco-2:radial-gradient(80% 40% at 100% 0%,rgba(255,220,140,.30),transparent 70%);
-  --oggi-ink:#fffaf0;
-  --oggi-ink-soft:#ffe6b0;
-  --oggi-glow:0 0 24px rgba(255,200,90,.45),0 2px 14px rgba(30,20,0,.55);
-  --oggi-hairline:rgba(255,226,160,.85);
-  --oggi-card-bg:rgba(40,40,52,.46);
-  --oggi-card-line:rgba(255,220,150,.30);
-  --oggi-card-kicker:#ffd479;
-  --oggi-chrome-tint:rgba(255,200,100,.12);
-}
-html[data-us-oggi-theme="seasonal"][data-us-oggi-season="winter"],
-.us-look-phone[data-oggi-theme="seasonal"][data-oggi-season="winter"]{
-  --oggi-photo-filter:saturate(.9) brightness(1.02) contrast(1.03) hue-rotate(-6deg);
-  --oggi-tint:linear-gradient(180deg,rgba(190,220,255,.20) 0%,rgba(170,200,240,.06) 44%,rgba(60,80,130,.14) 70%,rgba(12,18,38,.62) 100%);
-  --oggi-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Cdefs%3E%3Cpath id='s' d='M0-9V9M-7.8-4.5L7.8 4.5M-7.8 4.5L7.8-4.5'/%3E%3C/defs%3E%3Cg stroke='%23eaf4ff' stroke-width='1.4' stroke-linecap='round' fill='none' opacity='.9'%3E%3Cuse href='%23s' transform='translate(170 20)'/%3E%3Cuse href='%23s' transform='translate(150 44) scale(.7)'/%3E%3Cuse href='%23s' transform='translate(186 60) scale(.6)'/%3E%3Cuse href='%23s' transform='translate(20 92) scale(.55)'/%3E%3C/g%3E%3C/svg%3E") right 0 top 10%/min(58%,280px) auto no-repeat;
-  --oggi-deco-2:radial-gradient(70% 34% at 100% 0%,rgba(200,226,255,.30),transparent 70%);
-  --oggi-ink:#f4f9ff;
-  --oggi-ink-soft:#cfe2ff;
-  --oggi-glow:0 0 22px rgba(160,200,255,.42),0 2px 14px rgba(0,10,30,.6);
-  --oggi-hairline:rgba(200,224,255,.8);
-  --oggi-card-bg:rgba(18,28,52,.50);
-  --oggi-card-line:rgba(190,214,255,.30);
-  --oggi-card-kicker:#b8d4ff;
-  --oggi-chrome-tint:rgba(160,200,255,.12);
-}
 html[data-us-oggi-theme] body:has(#home.page.active) .us-premium-top{box-shadow:inset 0 0 0 999px var(--oggi-chrome-tint)}
 
 /* ---------- background effects ---------- */
@@ -181,7 +184,6 @@ html.us-oggi-fx-paused #homeHero .us-oggi-fx>i{animation-play-state:paused}
 .us-look-count b{font:var(--oggi-num-weight) 25cqw/1 var(--us-font-editorial,Georgia,serif);letter-spacing:-.06em;margin-top:1.4cqw}
 .us-look-count em{display:flex;align-items:center;gap:2.4cqw;font:italic 400 5cqw/1 var(--us-font-editorial,Georgia,serif);color:var(--oggi-ink-soft)}
 .us-look-count em::before,.us-look-count em::after{content:"";width:6cqw;height:1px;background:var(--oggi-hairline)}
-.us-look-phone[data-oggi-theme="romantic"] .us-look-count::after{content:"";width:26cqw;height:9cqw;margin-top:1cqw;background:var(--oggi-ornament) center/contain no-repeat}
 .us-look-card{z-index:4;left:5cqw;right:5cqw;bottom:21cqw;height:15cqw;border:1px solid;border-radius:5cqw;padding:2.6cqw 3.4cqw;display:flex;flex-direction:column;gap:1.4cqw}
 .us-look-phone .us-look-card{border-radius:calc(var(--oggi-card-radius) * .25)!important}
 .us-look-card small{font:800 2.2cqw/1 var(--us-font-ui,Inter,sans-serif);letter-spacing:.14em;color:var(--oggi-card-kicker)}
@@ -253,4 +255,5 @@ body.us-look-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){
   .us-look-overlay.open .us-look-sheet,.us-look-detail.open{animation:none}
   .us-look-tabs::before,.us-look-tile .us-look-phone{transition:none}
+  .us-oggi-deco::before{animation:none!important}
 }

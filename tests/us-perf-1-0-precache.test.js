@@ -118,5 +118,8 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // Gioca, gettoni e giostra (25/11/2026): the carousel of the games, the token
   // that drops on the server's answer, the descriptions in two languages and the
   // day colours of the tokens (~13 KB) cross it: 3.35 -> 3.4 MB.
-  assert.ok(total <= 3.4 * 1024 * 1024, `precache is ${total} bytes: stays under 3.4 MB`);
+  // Temi e countdown (26/11/2026): Stagioni drawn in oggi-look.js (the crowns,
+  // the frost, the sea, the beds, built once as still images), Pellicola, Ora d'oro
+  // and the three small countdowns (~14 KB net) cross it: 3.4 -> 3.45 MB.
+  assert.ok(total <= 3.45 * 1024 * 1024, `precache is ${total} bytes: stays under 3.45 MB`);
 });

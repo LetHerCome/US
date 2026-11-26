@@ -13,11 +13,14 @@ if (window.USOggiLook) return;
 // O11 (1.0) — Italian names; the seasonal theme speaks of no month.
 // Premi di Oggi (grill D4, D9, D14, 25/11/2026): Sogno pastello, Cinema and
 // Il vostro cielo left; whoever had them is back on Originale.
+// Temi di Oggi (tavola «Temi e countdown di Oggi», approved 26/11/2026):
+// Pellicola free, Ora d'oro at 6, Stagioni at 12 drawn again; Romantico and
+// Chiaro di luna left, whoever had them is back on Originale.
 const THEMES = Object.freeze([
   { id: 'original', name: 'Originale', note: 'Il vostro Oggi di sempre, senza aggiunte.', reward: null },
-  { id: 'romantic', name: 'Romantico', note: 'Rosa delicato e luce morbida sulla vostra foto.', reward: null },
-  { id: 'moonlight', name: 'Chiaro di luna', note: 'Notte blu, stelle e un riflesso di luna.', reward: 'oggi_theme_moonlight', level: 6 },
-  { id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: 'Cambia da solo: fiori in primavera, sole d’estate, foglie d’autunno, neve d’inverno.', reward: 'oggi_theme_seasonal', level: 12 }
+  { id: 'film', name: 'Pellicola', note: 'Come una foto di una macchinetta usa e getta: grana, una luce che entra di lato e la data stampata.', reward: null },
+  { id: 'golden', name: 'Ora d’oro', note: 'La luce calda del tramonto su qualsiasi foto, con un riflesso di sole che si muove piano.', reward: 'oggi_theme_golden', level: 6 },
+  { id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: 'Cambia da solo con l’anno: i ciliegi in fiore, il sole e il mare, le castagne e le foglie, il vetro ghiacciato e la neve.', reward: 'oggi_theme_seasonal', level: 12 }
 ]);
 // Premi di Oggi (grill D3, D8, D14 and the tavola, 25/11/2026): three steps
 // that grow with the level, drawn by oggi-fx.js. Stelle luminose, Lucciole,
@@ -80,6 +83,98 @@ function seasonFor(day) {
   return month >= 3 && month <= 5 ? 'spring' : month >= 6 && month <= 8 ? 'summer' : month >= 9 && month <= 11 ? 'autumn' : 'winter';
 }
 
+// ---------- Stagioni: what is drawn, still, on the edges of the photo ----------
+// Tavola v7 (26/11/2026): spring = Japanese cherry crowns from the top corners
+// and petals lying behind the daily question; summer = a sun top right and the
+// sea behind the question; autumn = red and gold crowns, chestnuts on the edges
+// and a bed of leaves; winter = frost on the top corners and snow. Nothing
+// falls (that is what the effects do). Each piece is one SVG image, built once
+// per season and painted by the browser as a background: no nodes, no frames.
+const SEASON_ART = (() => {
+  const cache = {};
+  let seed = 1;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const f = (n) => n.toFixed(1);
+  const img = (svg) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); return '#' + [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(k < 0 ? v * (1 + k) : v + (255 - v) * k).toString(16).padStart(2, '0')).join(''); };
+  const petal = (r) => `M0 0C${f(-r * .55)} ${f(-r * .3)} ${f(-r * .62)} ${f(-r * .92)} ${f(-r * .2)} ${f(-r * 1.06)}L0 ${f(-r * .86)}L${f(r * .2)} ${f(-r * 1.06)}C${f(r * .62)} ${f(-r * .92)} ${f(r * .55)} ${f(-r * .3)} 0 0Z`;
+  const bloom = (x, y, r, rot, fill, edge) => `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)})">${[0, 72, 144, 216, 288].map((a) => `<path d="${petal(r)}" transform="rotate(${a})" fill="${fill}" stroke="${edge}" stroke-width=".35"/>`).join('')}<circle r="${f(r * .28)}" fill="#e0607f"/></g>`;
+  const youngLeaf = (x, y, s, rot) => `<path transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)}) scale(${f(s)})" d="M0 0C3-3 9-3 12 0C9 3 3 3 0 0Z" fill="#8a7a3a" opacity=".85"/>`;
+  const looseP = (x, y, s, rot) => `<path transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)}) scale(${f(s)})" d="M0 0C-3-2-3.4-6-1-7L0-6L1-7C3.4-6 3-2 0 0Z" fill="#ffd9e4" stroke="#eea3b8" stroke-width=".4"/>`;
+  const MAPLE = (() => { const p = [[0, -1], [.22, -.55], [.62, -.72], [.5, -.3], [.95, -.18], [.55, .08], [.68, .45], [.22, .3], [.08, .62], [0, .5]]; return [...p, ...p.slice(1, -1).reverse().map(([a, b]) => [-a, b])].map(([a, b]) => `${f(a * 10)} ${f(b * 10)}`).join('L'); })();
+  const maple = (x, y, s, rot, fill) => `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)}) scale(${f(s)})"><path d="M${MAPLE}Z" fill="${fill}" stroke="rgba(90,30,12,.7)" stroke-width=".7" stroke-linejoin="round"/><path d="M0 9V-8M0-1L5-5M0-1L-5-5" stroke="rgba(90,30,12,.55)" stroke-width=".5" fill="none"/></g>`;
+  const oval = (x, y, s, rot, fill) => `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)}) scale(${f(s)})"><path d="M-12 0C-6-7 6-7 12 0C6 7-6 7-12 0Z" fill="${fill}" stroke="rgba(90,30,12,.6)" stroke-width=".7"/><path d="M-11 0H11" stroke="rgba(90,30,12,.5)" stroke-width=".5"/></g>`;
+  const SOFT = '<filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="#000" flood-opacity=".35"/></filter>';
+  // A tree crown from the top-left corner (the right one is the same, mirrored, with another seed).
+  function crown(kind, s0) {
+    seed = s0;
+    const rx = 96, ry = 80;
+    const spot = (spread) => { const t = rnd() * Math.PI / 2, r = Math.pow(rnd(), .6) * spread; return { x: Math.cos(t) * rx * r, y: Math.sin(t) * ry * r, d: r }; };
+    const branch = (p, w) => `<path d="M${p[0]} ${p[1]}Q${p[2]} ${p[3]} ${p[4]} ${p[5]}" fill="none" stroke="#2e2220" stroke-width="${w}" stroke-linecap="round"/>`;
+    const pal = kind === 'spring' ? ['#f4a9bf', '#f7bccd', '#fac9d7', '#fdd9e3', '#f29ab3'] : ['#c4472a', '#d8702c', '#e39a36', '#a8352a', '#ebbd47', '#b8562c'];
+    const mass = kind === 'spring' ? '#b9667f' : '#6e2a18';
+    let out = Array.from({ length: 26 }, () => { const q = spot(.92); return `<circle cx="${f(q.x)}" cy="${f(q.y)}" r="${f(12 + rnd() * 10)}" fill="${mass}"/>`; }).join('');
+    out += branch([-6, 62, 30, 50, 58, 48], 4.2) + branch([-6, 28, 36, 20, 68, 24], 3.4) + branch([22, -6, 28, 28, 36, 54], 2.8);
+    const bits = Array.from({ length: kind === 'spring' ? 330 : 260 }, () => spot(1.08)).sort((a, b) => a.d - b.d);
+    out += bits.map((q) => {
+      const base = pal[Math.floor(rnd() * pal.length)], k = q.d < .55 ? -.32 + q.d * .4 : (q.d - .55) * .5, c = shade(base, k), rot = rnd() * 360;
+      if (kind === 'spring') return rnd() < .1 ? youngLeaf(q.x, q.y, .55 + rnd() * .3, rot) : bloom(q.x, q.y, 2.8 + rnd() * 2, rot, c, shade(base, -.25));
+      return rnd() < .62 ? maple(q.x, q.y, .5 + rnd() * .32, rot, c) : oval(q.x, q.y, .38 + rnd() * .2, rot, c);
+    }).join('');
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><defs>${SOFT}</defs><g filter="url(#s)">${out}</g></svg>`;
+  }
+  function frost() {
+    const arm = (len, a, depth) => {
+      if (depth > 3 || len < 4) return '';
+      const ex = Math.cos(a) * len, ey = Math.sin(a) * len;
+      return `<path d="M0 0L${f(ex)} ${f(ey)}" stroke="rgba(240,248,255,${(0.8 - depth * 0.15).toFixed(2)})" stroke-width="${(1.5 - depth * 0.33).toFixed(2)}" stroke-linecap="round"/>` + [0.35, 0.6, 0.82].map((t) => `<g transform="translate(${f(ex * t)} ${f(ey * t)})">${arm(len * 0.42, a - 0.75, depth + 1)}${arm(len * 0.42, a + 0.75, depth + 1)}</g>`).join('');
+    };
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><filter id="g"><feGaussianBlur stdDeviation=".35"/></filter><g filter="url(#g)">${[0.2, 0.62, 1.05, 1.4].map((a) => arm(64, a, 0)).join('')}</g></svg>`;
+  }
+  function chestnuts() {
+    const nut = (x, y, s, rot) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"><path d="M-9 4C-10-6-2-11 0-11C2-11 10-6 9 4C6 8-6 8-9 4Z" fill="#7a3f1c" stroke="#3e1c0a" stroke-width="1"/><path d="M-9 4C-6 8 6 8 9 4C6 6-6 6-9 4Z" fill="#d9b48a"/><ellipse cx="-3" cy="-5" rx="3" ry="1.6" fill="rgba(255,255,255,.35)"/></g>`;
+    const husk = `<g transform="rotate(-8) scale(1.1)"><path d="M-12 2A12 12 0 0 1 12 2Z" fill="#9aa64a" stroke="#5a6420" stroke-width="1"/>${Array.from({ length: 13 }, (_, i) => { const a = Math.PI + (i / 12) * Math.PI; return `<path d="M${f(Math.cos(a) * 11)} ${f(2 + Math.sin(a) * 11)}l${f(Math.cos(a) * 5)} ${f(Math.sin(a) * 5)}" stroke="#6f7a2a" stroke-width=".9"/>`; }).join('')}</g>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-22 -20 46 40"><defs>${SOFT}</defs><g filter="url(#s)">${husk}${nut(-7, 11, 1, -14)}${nut(14, 10, .9, 18)}</g></svg>`;
+  }
+  const sun = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60"><radialGradient id="c"><stop offset="0" stop-color="#fffef4"/><stop offset=".55" stop-color="#fff3b8"/><stop offset="1" stop-color="#ffd76a"/></radialGradient><circle cx="30" cy="30" r="21" fill="url(#c)"/></svg>';
+  // What lies behind the daily question: 275 wide, the top edge fades in.
+  function ground(season) {
+    const W = 275, H = 220;
+    if (season === 'spring') { seed = 11; return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">${Array.from({ length: 130 }, () => looseP(-6 + rnd() * 287, 14 + rnd() * 206, .9 + rnd() * .7, rnd() * 360)).join('')}</svg>`; }
+    if (season === 'autumn') {
+      seed = 23;
+      const colors = ['#c8643b', '#d9a441', '#a8402f', '#d27a3e', '#b84a2a', '#e0b04e', '#8f5a2a'];
+      const leaves = Array.from({ length: 190 }, (_, i) => { const x = -10 + rnd() * 295, y = 6 + Math.pow(rnd(), .7) * 214, c = colors[i % colors.length]; return i % 3 ? maple(x, y, 1 + rnd() * .6, rnd() * 360, c) : oval(x, y, .8 + rnd() * .5, rnd() * 360, c); }).join('');
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}"><linearGradient id="v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".12" stop-color="#fff"/></linearGradient><mask id="m"><rect width="${W}" height="${H}" fill="url(#v)"/></mask><g mask="url(#m)">${leaves}</g></svg>`;
+    }
+    if (season === 'summer') {
+      const waves = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => { const y = 26 + i * 22, a = 3 + i * .8; let d = `M-10 ${y}`; for (let x = -10; x < 290; x += 22) d += `q11 ${f(-a)} 22 0`; return `<path d="${d}" fill="none" stroke="rgba(255,255,255,${(0.75 - i * 0.08).toFixed(2)})" stroke-width="${(1.6 - i * .12).toFixed(2)}" stroke-linecap="round"/>`; }).join('');
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}"><linearGradient id="w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#57c3d8"/><stop offset=".4" stop-color="#2a8fb5"/><stop offset="1" stop-color="#14527e"/></linearGradient><path d="M-10 16Q60 8 137 14T290 12V230H-10Z" fill="url(#w)" opacity=".92"/><path d="M-10 16Q60 8 137 14T290 12" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2"/>${waves}<path d="M196 22h24M206 30h16M220 26h10" stroke="rgba(255,250,210,.9)" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+    }
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}"><linearGradient id="n" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#cfe0f5"/></linearGradient><path d="M-10 24C30 12 60 26 100 18C140 10 170 24 210 16C240 10 262 20 290 14V230H-10Z" fill="url(#n)"/><path d="M-10 24C30 12 60 26 100 18C140 10 170 24 210 16C240 10 262 20 290 14" fill="none" stroke="rgba(150,180,220,.6)" stroke-width="1"/></svg>`;
+  }
+  function build(season) {
+    const piece = (cls, svg) => `<span class="us-season-${cls}" style="background-image:${img(svg).replace(/"/g, '&quot;')}"></span>`;
+    const top = season === 'spring' || season === 'autumn'
+      ? piece('tl', crown(season, season === 'spring' ? 31 : 53)) + piece('tr', crown(season, season === 'spring' ? 47 : 71))
+      : season === 'winter' ? piece('tl is-frost', frost()) + piece('tr is-frost', frost()) : piece('sun', sun);
+    const sides = season === 'autumn' ? ['l1', 'r1', 'r2'].map((k) => piece(`nut ${k}`, chestnuts())).join('') : '';
+    return `<span class="us-season-art" data-season="${season}">${top}${sides}${piece('ground', ground(season))}</span>`;
+  }
+  return (season) => (cache[season] ||= build(season));
+})();
+// Pellicola: today's date stamped like a disposable camera, "26 11 '26" (Rome).
+function filmStamp() {
+  let iso = '';
+  try { iso = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date()); } catch (_) { iso = new Date().toISOString().slice(0, 10); }
+  return `${iso.slice(8, 10)} ${iso.slice(5, 7)} ’${iso.slice(2, 4)}`;
+}
+function decoMarkup(theme) {
+  if (theme === 'seasonal') return SEASON_ART(seasonFor());
+  if (theme === 'film') return `<span class="us-film-stamp">${esc(filmStamp())}</span>`;
+  return '';
+}
+
 // ---------- applying to the real Oggi hero ----------
 let applied = { theme: DEFAULTS.theme, effect: DEFAULTS.effect };
 function ensureLayers() {
@@ -122,6 +217,8 @@ function apply(next = {}) {
   if (theme === 'seasonal') root.dataset.usOggiSeason = seasonFor(); else delete root.dataset.usOggiSeason;
   if (effect === DEFAULTS.effect) delete root.dataset.usOggiEffect; else root.dataset.usOggiEffect = effect;
   const layers = ensureLayers();
+  const deco = layers?.hero.querySelector(':scope > .us-oggi-deco');
+  if (deco) { const html = decoMarkup(theme), sign = `${theme}:${html.length}:${root.dataset.usOggiSeason || ''}`; if (deco.dataset.sign !== sign) { deco.innerHTML = html; deco.dataset.sign = sign; } }
   if (layers?.fx && (layers.fx.dataset.fx || DEFAULTS.effect) !== effect) {
     layers.fx.dataset.fx = effect;
     if (effect === DEFAULTS.effect) { heroFx?.destroy(); heroFx = null; layers.fx.innerHTML = ''; }
@@ -209,7 +306,7 @@ function heroSnapshot() {
 function phoneMarkup(theme, effect, snapshot, { compact = false } = {}) {
   const photo = snapshot.photo ? ` style="${esc(`--look-photo:${snapshot.photo}`)}"` : '';
   return `<span class="us-look-phone${compact ? ' is-compact' : ''}" data-oggi-theme="${esc(theme)}"${theme === 'seasonal' ? ` data-oggi-season="${esc(seasonFor())}"` : ''}${photo}>
-    <span class="us-look-photo"></span><span class="us-look-shade"></span><span class="us-oggi-tint"></span><span class="us-oggi-deco"></span>
+    <span class="us-look-photo"></span><span class="us-look-shade"></span><span class="us-oggi-tint"></span><span class="us-oggi-deco">${decoMarkup(theme)}</span>
     <span class="us-oggi-fx" data-fx="${esc(effect)}" data-fx-scale="${compact ? '0.55' : '0.9'}"></span>
     <span class="us-look-chrome"><i></i><b></b><i></i></span>
     <span class="us-look-count" data-countdown-style="editorial"><small>${esc(snapshot.title)}</small><b>${esc(snapshot.value)}</b><em>${esc(snapshot.unit)}</em></span>

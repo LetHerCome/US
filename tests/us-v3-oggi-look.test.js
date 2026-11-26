@@ -16,9 +16,9 @@ const html = read('index.html');
 
 // Premi di Oggi (founder, 25/11/2026; grill D3–D16 and the approved tavola):
 // four themes, and eight effects in three steps (Base, Natura, Vostri).
-const THEMES = ['original', 'romantic', 'moonlight', 'seasonal'];
+const THEMES = ['original', 'film', 'golden', 'seasonal'];
 const EFFECTS = ['none', 'hearts', 'petals', 'dandelions', 'snow', 'leaves', 'shooting', 'lanterns', 'memories'];
-const LEVELS = { moonlight: 6, seasonal: 12, dandelions: 4, snow: 7, leaves: 10, shooting: 13, lanterns: 16, memories: 20 };
+const LEVELS = { golden: 6, seasonal: 12, dandelions: 4, snow: 7, leaves: 10, shooting: 13, lanterns: 16, memories: 20 };
 
 // ------------------------------------------------------------------ fake DOM
 function fakeNode(id = '') {
@@ -80,7 +80,7 @@ function boot({ rewards = [], level = 1, profile = { id: 'f', couple_id: 'c', ro
 const plain = (value) => JSON.parse(JSON.stringify(value)); // vm objects come from another realm
 const reward = (id, category, level, unlocked) => ({ id, token: id, category, level_required: level, unlocked, title: id, description: id, equipped: false });
 const v3Rewards = (level) => [
-  reward('oggi_effect_dandelions', 'oggi_effect', 4, level >= 4), reward('oggi_theme_moonlight', 'oggi_theme', 6, level >= 6),
+  reward('oggi_effect_dandelions', 'oggi_effect', 4, level >= 4), reward('oggi_theme_golden', 'oggi_theme', 6, level >= 6),
   reward('oggi_effect_snow', 'oggi_effect', 7, level >= 7), reward('oggi_effect_leaves', 'oggi_effect', 10, level >= 10),
   reward('oggi_theme_seasonal', 'oggi_theme', 12, level >= 12), reward('oggi_effect_shooting', 'oggi_effect', 13, level >= 13),
   reward('oggi_effect_lanterns', 'oggi_effect', 16, level >= 16), reward('oggi_effect_memories', 'oggi_effect', 20, level >= 20)
@@ -91,12 +91,12 @@ test('Oggi looks: four themes and eight effects in three steps, a free Base and 
   const { look } = boot();
   assert.deepEqual(plain(look.THEMES.map((t) => t.id)), THEMES);
   assert.deepEqual(plain(look.EFFECTS.map((e) => e.id)), EFFECTS);
-  assert.deepEqual(plain(look.THEMES.filter((t) => !t.reward).map((t) => t.id)), ['original', 'romantic']);
+  assert.deepEqual(plain(look.THEMES.filter((t) => !t.reward).map((t) => t.id)), ['original', 'film']);
   assert.deepEqual(plain(look.EFFECTS.filter((e) => !e.reward).map((e) => e.id)), ['none', 'hearts', 'petals']);
-  for (const [id, level] of Object.entries(LEVELS)) assert.equal(look.find(id in { moonlight: 1, seasonal: 1 } ? 'theme' : 'effect', id).level, level, id);
+  for (const [id, level] of Object.entries(LEVELS)) assert.equal(look.find(id in { golden: 1, seasonal: 1 } ? 'theme' : 'effect', id).level, level, id);
   assert.deepEqual(plain(look.EFFECTS.filter((e) => e.step).map((e) => e.step)), ['Base', 'Base', 'Natura', 'Natura', 'Natura', 'Vostri', 'Vostri', 'Vostri']);
   // Gone (grill D4, D14): never offered again; a stored choice falls back to the original.
-  for (const gone of ['pastel', 'cinematic', 'sky']) assert.equal(look.find('theme', gone), null, gone);
+  for (const gone of ['pastel', 'cinematic', 'sky', 'romantic', 'moonlight']) assert.equal(look.find('theme', gone), null, gone);
   for (const gone of ['stars', 'fireflies', 'bokeh', 'aurora']) assert.equal(look.find('effect', gone), null, gone);
   const copy = [...look.THEMES, ...look.EFFECTS].map((l) => `${l.name} ${l.note}`).join(' ').toLowerCase();
   assert.doesNotMatch(copy, /\bcoin|monet|gettoni|crediti|premium|acquista/);
@@ -148,17 +148,17 @@ test('Oggi effects: above the photo, below every control, never blocking touches
 test('Oggi looks: choosing a free look applies at once and persists in this phone\'s cosmetics, not the server', async () => {
   const { look, progression, root, storage, calls, hero } = boot();
   await progression.hydrate({ force: true, showUnlocks: false });
-  assert.equal(await progression.setLook('theme', 'romantic'), true);
+  assert.equal(await progression.setLook('theme', 'film'), true);
   assert.equal(await progression.setLook('effect', 'hearts'), true);
-  assert.equal(root.dataset.usOggiTheme, 'romantic');
+  assert.equal(root.dataset.usOggiTheme, 'film');
   assert.equal(root.dataset.usOggiEffect, 'hearts');
   const fx = hero.children.find((c) => c.className === 'us-oggi-fx');
   assert.equal(fx.dataset.fx, 'hearts', 'the layer knows its effect; oggi-fx.js draws it');
   const saved = JSON.parse(storage.get('us:cosmetics:v1:c:f'));
-  assert.equal(saved.preferences.oggi_theme, 'romantic');
+  assert.equal(saved.preferences.oggi_theme, 'film');
   assert.equal(saved.preferences.oggi_effect, 'hearts');
   assert.deepEqual(calls.map(([n]) => n), ['get_progression_v1'], 'no write RPC: the look is device-local');
-  assert.deepEqual(plain(look.current()), { theme: 'romantic', effect: 'hearts' });
+  assert.deepEqual(plain(look.current()), { theme: 'film', effect: 'hearts' });
   // Restore the original look.
   await progression.setLook('theme', 'original');
   await progression.setLook('effect', 'none');
@@ -170,31 +170,31 @@ test('Oggi looks: choosing a free look applies at once and persists in this phon
 test('Oggi looks: locked looks preview but cannot be applied; looks the server does not offer stay hidden', async () => {
   const before = boot();
   await before.progression.hydrate({ force: true, showUnlocks: false });
-  assert.equal(before.look.status('theme', 'moonlight').state, 'unavailable', 'migration not applied: never shown as a fake reward');
-  assert.equal(await before.progression.setLook('theme', 'moonlight'), false);
+  assert.equal(before.look.status('theme', 'golden').state, 'unavailable', 'migration not applied: never shown as a fake reward');
+  assert.equal(await before.progression.setLook('theme', 'golden'), false);
 
   const after = boot({ rewards: v3Rewards(6), level: 6 });
   await after.progression.hydrate({ force: true, showUnlocks: false });
   assert.deepEqual(plain(after.look.status('theme', 'seasonal')), { state: 'locked', level: 12, plus: false });
-  assert.equal(after.look.status('theme', 'moonlight').state, 'unlocked');
+  assert.equal(after.look.status('theme', 'golden').state, 'unlocked');
   assert.equal(after.look.status('effect', 'dandelions').state, 'unlocked');
   assert.deepEqual(plain(after.look.status('effect', 'memories')), { state: 'locked', level: 20, plus: false });
   assert.equal(await after.progression.setLook('theme', 'seasonal'), false, 'locked');
   assert.equal(await after.progression.setLook('effect', 'memories'), false, 'locked');
-  assert.equal(await after.progression.setLook('theme', 'moonlight'), true);
+  assert.equal(await after.progression.setLook('theme', 'golden'), true);
   assert.equal(await after.progression.setLook('effect', 'dandelions'), true);
-  assert.equal(after.root.dataset.usOggiTheme, 'moonlight');
+  assert.equal(after.root.dataset.usOggiTheme, 'golden');
   assert.equal(after.root.dataset.usOggiEffect, 'dandelions');
 });
 
 test('Oggi looks: a restart paints the stored look before the server answers; entitlement is re-checked', async () => {
-  const stored = JSON.stringify({ version: 2, couple_id: 'c', profile_id: 'f', preferences: { oggi_theme: 'moonlight', oggi_effect: 'hearts' } });
+  const stored = JSON.stringify({ version: 2, couple_id: 'c', profile_id: 'f', preferences: { oggi_theme: 'golden', oggi_effect: 'hearts' } });
   const phone = boot({ storageSeed: { 'us:cosmetics:v1:c:f': stored }, rewards: [], level: 1 });
   phone.identityChange();
-  assert.equal(phone.root.dataset.usOggiTheme, 'moonlight', 'early paint from this phone');
+  assert.equal(phone.root.dataset.usOggiTheme, 'golden', 'early paint from this phone');
   assert.equal(phone.root.dataset.usOggiEffect, 'hearts');
   await phone.progression.hydrate({ force: true, showUnlocks: false });
-  assert.equal(phone.root.dataset.usOggiTheme, undefined, 'the server does not entitle Chiaro di luna: back to the original');
+  assert.equal(phone.root.dataset.usOggiTheme, undefined, 'the server does not entitle Ora d’oro: back to the original');
   assert.equal(phone.root.dataset.usOggiEffect, 'hearts', 'a free effect stays');
   // A look that left (Cinema, Stelle luminose) is never painted again.
   const old = boot({ storageSeed: { 'us:cosmetics:v1:c:f': JSON.stringify({ version: 2, couple_id: 'c', profile_id: 'f', preferences: { oggi_theme: 'cinematic', oggi_effect: 'stars' } }) } });
@@ -204,11 +204,11 @@ test('Oggi looks: a restart paints the stored look before the server answers; en
 });
 
 test('Oggi looks: each identity on the phone keeps its own look; logout returns to the original', async () => {
-  const francesco = JSON.stringify({ version: 2, couple_id: 'c', profile_id: 'f', preferences: { oggi_theme: 'romantic' } });
+  const francesco = JSON.stringify({ version: 2, couple_id: 'c', profile_id: 'f', preferences: { oggi_theme: 'film' } });
   const bea = JSON.stringify({ version: 2, couple_id: 'c', profile_id: 'b', preferences: { oggi_effect: 'petals' } });
   const phone = boot({ storageSeed: { 'us:cosmetics:v1:c:f': francesco, 'us:cosmetics:v1:c:b': bea } });
   phone.identityChange();
-  assert.equal(phone.root.dataset.usOggiTheme, 'romantic');
+  assert.equal(phone.root.dataset.usOggiTheme, 'film');
   phone.window.usProfile = { id: 'b', couple_id: 'c', role: 'beatrice' };
   phone.identityChange();
   assert.equal(phone.root.dataset.usOggiTheme, undefined);

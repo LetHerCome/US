@@ -271,10 +271,10 @@ const ATM = Object.freeze({ us: ['#22101D', 'rgba(255,124,150,.5)'], rose: ['#1B
 const ITEM_COLOR = Object.freeze({
   theme: { rose: '#C56EBE', midnight: '#968CFF', film: '#F0A65A', blue_hour: '#5B7CF0', graphite: '#C9C3D4' },
   accent: { orchidea: '#D98BE0', cherry: '#F0566C', champagne: '#E6C78E', ice: '#9FD2FF' },
-  oggi_theme: { moonlight: '#5B6CC8', seasonal: '#E0A050' },
+  oggi_theme: { golden: '#F3B76E', seasonal: '#E0A050' },
   oggi_effect: { hearts: '#FF7C96', petals: '#FF8BA8', dandelions: '#F4EEE6', snow: '#CFE3FF', leaves: '#D27A3E', shooting: '#A98BFF', lanterns: '#F3B76E', memories: '#FFE2D6' },
   effect: { pulse: '#FF7C96', constellation: '#A98BFF', duo: '#D98BE0' },
-  countdown: { aurora: '#F3B76E', orbit: '#F3B76E', chrome: '#C9C3D4' }
+  countdown: { aurora: '#FFD98A', orbit: '#F6E7C8', chrome: '#E0605A' }
 });
 // The free look of the three device slots that have no reward row: choosing
 // it simply clears the slot on this phone.
@@ -338,6 +338,9 @@ function artMarkup(item, big = false) {
   }
   if (cat === 'effect') return `<span class="logo-pv"><span class="logo-wrap" data-fx="${esc(id)}"><img class="og-logo" src="${US_SYMBOL}" alt="" decoding="async" draggable="false"><span class="shine"></span><span class="stars"><i style="left:4px;top:10px"></i><i style="right:2px;top:2px;animation-delay:.8s"></i><i style="right:6px;bottom:4px;animation-delay:1.6s"></i></span></span></span>`;
   if (cat === 'countdown') {
+    // Temi e countdown (26/11/2026): the three reward styles are shown with the real countdown markup.
+    const real = ['aurora', 'orbit', 'chrome'].includes(id) ? window.USCountdown?.previewMarkup?.(id) : '';
+    if (real) return `<span class="cd-pv"><span class="cd cd-real">${real}</span></span>`;
     const days = daysTogether() || '0';
     const digits = id === 'signal' ? days.split('').map((d) => `<span>${esc(d)}</span>`).join('') : esc(days);
     return `<span class="cd-pv"><span class="cd" data-style="${esc(id)}"><span class="cdb"><span class="num">${digits}</span><span class="lbl">giorni</span></span></span></span>`;

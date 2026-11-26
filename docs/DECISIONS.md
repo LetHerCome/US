@@ -583,6 +583,15 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Giochi nuovi:** ogni gioco a domande ha un genere (Per conoscervi, Per parlarvi, Per ridere, Per ricordare). Oltre sei, «Tutti i giochi» si divide da sola per genere, con un titolino ciascuno. I giochi con un modo di giocare loro (come Questo o quello) vanno nella giostra.
 - **Di giorno:** i gettoni spenti e il riquadro a zero hanno l'inchiostro tenue (prima erano tratteggi chiari invisibili sulla carta).
 
+## 2026-11-26 — Temi di Oggi e countdown rifatti
+
+**Fonte:** founder, 26/11/2026, sulla tavola «Temi e countdown di Oggi» (https://claude.ai/artifact/Gh85EKBZ7bsKTJ72qNnZUY), sette giri: «I vostri colori mi fa cacare», «adoro» Ora d'oro, Stagioni «non deve rifare la neve» e poi «alberi in alto… falli più realistici»; i countdown «devono essere piccolini», Cartolina e Calendario no, al 9 «Biglietto»; infine «Sì, vai al codice».
+
+- **Temi:** Originale e Pellicola gratis, Ora d'oro 6, Stagioni 12. Escono Romantico e Chiaro di luna (chi li aveva torna su Originale). Notte blu tenuta da parte.
+- **Stagioni:** una cosa sui bordi della foto e una dietro la domanda di oggi, ferme: ciliegi e petali, sole e mare, alberi d'autunno, castagne e foglie, ghiaccio e neve. Niente che cade, per non doppiare gli effetti. Cambia da sola col mese di Roma.
+- **Countdown:** restano gratis Editoriale, Partenze, Vetro; i premi tengono gli id che il server valida (aurora, orbit, chrome) con disegno e nome nuovi: Post-it 3, Biglietto 9, Filo rosso 18. Tutti piccoli, alla misura vera di Oggi.
+- Sostituisce, per countdown e temi, la scala del 25/11 (Calendario 3, Partenze 9, Chiaro di luna 6).
+
 ## 2026-11-25 — Premi: una scala che cresce e parla della coppia
 
 **Fonte:** founder, 25/11/2026: «i premi proprio non ci siamo… più avanti si sblocca più belli devono essere e anche un senso con l'app». Grill-me D1–D25 (tutte col consiglio, tranne: Costellazione resta, «è molto bello»; icone solo US Plus), tavola «Premi di Oggi» (https://claude.ai/artifact/M8dY8C3Rvu4Mwvb6Rnw362, v5) approvata: «Approvo, vai». Piano a fasi in `docs/missions/premi-oggi.md`.
