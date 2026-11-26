@@ -1015,3 +1015,44 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
 .left-for-you-kept .us-conservati-entry-count{flex:none;font-size:13px;font-weight:600;color:var(--us-color-text-3)}
 .left-for-you-kept .us-conservati-entry-count:empty{display:none}
 .left-for-you-kept .us-conservati-entry-copy small{font-size:12px}
+
+/* ===== Premi, fase 2 (25/11/2026): the Ti penso rewards (think-reward.js) ===== */
+#thinkArrival .think-arrival-sheet>canvas.us-think-hearts{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}
+#thinkArrival .us-letter-layer{position:absolute;inset:0;z-index:20;display:grid;place-items:center;background:rgba(10,7,9,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:opacity .3s ease}
+:root[data-us-luce="giorno"] #thinkArrival .us-letter-layer{background:rgba(243,236,225,.6)}
+#thinkArrival .us-letter-layer.is-leaving{opacity:0}
+.us-letter{position:absolute;inset:0;display:grid;place-items:center;perspective:900px;cursor:pointer;outline:none}
+.us-letter-env{position:relative;width:min(78vw,340px);aspect-ratio:3/2;transform:translateY(130%) rotate(-9deg);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.us-letter.arrive .us-letter-env{transform:translateY(8%);animation:us-letter-arrive .95s cubic-bezier(.2,.9,.25,1.15)}
+@keyframes us-letter-arrive{0%{transform:translateY(130%) rotate(-9deg)}70%{transform:translateY(4%) rotate(2deg)}100%{transform:translateY(8%) rotate(0)}}
+.us-letter-env>*{position:absolute}
+.us-letter-back{inset:0;width:100%;height:100%;z-index:0;filter:drop-shadow(0 12px 18px rgba(0,0,0,.35))}
+.us-letter-paper{left:6%;right:6%;top:5%;height:86%;z-index:1;box-sizing:border-box;border-radius:6px;background:repeating-linear-gradient(180deg,transparent 0 17px,rgba(120,100,110,.14) 17px 18px),#fffdf8;box-shadow:0 2px 8px rgba(0,0,0,.18);display:grid;align-content:center;justify-items:center;gap:3px;padding:6% 9%;color:#231b1d;transition:transform .75s cubic-bezier(.2,.8,.2,1)}
+.us-letter-date{justify-self:start;font:700 9px/1 var(--us-font-ui,Figtree,sans-serif);letter-spacing:.14em;text-transform:uppercase;color:#9a8d8a}
+.us-letter-hand{font:italic 400 34px/1.15 var(--us-font-display,Fraunces,Georgia,serif)}
+.us-letter-sign{justify-self:end;font:italic 400 15px/1 var(--us-font-display,Fraunces,Georgia,serif);color:var(--env-ink)}
+.us-letter-face{justify-self:end;width:28px}
+.us-letter-face svg{width:100%;height:auto;display:block}
+.us-letter-front{inset:0;width:100%;height:100%;z-index:2}
+.us-letter-flap{left:0;top:0;width:100%;height:auto;z-index:3;transform-origin:50% 1.5%;transition:transform .6s cubic-bezier(.4,0,.2,1),z-index 0s .3s,filter .6s;filter:drop-shadow(0 3px 3px rgba(0,0,0,.2))}
+.us-letter-seal{left:50%;top:62%;width:25%;aspect-ratio:1;transform:translate(-50%,-50%);z-index:4}
+.us-letter-seal .half{position:absolute;inset:0;background:radial-gradient(circle at 38% 32%,#e46a4f,#b23a2c 58%,#8a281e);border-radius:47% 53% 50% 45% / 53% 46% 54% 47%;box-shadow:0 3px 6px rgba(0,0,0,.35),inset 0 -3px 0 rgba(0,0,0,.2),inset 0 2px 0 rgba(255,255,255,.18);transition:transform .45s cubic-bezier(.3,.7,.3,1),opacity .45s}
+.us-letter-seal .half.l{clip-path:polygon(0 0,53% 0,45% 34%,56% 58%,47% 100%,0 100%)}
+.us-letter-seal .half.r{clip-path:polygon(53% 0,100% 0,100% 100%,47% 100%,56% 58%,45% 34%)}
+.us-letter-seal .emb{position:absolute;inset:20%;display:grid;place-items:center;opacity:.5;transition:opacity .25s;pointer-events:none}
+.us-letter-seal .emb svg{width:100%;height:auto}
+.us-letter-heart{left:calc(50% + var(--x));top:10%;width:16px;height:14px;z-index:7;opacity:0;background:var(--env);-webkit-mask:var(--heart) center/contain no-repeat;mask:var(--heart) center/contain no-repeat}
+.us-letter-heart.b{background:var(--env-tu)}
+.us-letter.o1 .half.l{transform:translate(-40%,10%) rotate(-30deg);opacity:0}
+.us-letter.o1 .half.r{transform:translate(40%,10%) rotate(30deg);opacity:0}
+.us-letter.o1 .emb{opacity:0}
+.us-letter.o2 .us-letter-flap{transform:rotateX(180deg);z-index:0;filter:brightness(.9)}
+.us-letter.o3 .us-letter-paper{transform:translateY(-62%)}
+.us-letter.o4 .us-letter-paper{z-index:6;transform:translateY(-34%) scale(1.3) rotate(-1.5deg)}
+.us-letter.o4 .us-letter-env{transform:translateY(36%) scale(.9)}
+.us-letter.o4 .us-letter-heart{animation:us-letter-heart 2.2s ease-out var(--d) both}
+@keyframes us-letter-heart{0%{opacity:0;transform:translateY(0) scale(.4)}20%{opacity:1}100%{opacity:0;transform:translateY(-110px) scale(1)}}
+.us-letter-hint{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 18%);left:0;right:0;text-align:center;font:600 13px/1 var(--us-font-ui,Figtree,sans-serif);color:var(--us-color-text,#f7efe9);opacity:.8}
+.us-letter-hint[hidden]{display:none}
+.us-letter:focus-visible .us-letter-seal .half{outline:2px solid var(--us-color-text,#f7efe9);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.us-letter-env,.us-letter-paper,.us-letter-flap,.us-letter-seal .half{transition:none}.us-letter.arrive .us-letter-env{animation:none}.us-letter-heart{display:none}}

@@ -38,6 +38,7 @@ const APP_SHELL = [
   versioned("/oggi-look.css"),
   versioned("/oggi-look.js"),
   versioned("/oggi-fx.js"),
+  versioned("/think-reward.js"),
   "/assets/third-party/spotify/spotify-full-logo-white.svg",
   versioned("/styles.css"),
   versioned("/ui-foundation.css"),

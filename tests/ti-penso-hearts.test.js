@@ -49,13 +49,28 @@ test('the reward: a Ti penso group in the collection, Classico free, Cuori from 
   assert.match(p, /if \(root\.dataset\.usThinkFx !== \(think \|\| undefined\)\) \{ if \(think\) root\.dataset\.usThinkFx = think; else delete root\.dataset\.usThinkFx; \}/);
 });
 
-test('a Ti penso that arrives bursts into hearts when this phone chose them', () => {
+// Premi, fase 2 (grill D20–D21, 25/11/2026): the reward plays when the Ti
+// penso is opened, after its scene, so it is seen even when read later; once
+// per Ti penso, never with reduced motion. «Cuori» from the heart eyes of who
+// thinks of you, a touch pops one; «Lettera» a real envelope, seal, flap, sheet.
+test('the Ti penso rewards play when the Ti penso is opened, once, after the scene', () => {
   const app = read('app.js');
   const handler = app.slice(app.indexOf('function handleIncomingThink('), app.indexOf('const usRealtimeRefreshTimers'));
-  assert.match(handler, /const thinkFx=document\.documentElement\.dataset\.usThinkFx;/);
-  assert.match(handler, /if\(thinkFx==='hearts'\)window\.UsUiFoundation\?\.heartBurst\?\.\(\);/);
-  // Fase 2 (livello 15): the letter opens on its heart seal.
-  assert.match(handler, /else if\(thinkFx==='letter'\)window\.UsUiFoundation\?\.letterOpen\?\.\(\);/);
+  assert.doesNotMatch(handler, /heartBurst|letterOpen/, 'nothing over Oggi at arrival any more');
+  const open = app.slice(app.indexOf('function openThinkArrival('), app.indexOf('window.openThinkArrival=openThinkArrival;'));
+  assert.match(open, /window\.UsThinkReward\?\.play\?\.\(root,\{id:usIncomingThink\.id,created_at:usIncomingThink\.created_at,name:/);
+  const reward = read('think-reward.js');
+  assert.match(reward, /if \(!root \|\| \(kind !== 'hearts' && kind !== 'letter'\) \|\| reduced\(\)\) return false;/);
+  assert.match(reward, /if \(key && played\.has\(key\)\) return false;/);
+  assert.match(reward, /\}, 900\);/, 'after the scene (the sheet floods in 700 ms)');
+  assert.match(reward, /const eye = \(x\) =>/, 'the hearts leave the heart eyes');
+  assert.match(reward, /sheet\.addEventListener\('pointerdown', onDown\);/, 'a touch pops a heart; the reply buttons keep theirs');
+  assert.match(reward, /Tocca il sigillo/);
+  for (const step of ['o1', 'o2', 'o3', 'o4']) assert.ok(reward.includes(`['${step}', `), step);
+  const html = read('index.html');
+  assert.ok(html.indexOf('/think-reward.js?v=') > 0);
+  assert.ok(read('service-worker.js').includes('versioned("/think-reward.js")'));
+  for (const build of ['scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) assert.ok(read(build).includes("'think-reward.js'"), build);
 });
 
 test('the letter opens in the middle of the screen, not with reduced motion, and cleans up after itself', () => {

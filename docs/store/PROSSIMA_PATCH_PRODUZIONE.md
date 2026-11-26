@@ -2,6 +2,15 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Premi, fase 2: Ti penso (26/11)
+
+**Stato:** ramo `claude/premi-fase2-tipenso` (sopra la fase 1), verso il ramo fisso di staging. Solo app, niente SQL.
+
+**Cosa cambia:**
+- **Il premio del Ti penso si vede sempre**: parte quando apri il Ti penso, dopo la scena dei personaggi, anche se lo leggi più tardi (prima solo se arrivava con US aperta).
+- **Cuori** (livello 5): escono dagli occhi a cuore di chi ti pensa, nei vostri due colori; toccandoli scoppiano.
+- **Lettera** (livello 15): una busta vera nel colore di chi ti pensa, con l'interno a cuoricini e il sigillo di ceralacca col suo personaggio. Tocchi il sigillo: si spezza, il lembo si apre e il foglio viene avanti con «Ti penso» e il suo nome.
+
 ### Premi di Oggi, fase 1: effetti e temi (25/11)
 
 **Stato:** ramo `claude/premi-fase1-effetti`, verso il ramo fisso di staging. Grill D1–D25 e tavola «Premi di Oggi» (https://claude.ai/artifact/M8dY8C3Rvu4Mwvb6Rnw362) approvata: «Approvo, vai». La migrazione `20261126000000_premi_oggi_effetti.sql` va applicata a US-STAGING col via del founder; in produzione solo con un sì separato.

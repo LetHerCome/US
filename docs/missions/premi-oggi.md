@@ -1,6 +1,6 @@
 # Premi di Oggi e la scala dei premi
 
-**Stato:** fase 1 in branch (`claude/premi-fase1-effetti`), fasi 2–4 da fare.
+**Stato:** fase 1 in PR #310 (migrazione applicata a US-STAGING il 26/11, run 45829784367); fase 2 sul ramo `claude/premi-fase2-tipenso` (sopra la 1); fasi 3–4 da fare.
 **Fonte:** grill-me D1–D25 del 25/11/2026 e tavola approvata https://claude.ai/artifact/M8dY8C3Rvu4Mwvb6Rnw362 (v5). Decisione: `docs/DECISIONS.md`, 2026-11-25 «Premi: una scala che cresce e parla della coppia».
 
 ## Fase 1 — Effetti e temi di Oggi (questa)
@@ -10,7 +10,7 @@
 - `progression.js`: anteprime dei Premi dal motore unico; momento forte a fine del momento del livello.
 - Migrazione `20261126000000_premi_oggi_effetti.sql` (solo staging, col sì): righe nuove degli effetti, livelli di Neve/Chiaro di luna/Stagioni, via le righe uscite (active = false), sblocchi già dati segnati come visti.
 
-## Fase 2 — Ti penso
+## Fase 2 — Ti penso (fatta: `think-reward.js`)
 Il premio parte quando si apre il Ti penso, dopo la scena dei personaggi. Cuori (5) dagli occhi a cuore, nei due colori, che scoppiano al tocco. Lettera (15): busta nel colore di chi pensa, interno a cuoricini, sigillo di ceralacca col personaggio che si spezza, lembo, foglio che esce e viene avanti («Ti penso», firma, personaggio).
 
 ## Fase 3 — Countdown e Simbolo US

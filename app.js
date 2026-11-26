@@ -2965,6 +2965,9 @@ function openThinkArrival(){
   root.setAttribute('aria-hidden','false');
   thinkArrivalCast(root);
   renderThinkReactionUi();
+  // Premi, fase 2 (grill D20): the chosen Ti penso reward plays here, after the
+  // scene, every time a Ti penso is opened (think-reward.js, once per Ti penso).
+  window.UsThinkReward?.play?.(root,{id:usIncomingThink.id,created_at:usIncomingThink.created_at,name:partnerFromProfiles(window.usBondProfiles||[])?.display_name||'La tua persona'});
 }
 window.openThinkArrival=openThinkArrival;
 function closeThinkArrival(){
@@ -5504,11 +5507,8 @@ function handleIncomingThink(row){
   // the attention tone — only because US is active right now.
   window.UsFeedback?.attention?.();
   window.UsUiFoundation?.auroraPulse?.();
-  // Ti penso animato (Sintonia V2, livello 5): hearts in your two colours, if this phone chose them;
-  // the letter (livello 15) opens on its heart.
-  const thinkFx=document.documentElement.dataset.usThinkFx;
-  if(thinkFx==='hearts')window.UsUiFoundation?.heartBurst?.();
-  else if(thinkFx==='letter')window.UsUiFoundation?.letterOpen?.();
+  // Premi, fase 2 (grill D20): the Ti penso rewards («Cuori», «Lettera») now
+  // play when the Ti penso is opened (openThinkArrival), not over Oggi here.
   // Premi di Oggi (grill D12): the effect on Oggi shines brighter, after the Ti penso's own moment.
   setTimeout(()=>window.USOggiLook?.burst?.(),2800);
 }
