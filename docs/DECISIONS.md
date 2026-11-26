@@ -583,6 +583,16 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Giochi nuovi:** ogni gioco a domande ha un genere (Per conoscervi, Per parlarvi, Per ridere, Per ricordare). Oltre sei, «Tutti i giochi» si divide da sola per genere, con un titolino ciascuno. I giochi con un modo di giocare loro (come Questo o quello) vanno nella giostra.
 - **Di giorno:** i gettoni spenti e il riquadro a zero hanno l'inchiostro tenue (prima erano tratteggi chiari invisibili sulla carta).
 
+## 2026-11-26 — L'intro col tuo personaggio
+
+**Fonte:** founder, 26/11/2026: «facciamo l'intro quando una persona entra per la prima volta in US deve avere una sorta di tutorial guidato dal suo personaggio e al massimo anche qualche battuta dall'altro». Quattro scelte, tutte col consiglio: subito su Oggi dopo «Entra in US», tappe con Avanti, due battute dell'altro, «Rivedi l'intro» nel Profilo. Poi sulla tavola (https://claude.ai/artifact/5bU5oAjgf9osRX8aumr1z4): «specifichiamo anche come funziona profilo/impostazioni e che la barra dei personaggi si deve toccare e che prima è solo il logo»; «Sì, vai al codice».
+
+- Otto tappe: benvenuto, domanda di oggi, Ti penso, Noi, Ricordi, Gioca, Profilo e Impostazioni, il logo che si tocca e si apre nella barra e nel vostro angolo.
+- Illumina e spiega, non fa al posto di nessuno; «Salta» e Indietro chiudono e non torna da sola.
+- Una volta per persona per telefono, solo al primo ingresso (non al rientro su un telefono nuovo); chi aspetta da solo ha una riga nella schermata del codice.
+- Chi ha già US (i beta tester) la vede una volta da sola al primo avvio dopo l'aggiornamento completo del redesign (founder, 26/11: «parte l'intro a tutti i betatester che hanno già l'app una sola volta»). La memoria è per telefono.
+- Parole neutre sull'altra persona (niente «la stai pensando», «mandale»).
+
 ## 2026-11-26 — Temi di Oggi e countdown rifatti
 
 **Fonte:** founder, 26/11/2026, sulla tavola «Temi e countdown di Oggi» (https://claude.ai/artifact/Gh85EKBZ7bsKTJ72qNnZUY), sette giri: «I vostri colori mi fa cacare», «adoro» Ora d'oro, Stagioni «non deve rifare la neve» e poi «alberi in alto… falli più realistici»; i countdown «devono essere piccolini», Cartolina e Calendario no, al 9 «Biglietto»; infine «Sì, vai al codice».

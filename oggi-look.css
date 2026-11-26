@@ -114,11 +114,13 @@ html:not([data-us-oggi-effect]) #homeHero>.us-oggi-fx{display:none}
 .us-oggi-deco{background:var(--oggi-deco)}
 :root[data-us-motion="reduced"] .us-oggi-deco::before{animation:none!important}
 html[data-us-oggi-theme] #homeHero .home-photo-layer,.us-look-phone .us-look-photo{filter:var(--oggi-photo-filter)}
-/* Pellicola: a light leak that breathes, grain and the date stamped in orange. */
+/* Pellicola: a light leak that breathes, grain and the date stamped in orange.
+   Fluidity (26/11/2026): the moving layers blend normally (no mix-blend-mode): with a
+   blend, Pellicola and an effect fell to ~48 fps on a modest phone, now ~58. */
 :is(html[data-us-oggi-theme="film"] #homeHero,.us-look-phone[data-oggi-theme="film"])>.us-oggi-deco::before,
-:is(html[data-us-oggi-theme="golden"] #homeHero,.us-look-phone[data-oggi-theme="golden"])>.us-oggi-deco::before{content:"";position:absolute;inset:0;mix-blend-mode:screen}
+:is(html[data-us-oggi-theme="golden"] #homeHero,.us-look-phone[data-oggi-theme="golden"])>.us-oggi-deco::before{content:"";position:absolute;inset:0;will-change:opacity}
 :is(html[data-us-oggi-theme="film"] #homeHero,.us-look-phone[data-oggi-theme="film"])>.us-oggi-deco::before{background:radial-gradient(45% 30% at 0% 8%,rgba(255,120,60,.55),transparent 70%),radial-gradient(30% 22% at 100% 30%,rgba(255,60,90,.28),transparent 70%);animation:us-oggi-leak 7s ease-in-out infinite alternate}
-:is(html[data-us-oggi-theme="film"] #homeHero,.us-look-phone[data-oggi-theme="film"])>.us-oggi-deco::after{content:"";position:absolute;inset:0;opacity:.3;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+:is(html[data-us-oggi-theme="film"] #homeHero,.us-look-phone[data-oggi-theme="film"])>.us-oggi-deco::after{content:"";position:absolute;inset:0;opacity:.13;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
 @keyframes us-oggi-leak{to{opacity:.55;transform:translateX(6px)}}
 .us-film-stamp{position:absolute;right:20px;bottom:33%;font:700 17px/1 ui-monospace,"SF Mono","Roboto Mono",Menlo,monospace;letter-spacing:.06em;color:#ff8a3d;text-shadow:0 0 6px rgba(255,120,40,.85),0 0 1px #ffb27a}
 .us-look-phone .us-film-stamp{right:5cqw;font-size:4.4cqw}
@@ -159,8 +161,8 @@ html[data-us-oggi-theme] body:has(#home.page.active) .us-premium-top{box-shadow:
 .us-oggi-fx>canvas.us-oggi-fx-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
 .mini>.us-oggi-fx.mini-fx{position:absolute;inset:0;pointer-events:none}
 /* Foto a fuoco with an effect on: a tap plays, the pill goes back to Oggi. */
-#homeHero>.us-oggi-focus-exit{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 26px);z-index:30;transform:translate(-50%,12px);min-height:44px;padding:0 20px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(18,13,17,.55);color:#fff;font:700 14px/1 var(--us-font-ui,Figtree,sans-serif);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease}
-html[data-us-oggi-effect] #homeHero.us-oggi-focus>.us-oggi-focus-exit{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#homeHero>.us-oggi-focus-exit{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 26px);z-index:30;transform:translate(-50%,12px);min-height:44px;padding:0 20px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(18,13,17,.55);color:#fff;font:700 14px/1 var(--us-font-ui,Figtree,sans-serif);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,transform .25s ease,visibility 0s .25s}
+html[data-us-oggi-effect] #homeHero.us-oggi-focus>.us-oggi-focus-exit{opacity:1;visibility:visible;transform:translate(-50%,0);pointer-events:auto;transition-delay:0s}
 html[data-us-oggi-effect] #homeHero.us-oggi-focus{touch-action:none}
 .us-look-touch{margin:4px 0 0;font-size:13px;line-height:1.45;color:var(--us-color-text-2,#cfc8d6)}
 .us-oggi-fx{overflow:hidden;contain:strict;container-type:size}

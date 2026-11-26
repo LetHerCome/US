@@ -400,3 +400,36 @@
 @keyframes us-acc-note{0%{opacity:0;transform:translate(0,0)}15%{opacity:1}100%{opacity:0;transform:translate(14px,-30px) rotate(18deg)}}
 @keyframes us-acc-sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
 @media (prefers-reduced-motion:reduce){.us-char.is-big :is(.us-acc-glint,.us-acc-gem,.us-acc-note,.us-acc-sway){animation:none}}
+
+/* ---------- L'intro col tuo personaggio (intro.js, tavola approved 26/11/2026) ---------- */
+.us-intro{position:fixed;inset:0;z-index:var(--us-layer-sheet,10060);opacity:0;transition:opacity .26s ease}
+.us-intro.is-open{opacity:1}
+.us-intro-hole{position:absolute;box-shadow:0 0 0 200vmax rgba(16,10,16,.62),0 0 0 2px rgba(255,255,255,.92) inset,0 0 26px rgba(255,255,255,.32);transition:left .55s cubic-bezier(.3,.8,.25,1),top .55s cubic-bezier(.3,.8,.25,1),width .55s cubic-bezier(.3,.8,.25,1),height .55s cubic-bezier(.3,.8,.25,1),border-radius .3s;pointer-events:none}
+.us-intro-hole.is-none{left:50%;top:50%;width:0;height:0}
+.us-intro-hole.is-tap::after{content:"";position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:rgba(255,255,255,.55);animation:us-intro-tap .7s ease-out both}
+@keyframes us-intro-tap{0%{opacity:.85;transform:scale(.3)}100%{opacity:0;transform:scale(1.9)}}
+.us-intro-guide{position:absolute;left:0;top:0;transition:transform .7s cubic-bezier(.3,.8,.25,1);pointer-events:none}
+.us-intro-guide svg{display:block;width:100%;height:auto;overflow:visible;animation:us-intro-breathe 2.6s ease-in-out infinite}
+.us-intro-guide.is-hop svg{animation:us-intro-hop .7s ease}
+@keyframes us-intro-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-2%)}}
+@keyframes us-intro-hop{0%{transform:translateY(0)}40%{transform:translateY(-14%)}100%{transform:translateY(0)}}
+.us-intro-bubble{position:absolute;left:max(16px,var(--us-safe-left,0px));right:max(16px,var(--us-safe-right,0px));max-width:440px;margin:0 auto;padding:16px 18px 14px;border-radius:22px;background:#fbf4ee;color:#241a20;box-shadow:0 12px 34px rgba(0,0,0,.32);transition:top .55s cubic-bezier(.3,.8,.25,1)}
+.us-intro-bubble::after{content:"";position:absolute;left:calc(var(--us-intro-tail,40px) - max(16px,var(--us-safe-left,0px)));bottom:-7px;width:16px;height:16px;border-radius:3px;background:inherit;transform:rotate(45deg)}
+.us-intro-bubble.is-up::after{bottom:auto;top:-7px}
+.us-intro-say{margin:0;font:600 15.5px/1.4 var(--us-font-ui,'Figtree',sans-serif);text-wrap:pretty}
+.us-intro-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.us-intro-dots{display:flex;gap:5px}
+.us-intro-dots i{width:7px;height:7px;border-radius:4px;background:#dccfd3;transition:width .25s}
+.us-intro-dots i.is-on{width:18px;background:#b8432f}
+.us-intro-btns{display:flex;align-items:center;gap:6px}
+.us-intro-skip{min-height:44px;padding:0 10px;border:0;background:none;color:#8a7a80;font:600 14px/1 var(--us-font-ui,'Figtree',sans-serif)}
+.us-intro-next{min-height:44px;padding:0 20px;border:0;border-radius:999px;background:#b8432f;color:#fff;font:700 15px/1 var(--us-font-ui,'Figtree',sans-serif)}
+.us-intro button:focus-visible{outline:2px solid #a98bff;outline-offset:2px}
+.us-intro-other{position:absolute;right:max(16px,var(--us-safe-right,0px));display:flex;align-items:flex-end;gap:8px;opacity:0;transform:translateY(40px);transition:opacity .3s,transform .5s cubic-bezier(.3,1.4,.4,1);pointer-events:none}
+.us-intro-other.is-on{opacity:1;transform:none}
+.us-intro-other svg{display:block;width:56px;height:auto;overflow:visible}
+.us-intro-other-say{max-width:170px;margin:0 0 30px;padding:9px 12px;border-radius:16px 16px 4px 16px;background:#efe6ff;color:#2a2040;font:600 13.5px/1.3 var(--us-font-ui,'Figtree',sans-serif)}
+html.us-intro-open .us-fumetto{visibility:hidden}
+@media (prefers-reduced-motion:reduce){.us-intro,.us-intro-hole,.us-intro-guide,.us-intro-bubble,.us-intro-other{transition:none!important}.us-intro-guide svg,.us-intro-hole.is-tap::after{animation:none!important}}
+:root[data-us-motion="reduced"] :is(.us-intro,.us-intro-hole,.us-intro-guide,.us-intro-bubble,.us-intro-other){transition:none!important}
+:root[data-us-motion="reduced"] .us-intro-guide svg{animation:none!important}
