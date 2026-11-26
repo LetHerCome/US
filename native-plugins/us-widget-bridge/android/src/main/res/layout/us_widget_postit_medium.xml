@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Post-it 4x2 (widget del redesign, 26/11/2026): the last two post-its,
+     one each when you both wrote, each with the tape of whoever wrote it. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/us_postit_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/us_w_card"
+    android:clipToOutline="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="18dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp">
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <FrameLayout
+                android:id="@+id/us_postit_paper"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/us_widget_postit_yellow"
+                android:elevation="3dp"
+                android:paddingStart="12dp"
+                android:paddingTop="18dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="10dp"
+                android:rotation="-2">
+
+                <ImageView
+                    android:id="@+id/us_postit_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+            </FrameLayout>
+
+            <ImageView
+                android:id="@+id/us_postit_tape"
+                android:layout_width="46dp"
+                android:layout_height="16dp"
+                android:layout_gravity="top|center_horizontal"
+                android:layout_marginTop="-4dp"
+                android:alpha="0.8"
+                android:contentDescription="@null"
+                android:elevation="4dp"
+                android:importantForAccessibility="no"
+                android:rotation="-4"
+                android:scaleType="fitXY"
+                android:src="@drawable/us_w_tape" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/us_postit_second"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <FrameLayout
+                android:id="@+id/us_postit_paper2"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/us_widget_postit_pink"
+                android:elevation="3dp"
+                android:paddingStart="12dp"
+                android:paddingTop="18dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="10dp"
+                android:rotation="2.5">
+
+                <ImageView
+                    android:id="@+id/us_postit_text2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+            </FrameLayout>
+
+            <ImageView
+                android:id="@+id/us_postit_tape2"
+                android:layout_width="46dp"
+                android:layout_height="16dp"
+                android:layout_gravity="top|center_horizontal"
+                android:layout_marginTop="-2dp"
+                android:alpha="0.8"
+                android:contentDescription="@null"
+                android:elevation="4dp"
+                android:importantForAccessibility="no"
+                android:rotation="5"
+                android:scaleType="fitXY"
+                android:src="@drawable/us_w_tape" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/us_postit_more"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="2dp"
+        android:fontFamily="@font/us_figtree"
+        android:importantForAccessibility="no"
+        android:textColor="@color/us_w_sub"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+</FrameLayout>

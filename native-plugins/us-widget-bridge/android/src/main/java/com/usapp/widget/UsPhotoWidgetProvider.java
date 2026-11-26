@@ -67,13 +67,18 @@ public final class UsPhotoWidgetProvider extends AppWidgetProvider {
         }
         boolean shown = photo != null;
         if (shown) views.setImageViewBitmap(R.id.us_photo_image, photo);
-        else UsWidgetArt.art(views, context, R.id.us_photo_art, R.id.us_photo_grain, R.drawable.us_widget_art_photo, options, true);
-        views.setViewVisibility(R.id.us_photo_art, shown ? View.GONE : View.VISIBLE);
         views.setViewVisibility(R.id.us_photo_image, shown ? View.VISIBLE : View.GONE);
-        // The photo melts into the theme's paper (founder, 02/11/2026: it follows the theme).
+        // The veil of Oggi: paper by day, night in the dark, never full (founder, 25/11/2026).
         views.setViewVisibility(R.id.us_photo_scrim, shown ? View.VISIBLE : View.GONE);
         views.setViewVisibility(R.id.us_photo_placeholder, shown ? View.GONE : View.VISIBLE);
-        if (shown) views.setViewVisibility(R.id.us_photo_grain, UsWidgetArt.clips() ? View.VISIBLE : View.GONE);
+        // From 4x2, you two peek in the corner, small like a signature (widget del redesign, 26/11/2026).
+        int widthNow = options == null ? 0 : options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0);
+        boolean duo = widthNow >= UsWidgets.MEDIUM_MIN_WIDTH_DP;
+        views.setViewVisibility(R.id.us_photo_duo, duo ? View.VISIBLE : View.GONE);
+        if (duo) {
+            UsWidgetCharacter.put(views, context, R.id.us_photo_me, UsWidgetCharacter.person(state.snapshot, true), UsWidgetCharacter.face(state, true), "", 40);
+            UsWidgetCharacter.put(views, context, R.id.us_photo_partner, UsWidgetCharacter.person(state.snapshot, false), UsWidgetCharacter.face(state, false), "", 36);
+        }
         views.setTextViewText(R.id.us_photo_placeholder, context.getString(state.snapshot == null ? R.string.us_widget_connect : R.string.us_widget_photo_empty));
         String place = slot.label.isEmpty() ? "" : ", " + slot.label;
         views.setContentDescription(R.id.us_photo_root, (shown ? "La vostra foto di Oggi" + place : context.getString(R.string.us_widget_photo_name))

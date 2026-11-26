@@ -1,128 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Come stai 2x2 (founder, 04/11/2026): only your two round portraits, each
-     with its emoji as a sticker. No names, no lines: the tap opens Come stai. -->
+<!-- Come stai 2x2 (widget del redesign, 26/11/2026): their character, with
+     the face of their Come stai and what they wear, their name and the state.
+     The tap opens the twelve in US; the widget never writes. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_status_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_card"
+    android:background="@drawable/us_w_card"
     android:clipToOutline="true">
-
-    <ImageView
-        android:id="@+id/us_status_art"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:contentDescription="@null"
-        android:importantForAccessibility="no"
-        android:scaleType="centerCrop"
-        android:src="@drawable/us_widget_art_status_s" />
-
-    <FrameLayout
-        android:id="@+id/us_status_grain"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/us_widget_grain" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:padding="6dp">
+        android:gravity="bottom|center_horizontal"
+        android:orientation="vertical"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="12dp">
 
-        <FrameLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
+        <ImageView
+            android:id="@+id/us_status_partner"
+            android:layout_width="101dp"
+            android:layout_height="98dp"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:scaleType="fitCenter" />
 
-            <FrameLayout
-                android:layout_width="66dp"
-                android:layout_height="66dp"
-                android:layout_gravity="center">
+        <TextView
+            android:id="@+id/us_status_partner_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/us_figtree"
+            android:importantForAccessibility="no"
+            android:maxLines="1"
+            android:textColor="@color/us_w_ink"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
-                <FrameLayout
-                    android:layout_width="60dp"
-                    android:layout_height="60dp">
-
-                    <ImageView
-                        android:id="@+id/us_status_me_avatar"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@null"
-                        android:importantForAccessibility="no"
-                        android:scaleType="fitCenter"
-                        android:src="@drawable/us_widget_art_field" />
-
-                    <ImageView
-                        android:id="@+id/us_status_me_initial"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:contentDescription="@null"
-                        android:importantForAccessibility="no"
-                        android:visibility="gone" />
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/us_status_me_emoji"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:layout_gravity="bottom|end"
-                    android:background="@drawable/us_widget_glass"
-                    android:gravity="center"
-                    android:importantForAccessibility="no"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:textColor="@color/us_widget_pastel_ink"
-                    android:textSize="15sp" />
-            </FrameLayout>
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
-
-            <FrameLayout
-                android:layout_width="66dp"
-                android:layout_height="66dp"
-                android:layout_gravity="center">
-
-                <FrameLayout
-                    android:layout_width="60dp"
-                    android:layout_height="60dp">
-
-                    <ImageView
-                        android:id="@+id/us_status_partner_avatar"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@null"
-                        android:importantForAccessibility="no"
-                        android:scaleType="fitCenter"
-                        android:src="@drawable/us_widget_art_field" />
-
-                    <ImageView
-                        android:id="@+id/us_status_partner_initial"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:contentDescription="@null"
-                        android:importantForAccessibility="no"
-                        android:visibility="gone" />
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/us_status_partner_emoji"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:layout_gravity="bottom|end"
-                    android:background="@drawable/us_widget_glass"
-                    android:gravity="center"
-                    android:importantForAccessibility="no"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:textColor="@color/us_widget_pastel_ink"
-                    android:textSize="15sp" />
-            </FrameLayout>
-        </FrameLayout>
+        <TextView
+            android:id="@+id/us_status_partner_line"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="@font/us_figtree"
+            android:importantForAccessibility="no"
+            android:maxLines="1"
+            android:textColor="@color/us_w_sub"
+            android:textSize="12sp" />
     </LinearLayout>
 </FrameLayout>

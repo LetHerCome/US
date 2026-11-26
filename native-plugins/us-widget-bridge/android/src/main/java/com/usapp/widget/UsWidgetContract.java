@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.regex.Pattern;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -28,6 +29,10 @@ final class UsWidgetContract {
     static final Pattern STATUS_KEY = Pattern.compile("^(innamorato|felice|stanco|giu|nervoso|malato|festa|lavoro|studio|palestra|viaggio|tavola)$");
     private static final Pattern COLOR = Pattern.compile("^#[0-9a-fA-F]{6}$");
     private static final Pattern PAPER = Pattern.compile("^(yellow|pink|blue|green)$");
+    // I personaggi (personaggi.js SHAPES, LOOK_HEAD, LOOK_FACE).
+    static final Pattern SHAPE = Pattern.compile("^(palla|quadrato|triangolo|goccia|nuvola)$");
+    static final Pattern HEAD = Pattern.compile("^(cappello|fiocco|cuffie|corona|coroncina|festa|cento)$");
+    static final Pattern FACE = Pattern.compile("^(occhiali|sole|sciarpina|gala|macchinetta)$");
 
     private UsWidgetContract() {}
 
@@ -89,6 +94,11 @@ final class UsWidgetContract {
             couple.put("colors", new JSONObject()
                 .put("me", COLOR.matcher(meColor).matches() ? meColor.toLowerCase() : "")
                 .put("partner", COLOR.matcher(partnerColor).matches() ? partnerColor.toLowerCase() : ""));
+            // Widget del redesign (26/11/2026): each person's character, as the app draws it.
+            JSONObject charactersIn = optObject(coupleIn, "characters");
+            couple.put("characters", new JSONObject()
+                .put("me", character(optObject(charactersIn, "me")))
+                .put("partner", character(optObject(charactersIn, "partner"))));
             couple.put("batteryLevel", batteryLevel)
                 .put("batteryCharging", batteryLevel >= 0 && coupleIn.optBoolean("batteryCharging", false))
                 .put("batteryAt", batteryAt);
@@ -198,6 +208,15 @@ final class UsWidgetContract {
                 .put("by", written && (postitBy.equals("me") || postitBy.equals("partner")) ? postitBy : "")
                 .put("more", written ? Math.max(0, Math.min(99, postitIn.optInt("more", 0))) : 0)
                 .put("at", written ? instantText(postitIn.optString("at", "")) : "");
+            // The one after it, for the 4x2 (widget del redesign, 26/11/2026).
+            JSONObject secondIn = optObject(postitIn, "second");
+            String secondText = written ? text(secondIn.optString("text", ""), 120) : "";
+            String secondPaper = secondIn.optString("color", "");
+            String secondBy = secondIn.optString("by", "");
+            postit.put("second", new JSONObject()
+                .put("text", secondText)
+                .put("color", secondText.isEmpty() ? "" : (PAPER.matcher(secondPaper).matches() ? secondPaper : "yellow"))
+                .put("by", !secondText.isEmpty() && (secondBy.equals("me") || secondBy.equals("partner")) ? secondBy : ""));
 
             return new JSONObject()
                 .put("schemaVersion", SCHEMA_VERSION)
@@ -218,6 +237,21 @@ final class UsWidgetContract {
         } catch (Exception ignored) {
             return null;
         }
+    }
+
+    /** One character: an unknown shape, head, face or colour is left empty (the widget uses the role's). */
+    static JSONObject character(JSONObject in) throws JSONException {
+        String shape = in.optString("shape", "");
+        String head = in.optString("head", "");
+        String face = in.optString("face", "");
+        String color = in.optString("color", "");
+        String day = in.optString("day", "");
+        return new JSONObject()
+            .put("shape", SHAPE.matcher(shape).matches() ? shape : "")
+            .put("head", HEAD.matcher(head).matches() ? head : "")
+            .put("face", FACE.matcher(face).matches() ? face : "")
+            .put("color", COLOR.matcher(color).matches() ? color.toLowerCase() : "")
+            .put("day", COLOR.matcher(day).matches() ? day.toLowerCase() : "");
     }
 
     static JSONObject optObject(JSONObject parent, String key) {

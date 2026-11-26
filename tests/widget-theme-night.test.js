@@ -42,20 +42,23 @@ test('code colours come in both forms; the launcher switches them with the theme
   const widgets = read(`${JAVA}/UsWidgets.java`);
   assert.match(widgets, /static void themedColor\(RemoteViews views, Context context, int id, String method, int light, int dark\) \{\s*if \(Build\.VERSION\.SDK_INT >= Build\.VERSION_CODES\.S\) views\.setColorInt\(id, method, light, dark\);\s*else views\.setInt\(id, method, night\(context\) \? dark : light\);/);
   assert.match(widgets, /Configuration\.UI_MODE_NIGHT_YES/);
-  // Ti penso (04/11/2026): only the rosa heart, the same in both themes.
-  assert.match(read(`${JAVA}/UsThinkWidgetProvider.java`), /views\.setInt\(R\.id\.us_widget_heart, "setColorFilter", ROSA\);/);
+  // Widget del redesign (26/11/2026): pictures come in both forms too (the
+  // characters, the blended heart, the pill), switched by the launcher from Android 12.
+  const pictures = read(`${JAVA}/UsWidgetCharacter.java`);
+  assert.match(pictures, /views\.setIcon\(id, "setImageIcon", Icon\.createWithBitmap\(day\), Icon\.createWithBitmap\(night\)\);/);
+  assert.match(pictures, /else \{\s*views\.setImageViewBitmap\(id, UsWidgets\.night\(context\) \? night : day\);/);
   const noi = read(`${JAVA}/UsNoiWidgetProvider.java`);
   assert.match(noi, /UsWidgets\.themedColor\(views, context, R\.id\.us_noi_battery, "setTextColor", color, dark\);/);
   assert.doesNotMatch(noi, /views\.setTextColor\(R\.id\.us_noi_battery/);
 });
 
 test('picker previews: light in the light theme, dark in the dark one', () => {
-  for (const kind of ['think', 'postit', 'noi', 'daily', 'message', 'memories', 'status']) {
+  // Widget del redesign (26/11/2026): every widget sits on the card of its theme,
+  // the Post-it too (its paper stays paper on it), so every preview has two pictures.
+  for (const kind of ['think', 'postit', 'noi', 'daily', 'message', 'memories', 'status', 'lavagna', 'photo']) {
     const light = fs.readFileSync(path.join(ROOT, RES, `drawable-nodpi/us_widget_preview_${kind}.png`));
     const dark = fs.readFileSync(path.join(ROOT, RES, `drawable-night-nodpi/us_widget_preview_${kind}.png`));
     assert.deepEqual([dark.readUInt32BE(16), dark.readUInt32BE(20)], [light.readUInt32BE(16), light.readUInt32BE(20)], kind);
-    // The Post-it's paper is the same in both themes (04/11/2026), so is its preview.
-    if (kind === 'postit') assert.deepEqual(dark, light, 'postit: the same paper');
-    else assert.notDeepEqual(dark, light, `${kind}: a different picture`);
+    assert.notDeepEqual(dark, light, `${kind}: a different picture`);
   }
 });

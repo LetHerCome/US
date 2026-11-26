@@ -2,6 +2,19 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Widget Android col redesign (26/11)
+
+**Stato:** ramo `claude/widget-redesign-android-ios-fb63c1`, verso staging. Tavola «US · Widget del redesign» (https://claude.ai/artifact/Hkj3ojVe3bwEHfg9XeJf6A) approvata: «Android ok», poi «tutte okay». Nessuna migrazione. Arriva solo con un AAB nuovo (codice nativo): il web da solo non basta.
+
+**Cosa cambia:**
+- I nove widget Android parlano come l'app: di giorno il foglio del Quaderno, di notte il nero caldo, col tema del telefono. Via le sfumature pastello, le illustrazioni e i cerchi con le emoji.
+- **I personaggi veri** al posto delle foto tonde e delle emoji: la forma, il colore e gli accessori di ognuno, con la faccia del Come stai e addormentati dalle 22 alle 6. Se uno di voi cambia forma, colore o accessori, cambiano anche nei widget appena l'app si apre.
+- **Ti penso**: il cuore dal tuo colore al suo (l'unico posto con i due colori insieme); quando arriva il suo pensiero, il suo personaggio innamorato e «Bea ti pensa». Nel medio voi due col cuore in mezzo.
+- **Foto di Oggi** col velo come in Oggi e, dal medio, voi due piccoli nell'angolo. **La domanda di oggi** col tasto nei vostri due colori (ceralacca di giorno) e il suo personaggio che saluta quando ha risposto. **Come stai** diventa «Voi due». **Distanza**: «Tra voi», niente arco, nel medio un filo dritto fra i due personaggi.
+- **Lasciato per te** è una busta di carta con la ceralacca, bordata nel colore di chi scrive. **Ricordi** sono polaroid col nastro di chi ha caricato la foto. **Post-it** di carta girati appena sulla carta del widget; **Lavagna** con la matita. Lavagna e Post-it arrivano anche in 4x2 (il Post-it medio mostra gli ultimi due, uno a testa).
+- Anteprime nuove nella lista dei widget del telefono e tessere nuove in Impostazioni › Widget.
+- iPhone e blocca schermo: stessa tavola approvata, ancora da fare (i dati dei personaggi arrivano già anche all'estensione iOS).
+
 ### Premi, fase 5: temi di Oggi e countdown (26/11)
 
 **Stato:** ramo `claude/premi-fase5-countdown-temi` (sopra le fasi 1–4). Tavola «Temi e countdown di Oggi» (https://claude.ai/artifact/Gh85EKBZ7bsKTJ72qNnZUY) approvata: «Sì, vai al codice». Migrazione `20261126020000_premi_temi_countdown.sql` solo su staging col sì; in produzione solo con un sì separato.

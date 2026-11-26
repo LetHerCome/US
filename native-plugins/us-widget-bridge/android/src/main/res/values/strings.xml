@@ -11,6 +11,7 @@
 
     <string name="us_widget_noi_name">Distanza e batteria</string>
     <string name="us_widget_noi_me">Tu</string>
+    <string name="us_widget_noi_label">Tra voi</string>
     <string name="us_widget_noi_unknown">Distanza non ancora nota</string>
     <string name="us_widget_postit_name">Post-it</string>
     <string name="us_widget_postit_description">L’ultimo post-it della vostra bacheca</string>
@@ -36,9 +37,10 @@
     <string name="us_widget_message_description">Il Lasciato per te ancora chiuso: solo che cosa è e quando</string>
     <string name="us_widget_message_empty">Il prossimo Lasciato per te arriverà qui</string>
     <string name="us_widget_message_open">Apri</string>
+    <string name="us_widget_memories_label">Ricordi</string>
     <string name="us_widget_memories_name">Ricordi a pila</string>
     <string name="us_widget_status_name">Come stai</string>
-    <string name="us_widget_status_description">Come state tu e la tua persona, con un’emoji. Dura 12 ore</string>
+    <string name="us_widget_status_description">Come state tu e la tua persona: i vostri personaggi con la faccia del momento. Dura 12 ore</string>
     <string name="us_widget_status_me">Tu</string>
     <string name="us_widget_preview_status_name">La tua persona</string>
     <string name="us_widget_preview_status_emoji">🥰</string>
@@ -49,6 +51,7 @@
     <string name="us_widget_preview_memories_date">12 ott</string>
     <string name="us_widget_lavagna_name">Lavagna</string>
     <string name="us_widget_lavagna_description">L’ultimo disegno sulla vostra lavagna. Toccalo per disegnare</string>
+    <string name="us_widget_lavagna_draw">Disegna</string>
     <string name="us_widget_lavagna_empty">Disegnate qualcosa sulla lavagna</string>
 
 

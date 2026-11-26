@@ -70,13 +70,20 @@ test('widgets: after an app update every widget redraws at once from the saved s
   assert.match(widgets, /static synchronized void refreshAll\(Context context\)/);
 });
 
-test('Impostazioni › Widget: each tile is its widget, a soft field of colour, never a flat one', () => {
+// Widget del redesign (founder, 26/11/2026): each tile is its widget on the
+// new card (night or the Quaderno's paper, with the app), the characters drawn
+// by personaggi.js, the blended heart, paper that stays paper.
+test('Impostazioni › Widget: each tile is its widget on the new card, with the real characters', () => {
   const css = read('dc-settings.css');
-  assert.ok(css.includes('#usWidgetHub .us-widget-hub-preview>*{--us-wp-aurora:radial-gradient('));
-  for (const rule of ['.us-wp-think{background:var(--us-wp-aurora)', '.us-wp-postit{position:relative;display:flex','.us-wp-daily{display:grid', '.us-wp-message{background:var(--us-wp-aurora)', '.us-wp-memories{position:relative;background:var(--us-wp-aurora)', '.us-wp-status{display:grid', '.us-wp-photo:not(.has-photo){background:var(--us-wp-aurora)']) {
+  assert.ok(css.includes('#usWidgetHub .us-widget-hub-preview{--us-w-tile:#120d11;'));
+  assert.ok(css.includes(':root[data-us-luce="giorno"] #usWidgetHub .us-widget-hub-preview{--us-w-tile:#fbf7f0}'));
+  assert.doesNotMatch(css, /--us-wp-aurora/, 'the pastel fields of before are gone');
+  for (const rule of ['.us-wp-envelope{', '.us-wp-memories i{', '.us-widget-hub-preview>.us-wp-postit{', '.us-wp-duo{']) {
     assert.ok(css.includes(`#usWidgetHub ${rule}`), rule);
   }
   const hub = read('widget-hub.js');
+  assert.match(hub, /const who = \(role, options = \{\}\) => window\.UsPersonaggi\?\.character\?\.\(role, \{ size: 28, \.\.\.options \}\) \|\| '';/);
+  assert.match(hub, /<stop offset="0" style="stop-color:var\(--us-tu\)"\/><stop offset="1" style="stop-color:var\(--us-partner\)"\/>/);
   // 04/11/2026: the Countdown left the widgets; the Post-it took its place.
   assert.doesNotMatch(hub, /kind: 'countdown'|countdownPreview/);
   assert.match(hub, /kind: 'postit', name: 'Post-it'/);
@@ -85,24 +92,24 @@ test('Impostazioni › Widget: each tile is its widget, a soft field of colour, 
 // Pastello (founder, 02/11/2026): the light theme of the approved board.
 // Ti penso (founder, 04/11/2026; tavole Main e TiPenso): only a heart. Empty
 // until tapped; the tap fills it with a pop (UsThinkHeartActivity) and sends.
-test('Ti penso: illustration and grain, only a heart, empty until the tap fills it', () => {
+// Widget del redesign (founder, 26/11/2026): the heart from your colour to
+// theirs, the only place where the two blend; their character when their
+// thought arrives; you two in the 4x2. tests/widget-redesign.test.js has the rest.
+test('Ti penso: the blended heart on the card, their character when their thought arrives', () => {
   const small = res('layout/us_widget_think.xml');
   const medium = res('layout/us_widget_think_medium.xml');
   const provider = read(`${JAVA}/UsThinkWidgetProvider.java`);
-  for (const [layout, art] of [[small, 'think_s'], [medium, 'think_m']]) {
-    assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/);
-    assert.match(layout, /android:id="@\+id\/us_think_art"[\s\S]*?android:scaleType="centerCrop"/);
-    assert.ok(layout.includes(`@drawable/us_widget_art_${art}"`), art);
-    assert.match(layout, /android:id="@\+id\/us_think_grain"[\s\S]*?@drawable\/us_widget_grain"/);
-    assert.match(layout, /android:id="@\+id\/us_widget_heart"[\s\S]*?android:layout_gravity="center"[\s\S]*?@drawable\/us_widget_think_heart_empty"/);
-    const code = layout.replace(/<!--[\s\S]*?-->/g, '');
-    assert.doesNotMatch(code, /<TextView|us_think_line|us_think_avatar|us_widget_cta|Ricambia/, 'only the heart');
+  for (const layout of [small, medium]) {
+    assert.match(layout, /android:background="@drawable\/us_w_card"\s+android:clipToOutline="true"/);
+    assert.match(layout, /android:id="@\+id\/us_widget_heart"/);
+    assert.doesNotMatch(layout, /us_widget_art_|us_widget_grain|us_think_avatar|us_widget_cta/);
   }
-  assert.match(res('drawable/us_widget_think_heart_empty.xml'), /android:strokeColor="#FFFF7C96"[\s\S]*android:fillColor="#00000000"/);
-  assert.match(res('values/colors.xml'), /<color name="us_widget_pastel_ink">#FF1A1020<\/color>/);
-  assert.ok(provider.includes('views.setImageViewResource(R.id.us_widget_heart, model.done ? R.drawable.us_widget_pastel_heart : R.drawable.us_widget_think_heart_empty);'));
+  assert.match(small, /android:id="@\+id\/us_think_got"[\s\S]*android:id="@\+id\/us_think_partner"/);
+  assert.match(medium, /android:id="@\+id\/us_think_me"[\s\S]*android:id="@\+id\/us_think_partner"/);
+  assert.ok(provider.includes('UsWidgetCharacter.heart(views, context, R.id.us_widget_heart, me, partner, wide ? 32 : 68, true);'));
+  assert.ok(provider.includes('UsWidgetCharacter.put(views, context, R.id.us_think_partner, partner, "innamorato", "", 84);'));
   assert.ok(provider.includes('views.setOnClickPendingIntent(R.id.us_widget_root, heart);'), 'the whole widget is the heart');
-  assert.doesNotMatch(provider, /us_widget_cta|us_think_line|readNoiPortrait/);
+  assert.doesNotMatch(provider, /us_widget_cta|readNoiPortrait/);
   const pop = read(`${JAVA}/UsThinkHeartActivity.java`);
   assert.ok(pop.includes('heart.setColorFilter(ROSA);'), 'the pop fills the heart in rosa');
   assert.doesNotMatch(pop, /us_widget_pastel_circle/, 'no rosa button behind it any more');
@@ -116,12 +123,11 @@ test('Ti penso: illustration and grain, only a heart, empty until the tap fills 
 
 // Distanza e batteria (Pastello, 02/11): the round portraits come from the
 // HTTP cache like every avatar; tests/widget-distance.test.js has the rest.
-test('Distanza e batteria 2x1: the illustrated card, the same round portraits', () => {
+test('Distanza e batteria 2x1: the card of the redesign, the round portraits still drawn for Noi', () => {
   const layout = res('layout/us_widget_noi.xml');
   const widgets = read('widgets.js');
-  assert.match(layout, /android:background="@drawable\/us_widget_card"/);
-  assert.match(layout, /@drawable\/us_widget_art_noi_m"/);
-  assert.doesNotMatch(layout, /us_widget_background|us_widget_two_dots|♡/);
+  assert.match(layout, /android:background="@drawable\/us_w_card"/);
+  assert.doesNotMatch(layout, /us_widget_art_|us_widget_background|us_widget_two_dots|♡/);
   assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)sp"/);
   const round = widgets.slice(widgets.indexOf('async function composeRoundPortrait'), widgets.indexOf('function clearRoundPreviews'));
   assert.match(round, /canvas\.toBlob\(resolve, 'image\/png'\)/, 'transparent, sits on the card');

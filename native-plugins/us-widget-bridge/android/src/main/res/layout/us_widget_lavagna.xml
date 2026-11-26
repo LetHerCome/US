@@ -1,53 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Lavagna 2x2 (founder, 03/11/2026; board Lavagna.dc.html): the last drawing
-     on the couple's board, drawn by US as a transparent picture on the theme's
-     paper, and "Bea · 5 min fa" under it. Before the first drawing, a line in
-     Fraunces. The tap opens the board; nobody draws here. -->
+<!-- Lavagna 2x2 (widget del redesign, 26/11/2026): the last drawing on the
+     board's paper, who drew it and when, the pencil to draw. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_lav_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_lavagna_card"
+    android:background="@drawable/us_w_board_card"
     android:clipToOutline="true">
 
     <ImageView
         android:id="@+id/us_lav_drawing"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="14dp"
+        android:layout_marginBottom="48dp"
         android:contentDescription="@null"
         android:importantForAccessibility="no"
-        android:scaleType="fitCenter"
-        android:visibility="gone" />
+        android:scaleType="fitCenter" />
 
     <ImageView
         android:id="@+id/us_lav_empty"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_marginBottom="18dp"
         android:adjustViewBounds="true"
         android:contentDescription="@null"
         android:importantForAccessibility="no"
-        android:scaleType="fitCenter" />
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/us_lav_line"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:paddingBottom="12dp"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="60dp"
+        android:layout_marginBottom="18dp"
         android:ellipsize="end"
         android:fontFamily="@font/us_figtree"
         android:importantForAccessibility="no"
-        android:includeFontPadding="false"
         android:maxLines="1"
-        android:textColor="@color/us_widget_pastel_sub"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        android:visibility="gone" />
+        android:textColor="@color/us_w_sub"
+        android:textSize="12sp" />
+
+    <FrameLayout
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="10dp">
+
+        <ImageView
+            android:id="@+id/us_lav_pen_bg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY" />
+
+        <ImageView
+            android:id="@+id/us_lav_pen"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_gravity="center"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:src="@drawable/us_w_pencil"
+            android:tint="@color/us_w_on_pill" />
+    </FrameLayout>
 </FrameLayout>
