@@ -47,7 +47,11 @@
   const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastSentAt: '', lastAnsweredAt: '', todayCount: 0, todayDate: '' });
   // Batteria del partner: level -1 = unknown (UsWidgetContract.java).
   // colors: each person's colour as the app shows it (Pastello widgets).
-  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready', distanceNear: false, distanceAt: '', batteryLevel: -1, batteryCharging: false, batteryAt: '', colors: { me: '', partner: '' } });
+  // characters (widget del redesign, founder 26/11/2026): each person's
+  // character as the app draws it (personaggi.js): shape, what is on the head
+  // and on the face, the colour at night and on paper (person-colors.js).
+  const emptyCharacter = () => ({ shape: '', head: '', face: '', color: '', day: '' });
+  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready', distanceNear: false, distanceAt: '', batteryLevel: -1, batteryCharging: false, batteryAt: '', colors: { me: '', partner: '' }, characters: { me: emptyCharacter(), partner: emptyCharacter() } });
   const emptyCountdown = () => ({ active: false, kind: '', title: '', target: '', style: 'editorial' });
   // Foto & giorni: Oggi's photo of this hour, then of the next two (next).
   const emptyPhoto = () => ({ state: 'none', key: '', takenOn: '', label: '', hour: '', next: [] });
@@ -64,7 +68,8 @@
   // Lavagna: whether there is a drawing, who drew last and when; the pictures are separate files.
   const emptyLavagna = () => ({ state: 'none', by: '', at: '' });
   // Post-it: the newest post-it of the board, its paper, who wrote it, how many others.
-  const emptyPostit = () => ({ state: 'none', text: '', color: '', by: '', more: 0, at: '' });
+  const emptySecond = () => ({ text: '', color: '', by: '' });
+  const emptyPostit = () => ({ state: 'none', text: '', color: '', by: '', more: 0, at: '', second: emptySecond() });
   let think = emptyThink();
   let couple = emptyCouple();
   let countdown = emptyCountdown();
@@ -100,14 +105,14 @@
       ownerHash,
       updatedAt: new Date().toISOString(),
       think: { ...think },
-      couple: { ...couple, names: [...couple.names], colors: { ...couple.colors } },
+      couple: { ...couple, names: [...couple.names], colors: { ...couple.colors }, characters: { me: { ...couple.characters.me }, partner: { ...couple.characters.partner } } },
       countdown: { ...countdown },
       photo: { ...photo, next: photo.next.map((item) => ({ ...item })) },
       daily: { ...daily },
       left: { ...left },
       memories: { ...memories },
       lavagna: { ...lavagna },
-      postit: { ...postit },
+      postit: { ...postit, second: { ...(postit.second || emptySecond()) } },
       status: { me: { ...comeStai.me }, partner: { ...comeStai.partner } }
     };
   }
@@ -244,7 +249,8 @@
         batteryLevel: couple.batteryLevel,
         batteryCharging: couple.batteryCharging,
         batteryAt: couple.batteryAt,
-        colors: couple.colors
+        colors: couple.colors,
+        characters: couple.characters
       };
       coupleSyncedAt = Date.now();
       return scheduleWrite();
@@ -403,6 +409,35 @@
     return noiPortraitSync;
   }
 
+  // I personaggi (widget del redesign, founder 26/11/2026: «se i personaggi
+  // cambiano di forma, in tutte le cose dove sono presenti ci saranno quei
+  // personaggi»): the two characters the app draws, for the widgets to draw
+  // the same. Written again whenever the couple's profiles change.
+  function syncCharacters() {
+    if (!ownerHash || !window.usProfile?.couple_id) return Promise.resolve(false);
+    const P = window.UsPersonaggi;
+    const C = window.UsPersonColors;
+    const profiles = window.UsCoupleContext?.snapshot?.()?.profiles || [];
+    if (!P?.shapeOf || !P?.lookOf) return Promise.resolve(false);
+    const me = window.usProfile?.role === 'beatrice' ? 'beatrice' : 'francesco';
+    const them = me === 'beatrice' ? 'francesco' : 'beatrice';
+    if (!profiles.some((p) => p?.role === them)) return Promise.resolve(false);
+    const hex = (value) => (/^#[0-9a-f]{6}$/i.test(value || '') ? value.toLowerCase() : '');
+    const person = (role) => {
+      const look = P.lookOf(role) || {};
+      const chosen = C?.idOf?.(profiles.find((p) => p?.role === role)?.person_color);
+      const id = chosen || (role === 'beatrice' ? 'lilla' : 'rosa');
+      return { shape: P.shapeOf(role) || '', head: look.head || '', face: look.face || '', color: hex(C?.PALETTE?.[id]), day: hex(C?.PALETTE_GIORNO?.[id]) };
+    };
+    const characters = { me: person(me), partner: person(them) };
+    if (JSON.stringify(characters) === JSON.stringify(couple.characters)) return Promise.resolve(false);
+    const recolour = characters.me.color !== couple.characters?.me?.color || characters.partner.color !== couple.characters?.partner?.color;
+    couple = { ...couple, characters };
+    // The polaroids' tape is each person's colour.
+    if (recolour && memories.state === 'ready') setTimeout(() => { syncMemories({ force: true }).catch(() => {}); }, 0);
+    return scheduleWrite();
+  }
+
   // Come stai (member-status.js): what the app shows, for the widget.
   function syncStatus() {
     if (!ownerHash) return Promise.resolve(false);
@@ -420,8 +455,10 @@
     if (!ownerHash) return Promise.resolve(false);
     const next = window.UsCoupleNotes?.widgetState?.();
     if (!next) return Promise.resolve(false);
+    const paper = (color) => (['yellow', 'pink', 'blue', 'green'].includes(color) ? color : 'yellow');
+    const who = (by) => (by === 'me' || by === 'partner' ? by : '');
     const value = next.state === 'ready' && cleanText(next.text, 120)
-      ? { state: 'ready', text: cleanText(next.text, 120), color: ['yellow', 'pink', 'blue', 'green'].includes(next.color) ? next.color : 'yellow', by: next.by === 'me' || next.by === 'partner' ? next.by : '', more: Math.max(0, Math.min(99, Math.trunc(Number(next.more) || 0))), at: isoInstant(next.at) }
+      ? { state: 'ready', text: cleanText(next.text, 120), color: paper(next.color), by: who(next.by), more: Math.max(0, Math.min(99, Math.trunc(Number(next.more) || 0))), at: isoInstant(next.at), second: next.second && cleanText(next.second.text, 120) ? { text: cleanText(next.second.text, 120), color: paper(next.second.color), by: who(next.second.by) } : emptySecond() }
       : emptyPostit();
     if (JSON.stringify(value) === JSON.stringify(postit)) return Promise.resolve(false);
     postit = value;
@@ -464,15 +501,22 @@
     };
   }
 
-  // Foto protagonista (02/11/2026): up to three prints with a soft shadow,
-  // transparent around them. 2x2 (176 x 176 dp): the newest memory fills the
-  // widget and the other two peek from the top edge. 4x2 (220 x 176 dp): a
-  // fan, the back ones turned, the top one with a white border. Drawn at 3x.
-  const STACK_SMALL = { width: 176, height: 176, radius: 18, border: 0, cards: [
-    { x: 88, y: 97, w: 176, h: 166, turn: 0 }, { x: 88, y: 44, w: 150, h: 80, turn: 3 }, { x: 88, y: 40, w: 130, h: 80, turn: -4 }] };
-  const STACK_WIDE = { width: 220, height: 176, radius: 12, border: 3, cards: [
-    { x: 112, y: 90, w: 112, h: 132, turn: 0 }, { x: 148, y: 84, w: 112, h: 132, turn: 5 }, { x: 78, y: 88, w: 112, h: 132, turn: -8 }] };
+  // Widget del redesign (founder, 26/11/2026): polaroids, as in Ricordi. The
+  // paper is the same in both themes, the tape is the colour of whoever
+  // added the photo, the date in Fraunces italic under the newest one.
+  // 2x2 (176 x 176 dp): one polaroid, turned a little. 4x2 (the left 220 x 176
+  // dp of the widget): two, the newest in front. Drawn at 3x, transparent around.
+  const STACK_SMALL = { width: 176, height: 176, cards: [{ x: 88, y: 90, w: 128, h: 150, turn: -3 }] };
+  const STACK_WIDE = { width: 220, height: 176, cards: [{ x: 84, y: 92, w: 120, h: 142, turn: -4 }, { x: 140, y: 86, w: 112, h: 134, turn: 6 }] };
   const PRINT_FALLBACK = [['#ffd3a8', '#ff7c96', '#5a2f63'], ['#ffe0b0', '#f3b76e', '#8a4b3a'], ['#bfe3ff', '#6d8fd6', '#2e2a5a']];
+  const MONTHS = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+  // "2 nov · un anno fa" on the newest polaroid; "2 nov" for the most recent ones.
+  function polaroidCaption(pick) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(pick?.date || ''));
+    if (!m) return '';
+    const day = `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]}`;
+    return pick.anniversary ? `${day} · ${String(pick.label || '').toLowerCase()}` : day;
+  }
 
   async function loadBitmap(url) {
     if (!url) return null;
@@ -489,46 +533,38 @@
     }
   }
 
-  async function composeStack(bitmaps, layout) {
+  async function composeStack(bitmaps, layout, { caption = '', tapes = [] } = {}) {
     const S = 3;
     const canvas = document.createElement('canvas');
     canvas.width = layout.width * S;
     canvas.height = layout.height * S;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('memories_canvas');
-    const rounded = (w, h, r) => {
-      ctx.beginPath();
-      ctx.moveTo(-w / 2 + r, -h / 2);
-      ctx.arcTo(w / 2, -h / 2, w / 2, h / 2, r);
-      ctx.arcTo(w / 2, h / 2, -w / 2, h / 2, r);
-      ctx.arcTo(-w / 2, h / 2, -w / 2, -h / 2, r);
-      ctx.arcTo(-w / 2, -h / 2, w / 2, -h / 2, r);
-      ctx.closePath();
-    };
-    // Back to front: the third print, the second, then the top one.
-    for (let i = bitmaps.length - 1; i >= 0; i--) {
+    const PAD = 7 * S, FOOT = 24 * S;
+    // Back to front: the older polaroid, then the newest.
+    for (let i = layout.cards.length - 1; i >= 0; i--) {
       const card = layout.cards[i];
-      const w = card.w * S, h = card.h * S, r = layout.radius * S;
+      if (i > 0 && !bitmaps[i]) continue;
+      const w = card.w * S, h = card.h * S;
       ctx.save();
       ctx.translate(card.x * S, card.y * S);
       ctx.rotate(card.turn * Math.PI / 180);
-      ctx.shadowColor = i === 0 ? 'rgba(26,16,32,.28)' : 'rgba(26,16,32,.22)';
-      ctx.shadowBlur = (i === 0 ? 20 : 16) * S;
-      ctx.shadowOffsetY = (i === 0 ? 8 : 6) * S;
-      rounded(w, h, r);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
+      ctx.shadowColor = 'rgba(0,0,0,.3)';
+      ctx.shadowBlur = 16 * S;
+      ctx.shadowOffsetY = 6 * S;
+      ctx.fillStyle = '#fbf7f0';
+      ctx.fillRect(-w / 2, -h / 2, w, h);
       ctx.shadowColor = 'transparent';
-      // The top print of the fan has a white border; the 2x2 photo has none.
-      const inset = i === 0 ? layout.border * S : 0;
+      const pw = w - PAD * 2, ph = h - PAD - FOOT;
       ctx.save();
-      rounded(w - inset * 2, h - inset * 2, Math.max(0, r - inset));
+      ctx.beginPath();
+      ctx.rect(-w / 2 + PAD, -h / 2 + PAD, pw, ph);
       ctx.clip();
       const bitmap = bitmaps[i];
       if (bitmap) {
-        const scale = Math.max((w - inset * 2) / bitmap.width, (h - inset * 2) / bitmap.height);
+        const scale = Math.max(pw / bitmap.width, ph / bitmap.height);
         const bw = bitmap.width * scale, bh = bitmap.height * scale;
-        ctx.drawImage(bitmap, -bw / 2, -bh / 2, bw, bh);
+        ctx.drawImage(bitmap, -bw / 2, -h / 2 + PAD + ph / 2 - bh / 2, bw, bh);
       } else {
         const [a, b, c] = PRINT_FALLBACK[i];
         const glow = ctx.createRadialGradient(-w * 0.25, -h * 0.3, 0, -w * 0.25, -h * 0.3, Math.max(w, h));
@@ -537,6 +573,23 @@
         ctx.fillRect(-w / 2, -h / 2, w, h);
       }
       ctx.restore();
+      if (i === 0 && caption) {
+        ctx.fillStyle = '#231b1d';
+        ctx.font = `italic 420 ${12 * S}px Fraunces, Georgia, serif`;
+        ctx.textBaseline = 'middle';
+        ctx.fillText(caption, -w / 2 + PAD + 2 * S, h / 2 - FOOT / 2, pw - 4 * S);
+      }
+      // The tape of whoever added it, across the top edge.
+      const tape = tapes[i];
+      if (tape) {
+        ctx.save();
+        ctx.translate(-4 * S, -h / 2 + 2 * S);
+        ctx.rotate((i === 0 ? -6 : 5) * Math.PI / 180);
+        ctx.globalAlpha = 0.78;
+        ctx.fillStyle = tape;
+        ctx.fillRect(-24 * S, -8 * S, 48 * S, 16 * S);
+        ctx.restore();
+      }
       ctx.restore();
     }
     let blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.9));
@@ -575,14 +628,17 @@
           return scheduleWrite();
         }
         const next = { state: 'ready', label: pick.label, anniversary: pick.anniversary, day: pick.day, date: pick.date, title: pick.title, count: pick.count, stack: pick.rows.length };
-        const signature = JSON.stringify([pick.rows.map((row) => [row.id, row.path]), next]);
+        const signature = JSON.stringify([pick.rows.map((row) => [row.id, row.path, row.by]), next, couple.characters?.me?.color, couple.characters?.partner?.color]);
         if (signature === memoriesSignature) return false;
         const urls = await api.memoryUrls(pick.rows.map((row) => row.path));
         if (token !== generation) return false;
         for (const url of urls) bitmaps.push(await loadBitmap(url));
         if (token !== generation) return false;
-        const small = await composeStack(bitmaps, STACK_SMALL);
-        const wide = await composeStack(bitmaps, STACK_WIDE);
+        // The tape of each photo in the colour of whoever added it (its character's).
+        const tint = (row) => couple.characters?.[row?.by === 'me' ? 'me' : 'partner']?.color || (row?.by === 'me' ? '#ff7c96' : '#a98bff');
+        const look = { caption: polaroidCaption(pick), tapes: pick.rows.map(tint) };
+        const small = await composeStack(bitmaps, STACK_SMALL, look);
+        const wide = await composeStack(bitmaps, STACK_WIDE, look);
         if (token !== generation) return false;
         const ok = await platform.writeWidgetNoiPortrait(owner, small, 'memories')
           && await platform.writeWidgetNoiPortrait(owner, wide, 'memories_wide');
@@ -790,7 +846,7 @@
       const native = seed?.snapshot;
       if (!native || native.ownerHash !== ownerHash) return false;
       think = { ...emptyThink(), ...native.think, partnerName: '' };
-      couple = { ...emptyCouple(), ...native.couple, names: [] };
+      couple = { ...emptyCouple(), ...native.couple, names: [], characters: { me: { ...emptyCharacter(), ...native.couple?.characters?.me }, partner: { ...emptyCharacter(), ...native.couple?.characters?.partner } } };
       countdown = { ...emptyCountdown(), ...native.countdown };
       daily = { ...emptyDaily(), ...native.daily };
       comeStai = { me: { ...emptyStatusPerson(), ...native.status?.me }, partner: { ...emptyStatusPerson(), ...native.status?.partner } };
@@ -843,6 +899,7 @@
     setTimeout(() => {
       syncPhoto({ force: true }).catch(() => {});
       syncNoiPortrait({ force: true }).catch(() => {});
+      syncCharacters().catch(() => {});
       syncMemories().catch(() => {});
       // The board is read once, so a placed Post-it widget is fresh without opening Noi.
       installed().then((placed) => { if (placed?.installed?.postit) window.UsCoupleNotes?.refresh?.(); }).catch(() => {});
@@ -973,6 +1030,7 @@
     syncNoiDistance,
     syncNoiBattery,
     syncNoiPortrait,
+    syncCharacters,
     syncPhoto,
     clear,
     view,
@@ -1008,6 +1066,8 @@
     window.addEventListener('us:noi-portraits-ready', () => { syncNoiPortrait().catch(() => {}); });
     // Ricordi changed (a photo added, moved or deleted): the stack follows.
     window.addEventListener('us:member-status-changed', () => { syncStatus().catch(() => {}); });
+    // A new shape, colour or look, yours or theirs: the widgets draw it too.
+    window.addEventListener('us-identity-change', () => { setTimeout(() => { syncCharacters().catch(() => {}); }, 300); });
     window.addEventListener('us:moments-updated', () => { syncMemories({ force: true }).catch(() => {}); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden || !ownerHash) return;
@@ -1021,6 +1081,7 @@
         syncCouple().catch(() => {});
         syncNoiDistance().catch(() => {});
         syncNoiPortrait().catch(() => {});
+        syncCharacters().catch(() => {});
         syncPhoto().catch(() => {});
         syncMemories().catch(() => {});
       }, 2000);

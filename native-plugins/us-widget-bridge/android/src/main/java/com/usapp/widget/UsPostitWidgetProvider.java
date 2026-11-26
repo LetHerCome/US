@@ -10,14 +10,15 @@ import android.widget.RemoteViews;
 import org.json.JSONObject;
 
 /**
- * Post-it 2x2 (founder, 04/11/2026; tavola Main.dc.html): it took the
- * Countdown's place. The newest post-it of the couple's board on its paper
- * (yellow, pink, blue, green, the same in both themes), its words in Fraunces
- * italic, who wrote it with that person's dot and "+2" when there are others.
- * The tap opens the board in Noi; nobody writes on the widget.
+ * Post-it (founder, 04/11/2026; widget del redesign 26/11/2026): the newest
+ * post-it of the couple's board on its paper (yellow, pink, blue, green, the
+ * same in both themes), turned a little on the card, its words in Fraunces
+ * italic, the tape in the colour of whoever wrote it and "+2" when there are
+ * others. The 4x2 shows the last two, one each when you both wrote. The tap
+ * opens the board in Noi; nobody writes on the widget.
  */
 public final class UsPostitWidgetProvider extends AppWidgetProvider {
-    private static final int INK = 0xFF3B2A10;
+    private static final int INK = 0xFF1A1020;
 
     @Override public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
         UsWidgets.refreshAll(context);
@@ -37,20 +38,41 @@ public final class UsPostitWidgetProvider extends AppWidgetProvider {
         int more = written ? postit.optInt("more", 0) : 0;
         String partner = UsWidgetContract.optObject(state.snapshot, "think").optString("partnerName", "").trim();
         String who = !written ? "" : by.equals("me") ? "Tu" : by.equals("partner") ? (partner.isEmpty() ? "La tua persona" : partner) : "";
+        JSONObject second = UsWidgetContract.optObject(postit, "second");
+        String secondText = written ? second.optString("text", "") : "";
 
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.us_widget_postit);
-        views.setOnClickPendingIntent(R.id.us_postit_root, UsWidgets.open(context, "postit", 5001));
-        views.setInt(R.id.us_postit_root, "setBackgroundResource", paper(color));
-        UsWidgetArt.serif(views, context, R.id.us_postit_text, text, 19f, 140, 4, true, Layout.Alignment.ALIGN_NORMAL, INK, INK);
-        views.setTextViewText(R.id.us_postit_by, who);
-        views.setViewVisibility(R.id.us_postit_by, who.isEmpty() ? View.INVISIBLE : View.VISIBLE);
-        views.setViewVisibility(R.id.us_postit_dot, who.isEmpty() ? View.GONE : View.VISIBLE);
-        if (!who.isEmpty()) views.setInt(R.id.us_postit_dot, "setColorFilter", UsWidgetModels.personColor(state.snapshot, by.equals("me")));
-        views.setTextViewText(R.id.us_postit_more, "+" + more);
-        views.setViewVisibility(R.id.us_postit_more, more > 0 ? View.VISIBLE : View.GONE);
-        views.setContentDescription(R.id.us_postit_root, "Post-it" + (who.isEmpty() ? "" : " di " + who) + ": " + text
-            + (more > 0 ? ". Altri " + more + " sulla bacheca" : "") + ". Apri la bacheca");
-        return views;
+        RemoteViews small = new RemoteViews(context.getPackageName(), R.layout.us_widget_postit);
+        RemoteViews medium = new RemoteViews(context.getPackageName(), R.layout.us_widget_postit_medium);
+        String spoken = "Post-it" + (who.isEmpty() ? "" : " di " + who) + ": " + text
+            + (more > 0 ? ". Altri " + more + " sulla bacheca" : "") + ". Apri la bacheca";
+        for (RemoteViews views : new RemoteViews[] { small, medium }) {
+            boolean wide = views == medium;
+            views.setOnClickPendingIntent(R.id.us_postit_root, UsWidgets.open(context, "postit", 5001));
+            views.setInt(R.id.us_postit_paper, "setBackgroundResource", paper(color));
+            UsWidgetArt.serif(views, context, R.id.us_postit_text, text, wide ? 16f : 17f, wide ? 130 : 120, 4, true, Layout.Alignment.ALIGN_NORMAL, INK, INK);
+            tape(views, context, state, R.id.us_postit_tape, written ? by : "");
+            // The 4x2 counts what is not on it.
+            int left = wide && !secondText.isEmpty() ? more - 1 : more;
+            views.setTextViewText(R.id.us_postit_more, "+" + left);
+            views.setViewVisibility(R.id.us_postit_more, left > 0 ? View.VISIBLE : View.GONE);
+            views.setContentDescription(R.id.us_postit_root, spoken);
+        }
+        medium.setViewVisibility(R.id.us_postit_second, secondText.isEmpty() ? View.INVISIBLE : View.VISIBLE);
+        if (!secondText.isEmpty()) {
+            medium.setInt(R.id.us_postit_paper2, "setBackgroundResource", paper(second.optString("color", "yellow")));
+            UsWidgetArt.serif(medium, context, R.id.us_postit_text2, secondText, 16f, 130, 4, true, Layout.Alignment.ALIGN_NORMAL, INK, INK);
+            tape(medium, context, state, R.id.us_postit_tape2, second.optString("by", ""));
+        }
+        return UsWidgets.sized(options, small, medium);
+    }
+
+    /** The tape in the colour of whoever wrote it; nobody known, none. */
+    private static void tape(RemoteViews views, Context context, UsWidgets.State state, int id, String by) {
+        boolean known = by.equals("me") || by.equals("partner");
+        views.setViewVisibility(id, known ? View.VISIBLE : View.INVISIBLE);
+        if (!known) return;
+        UsWidgetCharacter.Person p = UsWidgetCharacter.person(state.snapshot, by.equals("me"));
+        UsWidgets.themedColor(views, context, id, "setColorFilter", p.day, p.night);
     }
 
     static int paper(String color) {

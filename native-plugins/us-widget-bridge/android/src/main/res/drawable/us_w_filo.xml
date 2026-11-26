@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The thread between you two (Distanza 4x2), straight: the arc is gone (founder, 14/11/2026). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="line">
+    <stroke android:width="2dp" android:color="@color/us_w_filo" android:dashWidth="6dp" android:dashGap="5dp" />
+</shape>

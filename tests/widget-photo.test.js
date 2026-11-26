@@ -17,11 +17,17 @@ test('layout: the photo edge to edge, melting into the theme\'s paper, the days 
   // Foto protagonista (founder, 02/11/2026: "Segue il tema (B)").
   const layout = res('layout/us_widget_photo.xml');
   const provider = read(`${JAVA}/UsPhotoWidgetProvider.java`);
-  assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/);
-  assert.match(layout, /android:id="@\+id\/us_photo_art"[\s\S]*?@drawable\/us_widget_art_photo"/);
-  assert.match(layout, /android:id="@\+id\/us_photo_scrim"[\s\S]*?android:src="@drawable\/us_widget_fade"/);
-  assert.match(res('drawable/us_widget_fade.xml'), /#F7FFF6EE/, 'cream in Pastello');
-  assert.match(res('drawable-night/us_widget_fade.xml'), /#F717111C/, 'the night in Midnight');
+  // Widget del redesign (26/11/2026): the veil of Oggi, paper by day and the
+  // warm night in the dark, never full; from 4x2 you two peek in the corner.
+  assert.match(layout, /android:background="@drawable\/us_w_card"\s+android:clipToOutline="true"/);
+  assert.doesNotMatch(layout, /us_widget_art_|us_widget_grain/);
+  assert.match(layout, /android:id="@\+id\/us_photo_scrim"[\s\S]*?android:src="@drawable\/us_w_velo"/);
+  assert.match(res('drawable/us_w_velo.xml'), /@color\/us_w_velo_start/);
+  assert.match(res('values/colors.xml'), /<color name="us_w_velo_start">#F0FBF7F0<\/color>/, 'paper by day');
+  assert.match(res('values-night/colors.xml'), /<color name="us_w_velo_start">#DB120D11<\/color>/, 'the warm night');
+  assert.match(res('values-night/colors.xml'), /<color name="us_w_velo_end">#00120D11<\/color>/, 'never full');
+  assert.match(layout, /android:id="@\+id\/us_photo_duo"[\s\S]*android:id="@\+id\/us_photo_me"[\s\S]*android:id="@\+id\/us_photo_partner"/);
+  assert.match(provider, /boolean duo = widthNow >= UsWidgets\.MEDIUM_MIN_WIDTH_DP;/);
   assert.match(layout, /<ImageView\s+android:id="@\+id\/us_photo_days"/);
   assert.match(layout, /<ImageView\s+android:id="@\+id\/us_photo_unit"/);
   assert.ok(provider.includes('UsWidgetArt.serif(views, context, R.id.us_photo_days, days ? Long.toString(couple.days) : "", 40f'));

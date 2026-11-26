@@ -6,4 +6,17 @@
     <color name="us_widget_pastel_sub">#B8F7EFE9</color>
     <color name="us_widget_pastel_plum">#FFF7EFE9</color>
     <color name="us_widget_pastel_heart_bg">#FF3B2F3F</color>
+    <!-- Widget del redesign: the warm night of the app (colori.css #120d11). -->
+    <color name="us_w_surface">#FF120D11</color>
+    <!-- A real blackboard, as in the app (founder, 04/11/2026; lavagna.css). -->
+    <color name="us_w_board">#FF141416</color>
+    <color name="us_w_ink">#FFF7EFE9</color>
+    <color name="us_w_sub">#A3F7EFE9</color>
+    <color name="us_w_line">#14F7EFE9</color>
+    <color name="us_w_filo">#61F7EFE9</color>
+    <color name="us_w_label">#FFFF7C96</color>
+    <color name="us_w_on_pill">#FF1A1020</color>
+    <color name="us_w_velo_start">#DB120D11</color>
+    <color name="us_w_velo_center">#73120D11</color>
+    <color name="us_w_velo_end">#00120D11</color>
 </resources>

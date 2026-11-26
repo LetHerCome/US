@@ -420,14 +420,17 @@ function install(w){
     w.UsWidgets?.syncPostit?.()?.catch?.(()=>{});
   }
   // The Post-it widget (04/11/2026): the newest post-it with words on it, its
-  // paper, who wrote it and how many others; null until the board is read.
+  // paper, who wrote it and how many others, and the one after it; null until the board is read.
   function widgetState(){
     if(!loaded||owner!==key())return null;
     const written=sortNotes(notes).filter(n=>!isEmpty(n));
     const n=written[0];
     if(!n)return {state:'none'};
     const title=String(n.title||'').trim();
-    return {state:'ready',text:title||summary(n).preview,color:colorOf(n),by:authorOf(n)===me()?'me':'partner',more:written.length-1,at:n.updated_at||''};
+    // Widget del redesign (26/11/2026): the 4x2 shows two, one each when both wrote.
+    const s2=written.slice(1).find(x=>authorOf(x)!==authorOf(n))||written[1];
+    const second=s2?{text:String(s2.title||'').trim()||summary(s2).preview,color:colorOf(s2),by:authorOf(s2)===me()?'me':'partner'}:null;
+    return {state:'ready',text:title||summary(n).preview,color:colorOf(n),by:authorOf(n)===me()?'me':'partner',more:written.length-1,at:n.updated_at||'',second};
   }
   function repaintTile(id){
     const n=notes.find(x=>x.id===id);

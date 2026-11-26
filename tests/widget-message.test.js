@@ -17,13 +17,16 @@ const res = (file) => read(`${PLUGIN}/res/${file}`);
 
 // 04/11/2026 (founder: «da rivedere lo sfondo»): a letter. The sealed envelope
 // is the art; the line in Fraunces and when sit on top of it.
-test('layouts: the letter art and grain, the line in Fraunces on top, no portrait, no note card', () => {
-  for (const [name, art] of [['us_widget_message', 'message_s'], ['us_widget_message_medium', 'message_m']]) {
+// Widget del redesign (26/11/2026): a paper envelope with the ceralacca seal
+// (paper in both themes), its edge in the colour of whoever wrote.
+test('layouts: the paper envelope, the line in Fraunces on top, no portrait, no note card', () => {
+  for (const name of ['us_widget_message', 'us_widget_message_medium']) {
     const layout = res(`layout/${name}.xml`);
-    assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/, name);
-    assert.ok(layout.includes(`@drawable/us_widget_art_${art}"`), name);
-    for (const id of ['us_message_root', 'us_message_art', 'us_message_grain', 'us_message_text', 'us_message_when', 'us_message_hint']) assert.ok(layout.includes(`@+id/${id}"`), `${name} ${id}`);
-    assert.doesNotMatch(layout, /us_message_photo|us_widget_note"|us_widget_seal"/, `${name}: the envelope is the art`);
+    assert.match(layout, /android:background="@drawable\/us_w_card"\s+android:clipToOutline="true"/, name);
+    assert.doesNotMatch(layout, /us_widget_art_|us_widget_grain/, name);
+    assert.match(layout, /android:id="@\+id\/us_message_envelope"[\s\S]*android:rotation="-[45]"[\s\S]*@drawable\/us_w_envelope"[\s\S]*android:id="@\+id\/us_message_stripe"/, name);
+    for (const id of ['us_message_root', 'us_message_text', 'us_message_when']) assert.ok(layout.includes(`@+id/${id}"`), `${name} ${id}`);
+    assert.doesNotMatch(layout, /us_message_photo|us_widget_note"|us_widget_seal"/, `${name}: never what is inside`);
     assert.match(layout, /<ImageView\s+android:id="@\+id\/us_message_text"/, name);
     assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, `${name}: nothing under 11sp`);
     assert.doesNotMatch(layout, /android:text="[^@]/, `${name}: text from strings.xml`);

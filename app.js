@@ -324,7 +324,7 @@ window.UsWidgetDataApi=Object.freeze({
     const result=await query(`${US_MOMENT_COLUMNS},${US_MOMENT_PLACE_COLUMNS}`).then(res=>res?.error?query(US_MOMENT_COLUMNS):res);
     if(window.usProfile!==profile)return null;
     if(result?.error)throw result.error;
-    return {today:localDateISO(),rows:(result?.data||[]).map(row=>({id:String(row.id),date:row.moment_date||'',path:ricordiPreviewPath(row),place:row.place_label||'',caption:row.caption||''}))};
+    return {today:localDateISO(),rows:(result?.data||[]).map(row=>({id:String(row.id),date:row.moment_date||'',path:ricordiPreviewPath(row),place:row.place_label||'',caption:row.caption||'',by:row.created_by===profile.id?'me':'partner'}))};
   },
   // Signed URLs for the stack's previews; they stay inside the WebView.
   async memoryUrls(paths){

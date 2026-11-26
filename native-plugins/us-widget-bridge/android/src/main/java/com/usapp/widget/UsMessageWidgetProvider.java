@@ -9,8 +9,8 @@ import android.view.View;
 import android.widget.RemoteViews;
 
 /**
- * Lasciato per te (founder, 04/11/2026): a letter. The sealed envelope is the
- * art; at the top, in Fraunces, what they left that is still closed for me
+ * Lasciato per te (founder, 04/11/2026; widget del redesign 26/11/2026): a
+ * paper envelope with the ceralacca seal, its edge in their colour; at the top, in Fraunces, what they left that is still closed for me
  * ("Ti ha lasciato una foto") and "da Bea · 10 min fa"; the tap opens it in
  * US. The surprise stays closed: only the kind and the time (founder,
  * 31/10/2026: "Solo tipo e ora"), never the words, photo or link. 2x2 and 4x2.
@@ -28,10 +28,11 @@ public final class UsMessageWidgetProvider extends AppWidgetProvider {
         UsWidgetModels.Message message = UsWidgetModels.message(state.snapshot, state.now);
         state.needsUpdateAt(message.nextChange);
         String partner = UsWidgetContract.optObject(state.snapshot, "think").optString("partnerName", "").trim();
-        RemoteViews small = fill(context, state, message, partner, R.layout.us_widget_message, R.drawable.us_widget_art_message_s, options, false);
-        RemoteViews medium = fill(context, state, message, partner, R.layout.us_widget_message_medium, R.drawable.us_widget_art_message_m, options, true);
+        RemoteViews small = fill(context, state, message, partner, R.layout.us_widget_message);
+        RemoteViews medium = fill(context, state, message, partner, R.layout.us_widget_message_medium);
         UsWidgetArt.serif(small, context, R.id.us_message_text, message.text, 18f, 140, 3, false, Layout.Alignment.ALIGN_NORMAL);
-        UsWidgetArt.serif(medium, context, R.id.us_message_text, message.text, 21f, 300, 2, false, Layout.Alignment.ALIGN_NORMAL);
+        UsWidgetArt.serif(medium, context, R.id.us_message_text, message.text, 20f, 170, 3, false, Layout.Alignment.ALIGN_NORMAL);
+        UsWidgets.themedColor(medium, context, R.id.us_message_label, "setTextColor", 0xFFB8452F, UsWidgetCharacter.person(state.snapshot, true).night);
         // "da Bea · 10 min fa" under it; the 4x2 adds "la scopri solo dentro US".
         String who = partner.isEmpty() || message.empty ? message.when
             : message.when.isEmpty() ? "da " + partner : "da " + partner + " · " + message.when;
@@ -44,10 +45,12 @@ public final class UsMessageWidgetProvider extends AppWidgetProvider {
         return UsWidgets.sized(options, small, medium);
     }
 
-    private static RemoteViews fill(Context context, UsWidgets.State state, UsWidgetModels.Message message, String partner, int layout, int art, Bundle options, boolean wide) {
+    private static RemoteViews fill(Context context, UsWidgets.State state, UsWidgetModels.Message message, String partner, int layout) {
         RemoteViews views = new RemoteViews(context.getPackageName(), layout);
         views.setOnClickPendingIntent(R.id.us_message_root, UsWidgets.open(context, message.destination, 4601));
-        UsWidgetArt.art(views, context, R.id.us_message_art, R.id.us_message_grain, art, options, wide);
+        // The envelope's edge: the colour of whoever left it (widget del redesign, 26/11/2026).
+        UsWidgetCharacter.Person them = UsWidgetCharacter.person(state.snapshot, false);
+        UsWidgets.themedColor(views, context, R.id.us_message_stripe, "setColorFilter", them.day, them.night);
         views.setContentDescription(R.id.us_message_root, description(message, partner));
         return views;
     }

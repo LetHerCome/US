@@ -13,23 +13,28 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const res = (file) => read(`${PLUGIN}/res/${file}`);
 
 // 04/11/2026 (founder): the question first, as big as it fits, and the
-// «Rispondi» button that opens it in US.
-test('layouts: illustration and grain, the question in Fraunces as a picture, then «Rispondi»', () => {
-  for (const [layout, art] of [[res('layout/us_widget_daily.xml'), 'daily_s'], [res('layout/us_widget_daily_medium.xml'), 'daily_m']]) {
-    assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/);
-    assert.ok(layout.includes('@drawable/us_widget_art_' + art + '"'), art);
+// «Rispondi» button that opens it in US. Widget del redesign (26/11/2026):
+// the pill is the two of you blended at night, ceralacca on paper; the 4x2
+// adds their character, waving once they answered.
+test('layouts: the card, the question in Fraunces as a picture, then «Rispondi» on its pill', () => {
+  for (const layout of [res('layout/us_widget_daily.xml'), res('layout/us_widget_daily_medium.xml')]) {
+    assert.match(layout, /android:background="@drawable\/us_w_card"\s+android:clipToOutline="true"/);
+    assert.doesNotMatch(layout, /us_widget_art_|us_widget_grain/);
     assert.match(layout, /android:text="@string\/us_widget_daily_kicker"/);
-    assert.match(layout, /<ImageView\s+android:id="@\+id\/us_daily_question"[\s\S]*?android:id="@\+id\/us_daily_answer"[\s\S]*?android:background="@drawable\/us_widget_pastel_pill_rosa"[\s\S]*?android:text="@string\/us_widget_daily_answer"/);
+    assert.match(layout, /<ImageView\s+android:id="@\+id\/us_daily_question"[\s\S]*?android:id="@\+id\/us_daily_pill"[\s\S]*?android:id="@\+id\/us_daily_answer"[\s\S]*?android:text="@string\/us_widget_daily_answer"/);
     assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/);
-    assert.doesNotMatch(layout, /us_daily_partner|us_daily_me"|us_daily_who/, 'no portraits');
   }
+  assert.doesNotMatch(res('layout/us_widget_daily.xml'), /us_daily_partner/, 'the 2x2 is only the question');
+  assert.match(res('layout/us_widget_daily_medium.xml'), /@\+id\/us_daily_partner"[\s\S]*@\+id\/us_daily_status"/);
   assert.match(res('values/strings.xml'), /<string name="us_widget_daily_answer">Rispondi<\/string>/);
 });
 
 test('provider: the question big, «Rispondi» opens it, never an answer; 2x2 and 4x2', () => {
   const provider = read(`${JAVA}/UsDailyWidgetProvider.java`);
-  assert.ok(provider.includes('UsWidgetArt.serif(small, context, R.id.us_daily_question, question, 18f'));
-  assert.ok(provider.includes('UsWidgetArt.serif(medium, context, R.id.us_daily_question, question, 23f'));
+  assert.ok(provider.includes('UsWidgetArt.serif(small, context, R.id.us_daily_question, question, 17f'));
+  assert.ok(provider.includes('UsWidgetArt.serif(medium, context, R.id.us_daily_question, question, 19f'));
+  assert.ok(provider.includes('UsWidgetCharacter.pill(views, context, R.id.us_daily_pill, me, them, 104, 36);'));
+  assert.ok(provider.includes('daily.state.equals("your_turn") ? "saluta" : ""'), 'they wave once they answered');
   assert.ok(provider.includes('views.setOnClickPendingIntent(R.id.us_daily_answer, UsWidgets.open(context, "daily", 4502));'));
   assert.match(provider, /case "todo": case "your_turn": return "Rispondi";/);
   assert.match(provider, /case "your_turn": plain = who \+ " ha risposto · "; bold = "tocca a te"; break;/);

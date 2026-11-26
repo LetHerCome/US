@@ -3009,7 +3009,7 @@
     'La domanda di oggi e a chi tocca rispondere. Mai le risposte.': 'Today’s question and whose turn it is. Never the answers.',
     'Il Lasciato per te ancora chiuso: solo che cosa è e quando.': 'The Lasciato per te still closed: only what it is and when.',
     'Ricordi a pila': 'Memory stack',
-    'Come state tu e la tua persona, con un’emoji. Dura 12 ore.': 'How you and your person are, with an emoji. It lasts 12 hours.',
+    'Come state tu e la tua persona: i vostri personaggi con la faccia del momento. Dura 12 ore.': 'How you and your person are: your characters with the face of the moment. It lasts 12 hours.',
     'Come stai': 'How are you',
     'Come stai?': 'How are you?',
     'Come stai? Scegli': 'How are you? Choose',

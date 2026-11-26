@@ -1,24 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Foto & Noi, Foto protagonista (founder, 02/11/2026: "Segue il tema"):
-     Oggi's photo edge to edge under a light grain, melting from below into
-     the theme's paper (cream in Pastello, the night in Midnight), the days
-     together in Fraunces. Without a photo, an illustration with the sun and
-     the moon. One layout for every size. -->
+<!-- Foto di Oggi (widget del redesign, founder 26/11/2026): the photo of Oggi,
+     the veil at the bottom as on Oggi (paper by day, night in the dark), «195
+     giorni insieme» in Fraunces, and from 4x2 you two peeking in the corner,
+     small like a signature. One layout: the corner pair shows when it fits. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_photo_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/us_widget_card"
+    android:background="@drawable/us_w_card"
     android:clipToOutline="true">
-
-    <ImageView
-        android:id="@+id/us_photo_art"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:contentDescription="@null"
-        android:importantForAccessibility="no"
-        android:scaleType="centerCrop"
-        android:src="@drawable/us_widget_art_photo" />
 
     <ImageView
         android:id="@+id/us_photo_image"
@@ -36,37 +26,29 @@
         android:contentDescription="@null"
         android:importantForAccessibility="no"
         android:scaleType="fitXY"
-        android:src="@drawable/us_widget_fade"
+        android:src="@drawable/us_w_velo"
         android:visibility="gone" />
-
-    <FrameLayout
-        android:id="@+id/us_photo_grain"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/us_widget_grain" />
 
     <TextView
         android:id="@+id/us_photo_placeholder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
         android:fontFamily="@font/us_figtree"
-        android:gravity="center"
         android:importantForAccessibility="no"
-        android:includeFontPadding="false"
-        android:maxLines="2"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:text="@string/us_widget_photo_empty"
-        android:textColor="@color/us_widget_pastel_sub"
-        android:textSize="11.5sp" />
+        android:maxLines="3"
+        android:textColor="@color/us_w_sub"
+        android:textSize="13sp" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|start"
         android:layout_marginStart="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="14dp"
         android:gravity="bottom"
         android:orientation="horizontal">
 
@@ -76,18 +58,45 @@
             android:layout_height="wrap_content"
             android:adjustViewBounds="true"
             android:contentDescription="@null"
-            android:importantForAccessibility="no"
-            android:scaleType="fitStart" />
+            android:importantForAccessibility="no" />
 
         <ImageView
             android:id="@+id/us_photo_unit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginBottom="3dp"
             android:adjustViewBounds="true"
             android:contentDescription="@null"
+            android:importantForAccessibility="no" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/us_photo_duo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="6dp"
+        android:gravity="bottom"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/us_photo_me"
+            android:layout_width="46dp"
+            android:layout_height="44dp"
+            android:contentDescription="@null"
             android:importantForAccessibility="no"
-            android:scaleType="fitStart" />
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/us_photo_partner"
+            android:layout_width="41dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="-8dp"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:scaleType="fitCenter" />
     </LinearLayout>
 </FrameLayout>

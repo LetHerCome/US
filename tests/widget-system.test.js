@@ -492,8 +492,9 @@ test('Distanza e batteria opens Noi, its one action', () => {
   const app = read('app.js');
   assert.match(provider, /UsWidgets\.open\(context, "noi", 4401\)/);
   assert.doesNotMatch(provider, /"noi\/play"|us_noi_cta/);
-  assert.match(layout, /@\+id\/us_noi_partner"/);
-  assert.doesNotMatch(layout, /us_noi_me/, 'only the other person (04/11/2026)');
+  // The 2x1 is the distance and their battery; their character is in the 2x2 and 4x2 (widget del redesign, 26/11/2026).
+  assert.match(read(`${PLUGIN}/res/layout/us_widget_noi_small.xml`), /@\+id\/us_noi_partner"/);
+  assert.doesNotMatch(layout, /us_noi_me/);
   assert.match(layout, /@\+id\/us_noi_distance/);
   assert.doesNotMatch(layout, /us_noi_cta|GIOCA/);
   assert.match(store, /writeNoiPortrait/);
