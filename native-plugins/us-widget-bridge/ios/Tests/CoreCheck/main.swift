@@ -160,6 +160,79 @@ check(UsWidgetShared.kind(fromWidgetKind: "us.widget.photo") == "photo", "Widget
 check(UsWidgetShared.kind(fromWidgetKind: "us.widget.days") == nil, "Giorni insieme is not ported")
 check(UsWidgetShared.openURL("think").absoluteString == "us://widget/think", "links widgets.js reads")
 
+// MARK: Widget del redesign (26/11/2026): the characters and the other seven widgets
+
+for shape in UsCharacterShapes.shapes {
+    for head in [""] + UsCharacterShapes.heads {
+        for item in [""] + UsCharacterShapes.faces {
+            for face in ["felice", "innamorato", "dorme", "giu", "stanco", "teso"] {
+                for reaction in ["", "cuore", "festa", "saluta", "sera"] {
+                    for mono in [false, true] {
+                        let ops = UsCharacterShapes.draw(shape, color: 0xFFFF_7C96, face: face, reaction: reaction, head: head, faceItem: item, zz: 0xFFF7_EFE9, mono: mono)
+                        if ops.count < 5 { check(false, "\(shape) \(head) \(item) \(face) \(reaction): too few steps") }
+                        for op in ops where op.text == nil {
+                            let segments = UsCharacterShapes.parse(op.d)
+                            if segments.isEmpty { check(false, "\(shape) \(head) \(item): empty path \(op.d)") }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+check(true, "every shape, look, face and reaction draws and parses")
+let ellipse = UsCharacterShapes.parse(UsCharacterShapes.ell(50, 60, 10, 5))
+if case let .arc(cx, cy, rx, ry, _, sweep) = ellipse[1] {
+    check(abs(cx - 50) < 0.01 && abs(cy - 60) < 0.01 && abs(rx - 10) < 0.01 && abs(ry - 5) < 0.01 && abs(abs(sweep) - 180) < 0.01, "an ellipse is two half arcs")
+} else {
+    check(false, "an ellipse is two half arcs")
+}
+check(UsCharacterShapes.parse("M10 20 h12 v22 h-12 q-4 -11 0 -22 Z")[4] == .quad(6, 31, 10, 20), "relative commands follow the current point")
+check(UsCharacterShapes.edge(0xFFFF_7C96) == UsCharacterShapes.mix(0xFFFF_7C96, 0.42, 0xFF1A_1020), "the outline is the dark of the colour")
+check(UsCharacterShapes.faceOf("nervoso") == "teso" && UsCharacterShapes.faceOf("festa") == "innamorato" && UsCharacterShapes.faceOf("") == "felice", "faces of Come stai")
+check(UsCharacterShapes.shapeOr("", partnerRole: true) == "quadrato" && UsCharacterShapes.shapeOr("nuvola", partnerRole: false) == "nuvola", "the role's shape without a choice")
+let monoOps = UsCharacterShapes.draw("palla", color: 0xFFFF_7C96, face: "felice", reaction: "", head: "corona", faceItem: "occhiali", zz: 0, mono: true)
+check(monoOps.allSatisfy { [0, 0xFFFF_FFFF, 0xFF1C_1A1B].contains($0.fill) && [0, 0xFFFF_FFFF, 0xFF1C_1A1B].contains($0.stroke) }, "one tint: white and dark only")
+
+let sampleNow = date("2026-11-26T15:00:00Z")
+let redesign = UsWidgetContract.normalize([
+    "schemaVersion": 2, "ownerHash": owner,
+    "think": ["partnerName": "Bea"],
+    "couple": ["names": [], "distanceText": "12 km", "distanceAt": "2026-11-26T14:50:00Z", "batteryLevel": 78, "batteryAt": "2026-11-26T14:50:00Z",
+               "characters": ["me": ["shape": "nuvola", "head": "corona", "color": "#6F9BFF", "day": "#8faad6"],
+                              "partner": ["shape": "<svg>", "face": "gala"]]] as [String: Any],
+    "daily": ["date": "2026-11-26", "state": "your_turn", "question": "Una domanda?"],
+    "left": ["kind": "photo", "at": "2026-11-26T14:50:00Z"],
+    "memories": ["state": "ready", "date": "2025-11-26", "day": "2026-11-26", "label": "Un anno fa", "anniversary": true, "title": "Pescara", "count": 4, "stack": 2],
+    "lavagna": ["state": "ready", "by": "partner", "at": "2026-11-26T14:00:00Z"],
+    "postit": ["state": "ready", "text": "cena", "color": "pink", "by": "me", "more": 2, "second": ["text": "lucine", "color": "mauve", "by": "partner"]] as [String: Any],
+    "status": ["partner": ["status": "innamorato", "form": "f", "at": "2026-11-26T13:00:00Z", "until": "2026-11-27T01:00:00Z"]]
+])!
+let me = UsWidgetModels.person(redesign, me: true)
+let them = UsWidgetModels.person(redesign, me: false)
+check(me.shape == "nuvola" && me.head == "corona" && me.night == 0xFF6F_9BFF && me.day == 0xFF8F_AAD6, "my character from the snapshot")
+check(them.shape == "quadrato" && them.face == "gala" && them.night == 0xFFA9_8BFF, "an unknown shape is the role's, the colour lilla")
+check(UsWidgetModels.daily(redesign, now: sampleNow) == UsWidgetModels.Daily(question: "Una domanda?", state: "your_turn"), "the question of today")
+check(UsWidgetModels.daily(redesign, now: date("2026-11-27T10:00:00Z")).state == "stale", "a day later it asks for the new one")
+check(UsWidgetModels.dailyStatus("your_turn", who: "Bea") == ("Bea ha risposto · ", "tocca a te"), "whose turn")
+let coupleNow = UsWidgetModels.couple(redesign, now: sampleNow)
+check(coupleNow.distanceText == "12 km" && coupleNow.distanceAgo == "aggiornato 10 min fa" && coupleNow.batteryLevel == 78 && !coupleNow.batteryOld, "distance and battery")
+check(UsWidgetModels.couple(redesign, now: date("2026-11-27T16:00:00Z")).batteryLevel == -1, "a battery older than a day goes")
+let statusNow = UsWidgetModels.statusPerson(redesign, me: false, now: sampleNow)
+check(statusNow.shown && statusNow.line == "Innamorata · da 2 ore", "Come stai: \(statusNow.line)")
+var rome = Calendar(identifier: .gregorian)
+rome.timeZone = UsWidgetModels.rome
+check(UsWidgetModels.face(redesign, me: false, now: sampleNow, calendar: rome).face == "innamorato", "the face of Come stai")
+check(UsWidgetModels.face(redesign, me: false, now: date("2026-11-26T22:30:00Z"), calendar: rome).face == "dorme", "asleep after 22")
+check(UsWidgetModels.message(redesign, now: sampleNow).text == "Ti ha lasciato una foto" && UsWidgetModels.message(redesign, now: sampleNow).hint == "la scopri solo dentro US", "Lasciato per te, never what")
+let memoriesNow = UsWidgetModels.memories(redesign, now: sampleNow)
+check(memoriesNow.pill == "Un anno fa" && memoriesNow.title == "Pescara" && memoriesNow.line == "26 novembre · 4 foto", "Ricordi: \(memoriesNow.line)")
+check(UsWidgetModels.memories(redesign, now: date("2026-11-27T10:00:00Z")).pill.isEmpty, "«Un anno fa» only on the day")
+check(UsWidgetModels.lavagna(redesign, now: sampleNow).line == "Bea · 1 ora fa", "the board: who and when")
+let notes = UsWidgetModels.postit(redesign)
+check(notes.written && notes.first.text == "cena" && notes.second == UsWidgetModels.Note(text: "lucine", color: "yellow", by: "partner"), "the last two post-its")
+check(UsWidgetModels.postit(nil).first.text == "Apri US per collegarlo", "a post-it before US")
+
 if failures > 0 {
     print("\(failures) check(s) failed")
     exit(1)
