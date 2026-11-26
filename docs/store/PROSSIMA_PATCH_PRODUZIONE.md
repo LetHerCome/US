@@ -2,6 +2,15 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Premi, fase 3a e 4: Simbolo US e guardaroba (26/11)
+
+**Stato:** rami `claude/premi-fase3-countdown-simbolo` e `claude/premi-fase4-guardaroba` (sopra le fasi 1–2). Migrazione `20261126010000_premi_simbolo.sql` solo su staging col sì.
+
+**Cosa cambia:**
+- **Simbolo US**: «Battito» (livello 2) batte due volte come un cuore con un alone nel tuo colore; «Due colori» (livello 8, nuovo) fa girare i vostri due colori dentro le lettere; «Costellazione» resta e passa al livello 17; «Riflesso» esce (il suo lampo usciva dal simbolo).
+- **Guardaroba**: Gala diventa colletto e papillon vero con un luccichio, dalle Cuffie esce una nota, la Coroncina ha fiori più grandi che ondeggiano, la Corona ha le gemme che brillano; ritoccati Occhiali (montatura vera) e Sciarpina (nodo e code). Le animazioni solo dove il personaggio è grande.
+- La sciarpina non esce più dal corpo quando un altro personaggio con la sciarpina è nascosto nella pagina.
+
 ### Premi, fase 2: Ti penso (26/11)
 
 **Stato:** ramo `claude/premi-fase2-tipenso` (sopra la fase 1), verso il ramo fisso di staging. Solo app, niente SQL.

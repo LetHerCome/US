@@ -384,3 +384,19 @@
 #leftForYouOverlay>.left-for-you-sheet[data-us-modal-panel]>.left-for-you-head{left:56px;right:56px}
 #leftForYouOverlay #leftForYouKind{font-size:11px;letter-spacing:.12em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #leftForYouOverlay .left-for-you-cast{margin-top:10px}
+
+/* ===== Premi, fase 4 (25/11/2026, grill D24): the precious accessories move
+   only where the character is big (personaggi.js adds is-big from 90px);
+   small characters wear them still, without sparkles. ===== */
+.us-char .us-acc-glint,.us-char .us-acc-gem,.us-char .us-acc-note{opacity:0}
+.us-char.is-big .us-acc-glint{animation:us-acc-glint 3.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.us-char.is-big .us-acc-gem{animation:us-acc-gem 2.1s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.us-char.is-big .us-acc-gem.g2{animation-delay:.7s}.us-char.is-big .us-acc-gem.g3{animation-delay:1.4s}
+.us-char.is-big .us-acc-note{animation:us-acc-note 2.8s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.us-char.is-big .us-acc-note.n2{animation-delay:1.4s}
+.us-char.is-big .us-acc-sway{animation:us-acc-sway 3.4s ease-in-out infinite}
+@keyframes us-acc-glint{0%,70%,100%{opacity:0;transform:scale(.2) rotate(0)}78%{opacity:1;transform:scale(1) rotate(45deg)}88%{opacity:0;transform:scale(.4) rotate(90deg)}}
+@keyframes us-acc-gem{0%,60%,100%{opacity:0;transform:scale(.3)}75%{opacity:1;transform:scale(1)}}
+@keyframes us-acc-note{0%{opacity:0;transform:translate(0,0)}15%{opacity:1}100%{opacity:0;transform:translate(14px,-30px) rotate(18deg)}}
+@keyframes us-acc-sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@media (prefers-reduced-motion:reduce){.us-char.is-big :is(.us-acc-glint,.us-acc-gem,.us-acc-note,.us-acc-sway){animation:none}}
