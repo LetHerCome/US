@@ -4,7 +4,7 @@
 
 ### Widget iPhone col redesign e blocca schermo (26/11)
 
-**Stato:** ramo  (sopra quello Android). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.
+**Stato:** ramo `claude/widget-redesign-ios` (sopra quello Android). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.
 
 **Cosa cambia:**
 - Su iPhone gli stessi nove widget di Android (prima c'erano solo Foto e Ti penso, nello stile vecchio), col foglio di giorno e il nero caldo di notte e i personaggi veri disegnati dall'estensione.
