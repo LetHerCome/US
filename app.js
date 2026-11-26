@@ -2261,13 +2261,16 @@ function setOggiFocusPhoto(active){
 let usOggiFocusTipShown=false;
 function toggleOggiFocusPhoto(){
   setOggiFocusPhoto(!usOggiFocusPhotoActive);
-  if(usOggiFocusPhotoActive&&!usOggiFocusTipShown){usOggiFocusTipShown=true;setTimeout(()=>{if(usOggiFocusPhotoActive)toast('Tocca di nuovo per tornare',{quiet:true});},300);}
+  if(usOggiFocusPhotoActive&&!usOggiFocusTipShown){usOggiFocusTipShown=true;setTimeout(()=>{if(usOggiFocusPhotoActive)toast(window.USOggiLook?.touchActive?.()?'Tocca la foto: l’effetto ti risponde':'Tocca di nuovo per tornare',{quiet:true});},300);}
 }
 window.toggleOggiFocusPhoto=toggleOggiFocusPhoto;
 document.getElementById('homeHero')?.addEventListener('click',event=>{
   // A card that re-rendered under the tap (e.g. a notice that opened its sheet) is no photo tap.
   if(event.target&&event.target.isConnected===false)return;
   if(oggiIsWidgetTarget(event.target))return;
+  // Premi di Oggi (grill D11): in Foto a fuoco with an effect on, a tap plays
+  // with the effect (oggi-look.js); «Torna a Oggi» and back leave.
+  if(window.USOggiLook?.touchActive?.())return;
   toggleOggiFocusPhoto();
 });
 // The US mark at the top of Oggi is not a control: as in the approved mockup
@@ -2962,6 +2965,9 @@ function openThinkArrival(){
   root.setAttribute('aria-hidden','false');
   thinkArrivalCast(root);
   renderThinkReactionUi();
+  // Premi, fase 2 (grill D20): the chosen Ti penso reward plays here, after the
+  // scene, every time a Ti penso is opened (think-reward.js, once per Ti penso).
+  window.UsThinkReward?.play?.(root,{id:usIncomingThink.id,created_at:usIncomingThink.created_at,name:partnerFromProfiles(window.usBondProfiles||[])?.display_name||'La tua persona'});
 }
 window.openThinkArrival=openThinkArrival;
 function closeThinkArrival(){
@@ -5501,11 +5507,10 @@ function handleIncomingThink(row){
   // the attention tone — only because US is active right now.
   window.UsFeedback?.attention?.();
   window.UsUiFoundation?.auroraPulse?.();
-  // Ti penso animato (Sintonia V2, livello 5): hearts in your two colours, if this phone chose them;
-  // the letter (livello 15) opens on its heart.
-  const thinkFx=document.documentElement.dataset.usThinkFx;
-  if(thinkFx==='hearts')window.UsUiFoundation?.heartBurst?.();
-  else if(thinkFx==='letter')window.UsUiFoundation?.letterOpen?.();
+  // Premi, fase 2 (grill D20): the Ti penso rewards («Cuori», «Lettera») now
+  // play when the Ti penso is opened (openThinkArrival), not over Oggi here.
+  // Premi di Oggi (grill D12): the effect on Oggi shines brighter, after the Ti penso's own moment.
+  setTimeout(()=>window.USOggiLook?.burst?.(),2800);
 }
 const usRealtimeRefreshTimers=new Map();
 function scheduleUsRealtimeRefresh(kind){
@@ -5744,3 +5749,36 @@ if (canUseUsServiceWorker()) {
 
 
 document.addEventListener('keydown',(event)=>{if(event.key==='Escape')closeToday();});
+
+// «Ricordi in volo» (Premi di Oggi, grill D14): six of the couple's own photos,
+// the same six all day (the day picks them), with who added each. Read once per
+// day and identity; the URLs are the usual signed ones and never leave US.
+let usOggiMemoriesFx={key:'',list:null};
+window.usOggiMemoriesForFx=async function(){
+  const profile=window.usProfile;
+  if(!profile?.couple_id)return [];
+  const key=`${profile.couple_id}:${localDateISO()}`;
+  if(usOggiMemoriesFx.key===key&&usOggiMemoriesFx.list)return usOggiMemoriesFx.list;
+  const {data,error}=await sb.from('moments').select('id,created_by,storage_path,thumbnail_path,moment_date').order('moment_date',{ascending:false}).order('created_at',{ascending:false}).limit(60);
+  if(window.usProfile!==profile||error)return [];
+  const rows=(data||[]).filter(row=>ricordiPreviewPath(row));
+  let seed=[...key].reduce((h,ch)=>Math.imul(h^ch.charCodeAt(0),16777619),2166136261)>>>0;
+  const rand=()=>{seed=(seed+0x6D2B79F5)>>>0;let t=seed;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};
+  for(let i=rows.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[rows[i],rows[j]]=[rows[j],rows[i]];}
+  const pick=rows.slice(0,6);
+  const urls=await usGetSignedUrls(pick.map(ricordiPreviewPath),US_MEDIA_URL_TTL_S);
+  if(window.usProfile!==profile)return [];
+  const list=pick.map(row=>({id:String(row.id),url:urls.get(ricordiPreviewPath(row))||'',mine:row.created_by===profile.id,date:row.moment_date||''}));
+  usOggiMemoriesFx={key,list};
+  return list;
+};
+// A touch on one of those little photos opens that memory in the usual viewer.
+document.addEventListener('us:oggi-fx-memory',event=>{
+  const memory=usOggiMemoriesFx.list?.find(m=>m.id===event.detail?.id);
+  if(!memory?.url)return;
+  const card=document.createElement('div');
+  card.dataset.url=memory.url;
+  card.dataset.author=memory.mine?(window.usProfile?.display_name||'Tu'):(window.UsIdentity?.current?.().partnerName||'Noi');
+  card.dataset.date=memory.date?new Date(`${memory.date}T12:00:00`).toLocaleDateString(window.UsI18n?.tag||'it-IT',{day:'numeric',month:'long',year:'numeric'}):'';
+  setTimeout(()=>openMomentViewer(card),450);
+});

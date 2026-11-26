@@ -582,3 +582,23 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **La giostra, solo per pochi:** poi il founder: «non tutti a carosello… alcuni a carosello e gli altri come prima sono carini… se aggiungiamo dopo dei giochi non diventa un letamaio». In alto «Oggi per voi»: una fila di tre carte grandi da scorrere (agganciate al centro, quelle ai lati più piccole e inclinate, i pallini sotto): Per voi, «Il gioco di oggi» (uno dei giochi a domande, lo stesso per tutti e due tutto il giorno, il prossimo domani) e Questo o quello. Ogni carta dice cosa si fa, quanto dura e cosa costa il suo tasto («Gioca» col gettone, «Continua»/«Rispondi»/«Scopri» senza costo, «Domani» a zero); un tocco su una carta di lato la porta al centro, solo quella al centro parte. Sotto «Tutti i giochi»: le schede di prima, due per riga, ognuno dei giochi a domande una volta. Sostituisce «games are one grid (no sideways deck)» del 2026-10.
 - **Giochi nuovi:** ogni gioco a domande ha un genere (Per conoscervi, Per parlarvi, Per ridere, Per ricordare). Oltre sei, «Tutti i giochi» si divide da sola per genere, con un titolino ciascuno. I giochi con un modo di giocare loro (come Questo o quello) vanno nella giostra.
 - **Di giorno:** i gettoni spenti e il riquadro a zero hanno l'inchiostro tenue (prima erano tratteggi chiari invisibili sulla carta).
+
+## 2026-11-26 — Temi di Oggi e countdown rifatti
+
+**Fonte:** founder, 26/11/2026, sulla tavola «Temi e countdown di Oggi» (https://claude.ai/artifact/Gh85EKBZ7bsKTJ72qNnZUY), sette giri: «I vostri colori mi fa cacare», «adoro» Ora d'oro, Stagioni «non deve rifare la neve» e poi «alberi in alto… falli più realistici»; i countdown «devono essere piccolini», Cartolina e Calendario no, al 9 «Biglietto»; infine «Sì, vai al codice».
+
+- **Temi:** Originale e Pellicola gratis, Ora d'oro 6, Stagioni 12. Escono Romantico e Chiaro di luna (chi li aveva torna su Originale). Notte blu tenuta da parte.
+- **Stagioni:** una cosa sui bordi della foto e una dietro la domanda di oggi, ferme: ciliegi e petali, sole e mare, alberi d'autunno, castagne e foglie, ghiaccio e neve. Niente che cade, per non doppiare gli effetti. Cambia da sola col mese di Roma.
+- **Countdown:** restano gratis Editoriale, Partenze, Vetro; i premi tengono gli id che il server valida (aurora, orbit, chrome) con disegno e nome nuovi: Post-it 3, Biglietto 9, Filo rosso 18. Tutti piccoli, alla misura vera di Oggi.
+- Sostituisce, per countdown e temi, la scala del 25/11 (Calendario 3, Partenze 9, Chiaro di luna 6).
+
+## 2026-11-25 — Premi: una scala che cresce e parla della coppia
+
+**Fonte:** founder, 25/11/2026: «i premi proprio non ci siamo… più avanti si sblocca più belli devono essere e anche un senso con l'app». Grill-me D1–D25 (tutte col consiglio, tranne: Costellazione resta, «è molto bello»; icone solo US Plus), tavola «Premi di Oggi» (https://claude.ai/artifact/M8dY8C3Rvu4Mwvb6Rnw362, v5) approvata: «Approvo, vai». Piano a fasi in `docs/missions/premi-oggi.md`.
+
+- **Effetti di Oggi in tre gradini**, disegnati a mano su canvas (`oggi-fx.js`), nei due colori della coppia, giorno e notte: Base gratis (Cuori, Petali), Natura (Soffioni 4, Neve 7, Foglie 10), Vostri (Stelle cadenti 13, Lanterne 16, Ricordi in volo 20 con le foto vere). Escono Stelle luminose, Lucciole, Luci sfocate, Aurora; temi Cinema, Sogno pastello e Il vostro cielo («non uscirà mai bene»). Niente GIF né immagini generate.
+- **Tocco:** in Foto a fuoco ogni effetto risponde al dito (i Vostri anche allo swipe); con un effetto acceso si esce con «Torna a Oggi» o Indietro.
+- **Momenti forti:** Ti penso ricevuto (dopo la sua scena), giorno speciale (una volta), livello nuovo; niente con Riduci movimento.
+- **Plus** non blocca mai un gradino; le icone dell'app (Notte, Oro, Neon) sono solo Plus, fuori scala; più avanti anche su iPhone.
+- **Scala:** subito Cuori/Petali/Romantico/primi accessori; 2 Battito; 3 Countdown Calendario; 4 Soffioni; 5 Ti penso Cuori; 6 Chiaro di luna; 7 Neve; 8 Gala + Due colori; 9 Countdown Partenze; 10 Foglie; 11 Cuffie; 12 Stagioni; 13 Stelle cadenti; 14 Coroncina; 15 Ti penso Lettera; 16 Lanterne; 17 Costellazione; 18 Countdown Filo rosso; 19 Corona; 20 Ricordi in volo.
+- **Fasi:** 1 effetti e temi di Oggi; 2 Ti penso (premio quando si apre, Cuori dagli occhi, Lettera vera); 3 countdown (Calendario, Partenze, Filo rosso) e Simbolo US (Battito, Due colori); 4 guardaroba (accessori alti più grandi e animati). Ogni fase porta la sua parte di catalogo, solo su staging e col sì.

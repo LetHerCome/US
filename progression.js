@@ -271,10 +271,10 @@ const ATM = Object.freeze({ us: ['#22101D', 'rgba(255,124,150,.5)'], rose: ['#1B
 const ITEM_COLOR = Object.freeze({
   theme: { rose: '#C56EBE', midnight: '#968CFF', film: '#F0A65A', blue_hour: '#5B7CF0', graphite: '#C9C3D4' },
   accent: { orchidea: '#D98BE0', cherry: '#F0566C', champagne: '#E6C78E', ice: '#9FD2FF' },
-  oggi_theme: { cinematic: '#C06A6A', moonlight: '#5B6CC8', seasonal: '#E0A050' },
-  oggi_effect: { petals: '#FF8BA8', fireflies: '#F3B76E', bokeh: '#FF7C96', snow: '#CFE3FF' },
-  effect: { pulse: '#FF7C96', constellation: '#A98BFF', shimmer: '#E8E2F0' },
-  countdown: { aurora: '#F3B76E', orbit: '#F3B76E', chrome: '#C9C3D4' }
+  oggi_theme: { golden: '#F3B76E', seasonal: '#E0A050' },
+  oggi_effect: { hearts: '#FF7C96', petals: '#FF8BA8', dandelions: '#F4EEE6', snow: '#CFE3FF', leaves: '#D27A3E', shooting: '#A98BFF', lanterns: '#F3B76E', memories: '#FFE2D6' },
+  effect: { pulse: '#FF7C96', constellation: '#A98BFF', duo: '#D98BE0' },
+  countdown: { aurora: '#FFD98A', orbit: '#F6E7C8', chrome: '#E0605A' }
 });
 // The free look of the three device slots that have no reward row: choosing
 // it simply clears the slot on this phone.
@@ -327,7 +327,7 @@ function artMarkup(item, big = false) {
   if (cat === 'app_icon') return `<span class="us-cos-acc us-cos-icon" data-icon="${esc(id)}" style="--art:url('${REWARD_ART}us-app-icon-${esc(id)}-v1.webp')"></span>`;
   if (cat === 'pet_accessory') return `<span class="us-cos-acc" data-acc="${esc(id)}" style="--art:url('${esc(accessoryArt(id))}')"></span>`;
   if (cat === 'oggi_theme') return `<span class="mini" data-theme="${esc(id)}">${miniCount()}</span>`;
-  if (cat === 'oggi_effect') return `<span class="mini">${id !== 'none' && FX.has(id) ? `<canvas data-fx="${esc(id)}"></canvas>` : ''}${miniCount()}</span>`;
+  if (cat === 'oggi_effect') return `<span class="mini">${id !== 'none' && FX.has(id) ? `<span class="us-oggi-fx mini-fx" data-fx="${esc(id)}" data-fx-scale="0.5"></span>` : ''}${miniCount()}</span>`;
   if (cat === 'theme') {
     const [night, glow] = ATM[id] || ATM.us;
     return `<span class="swatch-pv atm" style="background:radial-gradient(90% 60% at 50% 0%,${glow},transparent 70%),${night}"><span class="ui"><i></i><i></i><i class="pill"></i><i></i></span></span>`;
@@ -338,6 +338,9 @@ function artMarkup(item, big = false) {
   }
   if (cat === 'effect') return `<span class="logo-pv"><span class="logo-wrap" data-fx="${esc(id)}"><img class="og-logo" src="${US_SYMBOL}" alt="" decoding="async" draggable="false"><span class="shine"></span><span class="stars"><i style="left:4px;top:10px"></i><i style="right:2px;top:2px;animation-delay:.8s"></i><i style="right:6px;bottom:4px;animation-delay:1.6s"></i></span></span></span>`;
   if (cat === 'countdown') {
+    // Temi e countdown (26/11/2026): the three reward styles are shown with the real countdown markup.
+    const real = ['aurora', 'orbit', 'chrome'].includes(id) ? window.USCountdown?.previewMarkup?.(id) : '';
+    if (real) return `<span class="cd-pv"><span class="cd cd-real">${real}</span></span>`;
     const days = daysTogether() || '0';
     const digits = id === 'signal' ? days.split('').map((d) => `<span>${esc(d)}</span>`).join('') : esc(days);
     return `<span class="cd-pv"><span class="cd" data-style="${esc(id)}"><span class="cdb"><span class="num">${digits}</span><span class="lbl">giorni</span></span></span></span>`;
@@ -345,86 +348,11 @@ function artMarkup(item, big = false) {
   return '<span class="us-cos-stage"></span>';
 }
 
-// The mockup's particle engine for the Oggi effect previews (sintonia.js FX).
-// Only canvases on screen draw; nothing runs under reduced motion.
-const FX = (() => {
-  // The canvases being drawn ({ c, g, kind, ps, on, w, h }).
-  let live = [];
-  const find = (c) => live.find((s) => s.c === c);
-  let raf = 0;
-  let seen = null;
-  const R = Math.random;
-  const heart = (g, x, y, s) => { g.beginPath(); g.moveTo(x, y + s * 0.35); g.bezierCurveTo(x, y, x - s * 0.5, y, x - s * 0.5, y + s * 0.35); g.bezierCurveTo(x - s * 0.5, y + s * 0.7, x, y + s * 0.85, x, y + s); g.bezierCurveTo(x, y + s * 0.85, x + s * 0.5, y + s * 0.7, x + s * 0.5, y + s * 0.35); g.bezierCurveTo(x + s * 0.5, y, x, y, x, y + s * 0.35); g.fill(); };
-  const KINDS = {
-    hearts: { n: 10, init: (p, w, h, first) => { p.x = R() * w; p.y = first ? R() * h : h + 12; p.s = 6 + R() * 7; p.v = 0.18 + R() * 0.22; p.a = 0.35 + R() * 0.35; p.ph = R() * 6; p.c = R() < 0.6 ? '255,124,150' : '255,179,194'; },
-      step: (p, w, h, t) => { p.y -= p.v; p.x += Math.sin(t / 900 + p.ph) * 0.25; if (p.y < -14) Object.assign(p, { y: h + 12, x: R() * w }); },
-      draw: (g, p) => { g.fillStyle = `rgba(${p.c},${p.a})`; heart(g, p.x, p.y, p.s); } },
-    stars: { n: 38, init: (p, w, h) => { p.x = R() * w; p.y = R() * h * 0.62; p.s = 0.5 + R() * 1.3; p.sp = 0.6 + R() * 1.4; p.ph = R() * 6; },
-      step: () => {}, draw: (g, p, t) => { const a = 0.15 + 0.85 * (0.5 + 0.5 * Math.sin(t / 1000 * p.sp + p.ph)); g.fillStyle = `rgba(255,248,240,${a})`; g.beginPath(); g.arc(p.x, p.y, p.s, 0, 7); g.fill();
-        if (p.s > 1.4) { g.strokeStyle = `rgba(255,248,240,${a * 0.6})`; g.lineWidth = 0.6; g.beginPath(); g.moveTo(p.x - p.s * 3, p.y); g.lineTo(p.x + p.s * 3, p.y); g.moveTo(p.x, p.y - p.s * 3); g.lineTo(p.x, p.y + p.s * 3); g.stroke(); } } },
-    petals: { n: 14, init: (p, w, h, first) => { p.x = R() * w; p.y = first ? R() * h : -10; p.s = 4 + R() * 4; p.v = 0.35 + R() * 0.5; p.r = R() * 6; p.vr = (R() - 0.5) * 0.03; p.ph = R() * 6; p.c = ['255,170,190', '255,140,165', '255,210,220'][R() * 3 | 0]; },
-      step: (p, w, h, t) => { p.y += p.v; p.x += Math.sin(t / 700 + p.ph) * 0.45; p.r += p.vr; if (p.y > h + 12) Object.assign(p, { y: -10, x: R() * w }); },
-      draw: (g, p) => { g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = `rgba(${p.c},.78)`; g.beginPath(); g.ellipse(0, 0, p.s, p.s * 0.55, 0, 0, 7); g.fill(); g.restore(); } },
-    fireflies: { n: 14, add: true, init: (p, w, h) => { p.x = R() * w; p.y = h * 0.25 + R() * h * 0.7; p.a = R() * 6; p.v = 0.18 + R() * 0.22; p.ph = R() * 6; p.s = 1.6 + R() * 1.6; },
-      step: (p, w, h) => { p.a += (R() - 0.5) * 0.18; p.x += Math.cos(p.a) * p.v; p.y += Math.sin(p.a) * p.v; if (p.x < -10) p.x = w + 10; if (p.x > w + 10) p.x = -10; if (p.y < h * 0.15) p.a = 1.57; if (p.y > h) p.a = -1.57; },
-      draw: (g, p, t) => { const k = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t / 650 + p.ph)), r = p.s * 7; const q = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); q.addColorStop(0, `rgba(255,226,150,${0.9 * k})`); q.addColorStop(0.25, `rgba(255,196,110,${0.35 * k})`); q.addColorStop(1, 'rgba(255,180,90,0)'); g.fillStyle = q; g.beginPath(); g.arc(p.x, p.y, r, 0, 7); g.fill(); } },
-    bokeh: { n: 9, add: true, init: (p, w, h) => { p.x = R() * w; p.y = R() * h; p.r = 16 + R() * 34; p.vx = (R() - 0.5) * 0.12; p.vy = -0.05 - R() * 0.1; p.ph = R() * 6; p.c = ['255,124,150', '243,183,110', '169,139,255', '255,236,220'][R() * 4 | 0]; },
-      step: (p, w, h) => { p.x += p.vx; p.y += p.vy; if (p.y < -p.r) p.y = h + p.r; if (p.x < -p.r) p.x = w + p.r; if (p.x > w + p.r) p.x = -p.r; },
-      draw: (g, p, t) => { const a = 0.08 + 0.12 * (0.5 + 0.5 * Math.sin(t / 1600 + p.ph)); const q = g.createRadialGradient(p.x, p.y, p.r * 0.55, p.x, p.y, p.r); q.addColorStop(0, `rgba(${p.c},${a})`); q.addColorStop(0.85, `rgba(${p.c},${a * 1.4})`); q.addColorStop(1, `rgba(${p.c},0)`); g.fillStyle = q; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7); g.fill(); } },
-    snow: { n: 46, init: (p, w, h, first) => { p.x = R() * w; p.y = first ? R() * h : -6; p.r = 0.8 + R() * 1.9; p.v = 0.3 + R() * 0.7; p.ph = R() * 6; },
-      step: (p, w, h, t) => { p.y += p.v; p.x += Math.sin(t / 1200 + p.ph) * 0.3; if (p.y > h + 6) Object.assign(p, { y: -6, x: R() * w }); },
-      draw: (g, p) => { g.fillStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7); g.fill(); } }
-  };
-  function size(s) {
-    const c = s.c, dpr = Math.min(2, window.devicePixelRatio || 1), w = c.clientWidth || c.parentElement?.clientWidth || 100, h = c.clientHeight || c.parentElement?.clientHeight || 100;
-    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); s.g.setTransform(dpr, 0, 0, dpr, 0, 0); }
-    s.w = w; s.h = h;
-    if (!s.ps.length) {
-      const K = KINDS[s.kind];
-      const n = Math.max(4, Math.round(K.n * Math.min(1.2, (w * h) / (390 * 700))));
-      for (let i = 0; i < n; i++) { const p = {}; K.init(p, w, h, true); s.ps.push(p); }
-    }
-  }
-  function paint(s, t, move) {
-    const K = KINDS[s.kind];
-    s.g.clearRect(0, 0, s.w, s.h);
-    s.g.globalCompositeOperation = K.add ? 'lighter' : 'source-over';
-    for (const p of s.ps) { if (move) K.step(p, s.w, s.h, t); K.draw(s.g, p, t); }
-  }
-  function frame(t) {
-    raf = 0;
-    let any = false;
-    for (const s of live) {
-      if (!s.c.isConnected) { stop(s.c); continue; }
-      if (!s.on) continue;
-      any = true;
-      if (!s.w) size(s);
-      paint(s, t, true);
-    }
-    if (any && !reducedMotion()) raf = requestAnimationFrame(frame);
-  }
-  function kick() { if (!raf && !reducedMotion() && live.some((s) => s.on)) raf = requestAnimationFrame(frame); }
-  function watch(c) {
-    if (typeof IntersectionObserver !== 'function') { const s = find(c); if (s) s.on = true; return; }
-    if (!seen) seen = new IntersectionObserver((entries) => { for (const e of entries) { const s = find(e.target); if (s) { s.on = e.isIntersecting; if (s.on) s.w = 0; } } kick(); });
-    seen.observe(c);
-  }
-  function start(c, kind) {
-    stop(c);
-    const g = KINDS[kind] && c.getContext?.('2d');
-    if (!g) return;
-    const s = { c, g, kind, ps: [], on: false, w: 0, h: 0 };
-    live.push(s);
-    // Measured on its first frame, never right after the markup lands (a
-    // read here would force a layout in the middle of a render).
-    if (reducedMotion()) { requestAnimationFrame(() => { if (!c.isConnected) return; size(s); paint(s, performance.now(), false); }); return; }
-    watch(c);
-  }
-  function stop(c) { if (!find(c)) return; seen?.unobserve?.(c); live = live.filter((s) => s.c !== c); }
-  return { start, has: (kind) => Boolean(KINDS[kind]), kick };
-})();
+// Premi di Oggi, fase 1 (25/11/2026): the previews of the Oggi effects are
+// painted by the same engine as Oggi (oggi-fx.js), only while on screen.
+const FX = Object.freeze({ has: (kind) => Boolean(window.UsOggiFx?.supports?.(kind)) });
 function startCanvases(root) {
-  root?.querySelectorAll?.('canvas[data-fx]')?.forEach?.((c) => FX.start(c, c.dataset.fx));
+  window.USOggiLook?.mountPreviews?.(root);
 }
 
 // ---------- Due colori · points: +XP, sparks, the bar that grows ----------
@@ -755,6 +683,8 @@ function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
       root.remove();
       levelMomentOpen = false;
       levelMomentClose = null;
+      // Premi di Oggi (grill D12): a new level makes the effect on Oggi shine brighter.
+      window.USOggiLook?.burst?.();
       if (unlocks.length && fromBack) setTimeout(() => startUnlockQueue(unlocks), 120);
       else if (unlocks.length) startUnlockQueue(unlocks);
       else if (look) window.UsAngolo?.open?.('look');
@@ -1487,8 +1417,6 @@ $('usProgressionRewards')?.addEventListener('click', async (event) => {
     ok = await window.USCountdown?.setStyle?.(data.countdownStyleSelect);
     if (ok) renderRewards(state);
   } else if (data.lookSlot) {
-    // Il vostro cielo needs its city and hour: it opens its own page first.
-    if (data.lookSlot === 'theme' && data.lookId === 'sky') { window.USOggiLook?.openGallery?.({ tab: 'theme', look: 'sky' }); return; }
     category = LOOK_SLOT[data.lookSlot] || '';
     ok = setDeviceLook(data.lookSlot, data.lookId);
   } else if (data.progressionDefault) {

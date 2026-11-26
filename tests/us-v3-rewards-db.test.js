@@ -102,7 +102,15 @@ test('US V3 rewards: client catalog and migration agree on reward ids and levels
   // The latest level of each look: V3, then Premi Sintonia V2 (29/10/2026).
   const levels = new Map();
   const v2 = fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261029031726_sintonia_rewards_v2_phase1.sql'), 'utf8');
-  for (const sql of [V3, v2]) for (const [, id, level] of sql.matchAll(/\('(oggi_[a-z_]+)',\s+(\d+),/g)) levels.set(id, level);
+  // Premi di Oggi (25/11/2026): the new ladder of Oggi's looks; what left is inactive.
+  const premi = fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261126000000_premi_oggi_effetti.sql'), 'utf8');
+  // Temi e countdown (26/11/2026): Ora d'oro arrives, Chiaro di luna leaves.
+  const temi = fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261126020000_premi_temi_countdown.sql'), 'utf8');
+  for (const sql of [V3, v2, premi, temi]) for (const [, id, level] of sql.matchAll(/\('(oggi_[a-z_]+)',\s+(\d+),/g)) levels.set(id, level);
+  const off = premi.match(/set active = false, headline = false\s+where id in \(([^)]*)\)/)[1];
+  for (const [, id] of off.matchAll(/'([a-z_]+)'/g)) levels.delete(id);
+  for (const [, id] of temi.matchAll(/set active = false, headline = false\s+where id = '([a-z_]+)'/g)) levels.delete(id);
+  assert.deepEqual([...levels.keys()].sort(), ['oggi_effect_dandelions', 'oggi_effect_lanterns', 'oggi_effect_leaves', 'oggi_effect_memories', 'oggi_effect_shooting', 'oggi_effect_snow', 'oggi_theme_golden', 'oggi_theme_seasonal']);
   for (const [id, level] of levels) {
     assert.match(look, new RegExp(`reward: '${id}', level: ${level}[,\\s]`), `${id} level ${level}`);
   }

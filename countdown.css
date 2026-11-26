@@ -46,23 +46,44 @@
 [data-countdown-style="glass"] .us-countdown-number{font:300 66px/.9 var(--us-font-display);letter-spacing:-.03em}
 [data-countdown-style="glass"][data-countdown-clock="true"] .us-countdown-number{font-size:34px}
 [data-countdown-style="glass"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
-/* Aurora (mockup aurora): the light moves slowly inside the figures. */
-[data-countdown-style="aurora"] .us-countdown-number{font:500 64px/.9 var(--us-font-display);letter-spacing:-.03em;background:linear-gradient(100deg,var(--us-rosa),var(--us-ambra),var(--us-lilla),var(--us-rosa));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;animation:us-countdown-aurora 9s ease-in-out infinite alternate}
-[data-countdown-style="aurora"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
-@keyframes us-countdown-aurora{to{background-position:100% 0}}
-/* Orbita (mockup orbit): a ring and one point of light that goes round once a minute. */
-[data-countdown-style="orbit"]{width:190px;height:190px;padding:6px 18px;border-radius:50%;align-content:center;border:1.5px solid rgba(255,255,255,.25)}
-[data-countdown-style="orbit"]::after{content:"";position:absolute;top:-5px;left:50%;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;background:var(--us-ambra);box-shadow:0 0 14px var(--us-ambra);transform-origin:4.5px 99px;transform:rotate(var(--us-cd-sweep,0deg));transition:transform 1s linear;pointer-events:none}
-[data-countdown-style="orbit"][data-sweep-jump]::after{transition:none;}
-[data-countdown-style="orbit"] .us-countdown-number{font:300 66px/.9 var(--us-font-display);letter-spacing:-.03em}
-[data-countdown-style="orbit"][data-countdown-clock="true"] .us-countdown-number{font-size:34px}
-[data-countdown-style="orbit"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
-/* Cromo (mockup chrome): the figures in polished metal. */
-[data-countdown-style="chrome"] .us-countdown-number{font:600 64px/.9 var(--us-font-display);letter-spacing:-.03em;background:linear-gradient(180deg,#fff 0%,#c9c3d4 38%,#6e6878 52%,#e8e2f0 64%,#a59fb0 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
-[data-countdown-style="chrome"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
-/* Oggi theme Cinematic (mockup): lighter, wider figures; the words in spaced small caps. */
-html[data-us-oggi-theme="cinematic"] #home .us-countdown-display .us-countdown-number{font-weight:400;letter-spacing:.06em;font-size:64px}
-html[data-us-oggi-theme="cinematic"] #home .us-countdown-display :is(.us-countdown-unit,.us-countdown-tail,.us-countdown-title){font:700 11px/1.5 var(--us-font-ui);letter-spacing:.32em;text-transform:uppercase}
+/* Temi e countdown (tavola approved 26/11/2026): three small reward styles on
+   the old ids (save_countdown_oggi_v1 keeps validating them). */
+/* Post-it (aurora, level 3): your note, the other person's under it, tape on top. */
+.us-countdown-art[data-countdown-style="aurora"]{display:grid;justify-items:center;grid-template-rows:13px 40px 18px 24px auto auto;min-width:96px;padding:0;border-radius:0;column-gap:0;rotate:-2deg;color:#2a1d22}
+[data-countdown-style="aurora"] .us-countdown-deco{inset:0 auto auto 50%;width:86px;height:86px;margin-left:-43px;border-radius:0}
+[data-countdown-style="aurora"] .us-countdown-deco::before,[data-countdown-style="aurora"] .us-countdown-deco>i{content:"";display:block;position:absolute;inset:0;border-radius:2px 2px 12px 2px;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 8px 14px rgba(0,0,0,.3)}
+[data-countdown-style="aurora"] .us-countdown-deco::before{background:linear-gradient(165deg,color-mix(in srgb,var(--us-partner,#a98bff) 30%,#fff8e6),color-mix(in srgb,var(--us-partner,#a98bff) 46%,#fff1cf));transform:translate(4px,3px) rotate(7deg)}
+[data-countdown-style="aurora"] .us-countdown-deco>i{background:linear-gradient(165deg,color-mix(in srgb,var(--us-tu,#ff7c96) 30%,#fff8e6),color-mix(in srgb,var(--us-tu,#ff7c96) 46%,#fff1cf))}
+[data-countdown-style="aurora"] .us-countdown-deco>i::after{content:"";position:absolute;right:0;bottom:0;width:16px;height:16px;border-radius:0 0 12px 0;background:linear-gradient(135deg,transparent 50%,rgba(0,0,0,.08) 50%,rgba(255,255,255,.7) 70%,color-mix(in srgb,var(--us-tu,#ff7c96) 30%,#fff8e6))}
+[data-countdown-style="aurora"] .us-countdown-deco>i::before{content:"";position:absolute;left:8px;bottom:7px;width:13px;height:12px;background:var(--us-partner,#a98bff);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 24'%3E%3Cpath d='M13 22C4 15 1 10 3 6C5 2 10 2 13 7C16 2 21 2 23 6C25 10 22 15 13 22Z' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 24'%3E%3Cpath d='M13 22C4 15 1 10 3 6C5 2 10 2 13 7C16 2 21 2 23 6C25 10 22 15 13 22Z' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+[data-countdown-style="aurora"] .us-countdown-deco::after{content:"";position:absolute;left:50%;top:-7px;width:36px;height:13px;margin-left:-18px;background:repeating-linear-gradient(45deg,rgba(255,255,255,.72) 0 4px,rgba(255,255,255,.46) 4px 8px);box-shadow:0 1px 2px rgba(0,0,0,.12);transform:rotate(4deg)}
+.us-countdown-art[data-countdown-style="aurora"] .us-countdown-number{grid-row:2;font:500 36px/40px var(--us-font-display);letter-spacing:-.02em;text-shadow:none;color:#2a1d22}
+.us-countdown-art[data-countdown-style="aurora"][data-countdown-clock="true"] .us-countdown-number{font-size:20px}
+.us-countdown-art[data-countdown-style="aurora"] .us-countdown-unit{grid-row:3;font:italic 400 13px/18px var(--us-font-display);color:rgba(42,29,34,.7)}
+.us-countdown-art[data-countdown-style="aurora"] :is(.us-countdown-title,.us-countdown-tail){grid-row:5;max-width:180px;font:italic 400 14px/1.3 var(--us-font-display);color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+.us-countdown-art[data-countdown-style="aurora"] .us-countdown-sub{grid-row:6;font-size:13px;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+[data-countdown-style="aurora"] .us-countdown-title::before{content:none!important}
+/* Biglietto (orbit, level 9): a small train ticket, andata per due, with its stub. */
+.us-countdown-art[data-countdown-style="orbit"] *,.us-countdown-art[data-countdown-style="aurora"] :is(.us-countdown-number,.us-countdown-unit){text-shadow:none!important}
+.us-countdown-art[data-countdown-style="orbit"]{width:228px;height:76px;padding:9px 76px 9px 13px;border-radius:0;justify-content:flex-start;align-content:center;align-items:baseline;row-gap:3px;column-gap:4px;color:#2c2220;filter:drop-shadow(0 10px 16px rgba(0,0,0,.4))}
+.us-countdown-art[data-countdown-style="orbit"]::before{content:"Andata · per due";flex:0 0 100%;font:800 7.5px/1 var(--us-font-ui);letter-spacing:.18em;text-transform:uppercase;color:#a0513a;text-align:left}
+[data-countdown-style="orbit"] .us-countdown-deco{inset:0;border-radius:9px;background:#fbf4e6;-webkit-mask:radial-gradient(circle 7px at calc(100% - 66px) 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 7px at calc(100% - 66px) 100%,#0000 98%,#000) bottom/100% 51% no-repeat;mask:radial-gradient(circle 7px at calc(100% - 66px) 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 7px at calc(100% - 66px) 100%,#0000 98%,#000) bottom/100% 51% no-repeat}
+[data-countdown-style="orbit"] .us-countdown-deco::after{content:"Posto\A 2 · noi";white-space:pre;position:absolute;top:0;right:0;bottom:0;width:66px;padding-top:11px;border-left:1.5px dashed rgba(44,34,32,.3);text-align:center;font:700 8px/1.6 ui-monospace,"SF Mono","Roboto Mono",Menlo,monospace;letter-spacing:.06em;text-transform:uppercase;color:#2c2220}
+[data-countdown-style="orbit"] .us-countdown-deco>i{display:block;position:absolute;right:9px;bottom:10px;width:48px;height:14px;background:repeating-linear-gradient(90deg,#2c2220 0 2px,transparent 2px 3px,#2c2220 3px 4px,transparent 4px 7px,#2c2220 7px 8px,transparent 8px 9px)}
+.us-countdown-art[data-countdown-style="orbit"] .us-countdown-number{flex:0 0 auto;justify-content:flex-start;font:500 32px/1 var(--us-font-display);letter-spacing:-.02em;text-shadow:none;color:#2c2220}
+.us-countdown-art[data-countdown-style="orbit"][data-countdown-clock="true"] .us-countdown-number{font-size:22px}
+.us-countdown-art[data-countdown-style="orbit"] :is(.us-countdown-unit,.us-countdown-tail){font:italic 400 13px/1 var(--us-font-display);color:#5a4048}
+.us-countdown-art[data-countdown-style="orbit"] .us-countdown-title{flex:0 0 100%;font:600 9.5px/1.3 var(--us-font-ui);color:#2c2220;text-align:left}
+[data-countdown-style="orbit"] .us-countdown-title::before{content:"a: "!important}
+.us-countdown-art[data-countdown-style="orbit"] .us-countdown-sub{font:700 8.5px/1.2 var(--us-font-ui);letter-spacing:.06em;color:#a0513a;text-align:left}
+/* Filo rosso (chrome, level 18): you two at the ends of a red thread that shortens as the day comes. */
+.us-countdown-art[data-countdown-style="chrome"] .us-countdown-number{font:300 50px/.9 var(--us-font-display);letter-spacing:-.03em}
+.us-countdown-art[data-countdown-style="chrome"][data-countdown-clock="true"] .us-countdown-number{font-size:34px}
+.us-countdown-art[data-countdown-style="chrome"] .us-countdown-unit{font:italic 400 16px/1.5 var(--us-font-display)}
+.us-cd-filo{order:5;flex:0 0 100%;display:flex;align-items:flex-end;justify-content:center;height:32px;margin-top:4px}
+.us-cd-filo-one{flex:none;width:30px;line-height:0}
+.us-cd-filo-one svg{width:30px;height:auto;overflow:visible}
+.us-cd-filo-thread{flex:none;width:calc(14px + var(--k,.5) * 150px);height:calc(4px + var(--k,.5) * 10px);margin:0 -5px 6px;border-bottom:3px solid #d8473a;border-radius:0 0 50% 50%/0 0 100% 100%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25));transition:width .6s cubic-bezier(.2,.8,.2,1),height .6s}
 .us-oggi-focus .us-countdown-display{opacity:0;pointer-events:none;}
 .us-countdown-display:focus-visible{outline:2px solid var(--us-color-accent-ink);outline-offset:5px;}
 /* Canonical sheet, content scrolls including the action when the keyboard opens. */
@@ -99,24 +120,21 @@ html[data-us-oggi-theme="cinematic"] #home .us-countdown-display :is(.us-countdo
 .us-countdown-status button{min-height:44px;flex-shrink:0;}
 @media(max-height:700px){
   #home #homeHero .us-countdown-display{top:12%}
-  #home .us-countdown-number{font-size:72px;}
+  #home .us-countdown-art:not([data-countdown-style="aurora"],[data-countdown-style="orbit"],[data-countdown-style="chrome"]) .us-countdown-number{font-size:72px;}
   #home [data-countdown-style="signal"] .us-countdown-number{font-size:44px}
   #home [data-countdown-style="signal"] .us-countdown-digit{width:38px;height:54px}
   #home [data-countdown-style="glass"]{width:148px;height:148px}
-  #home [data-countdown-style="orbit"]{width:150px;height:150px}
-  #home [data-countdown-style="orbit"]::after{transform-origin:4.5px 79px}
-  #home :is([data-countdown-style="glass"],[data-countdown-style="orbit"]) .us-countdown-number{font-size:52px}
-  #home .us-countdown-art[data-countdown-clock="true"] .us-countdown-number{font-size:34px;}
+  #home [data-countdown-style="glass"] .us-countdown-number{font-size:52px}
+  #home .us-countdown-art:not([data-countdown-style="aurora"],[data-countdown-style="orbit"],[data-countdown-style="chrome"])[data-countdown-clock="true"] .us-countdown-number{font-size:34px;}
 }
 /* Very short phones (≤600 px): the time sits right under the top bar and shrinks,
    so the photo, the invitation and the Daily card keep their bands. */
 @media(max-height:600px) and (orientation:portrait){
   #home #homeHero .us-countdown-display{top:70px}
-  #home .us-countdown-number{font-size:60px;}
-  #home :is([data-countdown-style="glass"],[data-countdown-style="orbit"]){width:120px;height:120px}
-  #home [data-countdown-style="orbit"]::after{transform-origin:4.5px 64px}
-  #home :is([data-countdown-style="glass"],[data-countdown-style="orbit"]) .us-countdown-number{font-size:42px}
-  #home :is([data-countdown-style="glass"],[data-countdown-style="orbit"]) .us-countdown-unit{font-size:15px}
+  #home .us-countdown-art:not([data-countdown-style="aurora"],[data-countdown-style="orbit"],[data-countdown-style="chrome"]) .us-countdown-number{font-size:60px;}
+  #home [data-countdown-style="glass"]{width:120px;height:120px}
+  #home [data-countdown-style="glass"] .us-countdown-number{font-size:42px}
+  #home [data-countdown-style="glass"] .us-countdown-unit{font-size:15px}
   #home [data-countdown-style="signal"] .us-countdown-number{font-size:36px}
   #home [data-countdown-style="signal"] .us-countdown-digit{width:32px;height:46px}
 }
@@ -125,16 +143,13 @@ html[data-us-oggi-theme="cinematic"] #home .us-countdown-display :is(.us-countdo
   #home #homeHero.is-empty .home-empty-state{right:72px;}
   #home #homeHero .us-countdown-display{top:50%;left:25%;transform:translate(-50%,-50%)}
   .us-countdown-entry{right:15px;}
-  #home .us-countdown-number{font-size:64px;}
-  #home [data-countdown-style="orbit"],#home [data-countdown-style="glass"]{width:130px;height:130px;}
-  #home [data-countdown-style="orbit"]::after{transform-origin:4.5px 69px}
-  #home .us-countdown-art[data-countdown-clock="true"] .us-countdown-number{font-size:30px;}
+  #home .us-countdown-art:not([data-countdown-style="aurora"],[data-countdown-style="orbit"],[data-countdown-style="chrome"]) .us-countdown-number{font-size:64px;}
+  #home [data-countdown-style="glass"]{width:130px;height:130px;}
+  #home .us-countdown-art:not([data-countdown-style="aurora"],[data-countdown-style="orbit"],[data-countdown-style="chrome"])[data-countdown-clock="true"] .us-countdown-number{font-size:30px;}
   .us-countdown-sheet{max-height:calc(var(--us-viewport-height) - 8px);padding-top:15px;}
 }
 @media(prefers-reduced-motion:reduce){.us-countdown-art *,.us-countdown-art::after{animation:none!important;transition:none!important;}.us-countdown-display{transition:none;}}
-/* Reduced motion: every identity stays, nothing moves; the orbit light rests at twelve. */
+/* Reduced motion: every identity stays, nothing moves. */
 :root[data-us-motion="reduced"] .us-countdown-art *,:root[data-us-motion="reduced"] .us-countdown-art::after{animation:none!important;transition:none!important;}
-@media(prefers-reduced-motion:reduce){[data-countdown-style="orbit"]::after{transform:none!important;}}
-:root[data-us-motion="reduced"] [data-countdown-style="orbit"]::after{transform:none!important;}
 html[data-us-visibility="hidden"] .us-countdown-art *,html[data-us-visibility="hidden"] .us-countdown-art::after{animation-play-state:paused!important;}
 #home:not(.active) .us-countdown-art *,#home:not(.active) .us-countdown-art::after,.us-oggi-focus .us-countdown-art *,.us-oggi-focus .us-countdown-art::after{animation-play-state:paused!important;}

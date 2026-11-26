@@ -2,6 +2,48 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Premi, fase 5: temi di Oggi e countdown (26/11)
+
+**Stato:** ramo `claude/premi-fase5-countdown-temi` (sopra le fasi 1–4). Tavola «Temi e countdown di Oggi» (https://claude.ai/artifact/Gh85EKBZ7bsKTJ72qNnZUY) approvata: «Sì, vai al codice». Migrazione `20261126020000_premi_temi_countdown.sql` solo su staging col sì; in produzione solo con un sì separato.
+
+**Cosa cambia:**
+- **Temi di Oggi**: Originale e **Pellicola** gratis (grana, una luce che entra di lato, la data di oggi stampata in arancione), **Ora d'oro** al livello 6 (luce calda e un riflesso di sole che si muove piano), **Stagioni** al 12 disegnata di nuovo: in primavera i ciliegi giapponesi in fiore dagli angoli in alto e i petali dietro la domanda di oggi, in estate il sole in alto a destra e il mare dietro la domanda, in autunno gli alberi rossi e oro, le castagne sui bordi e un letto di foglie, in inverno il vetro ghiacciato agli angoli e la neve. Non cade niente: quello lo fanno gli effetti.
+- Escono **Romantico** e **Chiaro di luna**: chi li aveva torna su Originale.
+- **Countdown**: Editoriale, Partenze e Vetro restano gratis. Escono Aurora, Orbita e Cromo; sugli stessi premi arrivano **Post-it** (livello 3: il tuo post-it attaccato con lo scotch, sotto quello dell'altra persona col cuoricino), **Biglietto** (9: un biglietto del treno, andata per due) e **Filo rosso** (18: i vostri due personaggi ai capi di un filo che si accorcia man mano che il giorno arriva). Tutti piccoli. Chi usava Aurora, Orbita o Cromo trova il nuovo disegno sullo stesso premio.
+- Nei Premi l'anteprima dei tre countdown è quella vera.
+- I widget del telefono (Android e iPhone) disegnano ancora gli stili vecchi per Post-it, Biglietto e Filo rosso: da rifare a parte.
+
+### Premi, fase 3a e 4: Simbolo US e guardaroba (26/11)
+
+**Stato:** rami `claude/premi-fase3-countdown-simbolo` e `claude/premi-fase4-guardaroba` (sopra le fasi 1–2). Migrazione `20261126010000_premi_simbolo.sql` solo su staging col sì.
+
+**Cosa cambia:**
+- **Simbolo US**: «Battito» (livello 2) batte due volte come un cuore con un alone nel tuo colore; «Due colori» (livello 8, nuovo) fa girare i vostri due colori dentro le lettere; «Costellazione» resta e passa al livello 17; «Riflesso» esce (il suo lampo usciva dal simbolo).
+- **Guardaroba**: Gala diventa colletto e papillon vero con un luccichio, dalle Cuffie esce una nota, la Coroncina ha fiori più grandi che ondeggiano, la Corona ha le gemme che brillano; ritoccati Occhiali (montatura vera) e Sciarpina (nodo e code). Le animazioni solo dove il personaggio è grande.
+- La sciarpina non esce più dal corpo quando un altro personaggio con la sciarpina è nascosto nella pagina.
+
+### Premi, fase 2: Ti penso (26/11)
+
+**Stato:** ramo `claude/premi-fase2-tipenso` (sopra la fase 1), verso il ramo fisso di staging. Solo app, niente SQL.
+
+**Cosa cambia:**
+- **Il premio del Ti penso si vede sempre**: parte quando apri il Ti penso, dopo la scena dei personaggi, anche se lo leggi più tardi (prima solo se arrivava con US aperta).
+- **Cuori** (livello 5): escono dagli occhi a cuore di chi ti pensa, nei vostri due colori; toccandoli scoppiano.
+- **Lettera** (livello 15): una busta vera nel colore di chi ti pensa, con l'interno a cuoricini e il sigillo di ceralacca col suo personaggio. Tocchi il sigillo: si spezza, il lembo si apre e il foglio viene avanti con «Ti penso» e il suo nome.
+
+### Premi di Oggi, fase 1: effetti e temi (25/11)
+
+**Stato:** ramo `claude/premi-fase1-effetti`, verso il ramo fisso di staging. Grill D1–D25 e tavola «Premi di Oggi» (https://claude.ai/artifact/M8dY8C3Rvu4Mwvb6Rnw362) approvata: «Approvo, vai». La migrazione `20261126000000_premi_oggi_effetti.sql` va applicata a US-STAGING col via del founder; in produzione solo con un sì separato.
+
+**Cosa cambia:**
+- **Effetti di Oggi nuovi, disegnati a mano nei vostri due colori**, di giorno e di notte. Subito e gratis: **Cuori** (coppie che si cercano salendo e si incontrano) e **Petali**. Poi **Soffioni** (livello 4), **Neve** (7), **Foglie** (10), **Stelle cadenti** (13), **Lanterne** (16) e in cima **Ricordi in volo** (20): piccole polaroid delle vostre foto vere che galleggiano su Oggi.
+- **Gli effetti rispondono al dito** in Foto a fuoco: i cuori scoppiano, i petali e la neve volano via, le stelle e le lanterne partono dal dito, una polaroid apre il suo ricordo. Gli ultimi tre rispondono anche allo swipe. Con un effetto acceso si torna a Oggi con «Torna a Oggi».
+- **L'effetto brilla di più** quando arriva un Ti penso, nei giorni speciali e quando salite di livello.
+- **Escono** gli effetti Stelle luminose, Lucciole, Luci sfocate e Aurora, e i temi Cinema, Sogno pastello e Il vostro cielo: chi li aveva torna a «Nessuno» e «Originale».
+- In Personalizza Oggi le etichette «In uso», «Incluso» e «Sbloccato» tornano piccole (erano diventate riquadri vuoti).
+
+**In produzione:** migrazione del catalogo (col sì), sito e app (stessa versione su AAB e TestFlight).
+
 ### Gioca: gettoni e giostra dei giochi (25/11)
 
 **Stato:** ramo `claude/gestioni-giochi-carosello-8d958b`, verso il ramo fisso di staging. Solo app (niente SQL).

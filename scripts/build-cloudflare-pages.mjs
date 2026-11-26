@@ -102,7 +102,8 @@ const RUNTIME_FILES = [
   'noi-v2.css',
   'oggi-look.js',
   // Il vostro cielo (Premi Sintonia V2): the sky and its stars.
-  'sky.js',
+  'oggi-fx.js',
+  'think-reward.js',
   'assets/data/stars-bsc5-v1.json',
   'oggi-look.css',
   'state-system.css',
