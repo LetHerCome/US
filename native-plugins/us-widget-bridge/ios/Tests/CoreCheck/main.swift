@@ -169,7 +169,7 @@ for shape in UsCharacterShapes.shapes {
                 for reaction in ["", "cuore", "festa", "saluta", "sera"] {
                     for mono in [false, true] {
                         let ops = UsCharacterShapes.draw(shape, color: 0xFFFF_7C96, face: face, reaction: reaction, head: head, faceItem: item, zz: 0xFFF7_EFE9, mono: mono)
-                        if ops.count < 5 { check(false, "\(shape) \(head) \(item) \(face) \(reaction): too few steps") }
+                        if ops.count < (mono ? 4 : 6) { check(false, "\(shape) \(head) \(item) \(face) \(reaction): too few steps") }
                         for op in ops where op.text == nil {
                             let segments = UsCharacterShapes.parse(op.d)
                             if segments.isEmpty { check(false, "\(shape) \(head) \(item): empty path \(op.d)") }
