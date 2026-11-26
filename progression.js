@@ -273,7 +273,7 @@ const ITEM_COLOR = Object.freeze({
   accent: { orchidea: '#D98BE0', cherry: '#F0566C', champagne: '#E6C78E', ice: '#9FD2FF' },
   oggi_theme: { moonlight: '#5B6CC8', seasonal: '#E0A050' },
   oggi_effect: { hearts: '#FF7C96', petals: '#FF8BA8', dandelions: '#F4EEE6', snow: '#CFE3FF', leaves: '#D27A3E', shooting: '#A98BFF', lanterns: '#F3B76E', memories: '#FFE2D6' },
-  effect: { pulse: '#FF7C96', constellation: '#A98BFF', shimmer: '#E8E2F0' },
+  effect: { pulse: '#FF7C96', constellation: '#A98BFF', duo: '#D98BE0' },
   countdown: { aurora: '#F3B76E', orbit: '#F3B76E', chrome: '#C9C3D4' }
 });
 // The free look of the three device slots that have no reward row: choosing
