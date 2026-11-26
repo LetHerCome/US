@@ -14,6 +14,18 @@
 - **Lasciato per te** è una busta di carta con la ceralacca, bordata nel colore di chi scrive. **Ricordi** sono polaroid col nastro di chi ha caricato la foto. **Post-it** di carta girati appena sulla carta del widget; **Lavagna** con la matita. Lavagna e Post-it arrivano anche in 4x2 (il Post-it medio mostra gli ultimi due, uno a testa).
 - Anteprime nuove nella lista dei widget del telefono e tessere nuove in Impostazioni › Widget.
 - iPhone e blocca schermo: stessa tavola approvata, ancora da fare (i dati dei personaggi arrivano già anche all'estensione iOS).
+### Intro col personaggio e correzioni (26/11)
+
+**Stato:** ramo `claude/premi-fase5-countdown-temi`, verso staging. Tavola «L'intro col tuo personaggio» (https://claude.ai/artifact/5bU5oAjgf9osRX8aumr1z4) approvata: «Sì, vai al codice». Nessuna migrazione.
+
+**Cosa cambia:**
+- **Intro**: subito dopo il primo «Entra in US», su Oggi, il tuo personaggio ti porta in giro in otto tappe (benvenuto, domanda di oggi, Ti penso, Noi, Ricordi, Gioca, Profilo e Impostazioni, il logo che si apre nella barra dei personaggi e nel vostro angolo). Illumina la cosa vera, una frase, Avanti; «Salta» sempre. Il personaggio dell'altra persona dice due battute. Una volta per persona su ogni telefono, non per chi rientra su un telefono nuovo. **Chi ha già l'app (i beta tester)** la vede una volta da sola col primo avvio dopo l'aggiornamento, su Oggi, quando siete in due e non c'è niente aperto (founder, 26/11). «Rivedi l'intro» nel Profilo. Mentre c'è, il fumetto di «US vi ricorda» aspetta.
+- Chi crea la coppia e aspetta l'altra persona vede una riga del suo personaggio nella schermata del codice.
+- **Premi**: le miniature dei temi di Oggi sono le anteprime vere (prima erano sfumature uguali).
+- **Fluidità**: Pellicola e Ora d'oro senza fusione di colore sugli strati che si muovono (Pellicola con un effetto da ~48 a ~58 fps su un telefono modesto); gli alberi di Stagioni diventano un'immagine una volta sola.
+- **Eventi di Noi**: l'ora si scrive come nel calendario (i due punti da soli, «2130» = 21:30); un'ora sbagliata viene detta.
+- **Oggi senza foto sui telefoni bassi**: resta solo «Aggiungi un ricordo», non copre più countdown e domanda.
+- «Torna a Oggi» di Foto a fuoco era invisibile ma raggiungibile da tastiera e lettore di schermo: ora è nascosto davvero.
 
 ### Premi, fase 5: temi di Oggi e countdown (26/11)
 

@@ -133,7 +133,7 @@
     function maybeSay() {
       clearTimeout(showTimer);
       showTimer = setTimeout(async () => {
-        if (d.hidden || !me() || muted) return;
+        if (d.hidden || !me() || muted || w.UsIntro?.active?.()) return;
         if (!$('home')?.classList.contains('active')) return;
         if (d.body?.getAttribute?.('data-us-surface') === 'open') return;
         if (!w.UsAngolo?.parla) return;

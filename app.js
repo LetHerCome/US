@@ -2308,8 +2308,11 @@ function layoutOggiEmptyState(){
     const rect=el&&!el.hidden?el.getBoundingClientRect():null;
     if(rect?.height)bottom=Math.min(bottom,rect.top-box.top-gap);
   }
-  empty.classList.remove('is-compact');
+  empty.classList.remove('is-compact','is-tiny');
   if(empty.offsetHeight>bottom-top)empty.classList.add('is-compact');
+  // Very short phones (320x568) with a countdown: even compact it covered the time and the
+  // daily card. Only the button stays; the invitation says the same thing (26/11/2026).
+  if(empty.offsetHeight>bottom-top)empty.classList.add('is-tiny');
   const half=empty.offsetHeight/2,preferred=box.height*.48;
   const center=top+half<=bottom-half?Math.min(Math.max(preferred,top+half),bottom-half):(top+bottom)/2;
   empty.style.top=`${Math.round(center)}px`;

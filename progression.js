@@ -326,7 +326,13 @@ function artMarkup(item, big = false) {
   if (cat === 'ti_penso') return `<span class="us-cos-think" data-think="${esc(id)}"${id === 'letter' ? ` style="--art:url('${REWARD_ART}us-think-letter-closed-v1.webp')"` : ''}><i></i><i></i><i></i></span>`;
   if (cat === 'app_icon') return `<span class="us-cos-acc us-cos-icon" data-icon="${esc(id)}" style="--art:url('${REWARD_ART}us-app-icon-${esc(id)}-v1.webp')"></span>`;
   if (cat === 'pet_accessory') return `<span class="us-cos-acc" data-acc="${esc(id)}" style="--art:url('${esc(accessoryArt(id))}')"></span>`;
-  if (cat === 'oggi_theme') return `<span class="mini" data-theme="${esc(id)}">${miniCount()}</span>`;
+  if (cat === 'oggi_theme') {
+    // Temi e countdown (26/11/2026): the tile is the real preview of the theme (the trees, the
+    // sea, the film stamp), as the gallery paints it; the plain gradient only without oggi-look.js.
+    const real = window.USOggiLook?.previewMarkup?.('theme', id);
+    if (real) return `<span class="mini us-progression-reward-preview" data-theme="${esc(id)}">${real}</span>`;
+    return `<span class="mini" data-theme="${esc(id)}">${miniCount()}</span>`;
+  }
   if (cat === 'oggi_effect') return `<span class="mini">${id !== 'none' && FX.has(id) ? `<span class="us-oggi-fx mini-fx" data-fx="${esc(id)}" data-fx-scale="0.5"></span>` : ''}${miniCount()}</span>`;
   if (cat === 'theme') {
     const [night, glow] = ATM[id] || ATM.us;

@@ -1120,3 +1120,7 @@ html .auth-overlay .us-ob-step :is(.us-ob-shapes,.us-ob-colors){order:3}
 html .auth-overlay #usOnboarding .us-ob-shapes button.us-ob-shape,html .auth-overlay .us-ob-shapes button.us-ob-shape,.us-setup .us-ob-shapes button.us-ob-shape{width:auto;min-width:58px;min-height:66px;margin:0;padding:8px 6px 6px;flex:0 0 auto;border-radius:16px;font:600 11.5px/1.2 var(--us-font-ui);box-shadow:none}
 #mc3Waiting #mc3WaitDuo{order:0;margin:0 0 6px}
 .us-tour-vis .us-tour-char svg{width:100%;height:auto}
+
+/* L'intro col tuo personaggio (26/11/2026): while you wait alone, your character says one line. */
+.us-ob-wait-say{position:relative;max-width:280px;margin:6px auto 4px;padding:10px 14px;border-radius:16px;background:#fbf4ee;color:#241a20;font:600 14px/1.38 var(--us-font-ui,'Figtree',sans-serif);text-align:center}
+.us-ob-wait-say::before{content:"";position:absolute;left:50%;top:-6px;width:12px;height:12px;margin-left:-6px;border-radius:2px;background:inherit;transform:rotate(45deg)}

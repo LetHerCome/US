@@ -482,7 +482,7 @@
       if (!d || d.hidden || !w.usProfile?.id) return;
       if (!d.getElementById('home')?.classList.contains('active')) return;
       const level = levelNow();
-      const busy = !paired() || !level || d.body?.getAttribute?.('data-us-surface') === 'open';
+      const busy = !paired() || !level || d.body?.getAttribute?.('data-us-surface') === 'open' || Boolean(w.UsIntro?.active?.());
       if (busy) { if (tries < 12) maybePeek(tries + 1); return; }
       if (isola()?.getAttribute('aria-expanded') === 'true') return;
       const seen = readSeen();

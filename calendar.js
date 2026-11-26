@@ -1476,6 +1476,8 @@ async function openCalendarEntry(entryId, { inPlace = false } = {}) {
   openDetail(entryId);
 }
 
+// Date e numeri (26/11/2026): the event editor of Noi types its hour the same way.
+window.UsQuickTime = Object.freeze({ normalize: normalizeQuickTime, mask: maskTimeField });
 window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, createForIdeaDate: createCalendarEntryForIdeaDate, cancelIdeaPick: clearIdeaPick, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
 window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth,readRange:readNoiRange,freeEvenings:noiFreeEvenings});
 window.openCalendarSurface = openCalendarSurface;
