@@ -184,7 +184,7 @@ test('W1 Foto & Noi e Ti penso: taglie, tocchi e link uguali ad Android', () => 
   const bundle = read(`${EXT}/UsWidgetsBundle.swift`);
   assert.match(bundle, /@main/);
   // Widget del redesign (26/11/2026): the same nine as Android, then the iOS 18 control.
-  assert.match(bundle, /UsPhotoWidget\(\)\s+UsThinkWidget\(\)\s+UsDailyWidget\(\)\s+UsStatusWidget\(\)\s+UsNoiWidget\(\)\s+UsMessageWidget\(\)\s+UsMemoriesWidget\(\)\s+UsLavagnaWidget\(\)\s+UsPostitWidget\(\)\s+if #available\(iOSApplicationExtension 18\.0, \*\) \{\s+UsThinkControl\(\)/);
+  assert.match(bundle, /UsPhotoWidget\(\)\s+UsThinkWidget\(\)\s+UsDailyWidget\(\)\s+UsStatusWidget\(\)\s+UsNoiWidget\(\)\s+UsMessageWidget\(\)\s+UsMemoriesWidget\(\)\s+UsLavagnaWidget\(\)\s+UsPostitWidget\(\)\s+if #available\(iOS 18\.0, \*\) \{\s+UsThinkControl\(\)/);
   const photo = read(`${EXT}/UsPhotoWidget.swift`);
   assert.match(photo, /widgetKind\("photo"\)/);
   assert.match(photo, /\.supportedFamilies\(\[\.systemSmall, \.systemMedium, \.systemLarge, \.accessoryCircular, \.accessoryInline\]\)/);
@@ -194,7 +194,7 @@ test('W1 Foto & Noi e Ti penso: taglie, tocchi e link uguali ad Android', () => 
   const think = read(`${EXT}/UsThinkWidget.swift`);
   assert.match(think, /widgetKind\("think"\)/);
   assert.match(think, /\.supportedFamilies\(\[\.systemSmall, \.systemMedium, \.accessoryCircular, \.accessoryInline\]\)/);
-  assert.match(think, /if #available\(iOSApplicationExtension 17\.0, \*\) \{\s*if model\.canSend \{\s*Button\(intent: UsThinkIntent\(\)\)/);
+  assert.match(think, /if #available\(iOS 17\.0, \*\) \{\s*if model\.canSend \{\s*Button\(intent: UsThinkIntent\(\)\)/);
   assert.match(think, /content\.widgetURL\(UsWidgetShared\.openURL\("think"\)\)/, 'iOS 16 e non collegato: apre US');
   assert.match(think, /static var openAppWhenRun = false/);
   assert.match(think, /ControlWidgetButton\(action: UsThinkIntent\(\)\)/, 'il Controllo «Ti penso» di iOS 18');

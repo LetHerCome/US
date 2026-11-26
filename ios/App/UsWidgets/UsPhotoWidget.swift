@@ -149,7 +149,7 @@ struct UsPhotoWidgetView: View {
     private func tintedPhoto(_ photo: UIImage) -> some View {
         let image = Image(uiImage: photo).resizable()
         Group {
-            if #available(iOSApplicationExtension 18.0, *) {
+            if #available(iOS 18.0, *) {
                 image.widgetAccentedRenderingMode(.fullColor)
             } else {
                 image

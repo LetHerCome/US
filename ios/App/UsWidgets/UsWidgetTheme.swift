@@ -232,7 +232,7 @@ extension View {
     /// (required there), a plain background on iOS 16.
     @ViewBuilder
     func usWidgetBackground<Background: View>(@ViewBuilder _ background: () -> Background) -> some View {
-        if #available(iOSApplicationExtension 17.0, *) {
+        if #available(iOS 17.0, *) {
             containerBackground(for: .widget) { background() }
         } else {
             self.background(background())
@@ -242,7 +242,7 @@ extension View {
     /// iOS 17 insets widget content by the system margins; iOS 16 does not, so the same 16 points by hand.
     @ViewBuilder
     func usLegacyContentPadding() -> some View {
-        if #available(iOSApplicationExtension 17.0, *) {
+        if #available(iOS 17.0, *) {
             self
         } else {
             padding(16)

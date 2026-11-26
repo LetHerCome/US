@@ -55,7 +55,7 @@ struct UsThinkProvider: TimelineProvider {
     }
 }
 
-@available(iOSApplicationExtension 17.0, *)
+@available(iOS 17.0, *)
 struct UsThinkIntent: AppIntent {
     static var title: LocalizedStringResource = "Ti penso"
     static var description = IntentDescription("Manda un Ti penso alla tua persona.")
@@ -86,7 +86,7 @@ struct UsThinkWidgetView: View {
 
     @ViewBuilder
     private var tappable: some View {
-        if #available(iOSApplicationExtension 17.0, *) {
+        if #available(iOS 17.0, *) {
             if model.canSend {
                 Button(intent: UsThinkIntent()) { content }
                     .buttonStyle(.plain)
@@ -195,7 +195,7 @@ struct UsThinkWidget: Widget {
 /// Il Controllo «Ti penso» (iOS 18; tavola del blocca schermo): on the lock
 /// screen in place of the torch, in Control Centre or on the Action button,
 /// one press and the heart goes, without opening US.
-@available(iOSApplicationExtension 18.0, *)
+@available(iOS 18.0, *)
 struct UsThinkControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "us.control.think") {

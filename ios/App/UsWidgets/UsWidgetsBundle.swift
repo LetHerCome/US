@@ -17,7 +17,7 @@ struct UsWidgetsBundle: WidgetBundle {
         UsMemoriesWidget()
         UsLavagnaWidget()
         UsPostitWidget()
-        if #available(iOSApplicationExtension 18.0, *) {
+        if #available(iOS 18.0, *) {
             UsThinkControl()
         }
     }
