@@ -42,6 +42,9 @@
 		B1D6E7000000000000000037 /* art_think_m_night.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000036 /* art_think_m_night.webp */; };
 		B1D6E7000000000000000039 /* grain_tile.png in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000038 /* grain_tile.png */; };
 		B1D6E7000000000000000002 /* UsWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000001 /* UsWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B1D6E700000000000000003B /* UsCharacterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000003A /* UsCharacterView.swift */; };
+		B1D6E700000000000000003D /* UsCardWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000003C /* UsCardWidgets.swift */; };
+		B1D6E700000000000000003F /* UsCharacterShapes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000003E /* UsCharacterShapes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -86,6 +89,9 @@
 		B1D6E7000000000000000034 /* art_think_m.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_think_m.webp; sourceTree = "<group>"; };
 		B1D6E7000000000000000036 /* art_think_m_night.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_think_m_night.webp; sourceTree = "<group>"; };
 		B1D6E7000000000000000038 /* grain_tile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = grain_tile.png; sourceTree = "<group>"; };
+		B1D6E700000000000000003A /* UsCharacterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsCharacterView.swift; sourceTree = "<group>"; };
+		B1D6E700000000000000003C /* UsCardWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsCardWidgets.swift; sourceTree = "<group>"; };
+		B1D6E700000000000000003E /* UsCharacterShapes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsCharacterShapes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -180,6 +186,8 @@
 				B1D6E7000000000000000016 /* UsPhotoWidget.swift */,
 				B1D6E7000000000000000018 /* UsThinkWidget.swift */,
 				B1D6E700000000000000001A /* UsThinkSender.swift */,
+				B1D6E700000000000000003C /* UsCardWidgets.swift */,
+				B1D6E700000000000000003A /* UsCharacterView.swift */,
 				B1D6E7000000000000000006 /* Info.plist */,
 				B1D6E7000000000000000007 /* UsWidgets.entitlements */,
 				B1D6E7000000000000000005 /* Resources */,
@@ -213,6 +221,7 @@
 				B1D6E7000000000000000020 /* UsWidgetStore.swift */,
 				B1D6E7000000000000000022 /* UsWidgetCredentials.swift */,
 				B1D6E7000000000000000024 /* UsWidgetModels.swift */,
+				B1D6E700000000000000003E /* UsCharacterShapes.swift */,
 			);
 			name = Core;
 			path = "../../native-plugins/us-widget-bridge/ios/Sources/UsWidgetBridgePlugin/Core";
@@ -364,6 +373,9 @@
 				B1D6E7000000000000000021 /* UsWidgetStore.swift in Sources */,
 				B1D6E7000000000000000023 /* UsWidgetCredentials.swift in Sources */,
 				B1D6E7000000000000000025 /* UsWidgetModels.swift in Sources */,
+				B1D6E700000000000000003F /* UsCharacterShapes.swift in Sources */,
+				B1D6E700000000000000003D /* UsCardWidgets.swift in Sources */,
+				B1D6E700000000000000003B /* UsCharacterView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

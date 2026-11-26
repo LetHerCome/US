@@ -4,24 +4,65 @@ import SwiftUI
 import UIKit
 import WidgetKit
 
-/// Pastello (light) and Midnight (dark), the colours of the Android widgets
-/// (values/colors.xml, values-night/colors.xml), picked by the phone's theme.
+/// Widget del redesign (founder, 26/11/2026; tavola Hkj3ojVe3bwEHfg9XeJf6A):
+/// the Quaderno's paper with the phone's light theme, the warm night of the
+/// app with the dark one (giorno.css, colori.css); the couple's colours live
+/// in the things, set from the snapshot. The same tokens as the Android
+/// widgets (res/values/colors.xml and values-night).
 enum UsPalette {
-    static let rosa = Color(red: 1, green: 124 / 255, blue: 150 / 255)
-    static let lilla = Color(red: 169 / 255, green: 139 / 255, blue: 1)
-    static let latte = Color(red: 247 / 255, green: 239 / 255, blue: 233 / 255)
-    static let pastelInk = Color(red: 26 / 255, green: 16 / 255, blue: 32 / 255)
-    static let pastelSub = Color(red: 91 / 255, green: 74 / 255, blue: 99 / 255)
-    static let cream = Color(red: 251 / 255, green: 243 / 255, blue: 236 / 255)
-    static let night = Color(red: 20 / 255, green: 12 / 255, blue: 20 / 255)
+    static let latte = Color(argb: 0xFFF7_EFE9)
+    static let inkDay = Color(argb: 0xFF23_1B1D)
+    static let ceralacca = Color(argb: 0xFFB8_452F)
+    static let paper = Color(argb: 0xFFF3_ECE1)
+    static let polaroid = Color(argb: 0xFFFB_F7F0)
+    static let paperInk = Color(argb: 0xFF1A_1020)
 
-    static func ink(_ scheme: ColorScheme) -> Color { scheme == .dark ? latte : pastelInk }
-    static func sub(_ scheme: ColorScheme) -> Color { scheme == .dark ? latte.opacity(0.78) : pastelSub }
-    /// Foto & Noi (founder, 02/11, choice B): the photo fades into the cream, or into the night.
-    static func fade(_ scheme: ColorScheme) -> LinearGradient {
-        let end = scheme == .dark ? night.opacity(0.9) : cream.opacity(0.92)
-        return LinearGradient(stops: [.init(color: end.opacity(0), location: 0.45), .init(color: end, location: 1)],
-                              startPoint: .top, endPoint: .bottom)
+    static func surface(_ scheme: ColorScheme) -> Color { scheme == .dark ? Color(argb: 0xFF12_0D11) : Color(argb: 0xFFFB_F7F0) }
+    /// La lavagna: a real blackboard at night, carta by day.
+    static func board(_ scheme: ColorScheme) -> Color { scheme == .dark ? Color(argb: 0xFF14_1416) : paper }
+    static func ink(_ scheme: ColorScheme) -> Color { scheme == .dark ? latte : inkDay }
+    static func sub(_ scheme: ColorScheme) -> Color { scheme == .dark ? latte.opacity(0.64) : Color(argb: 0xFF6B_5F5A) }
+    static func line(_ scheme: ColorScheme) -> Color { scheme == .dark ? latte.opacity(0.08) : inkDay.opacity(0.10) }
+    static func filo(_ scheme: ColorScheme) -> Color { scheme == .dark ? latte.opacity(0.38) : ceralacca }
+    /// A widget's label speaks in the page's colour: yours at night, ceralacca on paper.
+    static func label(_ scheme: ColorScheme, _ me: UsWidgetModels.Person) -> Color {
+        scheme == .dark ? Color(argb: me.night) : ceralacca
+    }
+    /// The person's colour on this card: bright at night, dusty on paper.
+    static func of(_ person: UsWidgetModels.Person, _ scheme: ColorScheme) -> Color {
+        Color(argb: scheme == .dark ? person.night : person.day)
+    }
+    /// The main button and the Ti penso's heart: the two of you at night, ceralacca on paper.
+    static func blend(_ me: UsWidgetModels.Person, _ them: UsWidgetModels.Person, _ scheme: ColorScheme, alwaysTwo: Bool = false) -> LinearGradient {
+        if scheme == .dark || alwaysTwo {
+            return LinearGradient(colors: [of(me, scheme), of(them, scheme)], startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+        return LinearGradient(colors: [ceralacca, ceralacca], startPoint: .leading, endPoint: .trailing)
+    }
+    static func onPill(_ scheme: ColorScheme) -> Color { scheme == .dark ? paperInk : polaroid }
+    /// The veil at the bottom of the photo, as on Oggi: paper by day, night in the dark, never full.
+    static func velo(_ scheme: ColorScheme) -> LinearGradient {
+        let end = scheme == .dark ? Color(argb: 0xFF12_0D11) : polaroid
+        return LinearGradient(stops: [.init(color: end.opacity(scheme == .dark ? 0.86 : 0.94), location: 0),
+                                      .init(color: end.opacity(scheme == .dark ? 0.45 : 0.55), location: 0.32),
+                                      .init(color: end.opacity(0), location: 0.62)],
+                              startPoint: .bottom, endPoint: .top)
+    }
+    /// The board's papers (couple-notes.css), the same in both themes.
+    static func postit(_ color: String) -> Color {
+        switch color {
+        case "pink": return Color(argb: 0xFFFF_C2CF)
+        case "blue": return Color(argb: 0xFFBF_E3F5)
+        case "green": return Color(argb: 0xFFC9_ECC0)
+        default: return Color(argb: 0xFFF6_E27A)
+        }
+    }
+}
+
+extension Color {
+    init(argb: UInt32) {
+        self.init(.sRGB, red: Double((argb >> 16) & 255) / 255, green: Double((argb >> 8) & 255) / 255,
+                  blue: Double(argb & 255) / 255, opacity: Double((argb >> 24) & 255) / 255)
     }
 }
 
@@ -57,20 +98,8 @@ enum UsFonts {
     }
 }
 
-/// The illustrations of the Android widgets (drawable-nodpi and drawable-night-nodpi,
-/// the same WebP files), bundled in the extension.
 enum UsArt {
-    static func image(_ name: String, _ scheme: ColorScheme) -> UIImage? {
-        let file = scheme == .dark ? name + "_night" : name
-        guard let path = Bundle.main.path(forResource: file, ofType: "webp") else { return nil }
-        return UIImage(contentsOfFile: path)
-    }
-
-    static var grain: UIImage? {
-        Bundle.main.path(forResource: "grain_tile", ofType: "png").flatMap { UIImage(contentsOfFile: $0) }
-    }
-
-    /// A private photo from the App Group, decoded small: widgets have little memory.
+    /// A private picture from the App Group, decoded small: widgets have little memory.
     static func downsampled(_ data: Data?, maxPixels: CGFloat) -> UIImage? {
         guard let data = data, let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         let options: [CFString: Any] = [
@@ -84,41 +113,117 @@ enum UsArt {
     }
 }
 
-/// The heart of the Android widgets (us_widget_think_heart_empty.xml,
-/// us_widget_pastel_heart.xml): "M12,20.5s-7.5,-4.4 -7.5,-10.1A4.3,4.3 0,0 1,12 7.6
-/// a4.3,4.3 0,0 1,7.5 2.8c0,5.7 -7.5,10.1 -7.5,10.1z" on a 24-point box.
-struct UsHeartShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        let scale = min(rect.width, rect.height) / 24
-        let dx = rect.midX - 12 * scale
-        let dy = rect.midY - 12 * scale
-        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: dx + x * scale, y: dy + y * scale) }
-        var path = Path()
-        path.move(to: p(12, 20.5))
-        path.addCurve(to: p(4.5, 10.4), control1: p(12, 20.5), control2: p(4.5, 16.1))
-        // The two lobes: arcs of radius 4.3 (centres worked out from the SVG arc flags).
-        arc(&path, center: p(8.7994, 10.4716), radius: 4.3 * scale, from: 180.95, to: 318.11)
-        arc(&path, center: p(15.2006, 10.4716), radius: 4.3 * scale, from: 221.89, to: 359.05)
-        path.addCurve(to: p(12, 20.5), control1: p(19.5, 16.1), control2: p(12, 20.5))
-        path.closeSubpath()
-        return path
-    }
+/// SVG path data drawn as a SwiftUI path (UsCharacterShapes.parse), scaled from its own units.
+struct UsPathShape: Shape {
+    let data: String
+    /// The units of the drawing (the Phosphor icons are 256).
+    var units: CGFloat = 256
 
-    /// An arc drawn with cubic curves, angles in degrees growing clockwise on screen.
-    private func arc(_ path: inout Path, center: CGPoint, radius: CGFloat, from: Double, to: Double) {
-        let segments = 2
-        let step = (to - from) / Double(segments) * .pi / 180
-        var angle = from * .pi / 180
-        let k = CGFloat(4.0 / 3.0 * tan(step / 4)) * radius
-        for _ in 0..<segments {
-            let next = angle + step
-            let start = CGPoint(x: center.x + radius * CGFloat(cos(angle)), y: center.y + radius * CGFloat(sin(angle)))
-            let end = CGPoint(x: center.x + radius * CGFloat(cos(next)), y: center.y + radius * CGFloat(sin(next)))
-            let c1 = CGPoint(x: start.x - k * CGFloat(sin(angle)), y: start.y + k * CGFloat(cos(angle)))
-            let c2 = CGPoint(x: end.x + k * CGFloat(sin(next)), y: end.y - k * CGFloat(cos(next)))
-            path.addCurve(to: end, control1: c1, control2: c2)
-            angle = next
+    func path(in rect: CGRect) -> Path {
+        let scale = min(rect.width, rect.height) / units
+        let dx = rect.midX - units * scale / 2, dy = rect.midY - units * scale / 2
+        return UsPaths.path(data, transform: CGAffineTransform(a: scale, b: 0, c: 0, d: scale, tx: dx, ty: dy))
+    }
+}
+
+enum UsPaths {
+    /// Phosphor heart (fill), the Ti penso's heart (founder, 24/11/2026).
+    static let heart = "M128 224 C128 224 24 168 24 102 A54 54 0 0 1 128 81.4 A54 54 0 0 1 232 102 C232 168 128 224 128 224 Z"
+    /// Phosphor pencil-simple (fill), the Lavagna's pencil.
+    static let pencil = "M227.31 73.37 L182.63 28.68 A16 16 0 0 0 160 28.68 L36.69 152 A15.86 15.86 0 0 0 32 163.31 V208 A16 16 0 0 0 48 224 H92.69 A15.86 15.86 0 0 0 104 219.31 L227.31 96 A16 16 0 0 0 227.31 73.37 Z M92.69 208 H48 V163.31 L136 75.31 L180.69 120 Z M192 108.68 L147.31 64 L171.31 40 L216 84.68 Z"
+
+    static func path(_ data: String, transform: CGAffineTransform = .identity) -> Path {
+        var path = Path()
+        for segment in UsCharacterShapes.parse(data) {
+            switch segment {
+            case let .move(x, y): path.move(to: CGPoint(x: x, y: y))
+            case let .line(x, y): path.addLine(to: CGPoint(x: x, y: y))
+            case let .quad(x1, y1, x, y): path.addQuadCurve(to: CGPoint(x: x, y: y), control: CGPoint(x: x1, y: y1))
+            case let .cubic(x1, y1, x2, y2, x, y):
+                path.addCurve(to: CGPoint(x: x, y: y), control1: CGPoint(x: x1, y: y1), control2: CGPoint(x: x2, y: y2))
+            case let .arc(cx, cy, rx, ry, start, sweep):
+                path.addRelativeArc(center: .zero, radius: 1, startAngle: .degrees(start), delta: .degrees(sweep),
+                                    transform: CGAffineTransform(a: rx, b: 0, c: 0, d: ry, tx: cx, ty: cy))
+            case .close: path.closeSubpath()
+            }
         }
+        return transform.isIdentity ? path : path.applying(transform)
+    }
+}
+
+/// The Ti penso's heart, from your colour to theirs (the only place where the two blend).
+struct UsBlendedHeart: View {
+    let me: UsWidgetModels.Person
+    let them: UsWidgetModels.Person
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        UsPathShape(data: UsPaths.heart)
+            .fill(UsPalette.blend(me, them, scheme, alwaysTwo: true))
+            .widgetAccentable()
+    }
+}
+
+/// «Rispondi», «Disegna»: the two of you blended at night, ceralacca on paper.
+struct UsPill: View {
+    let text: String
+    let me: UsWidgetModels.Person
+    let them: UsWidgetModels.Person
+    var icon: String?
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if let icon = icon { UsPathShape(data: icon).fill(UsPalette.onPill(scheme)).frame(width: 14, height: 14) }
+            Text(verbatim: text).font(UsFonts.figtree(13, bold: true)).foregroundColor(UsPalette.onPill(scheme))
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 34)
+        .background(Capsule().fill(UsPalette.blend(me, them, scheme)))
+    }
+}
+
+/// A widget's small label in the page's colour.
+struct UsLabel: View {
+    let text: String
+    let me: UsWidgetModels.Person
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        Text(verbatim: text).font(UsFonts.figtree(12, bold: true)).foregroundColor(UsPalette.label(scheme, me)).lineLimit(1)
+    }
+}
+
+/// A strip of tape in the colour of whoever left the thing.
+struct UsTape: View {
+    let color: Color
+    var body: some View {
+        RoundedRectangle(cornerRadius: 2).fill(color).opacity(0.8).frame(width: 46, height: 16)
+    }
+}
+
+/// Lasciato per te: a paper envelope with the ceralacca seal, its edge in the colour of whoever wrote.
+struct UsEnvelope: View {
+    let edge: Color
+
+    var body: some View {
+        GeometryReader { box in
+            let w = box.size.width, h = box.size.height
+            ZStack(alignment: .top) {
+                RoundedRectangle(cornerRadius: 4).fill(UsPalette.paper)
+                RoundedRectangle(cornerRadius: 4).stroke(UsPalette.inkDay.opacity(0.18), lineWidth: 1)
+                Path { p in
+                    p.move(to: CGPoint(x: 2, y: 3))
+                    p.addLine(to: CGPoint(x: w / 2, y: h * 0.56))
+                    p.addLine(to: CGPoint(x: w - 2, y: 3))
+                }
+                .stroke(UsPalette.inkDay.opacity(0.22), lineWidth: 1.4)
+                Rectangle().fill(edge).frame(height: max(4, h * 0.06))
+                Circle().fill(UsPalette.ceralacca).frame(width: h * 0.32, height: h * 0.32).offset(y: h * 0.56 - h * 0.16)
+                UsPathShape(data: UsPaths.heart).fill(UsPalette.paper).frame(width: h * 0.17, height: h * 0.17).offset(y: h * 0.56 - h * 0.085)
+            }
+        }
+        .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
     }
 }
 
@@ -127,19 +232,17 @@ extension View {
     /// (required there), a plain background on iOS 16.
     @ViewBuilder
     func usWidgetBackground<Background: View>(@ViewBuilder _ background: () -> Background) -> some View {
-        if #available(iOSApplicationExtension 17.0, *) {
+        if #available(iOS 17.0, *) {
             containerBackground(for: .widget) { background() }
         } else {
             self.background(background())
         }
     }
-}
 
-extension View {
     /// iOS 17 insets widget content by the system margins; iOS 16 does not, so the same 16 points by hand.
     @ViewBuilder
     func usLegacyContentPadding() -> some View {
-        if #available(iOSApplicationExtension 17.0, *) {
+        if #available(iOS 17.0, *) {
             self
         } else {
             padding(16)
@@ -147,11 +250,7 @@ extension View {
     }
 }
 
-/// The light grain over the illustrations, as on Android (7%).
-struct UsGrain: View {
-    var body: some View {
-        if let grain = UsArt.grain {
-            Image(uiImage: grain).resizable(resizingMode: .tile).opacity(0.07)
-        }
-    }
+/// When a widget changes by itself next: the earliest of the moments given, else Rome's midnight.
+func usNextChange(_ dates: [Date?], now: Date) -> Date {
+    ([UsWidgetModels.nextRomeMidnight(now)] + dates.compactMap { $0 }.filter { $0 > now }).min() ?? UsWidgetModels.nextRomeMidnight(now)
 }

@@ -2,6 +2,15 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Widget iPhone col redesign e blocca schermo (26/11)
+
+**Stato:** ramo `claude/widget-redesign-ios` (sopra quello Android). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.
+
+**Cosa cambia:**
+- Su iPhone gli stessi nove widget di Android (prima c'erano solo Foto e Ti penso, nello stile vecchio), col foglio di giorno e il nero caldo di notte e i personaggi veri disegnati dall'estensione.
+- **Blocca schermo:** Ti penso e Giorni in un cerchio, Come sta l'altra persona, la Distanza con l'anello della batteria, la busta; rettangoli per Voi due, La domanda, Lasciato per te e Distanza; una riga sopra l'ora (giorni insieme, «Bea ti pensa», «Bea ti ha lasciato una foto»). In una tinta sola, con le sagome dei personaggi.
+- **Il Controllo «Ti penso»** (iOS 18): sul blocca schermo al posto della torcia, nel Centro di Controllo o sul tasto Azione, manda il cuore senza aprire US.
+
 ### Widget Android col redesign (26/11)
 
 **Stato:** ramo `claude/widget-redesign-android-ios-fb63c1`, verso staging. Tavola «US · Widget del redesign» (https://claude.ai/artifact/Hkj3ojVe3bwEHfg9XeJf6A) approvata: «Android ok», poi «tutte okay». Nessuna migrazione. Arriva solo con un AAB nuovo (codice nativo): il web da solo non basta.
