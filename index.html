@@ -418,6 +418,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
       </div>
       <div id="mc3Waiting" data-us-enter="flat" hidden>
         <div class="us-ob-venn" id="mc3WaitDuo" aria-hidden="true"></div>
+        <p class="us-ob-wait-say" id="mc3WaitSay">Manda il codice: quando arriva l’altra persona, vi faccio fare il giro tutti e due.</p>
         <p id="mc3InviteStatus" class="us-inv-st"></p>
         <div id="mc3CodeArea" data-us-enter="flat" hidden>
           <label class="us-auth-field" for="mc3Code" data-us-enter="with-prev"><span>Il nuovo codice</span><textarea id="mc3Code" readonly autocomplete="off" spellcheck="false" rows="2"></textarea><code class="us-inv-code" id="mc3CodeShown" aria-hidden="true" translate="no"></code></label>
@@ -1024,6 +1025,11 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
           <span class="us-setting-main"><b>Suoni e vibrazione</b></span>
           <span class="us-setting-value" id="usFeedbackValue">Attivi</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="intro">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="play"></span></span>
+          <span class="us-setting-main"><b>Rivedi l’intro</b></span>
+          <i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="widgets" hidden>
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="squares-four"></span></span>
           <span class="us-setting-main"><b>Widget</b><small>Sulla schermata Home</small></span>
@@ -1185,7 +1191,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
         <label class="us-event-field"><span>Che cosa?</span><input id="usEventTitleInput" type="text" maxlength="120" placeholder="Il nostro primo concerto" required></label>
         <label class="us-event-field"><span>Quando?</span><input id="usEventDateInput" type="date" required></label>
         <div class="us-event-row">
-          <label class="us-event-field"><span>Ora <i>· facoltativa</i></span><input id="usEventTimeInput" type="time"></label>
+          <label class="us-event-field"><span>Ora <i>· facoltativa</i></span><input id="usEventTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="next" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora, facoltativa"></label>
           <label class="us-event-field"><span>Dove? <i>· facoltativo</i></span><input id="usEventLocationInput" type="text" maxlength="160" placeholder="Milano"></label>
         </div>
         <label class="us-event-field"><span>Una nota <i>· facoltativa</i></span><textarea id="usEventNoteInput" rows="3" maxlength="500" placeholder="Biglietti nella mail"></textarea></label>
@@ -1537,6 +1543,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
 <script defer src="/calendar.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/noi-v2.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/oggi-fx.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/intro.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/think-reward.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/oggi-look.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/navigation.js?v=us-rilascio-20261114-109"></script>

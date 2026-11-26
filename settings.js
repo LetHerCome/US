@@ -1099,6 +1099,8 @@ async function logout(){
 }
 
 async function action(name){
+  // L'intro col tuo personaggio (26/11/2026): it starts again on Oggi.
+  if(name==='intro'){window.usSettingsReturn?.();return window.UsIntro?.start?.({force:true});}
   // Which sheet is open: dc-settings.css gives each one the mockup's blocks.
   const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
   if(name==='relationship-date')return relationshipDateModal();

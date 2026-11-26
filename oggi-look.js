@@ -153,15 +153,54 @@ const SEASON_ART = (() => {
     }
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}"><linearGradient id="n" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#cfe0f5"/></linearGradient><path d="M-10 24C30 12 60 26 100 18C140 10 170 24 210 16C240 10 262 20 290 14V230H-10Z" fill="url(#n)"/><path d="M-10 24C30 12 60 26 100 18C140 10 170 24 210 16C240 10 262 20 290 14" fill="none" stroke="rgba(150,180,220,.6)" stroke-width="1"/></svg>`;
   }
-  function build(season) {
-    const piece = (cls, svg) => `<span class="us-season-${cls}" style="background-image:${img(svg).replace(/"/g, '&quot;')}"></span>`;
-    const top = season === 'spring' || season === 'autumn'
-      ? piece('tl', crown(season, season === 'spring' ? 31 : 53)) + piece('tr', crown(season, season === 'spring' ? 47 : 71))
-      : season === 'winter' ? piece('tl is-frost', frost()) + piece('tr is-frost', frost()) : piece('sun', sun);
-    const sides = season === 'autumn' ? ['l1', 'r1', 'r2'].map((k) => piece(`nut ${k}`, chestnuts())).join('') : '';
-    return `<span class="us-season-art" data-season="${season}">${top}${sides}${piece('ground', ground(season))}</span>`;
+  // The SVGs of a season (built once) and the pixel width each becomes a bitmap at.
+  function pieces(season) {
+    const crowns = season === 'spring' || season === 'autumn';
+    const list = {
+      tl: crowns ? [crown(season, season === 'spring' ? 31 : 53), 640] : season === 'winter' ? [frost(), 520] : [sun, 160],
+      ground: [ground(season), 1100]
+    };
+    if (crowns) list.tr = [crown(season, season === 'spring' ? 47 : 71), 640];
+    if (season === 'winter') list.tr = list.tl;
+    if (season === 'autumn') list.nut = [chestnuts(), 160];
+    return Object.fromEntries(Object.entries(list).map(([key, [svg, px]]) => [key, { svg: img(svg), px, url: '' }]));
   }
-  return (season) => (cache[season] ||= build(season));
+  // Fluidity (26/11/2026): an SVG of ~2000 petals is re-rasterised at every size it is drawn
+  // (the hero, each gallery tile, each Premi tile): opening the gallery cost ~150 ms more on a
+  // modest phone. Each piece is drawn once into a bitmap when the phone is idle; until then the
+  // SVG shows, then every element on screen switches to the bitmap.
+  function rasterize(season, set) {
+    const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 200));
+    for (const [key, piece] of Object.entries(set)) {
+      if (piece.url || piece.busy || typeof document.createElement !== 'function') continue;
+      piece.busy = true;
+      idle(async () => {
+        try {
+          const image = new Image();
+          image.src = piece.svg.slice(5, -2);
+          await image.decode();
+          const canvas = document.createElement('canvas');
+          canvas.width = piece.px;
+          canvas.height = Math.round(piece.px * image.naturalHeight / Math.max(1, image.naturalWidth));
+          canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+          const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+          if (!blob) return;
+          piece.url = `url("${URL.createObjectURL(blob)}")`;
+          for (const el of document.querySelectorAll(`.us-season-art[data-season="${season}"]>[data-piece="${key}"]`)) el.style.backgroundImage = piece.url;
+        } catch (_) { /* the SVG stays: same look, only slower to paint */ } finally { piece.busy = false; }
+      });
+    }
+  }
+  function markup(season) {
+    const set = cache[season] ||= pieces(season);
+    rasterize(season, set);
+    const piece = (key, cls) => `<span class="us-season-${cls}" data-piece="${key}" style="background-image:${(set[key].url || set[key].svg).replace(/"/g, '&quot;')}"></span>`;
+    const top = season === 'spring' || season === 'autumn' ? piece('tl', 'tl') + piece('tr', 'tr')
+      : season === 'winter' ? piece('tl', 'tl is-frost') + piece('tr', 'tr is-frost') : piece('tl', 'sun');
+    const sides = season === 'autumn' ? ['l1', 'r1', 'r2'].map((k) => piece('nut', `nut ${k}`)).join('') : '';
+    return `<span class="us-season-art" data-season="${season}">${top}${sides}${piece('ground', 'ground')}</span>`;
+  }
+  return markup;
 })();
 // Pellicola: today's date stamped like a disposable camera, "26 11 '26" (Rome).
 function filmStamp() {
