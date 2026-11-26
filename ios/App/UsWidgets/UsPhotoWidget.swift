@@ -165,7 +165,8 @@ struct UsPhotoWidgetView: View {
         ZStack {
             UsPalette.surface(scheme)
             if let photo = entry.photo {
-                Image(uiImage: photo).resizable().aspectRatio(contentMode: .fill)
+                // A filled photo never grows past the card (it would push the words out).
+                Color.clear.overlay(Image(uiImage: photo).resizable().aspectRatio(contentMode: .fill)).clipped()
                 UsPalette.velo(scheme)
             }
         }

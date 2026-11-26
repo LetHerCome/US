@@ -309,7 +309,7 @@ struct UsNoiView: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: family == .accessoryCircular ? .center : .topLeading)
         .usLegacyContentPadding()
         .usCard(family)
         .widgetURL(UsWidgetShared.openURL("noi"))
@@ -404,7 +404,7 @@ struct UsMessageView: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: family == .accessoryCircular ? .center : .topLeading)
         .usLegacyContentPadding()
         .usCard(family)
         .widgetURL(UsWidgetShared.openURL(message.destination))
@@ -636,6 +636,7 @@ enum UsSample {
             ] as [String: Any],
             "daily": ["date": today, "state": "your_turn", "question": "Quale piccolo momento vorresti rivivere insieme?"],
             "left": ["kind": "photo", "at": at(-10)],
+            "memories": ["state": "ready", "date": "2025-11-02", "day": today, "label": "I più recenti", "title": "Al bar di Pescara", "count": 4, "stack": 2],
             "lavagna": ["state": "ready", "by": "partner", "at": at(-60)],
             "postit": ["state": "ready", "text": "prenotare la cena di sabato", "color": "yellow", "by": "partner", "more": 2,
                        "second": ["text": "comprare le lucine per il balcone", "color": "pink", "by": "me"]] as [String: Any],

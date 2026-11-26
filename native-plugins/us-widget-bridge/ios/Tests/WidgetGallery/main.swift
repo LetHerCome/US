@@ -50,7 +50,7 @@ func card(_ kind: String, _ size: Size, _ scheme: ColorScheme) -> some View {
     default:
         if kind == "photo", let photo = picture("photo.jpg") {
             ZStack {
-                Image(uiImage: photo).resizable().aspectRatio(contentMode: .fill)
+                Color.clear.overlay(Image(uiImage: photo).resizable().aspectRatio(contentMode: .fill)).clipped()
                 UsPalette.velo(scheme)
             }
         } else {
