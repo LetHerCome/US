@@ -193,7 +193,8 @@ test('bacheca in the app: an error is an error with «Riprova»; Enter opens a t
 
 test('bacheca: the keyboard click opens the sheet, a finger keeps tap, double tap and drag', () => {
   const src = read('bacheca.js');
-  assert.ok(src.includes("if (item) { if (Date.now() - pointerAt > 800) { const n = nodes[Number(item.dataset.ubI)]; if (n) openSheet(n.pin); } return; }"));
+  // La bacheca, fase 3 (27/11/2026): in «fai spazio» the same click picks the thing instead.
+  assert.ok(src.includes("if (Date.now() - pointerAt > 800) { const n = nodes[Number(item.dataset.ubI)]; if (n) { if (room) pick(n.pin); else openSheet(n.pin); } }"));
   assert.ok(src.includes('setTimeout(() => { if (lastTap.id === g.n.pin.id && lastTap.t === t) openSheet(g.n.pin); }, 330);'), 'the tap of a finger as before');
   assert.ok(src.includes("if (!data && failed) {"));
 });
