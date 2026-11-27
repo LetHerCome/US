@@ -1,6 +1,7 @@
 import { cp, mkdir, readFile, readdir, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assetCopyFilter } from './build-asset-filter.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(SCRIPT_DIR, '..');
@@ -99,11 +100,9 @@ const RUNTIME_FILES = [
   'noi-v2.js',
   'noi-v2.css',
   'oggi-look.js',
-  // Il vostro cielo (Premi Sintonia V2): the sky and its stars.
   'oggi-fx.js',
   'intro.js',
   'think-reward.js',
-  'assets/data/stars-bsc5-v1.json',
   'oggi-look.css',
   'state-system.css',
   'auth-first-run.css',
@@ -146,7 +145,7 @@ for (const relative of RUNTIME_FILES) {
   await cp(source, destination);
 }
 
-await cp(path.join(ROOT, 'assets'), path.join(OUTPUT, 'assets'), { recursive: true });
+await cp(path.join(ROOT, 'assets'), path.join(OUTPUT, 'assets'), { recursive: true, filter: assetCopyFilter(ROOT) });
 await cp(path.join(ROOT, 'cloudflare', '_headers'), path.join(OUTPUT, '_headers'));
 
 async function collectFiles(directory, prefix = '') {

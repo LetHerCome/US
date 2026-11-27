@@ -9,11 +9,8 @@ const BRAND = 'assets/brand';
 const NAV_ICONS = ['home', 'moments', 'quiz', 'bond', 'settings', 'stories'];
 
 test('M5E conserva una famiglia SVG vettoriale coerente per il brand precedente', () => {
-  const wordmark = read(`${BRAND}/us-wordmark.svg`);
-  assert.match(wordmark, /viewBox="0 0 112 32"/);
-  assert.match(wordmark, /<path\b/);
-  assert.match(wordmark, /linearGradient\b/);
-  assert.doesNotMatch(wordmark, /<text\b/i, 'il wordmark deve restare un vero asset grafico, non testo font-dependent');
+  // The old gradient wordmark (us-wordmark.svg) was never loaded: removed 27/11/2026.
+  assert.equal(fs.existsSync(path.join(ROOT, BRAND, 'us-wordmark.svg')), false);
 
   NAV_ICONS.forEach((name) => {
     const icon = read(`${BRAND}/us-icon-${name}.svg`);

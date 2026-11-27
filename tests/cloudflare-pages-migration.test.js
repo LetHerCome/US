@@ -53,6 +53,11 @@ test('Cloudflare Pages bundle is a curated host-agnostic PWA', async () => {
   const serviceWorker = await readFile(path.join(OUTPUT, 'service-worker.js'), 'utf8');
   assert.match(serviceWorker, /self\.location\.origin/);
 
+  // Build più leggera (27/11/2026): masters and retired approved art stay out.
+  for (const unshipped of ['assets/source', 'assets/derived/pet', 'assets/derived/runtime/us-icon-settings-128-v1.png', 'assets/data/stars-bsc5-v1.json', 'stories.js']) {
+    assert.equal(await exists(unshipped), false, `must not publish ${unshipped}`);
+  }
+
   const headers = await readFile(path.join(OUTPUT, '_headers'), 'utf8');
   assert.match(headers, /\/service-worker\.js[\s\S]*no-cache, no-store/);
   assert.match(headers, /\/version\.json[\s\S]*no-cache, no-store/);
