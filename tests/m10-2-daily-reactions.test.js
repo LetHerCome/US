@@ -31,16 +31,25 @@ test('1.0 O2: reaction controls only on the partner answer, ♥ and "Mi hai comm
   assert.doesNotMatch(angry.nodes.todayReveal.innerHTML,/data-us-daily-partner-reaction|angry/,'an old "angry" is never shown');
 });
 
-test('1.0 O2: one tap sends set_daily_answer_reaction, the same tap takes it back; only a saved ♥ or cry asks for the push', async () => {
+// I cuori («Resta e cresce», 27/11/2026): the heart stays at the next taps
+// (nothing sent again); it goes only when held ({remove:true}). Cry still toggles.
+test('1.0 O2: one tap sends set_daily_answer_reaction, the heart stays, holding it takes it back; only a saved ♥ or cry asks for the push', async () => {
   const t = installToday();await t.hydrate();
   assert.equal(typeof t.window.setDailyAnswerReaction,'function');
   assert.equal(t.listeners.has('click'),true);
   const click=(reaction)=>t.listeners.get('click')({target:{closest:(sel)=>sel==='[data-daily-reaction]'?{dataset:{dailyReaction:reaction}}:null}});
+  const saves=()=>t.calls.filter(([name])=>name==='set_daily_answer_reaction');
   click('heart');await flush();await flush();
-  assert.deepEqual(t.calls.filter(([name])=>name==='set_daily_answer_reaction').at(-1),['set_daily_answer_reaction',{target_question_id:'q-1',target_reaction:'heart'}]);
+  assert.deepEqual(saves().at(-1),['set_daily_answer_reaction',{target_question_id:'q-1',target_reaction:'heart'}]);
   assert.equal(t.window.todayRevealMeta.my_reaction,'heart');
   click('heart');await flush();await flush();
-  assert.deepEqual(t.calls.filter(([name])=>name==='set_daily_answer_reaction').at(-1),['set_daily_answer_reaction',{target_question_id:'q-1',target_reaction:null}]);
+  assert.equal(saves().length,1,'a second tap keeps the heart: nothing is sent');
+  assert.equal(JSON.stringify(await t.window.setDailyAnswerReaction('heart')),'{"status":"more","count":3}');
+  assert.equal(t.window.todayRevealMeta.my_reaction,'heart');
+  assert.equal((await t.window.setDailyAnswerReaction('cry',{remove:true})).status,'noop','only the reaction given can be taken back');
+  await t.window.setDailyAnswerReaction('heart',{remove:true});
+  assert.deepEqual(saves().at(-1),['set_daily_answer_reaction',{target_question_id:'q-1',target_reaction:null}]);
+  assert.equal(t.window.todayRevealMeta.my_reaction,null);
   assert.equal(await t.window.setDailyAnswerReaction('angry').then((r)=>r.status),'noop','never "arrabbiato"');
   // The server reads the reaction back; taking it back sends nothing.
   assert.deepEqual(t.pushes,[['daily_reaction','q-1']]);

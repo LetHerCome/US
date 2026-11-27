@@ -47,19 +47,14 @@
 .us-nav-think.received .us-nav-think-heart{animation:us-nav-think-beat .9s ease-out}
 @keyframes us-nav-think-beat{0%,100%{transform:scale(1)}25%{transform:scale(1.28)}50%{transform:scale(.94)}75%{transform:scale(1.08)}}
 
-/* The burst (founder, 21/11/2026, «come il like di X»): the heart shrinks
-   away, a disc in your colour opens into a ring in theirs, the heart springs
-   back and seven pairs of dots spray out (app.js usNavHeartTap). */
-.us-nav-think.is-pop .us-nav-think-heart{animation:us-nav-heart-x .8s both}
-@keyframes us-nav-heart-x{0%{transform:scale(1);animation-timing-function:cubic-bezier(.5,0,.9,.5)}12%{transform:scale(0)}22%{transform:scale(0);animation-timing-function:cubic-bezier(.2,.9,.3,1)}48%{transform:scale(1.32);animation-timing-function:cubic-bezier(.45,0,.55,1)}68%{transform:scale(.9);animation-timing-function:cubic-bezier(.45,0,.55,1)}88%{transform:scale(1.05);animation-timing-function:cubic-bezier(.45,0,.55,1)}100%{transform:scale(1)}}
-.us-nav-burst{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
-.us-nav-burst-ring{position:absolute;left:-37px;top:-37px;width:74px;height:74px;box-sizing:border-box;border-radius:50%;border:37px solid var(--us-tu);animation:us-nav-burst-ring .48s .06s both}
-@keyframes us-nav-burst-ring{0%{transform:scale(0);border-width:37px;border-color:var(--us-tu);animation-timing-function:cubic-bezier(.2,.8,.3,1)}28%{transform:scale(1);border-width:37px;border-color:var(--us-partner);animation-timing-function:cubic-bezier(.3,.6,.4,1)}100%{transform:scale(1.06);border-width:0;border-color:var(--us-partner)}}
-.us-nav-burst-dot{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:var(--c);opacity:0;animation:us-nav-burst-dot .55s .2s cubic-bezier(.15,.8,.3,1) both}
-.us-nav-burst-dot.is-small{left:-2px;top:-2px;width:4px;height:4px;animation-delay:.24s}
-@keyframes us-nav-burst-dot{0%{opacity:0;transform:rotate(var(--a)) translateY(-30px) scale(1)}8%{opacity:1}70%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateY(-54px) scale(.2)}}
-:root[data-us-motion="reduced"] :is(.us-nav-think .us-nav-think-heart,.us-nav-burst *){animation:none!important}
-@media (prefers-reduced-motion:reduce){:is(.us-nav-think .us-nav-think-heart,.us-nav-burst *){animation:none!important}}
+/* I cuori (founder, 27/11/2026, prototype «Cuori di US»): rapid taps add up.
+   The heart squashes and springs back at each tap (ui-foundation.js
+   heartSquash), the little hearts fly on one canvas (heartSpray), a glow opens
+   behind it and «×N» shows above it from the 2nd tap (app.js usNavHeartTap). */
+.us-nav-glow{position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--us-tu) 60%,transparent),transparent 70%);opacity:0;pointer-events:none}
+.us-nav-combo{position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);font:italic 600 34px/1 var(--us-font-display);color:var(--us-color-text,#f7efe9);text-shadow:0 0 12px var(--us-color-bg,#140c14),0 4px 18px color-mix(in srgb,var(--us-tu) 65%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+:root[data-us-motion="reduced"] .us-nav-think .us-nav-think-heart{animation:none!important}
+@media (prefers-reduced-motion:reduce){.us-nav-think .us-nav-think-heart{animation:none!important}}
 
 /* While the Profilo is open the page you came from stays marked (app.js go()). */
 :root[data-us-from] body:has(#settings.page.active) .us-nav .us-nav-indicator{opacity:.16!important}

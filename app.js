@@ -2492,6 +2492,8 @@ let usThinkReactionFinal=null;
 let usThinkReactionInFlight=false;
 // Ti penso ricevuto (tavola del 25/11/2026): the reply chosen at the tap, so the characters answer before the server does.
 let usThinkReactionPicked='';
+// I cuori: the taps on the reply heart of this Ti penso, and the sheet closing by itself.
+let usThinkHearts=0,usThinkCloseTimer=0;
 let usThinkKnownReactionSignature='';
 
 // Redesign definitivo, fase 5 (founder 23/11/2026, D9): Oggi has no cards of
@@ -2974,6 +2976,11 @@ function thinkArrivalCast(root){
   const meEl=root.querySelector('[data-think-me]'),themEl=root.querySelector('[data-think-them]'),hugEl=root.querySelector('[data-think-hug]');
   if(meEl)meEl.innerHTML=P.character(me,{size:150,reaction:'',mood:''});
   if(themEl)themEl.innerHTML=P.character(them,{size:170,reaction:'cuore',mood:''});
+  // L'abbraccio (founder, 27/11/2026, the drawing was «bruttissimo»): the button shows
+  // your two real characters snuggled, eyes shut and happy, a small heart in your two
+  // colours above them. Without the characters the two shapes of index.html stay.
+  const hugGlyph=root.querySelector('.think-reaction-hug');
+  if(hugGlyph){const hug=role=>P.character(role,{size:30,reaction:'',mood:'innamorato',className:'think-hug-char'});hugGlyph.innerHTML=`<span class="think-hug-me">${hug(me)}</span><span class="think-hug-them">${hug(them)}</span><svg class="think-hug-heart" viewBox="0 0 256 256" focusable="false"><path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32Z" style="fill:var(--us-tu)"/><path d="M128,80c8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z" style="fill:var(--us-partner)"/></svg>`;}
   if(hugEl)hugEl.innerHTML=`<span class="think-arrival-hug-me">${P.character(me,{size:150,reaction:'',mood:'innamorato'})}</span><span class="think-arrival-hug-them">${P.character(them,{size:150,reaction:'',mood:'innamorato'})}</span><svg class="think-arrival-hug-heart" viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"/></svg>`;
 }
 function renderThinkReactionUi(){
@@ -2989,14 +2996,17 @@ function renderThinkReactionUi(){
   const state=({heart:'heart',hug:'hug',miss_you:'miss'})[chosen]||'ask';
   if(sheet&&sheet.dataset.thinkState!==state)sheet.dataset.thinkState=state;
   // The name on one line, then what happens in italic in their colour: «ti pensa», then your answer (no he/she needed).
-  const line=({heart:'e tu ricambi',hug:'e tu l\u2019abbracci',miss:'e vi pensate'})[state]||'ti pensa';
+  // I cuori (27/11/2026): a Ti penso of several taps says how many (\u00abti pensa \u00d75\u00bb).
+  const taps=usThinkTaps(usIncomingThink);
+  const line=({heart:'e tu ricambi',hug:'e tu l\u2019abbracci',miss:'e vi pensate'})[state]||(taps>1?`ti pensa \u00d7${taps}`:'ti pensa');
   if(title)title.innerHTML=`<span class="think-arrival-name"${partner?.display_name?' translate="no"':''}>${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>${line}</em>`;
   // When it arrived, in plain words ("adesso", "5 min fa").
   if(copy){const at=usIncomingThink?.created_at;const fresh=at&&Date.now()-Date.parse(at)<60000;copy.textContent=at?(fresh?'adesso':relativeSignalAge(at)):'';copy.hidden=!copy.textContent;}
   buttons.forEach(button=>{
     const reaction=button.dataset.thinkReaction;
     button.classList.toggle('selected',reaction===chosen);
-    button.disabled=Boolean(usThinkReactionFinal||usThinkReactionInFlight);
+    // «Resta e cresce»: the heart given stays tappable, each tap one more burst.
+    button.disabled=Boolean(usThinkReactionFinal||usThinkReactionInFlight)&&!(reaction==='heart'&&chosen==='heart');
     button.setAttribute('aria-pressed',String(reaction===chosen));
   });
   if(status)status.textContent=usThinkReactionFinal?`Hai risposto ${thinkReactionLabel(usThinkReactionFinal)}.`:usThinkReactionInFlight?'Invio…':'';
@@ -3016,6 +3026,7 @@ function openThinkArrival(){
 window.openThinkArrival=openThinkArrival;
 function closeThinkArrival(){
   const root=document.getElementById('thinkArrival');
+  clearTimeout(usThinkCloseTimer);
   if(!root)return;
   const finalize=()=>{root.classList.remove('open');root.setAttribute('aria-hidden','true');};
   if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(root,finalize);else finalize();
@@ -3025,7 +3036,7 @@ async function sendThinkReaction(reaction){
   if(!usIncomingThink?.id||usThinkReactionFinal||usThinkReactionInFlight)return false;
   if(!['heart','hug','miss_you'].includes(reaction))return false;
   usThinkReactionInFlight=true;usThinkReactionPicked=reaction;renderThinkReactionUi();
-  if(reaction==='heart')usHeartLike(document.querySelector('#thinkArrival [data-think-reaction="heart"]'));
+  if(reaction==='heart'){const heart=document.querySelector('#thinkArrival [data-think-reaction="heart"]');usHeartLike(heart);usThinkHearts=1;window.UsUiFoundation?.heartSpray?.(heart?.querySelector('.think-reaction-glyph')||heart);}
   const {data,error}=await sb.rpc('set_think_reaction',{target_message_id:usIncomingThink.id,target_reaction:reaction});
   if(error){
     const terminal=error.code==='23505'&&String(error.message||'').includes('already_reacted');
@@ -3039,7 +3050,7 @@ async function sendThinkReaction(reaction){
         sendWebPushEvent('think_reaction',usIncomingThink.id,{reaction:usThinkReactionFinal}).catch(()=>{});
         window.UsTodayPriority?.refresh?.();
         toast('Reazione già inviata');
-        setTimeout(()=>closeThinkArrival(),620);
+        usThinkCloseSoon(620);
         return true;
       }
     }
@@ -3057,14 +3068,25 @@ async function sendThinkReaction(reaction){
     if(usThinkReactionFinal!=='heart')window.UsUiFoundation?.done?.(document.querySelector(`[data-think-reaction="${usThinkReactionFinal}"]`),{feel:'action'});
     toast('Reazione inviata',{icon:'check',quiet:false});
     // The characters answer first (about 1.5 s), then it closes by itself.
-    setTimeout(()=>closeThinkArrival(),2300);
+    usThinkCloseSoon(2300);
     return true;
   }
   usThinkReactionInFlight=false;usThinkReactionPicked='';renderThinkReactionUi();return false;
 }
 window.sendThinkReaction=sendThinkReaction;
+// I cuori («Resta e cresce», founder 27/11/2026): the heart given stays; every
+// further tap adds a burst and «×N» on it (visual only: one reaction, one push)
+// and keeps the sheet open a little longer. The reaction itself stays final.
+function usThinkCloseSoon(ms){clearTimeout(usThinkCloseTimer);usThinkCloseTimer=setTimeout(()=>closeThinkArrival(),ms);}
+function usThinkHeartMore(){
+  const button=document.querySelector('#thinkArrival [data-think-reaction="heart"]');
+  usThinkHearts=Math.max(1,usThinkHearts)+1;
+  window.UsUiFoundation?.heartMore?.(button,usThinkHearts,{status:document.getElementById('thinkArrivalStatus')});
+  if(usThinkReactionFinal)usThinkCloseSoon(2300);
+}
 document.getElementById('thinkArrival')?.addEventListener('click',event=>{
   const reaction=event.target.closest?.('[data-think-reaction]')?.dataset.thinkReaction;
+  if(reaction==='heart'&&(usThinkReactionFinal||usThinkReactionPicked)==='heart'){usThinkHeartMore();return;}
   if(reaction)sendThinkReaction(reaction);
 });
 
@@ -3238,17 +3260,30 @@ function usShowWhatsNew(returning){
   // After the first paint of Oggi, not over it.
   setTimeout(()=>{window.UsUiFoundation?.notice?.({kicker:'Novità',title:US_WHATS_NEW.title,items:US_WHATS_NEW.items,confirmLabel:'Ho capito',icon:'sparkle'});},1400);
 }
-// One tap = my reaction; the same tap again takes it back. The server
-// (set_daily_answer_reaction) decides; on error everything goes back.
+// One tap = my reaction. The heart («Resta e cresce», founder 27/11/2026)
+// stays: every further tap adds a burst and «×N» on it (visual only, nothing
+// is sent again); it goes away only when held (~650 ms) or with Backspace or
+// Delete ({remove:true}). «Mi hai commosso» still goes back with a second
+// tap. The server (set_daily_answer_reaction) decides; on error everything goes back.
 let usDailyReactionInFlight=false;
-async function setDailyAnswerReaction(reaction){
+let usDailyHearts={id:'',n:0};
+function usDailyHeartButton(){return document.querySelector('#todayReveal [data-daily-reaction="heart"]');}
+async function setDailyAnswerReaction(reaction,{remove=false}={}){
   const questionId=window.todayQuestion?.id,meta=window.todayRevealMeta;
-  if(!questionId||!meta||meta.question_id!==questionId||!window.todayState?.both_answered||usDailyReactionInFlight)return {status:'noop'};
+  if(!questionId||!meta||meta.question_id!==questionId||!window.todayState?.both_answered)return {status:'noop'};
   if(!US_DAILY_REACTIONS[reaction])return {status:'noop'};
-  const previous=meta,next=meta.my_reaction===reaction?null:reaction;
+  const mine=meta.my_reaction;
+  if(reaction==='heart'&&mine==='heart'&&!remove){
+    usDailyHearts={id:questionId,n:Math.max(1,usDailyHearts.id===questionId?usDailyHearts.n:0)+1};
+    window.UsUiFoundation?.heartMore?.(usDailyHeartButton(),usDailyHearts.n);
+    return {status:'more',count:usDailyHearts.n};
+  }
+  if(usDailyReactionInFlight||(remove&&mine!==reaction))return {status:'noop'};
+  const previous=meta,next=remove||mine===reaction?null:reaction;
   usDailyReactionInFlight=true;
+  usDailyHearts={id:questionId,n:next==='heart'?1:0};
   window.todayRevealMeta={...meta,my_reaction:next};renderTodayReveal();
-  if(next==='heart')usHeartLike(document.querySelector('#todayReveal [data-daily-reaction="heart"]'));
+  if(next==='heart'){const heart=usDailyHeartButton();usHeartLike(heart);window.UsUiFoundation?.heartSpray?.(heart?.querySelector('.us-icon')||heart);window.UsUiFoundation?.heartSay?.('Cuore mandato');}
   try{
     const {data,error}=await sb.rpc('set_daily_answer_reaction',{target_question_id:questionId,target_reaction:next});
     if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reaction_invalid');
@@ -3271,6 +3306,16 @@ document.getElementById('todayReveal')?.addEventListener?.('click',event=>{
   const button=event.target.closest?.('[data-daily-reaction]');
   if(button)setDailyAnswerReaction(button.dataset.dailyReaction);
 });
+// Hold the heart given to take it back; a hold never also counts as a tap.
+// ui-foundation.js comes after app.js: wired once both are there.
+function usWireDailyHeartPress(){
+  window.UsUiFoundation?.heartPress?.(document.getElementById('todayReveal'),{
+    selector:'[data-daily-reaction="heart"]',
+    held:()=>window.todayRevealMeta?.my_reaction==='heart',
+    onHold:()=>setDailyAnswerReaction('heart',{remove:true})
+  });
+}
+if(window.UsUiFoundation?.heartPress)usWireDailyHeartPress();else document.addEventListener?.('DOMContentLoaded',usWireDailyHeartPress,{once:true});
 
 // "Visto" = il reveal è davvero mostrato in un foglio Today aperto: non il push,
 // non l'hydrate della Home, non il solo both_answered.
@@ -5360,12 +5405,21 @@ function relativeSignalAge(dateString){
   const h=Math.floor(min/60);if(h<24)return `${h} ${h===1?'ora':'ore'} fa`;
   const d=Math.floor(h/24);return `${d} ${d===1?'giorno':'giorni'} fa`;
 }
+// I cuori (27/11/2026): each Ti penso carries its taps (think_taps, null = 1);
+// before migration 20261127141307 the same list without them.
+async function usThinkRows(){
+  const read=columns=>sb.from('shared_messages').select(columns).eq('kind','think').order('created_at',{ascending:false}).limit(60);
+  const first=await read('id,sender_id,recipient_id,kind,created_at,think_taps');
+  return first.error&&/think_taps/.test(String(first.error.message||''))?read('id,sender_id,recipient_id,kind,created_at'):first;
+}
+function usThinkTaps(row){const n=Number(row?.think_taps);return Number.isFinite(n)?Math.min(99,Math.max(1,Math.round(n))):1;}
+window.usThinkTaps=usThinkTaps;
 async function hydrateThink(){
   const identityProfile=window.usProfile,identityCouple=identityProfile?.couple_id;
   if(!identityProfile)return;
   const [profiles,{data:rows,error}]=await Promise.all([
     getCoupleProfiles(),
-    sb.from('shared_messages').select('id,sender_id,recipient_id,kind,created_at').eq('kind','think').order('created_at',{ascending:false}).limit(60)
+    usThinkRows()
   ]);
   if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==identityCouple)return;
   if(error){console.warn(error);return;}
@@ -5402,58 +5456,88 @@ async function hydrateThink(){
   window.UsWidgets?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||'',lastAnsweredAt:receivedReaction?.updated_at||'',todayCount,todayDate}).catch(()=>{});
 }
 window.hydrateThink=hydrateThink;
-async function sendThinkSignal(){
+// I cuori (founder, 27/11/2026, «Uno solo ×N»): one send per combo, with its
+// taps; Gioca and «La cosa di oggi» send 1. The sends queue up instead of
+// disabling the heart, so a new combo can start while one is on its way.
+let usThinkQueue=Promise.resolve();
+function sendThinkSignal({taps=1}={}){
+  const run=usThinkQueue.then(()=>usSendThinkNow(taps));
+  usThinkQueue=run.catch(()=>false);
+  return run;
+}
+async function usSendThinkNow(taps){
   if(!window.usProfile){toast('Connessione non pronta. Riprova tra poco.');return false;}
-  const btn=document.getElementById('thinkButton');if(btn?.disabled)return false;
+  const n=Math.min(99,Math.max(1,Math.round(Number(taps))||1));
+  const btn=document.getElementById('thinkButton');
   const profiles=await getCoupleProfiles(),partner=partnerFromProfiles(profiles);
   if(!partner){toast('La tua persona non è ancora collegata');return false;}
   if(!usThinkOperationId)usThinkOperationId=globalThis.crypto?.randomUUID?.()||String(Date.now())+'-'+Math.random().toString(16).slice(2);
-  if(btn)btn.disabled=true;
-  const {data,error}=await sb.rpc('send_think',{operation_id:usThinkOperationId});
-  if(error){console.warn(error);window.UsFeedback?.error?.();toast('Non riesco a inviare il segnale');if(btn)btn.disabled=false;return false;}
+  let {data,error}=await sb.rpc('send_think',n>1?{operation_id:usThinkOperationId,p_taps:n}:{operation_id:usThinkOperationId});
+  // A server without 20261127141307 knows only operation_id: the combo still leaves, as one Ti penso.
+  if(error&&n>1&&(error.code==='PGRST202'||/p_taps/.test(String(error.message||''))))({data,error}=await sb.rpc('send_think',{operation_id:usThinkOperationId}));
+  if(error){console.warn(error);window.UsFeedback?.error?.();toast('Non riesco a inviare il segnale');return false;}
   const result=Array.isArray(data)?data[0]:data;
   const messageId=result?.message_id;
   usThinkOperationId=null;
   if(messageId)sendWebPushEvent('think',messageId).catch(()=>{});
-  // Mockup: the heart takes my colour for a moment and two sparks, mine and
-  // theirs, fly out of it; then "Ti penso inviato a …".
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),2400);
-  // Il cuore (founder, 29/10/2026): the same heart as the others, counted with them.
-  // The heart of the bar already burst at the tap (usNavHeartTap).
-  if(btn?.classList.contains('us-nav-think')){if(result?.duplicate)window.UsFeedback?.action?.();}
-  else if(btn&&!result?.duplicate)usHeartLike(btn);else window.UsFeedback?.action?.();
-  if(result?.duplicate)toast('Già inviato',{quiet:true});
-  else toast(`Ti penso inviato a ${partner.display_name||usIdentity().partnerName}`,{icon:'heart',quiet:false});
+  // The heart of the bar already played at the taps (usNavHeartTap).
+  if(result?.duplicate){window.UsFeedback?.action?.();toast('Già inviato',{quiet:true});}
+  else{const name=partner.display_name||usIdentity().partnerName;toast(n>1?`Ti penso ×${n} inviato a ${name}`:`Ti penso inviato a ${name}`,{icon:'heart',quiet:false});}
   await hydrateThink();
   // La cosa di oggi: my Ti penso of today, at once.
   window.UsCosaDiOggi?.refresh?.({force:true})?.catch?.(()=>{});
-  setTimeout(()=>{if(btn)btn.disabled=false;},1800);
   return true;
 }
 window.sendThinkSignal=sendThinkSignal;
-// Ti penso in the middle of the bar (founder, 21/11/2026, «come il like di X»):
-// one tap fills the heart and makes it burst at once, then sends. The heart
-// shrinks away, a disc in your colour opens into a ring in theirs, the heart
-// springs back and seven pairs of dots fly out (struttura.css).
+// Ti penso in the middle of the bar (founder, 27/11/2026, prototype
+// https://claude.ai/artifact/2NXZSrS4EypVcsAVBNDRVy): rapid taps add up. Each
+// tap squashes the heart and springs it back, little hearts fly out in your
+// two colours and «×N» shows above it from the 2nd tap, stronger at 3, 6 and
+// 10 (ui-foundation.js). About 1.15 s after the last tap ONE Ti penso leaves
+// with the taps and the hearts fly to the other person. Reduced motion: the
+// light bounce and the number, no little hearts.
+const US_THINK_COMBO_MS=1150;
+const usThinkCombo={taps:0,timer:0};
 let usNavHeartTimer=0;
+function usThinkComboParts(btn){
+  let glow=btn.querySelector('.us-nav-glow'),label=btn.querySelector('.us-nav-combo');
+  if(!glow){glow=document.createElement('span');glow.className='us-nav-glow';glow.setAttribute('aria-hidden','true');btn.prepend(glow);}
+  if(!label){label=document.createElement('span');label.className='us-nav-combo';label.setAttribute('aria-hidden','true');label.hidden=true;btn.appendChild(label);}
+  return {glow,label};
+}
 function usNavHeartTap(btn){
-  if(!btn||btn.disabled)return;
+  if(!btn)return;
+  const F=window.UsUiFoundation,n=++usThinkCombo.taps,level=F?.heartLevel?.(n)??0;
+  const reduced=Boolean(F?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   clearTimeout(usNavHeartTimer);
   btn.classList.add('is-full');
-  window.UsFeedback?.action?.();
-  const reduced=Boolean(window.UsUiFoundation?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
-  if(!reduced){
-    btn.querySelector('.us-nav-burst')?.remove();
-    const burst=document.createElement('span');
-    burst.className='us-nav-burst';
-    burst.setAttribute('aria-hidden','true');
-    const colors=['var(--us-tu)','var(--us-partner)','var(--us-think,var(--us-tu))'];
-    burst.innerHTML='<i class="us-nav-burst-ring"></i>'+Array.from({length:7},(_,i)=>{const a=i*(360/7);return `<i class="us-nav-burst-dot" style="--a:${a}deg;--c:${colors[i%3]}"></i><i class="us-nav-burst-dot is-small" style="--a:${a+16}deg;--c:${colors[(i+1)%3]}"></i>`;}).join('');
-    btn.prepend(burst);
-    btn.classList.remove('is-pop');void btn.offsetWidth;btn.classList.add('is-pop');
-    setTimeout(()=>{burst.remove();btn.classList.remove('is-pop');},950);
+  const heart=btn.querySelector('.us-nav-think-heart')||btn;
+  F?.heartSquash?.(heart,{level});
+  if(!reduced)F?.heartSpray?.(heart,{level,below:btn.closest('.us-nav')});
+  if(F?.heartCue)F.heartCue(n);else window.UsFeedback?.action?.();
+  const {glow,label}=usThinkComboParts(btn);
+  if(n>=2){
+    label.getAnimations?.().forEach(a=>a.cancel());
+    label.textContent=`×${n}`;label.hidden=false;
+    if(!reduced&&label.animate)label.animate([{transform:'translateX(-50%) scale(.6)',opacity:.4},{transform:`translateX(-50%) scale(${1.25+level*.08})`,opacity:1,offset:.45},{transform:`translateX(-50%) scale(${1+level*.06})`,opacity:1}],{duration:360,easing:'cubic-bezier(.2,1.3,.4,1)',fill:'forwards'});
   }
-  Promise.resolve(sendThinkSignal()).catch(()=>false).finally(()=>{usNavHeartTimer=setTimeout(()=>btn.classList.remove('is-full'),700);});
+  if(!reduced&&glow.animate)glow.animate([{opacity:.35+level*.15,transform:'scale(1)'},{opacity:0,transform:`scale(${1.9+level*.35})`}],{duration:620+level*80,easing:'cubic-bezier(.16,1,.3,1)'});
+  clearTimeout(usThinkCombo.timer);
+  usThinkCombo.timer=setTimeout(()=>usThinkComboSend(btn),US_THINK_COMBO_MS);
+}
+function usThinkComboSend(btn){
+  const taps=usThinkCombo.taps;usThinkCombo.taps=0;
+  if(!taps)return;
+  const F=window.UsUiFoundation,label=btn.querySelector('.us-nav-combo');
+  F?.heartFlight?.(btn.querySelector('.us-nav-think-heart')||btn,{count:taps,below:btn.closest('.us-nav')});
+  if(label&&!label.hidden){
+    label.getAnimations?.().forEach(a=>a.cancel());
+    const hide=()=>{if(!usThinkCombo.taps){label.hidden=true;label.textContent='';}};
+    const fade=label.animate&&!F?.isReducedMotion?.()?label.animate([{opacity:1,transform:'translateX(-50%)'},{opacity:0,transform:'translateX(-50%) translateY(-20px) scale(.9)'}],{duration:380,fill:'forwards'}):null;
+    if(fade)fade.onfinish=hide;else hide();
+  }
+  Promise.resolve(sendThinkSignal({taps})).catch(()=>false).finally(()=>{usNavHeartTimer=setTimeout(()=>btn.classList.remove('is-full'),700);});
 }
 window.usNavHeartTap=usNavHeartTap;
 // Redesign D9 — a Ti penso received is a short notice with «Apri» (the
@@ -5474,12 +5558,14 @@ function noticeIncomingThink(row,{name='',now=Date.now()}={}){
   if(Number.isFinite(at)&&now-at>24*60*60*1000)return false;
   usMarkThinkNoticed(row.id);
   const who=name||partnerFromProfiles(window.usBondProfiles||[])?.display_name||'L’altra persona';
-  toast(`${who} ti pensa ♡`,{action:{label:'Apri',onClick:()=>openThinkArrival()}});
+  const taps=usThinkTaps(row);
+  toast(taps>1?`${who} ti ha pensato ${taps} volte ♡`:`${who} ti pensa ♡`,{action:{label:'Apri',onClick:()=>openThinkArrival()}});
   return true;
 }
 function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
   usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;usThinkReactionPicked='';
+  usThinkHearts=0;document.querySelector('#thinkArrival [data-think-reaction="heart"] .us-heart-count')?.remove();
   noticeIncomingThink(row);
   const heart=document.getElementById('thinkButton');heart?.classList.add('received');setTimeout(()=>heart?.classList.remove('received'),900);
   hydrateThink().catch(()=>{});

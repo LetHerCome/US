@@ -22,9 +22,12 @@ test('the bar is Oggi, Noi, the heart, Ricordi, Gioca; a tap on the heart sends'
   for (const file of ['games.css', 'moments-albums.css', 'settings2.css']) assert.doesNotMatch(read(file), /#thinkButton\{display:none|#thinkButton\{\s*display:none/);
   const app = read('app.js');
   assert.match(app, /function usNavHeartTap\(btn\)\{/);
-  assert.match(app, /Promise\.resolve\(sendThinkSignal\(\)\)/);
-  // The burst plays at the tap: the send does not play a second heart on the bar.
-  assert.match(app, /if\(btn\?\.classList\.contains\('us-nav-think'\)\)/);
+  // I cuori (27/11/2026): rapid taps add up, one send per combo with its taps.
+  assert.match(app, /Promise\.resolve\(sendThinkSignal\(\{taps\}\)\)/);
+  assert.match(app, /usThinkCombo\.timer=setTimeout\(\(\)=>usThinkComboSend\(btn\),US_THINK_COMBO_MS\);/);
+  // The burst plays at the taps: the send does not play a second heart on the bar.
+  const send = app.slice(app.indexOf('async function usSendThinkNow('), app.indexOf('window.sendThinkSignal=sendThinkSignal;'));
+  assert.doesNotMatch(send, /usHeartLike|heartSpray/);
 });
 
 test('Oggi: the envelope top left, your character top right', () => {

@@ -16,7 +16,8 @@
   const updateBtn = document.getElementById('appUpdateBtn');
   const onlineBadge = document.getElementById('onlineBadge');
   const PROFILE_CACHE_KEY = 'us:fix4:last-profile';
-  const IMPORTANT_ACTIONS = '#todaySaveBtn,#momentUploadBtn,#thinkButton,.quest-confirm,.quest-reroll,#pushDisableBtn';
+  // I cuori (27/11/2026): the Ti penso heart counts rapid taps (one send per combo, app.js usNavHeartTap).
+  const IMPORTANT_ACTIONS = '#todaySaveBtn,#momentUploadBtn,.quest-confirm,.quest-reroll,#pushDisableBtn';
   let statusTimer = null;
   let updateCheckTimer = null;
   let keyboardOpen = false;

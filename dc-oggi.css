@@ -425,8 +425,9 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
   align-items:center;
   justify-content:center;
   gap:6px;
-  min-width:40px;
-  min-height:40px;
+  position:relative;
+  min-width:44px;
+  min-height:44px;
   padding:0 14px;
   border:0;
   border-radius:999px;
@@ -436,6 +437,8 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
   font:600 14px/1 var(--us-font-ui);
 }
 #today .today-reveal--simple .today-reaction .us-icon{--us-icon-size:20px}
+/* I cuori: the heart is held to take it back, never selected or called out. */
+#today .today-reaction[data-daily-reaction="heart"],#thinkArrival .think-reaction-button[data-think-reaction="heart"]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
 #today .today-reveal--simple .today-reaction[aria-pressed="true"]{background:var(--us-inchiostro);box-shadow:none;color:var(--us-partner)}
 #today .today-reveal--simple .today-reaction:focus-visible{outline:2px solid var(--us-inchiostro);outline-offset:2px}
 #today .today-reveal--simple .today-reaction:disabled{opacity:.6}
@@ -534,6 +537,7 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 #thinkArrival .think-arrival-hint{margin:0;font:600 13px/1.4 var(--us-font-ui);color:var(--us-color-text-2)}
 #thinkArrival .think-reaction-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 #thinkArrival .think-reaction-button{
+  position:relative;
   width:auto;
   min-width:0;
   height:104px;
@@ -558,8 +562,14 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 @keyframes dc-oggi-react{0%{scale:1}35%{scale:1.35}100%{scale:1}}
 #thinkArrival .think-reaction-button:disabled:not(.selected){opacity:1}
 #thinkArrival .think-reaction-glyph{display:block;width:30px;height:30px;color:inherit}
-#thinkArrival .think-reaction-glyph.think-reaction-hug{width:32px;height:32px}
 #thinkArrival .think-reaction-glyph svg{display:block;width:100%;height:100%}
+/* L'abbraccio (27/11/2026): your two characters cheek to cheek, eyes shut, a heart in your two colours (app.js thinkArrivalCast). */
+#thinkArrival .think-reaction-glyph.think-reaction-hug{position:relative;width:54px;height:40px}
+#thinkArrival .think-reaction-hug :is(.think-hug-me,.think-hug-them){position:absolute;bottom:0;width:30px;transform-origin:50% 100%}
+#thinkArrival .think-reaction-hug .think-hug-me{left:1px;transform:rotate(9deg)}
+#thinkArrival .think-reaction-hug .think-hug-them{right:1px;transform:rotate(-9deg)}
+#thinkArrival .think-reaction-hug .think-hug-char{display:block;width:30px;height:auto;overflow:visible}
+#thinkArrival .think-reaction-hug .think-hug-heart{position:absolute;left:50%;top:-7px;width:14px;height:14px;margin-left:-7px}
 #thinkArrival .think-arrival-status{min-height:1.5em;margin:18px 0 0;font:700 16px/1.5 var(--us-font-ui);color:var(--us-color-text)}
 #thinkArrival .think-arrival-actions{display:grid;margin-top:6px}
 #thinkArrival .think-arrival-close{min-height:44px;padding:0 22px;border:0;border-radius:999px;background:none;box-shadow:none;color:var(--us-color-text-2);font:600 14px/1 var(--us-font-ui)}

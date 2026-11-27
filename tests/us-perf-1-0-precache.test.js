@@ -121,5 +121,8 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // Temi e countdown (26/11/2026): Stagioni drawn in oggi-look.js (the crowns,
   // the frost, the sea, the beds, built once as still images), Pellicola, Ora d'oro
   // and the three small countdowns (~14 KB net) cross it: 3.4 -> 3.45 MB.
-  assert.ok(total <= 3.45 * 1024 * 1024, `precache is ${total} bytes: stays under 3.45 MB`);
+  // I cuori (27/11/2026): Ti penso ×N, the reply heart that stays and grows, the
+  // one canvas of little hearts and the hug with the real characters (~20 KB,
+  // minus ~1 KB of the old burst) cross it by ~9 KB: 3.45 -> 3.5 MB.
+  assert.ok(total <= 3.5 * 1024 * 1024, `precache is ${total} bytes: stays under 3.5 MB`);
 });
