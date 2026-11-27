@@ -982,15 +982,26 @@
       ctx.beginPath(); ctx.moveTo(0, 3.5); ctx.bezierCurveTo(-7, -1.5, -4.5, -8, 0, -4.2); ctx.bezierCurveTo(4.5, -8, 7, -1.5, 0, 3.5);
       ctx.fill(); ctx.restore();
     };
+    // A heart reaching its place says so once (the island's character hops).
+    const arrived = (p) => { const fn = p.arrive; p.arrive = null; try { fn(p.i); } catch (_) {} };
     const tick = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000 || 1 / 60);
       last = now;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
-      parts = parts.filter((p) => now - p.born < p.life);
+      parts = parts.filter((p) => { const on = now - p.born < p.life; if (!on && p.arrive) arrived(p); return on; });
       for (const p of parts) {
         if (now < p.born) continue;
         const k = (now - p.born) / p.life;
+        if (p.into) {
+          // Into the island: a soft arc (one control point to the side), a little pop
+          // at the start, then the heart shrinks into its place and is gone.
+          const e = k * (1.6 - 0.6 * k), u = 1 - e;
+          const x = u * u * p.x + 2 * u * e * p.cx + e * e * p.to.x, y = u * u * p.y + 2 * u * e * p.cy + e * e * p.to.y;
+          shape(x, y, p.s * (k < 0.18 ? 0.7 + k * 2.6 : 1.17 - (k - 0.18)), p.rot + Math.sin(k * 6.2832) * 0.25, p.color, k > 0.9 ? (1 - k) / 0.1 : 1);
+          if (k >= 0.92 && p.arrive) arrived(p);
+          continue;
+        }
         if (p.to) {
           // The send: each heart flies along a curve towards the other person.
           const e = 1 - Math.pow(1 - Math.min(1, k * 1.1), 3);
@@ -1011,10 +1022,11 @@
       doc: d,
       clock,
       colors: () => [heartColor(d, '--us-tu'), heartColor(d, '--us-partner')],
-      // below: an element (the bar) whose layer the hearts pass under, so its «×N» stays on top.
+      // below: an element (the bar) whose layer the hearts pass under, so its «×N» stays on top;
+      // or a number, the layer itself (into the island: over the toast that says it).
       add(list, below = null) {
         let z = '';
-        try { if (below) z = String((parseInt(win.getComputedStyle(below).zIndex, 10) || 1) - 1); } catch (_) { z = ''; }
+        try { if (typeof below === 'number') z = String(below); else if (below) z = String((parseInt(win.getComputedStyle(below).zIndex, 10) || 1) - 1); } catch (_) { z = ''; }
         canvas.style.zIndex = z;
         if (!canvas.isConnected) {
           w = d.documentElement.clientWidth || win.innerWidth || 0;
@@ -1053,12 +1065,33 @@
     return true;
   }
   // The send: the hearts leave towards the other person (by default up, on their side).
-  function heartFlight(element, { to = null, count = 1, below = null } = {}) {
+  // into (I cuoricini nell'isola, 27/11/2026): they rise in arcs to `to` (the other
+  // person's character in the island, personaggi.js) and shrink into it; onArrive(i)
+  // once per heart there. Returns the ms until the last one arrives (or false).
+  function heartFlight(element, { to = null, count = 1, below = null, into = false, onArrive = null } = {}) {
     const at = heartsFrom(element);
     if (!at) return false;
     const target = to || { x: (at.d.documentElement.clientWidth || 360) * 0.74, y: 64 };
     const [tu, partner] = at.fx.colors(), born = at.fx.clock(), list = [];
-    for (let i = 0; i < Math.min(18, 4 + count); i++) {
+    const n = Math.min(18, 4 + count);
+    if (into && to) {
+      let end = 0;
+      for (let i = 0; i < n; i++) {
+        const x = at.x + (Math.random() - 0.5) * 26, y = at.y + (Math.random() - 0.5) * 16;
+        const side = i % 2 ? 1 : -1, lift = 70 + Math.random() * 110;
+        const life = 820 + Math.random() * 180, start = born + i * 42;
+        end = Math.max(end, start - born + life * 0.92);
+        list.push({ into: true, i, x, y, to: target, cx: (x + target.x) / 2 + side * lift, cy: (y + target.y) / 2 + (Math.random() - 0.3) * 60,
+          s: 1.3 + Math.random() * 0.7, rot: (Math.random() - 0.5) * 0.5, color: count >= 10 && i % 4 === 0 ? HEART_GOLD : i % 2 ? tu : partner,
+          born: start, life, arrive: typeof onArrive === 'function' ? onArrive : null });
+      }
+      // Over the toast that says it (--us-layer-toast), so they reach the island unbroken.
+      let z = 10401;
+      try { z = (parseInt(at.d.defaultView.getComputedStyle(at.d.documentElement).getPropertyValue('--us-layer-toast'), 10) || 10400) + 1; } catch (_) { z = 10401; }
+      at.fx.add(list, typeof below === 'number' ? below : z);
+      return Math.round(end);
+    }
+    for (let i = 0; i < n; i++) {
       list.push({ x: at.x + (Math.random() - 0.5) * 30, y: at.y + (Math.random() - 0.5) * 20, to: target, curve: (Math.random() - 0.5) * 120,
         s: 1.4 + Math.random() * 0.8, rot: (Math.random() - 0.5) * 0.5, color: i % 2 ? tu : partner, born: born + i * 35, life: 760 + i * 20 });
     }

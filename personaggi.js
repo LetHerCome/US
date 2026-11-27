@@ -407,7 +407,7 @@
   // couple yet: then it is only the symbol.
   const ISOLA_MS = 6000, PEEK_MS = 4200;
   const isola = () => d?.getElementById('usIsola');
-  let isolaTimer = 0;
+  let isolaTimer = 0, receiving = null, hopAt = 0;
   const paired = () => Boolean(w.usProfile?.couple_id) && ['francesco', 'beatrice'].every((role) => profiles().some((p) => p?.role === role));
   const levelNow = () => Number(w.USProgression?.getState?.()?.level) || 0;
   function paintIsola({ reaction } = {}) {
@@ -422,7 +422,10 @@
     labelIsola();
     const duo = button.querySelector('[data-us-isola-duo]');
     const mine = myRole(), duoRoles = [mine, mine === 'beatrice' ? 'francesco' : 'beatrice'];
-    if (duo) duo.innerHTML = duoRoles.map((role) => character(role, { size: 42, ...(reaction ? { reaction } : { react: true }) })).join('');
+    // Receiving the hearts, the other person keeps their heart eyes (and their hop) until the island closes.
+    if (!duo || (receiving && duo.dataset.receiving)) return;
+    duo.innerHTML = duoRoles.map((role) => character(role, { size: 42, ...(receiving && role !== mine ? { reaction: 'cuore' } : reaction ? { reaction } : { react: true }) })).join('');
+    if (receiving) duo.dataset.receiving = '1'; else delete duo.dataset.receiving;
   }
   function labelIsola() {
     const button = isola(), level = levelNow();
@@ -440,7 +443,80 @@
     button.setAttribute('aria-expanded', String(open));
     if (top?.dataset) { if (open) top.dataset.usIsola = 'open'; else delete top.dataset.usIsola; }
     if (open) { labelIsola(); isolaTimer = setTimeout(() => setIsola(false), ms); }
-    else { hideFumetto(); if (was) paintIsola(); }
+    else { hideFumetto(); endCuori(button); if (was) paintIsola(); }
+  }
+  // I cuoricini volano nell'isola (founder, 27/11/2026: «dove risiedono loro»). A
+  // Ti penso ×N leaves: the island opens, the little hearts rise from the heart of
+  // the bar into the other person's character, who gets heart eyes, a hop as each
+  // wave arrives and «×N» by them; ~2 s after the last one it closes back to the
+  // symbol. Only when the island is really there to see: paired, on screen, not
+  // under a sheet, not during the intro, not while another island moment (the
+  // first peek, a new level, US vi ricorda) is on. Otherwise app.js keeps the old
+  // flight. cuoriVerso() is where the hearts land (null: not now).
+  function cuoriVerso() {
+    const button = isola();
+    if (!d || d.hidden || !button || button.hidden || !paired() || w.UsIntro?.active?.()) return null;
+    if (d.body?.getAttribute?.('data-us-surface') === 'open') return null;
+    if (!receiving && button.getAttribute('aria-expanded') === 'true') return null;
+    const r = button.getBoundingClientRect?.();
+    if (!r || !r.width || !r.height) return null;
+    const vw = d.documentElement?.clientWidth || w.innerWidth || 0, vh = d.documentElement?.clientHeight || w.innerHeight || 0;
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    if (x < 0 || y < 0 || (vw && x > vw) || (vh && y > vh)) return null;
+    // Something over it (a sheet, a popup): not there to see.
+    const top = button.closest?.('.top') || button;
+    const hit = typeof d.elementFromPoint === 'function' ? d.elementFromPoint(x, y) : null;
+    if (hit && !top.contains(hit)) return null;
+    // The other person's place in the open island (struttura.css: 220 px wide, the
+    // window 8 px in, two characters of 42 px overlapping by 12): mine, then theirs.
+    return { x: Math.round(x - 110 + 8 + 30 + 21), y: Math.round(y + 4) };
+  }
+  function riceviCuori({ count = 1, ms = 2200 } = {}) {
+    if (!cuoriVerso()) return false;
+    const button = isola();
+    const n = Math.max(1, Math.round(Number(count)) || 1);
+    receiving = { count: n };
+    if (button.getAttribute('aria-expanded') === 'true') {
+      // Open only if it is already ours: a second Ti penso while the first is arriving, the same moment, longer.
+      clearTimeout(isolaTimer);
+      isolaTimer = setTimeout(() => setIsola(false), ms);
+    } else setIsola(true, { ms });
+    if (button.getAttribute('aria-expanded') !== 'true') { receiving = null; return false; }
+    button.classList.add('is-receiving');
+    let badge = button.querySelector('.us-isola-count');
+    if (n > 1) {
+      if (!badge) {
+        badge = d.createElement('span');
+        badge.className = 'us-isola-count';
+        badge.setAttribute('aria-hidden', 'true');
+        button.appendChild(badge);
+      }
+      badge.textContent = `×${n}`;
+    } else badge?.remove();
+    return true;
+  }
+  // One heart has arrived: the other person's character hops (not more than every 150 ms).
+  function cuoriArrivo() {
+    const button = isola();
+    if (!receiving || !button) return false;
+    const now = w.performance?.now?.() ?? Date.now();
+    if (now - hopAt < 150) return false;
+    hopAt = now;
+    const them = button.querySelectorAll('[data-us-isola-duo] .us-char')[1];
+    const reduced = w.UsUiFoundation?.isReducedMotion?.() || w.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (reduced) return false;
+    them?.animate?.([{ translate: '0 0', scale: '1 1' }, { translate: '0 -7px', scale: '1.07 .93', offset: 0.35 }, { translate: '0 0', scale: '1 1' }], { duration: 320, easing: 'cubic-bezier(.2,.9,.3,1.2)' });
+    const badge = button.querySelector('.us-isola-count');
+    badge?.animate?.([{ scale: 1.35 }, { scale: 1 }], { duration: 260, easing: 'cubic-bezier(.2,1.6,.4,1)' });
+    return true;
+  }
+  function endCuori(button) {
+    if (!receiving) return;
+    receiving = null;
+    button?.classList.remove('is-receiving');
+    button?.querySelector('.us-isola-count')?.remove();
+    const duo = button?.querySelector('[data-us-isola-duo]');
+    if (duo) delete duo.dataset.receiving;
   }
   // US vi ricorda (founder, 25/11/2026, D11/D17; tavola «US · US vi ricorda»):
   // the island opens and a speech bubble comes out of the character who
@@ -457,7 +533,7 @@
   }
   function parla({ text, speaker = 'me', cta = '', reaction, onTap, onHold, ms = 8000 } = {}) {
     const f = fumetto();
-    if (!f || !text || !paired()) return false;
+    if (!f || !text || !paired() || receiving) return false;
     setIsola(true, { ms, reaction: reaction || (speaker === 'both' ? 'cuore' : undefined) });
     if (isola()?.getAttribute('aria-expanded') !== 'true') return false;
     f.querySelector('[data-us-fumetto-text]').textContent = text;
@@ -497,7 +573,8 @@
       if (!d.getElementById('home')?.classList.contains('active')) return;
       if (w.UsIntro?.active?.()) return;
       const level = levelNow();
-      const busy = !paired() || !level || d.body?.getAttribute?.('data-us-surface') === 'open';
+      // The hearts in the island first: the moment waits for them to close.
+      const busy = !paired() || !level || receiving || d.body?.getAttribute?.('data-us-surface') === 'open';
       if (busy) { if (++peekTries < PEEK_TRIES) maybePeek(true); return; }
       if (isola()?.getAttribute('aria-expanded') === 'true') return;
       const seen = readSeen();
@@ -590,7 +667,7 @@
     };
     if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot, { once: true });
     else boot();
-    w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla });
+    w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla, cuoriVerso, riceviCuori, cuoriArrivo });
   }
 
   return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, LOOK_HEAD, LOOK_FACE, LOOK_NAMES, LOOK_POINTS, LOOK_MOMENTS, character, slot, shapeOf, lookOf, colorName, myRole, reactionOf, unlockedLook, paintMe, paintDuo, paintWardrobe });

@@ -71,7 +71,7 @@ test('wiring: the bubble out of the island, the sheet, Voi, the switch, back, ca
   assert.match(html, /<script defer src="\/us-ricorda\.js\?v=[^"]+"><\/script>/);
   const p = read('personaggi.js');
   assert.match(p, /function parla\(\{ text, speaker = 'me', cta = '', reaction, onTap, onHold, ms = 8000 \} = \{\}\)/);
-  assert.match(p, /w\.UsAngolo = Object\.freeze\(\{ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla \}\);/);
+  assert.match(p, /w\.UsAngolo = Object\.freeze\(\{ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla, cuoriVerso, riceviCuori, cuoriArrivo \}\);/);
   assert.ok(read('app.js').includes("if(typeof window!=='undefined')window.dispatchEvent?.(new CustomEvent('us:tocca-a-te',{detail:{daily:Boolean(daily),game:Boolean(game)}}));"));
   assert.match(read('settings.js'), /<b>Le voci dei personaggi<\/b>/);
   assert.match(read('navigation.js'), /name:'battuta',\s*find:\(\)=>document\.getElementById\('usBattuta'\)/);

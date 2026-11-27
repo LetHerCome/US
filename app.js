@@ -5531,14 +5531,29 @@ function usThinkComboSend(btn){
   const taps=usThinkCombo.taps;usThinkCombo.taps=0;
   if(!taps)return;
   const F=window.UsUiFoundation,label=btn.querySelector('.us-nav-combo');
-  F?.heartFlight?.(btn.querySelector('.us-nav-think-heart')||btn,{count:taps,below:btn.closest('.us-nav')});
+  const intoIsola=usThinkToIsola(btn.querySelector('.us-nav-think-heart')||btn,taps,btn.closest('.us-nav'));
   if(label&&!label.hidden){
     label.getAnimations?.().forEach(a=>a.cancel());
     const hide=()=>{if(!usThinkCombo.taps){label.hidden=true;label.textContent='';}};
     const fade=label.animate&&!F?.isReducedMotion?.()?label.animate([{opacity:1,transform:'translateX(-50%)'},{opacity:0,transform:'translateX(-50%) translateY(-20px) scale(.9)'}],{duration:380,fill:'forwards'}):null;
     if(fade)fade.onfinish=hide;else hide();
   }
-  Promise.resolve(sendThinkSignal({taps})).catch(()=>false).finally(()=>{usNavHeartTimer=setTimeout(()=>btn.classList.remove('is-full'),700);});
+  Promise.resolve(sendThinkSignal({taps})).catch(()=>false).then((sent)=>{
+    // Not sent: the island does not pretend the other person got them.
+    if(!sent&&intoIsola&&document.getElementById('usIsola')?.classList.contains('is-receiving'))window.UsAngolo?.isola?.(false);
+  }).finally(()=>{usNavHeartTimer=setTimeout(()=>btn.classList.remove('is-full'),700);});
+}
+// I cuoricini volano nell'isola (founder, 27/11/2026): when the island is there to
+// see, the hearts rise in arcs into it and the other person's character receives
+// them (personaggi.js riceviCuori); otherwise the old flight, up on their side.
+// Reduced motion: no flight, only the island with their heart eyes for a moment.
+function usThinkToIsola(heart,taps,below){
+  const F=window.UsUiFoundation,A=window.UsAngolo;
+  const reduced=Boolean(F?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  const to=A?.cuoriVerso?.();
+  if(!to){if(!reduced)F?.heartFlight?.(heart,{count:taps,below});return false;}
+  const ms=reduced?0:Number(F?.heartFlight?.(heart,{count:taps,to,into:true,onArrive:()=>A.cuoriArrivo?.()}))||0;
+  return Boolean(A.riceviCuori?.({count:taps,ms:ms+2000}));
 }
 window.usNavHeartTap=usNavHeartTap;
 // Redesign D9 — a Ti penso received is a short notice with «Apri» (the

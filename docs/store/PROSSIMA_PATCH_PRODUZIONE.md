@@ -2,6 +2,16 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### I cuoricini volano nell'isola (27/11)
+
+**Stato:** ramo `claude/cuori-verso-isola`, verso staging, dopo «I cuori» (#317) e i widget (#318). Solo app (web): niente migrazioni, niente funzioni, nessun AAB o TestFlight necessario oltre al solito aggiornamento del web. Da provare sui telefoni (US LIVE su Android, TestFlight su iPhone) che il volo resti fluido.
+
+**Cosa cambia:**
+- **Quando mandi un Ti penso ×N i cuoricini vanno nell'isola in alto,** dove vivono i vostri personaggi. Mentre tocchi il cuore della barra tutto resta come prima (cuoricini intorno al cuore e «×N»). Quando ti fermi, l'isola si apre, i cuoricini salgono in curve morbide dal cuore della barra e si rimpiccioliscono dentro il personaggio dell'altra persona: ha gli occhi a cuore, fa un saltello a ogni ondata che arriva e accanto ha «×5». Il tuo personaggio resta com'è. Circa due secondi dopo l'ultimo cuoricino l'isola si richiude nel simbolo US.
+- Succede su Oggi, Noi, Ricordi e Gioca, dove l'isola si vede. Se l'isola non c'è o è coperta (Impostazioni, un foglio aperto, la coppia non ancora completa, Oggi a schermo intero), se sta già facendo altro (la prima occhiata, un livello nuovo, US vi ricorda che parla) o durante l'introduzione, i cuoricini volano come prima e l'isola resta com'è. Un livello nuovo che arriva in quel momento aspetta che l'isola si richiuda.
+- Se il Ti penso non parte (niente rete), l'isola si richiude subito: non fa finta che l'altra persona l'abbia ricevuto.
+- Con «Riduci movimento» niente volo: l'isola si apre per un attimo con gli occhi a cuore e «×N». Il messaggio «Ti penso ×5 inviato a <Nome>» resta quello di sempre; non si aggiunge niente da toccare.
+
 ### Ti penso ×N anche dai widget e nell'avviso Android (27/11)
 
 **Stato:** ramo `claude/widget-ti-penso-ripetuto`, verso staging, dopo «I cuori» (#317). Ordine: 1) migrazione `20261127152323_widget_ti_penso_ripetuto` (dopo `20261127141307_cuori_ti_penso`, che aggiunge `think_taps`); 2) funzioni `widget-think-send` (accetta i tocchi) e `send-web-push` (il catalogo condiviso ora mette il numero nel pacchetto Android). La funzione nuova funziona anche prima della migrazione (manda 1 tocco) e quella vecchia anche dopo (la firma vecchia è coperta dal valore predefinito). Servono un AAB nuovo (widget Android e frase dell'avviso) e una build TestFlight (widget iPhone e Controllo) con la stessa versione; senza, i widget di prima mandano 1 come oggi. Da provare sui telefoni: Android (anche con l'app chiusa da tempo) e iPhone via TestFlight.
