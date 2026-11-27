@@ -2,6 +2,20 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Il vostro mese: il pacchetto di carte del mese (27/11)
+
+**Stato:** ramo `claude/il-vostro-mese`, verso staging, dalla tavola «Il vostro mese» approvata il 27/11. Ordine: 1) migrazione `20261127202326_il_vostro_mese` (nessuna funzione Edge, nessun cron); 2) il web. Servono un AAB nuovo e una build TestFlight con la stessa versione per condividere le immagini dall'app: arrivano due plugin ufficiali di Capacitor 8, `@capacitor/share` 8.0.3 e `@capacitor/filesystem` 8.1.6. Senza, l'app vecchia apre e guarda le carte come la nuova, ma per condividere dice che serve la nuova versione (su iPhone la condivisione del sistema può funzionare già ora). Da provare sui telefoni: strappo, vibrazione, condivisione su TikTok.
+
+**Cosa cambia:**
+- **Il primo di ogni mese arriva un pacchetto** con le carte del mese appena finito; il 31 dicembre quello d'oro con le carte più belle dell'anno. Ognuno lo apre quando vuole: si strappa trascinando il dito lungo la linea in alto (o «Apri senza strappare»), si gira una carta alla volta e si lancia via; l'ultima è la rara, che trema, si gira d'oro e brilla seguendo il dito. Alla fine le carte si aprono a ventaglio.
+- **Le carte** sono al massimo 10 e sempre vere: foto (al massimo 3), domande a cui avete risposto e che avete letto tutti e due (al massimo 2), una lettera tenuta, una prima volta segnata in Noi, una scelta uguale a Questo o quello, i vostri numeri, dove siete stati, l'intesa in Gioca. Vincono le cose fissate in bacheca, quelle tenute, le prime volte, le risposte lunghe, i posti nuovi e i cuori. Un mese con poche cose ha meno carte, mai inventate. La carta «Il vostro Come stai» non c'è: Come stai non tiene uno storico.
+- **Le stesse carte per tutti e due,** scelte una volta sola. Si vede se l'altra persona non l'ha ancora aperto. Un pacchetto non aperto resta per sempre.
+- **Le vostre carte** in Ricordi (scheda «Carte»): un album per anno, 12 posti e il posto d'oro; i mesi prima di voi restano chiari. Si arriva anche da Gioca («Il vostro mese», che dice «È arrivato il vostro novembre» quando c'è un pacchetto da aprire) e dalla fine dell'apertura.
+- **Una carta alla volta:** toccando una carta del ventaglio (alla fine o nel mese della collezione) si apre grande; si scorre a destra e sinistra con «3 / 10»; su ogni carta «Metti in bacheca» (quando è un ricordo, una lettera o una risposta tenuta) e «Salva come immagine».
+- **Condividi il mese:** un carosello 9:16 (1080×1920), la copertina più una immagine per carta, con «US · uscouple.app» in basso. Foto e risposte sono nascoste finché non accendi i due interruttori.
+- Se un ricordo viene cancellato, la sua carta si spegne con «Questo ricordo non c'è più»: le carte tengono solo il riferimento, mai una copia di foto o testi. Chi esce dalla coppia o elimina l'account perde solo il segno di cosa ha aperto; i pacchetti restano alla coppia.
+- Gratis. Vibrazione sì, suoni no. Con «Riduci movimento» niente tremolio, scintille e voli.
+
 ### I cuoricini volano nell'isola (27/11)
 
 **Stato:** ramo `claude/cuori-verso-isola`, verso staging, dopo «I cuori» (#317) e i widget (#318). Solo app (web): niente migrazioni, niente funzioni, nessun AAB o TestFlight necessario oltre al solito aggiornamento del web. Da provare sui telefoni (US LIVE su Android, TestFlight su iPhone) che il volo resti fluido.

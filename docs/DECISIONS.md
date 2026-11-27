@@ -690,3 +690,16 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **iOS:** ogni tocco è un'App Intent; si conta nell'App Group sotto un lock condiviso, aspetta 1,5 s, e solo l'intent del tocco più recente manda (`claimBurst`); le altre tornano senza inviare.
 - **Chi riceve:** lo snapshot porta `think.lastReceivedTaps` (1..99) e il widget dice «<Nome> ti ha pensato N volte»; sul blocca schermo «×N».
 - **Avviso Android:** il pacchetto FCM del solo tipo plurale `think_many` porta un campo in più, `n` (cifre, 2..99); il telefono lo legge solo per quel tipo e dice «<Nome> ti ha pensato N volte ♡». Nessun altro campo nuovo, mai nomi, testi, id o destinazioni.
+
+## 2026-11-27 — Il vostro mese: il pacchetto di carte
+
+**Fonte:** founder, 27/11/2026, grill P1–P8 e C1–C6, tavola «Il vostro mese» approvata, ritocchi del 27/11 (buste, retro, cornice d'oro solo sulla rara, una carta alla volta); «La carta Il vostro Come stai NON va fatta».
+
+- **Cosa:** il primo del mese un pacchetto con al massimo 10 carte del mese finito, una rara; il 31 dicembre quello d'oro sull'anno. Gratis. Ognuno apre il suo; le carte sono le stesse per la coppia, scelte una volta sola alla prima richiesta dopo la fine del mese (niente cron). Un pacchetto non aperto resta per sempre.
+- **Scelta, a regole, nel database** (`private.us_mese_build`): fissata in bacheca +5, tenuta +4, prima volta in Noi +3, risposte lunghe di tutti e due +2, foto in un posto nuovo +2, ogni cuore +1 fino a 3; base 1 per ogni cosa vera. Varietà: 3 foto, 2 domande, una carta per gli altri tipi, mai due carte dello stesso giorno se c'è altro. La rara ha più punti (a pari punti una foto). Entrano solo le risposte lette da tutti e due e mai una didascalia con parole delicate (`us_ricorda_delicato`).
+- **Mese povero:** carte vere sui numeri del mese, sui posti e sull'intesa in Gioca; se non basta il pacchetto ha meno carte, mai inventate; un mese senza niente non ha pacchetto («nessuna carta»).
+- **Al posto di «Il vostro Come stai»** (Come stai non ha storico, 02/11): «L'intesa del mese», quante scelte uguali avete fatto nei giochi letti da tutti e due.
+- **Solo riferimenti** (C6): una carta tiene tipo, fonte, id, giorno, punti e, per numeri e intesa, i conti già fatti; mai copie di foto o testi; un ricordo cancellato spegne la carta. «Metti in bacheca» solo per le carte che la bacheca conosce (ricordo, lettera tenuta, risposta tenuta).
+- **Inizio:** il primo mese è quello in cui la coppia è nata su US; quelli prima sono «prima di voi». Al primo uso si creano anche i pacchetti dei mesi passati (al massimo 24).
+- **Condivisione:** immagini 1080×1920 fatte sul telefono (canvas; le foto private passano dall'URL firmato con CORS), foto e risposte nascoste di serie, «US · uscouple.app». Su Android servono i plugin ufficiali `@capacitor/share` e `@capacitor/filesystem` (AAB e TestFlight nuovi); sul web `navigator.share` coi file o il download.
+- **Avviso del primo del mese:** non c'è ancora. US vi ricorda ha un elenco chiuso di tipi e la notifica passa dal suo cron: aggiungerlo vuol dire riscrivere il suo pianificatore. Per ora lo dice la riga di Gioca («È arrivato il vostro novembre»).
