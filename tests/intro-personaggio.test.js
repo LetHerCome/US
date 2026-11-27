@@ -118,7 +118,7 @@ test('intro: «crea» before the tour, shapes and colours only, saved with the u
   assert.match(intro, /save\('set_my_color', \{ p_color: colour \}\)/);
   assert.doesNotMatch(intro, /set_my_character_look|LOOK_HEAD|LOOK_FACE/, 'no guardaroba in the intro');
   assert.match(intro, /Gli accessori arrivano dopo: li sbloccate insieme, nel vostro angolo\./);
-  assert.match(read('struttura.css'), /\.us-intro-swatch\{display:grid;place-items:center;width:100%;height:44px;/, 'the eight colours on one line, each 44px tall');
+  assert.match(read('struttura.css'), /\.us-intro-swatch\{display:grid;place-items:center;width:100%;height:44px;/, 'each colour 44px tall (two rows of four on a narrow bubble, controllo-oggi-personaggi.test.js)');
 });
 
 test('intro: in the real app you make your character, then the tour; once made, no «crea»', async (t) => {

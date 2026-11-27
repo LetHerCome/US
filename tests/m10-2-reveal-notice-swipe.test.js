@@ -154,7 +154,7 @@ test('M10.2 seen: già visto → nessuna seconda scrittura; non pronto → nessu
   const t = installToday({ revealMeta: meta({ my_reveal_seen_at: '2026-10-05T08:00:00Z' }) });
   await t.hydrate();
   assert.ok(!rpcNames(t).includes('mark_daily_reveal_seen'));
-  const src = slice('async function hydrateToday(){', 'async function updateHomeStatus');
+  const src = slice('async function hydrateToday(){', 'let pendingMomentFile=null;');
   assert.match(src, /markDailyRevealSeenIfVisible\(q\.id,seq\)/);
   assert.equal((app.match(/rpc\('mark_daily_reveal_seen'/g) || []).length, 1, 'one single writer of the receipt');
 });

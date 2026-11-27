@@ -232,10 +232,11 @@
     }
   }
 
-  // ---------------------------------------------------------------- voi due, on Oggi
-  // D2 and D3: the two characters on the photo of Oggi; a tap opens Il vostro
-  // angolo. Both phones show the same two in the same order: whoever created
-  // the couple, then whoever joined. Nothing until the other person is in.
+  // ---------------------------------------------------------------- voi due, in the angolo
+  // D2 and D3: the two characters, big, at the top of Il vostro angolo (they left
+  // the photo of Oggi for the island, 25/11/2026). Both phones show the same two
+  // in the same order: whoever created the couple, then whoever joined. Nothing
+  // until the other person is in.
   function paintDuo() {
     if (!d) return;
     let identity = {};
@@ -356,8 +357,15 @@
     if (!root) return;
     if (!w.usProfile?.couple_id) { root.innerHTML = ''; return; }
     const rows = [...root.querySelectorAll('.us-look-chips')].map((row) => row.scrollLeft);
-    root.innerHTML = wardrobeMarkup();
+    // The chip with the keyboard focus keeps it across the repaint (a pick, the points growing).
+    const had = d.activeElement && root.contains(d.activeElement) ? d.activeElement : null;
+    const focusKey = had?.dataset?.usLook !== undefined ? `[data-us-look="${had.dataset.usLook}"]` : had?.dataset?.usShape ? `[data-us-shape="${had.dataset.usShape}"]` : '';
+    const html = wardrobeMarkup();
+    if (root.__usHtml === html && root.childElementCount) return; // nothing changed: leave it (and the focus) alone
+    root.innerHTML = html;
+    root.__usHtml = html;
     root.querySelectorAll('.us-look-chips').forEach((row, i) => { row.scrollLeft = rows[i] || 0; });
+    if (focusKey) root.querySelector(focusKey)?.focus({ preventScroll: true });
   }
   function pickLook(button) {
     if (button.getAttribute('aria-disabled') === 'true') { w.toast?.(`Si sblocca con ${button.querySelector('small')?.textContent || 'la Sintonia'}`); return; }
@@ -558,14 +566,20 @@
     const home = d.getElementById('home');
     if (home && typeof w.MutationObserver === 'function') new w.MutationObserver(() => { if (home.classList.contains('active')) maybePeek(); else setIsola(false); }).observe(home, { attributes: true, attributeFilter: ['class'] });
     d.addEventListener('visibilitychange', () => { if (d.hidden) setIsola(false); else maybePeek(); });
+    // The intro held back the island's moment (a new level, the first time): tried again when it closes.
+    w.addEventListener('us:intro-done', () => maybePeek());
     const boot = () => {
       paintAll();
       let tries = 0;
       // The island's first time waits for the couple and the level, whichever comes last.
       const wait = () => { paintAll(); maybePeek(); if (!w.usProfile?.couple_id && tries++ < 40) setTimeout(wait, 500); };
       wait();
-      // Come stai turns twelve hours old while US stays open.
-      setInterval(() => { if (!d.hidden) paintAll(); }, 60000);
+      // Come stai turns twelve hours old while US stays open; the open angolo keeps its focus.
+      setInterval(() => {
+        if (d.hidden) return;
+        paintMe(); paintIsola();
+        if (!angolo()?.classList.contains('open')) { paintDuo(); paintWardrobe(); }
+      }, 60000);
     };
     if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot, { once: true });
     else boot();

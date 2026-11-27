@@ -312,7 +312,7 @@ function distanceModal(){
 // sale (D4: the closed test sees no payments).
 function personColorLockedModal(){
   const list=window.UsPersonColors?.choices?.(settingsSnapshot?.profiles||[],window.usProfile?.id)||[];
-  openModal('Il tuo colore',`<p class="us-person-color-locked">Si sblocca con US Plus: ognuno di voi sceglie il suo colore tra 8, e lo vedete tutti e due.</p><div class="us-setting-choice us-person-colors is-locked">${list.map(c=>`<button type="button" aria-disabled="true" data-person-color-locked><span><i class="us-person-swatch" style="background:${esc(c.hex)}" aria-hidden="true"></i>${esc(c.name)}</span><b>${c.mine?'Il tuo':''}</b></button>`).join('')}</div>`,'US PLUS');
+  openModal('Il tuo colore',`<p class="us-person-color-locked">Si sblocca con US Plus: scegli il tuo colore tra 8, e lo vede anche l’altra persona.</p><div class="us-setting-choice us-person-colors is-locked">${list.map(c=>`<button type="button" aria-disabled="true" data-person-color-locked><span><i class="us-person-swatch" style="background:${esc(c.hex)}" aria-hidden="true"></i>${esc(c.name)}</span><b>${c.mine?'Il tuo':''}</b></button>`).join('')}</div>`,'US PLUS');
   $('usSettingsModalBody').querySelectorAll('[data-person-color-locked]').forEach(btn=>btn.addEventListener('click',()=>toast('Si sblocca con US Plus')));
 }
 // US Plus, in arrivo (13/11/2026, verso l'uscita pubblica): what Plus will
@@ -321,7 +321,7 @@ function personColorLockedModal(){
 const PLUS_SOON=['Partite illimitate a Gioca','«Il vostro anno» completo','L’archivio delle domande passate','Pacchetti di domande a tema'];
 async function plusSoonModal(){
   const overlay=$('usSettingsOverlay');if(overlay?.dataset)overlay.dataset.usSettingsSheet='plus';
-  openModal('In arrivo',`<div class="us-plus-soon"><p class="us-plus-soon-lead">Un abbonamento per la coppia: se ne paga uno, vale per tutti e due.</p><ul class="us-plus-soon-list">${PLUS_SOON.map(t=>`<li><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span><span>${esc(t)}</span></li>`).join('')}</ul><p class="us-plus-soon-free">Quello che usate oggi resta gratis, per sempre.</p><button type="button" class="primary us-plus-soon-cta" data-plus-soon-join disabled>Avvisami quando arriva</button><p class="us-plus-soon-state" data-plus-soon-state hidden>Ti avviseremo qui su US ♡</p><button type="button" class="us-ob-link us-plus-soon-leave" data-plus-soon-leave hidden>Non avvisarmi più</button></div>`,'US PLUS');
+  openModal('In arrivo',`<div class="us-plus-soon"><p class="us-plus-soon-lead">Un abbonamento per la coppia: se ne paga uno, vale per voi due.</p><ul class="us-plus-soon-list">${PLUS_SOON.map(t=>`<li><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span><span>${esc(t)}</span></li>`).join('')}</ul><p class="us-plus-soon-free">Quello che usate oggi resta gratis, per sempre.</p><button type="button" class="primary us-plus-soon-cta" data-plus-soon-join disabled>Avvisami quando arriva</button><p class="us-plus-soon-state" data-plus-soon-state hidden>Ti avviseremo qui su US ♡</p><button type="button" class="us-ob-link us-plus-soon-leave" data-plus-soon-leave hidden>Non avvisarmi più</button></div>`,'US PLUS');
   const body=$('usSettingsModalBody');
   const join=body.querySelector('[data-plus-soon-join]'),state=body.querySelector('[data-plus-soon-state]'),leave=body.querySelector('[data-plus-soon-leave]');
   const paint=joined=>{join.hidden=joined;join.disabled=false;state.hidden=!joined;leave.hidden=!joined;};
@@ -402,13 +402,25 @@ async function locationAction(){
 }
 
 // US vi ricorda (25/11/2026, D22): the characters' lines, on by default; off is the '*' mute (us-ricorda.js).
-function vociToggle(){
+// `ricorda`: what the server keeps (UsRicorda.loadMutes), read before the sheet opens; null when it could not be read.
+function vociToggle(ricorda){
   if(!window.UsRicorda?.setVoci)return '';
-  const on=window.UsRicorda.voci?.()!==false;
+  const on=ricorda?ricorda.voci!==false:window.UsRicorda.voci?.()!==false;
   return `<button type="button" class="us-settings2-toggle-row" data-us-voci aria-pressed="${on?'true':'false'}">
     <span><b>Le voci dei personaggi</b><small>Ogni tanto vi ricordano le vostre cose</small></span>
     <i class="${on?'on':''}"><u></u></i>
   </button>`;
+}
+// «Non dirmelo più» (long press on a line) switches off one kind: each one comes back here, with its own switch.
+function vociKindsToggles(ricorda){
+  const names=window.UsRicorda?.KIND_NAMES||{};
+  const kinds=(ricorda?.kinds||[]).filter(kind=>names[kind]);
+  if(!kinds.length||!window.UsRicorda?.setKind)return '';
+  return `<p class="us-settings2-group-label">Le voci che hai spento</p>
+    <div class="us-settings2-toggle-list" data-us-voci-kinds>${kinds.map(kind=>`<button type="button" class="us-settings2-toggle-row" data-us-voce="${esc(kind)}" aria-pressed="false">
+      <span><b>${esc(names[kind])}</b><small>Spente con «Non dirmelo più»</small></span>
+      <i><u></u></i>
+    </button>`).join('')}</div>`;
 }
 function preferenceToggle(key,label,checked){
   return `<button type="button" class="us-settings2-toggle-row" data-pref="${key}" aria-pressed="${checked?'true':'false'}">
@@ -642,6 +654,8 @@ async function notificationsModal(){
   const state=await pushState();
   const {data:prefs}=await sb.rpc('get_notification_preferences');
   const p=prefs||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true,lavagna:true};
+  // The characters' switches as the server keeps them, not as Oggi last loaded them.
+  const ricorda=await window.UsRicorda?.loadMutes?.()||null;
   openModal('Notifiche',`
     ${pushMasterMarkup(state)}
     <p class="us-settings2-group-label">Cosa ricevere</p>
@@ -653,8 +667,9 @@ async function notificationsModal(){
       ${preferenceToggle('left_for_you','Lasciato per te',p.left_for_you!==false)}
       ${preferenceToggle('games','Gioca',p.games!==false)}
       ${preferenceToggle('lavagna','Lavagna',p.lavagna!==false)}
-      ${vociToggle()}
+      ${vociToggle(ricorda)}
     </div>
+    ${vociKindsToggles(ricorda)}
     <p class="us-settings2-note">Valgono per il tuo account, su ogni telefono.</p>
   `,state.native?(state.kind==='denied'||state.kind==='settings'?'PERMESSO':'NOTIFICHE'):state.permission==='denied'?'PERMESSO':'NOTIFICHE');
 
@@ -673,6 +688,14 @@ async function notificationsModal(){
     if(!ok){window.toast?.('Non riesco a salvarlo. Riprova.');return;}
     btn.setAttribute('aria-pressed',String(next));btn.querySelector('i')?.classList.toggle('on',next);
   });
+  $('usSettingsModalBody').querySelectorAll('[data-us-voce]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const next=btn.getAttribute('aria-pressed')!=='true';
+    btn.disabled=true;
+    const ok=await window.UsRicorda?.setKind?.(btn.dataset.usVoce,next);
+    btn.disabled=false;
+    if(!ok){window.toast?.('Non riesco a salvarlo. Riprova.');return;}
+    btn.setAttribute('aria-pressed',String(next));btn.querySelector('i')?.classList.toggle('on',next);
+  }));
   $('usSettingsModalBody').querySelectorAll('[data-pref]').forEach(btn=>btn.addEventListener('click',async()=>{
     const key=btn.dataset.pref;
     const next=btn.getAttribute('aria-pressed')!=='true';

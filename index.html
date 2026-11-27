@@ -509,8 +509,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
            Domanda di oggi. No cards of suggestions and no notifications invite:
            each thing has its own place (the envelope, Gioca, the characters, the Profilo). -->
       <div class="us-oggi-dock og-bottom" id="usOggiDock">
-        <!-- Voi due on the photo (redesign definitivo, D2 e D3): a tap opens Il vostro angolo (personaggi.js). -->
-        
         <p class="og-cap" id="usOggiCaption" hidden><em id="usOggiCaptionText" translate="no"></em><small><span class="dot" id="usOggiCaptionDot" aria-hidden="true"></span><span id="usOggiCaptionMeta"></span></small></p>
         <div class="og-row" id="usOggiRow" hidden>
           <button type="button" class="og-next" id="usOggiNext" hidden><span class="us-icon" data-us-icon="calendar-blank" aria-hidden="true"></span><b id="usOggiNextWhen"></b><span id="usOggiNextTitle" translate="no"></span></button>
@@ -518,6 +516,8 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
           <!-- Come stai (02/11/2026): the partner's state and mine; a tap opens the twelve. -->
           <button type="button" class="og-pill us-status-pill" id="usOggiStatus" aria-haspopup="dialog" aria-label="Come stai? Scegli" hidden><span data-status-partner translate="no" hidden></span><span data-status-mine>Come stai?</span></button>
         </div>
+        <!-- The answers read, the card goes away with a swipe or with «Togli» (27/11/2026): it sits on the card's corner. -->
+        <button type="button" class="us-daily-ritual-close" id="usDailyRitualClose" hidden aria-label="Togli la domanda di oggi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span><span>Togli</span></button>
         <button type="button" class="us-daily-ritual us-attention-orbit" id="usDailyRitual" hidden onclick="openToday()" data-us-attention="off"></button>
       </div>
       <!-- Legacy Calendar/reveal anchors stay mounted but visually retired. -->

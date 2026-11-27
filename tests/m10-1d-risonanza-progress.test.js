@@ -19,7 +19,7 @@ const floorOf = (level) => { let f = 0; for (let l = 1; l < level; l++) f += nee
 
 function fakeEl() { const attrs = {}; return { textContent: '', style: {}, dataset: {}, setAttribute: (k, v) => { attrs[k] = String(v); }, getAttribute: (k) => attrs[k] ?? null, attrs }; }
 function harness() {
-  const ids = ['heroBondLevel', 'heroBondXp', 'bondFill', 'bondLevelValue', 'bondTotalXp', 'bondRankTitle', 'bondNextXp', 'bondPageFill', 'bondLevelXp', 'bondResonanceLevel', 'bondProgressTrack', 'noiHubResonanceTitle', 'noiHubResonanceMeta', 'noiHubResonanceFill', 'noiResonanceTotal'];
+  const ids = ['bondLevelValue', 'bondTotalXp', 'bondRankTitle', 'bondNextXp', 'bondPageFill', 'bondLevelXp', 'bondResonanceLevel', 'bondProgressTrack', 'noiHubResonanceTitle', 'noiHubResonanceMeta', 'noiHubResonanceFill', 'noiResonanceTotal'];
   const els = Object.fromEntries(ids.map((id) => [id, fakeEl()]));
   const window = {};
   const context = vm.createContext({ console, window, document: { getElementById: (id) => els[id] || null }, renderBondBadges() {}, escapeHtml: String });
@@ -95,8 +95,9 @@ test('M10.1D: the rendered bar, labels and progressbar semantics all come from t
 test('M10.1D: no static or fake percentage — width is only ever written from bondLevelInfo', () => {
   assert.match(html, /<div id="bondPageFill"><\/div>/, 'no inline width in the markup');
   assert.doesNotMatch(html, /id="(?:bondPageFill|noiHubResonanceFill|bondFill)"[^>]*style=/);
+  // 27/11/2026: the hero bar (#bondFill) left the page long ago; its write went with the dead code.
   const widthWrites = app.match(/(?:pageFill|hubFill|heroFill)\.style\.width=`[^`]*`/g) || [];
-  assert.equal(widthWrites.length, 3);
+  assert.equal(widthWrites.length, 2);
   for (const w of widthWrites) assert.match(w, /\$\{info\.progress\}%/);
   assert.equal((app.match(/function bondLevelInfo\(/g) || []).length, 1, 'a single XP formula');
   assert.doesNotMatch(app, /bondPageFill'\)[^;]*\.style\.width='?\d/);

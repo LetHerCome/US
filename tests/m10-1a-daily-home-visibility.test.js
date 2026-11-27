@@ -117,7 +117,7 @@ function hydrateHarness() {
     dailyRitualPartnerName: () => 'Beatrice', localDateISO: () => 'x', toast() {}, sendWebPushEvent: () => Promise.resolve(),
   });
   require('./helpers/identity-fixture').install(ctx);
-  vm.runInContext(`${slice('// M9E — la domanda di oggi', 'async function updateHomeStatus')}\n${slice('saveAnswer = async function(){', 'window.saveAnswer=saveAnswer;')}\nwindow.hydrateToday=hydrateToday;window.saveAnswer=saveAnswer;`, ctx);
+  vm.runInContext(`${slice('// M9E — la domanda di oggi', 'let pendingMomentFile=null;')}\n${slice('saveAnswer = async function(){', 'window.saveAnswer=saveAnswer;')}\nwindow.hydrateToday=hydrateToday;window.saveAnswer=saveAnswer;`, ctx);
   return {
     window, nodes, refreshes,
     nextDay() { day = 'B'; saved = false; window.todayQuestion = null; window.todayState = null; },

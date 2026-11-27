@@ -413,6 +413,13 @@
   // cambiano di forma, in tutte le cose dove sono presenti ci saranno quei
   // personaggi»): the two characters the app draws, for the widgets to draw
   // the same. Written again whenever the couple's profiles change.
+  // The usual character of each role (personaggi.js shapeOf, person-colors.js rosa/lilla): whoever
+  // created the couple the ball in rosa, whoever joined the square in lilla, on both phones.
+  const ROLE_LOOK = Object.freeze({
+    francesco: Object.freeze({ shape: 'palla', color: '#ff7c96', day: '#e7a1ab' }),
+    beatrice: Object.freeze({ shape: 'quadrato', color: '#a98bff', day: '#ab9ddb' }),
+  });
+  const myRoleNow = () => (window.usProfile?.role === 'beatrice' ? 'beatrice' : 'francesco');
   function syncCharacters() {
     if (!ownerHash || !window.usProfile?.couple_id) return Promise.resolve(false);
     const P = window.UsPersonaggi;
@@ -427,7 +434,9 @@
       const look = P.lookOf(role) || {};
       const chosen = C?.idOf?.(profiles.find((p) => p?.role === role)?.person_color);
       const id = chosen || (role === 'beatrice' ? 'lilla' : 'rosa');
-      return { shape: P.shapeOf(role) || '', head: look.head || '', face: look.face || '', color: hex(C?.PALETTE?.[id]), day: hex(C?.PALETTE_GIORNO?.[id]) };
+      // Always a shape and the colours, by role (never left to the widget, which would pick by viewer).
+      const base = ROLE_LOOK[role];
+      return { shape: P.shapeOf(role) || base.shape, head: look.head || '', face: look.face || '', color: hex(C?.PALETTE?.[id]) || base.color, day: hex(C?.PALETTE_GIORNO?.[id]) || base.day };
     };
     const characters = { me: person(me), partner: person(them) };
     if (JSON.stringify(characters) === JSON.stringify(couple.characters)) return Promise.resolve(false);
@@ -635,7 +644,7 @@
         for (const url of urls) bitmaps.push(await loadBitmap(url));
         if (token !== generation) return false;
         // The tape of each photo in the colour of whoever added it (its character's).
-        const tint = (row) => couple.characters?.[row?.by === 'me' ? 'me' : 'partner']?.color || (row?.by === 'me' ? '#ff7c96' : '#a98bff');
+        const tint = (row) => couple.characters?.[row?.by === 'me' ? 'me' : 'partner']?.color || ROLE_LOOK[row?.by === 'me' ? myRoleNow() : (myRoleNow() === 'beatrice' ? 'francesco' : 'beatrice')].color;
         const look = { caption: polaroidCaption(pick), tapes: pick.rows.map(tint) };
         const small = await composeStack(bitmaps, STACK_SMALL, look);
         const wide = await composeStack(bitmaps, STACK_WIDE, look);

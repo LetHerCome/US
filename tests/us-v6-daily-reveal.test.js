@@ -35,7 +35,7 @@ function daily({ rpc, upsert } = {}) {
     dailyQuestionOutcomes:{hide(){}},updateHomeStatus(){},dailyRitualPartnerName:()=> 'Beatrice',localDateISO:()=>date,
     escapeHtml:v=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),toast(){},sendWebPushEvent:()=>Promise.resolve()});
   require('./helpers/identity-fixture').install(context);
-  vm.runInContext(slice('// M9E — la domanda di oggi','async function updateHomeStatus')+';window.hydrateToday=hydrateToday;',context);
+  vm.runInContext(slice('// M9E — la domanda di oggi','let pendingMomentFile=null;')+';window.hydrateToday=hydrateToday;',context);
   vm.runInContext(slice('let usTodayPreviousOverflow=null;','function thinkReactionLabel('),context);
   vm.runInContext(slice('saveAnswer = async function(){','window.saveAnswer=saveAnswer;')+';window.saveAnswer=saveAnswer;',context);
   return {nodes,window,calls,question,document,hydrate:()=>window.hydrateToday()};

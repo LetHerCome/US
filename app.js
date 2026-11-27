@@ -718,8 +718,6 @@ window.refreshWebPushUi=refreshWebPushUi;
 window.addEventListener('us-notifications-changed',()=>{refreshWebPushUi().catch(()=>{});toast('Notifiche attive ♡');});
 
 async function enableNativePush(){
-  const button=document.getElementById('pushEnableBtn');
-  if(button){button.disabled=true;button.textContent='Attivo…';}
   let result={ok:false,kind:'error'};
   try{result=await window.UsNotifications.enable();}catch(error){console.warn('[US Notifications] enable',error);}
   if(result.ok){toast('Notifiche attive ♡');setTimeout(()=>sendWebPushEvent('test'),350);}
@@ -729,7 +727,6 @@ async function enableNativePush(){
   else if(result.kind==='network'&&result.pending)toast(`La rete non risponde: le attivo appena torna${result.code?` · ${result.code}`:''}`);
   else if(result.kind==='network')toast(`Rete lenta: riprova tra poco, oppure con il Wi-Fi${result.code?` · ${result.code}`:''}`);
   else if(result.kind!=='busy')toast(`Non riesco ad attivare le notifiche${result.code?` · ${result.code}`:''}`);
-  if(button)button.disabled=false;
   try{await refreshWebPushUi();}catch(_e){}
   return result;
 }
@@ -741,11 +738,10 @@ async function enableWebPush(){
   const operation=usPushWaitScope();
   try{await operation.wait(usPushCleanup);}catch(_e){operation.finish();return;}
   if(usPushUiBusy||usPushSubscriptionPending||!operation.current()){operation.finish();return;}
-  const button=document.getElementById('pushEnableBtn');
   let finishOperation;
   const operationDone=new Promise(resolve=>{finishOperation=resolve;});
   usPushOperationInFlight=operationDone;
-  usPushUiBusy=true;if(button){button.disabled=true;button.textContent='Attivo…';}
+  usPushUiBusy=true;
   const profile=window.usProfile,epoch=usAuthEpoch;
   try{
     let permission=Notification.permission;
@@ -767,7 +763,7 @@ async function enableWebPush(){
   }catch(error){if(operation.current()){console.warn('[US Push] enable failed',error);toast('Non riesco ad attivare le notifiche');}}
   finally{
     operation.finish();
-    usPushUiBusy=false;if(button)button.disabled=false;
+    usPushUiBusy=false;
     if(usPushOperationInFlight===operationDone)usPushOperationInFlight=null;
     finishOperation();
     refreshWebPushUi().catch(()=>{});
@@ -1229,8 +1225,6 @@ async function initCloud(){
     window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:true}}));
     setCloudBadge(true, usIdentity().ownName);
     hydrateUsCoupleContext().catch(error=>console.warn('[US Couple] boot context',error));
-    const syncBadge=document.getElementById('syncReadyBadge');
-    if(syncBadge)syncBadge.textContent='SYNC ATTIVO';
 
     // First usable Home paint wins. Live subscriptions and device maintenance
     // start immediately after, but no longer compete with the first image/data.
@@ -1855,8 +1849,6 @@ async function uploadProfilePhoto(file){
   if(!['image/jpeg','image/png','image/webp'].includes(file.type))return toast('Per ora usa JPG, PNG o WebP');
   if(file.size>20*1024*1024)return toast('Foto troppo grande: massimo 20 MB');
   const oldPath=window.usProfile.avatar_path||null;
-  const btn=document.getElementById('profileAvatarBtn');
-  if(btn)btn.disabled=true;
   try{
     const compressed=await compressImageFile(file,{maxDimension:512,quality:.82});
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/avatar-${Date.now()}-${crypto.randomUUID()}.webp`;
@@ -1869,7 +1861,7 @@ async function uploadProfilePhoto(file){
     toast('Foto profilo aggiornata ♡',{icon:'user'});
     await hydrateProfileAvatars();
   }catch(err){console.warn(err);toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Non riesco ad aggiornare la foto');}
-  finally{if(btn)btn.disabled=false;document.getElementById('profileAvatarFile').value='';}
+  finally{document.getElementById('profileAvatarFile').value='';}
 }
 
 const profileAvatarFile=document.getElementById('profileAvatarFile');
@@ -2705,6 +2697,7 @@ function bindDailyRitualSwipe(card){
       card.style.transform='';card.style.opacity='';
       dailyRitualDropAbove(card);
       card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.dataset.usAttention='off';
+      if(typeof paintDailyRitualClose==='function')paintDailyRitualClose(card);
     };
     if(out?.finished)out.finished.then(finish,finish);else finish();
   };
@@ -2731,7 +2724,7 @@ function renderDailyRitual(model){
   if(model&&before!==model.state)window.UsCosaDiOggi?.refresh?.({force:true});
   if(model&&window.UsCosaDiOggi?.decorate)model=window.UsCosaDiOggi.decorate(model);
   if(model?.state==='revealed'&&model.questionId&&typeof dailyRitualDismissedId==='function'&&dailyRitualDismissedId()===String(model.questionId))model=null;
-  if(!model){card.hidden=true;card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.removeAttribute('data-look');delete card.dataset.cdoAction;card.dataset.usAttention='off';return;}
+  if(!model){card.hidden=true;card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.removeAttribute('data-look');delete card.dataset.cdoAction;card.dataset.usAttention='off';if(typeof paintDailyRitualClose==='function')paintDailyRitualClose(card);return;}
   card.dataset.state=model.state;
   if(model.look)card.dataset.look=model.look;else card.removeAttribute('data-look');
   if(model.action)card.dataset.cdoAction=model.action;else delete card.dataset.cdoAction;
@@ -2746,6 +2739,7 @@ function renderDailyRitual(model){
   // Same words, same circles: leave the card (and a running animation) alone.
   if(card.hidden||card.usDailyHtml!==html){card.innerHTML=html;card.usDailyHtml=html;}
   card.hidden=false;
+  if(typeof paintDailyRitualClose==='function')paintDailyRitualClose(card);
   // I just sent my answer: the characters tell it, once; if the other had
   // already answered, the two come close (redesign definitivo, D2).
   const answered=usDailyRitualAnswerPending&&(before==='answer'||before==='invited')&&['waiting','ready','revealed'].includes(model.state);
@@ -2756,6 +2750,31 @@ function renderDailyRitual(model){
   }
 }
 window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
+// «Togli» (27/11/2026): the answers read, the card can go without the swipe too, with a visible
+// button on its corner (a swipe alone is not reachable by everyone). Same memory as the swipe.
+function paintDailyRitualClose(card=document.getElementById('usDailyRitual')){
+  const close=document.getElementById('usDailyRitualClose');
+  if(!close)return;
+  close.hidden=!(card&&!card.hidden&&card.dataset.state==='revealed'&&card.dataset.questionId);
+}
+document.getElementById('usDailyRitualClose')?.addEventListener('click',event=>{
+  const close=event.currentTarget,card=document.getElementById('usDailyRitual');
+  const questionId=card?.dataset.questionId||'';
+  if(!card||card.hidden||card.dataset.state!=='revealed'||!questionId)return;
+  dailyRitualDismiss(questionId);
+  const hadFocus=document.activeElement===close;
+  close.hidden=true;
+  const out=dailyRitualReducedMotion()?null:card.animate?.([{transform:'none',opacity:1},{transform:'translateX(48px)',opacity:0}],{duration:220,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'});
+  const finish=()=>{
+    out?.cancel?.();
+    dailyRitualDropAbove(card);
+    card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.dataset.usAttention='off';
+    paintDailyRitualClose(card);
+    // The keyboard focus does not fall to the page: the next thing of Oggi takes it.
+    if(hadFocus)[...document.querySelectorAll('#usOggiDock button, #thinkButton')].find(el=>!el.hidden&&!el.closest('[hidden]')&&el.getBoundingClientRect().height>0)?.focus({preventScroll:true});
+  };
+  if(out?.finished)out.finished.then(finish,finish);else finish();
+});
 async function refreshTodayPriorities({daily,freshEvents=false}={}){
   const refreshId=++usTodayPriorityRefreshId;
   // La domanda di oggi widget (widgets.js): the question and whose turn it is.
@@ -3293,7 +3312,6 @@ async function hydrateToday(){
     // Un errore transitorio non cancella la domanda già valida di oggi.
     if(keepPrevious){renderTodaySyncError(true);return;}
     renderTodayQuestionUnavailable('error');
-    updateHomeStatus();
     window.UsTodayPriority?.refresh?.({daily:{status:'error'}});
     return;
   }
@@ -3366,26 +3384,12 @@ async function hydrateToday(){
       locked.innerHTML='<span class="dot" data-who="noi" aria-hidden="true"></span><span>Le risposte si svelano quando avete risposto voi due.</span>';
     }
   }
-  updateHomeStatus();
   window.UsTodayPriority?.refresh?.({daily:{
     question:q,
     state,
     reveal:window.todayRevealMeta,
     partnerName:dailyRitualPartnerName()
   }});
-}
-
-async function updateHomeStatus(){
-  if(!window.usProfile)return;
-  const todayPill=document.getElementById('todayStatusPill');
-  const st=window.todayState;
-  const partner=usIdentity().partnerName;
-  if(todayPill){
-    if(st?.both_answered) todayPill.textContent='💬 Today · reveal sbloccato';
-    else if(st?.my_answer) todayPill.textContent='💬 Today · in attesa di '+partner;
-    else if(st?.partner_has_answer) todayPill.textContent='💬 Today · risposta in attesa';
-    else todayPill.textContent='💬 Today · da fare';
-  }
 }
 
 let pendingMomentFile=null;
@@ -3761,7 +3765,6 @@ async function uploadMoment(){
     const challengeNote=source?.kind==='challenge'&&!failed?window.UsWeeklyChallenge?.takeNote?.():'';
     toast(challengeNote||(failed?`Ricordo aggiunto. ${failed} foto non sono entrate: riprova dall’album`:total>1?`Ricordo aggiunto con ${total} foto ♡`:'Ricordo aggiunto ♡'));
     await hydrateMoments();
-    await hydrateHomeMemory();
     if(!homePhotoPath)await hydrateHomePhoto(true);
   }catch(err){console.warn(err);window.UsFeedback?.error?.();toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Caricamento non riuscito');}
   finally{btn.disabled=false;btn.textContent='Salva ricordo';momentUpBar('done');}
@@ -4255,7 +4258,6 @@ async function hydrateMomentsCore(){
   usForceMomentsMediaRefresh=false;
   if(!window.usProfile)return;
   const grid=document.getElementById('momentsGrid');
-  const pill=document.getElementById('momentsStatusPill');
   if(!grid)return;
   const profile=window.usProfile;
   if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="us-skeleton-tiles" role="status"><span class="us-sr">Carico i ricordi…</span><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i></div>';
@@ -4299,7 +4301,6 @@ async function hydrateMomentsCore(){
   const eventRows=eventsError?[]:(events||[]);
   if(provenanceError)console.warn(provenanceError);
   const provenanceRows=provenanceError?[]:(provenance||[]);
-  if(pill)pill.textContent=`Ricordi · ${rows?.length||0}`;
   const today=localDateISO();
   // R5 — before the "nothing changed" shortcut: the dot follows the visit.
   const freshIds=ricordiNewSync(rows||[]);
@@ -4368,44 +4369,6 @@ async function hydrateMoments(options={}){
   return momentsHydrateInFlight;
 }
 window.hydrateMoments=hydrateMoments;
-
-let homeMemoryOffset=0;
-async function hydrateHomeMemory(forceNext=false){
-  if(!window.usProfile)return;
-  const section=document.getElementById('homeMemorySection');
-  const card=document.getElementById('homeMemoryCard');
-  if(!section||!card)return;
-  const [{data:rows,error},{data:profiles,error:profilesError}]=await Promise.all([
-    sb.from('moments').select('id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at').order('created_at',{ascending:false}).limit(24),
-    sb.from('profiles').select('id,display_name').eq('couple_id',window.usProfile.couple_id)
-  ]);
-  if(error){console.warn(error);section.hidden=true;return;}
-  if(profilesError)console.warn(profilesError);
-  if(!rows?.length){section.hidden=true;return;}
-  if(forceNext)homeMemoryOffset=(homeMemoryOffset+1)%rows.length;
-  const daySeed=Number(localDateISO().replaceAll('-',''))||0;
-  const row=rows[(daySeed+homeMemoryOffset)%rows.length];
-  const names=new Map((profiles||[]).map(profile=>[profile.id,profile.display_name||'Noi']));
-  const paths=[row.storage_path,row.thumbnail_path].filter(Boolean);
-  const urls=await usGetSignedUrls(paths,US_MEDIA_URL_TTL_S);
-  const signedUrl=urls.get(row.storage_path);
-  const previewUrl=urls.get(row.thumbnail_path)||signedUrl;
-  if(!signedUrl||!previewUrl){section.hidden=true;return;}
-  const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'long',year:'numeric'});
-  const author=names.get(row.created_by)||'Noi';
-  document.getElementById('homeMemoryImg').src=previewUrl;
-  document.getElementById('homeMemoryAuthor').textContent=author;
-  document.getElementById('homeMemoryDate').textContent=dateLabel;
-  const caption=document.getElementById('homeMemoryCaption');
-  caption.textContent=row.caption||'';
-  caption.hidden=!row.caption;
-  card.dataset.url=signedUrl;
-  card.dataset.author=author;
-  card.dataset.date=dateLabel;
-  card.dataset.caption=row.caption||'';
-  section.hidden=false;
-}
-window.hydrateHomeMemory=hydrateHomeMemory;
 
 let momentViewerMediaToken=0;
 function showMomentViewer(viewer){
@@ -4493,7 +4456,6 @@ async function commitMomentDeletion(id){
   if(data?.storage_cleanup===false)console.warn('[US Ricordi] moment deleted; storage cleanup will need recovery');
   try{
     await hydrateMoments();
-    await hydrateHomeMemory();
     homePhotoPath='';
     await hydrateHomePhoto(true);
   }catch(refreshError){console.warn('[US Ricordi] refresh after delete',refreshError);}
@@ -4574,12 +4536,6 @@ function renderBondProgress(totalXp){
   if(painted&&painted.__usTotal===totalXp)return;
   if(painted)painted.__usTotal=totalXp;
   const info=bondLevelInfo(totalXp);
-  const heroLevel=document.getElementById('heroBondLevel');
-  const heroXp=document.getElementById('heroBondXp');
-  const heroFill=document.getElementById('bondFill');
-  if(heroLevel)heroLevel.textContent=`Livello ${info.level}`;
-  if(heroXp)heroXp.textContent=`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} / ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))}`;
-  if(heroFill)heroFill.style.width=`${info.progress}%`;
   const levelEl=document.getElementById('bondLevelValue');if(levelEl)levelEl.textContent=info.level;
   const totalEl=document.getElementById('bondTotalXp');if(totalEl)totalEl.textContent=`${info.total.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} punti`;
   const rankEl=document.getElementById('bondRankTitle');if(rankEl)rankEl.textContent=bondRankTitle(info.level);
@@ -5401,13 +5357,12 @@ function relativeSignalAge(dateString){
 async function hydrateThink(){
   const identityProfile=window.usProfile,identityCouple=identityProfile?.couple_id;
   if(!identityProfile)return;
-  const [profiles,{data:rows,error},{count,error:countError}]=await Promise.all([
+  const [profiles,{data:rows,error}]=await Promise.all([
     getCoupleProfiles(),
-    sb.from('shared_messages').select('id,sender_id,recipient_id,kind,created_at').eq('kind','think').order('created_at',{ascending:false}).limit(60),
-    sb.from('shared_messages').select('id',{count:'exact',head:true}).eq('kind','think').gte('created_at',new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString())
+    sb.from('shared_messages').select('id,sender_id,recipient_id,kind,created_at').eq('kind','think').order('created_at',{ascending:false}).limit(60)
   ]);
   if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==identityCouple)return;
-  if(error){console.warn(error);return;}if(countError)console.warn(countError);
+  if(error){console.warn(error);return;}
   const messageIds=(rows||[]).map(row=>row.id).filter(Boolean);
   let reactionRows=[];
   if(messageIds.length){
@@ -5425,7 +5380,6 @@ async function hydrateThink(){
   else if(!received||receivedReaction){usIncomingThink=null;usThinkReactionFinal=receivedReaction?.reaction||null;}
   const receivedEl=document.getElementById('thinkLastReceived');if(receivedEl)receivedEl.textContent=received?(receivedReaction?`${partnerName} ha reagito al tuo Ti penso`:`${partnerName} ti ha pensato ${relativeSignalAge(received.created_at)}`):'Ancora nessun Ti penso';
   const sentEl=document.getElementById('thinkLastSent');if(sentEl)sentEl.textContent=sent?(sentReaction?`${partnerName} ha reagito ${thinkReactionLabel(sentReaction.reaction)}`:`Hai pensato a ${partnerName} ${relativeSignalAge(sent.created_at)}`):'Non ne hai ancora inviati';
-  const monthEl=document.getElementById('thinkMonthCount');if(monthEl)monthEl.textContent=Number(count||0).toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
   const live=document.getElementById('thinkLiveText');if(live&&received)live.textContent=`Ultimo Ti penso da ${partnerName} · ${relativeSignalAge(received.created_at)}`;
   if(sentReaction){
     const signature=`${sent.id}:${sentReaction.reaction}:${sentReaction.updated_at||''}`;

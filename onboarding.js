@@ -677,16 +677,19 @@
   // D14: at the first opening each of you makes their character — the shape
   // here, the colour with the picker below (set_my_character_shape, the same
   // rule as the guardaroba). `redraw` paints the characters again.
-  const SHAPE_ORDER=['palla','quadrato','triangolo','goccia','nuvola'];
-  const SHAPE_LABEL={palla:'Tondo',quadrato:'Quadrato',triangolo:'Triangolo',goccia:'Goccia',nuvola:'Nuvola'};
+  // The shapes and their names come from personaggi.js (one list, it cannot drift); these only if it is missing.
+  const SHAPE_ORDER_FALLBACK=['palla','quadrato','triangolo','goccia','nuvola'];
+  const SHAPE_LABEL_FALLBACK={palla:'Tondo',quadrato:'Quadrato',triangolo:'Triangolo',goccia:'Goccia',nuvola:'Nuvola'};
+  const shapeOrder=()=>{const list=globalThis.UsPersonaggi?.SHAPES;return Array.isArray(list)&&list.length?list:SHAPE_ORDER_FALLBACK;};
+  const shapeLabel=shape=>globalThis.UsPersonaggi?.SHAPE_NAMES?.[shape]||SHAPE_LABEL_FALLBACK[shape]||shape;
   function mountShapePicker(host,{profile,redraw=()=>{}}){
     if(!host)return;
     const draw=globalThis.UsPersonaggi?.character;
     if(typeof draw!=='function'||!profile?.id||!profile?.couple_id||!colourIO){host.hidden=true;return;}
     const side=profile.role==='beatrice'?'b':'a';
-    const now=()=>SHAPE_ORDER.includes(profile.character_shape)?profile.character_shape:defaultShape(side);
+    const now=()=>shapeOrder().includes(profile.character_shape)?profile.character_shape:defaultShape(side);
     const paint=()=>{
-      host.innerHTML=SHAPE_ORDER.map(shape=>`<button type="button" class="us-ob-shape" data-shape="${shape}" aria-pressed="${shape===now()}">${duoChar(side,{shape}).replace(/width="\d+" height="\d+"/,'width="40" height="37"')}<span>${SHAPE_LABEL[shape]}</span></button>`).join('');
+      host.innerHTML=shapeOrder().map(shape=>`<button type="button" class="us-ob-shape" data-shape="${shape}" aria-pressed="${shape===now()}">${duoChar(side,{shape}).replace(/width="\d+" height="\d+"/,'width="40" height="37"')}<span>${shapeLabel(shape)}</span></button>`).join('');
       host.hidden=false;
     };
     host.onclick=async event=>{
@@ -719,8 +722,11 @@
     }catch(_){/* only me: the partner's default below */}
     // Before the partner joins, their default colour is theirs already.
     if(!profiles.some(p=>p.id!==profile.id))profiles.push({id:'~partner',role:profile.role==='beatrice'?'francesco':'beatrice',person_color:null});
+    // A taken colour says whose it is (as in the intro).
+    const whose=()=>{let n='';try{n=globalThis.UsIdentity?.current?.()?.partnerName||'';}catch(_){n='';}return n&&n!=='La tua persona'?`è di ${n}`:'è della tua persona';};
+    const escapeAttr=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     const paint=()=>{
-      host.innerHTML=colors.choices(profiles,profile.id).map(c=>`<button type="button" class="us-ob-swatch${c.mine?' is-on':''}" data-colour="${c.id}" aria-pressed="${c.mine}" aria-label="${c.name}"${c.taken?' disabled':''}><i style="background:${c.hex}"></i></button>`).join('');
+      host.innerHTML=colors.choices(profiles,profile.id).map(c=>`<button type="button" class="us-ob-swatch${c.mine?' is-on':''}" data-colour="${c.id}" aria-pressed="${c.mine}" aria-label="${escapeAttr(c.taken?`${c.name}, ${whose()}`:c.name)}"${c.taken?' disabled':''}><i style="background:${c.hex}"></i></button>`).join('');
       host.hidden=false;
     };
     host.onclick=async event=>{
