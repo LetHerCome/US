@@ -48,10 +48,10 @@ test('Left for You e album hanno recovery media esplicita', async () => {
   assert.match(albums, /cover\.setAttribute\('data-us-media-path',item\.storage_path\)/);
 });
 
-test('Home Memory dead path uses the actual signedUrl variable', async () => {
+test('no dead signed.signedUrl path (the Home memory loader was removed on 27/11/2026)', async () => {
   const app = await src('app.js');
   assert.doesNotMatch(app, /signed\.signedUrl/);
-  assert.match(app, /card\.dataset\.url=signedUrl;/);
+  assert.doesNotMatch(app, /homeMemory/);
 });
 
 test('Service Worker cache writes after install are best effort', async () => {

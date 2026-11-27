@@ -2765,7 +2765,7 @@ function renderDailyRitual(model){
   }
 }
 window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
-// «Togli» (27/11/2026): the answers read, the card can go without the swipe too, with a visible
+// «Togli» (27/11/2026): the answers read, the card can leave without the swipe too, with a visible
 // button on its corner (a swipe alone is not reachable by everyone). Same memory as the swipe.
 function paintDailyRitualClose(card=document.getElementById('usDailyRitual')){
   const close=document.getElementById('usDailyRitualClose');

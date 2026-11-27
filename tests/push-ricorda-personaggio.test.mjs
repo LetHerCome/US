@@ -246,7 +246,7 @@ test('the app: the couple_sync looks signal reads the looks again; my own change
   assert.match(hydrate, /if\(mineWas!=='\[\]'&&mineWas!==uscLookKey\([^)]*\)\)\)sendWebPushEvent\('partner_look'\);/, 'only a real change of my own look, never the first read');
   const settings = read('settings.js');
   assert.match(settings, /preferenceToggle\('ricorda','US vi ricorda',p\.ricorda!==false\)/);
-  assert.ok(settings.indexOf("preferenceToggle('ricorda'") < settings.indexOf('${vociToggle()}'), 'next to the others, before the voices');
+  assert.ok(settings.indexOf("preferenceToggle('ricorda'") < settings.indexOf('${vociToggle('), 'next to the others, before the voices');
   assert.match(read('i18n-en.js'), /'US vi ricorda': 'US remembers'/);
 });
 

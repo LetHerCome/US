@@ -65,7 +65,7 @@ test('Ricordi cards download thumbnail previews but retain full originals for vi
   assert.match(app, /const previewUrl=ricordiPreviewUrl\(row,signedUrls\)/);
   assert.match(app, /data-url="\$\{escapeHtml\(fullUrl\)\}"/);
   assert.match(app, /src="\$\{escapeHtml\(previewUrl\)\}"/);
-  assert.match(app, /select\('id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at'\)/);
+  assert.match(app, /const US_MOMENT_COLUMNS='id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at';/);
   assert.match(app, /flatMap\(row=>\[row\.storage_path,row\.thumbnail_path\]\)/);
 });
 
