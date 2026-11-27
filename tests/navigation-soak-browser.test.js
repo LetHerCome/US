@@ -16,7 +16,6 @@ function shellState() {
     const rect = el.getBoundingClientRect();
     return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > 0.01 && rect.width > 0 && rect.height > 0;
   };
-  const pet = document.getElementById('usPetLayer');
   return {
     pages: [...document.querySelectorAll('.page.active')].map((page) => page.id),
     navActive: [...document.querySelectorAll('.nav button.active')].map((button) => button.dataset.page),
@@ -30,7 +29,8 @@ function shellState() {
     bodyOverflow: document.body.style.overflow,
     // US 1.0: a Noi section (Missioni, Eventi) shows its bar; the old hub is gone.
     noiSection: document.getElementById('noiSectionBar')?.hidden === false,
-    pet: { visibility: getComputedStyle(pet).visibility, blockers: window.USPet.blockers(), running: window.USPet.snapshot().running },
+    // Redesign (23/11/2026): the mascots and their layer are gone (no usPetLayer).
+    pet: document.getElementById('usPetLayer') !== null,
     overflowX: document.scrollingElement.scrollWidth > innerWidth,
     history: history.state && { kind: history.state.kind, page: history.state.page, layer: history.state.layer || null }
   };
@@ -39,7 +39,7 @@ function shellState() {
 const CLEAN_OGGI = {
   pages: ['home'], navActive: ['home'], navCount: 1, openModals: [], visibleOverlays: [], inert: [], bodyClasses: [],
   bodySurface: null, bodyOverflow: '', noiSection: false,
-  pet: { visibility: 'visible', blockers: [], running: true }, overflowX: false,
+  pet: false, overflowX: false,
   history: { kind: 'page', page: 'home', layer: null }
 };
 
@@ -66,11 +66,11 @@ test('navigation soak: repeated cycles through every primary surface leave one c
       await tab('moments'); await expectPage(`${cycle} Ricordi`, 'moments');
       await tab('home'); await expectPage(`${cycle} Oggi`, 'home');
 
-      // Ti penso arrives: a transient surface, the PET stays; Back closes it on Oggi.
+      // Ti penso arrives: a transient surface; Back closes it on Oggi.
       await page.evaluate(() => { usIncomingThink = { id: `qa-think-${Date.now()}`, sender_id: 'b1', created_at: new Date().toISOString() }; window.openThinkArrival(); });
       await settle(page);
       const arrival = await page.evaluate(shellState);
-      assert.deepEqual({ modals: arrival.openModals, pet: arrival.pet.visibility }, { modals: ['thinkArrival'], pet: 'visible' }, `${cycle} Ti penso`);
+      assert.deepEqual(arrival.openModals, ['thinkArrival'], `${cycle} Ti penso`);
       await back(); await expectPage(`${cycle} Ti penso → Back`, 'home');
 
       // Lasciato per te with nothing waiting opens the composer: Back closes it, Oggi stays.
@@ -79,9 +79,10 @@ test('navigation soak: repeated cycles through every primary surface leave one c
       assert.deepEqual((await page.evaluate(shellState)).openModals, ['leftForYouComposerOverlay'], `${cycle} Lasciato per te`);
       await back(); await expectPage(`${cycle} Lasciato per te → Back`, 'home');
 
-      // A Noi section (Missioni), then Back to the Noi calendar.
+      // A Noi section (Missioni), then Back to the Noi calendar. The redesign has no
+      // Missioni link on Noi: it opens as a mission push or an idea does.
       await tab('bond');
-      await page.click('[data-noi-open-link="quest"]'); await settle(page);
+      await page.evaluate(() => window.openNoiSection('quest')); await settle(page);
       assert.equal((await page.evaluate(shellState)).noiSection, true, `${cycle} Noi section open`);
       await back();
       const hub = await page.evaluate(shellState);

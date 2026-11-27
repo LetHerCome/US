@@ -14,13 +14,15 @@ test('a commitment for tomorrow added in Noi is Oggi\'s next one, refreshed afte
   await page.evaluate(()=>{window.__QA.persistWrites=true;});
   assert.equal((await pill(page)).hidden,true,'nothing within two days yet (the only event is 12 days away)');
   const tomorrow=await page.evaluate(()=>{const d=new Date();d.setDate(d.getDate()+1);return d.toLocaleDateString('en-CA');});
-  // Noi -> tomorrow -> + -> "Cena da Marco", 21:00-23:30 -> Salva impegno.
+  // Noi -> tomorrow -> Aggiungi a questo giorno -> "Cena da Marco", 21:00 -> Salva impegno.
   await page.locator('.nav button:has-text("Noi")').first().tap();await page.waitForTimeout(900);
   await page.locator(`[data-noi-day="${tomorrow}"]`).first().tap();
-  await page.locator('[data-noi-add]').first().tap();
+  // Noi, Fase A (24/11/2026): the day opens its sheet, whose «Aggiungi a questo giorno» is the visible add.
+  await page.locator('.us-noi-v2-add-day[data-noi-add]').first().tap();
   await page.waitForSelector('#usCalendarTitleInput',{state:'visible'});
   await page.locator('#usCalendarTitleInput').fill('Cena da Marco');
-  await page.locator('#usCalendarStartTimeInput').fill('21:00');await page.locator('#usCalendarEndTimeInput').fill('23:30');
+  // Noi, Fase A: one form, one «Ora · se c’è» (the end is no longer asked).
+  await page.locator('#usCalendarStartTimeInput').fill('21:00');
   await page.locator('#usCalendarFormSave').tap();
   await page.waitForFunction(()=>document.getElementById('usOggiNextTitle').textContent==='Cena da Marco');
   assert.deepEqual(await pill(page),{hidden:false,when:'Domani, 21:00',title:'Cena da Marco',kind:'calendar',label:'Prossimo impegno: Domani alle 21:00, Cena da Marco. Apri Noi'});

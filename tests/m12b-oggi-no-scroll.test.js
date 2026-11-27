@@ -73,7 +73,7 @@ const STATES = {
   'long texts: long event title + long question': { fx: fixtures({ eventTitle: 'La cena di compleanno a sorpresa con tutta la famiglia di Beatrice a Trastevere' }), dock: /ha già risposto · tocca a te/ },
   'answers ready notice (dismissable) + event': { fx: fixtures({ daily: 'ready' }), dock: /Le vostre risposte sono pronte/ },
   'empty: no Ricordo yet + Daily Question': { fx: fixtures({ moments: false, event: false, daily: 'answer' }), dock: /Una domanda, due risposte/ },
-  'notifications invite holds the evidence slot': { fx: fixtures({ event: false, push: true, daily: 'answer' }), dock: /Una domanda, due risposte/ },
+  // Redesign, fase 5 (24/11/2026): Oggi has no suggestion cards, the notifications invite included (no pushOptInCard).
   'calm: I answered, waiting for the other': { fx: fixtures({ event: false, daily: 'answered' }), dock: /Hai risposto · aspettiamo Beatrice/ }
 };
 
@@ -86,7 +86,7 @@ async function measure(page) {
     const nav = box(document.querySelector('.nav'));
     // Oggi surfaces in 1.0: the dock (evidence + daily card), the countdown
     // or its entry, the empty state and the bottom row.
-    const surfaceIds = ['usTodayPriorityRegion', 'usDailyRitual', 'homeEmptyState', 'distanceWidget', 'pushOptInCard', 'usCountdownDisplay', 'usCountdownEntry'];
+    const surfaceIds = ['usTodayPriorityRegion', 'usDailyRitual', 'homeEmptyState', 'distanceWidget', 'usCountdownDisplay', 'usCountdownEntry'];
     const surfaces = surfaceIds.map((id) => document.getElementById(id)).filter(visible).map((el) => ({ id: el.id, ...box(el) }));
     const controls = [...document.querySelectorAll('#homeHero button, #homeHero a, #homeHero [role=button]')]
       .filter((el) => el.id !== 'usOggiFocusToggle' && visible(el)).map((el) => ({ id: el.id || el.className, ...box(el) }));
@@ -138,13 +138,6 @@ test('M12B.1 geometry: Oggi fits every supported viewport without clipping', asy
         await page.goto(base + '/', { waitUntil: 'load' });
         await page.waitForFunction(() => window.usProfile, null, { timeout: 15000 });
         await page.waitForTimeout(2200);
-        if (fx.push) {
-          // The opt-in's own availability depends on the browser's push support;
-          // for geometry it is shown as the arbitration's evidence candidate
-          // (nothing else waits on Oggi in this state).
-          await page.evaluate(() => { document.getElementById('usOggiCalendarWidget').hidden = true; document.getElementById('pushOptInCard').hidden = false; });
-          await page.waitForTimeout(100);
-        }
         const m = await measure(page);
         await ctx.close();
 
@@ -171,7 +164,6 @@ test('M12B.1 geometry: Oggi fits every supported viewport without clipping', asy
         assert.ok(m.slots.filter((s) => s === 'evidence').length <= 1, `${label}: more than one evidence item`);
         assert.ok(m.slots.filter((s) => s === 'daily').length <= 1, `${label}: more than one daily card`);
         assert.equal(m.slots.includes('suppressed'), false, `${label}: a suppressed surface is still visible`);
-        if (fx.push) assert.ok(m.surfaces.some((s) => s.id === 'pushOptInCard'), `${label}: the opt-in should hold the evidence slot`);
       }
     }
   } finally {
