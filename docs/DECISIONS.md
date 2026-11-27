@@ -660,3 +660,14 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - L'app dichiara un solo modo in background, `remote-notification` (`UIBackgroundModes`), solo per i widget.
 - `AppDelegate` passa l'avviso a `UsWidgetSignals` (plugin dei widget). Il plugin controlla la versione (3) e che l'account sia quello dei widget (impronta = SHA-256 dell'id, come `widgets.js`). Poi scrive il personaggio dell'altra persona col contratto dei widget, oppure svuota tutto come al logout, e ricarica WidgetKit. Gli altri avvisi passano come prima da `@capacitor/push-notifications`.
 - Il server manda ora il segnale anche agli iPhone (`IOS_WIDGET_SIGNALS = true`) e calcola da sé l'impronta del proprietario. Limiti di iOS accettati: consegna quando vuole, mai ad app chiusa a mano.
+
+## 2026-11-27 — La bacheca: post-it vostri e ricerca
+
+**Fonte:** grill del founder del 27/11/2026 (D1–D16, «vai») e tavola https://claude.ai/artifact/7TZ8DkdQuApJZGeNhgEAiN approvata («Approvo»).
+
+- **Post-it:** attaccati a una cosa della bacheca (ricordo, lettera tenuta, risposta tenuta, traguardo), mai liberi. 80 caratteri, uno per persona per cosa, nel colore di chi scrive, accanto al perché di US. Ognuno cambia e toglie solo il suo; niente risposte a catena. Gratis, non contano nei 12. Scriverne uno rende la cosa «vostra»: US non la stacca più da sola.
+- **Legati alla cosa, non alla puntina** (`us_bacheca_notes.ref_key`): restano se la cosa si stacca e tornano quando si riappende; se ne vanno con il ricordo o la cosa tenuta (trigger). Anche il perché di US resta dopo lo stacco (`us_bacheca_why`), così il ricordo mostra «Sulla bacheca» anche quando non è appeso.
+- **Avviso:** «<Nome> ha scritto su un ricordo in bacheca», mai il testo; interruttore «Lavagna», al massimo uno ogni 2 ore con una finestra sua (`bacheca_postit`). Target `bacheca`: web e iPhone aprono la bacheca centrata sulla cosa; Android (FCM senza id per scelta) apre Ricordi.
+- **Ricerca:** sul server (`search_ricordi_v1`, SECURITY DEFINER, solo la coppia di chi chiede, al massimo 60, la query non si salva). Didascalie, posti, post-it, mese e anno, chi l'ha messo, lettere e risposte tenute; mai quello che non è stato tenuto. Senza accenti e senza differenza di maiuscole; `%` e `_` valgono come lettere. La lente è una sola per Raccolta, Bacheca e Mappa; il suo codice si carica al primo tocco (la ricerca vuole comunque la rete).
+- **Appendi e fai spazio:** `bacheca_pin_v1(p_source, p_source_id, p_replace)`: con la bacheca piena stacca la cosa scelta e appende la nuova nella stessa transazione; una cosa fissata non si stacca mai (`fixed`). Con US Plus il limite resta 500.
+- **Fuori:** «Da appuntare» nella Mappa, il gioco «Ti ricordi?».
