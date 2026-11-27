@@ -2,6 +2,16 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### L'invito che si rinnova (27/11)
+
+**Stato:** ramo `claude/invito-rinnovo`, verso staging. Dal controllo generale del 27/11 («per il resto va bene tutto»). **Da applicare su staging:** le migrazioni `20261127092454_invito_14_giorni` e `20261127092908_invito_promemoria_cron`, e la funzione `invite-reminder-job`. Su staging i lavori a orario restano spenti di proposito: lì il promemoria si prova a mano.
+
+**Cosa cambia:**
+- **Il codice d'invito vale 14 giorni** invece di 48 ore: le coppie aspettano l'altra persona anche una o due settimane, e chi apriva un link vecchio trovava «Codice non valido».
+- **Se il codice è scaduto, US ne fa uno nuovo da solo** quando apri la schermata d'attesa, e te lo dice.
+- **«Avvisami quando entra»** nella schermata d'attesa: accende le notifiche (prima si chiedevano solo dopo essere in due). Così arriva l'avviso quando l'altra persona entra.
+- **Promemoria per chi aspetta:** il giorno dopo e tre giorni dopo, alle 18, «Il vostro spazio vi aspetta: manda il codice alla tua persona ♡». Solo a chi ha acceso le notifiche, una volta sola. Su Android serve l'APK nuovo per leggere la frase giusta: prima mostra quella generica.
+
 ### Widget iPhone col redesign e blocca schermo (26/11)
 
 **Stato:** ramo `claude/widget-redesign-ios` (sopra quello Android). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.

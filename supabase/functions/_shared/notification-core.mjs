@@ -117,6 +117,10 @@ const CATALOGUE = Object.freeze({
   challenge_reminder: (a, en) => ({ title: CHALLENGE_TITLE(en), body: a.shortTitle ? pick(en, `Domani è l’ultimo giorno per «${a.shortTitle}» ♡`, `Tomorrow is the last day for “${a.shortTitle}” ♡`) : pick(en, 'Domani è l’ultimo giorno per la sfida ♡', 'Tomorrow is the last day for the challenge ♡'), target: 'quiz', ref: a.challengeId, tag: `challenge-reminder-${a.challengeId}`, channel: 'reminders', urgency: 'normal' }),
   challenge_photo: (a, en) => ({ title: CHALLENGE_TITLE(en), body: pick(en, `${name(a.senderName)} ha messo la sua foto: manca solo la tua`, `${name(a.senderName, true)} added their photo: only yours is missing`), target: 'quiz', ref: a.challengeId, tag: `challenge-photo-${a.challengeId}`, channel: 'partner', urgency: 'normal' }),
   // A2: the partner accepted the invite; sent once, to the creator.
+  // L'invito che si rinnova (27/11/2026): to whoever still waits, day 1 and day 3.
+  invite_reminder: (a, en) => ({ title: 'US.', body: Number(a.day) >= 3
+    ? pick(en, 'Ancora in attesa: rimanda il codice alla tua persona. Vale 14 giorni.', 'Still waiting: send your person the code again. It lasts 14 days.')
+    : pick(en, 'Il vostro spazio vi aspetta: manda il codice alla tua persona ♡', 'Your space is waiting: send the code to your person ♡'), target: 'home', tag: a.tag, channel: 'reminders', urgency: 'normal', ttl: 60 * 60 * 12 }),
   partner_joined: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} ha accettato l’invito: il vostro spazio è pronto`, `${name(a.senderName, true)} joined: your space is ready`), target: 'home', tag: 'us-partner-joined', channel: 'partner', urgency: 'normal' }),
 });
 export const NOTIFICATION_TYPES = Object.freeze(Object.keys(CATALOGUE));

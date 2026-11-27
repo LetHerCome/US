@@ -141,6 +141,8 @@ export const ANDROID_NOTICE_KINDS = Object.freeze({
   challenge_new: 'challenge',
   challenge_reminder: 'challenge_reminder',
   challenge_photo: 'challenge_photo',
+  // L'invito che si rinnova (27/11/2026).
+  invite_reminder: 'invite_reminder',
 });
 const INSTALLATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

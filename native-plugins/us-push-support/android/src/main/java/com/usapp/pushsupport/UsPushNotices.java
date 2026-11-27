@@ -37,6 +37,7 @@ public final class UsPushNotices {
         "test", "think", "think_reply", "daily_turn", "daily_ready", "daily_reaction", "daily_new",
         "quest", "left_for_you", "game_turn", "game_ready", "game_weekly", "game_weekly_turn",
         "calendar", "anniversary", "partner_joined", "lavagna", "postit", "challenge", "challenge_reminder", "challenge_photo",
+        "invite_reminder",
     };
 
     /** A display name: no control characters, trimmed, at most 40 characters. */
@@ -117,6 +118,9 @@ public final class UsPushNotices {
             case "challenge_photo":
                 return notice(en, "US. · La sfida della settimana", "US. · This week's challenge",
                     who + " ha messo la sua foto: manca solo la tua", who + " added their photo: only yours is missing", "gioca");
+            case "invite_reminder":
+                return notice(en, "US.", "US.",
+                    "Il vostro spazio vi aspetta: manda il codice alla tua persona ♡", "Your space is waiting: send the code to your person ♡", "oggi");
             default:
                 return new Notice(FALLBACK_TITLE, FALLBACK_BODY, "oggi");
         }
