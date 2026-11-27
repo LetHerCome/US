@@ -439,7 +439,7 @@ extension UsWidgetModels {
         let ten = calendar.date(byAdding: .hour, value: 22, to: today) ?? now
         let edge = hour >= 22 ? (calendar.date(byAdding: .day, value: 1, to: six) ?? now) : hour < 6 ? six : ten
         let person = statusPerson(snapshot, me: me, now: now)
-        let next = person.shown ? [edge, person.nextChange].compactMap { $0 }.min() : edge
+        let next: Date? = person.shown ? [edge, person.nextChange].compactMap { $0 }.min() : edge
         if hour >= 22 || hour < 6 { return (person.shown && person.key == "malato" ? "malato" : "dorme", next) }
         guard person.shown else { return ("felice", edge) }
         return (person.key, next)
