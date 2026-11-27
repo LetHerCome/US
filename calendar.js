@@ -1434,9 +1434,7 @@ async function prepareNoiEntryDate(dateISO){
     return true;
   }catch(error){console.warn('[US Calendar] prepare editor',error);window.toast?.('Calendario non disponibile. Riprova.');return false;}
 }
-// prefill (Come stai che conta, 27/11/2026, D14): { title, allDay } for a new
-// commitment, e.g. «In viaggio» today from Come stai; the person still saves it.
-async function createCalendarEntryForDate(dateISO, prefill = null) {
+async function createCalendarEntryForDate(dateISO) {
   if (!dateISO || !window.usProfile) return;
   // The plus is instant: render the existing editor first, then hydrate the
   // day's already-saved commitments without ever blocking the user's tap.
@@ -1446,16 +1444,21 @@ async function createCalendarEntryForDate(dateISO, prefill = null) {
   entries=[];
   selectedDate=dateISO;
   startCreateForDate(dateISO);
-  if (prefill && !pendingIdeaPick && !editingFormEntry) {
-    const title = $('usCalendarTitleInput');
-    if (title && typeof prefill.title === 'string') title.value = prefill.title.slice(0, 120);
-    const allDay = $('usCalendarAllDayInput');
-    if (allDay && prefill.allDay) { allDay.checked = true; toggleAllDayFields(); }
-  }
   void prepareNoiEntryDate(dateISO).then(ready=>{
     if(!ready||window.usProfile!==identity||formDateISO!==dateISO||editingFormEntry||!$('usCalendarFormSheet')?.classList.contains('open'))return;
     renderFormDay(dateISO,'create');
   });
+}
+
+// Come stai che conta (27/11/2026, D14): the same editor for a day, already
+// written ({ title, allDay }), e.g. «In viaggio» today; the person still saves it.
+function createCalendarEntryPrefilled(dateISO, prefill = {}) {
+  createCalendarEntryForDate(dateISO);
+  if (pendingIdeaPick || editingFormEntry || !$('usCalendarFormSheet')?.classList.contains('open')) return;
+  const title = $('usCalendarTitleInput');
+  if (title && typeof prefill.title === 'string') title.value = prefill.title.slice(0, 120);
+  const allDay = $('usCalendarAllDayInput');
+  if (allDay && prefill.allDay) { allDay.checked = true; toggleAllDayFields(); }
 }
 
 async function createCalendarEntryForIdeaDate(dateISO){
@@ -1486,7 +1489,7 @@ async function openCalendarEntry(entryId, { inPlace = false } = {}) {
 
 // Date e numeri (26/11/2026): the event editor of Noi types its hour the same way.
 window.UsQuickTime = Object.freeze({ normalize: normalizeQuickTime, mask: maskTimeField });
-window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, createForIdeaDate: createCalendarEntryForIdeaDate, cancelIdeaPick: clearIdeaPick, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
+window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, createForIdeaDate: createCalendarEntryForIdeaDate, cancelIdeaPick: clearIdeaPick, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, createPrefilled: createCalendarEntryPrefilled, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
 window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth,readRange:readNoiRange,freeEvenings:noiFreeEvenings});
 window.openCalendarSurface = openCalendarSurface;
 window.closeCalendarDetailSheet = closeCalendarDetailSheet;

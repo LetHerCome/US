@@ -135,8 +135,8 @@ test('the sheet and the Oggi row: the gesture, «Mandato ♡», the Noi calendar
   assert.match(module, /db\.rpc\('respond_member_status', \{ p_status_set_at: state\.partner\.set_at, p_gesture: g \}\)/);
   assert.match(module, /if \(!data\?\.already\) w\.sendWebPushEvent\?\.\('status_response'\);/);
   assert.match(module, /if \(ok && status === 'viaggio' && opened\(\)\) showTrip\(true\);/);
-  assert.match(module, /w\.UsCalendarLinks\?\.createForDate\?\.\(todayISO\(\), \{ title: t\('In viaggio'\), allDay: true \}\)/);
-  assert.match(read('calendar.js'), /async function createCalendarEntryForDate\(dateISO, prefill = null\) \{/);
+  assert.match(module, /w\.UsCalendarLinks\?\.createPrefilled\?\.\(todayISO\(\), \{ title: t\('In viaggio'\), allDay: true \}\)/);
+  assert.match(read('calendar.js'), /function createCalendarEntryPrefilled\(dateISO, prefill = \{\}\) \{\s*createCalendarEntryForDate\(dateISO\);/);
   // D13: a change of mine tells the other person's widgets, silently.
   assert.match(module, /w\.sendWebPushEvent\?\.\('partner_status'\);/);
 });

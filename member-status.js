@@ -375,7 +375,7 @@
   function tripToCalendar() {
     close();
     w.go?.('bond', { nav: true });
-    w.setTimeout(() => w.UsCalendarLinks?.createForDate?.(todayISO(), { title: t('In viaggio'), allDay: true }), 80);
+    w.setTimeout(() => w.UsCalendarLinks?.createPrefilled?.(todayISO(), { title: t('In viaggio'), allDay: true }), 80);
   }
 
   // D7/D16: one tap sends the gesture that fits the other person's state.
