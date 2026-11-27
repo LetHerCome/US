@@ -315,7 +315,7 @@
       setViewportHeight();
       saveProfileSnapshot();
       rescueOfflineProfile();
-      (window.usAfterForeground || ((task) => task()))(checkForUpdate, 2500);
+      if (!window.UsForeground?.shortAway?.()) (window.usAfterForeground || ((task) => task()))(checkForUpdate, 2500);
     }
   });
 

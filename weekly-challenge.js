@@ -380,7 +380,7 @@
         if (action === 'mine') pickMine();
         if (action === 'change') change();
       });
-      doc.addEventListener('visibilitychange', () => { if (!doc.hidden && doc.querySelector?.('#quiz.active')) load(); });
+      doc.addEventListener('visibilitychange', () => { if (!doc.hidden && doc.querySelector?.('#quiz.active') && !globalThis.UsForeground?.shortAway?.()) load(); });
       const start = () => { if (!watchRicordi()) setTimeout(start, 1000); };
       if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', start, { once: true }); else start();
     }

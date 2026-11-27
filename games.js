@@ -1431,6 +1431,8 @@ else boot();
 // Gioca badge can wait until the page on screen has refreshed.
 document.addEventListener('visibilitychange', () => {
   if (document.hidden || !window.usProfile || byId('quiz')?.classList.contains('active')) return;
+  // Back after a few seconds away (index.html, UsForeground): the badge is still right.
+  if (window.UsForeground?.shortAway?.()) return;
   (window.usAfterForeground || ((task) => task()))(() => refresh(), 1400);
 });
 setInterval(() => { if (!document.hidden && window.usProfile) refresh(); }, 45000);

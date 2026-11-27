@@ -754,7 +754,7 @@ function boot(){
     [year,month]=currentMonth();selected=today();ideaPick=null;
     if($('bond')?.classList.contains('active'))refresh();else render();
   });
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('bond')?.classList.contains('active'))refresh();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('bond')?.classList.contains('active')&&!window.UsForeground?.shortAway?.())refresh();});
   if($('bond')?.classList.contains('active'))refresh();
 }
 function openMainCalendar(dateISO,requestedMode='calendar'){

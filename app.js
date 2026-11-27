@@ -1043,6 +1043,18 @@ function usAfterForeground(task,delay=1200){
   setTimeout(()=>usRunWhenIdle(task,800),delay);
 }
 window.usAfterForeground=usAfterForeground;
+// Avvio più veloce (27/11/2026): back after a few seconds away (index.html,
+// UsForeground), what is on screen is still fresh: Realtime and the minute
+// refresh keep it. Only a real absence rereads.
+function usShortAway(){return Boolean(window.UsForeground?.shortAway?.());}
+window.usShortAway=usShortAway;
+// The hook of the entry animation (index.html, UsAppReady): marked once the
+// first content is painted, never later than capMs.
+function usMarkAppReadyAfter(tasks,reason,capMs=2500){
+  if(!window.UsAppReady||window.UsAppReady.ready)return;
+  Promise.race([Promise.allSettled(tasks),new Promise(resolve=>setTimeout(resolve,capMs))])
+    .then(()=>window.UsAppReady?.mark?.(reason));
+}
 
 const US_AUTH_SESSION_TIMEOUT_MS=3200;
 function usWithDeadline(promise,ms,label='operation timeout'){
@@ -2729,8 +2741,9 @@ function renderDailyRitual(model){
   const before=card.dataset.state||'';
   // La cosa di oggi (cosa-di-oggi.js): after the answers the next gesture,
   // the closed day or the first week's step; the streak in the foot. The
-  // server's state is read again when the card changes state.
-  if(model&&before!==model.state)window.UsCosaDiOggi?.refresh?.({force:true});
+  // server's state is read again when the card changes state. Not when it
+  // first appears (Avvio più veloce): refreshTodayPriorities has just read it.
+  if(model&&before&&before!==model.state)window.UsCosaDiOggi?.refresh?.({force:true});
   if(model&&window.UsCosaDiOggi?.decorate)model=window.UsCosaDiOggi.decorate(model);
   if(model?.state==='revealed'&&model.questionId&&typeof dailyRitualDismissedId==='function'&&dailyRitualDismissedId()===String(model.questionId))model=null;
   if(!model){card.hidden=true;card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.removeAttribute('data-look');delete card.dataset.cdoAction;card.dataset.usAttention='off';if(typeof paintDailyRitualClose==='function')paintDailyRitualClose(card);return;}
@@ -3953,7 +3966,7 @@ function ricordiMarkOpened(id){
 window.UsRicordiNew=Object.freeze({markOpened:ricordiMarkOpened,check:()=>ricordiCheckNew().catch(()=>{})});
 window.addEventListener('us-auth-resolved',()=>usRunWhenIdle(()=>ricordiCheckNew().catch(()=>{}),1800));
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden||!window.usProfile)return;
+  if(document.hidden||!window.usProfile||usShortAway())return;
   if(document.getElementById('moments')?.classList.contains('active'))ricordiCheckNew().catch(()=>{});
   else usAfterForeground(()=>ricordiCheckNew(),1800);
 });
@@ -5680,7 +5693,13 @@ async function hydrateCloud(){
 
     // Today starts with the Home image, not after it: its two small reads
     // would otherwise wait for the whole photo before the question shows.
-    usRunWhenIdle(()=>hydrateToday(),120);
+    const todayFirst=new Promise(resolve=>usRunWhenIdle(()=>hydrateToday().finally(resolve),120));
+    // Avvio più veloce: the first screen is ready when its photo (or its empty
+    // state) is painted and the question is on it, or after 2.5 s whatever
+    // the network does.
+    const firstScreen=[...critical,todayFirst];
+    if(!homePhotoHasPainted)firstScreen.push(new Promise(resolve=>window.addEventListener('us:home-photo-changed',resolve,{once:true})));
+    usMarkAppReadyAfter(firstScreen,'oggi');
 
     const results=await Promise.allSettled(critical);
     results.forEach(result=>{
@@ -5766,7 +5785,7 @@ async function refreshVisibleState(options={}){
   if(active==='settings'){await window.hydrateUsSettings?.();}
 }
 setInterval(()=>refreshVisibleState(),60000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)refreshVisibleState({foreground:true});});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile&&!usShortAway())refreshVisibleState({foreground:true});});
 sb.auth.onAuthStateChange((event,_session)=>{
   if(event==='PASSWORD_RECOVERY' && window.usS31Auth?.onRecoverySession?.()){
     usInvalidateAuth();

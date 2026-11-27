@@ -17,8 +17,8 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<script src="/i18n.js?v=us-rilascio-20261114-109"></script>
-<script src="/i18n-en.js?v=us-rilascio-20261114-109"></script>
+<!-- Avvio più veloce (27/11/2026): i18n.js writes the English dictionary in only for English. -->
+<script src="/i18n.js?v=us-rilascio-20261114-109" data-us-en="/i18n-en.js?v=us-rilascio-20261114-109"></script>
 <title>US — Il vostro spazio</title>
 <meta name="description" content="US è per due persone e basta: la domanda di oggi, i vostri Ricordi, i giochi e i piccoli gesti. Quello che condividete resta tra voi."/>
 <link rel="canonical" href="https://www.uscouple.app/"/>
@@ -101,6 +101,49 @@
     if (document.documentElement.classList.contains('us-auth-ready')) return;
     document.documentElement.classList.remove('us-auth-pending', 'us-returning-device');
   }, 6000);
+})();
+</script>
+<script>
+// Avvio più veloce (27/11/2026). Two small facts every module reads the same way.
+// 1. UsForeground.awayMs(): how long US was in the background last time. A quick
+//    trip away (the photo picker, a reply on WhatsApp) does not reread everything.
+// 2. UsAppReady: the one moment the first screen is on display (Oggi with its
+//    question and photo, the login, or the lock). Class html.us-app-ready and
+//    event us:app-ready, once per launch: the hook for the entry animation.
+(() => {
+  const w = window, d = document;
+  let hiddenAt = 0, away = Infinity;
+  const onVisibility = () => {
+    if (d.hidden) { hiddenAt = Date.now(); return; }
+    if (!hiddenAt) return;
+    const ms = Date.now() - hiddenAt;
+    away = ms >= 0 ? ms : Infinity;
+    hiddenAt = 0;
+  };
+  d.addEventListener('visibilitychange', onVisibility);
+  const SHORT_AWAY_MS = 30000;
+  const awayMs = () => { if (!d.hidden && hiddenAt) onVisibility(); return away; };
+  w.UsForeground = Object.freeze({ SHORT_AWAY_MS, awayMs, shortAway: (limit = SHORT_AWAY_MS) => awayMs() < limit });
+
+  let ready = null, open;
+  const whenReady = new Promise((resolve) => { open = resolve; });
+  const mark = (reason) => {
+    if (ready) return;
+    ready = { reason: String(reason || 'ready'), at: 0 };
+    // Two frames: the first screen is painted, not only in the DOM.
+    const done = () => {
+      ready.at = Math.round(w.performance?.now?.() || 0);
+      d.documentElement.classList.add('us-app-ready');
+      open(ready);
+      w.dispatchEvent(new CustomEvent('us:app-ready', { detail: { ...ready } }));
+    };
+    if (w.requestAnimationFrame) w.requestAnimationFrame(() => w.requestAnimationFrame(done)); else setTimeout(done, 0);
+  };
+  w.UsAppReady = Object.freeze({ mark, whenReady, get ready() { return Boolean(ready?.at); }, get detail() { return ready ? { ...ready } : null; } });
+  // Not signed in or not paired: the login is the first screen. Locked: the lock is.
+  w.addEventListener('us-auth-resolved', (event) => { if (!event.detail?.paired) mark('auth'); });
+  w.addEventListener('us-app-lock-change', (event) => { if (event.detail?.locked) mark('lock'); });
+  setTimeout(() => mark('timeout'), 8000);
 })();
 </script>
 <script>

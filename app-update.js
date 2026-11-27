@@ -146,7 +146,7 @@
     const updater = createAppUpdater({ plugin, platformName: platform.platformName, readMin, readInstalled, ui: domUi(doc), storage: globalThis.localStorage });
     // After the first screen has settled, and whenever US comes back.
     setTimeout(() => { updater.check(); }, 2500);
-    doc.addEventListener('visibilitychange', () => { if (doc.visibilityState === 'visible') updater.check(); });
+    doc.addEventListener('visibilitychange', () => { if (doc.visibilityState === 'visible' && !globalThis.UsForeground?.shortAway?.()) updater.check(); });
     return updater;
   }
 
