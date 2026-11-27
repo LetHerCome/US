@@ -5565,8 +5565,8 @@ function noticeIncomingThink(row,{name='',now=Date.now()}={}){
 function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
   usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;usThinkReactionPicked='';
-  usThinkHearts=0;document.querySelector('#thinkArrival [data-think-reaction="heart"] .us-heart-count')?.remove();
   noticeIncomingThink(row);
+  usThinkHearts=0;document.querySelector('#thinkArrival [data-think-reaction="heart"] .us-heart-count')?.remove();
   const heart=document.getElementById('thinkButton');heart?.classList.add('received');setTimeout(()=>heart?.classList.remove('received'),900);
   hydrateThink().catch(()=>{});
   // M12A — the arrival is one calm event: the notice, the aurora reaction and

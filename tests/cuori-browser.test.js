@@ -162,6 +162,9 @@ test('the hug button shows the couple’s own characters, and follows a change o
     const replyHeart = '#thinkArrival [data-think-reaction="heart"]';
     await page.click(replyHeart);
     await page.waitForFunction(() => window.__QA.thinkReactions.length === 1);
+    await page.waitForFunction(() => document.querySelector('#thinkArrival .think-arrival-sheet').dataset.thinkState === 'heart');
+    await page.waitForTimeout(300);
+    assert.equal(await page.locator('[data-think-reaction="hug"]').isVisible(), false, 'after a heart only the heart stays');
     await page.click(replyHeart);
     await page.click(replyHeart);
     assert.equal(await page.locator(`${replyHeart} .us-heart-count`).innerText(), '×3');

@@ -575,6 +575,12 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 #thinkArrival .think-arrival-close{min-height:44px;padding:0 22px;border:0;border-radius:999px;background:none;box-shadow:none;color:var(--us-color-text-2);font:600 14px/1 var(--us-font-ui)}
 /* After the tap: your character arrives, the bubble and the replies go away. */
 #thinkArrival .think-arrival-sheet:not([data-think-state="ask"]) .think-arrival-ask{display:none}
+/* I cuori («Resta e cresce», 27/11/2026): after a heart only the heart stays, to tap again (each tap a burst and «×N»). */
+#thinkArrival .think-arrival-sheet[data-think-state="heart"] .think-arrival-ask{display:grid}
+#thinkArrival .think-arrival-sheet[data-think-state="heart"] :is(.think-arrival-hint,.think-reaction-button:not([data-think-reaction="heart"])){display:none}
+#thinkArrival .think-arrival-sheet[data-think-state="heart"] .think-reaction-grid{grid-template-columns:minmax(0,116px);justify-content:center}
+#thinkArrival .think-heart-fill{display:none}
+#thinkArrival .think-reaction-button.selected .think-heart-fill{display:inline}
 #thinkArrival .think-arrival-sheet:not([data-think-state="ask"]) .think-arrival-actions{visibility:hidden}
 #thinkArrival .think-arrival-sheet:not([data-think-state="ask"]) .think-arrival-bubble{opacity:0;transform:scale(.4)}
 #thinkArrival .think-arrival-sheet:not([data-think-state="ask"]) .think-arrival-me{opacity:1;transform:translateX(-74px)}
