@@ -183,14 +183,18 @@
 .top.us-premium-top[data-us-isola="open"]>.us-top-brand{opacity:0;transform:scale(.6)}
 .top.us-premium-top .us-isola{position:absolute;left:50%;top:50%;z-index:1;width:56px;height:44px;min-height:0;margin:0;padding:0;overflow:hidden;transform:translate(-50%,-50%);border-radius:999px;border:1px solid rgba(247,239,233,.12);background:rgba(18,13,17,.3);box-shadow:none;color:#f7efe9;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:width .46s cubic-bezier(.2,.8,.2,1),height .46s cubic-bezier(.2,.8,.2,1),background-color .3s ease,box-shadow .3s ease,border-color .3s ease}
 .top.us-premium-top .us-isola[hidden]{display:none}
-.top.us-premium-top[data-us-isola="open"] .us-isola{width:220px;height:50px;background:rgba(18,13,17,.8);border-color:rgba(247,239,233,.24);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+/* The open island (founder, 28/11/2026: the two «troppo appoggiati a sinistra»): 232 px,
+   or less on a narrow phone; the two centred in their window, 18 px in from the edge.
+   personaggi.js cuoriVerso() and the bubble's tail read the same numbers. */
+:root{--us-isola-open-w:min(232px,calc(100vw - 100px))}
+.top.us-premium-top[data-us-isola="open"] .us-isola{width:var(--us-isola-open-w);height:50px;background:rgba(18,13,17,.8);border-color:rgba(247,239,233,.24);box-shadow:0 10px 26px rgba(0,0,0,.35)}
 .top.us-premium-top .us-isola:focus-visible{outline:2px solid #f7efe9;outline-offset:3px}
-.us-isola-window{position:absolute;left:8px;bottom:0;width:70px;height:46px;display:flex;align-items:flex-end;overflow:hidden;pointer-events:none}
+.us-isola-window{position:absolute;left:18px;bottom:0;width:72px;height:46px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;pointer-events:none}
 .us-isola-window .us-char{display:block;flex:none;margin-bottom:-5px;transform:translateY(50px);transition:transform .5s cubic-bezier(.2,.9,.25,1.15)}
 .us-isola-window .us-char+.us-char{margin-left:-12px}
 [data-us-isola="open"] .us-isola-window .us-char{transform:none;transition-delay:.12s}
 [data-us-isola="open"] .us-isola-window .us-char+.us-char{transition-delay:.2s}
-.us-isola-words{position:absolute;left:80px;top:50%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;opacity:0;transform:translate(8px,-50%);white-space:nowrap;text-align:left;pointer-events:none;transition:opacity .2s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
+.us-isola-words{position:absolute;left:98px;top:50%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;opacity:0;transform:translate(8px,-50%);white-space:nowrap;text-align:left;pointer-events:none;transition:opacity .2s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
 .us-isola-words b{font:800 13.5px/1.1 var(--us-font-ui,'Figtree',sans-serif);color:#f7efe9}
 .us-isola-words span{font:600 11.5px/1.2 var(--us-font-ui,'Figtree',sans-serif);color:rgba(247,239,233,.78)}
 [data-us-isola="open"] .us-isola-words{opacity:1;transform:translate(0,-50%);transition-delay:.18s}
@@ -200,7 +204,7 @@
 .us-isola[data-us-arriving] .us-isola-window .us-char{visibility:hidden}
 /* I cuoricini volano nell'isola (27/11/2026): the island receiving a Ti penso glows a little, «×N» by the other person. */
 .top.us-premium-top[data-us-isola="open"] .us-isola.is-receiving{border-color:rgba(255,138,166,.42);box-shadow:0 10px 26px rgba(0,0,0,.35),0 0 22px rgba(255,90,130,.32)}
-.us-isola-count{position:absolute;left:46px;top:2px;z-index:1;padding:1px 5px;border-radius:999px;background:#ff5a7a;color:#fff;font:800 10.5px/1.25 var(--us-font-ui,'Figtree',sans-serif);pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.us-isola-count{position:absolute;left:56px;top:2px;z-index:1;padding:1px 5px;border-radius:999px;background:#ff5a7a;color:#fff;font:800 10.5px/1.25 var(--us-font-ui,'Figtree',sans-serif);pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 
 /* ---------- Il vostro angolo: the level, then Voi · Guardaroba · Premi (tavola, 25/11/2026) ---------- */
 #usAngolo .us-angolo-livello{display:grid;grid-template-columns:minmax(0,1fr);min-width:0}
@@ -238,8 +242,8 @@
    island, from your character (me) or from between the two (both). Fixed colours: it sits on the photo. ---------- */
 .top.us-premium-top .us-fumetto{position:absolute;left:50%;top:calc(50% + 34px);z-index:3;width:min(262px,calc(100vw - 48px));margin-left:calc(min(262px,calc(100vw - 48px)) / -2);transform-origin:var(--us-fumetto-tail,49px) -8px;transform:scale(.4) translateY(-10px);opacity:0;pointer-events:none;transition:transform .42s cubic-bezier(.2,.9,.25,1.15),opacity .2s ease}
 .top.us-premium-top .us-fumetto[hidden]{display:none}
-.top.us-premium-top .us-fumetto[data-speaker="me"]{--us-fumetto-tail:49px}
-.top.us-premium-top .us-fumetto[data-speaker="both"]{--us-fumetto-tail:64px}
+.top.us-premium-top .us-fumetto[data-speaker="me"]{--us-fumetto-tail:calc(min(262px,calc(100vw - 48px)) / 2 + 39px - var(--us-isola-open-w) / 2)}
+.top.us-premium-top .us-fumetto[data-speaker="both"]{--us-fumetto-tail:calc(min(262px,calc(100vw - 48px)) / 2 + 54px - var(--us-isola-open-w) / 2)}
 .top.us-premium-top .us-fumetto[data-open]{transform:none;opacity:1;pointer-events:auto;transition-delay:.4s}
 .us-fumetto-body{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;min-height:0;margin:0;padding:12px 14px 11px;border:0;border-radius:18px;background:#f7efe9;box-shadow:0 12px 28px rgba(0,0,0,.35);color:#1a1020;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .us-fumetto-body::before{content:"";position:absolute;left:calc(var(--us-fumetto-tail,49px) - 8px);top:-7px;width:16px;height:16px;border-radius:3px;background:#f7efe9;transform:rotate(45deg)}

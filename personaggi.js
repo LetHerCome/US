@@ -441,7 +441,7 @@
   // it closes after 6 s. It opens by itself once, the first time, and again
   // when you reach a new level (with a party). Not for a phone without the
   // couple yet: then it is only the symbol.
-  const ISOLA_MS = 6000, PEEK_MS = 4200;
+  const ISOLA_MS = 6000, PEEK_MS = 4200, ISOLA_OPEN_W = 232, ISOLA_WINDOW_LEFT = 18;
   const isola = () => d?.getElementById('usIsola');
   let isolaTimer = 0, receiving = null, hopAt = 0;
   const paired = () => Boolean(w.usProfile?.couple_id) && ['francesco', 'beatrice'].every((role) => profiles().some((p) => p?.role === role));
@@ -510,9 +510,11 @@
   function cuoriVerso() {
     const at = isolaInVista({ open: Boolean(receiving) });
     if (!at) return null;
-    // The other person's place in the open island (struttura.css: 220 px wide, the
-    // window 8 px in, two characters of 42 px overlapping by 12): mine, then theirs.
-    return { x: Math.round(at.x - 110 + 8 + 30 + 21), y: Math.round(at.y + 4) };
+    // The other person's place in the open island (struttura.css: min(232 px, 100vw − 100)
+    // wide, the window 18 px in, two characters of 42 px overlapping by 12, centred): mine, then theirs.
+    const vw = d.documentElement?.clientWidth || w.innerWidth || 0;
+    const open = Math.min(ISOLA_OPEN_W, vw ? vw - 100 : ISOLA_OPEN_W);
+    return { x: Math.round(at.x - open / 2 + ISOLA_WINDOW_LEFT + 30 + 21), y: Math.round(at.y + 4) };
   }
   // Free for a moment of its own: there to see, no hearts arriving, no bubble, not in Impostazioni.
   function isolaLibera(options) {
