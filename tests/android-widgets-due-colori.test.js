@@ -20,7 +20,7 @@ test('widgets: the palette is the app tokens (ui-foundation.css)', () => {
     assert.match(colors, new RegExp(`<color name="${name}">#FF${hex}</color>`, 'i'), name);
     assert.match(css, new RegExp(`#${hex}`, 'i'), `${hex} is an app token`);
   }
-  assert.match(res('drawable/us_widget_background.xml'), /android:startColor="#FF1D1119"[\s\S]*<stroke android:width="1dp" android:color="#17F7EFE9"/);
+  // The night card drawable (us_widget_background) left with the redesign (27/11/2026 cleanup).
 });
 
 // Widget Pastello (02/11/2026): every widget's picker preview is its Pastello

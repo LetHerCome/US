@@ -18,29 +18,25 @@ const exists = (file) => fs.existsSync(path.join(ROOT, file));
 const ART = ['think_s', 'think_m', 'photo', 'daily_s', 'daily_m', 'noi_s', 'noi_m',
   'message_s', 'message_m', 'memories_s', 'memories_m', 'memories_back', 'status_s', 'status_m', 'field'];
 
-test('every illustration in Pastello and in Midnight, small WebP files', () => {
-  let total = 0;
-  for (const name of ART) {
-    for (const dir of ['drawable-nodpi', 'drawable-night-nodpi']) {
-      const file = path.join(ROOT, RES, dir, `us_widget_art_${name}.webp`);
-      assert.ok(fs.existsSync(file), `${dir}/${name}`);
-      const bytes = fs.readFileSync(file);
-      assert.equal(bytes.subarray(8, 12).toString('ascii'), 'WEBP', name);
-      total += bytes.length;
-    }
+test('the Pastello illustrations are gone; the soft field of the initial stays, day and night', () => {
+  // Widget del redesign (26/11/2026): no widget draws the Pastello art any more
+  // (27/11/2026 cleanup, tests/widget-drawables-referenced.test.js).
+  for (const name of ART.filter((item) => item !== 'field')) {
+    for (const dir of ['drawable-nodpi', 'drawable-night-nodpi']) assert.equal(exists(`${RES}/${dir}/us_widget_art_${name}.webp`), false, `${dir}/${name}`);
   }
-  assert.ok(total < 600 * 1024, `all the illustrations stay light (${Math.round(total / 1024)} KB)`);
-  assert.ok(exists(`${RES}/drawable-nodpi/us_widget_grain_tile.png`));
-  assert.match(read(`${RES}/drawable/us_widget_grain.xml`), /android:tileMode="repeat"/);
+  for (const dir of ['drawable-nodpi', 'drawable-night-nodpi']) {
+    const bytes = fs.readFileSync(path.join(ROOT, RES, dir, 'us_widget_art_field.webp'));
+    assert.equal(bytes.subarray(8, 12).toString('ascii'), 'WEBP', dir);
+    assert.ok(bytes.length < 60 * 1024, dir);
+  }
+  assert.equal(exists(`${RES}/drawable-nodpi/us_widget_grain_tile.png`), false);
 });
 
-test('the shared surfaces have their Midnight form', () => {
+test('the Pastello shared surfaces left with the redesign', () => {
   for (const name of ['card', 'glass', 'glass_pill', 'fade', 'note']) {
-    assert.ok(exists(`${RES}/drawable/us_widget_${name}.xml`), name);
-    assert.ok(exists(`${RES}/drawable-night/us_widget_${name}.xml`), `${name} night`);
+    assert.equal(exists(`${RES}/drawable/us_widget_${name}.xml`), false, name);
+    assert.equal(exists(`${RES}/drawable-night/us_widget_${name}.xml`), false, `${name} night`);
   }
-  assert.match(read(`${RES}/drawable/us_widget_card.xml`), /#FFFFF6EE/);
-  assert.match(read(`${RES}/drawable-night/us_widget_card.xml`), /#FF17111C/);
 });
 
 test('Fraunces as a picture, tinted with the theme; the initial on a soft field', () => {

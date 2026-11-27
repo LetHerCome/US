@@ -128,12 +128,10 @@ test('W0 estensione: target WidgetKit app.uscouple.widgets, incorporato nell\'ap
   assert.match(read('ios/App/App/Info.plist'), /<key>UsWidgetKeychainGroup<\/key>\s*<string>\$\(AppIdentifierPrefix\)app\.uscouple\.shared<\/string>/);
 });
 
-test('W1 disegni e caratteri: gli stessi file di Android, byte per byte', () => {
+test('W1 caratteri: gli stessi file di Android, byte per byte', () => {
+  // The Pastello illustrations and the grain left the Android widgets with the
+  // redesign (27/11/2026 cleanup); the iPhone extension no longer draws them either.
   const pairs = [
-    ['art_photo.webp', 'drawable-nodpi/us_widget_art_photo.webp'], ['art_photo_night.webp', 'drawable-night-nodpi/us_widget_art_photo.webp'],
-    ['art_think_s.webp', 'drawable-nodpi/us_widget_art_think_s.webp'], ['art_think_s_night.webp', 'drawable-night-nodpi/us_widget_art_think_s.webp'],
-    ['art_think_m.webp', 'drawable-nodpi/us_widget_art_think_m.webp'], ['art_think_m_night.webp', 'drawable-night-nodpi/us_widget_art_think_m.webp'],
-    ['grain_tile.png', 'drawable-nodpi/us_widget_grain_tile.png'],
     ['Fraunces.ttf', 'font/us_font_fraunces.ttf'], ['Fraunces-Italic.ttf', 'font/us_font_fraunces_italic.ttf'], ['Figtree.ttf', 'font/us_font_figtree.ttf']
   ];
   for (const [ios, android] of pairs) assert.equal(sha(`${EXT}/Resources/${ios}`), sha(`${ANDROID}/res/${android}`), ios);
