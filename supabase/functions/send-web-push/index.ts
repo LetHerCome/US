@@ -8,12 +8,13 @@ import { dispatchLavagnaPush, dispatchPostitPush } from "../_shared/lavagna-push
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 import { buildNotification, deliverNotification, recipientLocale } from "../_shared/notification-core.mjs";
 import { nativeTransport } from "../_shared/native-push-env.ts";
+import { dispatchPartnerLook } from "../_shared/widget-signal-core.mjs";
 
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,x-client-info,apikey,content-type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Content-Type": "application/json" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
-type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "lavagna" | "postit" | "challenge_photo";
-const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "postit", "challenge_photo"];
+type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "lavagna" | "postit" | "challenge_photo" | "partner_look";
+const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "postit", "challenge_photo", "partner_look"];
 // US 1.0 (A2): a join older than this is not "just joined" (legacy couples, stale retries).
 const PARTNER_JOINED_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -36,6 +37,13 @@ Deno.serve(async (request) => {
     const { data: sender, error: senderError } = await admin.from("profiles").select("id,couple_id,display_name,role").eq("id", authData.user.id).maybeSingle();
     if (senderError || !sender?.couple_id) return json({ error: "Profile not linked" }, 403);
     const { data: partner } = await admin.from("profiles").select("id,display_name,role").eq("couple_id", sender.couple_id).neq("id", sender.id).maybeSingle();
+
+    if (type === "partner_look") {
+      // I personaggi sempre aggiornati (27/11/2026): the caller just changed
+      // colour, shape or outfit. A silent widget signal to the partner's phones,
+      // the look read back from the server, one per couple_sync revision.
+      return json(await dispatchPartnerLook(admin, { sender, partner, native: nativeTransport() }));
+    }
 
     if (type === "think") {
       if (!partner || !body.reference_id) return json({ error: "Missing think reference" }, 400);

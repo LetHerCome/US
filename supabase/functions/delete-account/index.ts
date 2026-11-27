@@ -2,6 +2,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 import { handleDeleteAccount, isOriginAllowed } from "../_shared/s32-account-deletion-core.mjs";
+import { notifyPartnerLeft } from "../_shared/widget-signal-core.mjs";
+import { nativeTransport } from "../_shared/native-push-env.ts";
 
 // US Store S3.2 — account deletion (Google Play "delete account" requirement).
 // Inert unless US_ACCOUNT_DELETION_ENABLED === "true" (keep it unset in
@@ -55,6 +57,9 @@ Deno.serve(async (request: Request) => {
         });
       },
       log,
+      // The phones of who stays clear the partner from their widgets (silent push).
+      notifyPartnerLeft: ({ client, coupleId, partnerIds }: { client: any; coupleId: string; partnerIds: string[] }) =>
+        notifyPartnerLeft(client, { coupleId, partnerIds, native: nativeTransport() }),
     });
     if (result.body === null) return new Response(null, { status: result.status, headers });
     return new Response(JSON.stringify(result.body), { status: result.status, headers });

@@ -3,6 +3,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 import { isOriginAllowed } from "../_shared/s32-account-deletion-core.mjs";
 import { handleLeaveCouple } from "../_shared/s32-leave-couple-core.mjs";
+import { notifyPartnerLeft } from "../_shared/widget-signal-core.mjs";
+import { nativeTransport } from "../_shared/native-push-env.ts";
 
 // US Store 1.0 — leave the couple (founder decision 3, 2026-10-14). Closes
 // the couple space like an account deletion but keeps the account.
@@ -55,6 +57,9 @@ Deno.serve(async (request: Request) => {
         });
       },
       log,
+      // The phones of who stays clear the partner from their widgets (silent push).
+      notifyPartnerLeft: ({ client, coupleId, partnerIds }: { client: any; coupleId: string; partnerIds: string[] }) =>
+        notifyPartnerLeft(client, { coupleId, partnerIds, native: nativeTransport() }),
     });
     if (result.body === null) return new Response(null, { status: result.status, headers });
     return new Response(JSON.stringify(result.body), { status: result.status, headers });
