@@ -55,7 +55,11 @@ test('Android: a burst owed after the process died leaves at the next tick, with
 test('Android: taps on the heart over the widget count too; the client sends taps', () => {
   const heart = read(`${JAVA}/UsThinkHeartActivity.java`);
   assert.match(heart, /root\.setOnTouchListener/);
-  assert.match(heart, /target\.contains\(Math\.round\(event\.getRawX\(\)\), Math\.round\(event\.getRawY\(\)\)\)\) again\(\);/);
+  // Samsung (27/11/2026): a generous area around the widget, in screen and window coordinates.
+  assert.match(heart, /int margin = Math\.max\(bounds\.width\(\), bounds\.height\(\)\);\s*target\.inset\(-margin, -margin\);/);
+  assert.match(heart, /boolean onScreen = target\.contains\(Math\.round\(event\.getRawX\(\)\), Math\.round\(event\.getRawY\(\)\)\);/);
+  assert.match(heart, /boolean inWindow = target\.contains\(Math\.round\(event\.getX\(\)\), Math\.round\(event\.getY\(\)\)\);/);
+  assert.match(heart, /if \(onScreen \|\| inWindow\) again\(\);/);
   assert.match(heart, /handler\.postDelayed\(closer, LINGER_MS\)/);
   const client = read(`${JAVA}/UsWidgetActionClient.java`);
   assert.match(client, /String send\(String functionsBase, String token, String actionId, int taps\)/);
