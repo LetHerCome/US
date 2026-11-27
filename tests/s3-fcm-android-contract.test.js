@@ -195,10 +195,10 @@ const GATE = 'native-plugins/us-push-support/android/src/main/java/com/usapp/pus
 const PLUGIN = 'native-plugins/us-push-support/android/src/main/java/com/usapp/pushsupport/UsPushSupportPlugin.java';
 
 test('notices: the phone knows exactly the kinds the server sends, and writes each one', async () => {
-  const { ANDROID_NOTICE_KINDS, ANDROID_PLURAL_KINDS, ANDROID_SAFE_COPY } = await load(TRANSPORT);
+  const { ANDROID_NOTICE_KINDS, ANDROID_PLURAL_KINDS, ANDROID_STATUS_KINDS, ANDROID_SAFE_COPY } = await load(TRANSPORT);
   const notices = read(NOTICES);
   const javaKinds = [...notices.match(/KINDS = \{([^}]*)\}/)[1].matchAll(/"([a-z_]+)"/g)].map((m) => m[1]);
-  assert.deepEqual([...javaKinds].sort(), [...new Set([...Object.values(ANDROID_NOTICE_KINDS), ...Object.values(ANDROID_PLURAL_KINDS)])].sort());
+  assert.deepEqual([...javaKinds].sort(), [...new Set([...Object.values(ANDROID_NOTICE_KINDS), ...Object.values(ANDROID_PLURAL_KINDS), ...Object.values(ANDROID_STATUS_KINDS)])].sort());
   for (const kind of javaKinds) assert.match(notices, new RegExp(`case "${kind}":`), `${kind} has its sentence`);
   assert.equal(javaString(notices, 'FALLBACK_TITLE'), ANDROID_SAFE_COPY.title);
   assert.equal(javaString(notices, 'FALLBACK_BODY'), ANDROID_SAFE_COPY.body);
