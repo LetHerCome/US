@@ -179,10 +179,8 @@ html = html.replace(topChromeLink, '$1\n<link rel="stylesheet" href="/native-fra
 
 html = html
   .replace(/<link\s+rel=["']manifest["'][^>]*>\s*/i, '')
-  // Stories were retired from the product surface. Native must not resurrect
-  // the old partner bubble, Story add control, archive row or runtime.
-  .replace(/<link\s+rel=["']stylesheet["']\s+href=["']\/stories\.css(?:\?v=[^"']+)?["'][^>]*>\s*/i, '')
-  .replace(/<script\s+defer\s+src=["']\/stories\.js(?:\?v=[^"']+)?["']><\/script>\s*/i, '')
+  // Stories were retired from the product surface (stories.js/css are gone
+  // since 27/11/2026). The web archive row stays web-only.
   .replace(/<button\b(?=[^>]*\bdata-us-setting=["']story-archive["'])[^>]*>[\s\S]*?<\/button>\s*/i, '')
   .replace(/<link\s+rel=["']preconnect["']\s+href=["']https:\/\/cdn\.jsdelivr\.net["'][^>]*>\s*/i, '')
   .replace(/<link\s+rel=["']dns-prefetch["']\s+href=["']\/\/cdn\.jsdelivr\.net["'][^>]*>\s*/i, '')

@@ -37,13 +37,11 @@ test('foreground ripara Home avatar e Ricordi senza richiedere un nuovo login', 
   assert.match(app, /if\(forceMedia\)mediaPaths\.forEach\(usInvalidateSignedUrl\);\s*const signedUrlsPromise=usGetSignedUrls\(mediaPaths,US_MEDIA_URL_TTL_S\);/);
 });
 
-test('Stories Left for You e album hanno recovery media esplicita', async () => {
-  const [stories, left, albums] = await Promise.all([
-    src('stories.js'),
+test('Left for You e album hanno recovery media esplicita', async () => {
+  const [left, albums] = await Promise.all([
     src('left-for-you.js'),
     src('moments-albums.js')
   ]);
-  assert.match(stories, /usInvalidateSignedUrl\?\.\(story\.media_path\)[\s\S]*force:true/);
   assert.match(left, /data-us-media-path=.*onerror="usRecoverPrivateImage\(this\)"/);
   // The album cover is one <img> whose path is set when a photo is shown.
   assert.match(albums, /<img id="usAlbumCover"[^>]*onerror="usRecoverPrivateImage\(this\)"/);

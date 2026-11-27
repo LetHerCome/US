@@ -158,7 +158,6 @@ test('Daily: retired comments have no frontend entry point; the reaction is the 
   const app=read('app.js'),today=read('index.html').match(/<main id="today"[\s\S]*?<\/main>/)[0];
   assert.doesNotMatch(today,/todayOutcome|data-daily-reaction/,'no static reaction markup in the sheet');
   assert.doesNotMatch(app,/function dailyQuestionOutcomeRuntime|window\.saveDailyQuestionOutcome/);
-  assert.doesNotMatch(read('stories.js'),/wireTodayAutoClose|scheduleTodayCloseIfNeeded/);
 });
 
 module.exports={daily};

@@ -431,7 +431,7 @@ test('M5F no active Stories entry remains reachable', () => {
   assert.doesNotMatch(html, /data-page="stories"/);
   assert.doesNotMatch(html, /usStoryPartnerOpen/);
   assert.doesNotMatch(css, /us-top-story-ring/);
-  assert.match(read('stories.js'), /if \(window\.__US_LEFT_FOR_YOU_ACTIVE__\) return/);
+  assert.equal(fs.existsSync(path.join(ROOT, 'stories.js')), false, 'the Stories runtime is retired');
 });
 
 test('M5F envelope uses the canonical Phosphor pair and a restrained trace, not a Stories ring', () => {

@@ -296,7 +296,6 @@ test('la foundation centralizza reduced motion e segue i cambiamenti di preferen
 test('le superfici semplici adottano la primitive e Auth resta fuori', () => {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const albums = fs.readFileSync(path.join(ROOT, 'moments-albums.js'), 'utf8');
-  const stories = fs.readFileSync(path.join(ROOT, 'stories.js'), 'utf8');
 
   ['today', 'usEventsOverlay', 'usSettingsOverlay', 'momentViewer'].forEach((id) => {
     assert.match(html, new RegExp(`id=["']${id}["'][^>]*data-us-modal`));
@@ -304,9 +303,6 @@ test('le superfici semplici adottano la primitive e Auth resta fuori', () => {
   assert.doesNotMatch(html, /id=["']authOverlay["'][^>]*data-us-modal/);
   assert.match(albums, /id="usAlbumOverlay"[^>]*data-us-modal/);
   assert.match(albums, /id="usAlbumLightbox"[^>]*data-us-modal/);
-  assert.match(stories, /viewer\.setAttribute\('data-us-modal',''\)/);
-  assert.match(stories, /camera\.setAttribute\('data-us-modal',''\)/);
-  assert.match(stories, /confirmation\.setAttribute\('data-us-modal',''\)/);
 });
 
 test('il foglio fondazionale espone token conservativi e target comuni da 44px', () => {

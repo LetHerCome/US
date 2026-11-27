@@ -20,8 +20,6 @@ const RUNTIME_FILES = [
   'app.js',
   'onboarding.js',
   'onboarding.css',
-  'stories.js',
-  'stories.css',
   'styles.css',
   'ui-foundation.css',
   'ui-foundation.js',
