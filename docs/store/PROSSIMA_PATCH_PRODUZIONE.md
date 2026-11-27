@@ -2,6 +2,13 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Oggi senza la striscia bianca in alto (27/11)
+
+**Stato:** ramo `claude/controllo-integrazione`, verso staging. Segnalata dal founder con uno screenshot dell'APK di staging.
+
+**Cosa cambia:**
+- Col tema chiaro in cima a Oggi c'era una riga bianca di un pixel: la foto ora arriva fino al bordo, anche ai lati. Era il bordo rimasto dalla vecchia scheda della foto.
+
 ### Avvisi di US vi ricorda e personaggi sempre aggiornati (27/11)
 
 **Stato:** ramo `claude/push-ricorda-personaggio`, verso staging; migrazioni e funzioni da applicare su staging.

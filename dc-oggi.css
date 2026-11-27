@@ -20,6 +20,9 @@
 /* ---------- 1 · Photo: full screen, night at the top and at the bottom (.og-scrim) ---------- */
 /* The photo starts at the very top of the screen (no -2px pull from the legacy layer). */
 #home.page{margin-top:0}
+/* No frame around the photo (founder, 27/11/2026): the legacy .hero card kept a 1px border, and the
+   hero's own colour showed through it as a white line at the top with the light theme. */
+#home #homeHero{border:0}
 /* Il velo (founder, 25/11/2026): the photo sinks softly into the page at
    the bottom, the same shape by night (black) and by day (paper, giorno.css),
    never a full band: the words on the photo keep a soft dark under them. */
