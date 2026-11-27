@@ -3,6 +3,7 @@
 // Oggi in eight stops: it lights the real thing, says it in a sentence, you tap Avanti. The other
 // person's character drops two lines. «Salta» always; «Rivedi l'intro» in the Profilo starts it again.
 // It lights and explains, never acts for anyone: nothing is tapped or sent on your behalf.
+// Before the tour, whoever never made their character makes it (shape and colour, 27/11/2026).
 (() => {
 'use strict';
 if (window.UsIntro) return;
@@ -22,12 +23,25 @@ function nameOf(role, fallback) {
 const visible = (el) => { if (!el || el.closest('[hidden]')) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
 const firstVisible = (selector) => [...d.querySelectorAll(selector)].find(visible) || null;
 
-// The eight stops. target: what is lit (none for the welcome); other: the line of the other person.
-function steps() {
-  const mine = nameOf(me(), ''), theirs = nameOf(other(), 'la tua persona');
+// Your character before the tour (founder, 27/11/2026): whoever never made it (the update, or a
+// setup left as it was) first picks its shape and colour here; the guardaroba stays in the angolo,
+// where its pieces unlock. «Rivedi l'intro» shows it too, with what you have now.
+const profiles = () => { try { return w.UsCoupleContext?.snapshot?.()?.profiles || []; } catch (_) { return []; } };
+const mine = () => profiles().find((p) => p?.id && p.id === w.usProfile?.id) || null;
+const made = () => Boolean(mine()?.character_shape || mine()?.person_color || w.usProfile?.character_shape || w.usProfile?.person_color);
+const client = () => (typeof sb !== 'undefined' ? sb : null); // eslint-disable-line no-undef
+const canMake = () => Boolean(client()?.rpc && w.usProfile?.couple_id && P()?.character && P()?.SHAPES?.length);
+
+// The stops. target: what is lit (none for the welcome); other: the line of the other person;
+// maker: the shapes and the colours, in the bubble.
+function steps({ force = false } = {}) {
+  const name = nameOf(me(), ''), theirs = nameOf(other(), 'la tua persona');
+  const maker = canMake() && (force || !made());
   return [
-    { id: 'ciao', say: `Ciao${mine ? ` ${mine}` : ''}! Sono il tuo personaggio. Ti faccio fare un giro di US: ci vuole un minuto.`, cta: 'Andiamo', reaction: 'saluta' },
-    { id: 'domanda', target: () => firstVisible('#usDailyRitual'), say: 'Ogni giorno qui c’è una domanda per voi due. Rispondete tutti e due, poi leggete cosa ha scritto l’altra persona.' },
+    // Whole sentences, with and without the name, so the English dictionary finds each one.
+    ...(maker ? [{ id: 'crea', maker: true, say: name ? `Prima del giro, crea me, ${name}: sono il tuo personaggio. Scegli la mia forma e il mio colore. Ti seguo in tutta l’app, anche nei widget.` : 'Prima del giro, crea me: sono il tuo personaggio. Scegli la mia forma e il mio colore. Ti seguo in tutta l’app, anche nei widget.', cta: 'Eccomi', reaction: 'saluta' }] : []),
+    { id: 'ciao', say: maker ? 'Eccomi! Ora ti faccio fare un giro di US: ci vuole un minuto.' : name ? `Ciao ${name}! Sono il tuo personaggio. Ti faccio fare un giro di US: ci vuole un minuto.` : 'Ciao! Sono il tuo personaggio. Ti faccio fare un giro di US: ci vuole un minuto.', cta: 'Andiamo', reaction: maker ? 'festa' : 'saluta' },
+    { id: 'domanda', target: () => firstVisible('#usDailyRitual'), say: 'Ogni giorno qui c’è una domanda per voi due: rispondete, poi leggete cosa ha scritto l’altra persona.' },
     { id: 'tipenso', target: () => firstVisible('#thinkButton'), round: true, say: `Questo è il Ti penso: un tocco e ${theirs} riceve il tuo pensiero, anche da lontano.`, other: 'Io lo aspetto, eh.' },
     { id: 'noi', target: () => firstVisible('.us-nav [data-page="bond"]'), say: 'In Noi c’è il vostro tempo: il calendario, la lavagna e i post-it che vi lasciate.' },
     { id: 'ricordi', target: () => firstVisible('.us-nav [data-page="moments"]'), say: 'In Ricordi mettete le vostre foto, mese per mese. Diventano il vostro album.' },
@@ -38,6 +52,14 @@ function steps() {
 }
 
 let root = null, list = [], at = 0, open = false, returnFocus = null, timers = [], closing = 0;
+// A stop whose thing is not on screen yet is waited for a moment, then left out (27/11/2026).
+const TARGET_WAIT = 1500;
+let waitUntil = 0, waitTimer = 0, settleTimer = 0;
+const ready = (step) => !step?.target || Boolean(step.target());
+function settle() {
+  if (Date.now() < waitUntil) return;
+  list = list.filter((step, i) => i <= at || ready(step));
+}
 const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
 function clearTimers() { timers.forEach(clearTimeout); timers = []; }
 
@@ -55,18 +77,23 @@ function build() {
     <div class="us-intro-other" data-intro-other aria-hidden="true"><p class="us-intro-other-say" data-intro-other-say></p><span data-intro-other-char></span></div>
     <div class="us-intro-bubble" data-intro-bubble>
       <p class="us-intro-say" id="usIntroSay" aria-live="polite"></p>
+      <div class="us-intro-maker" data-intro-maker hidden></div>
       <div class="us-intro-foot"><span class="us-intro-dots" data-intro-dots aria-hidden="true"></span><span class="us-intro-btns"><button type="button" class="us-intro-skip" data-intro-skip>Salta</button><button type="button" class="us-intro-next" data-intro-next>Avanti</button></span></div>
     </div>`;
   d.body.appendChild(root);
   root.addEventListener('click', (event) => {
     if (event.target.closest('[data-intro-next]')) { next(); return; }
     if (event.target.closest('[data-intro-skip]')) { finish(); return; }
+    const shape = event.target.closest('[data-intro-shape]');
+    if (shape) { pickShape(shape.dataset.introShape); return; }
+    const colour = event.target.closest('[data-intro-colour]');
+    if (colour && !colour.disabled) pickColour(colour.dataset.introColour);
   });
   root.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') { event.preventDefault(); finish(); }
-    // The focus stays inside the two buttons while the intro is open.
+    // The focus stays inside the intro's buttons (Salta, Avanti and the maker's) while it is open.
     if (event.key === 'Tab') {
-      const buttons = [...root.querySelectorAll('button')].filter((b) => !b.hidden);
+      const buttons = [...root.querySelectorAll('button')].filter((b) => !b.hidden && !b.disabled && !b.closest('[hidden]'));
       const i = buttons.indexOf(d.activeElement);
       if (event.shiftKey && i <= 0) { event.preventDefault(); buttons[buttons.length - 1]?.focus(); }
       else if (!event.shiftKey && i === buttons.length - 1) { event.preventDefault(); buttons[0]?.focus(); }
@@ -76,8 +103,85 @@ function build() {
   return root;
 }
 
-function character(role, reaction, size) {
-  try { return P()?.character?.(role, { size, reaction }) || ''; } catch (_) { return ''; }
+// The shape just picked shows at once, before the couple is read again.
+let shapeNow = null, colourNow = null, saving = false;
+const myShape = () => shapeNow || P()?.shapeOf?.(me()) || '';
+function character(role, reaction, size, shape) {
+  const s = shape || (role === me() ? shapeNow : null);
+  try { return P()?.character?.(role, { size, reaction, ...(s ? { shape: s } : {}) }) || ''; } catch (_) { return ''; }
+}
+
+// The maker: the five shapes with your character in each, the eight colours (the other person's is theirs).
+const STAND_IN = '~partner';
+function coupleNow() {
+  const list = profiles().map((p) => ({ ...p }));
+  let self = list.find((p) => p.id === w.usProfile?.id);
+  if (!self && w.usProfile?.id) { self = { id: w.usProfile.id, role: me(), person_color: w.usProfile.person_color || null }; list.push(self); }
+  if (self && colourNow !== null) self.person_color = colourNow;
+  // The other profile not read yet: their usual colour is taken already, as in the setup.
+  if (!list.some((p) => p?.id && p.id !== w.usProfile?.id)) list.push({ id: STAND_IN, role: other(), person_color: null });
+  return list;
+}
+// The couple's colours on the page: only real profiles.
+const realCouple = () => coupleNow().filter((p) => p.id !== STAND_IN);
+function makerMarkup() {
+  const role = me(), names = P()?.SHAPE_NAMES || {}, theirName = nameOf(other(), '');
+  // Whole sentences, so the English dictionary finds them.
+  const takenLabel = (c) => (theirName ? `${c.name}, è di ${theirName}` : `${c.name}, è della tua persona`);
+  const shapes = (P()?.SHAPES || []).map((s) => `<button type="button" class="us-intro-shape" data-intro-shape="${esc(s)}" aria-pressed="${s === myShape()}">${character(role, '', 40, s)}<span>${esc(names[s] || s)}</span></button>`).join('');
+  const colours = (w.UsPersonColors?.choices?.(coupleNow(), w.usProfile?.id) || []).map((c) => `<button type="button" class="us-intro-swatch" data-intro-colour="${esc(c.id)}" aria-pressed="${c.mine}" aria-label="${esc(c.taken ? takenLabel(c) : c.name)}"${c.taken ? ' disabled' : ''}><i style="background:${esc(c.hex)}"></i></button>`).join('');
+  return `<p class="us-intro-maker-label">La forma</p><div class="us-intro-shapes" role="group" aria-label="La forma">${shapes}</div>`
+    + (colours ? `<p class="us-intro-maker-label">Il colore</p><div class="us-intro-swatches" role="group" aria-label="Il colore">${colours}</div>` : '')
+    + '<p class="us-intro-maker-note">Gli accessori arrivano dopo: li sbloccate insieme, nel vostro angolo.</p>';
+}
+function paintMaker(step) {
+  const host = root?.querySelector('[data-intro-maker]');
+  if (!host) return;
+  host.hidden = !step?.maker;
+  if (!step?.maker) { host.innerHTML = ''; return; }
+  const focused = d.activeElement && host.contains(d.activeElement) ? (d.activeElement.dataset.introShape ? `[data-intro-shape="${d.activeElement.dataset.introShape}"]` : `[data-intro-colour="${d.activeElement.dataset.introColour}"]`) : '';
+  host.innerHTML = makerMarkup();
+  if (focused) host.querySelector(focused)?.focus({ preventScroll: true });
+}
+function repaintMe() {
+  const step = list[at];
+  root.querySelector('[data-intro-guide]').innerHTML = character(me(), step?.reaction || '', 72);
+  paintMaker(step);
+}
+async function save(rpc, args) {
+  const db = client();
+  if (!db?.rpc) return false;
+  try {
+    const r = await db.rpc(rpc, args);
+    if (r?.error) throw r.error;
+    w.UsFeedback?.selection?.();
+    Promise.resolve(w.UsCoupleContext?.hydrate?.()).catch(() => {});
+    return true;
+  } catch (error) {
+    const m = String(error?.message || '');
+    w.toast?.(/partner color/.test(m) ? `È il colore di ${nameOf(other(), 'la tua persona')}` : /plus required/.test(m) ? 'Il colore si sblocca con US Plus' : 'Non riesco a salvarlo, riprova');
+    return false;
+  }
+}
+async function pickShape(shape) {
+  if (saving || !P()?.SHAPES?.includes(shape) || shape === myShape()) return;
+  const before = shapeNow;
+  saving = true; shapeNow = shape; repaintMe();
+  if (!(await save('set_my_character_shape', { p_shape: shape }))) { shapeNow = before; repaintMe(); }
+  saving = false;
+}
+async function pickColour(colour) {
+  if (saving || !w.UsPersonColors?.PALETTE?.[colour]) return;
+  const before = colourNow;
+  saving = true; colourNow = colour;
+  w.UsPersonColors.applyCoupleColors?.(realCouple());
+  repaintMe();
+  if (!(await save('set_my_color', { p_color: colour }))) {
+    colourNow = before;
+    w.UsPersonColors.applyCoupleColors?.(realCouple());
+    repaintMe();
+  }
+  saving = false;
 }
 
 // Where things go: the light around the target; the character next to it, on the side with room;
@@ -117,17 +221,34 @@ function place(step) {
   o.style.top = below ? `${Math.round(Math.min(vh - 150, top + bh + 30))}px` : `${Math.round(Math.max(90, top - 150))}px`;
 }
 
+// The last stop shown says «Fine».
+function paintFoot() {
+  const step = list[at];
+  if (!root || !step) return;
+  const nextBtn = root.querySelector('[data-intro-next]'), skip = root.querySelector('[data-intro-skip]');
+  const last = at === list.length - 1;
+  nextBtn.textContent = last ? 'Fine' : step.cta || 'Avanti';
+  skip.hidden = last;
+  root.querySelector('[data-intro-dots]').innerHTML = list.map((_, i) => `<i${i === at ? ' class="is-on"' : ''}></i>`).join('');
+}
+
 function paint() {
+  clearTimeout(waitTimer); waitTimer = 0;
   const step = list[at];
   if (!step) return finish();
+  if (!ready(step)) {
+    if (Date.now() < waitUntil) { waitTimer = setTimeout(paint, 120); return; }
+    list.splice(at, 1);
+    return paint();
+  }
+  settle();
   const guide = root.querySelector('[data-intro-guide]');
   guide.innerHTML = character(me(), step.reaction || '', 72);
   if (!reduced()) { guide.classList.remove('is-hop'); void guide.offsetWidth; guide.classList.add('is-hop'); }
   root.querySelector('#usIntroSay').textContent = step.say;
-  const nextBtn = root.querySelector('[data-intro-next]'), skip = root.querySelector('[data-intro-skip]');
-  nextBtn.textContent = step.cta || 'Avanti';
-  skip.hidden = at === list.length - 1;
-  root.querySelector('[data-intro-dots]').innerHTML = list.map((_, i) => `<i${i === at ? ' class="is-on"' : ''}></i>`).join('');
+  root.dataset.maker = step.maker ? 'true' : 'false';
+  paintMaker(step);
+  paintFoot();
   root.dataset.step = step.id;
   clearTimers();
   // The logo opens into the bar of your two characters, as if tapped; the light follows it.
@@ -151,6 +272,7 @@ function paint() {
 }
 
 function next() {
+  if (waitTimer) return; // the next stop is still being waited for
   if (at >= list.length - 1) return finish();
   at += 1;
   paint();
@@ -161,6 +283,8 @@ function finish() {
   if (!open) return;
   open = false;
   clearTimers();
+  clearTimeout(waitTimer); waitTimer = 0;
+  clearTimeout(settleTimer);
   store.set(SEEN(), '1');
   try { w.UsAngolo?.isola?.(false); } catch (_) {}
   root.classList.remove('is-open');
@@ -179,10 +303,15 @@ function start({ force = false } = {}) {
   clearTimeout(closing); // a closing fade still running must not hide the intro that starts again
   if (typeof w.go === 'function' && !$('home')?.classList.contains('active')) w.go('home', { nav: true });
   w.closeModal?.();
-  list = steps().filter((s) => !s.target || s.target());
+  shapeNow = null; colourNow = null;
+  // Every stop: its thing is looked for when it is reached.
+  list = steps({ force });
   if (!list.length) return false;
   at = 0;
   open = true;
+  waitUntil = Date.now() + TARGET_WAIT;
+  clearTimeout(settleTimer);
+  settleTimer = setTimeout(() => { if (open) { settle(); paintFoot(); } }, TARGET_WAIT + 20);
   returnFocus = d.activeElement;
   d.documentElement.classList.add('us-intro-open');
   root.hidden = false;

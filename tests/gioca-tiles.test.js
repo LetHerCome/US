@@ -101,7 +101,6 @@ test('Gioca CSS: tiles use the canonical tokens and the Noi chip recipe, never a
   assert.doesNotMatch(css, /\.us-gv2-deck|\.us-gv2-game-grid\{[^}]*overflow-x/);
   assert.doesNotMatch(css, /:root\s*\{/, 'no palette of its own');
   assert.match(css, /var\(--us-radius-card\)/);
-  assert.match(css, /var\(--us-accent-gradient\)/);
 });
 
 

@@ -94,6 +94,15 @@ final class UsWidgetStore {
         return true;
     }
 
+    /**
+     * Widget signal (27/11/2026): the other person's new look, written into
+     * this account's snapshot. No snapshot yet (US never opened): nothing.
+     */
+    synchronized boolean writePartnerLook(JSONObject look) {
+        JSONObject next = UsWidgetContract.withPartnerLook(read(), look);
+        return next != null && write(next);
+    }
+
     synchronized JSONObject read() {
         String json = readAtomic(snapshotFile);
         if (json.isEmpty()) return null;

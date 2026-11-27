@@ -29,11 +29,29 @@ GitHub repository `LetHerCome/US`:
 plus `cloudflare/_headers`. It deliberately excludes repository source and
 configuration (`supabase/`, migrations, tests, docs, Android sources, package
 files). `tests/cloudflare-pages-migration.test.js` keeps that contract.
+From `assets/` it leaves out what `scripts/build-asset-filter.mjs` lists: the
+masters in `assets/source/`, approved art the app no longer shows (companions,
+the Settings and Stories icons) and the unloaded star catalogue. The Capacitor
+build uses the same filter.
 
-Every release that changes a runtime file or the Service Worker bumps the build
-id (`npm run build:id -- <build-id>`): it rewrites `index.html` cache-busting
-query strings, `service-worker.js` `BUILD_ID`, `version.json` and the manifest.
-The private media cache `us-private-media-v1` is never renamed by a build bump.
+### Build id (automatic since 27/11/2026)
+
+The Service Worker serves every `?v=<BUILD_ID>` asset cache-first, so a deploy
+that changes a runtime file must change the id, or installed phones keep the
+old file. The build does it by itself: `scripts/build-cloudflare-pages.mjs`
+stamps `<release>-<hash>` into the bundle (`index.html` meta and every `?v=`,
+`service-worker.js` `BUILD_ID`, `version.json`, the manifest), before minify.
+`<release>` is the id in the source, `<hash>` 10 hex characters of the SHA-256
+of every bundled file (`scripts/build-id.mjs`). Same files, same id: a deploy
+that only changes docs or tests keeps it and shows no update banner; any
+runtime change gets a new id, a new shell cache and the update banner
+(`fix4.js` compares `version.json` with the page's `us-build`).
+
+`npm run build:id -- <build-id>` is now only how a release gets its name (it
+rewrites the same places in the source, e.g. `us-rilascio-20261127-110`); it
+is no longer needed for cache busting. The staging preview appends
+`-s<commit>` to the stamped id. The private media cache `us-private-media-v1`
+is never renamed by a build bump.
 
 ## Supabase Auth
 

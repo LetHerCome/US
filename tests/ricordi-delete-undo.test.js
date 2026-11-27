@@ -179,7 +179,6 @@ test('Ricordi delete commit: frontend invokes authenticated delete-moment then r
       window: { usProfile: { id: 'me' } }, console: { warn() {} },
       sb: { functions: { invoke: async (name, options) => { invokes.push({ name, options }); return { data, error }; } } },
       hydrateMoments: async () => order.push('hydrateMoments'),
-      hydrateHomeMemory: async () => order.push('hydrateHomeMemory'),
       hydrateHomePhoto: async () => order.push('hydrateHomePhoto'),
       homePhotoPath: 'old-path'
     };
@@ -191,7 +190,7 @@ test('Ricordi delete commit: frontend invokes authenticated delete-moment then r
   assert.equal(invokes.length, 1);
   assert.equal(invokes[0].name, 'delete-moment');
   assert.equal(invokes[0].options?.body?.moment_id, 'm1');
-  assert.deepEqual(order, ['hydrateMoments', 'hydrateHomeMemory', 'hydrateHomePhoto']);
+  assert.deepEqual(order, ['hydrateMoments', 'hydrateHomePhoto']);
   assert.doesNotMatch(COMMIT, /\.from\('moments'\)|storage\.from\('us-media'\)/, 'privileged whole-Moment deletion must not live in the browser');
 
   assert.equal(await run({ data: null, error: { message: 'denied' } }), false);

@@ -19,9 +19,9 @@ on:
       - 'scripts/configure-s3-staging-qa.mjs'
       - '.github/workflows/s3-staging-android-qa.yml'
       - '.github/workflows/s3-native-push-privacy.yml'
-  push:
-    branches:
-      - 'mission/us-store-s3-native-push-owner-gate-20261010'
+  # The push trigger named mission/us-store-s3-native-push-owner-gate-20261010,
+  # gone since #187 merged (audit 27/11/2026).
+  workflow_dispatch:
 
 permissions:
   contents: read

@@ -40,7 +40,7 @@ function install({ rpc, upsert } = {}) {
     sendWebPushEvent: (type, id) => { pushes.push([type, id]); return Promise.resolve(); },
   });
   require('./helpers/identity-fixture').install(context);
-  vm.runInContext(`${slice('// M9E — la domanda di oggi', 'async function updateHomeStatus')}\nwindow.hydrateToday=hydrateToday;window.usDailyQuestionDay=usDailyQuestionDay;`, context);
+  vm.runInContext(`${slice('// M9E — la domanda di oggi', 'let pendingMomentFile=null;')}\nwindow.hydrateToday=hydrateToday;window.usDailyQuestionDay=usDailyQuestionDay;`, context);
   require('./helpers/identity-fixture').install(context);
   vm.runInContext(`${slice('saveAnswer = async function(){', 'window.saveAnswer=saveAnswer;')}\nwindow.saveAnswer=saveAnswer;`, context);
   return { nodes, calls, refreshes, pushes, toasts, upserts, window, context, hydrate: () => window.hydrateToday() };
@@ -184,7 +184,7 @@ test('M9E client: giorno client allineato a Europe/Rome attorno alla mezzanotte'
 });
 
 test('M9E client: una sola authority, niente fallback da seed scaduto, card M9B con stato di errore', () => {
-  const hydrate = slice('async function hydrateToday(){', 'async function updateHomeStatus');
+  const hydrate = slice('async function hydrateToday(){', 'let pendingMomentFile=null;');
   assert.doesNotMatch(app, /from\('daily_questions'\)/, 'client never queries daily_questions by date');
   // Two callers of the one authority: Oggi, and the waiting screen of the onboarding (09/11/2026).
   assert.equal((app.match(/rpc\('get_or_create_daily_question'/g) || []).length, 2);

@@ -93,7 +93,8 @@ test('the app hands over both characters and writes again when a shape, colour o
   const source = read('widgets.js');
   assert.match(source, /const emptyCharacter = \(\) => \(\{ shape: '', head: '', face: '', color: '', day: '' \}\);/);
   assert.match(source, /window\.addEventListener\('us-identity-change', \(\) => \{ setTimeout\(\(\) => \{ syncCharacters\(\)\.catch\(\(\) => \{\}\); \}, 300\); \}\);/);
-  const body = source.match(/  function syncCharacters\(\) \{[\s\S]*?\n  \}\n/)[0];
+  const roleLook = source.match(/  const ROLE_LOOK = Object\.freeze\(\{[\s\S]*?\n  \}\);\n/)[0];
+  const body = roleLook + source.match(/  function syncCharacters\(\) \{[\s\S]*?\n  \}\n/)[0];
   let writes = 0;
   const profiles = [{ role: 'francesco', person_color: 'blu' }, { role: 'beatrice', person_color: null }];
   const looks = { francesco: { head: 'corona', face: null }, beatrice: { head: null, face: 'occhiali' } };
@@ -124,4 +125,115 @@ test('the app hands over both characters and writes again when a shape, colour o
   await sandbox.syncCharacters();
   assert.equal(writes, 2, 'a new shape is written again');
   assert.equal(sandbox.read().characters.me.shape, 'goccia');
+});
+
+// The bridge (platform.js) lets through only what it knows: the characters and the second post-it
+// must cross it, or the phone draws the role's character and a 4x2 with one note (audit 27/11/2026).
+test('the bridge hands the characters and the second post-it to the phone, checked as the contract does', async () => {
+  const written = [];
+  const plugin = { writeSnapshot: async ({ snapshot }) => { written.push(snapshot); } };
+  const sandbox = { console: { warn() {} }, navigator: {}, UsCapacitorRuntime: { isNativePlatform: () => true, isPluginAvailable: (name) => name === 'UsWidgetBridge', registerPlugin: () => plugin } };
+  sandbox.window = sandbox;
+  vm.runInContext(read('platform.js'), vm.createContext(sandbox), { filename: 'platform.js' });
+  const snapshot = {
+    ownerHash: 'a'.repeat(64),
+    couple: { characters: { me: { shape: 'nuvola', head: 'fiocco', face: 'occhiali', color: '#6F9BFF', day: '#8faad6' }, partner: { shape: 'stella', head: '<b>', face: 'gala', color: 'blue', day: '' } } },
+    postit: { state: 'ready', text: 'Ti amo', color: 'pink', by: 'partner', more: 1, at: '2026-11-27T10:00:00.000Z', second: { text: 'Compra il latte', color: 'viola', by: 'me' } }
+  };
+  assert.equal(await sandbox.UsPlatform.writeWidgetSnapshot(snapshot), true);
+  const out = JSON.parse(JSON.stringify(written[0]));
+  assert.deepEqual(out.couple.characters, {
+    me: { shape: 'nuvola', head: 'fiocco', face: 'occhiali', color: '#6f9bff', day: '#8faad6' },
+    partner: { shape: '', head: '', face: 'gala', color: '', day: '' }
+  });
+  assert.deepEqual(out.postit.second, { text: 'Compra il latte', color: 'yellow', by: 'me' });
+  // The same lists as the native contract.
+  const java = read(`${JAVA}/UsWidgetContract.java`), js = read('platform.js');
+  for (const name of ['SHAPE', 'HEAD', 'FACE']) {
+    const list = java.split(`static final Pattern ${name} = Pattern.compile("^(`)[1].split(')$")')[0];
+    assert.ok(/^[a-z|]+$/.test(list), `${name} read from UsWidgetContract.java`);
+    assert.ok(js.includes(`const CHARACTER_${name} = /^(${list})$/;`), `${name} as in UsWidgetContract.java`);
+  }
+  // Nothing written: an empty character and an empty second note.
+  await sandbox.UsPlatform.writeWidgetSnapshot({ ownerHash: 'a'.repeat(64) });
+  const empty = JSON.parse(JSON.stringify(written[1]));
+  assert.deepEqual(empty.couple.characters.me, { shape: '', head: '', face: '', color: '', day: '' });
+  assert.deepEqual(empty.postit.second, { text: '', color: '', by: '' });
+});
+
+// «se i personaggi cambiano di forma, in tutte le cose dove sono presenti ci saranno quei personaggi»:
+// the other person's new look reaches this phone when US comes back to the foreground, not only
+// at the next cold start (audit 27/11/2026). Nothing is read again when nothing changed.
+test('back in the foreground the other person\'s new look is read, and only then the couple again', async (t) => {
+  const { loadChromium } = require('./helpers/oggi-browser');
+  const chromium = loadChromium();
+  if (!chromium) return t.skip('Playwright unavailable');
+  const { start, pageFor } = require('./helpers/countdown-browser');
+  const h = await start();
+  try {
+    const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
+    const before = await page.evaluate(() => window.UsPersonaggi.shapeOf('beatrice'));
+    assert.equal(before, 'quadrato');
+    let events = await page.evaluate(async () => {
+      let n = 0; window.addEventListener('us-identity-change', () => { n += 1; });
+      window.__looks = () => n;
+      document.dispatchEvent(new Event('visibilitychange'));
+      await new Promise((r) => setTimeout(r, 3600));
+      return n;
+    });
+    assert.equal(events, 0, 'nothing changed: no new couple read');
+    events = await page.evaluate(async () => {
+      // A new row, as the server would send (the fake hands out its own objects).
+      window.__QA.tables.profiles = window.__QA.tables.profiles.map((p) => (p.role === 'beatrice' ? { ...p, character_shape: 'goccia', character_head: 'fiocco' } : p));
+      document.dispatchEvent(new Event('visibilitychange'));
+      await new Promise((r) => setTimeout(r, 3600));
+      return window.__looks();
+    });
+    assert.equal(events, 1);
+    assert.deepEqual(await page.evaluate(() => [window.UsPersonaggi.shapeOf('beatrice'), window.UsPersonaggi.lookOf('beatrice').head]), ['goccia', 'fiocco']);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  } finally { await h.close(); }
+});
+
+// A colour changed in the Profilo or at the first opening reaches the couple data at once (the Profilo
+// card, the characters, the widgets), and «Torna al colore di sempre» never lands on the other one's colour.
+test('a new colour refreshes the couple; the way back only when the usual colour is free', () => {
+  const settings = read('settings.js'), onboarding = read('onboarding.js');
+  assert.ok(settings.includes("window.UsPersonColors?.applyCoupleColors?.(profiles);Promise.resolve(window.UsCoupleContext?.hydrate?.()).catch(()=>{});"));
+  assert.ok(onboarding.includes("colors.applyCoupleColors(profiles.filter(p=>p.id!=='~partner'));\n      Promise.resolve(globalThis.UsCoupleContext?.hydrate?.()).catch(()=>{});"));
+  assert.ok(settings.includes("const usualFree=!list.find(c=>c.id===(me?.role==='beatrice'?'lilla':'rosa'))?.taken;"));
+  assert.ok(settings.includes("${me?.person_color&&usualFree?'<button type=\"button\" class=\"us-ob-link us-person-color-reset\""));
+});
+
+// Controllo 27/11/2026: the widgets draw by viewer (me = ball) when a value is missing, the app by
+// role (whoever joined = square). The app always hands over a shape and the colours, by role.
+test('the characters always carry a shape and colours by role, never left to the widget', async () => {
+  const source = read('widgets.js');
+  const roleLook = source.match(/  const ROLE_LOOK = Object\.freeze\(\{[\s\S]*?\n  \}\);\n/)[0];
+  const body = roleLook + source.match(/  function syncCharacters\(\) \{[\s\S]*?\n  \}\n/)[0];
+  const profiles = [{ role: 'francesco', person_color: null }, { role: 'beatrice', person_color: null }];
+  const sandbox = {
+    window: {
+      usProfile: { role: 'beatrice', couple_id: 'c' },
+      UsCoupleContext: { snapshot: () => ({ profiles }) },
+      // A shape not known and no palette loaded: the role's usual one, not the viewer's.
+      UsPersonaggi: { shapeOf: () => '', lookOf: () => ({}) }
+    },
+    ownerHash: 'h', memories: { state: 'none' }, couple: { characters: { me: {}, partner: {} } },
+    setTimeout: () => {}, syncMemories: () => Promise.resolve(false), scheduleWrite: () => Promise.resolve(true)
+  };
+  vm.runInNewContext(`${body}; this.syncCharacters = syncCharacters; this.read = () => couple;`, sandbox);
+  await sandbox.syncCharacters();
+  assert.deepEqual(JSON.parse(JSON.stringify(sandbox.read().characters)), {
+    me: { shape: 'quadrato', head: '', face: '', color: '#a98bff', day: '#ab9ddb' },
+    partner: { shape: 'palla', head: '', face: '', color: '#ff7c96', day: '#e7a1ab' }
+  });
+  // The same defaults as personaggi.js and person-colors.js.
+  const colors = require('../person-colors.js');
+  assert.equal(colors.PALETTE.rosa, '#ff7c96'); assert.equal(colors.PALETTE.lilla, '#a98bff');
+  assert.equal(colors.PALETTE_GIORNO.rosa, '#e7a1ab'); assert.equal(colors.PALETTE_GIORNO.lilla, '#ab9ddb');
+  assert.match(read('personaggi.js'), /return SHAPES\[own\] \? own : \(role === 'beatrice' \? 'quadrato' : 'palla'\);/);
+  // The polaroids' tape falls back on the colour of the role of whoever added it.
+  assert.match(source, /const tint = \(row\) => couple\.characters\?\.\[row\?\.by === 'me' \? 'me' : 'partner'\]\?\.color \|\| ROLE_LOOK\[row\?\.by === 'me' \? myRoleNow\(\) :/);
 });

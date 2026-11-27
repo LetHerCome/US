@@ -25,10 +25,3 @@ test('fast start: on return, what is not on screen waits for the page on screen'
   assert.match(read('widgets.js'), /window\.usAfterForeground \|\| \(\(task\) => task\(\)\)\)\(\(\) => \{\n\s+if \(document\.hidden \|\| !ownerHash\) return;/);
   assert.match(read('fix4.js'), /\(window\.usAfterForeground \|\| \(\(task\) => task\(\)\)\)\(checkForUpdate, \d+\)/);
 });
-
-test('fast start: stories refresh once on return, not on both visibilitychange and focus', () => {
-  const stories = read('stories.js');
-  assert.match(stories, /if \(Date\.now\(\) - lastReturnRefresh < 2000\) return;/);
-  assert.match(stories, /window\.addEventListener\('focus', refreshOnReturn\);/);
-  assert.doesNotMatch(stories, /addEventListener\('focus', \(\) => refreshStories/);
-});

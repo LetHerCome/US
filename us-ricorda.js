@@ -14,46 +14,67 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
 
-  const PRIORITY = Object.freeze({ presentazione: 0, compleanno: 1, anniversario: 1, ti_aspetta: 2, bacheca: 2.5, un_anno_fa: 3, mesiversario: 4, giorni: 4, traguardo: 4, conoscervi: 5 });
+  // The kinds «Non dirmelo più» switches off, as Profilo › Notifiche names them (one switch each).
+  const KIND_NAMES = Object.freeze({ compleanno: 'I compleanni', anniversario: 'Gli anniversari', mesiversario: 'I mesiversari', giorni: 'I giorni insieme', un_anno_fa: 'Un anno fa, oggi', traguardo: 'I traguardi', conoscervi: 'Le domande per conoscervi', ti_aspetta: 'Quando tocca a te', primi_passi: 'La prima settimana', bacheca: 'La bacheca' });
+  const PRIORITY = Object.freeze({ presentazione: 0, compleanno: 1, anniversario: 1, ti_aspetta: 2, primi_passi: 2, bacheca: 2.5, un_anno_fa: 3, mesiversario: 4, giorni: 4, traguardo: 4, conoscervi: 5 });
   const hash = (s) => { let h = 2166136261; for (const c of String(s || '')) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; };
   const pick = (list, key) => list[hash(key) % list.length];
-  const years = (n) => (n === 1 ? 'un anno' : `${n} anni`);
-  const longDate = (iso) => { try { return new Date(`${iso}T12:00:00Z`).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' }); } catch (_) { return iso || ''; } };
+  // The date in the app's language (UsI18n.tag), with or without the year.
+  const tag = () => (typeof window !== 'undefined' && window.UsI18n?.tag) || 'it-IT';
+  const longDate = (iso, { year = true } = {}) => { try { return new Date(`${iso}T12:00:00Z`).toLocaleDateString(tag(), { day: 'numeric', month: 'long', ...(year ? { year: 'numeric' } : {}), timeZone: 'Europe/Rome' }); } catch (_) { return iso || ''; } };
+  // «un anno» or «N anni» are written out in each sentence, so every sentence is
+  // one entry of the English dictionary (i18n-en.js).
 
   // The sentences (D15): short, warm, with «tu», never a reproach, no emoji.
   // v: the line's values; p: the partner's name.
   function lines(kind, v, p) {
+    // At the start of a sentence the name (or «la tua persona») takes a capital.
+    const P = String(p || '').charAt(0).toUpperCase() + String(p || '').slice(1);
     switch (kind) {
       case 'presentazione': return ['Ciao! Da oggi ogni tanto vi ricordiamo le vostre cose: le date, i ricordi, le prime volte.'];
       case 'compleanno':
         if (v.days === 0) return [`Oggi è il compleanno di ${v.name}. Un pensiero vale tantissimo.`, `Oggi compie gli anni ${v.name}. Gliel'hai già detto?`, `È il compleanno di ${v.name}: è la sua giornata.`, `Oggi festeggiamo ${v.name}. Un messaggio, una foto, una voce.`, `Buon compleanno a ${v.name}! Diglielo tu, come sai fare.`];
-        if (v.days === 1) return [`Domani è il compleanno di ${v.name}. Hai già un'idea?`, `Manca un giorno al compleanno di ${v.name}.`, `Domani compie gli anni ${v.name}. Ci siamo quasi.`, `Promemoria piccolo: domani è il compleanno di ${v.name}.`, `Domani è il giorno di ${v.name}. Pronto?`];
-        return [`Tra 7 giorni è il compleanno di ${v.name}. Ci pensiamo insieme?`, `Una settimana al compleanno di ${v.name}. C'è tempo per una sorpresa.`, `Il ${longDate(v.date).replace(/ \d{4}$/, '')} è il compleanno di ${v.name}: mancano 7 giorni.`, `Tra una settimana compie gli anni ${v.name}. Hai già in mente qualcosa?`, `Segnalo io: tra 7 giorni è il compleanno di ${v.name}.`];
+        if (v.days === 1) return [`Domani è il compleanno di ${v.name}. Hai già un'idea?`, `Manca un giorno al compleanno di ${v.name}.`, `Domani compie gli anni ${v.name}. Ci siamo quasi.`, `Promemoria piccolo: domani è il compleanno di ${v.name}.`, `Domani è il giorno di ${v.name}. Tutto pronto?`];
+        return [`Tra 7 giorni è il compleanno di ${v.name}. Ci pensiamo insieme?`, `Una settimana al compleanno di ${v.name}. C'è tempo per una sorpresa.`, `Il ${longDate(v.date, { year: false })} è il compleanno di ${v.name}: mancano 7 giorni.`, `Tra una settimana compie gli anni ${v.name}. Hai già in mente qualcosa?`, `Segnalo io: tra 7 giorni è il compleanno di ${v.name}.`];
       case 'anniversario':
-        if (v.days === 0) return [`Oggi fate ${years(v.years)} insieme.`, `${years(v.years)[0].toUpperCase()}${years(v.years).slice(1)} di voi due. Buon anniversario!`, `È il vostro anniversario: ${years(v.years)} insieme.`, `Oggi è il vostro giorno: ${years(v.years)}.`, `Buon anniversario! ${years(v.years)[0].toUpperCase()}${years(v.years).slice(1)} di cose vostre.`];
-        return [`Tra una settimana fate ${years(v.years)} insieme. Prepariamo qualcosa per ${p}?`, `Manca una settimana al vostro anniversario. Un'idea per ${p}?`, `Tra 7 giorni sono ${years(v.years)}. Resta tra noi due.`, `Una settimana all'anniversario: c'è tempo per una sorpresa.`, `Tra una settimana è il vostro giorno. Ci pensiamo?`];
+        if (v.days === 0) return v.years === 1
+          ? ['Oggi fate un anno insieme.', 'Un anno di voi due. Buon anniversario!', 'È il vostro anniversario: un anno insieme.', 'Oggi è il vostro giorno: un anno.', 'Buon anniversario! Un anno di cose vostre.']
+          : [`Oggi fate ${v.years} anni insieme.`, `${v.years} anni di voi due. Buon anniversario!`, `È il vostro anniversario: ${v.years} anni insieme.`, `Oggi è il vostro giorno: ${v.years} anni.`, `Buon anniversario! ${v.years} anni di cose vostre.`];
+        return [v.years === 1 ? `Tra una settimana fate un anno insieme. Prepariamo qualcosa per ${p}?` : `Tra una settimana fate ${v.years} anni insieme. Prepariamo qualcosa per ${p}?`, `Manca una settimana al vostro anniversario. Un'idea per ${p}?`, v.years === 1 ? 'Tra 7 giorni sono un anno. Resta tra noi due.' : `Tra 7 giorni sono ${v.years} anni. Resta tra noi due.`, `Una settimana all'anniversario: c'è tempo per una sorpresa.`, `Tra una settimana è il vostro giorno. Ci pensiamo?`];
       case 'mesiversario': return [`Oggi sono ${v.months} mesi insieme.`, `${v.months} mesi di voi due. Buon mesiversario!`, `Un mese in più: oggi sono ${v.months}.`, `Buon mesiversario! ${v.months} mesi, e non è che l'inizio.`, `Oggi fate ${v.months} mesi.`];
       case 'giorni': return [`Oggi sono ${v.days} giorni insieme.`, `${v.days} giorni di voi due.`, `Contati uno a uno: ${v.days} giorni.`, `Oggi fate ${v.days} giorni insieme. Non male!`, `Un numero tondo: ${v.days} giorni.`];
       case 'un_anno_fa':
-        if (v.source === 'meet') return [`Un anno fa vi siete visti: «${v.title}». Lo ricordi a ${p}?`, `Un anno fa, oggi: «${v.title}».`, `Esattamente un anno fa: «${v.title}».`, `Un anno fa eravate insieme: «${v.title}».`, `Ti ricordi? Un anno fa: «${v.title}».`];
+        if (v.source === 'meet') return [`Un anno fa, il vostro incontro: «${v.title}». Lo ricordi a ${p}?`, `Un anno fa, oggi: «${v.title}».`, `Esattamente un anno fa: «${v.title}».`, `Un anno fa eravate insieme: «${v.title}».`, `Ti ricordi? Un anno fa: «${v.title}».`];
         if (v.source === 'idea') return [`Un anno fa avete fatto «${v.title}». Lo ricordi a ${p}?`, `Un anno fa, oggi: «${v.title}», fatto insieme.`, `Ti ricordi «${v.title}»? Era un anno fa.`, `Un anno fa una vostra idea è diventata vera: «${v.title}».`, `Un anno fa: «${v.title}».`];
         if (v.place) return [`Un anno fa eravate a ${v.place}. Lo mandi a ${p}?`, `Un anno fa, oggi, a ${v.place}.`, `Ti ricordi ${v.place}? Era un anno fa.`, `Esattamente un anno fa: ${v.place}. Lo rimandi a ${p}?`, `Un anno fa a ${v.place}. Che giornata.`];
         return [`Un anno fa avete messo questo ricordo. Lo mandi a ${p}?`, `Un anno fa, oggi: un vostro ricordo.`, `Ti ricordi questo? Era un anno fa.`, `Un anno fa avete fermato questo momento.`, `Un ricordo di un anno fa. Lo rimandi a ${p}?`];
       case 'traguardo':
         if (v.what === 'luogo') return [`La prima volta a ${v.place}: ora è tra i vostri posti.`, `${v.place}: un posto nuovo per voi due.`, `Prima volta a ${v.place}. Lo segno tra i vostri luoghi.`, `Un posto in più: ${v.place}.`, `${v.place} entra nella vostra mappa.`];
-        return [`Siete a ${v.count} ricordi insieme.`, `${v.count} ricordi! Che collezione.`, `Avete messo il ricordo numero ${v.count}.`, `${v.count} momenti fermati insieme.`, `Siete arrivati a ${v.count} ricordi.`];
+        return [`Siete a ${v.count} ricordi insieme.`, `${v.count} ricordi! Che collezione.`, `Avete messo il ricordo numero ${v.count}.`, `${v.count} momenti fermati insieme.`, `Avete raggiunto ${v.count} ricordi.`];
       case 'conoscervi':
         if (v.ask === 'primo_ricordo') return ['Mettete il vostro primo ricordo: da lì comincio a conoscervi.', 'Una foto per cominciare? Il vostro primo ricordo.', 'Il primo ricordo è il più bello da mettere.'];
         return ['Quando è il tuo compleanno? Così me lo ricordo.', 'Non so ancora il tuo compleanno. Me lo dici?', 'Mettiamo il tuo compleanno? Poi ci penso io a ricordarlo.'];
+      case 'primi_passi':
+        // La prima settimana (27/11/2026): new couples only, one small first step a day.
+        switch (v.step) {
+          case 'domanda': return [`Un primo passo: rispondete alla domanda di oggi, poi leggi cosa ha scritto ${p}.`, 'Cominciamo dalla domanda di oggi: una risposta a testa, poi le leggete insieme.'];
+          case 'ricordo': return ['Mettete la vostra prima foto: Ricordi diventa il vostro album.', 'Una foto per cominciare il vostro album?'];
+          case 'gioco': return ['Oggi provate una partita in Gioca: bastano tre minuti.', 'Una partita insieme? Tre minuti, e vi conoscete un po’ di più.'];
+          case 'postit': return [`Lascia un post-it a ${p} sulla lavagna di Noi: lo trova appena apre US.`, `Un post-it per ${p}? Lo trova sulla lavagna di Noi.`];
+          case 'tipenso': return [`Prova il Ti penso: un tocco, e ${p} riceve il tuo pensiero anche da lontano.`, `Il cuore in basso è il Ti penso: toccalo quando pensi a ${p}.`];
+          case 'compleanni': return ['Mettete i vostri compleanni nel calendario: poi ve li ricordo io.', 'Quando è il tuo compleanno? Mettilo nel calendario e ci penso io.'];
+          case 'settimana': return ['Una settimana insieme in US! Siete partiti benissimo.', 'La vostra prima settimana qui: ed è solo l’inizio.'];
+          default: return [];
+        }
       case 'bacheca':
         // La vostra bacheca (25/11/2026): what US pinned on the board.
         if (v.reason === 'un_anno_fa') return v.place ? [`Vi ho appeso una foto in bacheca: un anno fa eravate a ${v.place}.`, `In bacheca c'è ${v.place}, un anno fa.`, `Ho messo in bacheca un ricordo di un anno fa: ${v.place}.`] : ['Vi ho appeso in bacheca un ricordo di un anno fa.', "In bacheca c'è una foto di un anno fa.", 'Un anno fa, oggi: ve l\'ho appeso in bacheca.'];
-        if (v.reason === 'traguardo') return v.what === 'anni' ? [`In bacheca c'è un timbro nuovo: ${years(v.count)} insieme.`, `Ho appeso i vostri ${years(v.count)} in bacheca.`] : [`In bacheca c'è un timbro nuovo: ${v.count} ricordi.`, `Ho appeso i vostri ${v.count} ricordi in bacheca.`];
+        if (v.reason === 'traguardo') return v.what === 'anni' ? (v.count === 1 ? ["In bacheca c'è un timbro nuovo: un anno insieme.", 'Ho appeso i vostri un anno in bacheca.'] : [`In bacheca c'è un timbro nuovo: ${v.count} anni insieme.`, `Ho appeso i vostri ${v.count} anni in bacheca.`]) : [`In bacheca c'è un timbro nuovo: ${v.count} ricordi.`, `Ho appeso i vostri ${v.count} ricordi in bacheca.`];
         if (v.reason === 'tenuta') return ['Ho appeso in bacheca una cosa che avete tenuto.', "In bacheca c'è una cosa vostra di questa settimana."];
         return ['Ho appeso in bacheca il ricordo della settimana.', "In bacheca c'è il ricordo più bello della settimana.", 'Ho sistemato la bacheca: guarda il ricordo della settimana.'];
       case 'ti_aspetta':
-        if (v.what === 'game') return [`${p} ha giocato e aspetta te.`, `C'è una partita che ti aspetta: tocca a te.`, `${p} ha fatto la sua mossa. Tocca a te.`];
-        return [`${p} ha già risposto alla domanda di oggi. Tocca a te.`, `La risposta di ${p} c'è già: manca la tua.`, `${p} ti aspetta sulla domanda di oggi.`];
+        if (v.what === 'game') return [`${P} ha giocato e aspetta te.`, `C'è una partita che ti aspetta: tocca a te.`, `${P} ha fatto la sua mossa. Tocca a te.`];
+        return [`${P} ha già risposto alla domanda di oggi. Tocca a te.`, `La risposta di ${p} c'è già: manca la tua.`, `${P} ti aspetta sulla domanda di oggi.`];
       default: return [];
     }
   }
@@ -66,12 +87,16 @@
     const v = b.vars || {};
     switch (b.kind) {
       case 'compleanno': return { label: v.days === 0 ? `Scrivi a ${v.name}` : 'Prepara qualcosa', go: 'lfy', text: v.days === 0 ? 'Tanti auguri ♡' : '' };
-      case 'anniversario': return { label: v.days === 0 ? `Scrivi a ${partner}` : 'Prepara una sorpresa', go: 'lfy', text: v.days === 0 ? `${years(v.years)[0].toUpperCase()}${years(v.years).slice(1)} di noi ♡` : '' };
+      case 'anniversario': return { label: v.days === 0 ? `Scrivi a ${partner}` : 'Prepara una sorpresa', go: 'lfy', text: v.days === 0 ? (v.years === 1 ? 'Un anno di noi ♡' : `${v.years} anni di noi ♡`) : '' };
       case 'mesiversario': return { label: `Scrivi a ${partner}`, go: 'lfy', text: `${v.months} mesi di noi ♡` };
       case 'giorni': return { label: `Scrivi a ${partner}`, go: 'lfy', text: `${v.days} giorni di noi ♡` };
       case 'un_anno_fa': return { label: `Mandalo a ${partner}`, go: v.source === 'moment' && v.path ? 'lfy-photo' : 'lfy', text: `Ti ricordi? ${v.place || v.title || ''}${v.date ? ` · ${longDate(v.date)}` : ''} ♡`.replace('?  ·', '?') };
       case 'traguardo': return { label: 'Apri Ricordi', go: 'moments' };
       case 'bacheca': return { label: 'Apri la bacheca', go: 'bacheca' };
+      case 'primi_passi': {
+        const step = { domanda: { label: 'Rispondi', go: 'daily' }, ricordo: { label: 'Metti una foto', go: 'compose' }, gioco: { label: 'Gioca', go: 'games' }, postit: { label: 'Apri Noi', go: 'noi' }, tipenso: { label: 'Provalo', go: 'think' }, compleanni: { label: 'Aggiungi il tuo', go: 'birthday', name: v.name } }[v.step];
+        return step || { label: 'Va bene', go: 'close' };
+      }
       case 'conoscervi': return v.ask === 'primo_ricordo' ? { label: 'Metti un ricordo', go: 'compose' } : { label: 'Aggiungilo', go: 'birthday', name: v.name };
       case 'ti_aspetta': return v.what === 'game' ? { label: 'Gioca', go: 'games' } : { label: 'Rispondi', go: 'daily' };
       case 'presentazione': return { label: 'Va bene', go: 'close' };
@@ -145,7 +170,7 @@
         const text = sentence(b, partnerName());
         if (!text) return;
         // The board's news opens the board itself; the others open the line's sheet.
-        const ok = w.UsAngolo.parla({ text, speaker: b.speaker, cta: action(b, partnerName()).label, onTap: () => (b.kind === 'bacheca' ? run(b) : openSheet(b)), onHold: b.kind === 'bacheca' ? undefined : () => askMute(b) });
+        const ok = w.UsAngolo.parla({ text, speaker: b.speaker, cta: action(b, partnerName()).label, onTap: () => (b.kind === 'bacheca' ? run(b) : openSheet(b)), onHold: () => askMute(b) });
         if (!ok) return;
         current = b;
         store(SAID(), JSON.stringify({ day, kind: b.kind, ref: b.ref_key, id: b.id || null }));
@@ -215,6 +240,8 @@
     }
     async function run(b) {
       const a = action(b, partnerName());
+      // The ready text goes into a field, which the page translation leaves alone.
+      if (a.text && typeof w.usT === 'function') a.text = w.usT(a.text);
       if (b.id) db()?.rpc('mark_my_battuta_v1', { p_id: b.id, p_action: 'done' }).then(() => {}, () => {});
       closeSheet();
       const v = b.vars || {};
@@ -223,9 +250,11 @@
         case 'lfy-photo': if (!(await attachPhoto(v.path, a.text))) w.UsLeftForYou?.openComposer?.({ kind: 'text', text: a.text }); break;
         case 'moments': w.go?.('moments', { nav: true }); break;
         case 'compose': w.go?.('moments', { nav: true }); setTimeout(() => w.UsMomentComposer?.open?.(), 80); break;
-        case 'birthday': w.go?.('bond', { nav: true }); setTimeout(() => w.openEventEditor?.(null, null, { title: `Compleanno di ${a.name || ''}`.trim() }), 80); break;
+        case 'birthday': w.go?.('bond', { nav: true }); setTimeout(() => w.openEventEditor?.(null, null, { title: (typeof w.usT === 'function' ? w.usT : String)(`Compleanno di ${a.name || ''}`.trim()) }), 80); break;
         case 'daily': w.openToday?.(); break;
         case 'games': w.openQuizHub?.({ nav: true }); break;
+        case 'noi': w.go?.('bond', { nav: true }); break;
+        case 'think': w.go?.('home', { nav: true }); setTimeout(() => d.getElementById('thinkButton')?.focus?.({ preventScroll: true }), 120); break;
         case 'bacheca': w.go?.('moments', { nav: true }); setTimeout(() => w.UsRicordiPlace?.setView?.('board'), 80); break;
         default: break;
       }
@@ -234,10 +263,39 @@
       if (!b || b.kind === 'presentazione') return;
       const ok = await w.UsUiFoundation?.confirm?.({ title: 'Non dirmelo più?', body: 'Non ti diremo più cose di questo tipo. Puoi riaccenderle da Profilo › Notifiche.', confirmLabel: 'Non dirmelo più', cancelLabel: 'Annulla' });
       if (!ok) return;
+      // Muted only once the server keeps it: otherwise it says so and nothing changes.
+      let saved = false;
+      try { const r = await db()?.rpc('set_my_battute_mute_v1', { p_kind: b.kind, p_muted: true }); saved = Boolean(r) && !r.error; } catch (_) { saved = false; }
+      if (!saved) { w.toast?.('Non riesco a salvarlo. Riprova.'); return; }
+      mutedKinds.add(b.kind);
       closeSheet();
       w.UsAngolo?.isola?.(false);
-      mutedKinds.add(b.kind);
-      await db()?.rpc('set_my_battute_mute_v1', { p_kind: b.kind, p_muted: true });
+    }
+    // Profilo › Notifiche: the switches as the server keeps them ('*' all off, or one kind).
+    async function loadMutes() {
+      const client = db();
+      if (!client?.from || !me()) return null;
+      try {
+        const { data, error } = await client.from('us_battute_mute').select('kind');
+        if (error) throw error;
+        const kinds = (data || []).map((r) => r?.kind).filter(Boolean);
+        muted = kinds.includes('*');
+        mutedKinds = new Set(kinds.filter((k) => k !== '*'));
+        return { voci: !muted, kinds: Object.keys(KIND_NAMES).filter((k) => mutedKinds.has(k)) };
+      } catch (error) {
+        console.warn('[US ricorda] mutes', error?.message || error);
+        return null;
+      }
+    }
+    // One kind back on (or off again), from Profilo › Notifiche.
+    async function setKind(kind, on) {
+      if (!KIND_NAMES[kind]) return false;
+      try {
+        const r = await db()?.rpc('set_my_battute_mute_v1', { p_kind: kind, p_muted: !on });
+        if (!r || r.error) return false;
+      } catch (_) { return false; }
+      if (on) mutedKinds.delete(kind); else mutedKinds.add(kind);
+      return true;
     }
     d.addEventListener('click', (e) => {
       const t = e.target;
@@ -281,6 +339,8 @@
     // Moments to try: the app ready, back on Oggi, back in the app, «tocca a te».
     w.addEventListener('us:tocca-a-te', (e) => { tocca = e?.detail?.daily ? 'daily' : e?.detail?.game ? 'game' : ''; maybeSay(); });
     w.addEventListener('us-identity-change', () => { loadedDay = ''; maybeSay(); });
+    // The intro held the line back while it was open: it is tried again when it closes.
+    w.addEventListener('us:intro-done', () => maybeSay());
     d.addEventListener('visibilitychange', () => { if (!d.hidden) maybeSay(); });
     const home = $('home');
     if (home && typeof w.MutationObserver === 'function') new w.MutationObserver(() => { if (home.classList.contains('active')) maybeSay(); }).observe(home, { attributes: true, attributeFilter: ['class'] });
@@ -290,8 +350,9 @@
 
     const api = w.UsRicorda;
     api.load = load; api.say = maybeSay; api.open = openSheet; api.close = closeSheet; api.setVoci = setVoci;
+    api.loadMutes = loadMutes; api.setKind = setKind; api.mutedKinds = () => Object.keys(KIND_NAMES).filter((k) => mutedKinds.has(k));
     api.voci = () => !muted; api.state = () => ({ server, muted, tocca, said: saidToday() });
   }
 
-  return { PRIORITY, lines, sentence, action, inWindow, choose, hash, install };
+  return { PRIORITY, KIND_NAMES, lines, sentence, action, inWindow, choose, hash, install };
 });

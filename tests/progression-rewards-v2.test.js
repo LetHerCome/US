@@ -91,7 +91,9 @@ test('Rewards V2 client: themes keep text-on-accent contrast >= 3:1 (default US 
     const bg = body.match(/--us-color-bg:(#[0-9a-f]{6})/i)?.[1] || '#08040e';
     assert.ok(ratio(ink, bg) >= 7, `${kind} ${name}: accent ink on background`);
   }
-  assert.match(read('games.css'), /\.us-gv2-pervoi-cta\{[^}]*color:var\(--us-color-text-on-accent\)/);
+  // The old Per voi hero card (.us-gv2-pervoi-cta, the only Gioca text on the
+  // accent) left with the redesign; its rules went on 27/11/2026.
+  assert.doesNotMatch(read('games.css'), /\.us-gv2-pervoi-cta/);
 });
 
 test('Rewards V2 client: motion is opt-out with reduced motion and paused when hidden', () => {

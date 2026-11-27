@@ -29,7 +29,9 @@ function fieldsWithoutSuggestions() {
 test('only codes, confirmation words, hours and sign-up names tell the keyboard «no suggestions»', () => {
   assert.deepEqual(fieldsWithoutSuggestions(), [
     'mc3Code', 'mc3CreateName', 'mc3JoinCode', 'mc3JoinName',
-    'usAccountDeleteConfirm', 'usCalendarEndTimeInput', 'usCalendarStartTimeInput', 'usLeaveCoupleConfirm',
+    'usAccountDeleteConfirm', 'usCalendarEndTimeInput', 'usCalendarStartTimeInput',
+    // The hour of an event (Noi, Fase A, 24/11/2026): «21:30», like the calendar hours.
+    'usEventTimeInput', 'usLeaveCoupleConfirm',
   ]);
 });
 

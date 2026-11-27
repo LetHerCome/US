@@ -677,16 +677,19 @@
   // D14: at the first opening each of you makes their character — the shape
   // here, the colour with the picker below (set_my_character_shape, the same
   // rule as the guardaroba). `redraw` paints the characters again.
-  const SHAPE_ORDER=['palla','quadrato','triangolo','goccia','nuvola'];
-  const SHAPE_LABEL={palla:'Tondo',quadrato:'Quadrato',triangolo:'Triangolo',goccia:'Goccia',nuvola:'Nuvola'};
+  // The shapes and their names come from personaggi.js (one list, it cannot drift); these only if it is missing.
+  const SHAPE_ORDER_FALLBACK=['palla','quadrato','triangolo','goccia','nuvola'];
+  const SHAPE_LABEL_FALLBACK={palla:'Tondo',quadrato:'Quadrato',triangolo:'Triangolo',goccia:'Goccia',nuvola:'Nuvola'};
+  const shapeOrder=()=>{const list=globalThis.UsPersonaggi?.SHAPES;return Array.isArray(list)&&list.length?list:SHAPE_ORDER_FALLBACK;};
+  const shapeLabel=shape=>globalThis.UsPersonaggi?.SHAPE_NAMES?.[shape]||SHAPE_LABEL_FALLBACK[shape]||shape;
   function mountShapePicker(host,{profile,redraw=()=>{}}){
     if(!host)return;
     const draw=globalThis.UsPersonaggi?.character;
     if(typeof draw!=='function'||!profile?.id||!profile?.couple_id||!colourIO){host.hidden=true;return;}
     const side=profile.role==='beatrice'?'b':'a';
-    const now=()=>SHAPE_ORDER.includes(profile.character_shape)?profile.character_shape:defaultShape(side);
+    const now=()=>shapeOrder().includes(profile.character_shape)?profile.character_shape:defaultShape(side);
     const paint=()=>{
-      host.innerHTML=SHAPE_ORDER.map(shape=>`<button type="button" class="us-ob-shape" data-shape="${shape}" aria-pressed="${shape===now()}">${duoChar(side,{shape}).replace(/width="\d+" height="\d+"/,'width="40" height="37"')}<span>${SHAPE_LABEL[shape]}</span></button>`).join('');
+      host.innerHTML=shapeOrder().map(shape=>`<button type="button" class="us-ob-shape" data-shape="${shape}" aria-pressed="${shape===now()}">${duoChar(side,{shape}).replace(/width="\d+" height="\d+"/,'width="40" height="37"')}<span>${shapeLabel(shape)}</span></button>`).join('');
       host.hidden=false;
     };
     host.onclick=async event=>{
@@ -719,8 +722,11 @@
     }catch(_){/* only me: the partner's default below */}
     // Before the partner joins, their default colour is theirs already.
     if(!profiles.some(p=>p.id!==profile.id))profiles.push({id:'~partner',role:profile.role==='beatrice'?'francesco':'beatrice',person_color:null});
+    // A taken colour says whose it is (as in the intro).
+    const whose=()=>{let n='';try{n=globalThis.UsIdentity?.current?.()?.partnerName||'';}catch(_){n='';}return n&&n!=='La tua persona'?`è di ${n}`:'è della tua persona';};
+    const escapeAttr=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     const paint=()=>{
-      host.innerHTML=colors.choices(profiles,profile.id).map(c=>`<button type="button" class="us-ob-swatch${c.mine?' is-on':''}" data-colour="${c.id}" aria-pressed="${c.mine}" aria-label="${c.name}"${c.taken?' disabled':''}><i style="background:${c.hex}"></i></button>`).join('');
+      host.innerHTML=colors.choices(profiles,profile.id).map(c=>`<button type="button" class="us-ob-swatch${c.mine?' is-on':''}" data-colour="${c.id}" aria-pressed="${c.mine}" aria-label="${escapeAttr(c.taken?`${c.name}, ${whose()}`:c.name)}"${c.taken?' disabled':''}><i style="background:${c.hex}"></i></button>`).join('');
       host.hidden=false;
     };
     host.onclick=async event=>{
@@ -732,6 +738,7 @@
       const me=profiles.find(p=>p.id===profile.id);if(me)me.person_color=colour;
       profile.person_color=colour;
       colors.applyCoupleColors(profiles.filter(p=>p.id!=='~partner'));
+      Promise.resolve(globalThis.UsCoupleContext?.hydrate?.()).catch(()=>{});
       paint();
     };
     paint();
@@ -1290,6 +1297,8 @@
     const root=document.getElementById('usOnboarding');
     const node=id=>document.getElementById(id);
     let mode='me',lastKind='',lastView='',lastInvite='',hiddenPrivate=[],me={name:'',birthday:null},meFor='',justCreated=false,note={text:'',kind:''},dismissed='';
+    // L'invito che si rinnova (27/11/2026): one new code by itself per opening when the old one expired.
+    let autoRenewed=false,notifyState='';
     // The button you pressed says what is happening while it works (the design's busy()).
     let pressed=null;
     // Paired from a step on screen: that step stays, still, until the setup takes its place.
@@ -1456,6 +1465,8 @@
       }
       node('mc3Generate').textContent=invite?.status==='none'?'Crea invito':'Genera nuovo codice';
       node('mc3Revoke').hidden=!waiting||invite?.status!=='pending';
+      if(waiting&&active&&invite?.status==='expired'&&!state.busy&&!autoRenewed){autoRenewed=true;note={text:'Il codice era scaduto: eccone uno nuovo.',kind:'neutral'};setTimeout(()=>run(()=>controller.generate()),0);}
+      paintNotify(waiting&&active);
       root.querySelectorAll('button,input,select').forEach(el=>{el.disabled=state.busy&&el.id!=='mc3Exit';});
       if(pressed&&state.busy&&active){if(pressed.label)pressed.button.textContent=pressed.label;pressed.button.dataset.usBusy='';root.dataset.usBusy='';}
       else{
@@ -1519,6 +1530,28 @@
     }
     const controller=createController({readProfile,rpc,onChange:render,onJoined:coupleId=>{window.sendWebPushEvent?.('partner_joined',coupleId);}});
     controllerRef=controller;
+    // «Avvisami quando entra» (27/11/2026): whoever waits turns on the notifications here (the
+    // setup asks only once you are two), for «è entrata» and the reminders to send the code again.
+    // Only where push works and is not on yet or refused; the OS asks, never US by itself.
+    function paintNotify(show){
+      const button=node('mc3Notify'),notifications=globalThis.UsNotifications;
+      if(!button)return;
+      if(!show||!notifications?.supported?.()){button.hidden=true;return;}
+      if(notifyState){button.hidden=notifyState!=='inactive';return;}
+      notifyState='asking';button.hidden=true;
+      Promise.resolve(notifications.getState?.()).then(s=>{notifyState=s?.kind||'unknown';paintNotify(true);}).catch(()=>{notifyState='unknown';});
+    }
+    node('mc3Notify')?.addEventListener('click',async()=>{
+      const button=node('mc3Notify'),notifications=globalThis.UsNotifications;
+      if(!button||!notifications?.enable)return;
+      button.disabled=true;
+      try{
+        const result=await notifications.enable();
+        if(result?.ok){notifyState='active';button.hidden=true;globalThis.toast?.('Ti avviso quando entra ♡');}
+        else{notifyState=result?.kind==='denied'?'denied':'inactive';button.hidden=notifyState!=='inactive';}
+      }catch(_e){notifyState='inactive';}
+      finally{button.disabled=false;}
+    });
     const run=async(action,kind)=>{
       const result=await action();
       const joined=result?.profile?.couple_id&&(result.kind==='PAIRED'||result.kind==='MEMBER_WAITING_PARTNER');

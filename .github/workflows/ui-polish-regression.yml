@@ -5,7 +5,6 @@ on:
     paths:
       - 'app.js'
       - 'modal-center.css'
-      - 'stories.js'
       - 'tests/us-v6-daily-reveal*.test.js'
       - 'tests/pwa-startup-browser.test.js'
       - 'service-worker.js'
@@ -46,7 +45,6 @@ on:
     paths:
       - 'app.js'
       - 'modal-center.css'
-      - 'stories.js'
       - 'tests/us-v6-daily-reveal*.test.js'
       - 'tests/pwa-startup-browser.test.js'
       - 'service-worker.js'

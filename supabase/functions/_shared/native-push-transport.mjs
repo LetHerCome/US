@@ -141,6 +141,14 @@ export const ANDROID_NOTICE_KINDS = Object.freeze({
   challenge_new: 'challenge',
   challenge_reminder: 'challenge_reminder',
   challenge_photo: 'challenge_photo',
+  // L'invito che si rinnova (27/11/2026).
+  invite_reminder: 'invite_reminder',
+  // US vi ricorda (27/11/2026): the phone says it with the partner's name it already has.
+  ricorda_birthday_week: 'birthday_week',
+  ricorda_birthday: 'birthday',
+  ricorda_anniversary_week: 'anniversary_week',
+  ricorda_year_ago: 'year_ago',
+  ricorda_bacheca: 'bacheca',
 });
 const INSTALLATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -183,6 +191,72 @@ export function apnsRequest(notification, nowMs = Date.now()) {
   return {
     headers,
     body: { aps, us: { v: notification.v, type: notification.type, target: notification.target, ref: notification.ref || '', tag: notification.tag } },
+  };
+}
+
+// Widget signals (founder, 27/11/2026): the other person's character changed,
+// or they left the couple. Silent: no banner, no sound, no JS event, never a
+// notification. v '3' on purpose: an app of before this change accepts only
+// v '2' and drops the packet, so it can never show the generic notice for it.
+// The look is the one the widget snapshot already holds (UsWidgetContract:
+// shape, head, face and two #rrggbb colours); 'clear' carries nothing at all.
+// No name, photo, id, text or account identity.
+export const WIDGET_SIGNAL_VERSION = '3';
+export const WIDGET_SIGNAL_LOOK = Object.freeze({
+  shape: /^(palla|quadrato|triangolo|goccia|nuvola)$/,
+  head: /^(cappello|fiocco|cuffie|corona|coroncina|festa|cento)$/,
+  face: /^(occhiali|sole|sciarpina|gala|macchinetta)$/,
+  color: /^#[0-9a-f]{6}$/,
+  day: /^#[0-9a-f]{6}$/,
+});
+const WIDGET_OWNER = /^[a-f0-9]{64}$/;
+
+/** The allow-listed signal: {s:'look', shape, head, face, color, day} (unknown values empty) or {s:'clear'}. */
+export function widgetSignal(input) {
+  if (input?.s === 'clear') return Object.freeze({ s: 'clear' });
+  if (input?.s !== 'look') throw new Error('widget_signal_invalid');
+  const out = { s: 'look' };
+  for (const [key, pattern] of Object.entries(WIDGET_SIGNAL_LOOK)) {
+    const value = typeof input[key] === 'string' ? input[key].toLowerCase() : '';
+    out[key] = pattern.test(value) ? value : '';
+  }
+  return Object.freeze(out);
+}
+
+/** Data-only FCM v3 for one Android device (same owner gate as v2: the installation). */
+export function fcmSignalMessage(signal, device) {
+  const installation = String(device?.installation_id || '').toLowerCase();
+  if (!INSTALLATION_ID.test(installation)) throw new Error('native_installation_missing');
+  const clean = widgetSignal(signal);
+  const clear = clean.s === 'clear';
+  return {
+    message: {
+      token: device.token,
+      data: { v: WIDGET_SIGNAL_VERSION, installation, ...clean },
+      android: {
+        // Leaving matters more than a new hat: it may wake the phone.
+        priority: clear ? 'HIGH' : 'NORMAL',
+        ttl: clear ? '604800s' : '86400s',
+        // A newer look replaces an older one still waiting.
+        collapse_key: clear ? 'us-widget-clear' : 'us-widget-look',
+      },
+    },
+  };
+}
+
+/** APNs background push for the iOS widgets (content-available, no alert). */
+export function apnsSignalRequest(signal, ownerHash, nowMs = Date.now()) {
+  if (!WIDGET_OWNER.test(String(ownerHash || ''))) throw new Error('widget_owner_missing');
+  const clean = widgetSignal(signal);
+  return {
+    headers: {
+      'apns-push-type': 'background',
+      // Apple requires priority 5 for background pushes.
+      'apns-priority': '5',
+      'apns-expiration': String(Math.floor(nowMs / 1000) + (clean.s === 'clear' ? 604800 : 86400)),
+      'apns-collapse-id': clean.s === 'clear' ? 'us-widget-clear' : 'us-widget-look',
+    },
+    body: { aps: { 'content-available': 1 }, us: { v: Number(WIDGET_SIGNAL_VERSION), owner: ownerHash, widget: { ...clean } } },
   };
 }
 
@@ -269,7 +343,7 @@ export function createNativeTransport({ config, fetch: fetchImpl = globalThis.fe
     return value;
   }
 
-  async function sendFcm(device, notification) {
+  async function postFcm(device, build) {
     if (!FCM_TOKEN.test(String(device.token || ''))) return { ok: false, outcome: 'invalid-token' };
     // Old rows without a valid installation UUID cannot be routed safely.
     if (!INSTALLATION_ID.test(String(device.installation_id || ''))) return { ok: false, outcome: 'rejected' };
@@ -281,7 +355,7 @@ export function createNativeTransport({ config, fetch: fetchImpl = globalThis.fe
       response = await timedFetch(fetchImpl, `https://fcm.googleapis.com/v1/projects/${encodeURIComponent(fcm.projectId)}/messages:send`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(fcmMessage(notification, device)),
+        body: JSON.stringify(build()),
       });
     } catch (_) {
       return { ok: false, outcome: 'transient' };
@@ -292,14 +366,14 @@ export function createNativeTransport({ config, fetch: fetchImpl = globalThis.fe
     return { ok: false, outcome: classifyFcmError(response.status, body) };
   }
 
-  async function sendApns(device, notification) {
+  async function postApns(device, build) {
     const token = String(device.token || '');
     if (!APNS_TOKEN.test(token)) return { ok: false, outcome: 'invalid-token' };
     const host = device.apns_environment === 'development' ? 'api.sandbox.push.apple.com' : 'api.push.apple.com';
     let jwt;
     try { jwt = await apnsJwt(); }
     catch (_) { return { ok: false, outcome: 'config' }; }
-    const request = apnsRequest(notification, now());
+    const request = build();
     let response;
     try {
       response = await timedFetch(fetchImpl, `https://${host}/3/device/${token}`, {
@@ -317,12 +391,22 @@ export function createNativeTransport({ config, fetch: fetchImpl = globalThis.fe
   }
 
   async function send(device, notification) {
-    if (device?.provider === 'fcm' && device.platform === 'android' && ready('fcm')) return sendFcm(device, notification);
-    if (device?.provider === 'apns' && device.platform === 'ios' && ready('apns')) return sendApns(device, notification);
+    if (device?.provider === 'fcm' && device.platform === 'android' && ready('fcm')) return postFcm(device, () => fcmMessage(notification, device));
+    if (device?.provider === 'apns' && device.platform === 'ios' && ready('apns')) return postApns(device, () => apnsRequest(notification, now()));
     return { ok: false, outcome: 'config' };
   }
 
-  return Object.freeze({ ready, send });
+  // Widget signals (27/11/2026): silent, never a banner. iOS only with the
+  // widget owner hash of that device's account (see widget-signal-core.mjs).
+  async function sendSignal(device, signal, ownerHash = '') {
+    if (device?.provider === 'fcm' && device.platform === 'android' && ready('fcm')) return postFcm(device, () => fcmSignalMessage(signal, device));
+    if (device?.provider === 'apns' && device.platform === 'ios' && ready('apns') && WIDGET_OWNER.test(String(ownerHash))) {
+      return postApns(device, () => apnsSignalRequest(signal, ownerHash, now()));
+    }
+    return { ok: false, outcome: 'config' };
+  }
+
+  return Object.freeze({ ready, send, sendSignal });
 }
 
 /** Edge glue: the transport configured from Edge secrets (Deno.env.get). */

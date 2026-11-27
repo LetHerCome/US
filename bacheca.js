@@ -42,7 +42,7 @@
       case 'prima_volta': return v.place ? `La prima volta a ${v.place}` : 'Una prima volta';
       case 'storia': return 'Un pezzo della vostra storia';
       case 'un_anno_fa': return v.place ? `Un anno fa, a ${v.place}` : 'Un anno fa, oggi';
-      case 'traguardo': return v.what === 'anni' ? `${v.count} ${Number(v.count) === 1 ? 'anno' : 'anni'} insieme` : `${v.count} ricordi insieme`;
+      case 'traguardo': return v.what === 'anni' ? (Number(v.count) === 1 ? `${v.count} anno insieme` : `${v.count} anni insieme`) : `${v.count} ricordi insieme`;
       case 'tenuta': return 'Tenuta da voi';
       case 'settimana': return 'Il ricordo della settimana';
       default: return '';
@@ -84,13 +84,20 @@
     return p ? { kind: 'bacheca', ref_key: `bacheca:${p.id}`, speaker: 'me', slot: p.reason === 'un_anno_fa' ? 'sera' : 'mattina', vars: { reason: p.reason, ...(p.vars || {}) }, at: Date.parse(p.created_at) } : null;
   }
 
+  // A kept answer of the day: the question and both answers, each in the
+  // colour of who wrote it; only the ones written, never an empty line.
+  function noteAnswers(c, role) {
+    const mine = role === 'francesco' || role === 'beatrice' ? role : '';
+    return ['francesco', 'beatrice'].map((r) => ({ who: mine ? (r === mine ? 'me' : 'you') : '', text: String(c?.[r] || '').trim() })).filter((a) => a.text);
+  }
+
   function install() {
     const d = w.document, $ = (id) => d.getElementById(id);
     const db = () => (typeof sb !== 'undefined' ? sb : null); // eslint-disable-line no-undef
     const me = () => w.usProfile?.id || '';
     const SEEN = () => `us:bacheca:seen:v1:${me()}`;
-    let data = null, nodes = [], cam = { x: 0, y: 0, z: 0.9 }, loading = null;
-    let sel = null, drag = null, pinch = null, lastTap = { id: '', t: 0 };
+    let data = null, nodes = [], cam = { x: 0, y: 0, z: 0.9 }, loading = null, failed = false;
+    let sel = null, drag = null, pinch = null, lastTap = { id: '', t: 0 }, pointerAt = 0;
     const pts = new Map();
 
     async function load() {
@@ -101,8 +108,9 @@
           const { data: res, error } = await db().rpc('get_bacheca_v1');
           if (error) throw error;
           data = res && typeof res === 'object' ? res : { pins: [], limit: 12, plus: false };
+          failed = false;
           return data;
-        } catch (error) { console.warn('[US Bacheca]', error); return null; } finally { loading = null; }
+        } catch (error) { console.warn('[US Bacheca]', error); failed = true; return null; } finally { loading = null; }
       })();
       return loading;
     }
@@ -134,7 +142,7 @@
       } else if (n.kind === 'letter') {
         inner = `<span class="ub-letter"><span class="ub-flap"></span><span class="ub-letter-text" translate="no">«${esc(String(c.body || '').slice(0, 70))}»</span></span>`;
       } else if (n.kind === 'note') {
-        inner = `<span class="ub-note" translate="no"><b>${esc(String(c.question || '').slice(0, 60))}</b>${esc(String(c.francesco || '').slice(0, 50))}</span>`;
+        inner = `<span class="ub-note" translate="no"><b>${esc(String(c.question || '').slice(0, 60))}</b>${noteAnswers(c, w.usProfile?.role).map((a) => `<span class="ub-ans"${a.who ? ` data-who="${a.who}"` : ''}>${esc(a.text.slice(0, 50))}</span>`).join('')}</span>`;
       } else {
         inner = `<span class="ub-stamp">${esc(postit({ ...p, by_us: true }))}</span>`;
       }
@@ -154,6 +162,11 @@
       const limit = Number(data?.limit) || 12;
       const full = pins.length >= limit;
       const count = data?.plus ? `${pins.length} cose · US Plus` : `${pins.length} su ${limit} · gratis`;
+      // Not read (no network, the server did not answer): say so, never the empty board.
+      if (!data && failed) {
+        el.innerHTML = '<div class="ub-empty" role="alert"><p>La bacheca non risponde. <button type="button" class="primary ub-retry" data-ub-retry>Riprova</button></p></div>';
+        return;
+      }
       if (!pins.length) {
         el.innerHTML = '<div class="ub-empty"><p>La vostra bacheca la tiene US: appena mettete un ricordo, ci appende la vostra storia.</p></div>';
         return;
@@ -219,7 +232,7 @@
       const c = pin.content || {};
       const title = pin.source === 'moment' ? (c.caption || c.place || 'Un ricordo') : pin.source === 'traguardo' ? postit({ ...pin, by_us: true }) : pin.source === 'keepsake' ? (c.question || 'Una risposta tenuta') : 'Una lettera tenuta';
       $('usBachecaSheetTitle').textContent = String(title).slice(0, 80);
-      $('usBachecaSheetWhy').textContent = pin.by_us ? `Appesa da US${postit(pin) ? `: ${postit(pin).toLowerCase()}` : ''}. Trascinala per spostarla: diventa vostra.` : (pin.mine ? 'Appesa da te.' : 'Appesa da voi.');
+      $('usBachecaSheetWhy').textContent = pin.by_us ? (postit(pin) ? `Appesa da US: ${postit(pin).toLowerCase()}. Trascinala per spostarla: diventa vostra.` : 'Appesa da US. Trascinala per spostarla: diventa vostra.') : (pin.mine ? 'Appesa da te.' : 'Appesa da voi.');
       const fix = s.querySelector('[data-ub-act="fix"]');
       if (fix) fix.textContent = pin.fixed ? 'Lascia decidere a US' : 'Fissa: US non la toglie più';
       const open = s.querySelector('[data-ub-act="open"]');
@@ -250,6 +263,7 @@
       if (!view) return;
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
       const item = e.target.closest('[data-ub-pin]');
+      if (item) pointerAt = Date.now();
       if (item && pts.size === 1) {
         const n = nodes[Number(item.dataset.ubI)];
         drag = { el: item, n, id: e.pointerId, sx: e.clientX, sy: e.clientY, ox: n.x, oy: n.y, moved: false };
@@ -276,7 +290,7 @@
       pts.delete(e.pointerId);
       if (pts.size < 2) pinch = null;
       if (!drag || drag.id !== e.pointerId) return;
-      const g = drag; drag = null; g.el.classList.remove('is-dragging');
+      const g = drag; drag = null; g.el.classList.remove('is-dragging'); pointerAt = Date.now();
       if (!g.moved) {
         const t = Date.now();
         if (lastTap.id === g.n.pin.id && t - lastTap.t < 320) { lastTap = { id: '', t: 0 }; lookAt(g.n.x + g.n.w / 2, g.n.y + g.n.w / 2, 1.6); return; }
@@ -304,6 +318,11 @@
       const t = e.target; if (!t?.closest) return;
       if (t.closest('[data-ub-now]')) { goNow(); return; }
       if (t.closest('[data-ub-all]')) { goAll(); return; }
+      if (t.closest('[data-ub-retry]')) { api.show(); return; }
+      // Enter, Space, a screen reader: the click a finger never makes here
+      // (the finger is read by the pointer: tap, double tap, drag).
+      const item = t.closest('[data-ub-pin]');
+      if (item) { if (Date.now() - pointerAt > 800) { const n = nodes[Number(item.dataset.ubI)]; if (n) openSheet(n.pin); } return; }
       const a = t.closest('[data-ub-act]');
       if (a) { if (a.dataset.ubAct === 'close') closeSheet(); else act(a.dataset.ubAct); }
     });
@@ -316,6 +335,6 @@
     api.closeSheet = closeSheet;
   }
 
-  const api = { shape, postit, layout, roadPath, yearMarks, bounds, newsOf, whenLabel, install, show: async () => {}, refresh: async () => {}, news: () => null, markSeen: () => {}, closeSheet: () => {} };
+  const api = { shape, postit, noteAnswers, layout, roadPath, yearMarks, bounds, newsOf, whenLabel, install, show: async () => {}, refresh: async () => {}, news: () => null, markSeen: () => {}, closeSheet: () => {} };
   return api;
 });

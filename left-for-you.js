@@ -1196,7 +1196,21 @@
     }
   }
 
+  // The phone's own camera (27/11): the same file input, opened with capture.
+  // Android hands it to the camera app (BridgeWebChromeClient; <queries> in
+  // the manifest), iOS to its camera; where capture is ignored (a computer)
+  // it is the usual picker. Without a camera type the input is back to the gallery.
+  function pickFile(input, cameraType = '') {
+    if (!input) return;
+    const gallery = input.dataset.accept || (input.dataset.accept = input.getAttribute('accept') || '');
+    input.setAttribute('accept', cameraType || gallery);
+    if (cameraType) input.setAttribute('capture', 'environment'); else input.removeAttribute('capture');
+    input.click();
+  }
+
   async function openCamera() {
+    // In the apps «Scatta una foto» is the phone camera; the browser keeps the viewfinder below.
+    if (window.UsPlatform?.isNative) { pickFile(document.getElementById('leftForYouComposerPhotoFile'), 'image/*'); return; }
     if (composer.cameraOpen) return;
     composer.cameraOpen = true;
     discardCameraCapture();
@@ -1815,7 +1829,7 @@
     for (const [pickId, fileId, nameId] of pickBindings) {
       const pick = document.getElementById(pickId);
       const file = document.getElementById(fileId);
-      pick?.addEventListener('click', () => file?.click());
+      pick?.addEventListener('click', () => pickFile(file));
       file?.addEventListener('change', () => {
         if (fileId === 'leftForYouComposerPhotoFile' && file.files?.[0]) discardCameraCapture();
         // The photo shows itself (preview); the video keeps its file name.
@@ -1849,6 +1863,7 @@
     });
     document.getElementById('leftForYouMusicClear')?.addEventListener('click', clearMusicSelection);
     document.getElementById('leftForYouComposerPhotoCamera')?.addEventListener('click', openCamera);
+    document.getElementById('leftForYouComposerVideoCamera')?.addEventListener('click', () => pickFile(document.getElementById('leftForYouComposerVideoFile'), 'video/*'));
     const cameraOverlay = document.getElementById('leftForYouCameraOverlay');
     const cameraBackdrop = document.getElementById('leftForYouCameraBackdrop');
     cameraOverlay?.addEventListener('click', (event) => {
@@ -1948,7 +1963,7 @@
     setComposerKind, openComposer, closeComposer, send, updateComposerValidity, composerCanSend,
     startRecording, stopRecording, discardRecording, toggleVoiceRecording,
     bindAudioStepPlayer, paintAudioStepPlayer, stopActiveAudioPlayer,
-    openCamera, closeCamera, switchCamera, captureCameraPhoto, useCameraPhoto, retakeCameraPhoto, discardCameraCapture, composer,
+    openCamera, pickFile, closeCamera, switchCamera, captureCameraPhoto, useCameraPhoto, retakeCameraPhoto, discardCameraCapture, composer,
     extractSpotifyTrackId, canonicalSpotifyTrackUrl, spotifyEmbedUrl,
     renderMusicResults, selectMusicResult, clearMusicSelection, resetMusicSearchUi, runMusicSearch, scheduleMusicSearch, musicSearch, musicSearchErrorMessage,
   };

@@ -46,11 +46,11 @@ test('DB-07–09,24: membership writes fail at grants even with a deliberately p
   assert.deepEqual(await h.as(db,h.U3,'select * from public.profiles'),[]);
   assert.deepEqual(await h.as(db,h.U3,'select * from public.couples'),[]);
 });
-test('DB-11: 128-bit Crockford tokens, canonicalization, hashes only, exact 48h expiry',async()=>{
+test('DB-11: 128-bit Crockford tokens, canonicalization, hashes only, exact 14-day expiry (48h until 27/11/2026)',async()=>{
   await h.create(db); const i=await h.invite(db);
   assert.match(i.code,/^(?:[0-9A-HJKMNP-TV-Z]{4}-){6}[0-9A-HJKMNP-TV-Z]{2}$/);
   const row=(await db.query('select * from public.couple_invites where used_at is null')).rows[0];
-  assert.equal(Date.parse(row.expires_at)-Date.parse(row.created_at),48*60*60*1000);
+  assert.equal(Date.parse(row.expires_at)-Date.parse(row.created_at),14*24*60*60*1000);
   assert.match(row.code_hash,/^[0-9a-f]{64}$/); assert.ok(!JSON.stringify(row).includes(i.code.replaceAll('-','')));
   const tokens=(await db.query('select private.mc2_new_code() code from generate_series(1,1000)')).rows.map(r=>r.code);
   assert.equal(new Set(tokens).size,1000); tokens.forEach(t=>assert.match(t,/^[0-9A-HJKMNP-TV-Z]{26}$/));

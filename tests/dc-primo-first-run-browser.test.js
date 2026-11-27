@@ -118,7 +118,8 @@ test('first run: Tu with birthday, create, colour, invite; the partner joins; ea
     await page.click('#mc3MeNext');await visible(page,'mc3Choice');
     await page.click('#mc3ChooseCreate');await page.selectOption('#mc3DateDay','1');await page.selectOption('#mc3DateMonth','1');await page.selectOption('#mc3DateYear','2024');await page.locator('#mc3Create button[type=submit]').click();
     await visible(page,'mc3Color');
-    assert.equal(await text(page,'#mc3Title'),'Il tuo colore è il lilla');
+    // Redesign, fase 7: the colour step became «Chi sei in US?» (shape and colour of the character).
+    assert.equal(await text(page,'#mc3Title'),'Chi sei in US?');
     await page.waitForFunction(()=>(window.__QA.inserts||[]).length===1);
     const today=await page.evaluate(()=>new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Rome'}));
     assert.deepEqual(await page.evaluate(()=>window.__QA.inserts),[{table:'shared_events',row:{title:'Compleanno di Mira',event_date:OB.nextBirthday(12,3,today),event_time:null,location:null,note:null,recurs_yearly:true,couple_id:'c2',created_by:'u1'}}]);
@@ -137,7 +138,7 @@ test('first run: Tu with birthday, create, colour, invite; the partner joins; ea
     await partner.page.click('#mc3ChooseJoin');await partner.page.fill('#mc3JoinCode',token);await partner.page.locator('#mc3Join button[type=submit]').click();
     await partner.page.waitForFunction(()=>window.usProfile?.id==='u2');
     await visible(partner.page,'usDeviceSetup');await partner.page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='color');
-    assert.equal(await text(partner.page,'#usSetupTitle'),'Il tuo colore è il rosa');
+    assert.equal(await text(partner.page,'#usSetupTitle'),'Chi sei in US?');
     assert.equal(await text(partner.page,'#usSetupKicker'),'Voi · 2 di 4');
     assert.equal(await partner.page.evaluate(()=>document.activeElement?.id),'usSetupTitle');
     assert.equal(await partner.page.locator('.app').evaluate(el=>el.inert&&el.getAttribute('aria-hidden')==='true'),true,'the app behind is unreachable');
@@ -164,10 +165,10 @@ test('first run: Tu with birthday, create, colour, invite; the partner joins; ea
     assert.equal(await partner.page.evaluate(()=>usOnboarding.setup.maybeOpen(window.usProfile)),false,'once per user');
     assert.equal(await partner.page.locator('#usDeviceSetup').isHidden(),true);
 
-    // The creator learns it on the next refresh, or the automatic check got there first: "Ora siete un Noi".
+    // The creator learns it on the next refresh, or the automatic check got there first: «Ora siete in due» (redesign, fase 7).
     await refreshIfWaiting(page);await page.waitForFunction(()=>window.usProfile?.id==='u1');
     await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='noi');
-    assert.equal(await text(page,'#usSetupTitle'),'Ora siete un Noi');
+    assert.equal(await text(page,'#usSetupTitle'),'Ora siete in due');
     await page.click('#usSetupPrimary');await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='place');
     await page.click('#usSetupSecondary');await page.waitForFunction(()=>document.getElementById('usDeviceSetup').dataset.step==='ready');
     assert.match(await text(page,'#usSetupReady'),/Compleanno il 12 marzo/);
@@ -220,8 +221,9 @@ test('1.0 A1: sign-up waits for the 18+ and Terms box and records it with the ac
     await page.fill('#usSignupEmail','new@example.test');await page.fill('#usSignupPassword','synthetic-pass-123');await page.fill('#usSignupConfirm','synthetic-pass-123');
     assert.equal(await submit.isDisabled(),true,'off until the box is ticked');
     assert.equal(await text(page,'#usSignup .us-auth-consent'),'Ho almeno 18 anni e accetto i Termini e la Privacy');
-    // No public page yet: the words carry no link.
-    assert.equal(await page.locator('#usSignup a[data-us-legal]').evaluateAll(links=>links.filter(a=>a.hasAttribute('href')).length),0);
+    // The Terms and Privacy pages are published (public-auth.js LEGAL_URLS): the words open them.
+    assert.deepEqual(await page.locator('#usSignup a[data-us-legal]').evaluateAll(links=>links.map(a=>[a.getAttribute('href'),a.target])),
+      [['https://www.uscouple.app/termini','_blank'],['https://www.uscouple.app/privacy','_blank']]);
     const box=await page.locator('#usSignup .us-auth-consent').boundingBox();assert.ok(box.height>=44,'44px target');
     await page.click('#usSignup .us-auth-consent span');assert.equal(await page.isChecked('#usSignupTerms'),true,'the sentence ticks the box');
     assert.equal(await submit.isDisabled(),false);
@@ -259,8 +261,8 @@ test('1.0 A2: Condividi, the code through a trip to another app, and the partner
     await page.waitForFunction(()=>document.getElementById('mc3Status').textContent.includes('Fatto.'));
     const [shared]=await page.evaluate(()=>window.__shared);
     assert.deepEqual(Object.keys(shared),['text']);
-    assert.match(shared.text,/^Ti aspetto su US ♡\nScegli «Ho un codice d’invito» e incolla questo codice:\n/);
-    assert.ok(shared.text.split('\n')[2]===token);assert.match(shared.text,/\nScade il \d+ \S+ alle \d\d:\d\d\.$/);
+    // The invite is a link since the closed test (28/10/2026, onboarding.js inviteMessage), with no expiry.
+    assert.equal(shared.text,`Ti aspetto su US ♡\nApri il mio invito:\nhttps://www.uscouple.app/invito#${encodeURIComponent(token)}`);
     // Off to WhatsApp and back: off the screen while away, back on return.
     await page.evaluate(()=>window.__setHidden(true));assert.equal(await page.inputValue('#mc3Code'),'');
     await page.evaluate(()=>window.__setHidden(false));

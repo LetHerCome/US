@@ -106,6 +106,7 @@ test('N1 browser: protezione attiva → nessun frame con contenuto privato prima
     hit: document.elementFromPoint(innerWidth / 2, innerHeight / 2)?.closest('#usAppLock') !== null,
     mode: document.getElementById('usAppLock').dataset.mode,
     button: document.getElementById('usAppLockPrimary').textContent,
+    label: document.getElementById('usAppLockPrimary').getAttribute('aria-label'),
     appInert: document.querySelector('.app').hasAttribute('inert'),
     authInert: document.getElementById('authOverlay').hasAttribute('inert')
   }));
@@ -113,7 +114,9 @@ test('N1 browser: protezione attiva → nessun frame con contenuto privato prima
   assert.equal(locked.profile, null, 'initCloud non ha ancora caricato profilo né dati');
   assert.equal(locked.hit, true, 'ogni tocco finisce sul lock');
   assert.equal(locked.mode, 'locked');
-  assert.equal(locked.button, 'Sblocca con l’impronta');
+  // Parity with the mockup: «Sblocca» on screen, the gesture's full name for screen readers.
+  assert.equal(locked.button, 'Sblocca');
+  assert.equal(locked.label, 'Sblocca con l’impronta');
   assert.equal(locked.appInert, true);
   assert.equal(locked.authInert, true);
   for (const selector of ['.app', '#homeHero', '#authOverlay', '#thinkButton']) {
@@ -123,7 +126,10 @@ test('N1 browser: protezione attiva → nessun frame con contenuto privato prima
 
   await page.evaluate(() => window.__LOCK.release());
   await page.waitForFunction(() => window.usProfile && !document.documentElement.classList.contains('us-app-locked'));
-  await page.waitForTimeout(400);
+  // The lock leaves with the mockup's motion (swell, then a circle closing in
+  // 260 + 560 ms) while the app is already open underneath.
+  await page.waitForFunction(() => !document.documentElement.classList.contains('us-app-lock-leaving'), null, { timeout: 3000 });
+  await page.waitForTimeout(100);
   assert.equal(await visibleAt(page, '.app'), true);
   assert.equal(await visibleAt(page, '#usAppLock'), false);
   const frames = await page.evaluate(() => window.__LOCK.frames);

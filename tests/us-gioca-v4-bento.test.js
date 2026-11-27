@@ -61,8 +61,8 @@ test('V4 → 1.0: the daily model follows the existing Daily engine; Gioca paint
   const sandbox={window,document:{getElementById:id=>id==='quizHub'?hub:null},oggiPartnerName:()=>'Bea',escapeHtml:value=>String(value??'').replace(/[&<>"']/g,'?')};
   const vmContext=vm.createContext(sandbox);
   vm.runInContext(app.slice(start,end),vmContext);
-  vm.runInContext('paintDailyInGioca()',vmContext);
   assert.equal(weeks,0,'no week strip since fase 6');
+  assert.doesNotMatch(app,/paintDailyInGioca/,'the empty painter is gone (27/11/2026)');
   assert.equal(vm.runInContext('dailyHubModel()',vmContext),null);
   window.todayQuestion={id:'q-1',question:'Un ricordo speciale?'};
   window.todayState={my_answer:null,partner_has_answer:true,both_answered:false,partner_answer:'Risposta segreta'};
@@ -72,13 +72,14 @@ test('V4 → 1.0: the daily model follows the existing Daily engine; Gioca paint
   window.todayState={my_answer:'Mia',partner_has_answer:false,both_answered:false};
   assert.equal(vm.runInContext('dailyHubModel()',vmContext).state,'waiting');
   assert.doesNotMatch(app,/data-us-daily-entry|function dailyHubMarkup/);
-  assert.match(app,/window\.UsDailyQuestionHub=Object\.freeze\(\{model:dailyHubModel,paint:paintDailyInGioca,paintCard:paintDailyCardAndTurn,open:openToday\}\);/);
+  assert.match(app,/window\.UsDailyQuestionHub=Object\.freeze\(\{model:dailyHubModel,paintCard:paintDailyCardAndTurn,open:openToday\}\);/);
 });
 test('V4: mobile-safe bento grid with existing icons; Sintonia reached from Il vostro angolo',()=>{
   const css=read('games.css'),html=read('index.html');
-  assert.match(css,/#quiz \.us-gv2-pervoi,[\s\S]*?grid-column:1;grid-row:span 2;/);
   assert.match(css,/#quiz \.us-gv2-game\.is-swipe\{[\s\S]*?grid-column:2;grid-row:1;/);
-  assert.match(read('dc-gioca.css'),/#quiz \.us-gv2-week\{display:grid;grid-template-columns:repeat\(7,1fr\)/);
+  // The old Per voi hero and the week strip left Gioca; their styles went on 27/11/2026.
+  assert.doesNotMatch(css,/\.us-gv2-pervoi\b/);
+  assert.doesNotMatch(read('dc-gioca.css'),/\.us-gv2-week\{/);
   assert.match(css,/@media\(max-width:360px\)/);
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)/);
   // Redesign definitivo (D3): no tabs in Gioca; Sintonia is in Il vostro angolo.

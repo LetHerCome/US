@@ -18,7 +18,8 @@ test('intro: shipped like every other script (page, service worker, both builds)
 
 test('intro: eight stops in the approved order, two lines of the other person, neutral words', () => {
   const ids = [...intro.matchAll(/\{ id: '([a-z]+)'/g)].map((m) => m[1]);
-  assert.deepEqual(ids, ['ciao', 'domanda', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo', 'angolo']);
+  // «crea» comes first only for whoever never made their character (see below).
+  assert.deepEqual(ids, ['crea', 'ciao', 'domanda', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo', 'angolo']);
   assert.equal((intro.match(/other: '/g) || []).length, 2);
   assert.match(intro, /other: 'Io lo aspetto, eh\.'/);
   assert.match(intro, /other: 'Ci vediamo qui ogni giorno!'/);
@@ -65,7 +66,8 @@ test('intro: who already has US gets it once with the update, on Oggi, by itself
     await page.addInitScript(() => { window.__usIntroAuto = true; });
     await page.goto(`${h.base}/?us-dev=1`, { waitUntil: 'load' });
     await page.waitForFunction(() => window.UsIntro?.active(), null, { timeout: 15000 });
-    assert.equal(await page.evaluate(() => document.getElementById('usIntro').dataset.step), 'ciao');
+    // The test couple never made a character: the update starts from «crea».
+    assert.equal(await page.evaluate(() => document.getElementById('usIntro').dataset.step), 'crea');
     await page.click('[data-intro-skip]');
     // Back to the app later (the fixture wipes storage on reload, so the return is simulated): it does not come back.
     assert.equal(await page.evaluate(() => window.UsIntro.seen()), true);
@@ -86,19 +88,75 @@ test('intro: in the real app it walks the eight stops and is not shown twice', a
     const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
     assert.equal(await page.evaluate(() => window.UsIntro.start()), true);
     const seen = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       await page.waitForTimeout(250);
       seen.push(await page.evaluate(() => document.getElementById('usIntro').dataset.step));
       const inside = await page.evaluate(() => { const b = document.querySelector('[data-intro-bubble]').getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight; });
       assert.ok(inside, `bubble on screen at ${seen[i]}`);
       await page.click('[data-intro-next]');
     }
-    assert.deepEqual(seen, ['ciao', 'domanda', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo', 'angolo']);
+    // Nobody in the test couple made a character yet: first «crea», then the eight stops.
+    assert.deepEqual(seen, ['crea', 'ciao', 'domanda', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo', 'angolo']);
     assert.deepEqual(await page.evaluate(() => ({ active: window.UsIntro.active(), seen: window.UsIntro.seen(), again: window.UsIntro.start() })), { active: false, seen: true, again: false });
     // «Salta» closes it at once.
     assert.equal(await page.evaluate(() => window.UsIntro.start({ force: true })), true);
     await page.click('[data-intro-skip]');
     assert.equal(await page.evaluate(() => window.UsIntro.active()), false);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  } finally { await h.close(); }
+});
+
+// Founder, 27/11/2026: who has US from before (the update) never made a character. Before the tour
+// they make it: the five shapes and the colours, the other person's taken; the guardaroba stays in
+// the angolo. Who already made it goes straight to the tour.
+test('intro: «crea» before the tour, shapes and colours only, saved with the usual rules', () => {
+  // A shape or a colour picked at the first opening counts, also before the couple is read again.
+  assert.ok(intro.includes('const made = () => Boolean(mine()?.character_shape || mine()?.person_color || w.usProfile?.character_shape || w.usProfile?.person_color);'));
+  assert.match(intro, /const maker = canMake\(\) && \(force \|\| !made\(\)\);/);
+  assert.match(intro, /save\('set_my_character_shape', \{ p_shape: shape \}\)/);
+  assert.match(intro, /save\('set_my_color', \{ p_color: colour \}\)/);
+  assert.doesNotMatch(intro, /set_my_character_look|LOOK_HEAD|LOOK_FACE/, 'no guardaroba in the intro');
+  assert.match(intro, /Gli accessori arrivano dopo: li sbloccate insieme, nel vostro angolo\./);
+  assert.match(read('struttura.css'), /\.us-intro-swatch\{display:grid;place-items:center;width:100%;height:44px;/, 'each colour 44px tall (two rows of four on a narrow bubble, controllo-oggi-personaggi.test.js)');
+});
+
+test('intro: in the real app you make your character, then the tour; once made, no «crea»', async (t) => {
+  const chromium = loadChromium();
+  if (!chromium) return t.skip('Playwright unavailable');
+  const { start, pageFor } = require('./helpers/countdown-browser');
+  const h = await start();
+  try {
+    const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
+    await page.evaluate(() => {
+      const qa = window.__QA; qa.calls = [];
+      const self = () => qa.tables.profiles.find((p) => p.id === qa.me);
+      qa.rpc.set_my_character_shape = async (a) => { qa.calls.push(['shape', a.p_shape]); self().character_shape = a.p_shape; return { data: { shape: a.p_shape }, error: null }; };
+      qa.rpc.set_my_color = async (a) => { qa.calls.push(['color', a.p_color]); self().person_color = a.p_color; return { data: { color: a.p_color }, error: null }; };
+    });
+    assert.equal(await page.evaluate(() => window.UsIntro.start()), true);
+    await page.waitForTimeout(300);
+    const first = await page.evaluate(() => {
+      const r = document.getElementById('usIntro'), b = r.querySelector('[data-intro-bubble]').getBoundingClientRect();
+      return { step: r.dataset.step, shapes: r.querySelectorAll('[data-intro-shape]').length, pressed: r.querySelector('[data-intro-shape][aria-pressed="true"]')?.dataset.introShape, taken: [...r.querySelectorAll('[data-intro-colour]:disabled')].map((x) => x.dataset.introColour), inside: b.top >= 0 && b.bottom <= innerHeight, wardrobe: r.querySelectorAll('[data-us-look]').length };
+    });
+    assert.deepEqual(first, { step: 'crea', shapes: 5, pressed: 'palla', taken: ['lilla'], inside: true, wardrobe: 0 });
+    await page.click('[data-intro-shape="nuvola"]');
+    await page.click('[data-intro-colour="blu"]');
+    await page.waitForTimeout(300);
+    const after = await page.evaluate(() => {
+      const r = document.getElementById('usIntro');
+      return { calls: window.__QA.calls, pressed: r.querySelector('[data-intro-shape][aria-pressed="true"]')?.dataset.introShape, colour: r.querySelector('[data-intro-colour][aria-pressed="true"]')?.dataset.introColour, guide: (() => { const t = document.createElement('div'); t.innerHTML = window.UsPersonaggi.character('francesco', { size: 72, reaction: 'saluta', shape: 'nuvola' }); return r.querySelector('[data-intro-guide]').innerHTML === t.innerHTML; })(), tu: ['#6f9bff', '#8faad6'].includes(getComputedStyle(document.documentElement).getPropertyValue('--us-rosa').trim().toLowerCase()) };
+    });
+    assert.deepEqual(after, { calls: [['shape', 'nuvola'], ['color', 'blu']], pressed: 'nuvola', colour: 'blu', guide: true, tu: true });
+    await page.click('[data-intro-next]');
+    assert.equal(await page.evaluate(() => document.getElementById('usIntro').dataset.step), 'ciao');
+    await page.click('[data-intro-skip]');
+    // Made now: the next first time (another phone) starts from «ciao».
+    await page.evaluate(async () => { await window.UsCoupleContext?.hydrate?.(); localStorage.removeItem(`us:intro:v1:${window.usProfile.id}`); });
+    assert.equal(await page.evaluate(() => window.UsIntro.start()), true);
+    assert.equal(await page.evaluate(() => document.getElementById('usIntro').dataset.step), 'ciao');
+    await page.click('[data-intro-skip]');
     assert.deepEqual(errors, []);
     await ctx.close();
   } finally { await h.close(); }

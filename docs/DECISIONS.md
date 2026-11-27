@@ -622,3 +622,41 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Set:** gli stessi nove widget su Android e iPhone (misure di ciascuno); Come stai diventa «Voi due»; Distanza senza arco (14/11); Lavagna e Post-it anche 4x2. Solo iPhone: il grande con la foto, i modi Colorata/Trasparente, StandBy.
 - **Blocca schermo (solo iPhone):** tinta unica con le sagome dei personaggi e il cuore pieno; sopra l'ora i giorni o l'ultima cosa arrivata; cerchi (Ti penso, Giorni, Distanza con l'anello della batteria, Come sta, busta) e rettangoli (Voi due, Lasciato per te, La domanda, Distanza); il Controllo «Ti penso» di iOS 18 al posto della torcia. Mai risposte, contenuti o posizioni.
 - **Ordine:** Android prima (fatto sul ramo `claude/widget-redesign-android-ios-fb63c1`), poi iPhone e blocca schermo dalla stessa tavola.
+
+## 2026-11-27 — Nell'intro prima si crea il personaggio
+
+**Fonte:** founder, 27/11/2026, dopo la prova dell'APK di staging. Chi ha solo aggiornato vedeva l'intro con il personaggio di partenza (tondo rosa per chi ha creato la coppia, quadrato lilla per chi è entrato) senza averlo mai scelto: «aggiungi nell'intro una parte che si spiega e ti fa scegliere il personaggio prima del tutorial e te lo fa creare e personalizzare il minimo senza il guardaroba che si sblocca dopo».
+
+- **Chi:** chi non ha né forma né colore scelti (`character_shape` e `person_color` vuoti). Chi li ha già scelti nella prima apertura va dritto al giro. «Rivedi l'intro» mostra sempre anche la scelta.
+- **Cosa:** forma (le cinque) e colore (gli otto, quello dell'altra persona escluso). Si salvano subito con le stesse funzioni della prima apertura e delle Impostazioni (`set_my_character_shape`, `set_my_color`), con le loro regole sul server. Niente accessori: il guardaroba resta nell'angolo, coi suoi sblocchi.
+## 2026-11-27 — L'invito dura 14 giorni e chi aspetta riceve un promemoria
+
+**Fonte:** founder, 27/11/2026, sulle idee del controllo generale: «per il resto va bene tutto».
+
+- **Scadenza:** 14 giorni invece di 48 ore. Il codice resta quello di MC2 (128 bit casuali, sul server solo l'impronta), quindi la sicurezza non cambia.
+- **Rinnovo:** un codice scaduto si rifà da solo, una volta per apertura, solo se era scaduto. Uno ancora valido non si tocca, perché ne annullerebbe uno già mandato.
+- **Notifiche per chi aspetta:** «Avvisami quando entra» le accende con un tocco, mai da sola. Promemoria al giorno 1 e al giorno 3 dalla creazione della coppia, alle 18 di Roma, solo a una coppia di una persona, una volta sola. L’interruttore «Ricorrenze» spento lo blocca.
+## 2026-11-27 — La prima settimana guidata, solo per le coppie nuove
+
+**Fonte:** founder, 27/11/2026: «la prima settimana di guida la farei ma solamente per gli account appena creati, quindi per i Beta tester no».
+
+- **Dove:** dentro «US vi ricorda», come un tipo di frase in più (`primi_passi`, priorità 2). Nessuna schermata nuova.
+- **Chi:** solo le coppie create dopo che la migrazione è stata applicata (`private.us_primi_passi_start`). Il giorno 1 è quello dopo l'ingresso dell'altra persona: il giorno stesso ci sono già l'intro e la presentazione.
+- **Sette passi**, uno al giorno: domanda di oggi, prima foto, una partita, un post-it, il Ti penso, i compleanni, la settimana. Un passo già fatto si salta. Si spengono con «Non dirmelo più», e compleanni e anniversario vincono.
+## 2026-11-27 — Avvisi di US vi ricorda e personaggi sempre aggiornati
+
+**Fonte:** founder, 27/11/2026 (via libera alla costruzione): le battute si vedevano solo aprendo l'app; il personaggio dell'altra persona e i widget devono seguire i cambi anche ad app chiusa.
+
+- **Avvisi di US vi ricorda:** solo le battute datate più forti diventano notifica: compleanno tra 7 giorni e il giorno stesso (solo all'altra persona), anniversario tra una settimana (a tutti e due), «un anno fa», e un ricordo appeso oggi da US in bacheca. Mai mesiversario, cento giorni e anniversario del giorno (li manda già «Ricorrenze»), mai le prime volte e le domande.
+- **Regole:** al massimo una al giorno a persona (`us-ricorda:<persona>:<giorno>` in `push_event_log`); solo alle 10 e alle 18 di Roma (mai di notte: non esistono ore di silenzio per persona, quindi l'orario è fisso e di giorno); mai una battuta già vista nell'app; rispettano «Non dirmelo più», «Le voci dei personaggi» spente e il nuovo interruttore **US vi ricorda** in Profilo › Notifiche (acceso di serie). Decide il server con le stesse regole delle battute (`us_ricorda_push_due_v1`), senza AI; il testo è nella lingua di chi riceve.
+- **Personaggio dell'altra persona dal vivo:** un cambio di colore, forma o vestiti muove `couple_sync` (tipo `looks`); l'app aperta dell'altra persona lo sente su Realtime e rilegge i look.
+- **Widget ad app chiusa (Android):** dopo il cambio l'app di chi l'ha fatto chiede a `send-web-push` (`partner_look`) un avviso silenzioso FCM v3 per i telefoni dell'altra persona, col look letto dal server (forma, testa, viso, due colori: niente nomi, foto o testo). Quando l'altra persona esce dalla coppia o cancella l'account, lo stesso avviso (`clear`) svuota i widget come al logout. v3 apposta: le app di prima accettano solo v2 e lo scartano senza mostrare nulla.
+- **iPhone:** per ora niente avviso silenzioso (l'app non dichiara `UIBackgroundModes`, scelta da fare a parte); il server è pronto (`apnsSignalRequest`, `IOS_WIDGET_SIGNALS` spento). Su iPhone il personaggio arriva con l'app aperta o al ritorno in primo piano.
+
+## 2026-11-27 — Widget dell'iPhone: avviso silenzioso in background
+
+**Fonte:** founder, 27/11/2026: «fai fix per ios».
+
+- L'app dichiara un solo modo in background, `remote-notification` (`UIBackgroundModes`), solo per i widget.
+- `AppDelegate` passa l'avviso a `UsWidgetSignals` (plugin dei widget). Il plugin controlla la versione (3) e che l'account sia quello dei widget (impronta = SHA-256 dell'id, come `widgets.js`). Poi scrive il personaggio dell'altra persona col contratto dei widget, oppure svuota tutto come al logout, e ricarica WidgetKit. Gli altri avvisi passano come prima da `@capacitor/push-notifications`.
+- Il server manda ora il segnale anche agli iPhone (`IOS_WIDGET_SIGNALS = true`) e calcola da sé l'impronta del proprietario. Limiti di iOS accettati: consegna quando vuole, mai ad app chiusa a mano.

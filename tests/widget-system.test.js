@@ -182,7 +182,7 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   // Lavagna (03/11/2026): whether there is a drawing, who drew last and when; never a stroke.
   assert.deepEqual({ ...sent.lavagna }, { state: 'ready', by: 'partner', at: '2026-11-03T10:00:00.000Z' });
   // Post-it (04/11/2026): the newest post-it's words, its paper, who and how many others; never an id.
-  assert.deepEqual({ ...sent.postit }, { state: 'ready', text: 'prenotare la cena', color: 'yellow', by: 'partner', more: 99, at: '2026-11-04T10:00:00.000Z' });
+  assert.deepEqual(JSON.parse(JSON.stringify(sent.postit)), { state: 'ready', text: 'prenotare la cena', color: 'yellow', by: 'partner', more: 99, at: '2026-11-04T10:00:00.000Z', second: { text: '', color: '', by: '' } });
   assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'lavagna', 'left', 'memories', 'ownerHash', 'photo', 'postit', 'schemaVersion', 'status', 'think', 'updatedAt']);
 
   assert.equal(await platform.writeWidgetSnapshot({ schemaVersion: 2, ownerHash: 'raw-user-id' }), false, 'owner non hash rifiutato');
@@ -600,15 +600,13 @@ test('nessun Stories o Scriptable risorge nel layer widget', () => {
   assert.doesNotMatch(sources, /stories|scriptable/i);
 });
 
-test('derivative widget sono byte-identiche agli APPROVED e il sync è deterministico', () => {
-  execFileSync(process.execPath, ['scripts/sync-approved-widget-assets.mjs'], { cwd: ROOT });
-  const firstIcon = sha256(`${PLUGIN}/res/drawable-nodpi/us_icon_ti_penso_v1.png`);
-  const firstWordmark = sha256(`${PLUGIN}/res/drawable-nodpi/us_wordmark_v1.png`);
-  execFileSync(process.execPath, ['scripts/sync-approved-widget-assets.mjs'], { cwd: ROOT });
-  assert.equal(firstIcon, sha256('assets/source/ui/us-icon-ti-penso-v1.png'));
-  assert.equal(firstWordmark, sha256('assets/source/brand/us-wordmark-v1.png'));
-  assert.equal(firstIcon, sha256(`${PLUGIN}/res/drawable-nodpi/us_icon_ti_penso_v1.png`));
-  assert.equal(firstWordmark, sha256(`${PLUGIN}/res/drawable-nodpi/us_wordmark_v1.png`));
+test('le derivative di Ti penso e del wordmark non vanno più nell’APK (mai usate dai widget, 1,6 MB)', () => {
+  assert.equal(fs.existsSync(path.join(ROOT, 'scripts/sync-approved-widget-assets.mjs')), false);
+  assert.equal(fs.existsSync(path.join(ROOT, `${PLUGIN}/res/drawable-nodpi/us_icon_ti_penso_v1.png`)), false);
+  assert.equal(fs.existsSync(path.join(ROOT, `${PLUGIN}/res/drawable-nodpi/us_wordmark_v1.png`)), false);
+  // The approved masters stay in the repository.
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/source/ui/us-icon-ti-penso-v1.png')));
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/source/brand/us-wordmark-v1.png')));
 });
 
 test('Impostazioni native: la riga Stories rimossa dal bundle non rompe l’idratazione', () => {

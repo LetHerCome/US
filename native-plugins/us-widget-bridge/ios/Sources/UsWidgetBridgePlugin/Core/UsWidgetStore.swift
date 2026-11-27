@@ -94,6 +94,20 @@ final class UsWidgetStore {
         return true
     }
 
+    /// Widget signals (27/11/2026): the other person's new look, from a background push for this
+    /// account only. Validated again by UsWidgetContract.character; nothing else in the snapshot moves.
+    @discardableResult
+    func writePartnerLook(ownerHash: String, look: [String: Any]) -> Bool {
+        guard UsWidgetContract.validOwner(ownerHash), var snapshot = readSnapshot(),
+              (snapshot["ownerHash"] as? String) == ownerHash else { return false }
+        var couple = UsWidgetContract.object(snapshot["couple"])
+        var characters = UsWidgetContract.object(couple["characters"])
+        characters["partner"] = UsWidgetContract.character(look)
+        couple["characters"] = characters
+        snapshot["couple"] = couple
+        return write(snapshot: snapshot)
+    }
+
     func readSnapshot() -> [String: Any]? {
         lock.lock(); defer { lock.unlock() }
         guard let data = try? Data(contentsOf: file("snapshot-v2.json")),

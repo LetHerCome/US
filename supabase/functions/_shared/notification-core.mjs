@@ -79,6 +79,28 @@ function relationshipCopy(a, en) {
   return { title: a.title, body: a.body };
 }
 
+// US vi ricorda (27/11/2026): the strongest dated lines of the characters and
+// what US hung on the bacheca, at most one a day (us-ricorda-push-core.mjs).
+// One tag: a newer line replaces the older. They open Oggi, where the line is.
+const RICORDA = Object.freeze({ title: 'US.', tag: 'us-ricorda', target: 'home', channel: 'reminders', urgency: 'normal' });
+// The name inside a sentence: lower case when there is none.
+const midName = (value, en = false) => value || (en ? 'your person' : 'la tua persona');
+const yearsCopy = (n, en) => (Number(n) === 1 ? pick(en, 'un anno', 'one year') : pick(en, `${Number(n)} anni`, `${Number(n)} years`));
+function yearAgoCopy(a, en) {
+  if (a.source === 'meet' && a.title) return pick(en, `Un anno fa, oggi: «${a.title}» ♡`, `A year ago today: “${a.title}” ♡`);
+  if (a.source === 'idea' && a.title) return pick(en, `Un anno fa avete fatto «${a.title}» ♡`, `A year ago you did “${a.title}” ♡`);
+  if (a.place) return pick(en, `Un anno fa, oggi, eravate a ${a.place} ♡`, `A year ago today you were in ${a.place} ♡`);
+  return pick(en, 'Un anno fa, oggi: un vostro ricordo ♡', 'A year ago today: one of your memories ♡');
+}
+function bachecaCopy(a, en) {
+  if (a.reason === 'un_anno_fa') return a.place
+    ? pick(en, `In bacheca c’è ${a.place}, un anno fa ♡`, `On your board: ${a.place}, a year ago ♡`)
+    : pick(en, 'US vi ha appeso in bacheca un ricordo di un anno fa ♡', 'US pinned a memory from a year ago on your board ♡');
+  if (a.reason === 'traguardo' && Number(a.count) > 0) return pick(en, `In bacheca c’è un timbro nuovo: ${Number(a.count)} ricordi ♡`, `A new stamp on your board: ${Number(a.count)} memories ♡`);
+  if (a.reason === 'tenuta') return pick(en, 'In bacheca c’è una cosa vostra di questa settimana ♡', 'Something of yours from this week is on your board ♡');
+  return pick(en, 'In bacheca c’è il ricordo della settimana ♡', 'The memory of the week is on your board ♡');
+}
+
 // The catalogue: for every logical event, ONE title/body/target/channel/urgency.
 // Each entry receives (args, en): en is true when the recipient reads English.
 const CATALOGUE = Object.freeze({
@@ -116,7 +138,16 @@ const CATALOGUE = Object.freeze({
   challenge_new: (a, en) => ({ title: CHALLENGE_TITLE(en), body: a.title || pick(en, 'C’è una nuova sfida per voi ♡', 'There is a new challenge for you two ♡'), target: 'quiz', ref: a.challengeId, tag: `challenge-new-${a.challengeId}`, channel: 'reminders', urgency: 'normal' }),
   challenge_reminder: (a, en) => ({ title: CHALLENGE_TITLE(en), body: a.shortTitle ? pick(en, `Domani è l’ultimo giorno per «${a.shortTitle}» ♡`, `Tomorrow is the last day for “${a.shortTitle}” ♡`) : pick(en, 'Domani è l’ultimo giorno per la sfida ♡', 'Tomorrow is the last day for the challenge ♡'), target: 'quiz', ref: a.challengeId, tag: `challenge-reminder-${a.challengeId}`, channel: 'reminders', urgency: 'normal' }),
   challenge_photo: (a, en) => ({ title: CHALLENGE_TITLE(en), body: pick(en, `${name(a.senderName)} ha messo la sua foto: manca solo la tua`, `${name(a.senderName, true)} added their photo: only yours is missing`), target: 'quiz', ref: a.challengeId, tag: `challenge-photo-${a.challengeId}`, channel: 'partner', urgency: 'normal' }),
+  ricorda_birthday_week: (a, en) => ({ ...RICORDA, body: pick(en, `Tra una settimana è il compleanno di ${midName(a.name)}. C’è tempo per una sorpresa ♡`, `${name(a.name, true)}’s birthday is a week away. There is time for a surprise ♡`) }),
+  ricorda_birthday: (a, en) => ({ ...RICORDA, body: pick(en, `Oggi è il compleanno di ${midName(a.name)}. Un pensiero vale tantissimo ♡`, `Today is ${midName(a.name, true)}’s birthday. A thought means a lot ♡`) }),
+  ricorda_anniversary_week: (a, en) => ({ ...RICORDA, body: pick(en, `Tra una settimana fate ${yearsCopy(a.years, en)} insieme. Ci pensiamo? ♡`, `One week until ${yearsCopy(a.years, en)} together. Shall we plan something? ♡`) }),
+  ricorda_year_ago: (a, en) => ({ ...RICORDA, body: yearAgoCopy(a, en) }),
+  ricorda_bacheca: (a, en) => ({ ...RICORDA, title: pick(en, 'US. · Bacheca', 'US. · Board'), body: bachecaCopy(a, en) }),
   // A2: the partner accepted the invite; sent once, to the creator.
+  // L'invito che si rinnova (27/11/2026): to whoever still waits, day 1 and day 3.
+  invite_reminder: (a, en) => ({ title: 'US.', body: Number(a.day) >= 3
+    ? pick(en, 'Ancora in attesa: rimanda il codice alla tua persona. Vale 14 giorni.', 'Still waiting: send your person the code again. It lasts 14 days.')
+    : pick(en, 'Il vostro spazio vi aspetta: manda il codice alla tua persona ♡', 'Your space is waiting: send the code to your person ♡'), target: 'home', tag: a.tag, channel: 'reminders', urgency: 'normal', ttl: 60 * 60 * 12 }),
   partner_joined: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} ha accettato l’invito: il vostro spazio è pronto`, `${name(a.senderName, true)} joined: your space is ready`), target: 'home', tag: 'us-partner-joined', channel: 'partner', urgency: 'normal' }),
 });
 export const NOTIFICATION_TYPES = Object.freeze(Object.keys(CATALOGUE));

@@ -14,15 +14,11 @@ const JAVA = 'native-plugins/us-widget-bridge/android/src/main/java/com/usapp/wi
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const exists = (file) => fs.existsSync(path.join(ROOT, file));
 
-test('every Pastello card and surface has its Midnight form', () => {
-  for (const name of ['think', 'daily', 'distance', 'left', 'memories', 'status', 'status_me', 'status_partner',
-    'pill', 'pill_blush', 'bubble', 'badge', 'heart_badge', 'progress', 'dash_off', 'line']) {
-    const file = `${RES}/drawable-night/us_widget_pastel_${name}.xml`;
-    assert.ok(exists(file), file);
-    assert.ok(exists(`${RES}/drawable/us_widget_pastel_${name}.xml`), `${name}: the light one too`);
-  }
-  // US night (#17111c) at the bottom of the cards.
-  assert.match(read(`${RES}/drawable-night/us_widget_pastel_memories.xml`), /#FF17111C/);
+test('the Pastello colours keep their Midnight form', () => {
+  // The Pastello cards themselves left with the redesign (27/11/2026 cleanup);
+  // the one Pastello drawable still used keeps its night twin.
+  assert.ok(exists(`${RES}/drawable/us_widget_pastel_tick_off.xml`));
+  assert.ok(exists(`${RES}/drawable-night/us_widget_pastel_tick_off.xml`));
   const night = read(`${RES}/values-night/colors.xml`);
   for (const [name, hex] of [['ink', 'FFF7EFE9'], ['sub', 'B8F7EFE9'], ['plum', 'FFF7EFE9'], ['heart_bg', 'FF3B2F3F']]) {
     assert.match(night, new RegExp(`<color name="us_widget_pastel_${name}">#${hex}</color>`), name);

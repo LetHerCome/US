@@ -2,9 +2,134 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Widget dell'iPhone aggiornati anche ad app chiusa (27/11)
+
+**Stato:** ramo `claude/controllo-integrazione`, verso staging. Chiesto dal founder il 27/11 («fai fix per ios»). Arriva con una build TestFlight nuova. Servono anche le funzioni `send-web-push`, `leave-couple` e `delete-account` aggiornate su staging.
+
+**Cosa cambia:**
+- Quando l'altra persona cambia forma, colore o accessori, o lascia la coppia, anche i widget dell'iPhone si aggiornano con US chiusa, come su Android: arriva un avviso silenzioso, senza banner, che contiene solo il personaggio.
+- iOS consegna questi avvisi quando decide lui (di solito entro pochi minuti) e mai a un'app chiusa a mano dal multitasking: lì il personaggio si aggiorna alla prossima apertura.
+
+### Oggi senza la striscia bianca in alto (27/11)
+
+**Stato:** ramo `claude/controllo-integrazione`, verso staging. Segnalata dal founder con uno screenshot dell'APK di staging.
+
+**Cosa cambia:**
+- Col tema chiaro in cima a Oggi c'era una riga bianca di un pixel: la foto ora arriva fino al bordo, anche ai lati. Era il bordo rimasto dalla vecchia scheda della foto.
+
+### Avvisi di US vi ricorda e personaggi sempre aggiornati (27/11)
+
+**Stato:** ramo `claude/push-ricorda-personaggio`, verso staging; migrazioni e funzioni da applicare su staging.
+
+**Cosa cambia:**
+- **US vi ricorda arriva anche sul telefono:** le battute più importanti diventano una notifica. Il compleanno dell'altra persona una settimana prima e il giorno stesso, l'anniversario una settimana prima, «un anno fa, oggi», un ricordo che US ha appeso in bacheca. Al massimo una al giorno, solo alle 10 o alle 18, mai una battuta già vista nell'app.
+- **Nuovo interruttore** in Profilo › Notifiche: «US vi ricorda», acceso di serie. Valgono anche «Non dirmelo più» e «Le voci dei personaggi».
+- **Il personaggio dell'altra persona dal vivo:** se Bea cambia forma, colore o accessori mentre hai US aperta, lo vedi cambiare in pochi secondi.
+- **Widget Android anche ad app chiusa:** il nuovo personaggio arriva ai widget con un avviso silenzioso, senza notifica. Se l'altra persona esce dalla coppia o cancella l'account, i widget si svuotano (nome, foto, Come stai). Serve un AAB nuovo.
+- **iPhone:** per ora il personaggio arriva con l'app aperta o quando la riapri; l'avviso silenzioso ai widget iPhone resta da decidere.
+
+### Widget coi vostri personaggi davvero, e il personaggio dell'altra persona aggiornato (27/11)
+
+**Stato:** ramo `claude/widget-personaggi-filtro`, verso staging. Trovato nel controllo generale del 27/11. Nessuna migrazione.
+
+**Cosa cambia:**
+- **Widget:** il ponte tra l'app e il telefono (`platform.js`) buttava via i personaggi e il secondo Post-it. Per questo i widget nuovi disegnavano sempre il personaggio di base del ruolo (tondo rosa o quadrato lilla) e il Post-it largo aveva una nota sola. Ora passano, controllati come fa il codice nativo.
+- **Il personaggio dell'altra persona:** se Bea cambia forma, colore o accessori, sul tuo telefono arriva quando riapri US. Prima arrivava solo dopo aver chiuso del tutto l'app. Si rilegge solo quello, e il resto si aggiorna solo se qualcosa è cambiato. Così si aggiornano anche Oggi, l'angolo e i widget.
+- **Colore:** cambiato nel Profilo o alla prima apertura, arriva subito anche alla scheda del Profilo, ai personaggi e ai widget. Prima il Profilo diceva ancora «Rosa». «Torna al colore di sempre» non compare più quando quel colore è dell'altra persona: prima vi ritrovavate tutti e due dello stesso colore.
+### Oggi, personaggi e US vi ricorda: correzioni dal controllo (27/11)
+
+**Stato:** ramo `claude/controllo-oggi-personaggi` (sopra `claude/intro-crea-personaggio`), verso staging. Nessuna migrazione: si riusano `set_my_battute_mute_v1` e la lettura di `us_battute_mute` che ci sono già.
+
+- **«Non dirmelo più» si può davvero riaccendere.** In Profilo › Notifiche, sotto «Le voci dei personaggi», compare «Le voci che hai spento»: ogni tipo spento (compleanni, anniversari, un anno fa, quando tocca a te…) ha il suo interruttore per riaccenderlo. Se il salvataggio di «Non dirmelo più» non riesce, US lo dice e non fa finta di averlo spento.
+- **L'interruttore «Le voci dei personaggi» mostra lo stato vero**, letto dal server prima di aprire la scheda, non quello che Oggi aveva caricato.
+- **Dopo l'intro** tornano le cose che aveva trattenuto: il nuovo livello sull'isola e la frase dei personaggi.
+- **Intro più solida:** se la domanda di oggi o l'isola non sono ancora sullo schermo quando parte, l'intro le aspetta un attimo; se non arrivano salta quella tappa, e l'ultima tappa mostrata dice sempre «Fine». Il colore dell'altra persona risulta già preso anche quando il suo profilo non è ancora arrivato.
+- **Più facile da toccare:** i colori dell'intro sono alti 44 px e, sui telefoni stretti, vanno su due righe da quattro; l'isola chiusa, le schede del vostro angolo e «Non dirmelo più» arrivano a 44 px. La domanda di oggi già svelata ha un pulsante «Togli» visibile, oltre allo scorrere di lato. Nella prima apertura un colore preso dice di chi è.
+- **Parole neutre:** via «Pronto?», «Siete arrivati», «vi siete visti», «tutti e due» (frasi dei personaggi, intro, colori e US Plus). Il nome all'inizio di una frase ha la maiuscola anche quando è «La tua persona».
+- **Widget:** l'app passa sempre ai widget forma e colori di ciascun personaggio secondo il ruolo, come li disegna l'app (chi ha creato la coppia il tondo rosa, chi è entrato il quadrato lilla); il nastro delle polaroid, senza colore, usa quello del ruolo di chi ha messo la foto.
+- **Guardaroba:** il ridisegno di ogni minuto non tocca più il vostro angolo aperto, e chi usa la tastiera non perde il punto in cui era.
+- **Pulizia:** tolto codice che cercava pezzi di pagina spariti da tempo (ricordo in home, barra del legame, contatori, vecchi badge e pulsanti) e le regole CSS morte del vecchio Ti penso in alto e del vecchio calendario a tutto schermo. Una lettura in meno al server per i Ti penso del mese (non serviva più).
+### Inglese completo (27/11)
+
+**Stato:** ramo `claude/inglese-mancanti` (sopra `claude/intro-crea-personaggio`), verso staging.
+
+- Con il telefono in inglese non restano più frasi in italiano nell'intro col personaggio (anche la nuova parte «crea»: forme, colori, «Gli accessori arrivano dopo…», «Eccomi!…»), nelle battute di US vi ricorda e nella loro scheda, nella bacheca tenuta da US, nei temi ed effetti di Oggi (nomi, descrizioni, cosa fa il dito), nei countdown, nel guardaroba e nell'angolo, nel widget Post-it e in Noi («Vi rivedete tra», «Oggi vi vedete», il giorno speciale). Circa 270 voci nuove nel dizionario inglese.
+- In inglese le date delle battute escono in inglese («December 2»), e il testo già pronto di Lasciato per te e il titolo «Compleanno di…» arrivano tradotti.
+- In italiano non cambia nulla: le frasi sono le stesse, solo scritte intere (con e senza nome, «un anno» e «N anni») perché il dizionario le trovi.
+- Un test nuovo (`tests/i18n-coverage.test.js`) fallisce se in quei file compare una frase italiana senza la sua voce inglese. Lo script `scripts/i18n-extract.mjs` ora gira anche su Windows e vede anche le frasi con una parte che cambia.
+- Il dizionario cresce di ~24 KB: il budget della precache (3,45 MB) si supera di ~21 KB finché non entra il ramo che toglie i file delle Stories.
+
+### Intro: prima crei il tuo personaggio (27/11)
+
+**Stato:** ramo `claude/intro-crea-personaggio`, verso staging. Chiesto dal founder dopo la prova dell'APK di staging: «aggiungi nell'intro una parte che … ti fa scegliere il personaggio prima del tutorial … senza il guardaroba che si sblocca dopo». Nessuna migrazione: usa `set_my_character_shape` e `set_my_color` che ci sono già.
+
+- **Chi non ha mai fatto il suo personaggio** (chi ha già l'app e riceve l'aggiornamento, o chi nella prima apertura ha lasciato tutto com'era) prima del giro dell'intro lo crea: il personaggio spiega che è il suo e che lo segue in tutta l'app, anche nei widget. Si scelgono le cinque forme, ognuna col tuo personaggio dentro, e gli otto colori. Quello dell'altra persona è barrato. Il personaggio cambia subito mentre scegli.
+- Niente guardaroba lì: una riga dice che gli accessori arrivano dopo e si sbloccano insieme nel vostro angolo.
+- Poi «Eccomi!» e il giro di sempre (otto tappe). Chi ha già scelto forma o colore parte direttamente dal giro. «Rivedi l'intro» nel Profilo mostra anche la scelta, con quello che hai adesso.
+- Se il salvataggio non riesce, torna la scelta di prima con un avviso. Il colore dell'altra persona non si può prendere, e quando US Plus sarà in vendita il colore chiederà Plus come nelle Impostazioni.
+### Noi, Ricordi e Gioca: correzioni dal controllo (27/11)
+
+**Stato:** ramo `claude/controllo-noi-ricordi-gioca`, verso staging. Una migrazione nuova, `20261127120000_us_battute_mute_bacheca.sql`, scritta ma non applicata (serve il sì, prima su staging).
+
+- **Lavagna senza rete**: un tratto non sparisce più. Resta sulla lavagna, più chiaro, e parte da solo appena torna la connessione (o al tratto dopo, o quando riaprite US), in ordine. Mai doppio.
+- **Bacheca**: se non si riesce a leggerla dice «La bacheca non risponde» con «Riprova», invece di sembrare vuota. Le risposte tenute mostrano la domanda e le risposte di tutti e due, ognuna col segno nel colore di chi l'ha scritta. Le cose appese si aprono anche con la tastiera e col lettore di schermo.
+- **«L'avete fatto?»**: dopo il primo «Sì» la carta dice «Ora manca Bea» e non propone più la foto; la foto arriva solo quando l'idea è fatta davvero, coi sì di tutti e due. Anche la frase sotto lo spiega.
+- **Post-it**: se la rete cade proprio mentre se ne salva uno nuovo, non nasce più una copia.
+- **Tocchi più comodi** (44 punti): la casella piccola delle liste nei post-it, le frecce del mese nel calendario, la X delle idee e delle voci dei post-it, le schede Raccolta/Bacheca/Mappa.
+- **Gioca**: con la tastiera o il lettore di schermo la carta di lato parte subito; col dito prima viene al centro, come prima. Testi: «Le cose che ancora non sapete di voi due», e senza il nome dell'altra persona «Aspetti la tua persona» (non più «Aspetti La tua persona»).
+- **Date**: le partite finite dopo mezzanotte mostrano il giorno giusto (quello italiano). Il calendario di Noi e «oggi» per le foto contano il giorno come il resto di US (ora italiana), anche se il telefono ha un altro fuso.
+- **Ricordi, la prima volta**: sotto «La vostra storia parte da qui» c'è «Aggiungi la prima foto», che apre la galleria come il +. Il riquadro vuoto non luccica più come se stesse caricando.
+- **US vi ricorda**: anche il fumetto della Bacheca si può zittire tenendolo premuto («Non dirmelo più»); la migrazione fa ricordare la scelta al server.
+- La foto di un Ricordo nuovo viene letta una volta sola per fare l'immagine e la miniatura (meno lavoro per il telefono). Tolti pezzi di codice e di stile rimasti dal redesign, senza cambiare nulla di visibile.
+### Lasciato per te: fotocamera e video (27/11)
+
+**Stato:** ramo `claude/lasciato-fotocamera-video`, verso staging. Nessuna migrazione. Nelle app arriva solo con un AAB nuovo (cambiano anche manifest e codice Android) e una build TestFlight nuova (il web sta dentro l'app). Nel sito basta il rilascio web: lì c'è solo «Fai un video».
+
+- **Scatta una foto:** nelle app apre la fotocamera del telefono, quella di sempre, al posto del mirino dentro US. Nel browser resta il mirino di US.
+- **Fai un video:** nuovo, sopra «Scegli un video». Apre la fotocamera del telefono in modalità video, con l'audio. Valgono gli stessi limiti dei video della galleria (30 secondi e 20 MB) e lo stesso messaggio se il video è troppo lungo o troppo grande. Sul computer, dove la fotocamera non si apre, mostra la scelta dei file.
+- **Android, il pezzo che mancava:** da Android 11 un'app «vede» la fotocamera del telefono solo se lo dichiara nel manifest; senza, il bottone avrebbe aperto la galleria. Ora è dichiarato, per le foto e per i video.
+- **Android, video:** la fotocamera riceve i limiti di US (30 secondi, poco meno di 20 MB) e si ferma da sola, se l'app della fotocamera li rispetta. Con la qualità alta del telefono 20 MB possono bastare per soli 10 secondi circa.
+- **iPhone:** le frasi per fotocamera e microfono c'erano già. iOS non riceve limiti: con un video più lungo di 30 secondi o più grande di 20 MB compare il messaggio e il video non parte.
+### L'invito che si rinnova (27/11)
+
+**Stato:** ramo `claude/invito-rinnovo`, verso staging. Dal controllo generale del 27/11 («per il resto va bene tutto»). **Da applicare su staging:** le migrazioni `20261127092454_invito_14_giorni` e `20261127092908_invito_promemoria_cron`, e la funzione `invite-reminder-job`. Su staging i lavori a orario restano spenti di proposito: lì il promemoria si prova a mano.
+
+- **Il codice d'invito vale 14 giorni** invece di 48 ore: le coppie aspettano l'altra persona anche una o due settimane, e chi apriva un link vecchio trovava «Codice non valido».
+- **Se il codice è scaduto, US ne fa uno nuovo da solo** quando apri la schermata d'attesa, e te lo dice.
+- **«Avvisami quando entra»** nella schermata d'attesa: accende le notifiche (prima si chiedevano solo dopo essere in due). Così arriva l'avviso quando l'altra persona entra.
+- **Promemoria per chi aspetta:** il giorno dopo e tre giorni dopo, alle 18, «Il vostro spazio vi aspetta: manda il codice alla tua persona ♡». Solo a chi ha acceso le notifiche, una volta sola. Su Android serve l'APK nuovo per leggere la frase giusta: prima mostra quella generica.
+### La prima settimana guidata, solo per le coppie nuove (27/11)
+
+**Stato:** ramo `claude/prima-settimana`, verso staging. **Da applicare su staging:** la migrazione `20261127093508_prima_settimana`. Chiesto dal founder il 27/11: «solamente per gli account appena creati, quindi per i Beta tester no».
+
+- Per i primi sette giorni dopo che l'altra persona entra, i personaggi di «US vi ricorda» suggeriscono un piccolo passo al giorno:
+  1. la domanda di oggi
+  2. la prima foto
+  3. una partita
+  4. un post-it
+  5. il Ti penso
+  6. i compleanni nel calendario
+  7. «una settimana insieme in US!»
+- Ogni frase ha il suo tasto, che porta dritto al posto giusto.
+- **Solo le coppie nate dopo la migrazione:** chi usa già US (i beta tester) non lo vede mai.
+- Un passo già fatto si salta: se la foto c'è già, o il tuo compleanno è già nel calendario. Compleanni e anniversario vincono comunque la giornata. Come ogni frase, si può spegnere per sempre con «Non dirmelo più».
+### Build più leggera, cache sicura e test verdi (27/11)
+
+**Stato:** ramo `claude/controllo-build-ci`, verso staging.
+
+- **Telefoni sempre coi file nuovi:** la build del sito di produzione mette da sola nel numero di versione un'impronta dei file (`<rilascio>-<impronta>`). Prima, se un rilascio cambiava il codice senza `npm run build:id` fatto a mano, i telefoni con l'app installata tenevano i file vecchi dalla cache (dall'ultimo id `us-rilascio-20261114-109` sono cambiati 23 file JS/CSS). Se cambiano solo documenti o test l'impronta resta uguale e non compare il banner di aggiornamento. Chi usa l'app non vede altro.
+- **App più leggera:** le immagini originali dei disegni (`assets/source`, 34 MB) non finiscono più nell'APK né sul sito, e nemmeno i compagni ritirati, le icone di Impostazioni e Stories che non si vedono più e il catalogo delle stelle che non si carica più (restano nel repository, sono APPROVED). La parte web dell'APK passa da 40,6 MB a 5,1 MB; il sito da 39,5 a 4,1 MB.
+- **Widget Android:** tolti 94 disegni dei widget vecchi (Pastello, vetro, grana, wordmark e icona Ti penso copiati dai master), 1,8 MB, che nessun widget usa più. I widget già sul telefono non cambiano: resta tutto quello che usano, Giorni insieme compreso. Arriva con un AAB nuovo.
+- **Stories via davvero:** `stories.js` e `stories.css` (57 KB) si scaricavano e si tenevano offline senza fare niente; ora non ci sono più. L'archivio delle Stories in Impostazioni resta. La cache offline scende da 3.606.631 a 3.529.396 byte (margine sul limite da 11 a 88 KB).
+- **Solo per chi sviluppa:** `npm test` completo (anche database e browser) su ogni PR verso staging e `main`; i workflow non aspettano più rami che non esistono; il SQL di produzione dal workflow parte solo da `main`; i test rimasti indietro col redesign sono allineati all'app.
+
+**Test:** `tests/build-leggera.test.mjs`, `tests/widget-drawables-referenced.test.js`, `tests/ci-workflows.test.js`, `tests/cloudflare-pages-migration.test.js`, `tests/supabase-sql-workflow.test.js`.
+
+**Novità per Play:** nessuna voce a sé («Piccole correzioni»).
+
 ### Widget iPhone col redesign e blocca schermo (26/11)
 
-**Stato:** ramo `claude/widget-redesign-ios` (sopra quello Android). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.
+**Stato:** in staging (#314, sopra Android #313). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.
 
 **Cosa cambia:**
 - Su iPhone gli stessi nove widget di Android (prima c'erano solo Foto e Ti penso, nello stile vecchio), col foglio di giorno e il nero caldo di notte e i personaggi veri disegnati dall'estensione.
@@ -13,7 +138,7 @@
 
 ### Widget Android col redesign (26/11)
 
-**Stato:** ramo `claude/widget-redesign-android-ios-fb63c1`, verso staging. Tavola «US · Widget del redesign» (https://claude.ai/artifact/Hkj3ojVe3bwEHfg9XeJf6A) approvata: «Android ok», poi «tutte okay». Nessuna migrazione. Arriva solo con un AAB nuovo (codice nativo): il web da solo non basta.
+**Stato:** in staging (#313), provato sull'APK di staging 1795730573 (27/11: «va tutto quanto bene»). Tavola «US · Widget del redesign» (https://claude.ai/artifact/Hkj3ojVe3bwEHfg9XeJf6A) approvata: «Android ok», poi «tutte okay». Nessuna migrazione. Arriva solo con un AAB nuovo (codice nativo): il web da solo non basta.
 
 **Cosa cambia:**
 - I nove widget Android parlano come l'app: di giorno il foglio del Quaderno, di notte il nero caldo, col tema del telefono. Via le sfumature pastello, le illustrazioni e i cerchi con le emoji.

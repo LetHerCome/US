@@ -53,6 +53,23 @@ test('Cloudflare Pages bundle is a curated host-agnostic PWA', async () => {
   const serviceWorker = await readFile(path.join(OUTPUT, 'service-worker.js'), 'utf8');
   assert.match(serviceWorker, /self\.location\.origin/);
 
+  // Build più leggera (27/11/2026): masters and retired approved art stay out.
+  for (const unshipped of ['assets/source', 'assets/derived/pet', 'assets/derived/runtime/us-icon-settings-128-v1.png', 'assets/data/stars-bsc5-v1.json', 'stories.js']) {
+    assert.equal(await exists(unshipped), false, `must not publish ${unshipped}`);
+  }
+
+  // Cache sicura (27/11/2026): the bundle carries <release>-<hash>, the same
+  // in the four places, whatever id the source has.
+  const sourceWorker = await readFile(path.join(ROOT, 'service-worker.js'), 'utf8');
+  const base = /const BUILD_ID = "([^"]+)";/.exec(sourceWorker)[1];
+  const builtId = /const BUILD_ID = "([^"]+)";/.exec(serviceWorker)?.[1];
+  assert.match(builtId || '', new RegExp(`^${base}-[a-f0-9]{10}$`));
+  const builtIndex = await readFile(path.join(OUTPUT, 'index.html'), 'utf8');
+  assert.match(builtIndex, new RegExp(`<meta name="us-build" content="${builtId}"/>`));
+  assert.deepEqual([...new Set([...builtIndex.matchAll(/\?v=([^"'&\s>]+)/g)].map((m) => m[1]))], [builtId]);
+  assert.deepEqual(JSON.parse(await readFile(path.join(OUTPUT, 'version.json'), 'utf8')), { version: builtId });
+  assert.doesNotMatch(await readFile(path.join(OUTPUT, 'manifest.webmanifest'), 'utf8'), new RegExp(`\\?v=${base}"`));
+
   const headers = await readFile(path.join(OUTPUT, '_headers'), 'utf8');
   assert.match(headers, /\/service-worker\.js[\s\S]*no-cache, no-store/);
   assert.match(headers, /\/version\.json[\s\S]*no-cache, no-store/);

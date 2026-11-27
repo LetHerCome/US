@@ -56,10 +56,12 @@ test('the first time: the story, up to 8, never a delicate caption; an empty cou
 });
 
 test('every day: a year ago and milestones; on Monday the memory of the week and something kept', async () => {
-  await moment(h.F, '2026-04-22', { caption: 'Il primo' });
+  // Every memory has its own upload time: one uploaded «now» would be the memory of
+  // the week of 30/11 whenever the test runs between 23 and 29 November 2026.
+  await moment(h.F, '2026-04-22', { caption: 'Il primo', createdAt: '2026-04-22T12:00:00Z' });
   await plan('2026-11-20');
   const before = (await pins()).length;
-  const yearAgo = await moment(h.B, '2025-11-24', { caption: 'Padova', place: 'Padova' });
+  const yearAgo = await moment(h.B, '2025-11-24', { caption: 'Padova', place: 'Padova', createdAt: '2025-11-24T18:00:00Z' });
   await plan('2026-11-24');
   assert.ok((await pins()).some((p) => p.ref_key === `moment:${yearAgo}` && p.reason === 'un_anno_fa'));
   // The first anniversary (started_on 2026-04-21).

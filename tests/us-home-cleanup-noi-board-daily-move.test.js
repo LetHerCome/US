@@ -46,7 +46,7 @@ test('Noi: "La nostra settimana" replaces Lavagna and reads the existing calenda
 
 function dailyModel(state, reveal = null) {
   const start = app.indexOf('// ===== 1.0 — La domanda di oggi in Gioca');
-  const end = app.indexOf('function paintDailyInGioca', start);
+  const end = app.indexOf('// F2 — Gioca has no turn API', start);
   const source = app.slice(start, end);
   const window = {
     usProfile: { role: 'francesco' },
@@ -75,7 +75,7 @@ test('Daily Question: Gioca view model follows canonical state and never exposes
   assert.deepEqual({ state: reveal.state, cta: reveal.cta }, { state: 'reveal', cta: 'Scopri' });
 
   for (const model of [fresh, partnerFirst, waiting, reveal]) assert.doesNotMatch(JSON.stringify(model), new RegExp(secret));
-  assert.doesNotMatch(app.slice(app.indexOf('function dailyHubModel'), app.indexOf('function paintDailyInGioca')), /partner_answer/);
+  assert.doesNotMatch(app.slice(app.indexOf('function dailyHubModel'), app.indexOf('// F2 — Gioca has no turn API')), /partner_answer/);
 });
 
 // Redesign definitivo (D11): the Gioca card is gone; the Oggi card still opens the sheet where you are.
