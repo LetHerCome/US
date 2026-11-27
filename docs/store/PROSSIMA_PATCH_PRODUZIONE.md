@@ -23,6 +23,15 @@
 - **Widget:** l'app passa sempre ai widget forma e colori di ciascun personaggio secondo il ruolo, come li disegna l'app (chi ha creato la coppia il tondo rosa, chi è entrato il quadrato lilla); il nastro delle polaroid, senza colore, usa quello del ruolo di chi ha messo la foto.
 - **Guardaroba:** il ridisegno di ogni minuto non tocca più il vostro angolo aperto, e chi usa la tastiera non perde il punto in cui era.
 - **Pulizia:** tolto codice che cercava pezzi di pagina spariti da tempo (ricordo in home, barra del legame, contatori, vecchi badge e pulsanti) e le regole CSS morte del vecchio Ti penso in alto e del vecchio calendario a tutto schermo. Una lettura in meno al server per i Ti penso del mese (non serviva più).
+### Inglese completo (27/11)
+
+**Stato:** ramo `claude/inglese-mancanti` (sopra `claude/intro-crea-personaggio`), verso staging.
+
+- Con il telefono in inglese non restano più frasi in italiano nell'intro col personaggio (anche la nuova parte «crea»: forme, colori, «Gli accessori arrivano dopo…», «Eccomi!…»), nelle battute di US vi ricorda e nella loro scheda, nella bacheca tenuta da US, nei temi ed effetti di Oggi (nomi, descrizioni, cosa fa il dito), nei countdown, nel guardaroba e nell'angolo, nel widget Post-it e in Noi («Vi rivedete tra», «Oggi vi vedete», il giorno speciale). Circa 270 voci nuove nel dizionario inglese.
+- In inglese le date delle battute escono in inglese («December 2»), e il testo già pronto di Lasciato per te e il titolo «Compleanno di…» arrivano tradotti.
+- In italiano non cambia nulla: le frasi sono le stesse, solo scritte intere (con e senza nome, «un anno» e «N anni») perché il dizionario le trovi.
+- Un test nuovo (`tests/i18n-coverage.test.js`) fallisce se in quei file compare una frase italiana senza la sua voce inglese. Lo script `scripts/i18n-extract.mjs` ora gira anche su Windows e vede anche le frasi con una parte che cambia.
+- Il dizionario cresce di ~24 KB: il budget della precache (3,45 MB) si supera di ~21 KB finché non entra il ramo che toglie i file delle Stories.
 
 ### Intro: prima crei il tuo personaggio (27/11)
 

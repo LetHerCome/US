@@ -38,8 +38,9 @@ function steps({ force = false } = {}) {
   const name = nameOf(me(), ''), theirs = nameOf(other(), 'la tua persona');
   const maker = canMake() && (force || !made());
   return [
-    ...(maker ? [{ id: 'crea', maker: true, say: `Prima del giro, crea me${name ? `, ${name}` : ''}: sono il tuo personaggio. Scegli la mia forma e il mio colore. Ti seguo in tutta l’app, anche nei widget.`, cta: 'Eccomi', reaction: 'saluta' }] : []),
-    { id: 'ciao', say: maker ? 'Eccomi! Ora ti faccio fare un giro di US: ci vuole un minuto.' : `Ciao${name ? ` ${name}` : ''}! Sono il tuo personaggio. Ti faccio fare un giro di US: ci vuole un minuto.`, cta: 'Andiamo', reaction: maker ? 'festa' : 'saluta' },
+    // Whole sentences, with and without the name, so the English dictionary finds each one.
+    ...(maker ? [{ id: 'crea', maker: true, say: name ? `Prima del giro, crea me, ${name}: sono il tuo personaggio. Scegli la mia forma e il mio colore. Ti seguo in tutta l’app, anche nei widget.` : 'Prima del giro, crea me: sono il tuo personaggio. Scegli la mia forma e il mio colore. Ti seguo in tutta l’app, anche nei widget.', cta: 'Eccomi', reaction: 'saluta' }] : []),
+    { id: 'ciao', say: maker ? 'Eccomi! Ora ti faccio fare un giro di US: ci vuole un minuto.' : name ? `Ciao ${name}! Sono il tuo personaggio. Ti faccio fare un giro di US: ci vuole un minuto.` : 'Ciao! Sono il tuo personaggio. Ti faccio fare un giro di US: ci vuole un minuto.', cta: 'Andiamo', reaction: maker ? 'festa' : 'saluta' },
     { id: 'domanda', target: () => firstVisible('#usDailyRitual'), say: 'Ogni giorno qui c’è una domanda per voi due: rispondete, poi leggete cosa ha scritto l’altra persona.' },
     { id: 'tipenso', target: () => firstVisible('#thinkButton'), round: true, say: `Questo è il Ti penso: un tocco e ${theirs} riceve il tuo pensiero, anche da lontano.`, other: 'Io lo aspetto, eh.' },
     { id: 'noi', target: () => firstVisible('.us-nav [data-page="bond"]'), say: 'In Noi c’è il vostro tempo: il calendario, la lavagna e i post-it che vi lasciate.' },
