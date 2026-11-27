@@ -44,7 +44,7 @@ const definitions = [
  // Batteria del partner (31/10/2026): the last level this person reported.
  ['couple_batteries','user_id','user_id,couple_id,level,charging,updated_at',true],
  // Come stai (02/11/2026): the state this person chose and how its words are said.
- ['member_status','user_id','user_id,couple_id,status,form,set_at,expires_at,updated_at',true],
+ ['member_status','user_id','user_id,couple_id,status,form,set_at,expires_at,updated_at,reply_gesture,reply_at,reply_sent_at',true],
  // Lavagna V1 (03/11/2026): the strokes this person drew on the couple's board.
  ['lavagna_strokes','author_id','id,couple_id,author_id,tool,color,width,points,created_at',true],
 ];
