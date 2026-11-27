@@ -690,3 +690,10 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **iOS:** ogni tocco è un'App Intent; si conta nell'App Group sotto un lock condiviso, aspetta 1,5 s, e solo l'intent del tocco più recente manda (`claimBurst`); le altre tornano senza inviare.
 - **Chi riceve:** lo snapshot porta `think.lastReceivedTaps` (1..99) e il widget dice «<Nome> ti ha pensato N volte»; sul blocca schermo «×N».
 - **Avviso Android:** il pacchetto FCM del solo tipo plurale `think_many` porta un campo in più, `n` (cifre, 2..99); il telefono lo legge solo per quel tipo e dice «<Nome> ti ha pensato N volte ♡». Nessun altro campo nuovo, mai nomi, testi, id o destinazioni.
+
+## 2026-11-27 — Il sistema che vi ricorda si chiama «US»
+
+**Fonte:** founder, 27/11/2026: «il funzionamento di Cupido, a cui dobbiamo chiamare in un altro modo: penso si chiamerà il sistema proprio US, come l'app».
+
+- Verso la coppia, quello che nei documenti era «Cupido» si chiama US: le battute di US vi ricorda, la bacheca tenuta da US, gli avvisi. «Cupido» resta solo come nome storico nei documenti di progetto (docs/product/2026-11-13-cupido.md).
+- L'intro lo presenta con una tappa sua, dopo l'angolo, e chiude con una battuta su US Plus.

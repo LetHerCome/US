@@ -2,6 +2,16 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### L'intro racconta di più (27/11)
+
+**Stato:** ramo `claude/intro-nuove-tappe`, verso staging. Tappe approvate dal founder il 27/11 («Approvo, vai»).
+
+**Cosa cambia:**
+- **Tappe nuove:** distanza e batteria («così sai se un silenzio è solo un telefono scarico»), Come stai, e il Ti penso spiegato coi tocchi ripetuti («più tocchi, più cuori… e Bea legge quante volte l'hai pensata»).
+- **US, l'app che si ricorda:** si ricorda le vostre date e i ricordi di un anno fa, e tiene la bacheca, mai più di una volta al giorno.
+- **Finale con battuta su US Plus:** «più vestiti per me, più giochi, più cose vostre… è una sorpresa».
+- Una tappa che non ha niente da mostrare viene saltata, per esempio la distanza se non la condividete. Chi ha già fatto l'intro la rivede dal Profilo.
+
 ### I cuoricini volano nell'isola (27/11)
 
 **Stato:** ramo `claude/cuori-verso-isola`, verso staging, dopo «I cuori» (#317) e i widget (#318). Solo app (web): niente migrazioni, niente funzioni, nessun AAB o TestFlight necessario oltre al solito aggiornamento del web. Da provare sui telefoni (US LIVE su Android, TestFlight su iPhone) che il volo resti fluido.
