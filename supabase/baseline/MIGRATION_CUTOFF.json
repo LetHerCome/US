@@ -74,7 +74,8 @@
     "20261127122511_bacheca_postit_ricerca.sql",
     "20261127130000_premi_apostrofi.sql",
     "20261127141307_cuori_ti_penso.sql",
-    "20261127152323_widget_ti_penso_ripetuto.sql"
+    "20261127152323_widget_ti_penso_ripetuto.sql",
+    "20261127202326_il_vostro_mese.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
@@ -144,7 +145,8 @@
     "20261127122511_bacheca_postit_ricerca.sql",
     "20261127130000_premi_apostrofi.sql",
     "20261127141307_cuori_ti_penso.sql",
-    "20261127152323_widget_ti_penso_ripetuto.sql"
+    "20261127152323_widget_ti_penso_ripetuto.sql",
+    "20261127202326_il_vostro_mese.sql"
   ],
   "counts": {
     "repo_files": 47,
