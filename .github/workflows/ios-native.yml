@@ -270,7 +270,8 @@ jobs:
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$EXT/Info.plist")" = "app.uscouple.widgets"
           test "$(/usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionPointIdentifier' "$EXT/Info.plist")" = "com.apple.widgetkit-extension"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$EXT/Info.plist")" = "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist")"
-          for file in Fraunces.ttf Fraunces-Italic.ttf Figtree.ttf art_photo.webp art_photo_night.webp art_think_s.webp art_think_m_night.webp grain_tile.png; do test -f "$EXT/$file"; done
+          for file in Fraunces.ttf Fraunces-Italic.ttf Figtree.ttf; do test -f "$EXT/$file"; done
+          if ls "$EXT" | grep -Eiq '\.(png|jpe?g|webp|gif|heic)$'; then echo "::error::Immagini non usate nell'estensione dei widget"; exit 1; fi
 
       # Proof the app starts: the unsigned Debug build in a booted iPhone
       # simulator, a screenshot of what it shows (the sign-in screen: nothing

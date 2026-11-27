@@ -119,8 +119,8 @@ test('send-web-push: only a fresh stroke of the caller, on the caller\'s board; 
 test('Impostazioni › Notifiche: a Lavagna switch with its own line', () => {
   const settings = read('settings.js');
   assert.match(settings, /preferenceToggle\('lavagna','Lavagna',p\.lavagna!==false\)/);
-  assert.match(settings, /key==='lavagna'\?'Quando la tua persona disegna o ti lascia un post-it'/, 'Fase B.3: the same switch for the post-its');
-  assert.match(read('i18n-en.js'), /'Quando la tua persona disegna o ti lascia un post-it': 'When your person draws or leaves you a sticky note'/);
+  assert.match(settings, /key==='lavagna'\?'Quando la tua persona disegna, ti lascia un post-it o scrive sulla bacheca'/, 'Fase B.3 and the bacheca of 27/11: the same switch for the post-its');
+  assert.match(read('i18n-en.js'), /'Quando la tua persona disegna, ti lascia un post-it o scrive sulla bacheca': 'When your person draws, leaves you a sticky note or writes on the board'/);
 });
 
 // Noi, Fase B.3 (founder, 24/11/2026, D15): «Bea ti ha lasciato un post-it»,

@@ -184,6 +184,7 @@ const APP_SHELL = [
   "/assets/icons/phosphor/bell-regular.svg",
   "/assets/icons/phosphor/squares-four-regular.svg",
   "/assets/icons/phosphor/map-pin-regular.svg",
+  "/assets/icons/phosphor/magnifying-glass-regular.svg",
   "/assets/icons/phosphor/battery-low-regular.svg",
   "/assets/icons/phosphor/battery-medium-regular.svg",
   "/assets/icons/phosphor/battery-high-regular.svg",
@@ -282,7 +283,7 @@ self.addEventListener("activate", (event) => {
 
 // Native Notifications V1: a notification can only name an allow-listed US
 // surface. Its URL is always rebuilt here, same-origin; a payload URL is never opened.
-const US_PUSH_TARGETS = ["home", "today", "think", "left_for_you", "quiz", "bond", "calendar", "events", "lavagna"];
+const US_PUSH_TARGETS = ["home", "today", "think", "left_for_you", "quiz", "bond", "calendar", "events", "lavagna", "bacheca"];
 const usPushTarget = (value) => (US_PUSH_TARGETS.includes(value) ? value : "home");
 const usPushUrl = (target) => `/?open=${encodeURIComponent(usPushTarget(target))}&from=push`;
 

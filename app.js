@@ -105,19 +105,6 @@ function resetQuiz(){window.USGameV2?.showHub();}
 window.openQuizHub=openQuizHub;
 window.resetQuiz=resetQuiz;
 
-function updateTogetherDays(startedOn){
-  const el=document.getElementById('daysTogether');
-  if(!el)return;
-  if(!startedOn){el.textContent='—';return;}
-  const [year,month,day]=String(startedOn).split('-').map(Number);
-  if(!year||!month||!day){el.textContent='—';return;}
-  const start=Date.UTC(year,month-1,day);
-  const now=new Date();
-  const today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
-  const diff=Math.max(0,Math.floor((today-start)/86400000));
-  el.textContent=diff.toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
-}
-
 
 const SB_URL = 'https://iiakdfsxpywdkxravqjh.supabase.co';
 const SB_KEY = 'sb_publishable_JAB6USqhccAUg8_0ujgQ1A_NkRJRv_A';
@@ -175,7 +162,6 @@ function clearUsCoupleContext(){
   usCoupleContextState.couple=null;
   usCoupleContextState.profiles=[];
   usCoupleContextState.identityKey='';
-  updateTogetherDays(null);
   window.usBondProfiles=[];
   for(const id of ['pairAvatarFrancesco','pairAvatarBeatrice']){
     const root=document.getElementById(id),image=root?.querySelector('img');
@@ -223,7 +209,6 @@ async function hydrateUsCoupleContext(){
   // Colori a scelta (US Plus, 29/10/2026): each person in their colour, on both phones.
   window.UsPersonColors?.applyCoupleColors?.(usCoupleContextState.profiles);
   usCoupleContextState.identityKey=identityKey;
-  updateTogetherDays(usCoupleContextState.couple?.started_on);
   refreshUsIdentityLabels();
   return {
     couple:usCoupleContextState.couple?{...usCoupleContextState.couple}:null,
@@ -822,7 +807,7 @@ window.disableWebPush=disableWebPush;
 // Native Notifications V1: one allow-listed target per notification (Web Push
 // and native alike), never a URL. `ref` (a UUID, native only) narrows the
 // surface; every surface re-reads its data through the normal RLS/RPC paths.
-const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar','events','lavagna']);
+const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar','events','lavagna','bacheca']);
 async function performPushNavigation(target,intent={}){
   if(!US_PUSH_TARGETS.includes(target))return;
   if(!window.usProfile){usPendingPushTarget=target;return;}
@@ -861,6 +846,13 @@ async function performPushNavigation(target,intent={}){
   if(target==='lavagna'){
     if(document.querySelector('.page.active')?.id!=='bond')go('bond',{motionCommit:true});
     setTimeout(()=>window.UsLavagna?.open?.(),120);
+    return;
+  }
+  // La bacheca, fase 2 (27/11/2026): a post-it of the partner on the board of
+  // Ricordi; the board opens centred on its thing (ref, the post-it, on iOS; the newest one elsewhere).
+  if(target==='bacheca'){
+    if(document.querySelector('.page.active')?.id!=='moments')go('moments',{motionCommit:true});
+    setTimeout(()=>window.UsBacheca?.openOn?.({noteId:ref||''}),120);
     return;
   }
   // Mesiversario and anniversary pushes: Eventi on Noi.

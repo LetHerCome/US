@@ -23,6 +23,8 @@ async function seedTenant(db,cid,u,v,n){
     insert into public.us_bacheca_pins(couple_id,source,source_id,ref_key,reason,vars,item_date,pinned_by) values('${cid}','moment','${id(5)}','moment:${id(5)}','primo','{"place":"Private ${n}"}','2026-01-01','${u}');
     insert into public.us_bacheca_bans(couple_id,ref_key,banned_by) values('${cid}','moment:private-${n}','${v}');
     insert into public.us_bacheca_planned(couple_id,day,first_fill) values('${cid}','2026-01-01',true);
+    insert into public.us_bacheca_notes(couple_id,ref_key,author_id,body) values('${cid}','moment:${id(5)}','${u}','Private post-it ${n}');
+    insert into public.us_bacheca_why(couple_id,ref_key,reason) values('${cid}','moment:private-${n}','primo');
     insert into public.daily_answers(question_id,user_id,couple_id,answer) values('${qid}','${u}','${cid}','PRIVATE-${n}-one'),('${qid}','${v}','${cid}','PRIVATE-${n}-two');
     insert into public.daily_question_keepsakes(couple_id,question_id,question_text,question_date,francesco_answer,beatrice_answer,revealed_at,kept_by_role)
       values('${cid}','${qid}','Private kept ${n}','2026-01-01','Private one','Private two',now(),'francesco');

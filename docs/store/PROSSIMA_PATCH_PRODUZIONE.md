@@ -2,6 +2,45 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Sicurezza: le funzioni vanno in produzione solo da main (27/11)
+
+**Stato:** ramo `claude/sicurezza-deploy`, verso staging. Dal controllo generale.
+
+**Cosa cambia:**
+- Il bottone che pubblica le funzioni del server in produzione accetta solo il codice di `main`, avviato da `main`, come già quello delle migrazioni. Un ramo non ancora unito può arrivare solo su staging. Per chi usa l'app non cambia niente.
+### Piccolezze prima del rilascio (27/11)
+
+**Stato:** ramo `claude/piccolezze-pre-rilascio`, verso staging; migrazione `20261127130000_premi_apostrofi` da applicare su staging.
+
+- I widget dell'iPhone non portano più dentro le vecchie illustrazioni e la grana che non usano: l'app è un po' più leggera, i widget restano uguali.
+- I testi dei premi aggiunti il 26/11 hanno l'apostrofo tipografico come tutti gli altri: «Ora d’oro», «Oggi cambia con l’anno…», «Foglie d’acero e d’autunno…», «…dell’altra persona».
+- Su un telefono lento la prima apertura dell'isola su Oggi non si perde più: aspetta che coppia e livello arrivino, anche dopo molti secondi. Mai durante l'intro, mai due volte.
+- Tolto un pezzo di codice morto che cercava un contatore dei giorni che non esiste più. Nessun cambio visibile.
+### Lasciato per te: video di 30 secondi pieni (27/11)
+
+**Stato:** ramo `claude/lasciato-video-30s`, verso staging. Trovato dal founder: con la fotocamera del telefono ad alta qualità i 20 MB finivano dopo ~10 secondi e il video si fermava prima. Nessuna migrazione: stessi limiti (30 secondi, 20 MB, MP4) e stesso caricamento di un video dalla galleria. Serve un AAB nuovo (cambia anche `UsWebChromeClient.java`) e una build TestFlight nuova per averlo sull'iPhone.
+
+- **«Fai un video» registra dentro US**, con la stessa schermata della foto: fotocamera dietro, pulsante per girarla, audio acceso. In alto il tempo che corre fino a 0:30; a 30 secondi il video si ferma da solo. Poi lo rivedi e scegli «Rifai» o «Usa video».
+- **La qualità la decide US:** circa 720p, 3 Mbit/s di video più 128 kbit/s di audio. 30 secondi pesano circa 11 MB, ben sotto i 20 MB. Se un telefono registrasse più pesante del previsto, US ferma il video a 18,5 MB e lo tiene buono (dice a che secondo si è fermato).
+- **Il file è un MP4 (H.264 + AAC)** e passa dagli stessi controlli di un video della galleria (durata, peso, tipo), con gli stessi messaggi.
+- **Dove il telefono non sa registrare MP4 dentro un'app** (WebView vecchi, iPhone prima di iOS 14.3) resta la fotocamera del telefono come prima. Anche se US non trova la fotocamera, apre quella del telefono.
+- **Permessi:** se fotocamera o microfono sono negati, US dice dove riattivarli e, nelle app, mostra «Apri le impostazioni» (la pagina di US nelle Impostazioni del telefono). Se le Impostazioni non si aprono, il pulsante sparisce e resta la frase.
+- **Android, «Scatta una foto» e la vecchia «Fai un video»:** con la fotocamera negata (anche per sempre) prima non succedeva niente; ora compare lo stesso messaggio con «Apri le impostazioni».
+- Da provare su telefono vero: un video di 30 secondi su Android e su iPhone (peso finale, audio, che si veda sull'altro telefono), il permesso negato per sempre su Android.
+### La bacheca: i vostri post-it e la ricerca in Ricordi (27/11)
+
+**Stato:** ramo `claude/bacheca-fasi-2-3`, verso staging; migrazioni da applicare su staging: `20261127122511_bacheca_postit_ricerca.sql` (dopo `20261125230000_us_bacheca_v1.sql` e `20261127120000_us_battute_mute_bacheca.sql`); funzioni da deployare: `send-web-push` (nuovo avviso `bacheca_postit`). Android: serve un AAB nuovo perché il telefono scriva la frase dell'avviso (le app vecchie mostrano la frase generica). Fonte: grill del 27/11 (D1–D16) e tavola approvata.
+
+- **I vostri post-it sulla bacheca:** su ogni cosa appesa (una foto, una lettera tenuta, una risposta tenuta, un traguardo) ognuno di voi può attaccare un suo post-it, al massimo 80 caratteri, nel suo colore, accanto a quello giallo di US. Uno a testa per cosa: ognuno cambia o toglie solo il suo, l'altra persona scrive il suo. Non occupano posto tra i 12.
+- **Scrivere un post-it fa la cosa «vostra»:** US non la stacca più da sola.
+- **I post-it restano con il ricordo:** se staccate la cosa dalla bacheca i post-it restano e tornano quando la riappendete. Se cancellate il ricordo, se ne vanno con lui.
+- **«Sulla bacheca» nel ricordo:** aprendo un ricordo, sotto la foto, ci sono il post-it di US e i vostri, anche quando non è appeso, con «Scrivi il tuo» e «Riappendi in bacheca» (oppure «Vedilo in bacheca» se è appeso).
+- **L'avviso:** «Francesco ha scritto su un ricordo in bacheca», mai il testo del post-it, al massimo uno ogni 2 ore, sotto l'interruttore «Lavagna» (che ora dice «Quando la tua persona disegna, ti lascia un post-it o scrive sulla bacheca»). Su web e iPhone apre la bacheca centrata su quella cosa; su Android apre Ricordi.
+- **La lente in Ricordi:** un tasto con la lente accanto a Raccolta · Bacheca · Mappa. Cerca nelle didascalie, nei posti, nei post-it (di US e vostri), nel mese e nell'anno, nel nome di chi l'ha messo, nelle lettere e nelle risposte che avete tenuto. Mai in quello che non avete tenuto. Filtri: Tutti / Le mie / Di Bea, anno, posto. A campo vuoto: «Un anno fa», i vostri anni, i 3 posti con più ricordi, «Le mie», «Di Bea». I risultati arrivano per mese: foto come polaroid, lettere come buste, risposte come foglietti; quelli già in bacheca hanno la puntina.
+- **Appendi in bacheca** da un risultato (foto, lettere e risposte tenute): «Appesa in bacheca ♡ · 9 di 12». Se è già appesa: «Vedilo in bacheca».
+- **Bacheca piena (12, gratis):** la bacheca chiede cosa staccare. Le cose fissate non si possono scegliere; tocchi una delle altre e «Stacca e appendi» le scambia in un colpo solo. Con US Plus il limite resta 500.
+- Ricerca e post-it sono gratis per tutti. La ricerca gira sul server, solo sui vostri ricordi, al massimo 60 risultati, e quello che scrivete non viene salvato.
+
 ### Widget dell'iPhone aggiornati anche ad app chiusa (27/11)
 
 **Stato:** ramo `claude/controllo-integrazione`, verso staging. Chiesto dal founder il 27/11 («fai fix per ios»). Arriva con una build TestFlight nuova. Servono anche le funzioni `send-web-push`, `leave-couple` e `delete-account` aggiornate su staging.

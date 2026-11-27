@@ -21,15 +21,39 @@
 // caller's and fresh, the same switch, and the same 2-hour window as the
 // drawing (one 'lavagna' line for the board), so a drawing and a post-it in
 // the same hour notify once.
+//
+// La bacheca, fase 2 (founder, 27/11/2026): «Bea ha scritto su un ricordo in
+// bacheca» (dispatchBachecaPostitPush), under the same «Lavagna» switch and the
+// same rule, with its own 2-hour window ('bacheca_postit' lines): never the
+// text of the post-it, and it opens the board on that thing.
 
 import { buildNotification, deliverNotification, recipientLocale } from './notification-core.mjs';
 
 export const LAVAGNA_EVENT_TYPE = 'lavagna';
 export const LAVAGNA_PUSH_GAP_MS = 2 * 60 * 60 * 1000;
 export const LAVAGNA_STROKE_MAX_AGE_MS = 30 * 60 * 1000;
+export const BACHECA_POSTIT_EVENT_TYPE = 'bacheca_postit';
 
-export function lavagnaDedupeKey(recipientId, now = Date.now()) {
-  return `lavagna:${recipientId}:${Math.floor(now / LAVAGNA_PUSH_GAP_MS)}`;
+export function lavagnaDedupeKey(recipientId, now = Date.now(), eventType = LAVAGNA_EVENT_TYPE) {
+  const prefix = eventType === BACHECA_POSTIT_EVENT_TYPE ? 'bacheca-postit' : 'lavagna';
+  return `${prefix}:${recipientId}:${Math.floor(now / LAVAGNA_PUSH_GAP_MS)}`;
+}
+
+/**
+ * La bacheca, fase 2: options.noteId = the post-it the caller just wrote on a
+ * thing of the board (us_bacheca_notes); the rest as dispatchLavagnaPush below.
+ */
+export async function dispatchBachecaPostitPush(admin, options) {
+  const { noteId, sender, partnerId, web = null, native = null, now = Date.now() } = options || {};
+  const { data: note, error: noteError } = await admin.from('us_bacheca_notes')
+    .select('id,couple_id,author_id,created_at')
+    .eq('id', noteId)
+    .maybeSingle();
+  if (noteError) throw noteError;
+  if (!note || !sender?.id || note.author_id !== sender.id || note.couple_id !== sender.couple_id || !partnerId || partnerId === sender.id) {
+    return { forbidden: true };
+  }
+  return boardPush(admin, { kind: 'bacheca_postit', args: { noteId: note.id }, coupleId: note.couple_id, madeAt: note.created_at, sender, partnerId, web, native, now, eventType: BACHECA_POSTIT_EVENT_TYPE });
 }
 
 /**
@@ -73,7 +97,7 @@ export async function dispatchLavagnaPush(admin, options) {
 }
 
 // The rule both share: fresh, the partner's switch, one line every 2 hours.
-async function boardPush(admin, { kind, args, coupleId, madeAt, sender, partnerId, web, native, now }) {
+async function boardPush(admin, { kind, args, coupleId, madeAt, sender, partnerId, web, native, now, eventType = LAVAGNA_EVENT_TYPE }) {
   const madeMs = Date.parse(madeAt || '');
   if (!Number.isFinite(madeMs) || now - madeMs > LAVAGNA_STROKE_MAX_AGE_MS) return { delivered: 0, failed: 0, reason: 'stale' };
 
@@ -85,7 +109,7 @@ async function boardPush(admin, { kind, args, coupleId, madeAt, sender, partnerI
 
   const since = new Date(now - LAVAGNA_PUSH_GAP_MS).toISOString();
   const { data: recent, error: recentError } = await admin.from('push_event_log').select('dedupe_key')
-    .eq('event_type', LAVAGNA_EVENT_TYPE).eq('couple_id', coupleId).eq('sender_id', sender.id)
+    .eq('event_type', eventType).eq('couple_id', coupleId).eq('sender_id', sender.id)
     .gte('created_at', since)
     .limit(1);
   if (recentError) throw recentError;
@@ -96,8 +120,8 @@ async function boardPush(admin, { kind, args, coupleId, madeAt, sender, partnerI
     recipientIds: [partnerId],
     coupleId,
     senderId: sender.id,
-    dedupeKey: lavagnaDedupeKey(partnerId, now),
-    eventType: LAVAGNA_EVENT_TYPE,
+    dedupeKey: lavagnaDedupeKey(partnerId, now, eventType),
+    eventType,
     web,
     native,
   });

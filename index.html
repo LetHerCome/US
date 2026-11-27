@@ -742,7 +742,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
           <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
         </div>
       </div>
-      <div class="ricordi-section-head ricordi-story-head"><h3 id="ricordiStoryTitle" class="noi-sr">Mese per mese</h3><div class="ricordi-views" role="tablist" aria-label="Come vedere i Ricordi"><button type="button" role="tab" data-ricordi-view="story" aria-selected="true">Raccolta</button><button type="button" role="tab" data-ricordi-view="board" aria-selected="false">Bacheca</button><button type="button" role="tab" data-ricordi-view="map" aria-selected="false">Mappa</button></div></div>
+      <div class="ricordi-section-head ricordi-story-head"><h3 id="ricordiStoryTitle" class="noi-sr">Mese per mese</h3><div class="ricordi-views" role="tablist" aria-label="Come vedere i Ricordi"><button type="button" role="tab" data-ricordi-view="story" aria-selected="true">Raccolta</button><button type="button" role="tab" data-ricordi-view="board" aria-selected="false">Bacheca</button><button type="button" role="tab" data-ricordi-view="map" aria-selected="false">Mappa</button></div><button type="button" class="ricordi-lens" data-ricordi-cerca aria-label="Cerca nei ricordi" aria-haspopup="dialog"><span class="us-icon" data-us-icon="magnifying-glass" aria-hidden="true"></span></button></div>
       <div class="ricordi-map" id="ricordiMap" aria-label="Mappa dei Ricordi" hidden></div>
       <div class="ricordi-bacheca" id="ricordiBacheca" aria-label="La vostra bacheca, tenuta da US" hidden></div>
       <div id="momentsGrid" class="moment-grid ricordi-story" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div></div>
@@ -1332,7 +1332,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
         </details>
       </div>
       <div class="left-for-you-actions left-for-you-composer-actions"><button type="button" id="leftForYouComposerSend" disabled>Lascia per la tua persona</button></div>
-      <div class="left-for-you-status" id="leftForYouComposerStatus" role="status" aria-live="polite"></div>
+      <div class="left-for-you-status" id="leftForYouComposerStatus" role="status" aria-live="polite"></div><button type="button" class="ghost left-for-you-composer-settings" id="leftForYouComposerSettings" hidden>Apri le impostazioni</button>
       <button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
         <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span></span>
         <span class="us-conservati-entry-copy"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
@@ -1346,9 +1346,9 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
 <div class="left-for-you-overlay left-for-you-camera-overlay" id="leftForYouCameraOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouCameraBackdrop"></div>
   <section class="left-for-you-sheet left-for-you-camera-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouCameraTitle" data-us-modal-panel>
-    <header class="left-for-you-head"><div><div class="tiny">FOTO PRIVATA</div><h2 id="leftForYouCameraTitle">Scatta una foto</h2></div><button type="button" class="left-for-you-close us-modal-close" id="leftForYouCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+    <header class="left-for-you-head"><div><div class="tiny" id="leftForYouCameraKicker">FOTO PRIVATA</div><h2 id="leftForYouCameraTitle">Scatta una foto</h2></div><button type="button" class="left-for-you-close us-modal-close" id="leftForYouCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
     <div class="left-for-you-body left-for-you-camera-body">
-      <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden><span class="left-for-you-camera-flash" id="leftForYouCameraFlash" aria-hidden="true"></span></div>
+      <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden><video id="leftForYouCameraRecorded" class="left-for-you-camera-recorded" controls playsinline preload="metadata" aria-label="Anteprima del video" hidden></video><span class="left-for-you-camera-flash" id="leftForYouCameraFlash" aria-hidden="true"></span><span class="left-for-you-camera-timer" id="leftForYouCameraTimer" role="timer" aria-label="Durata del video, massimo 30 secondi" data-recording="false" hidden>0:00 / 0:30</span></div>
       <div class="left-for-you-camera-status" id="leftForYouCameraStatus" role="status" aria-live="polite"></div>
       <div class="left-for-you-camera-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraSwitch">Cambia fotocamera</button><button type="button" class="left-for-you-camera-shutter" id="leftForYouCameraCapture" aria-label="Scatta foto"><span aria-hidden="true"></span></button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraUse" hidden>Usa foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraRetake" hidden>Rifai</button></div>
     </div>
@@ -1434,6 +1434,19 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
   </section>
 </div>
 
+<!-- La lente di Ricordi (founder, 27/11/2026): the search, month by month, and a result with «Sulla bacheca» (ricordi-cerca.js).
+     Before the board's sheet, which opens over it. -->
+<div class="us-cal-sheet-overlay us-foglio us-ricordi-cerca" id="usRicordiCerca" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-cal-sheet-backdrop us-modal-backdrop" data-rc-close></div>
+  <section class="us-cal-sheet us-sheet is-bottom rc-sheet" role="dialog" aria-modal="true" aria-label="Cerca nei ricordi" data-us-modal-panel>
+    <div class="rc-bar">
+      <label class="rc-field"><span class="us-icon" data-us-icon="magnifying-glass" aria-hidden="true"></span><input id="usRicordiCercaInput" type="search" enterkeyhint="search" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Cerca un posto, una parola, un mese" aria-label="Cerca nei ricordi"></label>
+      <button type="button" class="rc-close" data-rc-close>Chiudi</button>
+    </div>
+    <div class="rc-body" id="usRicordiCercaBody"></div>
+  </section>
+</div>
+
 <!-- La vostra bacheca (founder, 25/11/2026): what to do with a thing on the board (bacheca.js). -->
 <div class="us-cal-sheet-overlay us-bacheca-sheet" id="usBachecaSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="us-cal-sheet-backdrop us-modal-backdrop" data-ub-act="close"></div>
@@ -1446,6 +1459,8 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
       <button type="button" data-ub-act="unpin">Stacca: torna al suo posto</button>
       <button type="button" class="is-never" data-ub-act="ban">Non appenderla più</button>
     </div>
+    <!-- Fase 2 (27/11/2026): the post-its of the thing, and yours. -->
+    <div class="ub-notes-sec" id="usBachecaNotes"></div>
   </section>
 </div>
 

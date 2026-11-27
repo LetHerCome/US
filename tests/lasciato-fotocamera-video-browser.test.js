@@ -23,6 +23,9 @@ test('«Fai un video» and «Scegli un video» stack like the photo choices and 
     assert.ok(Math.max(record.right, gallery.right) <= 360 - 15, 'inside the 16 px gutter');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'no sideways scroll');
 
+    // A WebView that cannot record MP4 (27/11: elsewhere US records inside the app,
+    // tests/lasciato-video-30s-browser.test.js): «Fai un video» is the phone camera.
+    await page.evaluate(() => { window.MediaRecorder.isTypeSupported = () => false; });
     const chooser = async (id) => {
       const [fileChooser] = await Promise.all([page.waitForEvent('filechooser'), page.click(`#${id}`)]);
       return fileChooser.element().evaluate((input) => ({ id: input.id, accept: input.getAttribute('accept'), capture: input.getAttribute('capture') }));

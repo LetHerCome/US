@@ -16,6 +16,19 @@
   const VIDEO_MAX_BYTES = 20 * 1024 * 1024;
   const VIDEO_MAX_SECONDS = 30;
   const VIDEO_TYPES = new Set(['video/mp4', 'video/webm', 'video/quicktime']);
+  // «Fai un video» inside US (27/11): the phone camera at full quality filled
+  // 20 MB in ~10 s. Here the quality is ours: ~720p H.264 at 3 Mbit/s plus AAC
+  // at 128 kbit/s = 3.128 Mbit/s, about 11.7 MB (11.2 MiB) for 30 s, so the
+  // encoder may overshoot by ~75% before reaching 20 MB. If it does anyway,
+  // the recording stops itself at 18.5 MB and the take stays usable.
+  const VIDEO_RECORD_VIDEO_BPS = 3000000;
+  const VIDEO_RECORD_AUDIO_BPS = 128000;
+  const VIDEO_RECORD_GUARD_BYTES = Math.floor(18.5 * 1024 * 1024);
+  const VIDEO_RECORD_SLICE_MS = 1000;
+  // MP4 only (H.264 + AAC), so the file is the same as a gallery MP4 for the
+  // checks, the bucket and the other phone. No MP4 recorder: the phone camera.
+  const VIDEO_RECORD_TYPES = ['video/mp4;codecs=avc1.42E01F,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4;codecs=avc1.4D401F,mp4a.40.2'];
+  const CAMERA_DENIED_EVENT = 'uscamerapermissiondenied';
   const RECEIVER_AUDIO_STEPS = 5;
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   let activeAudioPlayer = null;
@@ -61,6 +74,17 @@
     cameraCapture: null,
     cameraOpen: false,
     cameraRequestId: 0,
+    cameraMode: 'photo',
+    videoRecorder: null,
+    videoChunks: [],
+    videoBytes: 0,
+    videoStartedAt: 0,
+    videoTicker: null,
+    videoMaxTimer: null,
+    videoStopReason: '',
+    videoEndedAt: 0,
+    videoCapture: null,
+    videoTake: null,
     photoPreview: null,
   };
   // Captions are optional and only for a photo or a vocale (the server keeps
@@ -710,9 +734,12 @@
 
   // ---- M5F sender composer ----
 
-  function setComposerStatus(message, kind = '') {
+  function setComposerStatus(message, kind = '', settings = false) {
     const status = document.getElementById('leftForYouComposerStatus');
     if (status) { status.textContent = message || ''; status.dataset.kind = kind; }
+    // «Apri le impostazioni» only next to a refused permission, and only where it can open them.
+    const open = document.getElementById('leftForYouComposerSettings');
+    if (open) open.hidden = !(settings && canOpenAppSettings());
   }
 
   // "per Bea" / "per la tua persona".
@@ -884,6 +911,7 @@
 
   function selectedComposerFile(kind = composer.kind) {
     if (kind === 'photo' && composer.cameraCapture?.selected && composer.cameraCapture.file) return composer.cameraCapture.file;
+    if (kind === 'video' && composer.videoTake?.file) return composer.videoTake.file;
     const id = { photo: 'leftForYouComposerPhotoFile', video: 'leftForYouComposerVideoFile' }[kind];
     return id ? document.getElementById(id)?.files?.[0] || null : null;
   }
@@ -947,8 +975,32 @@
   }
 
   function permissionDeniedText(device) {
+    if (device === 'video') return `Per i video servono la fotocamera e il microfono. Attivali ${permissionPlace()}.`;
     const what = device === 'camera' ? 'la fotocamera' : 'il microfono';
     return `Manca il permesso per ${what}. Attivalo ${permissionPlace()}.`;
+  }
+
+  // US's page in the phone's Settings (the widget bridge's helper: app details
+  // on Android, Settings › US on iOS). Without it the sentence says the way.
+  function canOpenAppSettings() {
+    const platform = window.UsPlatform;
+    return Boolean(platform?.isNative && typeof platform.openWidgetSettings === 'function' && platform.hasWidgetBridge?.() !== false);
+  }
+
+  function showPermissionProblem(device) {
+    setComposerStatus(permissionDeniedText(device), 'error', true);
+    // The line sits under «Lascia per…»: bring it on screen, it answers the tap just made.
+    const shown = document.getElementById('leftForYouComposerSettings');
+    const target = shown && !shown.hidden ? shown : document.getElementById('leftForYouComposerStatus');
+    try { target?.scrollIntoView?.({ block: 'nearest' }); } catch (_) { /* older engines */ }
+  }
+
+  async function openAppSettings() {
+    const open = document.getElementById('leftForYouComposerSettings');
+    let opened = false;
+    try { opened = canOpenAppSettings() && await window.UsPlatform.openWidgetSettings() === true; } catch (_) { opened = false; }
+    // Never a dead button: if Settings did not open, the sentence alone stays.
+    if (!opened && open) open.hidden = true;
   }
 
   // Reads only the video's metadata. Unknown (a format the browser cannot
@@ -1164,14 +1216,45 @@
     const use = document.getElementById('leftForYouCameraUse');
     const retake = document.getElementById('leftForYouCameraRetake');
     const switcher = document.getElementById('leftForYouCameraSwitch');
-    const hasCapture = Boolean(composer.cameraCapture);
-    if (overlay) { overlay.classList.toggle('open', composer.cameraOpen); overlay.setAttribute('aria-hidden', composer.cameraOpen ? 'false' : 'true'); }
+    const video = composer.cameraMode === 'video';
+    const take = video ? composer.videoCapture : composer.cameraCapture;
+    const hasCapture = Boolean(take);
+    const recording = Boolean(composer.videoRecorder);
+    if (overlay) {
+      overlay.classList.toggle('open', composer.cameraOpen);
+      overlay.setAttribute('aria-hidden', composer.cameraOpen ? 'false' : 'true');
+      overlay.setAttribute('data-mode', video ? 'video' : 'photo');
+    }
+    // One viewfinder, two uses: the words say which.
+    const kicker = document.getElementById('leftForYouCameraKicker');
+    if (kicker) kicker.textContent = video ? 'VIDEO PRIVATO' : 'FOTO PRIVATA';
+    const title = document.getElementById('leftForYouCameraTitle');
+    if (title) title.textContent = video ? 'Fai un video' : 'Scatta una foto';
     if (preview) preview.hidden = hasCapture;
-    if (captured) { captured.hidden = !hasCapture; if (hasCapture && composer.cameraCapture.url) captured.src = composer.cameraCapture.url; }
-    if (capture) capture.hidden = hasCapture;
-    if (use) use.hidden = !hasCapture;
+    if (captured) { captured.hidden = video || !hasCapture; if (!video && hasCapture && take.url) captured.src = take.url; }
+    const recorded = document.getElementById('leftForYouCameraRecorded');
+    if (recorded) {
+      recorded.hidden = !video || !hasCapture;
+      if (video && hasCapture && take.url) { if (recorded.getAttribute?.('src') !== take.url) recorded.src = take.url; } else if (recorded.getAttribute?.('src')) { recorded.pause?.(); recorded.removeAttribute('src'); }
+    }
+    if (capture) {
+      capture.hidden = hasCapture;
+      capture.classList?.toggle('is-video', video);
+      capture.classList?.toggle('is-recording', recording);
+      capture.setAttribute('aria-label', video ? (recording ? 'Ferma il video' : 'Inizia il video') : 'Scatta foto');
+      capture.setAttribute('aria-pressed', video && recording ? 'true' : 'false');
+    }
+    if (use) { use.hidden = !hasCapture; use.textContent = video ? 'Usa video' : 'Usa foto'; }
     if (retake) retake.hidden = !hasCapture;
-    if (switcher) switcher.hidden = hasCapture || switcher.disabled;
+    // A recording keeps its camera: switching would end the stream it records.
+    if (switcher) switcher.hidden = hasCapture || recording || switcher.disabled;
+    updateVideoTimer();
+  }
+
+  function cameraConstraints(facing) {
+    if (composer.cameraMode !== 'video') return { video: { facingMode: facing }, audio: false };
+    // ~720p at 30 fps: enough for a phone screen, and what the bitrate above is for.
+    return { video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: true };
   }
 
   async function requestCameraStream(facing = composer.cameraFacing) {
@@ -1180,7 +1263,7 @@
     const requestId = ++composer.cameraRequestId;
     releaseCameraStream();
     try {
-      const stream = await mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: false });
+      const stream = await mediaDevices.getUserMedia(cameraConstraints(facing));
       if (!composer.cameraOpen || requestId !== composer.cameraRequestId) { releaseCameraStream(stream); return null; }
       composer.cameraStream = stream;
       composer.cameraFacing = facing;
@@ -1212,35 +1295,74 @@
     // In the apps «Scatta una foto» is the phone camera; the browser keeps the viewfinder below.
     if (window.UsPlatform?.isNative) { pickFile(document.getElementById('leftForYouComposerPhotoFile'), 'image/*'); return; }
     if (composer.cameraOpen) return;
+    composer.cameraMode = 'photo';
+    await openViewfinder('camera');
+  }
+
+  // Opens the in-app viewfinder for a photo or a video; a refusal says where
+  // to turn the permission back on. Resolves false when it did not open.
+  async function openViewfinder(device) {
     composer.cameraOpen = true;
     discardCameraCapture();
     composer.cameraFacing = 'environment';
+    setCameraStatus('');
     updateCameraUi();
     try {
       const devices = await window.navigator?.mediaDevices?.enumerateDevices?.();
       const switcher = document.getElementById('leftForYouCameraSwitch');
-      if (switcher) switcher.hidden = (devices || []).filter((device) => device.kind === 'videoinput').length < 2;
+      if (switcher) switcher.hidden = (devices || []).filter((item) => item.kind === 'videoinput').length < 2;
       await requestCameraStream('environment');
+      return true;
     } catch (error) {
       composer.cameraOpen = false;
       releaseCameraStream();
       updateCameraUi();
-      setComposerStatus(isPermissionDenied(error) ? permissionDeniedText('camera') : 'Non riesco ad aprire la fotocamera su questo dispositivo.', 'error');
+      if (isPermissionDenied(error)) showPermissionProblem(device);
+      else setComposerStatus('Non riesco ad aprire la fotocamera su questo dispositivo.', 'error');
+      return isPermissionDenied(error) ? null : false;
     }
   }
 
+  // «Fai un video» (27/11): recorded inside US where the WebView can make an
+  // MP4 with a camera and a microphone; elsewhere the phone's own camera.
+  function videoRecordingMimeType() {
+    const MediaRecorderCtor = window.MediaRecorder;
+    if (typeof MediaRecorderCtor?.isTypeSupported !== 'function') return '';
+    const supported = (type) => { try { return MediaRecorderCtor.isTypeSupported(type) === true; } catch (_) { return false; } };
+    const exact = VIDEO_RECORD_TYPES.find(supported);
+    if (exact) return exact;
+    // A bare video/mp4 is H.264 + AAC in WebKit; where VP9 fits in MP4 it could be VP9.
+    return supported('video/mp4') && !supported('video/mp4;codecs=vp9') ? 'video/mp4' : '';
+  }
+
+  function canRecordVideoInApp() {
+    return typeof window.navigator?.mediaDevices?.getUserMedia === 'function' && Boolean(videoRecordingMimeType());
+  }
+
+  async function openVideoCamera() {
+    const input = document.getElementById('leftForYouComposerVideoFile');
+    if (!canRecordVideoInApp()) { pickFile(input, 'video/*'); return; }
+    if (composer.cameraOpen) return;
+    composer.cameraMode = 'video';
+    const opened = await openViewfinder('video');
+    // No camera here after all (not a refusal): the phone's camera, as before.
+    if (opened === false) pickFile(input, 'video/*');
+  }
+
   function closeCamera() {
+    cancelVideoRecording();
     composer.cameraOpen = false;
     ++composer.cameraRequestId;
     releaseCameraStream();
     if (composer.cameraCapture?.url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(composer.cameraCapture.url);
     composer.cameraCapture = null;
+    discardVideoCapture();
     updateCameraUi();
     updateComposerValidity();
   }
 
   async function switchCamera() {
-    if (!composer.cameraOpen || composer.cameraCapture) return;
+    if (!composer.cameraOpen || composer.cameraCapture || composer.videoCapture || composer.videoRecorder) return;
     const next = composer.cameraFacing === 'environment' ? 'user' : 'environment';
     try { await requestCameraStream(next); } catch (_) { setCameraStatus('Questa fotocamera non è disponibile.', 'error'); }
   }
@@ -1249,12 +1371,14 @@
     if (!composer.cameraOpen) return;
     if (composer.cameraCapture?.url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(composer.cameraCapture.url);
     composer.cameraCapture = null;
+    discardVideoCapture();
     setCameraStatus('');
     updateCameraUi();
     requestCameraStream(composer.cameraFacing).catch(() => setCameraStatus('Non riesco a riaprire la fotocamera.', 'error'));
   }
 
   function useCameraPhoto() {
+    if (composer.cameraMode === 'video') { useCameraVideo(); return; }
     if (!composer.cameraCapture) return;
     composer.cameraCapture.selected = true;
     composer.cameraOpen = false;
@@ -1265,6 +1389,8 @@
   }
 
   async function captureCameraPhoto() {
+    // The same round button records in video mode: a tap starts, a tap stops.
+    if (composer.cameraMode === 'video') { toggleVideoRecording(); return; }
     if (!composer.cameraOpen || !composer.cameraStream) return;
     const preview = document.getElementById('leftForYouCameraPreview');
     const width = preview.videoWidth || preview.clientWidth || 1280;
@@ -1288,6 +1414,179 @@
   function discardCameraCapture() {
     if (composer.cameraCapture?.url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(composer.cameraCapture.url);
     composer.cameraCapture = null;
+    updateComposerValidity();
+  }
+
+  // ---- «Fai un video» inside US: record, stop by itself at 30 s, review, use ----
+  function revokeObjectUrl(url) {
+    if (url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(url);
+  }
+
+  function clearVideoTimers() {
+    if (composer.videoTicker) clearInterval(composer.videoTicker);
+    if (composer.videoMaxTimer) clearTimeout(composer.videoMaxTimer);
+    composer.videoTicker = null;
+    composer.videoMaxTimer = null;
+  }
+
+  function updateVideoTimer() {
+    const timer = document.getElementById('leftForYouCameraTimer');
+    if (!timer) return;
+    const show = composer.cameraOpen && composer.cameraMode === 'video' && !composer.videoCapture;
+    timer.hidden = !show;
+    if (!show) return;
+    const recording = Boolean(composer.videoRecorder && composer.videoStartedAt);
+    const elapsed = recording ? Math.min(VIDEO_MAX_SECONDS, (Date.now() - composer.videoStartedAt) / 1000) : 0;
+    timer.setAttribute('data-recording', recording ? 'true' : 'false');
+    timer.textContent = `${formatRecordingDuration(elapsed)} / ${formatRecordingDuration(VIDEO_MAX_SECONDS)}`;
+  }
+
+  function toggleVideoRecording() {
+    if (composer.videoRecorder) stopVideoRecording();
+    else startVideoRecording();
+  }
+
+  function startVideoRecording() {
+    const stream = composer.cameraStream;
+    const MediaRecorderCtor = window.MediaRecorder;
+    const mimeType = videoRecordingMimeType();
+    if (!composer.cameraOpen || composer.cameraMode !== 'video' || !stream || composer.videoRecorder || composer.videoCapture || !MediaRecorderCtor || !mimeType) return;
+    let recorder;
+    try {
+      recorder = new MediaRecorderCtor(stream, { mimeType, videoBitsPerSecond: VIDEO_RECORD_VIDEO_BPS, audioBitsPerSecond: VIDEO_RECORD_AUDIO_BPS });
+    } catch (error) {
+      console.warn('[US Left for You] video recorder', error);
+      setCameraStatus('Non riesco a registrare il video. Riprova.', 'error');
+      return;
+    }
+    composer.videoRecorder = recorder;
+    composer.videoChunks = [];
+    composer.videoBytes = 0;
+    composer.videoStopReason = '';
+    composer.videoEndedAt = 0;
+    recorder.ondataavailable = (event) => {
+      if (recorder !== composer.videoRecorder || !event.data?.size) return;
+      composer.videoChunks.push(event.data);
+      composer.videoBytes += event.data.size;
+      // An encoder that ignores the bitrate still ends under 20 MB.
+      if (composer.videoBytes >= VIDEO_RECORD_GUARD_BYTES && recorder.state === 'recording') stopVideoRecording('size');
+    };
+    recorder.onerror = (event) => {
+      console.warn('[US Left for You] video recorder', event?.error || event);
+      if (recorder !== composer.videoRecorder) return;
+      composer.videoStopReason = 'error';
+      stopVideoRecording('error');
+    };
+    recorder.onstop = () => finishVideoRecording(recorder);
+    try {
+      recorder.start(VIDEO_RECORD_SLICE_MS);
+    } catch (error) {
+      console.warn('[US Left for You] video recorder start', error);
+      composer.videoRecorder = null;
+      setCameraStatus('Non riesco a registrare il video. Riprova.', 'error');
+      updateCameraUi();
+      return;
+    }
+    composer.videoStartedAt = Date.now();
+    composer.videoTicker = typeof setInterval === 'function' ? setInterval(updateVideoTimer, 250) : null;
+    composer.videoMaxTimer = setTimeout(() => stopVideoRecording('time'), VIDEO_MAX_SECONDS * 1000);
+    setCameraStatus('Registrazione in corso. Si ferma da sola a 30 secondi.');
+    updateCameraUi();
+  }
+
+  function stopVideoRecording(reason = '') {
+    const recorder = composer.videoRecorder;
+    if (!recorder) return;
+    if (!composer.videoStopReason) composer.videoStopReason = reason;
+    if (!composer.videoEndedAt) composer.videoEndedAt = Date.now();
+    clearVideoTimers();
+    if (recorder.state === 'inactive') { finishVideoRecording(recorder); return; }
+    try { recorder.stop(); } catch (_) { finishVideoRecording(recorder); }
+  }
+
+  function finishVideoRecording(recorder) {
+    if (recorder !== composer.videoRecorder) return;
+    clearVideoTimers();
+    const chunks = composer.videoChunks;
+    const reason = composer.videoStopReason;
+    const seconds = Math.min(VIDEO_MAX_SECONDS, Math.max(0, ((composer.videoEndedAt || Date.now()) - composer.videoStartedAt) / 1000));
+    composer.videoRecorder = null;
+    composer.videoChunks = [];
+    composer.videoBytes = 0;
+    composer.videoStartedAt = 0;
+    composer.videoEndedAt = 0;
+    composer.videoStopReason = '';
+    if (!composer.cameraOpen || composer.cameraMode !== 'video') { updateCameraUi(); return; }
+    if (reason === 'error' || !chunks.length) {
+      setCameraStatus('Non riesco a registrare il video. Riprova.', 'error');
+      updateCameraUi();
+      return;
+    }
+    if (seconds < 1) {
+      setCameraStatus('Il video è troppo corto. Riprova.', 'error');
+      updateCameraUi();
+      return;
+    }
+    const BlobCtor = window.Blob || globalThis.Blob;
+    // MP4 whatever codecs the recorder names: the same type as a gallery MP4 for the checks and the bucket.
+    const blob = new BlobCtor(chunks, { type: 'video/mp4' });
+    const name = `video-${Date.now()}.mp4`;
+    const file = typeof File === 'function' ? new File([blob], name, { type: 'video/mp4' }) : Object.assign(blob, { name });
+    const url = typeof window.URL?.createObjectURL === 'function' ? window.URL.createObjectURL(blob) : '';
+    composer.videoCapture = { file, url, seconds };
+    // Under review the camera is off: «Rifai» turns it back on.
+    releaseCameraStream();
+    setCameraStatus(reason === 'size' ? `Fermato a ${formatRecordingDuration(seconds)}: il video aveva raggiunto 20 MB.` : '');
+    updateCameraUi();
+  }
+
+  // Closing the camera mid-recording throws the take away, nothing is kept.
+  function cancelVideoRecording() {
+    const recorder = composer.videoRecorder;
+    if (!recorder) return;
+    clearVideoTimers();
+    recorder.ondataavailable = null;
+    recorder.onstop = null;
+    recorder.onerror = null;
+    composer.videoRecorder = null;
+    composer.videoChunks = [];
+    composer.videoBytes = 0;
+    composer.videoStartedAt = 0;
+    composer.videoEndedAt = 0;
+    composer.videoStopReason = '';
+    try { if (recorder.state !== 'inactive') recorder.stop(); } catch (_) { /* already stopped */ }
+  }
+
+  function discardVideoCapture() {
+    revokeObjectUrl(composer.videoCapture?.url);
+    composer.videoCapture = null;
+  }
+
+  function discardVideoTake() {
+    revokeObjectUrl(composer.videoTake?.url);
+    composer.videoTake = null;
+  }
+
+  // «Usa video»: the same checks as a video from the gallery, then it is the composer's video.
+  async function useCameraVideo() {
+    const take = composer.videoCapture;
+    if (!take) return;
+    const problem = await videoProblem(take.file);
+    if (take !== composer.videoCapture) return;
+    if (problem) { setCameraStatus(problem, 'error'); return; }
+    discardVideoTake();
+    composer.videoTake = take;
+    composer.videoCapture = null;
+    const input = document.getElementById('leftForYouComposerVideoFile');
+    if (input) { try { input.value = ''; } catch (_) { /* read-only in some test shims */ } }
+    const slot = document.getElementById('leftForYouComposerVideoName');
+    if (slot) slot.textContent = `Video registrato · ${formatRecordingDuration(take.seconds)}`;
+    composer.cameraOpen = false;
+    ++composer.cameraRequestId;
+    releaseCameraStream();
+    setCameraStatus('');
+    setComposerStatus('');
+    updateCameraUi();
     updateComposerValidity();
   }
 
@@ -1614,7 +1913,8 @@
       composer.mediaRecorder = null;
       composer.recordingState = 'idle';
       updateRecorderUi();
-      setComposerStatus(isPermissionDenied(error) ? permissionDeniedText('microphone') : 'Non riesco ad avviare la registrazione. Riprova.', 'error');
+      if (isPermissionDenied(error)) showPermissionProblem('microphone');
+      else setComposerStatus('Non riesco ad avviare la registrazione. Riprova.', 'error');
       updateComposerValidity();
     }
   }
@@ -1685,6 +1985,7 @@
     closeCamera();
     discardRecording();
     discardCameraCapture();
+    discardVideoTake();
     const text = document.getElementById('leftForYouComposerText');
     if (text) text.value = '';
     document.querySelectorAll('[data-us-composer-panel] input[type="file"]').forEach((input) => { input.value = ''; });
@@ -1832,6 +2133,8 @@
       pick?.addEventListener('click', () => pickFile(file));
       file?.addEventListener('change', () => {
         if (fileId === 'leftForYouComposerPhotoFile' && file.files?.[0]) discardCameraCapture();
+        // A video from the gallery (or the phone camera) replaces one recorded in US.
+        if (fileId === 'leftForYouComposerVideoFile' && file.files?.[0]) discardVideoTake();
         // The photo shows itself (preview); the video keeps its file name.
         const slot = document.getElementById(nameId);
         if (slot && fileId !== 'leftForYouComposerPhotoFile') slot.textContent = file.files?.[0]?.name || '';
@@ -1863,7 +2166,13 @@
     });
     document.getElementById('leftForYouMusicClear')?.addEventListener('click', clearMusicSelection);
     document.getElementById('leftForYouComposerPhotoCamera')?.addEventListener('click', openCamera);
-    document.getElementById('leftForYouComposerVideoCamera')?.addEventListener('click', () => pickFile(document.getElementById('leftForYouComposerVideoFile'), 'video/*'));
+    document.getElementById('leftForYouComposerVideoCamera')?.addEventListener('click', openVideoCamera);
+    document.getElementById('leftForYouComposerSettings')?.addEventListener('click', openAppSettings);
+    // Android (UsWebChromeClient): the phone camera was refused, also for good.
+    window.addEventListener?.(CAMERA_DENIED_EVENT, () => {
+      if (!document.getElementById('leftForYouComposerOverlay')?.classList?.contains('open')) return;
+      showPermissionProblem('camera');
+    });
     const cameraOverlay = document.getElementById('leftForYouCameraOverlay');
     const cameraBackdrop = document.getElementById('leftForYouCameraBackdrop');
     cameraOverlay?.addEventListener('click', (event) => {
@@ -1964,6 +2273,7 @@
     startRecording, stopRecording, discardRecording, toggleVoiceRecording,
     bindAudioStepPlayer, paintAudioStepPlayer, stopActiveAudioPlayer,
     openCamera, pickFile, closeCamera, switchCamera, captureCameraPhoto, useCameraPhoto, retakeCameraPhoto, discardCameraCapture, composer,
+    openVideoCamera, canRecordVideoInApp, videoRecordingMimeType, toggleVideoRecording, startVideoRecording, stopVideoRecording, useCameraVideo, openAppSettings,
     extractSpotifyTrackId, canonicalSpotifyTrackUrl, spotifyEmbedUrl,
     renderMusicResults, selectMusicResult, clearMusicSelection, resetMusicSearchUi, runMusicSearch, scheduleMusicSearch, musicSearch, musicSearchErrorMessage,
   };
