@@ -298,7 +298,7 @@ function artItem(reward) {
   return { cat: reward?.category, id: slotValue(reward?.category, reward?.token) };
 }
 // Days together for the tiny Oggi ("430 giorni" in the mockup), counted by
-// calendar days as Oggi counts them (app.js updateTogetherDays).
+// calendar days in UTC from the couple's started_on.
 function daysTogether() {
   try {
     const started = window.UsCoupleContext?.snapshot?.()?.couple?.started_on;
