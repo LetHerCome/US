@@ -10,10 +10,18 @@
 - **Widget:** il ponte tra l'app e il telefono (`platform.js`) buttava via i personaggi e il secondo Post-it. Per questo i widget nuovi disegnavano sempre il personaggio di base del ruolo (tondo rosa o quadrato lilla) e il Post-it largo aveva una nota sola. Ora passano, controllati come fa il codice nativo.
 - **Il personaggio dell'altra persona:** se Bea cambia forma, colore o accessori, sul tuo telefono arriva quando riapri US. Prima arrivava solo dopo aver chiuso del tutto l'app. Si rilegge solo quello, e il resto si aggiorna solo se qualcosa è cambiato. Così si aggiornano anche Oggi, l'angolo e i widget.
 - **Colore:** cambiato nel Profilo o alla prima apertura, arriva subito anche alla scheda del Profilo, ai personaggi e ai widget. Prima il Profilo diceva ancora «Rosa». «Torna al colore di sempre» non compare più quando quel colore è dell'altra persona: prima vi ritrovavate tutti e due dello stesso colore.
+### Intro: prima crei il tuo personaggio (27/11)
+
+**Stato:** ramo `claude/intro-crea-personaggio`, verso staging. Chiesto dal founder dopo la prova dell'APK di staging: «aggiungi nell'intro una parte che … ti fa scegliere il personaggio prima del tutorial … senza il guardaroba che si sblocca dopo». Nessuna migrazione: usa `set_my_character_shape` e `set_my_color` che ci sono già.
+
+- **Chi non ha mai fatto il suo personaggio** (chi ha già l'app e riceve l'aggiornamento, o chi nella prima apertura ha lasciato tutto com'era) prima del giro dell'intro lo crea: il personaggio spiega che è il suo e che lo segue in tutta l'app, anche nei widget. Si scelgono le cinque forme, ognuna col tuo personaggio dentro, e gli otto colori. Quello dell'altra persona è barrato. Il personaggio cambia subito mentre scegli.
+- Niente guardaroba lì: una riga dice che gli accessori arrivano dopo e si sbloccano insieme nel vostro angolo.
+- Poi «Eccomi!» e il giro di sempre (otto tappe). Chi ha già scelto forma o colore parte direttamente dal giro. «Rivedi l'intro» nel Profilo mostra anche la scelta, con quello che hai adesso.
+- Se il salvataggio non riesce, torna la scelta di prima con un avviso. Il colore dell'altra persona non si può prendere, e quando US Plus sarà in vendita il colore chiederà Plus come nelle Impostazioni.
 
 ### Widget iPhone col redesign e blocca schermo (26/11)
 
-**Stato:** ramo `claude/widget-redesign-ios` (sopra quello Android). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.
+**Stato:** in staging (#314, sopra Android #313). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.
 
 **Cosa cambia:**
 - Su iPhone gli stessi nove widget di Android (prima c'erano solo Foto e Ti penso, nello stile vecchio), col foglio di giorno e il nero caldo di notte e i personaggi veri disegnati dall'estensione.
@@ -22,7 +30,7 @@
 
 ### Widget Android col redesign (26/11)
 
-**Stato:** ramo `claude/widget-redesign-android-ios-fb63c1`, verso staging. Tavola «US · Widget del redesign» (https://claude.ai/artifact/Hkj3ojVe3bwEHfg9XeJf6A) approvata: «Android ok», poi «tutte okay». Nessuna migrazione. Arriva solo con un AAB nuovo (codice nativo): il web da solo non basta.
+**Stato:** in staging (#313), provato sull'APK di staging 1795730573 (27/11: «va tutto quanto bene»). Tavola «US · Widget del redesign» (https://claude.ai/artifact/Hkj3ojVe3bwEHfg9XeJf6A) approvata: «Android ok», poi «tutte okay». Nessuna migrazione. Arriva solo con un AAB nuovo (codice nativo): il web da solo non basta.
 
 **Cosa cambia:**
 - I nove widget Android parlano come l'app: di giorno il foglio del Quaderno, di notte il nero caldo, col tema del telefono. Via le sfumature pastello, le illustrazioni e i cerchi con le emoji.
