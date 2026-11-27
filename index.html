@@ -711,14 +711,20 @@ html.us-launch-play .us-launch-intro{display:block}
         <div class="og-row" id="usOggiRow" hidden>
           <button type="button" class="og-next" id="usOggiNext" hidden><span class="us-icon" data-us-icon="calendar-blank" aria-hidden="true"></span><b id="usOggiNextWhen"></b><span id="usOggiNextTitle" translate="no"></span></button>
           <button type="button" class="home-distance-pill us-distance-capsule og-pill" id="distanceWidget" onclick="openDistanceDetail()" aria-haspopup="dialog" aria-label="Distanza tra voi" data-us-distance-state="unknown" hidden><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><b id="distanceValue"></b><span class="us-distance-battery" id="distanceBattery" hidden><span class="us-sr-only">Batteria:</span> <span class="us-sr-only" data-battery-name translate="no"></span> <span class="us-icon" data-us-icon="battery-high" data-battery-icon aria-hidden="true"></span><b data-battery-level></b><span class="us-sr-only" data-battery-charging hidden>in carica</span></span></button>
-          <!-- Come stai (02/11/2026; tavola «Come stai di US», 27/11/2026): one item of the row, never on two
-               lines. The other person (their face, their state; a tap opens their sheet), the gesture for it,
-               then me (a tap opens the twelve) and, for three hours, the gesture I received. -->
+          <!-- Come stai (02/11/2026; tavola «Come stai di US», 27/11/2026; ritocchi del 28/11): one glass pill
+               like the distance, in two halves, never on two lines. Left: the other person (face and short
+               word; a tap opens their sheet) and the gesture for their state. Right, after a line: me («＋ Tu»
+               or my emoji; a tap opens the twelve) and, for three hours, the gesture I received. -->
           <div class="us-status-group" id="usOggiStatusGroup" data-fit="" hidden>
-            <button type="button" class="us-status-her" id="usOggiPartner" aria-haspopup="dialog" hidden><span class="us-status-face" data-status-face aria-hidden="true"></span><span class="us-status-her-text"><b data-status-name translate="no"></b><span data-status-her-word></span></span><span class="us-status-chev" aria-hidden="true">›</span></button>
-            <button type="button" class="us-status-act" id="usOggiStatusReply" hidden><span data-act-icon aria-hidden="true"></span><span data-act-word></span></button>
-            <button type="button" class="us-status-pill" id="usOggiStatus" aria-haspopup="dialog" aria-label="Come stai? Scegli" hidden><span class="us-status-dot" aria-hidden="true"></span><span data-status-mine-emoji aria-hidden="true"></span><span data-status-mine>Come stai?</span><span class="us-status-mine-word" data-status-mine-word></span><small class="us-status-change" data-status-change>· Cambia</small></button>
-            <button type="button" class="us-status-got" id="usOggiGot" aria-haspopup="dialog" hidden><span data-got-icon aria-hidden="true"></span><span class="us-status-got-word" data-got-word translate="no"></span></button>
+            <span class="us-status-half us-status-half-her">
+              <button type="button" class="us-status-her" id="usOggiPartner" aria-haspopup="dialog" hidden><span class="us-status-face" data-status-face aria-hidden="true"></span><span class="us-status-her-text"><b data-status-name translate="no"></b><span data-status-her-word></span></span></button>
+              <button type="button" class="us-status-act" id="usOggiStatusReply" hidden><span data-act-icon aria-hidden="true"></span><span data-act-word></span></button>
+            </span>
+            <span class="us-status-sep" aria-hidden="true"></span>
+            <span class="us-status-half us-status-half-me">
+              <button type="button" class="us-status-pill" id="usOggiStatus" aria-haspopup="dialog" aria-label="Come stai? Scegli" data-mine="none" hidden><span class="us-status-plus" aria-hidden="true">＋</span><span data-status-mine-emoji aria-hidden="true"></span><span data-status-mine>Tu</span></button>
+              <button type="button" class="us-status-got" id="usOggiGot" aria-haspopup="dialog" hidden><span data-got-icon aria-hidden="true"></span><span class="us-status-got-word" data-got-word translate="no"></span></button>
+            </span>
           </div>
         </div>
         <!-- The answers read, the card goes away with a swipe or with «Togli» (27/11/2026): it sits on the card's corner. -->

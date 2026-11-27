@@ -106,8 +106,12 @@
 :root[data-us-luce="giorno"] html.us-native #home .home-photo-shade,:root[data-us-luce="giorno"].us-native #home .home-photo-shade{background:linear-gradient(180deg,rgba(15,11,19,.5) 0%,rgba(15,11,19,.14) 22%,rgba(15,11,19,0) 36%,rgba(243,236,225,0) 54%,rgba(243,236,225,.32) 76%,rgba(243,236,225,.66) 100%)!important}
 /* Come stai che conta (27/11/2026): the row's glass pills took the dock's dark
    ink over the photo (dark on dark): by day they are paper labels too. The
-   second row (Come stai) is paper in both lights (member-status.css). */
-:root[data-us-luce="giorno"] #home #homeHero :is(#usOggiNext,#distanceWidget){background:#fbf7f0!important;border-color:rgba(35,27,29,.12)!important;color:#231b1d!important;box-shadow:0 4px 12px rgba(35,27,29,.12)!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+   second row (Come stai, one pill since 28/11) follows the distance. */
+:root[data-us-luce="giorno"] #home #homeHero :is(#usOggiNext,#distanceWidget,#usOggiStatusGroup){background:#fbf7f0!important;border-color:rgba(35,27,29,.12)!important;color:#231b1d!important;box-shadow:0 4px 12px rgba(35,27,29,.12)!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+:root[data-us-luce="giorno"] #home #homeHero #usOggiStatusGroup .us-status-face{background:#efe8f7}
+:root[data-us-luce="giorno"] #home #homeHero #usOggiStatusGroup .us-status-her-text span{color:#5a4b50}
+:root[data-us-luce="giorno"] #home #homeHero #usOggiStatusGroup .us-status-her[data-state="set"] .us-status-her-text span{color:#231b1d}
+:root[data-us-luce="giorno"] #home #homeHero #usOggiStatusGroup .us-status-plus{background:#d94f73;color:#fff}
 :root[data-us-luce="giorno"] #home #usDailyRitual{background:#fbf7f0!important;border-color:rgba(35,27,29,.12)!important;box-shadow:0 8px 22px rgba(35,27,29,.12)}
 
 /* The caption over the photo (inside the dock's block, drawn on the photo). */

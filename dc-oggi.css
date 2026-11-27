@@ -164,8 +164,10 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 #home #usOggiNext[data-us-next-kind="hint"] #usOggiNextTitle{color:var(--us-color-text);font-weight:600}
 #home #usOggiNext .us-icon[hidden]{display:none}
 #home #usOggiNext[data-us-next-kind="hint"] b:empty{display:none}
+/* relative, not static (28/11/2026): its 4 px tap ring (styles.css ::before) stays
+   around it; static, the ring took the whole row and the taps of Come stai. */
 #home #homeHero .og-row .home-distance-pill:not([hidden]){
-  position:static!important;
+  position:relative!important;
   inset:auto!important;
   transform:none!important;
   display:inline-flex!important;

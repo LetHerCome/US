@@ -51,26 +51,40 @@ test('the second row: their face and state, the red gesture, «✓ Mandato»; th
   try {
     const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
     await ready(page);
-    // Nobody said anything yet: «Beatrice · Come sta?» and my «Come stai?» with its dot.
+    // Nobody said anything yet: one glass pill like the distance, «Beatrice ?» | «＋ Tu» with its beat.
     const her = page.locator('#usOggiPartner');
     await her.waitFor({ state: 'visible' });
-    assert.equal((await her.innerText()).replace(/\s+/g, ' ').trim(), 'Beatrice · Come sta?');
+    const words = async (loc) => (await loc.innerText()).replace(/\s+/g, ' ').trim();
+    assert.equal(await words(her), 'Beatrice ?');
     assert.equal(await page.locator('#usOggiStatus').getAttribute('data-mine'), 'none');
-    assert.ok(await page.locator('#usOggiStatus .us-status-dot').isVisible());
+    assert.equal(await words(page.locator('#usOggiStatus')), '＋ Tu');
+    assert.ok(await page.locator('#usOggiStatus .us-status-plus').isVisible());
+    assert.notEqual(await page.locator('#usOggiStatus .us-status-plus').evaluate((el) => getComputedStyle(el).animationName), 'none', 'a light beat');
     assert.ok(await her.locator('[data-status-face] svg').count(), 'their real face');
+    await page.evaluate(() => window.renderDistanceCapsule({ visible: true, state: 'ready', near: false, km: 120, text: '120 km' }));
+    await page.waitForTimeout(150);
+    const look = await page.evaluate(() => {
+      const cs = (id) => getComputedStyle(document.getElementById(id));
+      const g = cs('usOggiStatusGroup'), d = cs('distanceWidget');
+      const box = (id) => document.getElementById(id).getBoundingClientRect();
+      return { bg: [g.backgroundColor, d.backgroundColor], color: [g.color, d.color], h: [box('usOggiStatusGroup').height, box('distanceWidget').height], top: [box('usOggiStatusGroup').top, box('distanceWidget').top] };
+    });
+    assert.equal(look.bg[0], look.bg[1], 'the distance\'s ground');
+    assert.equal(look.color[0], look.color[1], 'the distance\'s ink');
+    assert.equal(look.h[0], look.h[1], 'the distance\'s height');
+    assert.equal(look.top[0], look.top[1], 'beside the distance');
     await shot(page, 'v2-390-senza-stato');
     await partnerIs(page, 'giu', 3);
-    assert.equal((await her.innerText()).replace(/\s+/g, ' ').trim(), 'Beatrice · giù ›');
+    assert.match(await words(her), /^(Beatrice )?giù$/);
     const quick = page.locator('#usOggiStatusReply');
     await quick.waitFor({ state: 'visible' });
-    assert.equal((await quick.innerText()).replace(/\s+/g, ' ').trim(), '🤗 Abbraccio');
+    assert.match(await words(quick), /^🤗( Abbraccio)?$/);
     assert.equal(await quick.getAttribute('aria-label'), 'Manda un abbraccio');
     const color = await quick.evaluate((el) => getComputedStyle(el).backgroundColor);
     assert.equal(color, 'rgb(184, 67, 47)', 'ceralacca');
-    for (const el of [her, quick, page.locator('#usOggiStatus')]) {
-      const box = await el.boundingBox();
-      assert.ok(box.height >= 40, 'as tall as every pill of the row');
-    }
+    const box = await page.locator('#usOggiStatusGroup').boundingBox();
+    assert.equal(box.height, 40, 'as tall as every pill of the row');
+    assert.ok(box.width >= 150, 'readable');
     await shot(page, 'v2-390-con-stato');
     // Their sheet: the big character, how and until when, the gesture in full, Ti penso, a voice message.
     await her.click();
@@ -93,7 +107,7 @@ test('the second row: their face and state, the red gesture, «✓ Mandato»; th
     await page.click('#usStatusPerson .us-modal-close');
     await page.waitForFunction(() => !document.getElementById('usStatusPerson').classList.contains('open'));
     // On the row: a pale «✓ Mandato» that does nothing more.
-    assert.equal((await quick.innerText()).replace(/\s+/g, ' ').trim(), '✓ Mandato');
+    assert.match(await words(quick), /^✓( Mandato)?$/);
     assert.equal(await quick.getAttribute('aria-disabled'), 'true');
     await page.evaluate(() => document.getElementById('usOggiStatusReply').click());
     await page.waitForTimeout(200);
@@ -139,11 +153,11 @@ test('360×640: Oggi does not move or scroll whatever Come stai says, and the se
     const geometry = () => page.evaluate(() => {
       const r = (id) => { const e = document.getElementById(id); if (!e || e.hidden) return null; const b = e.getBoundingClientRect(); return [Math.round(b.top), Math.round(b.height)]; };
       const group = document.getElementById('usOggiStatusGroup');
-      const tops = [...group.children].filter((c) => !c.hidden && c.getBoundingClientRect().width).map((c) => Math.round(c.getBoundingClientRect().top));
+      const tops = [...group.querySelectorAll('button')].filter((c) => !c.hidden && c.getBoundingClientRect().width).map((c) => { const b = c.getBoundingClientRect(); return Math.round(b.top + b.height / 2); });
       return {
         scroll: document.documentElement.scrollHeight - innerHeight,
         days: r('usCountdownDisplay'), caption: r('usOggiCaption'), row: r('usOggiRow'), card: r('usDailyRitual'),
-        oneLine: new Set(tops).size === 1, overflow: group.scrollWidth - group.clientWidth, fit: group.dataset.fit,
+        oneLine: new Set(tops).size === 1, overflow: group.scrollWidth - group.clientWidth, fit: group.dataset.fit, width: Math.round(group.getBoundingClientRect().width),
       };
     });
     await page.evaluate(() => { window.__QA.tables.profiles[1].display_name = 'Beatrice Maria Antonietta'; return window.UsCoupleContext?.hydrate?.(); });
@@ -163,7 +177,9 @@ test('360×640: Oggi does not move or scroll whatever Come stai says, and the se
       assert.deepEqual({ days: now.days, caption: now.caption, row: now.row, card: now.card, scroll: now.scroll }, { days: base.days, caption: base.caption, row: base.row, card: base.card, scroll: 0 }, label);
       assert.ok(now.oneLine, `${label}: one line`);
       assert.ok(now.overflow <= 1, `${label}: nothing cut off (${now.overflow}px, fit ${now.fit})`);
-      if (theirs === 'palestra' && !got) assert.equal((await page.locator('#usOggiStatusReply [data-act-word]').innerText()).trim(), 'Spacca tutto!', 'the gesture keeps its word');
+      // No room for its word: the gesture is its emoji, its label stays whole.
+      if (theirs === 'palestra' && !got) assert.equal(await page.locator('#usOggiStatusReply').getAttribute('aria-label'), 'Manda «Spacca tutto!»');
+      assert.ok(now.width >= 150, `${label}: readable (${now.width}px)`);
     }
     await partnerIs(page, 'palestra', 2);
     await meIs(page, 'giu', {});
@@ -202,7 +218,8 @@ test('the sheet of the twelve: «Beatrice lo vede subito», two groups; both lig
       const ink = await page.evaluate(() => {
         const lum = (c) => { const m = c.match(/\d+(\.\d+)?/g).map(Number); const [r, g, b] = m.slice(0, 3).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
         const ratio = (el) => { const cs = getComputedStyle(el); let bg = cs.backgroundColor; if (/rgba\(.*, 0\)|transparent/.test(bg)) return null; const a = lum(cs.color), b = lum(bg); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); };
-        return ['usOggiNext', 'usOggiPartner', 'usOggiStatus'].map((id) => [id, ratio(document.getElementById(id))]);
+        // The pill's ground is its group's (28/11: one pill); the night glass is see-through, read on the dock's dark.
+        return ['usOggiNext', 'usOggiStatusGroup'].map((id) => [id, ratio(document.getElementById(id))]);
       });
       for (const [id, r] of ink) if (r !== null) assert.ok(r >= 4.5, `${luce} ${id}: contrast ${r?.toFixed(2)}`);
       await shot(page, `v2-${luce}`, page.locator('#usOggiDock'));
