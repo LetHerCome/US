@@ -18,7 +18,7 @@
 
 import {
   DeletionError, STORAGE_BUCKET, assertRecentPasswordAuth, bearerToken, cleanupStoragePrefix,
-  decodeJwtPayload, isOriginAllowed,
+  decodeJwtPayload, isOriginAllowed, partnersOf, tellPartnerWidgets,
 } from './s32-account-deletion-core.mjs';
 
 export const LEAVE_WORD = 'ESCI';
@@ -97,7 +97,9 @@ export async function finishCoupleDeparture({ uid, couple, storage, rpc, log = n
   return { status: 'left', resumedFrom: current.state };
 }
 
-export async function handleLeaveCouple({ method, origin, authorization, readBody, env, nowSeconds, createClient, log = noop }) {
+// notifyPartnerLeft (optional, 27/11/2026): async ({client, coupleId, partnerIds})
+// after the DB step, so the phones of who stays clear the partner from the widgets.
+export async function handleLeaveCouple({ method, origin, authorization, readBody, env, nowSeconds, createClient, log = noop, notifyPartnerLeft = null }) {
   if (!isLeaveEnabled(env)) return { status: 503, body: { error: 'leave_disabled' } };
   if (!isOriginAllowed(origin, env?.US_ALLOWED_ORIGINS)) return { status: 403, body: { error: 'origin_denied' } };
   if (method === 'OPTIONS') return { status: 204, body: null };
@@ -136,6 +138,7 @@ export async function handleLeaveCouple({ method, origin, authorization, readBod
   log({ step: 'get_user', outcome: 'ok' });
 
   const rpc = (fn, args) => client.rpc(fn, args);
+  const stays = notifyPartnerLeft ? await partnersOf(client, uid) : null;
   const db = await callRpc(rpc, 's32_leave_couple', { p_user: uid, p_channel: channel });
   if (db.error) {
     log({ step: 'leave_data', outcome: 'error', code: db.error });
@@ -149,6 +152,8 @@ export async function handleLeaveCouple({ method, origin, authorization, readBod
     return { status: 500, body: { error: 'leave_failed' } };
   }
   log({ step: 'leave_data', outcome: 'ok', code: typeof result.status === 'string' && SAFE_CODE.test(result.status) ? result.status : 'unexpected' });
+  // A retry of a leave already done ('already_done') tells nobody twice: stays is read before it, and empty then.
+  await tellPartnerWidgets(notifyPartnerLeft, stays, client, log);
   const plan = result.status === 'db_done' ? result : null;
   const finish = await finishCoupleDeparture({ uid, couple, storage: client.storage.from(STORAGE_BUCKET), rpc, log, plan });
   if (finish.status === 'left') return { status: 200, body: { status: 'left' } };

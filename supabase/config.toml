@@ -89,3 +89,8 @@ verify_jwt = false
 # Called only by cron `us-monthiversary-hourly`, authenticated by x-us-cron-key.
 [functions.monthiversary-job]
 verify_jwt = false
+
+# Avvisi di US vi ricorda (27/11/2026). Called only by cron
+# `us-ricorda-push-hourly` (or by hand on staging), authenticated by x-us-cron-key.
+[functions.us-ricorda-push-worker]
+verify_jwt = false

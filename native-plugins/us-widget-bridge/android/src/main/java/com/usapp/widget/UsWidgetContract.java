@@ -254,6 +254,33 @@ final class UsWidgetContract {
             .put("day", COLOR.matcher(day).matches() ? day.toLowerCase() : "");
     }
 
+    /**
+     * Widget signal (27/11/2026): the snapshot with the other person's
+     * character replaced (and their colour, when the look has one), then
+     * normalized again. Null without a snapshot or a look; the owner stays.
+     */
+    static JSONObject withPartnerLook(JSONObject snapshot, JSONObject look) {
+        if (snapshot == null || look == null) return null;
+        try {
+            JSONObject next = new JSONObject(snapshot.toString());
+            JSONObject couple = next.optJSONObject("couple");
+            if (couple == null) return null;
+            JSONObject partner = character(look);
+            JSONObject characters = optObject(couple, "characters");
+            characters.put("partner", partner);
+            couple.put("characters", characters);
+            String color = partner.optString("color", "");
+            if (!color.isEmpty()) {
+                JSONObject colors = optObject(couple, "colors");
+                colors.put("partner", color);
+                couple.put("colors", colors);
+            }
+            return normalize(next);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     static JSONObject optObject(JSONObject parent, String key) {
         JSONObject value = parent == null ? null : parent.optJSONObject(key);
         return value == null ? new JSONObject() : value;

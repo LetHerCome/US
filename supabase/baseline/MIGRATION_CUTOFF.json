@@ -67,6 +67,8 @@
     "20261126020000_premi_temi_countdown.sql",
     "20261127092454_invito_14_giorni.sql",
     "20261127092908_invito_promemoria_cron.sql",
+    "20261127093503_push_ricorda_personaggio.sql",
+    "20261127093507_ricorda_push_cron.sql",
     "20261127093508_prima_settimana.sql",
     "20261127120000_us_battute_mute_bacheca.sql"
   ],
@@ -131,6 +133,8 @@
     "20261126020000_premi_temi_countdown.sql",
     "20261127092454_invito_14_giorni.sql",
     "20261127092908_invito_promemoria_cron.sql",
+    "20261127093503_push_ricorda_personaggio.sql",
+    "20261127093507_ricorda_push_cron.sql",
     "20261127093508_prima_settimana.sql",
     "20261127120000_us_battute_mute_bacheca.sql"
   ],

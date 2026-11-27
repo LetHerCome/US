@@ -2,6 +2,17 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Avvisi di US vi ricorda e personaggi sempre aggiornati (27/11)
+
+**Stato:** ramo `claude/push-ricorda-personaggio`, verso staging; migrazioni e funzioni da applicare su staging.
+
+**Cosa cambia:**
+- **US vi ricorda arriva anche sul telefono:** le battute più importanti diventano una notifica. Il compleanno dell'altra persona una settimana prima e il giorno stesso, l'anniversario una settimana prima, «un anno fa, oggi», un ricordo che US ha appeso in bacheca. Al massimo una al giorno, solo alle 10 o alle 18, mai una battuta già vista nell'app.
+- **Nuovo interruttore** in Profilo › Notifiche: «US vi ricorda», acceso di serie. Valgono anche «Non dirmelo più» e «Le voci dei personaggi».
+- **Il personaggio dell'altra persona dal vivo:** se Bea cambia forma, colore o accessori mentre hai US aperta, lo vedi cambiare in pochi secondi.
+- **Widget Android anche ad app chiusa:** il nuovo personaggio arriva ai widget con un avviso silenzioso, senza notifica. Se l'altra persona esce dalla coppia o cancella l'account, i widget si svuotano (nome, foto, Come stai). Serve un AAB nuovo.
+- **iPhone:** per ora il personaggio arriva con l'app aperta o quando la riapri; l'avviso silenzioso ai widget iPhone resta da decidere.
+
 ### Widget coi vostri personaggi davvero, e il personaggio dell'altra persona aggiornato (27/11)
 
 **Stato:** ramo `claude/widget-personaggi-filtro`, verso staging. Trovato nel controllo generale del 27/11. Nessuna migrazione.
