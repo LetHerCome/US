@@ -216,7 +216,10 @@ async function hydrateUsCoupleContext(){
     return null;
   }
   usCoupleContextState.couple=coupleResult.data||null;
+  const mineWas=uscLookKey(usCoupleContextState.profiles.filter(row=>row.id===profile.id));
   usCoupleContextState.profiles=(profilesResult.data||[]).filter(row=>row.couple_id===coupleId);
+  // My own look changed (27/11/2026): the other phone's widgets hear it even with US closed.
+  if(mineWas!=='[]'&&mineWas!==uscLookKey(usCoupleContextState.profiles.filter(row=>row.id===profile.id)))sendWebPushEvent('partner_look');
   // Colori a scelta (US Plus, 29/10/2026): each person in their colour, on both phones.
   window.UsPersonColors?.applyCoupleColors?.(usCoupleContextState.profiles);
   usCoupleContextState.identityKey=identityKey;
@@ -5568,6 +5571,8 @@ function usOnCoupleSync(payload){
   if(kind==='calendar')return scheduleUsRealtimeRefresh('calendar');
   if(kind==='notes')return window.UsCoupleNotes?.refresh?.();
   if(kind==='stories')return window.usRefreshStories?.();
+  // 27/11/2026: the other one changed colour, shape or outfit.
+  if(kind==='looks')return refreshUsCoupleLooks();
 }
 function startUsRealtime(){
   if(!window.usProfile)return;
