@@ -11,6 +11,11 @@
 - Succede su Oggi, Noi, Ricordi e Gioca, dove l'isola si vede. Se l'isola non c'è o è coperta (Impostazioni, un foglio aperto, la coppia non ancora completa, Oggi a schermo intero), se sta già facendo altro (la prima occhiata, un livello nuovo, US vi ricorda che parla) o durante l'introduzione, i cuoricini volano come prima e l'isola resta com'è. Un livello nuovo che arriva in quel momento aspetta che l'isola si richiuda.
 - Se il Ti penso non parte (niente rete), l'isola si richiude subito: non fa finta che l'altra persona l'abbia ricevuto.
 - Con «Riduci movimento» niente volo: l'isola si apre per un attimo con gli occhi a cuore e «×N». Il messaggio «Ti penso ×5 inviato a <Nome>» resta quello di sempre; non si aggiunge niente da toccare.
+### Widget Ti penso: i tocchi veloci contano anche su Samsung (27/11)
+
+**Stato:** ramo `claude/widget-tocchi-samsung`, verso staging. Trovato dal founder sull'APK 1795795958: il widget contava un tocco solo.
+
+- Mentre il cuore grande è aperto sopra la Home, ogni tocco vicino al widget conta come un altro tocco. Prima contava solo un tocco esattamente nel rettangolo del widget, e su Samsung le coordinate potevano essere un po' spostate: il tocco cadeva «fuori» e il cuore si chiudeva senza contare. Serve l'AAB nuovo.
 
 ### Ti penso ×N anche dai widget e nell'avviso Android (27/11)
 

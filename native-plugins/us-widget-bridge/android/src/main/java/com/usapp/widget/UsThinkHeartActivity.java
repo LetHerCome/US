@@ -119,10 +119,18 @@ public final class UsThinkHeartActivity extends Activity {
             wave.setAlpha(0.85f * (1 - t));
         });
         // A tap on the heart (over the widget) is one more tap; elsewhere it closes.
+        // Founder, 27/11/2026 (Samsung): only the first tap counted. The launcher's bounds and the
+        // touch can sit in slightly different spaces (status bar, display scaling), so a quick second
+        // tap on the heart landed «elsewhere» and closed it. A generous area around the widget, in
+        // screen and in window coordinates, counts as the heart; only a tap far away closes.
         Rect target = new Rect(bounds);
+        int margin = Math.max(bounds.width(), bounds.height());
+        target.inset(-margin, -margin);
         root.setOnTouchListener((view, event) -> {
             if (event.getActionMasked() != MotionEvent.ACTION_DOWN) return true;
-            if (target.contains(Math.round(event.getRawX()), Math.round(event.getRawY()))) again();
+            boolean onScreen = target.contains(Math.round(event.getRawX()), Math.round(event.getRawY()));
+            boolean inWindow = target.contains(Math.round(event.getX()), Math.round(event.getY()));
+            if (onScreen || inWindow) again();
             else close();
             return true;
         });
