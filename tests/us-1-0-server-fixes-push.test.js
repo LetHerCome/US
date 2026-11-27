@@ -179,6 +179,36 @@ test('O6 Ti penso: one push every 2 minutes per person, the next one counts the 
   assert.deepEqual(first.webpush.sent.map((s) => s.payload.body), ['Bea is thinking of you ♡']);
 });
 
+// I cuori (27/11/2026, «Uno solo ×N»): one Ti penso can carry several taps.
+test('I cuori: the push counts the taps of the Ti penso (it/en); Android only learns «many»', async () => {
+  const MSG = UUID(81);
+  const think = (id, ms, taps) => ({ id, couple_id: COUPLE, sender_id: B, recipient_id: F, kind: 'think', created_at: new Date(Date.now() - ms).toISOString(), think_taps: taps });
+  const five = sendWorld({ tables: { shared_messages: [think(MSG, 0, 5)] } });
+  assert.deepEqual((await (await sender(five))('jwt-b', { type: 'think', reference_id: MSG })).body, { delivered: 1, failed: 0 });
+  assert.deepEqual(five.webpush.sent.map((s) => s.payload.body), ['Bea ti ha pensato 5 volte ♡']);
+  const en = sendWorld({ locales: { [F]: 'en' }, tables: { shared_messages: [think(MSG, 0, 5)] } });
+  await (await sender(en))('jwt-b', { type: 'think', reference_id: MSG });
+  assert.deepEqual(en.webpush.sent.map((s) => s.payload.body), ['Bea thought of you 5 times ♡']);
+  // One tap (or an older row, or the widget: null) keeps the usual line.
+  const one = sendWorld({ tables: { shared_messages: [think(MSG, 0, null)] } });
+  await (await sender(one))('jwt-b', { type: 'think', reference_id: MSG });
+  assert.deepEqual(one.webpush.sent.map((s) => s.payload.body), ['Bea ti sta pensando ♡']);
+  // Throttled ones in between add their taps too: 2 + 1 (null) + 4 = 7.
+  const lastPush = { dedupe_key: `think:${UUID(66)}`, couple_id: COUPLE, sender_id: B, event_type: 'think', created_at: new Date(Date.now() - 300_000).toISOString() };
+  const mixed = sendWorld({ tables: { shared_messages: [think(UUID(82), 240_000, 2), think(UUID(83), 200_000, null), think(MSG, 0, 4)], push_event_log: [lastPush] } });
+  await (await sender(mixed))('jwt-b', { type: 'think', reference_id: MSG });
+  assert.deepEqual(mixed.webpush.sent.map((s) => s.payload.body), ['Bea ti ha pensato 7 volte ♡']);
+
+  const { buildNotification } = await shared('notification-core.mjs');
+  const { fcmMessage } = await shared('native-push-transport.mjs');
+  const device = { token: 'fcm:' + 'Z'.repeat(80), installation_id: '1f5bcf2d-2cf9-48d6-b018-9ac99be5a1b8' };
+  const kind = (count) => fcmMessage(buildNotification('think', { senderName: 'Bea', messageId: MSG, count }), device).message.data.k;
+  assert.deepEqual([kind(1), kind(undefined), kind(2), kind(40)], ['think', 'think', 'think_many', 'think_many']);
+  assert.equal(buildNotification('think', { senderName: 'Bea', messageId: MSG, count: 3 }).plural, true);
+  assert.equal(buildNotification('think', { senderName: 'Bea', messageId: MSG, count: 1 }).plural, false);
+  assert.equal(buildNotification('think_reaction', { senderName: 'Bea', messageId: MSG, reaction: 'heart' }).plural, false);
+});
+
 test('N5 quest_confirmed: "ha fatto «titolo». Ora tocca a te", English title from the template, nothing once both confirmed', async () => {
   const QUEST = UUID(70);
   const quest = (confirmed) => ({ id: QUEST, couple_id: COUPLE, title: 'Cena senza telefoni', template_key: 'dinner_no_phones', confirmed_by: confirmed });

@@ -2373,6 +2373,13 @@
     'Le risposte si svelano quando avete risposto voi due.': 'The answers are revealed once you’ve both answered.',
     'Conservata, la domanda di oggi resta nei vostri Ricordi.': 'Once kept, today’s question stays in your Memories.',
     'Ti penso inviato a {name}': 'Thinking of you sent to {name}',
+    // I cuori (27/11/2026): Ti penso ×N and the reply heart that stays.
+    'Ti penso ×{n} inviato a {name}': 'Thinking of you ×{n} sent to {name}',
+    '{name} ti ha pensato {n} volte ♡': '{name} thought of you {n} times ♡',
+    'ti pensa ×{n}': 'is thinking of you ×{n}',
+    'Cuore mandato': 'Heart sent',
+    '{n} cuori': '{n} hearts',
+    'Cuore tolto': 'Heart removed',
     'Rispondi con': 'Reply with',
     'Rispondi con un cuore': 'Reply with a heart',
     'Rispondi con un abbraccio': 'Reply with a hug',

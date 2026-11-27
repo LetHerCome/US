@@ -99,19 +99,22 @@ test('wired: Oggi and Ti penso play it when a heart is given, never when taken b
   const app = read('app.js');
   assert.match(app, /function usHeartLike\(button\)\{const turn=window\.UsUiFoundation\?\.heartTurn\?\.\(window\.usProfile\?\.id\);window\.UsUiFoundation\?\.heart\?\.\(button,\{big:Boolean\(turn\?\.big\)\}\);\}/);
   // Oggi: at the tap (the reaction is shown at once), on the button just drawn.
-  assert.match(app, /window\.todayRevealMeta=\{\.\.\.meta,my_reaction:next\};renderTodayReveal\(\);\n  if\(next==='heart'\)usHeartLike\(document\.querySelector\('#todayReveal \[data-daily-reaction="heart"\]'\)\);/);
+  assert.match(app, /window\.todayRevealMeta=\{\.\.\.meta,my_reaction:next\};renderTodayReveal\(\);\n  if\(next==='heart'\)\{const heart=usDailyHeartButton\(\);usHeartLike\(heart\);/);
+  assert.match(app, /function usDailyHeartButton\(\)\{return document\.querySelector\('#todayReveal \[data-daily-reaction="heart"\]'\);\}/);
   assert.match(app, /if\(next&&next!=='heart'\)window\.UsUiFoundation\?\.done\?\.\(/, 'the heart has its own animation');
   // The reply from the server draws the same thing: the button stays, the animation goes on.
   assert.match(app, /if\(usTodayRevealDrawn===html&&reveal\.firstElementChild\)return;usTodayRevealDrawn=html;reveal\.innerHTML=html;/);
   // Ti penso: the heart plays at the tap; the other reactions keep their «fatto!».
-  assert.match(app, /if\(reaction==='heart'\)usHeartLike\(document\.querySelector\('#thinkArrival \[data-think-reaction="heart"\]'\)\);/);
+  assert.match(app, /if\(reaction==='heart'\)\{const heart=document\.querySelector\('#thinkArrival \[data-think-reaction="heart"\]'\);usHeartLike\(heart\);/);
   assert.match(app, /if\(usThinkReactionFinal!=='heart'\)window\.UsUiFoundation\?\.done\?\.\(/);
 });
 
-test('the Ti penso at the top left plays the same heart when it is sent, not when it was already sent', () => {
+// I cuori (27/11/2026): the heart of the bar plays at every tap of the combo (usNavHeartTap); the send only says it.
+test('the Ti penso of the bar plays at the taps; a send already made only gives the cue', () => {
   const app = read('app.js');
-  const send = app.slice(app.indexOf('async function sendThinkSignal('), app.indexOf('window.sendThinkSignal=sendThinkSignal;'));
-  assert.match(send, /if\(btn&&!result\?\.duplicate\)usHeartLike\(btn\);else window\.UsFeedback\?\.action\?\.\(\);/);
+  const send = app.slice(app.indexOf('async function usSendThinkNow('), app.indexOf('window.sendThinkSignal=sendThinkSignal;'));
+  assert.match(send, /if\(result\?\.duplicate\)\{window\.UsFeedback\?\.action\?\.\(\);toast\('Già inviato',\{quiet:true\}\);\}/);
+  assert.doesNotMatch(send, /usHeartLike/, 'the bar heart already played at the taps');
   assert.doesNotMatch(app, /thinkSparks/, 'the two old sparks are gone');
   assert.match(read('ui-foundation.js'), /element\.querySelector\?\.\('\.us-icon, \.think-reaction-glyph, \.us-shell-icon'\)/, 'its heart is the one that springs back');
 });

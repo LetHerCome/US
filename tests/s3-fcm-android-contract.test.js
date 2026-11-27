@@ -90,6 +90,18 @@ test('every notification type becomes a v2 packet with one allow-listed kind; no
   }
   // One banner slot for every kind; the kind is the only event metadata.
   assert.deepEqual([...seen], ['us-private-notice']);
+  // I cuori (27/11/2026): a Ti penso of several taps picks the plural kind; the number never travels.
+  const { ANDROID_PLURAL_KINDS } = await load(TRANSPORT);
+  assert.deepEqual(ANDROID_PLURAL_KINDS, { think: 'think_many' });
+  for (const count of [2, 5, 99]) {
+    const many = fcmMessage(buildNotification('think', { senderName: 'PRIVATE_SENDER_NAME', messageId: REF, count }), { token: 'fcm:' + 'Z'.repeat(80), installation_id: INSTALL_A }).message;
+    assert.deepEqual(many.data, { v: '2', installation: INSTALL_A, k: 'think_many' }, 'the kind only: no number, no copy');
+    assert.doesNotMatch(JSON.stringify(many), /PRIVATE_SENDER_NAME|volte|times/);
+  }
+  const one = fcmMessage(buildNotification('think', { senderName: 'B', messageId: REF, count: 1 }), { token: 'fcm:' + 'Z'.repeat(80), installation_id: INSTALL_A }).message;
+  assert.equal(one.data.k, 'think');
+  // A plural flag on a type without a plural kind keeps its own kind.
+  assert.equal(fcmMessage({ ...buildNotification('lavagna', { senderName: 'B' }), plural: true }, { token: 'fcm:' + 'Z'.repeat(80), installation_id: INSTALL_A }).message.data.k, ANDROID_NOTICE_KINDS.lavagna);
   // An unknown type (e.g. a newer server) travels without kind: generic copy.
   const unknown = fcmMessage({ type: 'not_a_type', urgency: 'normal', ttl: 60 }, { token: 'fcm:' + 'Z'.repeat(80), installation_id: INSTALL_A }).message;
   assert.deepEqual(unknown.data, { v: '2', installation: INSTALL_A });
@@ -174,10 +186,10 @@ const GATE = 'native-plugins/us-push-support/android/src/main/java/com/usapp/pus
 const PLUGIN = 'native-plugins/us-push-support/android/src/main/java/com/usapp/pushsupport/UsPushSupportPlugin.java';
 
 test('notices: the phone knows exactly the kinds the server sends, and writes each one', async () => {
-  const { ANDROID_NOTICE_KINDS, ANDROID_SAFE_COPY } = await load(TRANSPORT);
+  const { ANDROID_NOTICE_KINDS, ANDROID_PLURAL_KINDS, ANDROID_SAFE_COPY } = await load(TRANSPORT);
   const notices = read(NOTICES);
   const javaKinds = [...notices.match(/KINDS = \{([^}]*)\}/)[1].matchAll(/"([a-z_]+)"/g)].map((m) => m[1]);
-  assert.deepEqual([...javaKinds].sort(), [...new Set(Object.values(ANDROID_NOTICE_KINDS))].sort());
+  assert.deepEqual([...javaKinds].sort(), [...new Set([...Object.values(ANDROID_NOTICE_KINDS), ...Object.values(ANDROID_PLURAL_KINDS)])].sort());
   for (const kind of javaKinds) assert.match(notices, new RegExp(`case "${kind}":`), `${kind} has its sentence`);
   assert.equal(javaString(notices, 'FALLBACK_TITLE'), ANDROID_SAFE_COPY.title);
   assert.equal(javaString(notices, 'FALLBACK_BODY'), ANDROID_SAFE_COPY.body);

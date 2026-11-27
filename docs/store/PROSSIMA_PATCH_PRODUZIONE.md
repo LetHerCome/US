@@ -2,6 +2,17 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### I cuori: Ti penso ×N e il cuore che resta (27/11)
+
+**Stato:** ramo `claude/cuori-ti-penso`, verso staging; migrazione `20261127141307_cuori_ti_penso` da applicare su staging prima delle funzioni; funzioni da deployare dopo: `send-web-push` e `widget-think-send` (tutte e due usano `_shared/think-web-push.ts`, che ora conta i tocchi, e il catalogo condiviso col tipo Android «tante volte»). Per avere la frase «tante volte» su Android serve un AAB nuovo (`UsPushNotices.java`); senza, Android dice ancora «ti sta pensando». Prototipo approvato: https://claude.ai/artifact/2NXZSrS4EypVcsAVBNDRVy.
+
+**Cosa cambia:**
+- **Ti penso ×N.** Il cuore in mezzo alla barra si può toccare tante volte di fila: a ogni tocco si schiaccia e rimbalza, escono cuoricini nei vostri due colori e sopra compare «×2», «×3»… A 3, 6 e 10 tocchi la scossa è più forte (più cuoricini, più luce, una vibrazione più piena; dorati da 10). Quando ti fermi per poco più di un secondo parte un solo Ti penso con quante volte hai premuto, i cuoricini volano verso l'altra persona e il messaggio dice «Ti penso ×5 inviato a <Nome>». Il cuore non si blocca più tra un tocco e l'altro.
+- **Chi lo riceve legge quante volte:** la notifica dice «<Nome> ti ha pensato 5 volte ♡» (in inglese «thought of you 5 times»), l'avviso dentro l'app lo stesso, e il foglio del Ti penso ricevuto dice «ti pensa ×5». Su Android il telefono non riceve numeri: dice «<Nome> ti ha pensato tante volte ♡». Il widget, Gioca e «La cosa di oggi» mandano sempre un Ti penso da 1; il conteggio di oggi conta i Ti penso, non i tocchi.
+- **Il cuore che resta.** Nella risposta al Ti penso e sotto la risposta della domanda di oggi il primo tocco mette il cuore come prima; i tocchi dopo lo tengono e aggiungono cuoricini e «×N» sul bottone, senza mandare altro (niente notifiche in più). Il cuore della domanda di oggi si toglie solo tenendolo premuto (un bordo si riempie in mezzo secondo e poi si svuota) o con Canc dalla tastiera; un tocco non lo toglie più. La reazione al Ti penso resta una sola, come prima: dopo il cuore nel foglio resta solo il cuore, pieno, da ritoccare, e il foglio si chiude da solo poco dopo l'ultimo tocco.
+- **L'abbraccio coi vostri personaggi.** Il bottone «Un abbraccio» non è più il disegnino: mostra i vostri due personaggi veri, con le vostre forme, colori e vestiti, guancia a guancia con gli occhi chiusi e felici e un cuoricino nei vostri due colori sopra. Se cambiate forma, cambia anche lui.
+- Con «Riduci movimento» acceso restano il rimbalzo leggero e il numero, senza cuoricini. Lettori di schermo: «Cuore mandato», «3 cuori», «Cuore tolto».
+
 ### Sicurezza: le funzioni vanno in produzione solo da main (27/11)
 
 **Stato:** ramo `claude/sicurezza-deploy`, verso staging. Dal controllo generale.

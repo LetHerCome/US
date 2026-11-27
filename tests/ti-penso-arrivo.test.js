@@ -19,8 +19,9 @@ test('markup: the stage with the two characters, the bubble, three named replies
   for (const [reaction, label] of [['heart', 'Un cuore'], ['hug', 'Un abbraccio'], ['miss_you', 'Anch\'io']]) {
     assert.match(arrival, new RegExp(`data-think-reaction="${reaction}"[^>]*>.*?<span class="think-reaction-label" aria-hidden="true">${label}</span>`), label);
   }
-  // Icon A: the two characters cheek to cheek, one tone; no emoji left.
-  assert.match(arrival, /think-reaction-hug" aria-hidden="true"><svg viewBox="0 0 256 256" fill="none" stroke="currentColor"[^>]*><circle cx="82" cy="150" r="58"\/><rect x="140" y="92"/);
+  // L'abbraccio (27/11/2026): the app draws your two real characters there (app.js
+  // thinkArrivalCast); until then a ball and a square in your colours. No emoji left.
+  assert.match(arrival, /think-reaction-hug" aria-hidden="true"><svg class="think-hug-fallback" viewBox="0 0 56 42" focusable="false"><circle cx="19" cy="28" r="13" style="fill:var\(--us-tu\)"\/><rect [^>]*style="fill:var\(--us-partner\)"/);
   assert.doesNotMatch(arrival, /\p{Extended_Pictographic}/u);
   assert.match(arrival, /class="think-arrival-close ghost" onclick="closeThinkArrival\(\)">Più tardi<\/button>/);
 });
@@ -31,7 +32,10 @@ test('logic: their character with heart eyes, yours, the hug; the reply shows at
   assert.match(app, /usThinkReactionInFlight=true;usThinkReactionPicked=reaction;renderThinkReactionUi\(\);/);
   assert.match(app, /const state=\(\{heart:'heart',hug:'hug',miss_you:'miss'\}\)\[chosen\]\|\|'ask';/);
   assert.match(app, /thinkArrivalCast\(root\);\n  renderThinkReactionUi\(\);/);
-  assert.match(app, /setTimeout\(\(\)=>closeThinkArrival\(\),2300\);/);
+  // I cuori: each further tap on the heart given keeps the sheet open a little longer.
+  assert.match(app, /usThinkCloseSoon\(2300\);/);
+  assert.match(app, /function usThinkCloseSoon\(ms\)\{clearTimeout\(usThinkCloseTimer\);usThinkCloseTimer=setTimeout\(\(\)=>closeThinkArrival\(\),ms\);\}/);
+  assert.match(app, /hugGlyph\.innerHTML=`<span class="think-hug-me">\$\{hug\(me\)\}<\/span><span class="think-hug-them">\$\{hug\(them\)\}<\/span>/);
   // Founder 25/11/2026: no hands on the hug, the two cheek to cheek with a heart above.
   assert.doesNotMatch(app, /think-arrival-arms|const arm=/);
   assert.match(app, /<svg class="think-arrival-hug-heart"/);

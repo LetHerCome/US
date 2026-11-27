@@ -47,6 +47,7 @@ function thinkNotice({ profile = { id: 'f' }, stored = {} } = {}) {
     partnerFromProfiles: (list) => list[0] || null,
     openThinkArrival: () => opened.push(true),
   });
+  vm.runInContext(slice('function usThinkTaps(row){', 'window.usThinkTaps=usThinkTaps;'), context);
   vm.runInContext(slice('function usThinkNoticedKey(){', 'function handleIncomingThink(row){'), context);
   return { context, toasts, opened, store };
 }
@@ -67,6 +68,9 @@ test('a Ti penso received: a short notice with «Apri», once per Ti penso on th
   assert.equal(t.toasts[1].text, 'Beatrice ti pensa ♡');
   assert.equal(t.context.noticeIncomingThink({ id: 't3', created_at: '2026-11-23T09:00:00Z' }, { now }), false, 'older than a day: the heart history keeps it');
   assert.equal(thinkNotice({ profile: null }).context.noticeIncomingThink(row, { now }), false, 'nobody signed in');
+  // I cuori (27/11/2026): a Ti penso of several taps says how many.
+  assert.equal(t.context.noticeIncomingThink({ id: 't4', created_at: '2026-11-24T09:40:00Z', think_taps: 5 }, { now }), true);
+  assert.equal(t.toasts.at(-1).text, 'Bea ti ha pensato 5 volte ♡');
 });
 
 test('the notice is wired: live arrival, the first read, never over the sheet a push opens', () => {
