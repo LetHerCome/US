@@ -9,6 +9,7 @@
 **Cosa cambia:**
 - **Widget:** il ponte tra l'app e il telefono (`platform.js`) buttava via i personaggi e il secondo Post-it. Per questo i widget nuovi disegnavano sempre il personaggio di base del ruolo (tondo rosa o quadrato lilla) e il Post-it largo aveva una nota sola. Ora passano, controllati come fa il codice nativo.
 - **Il personaggio dell'altra persona:** se Bea cambia forma, colore o accessori, sul tuo telefono arriva quando riapri US. Prima arrivava solo dopo aver chiuso del tutto l'app. Si rilegge solo quello, e il resto si aggiorna solo se qualcosa è cambiato. Così si aggiornano anche Oggi, l'angolo e i widget.
+- **Colore:** cambiato nel Profilo o alla prima apertura, arriva subito anche alla scheda del Profilo, ai personaggi e ai widget. Prima il Profilo diceva ancora «Rosa». «Torna al colore di sempre» non compare più quando quel colore è dell'altra persona: prima vi ritrovavate tutti e due dello stesso colore.
 
 ### Widget iPhone col redesign e blocca schermo (26/11)
 

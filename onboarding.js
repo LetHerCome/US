@@ -732,6 +732,7 @@
       const me=profiles.find(p=>p.id===profile.id);if(me)me.person_color=colour;
       profile.person_color=colour;
       colors.applyCoupleColors(profiles.filter(p=>p.id!=='~partner'));
+      Promise.resolve(globalThis.UsCoupleContext?.hydrate?.()).catch(()=>{});
       paint();
     };
     paint();

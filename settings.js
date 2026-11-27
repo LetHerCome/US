@@ -348,14 +348,16 @@ function personColorModal(){
   const profiles=settingsSnapshot?.profiles||[],meId=window.usProfile?.id;
   const me=profiles.find(p=>p.id===meId),partner=profiles.find(p=>p.id!==meId)?.display_name||'la tua persona';
   const list=window.UsPersonColors?.choices?.(profiles,meId)||[];
-  openModal('Il tuo colore',`<div class="us-setting-choice us-person-colors">${list.map(c=>`<button data-person-color="${esc(c.id)}" class="${c.mine?'active':''}"${c.taken?' disabled':''}><span><i class="us-person-swatch" style="background:${esc(c.hex)}" aria-hidden="true"></i>${esc(c.name)}</span><b>${c.mine?'Il tuo':c.taken?esc(partner):''}</b></button>`).join('')}</div>${me?.person_color?'<button type="button" class="us-ob-link us-person-color-reset" data-person-color="">Torna al colore di sempre</button>':''}`,'US PLUS');
+  // The usual colour is no way back when the other person has taken it (the server checks only a chosen one).
+  const usualFree=!list.find(c=>c.id===(me?.role==='beatrice'?'lilla':'rosa'))?.taken;
+  openModal('Il tuo colore',`<div class="us-setting-choice us-person-colors">${list.map(c=>`<button data-person-color="${esc(c.id)}" class="${c.mine?'active':''}"${c.taken?' disabled':''}><span><i class="us-person-swatch" style="background:${esc(c.hex)}" aria-hidden="true"></i>${esc(c.name)}</span><b>${c.mine?'Il tuo':c.taken?esc(partner):''}</b></button>`).join('')}</div>${me?.person_color&&usualFree?'<button type="button" class="us-ob-link us-person-color-reset" data-person-color="">Torna al colore di sempre</button>':''}`,'US PLUS');
   $('usSettingsModalBody').querySelectorAll('[data-person-color]').forEach(btn=>btn.addEventListener('click',async()=>{
     if(btn.disabled)return;
     const color=btn.dataset.personColor||null;
     const {error}=await sb.rpc('set_my_color',{p_color:color});
     if(error){toast(/partner color/.test(error.message||'')?`È il colore di ${partner}`:'Non riesco a cambiare il colore. Riprova.');return;}
     if(me)me.person_color=color;
-    window.UsPersonColors?.applyCoupleColors?.(profiles);
+    window.UsPersonColors?.applyCoupleColors?.(profiles);Promise.resolve(window.UsCoupleContext?.hydrate?.()).catch(()=>{});
     closeModal();hydrateUsSettings();toast('Colore aggiornato ♡');
   }));
 }

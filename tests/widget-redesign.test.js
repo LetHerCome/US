@@ -194,3 +194,13 @@ test('back in the foreground the other person\'s new look is read, and only then
     await ctx.close();
   } finally { await h.close(); }
 });
+
+// A colour changed in the Profilo or at the first opening reaches the couple data at once (the Profilo
+// card, the characters, the widgets), and «Torna al colore di sempre» never lands on the other one's colour.
+test('a new colour refreshes the couple; the way back only when the usual colour is free', () => {
+  const settings = read('settings.js'), onboarding = read('onboarding.js');
+  assert.ok(settings.includes("window.UsPersonColors?.applyCoupleColors?.(profiles);Promise.resolve(window.UsCoupleContext?.hydrate?.()).catch(()=>{});"));
+  assert.ok(onboarding.includes("colors.applyCoupleColors(profiles.filter(p=>p.id!=='~partner'));\n      Promise.resolve(globalThis.UsCoupleContext?.hydrate?.()).catch(()=>{});"));
+  assert.ok(settings.includes("const usualFree=!list.find(c=>c.id===(me?.role==='beatrice'?'lilla':'rosa'))?.taken;"));
+  assert.ok(settings.includes("${me?.person_color&&usualFree?'<button type=\"button\" class=\"us-ob-link us-person-color-reset\""));
+});
