@@ -326,9 +326,11 @@ test('L8 a refused camera or microphone says where to turn it back on', async ()
     if (device === 'camera') await harness.api.openCamera(); else await harness.api.startRecording();
     return harness.el('leftForYouComposerStatus').textContent;
   };
-  assert.equal(await deny(createHarness({ native: true }), 'camera'), 'Manca il permesso per la fotocamera. Attivalo da Impostazioni del telefono › App › US › Autorizzazioni.');
+  // In the apps «Scatta una foto» is the phone camera (27/11): its permission is
+  // the system's. The in-app viewfinder, and its message, stay for the browser.
+  assert.equal(await deny(createHarness(), 'camera'), 'Manca il permesso per la fotocamera. Attivalo dalle impostazioni del browser per questo sito.');
   assert.equal(await deny(createHarness({ native: true }), 'microphone'), 'Manca il permesso per il microfono. Attivalo da Impostazioni del telefono › App › US › Autorizzazioni.');
-  assert.equal(await deny(createHarness({ native: true, ios: true }), 'camera'), 'Manca il permesso per la fotocamera. Attivalo da Impostazioni del telefono › US.');
+  assert.equal(await deny(createHarness({ native: true, ios: true }), 'microphone'), 'Manca il permesso per il microfono. Attivalo da Impostazioni del telefono › US.');
   assert.equal(await deny(createHarness(), 'microphone'), 'Manca il permesso per il microfono. Attivalo dalle impostazioni del browser per questo sito.');
 });
 
@@ -356,4 +358,62 @@ test('every new Italian text has its English in i18n-en.js', () => {
   for (const text of samples) assert.notEqual(i18n.lookup(dict, text), null, text);
   assert.equal(i18n.lookup(dict, "L’ultima cosa che hai lasciato a Bea: aperta Monday alle 9:40 PM."), 'The last thing you left for Bea: opened Monday at 9:40 PM.');
   assert.equal(i18n.lookup(dict, "L’ultima cosa che hai lasciato a Bea: aperta il October 2 alle 8:00 AM."), 'The last thing you left for Bea: opened on October 2 at 8:00 AM.');
+});
+
+// ---- Lasciato per te: fotocamera e video (27/11/2026) ----
+// «Scatta una foto» in the apps and «Fai un video» everywhere open the phone's
+// own camera: the same file input, with capture; a gallery pick puts it back.
+const clicks = (input) => { let n = 0; input.addEventListener('click', () => { n += 1; }); return () => n; };
+
+test('27/11 in the apps «Scatta una foto» opens the phone camera, not the in-app viewfinder', async () => {
+  const { api, el, window } = createHarness({ native: true });
+  let asked = 0;
+  window.mediaDevices = { getUserMedia: async () => { asked += 1; throw new Error('no'); }, enumerateDevices: async () => [] };
+  const photo = el('leftForYouComposerPhotoFile');
+  photo.setAttribute('accept', 'image/jpeg,image/png,image/webp');
+  const opened = clicks(photo);
+  api.setComposerKind('photo');
+  await api.openCamera();
+  assert.equal(opened(), 1);
+  assert.equal(photo.getAttribute('accept'), 'image/*', 'Capacitor needs image/* to start the camera app');
+  assert.equal(photo.getAttribute('capture'), 'environment');
+  assert.equal(asked, 0, 'no getUserMedia in the apps');
+  assert.equal(api.composer.cameraOpen, false);
+  el('leftForYouComposerPhotoPick').click();
+  assert.equal(opened(), 2);
+  assert.equal(photo.getAttribute('accept'), 'image/jpeg,image/png,image/webp', 'the gallery keeps its own types');
+  assert.equal(photo.getAttribute('capture'), null);
+});
+
+test('27/11 in the browser «Scatta una foto» keeps the in-app viewfinder', async () => {
+  const { api, el, window } = createHarness();
+  let asked = 0;
+  window.mediaDevices = { getUserMedia: async () => { asked += 1; return { getTracks: () => [] }; }, enumerateDevices: async () => [] };
+  const opened = clicks(el('leftForYouComposerPhotoFile'));
+  await api.openCamera();
+  assert.equal(asked, 1);
+  assert.equal(opened(), 0);
+  assert.equal(api.composer.cameraOpen, true);
+  api.closeCamera();
+});
+
+test('27/11 «Fai un video» records with the camera and is checked like a gallery video', async () => {
+  const { api, el } = createHarness();
+  const video = el('leftForYouComposerVideoFile');
+  video.setAttribute('accept', 'video/mp4,video/webm,video/quicktime');
+  const opened = clicks(video);
+  api.setComposerKind('video');
+  el('leftForYouComposerVideoCamera').click();
+  assert.equal(opened(), 1);
+  assert.equal(video.getAttribute('accept'), 'video/*', 'Capacitor needs video/* to start the camera app');
+  assert.equal(video.getAttribute('capture'), 'environment');
+  // A recording over the limit gets the same message as a gallery video.
+  video.files = [{ name: 'VID.mp4', type: 'video/mp4', size: 20 * 1024 * 1024 + 1 }];
+  video.fire('change');
+  await sleep(5);
+  assert.equal(el('leftForYouComposerStatus').textContent, 'Il video è troppo grande (massimo 20 MB).');
+  el('leftForYouComposerVideoPick').click();
+  assert.equal(opened(), 2);
+  assert.equal(video.getAttribute('accept'), 'video/mp4,video/webm,video/quicktime');
+  assert.equal(video.getAttribute('capture'), null);
 });

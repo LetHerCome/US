@@ -2360,6 +2360,8 @@
     'Resta privata, solo tra voi due': 'Stays private, just between you two',
     'Scegli dalla galleria': 'Choose from gallery',
     'Fino a 25 MB': 'Up to 25 MB',
+    'Fai un video': 'Record a video',
+    'Resta privato, solo tra voi due': 'Stays private, just between you two',
     Brano: 'Track',
 
     // ------------------------------------------------------------ Parity gioca

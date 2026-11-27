@@ -2,6 +2,17 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Lasciato per te: fotocamera e video (27/11)
+
+**Stato:** ramo `claude/lasciato-fotocamera-video`, verso staging. Nessuna migrazione. Nelle app arriva solo con un AAB nuovo (cambiano anche manifest e codice Android) e una build TestFlight nuova (il web sta dentro l'app). Nel sito basta il rilascio web: lì c'è solo «Fai un video».
+
+**Cosa cambia:**
+- **Scatta una foto:** nelle app apre la fotocamera del telefono, quella di sempre, al posto del mirino dentro US. Nel browser resta il mirino di US.
+- **Fai un video:** nuovo, sopra «Scegli un video». Apre la fotocamera del telefono in modalità video, con l'audio. Valgono gli stessi limiti dei video della galleria (30 secondi e 20 MB) e lo stesso messaggio se il video è troppo lungo o troppo grande. Sul computer, dove la fotocamera non si apre, mostra la scelta dei file.
+- **Android, il pezzo che mancava:** da Android 11 un'app «vede» la fotocamera del telefono solo se lo dichiara nel manifest; senza, il bottone avrebbe aperto la galleria. Ora è dichiarato, per le foto e per i video.
+- **Android, video:** la fotocamera riceve i limiti di US (30 secondi, poco meno di 20 MB) e si ferma da sola, se l'app della fotocamera li rispetta. Con la qualità alta del telefono 20 MB possono bastare per soli 10 secondi circa.
+- **iPhone:** le frasi per fotocamera e microfono c'erano già. iOS non riceve limiti: con un video più lungo di 30 secondi o più grande di 20 MB compare il messaggio e il video non parte.
+
 ### Widget iPhone col redesign e blocca schermo (26/11)
 
 **Stato:** ramo `claude/widget-redesign-ios` (sopra quello Android). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.
