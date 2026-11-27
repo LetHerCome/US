@@ -129,5 +129,9 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // version of the tavola, the second row that fits itself and the other
   // person's sheet (~40 KB after trimming its own comments and dead strings)
   // cross it by ~8 KB: 3.5 -> 3.55 MB.
-  assert.ok(total <= 3.55 * 1024 * 1024, `precache is ${total} bytes: stays under 3.55 MB`);
+  // Integration of 28/11/2026 (avvio veloce, apertura, intro, Gioca, Come stai,
+  // Il vostro mese): the founder raised the budget (27/11: «alza il limite»).
+  // The native apps do not use the service worker (platform.js canUseServiceWorker),
+  // only the browser/PWA pays it; the card images stay out of the precache: 3.55 -> 4 MB.
+  assert.ok(total <= 4 * 1024 * 1024, `precache is ${total} bytes: stays under 4 MB`);
 });

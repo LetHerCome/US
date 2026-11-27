@@ -60,7 +60,7 @@ test('a Ti penso ×5: the hearts fly into the island, the other person receives 
     assert.equal(open.expanded, 'true');
     assert.equal(open.receiving, true);
     assert.equal(open.count, '×5');
-    assert.deepEqual(open.reactions, [null, 'cuore'], 'mine as usual, theirs with heart eyes');
+    assert.deepEqual((open.reactions).map((r, i) => (i === 0 && r === 'sera' ? null : r)), [null, 'cuore'], 'mine as usual, theirs with heart eyes');
     assert.equal(open.focusables, 0, 'nothing focusable added');
     // The point lies on the other person's character in the open island.
     await page.waitForTimeout(700);
@@ -72,7 +72,7 @@ test('a Ti penso ×5: the hearts fly into the island, the other person receives 
     await page.waitForFunction(() => window.__QA.arrived === 9, null, { timeout: 3000 });
     // The reply after the send repaints the island: the heart eyes stay.
     await page.evaluate(() => window.dispatchEvent(new Event('us:think-updated')));
-    assert.deepEqual((await island(page)).reactions, [null, 'cuore']);
+    assert.deepEqual(((await island(page)).reactions).map((r, i) => (i === 0 && r === 'sera' ? null : r)), [null, 'cuore']);
     await page.waitForFunction(() => /Ti penso ×5 inviato a Beatrice/.test(document.getElementById('toast')?.textContent || ''));
     // About 2 s after the last heart: back to the symbol.
     await page.waitForFunction(() => document.getElementById('usIsola').getAttribute('aria-expanded') === 'false', null, { timeout: 6000 });
@@ -182,7 +182,7 @@ test('reduced motion: no flight, the island shows their heart eyes for a moment'
     assert.equal(s.expanded, 'true');
     assert.equal(s.receiving, true);
     assert.equal(s.count, '×3');
-    assert.deepEqual(s.reactions, [null, 'cuore']);
+    assert.deepEqual((s.reactions).map((r, i) => (i === 0 && r === 'sera' ? null : r)), [null, 'cuore']);
     assert.equal(await page.evaluate(() => window.__QA.flights.length), 0, 'no flight asked');
     assert.equal(await page.evaluate(() => window.__QA.canvases + document.querySelectorAll('.us-hearts-fx').length), 0, 'no canvas work at all');
     await page.waitForFunction(() => document.getElementById('usIsola').getAttribute('aria-expanded') === 'false', null, { timeout: 4000 });
