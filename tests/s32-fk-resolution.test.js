@@ -23,6 +23,8 @@ const PERSONAL_CASCADE=new Set([
   'profiles>us_battute.recipient_id','profiles>us_battute_mute.user_id',
   // La bacheca, fase 2 (27/11/2026): a person's post-its on the board go with them.
   'profiles>us_bacheca_notes.author_id',
+  // Il vostro mese (27/11/2026): who opened which pack goes with the person; the packs are the couple's.
+  'profiles>us_mese_aperti.user_id',
   // La sfida della settimana (03/11/2026): who sent which photo goes with the person (the Ricordo follows its own rule).
   'profiles>couple_weekly_challenge_photos.user_id',
   'profiles>notification_preferences.user_id','profiles>partner_knowledge_attempts.user_id','profiles>progression_reward_views.profile_id',
@@ -71,7 +73,8 @@ test('every user reference is classified, and shared content fails closed',async
     for(const key of [...PERSONAL_CASCADE,...OPERATIONAL_SET_NULL,...SHARED_FAIL_CLOSED])assert.ok(seen.has(key),'stale classification '+key);
     // La vostra bacheca (25/11/2026): +2 (who pinned, who banned).
     // La bacheca, fase 2 (27/11/2026): +1 (who wrote the post-it).
-    assert.equal(seen.size,50);
+    // Il vostro mese (27/11/2026): +1 (who opened a pack).
+    assert.equal(seen.size,51);
   }finally{await db.close();}
 });
 

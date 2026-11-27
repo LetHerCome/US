@@ -313,6 +313,13 @@ const layers=[
     close:()=>window.USOggiLook?.back?.()
   },
   {
+    // Il vostro mese (27/11/2026): back goes from a card to the fan, the share, the pack, then out.
+    name:'mese',
+    find:()=>document.getElementById('usMese'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsMese?.back?.()
+  },
+  {
     // Sintonia: the reward window and the level moment sit above everything.
     // Back does what their own button does (Chiudi keeps the reward).
     name:'progression-unlock',

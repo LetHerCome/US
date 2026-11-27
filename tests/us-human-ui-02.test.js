@@ -201,6 +201,8 @@ test('Gioca: RPC surface is explicit; Swipe adds only its start authority and no
   const src = read('games.js');
   const rpcs = [...new Set([...src.matchAll(/sb\.rpc\('([a-z_0-9]+)'/g)].map((m) => m[1]))].sort();
   assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_game_intesa_v1', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
+  // Il vostro mese (27/11/2026): the shortcut reads get_carte_v1 to say a pack is waiting.
+  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_carte_v1', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
   assert.doesNotMatch(src, /localStorage|sessionStorage|indexedDB/);
 });
 
@@ -360,7 +362,7 @@ test('release: one BUILD_ID owns HTML, version marker and atomic shell cache', (
 
 test('no new dependencies', () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/haptics', '@capacitor/ios', '@capacitor/push-notifications', '@capawesome/capacitor-app-update', '@supabase/supabase-js', '@us/app-icon', '@us/app-lock', '@us/apple-signin', '@us/google-signin', '@us/photo-place', '@us/push-support', '@us/splash-theme', '@us/widget-bridge']); // Accedi con Apple (05/11/2026, iOS Store V1): local apple-signin plugin, iOS only; Mappa dei Ricordi (29/10/2026): local photo-place plugin; Icone dell'app (29/10/2026, Premi Sintonia V2): local app-icon plugin; Aggiornamento dell'app (29/10/2026, founder): Play in-app updates plugin; Accesso con Google (25/10/2026): local Credential Manager plugin; M15: iOS platform; Native Security V1: local app-lock plugin; Native Notifications V1: official push plugin + local push-support; 18/10/2026: local splash-theme plugin (Android splash follows the app theme)
+  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/filesystem', '@capacitor/haptics', '@capacitor/ios', '@capacitor/push-notifications', '@capacitor/share', '@capawesome/capacitor-app-update', '@supabase/supabase-js', '@us/app-icon', '@us/app-lock', '@us/apple-signin', '@us/google-signin', '@us/photo-place', '@us/push-support', '@us/splash-theme', '@us/widget-bridge']); // Il vostro mese (27/11/2026): official Share + Filesystem plugins, to share the 9:16 images on Android; Accedi con Apple (05/11/2026, iOS Store V1): local apple-signin plugin, iOS only; Mappa dei Ricordi (29/10/2026): local photo-place plugin; Icone dell'app (29/10/2026, Premi Sintonia V2): local app-icon plugin; Aggiornamento dell'app (29/10/2026, founder): Play in-app updates plugin; Accesso con Google (25/10/2026): local Credential Manager plugin; M15: iOS platform; Native Security V1: local app-lock plugin; Native Notifications V1: official push plugin + local push-support; 18/10/2026: local splash-theme plugin (Android splash follows the app theme)
   assert.deepEqual(Object.keys(pkg.devDependencies).sort(), ['@capacitor/cli', '@electric-sql/pglite', 'esbuild']);
 });
 
