@@ -25,4 +25,3 @@ test('fast start: on return, what is not on screen waits for the page on screen'
   assert.match(read('widgets.js'), /window\.usAfterForeground \|\| \(\(task\) => task\(\)\)\)\(\(\) => \{\n\s+if \(document\.hidden \|\| !ownerHash\) return;/);
   assert.match(read('fix4.js'), /\(window\.usAfterForeground \|\| \(\(task\) => task\(\)\)\)\(checkForUpdate, \d+\)/);
 });
-

@@ -2,6 +2,21 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Build più leggera, cache sicura e test verdi (27/11)
+
+**Stato:** ramo `claude/controllo-build-ci`, verso staging.
+
+**Cosa cambia:**
+- **Telefoni sempre coi file nuovi:** la build del sito di produzione mette da sola nel numero di versione un'impronta dei file (`<rilascio>-<impronta>`). Prima, se un rilascio cambiava il codice senza `npm run build:id` fatto a mano, i telefoni con l'app installata tenevano i file vecchi dalla cache (dall'ultimo id `us-rilascio-20261114-109` sono cambiati 23 file JS/CSS). Se cambiano solo documenti o test l'impronta resta uguale e non compare il banner di aggiornamento. Chi usa l'app non vede altro.
+- **App più leggera:** le immagini originali dei disegni (`assets/source`, 34 MB) non finiscono più nell'APK né sul sito, e nemmeno i compagni ritirati, le icone di Impostazioni e Stories che non si vedono più e il catalogo delle stelle che non si carica più (restano nel repository, sono APPROVED). La parte web dell'APK passa da 40,6 MB a 5,1 MB; il sito da 39,5 a 4,1 MB.
+- **Widget Android:** tolti 94 disegni dei widget vecchi (Pastello, vetro, grana, wordmark e icona Ti penso copiati dai master), 1,8 MB, che nessun widget usa più. I widget già sul telefono non cambiano: resta tutto quello che usano, Giorni insieme compreso. Arriva con un AAB nuovo.
+- **Stories via davvero:** `stories.js` e `stories.css` (57 KB) si scaricavano e si tenevano offline senza fare niente; ora non ci sono più. L'archivio delle Stories in Impostazioni resta. La cache offline scende da 3.606.631 a 3.529.396 byte (margine sul limite da 11 a 88 KB).
+- **Solo per chi sviluppa:** `npm test` completo (anche database e browser) su ogni PR verso staging e `main`; i workflow non aspettano più rami che non esistono; il SQL di produzione dal workflow parte solo da `main`; i test rimasti indietro col redesign sono allineati all'app.
+
+**Test:** `tests/build-leggera.test.mjs`, `tests/widget-drawables-referenced.test.js`, `tests/ci-workflows.test.js`, `tests/cloudflare-pages-migration.test.js`, `tests/supabase-sql-workflow.test.js`.
+
+**Novità per Play:** nessuna voce a sé («Piccole correzioni»).
+
 ### Widget iPhone col redesign e blocca schermo (26/11)
 
 **Stato:** ramo `claude/widget-redesign-ios` (sopra quello Android). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.
