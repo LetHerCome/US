@@ -32,9 +32,9 @@ public final class UsPushNotices {
 
     private UsPushNotices() {}
 
-    /** Every kind the server may send. Tests keep it equal to ANDROID_NOTICE_KINDS. */
+    /** Every kind the server may send. Tests keep it equal to ANDROID_NOTICE_KINDS and ANDROID_PLURAL_KINDS. */
     public static final String[] KINDS = {
-        "test", "think", "think_reply", "daily_turn", "daily_ready", "daily_reaction", "daily_new",
+        "test", "think", "think_many", "think_reply", "daily_turn", "daily_ready", "daily_reaction", "daily_new",
         "quest", "left_for_you", "game_turn", "game_ready", "game_weekly", "game_weekly_turn",
         "calendar", "anniversary", "partner_joined", "lavagna", "postit", "bacheca_postit", "challenge", "challenge_reminder", "challenge_photo",
         "invite_reminder",
@@ -64,6 +64,10 @@ public final class UsPushNotices {
             case "think":
                 return notice(en, "US. · Ti penso", "US. · Thinking of you",
                     who + " ti sta pensando ♡", who + " is thinking of you ♡", "oggi");
+            // I cuori (27/11/2026): a Ti penso of several taps; the number stays off FCM.
+            case "think_many":
+                return notice(en, "US. · Ti penso", "US. · Thinking of you",
+                    who + " ti ha pensato tante volte ♡", who + " thought of you so many times ♡", "oggi");
             case "think_reply":
                 return notice(en, "US. · Ti penso", "US. · Thinking of you",
                     who + " ha risposto al tuo Ti penso ♡", who + " answered your thought ♡", "oggi");

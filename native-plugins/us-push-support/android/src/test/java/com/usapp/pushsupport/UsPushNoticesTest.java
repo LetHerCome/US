@@ -22,6 +22,15 @@ public class UsPushNoticesTest {
     }
 
     @Test
+    public void aThinkOfManyTapsSaysSoWithoutANumber() {
+        UsPushNotices.Notice it = UsPushNotices.forKind("think_many", "Bea", IT);
+        assertEquals("US. · Ti penso", it.title);
+        assertEquals("Bea ti ha pensato tante volte ♡", it.body);
+        assertEquals("oggi", it.page);
+        assertEquals("Bea thought of you so many times ♡", UsPushNotices.forKind("think_many", "Bea", EN).body);
+    }
+
+    @Test
     public void withoutANameTheSentenceStaysKind() {
         assertEquals("La tua persona ti sta pensando ♡", UsPushNotices.forKind("think", "", IT).body);
         assertEquals("La tua persona ti sta pensando ♡", UsPushNotices.forKind("think", null, IT).body);

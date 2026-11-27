@@ -152,14 +152,20 @@ export const ANDROID_NOTICE_KINDS = Object.freeze({
   ricorda_year_ago: 'year_ago',
   ricorda_bacheca: 'bacheca',
 });
+// I cuori (27/11/2026): «Bea ti ha pensato 5 volte». The number stays off
+// FCM; a plural notification only picks the plural kind, and the phone says
+// «tante volte». An older app does not know the kind: the generic line.
+export const ANDROID_PLURAL_KINDS = Object.freeze({
+  think: 'think_many',
+});
 const INSTALLATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const own = (map, key) => (Object.prototype.hasOwnProperty.call(map, key) ? map[key] : '');
 
 /** Strict data-only FCM v2; device is the authenticated dispatcher DB row. */
 export function fcmMessage(notification, device) {
   const installation = String(device?.installation_id || '').toLowerCase();
   if (!INSTALLATION_ID.test(installation)) throw new Error('native_installation_missing');
-  const kind = Object.prototype.hasOwnProperty.call(ANDROID_NOTICE_KINDS, notification?.type)
-    ? ANDROID_NOTICE_KINDS[notification.type] : '';
+  const kind = (notification?.plural === true && own(ANDROID_PLURAL_KINDS, notification?.type)) || own(ANDROID_NOTICE_KINDS, notification?.type);
   return {
     message: {
       token: device.token,
