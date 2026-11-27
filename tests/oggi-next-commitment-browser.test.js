@@ -24,7 +24,10 @@ test('a commitment for tomorrow added in Noi is Oggi\'s next one, refreshed afte
   // Noi, Fase A: one form, one «Ora · se c’è» (the end is no longer asked).
   await page.locator('#usCalendarStartTimeInput').fill('21:00');
   await page.locator('#usCalendarFormSave').tap();
-  await page.waitForFunction(()=>document.getElementById('usOggiNextTitle').textContent==='Cena da Marco');
+  // Saved means the form closed and the row is there; then Oggi's pill follows (slow when the whole suite runs).
+  await page.waitForFunction(()=>!document.getElementById('usCalendarFormSheet')?.classList.contains('open'),null,{timeout:45000});
+  assert.ok(await page.evaluate(()=>window.__QA.tables.calendar_entries.some(e=>e.title==='Cena da Marco')),'the commitment is saved');
+  await page.waitForFunction(()=>document.getElementById('usOggiNextTitle').textContent==='Cena da Marco',null,{timeout:45000});
   assert.deepEqual(await pill(page),{hidden:false,when:'Domani, 21:00',title:'Cena da Marco',kind:'calendar',label:'Prossimo impegno: Domani alle 21:00, Cena da Marco. Apri Noi'});
   await page.locator('.nav button:has-text("Oggi")').first().tap();
   // The page change (Due colori flood) ignores navigation until it ends, as the mockup does.

@@ -42,7 +42,9 @@ test('the island opens Il vostro angolo with Sintonia in three tabs; Gioca has n
     const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
     // L'isola (founder, 25/11/2026): the first time it opens by itself; since US vi ricorda the
     // characters introduce themselves in the bubble (us-ricorda.js), within the hours they speak.
-    await page.waitForFunction(() => localStorage.getItem(`us:isola:v1:${window.usProfile?.id}`), null, { timeout: 15000 });
+    // Wait for the couple and the island, not for the first peek: with the whole suite in
+    // parallel the peek can give up (12 tries) before the level arrives; the bubble opens it anyway.
+    await page.waitForFunction(() => window.usProfile?.couple_id && window.UsAngolo && window.UsRicorda && document.getElementById('usIsola'), null, { timeout: 30000 });
     // The clock is fixed only now: a line the app may already have said with the
     // real clock (it depends on the day and hour the test runs) is forgotten first.
     await page.evaluate(() => {
