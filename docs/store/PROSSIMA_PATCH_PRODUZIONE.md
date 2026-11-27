@@ -2,6 +2,17 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Avvio più veloce (27/11)
+
+**Stato:** ramo `claude/avvio-veloce`, dalla punta di staging `fac396a9`, non ancora spinto. Web e app: niente migrazioni, niente funzioni. Serve un AAB nuovo e una build TestFlight con la stessa versione (il pacchetto web dentro le app cambia, e su Android cambia il colore della WebView in `capacitor.config.json`). Da provare sui telefoni: avvio da app chiusa e ritorno dall'app di WhatsApp o dalla galleria, su Android e iPhone.
+
+**Cosa cambia:**
+- **L'app apre prima da chiusa.** Il codice e gli stili dentro l'app Android e iPhone ora sono compressi come sul sito: a ogni avvio il telefono legge circa 2,2 MB invece di 3,1 MB. Chi usa US in italiano non carica più il dizionario inglese (circa 230 KB), che prima bloccava la pagina prima del primo disegno. Nella prova sul PC (telefono simulato 4 volte più lento, rete finta con 150 ms per lettura, 7 avvii a testa, valore di mezzo) la domanda di oggi compare dopo 2,2 s invece di 3,5 s, l'app si sblocca dall'accesso dopo 1,7 s invece di 2,9 s, il primo colore della pagina arriva dopo 0,35 s invece di 0,53 s e i blocchi lunghi del telefono durante l'avvio scendono da 2,0 s a 0,9 s. Il PC era carico: nel caso migliore la differenza è più piccola (1,8 s invece di 1,9 s per la domanda). Sul telefono vero va riprovato.
+- **Su Android niente lampo bianco** tra la schermata di avvio e la prima pagina: la WebView parte nel colore della splash (#26142E), come su iPhone già succedeva.
+- **Tornare in US dopo pochi secondi non ricarica tutto.** Se US è rimasta in secondo piano meno di 30 secondi (una foto scelta dalla galleria, un messaggio su WhatsApp) non rilegge la domanda, la foto, il countdown, i widget e il resto: prima erano 16 letture al server a ogni ritorno, ora nessuna. Dopo 30 secondi o più si rilegge tutto come prima; il blocco con l'impronta, le notifiche toccate e i tratti della lavagna in attesa restano come prima, e ogni minuto la pagina in vista si aggiorna comunque.
+- All'avvio «La cosa di oggi» si legge una volta sola invece di due.
+- Per l'animazione d'entrata che verrà: un solo momento «la prima pagina è pronta» (Oggi con domanda e foto, oppure l'accesso o il blocco), al massimo 2,5 s dopo che Oggi si apre (8 s se qualcosa si blocca). Nessun cambio visivo per ora.
+
 ### I cuoricini volano nell'isola (27/11)
 
 **Stato:** ramo `claude/cuori-verso-isola`, verso staging, dopo «I cuori» (#317) e i widget (#318). Solo app (web): niente migrazioni, niente funzioni, nessun AAB o TestFlight necessario oltre al solito aggiornamento del web. Da provare sui telefoni (US LIVE su Android, TestFlight su iPhone) che il volo resti fluido.
