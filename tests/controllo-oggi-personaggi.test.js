@@ -17,7 +17,10 @@ const R = require('../us-ricorda.js');
 
 test('«Non dirmelo più»: every kind it switches off has its switch back in Profilo › Notifiche', () => {
   const sql = read('supabase/migrations/20261125200000_us_vi_ricorda_v1.sql');
-  const kinds = sql.match(/constraint us_battute_mute_kind check \(kind in \(([^)]+)\)\)/)[1].match(/'([a-z_*]+)'/g).map((k) => k.slice(1, -1)).filter((k) => k !== '*');
+  // The kinds the server keeps: the last migration that sets the check (bacheca and the first week came later).
+  const migrations = fs.readdirSync(path.join(__dirname, '../supabase/migrations')).filter((f) => f.endsWith('.sql')).sort().map((f) => read(`supabase/migrations/${f}`));
+  const finalCheck = migrations.filter((m) => /constraint us_battute_mute_kind\s+check/.test(m)).pop().replace(/add constraint us_battute_mute_kind\s+check/, 'constraint us_battute_mute_kind check');
+  const kinds = finalCheck.match(/constraint us_battute_mute_kind check \(kind in \(([^)]+)\)\)/)[1].match(/'([a-z_*]+)'/g).map((k) => k.slice(1, -1)).filter((k) => k !== '*');
   assert.deepEqual(Object.keys(R.KIND_NAMES).sort(), kinds.sort(), 'one name per kind the server can keep muted');
   // Back on is the same RPC with p_muted false (it deletes only that kind).
   assert.match(sql, /delete from public\.us_battute_mute mu where mu\.user_id = me and mu\.kind = p_kind;/);
@@ -81,7 +84,8 @@ test('touch targets: 44px for the island, the angolo tabs, «Non dirmelo più» 
   assert.match(css, /@media \(max-width:401px\)\{\.us-intro-swatches\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\);row-gap:4px\}\}/);
   // A taken colour says whose it is, in the setup as in the intro.
   assert.match(onboarding, /aria-label="\$\{escapeAttr\(c\.taken\?`\$\{c\.name\}, \$\{whose\(\)\}`:c\.name\)\}"/);
-  assert.match(intro, /aria-label="\$\{esc\(c\.taken \? `\$\{c\.name\}, \$\{whose\}` : c\.name\)\}"/);
+  assert.ok(intro.includes('aria-label="${esc(c.taken ? takenLabel(c) : c.name)}"'));
+  assert.ok(intro.includes('const takenLabel = (c) => (theirName ? `${c.name}, è di ${theirName}` : `${c.name}, è della tua persona`);'));
 });
 
 test('the revealed Domanda di oggi has a visible «Togli», not only the swipe', () => {

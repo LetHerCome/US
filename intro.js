@@ -126,9 +126,10 @@ function coupleNow() {
 const realCouple = () => coupleNow().filter((p) => p.id !== STAND_IN);
 function makerMarkup() {
   const role = me(), names = P()?.SHAPE_NAMES || {}, theirName = nameOf(other(), '');
-  const whose = theirName ? `è di ${theirName}` : 'è della tua persona';
+  // Whole sentences, so the English dictionary finds them.
+  const takenLabel = (c) => (theirName ? `${c.name}, è di ${theirName}` : `${c.name}, è della tua persona`);
   const shapes = (P()?.SHAPES || []).map((s) => `<button type="button" class="us-intro-shape" data-intro-shape="${esc(s)}" aria-pressed="${s === myShape()}">${character(role, '', 40, s)}<span>${esc(names[s] || s)}</span></button>`).join('');
-  const colours = (w.UsPersonColors?.choices?.(coupleNow(), w.usProfile?.id) || []).map((c) => `<button type="button" class="us-intro-swatch" data-intro-colour="${esc(c.id)}" aria-pressed="${c.mine}" aria-label="${esc(c.taken ? `${c.name}, ${whose}` : c.name)}"${c.taken ? ' disabled' : ''}><i style="background:${esc(c.hex)}"></i></button>`).join('');
+  const colours = (w.UsPersonColors?.choices?.(coupleNow(), w.usProfile?.id) || []).map((c) => `<button type="button" class="us-intro-swatch" data-intro-colour="${esc(c.id)}" aria-pressed="${c.mine}" aria-label="${esc(c.taken ? takenLabel(c) : c.name)}"${c.taken ? ' disabled' : ''}><i style="background:${esc(c.hex)}"></i></button>`).join('');
   return `<p class="us-intro-maker-label">La forma</p><div class="us-intro-shapes" role="group" aria-label="La forma">${shapes}</div>`
     + (colours ? `<p class="us-intro-maker-label">Il colore</p><div class="us-intro-swatches" role="group" aria-label="Il colore">${colours}</div>` : '')
     + '<p class="us-intro-maker-note">Gli accessori arrivano dopo: li sbloccate insieme, nel vostro angolo.</p>';
