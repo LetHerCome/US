@@ -2,6 +2,13 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Sicurezza: le funzioni vanno in produzione solo da main (27/11)
+
+**Stato:** ramo `claude/sicurezza-deploy`, verso staging. Dal controllo generale.
+
+**Cosa cambia:**
+- Il bottone che pubblica le funzioni del server in produzione accetta solo il codice di `main`, avviato da `main`, come già quello delle migrazioni. Un ramo non ancora unito può arrivare solo su staging. Per chi usa l'app non cambia niente.
+
 ### Widget dell'iPhone aggiornati anche ad app chiusa (27/11)
 
 **Stato:** ramo `claude/controllo-integrazione`, verso staging. Chiesto dal founder il 27/11 («fai fix per ios»). Arriva con una build TestFlight nuova. Servono anche le funzioni `send-web-push`, `leave-couple` e `delete-account` aggiornate su staging.

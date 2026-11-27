@@ -63,3 +63,17 @@ test('supabase sql workflow: the check logic accepts content reads and refuses e
     'select * from public.daily_questions join auth.users on true'
   ]) assert.notEqual(run(sql), 0, sql);
 });
+
+// Controllo 27/11/2026: the Edge deploy follows the same rule: production only from main.
+test('supabase edge deploy: production only from main (code and workflow), staging from any ref', () => {
+  const edge = fs.readFileSync(path.join(ROOT, '.github/workflows/supabase-edge-deploy.yml'), 'utf8');
+  assert.match(edge, /^on:\n  workflow_dispatch:\n/m);
+  assert.doesNotMatch(edge, /^\s*(push|pull_request|schedule):/m);
+  assert.ok(edge.includes('SOURCE_REF: ${{ inputs.ref }}'));
+  assert.ok(edge.includes('WORKFLOW_REF: ${{ github.ref }}'));
+  const production = edge.slice(edge.indexOf('            production)'), edge.indexOf('echo "PROJECT_REF=iiakdfsxpywdkxravqjh"'));
+  assert.ok(production.includes('if [ "$CONFIRM" != "PRODUZIONE" ]'));
+  assert.ok(production.includes('if [ "$SOURCE_REF" != "main" ] || [ "$WORKFLOW_REF" != "refs/heads/main" ]; then'), 'the main check comes before the production project is chosen');
+  const staging = edge.slice(edge.indexOf('            staging)'), edge.indexOf('            production)'));
+  assert.doesNotMatch(staging, /SOURCE_REF|WORKFLOW_REF/);
+});

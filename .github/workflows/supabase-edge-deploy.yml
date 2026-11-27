@@ -5,7 +5,9 @@ name: Supabase Edge deploy (manual)
 # Only runs when someone presses the button (never on push or pull request),
 # and every run waits for approval in the GitHub environment
 # `supabase-deploy` (required reviewer: the founder). Production also needs
-# the word PRODUZIONE. Feature flags and secrets are NOT touched: they stay
+# the word PRODUZIONE and takes the code only from main, with the workflow
+# itself started from main (controllo 27/11/2026: a branch or a commit not
+# merged yet can reach staging only). Feature flags and secrets are NOT touched: they stay
 # as set in the Supabase dashboard. The Supabase account token lives only in
 # that environment as SUPABASE_ACCESS_TOKEN; revoke it on supabase.com after
 # the release. Third-party actions and the CLI are pinned.
@@ -19,7 +21,7 @@ on:
         type: choice
         options: [staging, production]
       ref:
-        description: 'Branch o commit da cui prendere il codice'
+        description: 'Branch o commit da cui prendere il codice (production: solo main)'
         required: true
         default: main
       functions:
@@ -45,6 +47,8 @@ jobs:
       TARGET: ${{ inputs.target }}
       FUNCTIONS: ${{ inputs.functions }}
       CONFIRM: ${{ inputs.confirm }}
+      SOURCE_REF: ${{ inputs.ref }}
+      WORKFLOW_REF: ${{ github.ref }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -61,6 +65,7 @@ jobs:
             staging) echo "PROJECT_REF=dugmhngrfkuieeletatb" >> "$GITHUB_ENV" ;;
             production)
               if [ "$CONFIRM" != "PRODUZIONE" ]; then echo "::error::Per production scrivi PRODUZIONE nel campo di conferma"; exit 1; fi
+              if [ "$SOURCE_REF" != "main" ] || [ "$WORKFLOW_REF" != "refs/heads/main" ]; then echo "::error::In production solo da main: avvia il workflow da main con ref main"; exit 1; fi
               echo "PROJECT_REF=iiakdfsxpywdkxravqjh" >> "$GITHUB_ENV" ;;
             *) echo "::error::Destinazione non valida"; exit 1 ;;
           esac
