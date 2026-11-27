@@ -60,7 +60,6 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 }
 .app>.top.us-premium-top::before{display:none}
 .app>.top.us-premium-top .us-top-left,.app>.top.us-premium-top .top-actions{min-width:46px}
-#thinkButton.us-top-think,
 #leftForYouPartnerEntry.us-envelope-control{
   position:relative;
   flex:0 0 40px;
@@ -79,32 +78,9 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
   color:var(--us-color-text);
   box-shadow:none;
 }
-#thinkButton.us-top-think:focus-visible,
 #leftForYouPartnerEntry.us-envelope-control:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
 .app>.top.us-premium-top .us-top-brand{width:46px;height:46px}
 .app>.top.us-premium-top .us-top-brand-art{width:46px;height:46px}
-
-/* Heart: drawn in the text colour; when I send it fills with my colour for
-   2.4 s (mockup), when one arrives with theirs. */
-#thinkButton .us-shell-icon--think{position:relative;width:22px;height:22px}
-#thinkButton .us-shell-icon--think img{opacity:0}
-#thinkButton .us-shell-icon--think::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:currentColor;
-  -webkit-mask:url("/assets/icons/think-off.svg") center/contain no-repeat;
-  mask:url("/assets/icons/think-off.svg") center/contain no-repeat;
-}
-#thinkButton.sent .us-shell-icon--think::before,
-#thinkButton.received .us-shell-icon--think::before{-webkit-mask-image:url("/assets/icons/think-on.svg");mask-image:url("/assets/icons/think-on.svg")}
-#thinkButton.sent .us-shell-icon--think::before{background:var(--us-tu)}
-#thinkButton.received .us-shell-icon--think::before{background:var(--us-partner)}
-#thinkButton.us-top-think.sent,#thinkButton.us-top-think.received{animation:none}
-/* While the send cools down the button is disabled, but the heart stays lit (mockup: full colour for 2.4 s). */
-#thinkButton.us-top-think.sent:disabled{opacity:1!important;filter:none!important}
-#thinkButton.sent .us-shell-icon--think{animation:dc-oggi-heart .7s ease-out}
-@keyframes dc-oggi-heart{0%{scale:1}25%{scale:1.3}50%{scale:.92}70%{scale:1.12}100%{scale:1}}
 
 /* Envelope: the icon stays still; "there is something for you" is a small
    dot that beats (mockup .beat, redesign D9: one, in their colour). Same hook (data-us-attention). */
@@ -256,6 +232,12 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 #home #usDailyRitual .us-daily-ritual-question[data-length="xlong"]{font-size:15px;line-height:1.25;-webkit-line-clamp:4}
 #home #usDailyRitual .dq-foot{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
 #home #usDailyRitual[data-state="revealed"]{touch-action:pan-y;user-select:none;-webkit-user-select:none}
+/* «Togli» (27/11/2026): on the card's top-right corner, 44px to touch, the word written.
+   It takes no room in the column (its row is 0 tall) and sits over the card. */
+#home #usDailyRitualClose{justify-self:end;align-self:start;position:relative;top:16px;z-index:5;margin:0 6px -100px 0;display:inline-flex;align-items:center;gap:4px;min-width:44px;min-height:44px;padding:0 12px;border:0;border-radius:999px;background:transparent;box-shadow:none;color:var(--us-color-text-2);font:700 12.5px/1 var(--us-font-ui);cursor:pointer}
+#home #usDailyRitualClose .us-icon{--us-icon-size:15px}
+#home #usDailyRitualClose:focus-visible{outline:2px solid var(--us-noi);outline-offset:-2px}
+@media(max-height:700px){#home #usDailyRitualClose{top:12px}}
 #home #usDailyRitual .us-daily-ritual-swipe{display:block;grid-column:1/-1;margin-top:-2px;font:400 11px/1.4 var(--us-font-ui);letter-spacing:.02em;color:var(--us-color-text-3,var(--us-color-text-2));opacity:.8}
 #home #usDailyRitual .us-daily-ritual-meta{margin:0;min-width:0;font:400 13px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
 #home #usDailyRitual .us-daily-ritual-cta{
@@ -995,11 +977,11 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
 #leftForYouCameraOverlay #leftForYouCameraRetake{order:1;background:rgba(15,11,19,.55);box-shadow:inset 0 0 0 1px var(--us-color-line-strong);color:var(--us-color-text);font-weight:600}
 
 /* ---------- 13 · Reduced motion: movement becomes a fade or nothing ---------- */
-:root[data-us-motion="reduced"] :is(#thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-stage *,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-stage,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind){animation:none!important}
+:root[data-us-motion="reduced"] :is(#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-stage *,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-stage,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind){animation:none!important}
 :root[data-us-motion="reduced"] #home .us-daily-ritual-ring *{transition:none!important}
 :root[data-us-motion="reduced"] #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
 @media (prefers-reduced-motion:reduce){
-  #thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-stage *,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-stage,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind{animation:none!important}
+  #leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-stage *,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-stage,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind{animation:none!important}
   #home .us-daily-ritual-ring *{transition:none!important}
   #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
   #thinkArrival .think-arrival-hearts{display:none}

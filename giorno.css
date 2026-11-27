@@ -117,7 +117,7 @@
 /* ---------- Small words: the third grey and the ambra, darker on paper ---------- */
 :root[data-us-luce="giorno"]{--us-color-text-3:#665a54;--us-ambra:#7a4f12}
 /* Sheet kickers (the small word above a sheet's title) speak with the ceralacca. */
-:root[data-us-luce="giorno"] :is(#leftForYouOverlay,#leftForYouComposerOverlay,#usSettingsOverlay,#usWidgetHub,#usCalendarDetailSheet,.us-notes-overlay,#usNoiLavagna,.noi-sheet,#usCountdownSheet,#today,#usEventsOverlay,#usCalendarOverlay,#usCalendarFormSheet,#conservatiOverlay,.us-moment-compose-overlay,#ricordiChapterOverlay){--us-sheet-k:#b8452f!important}
+:root[data-us-luce="giorno"] :is(#leftForYouOverlay,#leftForYouComposerOverlay,#usSettingsOverlay,#usWidgetHub,#usCalendarDetailSheet,.us-notes-overlay,#usNoiLavagna,.noi-sheet,#usCountdownSheet,#today,#usEventsOverlay,#usCalendarFormSheet,#conservatiOverlay,.us-moment-compose-overlay,#ricordiChapterOverlay){--us-sheet-k:#b8452f!important}
 :root[data-us-luce="giorno"]{--us-verde:#2a6b46}
 /* Placeholders in fields: the third grey of the page, never a light one. */
 :root[data-us-luce="giorno"] :is(input,textarea)::placeholder{color:#857771!important;opacity:1}
@@ -176,7 +176,6 @@
 :root[data-us-luce="giorno"] #quiz .us-gv2-wd-pair i[data-who="tu"]{color:#231b1d!important}
 :root[data-us-luce="giorno"] #quiz .us-gv5-reveal-answers dl>div:nth-child(1),:root[data-us-luce="giorno"] #quiz .us-gv2-then dl>div:nth-child(1),:root[data-us-luce="giorno"] #quiz .us-gv5-move-pick dl>div:nth-child(1){color:#231b1d!important}
 :root[data-us-luce="giorno"] #quiz .us-wc-pair-cell[data-who="me"] .us-wc-pair-label i{color:#231b1d!important}
-:root[data-us-luce="giorno"] #thinkButton.sent .us-shell-icon--think::before{color:#231b1d!important}
 :root[data-us-luce="giorno"] #home #usOggiCaption .dot[data-who="tu"],:root[data-us-luce="giorno"] #today .question .locked .dot[data-who="tu"]{color:#231b1d!important}
 :root[data-us-luce="giorno"] #today .today-reveal--simple .today-answer[data-us-daily-answer="mine"]{color:#231b1d!important}
 :root[data-us-luce="giorno"] .us-tour-dots button[aria-current="true"]::before{color:#231b1d!important}

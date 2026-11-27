@@ -215,8 +215,6 @@ const APP_SHELL = [
   "/assets/icons/phosphor/arrow-clockwise-regular.svg",
   "/assets/icons/phosphor/star-four-regular.svg",
   "/assets/icons/phosphor/star-regular.svg",
-  "/assets/icons/think-off.svg",
-  "/assets/icons/think-on.svg",
   "/version.json",
   versioned("/manifest.webmanifest"),
   versioned("/icon-192.png"),

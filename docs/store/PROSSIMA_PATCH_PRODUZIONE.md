@@ -2,6 +2,21 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Oggi, personaggi e US vi ricorda: correzioni dal controllo (27/11)
+
+**Stato:** ramo `claude/controllo-oggi-personaggi` (sopra `claude/intro-crea-personaggio`), verso staging. Nessuna migrazione: si riusano `set_my_battute_mute_v1` e la lettura di `us_battute_mute` che ci sono già.
+
+**Cosa cambia:**
+- **«Non dirmelo più» si può davvero riaccendere.** In Profilo › Notifiche, sotto «Le voci dei personaggi», compare «Le voci che hai spento»: ogni tipo spento (compleanni, anniversari, un anno fa, quando tocca a te…) ha il suo interruttore per riaccenderlo. Se il salvataggio di «Non dirmelo più» non riesce, US lo dice e non fa finta di averlo spento.
+- **L'interruttore «Le voci dei personaggi» mostra lo stato vero**, letto dal server prima di aprire la scheda, non quello che Oggi aveva caricato.
+- **Dopo l'intro** tornano le cose che aveva trattenuto: il nuovo livello sull'isola e la frase dei personaggi.
+- **Intro più solida:** se la domanda di oggi o l'isola non sono ancora sullo schermo quando parte, l'intro le aspetta un attimo; se non arrivano salta quella tappa, e l'ultima tappa mostrata dice sempre «Fine». Il colore dell'altra persona risulta già preso anche quando il suo profilo non è ancora arrivato.
+- **Più facile da toccare:** i colori dell'intro sono alti 44 px e, sui telefoni stretti, vanno su due righe da quattro; l'isola chiusa, le schede del vostro angolo e «Non dirmelo più» arrivano a 44 px. La domanda di oggi già svelata ha un pulsante «Togli» visibile, oltre allo scorrere di lato. Nella prima apertura un colore preso dice di chi è.
+- **Parole neutre:** via «Pronto?», «Siete arrivati», «vi siete visti», «tutti e due» (frasi dei personaggi, intro, colori e US Plus). Il nome all'inizio di una frase ha la maiuscola anche quando è «La tua persona».
+- **Widget:** l'app passa sempre ai widget forma e colori di ciascun personaggio secondo il ruolo, come li disegna l'app (chi ha creato la coppia il tondo rosa, chi è entrato il quadrato lilla); il nastro delle polaroid, senza colore, usa quello del ruolo di chi ha messo la foto.
+- **Guardaroba:** il ridisegno di ogni minuto non tocca più il vostro angolo aperto, e chi usa la tastiera non perde il punto in cui era.
+- **Pulizia:** tolto codice che cercava pezzi di pagina spariti da tempo (ricordo in home, barra del legame, contatori, vecchi badge e pulsanti) e le regole CSS morte del vecchio Ti penso in alto e del vecchio calendario a tutto schermo. Una lettura in meno al server per i Ti penso del mese (non serviva più).
+
 ### Intro: prima crei il tuo personaggio (27/11)
 
 **Stato:** ramo `claude/intro-crea-personaggio`, verso staging. Chiesto dal founder dopo la prova dell'APK di staging: «aggiungi nell'intro una parte che … ti fa scegliere il personaggio prima del tutorial … senza il guardaroba che si sblocca dopo». Nessuna migrazione: usa `set_my_character_shape` e `set_my_color` che ci sono già.

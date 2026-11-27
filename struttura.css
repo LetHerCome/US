@@ -186,7 +186,7 @@
    characters lean out of it (personaggi.js). Fixed night colours: the bar is always on the photo. ---------- */
 .top.us-premium-top>.us-top-brand{z-index:2;transition:opacity .2s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
 .top.us-premium-top[data-us-isola="open"]>.us-top-brand{opacity:0;transform:scale(.6)}
-.top.us-premium-top .us-isola{position:absolute;left:50%;top:50%;z-index:1;width:56px;height:40px;min-height:0;margin:0;padding:0;overflow:hidden;transform:translate(-50%,-50%);border-radius:999px;border:1px solid rgba(247,239,233,.12);background:rgba(18,13,17,.3);box-shadow:none;color:#f7efe9;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:width .46s cubic-bezier(.2,.8,.2,1),height .46s cubic-bezier(.2,.8,.2,1),background-color .3s ease,box-shadow .3s ease,border-color .3s ease}
+.top.us-premium-top .us-isola{position:absolute;left:50%;top:50%;z-index:1;width:56px;height:44px;min-height:0;margin:0;padding:0;overflow:hidden;transform:translate(-50%,-50%);border-radius:999px;border:1px solid rgba(247,239,233,.12);background:rgba(18,13,17,.3);box-shadow:none;color:#f7efe9;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:width .46s cubic-bezier(.2,.8,.2,1),height .46s cubic-bezier(.2,.8,.2,1),background-color .3s ease,box-shadow .3s ease,border-color .3s ease}
 .top.us-premium-top .us-isola[hidden]{display:none}
 .top.us-premium-top[data-us-isola="open"] .us-isola{width:220px;height:50px;background:rgba(18,13,17,.8);border-color:rgba(247,239,233,.24);box-shadow:0 10px 26px rgba(0,0,0,.35)}
 .top.us-premium-top .us-isola:focus-visible{outline:2px solid #f7efe9;outline-offset:3px}
@@ -204,7 +204,7 @@
 /* ---------- Il vostro angolo: the level, then Voi · Guardaroba · Premi (tavola, 25/11/2026) ---------- */
 #usAngolo .us-angolo-livello{display:grid;grid-template-columns:minmax(0,1fr);min-width:0}
 #usAngolo .us-angolo-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:999px;border:1px solid var(--us-color-line,rgba(247,239,233,.08));background:color-mix(in srgb,var(--us-color-text,#f7efe9) 6%,transparent)}
-#usAngolo .us-angolo-tabs [role="tab"]{min-height:40px;margin:0;padding:0 6px;border:0;border-radius:999px;background:transparent;box-shadow:none;color:var(--us-color-text,#f7efe9);font:700 13.5px/1 var(--us-font-ui,'Figtree',sans-serif);cursor:pointer;transition:background-color .2s ease,color .2s ease}
+#usAngolo .us-angolo-tabs [role="tab"]{min-height:44px;margin:0;padding:0 6px;border:0;border-radius:999px;background:transparent;box-shadow:none;color:var(--us-color-text,#f7efe9);font:700 13.5px/1 var(--us-font-ui,'Figtree',sans-serif);cursor:pointer;transition:background-color .2s ease,color .2s ease}
 #usAngolo .us-angolo-tabs [role="tab"][aria-selected="true"]{background:var(--us-color-text,#f7efe9);color:var(--us-color-bg,#120d11);font-weight:800}
 #usAngolo .us-angolo-tabs [role="tab"]:focus-visible{outline:2px solid var(--us-color-text,#f7efe9);outline-offset:2px}
 #usAngolo .us-angolo-panel{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
@@ -265,7 +265,7 @@
 #usBattuta .us-battuta-go{min-height:54px;margin:0;border:0;border-radius:999px;background:linear-gradient(90deg,var(--us-tu,#ff7c96),var(--us-partner,#a98bff));color:#1a1020;font:800 15px/1 var(--us-font-ui,'Figtree',sans-serif);box-shadow:none}
 #usBattuta .us-battuta-later{min-height:50px;margin:0;border:1px solid var(--us-color-line-strong,rgba(247,239,233,.18));border-radius:999px;background:transparent;color:var(--us-color-text,#f7efe9);font:700 14.5px/1 var(--us-font-ui,'Figtree',sans-serif);box-shadow:none}
 .us-battuta-note{margin:0;font-size:12.5px;line-height:1.45;text-align:center;color:var(--us-color-text-2,rgba(247,239,233,.6))}
-#usBattuta .us-battuta-never{align-self:center;min-height:40px;margin:0;padding:0 12px;border:0;background:transparent;color:var(--us-color-text-2,rgba(247,239,233,.6));font:600 12.5px/1 var(--us-font-ui,'Figtree',sans-serif);text-decoration:underline;box-shadow:none}
+#usBattuta .us-battuta-never{align-self:center;min-height:44px;margin:0;padding:0 12px;border:0;background:transparent;color:var(--us-color-text-2,rgba(247,239,233,.6));font:600 12.5px/1 var(--us-font-ui,'Figtree',sans-serif);text-decoration:underline;box-shadow:none}
 
 /* Voi: «Oggi ti ho detto», until the evening. */
 #usAngolo .us-angolo-oggi[hidden]{display:none}
@@ -445,6 +445,8 @@ html.us-intro-open .us-fumetto{visibility:hidden}
 .us-intro-swatch{position:relative}
 .us-intro-swatch:disabled i{opacity:.4}
 .us-intro-swatch:disabled::after{content:"";position:absolute;width:32px;height:2px;border-radius:1px;background:#6d5e64;transform:rotate(-45deg)}
+/* Each colour at least 44px tall and 40px wide (27/11/2026): under 402px the eight go on two rows of four. */
+@media (max-width:401px){.us-intro-swatches{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:4px}}
 .us-intro-maker-note{margin:10px 0 0;color:#6d5e64;font:500 13px/1.35 var(--us-font-ui,'Figtree',sans-serif)}
 @media (prefers-reduced-motion:reduce){.us-intro,.us-intro-hole,.us-intro-guide,.us-intro-bubble,.us-intro-other{transition:none!important}.us-intro-guide svg,.us-intro-hole.is-tap::after{animation:none!important}}
 :root[data-us-motion="reduced"] :is(.us-intro,.us-intro-hole,.us-intro-guide,.us-intro-bubble,.us-intro-other){transition:none!important}

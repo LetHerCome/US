@@ -93,7 +93,8 @@ test('the app hands over both characters and writes again when a shape, colour o
   const source = read('widgets.js');
   assert.match(source, /const emptyCharacter = \(\) => \(\{ shape: '', head: '', face: '', color: '', day: '' \}\);/);
   assert.match(source, /window\.addEventListener\('us-identity-change', \(\) => \{ setTimeout\(\(\) => \{ syncCharacters\(\)\.catch\(\(\) => \{\}\); \}, 300\); \}\);/);
-  const body = source.match(/  function syncCharacters\(\) \{[\s\S]*?\n  \}\n/)[0];
+  const roleLook = source.match(/  const ROLE_LOOK = Object\.freeze\(\{[\s\S]*?\n  \}\);\n/)[0];
+  const body = roleLook + source.match(/  function syncCharacters\(\) \{[\s\S]*?\n  \}\n/)[0];
   let writes = 0;
   const profiles = [{ role: 'francesco', person_color: 'blu' }, { role: 'beatrice', person_color: null }];
   const looks = { francesco: { head: 'corona', face: null }, beatrice: { head: null, face: 'occhiali' } };
@@ -124,4 +125,36 @@ test('the app hands over both characters and writes again when a shape, colour o
   await sandbox.syncCharacters();
   assert.equal(writes, 2, 'a new shape is written again');
   assert.equal(sandbox.read().characters.me.shape, 'goccia');
+});
+
+// Controllo 27/11/2026: the widgets draw by viewer (me = ball) when a value is missing, the app by
+// role (whoever joined = square). The app always hands over a shape and the colours, by role.
+test('the characters always carry a shape and colours by role, never left to the widget', async () => {
+  const source = read('widgets.js');
+  const roleLook = source.match(/  const ROLE_LOOK = Object\.freeze\(\{[\s\S]*?\n  \}\);\n/)[0];
+  const body = roleLook + source.match(/  function syncCharacters\(\) \{[\s\S]*?\n  \}\n/)[0];
+  const profiles = [{ role: 'francesco', person_color: null }, { role: 'beatrice', person_color: null }];
+  const sandbox = {
+    window: {
+      usProfile: { role: 'beatrice', couple_id: 'c' },
+      UsCoupleContext: { snapshot: () => ({ profiles }) },
+      // A shape not known and no palette loaded: the role's usual one, not the viewer's.
+      UsPersonaggi: { shapeOf: () => '', lookOf: () => ({}) }
+    },
+    ownerHash: 'h', memories: { state: 'none' }, couple: { characters: { me: {}, partner: {} } },
+    setTimeout: () => {}, syncMemories: () => Promise.resolve(false), scheduleWrite: () => Promise.resolve(true)
+  };
+  vm.runInNewContext(`${body}; this.syncCharacters = syncCharacters; this.read = () => couple;`, sandbox);
+  await sandbox.syncCharacters();
+  assert.deepEqual(JSON.parse(JSON.stringify(sandbox.read().characters)), {
+    me: { shape: 'quadrato', head: '', face: '', color: '#a98bff', day: '#ab9ddb' },
+    partner: { shape: 'palla', head: '', face: '', color: '#ff7c96', day: '#e7a1ab' }
+  });
+  // The same defaults as personaggi.js and person-colors.js.
+  const colors = require('../person-colors.js');
+  assert.equal(colors.PALETTE.rosa, '#ff7c96'); assert.equal(colors.PALETTE.lilla, '#a98bff');
+  assert.equal(colors.PALETTE_GIORNO.rosa, '#e7a1ab'); assert.equal(colors.PALETTE_GIORNO.lilla, '#ab9ddb');
+  assert.match(read('personaggi.js'), /return SHAPES\[own\] \? own : \(role === 'beatrice' \? 'quadrato' : 'palla'\);/);
+  // The polaroids' tape falls back on the colour of the role of whoever added it.
+  assert.match(source, /const tint = \(row\) => couple\.characters\?\.\[row\?\.by === 'me' \? 'me' : 'partner'\]\?\.color \|\| ROLE_LOOK\[row\?\.by === 'me' \? myRoleNow\(\) :/);
 });
