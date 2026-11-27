@@ -2,6 +2,15 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Ti penso ×N anche dai widget e nell'avviso Android (27/11)
+
+**Stato:** ramo `claude/widget-ti-penso-ripetuto`, verso staging, dopo «I cuori» (#317). Ordine: 1) migrazione `20261127152323_widget_ti_penso_ripetuto` (dopo `20261127141307_cuori_ti_penso`, che aggiunge `think_taps`); 2) funzioni `widget-think-send` (accetta i tocchi) e `send-web-push` (il catalogo condiviso ora mette il numero nel pacchetto Android). La funzione nuova funziona anche prima della migrazione (manda 1 tocco) e quella vecchia anche dopo (la firma vecchia è coperta dal valore predefinito). Servono un AAB nuovo (widget Android e frase dell'avviso) e una build TestFlight (widget iPhone e Controllo) con la stessa versione; senza, i widget di prima mandano 1 come oggi. Da provare sui telefoni: Android (anche con l'app chiusa da tempo) e iPhone via TestFlight.
+
+**Cosa cambia:**
+- **Il cuore del widget si può toccare tante volte di fila,** su Android, su iPhone e dal Controllo «Ti penso» dell'iPhone (blocca schermo, Centro di Controllo, tasto Azione). A ogni tocco il widget mostra subito «×2», «×3»… e quando ti fermi per un secondo e mezzo parte un solo Ti penso con quante volte hai premuto; poi il widget dice «Inviato ×5» (o «Ricambiato ×5»). Su Android anche i tocchi sul cuore che si apre sopra la Home contano. Al 99° tocco parte subito.
+- **Il widget di chi lo riceve dice quante volte:** «Bea ti ha pensato 5 volte»; sul blocca schermo dell'iPhone il cerchio mostra il cuore con «×5» e la riga sopra l'orologio «Bea ti pensa ×5». Con un tocco solo resta come prima.
+- **L'avviso Android dice il numero:** «Bea ti ha pensato 5 volte ♡» (in inglese «Bea thought of you 5 times ♡») al posto di «tante volte». Il telefono riceve solo quel numero, e solo per questo avviso: mai nomi, testi o altro.
+
 ### I cuori: Ti penso ×N e il cuore che resta (27/11)
 
 **Stato:** ramo `claude/cuori-ti-penso`, verso staging; migrazione `20261127141307_cuori_ti_penso` da applicare su staging prima delle funzioni; funzioni da deployare dopo: `send-web-push` e `widget-think-send` (tutte e due usano `_shared/think-web-push.ts`, che ora conta i tocchi, e il catalogo condiviso col tipo Android «tante volte»). Per avere la frase «tante volte» su Android serve un AAB nuovo (`UsPushNotices.java`); senza, Android dice ancora «ti sta pensando». Prototipo approvato: https://claude.ai/artifact/2NXZSrS4EypVcsAVBNDRVy.
