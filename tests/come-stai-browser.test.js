@@ -219,6 +219,8 @@ test('the six things on the characters, in the app as on the widgets; the faces 
   if (!h) return t.skip('Playwright unavailable');
   try {
     const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
+    // By day: from 22 to 6 the characters sleep and carry nothing (personaggi.js «sera»).
+    await page.clock.setFixedTime(new Date(new Date().setHours(15, 0, 0, 0)));
     await ready(page);
     // The other person at work: their character in the island carries the briefcase, at once.
     await partnerIs(page, 'lavoro', 1);
