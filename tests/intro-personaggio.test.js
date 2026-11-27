@@ -111,7 +111,8 @@ test('intro: in the real app it walks the eight stops and is not shown twice', a
 // they make it: the five shapes and the colours, the other person's taken; the guardaroba stays in
 // the angolo. Who already made it goes straight to the tour.
 test('intro: «crea» before the tour, shapes and colours only, saved with the usual rules', () => {
-  assert.match(intro, /const made = \(\) => Boolean\(mine\(\)\?\.character_shape \|\| mine\(\)\?\.person_color \|\| w\.usProfile\?\.character_shape\);/);
+  // A shape or a colour picked at the first opening counts, also before the couple is read again.
+  assert.ok(intro.includes('const made = () => Boolean(mine()?.character_shape || mine()?.person_color || w.usProfile?.character_shape || w.usProfile?.person_color);'));
   assert.match(intro, /const maker = canMake\(\) && \(force \|\| !made\(\)\);/);
   assert.match(intro, /save\('set_my_character_shape', \{ p_shape: shape \}\)/);
   assert.match(intro, /save\('set_my_color', \{ p_color: colour \}\)/);

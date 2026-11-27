@@ -28,7 +28,7 @@ const firstVisible = (selector) => [...d.querySelectorAll(selector)].find(visibl
 // where its pieces unlock. «Rivedi l'intro» shows it too, with what you have now.
 const profiles = () => { try { return w.UsCoupleContext?.snapshot?.()?.profiles || []; } catch (_) { return []; } };
 const mine = () => profiles().find((p) => p?.id && p.id === w.usProfile?.id) || null;
-const made = () => Boolean(mine()?.character_shape || mine()?.person_color || w.usProfile?.character_shape);
+const made = () => Boolean(mine()?.character_shape || mine()?.person_color || w.usProfile?.character_shape || w.usProfile?.person_color);
 const client = () => (typeof sb !== 'undefined' ? sb : null); // eslint-disable-line no-undef
 const canMake = () => Boolean(client()?.rpc && w.usProfile?.couple_id && P()?.character && P()?.SHAPES?.length);
 
