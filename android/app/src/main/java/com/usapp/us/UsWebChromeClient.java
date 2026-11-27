@@ -12,13 +12,15 @@ import android.webkit.WebView;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeWebChromeClient;
 import java.util.Arrays;
+import java.util.List;
 
 /**
- * Capacitor's WebChromeClient with two US changes.
+ * Capacitor's WebChromeClient with three US changes.
  *
  * Location: US asks only for approximate location (ACCESS_COARSE_LOCATION).
  * Capacitor's default client requests FINE and COARSE together and, on
@@ -26,16 +28,23 @@ import java.util.Arrays;
  * With FINE no longer in the manifest that would break the distance on those
  * versions, so the web prompt is answered with COARSE alone.
  *
- * Video: «Fai un video» in "Lasciato per te" (an input with accept video/*
- * and capture) opens the camera app with the composer's limits, 30 seconds
- * and a little under 20 MB, so a recording fits instead of being refused
- * afterwards. Camera apps that ignore the limits still get the composer's
- * message. Photos and every other picker stay Capacitor's.
+ * Video: «Fai un video» in "Lasciato per te" records inside US where the
+ * WebView can make an MP4 (getUserMedia, Capacitor's onPermissionRequest).
+ * Older WebViews still use an input with accept video/* and capture: that
+ * opens the camera app with the composer's limits, 30 seconds and a little
+ * under 20 MB, so a recording fits instead of being refused afterwards.
+ * Camera apps that ignore the limits still get the composer's message.
+ *
+ * Camera refused: «Scatta una foto» and the camera app for a video need the
+ * CAMERA permission. When it is refused (also for good, "don't ask again")
+ * the page gets a window event, uscamerapermissiondenied, and says where to
+ * turn it back on instead of doing nothing. Every other picker stays Capacitor's.
  */
 public final class UsWebChromeClient extends BridgeWebChromeClient {
 
     private static final int VIDEO_MAX_SECONDS = 30;
     private static final long VIDEO_MAX_BYTES = 19L * 1024 * 1024;
+    static final String CAMERA_DENIED_EVENT = "uscamerapermissiondenied";
 
     private final Bridge bridge;
     private final ActivityResultLauncher<String> coarseLauncher;
@@ -44,6 +53,8 @@ public final class UsWebChromeClient extends BridgeWebChromeClient {
     private GeolocationPermissions.Callback pendingCallback;
     private String pendingOrigin;
     private ValueCallback<Uri[]> pendingVideo;
+    private ValueCallback<Uri[]> pendingCapture;
+    private Runnable pendingCaptureStart;
 
     public UsWebChromeClient(Bridge bridge) {
         super(bridge);
@@ -88,18 +99,25 @@ public final class UsWebChromeClient extends BridgeWebChromeClient {
 
     @Override
     public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> callback, FileChooserParams params) {
-        boolean recordVideo = params.isCaptureEnabled() && Arrays.asList(params.getAcceptTypes()).contains("video/*");
-        if (!recordVideo || videoIntent().resolveActivity(bridge.getActivity().getPackageManager()) == null) {
+        List<String> accept = Arrays.asList(params.getAcceptTypes());
+        boolean recordVideo = params.isCaptureEnabled() && Arrays.asList(params.getAcceptTypes()).contains("video/*")
+            && videoIntent().resolveActivity(bridge.getActivity().getPackageManager()) != null;
+        boolean takePhoto = !recordVideo && params.isCaptureEnabled() && accept.contains("image/*");
+        if (!recordVideo && !takePhoto) {
             return super.onShowFileChooser(webView, callback, params);
         }
-        finishVideo(null);
-        pendingVideo = callback;
+        Runnable start = recordVideo
+            ? () -> startVideo(callback)
+            : () -> super.onShowFileChooser(webView, callback, params);
         // CAMERA is in the manifest, so the camera app may only be started once it is granted.
         if (hasPermission(Manifest.permission.CAMERA)) {
-            videoLauncher.launch(videoIntent());
-        } else {
-            cameraLauncher.launch(Manifest.permission.CAMERA);
+            start.run();
+            return true;
         }
+        finishCapture(null);
+        pendingCapture = callback;
+        pendingCaptureStart = start;
+        cameraLauncher.launch(Manifest.permission.CAMERA);
         return true;
     }
 
@@ -110,11 +128,36 @@ public final class UsWebChromeClient extends BridgeWebChromeClient {
         return intent;
     }
 
+    private void startVideo(ValueCallback<Uri[]> callback) {
+        finishVideo(null);
+        pendingVideo = callback;
+        videoLauncher.launch(videoIntent());
+    }
+
     private void onCameraResult(Boolean granted) {
-        if (Boolean.TRUE.equals(granted) && pendingVideo != null) {
-            videoLauncher.launch(videoIntent());
-        } else {
-            finishVideo(null);
+        Runnable start = pendingCaptureStart;
+        ValueCallback<Uri[]> callback = pendingCapture;
+        pendingCapture = null;
+        pendingCaptureStart = null;
+        if (callback == null || start == null) {
+            return;
+        }
+        if (Boolean.TRUE.equals(granted) && hasPermission(Manifest.permission.CAMERA)) {
+            start.run();
+            return;
+        }
+        callback.onReceiveValue(null);
+        // No rationale after a refusal: Android will not ask again, only Settings can turn it on.
+        boolean permanent = !ActivityCompat.shouldShowRequestPermissionRationale(bridge.getActivity(), Manifest.permission.CAMERA);
+        bridge.triggerWindowJSEvent(CAMERA_DENIED_EVENT, "{ \"permanent\": " + permanent + " }");
+    }
+
+    private void finishCapture(Uri[] result) {
+        ValueCallback<Uri[]> callback = pendingCapture;
+        pendingCapture = null;
+        pendingCaptureStart = null;
+        if (callback != null) {
+            callback.onReceiveValue(result);
         }
     }
 
