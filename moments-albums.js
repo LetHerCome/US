@@ -86,6 +86,7 @@ function ensureUi(){
             </div>
             <div class="us-album-grid" id="usAlbumGrid"></div>
           </section>
+          <section class="us-album-bacheca" id="usAlbumBacheca" hidden></section>
         </div>
       </div>
     </div>
@@ -939,6 +940,9 @@ async function openAlbum(card,{focusDelete=false}={}){
   if(author)author.textContent=currentAlbum.caption?`Aggiunto da ${currentAlbum.author}`:currentAlbum.author;
   if(note)note.hidden=!currentAlbum.caption;
   renderAlbumStory();
+  // La bacheca, fase 2 (27/11/2026): US's post-it and yours, also when it is not pinned.
+  const board=document.getElementById('usAlbumBacheca');
+  if(board){board.hidden=true;board.innerHTML='';window.UsBacheca?.memoryRow?.(board,{ref:`moment:${id}`,title:currentAlbum.caption||currentAlbum.date||'Un ricordo'});}
   overlay?.classList.add('show');
   // The modal bookkeeping (background inert, focus, page scroll lock) restyles
   // the whole page: it waits until the photo has landed, so the first frame of
@@ -964,6 +968,8 @@ async function openAlbum(card,{focusDelete=false}={}){
     }
   }
 }
+// La bacheca: «Vedilo in bacheca» and «fai spazio» close the open memory first.
+window.closeMomentAlbum=function(){if(document.getElementById('usAlbumOverlay')?.classList.contains('show'))closeAlbum();};
 window.refreshOpenMomentAlbum=function(){
   if(currentAlbum?.id&&document.getElementById('usAlbumOverlay')?.classList.contains('show'))return loadAlbum(currentAlbum.id);
   return Promise.resolve();

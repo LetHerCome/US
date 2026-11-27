@@ -120,6 +120,20 @@ const layers=[
     close:()=>window.UsCoupleNotes?.back?.()
   },
   {
+    // La bacheca, fase 3 (27/11/2026): «fai spazio» asks what to take down; back cancels it.
+    name:'bacheca-spazio',
+    find:()=>document.getElementById('ricordiBacheca'),
+    open:()=>Boolean(window.UsBacheca?.inRoom?.()),
+    close:()=>window.UsBacheca?.cancelRoom?.()
+  },
+  {
+    // La lente di Ricordi (27/11/2026): back goes from a result to the list, then out.
+    name:'ricordi-cerca',
+    find:()=>document.getElementById('usRicordiCerca'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsRicordiCerca?.back?.()
+  },
+  {
     // US vi ricorda (25/11/2026): the sheet of the characters' line.
     name:'bacheca',
     find:()=>document.getElementById('usBachecaSheet'),

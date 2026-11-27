@@ -184,6 +184,7 @@ const APP_SHELL = [
   "/assets/icons/phosphor/bell-regular.svg",
   "/assets/icons/phosphor/squares-four-regular.svg",
   "/assets/icons/phosphor/map-pin-regular.svg",
+  "/assets/icons/phosphor/magnifying-glass-regular.svg",
   "/assets/icons/phosphor/battery-low-regular.svg",
   "/assets/icons/phosphor/battery-medium-regular.svg",
   "/assets/icons/phosphor/battery-high-regular.svg",
