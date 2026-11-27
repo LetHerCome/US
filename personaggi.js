@@ -443,7 +443,7 @@
     button.setAttribute('aria-expanded', String(open));
     if (top?.dataset) { if (open) top.dataset.usIsola = 'open'; else delete top.dataset.usIsola; }
     if (open) { labelIsola(); isolaTimer = setTimeout(() => setIsola(false), ms); }
-    else { hideFumetto(); endCuori(button); if (was) paintIsola(); }
+    else { hideFumetto(); endCuori(button); endEccoti(); if (was) paintIsola(); }
   }
   // I cuoricini volano nell'isola (founder, 27/11/2026: «dove risiedono loro»). A
   // Ti penso ×N leaves: the island opens, the little hearts rise from the heart of
@@ -453,11 +453,13 @@
   // under a sheet, not during the intro, not while another island moment (the
   // first peek, a new level, US vi ricorda) is on. Otherwise app.js keeps the old
   // flight. cuoriVerso() is where the hearts land (null: not now).
-  function cuoriVerso() {
+  // The island on screen and there to see (paired, not under a sheet, not during the
+  // intro, nothing over it): its button and centre, or null.
+  function isolaInVista({ open = false } = {}) {
     const button = isola();
     if (!d || d.hidden || !button || button.hidden || !paired() || w.UsIntro?.active?.()) return null;
     if (d.body?.getAttribute?.('data-us-surface') === 'open') return null;
-    if (!receiving && button.getAttribute('aria-expanded') === 'true') return null;
+    if (!open && button.getAttribute('aria-expanded') === 'true') return null;
     const r = button.getBoundingClientRect?.();
     if (!r || !r.width || !r.height) return null;
     const vw = d.documentElement?.clientWidth || w.innerWidth || 0, vh = d.documentElement?.clientHeight || w.innerHeight || 0;
@@ -467,10 +469,88 @@
     const top = button.closest?.('.top') || button;
     const hit = typeof d.elementFromPoint === 'function' ? d.elementFromPoint(x, y) : null;
     if (hit && !top.contains(hit)) return null;
+    return { button, x, y };
+  }
+  function cuoriVerso() {
+    const at = isolaInVista({ open: Boolean(receiving) });
+    if (!at) return null;
     // The other person's place in the open island (struttura.css: 220 px wide, the
     // window 8 px in, two characters of 42 px overlapping by 12): mine, then theirs.
-    return { x: Math.round(x - 110 + 8 + 30 + 21), y: Math.round(y + 4) };
+    return { x: Math.round(at.x - 110 + 8 + 30 + 21), y: Math.round(at.y + 4) };
   }
+  // Free for a moment of its own: there to see, no hearts arriving, no bubble, not in Impostazioni.
+  function isolaLibera(options) {
+    if (receiving || fumetto()?.hasAttribute?.('data-open')) return null;
+    if (d?.getElementById('settings')?.classList.contains('active')) return null;
+    return isolaInVista(options);
+  }
+  // The island is centred with translate(-50%, -50%) (struttura.css): a squeeze keeps it, around its centre.
+  const squeeze = (scale, offset) => [{ transform: 'translate(-50%, -50%) scale(1)' }, { transform: `translate(-50%, -50%) scale(${scale})`, offset }, { transform: 'translate(-50%, -50%) scale(1)' }];
+  const reducedMotion = () => Boolean(w.UsUiFoundation?.isReducedMotion?.() || w.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+  // L'apertura che accoglie (founder, 27/11/2026): at a cold start your two characters
+  // fly from the opening (index.html) into the island. accogli() opens it at once,
+  // under the opening, with its own two out of sight, and says where they stand;
+  // land() shows them again, with a little squash. null: not now (the opening fades).
+  // An island already open (its first time, US vi ricorda speaking) takes them too.
+  function accogli({ ms = 3000 } = {}) {
+    const at = receiving || d?.getElementById('settings')?.classList.contains('active') ? null : isolaInVista({ open: true });
+    if (!at) return null;
+    const { button } = at;
+    const was = button.getAttribute('aria-expanded') === 'true';
+    button.dataset.usArriving = '1';
+    if (!was) setIsola(true, { ms });
+    let landed = false;
+    const land = (squash = true) => {
+      if (landed) return;
+      landed = true;
+      delete button.dataset.usArriving;
+      if (squash && !reducedMotion()) button.animate?.(squeeze('1.06, .94', 0.35), { duration: 380, easing: 'cubic-bezier(.22,1.45,.36,1)' });
+    };
+    const chars = [...button.querySelectorAll('[data-us-isola-duo] .us-char')];
+    const rects = chars.map((c) => c.getBoundingClientRect?.());
+    if (button.getAttribute('aria-expanded') !== 'true' || rects.length !== 2 || rects.some((r) => !r || !r.width || !r.height)) {
+      land(false);
+      if (!was) setIsola(false);
+      return null;
+    }
+    const centre = (r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    return { me: centre(rects[0]), them: centre(rects[1]), width: rects[0].width, land };
+  }
+  // Back after more than an hour away (UsForeground): no opening, the two hop in the
+  // island and it says «Eccoti, {nome}» for about 2.6 s, then it is as it was.
+  const AWAY_MS = 3600000, ECCOTI_MS = 2600;
+  let eccotiWas = null;
+  function endEccoti() {
+    const b = isola()?.querySelector('.us-isola-words b');
+    if (eccotiWas !== null && b) b.textContent = eccotiWas;
+    eccotiWas = null;
+  }
+  const nameOf = (role) => String(profileOf(role)?.display_name || (role === myRole() ? w.usProfile?.display_name : '') || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  function eccoti() {
+    const name = nameOf(myRole());
+    const at = name ? isolaLibera() : null;
+    if (!at) return false;
+    const { button } = at;
+    setIsola(true, { ms: ECCOTI_MS });
+    if (button.getAttribute('aria-expanded') !== 'true') return false;
+    const b = button.querySelector('.us-isola-words b');
+    if (b) {
+      eccotiWas = b.textContent;
+      b.textContent = typeof w.usT === 'function' ? w.usT('Eccoti, {name}', { name }) : `Eccoti, ${name}`;
+    }
+    if (reducedMotion()) return true;
+    button.animate?.(squeeze('1.08', 0.4), { duration: 460, easing: 'cubic-bezier(.22,1.45,.36,1)' });
+    // After they have risen into the window: a hop each.
+    button.querySelectorAll('[data-us-isola-duo] .us-char').forEach((c, i) => c.animate?.([
+      { translate: '0 0', rotate: '0deg' },
+      { translate: '0 -7px', rotate: `${i ? 8 : -8}deg`, offset: 0.3 },
+      { translate: '0 0', rotate: '0deg', offset: 0.55 },
+      { translate: '0 -4px', rotate: '0deg', offset: 0.75 },
+      { translate: '0 0', rotate: '0deg' }
+    ], { duration: 900, delay: 620 + i * 90, easing: 'ease-out' }));
+    return true;
+  }
+  const awayLong = () => { const ms = w.UsForeground?.awayMs?.(); return Number.isFinite(ms) && ms > AWAY_MS; };
   function riceviCuori({ count = 1, ms = 2200 } = {}) {
     if (!cuoriVerso()) return false;
     const button = isola();
@@ -534,6 +614,7 @@
   function parla({ text, speaker = 'me', cta = '', reaction, onTap, onHold, ms = 8000 } = {}) {
     const f = fumetto();
     if (!f || !text || !paired() || receiving) return false;
+    endEccoti();
     setIsola(true, { ms, reaction: reaction || (speaker === 'both' ? 'cuore' : undefined) });
     if (isola()?.getAttribute('aria-expanded') !== 'true') return false;
     f.querySelector('[data-us-fumetto-text]').textContent = text;
@@ -589,8 +670,10 @@
     }, retry ? PEEK_WAIT[Math.min(peekTries - 1, PEEK_WAIT.length - 1)] : 900);
   }
 
-  // Apertura A (25/11/2026): the opening shows your two characters before anything loads,
-  // so they are kept here, with their colours resolved (the page has no couple colours yet then).
+  // L'apertura che accoglie (27/11/2026; Apertura A before it): the opening shows your two
+  // characters and says hello before anything loads, so they are kept here: the two with
+  // their colours resolved (the page has no couple colours yet then), your names and
+  // «Insieme dal» (the days are counted at the opening). Signing out forgets both (app.js).
   function keepLaunchDuo() {
     try {
       if (!w.localStorage || !w.usProfile?.id) return;
@@ -600,6 +683,12 @@
       const solid = (svg) => svg.replace(/var\((--us-[a-z-]+)\)/g, (all, name) => (css?.getPropertyValue(name) || '').trim() || all);
       const duo = { me: solid(character(me, { size: 50, reaction: '', mood: '' })), them: solid(character(them, { size: 50, reaction: '', mood: '' })) };
       w.localStorage.setItem('us:launch-duo:v1', JSON.stringify(duo));
+      let since = '';
+      try { since = String(w.UsCoupleContext?.snapshot?.()?.couple?.started_on || ''); } catch (_) { since = ''; }
+      // The couple's row can arrive after the profiles: a date already kept stays until a new one is known.
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(since)) { try { since = String(JSON.parse(w.localStorage.getItem('us:launch-hello:v1') || 'null')?.since || ''); } catch (_) { since = ''; } }
+      const hello = { name: nameOf(me), partner: nameOf(them), since: /^\d{4}-\d{2}-\d{2}$/.test(since) ? since : '' };
+      w.localStorage.setItem('us:launch-hello:v1', JSON.stringify(hello));
     } catch (_) {}
   }
   const paintAll = () => { paintMe(); paintDuo(); paintWardrobe(); paintIsola(); keepLaunchDuo(); };
@@ -649,7 +738,12 @@
     // Back on Oggi, back in the app: maybe a new level to show.
     const home = d.getElementById('home');
     if (home && typeof w.MutationObserver === 'function') new w.MutationObserver(() => { if (home.classList.contains('active')) maybePeek(); else setIsola(false); }).observe(home, { attributes: true, attributeFilter: ['class'] });
-    d.addEventListener('visibilitychange', () => { if (d.hidden) setIsola(false); else maybePeek(); });
+    d.addEventListener('visibilitychange', () => {
+      if (d.hidden) { setIsola(false); return; }
+      maybePeek();
+      // Back after more than an hour: «Eccoti» once the screen is back.
+      if (awayLong()) setTimeout(() => { if (!d.hidden) eccoti(); }, 400);
+    });
     // The intro held back the island's moment (a new level, the first time): tried again when it closes.
     w.addEventListener('us:intro-done', () => maybePeek());
     const boot = () => {
@@ -667,7 +761,7 @@
     };
     if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot, { once: true });
     else boot();
-    w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla, cuoriVerso, riceviCuori, cuoriArrivo });
+    w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla, cuoriVerso, riceviCuori, cuoriArrivo, accogli, eccoti });
   }
 
   return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, LOOK_HEAD, LOOK_FACE, LOOK_NAMES, LOOK_POINTS, LOOK_MOMENTS, character, slot, shapeOf, lookOf, colorName, myRole, reactionOf, unlockedLook, paintMe, paintDuo, paintWardrobe });

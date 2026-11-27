@@ -892,8 +892,9 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
     US_SIGNED_URL_STORAGE_KEY,
     US_HOME_BOOT_CACHE_KEY,
     'us:home-photo:boot:v1',
-    // Apertura A: the two characters of the opening.
-    'us:launch-duo:v1'
+    // L'apertura che accoglie: the two characters of the opening, and your names for its hello.
+    'us:launch-duo:v1',
+    'us:launch-hello:v1'
   ];
   if(profileId)storageKeys.push(`us:push:subscription:${profileId}`);
   for(const key of storageKeys){

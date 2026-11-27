@@ -49,7 +49,7 @@ test('Il vostro angolo: a sheet with the two characters and Sintonia inside', ()
 test('who opens it: the characters, the Sintonia links, a finished mission; Back closes it', () => {
   const p = read('personaggi.js');
   assert.match(p, /const entry = target\.closest\('\[data-us-angolo\]'\);\n      if \(entry\) \{ openAngolo\(entry\.dataset\.usAngolo \|\| ''\); return; \}/);
-  assert.match(p, /w\.UsAngolo = Object\.freeze\(\{ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla, cuoriVerso, riceviCuori, cuoriArrivo \}\);/);
+  assert.match(p, /w\.UsAngolo = Object\.freeze\(\{ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla, cuoriVerso, riceviCuori, cuoriArrivo, accogli, eccoti \}\);/);
   // L'isola (25/11/2026): first tap opens it, second opens the angolo; by itself the first time and at a new level.
   // Only the island's button: the open bar carries data-us-isola too, and a tap on the envelope or the bubble is not a tap on the island.
   assert.match(p, /if \(target\.closest\('button\[data-us-isola\]'\)\) \{ tapIsola\(\); return; \}/);

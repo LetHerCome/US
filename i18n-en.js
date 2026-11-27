@@ -5,6 +5,14 @@
 (function () {
   'use strict';
   const EN = {
+    // L'apertura che accoglie (27/11/2026): the hello of the opening and «Eccoti» in the island.
+    'Buongiorno, {name}': 'Good morning, {name}',
+    'Buon pomeriggio, {name}': 'Good afternoon, {name}',
+    'Buonasera, {name}': 'Good evening, {name}',
+    'Notte fonda, {name}': 'Late night, {name}',
+    'tu e {name}': 'you and {name}',
+    'Un attimo, vi preparo la giornata': 'One moment, getting your day ready',
+    'Eccoti, {name}': 'There you are, {name}',
     // Controllo del 27/11/2026: the texts of the branches that met in the integration.
     'Ogni giorno qui c’è una domanda per voi due: rispondete, poi leggete cosa ha scritto l’altra persona.': 'Every day there’s a question here for you two: answer it, then read what the other person wrote.',
     '{color}, è di {name}': '{color}, it’s {name}’s',
