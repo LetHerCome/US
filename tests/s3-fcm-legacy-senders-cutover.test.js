@@ -65,7 +65,9 @@ test('FCM v2 sender cannot request automatic Android notification rendering', as
 
 test('native delivery cannot silently restore legacy Firebase notification payloads', () => {
   const transport = read(SHARED_TRANSPORT);
-  assert.match(transport, /data: kind \? \{ v: '2', installation, k: kind \} : \{ v: '2', installation \},/);
+  assert.match(transport, /const data = kind \? \{ v: '2', installation, k: kind \} : \{ v: '2', installation \};/);
+  // Ti penso ×N (27/11/2026): the one optional extra is n, the digits of the plural Ti penso.
+  assert.match(transport, /if \(times\) data\.n = times;/);
   assert.doesNotMatch(transport, /message:\s*\{\s*token[^]*?notification:\s*\{/,
     'A message.notification causes Android OS to auto-display before the owner gate');
   const ownerGate = read('android/app/src/main/java/com/usapp/us/UsGuardedMessagingService.java');

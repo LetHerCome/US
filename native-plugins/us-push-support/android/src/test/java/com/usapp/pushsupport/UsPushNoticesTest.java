@@ -31,6 +31,32 @@ public class UsPushNoticesTest {
     }
 
     @Test
+    public void aThinkOfManyTapsSaysTheNumberWhenFcmCarriesIt() {
+        int five = UsPushNotices.times("think_many", "5");
+        assertEquals(5, five);
+        UsPushNotices.Notice it = UsPushNotices.forKind("think_many", "Bea", IT, five);
+        assertEquals("US. · Ti penso", it.title);
+        assertEquals("Bea ti ha pensato 5 volte ♡", it.body);
+        assertEquals("oggi", it.page);
+        assertEquals("Bea thought of you 99 times ♡", UsPushNotices.forKind("think_many", "Bea", EN, UsPushNotices.times("think_many", "99")).body);
+        assertEquals("La tua persona ti ha pensato 2 volte ♡", UsPushNotices.forKind("think_many", "", IT, 2).body);
+    }
+
+    @Test
+    public void onlyDigitsTwoToNinetyNineOnThePluralKindCount() {
+        for (String raw : new String[] { null, "", "1", "0", "100", "05", "-3", "2.5", " 7", "7 ", "x", "٣" }) {
+            assertEquals(raw, 0, UsPushNotices.times("think_many", raw));
+        }
+        // Another kind never reads a number, even a valid one.
+        assertEquals(0, UsPushNotices.times("think", "5"));
+        assertEquals(0, UsPushNotices.times("lavagna", "5"));
+        assertEquals(0, UsPushNotices.times(null, "5"));
+        // Without a number the plural sentence stays «tante volte»; a number on another kind changes nothing.
+        assertEquals("Bea ti ha pensato tante volte ♡", UsPushNotices.forKind("think_many", "Bea", IT, 0).body);
+        assertEquals("Bea ti sta pensando ♡", UsPushNotices.forKind("think", "Bea", IT, 5).body);
+    }
+
+    @Test
     public void withoutANameTheSentenceStaysKind() {
         assertEquals("La tua persona ti sta pensando ♡", UsPushNotices.forKind("think", "", IT).body);
         assertEquals("La tua persona ti sta pensando ♡", UsPushNotices.forKind("think", null, IT).body);

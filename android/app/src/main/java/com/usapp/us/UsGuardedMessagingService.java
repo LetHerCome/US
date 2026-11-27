@@ -57,7 +57,8 @@ public final class UsGuardedMessagingService extends MessagingService {
         // Preserve presentationOptions=[]: no OS banner while US is visible.
         // The v2 event has no private target/ref and no JS navigation action.
         if (!UsPushSupportPlugin.isActivityResumed()) {
-            postPrivateSafeNotice(data.get("installation"), data.get("k"));
+            // Ti penso ×N (27/11/2026): n, how many times, only digits and only for the plural kind.
+            postPrivateSafeNotice(data.get("installation"), data.get("k"), UsPushNotices.times(data.get("k"), data.get("n")));
         }
         PushNotificationsPlugin.sendRemoteMessage(message);
     }
@@ -78,7 +79,7 @@ public final class UsGuardedMessagingService extends MessagingService {
         }
     }
 
-    private void postPrivateSafeNotice(String installation, String kind) {
+    private void postPrivateSafeNotice(String installation, String kind, int times) {
         if (Build.VERSION.SDK_INT >= 33
             && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
         final NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -93,7 +94,7 @@ public final class UsGuardedMessagingService extends MessagingService {
         // changed, nothing is posted and no other account's name is read.
         try {
             UsPushOwnerGate.postIfCurrent(this, installation, (String partnerName) -> {
-                final UsPushNotices.Notice notice = UsPushNotices.forKind(kind, partnerName, Locale.getDefault());
+                final UsPushNotices.Notice notice = UsPushNotices.forKind(kind, partnerName, Locale.getDefault(), times);
                 final boolean known = kind != null && java.util.Arrays.asList(UsPushNotices.KINDS).contains(kind);
                 // Opens the matching tab through the public app link (app-links.mjs):
                 // a tab, never an action, a ref or private data.
