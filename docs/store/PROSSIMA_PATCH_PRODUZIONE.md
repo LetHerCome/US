@@ -2,6 +2,19 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### L'apertura che vi accoglie (27/11)
+
+**Stato:** ramo `claude/apertura-accoglie`, da `claude/avvio-veloce` (serve il suo momento «app pronta»), non ancora spinto. Solo app (web): niente migrazioni, niente funzioni. Il pacchetto web dentro le app cambia, quindi serve un AAB nuovo e una build TestFlight con la stessa versione. Da provare sui telefoni veri: apertura da app chiusa (rete buona e rete lenta), «Riduci movimento» acceso, ritorno dopo più di un'ora.
+
+**Cosa cambia:**
+- **L'apertura di quando apri US da chiusa è nuova** (sostituisce l'«Apertura A» del 25/11). Parte uguale alla schermata di avvio, poi i vostri due personaggi escono da dietro il logo, si girano uno verso l'altro e tra loro nasce un cuore. Sul telefono c'è una vibrazione leggera quando nasce il cuore (se le vibrazioni sono accese nelle Impostazioni).
+- **Vi saluta per nome:** «Buongiorno», «Buon pomeriggio», «Buonasera» o «Notte fonda», col tuo nome, e sotto «tu e <nome> · N giorni insieme». Nomi e data «Insieme dal» sono quelli salvati sul telefono l'ultima volta: il saluto non aspetta la rete. Senza nomi salvati (primo avvio, dopo l'uscita dall'account) resta solo il logo.
+- **Non dura più un tempo fisso.** Prima erano sempre 1,9 s, anche se sotto la pagina era ancora vuota. Ora aspetta che la prima pagina sia pronta: almeno 1,4 s, al massimo 3,2 s. Se c'è da aspettare, i personaggi respirano e il cuore batte; dopo 2,1 s compare «Un attimo, vi preparo la giornata».
+- **Alla fine i personaggi volano nell'isola in alto,** dove abitano, e l'app si apre da dietro con un leggero avvicinamento. L'isola resta aperta un paio di secondi e si richiude. Se l'isola non c'è o è coperta (l'accesso, il blocco con l'impronta, la coppia non completa) l'apertura sfuma come prima.
+- **Con «Riduci movimento»** prima l'apertura non c'era; ora restano logo e saluto, poi una dissolvenza quando l'app è pronta (almeno 0,9 s).
+- **Quando torni in US dopo più di un'ora** (non da chiusa) i personaggi saltellano nell'isola e la scritta diventa «Eccoti, <nome>» per circa 2,6 s, poi torna com'era. Non succede se l'isola è coperta o sta già facendo altro, né se torni prima dell'ora.
+- All'uscita dall'account il telefono dimentica anche i nomi salvati per il saluto.
+
 ### Avvio più veloce (27/11)
 
 **Stato:** ramo `claude/avvio-veloce`, dalla punta di staging `fac396a9`, non ancora spinto. Web e app: niente migrazioni, niente funzioni. Serve un AAB nuovo e una build TestFlight con la stessa versione (il pacchetto web dentro le app cambia, e su Android cambia il colore della WebView in `capacitor.config.json`). Da provare sui telefoni: avvio da app chiusa e ritorno dall'app di WhatsApp o dalla galleria, su Android e iPhone.
