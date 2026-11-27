@@ -13,6 +13,15 @@
     'tu e {name}': 'you and {name}',
     'Un attimo, vi preparo la giornata': 'One moment, getting your day ready',
     'Eccoti, {name}': 'There you are, {name}',
+    // Nuove tappe dell’intro (27/11/2026).
+    'Qui vedi quanto siete lontani. Se lo condividete, anche la batteria di {name}: così sai se un silenzio è solo un telefono scarico.': 'Here you see how far apart you are. If you share it, {name}’s battery too: so you know when a silence is just a flat phone.',
+    'Dimmi come stai con un tocco: la mia faccia cambia, anche sul telefono di {name} e nei widget.': 'Tell me how you are with one tap: my face changes, on {name}’s phone and in the widgets too.',
+    'Questo è il Ti penso. Toccalo una volta, o tante di fila: più tocchi, più cuori. Quando ti fermi parte un solo Ti penso, e {name} legge quante volte l’hai pensata.': 'This is Thinking of you. Tap it once, or many times in a row: more taps, more hearts. When you stop, one Thinking of you leaves, and {name} reads how many times you thought of them.',
+    'Io li conto tutti, eh.': 'I count every one of them, you know.',
+    'Ogni tanto parla anche US, l’app: si ricorda le vostre date, i ricordi di un anno fa, e vi tiene la bacheca in Ricordi. Mai più di una volta al giorno, promesso.': 'Now and then US, the app, speaks too: it remembers your dates, your memories from a year ago, and keeps your board in Memories. Never more than once a day, promise.',
+    'Una specie di amico che non dimentica niente.': 'A kind of friend who never forgets anything.',
+    'Un giorno arriverà anche US Plus: più vestiti per me, più giochi, più cose vostre… Per ora non posso dire altro, è una sorpresa.': 'One day US Plus will arrive too: more clothes for me, more games, more things of yours… I can’t say more for now, it’s a surprise.',
+    'Io intanto mi prenoto un cappello nuovo.': 'Meanwhile I’m booking myself a new hat.',
     // Controllo del 27/11/2026: the texts of the branches that met in the integration.
     'Ogni giorno qui c’è una domanda per voi due: rispondete, poi leggete cosa ha scritto l’altra persona.': 'Every day there’s a question here for you two: answer it, then read what the other person wrote.',
     '{color}, è di {name}': '{color}, it’s {name}’s',

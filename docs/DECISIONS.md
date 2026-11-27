@@ -701,3 +701,9 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Volo:** una curva quadratica campionata (30 campioni, easeInOutCubic, 600 ms, lineare tra i campioni), uguale per gruppo e personaggi; solo transform e opacity. Scala e distanza finali non sono i numeri del prototipo (0,42 e 27, per personaggi di 26 px): si misurano sui due personaggi veri dell'isola (42 px, quindi circa 0,68), così atterrano esattamente su di loro. `UsAngolo.accogli()` apre l'isola subito sotto l'apertura con i suoi due nascosti (`data-us-arriving`), `land()` li rimostra con lo schiacciamento. Isola assente, coperta o con i cuoricini in arrivo: dissolvenza con leggero scale come Apertura A. Un'isola già aperta (prima occhiata, US vi ricorda) li accoglie lo stesso.
 - **Ritorno dopo più di un'ora** (`UsForeground.awayMs`): niente apertura; se l'isola è libera (niente fumetto, foglio, intro, Impostazioni, cuoricini) si apre, i personaggi saltellano e la scritta diventa «Eccoti, {nome}» per 2,6 s, poi si richiude com'era. Mai «Bentornato» (ha il genere), niente dati inventati.
 - **Vibrazione:** leggera (`UsFeedback.landing`) quando nasce il cuore, solo nell'app nativa e se le vibrazioni sono accese.
+## 2026-11-27 — Il sistema che vi ricorda si chiama «US»
+
+**Fonte:** founder, 27/11/2026: «il funzionamento di Cupido, a cui dobbiamo chiamare in un altro modo: penso si chiamerà il sistema proprio US, come l'app».
+
+- Verso la coppia, quello che nei documenti era «Cupido» si chiama US: le battute di US vi ricorda, la bacheca tenuta da US, gli avvisi. «Cupido» resta solo come nome storico nei documenti di progetto (docs/product/2026-11-13-cupido.md).
+- L'intro lo presenta con una tappa sua, dopo l'angolo, e chiude con una battuta su US Plus.

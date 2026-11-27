@@ -25,6 +25,14 @@
 - **Tornare in US dopo pochi secondi non ricarica tutto.** Se US è rimasta in secondo piano meno di 30 secondi (una foto scelta dalla galleria, un messaggio su WhatsApp) non rilegge la domanda, la foto, il countdown, i widget e il resto: prima erano 16 letture al server a ogni ritorno, ora nessuna. Dopo 30 secondi o più si rilegge tutto come prima; il blocco con l'impronta, le notifiche toccate e i tratti della lavagna in attesa restano come prima, e ogni minuto la pagina in vista si aggiorna comunque.
 - All'avvio «La cosa di oggi» si legge una volta sola invece di due.
 - Per l'animazione d'entrata che verrà: un solo momento «la prima pagina è pronta» (Oggi con domanda e foto, oppure l'accesso o il blocco), al massimo 2,5 s dopo che Oggi si apre (8 s se qualcosa si blocca). Nessun cambio visivo per ora.
+### L'intro racconta di più (27/11)
+
+**Stato:** ramo `claude/intro-nuove-tappe`, verso staging. Tappe approvate dal founder il 27/11 («Approvo, vai»).
+
+- **Tappe nuove:** distanza e batteria («così sai se un silenzio è solo un telefono scarico»), Come stai, e il Ti penso spiegato coi tocchi ripetuti («più tocchi, più cuori… e Bea legge quante volte l'hai pensata»).
+- **US, l'app che si ricorda:** si ricorda le vostre date e i ricordi di un anno fa, e tiene la bacheca, mai più di una volta al giorno.
+- **Finale con battuta su US Plus:** «più vestiti per me, più giochi, più cose vostre… è una sorpresa».
+- Una tappa che non ha niente da mostrare viene saltata, per esempio la distanza se non la condividete. Chi ha già fatto l'intro la rivede dal Profilo.
 
 ### I cuoricini volano nell'isola (27/11)
 

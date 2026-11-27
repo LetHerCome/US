@@ -192,12 +192,13 @@ test('real app: the intro waits for a stop that comes late and says «Fine» on 
   assert.equal(await page.evaluate(() => window.UsIntro.start({ force: true })), true);
   await page.waitForTimeout(1700);
   const seen = [];
-  for (let i = 0; i < 10 && await page.evaluate(() => window.UsIntro.active()); i++) {
+  for (let i = 0; i < 16 && await page.evaluate(() => window.UsIntro.active()); i++) {
     seen.push(await page.evaluate(() => [document.getElementById('usIntro').dataset.step, document.querySelector('[data-intro-next]').textContent]));
     await page.click('[data-intro-next]');
     await page.waitForTimeout(120);
   }
-  assert.deepEqual(seen.map((s) => s[0]), ['crea', 'ciao', 'domanda', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo']);
+  // Without the island, the angolo and US stops are left out; US Plus closes with «Fine».
+  assert.deepEqual(seen.map((s) => s[0]), ['crea', 'ciao', 'domanda', 'comestai', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo', 'plus']);
   assert.equal(seen[seen.length - 1][1], 'Fine');
   assert.ok(seen.slice(0, -1).every((s) => s[1] !== 'Fine'));
   // A stop that is not on screen yet when the intro starts is waited for, not dropped.

@@ -19,9 +19,13 @@ test('intro: shipped like every other script (page, service worker, both builds)
 test('intro: eight stops in the approved order, two lines of the other person, neutral words', () => {
   const ids = [...intro.matchAll(/\{ id: '([a-z]+)'/g)].map((m) => m[1]);
   // «crea» comes first only for whoever never made their character (see below).
-  assert.deepEqual(ids, ['crea', 'ciao', 'domanda', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo', 'angolo']);
-  assert.equal((intro.match(/other: '/g) || []).length, 2);
-  assert.match(intro, /other: 'Io lo aspetto, eh\.'/);
+  // 27/11/2026: distance and battery, Come stai, the Ti penso ×N, US (the app that remembers) and US Plus.
+  assert.deepEqual(ids, ['crea', 'ciao', 'domanda', 'distanza', 'comestai', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo', 'angolo', 'us', 'plus']);
+  assert.equal((intro.match(/other: '/g) || []).length, 4);
+  assert.match(intro, /other: 'Io li conto tutti, eh\.'/);
+  assert.match(intro, /other: 'Una specie di amico che non dimentica niente\.'/);
+  assert.match(intro, /other: 'Io intanto mi prenoto un cappello nuovo\.', cta: 'Fine'/);
+  assert.doesNotMatch(intro, /Cupido/, 'the system is called US');
   assert.match(intro, /other: 'Ci vediamo qui ogni giorno!'/);
   // The logo opens into the bar, as if tapped (it is only the logo before).
   assert.match(intro, /island: true/);
@@ -89,7 +93,7 @@ test('intro: in the real app it walks the eight stops and is not shown twice', a
     const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
     assert.equal(await page.evaluate(() => window.UsIntro.start()), true);
     const seen = [];
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 16 && await page.evaluate(() => window.UsIntro.active()); i++) {
       await page.waitForTimeout(250);
       seen.push(await page.evaluate(() => document.getElementById('usIntro').dataset.step));
       const inside = await page.evaluate(() => { const b = document.querySelector('[data-intro-bubble]').getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight; });
@@ -97,7 +101,8 @@ test('intro: in the real app it walks the eight stops and is not shown twice', a
       await page.click('[data-intro-next]');
     }
     // Nobody in the test couple made a character yet: first «crea», then the eight stops.
-    assert.deepEqual(seen, ['crea', 'ciao', 'domanda', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo', 'angolo']);
+    // The test couple shares no distance: that stop is waited for, then left out.
+    assert.deepEqual(seen, ['crea', 'ciao', 'domanda', 'comestai', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo', 'angolo', 'us', 'plus']);
     assert.deepEqual(await page.evaluate(() => ({ active: window.UsIntro.active(), seen: window.UsIntro.seen(), again: window.UsIntro.start() })), { active: false, seen: true, again: false });
     // «Salta» closes it at once.
     assert.equal(await page.evaluate(() => window.UsIntro.start({ force: true })), true);

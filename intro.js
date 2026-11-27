@@ -42,12 +42,18 @@ function steps({ force = false } = {}) {
     ...(maker ? [{ id: 'crea', maker: true, say: name ? `Prima del giro, crea me, ${name}: sono il tuo personaggio. Scegli la mia forma e il mio colore. Ti seguo in tutta l’app, anche nei widget.` : 'Prima del giro, crea me: sono il tuo personaggio. Scegli la mia forma e il mio colore. Ti seguo in tutta l’app, anche nei widget.', cta: 'Eccomi', reaction: 'saluta' }] : []),
     { id: 'ciao', say: maker ? 'Eccomi! Ora ti faccio fare un giro di US: ci vuole un minuto.' : name ? `Ciao ${name}! Sono il tuo personaggio. Ti faccio fare un giro di US: ci vuole un minuto.` : 'Ciao! Sono il tuo personaggio. Ti faccio fare un giro di US: ci vuole un minuto.', cta: 'Andiamo', reaction: maker ? 'festa' : 'saluta' },
     { id: 'domanda', target: () => firstVisible('#usDailyRitual'), say: 'Ogni giorno qui c’è una domanda per voi due: rispondete, poi leggete cosa ha scritto l’altra persona.' },
-    { id: 'tipenso', target: () => firstVisible('#thinkButton'), round: true, say: `Questo è il Ti penso: un tocco e ${theirs} riceve il tuo pensiero, anche da lontano.`, other: 'Io lo aspetto, eh.' },
+    // Distanza, batteria e Come stai (founder, 27/11/2026).
+    { id: 'distanza', target: () => firstVisible('#distanceWidget'), pill: true, say: `Qui vedi quanto siete lontani. Se lo condividete, anche la batteria di ${theirs}: così sai se un silenzio è solo un telefono scarico.` },
+    { id: 'comestai', target: () => firstVisible('#usOggiStatus'), pill: true, say: `Dimmi come stai con un tocco: la mia faccia cambia, anche sul telefono di ${theirs} e nei widget.` },
+    { id: 'tipenso', target: () => firstVisible('#thinkButton'), round: true, say: `Questo è il Ti penso. Toccalo una volta, o tante di fila: più tocchi, più cuori. Quando ti fermi parte un solo Ti penso, e ${theirs} legge quante volte l’hai pensata.`, other: 'Io li conto tutti, eh.' },
     { id: 'noi', target: () => firstVisible('.us-nav [data-page="bond"]'), say: 'In Noi c’è il vostro tempo: il calendario, la lavagna e i post-it che vi lasciate.' },
     { id: 'ricordi', target: () => firstVisible('.us-nav [data-page="moments"]'), say: 'In Ricordi mettete le vostre foto, mese per mese. Diventano il vostro album.' },
     { id: 'gioca', target: () => firstVisible('.us-nav [data-page="quiz"]'), say: 'In Gioca ci sono i giochi da fare in due: tre partite al giorno, per conoscervi ancora.' },
     { id: 'profilo', target: () => firstVisible('#home [data-us-self], .top [data-us-self]'), round: true, say: 'Qui in alto a destra ci sono io: toccami e apri il tuo Profilo, con le Impostazioni, i colori, le notifiche e la vostra data.' },
-    { id: 'angolo', target: () => firstVisible('#usIsola'), pill: true, island: true, say: 'Questo è il logo di US: toccalo e si apre la barra con voi due e il vostro livello. Tocca la barra ed entri nel vostro angolo: il guardaroba e i premi.', other: 'Ci vediamo qui ogni giorno!', cta: 'Fine', reaction: 'cuore' }
+    { id: 'angolo', target: () => firstVisible('#usIsola'), pill: true, island: true, say: 'Questo è il logo di US: toccalo e si apre la barra con voi due e il vostro livello. Tocca la barra ed entri nel vostro angolo: il guardaroba e i premi.', other: 'Ci vediamo qui ogni giorno!' },
+    // US, the app that remembers (the rules behind US vi ricorda and the bacheca), and US Plus (27/11/2026).
+    { id: 'us', target: () => firstVisible('#usIsola'), pill: true, say: 'Ogni tanto parla anche US, l’app: si ricorda le vostre date, i ricordi di un anno fa, e vi tiene la bacheca in Ricordi. Mai più di una volta al giorno, promesso.', other: 'Una specie di amico che non dimentica niente.' },
+    { id: 'plus', say: 'Un giorno arriverà anche US Plus: più vestiti per me, più giochi, più cose vostre… Per ora non posso dire altro, è una sorpresa.', other: 'Io intanto mi prenoto un cappello nuovo.', cta: 'Fine', reaction: 'cuore' }
   ];
 }
 
