@@ -24,7 +24,9 @@ test('lo scaffold Android mantiene identità US e UsActivity (ex MainActivity) p
   assert.doesNotMatch(activity, /registerPlugin|addJavascriptInterface|loadUrl|Supabase|Push|Widget/);
   assert.equal(config.server, undefined);
   // M15: iOS is a sibling target (ios/); its options must not reach Android.
-  assert.equal(config.android, undefined);
+  // Avvio più veloce (27/11/2026): Android has one option of its own, the
+  // WebView colour before the first web frame (the splash colour, no white flash).
+  assert.deepEqual(config.android, { backgroundColor: '#26142E' });
 });
 
 test('il manifest dichiara soltanto i permessi necessari alle capability web e ai feedback aptici Android', () => {

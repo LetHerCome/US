@@ -2,6 +2,9 @@
   "appId": "com.usapp.us",
   "appName": "US",
   "webDir": "dist/capacitor",
+  "android": {
+    "backgroundColor": "#26142E"
+  },
   "ios": {
     "contentInset": "never",
     "backgroundColor": "#26142E",
