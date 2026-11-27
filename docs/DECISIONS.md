@@ -622,3 +622,10 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Set:** gli stessi nove widget su Android e iPhone (misure di ciascuno); Come stai diventa «Voi due»; Distanza senza arco (14/11); Lavagna e Post-it anche 4x2. Solo iPhone: il grande con la foto, i modi Colorata/Trasparente, StandBy.
 - **Blocca schermo (solo iPhone):** tinta unica con le sagome dei personaggi e il cuore pieno; sopra l'ora i giorni o l'ultima cosa arrivata; cerchi (Ti penso, Giorni, Distanza con l'anello della batteria, Come sta, busta) e rettangoli (Voi due, Lasciato per te, La domanda, Distanza); il Controllo «Ti penso» di iOS 18 al posto della torcia. Mai risposte, contenuti o posizioni.
 - **Ordine:** Android prima (fatto sul ramo `claude/widget-redesign-android-ios-fb63c1`), poi iPhone e blocca schermo dalla stessa tavola.
+
+## 2026-11-27 — Nell'intro prima si crea il personaggio
+
+**Fonte:** founder, 27/11/2026, dopo la prova dell'APK di staging. Chi ha solo aggiornato vedeva l'intro con il personaggio di partenza (tondo rosa per chi ha creato la coppia, quadrato lilla per chi è entrato) senza averlo mai scelto: «aggiungi nell'intro una parte che si spiega e ti fa scegliere il personaggio prima del tutorial e te lo fa creare e personalizzare il minimo senza il guardaroba che si sblocca dopo».
+
+- **Chi:** chi non ha né forma né colore scelti (`character_shape` e `person_color` vuoti). Chi li ha già scelti nella prima apertura va dritto al giro. «Rivedi l'intro» mostra sempre anche la scelta.
+- **Cosa:** forma (le cinque) e colore (gli otto, quello dell'altra persona escluso). Si salvano subito con le stesse funzioni della prima apertura e delle Impostazioni (`set_my_character_shape`, `set_my_color`), con le loro regole sul server. Niente accessori: il guardaroba resta nell'angolo, coi suoi sblocchi.

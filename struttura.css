@@ -430,6 +430,22 @@
 .us-intro-other svg{display:block;width:56px;height:auto;overflow:visible}
 .us-intro-other-say{max-width:170px;margin:0 0 30px;padding:9px 12px;border-radius:16px 16px 4px 16px;background:#efe6ff;color:#2a2040;font:600 13.5px/1.3 var(--us-font-ui,'Figtree',sans-serif)}
 html.us-intro-open .us-fumetto{visibility:hidden}
+/* Crea il tuo personaggio (27/11/2026): the shapes and the colours in the bubble, on its paper. */
+.us-intro-maker{margin-top:10px}
+.us-intro-maker[hidden]{display:none}
+.us-intro-maker-label{margin:8px 0 6px;color:#8a7a80;font:700 11.5px/1 var(--us-font-ui,'Figtree',sans-serif);letter-spacing:.04em;text-transform:uppercase}
+.us-intro-shapes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.us-intro-shape{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:64px;padding:7px 2px 6px;border:1.5px solid #e6dad6;border-radius:14px;background:#fff;color:#6d5e64;font:600 11px/1.15 var(--us-font-ui,'Figtree',sans-serif)}
+.us-intro-shape svg{display:block;width:38px;height:auto;overflow:visible}
+.us-intro-shape[aria-pressed="true"]{border-color:#241a20;background:#f3e9e3;color:#241a20}
+.us-intro-swatches{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:2px}
+.us-intro-swatch{display:grid;place-items:center;width:100%;height:44px;padding:0;border:0;background:none}
+.us-intro-swatch i{display:block;width:30px;height:30px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(36,26,32,.14),0 0 0 2px #fbf4ee,0 0 0 2px transparent}
+.us-intro-swatch[aria-pressed="true"] i{box-shadow:inset 0 0 0 1px rgba(36,26,32,.14),0 0 0 2px #fbf4ee,0 0 0 4px #241a20}
+.us-intro-swatch{position:relative}
+.us-intro-swatch:disabled i{opacity:.4}
+.us-intro-swatch:disabled::after{content:"";position:absolute;width:32px;height:2px;border-radius:1px;background:#6d5e64;transform:rotate(-45deg)}
+.us-intro-maker-note{margin:10px 0 0;color:#6d5e64;font:500 13px/1.35 var(--us-font-ui,'Figtree',sans-serif)}
 @media (prefers-reduced-motion:reduce){.us-intro,.us-intro-hole,.us-intro-guide,.us-intro-bubble,.us-intro-other{transition:none!important}.us-intro-guide svg,.us-intro-hole.is-tap::after{animation:none!important}}
 :root[data-us-motion="reduced"] :is(.us-intro,.us-intro-hole,.us-intro-guide,.us-intro-bubble,.us-intro-other){transition:none!important}
 :root[data-us-motion="reduced"] .us-intro-guide svg{animation:none!important}
