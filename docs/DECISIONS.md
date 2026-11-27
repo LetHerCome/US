@@ -636,3 +636,10 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Scadenza:** 14 giorni invece di 48 ore. Il codice resta quello di MC2 (128 bit casuali, sul server solo l'impronta), quindi la sicurezza non cambia.
 - **Rinnovo:** un codice scaduto si rifà da solo, una volta per apertura, solo se era scaduto. Uno ancora valido non si tocca, perché ne annullerebbe uno già mandato.
 - **Notifiche per chi aspetta:** «Avvisami quando entra» le accende con un tocco, mai da sola. Promemoria al giorno 1 e al giorno 3 dalla creazione della coppia, alle 18 di Roma, solo a una coppia di una persona, una volta sola. L’interruttore «Ricorrenze» spento lo blocca.
+## 2026-11-27 — La prima settimana guidata, solo per le coppie nuove
+
+**Fonte:** founder, 27/11/2026: «la prima settimana di guida la farei ma solamente per gli account appena creati, quindi per i Beta tester no».
+
+- **Dove:** dentro «US vi ricorda», come un tipo di frase in più (`primi_passi`, priorità 2). Nessuna schermata nuova.
+- **Chi:** solo le coppie create dopo che la migrazione è stata applicata (`private.us_primi_passi_start`). Il giorno 1 è quello dopo l'ingresso dell'altra persona: il giorno stesso ci sono già l'intro e la presentazione.
+- **Sette passi**, uno al giorno: domanda di oggi, prima foto, una partita, un post-it, il Ti penso, i compleanni, la settimana. Un passo già fatto si salta. Si spengono con «Non dirmelo più», e compleanni e anniversario vincono.
