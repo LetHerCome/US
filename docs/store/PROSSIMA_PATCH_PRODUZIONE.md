@@ -2,6 +2,13 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Widget Ti penso: i tocchi veloci contano anche su Samsung (27/11)
+
+**Stato:** ramo `claude/widget-tocchi-samsung`, verso staging. Trovato dal founder sull'APK 1795795958: il widget contava un tocco solo.
+
+**Cosa cambia:**
+- Mentre il cuore grande è aperto sopra la Home, ogni tocco vicino al widget conta come un altro tocco. Prima contava solo un tocco esattamente nel rettangolo del widget, e su Samsung le coordinate potevano essere un po' spostate: il tocco cadeva «fuori» e il cuore si chiudeva senza contare. Serve l'AAB nuovo.
+
 ### Ti penso ×N anche dai widget e nell'avviso Android (27/11)
 
 **Stato:** ramo `claude/widget-ti-penso-ripetuto`, verso staging, dopo «I cuori» (#317). Ordine: 1) migrazione `20261127152323_widget_ti_penso_ripetuto` (dopo `20261127141307_cuori_ti_penso`, che aggiunge `think_taps`); 2) funzioni `widget-think-send` (accetta i tocchi) e `send-web-push` (il catalogo condiviso ora mette il numero nel pacchetto Android). La funzione nuova funziona anche prima della migrazione (manda 1 tocco) e quella vecchia anche dopo (la firma vecchia è coperta dal valore predefinito). Servono un AAB nuovo (widget Android e frase dell'avviso) e una build TestFlight (widget iPhone e Controllo) con la stessa versione; senza, i widget di prima mandano 1 come oggi. Da provare sui telefoni: Android (anche con l'app chiusa da tempo) e iPhone via TestFlight.
