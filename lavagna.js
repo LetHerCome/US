@@ -642,7 +642,7 @@ function install(w){
     if(d.hidden){if(pushStroke)sendPush();return;}
     placed=null;
     if(outbox.length)flush();
-    if(loaded&&key()===owner)load({force:true});
+    if(loaded&&key()===owner&&!w.UsForeground?.shortAway?.())load({force:true});
   });
   // The network is back: the strokes that waited leave, in order.
   w.addEventListener('online',()=>{if(outbox.length)flush();});

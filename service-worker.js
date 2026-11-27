@@ -58,6 +58,7 @@ const APP_SHELL = [
   versioned("/navigation.js"),
   versioned("/games.css"),
   versioned("/games.js"),
+  versioned("/gioca-insieme.js"),
   versioned("/progression.css"),
   versioned("/progression.js"),
   versioned("/countdown.css"),

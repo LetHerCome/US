@@ -103,6 +103,12 @@ final class UsWidgetStore {
         return next != null && write(next);
     }
 
+    /** Come stai che conta (D13): the other person's Come stai from a widget signal. */
+    synchronized boolean writePartnerStatus(JSONObject status) {
+        JSONObject next = UsWidgetContract.withPartnerStatus(read(), status);
+        return next != null && write(next);
+    }
+
     synchronized JSONObject read() {
         String json = readAtomic(snapshotFile);
         if (json.isEmpty()) return null;

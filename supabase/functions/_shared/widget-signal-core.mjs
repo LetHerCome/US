@@ -47,6 +47,11 @@ export function lookSignal(profile) {
 
 export const CLEAR_SIGNAL = widgetSignal({ s: 'clear' });
 
+/** Come stai che conta (D13): one member_status row as the widgets hold it (status, form, the two instants). */
+export function statusSignal(row) {
+  return widgetSignal({ s: 'status', status: row?.status || '', form: row?.form || '', at: row?.set_at || '', until: row?.expires_at || '' });
+}
+
 async function releaseClaim(admin, dedupeKey) {
   if (dedupeKey) await admin.from('push_event_log').delete().eq('dedupe_key', dedupeKey);
 }
@@ -122,6 +127,34 @@ export async function dispatchPartnerLook(admin, { sender, partner, native, owne
     senderId: sender.id,
     dedupeKey: `partner-look:${sender.id}:${sync.revision}`,
     eventType: 'partner_look',
+    native,
+    ownerHash,
+  });
+}
+
+/**
+ * Come stai che conta (27/11/2026, D13): send-web-push type partner_status.
+ * The caller just changed their Come stai (or its words): the partner's
+ * widgets follow at once, even with US closed, like partner_look. The state
+ * is read back from the server, never from the request; one signal per
+ * change of the row (updated_at), Android FCM v3 and iPhone APNs background.
+ */
+export async function dispatchPartnerStatus(admin, { sender, partner, native, ownerHash = null }) {
+  if (!sender?.id || !sender.couple_id || !partner?.id) return { delivered: 0, reason: 'no-recipient' };
+  const { data: row, error } = await admin.from('member_status')
+    .select('user_id,couple_id,status,form,set_at,expires_at,updated_at')
+    .eq('user_id', sender.id).maybeSingle();
+  if (error) throw error;
+  if (!row || row.couple_id !== sender.couple_id) return { delivered: 0, reason: 'no-change' };
+  const changed = Date.parse(String(row.updated_at || ''));
+  if (!Number.isFinite(changed)) return { delivered: 0, reason: 'no-change' };
+  return deliverWidgetSignal(admin, {
+    signal: statusSignal(row),
+    recipientIds: [partner.id],
+    coupleId: sender.couple_id,
+    senderId: sender.id,
+    dedupeKey: `partner-status:${sender.id}:${changed}`,
+    eventType: 'partner_status',
     native,
     ownerHash,
   });

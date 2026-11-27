@@ -66,6 +66,73 @@ function gameIdentityGuard(){
 let weeklyRequestId = null;
 const startRequestIds = new Map();
 
+// ---------------------------------------------------------------- insieme
+// Gioca più piena (grill del 27/11/2026, D1–D5, D15, D18; gioca-insieme.js
+// holds the choices): the couple's intesa and this week's days come from one
+// read-only RPC (get_game_intesa_v1, counts and dates only); the discoveries
+// from rounds you have already opened (get_game_session). Both are read again
+// only when the finished rounds change, and stay in memory only.
+const insieme = () => window.UsGiocaInsieme || null;
+const revealedRounds = new Map(); // session id -> revealed server state (memory only)
+let intesaData = null;
+let insiemeKey = '';
+let insiemeBusy = false;
+let intesaOff = false;
+const missingRpc = (error) => /PGRST202|42883|Could not find the function|does not exist/i.test(`${error?.code || ''} ${error?.message || ''}`);
+async function loadInsieme() {
+  const G = insieme();
+  if (!G || !home || insiemeBusy) return;
+  const sameIdentity = gameIdentityGuard();
+  const recent = Array.isArray(home.recent) ? home.recent : [];
+  const key = recent.map((r) => `${r.id}:${r.completed_at || ''}:${r.my_reveal_seen_at ? 1 : 0}`).join('|') || 'none';
+  if (key === insiemeKey) return;
+  insiemeBusy = true;
+  let changed = false, settled = true;
+  try {
+    if (!intesaOff) {
+      const { data, error } = await sb.rpc('get_game_intesa_v1');
+      if (!sameIdentity()) return;
+      if (error) { if (missingRpc(error)) intesaOff = true; else settled = false; }
+      else if (data && typeof data === 'object' && typeof data.compared === 'number') { intesaData = data; changed = true; }
+    }
+    for (const id of G.discoverySessions(recent, 3)) {
+      if (revealedRounds.has(id)) continue;
+      const { data, error } = await sb.rpc('get_game_session', { target_session_id: id });
+      if (!sameIdentity()) return;
+      if (error) { settled = false; continue; }
+      if (data?.id === id && data.reveal_ready && Array.isArray(data.items)) { revealedRounds.set(id, data); changed = true; }
+    }
+    if (settled) insiemeKey = key;
+  } catch (error) { console.warn('[US Gioca] insieme', error); }
+  finally { insiemeBusy = false; }
+  if (changed && view === 'hub' && sameIdentity()) renderHub();
+}
+// The revealed rounds this phone has read, newest first, only those the hub
+// still lists.
+function knownRounds() {
+  return (home?.recent || []).map((r) => revealedRounds.get(r.id)).filter(Boolean);
+}
+const partnerRoleOf = () => home?.partner_role || (myRole() === 'beatrice' ? 'francesco' : 'beatrice');
+function characterOf(role, options) {
+  try { return window.UsPersonaggi?.character?.(role, options) || ''; } catch (_) { return ''; }
+}
+// You and the other one, side by side and leaning in. reaction: undefined for
+// the face of Come stai, 'cuore' when answers are ready, 'sera' when the day's
+// rounds are spent (personaggi.js).
+function duo(size, reaction) {
+  const me = myRole();
+  if (!me) return '';
+  const o = reaction === undefined ? { size } : { size, reaction };
+  const mine = characterOf(me, o), theirs = characterOf(partnerRoleOf(), o);
+  if (!mine || !theirs) return '';
+  return `<span class="us-gv2-duo" aria-hidden="true"><span class="is-tu">${mine}</span><span class="is-pa">${theirs}</span></span>`;
+}
+function moods() {
+  let st = null;
+  try { st = window.UsMemberStatus?.widgetState?.() || null; } catch (_) { st = null; }
+  return { mine: st?.me?.status || '', theirs: st?.partner?.status || '' };
+}
+
 // ---------------------------------------------------------------- status copy
 
 // A round's state in as few words as the tile can carry.
@@ -192,8 +259,23 @@ function tokensCard() {
   const line = left ? 'Ogni partita nuova usa un gettone' : resetLine(a.resets_on);
   const plus = !left && window.UsPlusSoon?.open ? '<div class="us-gv2-tokens-plus"><span class="us-gv2-tokens-copy"><b>Partite illimitate con US Plus</b><small>In arrivo</small></span><button type="button" data-us-feedback="tap" data-gv2-action="plus-soon">Avvisami</button></div>' : '';
   return `<section class="us-gv2-tokens" id="usGv2Tokens" data-gv2-left="${left}" data-s aria-label="Le partite di oggi">
-    <div class="us-gv2-tokens-row"><span class="us-gv2-token-row" role="img" aria-label="${esc(aria)}">${tokens}</span><span class="us-gv2-tokens-copy" role="status"><b>${esc(title)}</b>${line ? `<small>${esc(line)}</small>` : ''}</span></div>${plus}
+    <div class="us-gv2-tokens-row"><span class="us-gv2-token-row" role="img" aria-label="${esc(aria)}">${tokens}</span><span class="us-gv2-tokens-copy" role="status"><b>${esc(title)}</b>${line ? `<small>${esc(line)}</small>` : ''}</span></div>${weekRow()}${plus}
   </section>`;
+}
+// D4: the days of this week a round was finished by both, beside the tokens.
+// A dot lights up; an empty day takes nothing away.
+function weekRow() {
+  const G = insieme();
+  const a = allowance();
+  if (!G || !a) return '';
+  const start = intesaData?.week_start || a.week_start;
+  const days = Array.isArray(intesaData?.days) ? intesaData.days : G.daysFromRecent(home?.recent, start);
+  const dots = G.weekDots(start, days, a.day || undefined);
+  if (dots.length !== 7) return '';
+  const on = dots.filter((d) => d.on);
+  const line = G.weekLine(on.length);
+  const label = on.length ? `Questa settimana avete giocato insieme: ${on.map((d) => d.name).join(', ')}` : line;
+  return `<div class="us-gv2-giorni"><span class="us-gv2-giorni-dots" role="img" aria-label="${esc(label)}">${dots.map((d) => `<i data-on="${d.on}"${d.today ? ' data-today="true"' : ''}>${esc(d.letter)}</i>`).join('')}</span><small>${esc(line)}</small></div>`;
 }
 // A new round: the last lit token flies into the game (D11), in place of the
 // old confirm window before each new round. Motion only: the server spends it,
@@ -320,14 +402,13 @@ function roundRow(r) {
   const when = r.completed_at ? romeDate(romeDayOf(r.completed_at), { day: 'numeric', month: 'long' }) : '';
   return `<button type="button" class="us-gv2-row" data-gv2-session="${esc(r.id)}" data-tone="${esc(status?.tone || '')}">${glyph(ROUND_ICON(r.game_family))}<span class="us-gv2-row-copy"><b>${esc(familyName(r.game_family))}</b>${when ? `<small>${esc(when)}</small>` : ''}</span>${status ? `<small class="us-gv2-row-state" data-tone="${esc(status.tone)}">${esc(status.text)}</small>` : ''}</button>`;
 }
-// «Vi aspetta»: the other one's character, the game, what happened, one action.
+// «Vi aspetta»: the two of you (happy when the answers are ready), the game,
+// what happened, one action.
 function waitingRow(r) {
   const ready = roundStatus(r)?.tone === 'ready';
   const who = knownPartner() || 'L’altra persona';
   const line = ready ? 'Le vostre risposte sono pronte' : r.partner_complete ? `${who} ha giocato, tocca a te` : `${who} ha iniziato, tocca a te`;
-  const partnerRole = home?.partner_role || (myRole() === 'beatrice' ? 'francesco' : 'beatrice');
-  let face = '';
-  try { face = window.UsPersonaggi?.character?.(partnerRole, { size: 46 }) || ''; } catch (_) { face = ''; }
+  const face = duo(34, ready ? 'cuore' : undefined);
   return `<button type="button" class="us-gv2-aspetta" data-us-feedback="tap" data-gv2-session="${esc(r.id)}" data-tone="${ready ? 'ready' : 'turn'}">
       <span class="us-gv2-aspetta-face" aria-hidden="true">${face || glyph(ROUND_ICON(r.game_family))}</span>
       <span class="us-gv2-aspetta-copy"><b>${esc(familyName(r.game_family))}</b><small>${esc(line)}</small></span>
@@ -356,7 +437,57 @@ function continueSection(h, onTiles) {
 function doneSection(h) {
   const rounds = doneRounds(h);
   if (!rounds.length) return '';
-  return `<details class="us-gv2-done"><summary><span>Partite completate</span><b>${rounds.length}</b></summary><div class="us-gv2-rows">${rounds.map(roundRow).join('')}</div></details>`;
+  return `<details class="us-gv2-done"><summary><span>Il diario delle partite</span><b>${rounds.length}</b></summary><div class="us-gv2-rows">${rounds.map(roundRow).join('')}</div></details>`;
+}
+
+// D1, D3, D18: «Voi due», the two of you facing each other and your intesa
+// over the last 20 comparable answers; never who won. Before enough answers,
+// a gentle line. Sleepy when the day's rounds are spent, happy when answers
+// are ready, otherwise the faces of Come stai.
+function voiDueCard(h) {
+  const G = insieme();
+  if (!G) return '';
+  const waiting = continueRounds(h).filter(waitsForMe);
+  const ready = waiting.some((r) => roundStatus(r)?.tone === 'ready');
+  const spent = Boolean(allowance() && !freeLeft());
+  const pair = duo(52, ready ? 'cuore' : spent && !waiting.length ? 'sera' : undefined);
+  const i = G.intesa(intesaData);
+  const meter = i.ready ? `<span class="us-gv2-intesa" aria-hidden="true">${Array.from({ length: i.compared }, (_, k) => `<i${k < i.same ? ' data-on="true"' : ''}></i>`).join('')}</span>` : '';
+  return `<section class="us-gv2-voi" data-s data-gv2-intesa="${i.ready ? 'ready' : 'empty'}" aria-labelledby="usGv2VoiTitle">
+    ${pair}<div class="us-gv2-voi-copy"><h3 class="us-gv2-kicker" id="usGv2VoiTitle">Voi due</h3><p class="us-gv2-voi-line">${esc(i.line)}</p>${meter}</div>
+  </section>`;
+}
+
+// One answer as two short pills: yours, then the other one's (what you wrote
+// stays as written).
+function answerPair(mine, theirs, same) {
+  if (same) return `<span class="us-gv2-scoperta-pair" data-same="true"><span class="is-noi"><i>Tutti e due</i> <b translate="no">${esc(mine)}</b></span></span>`;
+  return `<span class="us-gv2-scoperta-pair"><span class="is-tu"><i>Tu</i> <b translate="no">${esc(mine)}</b></span><span class="is-pa"><i translate="no">${esc(partnerName())}</i> <b translate="no">${esc(theirs)}</b></span></span>`;
+}
+// D2: «Cosa avete scoperto», two or three short answers from the rounds you
+// have opened, light games first, a new choice every day; a tap opens that
+// round's reveal again.
+function discoveriesSection() {
+  const G = insieme();
+  if (!G) return '';
+  const day = allowance()?.day || undefined;
+  const list = G.pickDiscoveries(knownRounds(), { day, max: 3 });
+  if (!list.length) return '';
+  return `<section class="us-gv2-scoperte" aria-labelledby="usGv2ScoperteTitle">
+    <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ScoperteTitle">Cosa avete scoperto</h3><small>dalle ultime partite</small></div>
+    <div class="us-gv2-scoperte-rows" data-s>${list.map((d) => `<button type="button" class="us-gv2-scoperta" data-us-feedback="tap" data-gv2-session="${esc(d.sessionId)}" data-gv2-family-of="${esc(d.family)}">
+      <span class="us-gv2-scoperta-q"><small>${esc(familyName(d.family))}</small><b>${esc(d.question)}</b></span>${answerPair(d.mine, d.theirs, d.same)}
+    </button>`).join('')}</div>
+  </section>`;
+}
+// D5: with the day's rounds spent, Gioca is not a grey page: the newest answer
+// where you differed, and the move a result already offers.
+function rileggeteSection() {
+  const G = insieme();
+  if (!G || !allowance() || freeLeft()) return '';
+  const found = G.latestDifferent(knownRounds());
+  if (!found) return '';
+  return revealMove({ different: [{ item: found.item }] }, { titleId: 'usGv2RileggeteTitle', lead: 'Intanto rileggete…', session: found.session.id, extraClass: ' us-gv2-rileggete' });
 }
 
 // D11: every tile says one of three things on its chip — Pronto, Giocato,
@@ -396,7 +527,7 @@ function cardAction(card, id) {
 }
 // big: a card of the giostra (description, length, the button and its cost);
 // otherwise the small tile of «Tutti i giochi», as before.
-function gameCard({ id, name, kind, action, extraClass = '', status, line: own = '', attrs = '', big = false, badge = '' }) {
+function gameCard({ id, name, kind, action, extraClass = '', status, line: own = '', attrs = '', big = false, badge = '', meta = [] }) {
   const card = cardState(status);
   const locked = card.state === 'locked';
   const data = action === 'swipe' ? 'data-gv2-action="swipe"' : action === 'per-voi' ? 'data-gv2-action="per-voi"' : `data-gv2-family="${id}"`;
@@ -411,7 +542,7 @@ function gameCard({ id, name, kind, action, extraClass = '', status, line: own =
       <span class="us-gv2-carta-foot" aria-hidden="true"><span class="us-gv2-carta-meta">${esc(GAME_META[id] || '5 domande · 3 min')}</span><span class="us-gv2-carta-cta" data-cost="${act.cost}">${esc(act.text)}${act.cost ? TOKEN_MINI : ''}</span></span>` : '';
   return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-game${extraClass}" ${data} data-gv2-mode-state="${esc(card.state)}" data-gv2-chip="${card.chip}"${round}${attrs}${locked ? ' aria-disabled="true"' : ''} aria-label="${esc(name)}: ${esc(kind)}. ${esc(card.text)}"${act.cost ? ' aria-description="Usa un gettone"' : ''}${slide}>
       <span class="us-gv2-game-top">${badge ? `<span class="us-gv2-carta-badge" aria-hidden="true">${esc(badge)}</span>` : ''}<span class="us-gv2-glyph" aria-hidden="true">${gameArt(id)}</span>${chip}</span>
-      <span class="us-gv2-game-copy"><b>${esc(name)}</b><small>${esc(line)}</small></span>${extra}
+      <span class="us-gv2-game-copy"><b>${esc(name)}</b><small>${esc(line)}</small>${meta.length ? `<span class="us-gv2-game-meta">${meta.map((m) => `<i>${esc(m)}</i>`).join('')}</span>` : ''}</span>${extra}
     </button>`;
 }
 
@@ -538,19 +669,38 @@ function renderHub() {
  const swipe=gameCard({id:'swipe',name:SWIPE.name,kind:'8 carte · veloce e privato',action:'swipe',extraClass:' is-swipe',status:tileStatus(SWIPE),big:true});
  const pick=dailyPick();
  const today=gameCard({id:pick.id,name:pick.name,kind:pick.kind,status:tileStatus(pick),big:true,badge:'Il gioco di oggi',extraClass:' is-oggi'});
- const tiles=OFFERED.map(f=>({genre:f.genre,html:gameCard({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)})}));
+ // D15: your two moods may bring one game first (a game to laugh when you are
+ // both happy, a tender one when one of you is down); the rest stays as today.
+ // With the day's rounds spent nothing can start: today's order stays.
+ const G=insieme(),mood=moods(),lead=G&&!spent?G.moodLead(mood.mine,mood.theirs):'';
+ const cards={per_voi:perVoi,[pick.id]:today,swipe};
+ const moodId=G?.MOOD_GAME?.[lead];
+ if(moodId&&!cards[moodId]){const f=FAMILY[moodId];cards[moodId]=gameCard({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f),big:true,badge:G.MOOD_BADGE[lead],extraClass:' is-umore'});}
+ const order=G?G.giostraOrder(['per_voi',pick.id,'swipe'],lead):['per_voi',pick.id,'swipe'];
+ // Tutti i giochi: each game on its own card, with its last time and how often
+ // you answered the same, once the server knows.
+ const fam=(id)=>intesaData?.families?.[id]||null;
+ const metaOf=(id)=>{const f=fam(id);if(!f||!G)return[];return[G.lastPlayedLine(f.last_at,new Date()),G.sameShare(f)].filter(Boolean);};
+ const tiles=OFFERED.map(f=>({genre:f.genre,html:gameCard({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f),meta:metaOf(f.id)})}));
+ // D1 (grill 27/11/2026): tokens and the week, Voi due, what waits for you,
+ // Oggi per voi, Cosa avete scoperto, Tutti i giochi, then the rest and the
+ // diary of your rounds at the bottom.
  const html=`
   <h2 class="us-gv2-sr">Gioca</h2>
   ${tokensCard()}
+  ${voiDueCard(home)}
+  ${rileggeteSection()}
   ${waitingSection(home)}
   <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">
    <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">Oggi per voi</h3><small>${spent?'tornano domani':'scorri e scegli'}</small></div>
-   ${giostra([perVoi,today,swipe])}
+   ${giostra(order.map((id)=>cards[id]).filter(Boolean))}
   </section>
+  ${discoveriesSection()}
   <section class="us-gv2-all" aria-labelledby="usGv2AllTitle">
    <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2AllTitle">Tutti i giochi</h3><small>${spent?'tornano domani':'bastano pochi minuti'}</small></div>
    ${allGames(tiles)}
   </section>
+  ${meseRow()}
   ${weeklyCard(home?.weekly)}
   ${continueSection(home,onTiles)}
   ${doneSection(home)}`;
@@ -560,6 +710,28 @@ function renderHub() {
  root.innerHTML=html;
  settleGiostra();
  window.UsDailyQuestionHub?.paintCard?.();
+}
+
+// Il vostro mese (27/11/2026): the shortcut to Le vostre carte, in Ricordi;
+// when a pack is waiting it says so and opens it.
+const mese = { note: '', pack: null, at: 0 };
+const MESE_MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+function meseRow() {
+  return `<button type="button" class="us-gv2-mese" data-us-feedback="tap" data-gv2-action="mese"><span class="us-gv2-mese-pk" aria-hidden="true"></span><span class="us-gv2-mese-copy"><b>Il vostro mese</b><small>${esc(mese.note || 'Le vostre carte, in Ricordi')}</small></span></button>`;
+}
+async function refreshMese() {
+  if (Date.now() - mese.at < 300000 || typeof sb === 'undefined') return;
+  mese.at = Date.now();
+  try {
+    const { data, error } = await sb.rpc('get_carte_v1', { p_year: null });
+    if (error || !data) return;
+    const next = data.waiting?.[0];
+    const when = next ? (next.kind === 'anno' ? String(next.period_start).slice(0, 4) : MESE_MONTHS[Number(String(next.period_start).slice(5, 7)) - 1]) : '';
+    const note = next ? `È arrivato il vostro ${when}` : '';
+    if (note === mese.note && (next?.pack || null) === mese.pack) return;
+    mese.note = note; mese.pack = next?.pack || null;
+    if (view === 'hub') renderHub();
+  } catch (_) { /* the row keeps its quiet line */ }
 }
 
 function renderHubError() {
@@ -580,6 +752,8 @@ async function load() {
     if (weeklyJustCreated === 'pending') weeklyJustCreated = true;
     if (view === 'hub') renderHub();
     checkPerVoiQuestion();
+    loadInsieme();
+    refreshMese();
     return home;
   } catch (error) {
     console.warn('[US Gioca] home', error);
@@ -1171,20 +1345,25 @@ function revealSwipeItem(item,number,kind){
 // 1.0 — the result is where the conversation starts: one of the different
 // answers (when there is one) with "Ne parlate stasera?", then two gestures
 // that already exist: Lasciato per te and Ti penso.
-function revealMove(groups){
+// Gioca più piena (D5): the same move on the hub when the day's rounds are
+// spent, led by «Intanto rileggete…», with the way back to that round.
+function revealMove(groups,{titleId='usGv5MoveTitle',lead='',session='',extraClass=''}={}){
   const pick=groups.different[0]?.item||null;
   const partner=knownPartner();
   const feature=pick?`<div class="us-gv5-move-pick">
       <p class="us-gv5-move-q"${asWritten(coupleWritten(pick))}>${esc(pick.my_prompt||pick.question_text||'Una domanda')}</p>
       <dl>${revealAnswerRows(pick)}</dl>
     </div>`:'';
-  return `<section class="us-gv5-move" aria-labelledby="usGv5MoveTitle">
-    <h3 id="usGv5MoveTitle">Ne parlate stasera?</h3>
-    ${feature}
+  const head=`<h3 id="${titleId}">Ne parlate stasera?</h3>`;
+  const top=lead?`<span class="us-gv2-kicker">${esc(lead)}</span>${feature}${head}`:`${head}
+    ${feature}`;
+  const back=session?`<button type="button" class="us-gv2-rileggi" data-gv2-session="${esc(session)}">Rivedi la partita</button>`:'';
+  return `<section class="us-gv5-move${extraClass}"${lead?' data-s':''} aria-labelledby="${titleId}">
+    ${top}
     <div class="us-gv5-move-actions">
       <button type="button" class="primary" data-gv2-action="leave-something">${icon('envelope-simple')}<span>${esc(partner?`Lascia qualcosa a ${partner}`:'Lascia qualcosa alla tua persona')}</span></button>
       <button type="button" class="ghost" data-gv2-action="think">${icon('heart-straight')}<span>Ti penso</span></button>
-    </div>
+    </div>${back}
   </section>`;
 }
 // 1.0 — "Quanto mi conosci?": how well you were read, from the server's own
@@ -1203,6 +1382,9 @@ function revealHead(groups){
   const compared=groups.same.length+groups.different.length;
   return compared?`${groups.same.length} su ${compared} <em>uguali</em>`:'Da leggere insieme';
 }
+// D4: a finished round gives the couple's level the points the server
+// already awarded (progression_award 'game', 15, once per round).
+const GAME_XP=15;
 function renderCompactReveal({first=false,swipe=false}={}){
   const groups={same:[],different:[],open:[]};
   const ordered=[];
@@ -1216,6 +1398,7 @@ function renderCompactReveal({first=false,swipe=false}={}){
     </div>
     ${reading?`<p class="us-gv5-reading">${esc(reading)}</p>`:''}
     ${revealMove(groups)}
+    <p class="us-gv5-livello"><span aria-hidden="true">${icon('heart-straight-fill')}</span><span>+${GAME_XP} per il vostro livello</span></p>
     <div class="us-gv2-actions is-single"><button type="button" class="primary" data-gv2-action="back">Torna a Gioca</button></div>
   </article>`,{kicker:'LE VOSTRE SCELTE',title:revealHead(groups),label:familyName(current.game_family),tone:swipe?'ambra':'menta'});
   // The mockup's reveal: each answer rises in turn (first reveal only).
@@ -1364,6 +1547,7 @@ function onClick(event) {
   }
   else if (action === 'retry') load();
   else if (action === 'plus-soon') window.UsPlusSoon?.open?.({ from: 'gioca' });
+  else if (action === 'mese') window.usOpenCarte?.(mese.pack ? { pack: mese.pack } : {});
   else if (button.dataset.gv2Family) chooseMode(button.dataset.gv2Family, button);
   else if (button.dataset.gv2Session) openSession(button.dataset.gv2Session);
 }
@@ -1408,6 +1592,7 @@ window.USGameV2 = {
 window.addEventListener('us-identity-change', (event) => {
   if (!event.detail?.identityKey) {
     identityEpoch++;loadSeq++;current=null;home=null;drafts.clear();view='hub';
+    revealedRounds.clear();intesaData=null;insiemeKey='';intesaOff=false;
     startRequestIds.clear();weeklyRequestId=null;
     clearPanel();
     byId('quizHub')?.classList.remove('hidden');
@@ -1431,6 +1616,8 @@ else boot();
 // Gioca badge can wait until the page on screen has refreshed.
 document.addEventListener('visibilitychange', () => {
   if (document.hidden || !window.usProfile || byId('quiz')?.classList.contains('active')) return;
+  // Back after a few seconds away (index.html, UsForeground): the badge is still right.
+  if (window.UsForeground?.shortAway?.()) return;
   (window.usAfterForeground || ((task) => task()))(() => refresh(), 1400);
 });
 setInterval(() => { if (!document.hidden && window.usProfile) refresh(); }, 45000);

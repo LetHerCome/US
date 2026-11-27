@@ -84,6 +84,31 @@
     }
   }
 
+  // Come stai che conta (founder, 27/11/2026, D8): what you hold or wear while
+  // your Come stai says so. The same steps are in UsCharacterShapes.java and
+  // .swift (thingOf, thing), so the widgets draw them too. Never while asleep.
+  const THING = Object.freeze({ lavoro: 'valigetta', studio: 'libro', palestra: 'fascia', viaggio: 'valigia', tavola: 'forchetta', malato: 'termometro' });
+  const ink = (p, sw, c = INK) => `<path d="${p}" fill="none" stroke="${c}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  function thingSvg(thing, shape) {
+    const s = SHAPES[shape], an = ANCHOR[shape];
+    if (!s || !an) return '';
+    const y = s.ey, r = an.ears[1];
+    switch (thing) {
+      case 'valigetta': return ink('M5 72 V68 Q5 65 8 65 H12 Q15 65 15 68 V72', 2.6) + lp('M-3 75 Q-3 72 0 72 H20 Q23 72 23 75 V89 Q23 92 20 92 H0 Q-3 92 -3 89 Z', '#9B6A43', 2.4) + ink('M-3 79 H23', 1.8) + lp('M8 76.5 H12 V81.5 H8 Z', '#F3D27A', 1.2);
+      case 'valigia': return ink('M4 66 V56 H12 V66', 2.6) + lp('M-4 69 Q-4 66 -1 66 H17 Q20 66 20 69 V91 Q20 94 17 94 H-1 Q-4 94 -4 91 Z', '#F3A64B', 2.4) + ink('M2 69 V91 M14 69 V91', 2.2, '#D9822B') + lp(`${ell(1, 96.5, 2.4, 2.4)} ${ell(15, 96.5, 2.4, 2.4)}`, '#3A3446', 1.4);
+      case 'libro': return `<g transform="rotate(-12 9 83)">${lp('M-3 70 H19 Q22 70 22 73 V93 Q22 96 19 96 H-3 Z', '#A98BFF', 2.4)}${ink('M0 93 H19', 2.6, '#FFFDF9')}${ink('M3 76 H15 M3 81 H12', 2, '#FFFDF9')}</g>`;
+      case 'forchetta': return lp('M5 66 H11 V93 Q11 96 8 96 Q5 96 5 93 Z', '#D7DCE3', 2.2) + ink('M2 49 V60 M8 49 V60 M14 49 V60 M2 58 Q2 66 8 66 Q14 66 14 58', 4.4) + ink('M2 49 V60 M8 49 V60 M14 49 V60 M2 58 Q2 66 8 66 Q14 66 14 58', 2, '#D7DCE3');
+      case 'fascia': {
+        scarfClips();
+        const y0 = y - 18;
+        return `<g clip-path="url(#usc-${shape})"><path d="M0 ${y0} Q50 ${y0 - 4} 110 ${y0} V${y0 + 7} Q50 ${y0 + 3} 0 ${y0 + 7} Z" fill="#FF5A7A" stroke="${INK}" stroke-width="2.2"/><path d="M0 ${y0 + 3.5} Q50 ${y0 - 0.5} 110 ${y0 + 3.5}" fill="none" stroke="#FFFFFF" stroke-width="1.6"/></g>`
+          + lp(`M${r - 7} ${y0 + 3} l9 -6 l2 7 Z`, '#FF5A7A', 1.8) + lp(`M${r - 7} ${y0 + 4} l10 3 l-4 6 Z`, '#FF5A7A', 1.8);
+      }
+      case 'termometro': return ink(`M53 ${y + 12} L68 ${y + 5}`, 5.4) + ink(`M53 ${y + 12} L68 ${y + 5}`, 3, '#FFFFFF') + ink(`M53 ${y + 12} L59 ${y + 9.2}`, 3, '#E8484A') + lp(ell(53, y + 12, 2.6, 2.6), '#E8484A', 1.4);
+      default: return '';
+    }
+  }
+
   // ---------------------------------------------------------------- who is who
   const profiles = () => {
     try { return w?.UsCoupleContext?.snapshot?.()?.profiles || []; } catch (_) { return []; }
@@ -111,7 +136,7 @@
   const FACE = Object.freeze({ dorme: 'dorme', occhiolino: 'felice', felice: 'felice', festa: 'innamorato', innamorato: 'innamorato', giu: 'giu', malato: 'giu', stanco: 'stanco', nervoso: 'teso', lavoro: 'felice', studio: 'felice', palestra: 'felice', viaggio: 'felice', tavola: 'felice' });
   function moodOf(role) {
     let st;
-    try { st = w?.UsMemberStatus?.widgetState?.(); } catch (_) { st = null; }
+    try { st = w?.UsMemberStatus?.faces?.() || w?.UsMemberStatus?.widgetState?.(); } catch (_) { st = null; }
     const pick = role === myRole() ? st?.me : st?.partner;
     return { status: pick?.status || '', form: pick?.form || '' };
   }
@@ -139,6 +164,11 @@
     if (mine) {
       const at = Date.parse(w?.usThinkLastReceivedAt || '');
       if (Number.isFinite(at) && now.getTime() - at >= 0 && now.getTime() - at < REACTION_HOURS * 3600e3) return 'cuore';
+      // Come stai che conta (D7/D16): the other person answered my Come stai.
+      let reply = null;
+      try { reply = w?.UsMemberStatus?.replyToMe?.({ now: now.getTime() }) || null; } catch (_) { reply = null; }
+      const got = Date.parse(reply?.at || '');
+      if (reply && Number.isFinite(got) && now.getTime() - got < REACTION_HOURS * 3600e3) return reply.gesture === 'festa' ? 'festa' : reply.gesture === 'cuore' ? 'cuore' : 'coccola';
     } else {
       const st = w?.todayState;
       if (w?.todayQuestion?.id && st?.partner_has_answer && st?.my_answer == null) return 'saluta';
@@ -154,6 +184,8 @@
   }
   function reactionFront(reaction, shape) {
     const s = SHAPES[shape];
+    // A little heart by the head: someone answered your Come stai with a hug, a «Forza!»…
+    if (reaction === 'coccola' && s && ANCHOR[shape]) { const [hx, hy] = ANCHOR[shape].head, x = hx + 24, y = hy + 2; return `<path class="us-char-coccola" d="M${x} ${y + 6} C${x - 9} ${y} ${x - 6} ${y - 8} ${x} ${y - 3} C${x + 6} ${y - 8} ${x + 9} ${y} ${x} ${y + 6} Z" fill="#FF7C96" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/>`; }
     if (reaction !== 'cuore' || !s) return '';
     const [a, b] = s.ex, y = s.ey;
     const heart = (x) => `M${x} ${y + 5} C${x - 9} ${y - 1} ${x - 6} ${y - 9} ${x} ${y - 4} C${x + 6} ${y - 9} ${x + 9} ${y - 1} ${x} ${y + 5} Z`;
@@ -168,9 +200,12 @@
     const shape = SHAPES[o.shape] ? o.shape : SHAPES[who?.shape] ? who.shape : shapeOf(role);
     const color = o.color || who?.color || colorVar(role);
     const s = SHAPES[shape], size = o.size || 56, [a, b] = s.ex, y = s.ey;
-    const reaction = o.reaction !== undefined ? o.reaction : (o.react && role ? reactionOf(role) : '');
     const mood = o.mood !== undefined ? o.mood : (role ? moodOf(role).status : '');
+    const asked = o.reaction !== undefined ? o.reaction : (o.react && role ? reactionOf(role) : '');
+    // Not feeling well never falls asleep at night (D8): the face of their state stays.
+    const reaction = asked === 'sera' && mood === 'malato' ? '' : asked;
     const face = reaction === 'sera' ? 'dorme' : reaction ? 'felice' : (FACE[mood] || 'felice');
+    const thing = o.thing !== undefined ? o.thing : (face === 'dorme' ? '' : THING[mood] || '');
     const shut = face === 'stanco' || face === 'innamorato' || face === 'dorme';
     const open = reaction === 'cuore' || shut ? [] : [a, b];
     const big = reaction === 'cuore' || reaction === 'festa';
@@ -193,6 +228,7 @@
       + `<path d="${mouth}" fill="${big ? '#7A2E3A' : face === 'dorme' ? INK : 'none'}" stroke="${face === 'dorme' && !big ? 'none' : INK}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`
       + reactionFront(reaction, shape)
       + (face === 'dorme' ? `<text x="84" y="36" font-family="Figtree,sans-serif" font-weight="800" font-size="19" fill="currentColor">z</text><text x="97" y="22" font-family="Figtree,sans-serif" font-weight="800" font-size="13" fill="currentColor">z</text>` : '')
+      + (thing ? `<g class="us-char-thing" data-thing="${thing}">${thingSvg(thing, shape)}</g>` : '')
       + dress
       + '</svg>';
   }
@@ -334,10 +370,10 @@
       const free = item === null || open.has(item);
       const name = item === null ? 'Niente' : LOOK_NAMES[item];
       const lock = free ? '' : lockOf(item);
-      const preview = character(role, { size: 44, reaction: '', head: slot === 'head' ? item : mine.head, face: slot === 'face' ? item : mine.face });
+      const preview = character(role, { size: 44, reaction: '', thing: '', head: slot === 'head' ? item : mine.head, face: slot === 'face' ? item : mine.face });
       return `<button type="button" class="us-look-chip${free ? '' : ' is-locked'}" data-us-look="${slot}:${item || ''}" aria-pressed="${on}"${free ? '' : ' aria-disabled="true"'} aria-label="${esc(free ? name : `${name}: si sblocca con ${lock}`)}">${preview}<span class="us-look-name">${esc(name)}</span>${lock ? `<small>${esc(lock)}</small>` : ''}</button>`;
     };
-    const shapeChip = (shape) => `<button type="button" class="us-look-chip" data-us-shape="${shape}" aria-pressed="${shape === shapeNow}">${character(role, { size: 44, reaction: '', shape })}<span class="us-look-name">${esc(SHAPE_NAMES[shape])}</span></button>`;
+    const shapeChip = (shape) => `<button type="button" class="us-look-chip" data-us-shape="${shape}" aria-pressed="${shape === shapeNow}">${character(role, { size: 44, reaction: '', thing: '', shape })}<span class="us-look-name">${esc(SHAPE_NAMES[shape])}</span></button>`;
     const next = Object.entries(LOOK_POINTS).filter(([item]) => !open.has(item)).sort((x, y) => x[1] - y[1])[0];
     let nextRow = '<p class="us-look-next"><b>Avete sbloccato tutto il guardaroba della Sintonia</b></p>';
     if (next) {
@@ -443,7 +479,7 @@
     button.setAttribute('aria-expanded', String(open));
     if (top?.dataset) { if (open) top.dataset.usIsola = 'open'; else delete top.dataset.usIsola; }
     if (open) { labelIsola(); isolaTimer = setTimeout(() => setIsola(false), ms); }
-    else { hideFumetto(); endCuori(button); if (was) paintIsola(); }
+    else { hideFumetto(); endCuori(button); endEccoti(); if (was) paintIsola(); }
   }
   // I cuoricini volano nell'isola (founder, 27/11/2026: «dove risiedono loro»). A
   // Ti penso ×N leaves: the island opens, the little hearts rise from the heart of
@@ -453,11 +489,13 @@
   // under a sheet, not during the intro, not while another island moment (the
   // first peek, a new level, US vi ricorda) is on. Otherwise app.js keeps the old
   // flight. cuoriVerso() is where the hearts land (null: not now).
-  function cuoriVerso() {
+  // The island on screen and there to see (paired, not under a sheet, not during the
+  // intro, nothing over it): its button and centre, or null.
+  function isolaInVista({ open = false } = {}) {
     const button = isola();
     if (!d || d.hidden || !button || button.hidden || !paired() || w.UsIntro?.active?.()) return null;
     if (d.body?.getAttribute?.('data-us-surface') === 'open') return null;
-    if (!receiving && button.getAttribute('aria-expanded') === 'true') return null;
+    if (!open && button.getAttribute('aria-expanded') === 'true') return null;
     const r = button.getBoundingClientRect?.();
     if (!r || !r.width || !r.height) return null;
     const vw = d.documentElement?.clientWidth || w.innerWidth || 0, vh = d.documentElement?.clientHeight || w.innerHeight || 0;
@@ -467,10 +505,88 @@
     const top = button.closest?.('.top') || button;
     const hit = typeof d.elementFromPoint === 'function' ? d.elementFromPoint(x, y) : null;
     if (hit && !top.contains(hit)) return null;
+    return { button, x, y };
+  }
+  function cuoriVerso() {
+    const at = isolaInVista({ open: Boolean(receiving) });
+    if (!at) return null;
     // The other person's place in the open island (struttura.css: 220 px wide, the
     // window 8 px in, two characters of 42 px overlapping by 12): mine, then theirs.
-    return { x: Math.round(x - 110 + 8 + 30 + 21), y: Math.round(y + 4) };
+    return { x: Math.round(at.x - 110 + 8 + 30 + 21), y: Math.round(at.y + 4) };
   }
+  // Free for a moment of its own: there to see, no hearts arriving, no bubble, not in Impostazioni.
+  function isolaLibera(options) {
+    if (receiving || fumetto()?.hasAttribute?.('data-open')) return null;
+    if (d?.getElementById('settings')?.classList.contains('active')) return null;
+    return isolaInVista(options);
+  }
+  // The island is centred with translate(-50%, -50%) (struttura.css): a squeeze keeps it, around its centre.
+  const squeeze = (scale, offset) => [{ transform: 'translate(-50%, -50%) scale(1)' }, { transform: `translate(-50%, -50%) scale(${scale})`, offset }, { transform: 'translate(-50%, -50%) scale(1)' }];
+  const reducedMotion = () => Boolean(w.UsUiFoundation?.isReducedMotion?.() || w.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+  // L'apertura che accoglie (founder, 27/11/2026): at a cold start your two characters
+  // fly from the opening (index.html) into the island. accogli() opens it at once,
+  // under the opening, with its own two out of sight, and says where they stand;
+  // land() shows them again, with a little squash. null: not now (the opening fades).
+  // An island already open (its first time, US vi ricorda speaking) takes them too.
+  function accogli({ ms = 3000 } = {}) {
+    const at = receiving || d?.getElementById('settings')?.classList.contains('active') ? null : isolaInVista({ open: true });
+    if (!at) return null;
+    const { button } = at;
+    const was = button.getAttribute('aria-expanded') === 'true';
+    button.dataset.usArriving = '1';
+    if (!was) setIsola(true, { ms });
+    let landed = false;
+    const land = (squash = true) => {
+      if (landed) return;
+      landed = true;
+      delete button.dataset.usArriving;
+      if (squash && !reducedMotion()) button.animate?.(squeeze('1.06, .94', 0.35), { duration: 380, easing: 'cubic-bezier(.22,1.45,.36,1)' });
+    };
+    const chars = [...button.querySelectorAll('[data-us-isola-duo] .us-char')];
+    const rects = chars.map((c) => c.getBoundingClientRect?.());
+    if (button.getAttribute('aria-expanded') !== 'true' || rects.length !== 2 || rects.some((r) => !r || !r.width || !r.height)) {
+      land(false);
+      if (!was) setIsola(false);
+      return null;
+    }
+    const centre = (r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    return { me: centre(rects[0]), them: centre(rects[1]), width: rects[0].width, land };
+  }
+  // Back after more than an hour away (UsForeground): no opening, the two hop in the
+  // island and it says «Eccoti, {nome}» for about 2.6 s, then it is as it was.
+  const AWAY_MS = 3600000, ECCOTI_MS = 2600;
+  let eccotiWas = null;
+  function endEccoti() {
+    const b = isola()?.querySelector('.us-isola-words b');
+    if (eccotiWas !== null && b) b.textContent = eccotiWas;
+    eccotiWas = null;
+  }
+  const nameOf = (role) => String(profileOf(role)?.display_name || (role === myRole() ? w.usProfile?.display_name : '') || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  function eccoti() {
+    const name = nameOf(myRole());
+    const at = name ? isolaLibera() : null;
+    if (!at) return false;
+    const { button } = at;
+    setIsola(true, { ms: ECCOTI_MS });
+    if (button.getAttribute('aria-expanded') !== 'true') return false;
+    const b = button.querySelector('.us-isola-words b');
+    if (b) {
+      eccotiWas = b.textContent;
+      b.textContent = typeof w.usT === 'function' ? w.usT('Eccoti, {name}', { name }) : `Eccoti, ${name}`;
+    }
+    if (reducedMotion()) return true;
+    button.animate?.(squeeze('1.08', 0.4), { duration: 460, easing: 'cubic-bezier(.22,1.45,.36,1)' });
+    // After they have risen into the window: a hop each.
+    button.querySelectorAll('[data-us-isola-duo] .us-char').forEach((c, i) => c.animate?.([
+      { translate: '0 0', rotate: '0deg' },
+      { translate: '0 -7px', rotate: `${i ? 8 : -8}deg`, offset: 0.3 },
+      { translate: '0 0', rotate: '0deg', offset: 0.55 },
+      { translate: '0 -4px', rotate: '0deg', offset: 0.75 },
+      { translate: '0 0', rotate: '0deg' }
+    ], { duration: 900, delay: 620 + i * 90, easing: 'ease-out' }));
+    return true;
+  }
+  const awayLong = () => { const ms = w.UsForeground?.awayMs?.(); return Number.isFinite(ms) && ms > AWAY_MS; };
   function riceviCuori({ count = 1, ms = 2200 } = {}) {
     if (!cuoriVerso()) return false;
     const button = isola();
@@ -534,6 +650,7 @@
   function parla({ text, speaker = 'me', cta = '', reaction, onTap, onHold, ms = 8000 } = {}) {
     const f = fumetto();
     if (!f || !text || !paired() || receiving) return false;
+    endEccoti();
     setIsola(true, { ms, reaction: reaction || (speaker === 'both' ? 'cuore' : undefined) });
     if (isola()?.getAttribute('aria-expanded') !== 'true') return false;
     f.querySelector('[data-us-fumetto-text]').textContent = text;
@@ -589,8 +706,10 @@
     }, retry ? PEEK_WAIT[Math.min(peekTries - 1, PEEK_WAIT.length - 1)] : 900);
   }
 
-  // Apertura A (25/11/2026): the opening shows your two characters before anything loads,
-  // so they are kept here, with their colours resolved (the page has no couple colours yet then).
+  // L'apertura che accoglie (27/11/2026; Apertura A before it): the opening shows your two
+  // characters and says hello before anything loads, so they are kept here: the two with
+  // their colours resolved (the page has no couple colours yet then), your names and
+  // «Insieme dal» (the days are counted at the opening). Signing out forgets both (app.js).
   function keepLaunchDuo() {
     try {
       if (!w.localStorage || !w.usProfile?.id) return;
@@ -600,6 +719,12 @@
       const solid = (svg) => svg.replace(/var\((--us-[a-z-]+)\)/g, (all, name) => (css?.getPropertyValue(name) || '').trim() || all);
       const duo = { me: solid(character(me, { size: 50, reaction: '', mood: '' })), them: solid(character(them, { size: 50, reaction: '', mood: '' })) };
       w.localStorage.setItem('us:launch-duo:v1', JSON.stringify(duo));
+      let since = '';
+      try { since = String(w.UsCoupleContext?.snapshot?.()?.couple?.started_on || ''); } catch (_) { since = ''; }
+      // The couple's row can arrive after the profiles: a date already kept stays until a new one is known.
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(since)) { try { since = String(JSON.parse(w.localStorage.getItem('us:launch-hello:v1') || 'null')?.since || ''); } catch (_) { since = ''; } }
+      const hello = { name: nameOf(me), partner: nameOf(them), since: /^\d{4}-\d{2}-\d{2}$/.test(since) ? since : '' };
+      w.localStorage.setItem('us:launch-hello:v1', JSON.stringify(hello));
     } catch (_) {}
   }
   const paintAll = () => { paintMe(); paintDuo(); paintWardrobe(); paintIsola(); keepLaunchDuo(); };
@@ -608,6 +733,12 @@
     w.addEventListener('us-identity-change', () => { paintAll(); maybePeek(); if (!w.usProfile?.couple_id) closeAngolo(); });
     // A Ti penso arrives (heart eyes), the points grow (the wardrobe), the question changes (a wave).
     w.addEventListener('us:think-updated', paintAll);
+    // Come stai changed (mine, theirs, an answer): the faces and the things follow at once
+    // (they waited for the minute's repaint before, 27/11/2026). The open angolo keeps its focus.
+    w.addEventListener('us:member-status-changed', () => {
+      paintMe(); paintIsola();
+      if (!angolo()?.classList.contains('open')) paintDuo();
+    });
     w.addEventListener('us:progression-updated', () => { paintWardrobe(); paintIsola(); maybePeek(); });
     d.addEventListener('click', (event) => {
       const target = event.target;
@@ -649,7 +780,12 @@
     // Back on Oggi, back in the app: maybe a new level to show.
     const home = d.getElementById('home');
     if (home && typeof w.MutationObserver === 'function') new w.MutationObserver(() => { if (home.classList.contains('active')) maybePeek(); else setIsola(false); }).observe(home, { attributes: true, attributeFilter: ['class'] });
-    d.addEventListener('visibilitychange', () => { if (d.hidden) setIsola(false); else maybePeek(); });
+    d.addEventListener('visibilitychange', () => {
+      if (d.hidden) { setIsola(false); return; }
+      maybePeek();
+      // Back after more than an hour: «Eccoti» once the screen is back.
+      if (awayLong()) setTimeout(() => { if (!d.hidden) eccoti(); }, 400);
+    });
     // The intro held back the island's moment (a new level, the first time): tried again when it closes.
     w.addEventListener('us:intro-done', () => maybePeek());
     const boot = () => {
@@ -667,8 +803,8 @@
     };
     if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot, { once: true });
     else boot();
-    w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla, cuoriVerso, riceviCuori, cuoriArrivo });
+    w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla, cuoriVerso, riceviCuori, cuoriArrivo, accogli, eccoti });
   }
 
-  return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, LOOK_HEAD, LOOK_FACE, LOOK_NAMES, LOOK_POINTS, LOOK_MOMENTS, character, slot, shapeOf, lookOf, colorName, myRole, reactionOf, unlockedLook, paintMe, paintDuo, paintWardrobe });
+  return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, THING, thingSvg, LOOK_HEAD, LOOK_FACE, LOOK_NAMES, LOOK_POINTS, LOOK_MOMENTS, character, slot, shapeOf, lookOf, colorName, myRole, reactionOf, unlockedLook, paintMe, paintDuo, paintWardrobe });
 });

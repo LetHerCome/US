@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assetCopyFilter } from './build-asset-filter.mjs';
 import { build } from 'esbuild';
+import { minifyWebBundle } from './minify-web.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(SCRIPT_DIR, '..');
@@ -36,6 +37,8 @@ const RUNTIME_FILES = [
   'bacheca.js',
   'ricordi-cerca.js',
   'ricordi-cerca.css',
+  'mese.js',
+  'mese.css',
   'app-lock.js',
   'app-lock.css',
   'notifications.js',
@@ -58,6 +61,7 @@ const RUNTIME_FILES = [
   'navigation.js',
   'games.css',
   'games.js',
+  'gioca-insieme.js',
   'progression.css',
   'progression.js',
   'countdown.css',
@@ -214,6 +218,12 @@ if (
   throw new Error('Native index transformation incomplete');
 }
 await writeFile(stagedIndexPath, html, 'utf8');
+
+// Avvio più veloce (27/11/2026): the same per-file minification as the web
+// build (scripts/minify-web.mjs), before the manifest hashes the files. The
+// app parses about 2.2 MB instead of 3.1 MB at every cold start.
+const minified = await minifyWebBundle(OUTPUT);
+if (minified.skipped) console.warn(`Capacitor web bundle: esbuild missing, ${minified.files} files unminified`);
 
 async function collectFiles(directory, prefix = '') {
   const entries = await readdir(directory, { withFileTypes: true });

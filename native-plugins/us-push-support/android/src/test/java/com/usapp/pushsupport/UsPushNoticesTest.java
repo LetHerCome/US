@@ -126,6 +126,21 @@ public class UsPushNoticesTest {
     }
 
     @Test
+    public void anAnswerToMyComeStaiSaysTheGestureLikeATiPenso() {
+        UsPushNotices.Notice hug = UsPushNotices.forKind("status_abbraccio", "Bea", IT);
+        assertEquals("US. · Come stai", hug.title);
+        assertEquals("Bea: Ti mando un abbraccio", hug.body);
+        assertEquals("oggi", hug.page);
+        assertEquals("Bea: Sending you a hug", UsPushNotices.forKind("status_abbraccio", "Bea", EN).body);
+        assertEquals("US. · How are you", UsPushNotices.forKind("status_abbraccio", "Bea", EN).title);
+        assertEquals("Bea: Respira, ci sono io", UsPushNotices.forKind("status_respira", "Bea", IT).body);
+        assertEquals("Bea ti manda un cuore ♡", UsPushNotices.forKind("status_cuore", "Bea", IT).body);
+        assertEquals("Bea: Spacca tutto!", UsPushNotices.forKind("status_spacca", "Bea", IT).body);
+        assertEquals("La tua persona: Buon viaggio", UsPushNotices.forKind("status_buon_viaggio", "", IT).body);
+        assertEquals("Bea ha risposto al tuo Come stai ♡", UsPushNotices.forKind("status_reply", "Bea", IT).body);
+    }
+
+    @Test
     public void namesAreCleanedAndBounded() {
         assertEquals("Bea trice", UsPushNotices.cleanName("Bea\ntrice"));
         StringBuilder longName = new StringBuilder();

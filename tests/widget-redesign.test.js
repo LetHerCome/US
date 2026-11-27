@@ -37,10 +37,13 @@ test('the characters are the app\'s: the same five bodies, the same things to we
   assert.match(shapes, /static final int INK = 0xFF14120E;/);
 });
 
-test('the faces follow the app: asleep from 22 to 6, else the face of Come stai', () => {
+test('the faces follow the app: asleep from 22 to 6 (not when not well), else the Come stai with its face and thing', () => {
   const pictures = read(`${JAVA}/UsWidgetCharacter.java`);
-  assert.match(pictures, /if \(hour >= 22 \|\| hour < 6\) return "dorme";/);
-  assert.match(pictures, /return UsCharacterShapes\.faceOf\(status\.optString\("status", ""\)\);/);
+  // Come stai che conta (27/11/2026, D8): the Come stai key, drawn as its face and thing by UsCharacterShapes.draw.
+  assert.match(pictures, /if \(hour >= 22 \|\| hour < 6\) return "malato"\.equals\(key\) \? key : "dorme";/);
+  assert.match(pictures, /return key\.isEmpty\(\) \? "felice" : key;/);
+  const shapes = read(`${JAVA}/UsCharacterShapes.java`);
+  assert.match(shapes, /String thing = f\.equals\("dorme"\) \? "" : thingOf\(face\);/);
   assert.match(read('personaggi.js'), /return h >= 22 \|\| h < 6 \? 'sera' : '';/);
   // Every widget with characters draws them from the snapshot, never from a photo.
   for (const kind of ['Think', 'Status', 'Noi', 'Photo', 'Daily', 'Lavagna']) {

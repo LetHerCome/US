@@ -55,10 +55,12 @@ final class UsWidgetCharacter {
     }
 
     /**
-     * The face of the moment, as the app's (personaggi.js reactionOf and FACE):
-     * asleep from 22 to 6 on the phone's clock, otherwise the face of their
-     * Come stai while its twelve hours last, otherwise happy. Asks the next
-     * refresh for the moment the face changes.
+     * The mood of the moment, as the app's (personaggi.js reactionOf, FACE and
+     * THING): asleep from 22 to 6 on the phone's clock, otherwise their Come
+     * stai while its twelve hours last (its face and what they hold, D8 of
+     * 27/11/2026), otherwise happy. Not feeling well never falls asleep.
+     * UsCharacterShapes.draw turns a Come stai key into its face and thing.
+     * Asks the next refresh for the moment it changes.
      */
     static String face(UsWidgets.State state, boolean me) {
         java.time.ZonedDateTime local = state.now.atZone(java.time.ZoneId.systemDefault());
@@ -67,12 +69,12 @@ final class UsWidgetCharacter {
             : hour < 6 ? local.withHour(6).withMinute(0).withSecond(0).withNano(0)
             : local.withHour(22).withMinute(0).withSecond(0).withNano(0);
         state.needsUpdateAt(next.toInstant());
-        if (hour >= 22 || hour < 6) return "dorme";
         JSONObject status = UsWidgetContract.optObject(UsWidgetContract.optObject(state.snapshot, "status"), me ? "me" : "partner");
         UsWidgetModels.StatusPerson person = UsWidgetModels.statusPerson(status, state.now);
-        if (!person.shown) return "felice";
-        state.needsUpdateAt(person.nextChange);
-        return UsCharacterShapes.faceOf(status.optString("status", ""));
+        if (person.shown) state.needsUpdateAt(person.nextChange);
+        String key = person.shown ? status.optString("status", "") : "";
+        if (hour >= 22 || hour < 6) return "malato".equals(key) ? key : "dorme";
+        return key.isEmpty() ? "felice" : key;
     }
 
     private static int color(String hex, int fallback) {

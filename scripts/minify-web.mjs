@@ -23,7 +23,10 @@ import { PLACEHOLDER_HTML } from './build-s31-staging-preview.mjs';
 const esbuild = await import('esbuild').catch(() => null);
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const ALLOWED_OUTPUTS = ['dist/cloudflare-pages', 'dist/s31-staging-preview'].map((dir) => path.join(ROOT, ...dir.split('/')));
+// dist/capacitor since 27/11/2026 (Avvio più veloce): the web bundle inside the
+// Android and iOS apps is parsed from scratch at every cold start (no code
+// cache for files served by the Capacitor bridge), so it ships minified too.
+const ALLOWED_OUTPUTS = ['dist/cloudflare-pages', 'dist/s31-staging-preview', 'dist/capacitor'].map((dir) => path.join(ROOT, ...dir.split('/')));
 
 export async function minifyWebBundle(directory) {
   const target = path.resolve(directory);

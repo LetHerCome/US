@@ -102,16 +102,16 @@ test('notifications: a failed "Attiva" says at which step and why (19/10, still 
   assert.ok(read('app.js').includes("toast(`Non riesco ad attivare le notifiche${result.code?` · ${result.code}`:''}`)"));
 });
 
-test('opening animation: installed app only, at load (never on resume), from the splash colour, about two seconds', () => {
+test('opening animation: installed app only, at load (never on resume), from the splash colour, waiting for the app', () => {
   const html = read('index.html');
   const has = (text) => assert.ok(html.includes(text), text);
   has('<div class="us-launch-intro" id="usLaunchIntro" aria-hidden="true">');
-  has("if (!intro || (!native && !standalone) || reduced) { intro?.remove(); return; }");
+  has("if (!intro || (!native && !standalone)) { intro?.remove(); return; }");
   has("localStorage.getItem('us:splash-theme:v1')");
-  // Apertura A (founder 25/11/2026): the two characters lean out from the logo, ~1.9 s.
-  has('setTimeout(done, 2400);');
+  // L'apertura che accoglie (founder 27/11/2026; Apertura A before it): 1.4–3.2 s, always gone.
+  has('setTimeout(done, MAX_MS + 1600);');
   has("localStorage.getItem('us:launch-duo:v1')");
-  has('@media (prefers-reduced-motion:reduce){html.us-launch-play .us-launch-intro{display:none}}');
+  has("localStorage.getItem('us:launch-hello:v1')");
   // It lives in the page markup: a resume does not reload the page, so it never replays.
   assert.ok(html.indexOf('id="usLaunchIntro"') < html.indexOf('id="usAppLock"'));
   assert.doesNotMatch(read('app.js') + read('notifications.js'), /usLaunchIntro|us-launch-play/);

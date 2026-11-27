@@ -212,6 +212,15 @@
 
   if (w) w.usT = t;
 
+  // Avvio più veloce (27/11/2026): the English dictionary (about 230 KB) is
+  // read only when the app speaks English. index.html names it on this tag
+  // (data-us-en); written while the page is parsed, it still runs before the
+  // body, so nothing paints in Italian first.
+  if (w && locale === 'en' && w.document?.readyState === 'loading') {
+    const src = w.document.currentScript?.getAttribute?.('data-us-en') || '';
+    if (/^\/i18n-en\.js(\?v=[\w.-]+)?$/.test(src)) w.document.write(`<script src="${src}"></script>`);
+  }
+
   return Object.freeze({
     locale,
     tag: TAGS[locale],

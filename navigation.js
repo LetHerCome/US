@@ -86,6 +86,13 @@ const layers=[
     close:()=>window.UsMemberStatus?.close?.()
   },
   {
+    // Come stai che conta (27/11/2026): back closes the other person's sheet.
+    name:'statusPerson',
+    find:()=>document.getElementById('usStatusPerson'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsMemberStatus?.closePerson?.()
+  },
+  {
     // Il vostro angolo (redesign definitivo, D3): back closes the sheet.
     name:'angolo',
     find:()=>document.getElementById('usAngolo'),
@@ -304,6 +311,13 @@ const layers=[
     find:()=>document.getElementById('usLookDetail'),
     open:el=>el?.classList.contains('open'),
     close:()=>window.USOggiLook?.back?.()
+  },
+  {
+    // Il vostro mese (27/11/2026): back goes from a card to the fan, the share, the pack, then out.
+    name:'mese',
+    find:()=>document.getElementById('usMese'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsMese?.back?.()
   },
   {
     // Sintonia: the reward window and the level moment sit above everything.

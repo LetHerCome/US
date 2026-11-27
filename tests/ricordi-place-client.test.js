@@ -79,8 +79,8 @@ test('composer, upload, read and card carry the place; the staging probe is gone
   const app = read('app.js');
   const html = read('index.html');
   assert.match(html, /id="momentPlaceField"[\s\S]*Dove · facoltativo[\s\S]*onclick="editMomentPlace\(\)"/);
-  // Redesign, fase 8 (D12): Raccolta, Bacheca, Mappa.
-  assert.match(html, /<div class="ricordi-views" role="tablist" aria-label="Come vedere i Ricordi"><button type="button" role="tab" data-ricordi-view="story" aria-selected="true">Raccolta<\/button><button type="button" role="tab" data-ricordi-view="board" aria-selected="false">Bacheca<\/button><button type="button" role="tab" data-ricordi-view="map" aria-selected="false">Mappa<\/button><\/div>/);
+  // Redesign, fase 8 (D12): Raccolta, Bacheca, Mappa; Il vostro mese (27/11/2026): Carte.
+  assert.match(html, /<div class="ricordi-views" role="tablist" aria-label="Come vedere i Ricordi"><button type="button" role="tab" data-ricordi-view="story" aria-selected="true">Raccolta<\/button><button type="button" role="tab" data-ricordi-view="board" aria-selected="false">Bacheca<\/button><button type="button" role="tab" data-ricordi-view="map" aria-selected="false">Mappa<\/button><button type="button" role="tab" data-ricordi-view="carte" aria-selected="false">Carte<\/button><\/div>/);
   assert.match(html, /<div class="ricordi-bacheca" id="ricordiBacheca" aria-label="La vostra bacheca, tenuta da US" hidden><\/div>/);
   assert.match(html, /<div class="ricordi-map" id="ricordiMap"[^>]*hidden><\/div>/);
   assert.ok(html.indexOf('/moments-albums.js?v=') < html.indexOf('/ricordi-place.js?v='));

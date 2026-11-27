@@ -7,6 +7,9 @@
 // (personaggi.js UsAngolo.parla, D11/D17) and opens the line's sheet with the
 // gesture ready (D7): it never sends anything for anyone.
 // «Ti aspetta» is decided here, live (D13), from the «tocca a te» state.
+// «Come sta» too (Come stai che conta, 27/11/2026, D9/D17): the other person
+// giù, non sta bene or nervoso for two hours (member-status.js lineFor), once
+// per state; its sheet offers a Ti penso or the gesture of their state.
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -15,8 +18,8 @@
   'use strict';
 
   // The kinds «Non dirmelo più» switches off, as Profilo › Notifiche names them (one switch each).
-  const KIND_NAMES = Object.freeze({ compleanno: 'I compleanni', anniversario: 'Gli anniversari', mesiversario: 'I mesiversari', giorni: 'I giorni insieme', un_anno_fa: 'Un anno fa, oggi', traguardo: 'I traguardi', conoscervi: 'Le domande per conoscervi', ti_aspetta: 'Quando tocca a te', primi_passi: 'La prima settimana', bacheca: 'La bacheca' });
-  const PRIORITY = Object.freeze({ presentazione: 0, compleanno: 1, anniversario: 1, ti_aspetta: 2, primi_passi: 2, bacheca: 2.5, un_anno_fa: 3, mesiversario: 4, giorni: 4, traguardo: 4, conoscervi: 5 });
+  const KIND_NAMES = Object.freeze({ compleanno: 'I compleanni', anniversario: 'Gli anniversari', mesiversario: 'I mesiversari', giorni: 'I giorni insieme', un_anno_fa: 'Un anno fa, oggi', traguardo: 'I traguardi', conoscervi: 'Le domande per conoscervi', ti_aspetta: 'Quando tocca a te', primi_passi: 'La prima settimana', bacheca: 'La bacheca', come_sta: 'Quando la tua persona non sta bene' });
+  const PRIORITY = Object.freeze({ presentazione: 0, compleanno: 1, anniversario: 1, come_sta: 1.5, ti_aspetta: 2, primi_passi: 2, bacheca: 2.5, un_anno_fa: 3, mesiversario: 4, giorni: 4, traguardo: 4, conoscervi: 5 });
   const hash = (s) => { let h = 2166136261; for (const c of String(s || '')) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; };
   const pick = (list, key) => list[hash(key) % list.length];
   // The date in the app's language (UsI18n.tag), with or without the year.
@@ -72,6 +75,13 @@
         if (v.reason === 'traguardo') return v.what === 'anni' ? (v.count === 1 ? ["In bacheca c'è un timbro nuovo: un anno insieme.", 'Ho appeso i vostri un anno in bacheca.'] : [`In bacheca c'è un timbro nuovo: ${v.count} anni insieme.`, `Ho appeso i vostri ${v.count} anni in bacheca.`]) : [`In bacheca c'è un timbro nuovo: ${v.count} ricordi.`, `Ho appeso i vostri ${v.count} ricordi in bacheca.`];
         if (v.reason === 'tenuta') return ['Ho appeso in bacheca una cosa che avete tenuto.', "In bacheca c'è una cosa vostra di questa settimana."];
         return ['Ho appeso in bacheca il ricordo della settimana.', "In bacheca c'è il ricordo più bello della settimana.", 'Ho sistemato la bacheca: guarda il ricordo della settimana.'];
+      case 'come_sta': {
+        // Come stai che conta (27/11/2026, D9/D17): the other person giù, non sta bene or nervoso for two hours.
+        const h = Math.max(2, Math.floor(Number(v.hours) || 2));
+        if (v.status === 'malato') return [`${P} non sta bene da ${h} ore. Un pensiero?`];
+        if (v.status === 'nervoso') return [v.form === 'm' ? `${P} è nervoso da ${h} ore. Un pensiero?` : v.form === 'f' ? `${P} è nervosa da ${h} ore. Un pensiero?` : `${P} ha i nervi tesi da ${h} ore. Un pensiero?`];
+        return [`${P} è giù da ${h} ore. Un pensiero?`];
+      }
       case 'ti_aspetta':
         if (v.what === 'game') return [`${P} ha giocato e aspetta te.`, `C'è una partita che ti aspetta: tocca a te.`, `${P} ha fatto la sua mossa. Tocca a te.`];
         return [`${P} ha già risposto alla domanda di oggi. Tocca a te.`, `La risposta di ${p} c'è già: manca la tua.`, `${P} ti aspetta sulla domanda di oggi.`];
@@ -99,6 +109,7 @@
       }
       case 'conoscervi': return v.ask === 'primo_ricordo' ? { label: 'Metti un ricordo', go: 'compose' } : { label: 'Aggiungilo', go: 'birthday', name: v.name };
       case 'ti_aspetta': return v.what === 'game' ? { label: 'Gioca', go: 'games' } : { label: 'Rispondi', go: 'daily' };
+      case 'come_sta': return { label: 'Fatti sentire', go: 'come_sta' };
       case 'presentazione': return { label: 'Va bene', go: 'close' };
       default: return { label: 'Va bene', go: 'close' };
     }
@@ -109,11 +120,12 @@
     return b.slot !== 'sera' || hour >= 17;
   }
   // The line of the moment: the introduction first, then the strongest.
-  function choose({ server, tocca, introduced, mutedKinds, bacheca = null }) {
+  function choose({ server, tocca, introduced, mutedKinds, bacheca = null, comeSta = null }) {
     const list = [];
     if (!introduced) list.push({ kind: 'presentazione', ref_key: 'presentazione', speaker: 'both', slot: 'mattina', vars: {} });
     if (server) list.push(server);
     if (bacheca && !mutedKinds.has('bacheca')) list.push(bacheca);
+    if (comeSta && !mutedKinds.has('come_sta')) list.push(comeSta);
     if (tocca && !mutedKinds.has('ti_aspetta')) list.push({ kind: 'ti_aspetta', ref_key: `ti_aspetta:${tocca}`, speaker: 'me', slot: 'mattina', vars: { what: tocca } });
     return list.sort((a, b) => (PRIORITY[a.kind] ?? 9) - (PRIORITY[b.kind] ?? 9))[0] || null;
   }
@@ -128,6 +140,7 @@
     const store = (k, v) => { try { if (v === undefined) return w.localStorage?.getItem(k); w.localStorage?.setItem(k, v); } catch (_) { return null; } return null; };
     const SAID = () => `us:ricorda:v1:${me()}`;
     const INTRO = () => `us:ricorda:intro:v1:${me()}`;
+    const COMESTA = () => `us:ricorda:comesta:v1:${me()}`;
     let server = null, muted = false, mutedKinds = new Set(), loadedDay = '', loading = null, tocca = '', current = null;
 
     async function load({ force = false } = {}) {
@@ -165,7 +178,11 @@
         await load();
         if (muted || saidToday()) return;
         const { hour, day } = romeNow();
-        const b = choose({ server: server && !server.seen ? server : null, tocca, introduced: Boolean(store(INTRO())), mutedKinds, bacheca: w.UsBacheca?.news?.() || null });
+        // Come stai che conta (D9/D17): once per state of the other person.
+        let comeSta = null;
+        try { comeSta = w.UsMemberStatus?.ricordaLine?.() || null; } catch (_) { comeSta = null; }
+        if (comeSta && store(COMESTA()) === comeSta.ref_key) comeSta = null;
+        const b = choose({ server: server && !server.seen ? server : null, tocca, introduced: Boolean(store(INTRO())), mutedKinds, bacheca: w.UsBacheca?.news?.() || null, comeSta });
         if (!b || !inWindow(b, hour)) return;
         const text = sentence(b, partnerName());
         if (!text) return;
@@ -175,6 +192,7 @@
         current = b;
         store(SAID(), JSON.stringify({ day, kind: b.kind, ref: b.ref_key, id: b.id || null }));
         if (b.kind === 'presentazione') store(INTRO(), '1');
+        if (b.kind === 'come_sta') store(COMESTA(), b.ref_key);
         if (b.kind === 'bacheca') w.UsBacheca?.markSeen?.();
         if (b.id) db()?.rpc('mark_my_battuta_v1', { p_id: b.id, p_action: 'seen' }).then(() => {}, () => {});
         paintVoi();
@@ -205,7 +223,7 @@
         </div>
         ${b.kind === 'un_anno_fa' && v.source === 'moment' ? `<figure class="us-battuta-photo"><div class="us-battuta-img" data-battuta-img><span>${esc([v.place, v.date ? longDate(v.date) : ''].filter(Boolean).join(' · '))}</span></div>${v.caption ? `<figcaption>«${esc(v.caption)}»</figcaption>` : ''}</figure>` : ''}
         <div class="us-battuta-actions">
-          <button type="button" class="us-battuta-go" data-battuta-go>${esc(a.label)}</button>
+          ${b.kind === 'come_sta' ? comeStaActions(v) : `<button type="button" class="us-battuta-go" data-battuta-go>${esc(a.label)}</button>`}
           ${a.go === 'close' ? '' : '<button type="button" class="us-battuta-later" data-battuta-later>Non ora</button>'}
         </div>
         ${a.go === 'lfy' || a.go === 'lfy-photo' ? `<p class="us-battuta-note">Si apre Lasciato per te già pronto: scrivi tu e mandi tu.</p>` : ''}
@@ -219,6 +237,11 @@
           if (url && img) img.style.backgroundImage = `url("${String(url).replace(/"/g, '%22')}")`;
         } catch (_) {}
       }
+    }
+    // Come stai che conta (D9/D17): «Un pensiero?» offers the two gestures, a Ti penso or the one of their state.
+    function comeStaActions(v) {
+      const M = w.UsMemberStatus, g = M?.GESTURES?.[v.gesture];
+      return `<button type="button" class="us-battuta-go" data-battuta-think>Ti penso</button>${g ? `<button type="button" class="us-battuta-go is-gesture" data-battuta-gesture>${esc(`${g.icon} ${M.ACT[v.gesture]}`)}</button>` : ''}`;
     }
     async function attachPhoto(path, caption) {
       // The memory's photo in Lasciato per te, ready to send (the sender still sends).
@@ -301,6 +324,8 @@
       const t = e.target;
       if (!t?.closest) return;
       if (t.closest('[data-battuta-close]')) { closeSheet(); return; }
+      if (t.closest('[data-battuta-think]') && current) { closeSheet(); w.sendThinkSignal?.(); return; }
+      if (t.closest('[data-battuta-gesture]') && current) { closeSheet(); w.UsMemberStatus?.respond?.(); return; }
       if (t.closest('[data-battuta-go]') && current) { run(current); return; }
       if (t.closest('[data-battuta-later]') && current) {
         if (current.id) db()?.rpc('mark_my_battuta_v1', { p_id: current.id, p_action: 'later' }).then(() => {}, () => {});
@@ -339,6 +364,8 @@
     // Moments to try: the app ready, back on Oggi, back in the app, «tocca a te».
     w.addEventListener('us:tocca-a-te', (e) => { tocca = e?.detail?.daily ? 'daily' : e?.detail?.game ? 'game' : ''; maybeSay(); });
     w.addEventListener('us-identity-change', () => { loadedDay = ''; maybeSay(); });
+    // Come stai che conta (D9/D17): the other person's state, or its two hours passing (every minute).
+    w.addEventListener('us:member-status-changed', () => { if (w.UsMemberStatus?.ricordaLine?.()) maybeSay(); });
     // The intro held the line back while it was open: it is tried again when it closes.
     w.addEventListener('us:intro-done', () => maybeSay());
     d.addEventListener('visibilitychange', () => { if (!d.hidden) maybeSay(); });

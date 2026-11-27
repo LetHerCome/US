@@ -83,10 +83,11 @@ final class UsCharacterShapes {
 
     // ---------------------------------------------------------------- faces
 
-    /** Come stai → the face (personaggi.js FACE); nothing said: happy. */
+    /** Come stai → the face (personaggi.js FACE); nothing said: happy. A face name stays itself. */
     static String faceOf(String status) {
         switch (status == null ? "" : status) {
             case "dorme": return "dorme";
+            case "teso": return "teso";
             case "festa": case "innamorato": return "innamorato";
             case "giu": case "malato": return "giu";
             case "stanco": return "stanco";
@@ -95,10 +96,23 @@ final class UsCharacterShapes {
         }
     }
 
+    /** Come stai che conta (27/11/2026, D8): what they hold or wear (personaggi.js THING); nothing for the others. */
+    static String thingOf(String status) {
+        switch (status == null ? "" : status) {
+            case "lavoro": return "valigetta";
+            case "studio": return "libro";
+            case "palestra": return "fascia";
+            case "viaggio": return "valigia";
+            case "tavola": return "forchetta";
+            case "malato": return "termometro";
+            default: return "";
+        }
+    }
+
     // ---------------------------------------------------------------- the drawing
 
     /**
-     * @param face felice, innamorato, dorme, giu, stanco, teso
+     * @param face felice, innamorato, dorme, giu, stanco, teso, or a Come stai key (its face and its thing)
      * @param reaction "", cuore, festa, saluta or sera (sera sleeps)
      * @param head one of personaggi.js LOOK_HEAD or ""
      * @param faceItem one of LOOK_FACE or ""
@@ -107,7 +121,10 @@ final class UsCharacterShapes {
     static List<Op> draw(String shapeName, int color, String face, String reaction, String head, String faceItem, int zz) {
         Shape s = shape(shapeName);
         String reactionNow = reaction == null ? "" : reaction;
-        String f = "sera".equals(reactionNow) ? "dorme" : !reactionNow.isEmpty() ? "felice" : (face == null || face.isEmpty() ? "felice" : face);
+        // Not feeling well never falls asleep at night (D8): the face of the state stays.
+        if ("sera".equals(reactionNow) && "malato".equals(face)) reactionNow = "";
+        String f = "sera".equals(reactionNow) ? "dorme" : !reactionNow.isEmpty() ? "felice" : faceOf(face);
+        String thing = f.equals("dorme") ? "" : thingOf(face);
         boolean shut = f.equals("stanco") || f.equals("innamorato") || f.equals("dorme");
         boolean heartEyes = reactionNow.equals("cuore");
         boolean big = heartEyes || reactionNow.equals("festa");
@@ -154,9 +171,58 @@ final class UsCharacterShapes {
             out.add(text("z", 84, 36, 19, zz, false));
             out.add(text("z", 97, 22, 13, zz, false));
         }
+        if (!thing.isEmpty()) thing(out, thing, s);
         if (faceItem != null && !faceItem.isEmpty()) look(out, faceItem, shapeName, s);
         if (head != null && !head.isEmpty()) look(out, head, shapeName, s);
         return out;
+    }
+
+    /** personaggi.js thingSvg: the same steps, held at the left or worn. */
+    static void thing(List<Op> out, String thing, Shape s) {
+        double y = s.ey, r = s.right;
+        switch (thing) {
+            case "valigetta":
+                add(out, "M5 72 V68 Q5 65 8 65 H12 Q15 65 15 68 V72", NONE, INK, 2.6f, true);
+                lp(out, "M-3 75 Q-3 72 0 72 H20 Q23 72 23 75 V89 Q23 92 20 92 H0 Q-3 92 -3 89 Z", 0xFF9B6A43, 2.4f);
+                add(out, "M-3 79 H23", NONE, INK, 1.8f, true);
+                lp(out, "M8 76.5 H12 V81.5 H8 Z", 0xFFF3D27A, 1.2f);
+                return;
+            case "valigia":
+                add(out, "M4 66 V56 H12 V66", NONE, INK, 2.6f, true);
+                lp(out, "M-4 69 Q-4 66 -1 66 H17 Q20 66 20 69 V91 Q20 94 17 94 H-1 Q-4 94 -4 91 Z", 0xFFF3A64B, 2.4f);
+                add(out, "M2 69 V91 M14 69 V91", NONE, 0xFFD9822B, 2.2f, true);
+                lp(out, ell(1, 96.5, 2.4, 2.4) + " " + ell(15, 96.5, 2.4, 2.4), 0xFF3A3446, 1.4f);
+                return;
+            case "libro": {
+                Op cover = lp(out, "M-3 70 H19 Q22 70 22 73 V93 Q22 96 19 96 H-3 Z", 0xFFA98BFF, 2.4f);
+                Op pages = add(out, "M0 93 H19", NONE, 0xFFFFFDF9, 2.6f, true);
+                Op lines = add(out, "M3 76 H15 M3 81 H12", NONE, 0xFFFFFDF9, 2f, true);
+                for (Op op : new Op[] { cover, pages, lines }) { op.rotate = -12; op.rx = 9; op.ry = 83; }
+                return;
+            }
+            case "forchetta":
+                lp(out, "M5 66 H11 V93 Q11 96 8 96 Q5 96 5 93 Z", 0xFFD7DCE3, 2.2f);
+                add(out, "M2 49 V60 M8 49 V60 M14 49 V60 M2 58 Q2 66 8 66 Q14 66 14 58", NONE, INK, 4.4f, true);
+                add(out, "M2 49 V60 M8 49 V60 M14 49 V60 M2 58 Q2 66 8 66 Q14 66 14 58", NONE, 0xFFD7DCE3, 2f, true);
+                return;
+            case "fascia": {
+                double y0 = y - 18;
+                Op band = add(out, "M0 " + n(y0) + " Q50 " + n(y0 - 4) + " 110 " + n(y0) + " V" + n(y0 + 7) + " Q50 " + n(y0 + 3) + " 0 " + n(y0 + 7) + " Z", 0xFFFF5A7A, INK, 2.2f, false);
+                band.clip = s.body;
+                Op stripe = add(out, "M0 " + n(y0 + 3.5) + " Q50 " + n(y0 - 0.5) + " 110 " + n(y0 + 3.5), NONE, 0xFFFFFFFF, 1.6f, false);
+                stripe.clip = s.body;
+                lp(out, "M" + n(r - 7) + " " + n(y0 + 3) + " l9 -6 l2 7 Z", 0xFFFF5A7A, 1.8f);
+                lp(out, "M" + n(r - 7) + " " + n(y0 + 4) + " l10 3 l-4 6 Z", 0xFFFF5A7A, 1.8f);
+                return;
+            }
+            case "termometro":
+                add(out, "M53 " + n(y + 12) + " L68 " + n(y + 5), NONE, INK, 5.4f, true);
+                add(out, "M53 " + n(y + 12) + " L68 " + n(y + 5), NONE, 0xFFFFFFFF, 3f, true);
+                add(out, "M53 " + n(y + 12) + " L59 " + n(y + 9.2), NONE, 0xFFE8484A, 3f, true);
+                lp(out, ell(53, y + 12, 2.6, 2.6), 0xFFE8484A, 1.4f);
+                return;
+            default:
+        }
     }
 
     private static String heart(double x, double y) {

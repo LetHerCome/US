@@ -14,7 +14,7 @@ public class UsCharacterShapesTest {
     private static final String[] SHAPES = { "palla", "quadrato", "triangolo", "goccia", "nuvola" };
     private static final String[] HEADS = { "", "cappello", "fiocco", "cuffie", "corona", "coroncina", "festa", "cento" };
     private static final String[] FACES = { "", "occhiali", "sole", "sciarpina", "gala", "macchinetta" };
-    private static final String[] MOODS = { "felice", "innamorato", "dorme", "giu", "stanco", "teso" };
+    private static final String[] MOODS = { "felice", "innamorato", "dorme", "giu", "stanco", "teso", "lavoro", "studio", "palestra", "viaggio", "tavola", "malato", "festa", "nervoso" };
     private static final String[] REACTIONS = { "", "cuore", "festa", "saluta", "sera" };
 
     @Test
@@ -100,5 +100,29 @@ public class UsCharacterShapesTest {
         assertEquals("", partner.getString("head"));
         assertEquals("occhiali", partner.getString("face"));
         assertEquals("", partner.getString("color"));
+    }
+
+    @Test
+    public void comeStaiPutsSomethingInTheirHandsOrOnTheirHead() {
+        assertEquals("valigetta", UsCharacterShapes.thingOf("lavoro"));
+        assertEquals("libro", UsCharacterShapes.thingOf("studio"));
+        assertEquals("fascia", UsCharacterShapes.thingOf("palestra"));
+        assertEquals("valigia", UsCharacterShapes.thingOf("viaggio"));
+        assertEquals("forchetta", UsCharacterShapes.thingOf("tavola"));
+        assertEquals("termometro", UsCharacterShapes.thingOf("malato"));
+        assertEquals("", UsCharacterShapes.thingOf("felice"));
+        assertEquals("teso", UsCharacterShapes.faceOf("teso"));
+        int plain = UsCharacterShapes.draw("palla", 0xFFFF7C96, "felice", "", "", "", 0).size();
+        for (String status : new String[] { "lavoro", "studio", "palestra", "viaggio", "tavola", "malato" }) {
+            assertTrue(status, UsCharacterShapes.draw("palla", 0xFFFF7C96, status, "", "", "", 0).size() > plain);
+        }
+        // The thermometer is red; the headband stays inside the body (clipped).
+        assertTrue(UsCharacterShapes.draw("goccia", 0xFFFF7C96, "malato", "", "", "", 0).stream().anyMatch(op -> op.stroke == 0xFFE8484A));
+        assertTrue(UsCharacterShapes.draw("quadrato", 0xFFFF7C96, "palestra", "", "", "", 0).stream().anyMatch(op -> op.clip != null && op.fill == 0xFFFF5A7A));
+        // Asleep: no thing. Not feeling well never sleeps: no z, the thermometer stays.
+        assertEquals(UsCharacterShapes.draw("palla", 0xFFFF7C96, "dorme", "", "", "", 0).size(), UsCharacterShapes.draw("palla", 0xFFFF7C96, "lavoro", "sera", "", "", 0).size());
+        List<UsCharacterShapes.Op> sick = UsCharacterShapes.draw("palla", 0xFFFF7C96, "malato", "sera", "", "", 0xFFF7EFE9);
+        assertFalse(sick.stream().anyMatch(op -> "z".equals(op.text)));
+        assertTrue(sick.stream().anyMatch(op -> op.stroke == 0xFFE8484A));
     }
 }

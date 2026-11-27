@@ -63,4 +63,28 @@ public class UsWidgetSignalsTest {
         assertNull(UsWidgetContract.withPartnerLook(null, new JSONObject()));
         assertNull(UsWidgetContract.withPartnerLook(snapshot(), null));
     }
+
+    @Test
+    public void theirComeStaiReplacesOnlyThePartnersState() throws Exception {
+        JSONObject status = new JSONObject().put("status", "lavoro").put("form", "f")
+            .put("at", "2026-11-27T12:00:00.123Z").put("until", "2026-11-28T00:00:00.123Z");
+        JSONObject next = UsWidgetContract.withPartnerStatus(snapshot(), status);
+        JSONObject partner = next.getJSONObject("status").getJSONObject("partner");
+        assertEquals("lavoro", partner.getString("status"));
+        assertEquals("f", partner.getString("form"));
+        assertEquals("2026-11-27T12:00:00.123Z", partner.getString("at"));
+        // The rest stays: the characters, the owner.
+        assertEquals("quadrato", next.getJSONObject("couple").getJSONObject("characters").getJSONObject("partner").getString("shape"));
+        assertEquals(OWNER, next.getString("ownerHash"));
+        // No state, or a hostile one: nothing shown, never half a state.
+        JSONObject none = UsWidgetContract.withPartnerStatus(snapshot(), new JSONObject().put("status", "").put("form", "").put("at", "").put("until", ""));
+        assertEquals("", none.getJSONObject("status").getJSONObject("partner").getString("status"));
+        JSONObject hostile = UsWidgetContract.withPartnerStatus(snapshot(), new JSONObject().put("status", "<b>").put("form", "x").put("at", "ieri").put("until", "domani"));
+        JSONObject p = hostile.getJSONObject("status").getJSONObject("partner");
+        assertEquals("", p.getString("status"));
+        assertEquals("", p.getString("form"));
+        assertEquals("", p.getString("at"));
+        assertNull(UsWidgetContract.withPartnerStatus(null, status));
+        assertNull(UsWidgetContract.withPartnerStatus(snapshot(), null));
+    }
 }

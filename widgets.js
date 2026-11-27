@@ -1081,7 +1081,8 @@
     window.addEventListener('us-identity-change', () => { setTimeout(() => { syncCharacters().catch(() => {}); }, 300); });
     window.addEventListener('us:moments-updated', () => { syncMemories({ force: true }).catch(() => {}); });
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden || !ownerHash) return;
+      // Back after a few seconds away (index.html, UsForeground): nothing to send them.
+      if (document.hidden || !ownerHash || window.UsForeground?.shortAway?.()) return;
       // The phone's widgets are not on screen while US is: they refresh just
       // after the page in front of the person (app.js usAfterForeground).
       (window.usAfterForeground || ((task) => task()))(() => {

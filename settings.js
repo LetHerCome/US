@@ -1176,7 +1176,7 @@ function boot(){
   setTimeout(()=>clearInterval(wait),30000);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.getElementById('settings')?.classList.contains('active')&&!window.UsForeground?.shortAway?.())hydrateUsSettings();});
 window.addEventListener('online',()=>{if(document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
 // A new profile photo (Foto profilo) shows on the couple card at once.
 window.addEventListener('us:noi-portraits-ready',()=>{if(document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});

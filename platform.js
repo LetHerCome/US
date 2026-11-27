@@ -90,6 +90,23 @@
     return Promise.resolve(call()).catch(() => vibrateFallback(fallbackPattern));
   }
 
+  // Il vostro mese (27/11/2026): images to the system share sheet through the
+  // official Filesystem and Share plugins (written to the app's cache folder,
+  // which the FileProvider already shares). null when this build has neither.
+  async function shareNativeFiles(files, title) {
+    const fsys = getNativePlugin('Filesystem'), share = getNativePlugin('Share');
+    if (!fsys || !share || !files?.length) return null;
+    const base64 = (blob) => new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result).split(',')[1] || ''); r.onerror = reject; r.readAsDataURL(blob); });
+    const uris = [];
+    for (const file of files) {
+      const out = await fsys.writeFile({ path: `us-share/${file.name}`, data: await base64(file), directory: 'CACHE', recursive: true });
+      uris.push(out.uri);
+    }
+    try { await share.share({ title, dialogTitle: title, files: uris }); }
+    catch (error) { if (!/cancel/i.test(String(error?.message || error))) throw error; }
+    return 'shared';
+  }
+
   function listenForNativeBackButton(handler) {
     if (!isNative || typeof handler !== 'function') return Promise.resolve(null);
     if (nativeBackListener) return nativeBackListener;
@@ -488,6 +505,7 @@
     isPluginAvailable,
     getNativePlugin,
     haptic,
+    shareNativeFiles,
     listenForNativeBackButton,
     exitNativeApp,
     hasWidgetBridge,

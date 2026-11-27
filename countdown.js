@@ -391,7 +391,7 @@ function install(w){
     const next=copy();next.items=next.items.filter(e=>e.id!==id);if(next.active_id===id)next.active_id=null;
     if(await persist(next)){collection(-1);w.toast?.('Countdown eliminato',{quiet:true});}
   });
-  d.addEventListener('visibilitychange',()=>{w.clearInterval(timer);timer=null;if(!d.hidden){tick();if(key())hydrate();startTimer();}});
+  d.addEventListener('visibilitychange',()=>{w.clearInterval(timer);timer=null;if(!d.hidden){tick();if(key()&&!w.UsForeground?.shortAway?.())hydrate();startTimer();}});
   w.addEventListener('us:progression-updated',()=>{paint();if(draft&&opened()){styleTiles();preview();}});
   // Reconcile partner changes at most once per minute, only while Oggi is visible.
   // Identity changes clear immediately on the next lifecycle tick. No private local storage.

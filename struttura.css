@@ -195,6 +195,9 @@
 .us-isola-words span{font:600 11.5px/1.2 var(--us-font-ui,'Figtree',sans-serif);color:rgba(247,239,233,.78)}
 [data-us-isola="open"] .us-isola-words{opacity:1;transform:translate(0,-50%);transition-delay:.18s}
 @media (prefers-reduced-motion:reduce){.top.us-premium-top .us-isola,.us-isola-window .us-char,.us-isola-words,.top.us-premium-top>.us-top-brand{transition:none!important}}
+/* L'apertura che accoglie (27/11/2026): while your two fly in from the opening, the island is already open under it and its own two wait out of sight (personaggi.js accogli). */
+.top.us-premium-top .us-isola[data-us-arriving],.us-isola[data-us-arriving] .us-isola-window .us-char{transition:none}
+.us-isola[data-us-arriving] .us-isola-window .us-char{visibility:hidden}
 /* I cuoricini volano nell'isola (27/11/2026): the island receiving a Ti penso glows a little, «×N» by the other person. */
 .top.us-premium-top[data-us-isola="open"] .us-isola.is-receiving{border-color:rgba(255,138,166,.42);box-shadow:0 10px 26px rgba(0,0,0,.35),0 0 22px rgba(255,90,130,.32)}
 .us-isola-count{position:absolute;left:46px;top:2px;z-index:1;padding:1px 5px;border-radius:999px;background:#ff5a7a;color:#fff;font:800 10.5px/1.25 var(--us-font-ui,'Figtree',sans-serif);pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.3)}

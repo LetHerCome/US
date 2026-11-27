@@ -24,6 +24,7 @@
 //     of the round in the key), in the recipient's language (profiles.locale).
 
 import { buildNotification, deliverNotification, normalizeLocale, recipientLocale, webPushPayload } from './notification-core.mjs';
+import { isQuiet } from './come-stai-push-core.mjs';
 
 export const GAME_PUSH_KINDS = ['game_waiting', 'game_reveal', 'game_weekly_created', 'game_weekly_turn'];
 export const GAME_PUSH_TTL_SECONDS = 60 * 60 * 12;
@@ -98,7 +99,7 @@ function validEvent(event) {
 }
 
 /** Delivers one server-derived event. */
-export async function deliverGamePush(admin, event, { ensureVapid, sendNotification, native = null } = {}) {
+export async function deliverGamePush(admin, event, { ensureVapid, sendNotification, native = null, now = new Date() } = {}) {
   if (!validEvent(event)) return { outcome: 'invalid-event', delivered: 0, failed: 0 };
   const { data: members, error: membersError } = await admin.from('profiles')
     .select('id,couple_id,role,display_name')
@@ -113,6 +114,10 @@ export async function deliverGamePush(admin, event, { ensureVapid, sendNotificat
     .eq('user_id', recipient.id)
     .maybeSingle();
   if (!preferenceError && preference?.games === false) return { outcome: 'disabled-by-preference', delivered: 0, failed: 0 };
+  // Come stai che conta (D11/D19): the recipient is at work or studying. Not
+  // now and no key claimed: the worker (every 10 minutes, 9–22, rounds of the
+  // last 48 hours) sends it once the state is over or expired.
+  if (await isQuiet(admin, recipient.id, now)) return { outcome: 'deferred', delivered: 0, failed: 0 };
 
   const [family, locale] = await Promise.all([sessionFamily(admin, event), recipientLocale(admin, recipient.id)]);
   const result = await deliverNotification(admin, {
@@ -173,7 +178,7 @@ export async function dispatchGameV2PendingPushes(admin, { now = new Date(), ...
     if (done.has(event.dedupe_key)) { results.push({ kind: event.kind, outcome: 'deduplicated' }); continue; }
     let result;
     try {
-      result = await deliverGamePush(admin, event, options);
+      result = await deliverGamePush(admin, event, { ...options, now });
     } catch (error) {
       result = { outcome: 'error', delivered: 0, failed: 0, error: error instanceof Error ? error.message : 'unknown' };
     }

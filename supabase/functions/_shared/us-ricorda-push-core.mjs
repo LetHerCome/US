@@ -9,10 +9,19 @@
 // recipient's language) and claims us-ricorda:<user>:<day>, so a person gets
 // at most one of these a day whatever the two runs find. Never at night: it
 // acts only at the two hours below. Pure and injectable like the other cores.
+//
+// Come stai che conta (27/11/2026, D11/D19): whoever is «al lavoro» or «sui
+// libri» at 10 or 18 is not told then. Their line waits (a marker
+// us-ricorda-wait:<slot>:<user>:<day> in push_event_log, never their day's
+// key) and the same hourly run tries it again at every later hour of the day
+// up to 21, once the state is over: the same server rules decide it again
+// (a line seen in the app meanwhile is gone), still one a day.
 import { buildNotification, deliverNotification, recipientLocales } from './notification-core.mjs';
+import { quietRecipients } from './come-stai-push-core.mjs';
 
 export const MORNING_HOUR = 10;
 export const EVENING_HOUR = 18;
+export const CATCH_UP_LAST_HOUR = 21;
 export const RICORDA_TYPES = Object.freeze(['ricorda_birthday_week', 'ricorda_birthday', 'ricorda_anniversary_week', 'ricorda_year_ago', 'ricorda_bacheca']);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -32,6 +41,14 @@ export function ricordaSlot(hour, force) {
   return null;
 }
 
+// The slots whose waiting lines may go at this Rome hour (never at 10 or 18
+// themselves, never after 21): the morning's from 11, the evening's from 19.
+export function ricordaCatchUp(hour) {
+  if (!Number.isInteger(hour) || hour <= MORNING_HOUR || hour > CATCH_UP_LAST_HOUR || hour === EVENING_HOUR) return [];
+  return hour > EVENING_HOUR ? ['mattina', 'sera'] : ['mattina'];
+}
+export const waitKey = (slot, userId, day) => `us-ricorda-wait:${slot}:${userId}:${day}`;
+
 const text = (value, max) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
 
 /** One due row of us_ricorda_push_due_v1 → the canonical notification, or null when off-contract. */
@@ -50,14 +67,36 @@ export function ricordaNotification(row, locale) {
   });
 }
 
-export async function runRicordaPushJob(admin, { slot, day = null, web = null, native = null } = {}) {
+// catchUp: only the lines that waited for this slot (a marker), now that the state is over.
+export async function runRicordaPushJob(admin, { slot, day = null, web = null, native = null, now = new Date(), catchUp = false } = {}) {
   const { data, error } = await admin.rpc('us_ricorda_push_due_v1', day ? { p_slot: slot, p_day: day } : { p_slot: slot });
   if (error) throw error;
-  const rows = (Array.isArray(data) ? data : []).filter((row) => UUID.test(String(row?.user_id || '')) && UUID.test(String(row?.couple_id || '')) && DAY.test(String(row?.day || '')));
+  let rows = (Array.isArray(data) ? data : []).filter((row) => UUID.test(String(row?.user_id || '')) && UUID.test(String(row?.couple_id || '')) && DAY.test(String(row?.day || '')));
+  if (catchUp && rows.length) {
+    const { data: waiting, error: waitError } = await admin.from('push_event_log').select('dedupe_key').in('dedupe_key', rows.map((row) => waitKey(slot, row.user_id, row.day)));
+    if (waitError) throw waitError;
+    const marked = new Set((waiting || []).map((row) => row.dedupe_key));
+    rows = rows.filter((row) => marked.has(waitKey(slot, row.user_id, row.day)));
+  }
+  const quiet = await quietRecipients(admin, rows.map((row) => row.user_id), now);
   const locales = await recipientLocales(admin, rows.map((row) => row.user_id));
   let delivered = 0;
   let skipped = 0;
+  let deferred = 0;
   for (const row of rows) {
+    if (quiet.has(row.user_id)) {
+      // At work or studying: the line waits; the day's key stays free.
+      deferred += 1;
+      if (!catchUp) {
+        try {
+          const { error: markError } = await admin.from('push_event_log').insert({ dedupe_key: waitKey(slot, row.user_id, row.day), couple_id: row.couple_id, sender_id: null, event_type: 'ricorda_wait' });
+          if (markError && markError.code !== '23505') throw markError;
+        } catch (markFailure) {
+          console.error('us ricorda wait', markFailure instanceof Error ? markFailure.message : 'unknown');
+        }
+      }
+      continue;
+    }
     const notification = ricordaNotification(row, locales.get(row.user_id));
     if (!notification) { skipped += 1; continue; }
     try {
@@ -76,5 +115,5 @@ export async function runRicordaPushJob(admin, { slot, day = null, web = null, n
       console.error('us ricorda push', error instanceof Error ? error.message : 'unknown');
     }
   }
-  return { ok: true, slot, due: rows.length, delivered, skipped };
+  return { ok: true, slot, due: rows.length, delivered, skipped, deferred, ...(catchUp ? { catchUp: true } : {}) };
 }

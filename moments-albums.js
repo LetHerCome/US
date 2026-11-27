@@ -1148,7 +1148,7 @@ function installHooks(){
 installHooks();
 setTimeout(()=>decorateMomentCards().catch(()=>{}),900);
 document.addEventListener('visibilitychange',()=>{
-  if(!document.hidden&&window.usProfile){
+  if(!document.hidden&&window.usProfile&&!window.UsForeground?.shortAway?.()){
     if(document.getElementById('moments')?.classList.contains('active'))decorateMomentCards().catch(()=>{});
     if(currentAlbum)loadAlbum(currentAlbum.id).catch(()=>{});
   }

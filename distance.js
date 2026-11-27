@@ -74,8 +74,8 @@ function install(w){
     if(pick)choose(pick.dataset.distance,pick);
   });
   w.setInterval(()=>{if(key()!==owner){state={known:false,mode:null};if(key())hydrate();}},2000);
-  // The partner may have answered meanwhile.
-  d.addEventListener('visibilitychange',()=>{if(!d.hidden&&key())hydrate();});
+  // The partner may have answered meanwhile (not after a few seconds away).
+  d.addEventListener('visibilitychange',()=>{if(!d.hidden&&key()&&!w.UsForeground?.shortAway?.())hydrate();});
   if(key())hydrate();
   const api=w.UsDistance;
   api.open=open;api.close=close;api.reset=reset;api.refresh=hydrate;api.choose=choose;

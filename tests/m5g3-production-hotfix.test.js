@@ -77,7 +77,7 @@ test('M5G3 left_for_you Edge Function preserves think_reaction and suppresses di
   const edge = read('supabase/functions/send-web-push/index.ts');
   const settings = read('settings.js');
   // US 1.0 adds daily_reaction (O2) and partner_joined (A2), Lavagna V1 (03/11/2026) lavagna, Noi Fase B.3 (25/11/2026) postit, La sfida della settimana challenge_photo, the silent widget signal partner_look and the post-it on the bacheca bacheca_postit (27/11/2026); every earlier type stays.
-  assert.match(edge, /\[\"test\", \"think\", \"think_reaction\", \"daily_answer\", \"daily_reaction\", \"quest_confirmed\", \"left_for_you\", \"partner_joined\", \"lavagna\", \"postit\", \"bacheca_postit\", \"challenge_photo\", \"partner_look\"\]/);
+  assert.match(edge, /\[\"test\", \"think\", \"think_reaction\", \"daily_answer\", \"daily_reaction\", \"quest_confirmed\", \"left_for_you\", \"partner_joined\", \"lavagna\", \"postit\", \"bacheca_postit\", \"challenge_photo\", \"partner_look\", \"partner_status\", \"status_response\"\]/);
   // M9A: la preferenza left_for_you è applicata dal core condiviso.
   const core = read('supabase/functions/_shared/left-for-you-push-core.mjs');
   assert.match(core, /\.select\('left_for_you'\)/);
