@@ -64,6 +64,14 @@
 - **Android, il pezzo che mancava:** da Android 11 un'app «vede» la fotocamera del telefono solo se lo dichiara nel manifest; senza, il bottone avrebbe aperto la galleria. Ora è dichiarato, per le foto e per i video.
 - **Android, video:** la fotocamera riceve i limiti di US (30 secondi, poco meno di 20 MB) e si ferma da sola, se l'app della fotocamera li rispetta. Con la qualità alta del telefono 20 MB possono bastare per soli 10 secondi circa.
 - **iPhone:** le frasi per fotocamera e microfono c'erano già. iOS non riceve limiti: con un video più lungo di 30 secondi o più grande di 20 MB compare il messaggio e il video non parte.
+### L'invito che si rinnova (27/11)
+
+**Stato:** ramo `claude/invito-rinnovo`, verso staging. Dal controllo generale del 27/11 («per il resto va bene tutto»). **Da applicare su staging:** le migrazioni `20261127092454_invito_14_giorni` e `20261127092908_invito_promemoria_cron`, e la funzione `invite-reminder-job`. Su staging i lavori a orario restano spenti di proposito: lì il promemoria si prova a mano.
+
+- **Il codice d'invito vale 14 giorni** invece di 48 ore: le coppie aspettano l'altra persona anche una o due settimane, e chi apriva un link vecchio trovava «Codice non valido».
+- **Se il codice è scaduto, US ne fa uno nuovo da solo** quando apri la schermata d'attesa, e te lo dice.
+- **«Avvisami quando entra»** nella schermata d'attesa: accende le notifiche (prima si chiedevano solo dopo essere in due). Così arriva l'avviso quando l'altra persona entra.
+- **Promemoria per chi aspetta:** il giorno dopo e tre giorni dopo, alle 18, «Il vostro spazio vi aspetta: manda il codice alla tua persona ♡». Solo a chi ha acceso le notifiche, una volta sola. Su Android serve l'APK nuovo per leggere la frase giusta: prima mostra quella generica.
 
 ### Widget iPhone col redesign e blocca schermo (26/11)
 

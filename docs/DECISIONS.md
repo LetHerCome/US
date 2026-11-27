@@ -629,3 +629,10 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 
 - **Chi:** chi non ha né forma né colore scelti (`character_shape` e `person_color` vuoti). Chi li ha già scelti nella prima apertura va dritto al giro. «Rivedi l'intro» mostra sempre anche la scelta.
 - **Cosa:** forma (le cinque) e colore (gli otto, quello dell'altra persona escluso). Si salvano subito con le stesse funzioni della prima apertura e delle Impostazioni (`set_my_character_shape`, `set_my_color`), con le loro regole sul server. Niente accessori: il guardaroba resta nell'angolo, coi suoi sblocchi.
+## 2026-11-27 — L'invito dura 14 giorni e chi aspetta riceve un promemoria
+
+**Fonte:** founder, 27/11/2026, sulle idee del controllo generale: «per il resto va bene tutto».
+
+- **Scadenza:** 14 giorni invece di 48 ore. Il codice resta quello di MC2 (128 bit casuali, sul server solo l'impronta), quindi la sicurezza non cambia.
+- **Rinnovo:** un codice scaduto si rifà da solo, una volta per apertura, solo se era scaduto. Uno ancora valido non si tocca, perché ne annullerebbe uno già mandato.
+- **Notifiche per chi aspetta:** «Avvisami quando entra» le accende con un tocco, mai da sola. Promemoria al giorno 1 e al giorno 3 dalla creazione della coppia, alle 18 di Roma, solo a una coppia di una persona, una volta sola. L’interruttore «Ricorrenze» spento lo blocca.

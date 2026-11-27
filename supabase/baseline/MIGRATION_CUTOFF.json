@@ -65,6 +65,8 @@
     "20261126000000_premi_oggi_effetti.sql",
     "20261126010000_premi_simbolo.sql",
     "20261126020000_premi_temi_countdown.sql",
+    "20261127092454_invito_14_giorni.sql",
+    "20261127092908_invito_promemoria_cron.sql",
     "20261127120000_us_battute_mute_bacheca.sql"
   ],
   "forward_migrations": [
@@ -126,6 +128,8 @@
     "20261126000000_premi_oggi_effetti.sql",
     "20261126010000_premi_simbolo.sql",
     "20261126020000_premi_temi_countdown.sql",
+    "20261127092454_invito_14_giorni.sql",
+    "20261127092908_invito_promemoria_cron.sql",
     "20261127120000_us_battute_mute_bacheca.sql"
   ],
   "counts": {

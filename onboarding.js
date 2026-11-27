@@ -1297,6 +1297,8 @@
     const root=document.getElementById('usOnboarding');
     const node=id=>document.getElementById(id);
     let mode='me',lastKind='',lastView='',lastInvite='',hiddenPrivate=[],me={name:'',birthday:null},meFor='',justCreated=false,note={text:'',kind:''},dismissed='';
+    // L'invito che si rinnova (27/11/2026): one new code by itself per opening when the old one expired.
+    let autoRenewed=false,notifyState='';
     // The button you pressed says what is happening while it works (the design's busy()).
     let pressed=null;
     // Paired from a step on screen: that step stays, still, until the setup takes its place.
@@ -1463,6 +1465,8 @@
       }
       node('mc3Generate').textContent=invite?.status==='none'?'Crea invito':'Genera nuovo codice';
       node('mc3Revoke').hidden=!waiting||invite?.status!=='pending';
+      if(waiting&&active&&invite?.status==='expired'&&!state.busy&&!autoRenewed){autoRenewed=true;note={text:'Il codice era scaduto: eccone uno nuovo.',kind:'neutral'};setTimeout(()=>run(()=>controller.generate()),0);}
+      paintNotify(waiting&&active);
       root.querySelectorAll('button,input,select').forEach(el=>{el.disabled=state.busy&&el.id!=='mc3Exit';});
       if(pressed&&state.busy&&active){if(pressed.label)pressed.button.textContent=pressed.label;pressed.button.dataset.usBusy='';root.dataset.usBusy='';}
       else{
@@ -1526,6 +1530,28 @@
     }
     const controller=createController({readProfile,rpc,onChange:render,onJoined:coupleId=>{window.sendWebPushEvent?.('partner_joined',coupleId);}});
     controllerRef=controller;
+    // «Avvisami quando entra» (27/11/2026): whoever waits turns on the notifications here (the
+    // setup asks only once you are two), for «è entrata» and the reminders to send the code again.
+    // Only where push works and is not on yet or refused; the OS asks, never US by itself.
+    function paintNotify(show){
+      const button=node('mc3Notify'),notifications=globalThis.UsNotifications;
+      if(!button)return;
+      if(!show||!notifications?.supported?.()){button.hidden=true;return;}
+      if(notifyState){button.hidden=notifyState!=='inactive';return;}
+      notifyState='asking';button.hidden=true;
+      Promise.resolve(notifications.getState?.()).then(s=>{notifyState=s?.kind||'unknown';paintNotify(true);}).catch(()=>{notifyState='unknown';});
+    }
+    node('mc3Notify')?.addEventListener('click',async()=>{
+      const button=node('mc3Notify'),notifications=globalThis.UsNotifications;
+      if(!button||!notifications?.enable)return;
+      button.disabled=true;
+      try{
+        const result=await notifications.enable();
+        if(result?.ok){notifyState='active';button.hidden=true;globalThis.toast?.('Ti avviso quando entra ♡');}
+        else{notifyState=result?.kind==='denied'?'denied':'inactive';button.hidden=notifyState!=='inactive';}
+      }catch(_e){notifyState='inactive';}
+      finally{button.disabled=false;}
+    });
     const run=async(action,kind)=>{
       const result=await action();
       const joined=result?.profile?.couple_id&&(result.kind==='PAIRED'||result.kind==='MEMBER_WAITING_PARTNER');

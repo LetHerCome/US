@@ -393,6 +393,8 @@ test('F2C VAPID_SUBJECT: every Web Push producer reads it through the one helper
     'supabase/functions/daily-question-push-worker/index.ts',
     'supabase/functions/game-v2-push-worker/index.ts',
     'supabase/functions/game-v2-push/index.ts',
+    // L'invito che si rinnova (27/11/2026).
+    'supabase/functions/invite-reminder-job/index.ts',
     'supabase/functions/left-for-you-push-worker/index.ts',
     'supabase/functions/monthiversary-job/index.ts',
     'supabase/functions/send-web-push/index.ts',
