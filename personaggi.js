@@ -481,17 +481,24 @@
   const ISOLA_KEY = () => `us:isola:v1:${w.usProfile?.id || ''}`;
   function readSeen() { try { return JSON.parse(w.localStorage?.getItem(ISOLA_KEY()) || 'null'); } catch (_) { return null; } }
   function writeSeen(level) { try { w.localStorage?.setItem(ISOLA_KEY(), JSON.stringify({ level })); } catch (_) {} }
-  let peekTimer = 0;
+  let peekTimer = 0, peekTries = 0;
   // At launch the couple, the level and the first screens arrive in any
-  // order: a moment that is not ready yet is tried again, a few times.
-  function maybePeek(tries = 0) {
+  // order, on a slow phone many seconds late: a moment that is not ready yet
+  // is tried again, less and less often (up to every 15 s, for about ten
+  // minutes), and at once when something changes (the couple, the points,
+  // back on Oggi, back in the app, the intro closing). Never while the intro
+  // is open (its end tries again); never twice (the level is written first).
+  const PEEK_WAIT = [900, 1500, 2500, 4000, 6000, 10000, 15000], PEEK_TRIES = 50;
+  function maybePeek(retry = false) {
     clearTimeout(peekTimer);
+    if (!retry) peekTries = 0;
     peekTimer = setTimeout(() => {
       if (!d || d.hidden || !w.usProfile?.id) return;
       if (!d.getElementById('home')?.classList.contains('active')) return;
+      if (w.UsIntro?.active?.()) return;
       const level = levelNow();
-      const busy = !paired() || !level || d.body?.getAttribute?.('data-us-surface') === 'open' || Boolean(w.UsIntro?.active?.());
-      if (busy) { if (tries < 12) maybePeek(tries + 1); return; }
+      const busy = !paired() || !level || d.body?.getAttribute?.('data-us-surface') === 'open';
+      if (busy) { if (++peekTries < PEEK_TRIES) maybePeek(true); return; }
       if (isola()?.getAttribute('aria-expanded') === 'true') return;
       const seen = readSeen();
       if (!seen) { writeSeen(level); if (!w.UsRicorda) setIsola(true, { ms: PEEK_MS, reaction: 'cuore' }); return; }
@@ -502,7 +509,7 @@
         return;
       }
       if (level < (Number(seen.level) || 0)) writeSeen(level);
-    }, 900);
+    }, retry ? PEEK_WAIT[Math.min(peekTries - 1, PEEK_WAIT.length - 1)] : 900);
   }
 
   // Apertura A (25/11/2026): the opening shows your two characters before anything loads,
