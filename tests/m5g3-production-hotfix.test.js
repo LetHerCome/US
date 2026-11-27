@@ -28,7 +28,9 @@ test('M5G3 camera button remains explicitly bound and opens the existing camera 
   assert.match(html, /id="leftForYouComposerPhotoCamera"/);
   assert.match(source, /getElementById\('leftForYouComposerPhotoCamera'\)\?\.addEventListener\('click', openCamera\)/);
   assert.match(source, /composer\.cameraOpen = true/);
-  assert.match(source, /getUserMedia\(\{ video: \{ facingMode: facing \}, audio: false \}\)/);
+  // 27/11: the photo keeps its constraints; the video (same viewfinder) adds sound.
+  assert.match(source, /getUserMedia\(cameraConstraints\(facing\)\)/);
+  assert.match(source, /if \(composer\.cameraMode !== 'video'\) return \{ video: \{ facingMode: facing \}, audio: false \};/);
   assert.match(source, /NotAllowedError/);
 });
 

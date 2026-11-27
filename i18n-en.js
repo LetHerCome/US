@@ -2399,6 +2399,22 @@
     'Fino a 25 MB': 'Up to 25 MB',
     'Fai un video': 'Record a video',
     'Resta privato, solo tra voi due': 'Stays private, just between you two',
+    // «Fai un video» inside US (27/11)
+    'VIDEO PRIVATO': 'PRIVATE VIDEO',
+    'Inizia il video': 'Start recording',
+    'Ferma il video': 'Stop recording',
+    'Usa video': 'Use video',
+    'Anteprima del video': 'Video preview',
+    'Durata del video, massimo 30 secondi': 'Video length, 30 seconds max',
+    'Registrazione in corso. Si ferma da sola a 30 secondi.': 'Recording. It stops by itself at 30 seconds.',
+    'Non riesco a registrare il video. Riprova.': 'Couldn’t record the video. Try again.',
+    'Il video è troppo corto. Riprova.': 'The video is too short. Try again.',
+    'Fermato a {time}: il video aveva raggiunto 20 MB.': 'Stopped at {time}: the video had reached 20 MB.',
+    'Video registrato · {time}': 'Recorded video · {time}',
+    'Apri le impostazioni': 'Open settings',
+    'Per i video servono la fotocamera e il microfono. Attivali da Impostazioni del telefono › App › US › Autorizzazioni.': 'Videos need the camera and the microphone. Turn them on in your phone’s Settings › Apps › US › Permissions.',
+    'Per i video servono la fotocamera e il microfono. Attivali da Impostazioni del telefono › US.': 'Videos need the camera and the microphone. Turn them on in your phone’s Settings › US.',
+    'Per i video servono la fotocamera e il microfono. Attivali dalle impostazioni del browser per questo sito.': 'Videos need the camera and the microphone. Turn them on in your browser’s settings for this site.',
     Brano: 'Track',
 
     // ------------------------------------------------------------ Parity gioca

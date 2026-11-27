@@ -1332,7 +1332,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
         </details>
       </div>
       <div class="left-for-you-actions left-for-you-composer-actions"><button type="button" id="leftForYouComposerSend" disabled>Lascia per la tua persona</button></div>
-      <div class="left-for-you-status" id="leftForYouComposerStatus" role="status" aria-live="polite"></div>
+      <div class="left-for-you-status" id="leftForYouComposerStatus" role="status" aria-live="polite"></div><button type="button" class="ghost left-for-you-composer-settings" id="leftForYouComposerSettings" hidden>Apri le impostazioni</button>
       <button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
         <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span></span>
         <span class="us-conservati-entry-copy"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
@@ -1346,9 +1346,9 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
 <div class="left-for-you-overlay left-for-you-camera-overlay" id="leftForYouCameraOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouCameraBackdrop"></div>
   <section class="left-for-you-sheet left-for-you-camera-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouCameraTitle" data-us-modal-panel>
-    <header class="left-for-you-head"><div><div class="tiny">FOTO PRIVATA</div><h2 id="leftForYouCameraTitle">Scatta una foto</h2></div><button type="button" class="left-for-you-close us-modal-close" id="leftForYouCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+    <header class="left-for-you-head"><div><div class="tiny" id="leftForYouCameraKicker">FOTO PRIVATA</div><h2 id="leftForYouCameraTitle">Scatta una foto</h2></div><button type="button" class="left-for-you-close us-modal-close" id="leftForYouCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
     <div class="left-for-you-body left-for-you-camera-body">
-      <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden><span class="left-for-you-camera-flash" id="leftForYouCameraFlash" aria-hidden="true"></span></div>
+      <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden><video id="leftForYouCameraRecorded" class="left-for-you-camera-recorded" controls playsinline preload="metadata" aria-label="Anteprima del video" hidden></video><span class="left-for-you-camera-flash" id="leftForYouCameraFlash" aria-hidden="true"></span><span class="left-for-you-camera-timer" id="leftForYouCameraTimer" role="timer" aria-label="Durata del video, massimo 30 secondi" data-recording="false" hidden>0:00 / 0:30</span></div>
       <div class="left-for-you-camera-status" id="leftForYouCameraStatus" role="status" aria-live="polite"></div>
       <div class="left-for-you-camera-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraSwitch">Cambia fotocamera</button><button type="button" class="left-for-you-camera-shutter" id="leftForYouCameraCapture" aria-label="Scatta foto"><span aria-hidden="true"></span></button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraUse" hidden>Usa foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraRetake" hidden>Rifai</button></div>
     </div>

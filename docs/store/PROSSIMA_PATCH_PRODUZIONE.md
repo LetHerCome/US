@@ -16,6 +16,17 @@
 - I testi dei premi aggiunti il 26/11 hanno l'apostrofo tipografico come tutti gli altri: «Ora d’oro», «Oggi cambia con l’anno…», «Foglie d’acero e d’autunno…», «…dell’altra persona».
 - Su un telefono lento la prima apertura dell'isola su Oggi non si perde più: aspetta che coppia e livello arrivino, anche dopo molti secondi. Mai durante l'intro, mai due volte.
 - Tolto un pezzo di codice morto che cercava un contatore dei giorni che non esiste più. Nessun cambio visibile.
+### Lasciato per te: video di 30 secondi pieni (27/11)
+
+**Stato:** ramo `claude/lasciato-video-30s`, verso staging. Trovato dal founder: con la fotocamera del telefono ad alta qualità i 20 MB finivano dopo ~10 secondi e il video si fermava prima. Nessuna migrazione: stessi limiti (30 secondi, 20 MB, MP4) e stesso caricamento di un video dalla galleria. Serve un AAB nuovo (cambia anche `UsWebChromeClient.java`) e una build TestFlight nuova per averlo sull'iPhone.
+
+- **«Fai un video» registra dentro US**, con la stessa schermata della foto: fotocamera dietro, pulsante per girarla, audio acceso. In alto il tempo che corre fino a 0:30; a 30 secondi il video si ferma da solo. Poi lo rivedi e scegli «Rifai» o «Usa video».
+- **La qualità la decide US:** circa 720p, 3 Mbit/s di video più 128 kbit/s di audio. 30 secondi pesano circa 11 MB, ben sotto i 20 MB. Se un telefono registrasse più pesante del previsto, US ferma il video a 18,5 MB e lo tiene buono (dice a che secondo si è fermato).
+- **Il file è un MP4 (H.264 + AAC)** e passa dagli stessi controlli di un video della galleria (durata, peso, tipo), con gli stessi messaggi.
+- **Dove il telefono non sa registrare MP4 dentro un'app** (WebView vecchi, iPhone prima di iOS 14.3) resta la fotocamera del telefono come prima. Anche se US non trova la fotocamera, apre quella del telefono.
+- **Permessi:** se fotocamera o microfono sono negati, US dice dove riattivarli e, nelle app, mostra «Apri le impostazioni» (la pagina di US nelle Impostazioni del telefono). Se le Impostazioni non si aprono, il pulsante sparisce e resta la frase.
+- **Android, «Scatta una foto» e la vecchia «Fai un video»:** con la fotocamera negata (anche per sempre) prima non succedeva niente; ora compare lo stesso messaggio con «Apri le impostazioni».
+- Da provare su telefono vero: un video di 30 secondi su Android e su iPhone (peso finale, audio, che si veda sull'altro telefono), il permesso negato per sempre su Android.
 
 ### Widget dell'iPhone aggiornati anche ad app chiusa (27/11)
 
