@@ -53,7 +53,9 @@ test('copy: empty, loading and error states are a title, not a paragraph', () =>
   assert.match(read('noi-v2.js'), /<b>Niente in arrivo<\/b>/);
   assert.match(html, /<h3>Non riesco ad aprirlo<\/h3><button/);
   assert.doesNotMatch(html, /Preparo i vostri Conservati|Preparo qualcosa per te|Preparo Gioca/);
-  assert.match(read('app.js'), /<b>La vostra storia parte da qui<\/b><\/div>/);
+  // First use (27/11/2026): one button, the same gallery as the + of Ricordi.
+  assert.match(read('app.js'), /<b>La vostra storia parte da qui<\/b><button type="button" class="primary ricordi-empty-add" data-ricordi-first-photo>Aggiungi la prima foto<\/button><\/div>/);
+  assert.match(read('app.js'), /if\(event\.target\.closest\('\[data-ricordi-first-photo\]'\)\)\{window\.UsMomentComposer\?\.pick\?\.\(\);return;\}/);
 });
 
 test('copy: Noi and Settings rows carry a label, not a description', () => {

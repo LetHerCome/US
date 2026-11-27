@@ -1621,7 +1621,7 @@ console.info('[US] Moments Albums attivo');
   let entryRequestId = 0;
   const all = (selector) => [...(document.querySelectorAll?.(selector) || [])];
   async function refreshConservatiEntry() {
-    const entries = [document.getElementById('conservatiEntry'), ...all('[data-conservati-entry]')].filter(Boolean);
+    const entries = all('[data-conservati-entry]');
     const coupleId = window.usProfile?.couple_id;
     if (!entries.length || !coupleId) return;
     let client;
@@ -1636,7 +1636,7 @@ console.info('[US] Moments Albums attivo');
       if (requestId !== entryRequestId) return;
       const total = Number(count) || 0;
       for (const entry of entries) entry.hidden = total < 1;
-      for (const label of [document.getElementById('conservatiCount'), ...all('[data-conservati-count]')].filter(Boolean)) label.textContent = total > 0 ? String(total) : '';
+      for (const label of all('[data-conservati-count]')) label.textContent = total > 0 ? String(total) : '';
     } catch (error) {
       console.warn('[US Conservati] entry', error);
     }

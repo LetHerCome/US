@@ -18,8 +18,8 @@ test('Gioca: no daily question and no Giochi/Sintonia tabs', () => {
   assert.doesNotMatch(read('games.js'), /us-gv2-daily-slot|bindTabMotion/);
   const app = read('app.js');
   assert.doesNotMatch(app, /function dailyHubMarkup|data-us-daily-entry/);
-  // Fase 6 (D11): no week strip either; the painter stays as a name for its callers.
-  assert.match(app, /function paintDailyInGioca\(\)\{\}/);
+  // Fase 6 (D11): no week strip either; the empty painter is gone too (27/11/2026).
+  assert.doesNotMatch(app, /paintDailyInGioca/);
   assert.doesNotMatch(read('games.js'), /paintWeek|id="usGv2Week"/);
   // La domanda di oggi stays on Oggi.
   assert.match(block('<main id="home"', '</main>'), /id="usDailyRitual"/);

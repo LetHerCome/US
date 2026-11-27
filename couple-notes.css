@@ -95,6 +95,8 @@
 .us-notes-item:last-child{border-bottom:1px solid var(--postit-line)}
 .us-notes-check{position:relative;flex:none;display:grid;place-items:center;width:44px;height:44px;margin-left:-10px;cursor:pointer}
 .us-notes-check.is-small{width:30px;height:30px;margin-left:0}
+/* 44px to the finger, the small box stays small. */
+.us-notes-check.is-small input{inset:-7px;width:calc(100% + 14px);height:calc(100% + 14px)}
 .us-notes-check input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
 .us-notes-check span{position:relative;width:20px;height:20px;border:1.6px solid var(--postit-ink,var(--us-color-line-strong));border-radius:5px;background:transparent;transition:background-color .16s ease,border-color .16s ease}
 .us-notes-check.is-small span{width:16px;height:16px;border-radius:4px}
@@ -104,7 +106,7 @@
 .us-notes-check input:focus-visible+span{outline:2px solid var(--us-noi);outline-offset:2px}
 .us-postit .us-notes-item-text{flex:1;min-width:0;min-height:44px;padding:0!important;font:400 15px/1.3 var(--us-font-ui)}
 .us-notes-item.is-done .us-notes-item-text{opacity:.55;text-decoration:line-through}
-.us-notes-item-x{flex:none;display:grid;place-items:center;width:40px;height:40px;margin-right:-8px;border:0;border-radius:50%;background:transparent;color:var(--postit-ink-2);--us-icon-size:16px}
+.us-notes-item-x{position:relative;flex:none;display:grid;place-items:center;width:40px;height:40px;margin-right:-8px;border:0;border-radius:50%;background:transparent;color:var(--postit-ink-2);--us-icon-size:16px}
 .us-postit .us-notes-add-item{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0;border:0;background:transparent;box-shadow:none;color:var(--postit-ink);font:600 14px/1 var(--us-font-ui);--us-icon-size:18px}
 /* «Carta»: the four papers, the chosen one ringed in ink. */
 .us-postit-papers{display:flex;align-items:center;gap:2px}
@@ -163,7 +165,8 @@
 
 /* ---------- Noi, Fase B.2: «Le vostre idee» (board Idee) ---------- */
 .us-idea-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.us-postit .us-idea-close{display:grid;place-items:center;flex:none;width:40px;height:40px;min-height:0;margin:-6px -6px 0 0;padding:0;border:0;border-radius:50%;background:rgba(42,31,42,.08);color:var(--postit-ink);box-shadow:none;--us-icon-size:16px}
+.us-postit .us-idea-close{position:relative;display:grid;place-items:center;flex:none;width:40px;height:40px;min-height:0;margin:-6px -6px 0 0;padding:0;border:0;border-radius:50%;background:rgba(42,31,42,.08);color:var(--postit-ink);box-shadow:none;--us-icon-size:16px}
+.us-postit .us-idea-close::after,.us-notes-item-x::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
 .us-idea-intro{margin:0;font-size:13.5px;line-height:1.4;color:#5a4a40}
 .us-idea-rows{display:flex;flex-direction:column;margin:2px 0 0;padding:0;list-style:none}
 .us-idea-row{display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 0;border-bottom:1px dashed rgba(42,31,42,.25)}

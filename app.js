@@ -1724,8 +1724,13 @@ window.pickProfilePhoto=pickProfilePhoto;
 
 
 
-async function compressImageFile(file,{maxDimension=1920,quality=.82}={}){
+async function compressImageFile(file,options={}){
   if(!file)return null;
+  return (await compressImageVariants(file,[options]))[0];
+}
+// One decode of the photo, then one WebP for each size asked (the Ricordo
+// and its thumbnail come from the same picture, decoded once).
+async function compressImageVariants(file,variants){
   if(file.size>20*1024*1024)throw new Error('SOURCE_TOO_LARGE');
   let bitmap=null;
   try{
@@ -1738,20 +1743,27 @@ async function compressImageFile(file,{maxDimension=1920,quality=.82}={}){
     const img=await new Promise((resolve,reject)=>{const el=new Image();el.onload=()=>resolve(el);el.onerror=reject;el.src=url;});
     width=img.naturalWidth||img.width;height=img.naturalHeight||img.height;drawSource=img;
   }
-  if(!width||!height)throw new Error('INVALID_IMAGE');
-  const scale=Math.min(1,maxDimension/Math.max(width,height));
-  const outW=Math.max(1,Math.round(width*scale));
-  const outH=Math.max(1,Math.round(height*scale));
-  const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;
-  const ctx=canvas.getContext('2d',{alpha:false});
-  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  ctx.drawImage(drawSource,0,0,outW,outH);
-  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));
-  if(bitmap?.close)bitmap.close();
-  if(revokeUrl)URL.revokeObjectURL(revokeUrl);
-  if(!blob)throw new Error('COMPRESSION_FAILED');
-
-  return new File([blob],(file.name||'image').replace(/\.[^.]+$/,'')+'.webp',{type:'image/webp',lastModified:Date.now()});
+  try{
+    if(!width||!height)throw new Error('INVALID_IMAGE');
+    const out=[];
+    for(const variant of variants){
+      const {maxDimension=1920,quality=.82}=variant||{};
+      const scale=Math.min(1,maxDimension/Math.max(width,height));
+      const outW=Math.max(1,Math.round(width*scale));
+      const outH=Math.max(1,Math.round(height*scale));
+      const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;
+      const ctx=canvas.getContext('2d',{alpha:false});
+      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+      ctx.drawImage(drawSource,0,0,outW,outH);
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));
+      if(!blob)throw new Error('COMPRESSION_FAILED');
+      out.push(new File([blob],(file.name||'image').replace(/\.[^.]+$/,'')+'.webp',{type:'image/webp',lastModified:Date.now()}));
+    }
+    return out;
+  }finally{
+    if(bitmap?.close)bitmap.close();
+    if(revokeUrl)URL.revokeObjectURL(revokeUrl);
+  }
 }
 
 let usRicordiThumbnailBackfillBusy=false;
@@ -2766,7 +2778,6 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   if(refreshId!==usTodayPriorityRefreshId)return;
   const dailyState=dailySource?.state;
   renderToccaATe({daily:Boolean(dailyState&&dailyState.my_answer==null&&dailyState.partner_has_answer),game:Boolean(usOggiGameTurn?.game)});
-  window.UsDailyQuestionHub?.paint?.();
 }
 window.UsTodayPriority=Object.freeze({
   revealLinkViewModel:dailyRevealLinkViewModel,
@@ -2814,9 +2825,11 @@ window.UsOggi=Object.freeze({arbitrate:arbitrateOggi,apply:applyOggiArbitration,
   schedule();
 })();
 
+// Today as US counts it: the Europe/Rome day, as the server, Gioca and the
+// post-its do (the phone's own clock only if the browser has no time zones).
 function localDateISO(){
-  const d=new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
+  try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
+  catch(_e){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 }
 // Founder 15/10: once both answered (and the answers were read), the card can
 // be swiped away and stays away for that question on this phone. The new
@@ -2871,9 +2884,7 @@ function dailyHubModel(){
   return {...base,state:'answer',meta:'Una domanda per voi oggi',cta:'Rispondi'};
 }
 // La domanda di oggi left Gioca (redesign definitivo, 23/11/2026, D11): it
-// lives on Oggi only, and since fase 6 Gioca has no week strip either. The
-// name stays for the callers (Oggi repaints after a daily change).
-function paintDailyInGioca(){}
+// lives on Oggi only, and since fase 6 Gioca has no week strip either.
 // F2 — Gioca has no turn API: Oggi reads "Tocca a te" from the hub games.js
 // just rendered (a round where the other is waiting, or Per voi pending).
 let usOggiGameTurnTimer=0;
@@ -2889,9 +2900,8 @@ function readGameTurnFromHub(){
   clearTimeout(usOggiGameTurnTimer);
   usOggiGameTurnTimer=setTimeout(()=>{if(window.usProfile)refreshTodayPriorities();},120);
 }
-function paintDailyCardAndTurn(){paintDailyInGioca();readGameTurnFromHub();}
-window.addEventListener('us-identity-change',()=>paintDailyInGioca());
-window.UsDailyQuestionHub=Object.freeze({model:dailyHubModel,paint:paintDailyInGioca,paintCard:paintDailyCardAndTurn,open:openToday});
+function paintDailyCardAndTurn(){readGameTurnFromHub();}
+window.UsDailyQuestionHub=Object.freeze({model:dailyHubModel,paintCard:paintDailyCardAndTurn,open:openToday});
 
 // L4 — who left what in Lasciato per te. left-for-you.js owns the envelope and
 // its dot; Oggi follows the envelope and reads only the unseen rows (oldest
@@ -3326,7 +3336,6 @@ async function hydrateToday(){
     if(!current())return;
     if(meta)window.todayRevealMeta=meta;
     renderTodayReveal();
-    window.UsDailyQuestionHub?.paint?.();
     await markDailyRevealSeenIfVisible(q.id,seq);
     if(!current())return;
     // M12B.4 — Conserva solo qui, dove lo scambio è legittimamente visibile.
@@ -3686,8 +3695,7 @@ async function uploadMoment(){
   const total=1+extras.length;
   btn.disabled=true;btn.textContent='Ottimizzo…';momentUpBar('optimize');
   try{
-    const compressed=await compressImageFile(file,{maxDimension:1920,quality:.82});
-    const thumbnail=await compressImageFile(file,{maxDimension:720,quality:.72});
+    const [compressed,thumbnail]=await compressImageVariants(file,[{maxDimension:1920,quality:.82},{maxDimension:720,quality:.72}]);
     const safeName=`${Date.now()}-${crypto.randomUUID()}.webp`;
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/${safeName}`;
     const thumbnailPath=`${window.usProfile.couple_id}/${window.usProfile.id}/derived-thumbnails/${crypto.randomUUID()}.webp`;
@@ -4222,6 +4230,7 @@ function openRicordiExperience(id){
 document.getElementById('moments')?.addEventListener('click',event=>{
   const send=event.target.closest('[data-ricordi-send]');
   if(send){ricordiSendToPartner(send.dataset.sendTitle,send.dataset.sendDate);return;}
+  if(event.target.closest('[data-ricordi-first-photo]')){window.UsMomentComposer?.pick?.();return;}
   const addPhoto=event.target.closest('[data-ricordi-add-photo]');
   if(addPhoto){window.UsMomentComposer?.pick?.({source:{kind:addPhoto.dataset.ricordiAddPhoto,ref:addPhoto.dataset.sourceRef,date:addPhoto.dataset.sourceDate}});return;}
   const rivivi=event.target.closest('[data-ricordi-open]');
@@ -4291,7 +4300,8 @@ async function hydrateMomentsCore(){
   // Ricordi is the album (founder, 04/11/2026): only the photos, month by
   // month. Ideas, Events and questions lived without a photo stay saved, not here.
   if(!rows?.length){
-    grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
+    // First use: the same gallery as the + of Ricordi (founder, 27/11/2026).
+    grid.innerHTML='<div class="empty-state ricordi-empty"><b>La vostra storia parte da qui</b><button type="button" class="primary ricordi-empty-add" data-ricordi-first-photo>Aggiungi la prima foto</button></div>';
     renderRicordiRivivi(null,new Map(),new Map());
     renderRicordiChapters([],new Map(),today);
     grid.dataset.loaded='1';grid.dataset.signature=signature;window.dispatchEvent(new CustomEvent('us:moments-updated'));return;
@@ -5147,7 +5157,8 @@ async function markNoiIdeaLivedFromBoard(id){
   try{
     const res=await confirmNoiIdeaLived(id);
     if(res===null){toast('È già cambiata: aggiorno la lista.');hydrateNoiIdeas();}
-    return Boolean(res);
+    // 'lived' once both said yes; 'proposed' when the other yes is still missing.
+    return res?(res.status==='lived'?'lived':'proposed'):false;
   }catch(e){
     console.warn(e);
     toast('Non riesco a salvarla. Riprova.');

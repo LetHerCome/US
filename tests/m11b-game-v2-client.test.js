@@ -101,20 +101,15 @@ test('M11B client: hub shows Per voi, the six modes and the weekly turn, with no
   assert.deepEqual(h.calls[0][1], undefined, 'no client-supplied couple, user or role');
 });
 
-test('M11B client: the top Per voi control mirrors the server state with the shared attention orbit', async () => {
-  const expectations = { idle: 'off', in_progress: 'off', waiting: 'off', pending: 'on', reveal_ready: 'on' };
-  for (const [state, attention] of Object.entries(expectations)) {
-    const h = harness({ homeState: home({ per_voi: { state, session_id: state === 'idle' ? undefined : 's1' } }) });
-    await tick();
-    const top = h.nodes.usPerVoiTop;
-    assert.equal(top.dataset.gv2State, state);
-    assert.equal(top.dataset.usAttention, attention, state);
-    assert.equal(top.classList.contains('is-loading'), false);
-    assert.match(top.getAttribute('aria-label'), /^Per voi/);
-  }
+// The top Per voi control left the shell with the redesign; its painter went
+// too (27/11/2026). A failed load still says so, with «Riprova».
+test('M11B client: no top Per voi control is painted; a failed load offers «Riprova»', async () => {
+  const h = harness({ homeState: home({ per_voi: { state: 'pending', session_id: 's1' } }) });
+  await tick();
+  assert.equal(h.nodes.usPerVoiTop.dataset.gv2State, undefined);
+  assert.doesNotMatch(read('games.js'), /usPerVoiTop|renderTop/);
   const failed = harness({ handlers: { get_game_v2_home: () => { throw new Error('offline'); } } });
   await tick();
-  assert.equal(failed.nodes.usPerVoiTop.classList.contains('is-loading'), false, 'a failed load never leaves the control disabled');
   assert.match(failed.nodes.quizHub.innerHTML, /Riprova/);
 });
 
@@ -382,9 +377,6 @@ test('Gioca daily: the limit reads the server allowance, on the tokens and the t
   assert.doesNotMatch(dh, /Tutti giocati|Da lunedì|Giocato questa settimana/);
   assert.match(dh, /Per oggi avete giocato/, 'Per voi says the day is spent');
   assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" data-gv2-chip="tomorrow" aria-disabled="true"[\s\S]*?<small>torna domani<\/small>/, 'modes stay visible, locked until tomorrow');
-  assert.equal(done.nodes.usPerVoiTop.dataset.gv2State, 'played');
-  assert.equal(done.nodes.usPerVoiTop.dataset.usAttention, 'off');
-  assert.match(done.nodes.usPerVoiTop.getAttribute('aria-label'), /la prossima partita domani/);
 });
 
 test('Gioca daily: a spent day starts nothing; played modes open their reveal; server refusals are explained', async () => {

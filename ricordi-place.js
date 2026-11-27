@@ -471,28 +471,6 @@
     }
     return list.sort((a, b) => String(a.first).localeCompare(String(b.first)) || a.key.localeCompare(b.key));
   }
-  // The Ricordi as the Raccolta drew them.
-  function boardItems() {
-    return cards().map((card) => {
-      const place = fromCard(card);
-      const img = card.querySelector?.('.ricordi-inline-current') || card.querySelector?.('img[src]:not(.ricordi-inline-peek)');
-      return {
-        id: card.dataset.momentId, lat: place?.lat, lon: place?.lon, label: place?.label || '',
-        caption: String(card.dataset.caption || '').replace(/\s+/g, ' ').trim(),
-        thumb: img?.currentSrc || img?.getAttribute?.('src') || '', iso: card.dataset.momentIso || '', by: card.dataset.momentBy || '',
-      };
-    });
-  }
-  // «42 ricordi · 9 posti» under the switch.
-  function paintCount() {
-    const el = w.document.getElementById('ricordiCount');
-    if (!el) return;
-    const items = boardItems();
-    if (!items.length) { el.textContent = ''; el.hidden = true; return; }
-    const places = boardPlaces(items).length;
-    el.textContent = `${items.length} ${items.length === 1 ? 'ricordo' : 'ricordi'}${places ? ` · ${places} ${places === 1 ? 'posto' : 'posti'}` : ''}`;
-    el.hidden = false;
-  }
   // Fase 8 (D12): Ricordi opens on the Raccolta (the polaroids month by
   // month); the switch shows the Bacheca or the Mappa. The month grid and the
   // chapters stay in the page (the pins and the board open their cards), only hidden.
@@ -530,7 +508,6 @@
     w.addEventListener('us:moments-updated', () => {
       if (w.document.getElementById('ricordiMap')?.hidden === false) drawMap();
       if (w.document.getElementById('ricordiBacheca')?.hidden === false) w.UsBacheca?.refresh?.();
-      paintCount();
     });
     w.document?.addEventListener?.('click', (event) => {
       const target = event.target;

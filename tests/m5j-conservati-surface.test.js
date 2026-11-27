@@ -72,8 +72,10 @@ function mountConservati({ contributions = [], sources = [], profiles = [], sign
   const queries = [];
   const signedPaths = [];
   const rendered = [];
+  // The door and its count are in the sheets of Lasciato per te ([data-conservati-*]).
   const document = {
     getElementById: id => elements.get(id) || null,
+    querySelectorAll: selector => selector === '[data-conservati-entry]' ? [elements.get('conservatiEntry')] : selector === '[data-conservati-count]' ? [elements.get('conservatiCount')] : [],
     addEventListener() {}
   };
   const responseFor = (query) => {
@@ -362,7 +364,8 @@ test('Conservati: its door is at the bottom of Lasciato per te, both sheets', ()
     assert.match(sheet, /<button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>[\s\S]*?<b>Conservati<\/b>[\s\S]*?data-conservati-count/, id);
   }
   const albums = read('moments-albums.js');
-  assert.match(albums, /const entries = \[document\.getElementById\('conservatiEntry'\), \.\.\.all\('\[data-conservati-entry\]'\)\]\.filter\(Boolean\);/);
+  assert.match(albums, /const entries = all\('\[data-conservati-entry\]'\);/);
+  assert.doesNotMatch(albums, /getElementById\('conservati(?:Entry|Count)'\)/, 'the old door in Ricordi is gone');
   assert.match(albums, /for \(const entry of entries\) entry\.hidden = total < 1;/);
   assert.match(albums, /addEventListener\?\.\('us:left-for-you-opened', \(\) => \{ refreshConservatiEntry\(\); \}\);/);
   assert.match(albums, /if \(event\.target\?\.closest\?\.\('\[data-conservati-entry\]'\)\) openConservati\(\);/);

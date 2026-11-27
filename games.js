@@ -47,6 +47,7 @@ const GAME_ART = Object.freeze({
 });
 const gameArt = (id) => `<svg class="us-gv2-art" viewBox="0 0 48 48" focusable="false">${GAME_ART[id] || ''}</svg>`;
 const uuid = () => window.crypto.randomUUID();
+const romeDayOf = (at) => { try { const t = new Date(at); return Number.isFinite(t.getTime()) ? t.toLocaleDateString('en-CA', { timeZone: 'Europe/Rome' }) : ''; } catch (_) { return ''; } };
 const romeDate = (iso, opts) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'), { timeZone: 'UTC', ...opts }) : '');
 const mondayLabel = (iso) => romeDate(iso, { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -71,7 +72,7 @@ const startRequestIds = new Map();
 function roundStatus(row) {
   if (!row) return null;
   if (row.reveal_ready) return row.my_reveal_seen_at ? { text: 'Rivedi', tone: 'seen' } : { text: 'Risposte pronte', tone: 'ready' };
-  if (row.my_complete) return { text: `Aspetti ${partnerName()}`, tone: 'waiting' };
+  if (row.my_complete) return { text: `Aspetti ${waitingName()}`, tone: 'waiting' };
   if (row.partner_complete) return { text: 'Tocca a te', tone: 'turn' };
   if (row.my_answered_count > 0) return { text: `${row.my_answered_count} di ${row.item_count}`, tone: 'progress' };
   if (row.started_by_role && row.started_by_role !== myRole()) return { text: 'Tocca a te', tone: 'turn' };
@@ -82,6 +83,8 @@ function roundStatus(row) {
 // sentence can fall back to "la tua persona" instead of a capitalised label.
 const knownPartner = () => { const name = partnerName(); return name === 'La tua persona' ? '' : name; };
 const ofPartner = () => (knownPartner() ? `di ${knownPartner()}` : 'della tua persona');
+// Inside a sentence the fallback is lowercase: «Aspetti la tua persona».
+const midName = (name) => (name === 'La tua persona' ? 'la tua persona' : name);
 
 // 1.0 — Per voi says when the partner's sealed question is inside. Before the
 // round exists that is the server's own rule (an unplayed weekly question
@@ -125,42 +128,21 @@ function perVoiCopy() {
   const note = ['idle', 'pending', 'in_progress'].includes(state) && perVoiHasPartnerQuestion() ? `Dentro c’è la domanda ${ofPartner()}` : '';
   switch (state) {
     case 'reveal_ready': return { line: 'Risposte pronte ♡', cta: 'Scopri' };
-    case 'waiting': return { line: `Aspetti ${partnerName()}`, cta: 'Apri' };
+    case 'waiting': return { line: `Aspetti ${waitingName()}`, cta: 'Apri' };
     case 'pending': return { line: row?.partner_complete ? `${partnerName()} ha già risposto` : `${partnerName()} ha iniziato`, cta: 'Rispondi', note };
     case 'in_progress': return { line: 'A metà', cta: 'Continua', note };
-    // The day's one game is spent (Per voi or any other mode).
+    // The day's games are spent (Per voi or any other mode).
     case 'played': return { line: 'Per oggi avete giocato', cta: home?.per_voi?.session_id ? 'Rivedi' : 'Domani' };
     default: return { line: '5 domande scelte per voi', cta: 'Inizia', note };
   }
 }
 
-// ---------------------------------------------------------------- top control
-
-function renderTop() {
-  const button = byId('usPerVoiTop');
-  if (!button) return;
-  const state = home?.per_voi?.state || 'idle';
-  const attention = state === 'pending' || state === 'reveal_ready';
-  button.dataset.gv2State = state;
-  button.dataset.usAttention = attention ? 'on' : 'off';
-  const labels = {
-    idle: 'Per voi: una partita preparata apposta',
-    in_progress: 'Per voi: riprendi la partita',
-    pending: 'Per voi: tocca a te',
-    waiting: `Per voi: aspettiamo ${partnerName()}`,
-    reveal_ready: 'Per voi: le vostre risposte sono pronte',
-    played: 'Per voi: per oggi avete giocato, la prossima partita domani',
-  };
-  button.setAttribute('aria-label', labels[state] || labels.idle);
-  button.classList.remove('is-loading');
-  button.removeAttribute('aria-busy');
-}
-
 // ---------------------------------------------------------------- daily rhythm
 
-// D4 (28/10/2026): the server allows one new round per Europe/Rome day, of
-// any mode, and refuses a second; the client only reads that state and never
-// decides it. 'families' still names what was played this week.
+// The server counts the new rounds of each Europe/Rome day (any mode; three
+// since 1.5, the allowance's free_limit) and refuses one more; the client only
+// reads that state and never decides it. 'families' still names what was
+// played this week.
 const allowance = () => home?.allowance || null;
 const freeLeft = () => { const a = allowance(); return a ? Math.max(0, a.free_limit - a.free_used) : 1; };
 const playedThisWeek = (family) => allowance()?.families?.[family] || null;
@@ -299,7 +281,7 @@ function weeklyCard(w) {
     const settle = weeklyJustCreated === true ? ' is-just-created' : '';
     if (weeklyJustCreated === true) weeklyJustCreated = false;
     return `<section class="us-gv2-weekly is-locked${settle}" data-s aria-label="La domanda della settimana">
-      ${head('lock-simple', 'Domanda creata', `Poi tocca a ${partnerName()}, ${unlock}.`)}
+      ${head('lock-simple', 'Domanda creata', `Poi tocca a ${waitingName()}, ${unlock}.`)}
       ${q ? `<blockquote translate="no">${esc(q.question_text)}</blockquote><small class="us-gv2-note">${esc(partnerName())} la scoprirà giocando.</small>` : ''}
     </section>`;
   }
@@ -315,7 +297,7 @@ function weeklyCard(w) {
     </section>`;
   }
   return `<section class="us-gv2-weekly is-locked" data-s aria-label="La domanda della settimana">
-    ${head('lock-simple', `Questa settimana tocca a ${label(w.assigned_role)}`, w.next_role === myRole() ? `Tocca a te da ${unlock}` : `Si cambia ${unlock}`)}
+    ${head('lock-simple', `Questa settimana tocca a ${midName(label(w.assigned_role))}`, w.next_role === myRole() ? `Tocca a te da ${unlock}` : `Si cambia ${unlock}`)}
   </section>`;
 }
 
@@ -334,7 +316,8 @@ const waitsForMe = (r) => ['turn', 'ready'].includes(roundStatus(r)?.tone);
 
 function roundRow(r) {
   const status = roundStatus(r);
-  const when = r.completed_at ? romeDate(String(r.completed_at).slice(0, 10), { day: 'numeric', month: 'long' }) : '';
+  // The day it ended in Rome, not in UTC (a round finished at 00:30 is that day).
+  const when = r.completed_at ? romeDate(romeDayOf(r.completed_at), { day: 'numeric', month: 'long' }) : '';
   return `<button type="button" class="us-gv2-row" data-gv2-session="${esc(r.id)}" data-tone="${esc(status?.tone || '')}">${glyph(ROUND_ICON(r.game_family))}<span class="us-gv2-row-copy"><b>${esc(familyName(r.game_family))}</b>${when ? `<small>${esc(when)}</small>` : ''}</span>${status ? `<small class="us-gv2-row-state" data-tone="${esc(status.tone)}">${esc(status.text)}</small>` : ''}</button>`;
 }
 // «Vi aspetta»: the other one's character, the game, what happened, one action.
@@ -393,7 +376,7 @@ const CHIP_TEXT = { ready: 'Pronto', played: 'Giocato', tomorrow: 'Domani' };
 // shows the token it spends, a round already open spends nothing.
 const GAME_DESC = Object.freeze({
   per_voi: 'Un po’ di tutti i giochi, scelto da US per voi due. Dentro può esserci la domanda della settimana.',
-  scopritevi: 'Le cose che ancora non sapete l’uno dell’altra, una domanda alla volta.',
+  scopritevi: 'Le cose che ancora non sapete di voi due, una domanda alla volta.',
   confrontatevi: 'La stessa situazione, due risposte: scoprite dove la pensate uguale.',
   ridete: 'Domande leggere e un po’ assurde, per ridere insieme.',
   quanto_mi_conosci: 'Uno risponde su di sé, l’altro prova a indovinare. Poi si scambia.',
@@ -595,7 +578,6 @@ async function load() {
     if (seq !== loadSeq) return home;
     home = data || null;
     if (weeklyJustCreated === 'pending') weeklyJustCreated = true;
-    renderTop();
     if (view === 'hub') renderHub();
     checkPerVoiQuestion();
     return home;
@@ -603,7 +585,6 @@ async function load() {
     console.warn('[US Gioca] home', error);
     if(!sameIdentity())return false;
     weeklyJustCreated = false;
-    renderTop();
     if (view === 'hub' && !home) renderHubError();
     return null;
   }
@@ -710,7 +691,7 @@ async function startRound(family) {
     const msg = error?.message || '';
     if (/weekly per voi played|weekly allowance exhausted|too many open rounds/.test(msg)) startRequestIds.delete(family);
     // The server keeps the old "weekly" error names for installed clients;
-    // the budget they speak of is the day's one game.
+    // the budget they speak of is the day's games.
     toast(/not enough content/.test(msg) ? 'Non ci sono ancora abbastanza domande per questo gioco.'
       : /weekly per voi played/.test(msg) ? 'Per oggi avete giocato. Domani un’altra partita.'
       : /weekly allowance exhausted/.test(msg) ? EXHAUSTED
@@ -1360,8 +1341,10 @@ function onClick(event) {
   if (event.target?.hasAttribute?.('data-gv2-scrim')) { showHub(); return; }
   const button = event.target.closest('button');
   if (!button) return;
-  // La giostra: a side card comes to the middle; only the middle one plays.
-  if (button.dataset.gv2Slide && button.dataset.gv2Active === 'false') { centerSlide(button); return; }
+  // La giostra: a finger on a side card brings it to the middle; only the
+  // middle one plays. Enter, Space or a screen reader (a click without a
+  // pointer, detail 0) play the card they name, wherever it is.
+  if (button.dataset.gv2Slide && button.dataset.gv2Active === 'false' && event.detail !== 0) { centerSlide(button); return; }
   const action = button.dataset.gv2Action;
   if (action === 'per-voi') openPerVoi(button);
   else if (action === 'swipe') chooseSwipe(button);

@@ -7,13 +7,6 @@
 #quiz{--dcg-gut-l:max(16px,var(--us-safe-left));--dcg-gut-r:max(16px,var(--us-safe-right))}
 @media (max-width:360px){#quiz{--dcg-gut-l:max(12px,var(--us-safe-left));--dcg-gut-r:max(12px,var(--us-safe-right))}}
 
-/* ---------- Giochi / Sintonia segmented control ---------- */
-#quiz .us-gioca-tabs{margin:10px 0 18px;padding:4px;background:var(--us-color-surface);border:1px solid var(--us-color-line);transition:opacity 240ms var(--us-ease-standard)}
-#quiz .us-gioca-tabs::before{background:var(--us-menta);box-shadow:none;transition:transform 480ms var(--us-ease-spring)}
-#quiz .us-gioca-tab{min-height:40px;font-size:14px;font-weight:600;color:var(--us-color-text-3);transition:color 250ms ease}
-#quiz .us-gioca-tab[aria-selected="true"]{color:var(--us-inchiostro)}
-#quiz .us-gioca-tab:focus-visible{outline:2px solid var(--us-menta);outline-offset:3px}
-
 /* ---------- Gioca icons not mapped by games.css ---------- */
 #quiz .us-gv2-icon[data-gv2-icon="x"]{-webkit-mask-image:url("/assets/icons/phosphor/x-regular.svg");mask-image:url("/assets/icons/phosphor/x-regular.svg")}
 #quiz .us-gv2-icon[data-gv2-icon="caret-right"]{-webkit-mask-image:url("/assets/icons/phosphor/caret-right-regular.svg");mask-image:url("/assets/icons/phosphor/caret-right-regular.svg")}
@@ -25,67 +18,17 @@
 /* Round 3: one block, mockup values literally. The page is the mockup's .view (padding 20px 18px, body 15px/1.5);
    the panel is a plain column whose spacing comes from the blocks' own margins, as in the mockup. */
 #quiz>.us-gv2-page{padding-top:12px;padding-inline:2px;line-height:1.5}
-#quiz .us-gioca-tab{height:40px;min-height:40px;padding:0;line-height:1.5}
 #quiz #quizHub.us-gv2-hub{display:block;gap:0;font-size:15px;line-height:1.5}
 #quiz .us-gv2-kicker{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-menta)}
-
-/* Sfida di oggi: .challenge — the one mint card, dark ink */
-#quiz .us-gv2-daily-slot{min-height:0}
-#quiz .us-gv2-daily-slot>.us-gv2-daily,#quiz .us-gv2-daily-slot>.us-gv4-daily-pending{min-height:0;height:auto}
-#quiz .us-gv2-daily,
-#quiz .us-gv2-daily[data-daily-state]{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr);justify-items:stretch;gap:8px;width:100%;padding:16px 16px 14px;border:0;border-radius:28px;background:var(--us-menta);color:var(--us-inchiostro);box-shadow:none;text-align:left;font-weight:400;line-height:1.5}
-#quiz .us-gv2-daily::before,#quiz .us-gv2-daily::after{content:"";position:absolute;z-index:-1;border-radius:50%;pointer-events:none}
-#quiz .us-gv2-daily::before{right:30px;top:-30px;width:120px;height:120px;background:rgba(26,16,32,.07)}
-#quiz .us-gv2-daily::after{right:-50px;top:-60px;width:190px;height:190px;background:rgba(255,255,255,.22)}
-#quiz .us-gv4-daily-art{display:none}
-#quiz .us-gv2-daily-copy{display:grid;gap:8px;width:100%;max-width:none}
-#quiz .us-gv2-daily-copy small{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-inchiostro);opacity:.7}
-#quiz .us-gv2-daily-copy b{display:block;-webkit-line-clamp:unset;max-width:15ch;overflow:visible;font:500 20px/1.2 var(--us-font-display);letter-spacing:0;color:var(--us-inchiostro);text-wrap:wrap;overflow-wrap:anywhere}
-#quiz .us-gv2-daily-state{margin:0;font-size:14px;font-weight:500;line-height:1.5;color:var(--us-inchiostro);opacity:.75}
-#quiz .us-gv4-daily-footer{display:flex;grid-column:1/-1;justify-self:stretch;width:100%;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
-#quiz .us-gv4-daily-footer>span:first-child{font-size:14px;font-weight:500;line-height:1.5;color:var(--us-inchiostro);opacity:.75}
-#quiz .us-gv2-daily-cta{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;background:var(--us-inchiostro);color:var(--us-latte);font:700 15px/1.5 var(--us-font-ui);box-shadow:none;white-space:nowrap}
-#quiz .us-gv2-daily-cta>span[aria-hidden="true"]{display:none}
-#quiz .us-gv2-daily:focus-visible{outline:2px solid var(--us-latte);outline-offset:3px}
-#quiz .us-gv4-daily-pending{display:grid;gap:8px;padding:20px 18px;border-radius:28px;border:1px solid var(--us-color-line);background:var(--us-color-surface)}
-#quiz .us-gv4-daily-pending-title{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-menta)}
-#quiz .us-gv4-daily-pending small{font-size:15px;color:var(--us-color-text-2)}
-
-/* the week: .week/.wd — hairline days, today in milk, a dot for who was there */
-#quiz .us-gv2-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:14px 0 26px}
-#quiz .us-gv2-wd{display:grid;justify-items:center;gap:2px;padding:6px 0 7px;border-radius:16px;border:1px solid var(--us-color-line);font-size:11px;font-weight:600;line-height:1.5;color:var(--us-color-text-3)}
-#quiz .us-gv2-wd b{font-size:15px;font-weight:900;color:var(--us-color-text);font-variant-numeric:tabular-nums}
-#quiz .us-gv2-wd-pair{display:flex;height:7px;align-items:center}
-#quiz .us-gv2-wd-pair i{display:block;width:7px;height:7px;border-radius:50%;background:var(--us-noi)}
-#quiz .us-gv2-wd-pair i[data-who="tu"]{background:var(--us-tu)}
-#quiz .us-gv2-wd-pair i[data-who="partner"]{background:var(--us-partner)}
-#quiz .us-gv2-wd.is-today{background:var(--us-latte);border-color:var(--us-latte)}
-#quiz .us-gv2-wd.is-today,#quiz .us-gv2-wd.is-today b{color:var(--us-inchiostro)}
 
 /* I vostri giochi: .sec-h */
 #quiz .us-gv2-choose{display:block;margin:0}
 #quiz .us-gv2-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 12px}
 #quiz .us-gv2-section-title{margin:0;font:400 20px/1.5 var(--us-font-display);letter-spacing:0;color:var(--us-color-text)}
 #quiz .us-gv2-section-head small{font-size:13px;line-height:1.5;color:var(--us-color-text-3)}
-/* Partite di oggi (13/11/2026): one dot per round of the day, lit while it is left */
-#quiz .us-gv2-daycount{display:inline-flex;align-items:center;gap:8px;flex:none}
-#quiz .us-gv2-daycount-dots{display:inline-flex;gap:4px}
-#quiz .us-gv2-daycount-dots i{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--us-color-text-3);background:transparent}
-#quiz .us-gv2-daycount-dots i[data-on="true"]{border-color:var(--us-tu);background:var(--us-tu)}
-#quiz .us-gv2-daycount[data-gv2-left="0"] small{color:var(--us-color-text-2,var(--us-color-text-3))}
-/* Partite finite: US Plus, in arrivo */
-#quiz #quizHub .us-gv2-plus-soon{display:flex;align-items:center;gap:12px;width:100%;margin:8px 0 0;padding:12px 14px;border-radius:18px;border:1px dashed color-mix(in srgb,var(--us-tu) 55%,var(--us-color-line));background:color-mix(in srgb,var(--us-tu) 8%,var(--us-color-surface));color:var(--us-color-text);text-align:left;font:400 15px/1.4 var(--us-font-ui)}
-#quiz #quizHub .us-gv2-plus-soon .us-gv2-glyph{flex:none}
-#quiz #quizHub .us-gv2-plus-soon-copy{display:grid;gap:2px;flex:1;min-width:0}
-#quiz #quizHub .us-gv2-plus-soon-copy b{font-weight:600}
-#quiz #quizHub .us-gv2-plus-soon-copy small{font-size:13px;color:var(--us-color-text-3)}
-#quiz #quizHub .us-gv2-plus-soon>.us-gv2-icon{flex:none;width:16px;height:16px;color:var(--us-color-text-3)}
-
 /* .games/.game — flat night tiles, the mockup's art, Per voi tall with my colour washing in */
 #quiz #quizHub .us-gv2-game-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
-#quiz #quizHub .us-gv2-game,
-#quiz #quizHub .us-gv2-pervoi{position:relative;isolation:auto;overflow:visible;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:none;align-content:space-between;align-items:stretch;justify-items:stretch;gap:16px;min-height:132px;margin:0;padding:14px;border-radius:22px;border:1px solid var(--us-color-line);background:var(--us-color-surface);box-shadow:none;color:var(--us-color-text);text-align:left;font:400 15px/1.5 var(--us-font-ui);opacity:1}
-#quiz #quizHub .us-gv2-pervoi{grid-column:1;grid-row:span 2;background:linear-gradient(170deg,color-mix(in srgb,var(--us-tu) 16%,transparent),transparent 60%),var(--us-color-surface)}
+#quiz #quizHub .us-gv2-game{position:relative;isolation:auto;overflow:visible;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:none;align-content:space-between;align-items:stretch;justify-items:stretch;gap:16px;min-height:132px;margin:0;padding:14px;border-radius:22px;border:1px solid var(--us-color-line);background:var(--us-color-surface);box-shadow:none;color:var(--us-color-text);text-align:left;font:400 15px/1.5 var(--us-font-ui);opacity:1}
 #quiz #quizHub .us-gv2-game.is-swipe{grid-column:2;grid-row:1}
 #quiz #quizHub .us-gv2-game[data-gv2-family="scopritevi"]{grid-column:2;grid-row:2}
 #quiz #quizHub .us-gv2-game[data-gv2-family]:not([data-gv2-family="scopritevi"]){grid-column:auto;grid-row:auto}
@@ -93,28 +36,13 @@
 #quiz #quizHub :is(.us-gv2-game,.us-gv2-pervoi) .us-gv2-glyph{display:block;position:static;width:44px;height:44px;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;color:inherit;opacity:1;animation:none}
 #quiz #quizHub :is(.us-gv2-game,.us-gv2-pervoi) .us-gv2-glyph::before,#quiz #quizHub :is(.us-gv2-game,.us-gv2-pervoi) .us-gv2-glyph::after{content:none;display:none}
 #quiz #quizHub .us-gv2-art{display:block;width:44px;height:44px;overflow:visible}
-#quiz #quizHub .us-gv2-art .f-rosa{fill:var(--us-rosa)}
-#quiz #quizHub .us-gv2-art .f-lilla{fill:var(--us-lilla)}
-#quiz #quizHub .us-gv2-art .f-ambra{fill:var(--us-ambra)}
-#quiz #quizHub .us-gv2-art .f-night{fill:var(--us-color-elevated)}
 #quiz #quizHub .us-gv2-art .f-ink{fill:var(--us-inchiostro)}
-#quiz #quizHub .us-gv2-art .s-menta{stroke:var(--us-menta)}
-#quiz #quizHub .us-gv2-art .s-noi{stroke:var(--us-noi)}
-#quiz #quizHub .us-gv2-art .s-rosa{stroke:var(--us-rosa)}
 #quiz #quizHub .us-gv2-art .s-ink{stroke:var(--us-inchiostro)}
-#quiz #quizHub .us-gv2-art .is-screen{mix-blend-mode:screen}
 #quiz #quizHub :is(.us-gv2-game-copy,.us-gv2-pervoi-copy){display:block;min-width:0;margin:0;align-self:auto}
 #quiz #quizHub :is(.us-gv2-game-copy,.us-gv2-pervoi-copy) b{display:block;margin:0;font:500 17px/1.15 var(--us-font-display);letter-spacing:0;color:var(--us-color-text);overflow-wrap:normal}
 #quiz #quizHub :is(.us-gv2-game-copy,.us-gv2-pervoi-copy) small{display:block;margin:3px 0 0;overflow:visible;-webkit-line-clamp:unset;font-size:13px;font-weight:400;line-height:1.5;color:var(--us-color-text-3)}
-#quiz #quizHub .us-gv2-pervoi-copy small.us-gv2-pervoi-note{font-weight:600;color:var(--us-partner)}
-#quiz #quizHub .us-gv2-pervoi-cta{display:inline-flex;align-items:center;justify-content:center;justify-self:start;gap:6px;min-height:44px;margin:0;padding:0 18px;border:0;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro);font:700 15px/1.5 var(--us-font-ui);white-space:nowrap;box-shadow:none}
 #quiz #quizHub .us-gv2-game[aria-disabled="true"] :is(.us-gv2-glyph,.us-gv2-game-copy){opacity:.45}
 #quiz #quizHub :is(.us-gv2-game,.us-gv2-pervoi):focus-visible,#quiz .us-gv2-row:focus-visible,#quiz .us-gv2-done>summary:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
-/* no loops in Gioca: "your turn" on Per voi is a still ring in my colour */
-#quiz #quizHub .us-gv2-pervoi.us-attention-orbit::after{content:"";position:absolute;inset:-1px;width:auto;height:auto;padding:0;border-radius:inherit;background:none;-webkit-mask:none;mask:none;box-shadow:inset 0 0 0 1.5px var(--us-tu);transform:none;animation:none;opacity:0;pointer-events:none}
-#quiz #quizHub .us-gv2-pervoi.us-attention-orbit[data-us-attention="on"]::after{opacity:1}
-#quiz #quizHub .us-gv2-pervoi [data-us-attention-icon]{animation:none}
-
 /* La vostra domanda: .weekly — last, after the games */
 #quiz #quizHub .us-gv2-weekly{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:4px;margin:10px 0 0;padding:18px;border-radius:24px;background:radial-gradient(90% 120% at 100% 0%,color-mix(in srgb,var(--us-menta) 16%,transparent),transparent 70%),var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none}
 #quiz #quizHub .us-gv2-weekly-head{display:block;gap:0}
@@ -233,7 +161,6 @@ body.us-gv2-sheet-open{overflow:hidden}
 #quiz .us-gv2-swipe-card[data-swipe-side="left"]{box-shadow:0 20px 40px rgba(0,0,0,.35),inset 0 0 0 2px var(--us-color-text-2)}
 #quiz .us-gv2-swipe-card[data-swipe-side="right"]{box-shadow:0 20px 40px rgba(0,0,0,.35),inset 0 0 0 2px var(--us-tu)}
 #quiz .us-gv2-swipe-card h2{display:block;margin:0;font:400 24px/1.2 var(--us-font-display);letter-spacing:0;color:var(--us-color-text);text-wrap:wrap}
-#quiz .us-gv2-swipe-card-foot{display:none}
 #quiz .us-gv2-swipe-stamp,#quiz .us-gv2-swipe-stamp.is-left,#quiz .us-gv2-swipe-stamp.is-right{position:absolute;top:16px;bottom:auto;max-width:42%;padding:5px 11px;border:0;border-radius:999px;font:700 12px/1.5 var(--us-font-ui);letter-spacing:.04em;text-transform:none;transform:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:0;transition:opacity .15s}
 #quiz .us-gv2-swipe-stamp.is-left{left:16px;right:auto;box-shadow:inset 0 0 0 1.5px var(--us-color-text-2);background:transparent;color:var(--us-color-text)}
 #quiz .us-gv2-swipe-stamp.is-right{right:16px;left:auto;background:var(--us-tu);color:var(--us-inchiostro)}
@@ -568,12 +495,11 @@ body.us-gv2-sheet-open{overflow:hidden}
 .lvx.is-done .lvx-noi,.lvx.is-done .lvx-num{opacity:1}
 .lvx.is-done .lvx-odo i{translate:0 -100%}
 /* the reduced-motion fade the Gioca panels use */
-@keyframes dcg-fade{from{opacity:0}to{opacity:1}}
 
 /* ---------- 360px and large text ---------- */
 @media (max-width:360px){
   #quiz .us-gv2-game,#quiz .us-gv2-game.is-swipe,#quiz .us-gv2-game[data-gv2-family]{padding:12px}
-  #quiz .us-gv2-game-copy b,#quiz .us-gv2-pervoi-copy b{font-size:16px}
+  #quiz .us-gv2-game-copy b{font-size:16px}
   #usProgressionUnlock h2,.us-level-moment h2{font-size:34px}
 }
 @media (max-height:640px){
@@ -583,22 +509,19 @@ body.us-gv2-sheet-open{overflow:hidden}
 }
 
 /* ---------- Reduced motion: fades or nothing ---------- */
-:root[data-us-motion="reduced"] #quiz .us-gioca-tabs::before,
-:root[data-us-motion="reduced"] #quiz .us-gioca-tab,
+
 :root[data-us-motion="reduced"] #quiz .us-gv2-choice,
 :root[data-us-motion="reduced"] #quiz .us-gv2-choice-key{transition:none}
 
 :root[data-us-motion="reduced"] #quiz .us-gv2-choice:active{transform:none}
 @media (prefers-reduced-motion:reduce){
-  #quiz .us-gioca-tabs::before,#quiz .us-gioca-tab,#quiz .us-gv2-choice,#quiz .us-gv2-choice-key{transition:none}
+  #quiz .us-gv2-choice,#quiz .us-gv2-choice-key{transition:none}
 
   #quiz .us-gv2-choice:active{transform:none}
 }
 
 /* ---------- La sfida della settimana (boards SfidaGioca, SfidaDistanza, 03/11/2026) ----------
    Amber is the challenge's colour; my photo is --us-tu, the other one's --us-partner. */
-#quiz .us-wc-slot{display:block;margin:12px 0 0}
-#quiz .us-wc-slot[hidden]{display:none}
 #quiz .us-wc{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:18px;border-radius:24px;background:var(--us-color-surface-2);border:1px solid color-mix(in srgb,var(--us-ambra) 35%,transparent);color:var(--us-color-text)}
 #quiz .us-wc-head{display:flex;align-items:center;justify-content:space-between;gap:8px 10px;flex-wrap:wrap}
 #quiz .us-wc-kicker{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--us-ambra)}

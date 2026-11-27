@@ -2,6 +2,22 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Noi, Ricordi e Gioca: correzioni dal controllo (27/11)
+
+**Stato:** ramo `claude/controllo-noi-ricordi-gioca`, verso staging. Una migrazione nuova, `20261127120000_us_battute_mute_bacheca.sql`, scritta ma non applicata (serve il sì, prima su staging).
+
+**Cosa cambia:**
+- **Lavagna senza rete**: un tratto non sparisce più. Resta sulla lavagna, più chiaro, e parte da solo appena torna la connessione (o al tratto dopo, o quando riaprite US), in ordine. Mai doppio.
+- **Bacheca**: se non si riesce a leggerla dice «La bacheca non risponde» con «Riprova», invece di sembrare vuota. Le risposte tenute mostrano la domanda e le risposte di tutti e due, ognuna col segno nel colore di chi l'ha scritta. Le cose appese si aprono anche con la tastiera e col lettore di schermo.
+- **«L'avete fatto?»**: dopo il primo «Sì» la carta dice «Ora manca Bea» e non propone più la foto; la foto arriva solo quando l'idea è fatta davvero, coi sì di tutti e due. Anche la frase sotto lo spiega.
+- **Post-it**: se la rete cade proprio mentre se ne salva uno nuovo, non nasce più una copia.
+- **Tocchi più comodi** (44 punti): la casella piccola delle liste nei post-it, le frecce del mese nel calendario, la X delle idee e delle voci dei post-it, le schede Raccolta/Bacheca/Mappa.
+- **Gioca**: con la tastiera o il lettore di schermo la carta di lato parte subito; col dito prima viene al centro, come prima. Testi: «Le cose che ancora non sapete di voi due», e senza il nome dell'altra persona «Aspetti la tua persona» (non più «Aspetti La tua persona»).
+- **Date**: le partite finite dopo mezzanotte mostrano il giorno giusto (quello italiano). Il calendario di Noi e «oggi» per le foto contano il giorno come il resto di US (ora italiana), anche se il telefono ha un altro fuso.
+- **Ricordi, la prima volta**: sotto «La vostra storia parte da qui» c'è «Aggiungi la prima foto», che apre la galleria come il +. Il riquadro vuoto non luccica più come se stesse caricando.
+- **US vi ricorda**: anche il fumetto della Bacheca si può zittire tenendolo premuto («Non dirmelo più»); la migrazione fa ricordare la scelta al server.
+- La foto di un Ricordo nuovo viene letta una volta sola per fare l'immagine e la miniatura (meno lavoro per il telefono). Tolti pezzi di codice e di stile rimasti dal redesign, senza cambiare nulla di visibile.
+
 ### Widget iPhone col redesign e blocca schermo (26/11)
 
 **Stato:** ramo `claude/widget-redesign-ios` (sopra quello Android). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.

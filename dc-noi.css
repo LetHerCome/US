@@ -39,8 +39,10 @@
 #bond .us-noi-v2-monthbar h3{flex:1 1 auto;min-width:0;font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1.3;letter-spacing:0;color:var(--us-color-text)}
 #bond .us-noi-v2-year{font-size:.72em;color:var(--us-color-text-3);letter-spacing:0}
 #bond .us-noi-v2-month-nav{gap:8px}
-#bond .us-noi-v2 .us-noi-v2-nav{width:40px;height:40px;border-radius:50%;background:var(--us-color-surface);border:1px solid var(--us-color-line);color:var(--us-color-text)}
+#bond .us-noi-v2 .us-noi-v2-nav{position:relative;width:40px;height:40px;border-radius:50%;background:var(--us-color-surface);border:1px solid var(--us-color-line);color:var(--us-color-text)}
 #bond .us-noi-v2 .us-noi-v2-nav .us-icon{--us-icon-size:22px}
+/* 44px to the finger, whatever the circle drawn (40px, 38px on small phones). */
+#bond .us-noi-v2 .us-noi-v2-nav::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
 #bond .us-noi-v2 .us-noi-v2-add{width:44px;height:44px;border-radius:50%;background:var(--us-noi);color:var(--us-inchiostro);box-shadow:none}
 #bond .us-noi-v2 .us-noi-v2-add .us-icon{--us-icon-size:22px}
 
