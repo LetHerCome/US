@@ -324,7 +324,8 @@ test('S3 browser: after A logs out offline, B on the same phone gets its own ins
   assert.equal(await page.evaluate(() => window.__PUSH.gate().owner ?? null), null, 'A no longer owns the native gate');
   await page.evaluate(() => { window.__PUSH.rpcError = null; });
   await page.evaluate(() => window.UsNotifications.authReady({ id: 'f2' }));
-  assert.deepEqual(await page.evaluate(async () => ({ ...(await window.UsNotifications.enable()) })), { ok: false, kind: 'error' }, 'fail closed while A\'s token may still be live');
+  // Since 1.2.3 (26/10/2026) a failure also carries its code for the message and whether it retries by itself.
+  assert.deepEqual(await page.evaluate(async () => ({ ...(await window.UsNotifications.enable()) })), { ok: false, kind: 'error', code: 'T-previous_transport_clean', pending: false }, 'fail closed while A\'s token may still be live');
   assert.equal(await page.evaluate(() => window.__PUSH.rpc.filter((entry) => entry.name === 'register_native_push_device').length), 1, 'no registration for B yet');
 
   // The provider now confirms deleteToken(): A's row can no longer deliver.
