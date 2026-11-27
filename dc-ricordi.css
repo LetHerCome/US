@@ -629,7 +629,7 @@
    The approved tavole «Ricordi», «Bacheca» and «Bacheca intera» (23/11/2026).
    The caption is Fraunces italic (the app has no handwriting font). */
 #moments .ricordi-story-head{display:grid!important;grid-template-columns:minmax(0,1fr);gap:8px;margin:4px 0 14px}
-#moments .ricordi-views{width:100%;min-width:100%;justify-self:stretch;box-sizing:border-box;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:4px;border-radius:22px;background:rgba(247,239,233,.06)}
+#moments .ricordi-views{width:100%;min-width:100%;justify-self:stretch;box-sizing:border-box;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:4px;border-radius:22px;background:rgba(247,239,233,.06)}
 #moments .ricordi-views button{min-height:44px;margin:0;padding:0;border:0;border-radius:18px;background:none;color:var(--us-color-text-2);font:600 13.5px/1 var(--us-font-ui);box-shadow:none}
 #moments .ricordi-views button[aria-selected="true"]{background:var(--us-pg);color:var(--us-color-text-on-accent,#1a1020);font-weight:700}
 #moments .ricordi-views button:focus-visible{outline:2px solid var(--us-pg);outline-offset:2px}

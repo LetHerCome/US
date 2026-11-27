@@ -551,6 +551,7 @@ function renderHub() {
    <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2AllTitle">Tutti i giochi</h3><small>${spent?'tornano domani':'bastano pochi minuti'}</small></div>
    ${allGames(tiles)}
   </section>
+  ${meseRow()}
   ${weeklyCard(home?.weekly)}
   ${continueSection(home,onTiles)}
   ${doneSection(home)}`;
@@ -560,6 +561,28 @@ function renderHub() {
  root.innerHTML=html;
  settleGiostra();
  window.UsDailyQuestionHub?.paintCard?.();
+}
+
+// Il vostro mese (27/11/2026): the shortcut to Le vostre carte, in Ricordi;
+// when a pack is waiting it says so and opens it.
+const mese = { note: '', pack: null, at: 0 };
+const MESE_MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+function meseRow() {
+  return `<button type="button" class="us-gv2-mese" data-us-feedback="tap" data-gv2-action="mese"><span class="us-gv2-mese-pk" aria-hidden="true"></span><span class="us-gv2-mese-copy"><b>Il vostro mese</b><small>${esc(mese.note || 'Le vostre carte, in Ricordi')}</small></span></button>`;
+}
+async function refreshMese() {
+  if (Date.now() - mese.at < 300000 || typeof sb === 'undefined') return;
+  mese.at = Date.now();
+  try {
+    const { data, error } = await sb.rpc('get_carte_v1', { p_year: null });
+    if (error || !data) return;
+    const next = data.waiting?.[0];
+    const when = next ? (next.kind === 'anno' ? String(next.period_start).slice(0, 4) : MESE_MONTHS[Number(String(next.period_start).slice(5, 7)) - 1]) : '';
+    const note = next ? `È arrivato il vostro ${when}` : '';
+    if (note === mese.note && (next?.pack || null) === mese.pack) return;
+    mese.note = note; mese.pack = next?.pack || null;
+    if (view === 'hub') renderHub();
+  } catch (_) { /* the row keeps its quiet line */ }
 }
 
 function renderHubError() {
@@ -580,6 +603,7 @@ async function load() {
     if (weeklyJustCreated === 'pending') weeklyJustCreated = true;
     if (view === 'hub') renderHub();
     checkPerVoiQuestion();
+    refreshMese();
     return home;
   } catch (error) {
     console.warn('[US Gioca] home', error);
@@ -1364,6 +1388,7 @@ function onClick(event) {
   }
   else if (action === 'retry') load();
   else if (action === 'plus-soon') window.UsPlusSoon?.open?.({ from: 'gioca' });
+  else if (action === 'mese') window.usOpenCarte?.(mese.pack ? { pack: mese.pack } : {});
   else if (button.dataset.gv2Family) chooseMode(button.dataset.gv2Family, button);
   else if (button.dataset.gv2Session) openSession(button.dataset.gv2Session);
 }

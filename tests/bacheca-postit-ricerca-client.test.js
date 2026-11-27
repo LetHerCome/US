@@ -44,7 +44,7 @@ test('wiring: the lens in the head of Ricordi, the sheets, Back, caches, builds,
   assert.doesNotMatch(html, /src="\/ricordi-cerca\.js/);
   assert.match(read('bacheca.js'), /const LENS = 'ricordi-cerca';[\s\S]*script\.src = `\/\$\{LENS\}\.js\$\{version\}`/);
   assert.match(read('bacheca.js'), /link\.href = `\/\$\{LENS\}\.css\$\{version\}`/);
-  assert.match(html, /data-ricordi-view="map" aria-selected="false">Mappa<\/button><\/div><button type="button" class="ricordi-lens" data-ricordi-cerca aria-label="Cerca nei ricordi"/);
+  assert.match(html, /data-ricordi-view="map" aria-selected="false">Mappa<\/button><button type="button" role="tab" data-ricordi-view="carte" aria-selected="false">Carte<\/button><\/div><button type="button" class="ricordi-lens" data-ricordi-cerca aria-label="Cerca nei ricordi"/);
   assert.ok(html.indexOf('id="usRicordiCerca"') < html.indexOf('id="usBachecaSheet"'), 'the board\'s sheet opens over the search');
   assert.match(html, /<div class="ub-notes-sec" id="usBachecaNotes"><\/div>/);
   const nav = read('navigation.js');

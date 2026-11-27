@@ -506,3 +506,9 @@
 #quiz .us-gv5-reveal-answers .us-gv2-then{padding:8px;font-size:11px}
 #quiz .us-gv5-reveal .us-gv2-actions{margin-top:4px}
 @media(max-width:360px){#quiz .us-gv5-reveal{padding:15px 12px 20px}#quiz .us-gv5-reveal-title{font-size:12.5px}}
+/* Il vostro mese (27/11/2026): the shortcut to Le vostre carte, in Ricordi. */
+#quiz .us-gv2-mese{display:flex;align-items:center;gap:14px;width:100%;min-height:72px;margin:6px 0 18px;padding:12px 16px;border:1px solid var(--us-color-line-strong);border-radius:20px;background:color-mix(in srgb,var(--us-color-text) 5%,transparent);color:var(--us-color-text);text-align:left;font:inherit;cursor:pointer}
+#quiz .us-gv2-mese-pk{flex:none;width:34px;height:51px;background:url("/assets/mese/pack-holo.webp") center/100% 100% no-repeat;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25))}
+#quiz .us-gv2-mese-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+#quiz .us-gv2-mese-copy b{font:italic 600 18px/1.1 var(--us-font-display,"Fraunces",serif)}
+#quiz .us-gv2-mese-copy small{font:600 12.5px/1.3 var(--us-font-ui);color:var(--us-color-text-2)}
