@@ -41,7 +41,8 @@ test('intro: only the first entry starts it, on this phone, and the Profilo star
 
 test('intro: nothing else talks over it; reduced motion keeps it still', () => {
   assert.match(read('us-ricorda.js'), /muted \|\| w\.UsIntro\?\.active\?\.\(\)\) return;/);
-  assert.match(read('personaggi.js'), /Boolean\(w\.UsIntro\?\.active\?\.\(\)\)/);
+  // The island waits for the intro's end (us:intro-done) instead of retrying under it.
+  assert.match(read('personaggi.js'), /if \(w\.UsIntro\?\.active\?\.\(\)\) return;/);
   const css = read('struttura.css');
   assert.match(css, /html\.us-intro-open \.us-fumetto\{visibility:hidden\}/);
   assert.match(css, /@media \(prefers-reduced-motion:reduce\)\{\.us-intro,\.us-intro-hole,\.us-intro-guide,\.us-intro-bubble,\.us-intro-other\{transition:none!important\}/);

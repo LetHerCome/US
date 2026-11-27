@@ -105,19 +105,6 @@ function resetQuiz(){window.USGameV2?.showHub();}
 window.openQuizHub=openQuizHub;
 window.resetQuiz=resetQuiz;
 
-function updateTogetherDays(startedOn){
-  const el=document.getElementById('daysTogether');
-  if(!el)return;
-  if(!startedOn){el.textContent='—';return;}
-  const [year,month,day]=String(startedOn).split('-').map(Number);
-  if(!year||!month||!day){el.textContent='—';return;}
-  const start=Date.UTC(year,month-1,day);
-  const now=new Date();
-  const today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
-  const diff=Math.max(0,Math.floor((today-start)/86400000));
-  el.textContent=diff.toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
-}
-
 
 const SB_URL = 'https://iiakdfsxpywdkxravqjh.supabase.co';
 const SB_KEY = 'sb_publishable_JAB6USqhccAUg8_0ujgQ1A_NkRJRv_A';
@@ -175,7 +162,6 @@ function clearUsCoupleContext(){
   usCoupleContextState.couple=null;
   usCoupleContextState.profiles=[];
   usCoupleContextState.identityKey='';
-  updateTogetherDays(null);
   window.usBondProfiles=[];
   for(const id of ['pairAvatarFrancesco','pairAvatarBeatrice']){
     const root=document.getElementById(id),image=root?.querySelector('img');
@@ -223,7 +209,6 @@ async function hydrateUsCoupleContext(){
   // Colori a scelta (US Plus, 29/10/2026): each person in their colour, on both phones.
   window.UsPersonColors?.applyCoupleColors?.(usCoupleContextState.profiles);
   usCoupleContextState.identityKey=identityKey;
-  updateTogetherDays(usCoupleContextState.couple?.started_on);
   refreshUsIdentityLabels();
   return {
     couple:usCoupleContextState.couple?{...usCoupleContextState.couple}:null,

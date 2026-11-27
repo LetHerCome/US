@@ -8,6 +8,14 @@
 
 **Cosa cambia:**
 - Il bottone che pubblica le funzioni del server in produzione accetta solo il codice di `main`, avviato da `main`, come già quello delle migrazioni. Un ramo non ancora unito può arrivare solo su staging. Per chi usa l'app non cambia niente.
+### Piccolezze prima del rilascio (27/11)
+
+**Stato:** ramo `claude/piccolezze-pre-rilascio`, verso staging; migrazione `20261127130000_premi_apostrofi` da applicare su staging.
+
+- I widget dell'iPhone non portano più dentro le vecchie illustrazioni e la grana che non usano: l'app è un po' più leggera, i widget restano uguali.
+- I testi dei premi aggiunti il 26/11 hanno l'apostrofo tipografico come tutti gli altri: «Ora d’oro», «Oggi cambia con l’anno…», «Foglie d’acero e d’autunno…», «…dell’altra persona».
+- Su un telefono lento la prima apertura dell'isola su Oggi non si perde più: aspetta che coppia e livello arrivino, anche dopo molti secondi. Mai durante l'intro, mai due volte.
+- Tolto un pezzo di codice morto che cercava un contatore dei giorni che non esiste più. Nessun cambio visibile.
 
 ### Widget dell'iPhone aggiornati anche ad app chiusa (27/11)
 

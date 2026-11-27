@@ -42,7 +42,7 @@ function runtime(options={}){
   const pending=new Promise(r=>{release=r;});
   const window={dispatchEvent(){},addEventListener(){}};
   const chain={select(){return this;},eq(){return this;},maybeSingle(){return pending.then(()=>({data:{id:'b'},error:null}));},order(){return pending.then(()=>{if(options.failure)throw new Error('offline');return {data:rows('b',['Alex','Sam']),error:null};});}};
-  const ctx=vm.createContext({window,document:{getElementById(){return null;},querySelector(){return null;},querySelectorAll(){return [];}},CustomEvent:class{},sb:{from(){return chain;}},updateTogetherDays(){},console});
+  const ctx=vm.createContext({window,document:{getElementById(){return null;},querySelector(){return null;},querySelectorAll(){return [];}},CustomEvent:class{},sb:{from(){return chain;}},console});
   vm.runInContext(source.slice(start,source.indexOf("window.addEventListener('us-app-lock-change'",start)),ctx);
   return {ctx,window,release};
 }
