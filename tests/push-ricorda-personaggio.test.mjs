@@ -176,14 +176,19 @@ test('signal: FCM v3 carries the look or nothing; an old app (v2 only) drops it'
   assert.match(service, /UsPushOwnerGate\.postIfCurrent\(this, data\.get\("installation"\), \(\) -> changed\[0\] = UsWidgetSignals\.apply\(this, data\)\)/);
 });
 
-test('signal: APNs background push ready for iOS, but iOS stays off until the app declares it', () => {
+test('signal: APNs background push for iOS, on since the app declares it (27/11/2026)', async () => {
   const owner = 'a'.repeat(64);
   const request = transport.apnsSignalRequest(signals.CLEAR_SIGNAL, owner, 1_700_000_000_000);
   assert.deepEqual(request.headers, { 'apns-push-type': 'background', 'apns-priority': '5', 'apns-expiration': String(1_700_000_000 + 604800), 'apns-collapse-id': 'us-widget-clear' });
   assert.deepEqual(request.body, { aps: { 'content-available': 1 }, us: { v: 3, owner, widget: { s: 'clear' } } });
   assert.throws(() => transport.apnsSignalRequest(signals.CLEAR_SIGNAL, ''), /widget_owner_missing/);
-  assert.equal(signals.IOS_WIDGET_SIGNALS, false);
-  assert.doesNotMatch(read('ios/App/App/Info.plist'), /UIBackgroundModes/);
+  assert.equal(signals.IOS_WIDGET_SIGNALS, true);
+  assert.match(read('ios/App/App/Info.plist'), /<key>UIBackgroundModes<\/key>\s*<array>\s*<string>remote-notification<\/string>\s*<\/array>/);
+  // The owner is the widgets' own: sha256 hex of the user id, as widgets.js computes it.
+  const id = '01d5fe3d-1e8e-4872-b453-01918de88893';
+  const expected = Buffer.from(await webcrypto.subtle.digest('SHA-256', new TextEncoder().encode(id))).toString('hex');
+  assert.equal(await signals.widgetOwnerHash(id), expected);
+  assert.match(read('widgets.js'), /const nextHash = await sha256Hex\(profile\.id\);/);
 });
 
 test('signal: the colours and the default shapes are the app\'s own', () => {
@@ -199,7 +204,7 @@ test('signal: the colours and the default shapes are the app\'s own', () => {
   assert.match(personaggi, /role === 'beatrice' \? 'quadrato' : 'palla'/);
 });
 
-test('partner_look: the look is read back from the server; one signal per revision; Android only', async () => {
+test('partner_look: the look is read back from the server; one signal per revision; Android and iPhone', async () => {
   const profiles = [
     { id: F, couple_id: C1, role: 'francesco', person_color: 'blu', character_shape: 'nuvola', character_head: null, character_face: 'occhiali' },
     { id: B, couple_id: C1, role: 'beatrice', person_color: null, character_shape: null, character_head: null, character_face: null },
@@ -213,8 +218,10 @@ test('partner_look: the look is read back from the server; one signal per revisi
   const native = fakeNative();
   const sender = { id: F, couple_id: C1 };
   const res = await signals.dispatchPartnerLook(admin, { sender, partner: { id: B }, native });
-  assert.deepEqual(res, { delivered: 1, failed: 0 });
-  assert.deepEqual(native.sent.map((s) => s.device), ['b-android'], 'not the iPhone (off), not another couple, not the sender');
+  assert.deepEqual(res, { delivered: 2, failed: 0 });
+  assert.deepEqual(native.sent.map((s) => s.device), ['b-android', 'b-iphone'], 'not another couple, not the sender');
+  assert.equal(native.sent[0].owner, '', 'Android needs no owner: the installation gate decides');
+  assert.equal(native.sent[1].owner, await signals.widgetOwnerHash(B), 'the iPhone gets its account\'s widget owner');
   assert.deepEqual({ ...native.sent[0].signal }, { s: 'look', shape: 'nuvola', head: '', face: 'occhiali', color: '#6f9bff', day: '#8faad6' });
   assert.deepEqual(admin.log.claims.map((c) => [c.dedupe_key, c.event_type]), [[`partner-look:${F}:4`, 'partner_look']]);
   assert.deepEqual(await signals.dispatchPartnerLook(admin, { sender, partner: { id: B }, native }), { delivered: 0, failed: 0, deduplicated: true });
@@ -222,9 +229,9 @@ test('partner_look: the look is read back from the server; one signal per revisi
   assert.deepEqual(await signals.dispatchPartnerLook(fakeAdmin({ tables: { ...tables, couple_sync: [] } }), { sender, partner: { id: B }, native }), { delivered: 0, reason: 'no-change' });
   assert.deepEqual(await signals.dispatchPartnerLook(admin, { sender, partner: null, native }), { delivered: 0, reason: 'no-recipient' });
   const dead = fakeAdmin({ tables: { ...tables, couple_sync: [{ couple_id: C1, kind: 'looks', revision: 5 }] } });
-  const r = await signals.dispatchPartnerLook(dead, { sender, partner: { id: B }, native: fakeNative({ outcome: { 'b-android': 'invalid-token' } }) });
-  assert.deepEqual(r, { delivered: 0, failed: 1 });
-  assert.deepEqual(dead.log.deletedDevices, ['b-android']);
+  const r = await signals.dispatchPartnerLook(dead, { sender, partner: { id: B }, native: fakeNative({ outcome: { 'b-android': 'invalid-token', 'b-iphone': 'invalid-token' } }) });
+  assert.deepEqual(r, { delivered: 0, failed: 2 });
+  assert.deepEqual(dead.log.deletedDevices, ['b-android', 'b-iphone']);
   assert.deepEqual(dead.log.released, [`partner-look:${F}:5`], 'nothing delivered: the revision can be retried');
   assert.equal((await signals.deliverWidgetSignal(admin, { signal: signals.CLEAR_SIGNAL, recipientIds: [B], native: fakeNative({ ready: [] }) })).reason, 'transport-unconfigured');
 });

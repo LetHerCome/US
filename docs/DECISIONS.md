@@ -652,3 +652,11 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Personaggio dell'altra persona dal vivo:** un cambio di colore, forma o vestiti muove `couple_sync` (tipo `looks`); l'app aperta dell'altra persona lo sente su Realtime e rilegge i look.
 - **Widget ad app chiusa (Android):** dopo il cambio l'app di chi l'ha fatto chiede a `send-web-push` (`partner_look`) un avviso silenzioso FCM v3 per i telefoni dell'altra persona, col look letto dal server (forma, testa, viso, due colori: niente nomi, foto o testo). Quando l'altra persona esce dalla coppia o cancella l'account, lo stesso avviso (`clear`) svuota i widget come al logout. v3 apposta: le app di prima accettano solo v2 e lo scartano senza mostrare nulla.
 - **iPhone:** per ora niente avviso silenzioso (l'app non dichiara `UIBackgroundModes`, scelta da fare a parte); il server è pronto (`apnsSignalRequest`, `IOS_WIDGET_SIGNALS` spento). Su iPhone il personaggio arriva con l'app aperta o al ritorno in primo piano.
+
+## 2026-11-27 — Widget dell'iPhone: avviso silenzioso in background
+
+**Fonte:** founder, 27/11/2026: «fai fix per ios».
+
+- L'app dichiara un solo modo in background, `remote-notification` (`UIBackgroundModes`), solo per i widget.
+- `AppDelegate` passa l'avviso a `UsWidgetSignals` (plugin dei widget). Il plugin controlla la versione (3) e che l'account sia quello dei widget (impronta = SHA-256 dell'id, come `widgets.js`). Poi scrive il personaggio dell'altra persona col contratto dei widget, oppure svuota tutto come al logout, e ricarica WidgetKit. Gli altri avvisi passano come prima da `@capacitor/push-notifications`.
+- Il server manda ora il segnale anche agli iPhone (`IOS_WIDGET_SIGNALS = true`) e calcola da sé l'impronta del proprietario. Limiti di iOS accettati: consegna quando vuole, mai ad app chiusa a mano.

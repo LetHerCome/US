@@ -9,9 +9,11 @@
 //   syncCharacters builds it (shape, outfit, the colour at night and on
 //   paper), so a phone that gets the push writes what the app would write.
 // * Android: data-only v3 behind the same installation gate as v2.
-// * iOS: off (IOS_WIDGET_SIGNALS). The app has no background mode yet
-//   (UIBackgroundModes is not declared, tests/ios-native-baseline.test.js);
-//   the open app still follows over Realtime and on return to the foreground.
+// * iOS (27/11/2026, founder: «fai fix per ios»): an APNs background push
+//   (UIBackgroundModes remote-notification; AppDelegate -> UsWidgetSignals.apply)
+//   for the account whose widgets they are (owner = sha256 of the user id, as
+//   widgets.js). iOS delivers it when it decides and never to an app closed by
+//   hand: the open app still follows over Realtime and on return to the foreground.
 import { widgetSignal } from './native-push-transport.mjs';
 
 // The person colours of person-colors.js (PALETTE, PALETTE_GIORNO): kept equal by tests.
@@ -20,7 +22,12 @@ export const PERSON_PALETTE = Object.freeze({
   pesca: ['#ff9f6e', '#e9ab80'], prugna: ['#c98bd6', '#bb93bf'], menta: ['#6fd6c8', '#8ac6ba'], perla: ['#e8e1f0', '#ddd5de'],
 });
 const RETIRED = Object.freeze({ cielo: 'blu', rubino: 'prugna', oro: 'pesca' });
-export const IOS_WIDGET_SIGNALS = false;
+export const IOS_WIDGET_SIGNALS = true;
+// The widget owner of an account, as widgets.js computes it (sha256 hex of the user id).
+export async function widgetOwnerHash(userId) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(userId || '')));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** The look of one profile row, as the widgets draw it (personaggi.js shapeOf/lookOf, widgets.js syncCharacters). */
@@ -78,7 +85,7 @@ export async function deliverWidgetSignal(admin, options) {
   for (const device of devices) {
     let result;
     try {
-      const owner = device.provider === 'apns' && typeof ownerHash === 'function' ? await ownerHash(device.user_id) : '';
+      const owner = device.provider === 'apns' ? await (typeof ownerHash === 'function' ? ownerHash : widgetOwnerHash)(device.user_id) : '';
       result = await native.sendSignal(device, signal, owner);
     } catch (_) {
       result = { ok: false, outcome: 'transient' };

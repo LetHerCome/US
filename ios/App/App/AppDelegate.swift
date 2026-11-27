@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import UsWidgetBridgePlugin
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -42,6 +43,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
         NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
+    }
+
+    // Widget signals (27/11/2026): a background push (content-available, no alert) carries the
+    // other person's new look, or tells the widgets to forget them; nothing else is read here.
+    // Every other push keeps going through @capacitor/push-notifications as before.
+    func application(_ application: UIApplication,
+                     didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        completionHandler(UsWidgetSignals.apply(userInfo) ? .newData : .noData)
     }
 
     func application(_ application: UIApplication,

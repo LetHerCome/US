@@ -2,6 +2,14 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Widget dell'iPhone aggiornati anche ad app chiusa (27/11)
+
+**Stato:** ramo `claude/controllo-integrazione`, verso staging. Chiesto dal founder il 27/11 («fai fix per ios»). Arriva con una build TestFlight nuova. Servono anche le funzioni `send-web-push`, `leave-couple` e `delete-account` aggiornate su staging.
+
+**Cosa cambia:**
+- Quando l'altra persona cambia forma, colore o accessori, o lascia la coppia, anche i widget dell'iPhone si aggiornano con US chiusa, come su Android: arriva un avviso silenzioso, senza banner, che contiene solo il personaggio.
+- iOS consegna questi avvisi quando decide lui (di solito entro pochi minuti) e mai a un'app chiusa a mano dal multitasking: lì il personaggio si aggiorna alla prossima apertura.
+
 ### Oggi senza la striscia bianca in alto (27/11)
 
 **Stato:** ramo `claude/controllo-integrazione`, verso staging. Segnalata dal founder con uno screenshot dell'APK di staging.
