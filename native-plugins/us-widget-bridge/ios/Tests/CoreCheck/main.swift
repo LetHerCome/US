@@ -256,6 +256,34 @@ var rome = Calendar(identifier: .gregorian)
 rome.timeZone = UsWidgetModels.rome
 check(UsWidgetModels.face(redesign, me: false, now: sampleNow, calendar: rome).face == "innamorato", "the face of Come stai")
 check(UsWidgetModels.face(redesign, me: false, now: date("2026-11-26T22:30:00Z"), calendar: rome).face == "dorme", "asleep after 22")
+// Come stai che conta (27/11/2026, D8): the things in their hands or on their head; never asleep when not well.
+let plainOps = UsCharacterShapes.draw("palla", color: 0xFFFF_7C96, face: "felice", reaction: "", head: "", faceItem: "", zz: 0).count
+for status in ["lavoro", "studio", "palestra", "viaggio", "tavola", "malato"] {
+    if UsCharacterShapes.thingOf(status).isEmpty { check(false, "\(status) holds nothing") }
+    for shape in UsCharacterShapes.shapes {
+        for mono in [false, true] {
+            let ops = UsCharacterShapes.draw(shape, color: 0xFFFF_7C96, face: status, reaction: "", head: "corona", faceItem: "", zz: 0, mono: mono)
+            for op in ops where op.text == nil {
+                if UsCharacterShapes.parse(op.d).isEmpty { check(false, "\(status) \(shape): empty path \(op.d)") }
+                if let clip = op.clip, UsCharacterShapes.parse(clip).isEmpty { check(false, "\(status) \(shape): empty clip") }
+            }
+        }
+    }
+    if UsCharacterShapes.draw("palla", color: 0xFFFF_7C96, face: status, reaction: "", head: "", faceItem: "", zz: 0).count <= plainOps { check(false, "\(status): no thing drawn") }
+}
+check(true, "Come stai: the six things draw and parse on every shape")
+check(UsCharacterShapes.thingOf("lavoro") == "valigetta" && UsCharacterShapes.thingOf("malato") == "termometro" && UsCharacterShapes.thingOf("felice").isEmpty, "the things of Come stai")
+check(UsCharacterShapes.faceOf("teso") == "teso" && UsCharacterShapes.faceOf("lavoro") == "felice", "a face name stays itself, a state gives its face")
+let sickNight = UsCharacterShapes.draw("palla", color: 0xFFFF_7C96, face: "malato", reaction: "sera", head: "", faceItem: "", zz: 0xFFF7_EFE9)
+check(!sickNight.contains { $0.text == "z" } && sickNight.contains { $0.stroke == 0xFFE8_484A }, "not feeling well never sleeps at night")
+check(UsCharacterShapes.draw("palla", color: 0xFFFF_7C96, face: "lavoro", reaction: "sera", head: "", faceItem: "", zz: 0xFFF7_EFE9).contains { $0.text == "z" }, "the others sleep, without their thing")
+var sick = redesign
+var sickStatus = UsWidgetContract.object(sick["status"])
+sickStatus["partner"] = ["status": "malato", "form": "", "at": "2026-11-26T13:00:00Z", "until": "2026-11-27T01:00:00Z"]
+sick["status"] = sickStatus
+check(UsWidgetModels.face(sick, me: false, now: date("2026-11-26T22:30:00Z"), calendar: rome).face == "malato", "the widget keeps the thermometer at night")
+check(UsWidgetModels.face(sick, me: false, now: sampleNow, calendar: rome).face == "malato", "the widget draws their state")
+check((UsWidgetContract.statusPerson(["status": "<b>", "form": "x", "at": "ieri", "until": "domani"])["status"] as? String) == "", "a hostile status signal shows nothing")
 check(UsWidgetModels.message(redesign, now: sampleNow).text == "Ti ha lasciato una foto" && UsWidgetModels.message(redesign, now: sampleNow).hint == "la scopri solo dentro US", "Lasciato per te, never what")
 let memoriesNow = UsWidgetModels.memories(redesign, now: sampleNow)
 check(memoriesNow.pill == "Un anno fa" && memoriesNow.title == "Pescara" && memoriesNow.line == "26 novembre · 4 foto", "Ricordi: \(memoriesNow.line)")

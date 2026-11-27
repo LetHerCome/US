@@ -47,7 +47,7 @@ test('model: twelve hours from the server time, then nothing', () => {
   assert.equal(status.since(3 * 3600 * 1000), 'da 3 ore');
 });
 
-test('app: Oggi pill, the sheet, Settings, Realtime on the one channel, no push', () => {
+test('app: Oggi pill, the sheet, Settings, Realtime on the one channel; the only pushes are the silent signal and the gesture', () => {
   const html = read('index.html');
   assert.match(html, /id="usOggiStatus"[^>]*aria-haspopup="dialog"/);
   assert.match(html, /<div id="usStatusSheet" class="us-status-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>/);
@@ -64,7 +64,10 @@ test('app: Oggi pill, the sheet, Settings, Realtime on the one channel, no push'
   assert.match(module, /db\.rpc\(rpc, args\)/);
   assert.match(module, /write\('set_member_status', \{ p_status: status \}/);
   assert.match(module, /write\('set_member_form', \{ p_form: validForm\(form\) \}/);
-  assert.doesNotMatch(module, /\.channel\(|notif|sendPush/i);
+  // Come stai che conta (27/11/2026): no channel of its own; a change of state is never a
+  // notification (02/11), only the silent widget signal; the gesture is the one push (D7/D16).
+  assert.doesNotMatch(module, /\.channel\(|sendPush/i);
+  assert.deepEqual([...module.matchAll(/sendWebPushEvent\?\.\('([a-z_]+)'\)/g)].map((m) => m[1]).sort(), ['partner_status', 'status_response']);
   for (const build of ['scripts/build-capacitor-web.mjs', 'scripts/build-cloudflare-pages.mjs']) {
     assert.match(read(build), /'member-status\.js',/);
     assert.match(read(build), /'member-status\.css',/);

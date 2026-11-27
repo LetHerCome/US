@@ -111,6 +111,16 @@ final class UsWidgetStore {
         return write(snapshot: snapshot)
     }
 
+    /// Come stai che conta (D13): the other person's Come stai from a widget signal, validated, same owner.
+    func writePartnerStatus(ownerHash: String, status: [String: Any]) -> Bool {
+        guard UsWidgetContract.validOwner(ownerHash), var snapshot = readSnapshot(),
+              (snapshot["ownerHash"] as? String) == ownerHash else { return false }
+        var all = UsWidgetContract.object(snapshot["status"])
+        all["partner"] = UsWidgetContract.statusPerson(status)
+        snapshot["status"] = all
+        return write(snapshot: snapshot)
+    }
+
     func readSnapshot() -> [String: Any]? {
         lock.lock(); defer { lock.unlock() }
         guard let data = try? Data(contentsOf: file("snapshot-v2.json")),

@@ -25,8 +25,12 @@
 //     Preferenza today; dedupe `daily-evening:<giorno>:<user id>`. Chi riceve
 //     il promemoria serale non riceve anche "nuova domanda" nello stesso run.
 //   * US 1.0: testo nella lingua di chi riceve (profiles.locale).
+//   * Come stai che conta (27/11/2026, D11/D19): il promemoria serale aspetta
+//     chi è «al lavoro» o «sui libri» (Come stai non scaduto); il run dopo
+//     riprova, fino alle 22. La nuova domanda del mattino parte come sempre.
 
 import { buildNotification, deliverNotification, recipientLocales, webPushPayload } from './notification-core.mjs';
+import { quietRecipients } from './come-stai-push-core.mjs';
 
 export const DAILY_QUESTION_EVENT_TYPE = 'daily_question';
 export const DAILY_QUESTION_PUSH_TTL_SECONDS = 60 * 60 * 12;
@@ -228,9 +232,13 @@ export async function dispatchDailyQuestionPush(admin, options) {
       .in('dedupe_key', [...eveningPartner.keys()].map((id) => dailyEveningDedupeKey(clock.day, id)));
     if (eveningLoggedError) throw eveningLoggedError;
     const eveningDone = new Set((eveningLogged || []).map((row) => row.dedupe_key));
+    // Come stai che conta (D11/D19): at work or studying, the reminder waits
+    // (no key claimed): this same run, every 10 minutes until 22, tries again.
+    const quiet = await quietRecipients(admin, [...eveningPartner.keys()], now);
     for (const [userId, partner] of eveningPartner) {
       const user = members.find((member) => member.id === userId);
       if (eveningDone.has(dailyEveningDedupeKey(clock.day, userId))) { eveningRecipients.push({ userId, outcome: 'deduplicated' }); continue; }
+      if (quiet.has(userId)) { eveningRecipients.push({ userId, outcome: 'deferred' }); continue; }
       let result;
       try {
         result = await deliverEveningToUser(admin, { question, day: clock.day, user, partner, locale: locales.get(userId), ensureVapid, sendNotification, native });

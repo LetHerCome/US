@@ -1450,6 +1450,17 @@ async function createCalendarEntryForDate(dateISO) {
   });
 }
 
+// Come stai che conta (27/11/2026, D14): the same editor for a day, already
+// written ({ title, allDay }), e.g. «In viaggio» today; the person still saves it.
+function createCalendarEntryPrefilled(dateISO, prefill = {}) {
+  createCalendarEntryForDate(dateISO);
+  if (pendingIdeaPick || editingFormEntry || !$('usCalendarFormSheet')?.classList.contains('open')) return;
+  const title = $('usCalendarTitleInput');
+  if (title && typeof prefill.title === 'string') title.value = prefill.title.slice(0, 120);
+  const allDay = $('usCalendarAllDayInput');
+  if (allDay && prefill.allDay) { allDay.checked = true; toggleAllDayFields(); }
+}
+
 async function createCalendarEntryForIdeaDate(dateISO){
   const pick=pendingIdeaPick;
   if(!pick||!dateISO||window.usProfile?.id!==pick.userId||window.usProfile?.couple_id!==pick.coupleId)return;
@@ -1478,7 +1489,7 @@ async function openCalendarEntry(entryId, { inPlace = false } = {}) {
 
 // Date e numeri (26/11/2026): the event editor of Noi types its hour the same way.
 window.UsQuickTime = Object.freeze({ normalize: normalizeQuickTime, mask: maskTimeField });
-window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, createForIdeaDate: createCalendarEntryForIdeaDate, cancelIdeaPick: clearIdeaPick, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
+window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, createForIdeaDate: createCalendarEntryForIdeaDate, cancelIdeaPick: clearIdeaPick, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, createPrefilled: createCalendarEntryPrefilled, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
 window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth,readRange:readNoiRange,freeEvenings:noiFreeEvenings});
 window.openCalendarSurface = openCalendarSurface;
 window.closeCalendarDetailSheet = closeCalendarDetailSheet;

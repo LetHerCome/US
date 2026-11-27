@@ -39,6 +39,8 @@ public final class UsPushNotices {
         "calendar", "anniversary", "partner_joined", "lavagna", "postit", "bacheca_postit", "challenge", "challenge_reminder", "challenge_photo",
         "invite_reminder",
         "birthday_week", "birthday", "anniversary_week", "year_ago", "bacheca",
+        "status_reply", "status_abbraccio", "status_riposati", "status_respira", "status_cuore", "status_festa",
+        "status_forza", "status_spacca", "status_buon_viaggio", "status_buon_appetito",
     };
 
     /** A display name: no control characters, trimmed, at most 40 characters. */
@@ -168,9 +170,34 @@ public final class UsPushNotices {
             case "bacheca":
                 return notice(en, "US. · Bacheca", "US. · Board",
                     "US vi ha appeso un ricordo in bacheca ♡", "US pinned a memory on your board ♡", "ricordi");
+            // Come stai che conta (27/11/2026): the gesture to my Come stai, like a Ti penso.
+            case "status_reply":
+                return status(en, who + " ha risposto al tuo Come stai ♡", who + " answered how you are ♡");
+            case "status_abbraccio":
+                return status(en, who + ": Ti mando un abbraccio", who + ": Sending you a hug");
+            case "status_riposati":
+                return status(en, who + ": Riposati", who + ": Get some rest");
+            case "status_respira":
+                return status(en, who + ": Respira, ci sono io", who + ": Breathe, I’m here");
+            case "status_cuore":
+                return status(en, who + " ti manda un cuore ♡", who + " sends you a heart ♡");
+            case "status_festa":
+                return status(en, who + ": 🎉", who + ": 🎉");
+            case "status_forza":
+                return status(en, who + ": Forza!", who + ": You’ve got this!");
+            case "status_spacca":
+                return status(en, who + ": Spacca tutto!", who + ": Crush it!");
+            case "status_buon_viaggio":
+                return status(en, who + ": Buon viaggio", who + ": Safe travels");
+            case "status_buon_appetito":
+                return status(en, who + ": Buon appetito", who + ": Enjoy your meal");
             default:
                 return new Notice(FALLBACK_TITLE, FALLBACK_BODY, "oggi");
         }
+    }
+
+    private static Notice status(boolean en, String bodyIt, String bodyEn) {
+        return notice(en, "US. · Come stai", "US. · How are you", bodyIt, bodyEn, "oggi");
     }
 
     private static Notice notice(boolean en, String titleIt, String titleEn, String bodyIt, String bodyEn, String page) {

@@ -283,6 +283,25 @@ final class UsWidgetContract {
         }
     }
 
+    /**
+     * Widget signal "status" (Come stai che conta, 27/11/2026, D13): the
+     * snapshot with the other person's Come stai replaced, validated like the
+     * app's (statusPerson), then normalized again. Null without a snapshot or
+     * a state; my own Come stai and the owner stay.
+     */
+    static JSONObject withPartnerStatus(JSONObject snapshot, JSONObject status) {
+        if (snapshot == null || status == null) return null;
+        try {
+            JSONObject next = new JSONObject(snapshot.toString());
+            JSONObject all = optObject(next, "status");
+            all.put("partner", statusPerson(status));
+            next.put("status", all);
+            return normalize(next);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     static JSONObject optObject(JSONObject parent, String key) {
         JSONObject value = parent == null ? null : parent.optJSONObject(key);
         return value == null ? new JSONObject() : value;

@@ -1,24 +1,39 @@
-/* Come stai (02/11/2026): the pill in Oggi beside the distance, and the sheet
-   with the twelve states (or the words' form, from Settings). */
-#home #homeHero .og-row .us-status-pill:not([hidden]){
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  min-height:40px;
-  padding:0 13px;
-  border:1px solid var(--us-color-line-strong);
-  border-radius:999px;
-  background:var(--dc-oggi-glass);
-  -webkit-backdrop-filter:blur(10px);
-  backdrop-filter:blur(10px);
-  color:var(--us-color-text);
-  font:600 13px/1 var(--us-font-ui);
-  white-space:nowrap;
-}
-#home #homeHero .og-row .us-status-pill [hidden]{display:none}
-#home #homeHero .og-row .us-status-pill [data-status-partner]:not([hidden])+[data-status-mine]::before{content:"·";content:"·" / "";margin-right:6px;color:var(--us-color-text-2)}
-#home #homeHero .og-row .us-status-pill[data-mine="none"] [data-status-mine]{color:var(--us-color-text-2)}
+/* Come stai (tavola «Come stai di US», 27/11/2026): Oggi's second row, the
+   twelve (or the words' form) and the other person's sheet. The row is one
+   item that never wraps (member-status.js fit()); its basis is its smallest
+   form, so it takes the lines the old pill took. Paper labels in both lights,
+   the gesture in ceralacca; 40 px like every pill of the row, 44 px to tap. */
+#home #homeHero .og-row .us-status-group:not([hidden]){display:flex;flex:1 1 var(--us-status-basis,100%);min-width:0;align-items:center;gap:5px;flex-wrap:nowrap;overflow:hidden;padding:3px;margin:-3px}
+#home #homeHero .us-status-group [hidden]{display:none!important}
+#home #homeHero .us-status-group>button{position:relative;display:inline-flex;align-items:center;gap:6px;flex:none;height:40px;padding:0 13px;border:1px solid rgba(35,27,29,.1);border-radius:999px;background:#fbf7f0;box-shadow:0 4px 12px rgba(18,13,17,.14);color:#231b1d;font:600 13px/1 var(--us-font-ui);white-space:nowrap}
+#home #homeHero .us-status-group>button{cursor:pointer}
+#home #homeHero .us-status-group>button::after{content:"";position:absolute;inset:-2px 0}
+#home #homeHero .us-status-group>button:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
+#home #homeHero .us-status-her{flex:0 1 auto!important;min-width:120px;padding:0 10px 0 5px!important}
+#home #homeHero .us-status-group[data-shrink="off"] .us-status-her{flex-shrink:0!important}
+#home #homeHero .us-status-face{flex:none;display:grid;place-items:end center;width:28px;height:28px;border-radius:50%;overflow:hidden;background:#efe8f7}
+#home #homeHero .us-status-face svg{display:block;width:26px;height:auto;margin-bottom:-2px}
+#home #homeHero .us-status-her-text{display:flex;flex:1 1 auto;align-items:baseline;gap:4px;min-width:0;overflow:hidden}
+#home #homeHero .us-status-her-text b{flex:0 100 auto;min-width:2.2em;overflow:hidden;text-overflow:ellipsis;font-weight:800}
+#home #homeHero .us-status-her-text span{flex:0 1 auto;min-width:3.2em;overflow:hidden;text-overflow:ellipsis;color:#4a3d42}
+#home #homeHero .us-status-chev{flex:none;color:#6b5f5a;font-weight:800}
+#home #homeHero .us-status-her[data-state="none"] .us-status-chev{display:none}
+#home #homeHero .us-status-act{background:#b8432f!important;border-color:transparent!important;color:#fff!important;font-weight:800!important;box-shadow:0 4px 14px rgba(184,67,47,.4)!important}
+#home #homeHero .us-status-act[data-sent="true"]{background:#fbe3e8!important;color:#a3274a!important;box-shadow:none!important;cursor:default}
+#home #homeHero .us-status-pill .us-status-dot{display:none;width:7px;height:7px;border-radius:50%;background:#ff7c96;animation:us-status-dot 1.4s ease-in-out infinite}
+#home #homeHero .us-status-pill[data-mine="none"] .us-status-dot{display:inline-block}
+#home #homeHero .us-status-pill[data-mine="none"] :is(.us-status-mine-word,.us-status-change,[data-status-mine-emoji]){display:none}
+#home #homeHero .us-status-pill .us-status-change{color:#6b5f5a;font:700 12px/1 var(--us-font-ui)}
+@keyframes us-status-dot{50%{transform:scale(1.6);opacity:.5}}
+:root[data-us-motion="reduced"] #home #homeHero .us-status-pill .us-status-dot{animation:none}
+@media (prefers-reduced-motion:reduce){#home #homeHero .us-status-pill .us-status-dot{animation:none}}
+#home #homeHero .us-status-got{background:#fbe3e8!important;color:#a3274a!important;font-weight:700!important;box-shadow:none!important}
+/* No room: words go, a level at a time (fit: data-fit holds every level reached, «1234…»). */
+#home #homeHero .us-status-group[data-fit*="1"] .us-status-change,#home #homeHero .us-status-group[data-fit*="2"] .us-status-got-word,#home #homeHero .us-status-group[data-fit*="3"] .us-status-mine-word,#home #homeHero .us-status-group[data-fit*="4"] .us-status-pill[data-mine="set"] [data-status-mine],#home #homeHero .us-status-group[data-fit*="5"] .us-status-pill[data-mine="none"] [data-status-mine],#home #homeHero .us-status-group[data-got="true"][data-fit*="6"] .us-status-pill,#home #homeHero .us-status-group[data-fit*="7"] :is(.us-status-her-text,.us-status-chev),#home #homeHero .us-status-group[data-fit*="8"] .us-status-act [data-act-word]{display:none}
+#home #homeHero .us-status-group[data-fit*="4"] .us-status-pill{padding:0 12px}
+#home #homeHero .us-status-group[data-fit*="7"] .us-status-her{min-width:0;padding:0 5px!important}
 
+/* ---------- the sheets ---------- */
 .us-status-overlay [hidden]{display:none!important}
 .us-status-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:end;justify-content:center}
 .us-status-overlay[aria-hidden="false"]{display:flex}
@@ -27,12 +42,12 @@
 .us-status-head .tiny{color:var(--us-noi,#d98be0);font-size:10px;font-weight:700;letter-spacing:.16em}
 .us-status-head h2{margin:6px 0 0;font:500 28px/1.1 var(--us-font-editorial)}
 .us-status-head .us-modal-close{min-width:44px;min-height:44px}
-.us-status-partner{margin:10px 0 0;color:var(--us-color-text-2);font-size:14px}
-.us-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
-.us-status-choice{display:grid;justify-items:center;gap:4px;min-height:84px;padding:10px 6px;border:1px solid var(--us-color-line);border-radius:20px;background:rgba(247,239,233,.04);color:var(--us-color-text);font:500 13px/1.2 var(--us-font-ui);text-align:center;cursor:pointer}
-.us-status-emoji{font-size:30px;line-height:1.1}
+.us-status-note{margin:6px 0 0;color:var(--us-color-text-2);font-size:13px;line-height:1.45}
+.us-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.us-status-group-head{grid-column:1/-1;margin:6px 2px 0;color:var(--us-color-text-3);font:800 10px/1.2 var(--us-font-ui);letter-spacing:.16em;text-transform:uppercase}
+.us-status-choice{display:grid;justify-items:center;gap:4px;min-height:76px;padding:9px 6px;border:1px solid var(--us-color-line);border-radius:20px;background:rgba(247,239,233,.04);color:var(--us-color-text);font:500 13px/1.2 var(--us-font-ui);text-align:center;cursor:pointer}
+.us-status-emoji{font-size:28px;line-height:1.1}
 .us-status-choice[aria-pressed="true"]{border-color:color-mix(in srgb,var(--us-rosa,#ff7c96) 70%,transparent);background:color-mix(in srgb,var(--us-rosa,#ff7c96) 14%,transparent)}
-.us-status-note{margin:14px 0 0;color:var(--us-color-text-3);font-size:12px;line-height:1.45}
 .us-status-clear{display:block;min-height:44px;margin:8px auto 0;padding:0 18px;border:0;background:none;color:var(--us-color-text-2);font:600 14px var(--us-font-ui);text-decoration:underline;cursor:pointer}
 .us-status-lead{margin:10px 0 16px;color:var(--us-color-text-2);font-size:15px;line-height:1.5}
 .us-status-forms{display:grid;gap:10px}
@@ -41,3 +56,26 @@
 .us-status-form small{color:var(--us-color-text-2);font-size:13px}
 .us-status-form[aria-pressed="true"]{border-color:color-mix(in srgb,var(--us-noi,#d98be0) 70%,transparent);background:color-mix(in srgb,var(--us-noi,#d98be0) 12%,transparent)}
 @media (prefers-reduced-motion:reduce){.us-status-overlay *{animation:none!important;transition:none!important}}
+
+/* The other person's sheet. */
+.us-status-person{display:flex;flex-direction:column;gap:10px}
+.us-status-person-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:2px 0 6px;text-align:center}
+.us-status-person-char svg{display:block;width:96px;height:auto}
+.us-status-person-card h2{margin:4px 0 0;font:400 24px/1.15 var(--us-font-display)}
+.us-status-person-card p{margin:0;color:var(--us-color-text-2);font:600 13px/1.3 var(--us-font-ui)}
+.us-status-person>button{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;padding:0 18px;border-radius:999px;font:800 15px/1.2 var(--us-font-ui);cursor:pointer}
+.us-status-respond{border:0;background:#b8432f;color:#fff}
+.us-status-respond[data-sent="true"]{background:#fbe3e8;color:#a3274a;cursor:default}
+.us-status-respond:disabled{opacity:1}
+.us-status-person-think{border:0;background:linear-gradient(90deg,var(--us-rosa,#ff7c96),var(--us-lilla,#a98bff));color:#1a1020}
+.us-status-person-voice{border:1px solid var(--us-color-line);background:transparent;color:var(--us-color-text)}
+.us-status-person>button:focus-visible,.us-status-trip button:focus-visible{outline:2px solid var(--us-noi,#d98be0);outline-offset:3px}
+
+/* D14: the Noi calendar offer. */
+.us-status-trip{margin:14px 0 0;padding:14px 16px;border:1px solid var(--us-color-line);border-radius:22px;background:rgba(247,239,233,.04)}
+.us-status-trip p{margin:0;color:var(--us-color-text);font:500 16px/1.35 var(--us-font-ui)}
+.us-status-trip-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.us-status-trip button{min-height:44px;padding:0 16px;border-radius:999px;font:600 14px var(--us-font-ui);cursor:pointer}
+.us-status-trip-yes{border:0;background:var(--us-noi,#d98be0);color:#1a1020}
+.us-status-trip-no{border:1px solid var(--us-color-line);background:none;color:var(--us-color-text-2)}
+#home #homeHero .og-row .home-distance-pill[data-us-trip="true"] b{font-style:italic}

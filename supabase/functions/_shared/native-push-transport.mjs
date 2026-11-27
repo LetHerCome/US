@@ -151,6 +151,24 @@ export const ANDROID_NOTICE_KINDS = Object.freeze({
   ricorda_anniversary_week: 'anniversary_week',
   ricorda_year_ago: 'year_ago',
   ricorda_bacheca: 'bacheca',
+  // Come stai che conta (27/11/2026): an answer to my Come stai. With a known
+  // gesture it travels as its own kind (ANDROID_STATUS_KINDS); this one is the
+  // generic «ha risposto al tuo Come stai» for anything else.
+  status_response: 'status_reply',
+});
+// Come stai che conta (27/11/2026, D7/D16): the gesture is an allow-listed
+// suffix of the kind, so the phone writes «Bea: Ti mando un abbraccio» itself.
+// Never a text, a name or an id: only one of these nine kinds.
+export const ANDROID_STATUS_KINDS = Object.freeze({
+  abbraccio: 'status_abbraccio',
+  riposati: 'status_riposati',
+  respira: 'status_respira',
+  cuore: 'status_cuore',
+  festa: 'status_festa',
+  forza: 'status_forza',
+  spacca: 'status_spacca',
+  buon_viaggio: 'status_buon_viaggio',
+  buon_appetito: 'status_buon_appetito',
 });
 // I cuori (27/11/2026): «Bea ti ha pensato 5 volte». A plural notification
 // picks the plural kind. An older app does not know the kind: the generic line.
@@ -170,7 +188,9 @@ const own = (map, key) => (Object.prototype.hasOwnProperty.call(map, key) ? map[
 export function fcmMessage(notification, device) {
   const installation = String(device?.installation_id || '').toLowerCase();
   if (!INSTALLATION_ID.test(installation)) throw new Error('native_installation_missing');
-  const kind = (notification?.plural === true && own(ANDROID_PLURAL_KINDS, notification?.type)) || own(ANDROID_NOTICE_KINDS, notification?.type);
+  const kind = (notification?.plural === true && own(ANDROID_PLURAL_KINDS, notification?.type))
+    || (notification?.type === 'status_response' && typeof notification?.gesture === 'string' && own(ANDROID_STATUS_KINDS, notification.gesture))
+    || own(ANDROID_NOTICE_KINDS, notification?.type);
   const times = androidTimes(kind, notification?.times);
   const data = kind ? { v: '2', installation, k: kind } : { v: '2', installation };
   if (times) data.n = times;
@@ -226,10 +246,32 @@ export const WIDGET_SIGNAL_LOOK = Object.freeze({
   day: /^#[0-9a-f]{6}$/,
 });
 const WIDGET_OWNER = /^[a-f0-9]{64}$/;
+// Come stai che conta (27/11/2026, D13): the other person's Come stai, as the
+// widget snapshot holds it (UsWidgetContract.statusPerson): one of the twelve
+// keys, the words' form and the server's two instants. Nothing else.
+export const WIDGET_SIGNAL_STATUS = Object.freeze({
+  status: /^(innamorato|felice|stanco|giu|nervoso|malato|festa|lavoro|studio|palestra|viaggio|tavola)$/,
+  form: /^(m|f)$/,
+});
+const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/;
+const isoInstant = (value) => {
+  if (typeof value !== 'string' || !ISO_INSTANT.test(value)) return '';
+  const ms = Date.parse(value);
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : '';
+};
 
-/** The allow-listed signal: {s:'look', shape, head, face, color, day} (unknown values empty) or {s:'clear'}. */
+/** The allow-listed signal: {s:'look', shape, head, face, color, day} (unknown values empty), {s:'status', status, form, at, until} or {s:'clear'}. */
 export function widgetSignal(input) {
   if (input?.s === 'clear') return Object.freeze({ s: 'clear' });
+  if (input?.s === 'status') {
+    const key = typeof input.status === 'string' && WIDGET_SIGNAL_STATUS.status.test(input.status) ? input.status : '';
+    const at = key ? isoInstant(input.at) : '';
+    const until = key ? isoInstant(input.until) : '';
+    const shown = Boolean(key && at && until);
+    const form = typeof input.form === 'string' && WIDGET_SIGNAL_STATUS.form.test(input.form) ? input.form : '';
+    // No state (or a broken one) travels as "nothing to show", never half a state.
+    return Object.freeze({ s: 'status', status: shown ? key : '', form, at: shown ? at : '', until: shown ? until : '' });
+  }
   if (input?.s !== 'look') throw new Error('widget_signal_invalid');
   const out = { s: 'look' };
   for (const [key, pattern] of Object.entries(WIDGET_SIGNAL_LOOK)) {
@@ -245,6 +287,7 @@ export function fcmSignalMessage(signal, device) {
   if (!INSTALLATION_ID.test(installation)) throw new Error('native_installation_missing');
   const clean = widgetSignal(signal);
   const clear = clean.s === 'clear';
+  const status = clean.s === 'status';
   return {
     message: {
       token: device.token,
@@ -252,9 +295,10 @@ export function fcmSignalMessage(signal, device) {
       android: {
         // Leaving matters more than a new hat: it may wake the phone.
         priority: clear ? 'HIGH' : 'NORMAL',
-        ttl: clear ? '604800s' : '86400s',
-        // A newer look replaces an older one still waiting.
-        collapse_key: clear ? 'us-widget-clear' : 'us-widget-look',
+        // A Come stai lasts twelve hours: never delivered after it is over.
+        ttl: clear ? '604800s' : status ? '43200s' : '86400s',
+        // A newer look (or Come stai) replaces an older one still waiting.
+        collapse_key: clear ? 'us-widget-clear' : status ? 'us-widget-status' : 'us-widget-look',
       },
     },
   };
@@ -264,13 +308,14 @@ export function fcmSignalMessage(signal, device) {
 export function apnsSignalRequest(signal, ownerHash, nowMs = Date.now()) {
   if (!WIDGET_OWNER.test(String(ownerHash || ''))) throw new Error('widget_owner_missing');
   const clean = widgetSignal(signal);
+  const life = clean.s === 'clear' ? 604800 : clean.s === 'status' ? 43200 : 86400;
   return {
     headers: {
       'apns-push-type': 'background',
       // Apple requires priority 5 for background pushes.
       'apns-priority': '5',
-      'apns-expiration': String(Math.floor(nowMs / 1000) + (clean.s === 'clear' ? 604800 : 86400)),
-      'apns-collapse-id': clean.s === 'clear' ? 'us-widget-clear' : 'us-widget-look',
+      'apns-expiration': String(Math.floor(nowMs / 1000) + life),
+      'apns-collapse-id': clean.s === 'clear' ? 'us-widget-clear' : clean.s === 'status' ? 'us-widget-status' : 'us-widget-look',
     },
     body: { aps: { 'content-available': 1 }, us: { v: Number(WIDGET_SIGNAL_VERSION), owner: ownerHash, widget: { ...clean } } },
   };

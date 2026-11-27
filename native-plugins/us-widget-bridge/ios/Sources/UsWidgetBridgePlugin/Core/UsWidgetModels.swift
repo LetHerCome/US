@@ -427,20 +427,22 @@ extension UsWidgetModels {
         return "da \(minutes / 60) ore"
     }
 
-    /// The face of the moment (personaggi.js reactionOf and FACE): asleep from
-    /// 22 to 6 on the phone's clock, else the face of Come stai, else happy;
-    /// and when it next changes.
+    /// The mood of the moment (personaggi.js reactionOf, FACE and THING): asleep
+    /// from 22 to 6 on the phone's clock, else their Come stai (its face and
+    /// what they hold, D8 of 27/11/2026), else happy; not feeling well never
+    /// falls asleep. UsCharacterShapes.draw turns a Come stai key into its
+    /// face and thing. And when it next changes.
     static func face(_ snapshot: [String: Any]?, me: Bool, now: Date, calendar: Calendar = .current) -> (face: String, next: Date?) {
         let hour = calendar.component(.hour, from: now)
         let today = calendar.startOfDay(for: now)
         let six = calendar.date(byAdding: .hour, value: 6, to: today) ?? now
         let ten = calendar.date(byAdding: .hour, value: 22, to: today) ?? now
         let edge = hour >= 22 ? (calendar.date(byAdding: .day, value: 1, to: six) ?? now) : hour < 6 ? six : ten
-        if hour >= 22 || hour < 6 { return ("dorme", edge) }
         let person = statusPerson(snapshot, me: me, now: now)
+        let next: Date? = person.shown ? [edge, person.nextChange].compactMap { $0 }.min() : edge
+        if hour >= 22 || hour < 6 { return (person.shown && person.key == "malato" ? "malato" : "dorme", next) }
         guard person.shown else { return ("felice", edge) }
-        let next = [edge, person.nextChange].compactMap { $0 }.min()
-        return (UsCharacterShapes.faceOf(person.key), next)
+        return (person.key, next)
     }
 
     // MARK: Lasciato per te

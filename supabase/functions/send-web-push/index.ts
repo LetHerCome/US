@@ -8,13 +8,14 @@ import { dispatchBachecaPostitPush, dispatchLavagnaPush, dispatchPostitPush } fr
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 import { buildNotification, deliverNotification, recipientLocale } from "../_shared/notification-core.mjs";
 import { nativeTransport } from "../_shared/native-push-env.ts";
-import { dispatchPartnerLook } from "../_shared/widget-signal-core.mjs";
+import { dispatchPartnerLook, dispatchPartnerStatus } from "../_shared/widget-signal-core.mjs";
+import { statusResponseEvent } from "../_shared/come-stai-push-core.mjs";
 
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,x-client-info,apikey,content-type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Content-Type": "application/json" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
-type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "lavagna" | "postit" | "bacheca_postit" | "challenge_photo" | "partner_look";
-const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "postit", "bacheca_postit", "challenge_photo", "partner_look"];
+type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "lavagna" | "postit" | "bacheca_postit" | "challenge_photo" | "partner_look" | "partner_status" | "status_response";
+const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "postit", "bacheca_postit", "challenge_photo", "partner_look", "partner_status", "status_response"];
 // US 1.0 (A2): a join older than this is not "just joined" (legacy couples, stale retries).
 const PARTNER_JOINED_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -43,6 +44,13 @@ Deno.serve(async (request) => {
       // colour, shape or outfit. A silent widget signal to the partner's phones,
       // the look read back from the server, one per couple_sync revision.
       return json(await dispatchPartnerLook(admin, { sender, partner, native: nativeTransport() }));
+    }
+
+    if (type === "partner_status") {
+      // Come stai che conta (27/11/2026, D13): the caller just changed their
+      // Come stai. The same silent widget signal, the state read back from the
+      // server, so the partner's widgets follow with US closed.
+      return json(await dispatchPartnerStatus(admin, { sender, partner, native: nativeTransport() }));
     }
 
     if (type === "think") {
@@ -147,7 +155,7 @@ Deno.serve(async (request) => {
     let recipientIds: string[] = [];
     let compose: ((locale: string) => Promise<ReturnType<typeof buildNotification>>) | null = null;
     let dedupeKey: string | null = null;
-    let prefKey: "today" | "bond" | null = null;
+    let prefKey: "today" | "bond" | "think" | null = null;
     if (type === "test") {
       recipientIds = [sender.id];
       compose = async (locale) => buildNotification("test", { locale });
@@ -254,6 +262,19 @@ Deno.serve(async (request) => {
       recipientIds = [partner.id];
       compose = async (locale) => buildNotification("partner_joined", { senderName: sender.display_name, locale });
       dedupeKey = `partner-joined:${sender.couple_id}`;
+    }
+    if (type === "status_response") {
+      // Come stai che conta (27/11/2026, D7/D16): the caller just answered the
+      // partner's Come stai (respond_member_status). The gesture is read back
+      // from the partner's row, one push per state, like a Ti penso: it always
+      // goes, even while the partner is at work (D11).
+      if (!partner) return json({ delivered: 0, reason: "no-recipient" });
+      const event = await statusResponseEvent(admin, { sender, partner });
+      if ("reason" in event) return json({ delivered: 0, reason: event.reason });
+      recipientIds = [partner.id];
+      compose = async (locale) => buildNotification("status_response", { senderName: sender.display_name, gesture: event.gesture, locale });
+      dedupeKey = event.dedupeKey;
+      prefKey = "think";
     }
     if (!recipientIds.length || !compose) return json({ delivered: 0, reason: "no-recipient" });
     if (prefKey) {

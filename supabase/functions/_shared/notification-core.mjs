@@ -54,6 +54,21 @@ const DAILY_REACTION_COPY = Object.freeze({
   heart: (n, en) => pick(en, `${n} ha messo ♥ alla tua risposta`, `${n} left a ♥ on your answer`),
   cry: (n, en) => pick(en, `${n}: mi hai fatto commuovere`, `${n}: you moved me`),
 });
+// Come stai che conta (27/11/2026, D7/D16): the gesture answering my Come
+// stai, like a Ti penso («Bea: Ti mando un abbraccio»). The same nine as the
+// SQL (respond_member_status) and member-status.js GESTURES.
+export const STATUS_GESTURES = Object.freeze(['abbraccio', 'riposati', 'respira', 'cuore', 'festa', 'forza', 'spacca', 'buon_viaggio', 'buon_appetito']);
+const STATUS_REPLY_COPY = Object.freeze({
+  abbraccio: (n, en) => pick(en, `${n}: Ti mando un abbraccio`, `${n}: Sending you a hug`),
+  riposati: (n, en) => pick(en, `${n}: Riposati`, `${n}: Get some rest`),
+  respira: (n, en) => pick(en, `${n}: Respira, ci sono io`, `${n}: Breathe, I’m here`),
+  cuore: (n, en) => pick(en, `${n} ti manda un cuore ♡`, `${n} sends you a heart ♡`),
+  festa: (n) => `${n}: 🎉`,
+  forza: (n, en) => pick(en, `${n}: Forza!`, `${n}: You’ve got this!`),
+  spacca: (n, en) => pick(en, `${n}: Spacca tutto!`, `${n}: Crush it!`),
+  buon_viaggio: (n, en) => pick(en, `${n}: Buon viaggio`, `${n}: Safe travels`),
+  buon_appetito: (n, en) => pick(en, `${n}: Buon appetito`, `${n}: Enjoy your meal`),
+});
 function relationshipCopy(a, en) {
   const months = Number(a.months);
   if (a.kind === 'anniversary') {
@@ -147,6 +162,8 @@ const CATALOGUE = Object.freeze({
   ricorda_anniversary_week: (a, en) => ({ ...RICORDA, body: pick(en, `Tra una settimana fate ${yearsCopy(a.years, en)} insieme. Ci pensiamo? ♡`, `One week until ${yearsCopy(a.years, en)} together. Shall we plan something? ♡`) }),
   ricorda_year_ago: (a, en) => ({ ...RICORDA, body: yearAgoCopy(a, en) }),
   ricorda_bacheca: (a, en) => ({ ...RICORDA, title: pick(en, 'US. · Bacheca', 'US. · Board'), body: bachecaCopy(a, en) }),
+  // Come stai che conta: one answer per state (tag per person, a newer one replaces it). Opens Oggi.
+  status_response: (a, en) => ({ title: pick(en, 'US. · Come stai', 'US. · How are you'), body: own(STATUS_REPLY_COPY, a.gesture)?.(name(a.senderName, en), en) || pick(en, `${name(a.senderName)} ha risposto al tuo Come stai ♡`, `${name(a.senderName, true)} answered how you are ♡`), target: 'home', tag: 'us-status-response', channel: 'partner', urgency: 'high', gesture: own(STATUS_REPLY_COPY, a.gesture) ? a.gesture : null }),
   // A2: the partner accepted the invite; sent once, to the creator.
   // L'invito che si rinnova (27/11/2026): to whoever still waits, day 1 and day 3.
   invite_reminder: (a, en) => ({ title: 'US.', body: Number(a.day) >= 3
@@ -185,6 +202,9 @@ export function buildNotification(type, args = {}) {
     // times, 2..99, only on a plural notification; 0 otherwise. Android gets
     // it as the one numeric field n of the plural kinds (native-push-transport.mjs).
     times: raw.plural === true && Number.isFinite(raw.times) ? Math.max(2, Math.min(99, Math.floor(raw.times))) : 0,
+    // Come stai che conta (27/11/2026): the gesture of a status_response, one
+    // of STATUS_GESTURES or null; Android turns it into its own kind.
+    gesture: type === 'status_response' && STATUS_GESTURES.includes(raw.gesture) ? raw.gesture : null,
   };
   if (!notification.title || !notification.body) throw new Error('notification_copy_missing');
   if (!NOTIFICATION_TARGETS.includes(notification.target)) throw new Error('notification_target_invalid');
