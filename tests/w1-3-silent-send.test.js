@@ -175,7 +175,9 @@ test('heart: invio subito dal receiver, animazione in una finestrella non esport
   assert.match(provider, /!model\.canSend \? UsWidgets\.open\(context, "think", 4101\) : model\.busy \? sendIntent\(context\) : heartIntent\(context\)/);
   assert.match(provider, /setOnClickPendingIntent\(R\.id\.us_widget_root,\s*heart\)/);
   assert.match(provider, /PendingIntent\.getBroadcast/);
-  assert.match(heart, /super\.onCreate\(savedInstanceState\);\s*\/\/[^\n]*\n\s*sendBroadcast\(new Intent\(this, UsThinkWidgetActionReceiver\.class\)\.setAction\(UsThinkWidgetActionReceiver\.ACTION_SEND_THINK\)\);/);
+  // Ti penso ×N (27/11/2026): the tap reaches the receiver first; taps on the heart count too.
+  assert.match(heart, /super\.onCreate\(savedInstanceState\);\s*\/\/[^\n]*\n\s*tap\(\);/);
+  assert.match(heart, /private void tap\(\) \{\s*sendBroadcast\(new Intent\(this, UsThinkWidgetActionReceiver\.class\)\.setAction\(UsThinkWidgetActionReceiver\.ACTION_SEND_THINK\)\);/);
   assert.doesNotMatch(heart, /HttpURLConnection|UsWidgetActionClient|token/i, 'the animation never sends by itself');
   assert.match(widgets, /PendingIntent\.getActivity/);
   assert.match(widgets, /Intent\.ACTION_VIEW,\s*Uri\.parse\("us:\/\/widget\/"/);
@@ -214,7 +216,7 @@ test('Ti penso dal widget va all’Edge della build che ha emesso la credential,
   assert.match(endpoints, /PROJECTS = \{ "iiakdfsxpywdkxravqjh" \}/);
   assert.doesNotMatch(endpoints, /dugmhngrfkuieeletatb/);
   assert.match(endpoints, /return \(base\.isEmpty\(\) \? PRODUCTION : base\) \+ "\/widget-think-send";/);
-  assert.match(read(`${W}/UsThinkWidgetActionReceiver.java`), /new UsWidgetActionClient\(\)\.send\(credentials\.functionsBase\(owner\), token, actionId\)/);
+  assert.match(read(`${W}/UsThinkWidgetActionReceiver.java`), /new UsWidgetActionClient\(\)\.send\(credentials\.functionsBase\(owner\), token, id, taps\)/);
   assert.match(read(`${W}/UsWidgetCredentialStore.java`), /return UsWidgetEndpoints\.functionsBase\(payload\.optString\("functionsUrl", ""\)\);/);
   const bridge = read(`${W}/UsWidgetBridgePlugin.java`);
   assert.match(bridge, /boolean addressOk = functionsUrl\.isEmpty\(\) \|\| !UsWidgetEndpoints\.functionsBase\(functionsUrl\)\.isEmpty\(\);/);
@@ -240,7 +242,7 @@ test('feedback widget: «Ricambiato · adesso» al tocco, Riprova se non parte; 
   const models = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetModels.java');
   const heart = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsThinkHeartActivity.java');
   assert.match(provider, /UsWidgetModels\.think\(/);
-  assert.match(models, /out\.line = action\.optBoolean\("reply", false\) \? "Ricambiato" : "Inviato";\s*out\.when = "adesso";/);
+  assert.match(models, /out\.line = \(action\.optBoolean\("reply", false\) \? "Ricambiato" : "Inviato"\) \+ times\(out\.taps\);\s*out\.when = "adesso";/);
   assert.match(models, /Riprova/);
   assert.doesNotMatch(provider + models, /AnimationDrawable|ObjectAnimator|ValueAnimator/);
   // The app's heart (UsUiFoundation.heart): .72, 1.3, .96 in 440 ms; the wave in 420 ms.
