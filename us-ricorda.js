@@ -154,7 +154,7 @@
         const text = sentence(b, partnerName());
         if (!text) return;
         // The board's news opens the board itself; the others open the line's sheet.
-        const ok = w.UsAngolo.parla({ text, speaker: b.speaker, cta: action(b, partnerName()).label, onTap: () => (b.kind === 'bacheca' ? run(b) : openSheet(b)), onHold: b.kind === 'bacheca' ? undefined : () => askMute(b) });
+        const ok = w.UsAngolo.parla({ text, speaker: b.speaker, cta: action(b, partnerName()).label, onTap: () => (b.kind === 'bacheca' ? run(b) : openSheet(b)), onHold: () => askMute(b) });
         if (!ok) return;
         current = b;
         store(SAID(), JSON.stringify({ day, kind: b.kind, ref: b.ref_key, id: b.id || null }));

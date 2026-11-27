@@ -184,9 +184,8 @@ function bindSurface(){
   $('noiEventsAdd')?.addEventListener('click',()=>openEventEditor(null));
 }
 function render(){
-  const upcoming=upcomingRows(),due=dueRows(),done=completedRows();const list=$('usEventsList'),count=$('usEventsCount'),card=$('usNextEventCard'),dot=$('usCalendarDot');
+  const upcoming=upcomingRows(),due=dueRows(),done=completedRows();const list=$('usEventsList'),count=$('usEventsCount'),card=$('usNextEventCard');
   if(count)count.textContent=upcoming.length?`${upcoming.length} ${upcoming.length===1?'evento':'eventi'}`:'';
-  if(dot)dot.hidden=!(upcoming[0]&&upcoming[0].days_left<=7);
   if(!upcoming.length){if(card)card.hidden=true;if(list)list.innerHTML='<div class="us-events-empty"><b>Niente in programma</b></div>';}
   else{
     const next=upcoming[0];if(card){card.hidden=false;card.classList.toggle('us-next-relationship',Boolean(next.system));card.dataset.id=next.system?'':next.id;card.onclick=next.system?null:()=>editEvent(next.id,next.effective_date);$('usNextEventTitle').textContent=next.title;$('usNextEventDate').textContent=capFirst(formatDate(next.effective_date))+(next.event_time?` · ${String(next.event_time).slice(0,5)}`:'');$('usNextEventCountdown').textContent=next.system&&next.awarded?'Festeggiato':countdownLower(next.days_left);}

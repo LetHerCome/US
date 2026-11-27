@@ -85,6 +85,15 @@ function payload(n,{keep=true}={}){
   return {title:String(n?.title||'').slice(0,LIMITS.title),body:String(n?.body||'').slice(0,LIMITS.body),items:keep?list:list.filter(i=>i.text.trim()),color:colorOf(n)};
 }
 function newId(){return Math.random().toString(36).slice(2,10)||'i';}
+// A new post-it's own id, made here once: a retry after a lost answer finds
+// the row it already made instead of a copy (as the lavagna's strokes).
+function noteId(c=globalThis.crypto){
+  if(typeof c?.randomUUID==='function')return c.randomUUID();
+  const b=new Uint8Array(16);c.getRandomValues(b);b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;
+  const h=[...b].map(x=>x.toString(16).padStart(2,'0')).join('');
+  return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`;
+}
+const duplicateKey=e=>String(e?.code||'')==='23505'||/duplicate key/i.test(String(e?.message||''));
 function sortNotes(list){return [...list].sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));}
 // On Noi: the most recent post-its, at most six; the others on the board.
 function boardNotes(list,{max=ON_NOI}={}){
@@ -280,6 +289,14 @@ function install(w){
     if(f.day!==yesterday){try{label=new Date(`${f.day}T12:00:00Z`).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',timeZone:'Europe/Rome'});label=label.charAt(0).toUpperCase()+label.slice(1);}catch(_){label=f.day;}}
     const duo=w.UsPersonaggi?.character?['francesco','beatrice'].map(r=>w.UsPersonaggi.character(r,{size:72,reaction:f.step==='photo'?'cuore':undefined})).join(''):'';
     void today;
+    // My yes, the other one still missing: the idea is not done yet (no photo).
+    if(f.step==='waiting')return `<li class="us-fatto" data-fatto>
+      <span class="us-fatto-grab" aria-hidden="true"></span>
+      <div class="us-fatto-duo" aria-hidden="true">${duo}</div>
+      <h2 class="us-fatto-title" translate="no">Ora manca ${esc(partnerName())}</h2>
+      <p class="us-fatto-q">Quando dice di sì anche ${esc(partnerName())}, «${esc(f.title)}» va tra le idee fatte.</p>
+      <div class="us-fatto-actions"><button type="button" class="us-fatto-yes" data-focus-close>Va bene</button></div>
+    </li>`;
     if(f.step==='photo')return `<li class="us-fatto" data-fatto>
       <span class="us-fatto-grab" aria-hidden="true"></span>
       <div class="us-fatto-duo" aria-hidden="true">${duo}</div>
@@ -293,7 +310,7 @@ function install(w){
       <h2 class="us-fatto-title" translate="no">${esc(label)}, ${esc(f.title)}</h2>
       <p class="us-fatto-q">${f.partnerSaid?`L’avete fatto? ${esc(partnerName())} dice di sì.`:'L’avete fatto?'}</p>
       <div class="us-fatto-actions"><button type="button" class="us-fatto-yes" data-fatto-yes>Sì, l’abbiamo fatto</button><button type="button" class="us-fatto-no" data-fatto-later>Non ancora, scegliamo un altro giorno</button></div>
-      <p class="us-fatto-note">Con un sì l’idea diventa fatta e vi propone una foto in Ricordi. Ve lo chiede una volta sola.</p>
+      <p class="us-fatto-note">${f.partnerSaid?'Con il tuo sì l’idea diventa fatta e vi propone una foto in Ricordi.':`Dopo il tuo sì manca quello di ${esc(partnerName())}: con tutti e due l’idea diventa fatta.`} Ve lo chiede una volta sola.</p>
     </li>`;
   }
   let askTimer=0;
@@ -312,8 +329,9 @@ function install(w){
     const f=fatto;if(!f)return;
     const ok=await w.UsDaVivere?.markLived?.(f.id);
     if(fatto!==f)return;
-    if(ok===false){fatto=null;paintFocus();return;}
-    fatto={...f,step:'photo'};
+    if(!ok){fatto=null;paintFocus();return;}
+    // The photo only for an idea really lived (both said yes).
+    fatto={...f,step:ok==='proposed'?'waiting':'photo'};
     if(focusList)focusList.innerHTML='';
     paintFocus();
   }
@@ -639,10 +657,16 @@ function install(w){
       if(target.id){
         res=await client.from('couple_notes').update(data).eq('id',target.id).select(cols()).maybeSingle();
         // Deleted meanwhile by the partner: kept, as a new note.
-        if(!res.error&&!res.data){target.id=null;res=null;}
+        if(!res.error&&!res.data){target.id=null;target.newId='';res=null;}
       }
       let created=false;
-      if(!res){res=await client.from('couple_notes').insert({...data,couple_id:w.usProfile.couple_id}).select(cols()).single();created=true;}
+      if(!res){
+        target.newId=target.newId||noteId(w.crypto);
+        res=await client.from('couple_notes').insert({...data,id:target.newId,couple_id:w.usProfile.couple_id}).select(cols()).single();
+        // Already made by a try whose answer was lost: it takes the words of now.
+        if(duplicateKey(res.error))res=await client.from('couple_notes').update(data).eq('id',target.newId).select(cols()).single();
+        created=true;
+      }
       if(res.error)throw res.error;
       // Noi, Fase B.3 (D15): a new post-it tells your person once it is closed.
       if(created)target.fresh=true;
@@ -913,5 +937,5 @@ function install(w){
   // «Le vostre idee» in front, from Il vostro angolo (Per crescere insieme).
   api.ideas=openIdeas;
 }
-return {entryDay,dueDone,ideaState,when,isEmpty,closeVerdict,fullRow,summary,payload,sortNotes,boardNotes,byColor,byAuthor,tilt,ideaLines,colorOf,placesFor,placePayload,sameWords,missingPlace,COLORS,LIMITS,ON_NOI,ON_BOARD,SPOTS,NOI_SPOTS,install};
+return {entryDay,dueDone,ideaState,noteId,duplicateKey,when,isEmpty,closeVerdict,fullRow,summary,payload,sortNotes,boardNotes,byColor,byAuthor,tilt,ideaLines,colorOf,placesFor,placePayload,sameWords,missingPlace,COLORS,LIMITS,ON_NOI,ON_BOARD,SPOTS,NOI_SPOTS,install};
 });

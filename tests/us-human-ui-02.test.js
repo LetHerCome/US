@@ -367,7 +367,8 @@ test('no new dependencies', () => {
 test('Gioca density: played Per voi, game grid and weekly question use compact hub geometry', () => {
   const css = read('games.css');
   assert.match(css, /US-GIOCA-DENSITY-01/);
-  assert.match(css, /#quiz \.us-gv2-pervoi\[data-gv2-state="played"\]\{[\s\S]*?min-height:64px/);
+  // The old Per voi hero (.us-gv2-pervoi) left Gioca; its styles went on 27/11/2026.
+  assert.doesNotMatch(css, /\.us-gv2-pervoi\b/);
   assert.match(css, /US-GIOCA-V3/);
   assert.match(css, /#quiz \.us-gv2-game-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(css, /#quiz \.us-gv2-game\.is-swipe\{[^}]*grid-column:1\/-1/, 'Swipe stands out without taking the page');

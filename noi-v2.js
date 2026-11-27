@@ -21,9 +21,10 @@ const weekdays = tag === 'it-IT' ? [['L','lunedì'],['M','martedì'],['M','merco
   : named(7, i => new Date(Date.UTC(2024, 0, 1 + i, 12)), {weekday:'narrow'}).map((short, i) => [short, new Date(Date.UTC(2024, 0, 1 + i, 12)).toLocaleDateString(tag, {weekday:'long', timeZone:'UTC'})]);
 const pad = n => String(n).padStart(2,'0');
 const iso = (y,m,d) => `${y}-${pad(m+1)}-${pad(d)}`;
-const today = () => {const d=new Date();return iso(d.getFullYear(),d.getMonth(),d.getDate());};
+// Today is the Europe/Rome day, as for the rest of US (Gioca, the post-its, the server).
+const today = () => {try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(_){const d=new Date();return iso(d.getFullYear(),d.getMonth(),d.getDate());}};
 const dateOf = value => {const [y,m,d]=String(value).split('-').map(Number);return new Date(y,m-1,d,12);};
-const currentMonth = () => {const d=new Date();return [d.getFullYear(),d.getMonth()];};
+const currentMonth = () => {const [y,m]=today().split('-').map(Number);return [y,m-1];};
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const icon = name => `<span class="us-icon" data-us-icon="${name}" aria-hidden="true"></span>`;
 let [year,month] = currentMonth();
