@@ -42,7 +42,7 @@
       case 'prima_volta': return v.place ? `La prima volta a ${v.place}` : 'Una prima volta';
       case 'storia': return 'Un pezzo della vostra storia';
       case 'un_anno_fa': return v.place ? `Un anno fa, a ${v.place}` : 'Un anno fa, oggi';
-      case 'traguardo': return v.what === 'anni' ? `${v.count} ${Number(v.count) === 1 ? 'anno' : 'anni'} insieme` : `${v.count} ricordi insieme`;
+      case 'traguardo': return v.what === 'anni' ? (Number(v.count) === 1 ? `${v.count} anno insieme` : `${v.count} anni insieme`) : `${v.count} ricordi insieme`;
       case 'tenuta': return 'Tenuta da voi';
       case 'settimana': return 'Il ricordo della settimana';
       default: return '';
@@ -219,7 +219,7 @@
       const c = pin.content || {};
       const title = pin.source === 'moment' ? (c.caption || c.place || 'Un ricordo') : pin.source === 'traguardo' ? postit({ ...pin, by_us: true }) : pin.source === 'keepsake' ? (c.question || 'Una risposta tenuta') : 'Una lettera tenuta';
       $('usBachecaSheetTitle').textContent = String(title).slice(0, 80);
-      $('usBachecaSheetWhy').textContent = pin.by_us ? `Appesa da US${postit(pin) ? `: ${postit(pin).toLowerCase()}` : ''}. Trascinala per spostarla: diventa vostra.` : (pin.mine ? 'Appesa da te.' : 'Appesa da voi.');
+      $('usBachecaSheetWhy').textContent = pin.by_us ? (postit(pin) ? `Appesa da US: ${postit(pin).toLowerCase()}. Trascinala per spostarla: diventa vostra.` : 'Appesa da US. Trascinala per spostarla: diventa vostra.') : (pin.mine ? 'Appesa da te.' : 'Appesa da voi.');
       const fix = s.querySelector('[data-ub-act="fix"]');
       if (fix) fix.textContent = pin.fixed ? 'Lascia decidere a US' : 'Fissa: US non la toglie più';
       const open = s.querySelector('[data-ub-act="open"]');

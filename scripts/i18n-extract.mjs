@@ -9,8 +9,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const collapse = (text) => text.replace(/\s+/g, ' ').trim();
@@ -29,7 +30,7 @@ function looksLikeText(text) {
   if (!text || text.length < 2 || !/[A-Za-zÀ-ÿ]{2}/.test(text)) return false;
   if (/^(https?:|\/|#|\.|\[|data:|[a-z-]+:[a-z]|--)/.test(text)) return false;
   if (/^[a-z0-9_.:-]+$/.test(text) || /^[a-z]+[A-Z][A-Za-z]+$/.test(text)) return false;
-  if (/[{};=]|=>|\(\)|\bfunction\b|\bselect\b.*\bfrom\b/i.test(text) && !/\{[a-z]+\}/.test(text)) return false;
+  if (/[{};=]|=>|\(\)|\bfunction\b|\bselect\b.*\bfrom\b/i.test(text) && !/\{[a-z]+\d*\}/.test(text)) return false;
   return ITALIAN.test(text) || WORD.test(text);
 }
 

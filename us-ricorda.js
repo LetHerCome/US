@@ -17,8 +17,11 @@
   const PRIORITY = Object.freeze({ presentazione: 0, compleanno: 1, anniversario: 1, ti_aspetta: 2, bacheca: 2.5, un_anno_fa: 3, mesiversario: 4, giorni: 4, traguardo: 4, conoscervi: 5 });
   const hash = (s) => { let h = 2166136261; for (const c of String(s || '')) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; };
   const pick = (list, key) => list[hash(key) % list.length];
-  const years = (n) => (n === 1 ? 'un anno' : `${n} anni`);
-  const longDate = (iso) => { try { return new Date(`${iso}T12:00:00Z`).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' }); } catch (_) { return iso || ''; } };
+  // The date in the app's language (UsI18n.tag), with or without the year.
+  const tag = () => (typeof window !== 'undefined' && window.UsI18n?.tag) || 'it-IT';
+  const longDate = (iso, { year = true } = {}) => { try { return new Date(`${iso}T12:00:00Z`).toLocaleDateString(tag(), { day: 'numeric', month: 'long', ...(year ? { year: 'numeric' } : {}), timeZone: 'Europe/Rome' }); } catch (_) { return iso || ''; } };
+  // «un anno» or «N anni» are written out in each sentence, so every sentence is
+  // one entry of the English dictionary (i18n-en.js).
 
   // The sentences (D15): short, warm, with «tu», never a reproach, no emoji.
   // v: the line's values; p: the partner's name.
@@ -28,10 +31,12 @@
       case 'compleanno':
         if (v.days === 0) return [`Oggi è il compleanno di ${v.name}. Un pensiero vale tantissimo.`, `Oggi compie gli anni ${v.name}. Gliel'hai già detto?`, `È il compleanno di ${v.name}: è la sua giornata.`, `Oggi festeggiamo ${v.name}. Un messaggio, una foto, una voce.`, `Buon compleanno a ${v.name}! Diglielo tu, come sai fare.`];
         if (v.days === 1) return [`Domani è il compleanno di ${v.name}. Hai già un'idea?`, `Manca un giorno al compleanno di ${v.name}.`, `Domani compie gli anni ${v.name}. Ci siamo quasi.`, `Promemoria piccolo: domani è il compleanno di ${v.name}.`, `Domani è il giorno di ${v.name}. Pronto?`];
-        return [`Tra 7 giorni è il compleanno di ${v.name}. Ci pensiamo insieme?`, `Una settimana al compleanno di ${v.name}. C'è tempo per una sorpresa.`, `Il ${longDate(v.date).replace(/ \d{4}$/, '')} è il compleanno di ${v.name}: mancano 7 giorni.`, `Tra una settimana compie gli anni ${v.name}. Hai già in mente qualcosa?`, `Segnalo io: tra 7 giorni è il compleanno di ${v.name}.`];
+        return [`Tra 7 giorni è il compleanno di ${v.name}. Ci pensiamo insieme?`, `Una settimana al compleanno di ${v.name}. C'è tempo per una sorpresa.`, `Il ${longDate(v.date, { year: false })} è il compleanno di ${v.name}: mancano 7 giorni.`, `Tra una settimana compie gli anni ${v.name}. Hai già in mente qualcosa?`, `Segnalo io: tra 7 giorni è il compleanno di ${v.name}.`];
       case 'anniversario':
-        if (v.days === 0) return [`Oggi fate ${years(v.years)} insieme.`, `${years(v.years)[0].toUpperCase()}${years(v.years).slice(1)} di voi due. Buon anniversario!`, `È il vostro anniversario: ${years(v.years)} insieme.`, `Oggi è il vostro giorno: ${years(v.years)}.`, `Buon anniversario! ${years(v.years)[0].toUpperCase()}${years(v.years).slice(1)} di cose vostre.`];
-        return [`Tra una settimana fate ${years(v.years)} insieme. Prepariamo qualcosa per ${p}?`, `Manca una settimana al vostro anniversario. Un'idea per ${p}?`, `Tra 7 giorni sono ${years(v.years)}. Resta tra noi due.`, `Una settimana all'anniversario: c'è tempo per una sorpresa.`, `Tra una settimana è il vostro giorno. Ci pensiamo?`];
+        if (v.days === 0) return v.years === 1
+          ? ['Oggi fate un anno insieme.', 'Un anno di voi due. Buon anniversario!', 'È il vostro anniversario: un anno insieme.', 'Oggi è il vostro giorno: un anno.', 'Buon anniversario! Un anno di cose vostre.']
+          : [`Oggi fate ${v.years} anni insieme.`, `${v.years} anni di voi due. Buon anniversario!`, `È il vostro anniversario: ${v.years} anni insieme.`, `Oggi è il vostro giorno: ${v.years} anni.`, `Buon anniversario! ${v.years} anni di cose vostre.`];
+        return [v.years === 1 ? `Tra una settimana fate un anno insieme. Prepariamo qualcosa per ${p}?` : `Tra una settimana fate ${v.years} anni insieme. Prepariamo qualcosa per ${p}?`, `Manca una settimana al vostro anniversario. Un'idea per ${p}?`, v.years === 1 ? 'Tra 7 giorni sono un anno. Resta tra noi due.' : `Tra 7 giorni sono ${v.years} anni. Resta tra noi due.`, `Una settimana all'anniversario: c'è tempo per una sorpresa.`, `Tra una settimana è il vostro giorno. Ci pensiamo?`];
       case 'mesiversario': return [`Oggi sono ${v.months} mesi insieme.`, `${v.months} mesi di voi due. Buon mesiversario!`, `Un mese in più: oggi sono ${v.months}.`, `Buon mesiversario! ${v.months} mesi, e non è che l'inizio.`, `Oggi fate ${v.months} mesi.`];
       case 'giorni': return [`Oggi sono ${v.days} giorni insieme.`, `${v.days} giorni di voi due.`, `Contati uno a uno: ${v.days} giorni.`, `Oggi fate ${v.days} giorni insieme. Non male!`, `Un numero tondo: ${v.days} giorni.`];
       case 'un_anno_fa':
@@ -48,7 +53,7 @@
       case 'bacheca':
         // La vostra bacheca (25/11/2026): what US pinned on the board.
         if (v.reason === 'un_anno_fa') return v.place ? [`Vi ho appeso una foto in bacheca: un anno fa eravate a ${v.place}.`, `In bacheca c'è ${v.place}, un anno fa.`, `Ho messo in bacheca un ricordo di un anno fa: ${v.place}.`] : ['Vi ho appeso in bacheca un ricordo di un anno fa.', "In bacheca c'è una foto di un anno fa.", 'Un anno fa, oggi: ve l\'ho appeso in bacheca.'];
-        if (v.reason === 'traguardo') return v.what === 'anni' ? [`In bacheca c'è un timbro nuovo: ${years(v.count)} insieme.`, `Ho appeso i vostri ${years(v.count)} in bacheca.`] : [`In bacheca c'è un timbro nuovo: ${v.count} ricordi.`, `Ho appeso i vostri ${v.count} ricordi in bacheca.`];
+        if (v.reason === 'traguardo') return v.what === 'anni' ? (v.count === 1 ? ["In bacheca c'è un timbro nuovo: un anno insieme.", 'Ho appeso i vostri un anno in bacheca.'] : [`In bacheca c'è un timbro nuovo: ${v.count} anni insieme.`, `Ho appeso i vostri ${v.count} anni in bacheca.`]) : [`In bacheca c'è un timbro nuovo: ${v.count} ricordi.`, `Ho appeso i vostri ${v.count} ricordi in bacheca.`];
         if (v.reason === 'tenuta') return ['Ho appeso in bacheca una cosa che avete tenuto.', "In bacheca c'è una cosa vostra di questa settimana."];
         return ['Ho appeso in bacheca il ricordo della settimana.', "In bacheca c'è il ricordo più bello della settimana.", 'Ho sistemato la bacheca: guarda il ricordo della settimana.'];
       case 'ti_aspetta':
@@ -66,7 +71,7 @@
     const v = b.vars || {};
     switch (b.kind) {
       case 'compleanno': return { label: v.days === 0 ? `Scrivi a ${v.name}` : 'Prepara qualcosa', go: 'lfy', text: v.days === 0 ? 'Tanti auguri ♡' : '' };
-      case 'anniversario': return { label: v.days === 0 ? `Scrivi a ${partner}` : 'Prepara una sorpresa', go: 'lfy', text: v.days === 0 ? `${years(v.years)[0].toUpperCase()}${years(v.years).slice(1)} di noi ♡` : '' };
+      case 'anniversario': return { label: v.days === 0 ? `Scrivi a ${partner}` : 'Prepara una sorpresa', go: 'lfy', text: v.days === 0 ? (v.years === 1 ? 'Un anno di noi ♡' : `${v.years} anni di noi ♡`) : '' };
       case 'mesiversario': return { label: `Scrivi a ${partner}`, go: 'lfy', text: `${v.months} mesi di noi ♡` };
       case 'giorni': return { label: `Scrivi a ${partner}`, go: 'lfy', text: `${v.days} giorni di noi ♡` };
       case 'un_anno_fa': return { label: `Mandalo a ${partner}`, go: v.source === 'moment' && v.path ? 'lfy-photo' : 'lfy', text: `Ti ricordi? ${v.place || v.title || ''}${v.date ? ` · ${longDate(v.date)}` : ''} ♡`.replace('?  ·', '?') };
@@ -215,6 +220,8 @@
     }
     async function run(b) {
       const a = action(b, partnerName());
+      // The ready text goes into a field, which the page translation leaves alone.
+      if (a.text && typeof w.usT === 'function') a.text = w.usT(a.text);
       if (b.id) db()?.rpc('mark_my_battuta_v1', { p_id: b.id, p_action: 'done' }).then(() => {}, () => {});
       closeSheet();
       const v = b.vars || {};
@@ -223,7 +230,7 @@
         case 'lfy-photo': if (!(await attachPhoto(v.path, a.text))) w.UsLeftForYou?.openComposer?.({ kind: 'text', text: a.text }); break;
         case 'moments': w.go?.('moments', { nav: true }); break;
         case 'compose': w.go?.('moments', { nav: true }); setTimeout(() => w.UsMomentComposer?.open?.(), 80); break;
-        case 'birthday': w.go?.('bond', { nav: true }); setTimeout(() => w.openEventEditor?.(null, null, { title: `Compleanno di ${a.name || ''}`.trim() }), 80); break;
+        case 'birthday': w.go?.('bond', { nav: true }); setTimeout(() => w.openEventEditor?.(null, null, { title: (typeof w.usT === 'function' ? w.usT : String)(`Compleanno di ${a.name || ''}`.trim()) }), 80); break;
         case 'daily': w.openToday?.(); break;
         case 'games': w.openQuizHub?.({ nav: true }); break;
         case 'bacheca': w.go?.('moments', { nav: true }); setTimeout(() => w.UsRicordiPlace?.setView?.('board'), 80); break;

@@ -2,6 +2,17 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Inglese completo (27/11)
+
+**Stato:** ramo `claude/inglese-mancanti` (sopra `claude/intro-crea-personaggio`), verso staging.
+
+**Cosa cambia:**
+- Con il telefono in inglese non restano più frasi in italiano nell'intro col personaggio (anche la nuova parte «crea»: forme, colori, «Gli accessori arrivano dopo…», «Eccomi!…»), nelle battute di US vi ricorda e nella loro scheda, nella bacheca tenuta da US, nei temi ed effetti di Oggi (nomi, descrizioni, cosa fa il dito), nei countdown, nel guardaroba e nell'angolo, nel widget Post-it e in Noi («Vi rivedete tra», «Oggi vi vedete», il giorno speciale). Circa 270 voci nuove nel dizionario inglese.
+- In inglese le date delle battute escono in inglese («December 2»), e il testo già pronto di Lasciato per te e il titolo «Compleanno di…» arrivano tradotti.
+- In italiano non cambia nulla: le frasi sono le stesse, solo scritte intere (con e senza nome, «un anno» e «N anni») perché il dizionario le trovi.
+- Un test nuovo (`tests/i18n-coverage.test.js`) fallisce se in quei file compare una frase italiana senza la sua voce inglese. Lo script `scripts/i18n-extract.mjs` ora gira anche su Windows e vede anche le frasi con una parte che cambia.
+- Il dizionario cresce di ~24 KB: il budget della precache (3,45 MB) si supera di ~21 KB finché non entra il ramo che toglie i file delle Stories.
+
 ### Intro: prima crei il tuo personaggio (27/11)
 
 **Stato:** ramo `claude/intro-crea-personaggio`, verso staging. Chiesto dal founder dopo la prova dell'APK di staging: «aggiungi nell'intro una parte che … ti fa scegliere il personaggio prima del tutorial … senza il guardaroba che si sblocca dopo». Nessuna migrazione: usa `set_my_character_shape` e `set_my_color` che ci sono già.
