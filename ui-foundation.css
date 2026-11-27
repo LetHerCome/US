@@ -578,6 +578,7 @@ h1,h2,h3{font-family:var(--us-font-editorial)}
 .us-icon[data-us-icon="caret-down"]{--us-icon-src:url("/assets/icons/phosphor/caret-down-regular.svg")}
 .us-icon[data-us-icon="plus"]{--us-icon-src:url("/assets/icons/phosphor/plus-regular.svg")}
 .us-icon[data-us-icon="bell"]{--us-icon-src:url("/assets/icons/phosphor/bell-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/bell-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="magnifying-glass"]{--us-icon-src:url("/assets/icons/phosphor/magnifying-glass-regular.svg")}
 .us-icon[data-us-icon="map-pin"]{--us-icon-src:url("/assets/icons/phosphor/map-pin-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/map-pin-fill.svg");--us-icon-tint-alpha:.5}
 .us-icon[data-us-icon="battery-low"]{--us-icon-src:url("/assets/icons/phosphor/battery-low-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/battery-low-fill.svg");--us-icon-tint-alpha:.5}
 .us-icon[data-us-icon="battery-medium"]{--us-icon-src:url("/assets/icons/phosphor/battery-medium-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/battery-medium-fill.svg");--us-icon-tint-alpha:.5}

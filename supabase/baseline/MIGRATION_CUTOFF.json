@@ -71,6 +71,7 @@
     "20261127093507_ricorda_push_cron.sql",
     "20261127093508_prima_settimana.sql",
     "20261127120000_us_battute_mute_bacheca.sql",
+    "20261127122511_bacheca_postit_ricerca.sql",
     "20261127130000_premi_apostrofi.sql"
   ],
   "forward_migrations": [
@@ -138,6 +139,7 @@
     "20261127093507_ricorda_push_cron.sql",
     "20261127093508_prima_settimana.sql",
     "20261127120000_us_battute_mute_bacheca.sql",
+    "20261127122511_bacheca_postit_ricerca.sql",
     "20261127130000_premi_apostrofi.sql"
   ],
   "counts": {

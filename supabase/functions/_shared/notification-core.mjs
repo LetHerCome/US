@@ -23,7 +23,8 @@ export const NOTIFICATION_SCHEMA_VERSION = 1;
 // app maps each to a surface. There is no URL in the contract.
 // US 1.0: 'events' opens Eventi (mesiversario / anniversario).
 // Lavagna V1 (03/11/2026): 'lavagna' opens the board in Noi.
-export const NOTIFICATION_TARGETS = Object.freeze(['home', 'today', 'think', 'left_for_you', 'quiz', 'bond', 'calendar', 'events', 'lavagna']);
+// La bacheca, fase 2 (27/11/2026): 'bacheca' opens the board of Ricordi on a thing.
+export const NOTIFICATION_TARGETS = Object.freeze(['home', 'today', 'think', 'left_for_you', 'quiz', 'bond', 'calendar', 'events', 'lavagna', 'bacheca']);
 export const NOTIFICATION_CHANNELS = Object.freeze(['partner', 'reminders']);
 export const NOTIFICATION_CATEGORIES = Object.freeze(['think']);
 // US 1.0: the copy follows the RECIPIENT's profiles.locale; anything but 'en'
@@ -133,6 +134,9 @@ const CATALOGUE = Object.freeze({
   // Noi, Fase B.3 (D15): a new post-it on the lavagna, same tag as the drawing
   // (one line for the board), it opens the board too.
   postit: (a, en) => ({ title: pick(en, 'US. · Lavagna', 'US. · Board'), body: pick(en, `${name(a.senderName)} ti ha lasciato un post-it`, `${name(a.senderName, true)} left you a sticky note`), target: 'lavagna', ref: a.noteId, tag: 'us-lavagna', channel: 'partner', urgency: 'normal' }),
+  // La bacheca, fase 2 (27/11/2026): a post-it of the partner on a thing of the
+  // board. Never its text; ref is the post-it, the app centres the board on its thing.
+  bacheca_postit: (a, en) => ({ title: pick(en, 'US. · Bacheca', 'US. · Board'), body: pick(en, `${name(a.senderName)} ha scritto su un ricordo in bacheca`, `${name(a.senderName, true)} wrote on a memory on your board`), target: 'bacheca', ref: a.noteId, tag: 'us-bacheca-postit', channel: 'partner', urgency: 'normal' }),
   // La sfida della settimana (03/11/2026): Monday its title, Saturday a
   // reminder, and for a couple apart the other one's photo. They open Gioca.
   challenge_new: (a, en) => ({ title: CHALLENGE_TITLE(en), body: a.title || pick(en, 'C’è una nuova sfida per voi ♡', 'There is a new challenge for you two ♡'), target: 'quiz', ref: a.challengeId, tag: `challenge-new-${a.challengeId}`, channel: 'reminders', urgency: 'normal' }),

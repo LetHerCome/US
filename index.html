@@ -742,7 +742,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
           <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
         </div>
       </div>
-      <div class="ricordi-section-head ricordi-story-head"><h3 id="ricordiStoryTitle" class="noi-sr">Mese per mese</h3><div class="ricordi-views" role="tablist" aria-label="Come vedere i Ricordi"><button type="button" role="tab" data-ricordi-view="story" aria-selected="true">Raccolta</button><button type="button" role="tab" data-ricordi-view="board" aria-selected="false">Bacheca</button><button type="button" role="tab" data-ricordi-view="map" aria-selected="false">Mappa</button></div></div>
+      <div class="ricordi-section-head ricordi-story-head"><h3 id="ricordiStoryTitle" class="noi-sr">Mese per mese</h3><div class="ricordi-views" role="tablist" aria-label="Come vedere i Ricordi"><button type="button" role="tab" data-ricordi-view="story" aria-selected="true">Raccolta</button><button type="button" role="tab" data-ricordi-view="board" aria-selected="false">Bacheca</button><button type="button" role="tab" data-ricordi-view="map" aria-selected="false">Mappa</button></div><button type="button" class="ricordi-lens" data-ricordi-cerca aria-label="Cerca nei ricordi" aria-haspopup="dialog"><span class="us-icon" data-us-icon="magnifying-glass" aria-hidden="true"></span></button></div>
       <div class="ricordi-map" id="ricordiMap" aria-label="Mappa dei Ricordi" hidden></div>
       <div class="ricordi-bacheca" id="ricordiBacheca" aria-label="La vostra bacheca, tenuta da US" hidden></div>
       <div id="momentsGrid" class="moment-grid ricordi-story" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div></div>
@@ -1434,6 +1434,19 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
   </section>
 </div>
 
+<!-- La lente di Ricordi (founder, 27/11/2026): the search, month by month, and a result with «Sulla bacheca» (ricordi-cerca.js).
+     Before the board's sheet, which opens over it. -->
+<div class="us-cal-sheet-overlay us-foglio us-ricordi-cerca" id="usRicordiCerca" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-cal-sheet-backdrop us-modal-backdrop" data-rc-close></div>
+  <section class="us-cal-sheet us-sheet is-bottom rc-sheet" role="dialog" aria-modal="true" aria-label="Cerca nei ricordi" data-us-modal-panel>
+    <div class="rc-bar">
+      <label class="rc-field"><span class="us-icon" data-us-icon="magnifying-glass" aria-hidden="true"></span><input id="usRicordiCercaInput" type="search" enterkeyhint="search" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Cerca un posto, una parola, un mese" aria-label="Cerca nei ricordi"></label>
+      <button type="button" class="rc-close" data-rc-close>Chiudi</button>
+    </div>
+    <div class="rc-body" id="usRicordiCercaBody"></div>
+  </section>
+</div>
+
 <!-- La vostra bacheca (founder, 25/11/2026): what to do with a thing on the board (bacheca.js). -->
 <div class="us-cal-sheet-overlay us-bacheca-sheet" id="usBachecaSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="us-cal-sheet-backdrop us-modal-backdrop" data-ub-act="close"></div>
@@ -1446,6 +1459,8 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
       <button type="button" data-ub-act="unpin">Stacca: torna al suo posto</button>
       <button type="button" class="is-never" data-ub-act="ban">Non appenderla più</button>
     </div>
+    <!-- Fase 2 (27/11/2026): the post-its of the thing, and yours. -->
+    <div class="ub-notes-sec" id="usBachecaNotes"></div>
   </section>
 </div>
 
