@@ -84,6 +84,31 @@
     }
   }
 
+  // Come stai che conta (founder, 27/11/2026, D8): what you hold or wear while
+  // your Come stai says so. The same steps are in UsCharacterShapes.java and
+  // .swift (thingOf, thing), so the widgets draw them too. Never while asleep.
+  const THING = Object.freeze({ lavoro: 'valigetta', studio: 'libro', palestra: 'fascia', viaggio: 'valigia', tavola: 'forchetta', malato: 'termometro' });
+  const ink = (p, sw, c = INK) => `<path d="${p}" fill="none" stroke="${c}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  function thingSvg(thing, shape) {
+    const s = SHAPES[shape], an = ANCHOR[shape];
+    if (!s || !an) return '';
+    const y = s.ey, r = an.ears[1];
+    switch (thing) {
+      case 'valigetta': return ink('M5 75 V72 Q5 69 8 69 H12 Q15 69 15 72 V75', 2.4) + lp('M1 77 Q1 75 3 75 H17 Q19 75 19 77 V91 Q19 93 17 93 H3 Q1 93 1 91 Z', '#9B6A43', 2.4) + ink('M1 82 H19', 1.6) + lp('M8.5 80.5 H11.5 V83.5 H8.5 Z', '#F3D27A', 1.2);
+      case 'valigia': return ink('M6 70 V60 H14 V70', 2.4) + lp('M0 72 Q0 70 2 70 H18 Q20 70 20 72 V92 Q20 94 18 94 H2 Q0 94 0 92 Z', '#F3A64B', 2.4) + ink('M6 73 V91 M14 73 V91', 2, '#D9822B') + lp(`${ell(4, 96, 2.2, 2.2)} ${ell(16, 96, 2.2, 2.2)}`, '#3A3446', 1.4);
+      case 'libro': return `<g transform="rotate(-12 10 84)">${lp('M1 74 H17 Q19 74 19 76 V92 Q19 94 17 94 H1 Z', '#A98BFF', 2.4)}${ink('M4 91 H17', 2.4, '#FFFDF9')}${ink('M6 79 H14 M6 83 H12', 1.8, '#FFFDF9')}</g>`;
+      case 'forchetta': return lp('M7 70 H11 V92 Q11 94 9 94 Q7 94 7 92 Z', '#D7DCE3', 2) + ink('M4 57 V65 M9 57 V65 M14 57 V65', 2.6) + ink('M4 64 Q4 70 9 70 Q14 70 14 64', 2.6);
+      case 'fascia': {
+        scarfClips();
+        const y0 = y - 18;
+        return `<g clip-path="url(#usc-${shape})"><path d="M0 ${y0} Q50 ${y0 - 4} 110 ${y0} V${y0 + 7} Q50 ${y0 + 3} 0 ${y0 + 7} Z" fill="#FF5A7A" stroke="${INK}" stroke-width="2.2"/><path d="M0 ${y0 + 3.5} Q50 ${y0 - 0.5} 110 ${y0 + 3.5}" fill="none" stroke="#FFFFFF" stroke-width="1.6"/></g>`
+          + lp(`M${r - 7} ${y0 + 3} l9 -6 l2 7 Z`, '#FF5A7A', 1.8) + lp(`M${r - 7} ${y0 + 4} l10 3 l-4 6 Z`, '#FF5A7A', 1.8);
+      }
+      case 'termometro': return ink(`M53 ${y + 12} L68 ${y + 5}`, 5.4) + ink(`M53 ${y + 12} L68 ${y + 5}`, 3, '#FFFFFF') + ink(`M53 ${y + 12} L59 ${y + 9.2}`, 3, '#E8484A') + lp(ell(53, y + 12, 2.6, 2.6), '#E8484A', 1.4);
+      default: return '';
+    }
+  }
+
   // ---------------------------------------------------------------- who is who
   const profiles = () => {
     try { return w?.UsCoupleContext?.snapshot?.()?.profiles || []; } catch (_) { return []; }
@@ -139,6 +164,11 @@
     if (mine) {
       const at = Date.parse(w?.usThinkLastReceivedAt || '');
       if (Number.isFinite(at) && now.getTime() - at >= 0 && now.getTime() - at < REACTION_HOURS * 3600e3) return 'cuore';
+      // Come stai che conta (D7/D16): the other person answered my Come stai.
+      let reply = null;
+      try { reply = w?.UsMemberStatus?.replyToMe?.({ now: now.getTime() }) || null; } catch (_) { reply = null; }
+      const got = Date.parse(reply?.at || '');
+      if (reply && Number.isFinite(got) && now.getTime() - got < REACTION_HOURS * 3600e3) return reply.gesture === 'festa' ? 'festa' : reply.gesture === 'cuore' ? 'cuore' : 'coccola';
     } else {
       const st = w?.todayState;
       if (w?.todayQuestion?.id && st?.partner_has_answer && st?.my_answer == null) return 'saluta';
@@ -154,6 +184,8 @@
   }
   function reactionFront(reaction, shape) {
     const s = SHAPES[shape];
+    // A little heart by the head: someone answered your Come stai with a hug, a «Forza!»…
+    if (reaction === 'coccola' && s && ANCHOR[shape]) { const [hx, hy] = ANCHOR[shape].head, x = hx + 24, y = hy + 2; return `<path class="us-char-coccola" d="M${x} ${y + 6} C${x - 9} ${y} ${x - 6} ${y - 8} ${x} ${y - 3} C${x + 6} ${y - 8} ${x + 9} ${y} ${x} ${y + 6} Z" fill="#FF7C96" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/>`; }
     if (reaction !== 'cuore' || !s) return '';
     const [a, b] = s.ex, y = s.ey;
     const heart = (x) => `M${x} ${y + 5} C${x - 9} ${y - 1} ${x - 6} ${y - 9} ${x} ${y - 4} C${x + 6} ${y - 9} ${x + 9} ${y - 1} ${x} ${y + 5} Z`;
@@ -168,9 +200,12 @@
     const shape = SHAPES[o.shape] ? o.shape : SHAPES[who?.shape] ? who.shape : shapeOf(role);
     const color = o.color || who?.color || colorVar(role);
     const s = SHAPES[shape], size = o.size || 56, [a, b] = s.ex, y = s.ey;
-    const reaction = o.reaction !== undefined ? o.reaction : (o.react && role ? reactionOf(role) : '');
     const mood = o.mood !== undefined ? o.mood : (role ? moodOf(role).status : '');
+    const asked = o.reaction !== undefined ? o.reaction : (o.react && role ? reactionOf(role) : '');
+    // Not feeling well never falls asleep at night (D8): the face of their state stays.
+    const reaction = asked === 'sera' && mood === 'malato' ? '' : asked;
     const face = reaction === 'sera' ? 'dorme' : reaction ? 'felice' : (FACE[mood] || 'felice');
+    const thing = o.thing !== undefined ? o.thing : (face === 'dorme' ? '' : THING[mood] || '');
     const shut = face === 'stanco' || face === 'innamorato' || face === 'dorme';
     const open = reaction === 'cuore' || shut ? [] : [a, b];
     const big = reaction === 'cuore' || reaction === 'festa';
@@ -193,6 +228,7 @@
       + `<path d="${mouth}" fill="${big ? '#7A2E3A' : face === 'dorme' ? INK : 'none'}" stroke="${face === 'dorme' && !big ? 'none' : INK}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`
       + reactionFront(reaction, shape)
       + (face === 'dorme' ? `<text x="84" y="36" font-family="Figtree,sans-serif" font-weight="800" font-size="19" fill="currentColor">z</text><text x="97" y="22" font-family="Figtree,sans-serif" font-weight="800" font-size="13" fill="currentColor">z</text>` : '')
+      + (thing ? `<g class="us-char-thing" data-thing="${thing}">${thingSvg(thing, shape)}</g>` : '')
       + dress
       + '</svg>';
   }
@@ -334,10 +370,10 @@
       const free = item === null || open.has(item);
       const name = item === null ? 'Niente' : LOOK_NAMES[item];
       const lock = free ? '' : lockOf(item);
-      const preview = character(role, { size: 44, reaction: '', head: slot === 'head' ? item : mine.head, face: slot === 'face' ? item : mine.face });
+      const preview = character(role, { size: 44, reaction: '', thing: '', head: slot === 'head' ? item : mine.head, face: slot === 'face' ? item : mine.face });
       return `<button type="button" class="us-look-chip${free ? '' : ' is-locked'}" data-us-look="${slot}:${item || ''}" aria-pressed="${on}"${free ? '' : ' aria-disabled="true"'} aria-label="${esc(free ? name : `${name}: si sblocca con ${lock}`)}">${preview}<span class="us-look-name">${esc(name)}</span>${lock ? `<small>${esc(lock)}</small>` : ''}</button>`;
     };
-    const shapeChip = (shape) => `<button type="button" class="us-look-chip" data-us-shape="${shape}" aria-pressed="${shape === shapeNow}">${character(role, { size: 44, reaction: '', shape })}<span class="us-look-name">${esc(SHAPE_NAMES[shape])}</span></button>`;
+    const shapeChip = (shape) => `<button type="button" class="us-look-chip" data-us-shape="${shape}" aria-pressed="${shape === shapeNow}">${character(role, { size: 44, reaction: '', thing: '', shape })}<span class="us-look-name">${esc(SHAPE_NAMES[shape])}</span></button>`;
     const next = Object.entries(LOOK_POINTS).filter(([item]) => !open.has(item)).sort((x, y) => x[1] - y[1])[0];
     let nextRow = '<p class="us-look-next"><b>Avete sbloccato tutto il guardaroba della Sintonia</b></p>';
     if (next) {
@@ -608,6 +644,12 @@
     w.addEventListener('us-identity-change', () => { paintAll(); maybePeek(); if (!w.usProfile?.couple_id) closeAngolo(); });
     // A Ti penso arrives (heart eyes), the points grow (the wardrobe), the question changes (a wave).
     w.addEventListener('us:think-updated', paintAll);
+    // Come stai changed (mine, theirs, an answer): the faces and the things follow at once
+    // (they waited for the minute's repaint before, 27/11/2026). The open angolo keeps its focus.
+    w.addEventListener('us:member-status-changed', () => {
+      paintMe(); paintIsola();
+      if (!angolo()?.classList.contains('open')) paintDuo();
+    });
     w.addEventListener('us:progression-updated', () => { paintWardrobe(); paintIsola(); maybePeek(); });
     d.addEventListener('click', (event) => {
       const target = event.target;
@@ -670,5 +712,5 @@
     w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla, cuoriVerso, riceviCuori, cuoriArrivo });
   }
 
-  return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, LOOK_HEAD, LOOK_FACE, LOOK_NAMES, LOOK_POINTS, LOOK_MOMENTS, character, slot, shapeOf, lookOf, colorName, myRole, reactionOf, unlockedLook, paintMe, paintDuo, paintWardrobe });
+  return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, THING, thingSvg, LOOK_HEAD, LOOK_FACE, LOOK_NAMES, LOOK_POINTS, LOOK_MOMENTS, character, slot, shapeOf, lookOf, colorName, myRole, reactionOf, unlockedLook, paintMe, paintDuo, paintWardrobe });
 });

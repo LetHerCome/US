@@ -515,6 +515,8 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
           <button type="button" class="home-distance-pill us-distance-capsule og-pill" id="distanceWidget" onclick="openDistanceDetail()" aria-haspopup="dialog" aria-label="Distanza tra voi" data-us-distance-state="unknown" hidden><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><b id="distanceValue"></b><span class="us-distance-battery" id="distanceBattery" hidden><span class="us-sr-only">Batteria:</span> <span class="us-sr-only" data-battery-name translate="no"></span> <span class="us-icon" data-us-icon="battery-high" data-battery-icon aria-hidden="true"></span><b data-battery-level></b><span class="us-sr-only" data-battery-charging hidden>in carica</span></span></button>
           <!-- Come stai (02/11/2026): the partner's state and mine; a tap opens the twelve. -->
           <button type="button" class="og-pill us-status-pill" id="usOggiStatus" aria-haspopup="dialog" aria-label="Come stai? Scegli" hidden><span data-status-partner translate="no" hidden></span><span data-status-mine>Come stai?</span></button>
+          <!-- Come stai che conta (27/11/2026, D7/D16): the gesture to the partner's state, one tap. -->
+          <button type="button" class="og-pill us-status-reply-pill" id="usOggiStatusReply" hidden></button>
         </div>
         <!-- The answers read, the card goes away with a swipe or with «Togli» (27/11/2026): it sits on the card's corner. -->
         <button type="button" class="us-daily-ritual-close" id="usDailyRitualClose" hidden aria-label="Togli la domanda di oggi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span><span>Togli</span></button>
@@ -604,6 +606,8 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
       <header class="us-status-head"><div><span class="tiny">COME STAI</span><h2 id="usStatusHeading">Come stai?</h2></div><button type="button" class="us-modal-close" data-us-modal-close data-status-close aria-label="Chiudi come stai"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
       <div data-status-panel="status">
         <p class="us-status-partner" id="usStatusPartnerLine" translate="no" hidden></p>
+        <!-- Come stai che conta (27/11/2026, D7/D16): one gesture that fits, once per state. -->
+        <button type="button" class="us-status-respond" id="usStatusRespond" hidden><span data-status-respond-label></span></button>
         <div class="us-status-grid" role="group" aria-label="Come stai">
           <button type="button" class="us-status-choice" data-status="innamorato" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🥰</span><span data-status-word>col cuore pieno</span></button>
           <button type="button" class="us-status-choice" data-status="felice" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😊</span><span data-status-word>felice</span></button>
@@ -620,6 +624,11 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
         </div>
         <p class="us-status-note" id="usStatusNote">Lo vede solo la tua persona, per 12 ore.</p>
         <button type="button" class="us-status-clear" id="usStatusClear" hidden>Togli</button>
+        <!-- D14: «In viaggio» chosen, the Noi calendar offered once (dismissable). -->
+        <div class="us-status-trip" id="usStatusTrip" role="group" aria-labelledby="usStatusTripText" hidden>
+          <p id="usStatusTripText">Lo segno nel calendario di Noi?</p>
+          <div class="us-status-trip-actions"><button type="button" class="us-status-trip-yes" id="usStatusTripYes">Sì, segnalo</button><button type="button" class="us-status-trip-no" id="usStatusTripNo">No, grazie</button></div>
+        </div>
       </div>
       <div data-status-panel="form" hidden>
         <p class="us-status-lead">Come vuoi le parole di «Come stai»? Vale per te, nell’app e nel widget.</p>

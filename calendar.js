@@ -1434,7 +1434,9 @@ async function prepareNoiEntryDate(dateISO){
     return true;
   }catch(error){console.warn('[US Calendar] prepare editor',error);window.toast?.('Calendario non disponibile. Riprova.');return false;}
 }
-async function createCalendarEntryForDate(dateISO) {
+// prefill (Come stai che conta, 27/11/2026, D14): { title, allDay } for a new
+// commitment, e.g. «In viaggio» today from Come stai; the person still saves it.
+async function createCalendarEntryForDate(dateISO, prefill = null) {
   if (!dateISO || !window.usProfile) return;
   // The plus is instant: render the existing editor first, then hydrate the
   // day's already-saved commitments without ever blocking the user's tap.
@@ -1444,6 +1446,12 @@ async function createCalendarEntryForDate(dateISO) {
   entries=[];
   selectedDate=dateISO;
   startCreateForDate(dateISO);
+  if (prefill && !pendingIdeaPick && !editingFormEntry) {
+    const title = $('usCalendarTitleInput');
+    if (title && typeof prefill.title === 'string') title.value = prefill.title.slice(0, 120);
+    const allDay = $('usCalendarAllDayInput');
+    if (allDay && prefill.allDay) { allDay.checked = true; toggleAllDayFields(); }
+  }
   void prepareNoiEntryDate(dateISO).then(ready=>{
     if(!ready||window.usProfile!==identity||formDateISO!==dateISO||editingFormEntry||!$('usCalendarFormSheet')?.classList.contains('open'))return;
     renderFormDay(dateISO,'create');

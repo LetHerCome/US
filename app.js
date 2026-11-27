@@ -1415,15 +1415,24 @@ function renderNoiDistance(model){
   link.setAttribute('aria-label',line.label);
 }
 
+// Come stai che conta (27/11/2026, D10): while the other person is «in
+// viaggio» the pill says so instead of the kilometres. The last model is kept
+// for member-status.js to repaint it when their Come stai changes.
+var usDistanceCapsuleModel=null;
+window.usRepaintDistanceCapsule=()=>{if(usDistanceCapsuleModel)renderDistanceCapsule(usDistanceCapsuleModel);};
 function renderDistanceCapsule(model){
+  usDistanceCapsuleModel=model;
   renderNoiDistance(model);
   const root=document.getElementById('distanceWidget');
   const value=document.getElementById('distanceValue');
   if(!root||!value)return;
   root.hidden=!model.visible;
   root.dataset.usDistanceState=model.state;
-  value.textContent=model.text||'';
-  root.setAttribute('aria-label',model.visible?(model.near?'Siete a meno di 3 km':`Distanza tra voi: ${model.text}`):'Distanza tra voi');
+  const trip=Boolean(model.visible&&window.UsMemberStatus?.partnerTraveling?.());
+  root.dataset.usTrip=trip?'true':'false';
+  value.textContent=trip?'in viaggio':(model.text||'');
+  const partner=window.UsIdentity?.current?.()?.partnerName||'La tua persona';
+  root.setAttribute('aria-label',trip?`${partner} è in viaggio`:model.visible?(model.near?'Siete a meno di 3 km':`Distanza tra voi: ${model.text}`):'Distanza tra voi');
   if(typeof syncOggiRow==='function')syncOggiRow();
   if (typeof Event === 'function' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(new Event('us:distance-changed'));
@@ -2138,9 +2147,30 @@ function syncOggiRow(){
   const next=document.getElementById('usOggiNext'),pill=document.getElementById('distanceWidget'),status=document.getElementById('usOggiStatus');
   row.hidden=Boolean((!next||next.hidden)&&(!pill||pill.hidden)&&(!status||status.hidden));
 }
+// Come stai che conta (27/11/2026, D10): the row may carry ONE light suggestion
+// from your two Come stai (member-status.js oggiHint), never over a commitment
+// of today. The last real model is kept, so the hint comes and goes by itself.
+var usOggiNextModel=null;
 function renderOggiNext(model){
   const button=document.getElementById('usOggiNext');
   if(!button)return;
+  usOggiNextModel=model||null;
+  const icon=button.querySelector('.us-icon');
+  const hint=model&&model.date===localDateISO()?null:window.UsMemberStatus?.oggiHint?.()||null;
+  if(hint){
+    document.getElementById('usOggiNextWhen').textContent='';
+    document.getElementById('usOggiNextTitle').textContent=hint.title;
+    button.dataset.usNextKind='hint';
+    button.dataset.usHint=hint.kind;
+    delete button.dataset.usEventId;button.dataset.usNextDate='';
+    if(icon)icon.dataset.usIcon=hint.icon;
+    button.setAttribute('aria-label',hint.title);
+    button.hidden=false;
+    syncOggiRow();
+    return;
+  }
+  delete button.dataset.usHint;
+  if(icon)icon.dataset.usIcon='calendar-blank';
   if(!model){button.hidden=true;button.removeAttribute('aria-label');syncOggiRow();return;}
   document.getElementById('usOggiNextWhen').textContent=model.when;
   document.getElementById('usOggiNextTitle').textContent=model.title;
@@ -2189,12 +2219,13 @@ async function refreshOggiNext({event,calendar}={}){
 // the event, or the Noi calendar on the mesiversario's day.
 document.getElementById('usOggiNext')?.addEventListener('click',event=>{
   const data=event.currentTarget?.dataset||{};
+  if(data.usNextKind==='hint'&&window.UsMemberStatus?.runHint?.(data.usHint))return;
   if(data.usNextKind==='calendar'&&data.usEventId&&window.UsCalendarLinks?.openEntry){window.UsCalendarLinks.openEntry(data.usEventId);return;}
   if(data.usNextKind==='event'&&data.usEventId&&typeof window.openEventEditor==='function'){window.go?.('bond',{nav:true});window.openEventEditor(data.usEventId,data.usNextDate||null);return;}
   if(data.usNextKind==='relationship'&&data.usNextDate&&window.openCalendarSurface){window.openCalendarSurface(data.usNextDate);return;}
   window.go?.('bond',{nav:true});
 });
-window.UsOggiNext=Object.freeze({viewModel:oggiNextEventViewModel,render:renderOggiNext,nearest:oggiNearestNext,refresh:refreshOggiNext});
+window.UsOggiNext=Object.freeze({viewModel:oggiNextEventViewModel,render:renderOggiNext,nearest:oggiNearestNext,refresh:refreshOggiNext,repaint:()=>renderOggiNext(usOggiNextModel)});
 
 // M6E — Oggi calendar widget + Focus Photo. A single small glass card, fed by
 // calendar.js's window.getOggiCalendarInsightSource() (which itself reuses

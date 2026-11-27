@@ -41,3 +41,38 @@
 .us-status-form small{color:var(--us-color-text-2);font-size:13px}
 .us-status-form[aria-pressed="true"]{border-color:color-mix(in srgb,var(--us-noi,#d98be0) 70%,transparent);background:color-mix(in srgb,var(--us-noi,#d98be0) 12%,transparent)}
 @media (prefers-reduced-motion:reduce){.us-status-overlay *{animation:none!important;transition:none!important}}
+
+/* Come stai che conta (27/11/2026). D7/D16: the gesture to the other person's
+   state, in the sheet under their line and as a small round action beside the
+   Oggi pill; after the tap «Mandato ♡». D14: the Noi calendar offer. */
+#home #homeHero .og-row .us-status-reply-pill:not([hidden]){
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:44px;
+  min-height:44px;
+  padding:0 12px;
+  border:1px solid var(--us-color-line-strong);
+  border-radius:999px;
+  background:var(--dc-oggi-glass);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  color:var(--us-color-text);
+  font:600 17px/1 var(--us-font-ui);
+  white-space:nowrap;
+  cursor:pointer;
+}
+#home #homeHero .og-row .us-status-reply-pill[data-sent="true"]{font-size:13px;color:var(--us-color-text-2)}
+#home #homeHero .og-row .us-status-reply-pill:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+.us-status-respond{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;margin:12px 0 0;padding:0 18px;border:1px solid color-mix(in srgb,var(--us-rosa,#ff7c96) 60%,transparent);border-radius:999px;background:color-mix(in srgb,var(--us-rosa,#ff7c96) 16%,transparent);color:var(--us-color-text);font:600 16px/1.2 var(--us-font-ui);cursor:pointer}
+.us-status-respond[data-gesture="festa"]:not([data-sent="true"]){font-size:24px}
+.us-status-respond[data-sent="true"]{border-color:var(--us-color-line);background:rgba(247,239,233,.04);color:var(--us-color-text-2);cursor:default}
+.us-status-respond[aria-disabled="true"]{cursor:default}
+.us-status-respond:focus-visible,.us-status-trip button:focus-visible{outline:2px solid var(--us-noi,#d98be0);outline-offset:3px}
+.us-status-trip{margin:14px 0 0;padding:14px 16px;border:1px solid var(--us-color-line);border-radius:22px;background:rgba(247,239,233,.04)}
+.us-status-trip p{margin:0;color:var(--us-color-text);font:500 16px/1.35 var(--us-font-ui)}
+.us-status-trip-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.us-status-trip button{min-height:44px;padding:0 16px;border-radius:999px;font:600 14px var(--us-font-ui);cursor:pointer}
+.us-status-trip-yes{border:0;background:var(--us-noi,#d98be0);color:#1a1020}
+.us-status-trip-no{border:1px solid var(--us-color-line);background:none;color:var(--us-color-text-2)}
+#home #homeHero .og-row .home-distance-pill[data-us-trip="true"] b{font-style:italic}

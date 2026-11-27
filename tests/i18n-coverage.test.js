@@ -10,7 +10,7 @@ const test = require('node:test');
 const I18n = require('../i18n.js');
 
 const ROOT = path.resolve(__dirname, '..');
-const FILES = ['intro.js', 'us-ricorda.js', 'bacheca.js', 'ricordi-cerca.js', 'oggi-look.js', 'personaggi.js', 'widget-hub.js', 'noi-v2.js'];
+const FILES = ['intro.js', 'us-ricorda.js', 'bacheca.js', 'ricordi-cerca.js', 'oggi-look.js', 'personaggi.js', 'widget-hub.js', 'noi-v2.js', 'member-status.js'];
 const ATTRS = ['placeholder', 'aria-label', 'title', 'alt'];
 const KEYS = /^(Escape|Tab|Enter|Backspace|Space|Arrow(Left|Right|Up|Down))$/;
 const ITALIAN = /[àèéìòù]|\b(il|lo|la|le|gli|un|una|uno|di|da|del|della|dei|delle|che|per|non|con|col|sono|siete|ancora|tua|tuo|tue|tuoi|vostr[aoie]|nostr[aoie]|questo|questa|qui|oggi|domani|insieme|cosa|come|quando|dove|niente|nessun[oa]?|ogni|prima|dopo|poi|più|già|anche|solo|tutto|tutti|tocca|ti|vi|ci|mi|si|ne|al|ai|alla|alle|nel|nella|sul|sulla|tra|fra|anni|anno|giorni|mesi|ricordi?|bacheca|foto|apri|chiudi|metti|scrivi|e|te|ha|hai|ho)\b/i;
