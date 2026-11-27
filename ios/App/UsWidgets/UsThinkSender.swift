@@ -11,9 +11,11 @@ enum UsWidgetActionClient {
         case rateLimited = "rate_limited"
     }
 
-    static func send(functionsBase: String, token: String, actionId: String) async -> Result {
+    /// taps (Ti penso ×N, 27/11/2026): the taps of the burst, 1..99; an older server ignores them and stores 1.
+    static func send(functionsBase: String, token: String, actionId: String, taps: Int = 1) async -> Result {
+        let payload: [String: Any] = ["actionId": actionId, "taps": max(1, min(UsWidgetModels.maxTaps, taps))]
         guard let url = URL(string: UsWidgetEndpoints.thinkSend(functionsBase)),
-              let body = try? JSONSerialization.data(withJSONObject: ["actionId": actionId]) else { return .failed }
+              let body = try? JSONSerialization.data(withJSONObject: payload) else { return .failed }
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 8)
         request.httpMethod = "POST"
         request.httpBody = body
@@ -49,6 +51,14 @@ enum UsWidgetActionClient {
 /// Sends "Ti penso" from the Home or Lock Screen with US closed (iOS twin of
 /// UsThinkWidgetActionReceiver.java). Double sends are prevented by the busy
 /// window re-checked on every tap and by retries that reuse the actionId.
+///
+/// Ti penso ×N (founder, 27/11/2026: «deve funzionare anche sul widget questa
+/// cosa ripetuta»): each tap is one intent. It counts itself in the App Group
+/// (UsWidgetStore.countTap, «×3» on the widget at once), waits
+/// UsWidgetModels.burst, and only the intent whose tap was the last one sends
+/// ONE Ti penso with all the taps (claimBurst); the others return without
+/// sending. The 99th tap sends at once. The intent stays well inside the
+/// time an App Intent may run (1.5 s plus a request of at most 10 s).
 enum UsThinkSender {
     static func send(now: Date = Date()) async {
         guard let store = UsWidgetStore.shared() else { return }
@@ -61,19 +71,26 @@ enum UsThinkSender {
         let model = UsWidgetModels.think(snapshot, action: action, hasCredential: !token.isEmpty, now: now)
         let lastSent = UsWidgetContract.instant(UsWidgetContract.string(action?["sentAt"]))
         let cooldown = lastSent.map { $0 <= now && now.timeIntervalSince($0) < UsWidgetModels.sendCooldown } ?? false
-        guard model.canSend, !model.busy, !cooldown else { return }
+        guard model.canSend, !model.busy, !cooldown || model.counting else { return }
 
-        let actionId = UsWidgetModels.actionId(previous: action, now: now)
-        // "Ricambiato" when the tap answers the partner's thought, "Inviato" otherwise.
+        // "Ricambiato" when the burst answers the partner's thought, "Inviato" otherwise.
         let reply = UsWidgetModels.unanswered(UsWidgetContract.object(snapshot?["think"]), action: action)
-        store.writeAction(status: "sending", actionId: actionId, reply: reply, now: now)
+        guard let counted = store.countTap(replyIfNew: reply, now: now) else { return }
         WidgetCenter.shared.reloadTimelines(ofKind: UsWidgetShared.widgetKind("think"))
 
-        let result = await UsWidgetActionClient.send(functionsBase: credentials.functionsBase(owner), token: token, actionId: actionId)
+        if !counted.tap.full {
+            try? await Task.sleep(nanoseconds: UInt64(UsWidgetModels.burst * 1_000_000_000))
+        }
+        // A later tap came: its own intent sends the burst.
+        guard let taps = store.claimBurst(actionId: counted.tap.actionId, tapId: counted.tapId) else { return }
+        WidgetCenter.shared.reloadTimelines(ofKind: UsWidgetShared.widgetKind("think"))
+
+        let result = await UsWidgetActionClient.send(functionsBase: credentials.functionsBase(owner), token: token,
+                                                     actionId: counted.tap.actionId, taps: taps)
         // Logout or account switch while the request was in flight: drop the result.
         guard store.owner() == owner else { return }
         if result == .unauthorized { credentials.clear() }
-        store.writeAction(status: result.rawValue, actionId: actionId)
+        store.writeAction(status: result.rawValue, actionId: counted.tap.actionId)
         WidgetCenter.shared.reloadTimelines(ofKind: UsWidgetShared.widgetKind("think"))
     }
 }

@@ -24,6 +24,8 @@ enum UsWidgetContract {
         let think: [String: Any] = [
             "partnerName": text(string(thinkIn["partnerName"]), 40),
             "lastReceivedAt": instantText(string(thinkIn["lastReceivedAt"])),
+            // Ti penso ×N (27/11/2026): the taps of their last Ti penso, 1..99.
+            "lastReceivedTaps": taps(thinkIn["lastReceivedTaps"]),
             "lastSentAt": instantText(string(thinkIn["lastSentAt"])),
             // A reaction to the partner's thought answers it as well as a thought does.
             "lastAnsweredAt": instantText(string(thinkIn["lastAnsweredAt"])),
@@ -250,6 +252,15 @@ enum UsWidgetContract {
         }
         if let text = value as? String, let parsed = Int(text.trimmingCharacters(in: .whitespaces)) { return parsed }
         return fallback
+    }
+
+    /// Ti penso ×N: the taps of one Ti penso, a whole number 1..99; anything else
+    /// (a string, a boolean, a fraction) is 1, like UsWidgetContract.java.
+    static func taps(_ value: Any?) -> Int {
+        guard let number = value as? NSNumber, !isBool(number) else { return 1 }
+        let double = number.doubleValue
+        guard double.isFinite, double == double.rounded() else { return 1 }
+        return Int(max(1, min(99, double)))
     }
 
     static func bool(_ value: Any?) -> Bool {

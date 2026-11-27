@@ -77,6 +77,16 @@ struct UsThinkWidgetView: View {
     private var partner: String { UsWidgetModels.partnerName(entry.snapshot) }
     /// Their thought is waiting for an answer.
     private var got: Bool { !model.done && model.unanswered }
+    /// Ti penso ×N (27/11/2026): their Ti penso of several taps.
+    private var many: Bool { got && model.receivedTaps > 1 }
+    /// «Bea ti ha pensato 5 volte», or «Bea ti pensa».
+    private var gotTitle: String { many ? model.line : (partner.isEmpty ? "Ti pensa" : partner + " ti pensa") }
+    /// The lock screen's short form: «×3» while counting or just sent, «×5» for theirs.
+    private var shortCount: String? {
+        if model.done && model.taps > 1 { return "×\(model.taps)" }
+        if many { return "×\(model.receivedTaps)" }
+        return nil
+    }
 
     var body: some View {
         tappable
@@ -106,9 +116,17 @@ struct UsThinkWidgetView: View {
         Group {
             switch family {
             case .accessoryCircular:
-                UsPathShape(data: UsPaths.heart).fill(.primary).frame(width: 30, height: 30).opacity(dim ? 0.55 : 1)
+                if let short = shortCount {
+                    VStack(spacing: 1) {
+                        UsPathShape(data: UsPaths.heart).fill(.primary).frame(width: 22, height: 22)
+                        Text(verbatim: short).font(.system(size: 12, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
+                    }
+                } else {
+                    UsPathShape(data: UsPaths.heart).fill(.primary).frame(width: 30, height: 30).opacity(dim ? 0.55 : 1)
+                }
             case .accessoryInline:
-                Text(verbatim: got ? "\(partner.isEmpty ? "Ti pensa" : partner + " ti pensa")\(model.when.isEmpty ? "" : " · " + model.when)"
+                Text(verbatim: got ? "\(partner.isEmpty ? "Ti pensa" : partner + " ti pensa")\(many ? " ×\(model.receivedTaps)" : "")\(model.when.isEmpty ? "" : " · " + model.when)"
+                     : model.counting ? "Ti penso " + model.line
                      : model.done ? model.line : (partner.isEmpty ? "Ti penso" : "Pensa a " + partner))
             case .systemMedium:
                 HStack(spacing: 8) {
@@ -131,7 +149,7 @@ struct UsThinkWidgetView: View {
                 if got {
                     ZStack(alignment: .topLeading) {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(verbatim: partner.isEmpty ? "Ti pensa" : partner + " ti pensa").font(UsFonts.fraunces(19)).foregroundColor(UsPalette.ink(scheme)).lineLimit(2)
+                            Text(verbatim: gotTitle).font(UsFonts.fraunces(many ? 17 : 19)).foregroundColor(UsPalette.ink(scheme)).lineLimit(2).minimumScaleFactor(0.8)
                             Text(verbatim: model.when).font(UsFonts.figtree(12)).foregroundColor(UsPalette.sub(scheme))
                         }
                         UsCharacterView(person: them, face: "innamorato", size: 82)
@@ -164,7 +182,7 @@ struct UsThinkWidgetView: View {
 
     private var mediumTitle: String {
         if model.done { return model.line }
-        if got { return partner.isEmpty ? "Ti pensa" : partner + " ti pensa" }
+        if got { return gotTitle }
         return model.canSend ? "Un pensiero,\nun tocco" : model.line
     }
 

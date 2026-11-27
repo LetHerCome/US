@@ -124,6 +124,30 @@ check(UsWidgetModels.actionId(previous: sent, now: now, make: { "new" }) == "new
 t = UsWidgetModels.think(thinkSnapshot, action: ["status": "unauthorized", "at": "2026-11-14T09:00:00Z"], hasCredential: true, now: now)
 check(!t.canSend, "revoked credential: open US")
 
+// Ti penso ×N dai widget (founder, 27/11/2026): taps in a row add up, one Ti penso leaves after the last.
+let burstId = "1b4e28ba-2fa1-41d2-883f-0016d3cca427"
+let counting: [String: Any] = ["status": "counting", "at": "2026-11-14T09:59:59.500Z", "actionId": burstId, "taps": 3]
+t = UsWidgetModels.think(thinkSnapshot, action: counting, hasCredential: true, now: now)
+check(t.counting && t.done && !t.busy && t.line == "×3" && t.when == "tocca ancora", "counting: «×3», one more tap adds one")
+check(t.nextChange == date("2026-11-14T10:00:01.500Z"), "counting: redrawn after the burst")
+t = UsWidgetModels.think(thinkSnapshot, action: ["status": "sent", "at": "2026-11-14T09:59:30Z", "sentAt": "2026-11-14T09:59:30Z", "taps": 3], hasCredential: true, now: now)
+check(t.line == "Inviato ×3" && t.taps == 3, "sent: «Inviato ×3»")
+t = UsWidgetModels.think(thinkSnapshot, action: counting, hasCredential: true, now: date("2026-11-14T10:02:00Z"))
+check(!t.counting && t.line == "Non è partito, riprova", "a burst never sent asks to retry")
+var tap = UsWidgetModels.tap(previous: counting, replyIfNew: false, now: now)
+check(tap.actionId == burstId && tap.taps == 4 && !tap.full, "one more tap, the same burst")
+tap = UsWidgetModels.tap(previous: ["status": "counting", "at": "2026-11-14T09:59:59Z", "actionId": burstId, "taps": 98], replyIfNew: false, now: now)
+check(tap.taps == 99 && tap.full, "the 99th tap sends at once")
+tap = UsWidgetModels.tap(previous: sent, replyIfNew: true, now: now, make: { "new" })
+check(tap.actionId == "new" && tap.taps == 1 && tap.reply, "after a send: a new burst")
+check(UsWidgetModels.actionId(previous: counting, now: now, make: { "new" }) == burstId, "an open burst keeps its id")
+let manySnapshot = UsWidgetContract.normalize(["schemaVersion": 2, "ownerHash": owner,
+    "think": ["partnerName": "Bea", "lastReceivedAt": "2026-11-14T09:50:00Z", "lastReceivedTaps": 5]])
+t = UsWidgetModels.think(manySnapshot, action: nil, hasCredential: true, now: now)
+check(t.unanswered && t.receivedTaps == 5 && t.line == "Bea ti ha pensato 5 volte", "theirs: «Bea ti ha pensato 5 volte»")
+check(UsWidgetContract.taps(400) == 99 && UsWidgetContract.taps(0) == 1 && UsWidgetContract.taps("7") == 1 && UsWidgetContract.taps(true) == 1 && UsWidgetContract.taps(2.5) == 1 && UsWidgetContract.taps(nil) == 1, "taps: a whole number 1..99")
+check((thinkSnapshot?["think"] as? [String: Any])?["lastReceivedTaps"] as? Int == 1, "an older app: 1 tap")
+
 check(UsWidgetModels.bubbleAgo(date("2026-11-14T09:58:00Z"), now: now) == "proprio ora", "just now")
 check(UsWidgetModels.bubbleAgo(date("2026-11-14T08:30:00Z"), now: now) == "1 ora fa", "an hour")
 check(UsWidgetModels.bubbleAgo(date("2026-11-06T10:00:00Z"), now: now) == "", "older than a week: nothing")
@@ -148,6 +172,14 @@ check(!store.writePortrait(ownerHash: owner, slot: "../../x", bytes: jpeg), "unk
 check(store.writeAction(status: "sending", actionId: "id", reply: true), "action written")
 check(store.readAction()?["reply"] as? Bool == true, "reply kept")
 check(store.writeAction(status: "sent", actionId: "id") && UsWidgetContract.bool(store.readAction()?["reply"]), "reply carried over")
+// Ti penso ×N: only the burst's last tap claims the send, with every tap.
+let firstTap = store.countTap(replyIfNew: false)
+let secondTap = store.countTap(replyIfNew: false)
+check(firstTap != nil && secondTap != nil && firstTap!.tap.actionId == secondTap!.tap.actionId && secondTap!.tap.taps == 2, "taps in a row: one burst")
+check(store.claimBurst(actionId: firstTap!.tap.actionId, tapId: firstTap!.tapId) == nil, "an earlier tap does not send")
+check(store.claimBurst(actionId: secondTap!.tap.actionId, tapId: secondTap!.tapId) == 2, "the last tap sends both")
+check(store.claimBurst(actionId: secondTap!.tap.actionId, tapId: secondTap!.tapId) == nil && UsWidgetContract.string(store.readAction()?["status"]) == "sending", "claimed once")
+check(store.writeAction(status: "sent", actionId: secondTap!.tap.actionId) && UsWidgetContract.taps(store.readAction()?["taps"]) == 2, "the sent burst keeps its taps")
 let device = store.deviceId()
 check(UUID(uuidString: device) != nil && store.deviceId() == device, "stable device id")
 check(store.activateAccount(other), "another account")
