@@ -14,7 +14,7 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
 
-  const PRIORITY = Object.freeze({ presentazione: 0, compleanno: 1, anniversario: 1, ti_aspetta: 2, bacheca: 2.5, un_anno_fa: 3, mesiversario: 4, giorni: 4, traguardo: 4, conoscervi: 5 });
+  const PRIORITY = Object.freeze({ presentazione: 0, compleanno: 1, anniversario: 1, ti_aspetta: 2, primi_passi: 2, bacheca: 2.5, un_anno_fa: 3, mesiversario: 4, giorni: 4, traguardo: 4, conoscervi: 5 });
   const hash = (s) => { let h = 2166136261; for (const c of String(s || '')) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; };
   const pick = (list, key) => list[hash(key) % list.length];
   const years = (n) => (n === 1 ? 'un anno' : `${n} anni`);
@@ -45,6 +45,18 @@
       case 'conoscervi':
         if (v.ask === 'primo_ricordo') return ['Mettete il vostro primo ricordo: da lì comincio a conoscervi.', 'Una foto per cominciare? Il vostro primo ricordo.', 'Il primo ricordo è il più bello da mettere.'];
         return ['Quando è il tuo compleanno? Così me lo ricordo.', 'Non so ancora il tuo compleanno. Me lo dici?', 'Mettiamo il tuo compleanno? Poi ci penso io a ricordarlo.'];
+      case 'primi_passi':
+        // La prima settimana (27/11/2026): new couples only, one small first step a day.
+        switch (v.step) {
+          case 'domanda': return [`Un primo passo: rispondete alla domanda di oggi, poi leggi cosa ha scritto ${p}.`, 'Cominciamo dalla domanda di oggi: una risposta a testa, poi le leggete insieme.'];
+          case 'ricordo': return ['Mettete la vostra prima foto: Ricordi diventa il vostro album.', 'Una foto per cominciare il vostro album?'];
+          case 'gioco': return ['Oggi provate una partita in Gioca: bastano tre minuti.', 'Una partita insieme? Tre minuti, e vi conoscete un po’ di più.'];
+          case 'postit': return [`Lascia un post-it a ${p} sulla lavagna di Noi: lo trova appena apre US.`, `Un post-it per ${p}? Lo trova sulla lavagna di Noi.`];
+          case 'tipenso': return [`Prova il Ti penso: un tocco, e ${p} riceve il tuo pensiero anche da lontano.`, `Il cuore in basso è il Ti penso: toccalo quando pensi a ${p}.`];
+          case 'compleanni': return ['Mettete i vostri compleanni nel calendario: poi ve li ricordo io.', 'Quando è il tuo compleanno? Mettilo nel calendario e ci penso io.'];
+          case 'settimana': return ['Una settimana insieme in US! Siete partiti benissimo.', 'La vostra prima settimana qui: ed è solo l’inizio.'];
+          default: return [];
+        }
       case 'bacheca':
         // La vostra bacheca (25/11/2026): what US pinned on the board.
         if (v.reason === 'un_anno_fa') return v.place ? [`Vi ho appeso una foto in bacheca: un anno fa eravate a ${v.place}.`, `In bacheca c'è ${v.place}, un anno fa.`, `Ho messo in bacheca un ricordo di un anno fa: ${v.place}.`] : ['Vi ho appeso in bacheca un ricordo di un anno fa.', "In bacheca c'è una foto di un anno fa.", 'Un anno fa, oggi: ve l\'ho appeso in bacheca.'];
@@ -72,6 +84,10 @@
       case 'un_anno_fa': return { label: `Mandalo a ${partner}`, go: v.source === 'moment' && v.path ? 'lfy-photo' : 'lfy', text: `Ti ricordi? ${v.place || v.title || ''}${v.date ? ` · ${longDate(v.date)}` : ''} ♡`.replace('?  ·', '?') };
       case 'traguardo': return { label: 'Apri Ricordi', go: 'moments' };
       case 'bacheca': return { label: 'Apri la bacheca', go: 'bacheca' };
+      case 'primi_passi': {
+        const step = { domanda: { label: 'Rispondi', go: 'daily' }, ricordo: { label: 'Metti una foto', go: 'compose' }, gioco: { label: 'Gioca', go: 'games' }, postit: { label: 'Apri Noi', go: 'noi' }, tipenso: { label: 'Provalo', go: 'think' }, compleanni: { label: 'Aggiungi il tuo', go: 'birthday', name: v.name } }[v.step];
+        return step || { label: 'Va bene', go: 'close' };
+      }
       case 'conoscervi': return v.ask === 'primo_ricordo' ? { label: 'Metti un ricordo', go: 'compose' } : { label: 'Aggiungilo', go: 'birthday', name: v.name };
       case 'ti_aspetta': return v.what === 'game' ? { label: 'Gioca', go: 'games' } : { label: 'Rispondi', go: 'daily' };
       case 'presentazione': return { label: 'Va bene', go: 'close' };
@@ -226,6 +242,8 @@
         case 'birthday': w.go?.('bond', { nav: true }); setTimeout(() => w.openEventEditor?.(null, null, { title: `Compleanno di ${a.name || ''}`.trim() }), 80); break;
         case 'daily': w.openToday?.(); break;
         case 'games': w.openQuizHub?.({ nav: true }); break;
+        case 'noi': w.go?.('bond', { nav: true }); break;
+        case 'think': w.go?.('home', { nav: true }); setTimeout(() => d.getElementById('thinkButton')?.focus?.({ preventScroll: true }), 120); break;
         case 'bacheca': w.go?.('moments', { nav: true }); setTimeout(() => w.UsRicordiPlace?.setView?.('board'), 80); break;
         default: break;
       }

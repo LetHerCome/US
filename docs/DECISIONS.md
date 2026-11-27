@@ -622,3 +622,11 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Set:** gli stessi nove widget su Android e iPhone (misure di ciascuno); Come stai diventa «Voi due»; Distanza senza arco (14/11); Lavagna e Post-it anche 4x2. Solo iPhone: il grande con la foto, i modi Colorata/Trasparente, StandBy.
 - **Blocca schermo (solo iPhone):** tinta unica con le sagome dei personaggi e il cuore pieno; sopra l'ora i giorni o l'ultima cosa arrivata; cerchi (Ti penso, Giorni, Distanza con l'anello della batteria, Come sta, busta) e rettangoli (Voi due, Lasciato per te, La domanda, Distanza); il Controllo «Ti penso» di iOS 18 al posto della torcia. Mai risposte, contenuti o posizioni.
 - **Ordine:** Android prima (fatto sul ramo `claude/widget-redesign-android-ios-fb63c1`), poi iPhone e blocca schermo dalla stessa tavola.
+
+## 2026-11-27 — La prima settimana guidata, solo per le coppie nuove
+
+**Fonte:** founder, 27/11/2026: «la prima settimana di guida la farei ma solamente per gli account appena creati, quindi per i Beta tester no».
+
+- **Dove:** dentro «US vi ricorda», come un tipo di frase in più (`primi_passi`, priorità 2). Nessuna schermata nuova.
+- **Chi:** solo le coppie create dopo che la migrazione è stata applicata (`private.us_primi_passi_start`). Il giorno 1 è quello dopo l'ingresso dell'altra persona: il giorno stesso ci sono già l'intro e la presentazione.
+- **Sette passi**, uno al giorno: domanda di oggi, prima foto, una partita, un post-it, il Ti penso, i compleanni, la settimana. Un passo già fatto si salta. Si spengono con «Non dirmelo più», e compleanni e anniversario vincono.

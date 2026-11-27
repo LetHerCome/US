@@ -2,6 +2,23 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### La prima settimana guidata, solo per le coppie nuove (27/11)
+
+**Stato:** ramo `claude/prima-settimana`, verso staging. **Da applicare su staging:** la migrazione `20261127093508_prima_settimana`. Chiesto dal founder il 27/11: «solamente per gli account appena creati, quindi per i Beta tester no».
+
+**Cosa cambia:**
+- Per i primi sette giorni dopo che l'altra persona entra, i personaggi di «US vi ricorda» suggeriscono un piccolo passo al giorno:
+  1. la domanda di oggi
+  2. la prima foto
+  3. una partita
+  4. un post-it
+  5. il Ti penso
+  6. i compleanni nel calendario
+  7. «una settimana insieme in US!»
+- Ogni frase ha il suo tasto, che porta dritto al posto giusto.
+- **Solo le coppie nate dopo la migrazione:** chi usa già US (i beta tester) non lo vede mai.
+- Un passo già fatto si salta: se la foto c'è già, o il tuo compleanno è già nel calendario. Compleanni e anniversario vincono comunque la giornata. Come ogni frase, si può spegnere per sempre con «Non dirmelo più».
+
 ### Widget iPhone col redesign e blocca schermo (26/11)
 
 **Stato:** ramo `claude/widget-redesign-ios` (sopra quello Android). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.
