@@ -169,7 +169,8 @@
 
   function paintRespond() {
     const partner = model(state.partner);
-    const g = partner ? gestureOf(partner.key) : null;
+    // Before the SQL of 27/11 (no answer columns) nothing is offered that the server would refuse.
+    const g = partner && !state.noReplies ? gestureOf(partner.key) : null;
     const sent = sentToPartner();
     const button = $('usStatusRespond');
     if (button) {
@@ -383,7 +384,7 @@
     const partner = model(state.partner);
     const g = partner ? gestureOf(partner.key) : null;
     const db = client();
-    if (!g || !key || key !== state.key || state.responding || sentToPartner() || !db?.rpc) return false;
+    if (!g || state.noReplies || !key || key !== state.key || state.responding || sentToPartner() || !db?.rpc) return false;
     state.responding = true;
     paintRespond();
     try {

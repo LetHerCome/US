@@ -2,6 +2,28 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Come stai che conta (27/11)
+
+**Stato:** ramo `claude/come-stai-vivo` (da staging fac396a9), commit locali, non pushato. Grill del founder del 27/11 (D7–D14, D16, D17, D19), voce in `docs/DECISIONS.md`.
+
+**Da applicare, in ordine (su staging, ognuno col suo sì):**
+1. migrazione `20261127184637_come_stai_risposta` (colonne della risposta su `member_status`, trigger, RPC `respond_member_status`);
+2. migrazione `20261127184701_come_stai_muto` (il «Non dirmelo più» accetta `come_sta`, tiene tutti i tipi di prima);
+3. funzioni: `send-web-push` (tipi `status_response` e `partner_status`), `game-v2-push` e `game-v2-push-worker`, `daily-question-push-worker`, `us-ricorda-push-worker` (le push che aspettano lavoro e studio). Usano i file condivisi `_shared/come-stai-push-core.mjs`, `notification-core.mjs`, `native-push-transport.mjs`, `widget-signal-core.mjs`, `game-v2-push-core.mjs`, `daily-question-push-core.mjs`, `us-ricorda-push-core.mjs`.
+4. web (Cloudflare Pages). L’app nuova regge anche prima della migrazione: legge le colonne di prima e non offre il gesto finché le colonne nuove non ci sono.
+
+Servono un **AAB** nuovo (frasi Android della risposta `status_*`, oggetti sui personaggi dei widget, segnale «status» ad app chiusa) e una build **TestFlight** con la stessa versione (oggetti e segnale «status» sui widget dell'iPhone). Senza, le app di prima mostrano l'avviso generico «Apri US per vedere le novità» per la risposta e scartano il segnale «status» (v3 sconosciuto: niente di visibile). Da provare sui telefoni: la notifica della risposta (Android e iPhone), il widget dell'altra persona che cambia col Come stai ad app chiusa, gli oggetti sui widget, la pausa delle notifiche di Gioca mentre si è «al lavoro».
+
+**Cosa cambia:**
+- **Rispondi al Come stai dell'altra persona.** Sotto il suo stato, nella scheda di Come stai e come piccolo bottone tondo accanto alla pillola di Oggi, c'è un gesto che gli va bene, con un tocco: giù o non sta bene → «Ti mando un abbraccio», stanco → «Riposati», nervoso → «Respira, ci sono io», felice o innamorato → un cuore, in festa → 🎉, al lavoro o sui libri → «Forza!», in palestra → «Spacca tutto!», in viaggio → «Buon viaggio», a tavola → «Buon appetito». Uno per ogni stato: poi il bottone dice «Mandato ♡». Chi lo riceve ha una notifica come un Ti penso («Bea: Ti mando un abbraccio», anche in inglese), un avviso dentro l'app e per tre ore un cuoricino accanto al suo personaggio (occhi a cuore per il cuore, coriandoli per la festa). È l'unica notifica di Come stai: i cambi di stato restano senza notifica.
+- **I personaggi portano gli oggetti del momento,** nell'app e nei widget: al lavoro la valigetta, sui libri il libro, in palestra la fascia in testa, in viaggio la valigia, a tavola la forchetta, se non stai bene il termometro. In festa resta la faccia di festa. Di notte chi non sta bene non si addormenta: tiene la sua faccia e il termometro. Le facce cambiano subito quando cambia il Come stai (prima aspettavano fino a un minuto).
+- **US se ne accorge:** quando l'altra persona è giù, non sta bene o nervosa da almeno 2 ore, US lo dice una volta sola, nel fumetto dell'isola: «Bea è giù da 3 ore. Un pensiero?». Toccandolo si sceglie Ti penso o il gesto del suo stato. Mai di notte, dentro la battuta al giorno di US vi ricorda, e si spegne con «Non dirmelo più» come le altre (in Profilo › Notifiche: «Quando la tua persona non sta bene»). Se le hai già mandato il gesto, non lo dice.
+- **Oggi si adatta, poco:** nella riga del prossimo impegno può comparire un suggerimento leggero, uno solo e mai al posto di un impegno di oggi: se l'altra persona è stanca o giù «Lascia un vocale a Bea» (apre Lasciato per te sul vocale); se siete tutti e due felici o innamorati «Una partita?» (apre Gioca). Se è in viaggio, la pillola della distanza dice «in viaggio».
+- **Lavoro e studio rispettati:** mentre sei «al lavoro» o «sui libri» le notifiche che possono aspettare aspettano: le partite di Gioca, il promemoria serale della domanda di oggi e quelle di US vi ricorda. Arrivano quando lo stato finisce o scade (al massimo 12 ore), negli orari di sempre (Gioca 9–22, la sera della domanda fino alle 22, US vi ricorda fino alle 21). Ti penso, Lasciato per te, post-it e risposte al Come stai arrivano sempre.
+- **Il widget dell'altra persona si aggiorna subito,** anche con l'app chiusa, quando cambi il tuo Come stai (avviso silenzioso, come per il cambio di look; su iPhone quando iOS lo consegna).
+- **«In viaggio» e il calendario di Noi:** scegliendo «in viaggio» la scheda chiede «Lo segno nel calendario di Noi?»; «Sì, segnalo» apre l'impegno già scritto («In viaggio», oggi, tutto il giorno) e lo salvi tu, «No, grazie» chiude.
+- Niente storico del Come stai: la risposta sta sulla riga dello stato e se ne va con lui.
+
 ### I cuoricini volano nell'isola (27/11)
 
 **Stato:** ramo `claude/cuori-verso-isola`, verso staging, dopo «I cuori» (#317) e i widget (#318). Solo app (web): niente migrazioni, niente funzioni, nessun AAB o TestFlight necessario oltre al solito aggiornamento del web. Da provare sui telefoni (US LIVE su Android, TestFlight su iPhone) che il volo resti fluido.
