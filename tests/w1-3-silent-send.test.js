@@ -23,7 +23,8 @@ test('widget send accetta solo token opaco header-only e action UUID valido', as
     headers: { 'x-us-widget-token': token, 'content-type': 'application/json' },
     body: JSON.stringify({ actionId })
   }));
-  assert.deepEqual(accepted, { token, actionId });
+  // Ti penso ×N dai widget (27/11/2026): an older widget sends no taps and means 1.
+  assert.deepEqual(accepted, { token, actionId, taps: 1 });
 
   await assert.rejects(
     parseWidgetThinkRequest(new Request(`https://example.test/widget-think-send?token=${token}`, {
@@ -43,6 +44,33 @@ test('widget send accetta solo token opaco header-only e action UUID valido', as
     })),
     /action/i
   );
+});
+
+test('Ti penso ×N dai widget: taps 1..99 opzionale, default 1, mai indovinato', async () => {
+  const { parseWidgetThinkRequest, widgetThinkRpcArgs, missingTapsSignature, WIDGET_THINK_MAX_TAPS } = await loadContract();
+  const token = 'A'.repeat(43);
+  const actionId = '2de8db04-d677-4f8c-97bc-8ae3e068503f';
+  const request = (body) => new Request('https://example.test/widget-think-send', {
+    method: 'POST', headers: { 'x-us-widget-token': token, 'content-type': 'application/json' }, body: JSON.stringify(body)
+  });
+  assert.equal(WIDGET_THINK_MAX_TAPS, 99);
+  for (const taps of [1, 2, 5, 99]) assert.deepEqual(await parseWidgetThinkRequest(request({ actionId, taps })), { token, actionId, taps });
+  assert.equal((await parseWidgetThinkRequest(request({ actionId, taps: null }))).taps, 1);
+  for (const taps of [0, -1, 100, 2.5, '5', true, [3], { n: 3 }]) {
+    await assert.rejects(parseWidgetThinkRequest(request({ actionId, taps })), /invalid_taps/, JSON.stringify(taps));
+  }
+  // One tap travels exactly as before; several add p_taps (the 27/11 migration).
+  assert.deepEqual(widgetThinkRpcArgs('h', actionId, 1), { p_token_hash: 'h', p_action_id: actionId });
+  assert.deepEqual(widgetThinkRpcArgs('h', actionId), { p_token_hash: 'h', p_action_id: actionId });
+  assert.deepEqual(widgetThinkRpcArgs('h', actionId, 7), { p_token_hash: 'h', p_action_id: actionId, p_taps: 7 });
+  assert.equal(missingTapsSignature({ code: 'PGRST202', message: 'Could not find the function' }), true);
+  assert.equal(missingTapsSignature({ code: '28000', message: 'invalid_widget_credential' }), false);
+  assert.equal(missingTapsSignature(null), false);
+  // The Edge passes the taps and, before the migration, falls back to one tap with the SAME action id.
+  const send = read('supabase/functions/widget-think-send/index.ts');
+  assert.match(send, /widgetThinkRpcArgs\(tokenHash, actionId, taps\)/);
+  assert.match(send, /taps > 1 && missingTapsSignature\(error\)[\s\S]*?widgetThinkRpcArgs\(tokenHash, actionId, 1\)/);
+  assert.match(send, /method\|query\|token\|action\|taps/);
 });
 
 test('token hash è deterministico e non conserva il token raw', async () => {
@@ -147,7 +175,9 @@ test('heart: invio subito dal receiver, animazione in una finestrella non esport
   assert.match(provider, /!model\.canSend \? UsWidgets\.open\(context, "think", 4101\) : model\.busy \? sendIntent\(context\) : heartIntent\(context\)/);
   assert.match(provider, /setOnClickPendingIntent\(R\.id\.us_widget_root,\s*heart\)/);
   assert.match(provider, /PendingIntent\.getBroadcast/);
-  assert.match(heart, /super\.onCreate\(savedInstanceState\);\s*\/\/[^\n]*\n\s*sendBroadcast\(new Intent\(this, UsThinkWidgetActionReceiver\.class\)\.setAction\(UsThinkWidgetActionReceiver\.ACTION_SEND_THINK\)\);/);
+  // Ti penso ×N (27/11/2026): the tap reaches the receiver first; taps on the heart count too.
+  assert.match(heart, /super\.onCreate\(savedInstanceState\);\s*\/\/[^\n]*\n\s*tap\(\);/);
+  assert.match(heart, /private void tap\(\) \{\s*sendBroadcast\(new Intent\(this, UsThinkWidgetActionReceiver\.class\)\.setAction\(UsThinkWidgetActionReceiver\.ACTION_SEND_THINK\)\);/);
   assert.doesNotMatch(heart, /HttpURLConnection|UsWidgetActionClient|token/i, 'the animation never sends by itself');
   assert.match(widgets, /PendingIntent\.getActivity/);
   assert.match(widgets, /Intent\.ACTION_VIEW,\s*Uri\.parse\("us:\/\/widget\/"/);
@@ -186,7 +216,7 @@ test('Ti penso dal widget va all’Edge della build che ha emesso la credential,
   assert.match(endpoints, /PROJECTS = \{ "iiakdfsxpywdkxravqjh" \}/);
   assert.doesNotMatch(endpoints, /dugmhngrfkuieeletatb/);
   assert.match(endpoints, /return \(base\.isEmpty\(\) \? PRODUCTION : base\) \+ "\/widget-think-send";/);
-  assert.match(read(`${W}/UsThinkWidgetActionReceiver.java`), /new UsWidgetActionClient\(\)\.send\(credentials\.functionsBase\(owner\), token, actionId\)/);
+  assert.match(read(`${W}/UsThinkWidgetActionReceiver.java`), /new UsWidgetActionClient\(\)\.send\(credentials\.functionsBase\(owner\), token, id, taps\)/);
   assert.match(read(`${W}/UsWidgetCredentialStore.java`), /return UsWidgetEndpoints\.functionsBase\(payload\.optString\("functionsUrl", ""\)\);/);
   const bridge = read(`${W}/UsWidgetBridgePlugin.java`);
   assert.match(bridge, /boolean addressOk = functionsUrl\.isEmpty\(\) \|\| !UsWidgetEndpoints\.functionsBase\(functionsUrl\)\.isEmpty\(\);/);
@@ -212,7 +242,7 @@ test('feedback widget: «Ricambiato · adesso» al tocco, Riprova se non parte; 
   const models = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetModels.java');
   const heart = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsThinkHeartActivity.java');
   assert.match(provider, /UsWidgetModels\.think\(/);
-  assert.match(models, /out\.line = action\.optBoolean\("reply", false\) \? "Ricambiato" : "Inviato";\s*out\.when = "adesso";/);
+  assert.match(models, /out\.line = \(action\.optBoolean\("reply", false\) \? "Ricambiato" : "Inviato"\) \+ times\(out\.taps\);\s*out\.when = "adesso";/);
   assert.match(models, /Riprova/);
   assert.doesNotMatch(provider + models, /AnimationDrawable|ObjectAnimator|ValueAnimator/);
   // The app's heart (UsUiFoundation.heart): .72, 1.3, .96 in 440 ms; the wave in 420 ms.

@@ -108,7 +108,7 @@ const CATALOGUE = Object.freeze({
   test: (a, en) => ({ title: 'US.', body: pick(en, 'Notifiche attive. US può raggiungerti anche quando è chiusa ♡', 'Notifications are on. US can reach you even when it is closed ♡'), target: 'home', tag: 'us-push-test', channel: 'reminders', urgency: 'normal' }),
   think: (a, en) => ({ title: 'US.', body: Number(a.count) > 1
     ? pick(en, `${name(a.senderName)} ti ha pensato ${Number(a.count)} volte ♡`, `${name(a.senderName, true)} thought of you ${Number(a.count)} times ♡`)
-    : pick(en, `${name(a.senderName)} ti sta pensando ♡`, `${name(a.senderName, true)} is thinking of you ♡`), target: 'think', ref: a.messageId, tag: `think-${a.messageId}`, channel: 'partner', urgency: 'high', category: 'think', plural: Number(a.count) > 1 }),
+    : pick(en, `${name(a.senderName)} ti sta pensando ♡`, `${name(a.senderName, true)} is thinking of you ♡`), target: 'think', ref: a.messageId, tag: `think-${a.messageId}`, channel: 'partner', urgency: 'high', category: 'think', plural: Number(a.count) > 1, times: Number(a.count) }),
   // O7: the reaction itself, with the name ("Bea ti manda un abbraccio").
   think_reaction: (a, en) => ({ title: pick(en, 'US. · Ti penso', 'US. · Thinking of you'), body: own(THINK_REACTION_COPY, a.reaction)?.(name(a.senderName, en), en) || pick(en, `${name(a.senderName)} ha reagito al tuo Ti penso`, `${name(a.senderName, true)} reacted to your Thinking of you`), target: 'home', ref: a.messageId, tag: `think-reaction-${a.messageId}`, channel: 'partner', urgency: 'normal' }),
   daily_answer: (a, en) => ({ title: DAILY_TITLE(en), body: pick(en, `${name(a.senderName)} ha risposto. Ora tocca a te.`, `${name(a.senderName, true)} answered. Your turn now.`), target: 'today', ref: a.questionId, tag: `daily-answer-${a.questionId}`, channel: 'partner', urgency: 'normal' }),
@@ -178,9 +178,13 @@ export function buildNotification(type, args = {}) {
     // Native badge semantics are intentionally binary: "US has something new".
     // The client clears it only after the private app is visible and unlocked.
     badge: Number.isInteger(raw.badge) && raw.badge >= 0 ? raw.badge : 1,
-    // I cuori (27/11/2026): «N volte». Android gets no numbers over FCM, only
-    // that there were several (native-push-transport.mjs ANDROID_PLURAL_KINDS).
+    // I cuori (27/11/2026): «N volte»: there were several, so Android picks
+    // the plural kind (native-push-transport.mjs ANDROID_PLURAL_KINDS).
     plural: raw.plural === true,
+    // Ti penso ×N (27/11/2026, founder: the number is not private): how many
+    // times, 2..99, only on a plural notification; 0 otherwise. Android gets
+    // it as the one numeric field n of the plural kinds (native-push-transport.mjs).
+    times: raw.plural === true && Number.isFinite(raw.times) ? Math.max(2, Math.min(99, Math.floor(raw.times))) : 0,
   };
   if (!notification.title || !notification.body) throw new Error('notification_copy_missing');
   if (!NOTIFICATION_TARGETS.includes(notification.target)) throw new Error('notification_target_invalid');

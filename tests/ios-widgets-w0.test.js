@@ -238,7 +238,8 @@ test('W1 Foto & Noi e Ti penso: taglie, tocchi e link uguali ad Android', () => 
   const sender = read(`${EXT}/UsThinkSender.swift`);
   assert.match(sender, /X-US-Widget-Token/);
   assert.match(sender, /willPerformHTTPRedirection[\s\S]*completionHandler\(nil\)/, 'mai seguire un redirect col token');
-  assert.match(sender, /guard model\.canSend, !model\.busy, !cooldown else \{ return \}/);
+  // Ti penso ×N (27/11/2026): a tap of a burst being counted is never held back by the cooldown.
+  assert.match(sender, /guard model\.canSend, !model\.busy, !cooldown \|\| model\.counting else \{ return \}/);
   assert.match(sender, /guard store\.owner\(\) == owner else \{ return \}/);
   // Links: the kinds widgets.js already reads (us://widget/<kind>), Giorni insieme not ported.
   const kinds = read('widgets.js').match(/const KINDS = Object\.freeze\(\[([^\]]+)\]\)|const KINDS = \[([^\]]+)\]/);

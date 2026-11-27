@@ -152,12 +152,17 @@ export const ANDROID_NOTICE_KINDS = Object.freeze({
   ricorda_year_ago: 'year_ago',
   ricorda_bacheca: 'bacheca',
 });
-// I cuori (27/11/2026): «Bea ti ha pensato 5 volte». The number stays off
-// FCM; a plural notification only picks the plural kind, and the phone says
-// «tante volte». An older app does not know the kind: the generic line.
+// I cuori (27/11/2026): «Bea ti ha pensato 5 volte». A plural notification
+// picks the plural kind. An older app does not know the kind: the generic line.
+// Ti penso ×N (27/11/2026, founder: the number is not private): the plural
+// kinds alone also carry n, the number of times, digits only, 2..99, and the
+// phone says «Bea ti ha pensato 5 volte»; without n, «tante volte». Never a
+// name, a text, an id or a target: only that one number, on these kinds only.
 export const ANDROID_PLURAL_KINDS = Object.freeze({
   think: 'think_many',
 });
+const ANDROID_TIMES_KINDS = Object.freeze(Object.values(ANDROID_PLURAL_KINDS));
+const androidTimes = (kind, times) => (ANDROID_TIMES_KINDS.includes(kind) && Number.isInteger(times) && times >= 2 && times <= 99 ? String(times) : '');
 const INSTALLATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const own = (map, key) => (Object.prototype.hasOwnProperty.call(map, key) ? map[key] : '');
 
@@ -166,10 +171,13 @@ export function fcmMessage(notification, device) {
   const installation = String(device?.installation_id || '').toLowerCase();
   if (!INSTALLATION_ID.test(installation)) throw new Error('native_installation_missing');
   const kind = (notification?.plural === true && own(ANDROID_PLURAL_KINDS, notification?.type)) || own(ANDROID_NOTICE_KINDS, notification?.type);
+  const times = androidTimes(kind, notification?.times);
+  const data = kind ? { v: '2', installation, k: kind } : { v: '2', installation };
+  if (times) data.n = times;
   return {
     message: {
       token: device.token,
-      data: kind ? { v: '2', installation, k: kind } : { v: '2', installation },
+      data,
       android: {
         priority: notification.urgency === 'high' ? 'HIGH' : 'NORMAL',
         ttl: `${notification.ttl}s`,

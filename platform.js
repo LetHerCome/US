@@ -156,6 +156,8 @@
       think: {
         partnerName: safeText(think.partnerName, 40),
         lastReceivedAt: safeInstant(think.lastReceivedAt),
+        // Ti penso ×N (27/11/2026): the taps of their last Ti penso, 1..99 (UsWidgetContract.java).
+        lastReceivedTaps: Number.isInteger(think.lastReceivedTaps) ? Math.max(1, Math.min(99, think.lastReceivedTaps)) : 1,
         lastSentAt: safeInstant(think.lastSentAt),
         lastAnsweredAt: safeInstant(think.lastAnsweredAt),
         // Ti penso of both that Rome day (UsWidgetContract.java).

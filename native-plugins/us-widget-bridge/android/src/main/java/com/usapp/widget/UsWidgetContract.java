@@ -54,6 +54,8 @@ final class UsWidgetContract {
             JSONObject think = new JSONObject()
                 .put("partnerName", text(thinkIn.optString("partnerName", ""), 40))
                 .put("lastReceivedAt", instantText(thinkIn.optString("lastReceivedAt", "")))
+                // Ti penso ×N (27/11/2026): the taps of their last Ti penso, 1..99.
+                .put("lastReceivedTaps", taps(thinkIn.opt("lastReceivedTaps")))
                 .put("lastSentAt", instantText(thinkIn.optString("lastSentAt", "")))
                 // A reaction to the partner's thought answers it as well as a thought does.
                 .put("lastAnsweredAt", instantText(thinkIn.optString("lastAnsweredAt", "")))
@@ -304,6 +306,14 @@ final class UsWidgetContract {
         if (value == null) return "";
         String clean = value.replaceAll("[\\p{Cntrl}]", " ").trim();
         return clean.length() <= max ? clean : clean.substring(0, max);
+    }
+
+    /** Ti penso ×N: the taps of one Ti penso, a whole number 1..99; anything else is 1. */
+    static int taps(Object value) {
+        if (!(value instanceof Number)) return 1;
+        double n = ((Number) value).doubleValue();
+        if (Double.isNaN(n) || n != Math.rint(n)) return 1;
+        return (int) Math.max(1, Math.min(99, n));
     }
 
     static String civilDate(String value) {

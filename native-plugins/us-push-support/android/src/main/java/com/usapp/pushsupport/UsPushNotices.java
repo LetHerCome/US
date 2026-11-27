@@ -52,7 +52,23 @@ public final class UsPushNotices {
         return locale != null && "en".equals(locale.getLanguage());
     }
 
+    /**
+     * Ti penso ×N (27/11/2026, founder: the number is not private): FCM n, how
+     * many times, read only for the plural kind and only as digits 2..99.
+     * Anything else is 0, and the sentence says «tante volte».
+     */
+    public static int times(String kind, String raw) {
+        if (!"think_many".equals(kind) || raw == null || !raw.matches("[1-9][0-9]?")) return 0;
+        final int n = Integer.parseInt(raw);
+        return n >= 2 ? n : 0;
+    }
+
     public static Notice forKind(String kind, String partnerName, Locale locale) {
+        return forKind(kind, partnerName, locale, 0);
+    }
+
+    /** times: UsPushNotices.times(kind, n), 2..99 or 0. */
+    public static Notice forKind(String kind, String partnerName, Locale locale, int times) {
         final boolean en = english(locale);
         final String name = cleanName(partnerName);
         final String who = name.isEmpty() ? (en ? "Your person" : "La tua persona") : name;
@@ -64,8 +80,12 @@ public final class UsPushNotices {
             case "think":
                 return notice(en, "US. · Ti penso", "US. · Thinking of you",
                     who + " ti sta pensando ♡", who + " is thinking of you ♡", "oggi");
-            // I cuori (27/11/2026): a Ti penso of several taps; the number stays off FCM.
+            // I cuori (27/11/2026): a Ti penso of several taps; with n (Ti penso ×N), the number.
             case "think_many":
+                if (times >= 2 && times <= 99) {
+                    return notice(en, "US. · Ti penso", "US. · Thinking of you",
+                        who + " ti ha pensato " + times + " volte ♡", who + " thought of you " + times + " times ♡", "oggi");
+                }
                 return notice(en, "US. · Ti penso", "US. · Thinking of you",
                     who + " ti ha pensato tante volte ♡", who + " thought of you so many times ♡", "oggi");
             case "think_reply":

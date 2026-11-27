@@ -680,3 +680,13 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **«Resta e cresce» (cuore di risposta):** il primo tocco mette il cuore e lo salva; i tocchi dopo aggiungono cuoricini e «×N» solo a schermo, senza server né notifiche. Il cuore della domanda di oggi si toglie solo tenendolo premuto ~650 ms (o Canc/Backspace); la reazione al Ti penso resta finale come prima.
 - **Movimento:** un solo canvas di cuoricini sopra la pagina, solo mentre volano (`ui-foundation.js`); con movimento ridotto solo il rimbalzo leggero e il numero.
 - **Abbraccio:** il bottone mostra i due personaggi veri della coppia (forma, colore, vestiti) con il viso «innamorato» e un cuore nei due colori; senza personaggi, palla e quadrato nei colori delle persone.
+
+## 2026-11-27 — Ti penso ×N anche dai widget e nell'avviso Android
+
+**Fonte:** founder, 27/11/2026 («deve funzionare anche sul widget questa cosa ripetuta sia iOS che android»; il numero dei tocchi non è privato).
+
+- **Widget (Android, iPhone, Controllo iOS 18):** i tocchi di fila si contano sul telefono (stato `counting` con `taps` e un solo action id) e 1,5 s dopo l'ultimo parte UN solo Ti penso con i tocchi; il 99° parte subito. `widget-think-send` accetta `taps` (intero 1..99, assente = 1, altro: errore 400 `invalid_taps`) e `widget_send_think_internal(token, action, p_taps default 1)` lo salva in `think_taps`; idempotenza per (credenziale, action id) invariata.
+- **Android:** ogni tocco è un broadcast tenuto aperto con `goAsync()` finché la raffica non è partita; il timer da 1,5 s vive nel processo, che intanto ha priorità di receiver. Niente WorkManager (non è una dipendenza e JobScheduler può rimandare), niente allarmi esatti (permesso negato di default da Android 14). Se il processo muore, il tick del widget (allarme inesatto già esistente) manda la raffica dovuta con lo stesso id, entro 2 minuti.
+- **iOS:** ogni tocco è un'App Intent; si conta nell'App Group sotto un lock condiviso, aspetta 1,5 s, e solo l'intent del tocco più recente manda (`claimBurst`); le altre tornano senza inviare.
+- **Chi riceve:** lo snapshot porta `think.lastReceivedTaps` (1..99) e il widget dice «<Nome> ti ha pensato N volte»; sul blocca schermo «×N».
+- **Avviso Android:** il pacchetto FCM del solo tipo plurale `think_many` porta un campo in più, `n` (cifre, 2..99); il telefono lo legge solo per quel tipo e dice «<Nome> ti ha pensato N volte ♡». Nessun altro campo nuovo, mai nomi, testi, id o destinazioni.

@@ -86,7 +86,8 @@ test('contract: every catalogue entry builds a valid, URL-free, allow-listed not
   for (const type of core.NOTIFICATION_TYPES) {
     const n = core.buildNotification(type, args);
     assert.ok(Object.isFrozen(n));
-    assert.deepEqual(Object.keys(n).sort(), ['badge', 'body', 'category', 'channel', 'plural', 'ref', 'tag', 'target', 'title', 'ttl', 'type', 'urgency', 'v']);
+    assert.deepEqual(Object.keys(n).sort(), ['badge', 'body', 'category', 'channel', 'plural', 'ref', 'tag', 'target', 'times', 'title', 'ttl', 'type', 'urgency', 'v']);
+    assert.equal(n.times, 0, `${type}: no number without several times (Ti penso ×N: Android n)`);
     assert.equal(typeof n.plural, 'boolean', `${type}: plural is only a flag (I cuori: the Android kind)`);
     assert.ok(core.NOTIFICATION_TARGETS.includes(n.target), type);
     assert.ok(core.NOTIFICATION_CHANNELS.includes(n.channel), type);

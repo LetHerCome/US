@@ -13,6 +13,11 @@ enum UsWidgetModels {
     /// A "sending" older than this was interrupted.
     static let sendingStale: TimeInterval = 45
     static let retrySameAction: TimeInterval = 2 * 60
+    /// Ti penso ×N dai widget (founder, 27/11/2026): taps in a row add up; the
+    /// Ti penso leaves this long after the last one, with all of them (UsWidgetModels.java BURST_MS).
+    static let burst: TimeInterval = 1.5
+    /// At most 99 taps in one Ti penso (shared_messages.think_taps): the 99th sends at once.
+    static let maxTaps = 99
     static let bubbleVisible: TimeInterval = 7 * 86_400
 
     static var romeCalendar: Calendar {
@@ -108,8 +113,17 @@ enum UsWidgetModels {
         var done = false
         /// The partner thought of you and you have not answered (Lock Screen: full heart).
         var unanswered = false
+        /// Ti penso ×N: taps are adding up, the send leaves after the last one.
+        var counting = false
+        /// The taps of the burst being counted, sent or just sent (1..99).
+        var taps = 1
+        /// The taps of their last Ti penso (1..99): «Bea ti ha pensato 5 volte».
+        var receivedTaps = 1
         var nextChange: Date?
     }
+
+    /// "Inviato ×5": the number only when there were several.
+    static func times(_ taps: Int) -> String { taps > 1 ? " ×\(taps)" : "" }
 
     /// action: status (idle|sending|sent|failed|unauthorized|rate_limited), at, sentAt, reply.
     static func think(_ snapshot: [String: Any]?, action: [String: Any]?, hasCredential: Bool, now: Date) -> Think {
@@ -131,17 +145,29 @@ enum UsWidgetModels {
             return out
         }
         out.canSend = true
+        out.taps = UsWidgetContract.taps(action?["taps"])
+        // Ti penso ×N: the taps add up on the heart; another tap adds one more.
+        if let at = actionAt, status == "counting", since < retrySameAction {
+            out.done = true
+            out.counting = true
+            out.unanswered = false
+            out.line = "×\(out.taps)"
+            out.when = "tocca ancora"
+            out.nextChange = at.addingTimeInterval(since < burst ? burst + 0.5 : retrySameAction)
+            return out
+        }
         let sending = status == "sending" && since < sendingStale
         if let at = actionAt, sending || (status == "sent" && since < sentVisible) {
             out.done = true
             out.unanswered = false
-            out.line = UsWidgetContract.bool(action?["reply"]) ? "Ricambiato" : "Inviato"
+            out.line = (UsWidgetContract.bool(action?["reply"]) ? "Ricambiato" : "Inviato") + times(out.taps)
             out.when = "adesso"
             out.busy = sending || since < sendCooldown
             out.nextChange = at.addingTimeInterval(sending ? sendingStale : out.busy ? sendCooldown : sentVisible)
             return out
         }
-        if let at = actionAt, (status == "failed" || (status == "sending" && since >= sendingStale)) && since < failedVisible {
+        let lost = (status == "sending" && since >= sendingStale) || status == "counting"
+        if let at = actionAt, (status == "failed" || lost) && since < failedVisible {
             out.line = "Non è partito, riprova"
             out.nextChange = at.addingTimeInterval(failedVisible)
             return out
@@ -153,7 +179,9 @@ enum UsWidgetModels {
         }
         if out.unanswered {
             let received = UsWidgetContract.instant(UsWidgetContract.string(t["lastReceivedAt"]))
-            out.line = who + " ti ha pensato"
+            // Ti penso ×N (27/11/2026): «Bea ti ha pensato 5 volte».
+            out.receivedTaps = UsWidgetContract.taps(t["lastReceivedTaps"])
+            out.line = who + " ti ha pensato" + (out.receivedTaps > 1 ? " \(out.receivedTaps) volte" : "")
             out.when = bubbleAgo(received, now: now)
             if let received = received, !out.when.isEmpty { out.nextChange = bubbleNextChange(received, now: now) }
             return out
@@ -179,12 +207,44 @@ enum UsWidgetModels {
         if let previous = previous {
             let status = UsWidgetContract.string(previous["status"])
             let id = UsWidgetContract.string(previous["actionId"])
-            if ["failed", "sending", "rate_limited"].contains(status),
+            // A burst still being counted (or owed) keeps its id too: Ti penso ×N.
+            if ["failed", "sending", "rate_limited", "counting"].contains(status),
                let at = UsWidgetContract.instant(UsWidgetContract.string(previous["at"])),
                now.timeIntervalSince(at) < retrySameAction,
                let uuid = UUID(uuidString: id), uuid.uuidString.lowercased() == id { return id }
         }
         return make()
+    }
+
+    /// Ti penso ×N: what one more tap does to the action state (iOS twin of
+    /// UsWidgetModels.Tap). A burst still open (counting, under
+    /// retrySameAction) gets one more tap with the same id; otherwise a new
+    /// burst of 1 starts (a retry after a failed send keeps the id).
+    struct Tap: Equatable {
+        var actionId = ""
+        var taps = 1
+        /// The burst answers their thought («Ricambiato»), fixed at its first tap.
+        var reply = false
+        /// The 99th tap: the send leaves at once.
+        var full = false
+    }
+
+    static func tap(previous: [String: Any]?, replyIfNew: Bool, now: Date, make: () -> String = { UUID().uuidString.lowercased() }) -> Tap {
+        var out = Tap()
+        let status = UsWidgetContract.string(previous?["status"])
+        let id = UsWidgetContract.string(previous?["actionId"])
+        let at = UsWidgetContract.instant(UsWidgetContract.string(previous?["at"]))
+        if status == "counting", let at = at, at <= now, now.timeIntervalSince(at) < retrySameAction,
+           let uuid = UUID(uuidString: id), uuid.uuidString.lowercased() == id {
+            out.actionId = id
+            out.taps = min(maxTaps, UsWidgetContract.taps(previous?["taps"]) + 1)
+            out.reply = UsWidgetContract.bool(previous?["reply"])
+        } else {
+            out.actionId = actionId(previous: previous, now: now, make: make)
+            out.reply = replyIfNew
+        }
+        out.full = out.taps >= maxTaps
+        return out
     }
 
     // MARK: - Relative times

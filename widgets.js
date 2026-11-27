@@ -44,7 +44,7 @@
   let pendingDestination = '';
   let pendingKind = '';
 
-  const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastSentAt: '', lastAnsweredAt: '', todayCount: 0, todayDate: '' });
+  const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastReceivedTaps: 1, lastSentAt: '', lastAnsweredAt: '', todayCount: 0, todayDate: '' });
   // Batteria del partner: level -1 = unknown (UsWidgetContract.java).
   // colors: each person's colour as the app shows it (Pastello widgets).
   // characters (widget del redesign, founder 26/11/2026): each person's
@@ -189,6 +189,8 @@
     think = {
       partnerName: cleanText(next.partnerName || think.partnerName, 40),
       lastReceivedAt: isoInstant(next.lastReceivedAt),
+      // Ti penso ×N (27/11/2026): the taps of their last Ti penso, 1..99.
+      lastReceivedTaps: Number.isInteger(next.lastReceivedTaps) ? Math.max(1, Math.min(99, next.lastReceivedTaps)) : 1,
       lastSentAt: isoInstant(next.lastSentAt),
       lastAnsweredAt: isoInstant(next.lastAnsweredAt),
       // "12 volte che vi siete pensati oggi" on the Ti penso widget.

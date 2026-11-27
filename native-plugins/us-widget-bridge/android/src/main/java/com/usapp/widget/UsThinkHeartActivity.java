@@ -1,7 +1,5 @@
 package com.usapp.widget;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.animation.ArgbEvaluator;
 import android.animation.Keyframe;
 import android.animation.ObjectAnimator;
@@ -14,8 +12,11 @@ import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.view.HapticFeedbackConstants;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -37,11 +38,27 @@ public final class UsThinkHeartActivity extends Activity {
     private static final int ROSA = 0xFFFF7C96;
     private static final int LILLA = 0xFFA98BFF;
 
+    /**
+     * Ti penso ×N (27/11/2026): while the heart is up it covers the widget,
+     * so a tap on it is one more tap on the widget (the receiver counts it),
+     * with its own pop; it closes a moment after the last one.
+     */
+    private static final long LINGER_MS = 700;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable closer = this::close;
+    private ObjectAnimator pop;
+    private ValueAnimator opening;
+    private View root;
+
+    private void tap() {
+        sendBroadcast(new Intent(this, UsThinkWidgetActionReceiver.class).setAction(UsThinkWidgetActionReceiver.ACTION_SEND_THINK));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // The send first: it never waits for the animation.
-        sendBroadcast(new Intent(this, UsThinkWidgetActionReceiver.class).setAction(UsThinkWidgetActionReceiver.ACTION_SEND_THINK));
+        // The tap first: it never waits for the animation.
+        tap();
         Rect bounds = getIntent().getSourceBounds();
         float motion = Settings.Global.getFloat(getContentResolver(), Settings.Global.ANIMATOR_DURATION_SCALE, 1f);
         if (bounds == null || bounds.isEmpty() || motion == 0f) {
@@ -52,6 +69,7 @@ public final class UsThinkHeartActivity extends Activity {
         // Screen coordinates, like the widget's bounds.
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         FrameLayout root = new FrameLayout(this);
+        this.root = root;
         // The widget is the heart: drawn over its empty heart, at the middle of the widget.
         int button = Math.min(bounds.width(), bounds.height());
         int glyph = Math.round(button * 0.52f);
@@ -80,7 +98,7 @@ public final class UsThinkHeartActivity extends Activity {
         k3.setInterpolator(new AccelerateDecelerateInterpolator());
         Keyframe k4 = Keyframe.ofFloat(1f, 1f);
         k4.setInterpolator(new DecelerateInterpolator());
-        ObjectAnimator pop = ObjectAnimator.ofPropertyValuesHolder(heart,
+        pop = ObjectAnimator.ofPropertyValuesHolder(heart,
             PropertyValuesHolder.ofKeyframe(View.SCALE_X, k0, k1, k2, k3, k4),
             PropertyValuesHolder.ofKeyframe(View.SCALE_Y, k0.clone(), k1.clone(), k2.clone(), k3.clone(), k4.clone()));
         pop.setDuration(440);
@@ -88,7 +106,7 @@ public final class UsThinkHeartActivity extends Activity {
         // The wave: a thick rosa ring that opens out, turns lilla and thins away (420 ms).
         float thick = size / 7f;
         ArgbEvaluator colors = new ArgbEvaluator();
-        ValueAnimator opening = ValueAnimator.ofFloat(0f, 1f);
+        opening = ValueAnimator.ofFloat(0f, 1f);
         opening.setStartDelay(30);
         opening.setDuration(420);
         opening.setInterpolator(new PathInterpolator(0.16f, 1f, 0.3f, 1f));
@@ -100,11 +118,36 @@ public final class UsThinkHeartActivity extends Activity {
             wave.setScaleY(scale);
             wave.setAlpha(0.85f * (1 - t));
         });
-        opening.addListener(new AnimatorListenerAdapter() {
-            @Override public void onAnimationEnd(Animator animation) { close(); }
+        // A tap on the heart (over the widget) is one more tap; elsewhere it closes.
+        Rect target = new Rect(bounds);
+        root.setOnTouchListener((view, event) -> {
+            if (event.getActionMasked() != MotionEvent.ACTION_DOWN) return true;
+            if (target.contains(Math.round(event.getRawX()), Math.round(event.getRawY()))) again();
+            else close();
+            return true;
         });
+        play();
+    }
+
+    private void play() {
+        pop.cancel();
+        opening.cancel();
         pop.start();
         opening.start();
+        handler.removeCallbacks(closer);
+        handler.postDelayed(closer, LINGER_MS);
+    }
+
+    private void again() {
+        tap();
+        if (root != null) root.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+        play();
+    }
+
+    @Override
+    protected void onDestroy() {
+        handler.removeCallbacks(closer);
+        super.onDestroy();
     }
 
     private static FrameLayout.LayoutParams at(int size, int left, int top) {
