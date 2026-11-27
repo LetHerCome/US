@@ -1,6 +1,8 @@
-import { cp, mkdir, readFile, readdir, rm, stat } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assetCopyFilter } from './build-asset-filter.mjs';
+import { bundleHash, productionBuildId, stampBuild } from './build-id.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(SCRIPT_DIR, '..');
@@ -20,8 +22,6 @@ const RUNTIME_FILES = [
   'app.js',
   'onboarding.js',
   'onboarding.css',
-  'stories.js',
-  'stories.css',
   'styles.css',
   'ui-foundation.css',
   'ui-foundation.js',
@@ -101,11 +101,9 @@ const RUNTIME_FILES = [
   'noi-v2.js',
   'noi-v2.css',
   'oggi-look.js',
-  // Il vostro cielo (Premi Sintonia V2): the sky and its stars.
   'oggi-fx.js',
   'intro.js',
   'think-reward.js',
-  'assets/data/stars-bsc5-v1.json',
   'oggi-look.css',
   'state-system.css',
   'auth-first-run.css',
@@ -148,8 +146,29 @@ for (const relative of RUNTIME_FILES) {
   await cp(source, destination);
 }
 
-await cp(path.join(ROOT, 'assets'), path.join(OUTPUT, 'assets'), { recursive: true });
+await cp(path.join(ROOT, 'assets'), path.join(OUTPUT, 'assets'), { recursive: true, filter: assetCopyFilter(ROOT) });
 await cp(path.join(ROOT, 'cloudflare', '_headers'), path.join(OUTPUT, '_headers'));
+
+// Every bundle carries <release>-<hash of its files> (scripts/build-id.mjs):
+// a runtime change always reaches installed phones, a docs-only deploy keeps
+// the id. Done before minify, so the hash follows the source bytes.
+{
+  const bundle = [];
+  for (const file of await collectFiles(OUTPUT)) {
+    bundle.push([file, await readFile(path.join(OUTPUT, ...file.split('/')))]);
+  }
+  const read = (file) => readFile(path.join(OUTPUT, file), 'utf8');
+  const [index, worker, manifest] = await Promise.all(['index.html', 'service-worker.js', 'manifest.webmanifest'].map(read));
+  const buildId = productionBuildId(worker, bundleHash(bundle));
+  const stamped = stampBuild({ index, worker, manifest }, buildId);
+  await Promise.all([
+    writeFile(path.join(OUTPUT, 'index.html'), stamped.index, 'utf8'),
+    writeFile(path.join(OUTPUT, 'service-worker.js'), stamped.worker, 'utf8'),
+    writeFile(path.join(OUTPUT, 'manifest.webmanifest'), stamped.manifest, 'utf8'),
+    writeFile(path.join(OUTPUT, 'version.json'), stamped.version, 'utf8')
+  ]);
+  console.log(`Cloudflare Pages BUILD_ID -> ${buildId}`);
+}
 
 async function collectFiles(directory, prefix = '') {
   const entries = await readdir(directory, { withFileTypes: true });

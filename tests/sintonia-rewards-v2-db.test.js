@@ -16,11 +16,17 @@ const progression = (user = h.F) => h.as(db, user, 'select public.get_progressio
 const setLevel = (level) => db.query('update public.couples set bond_xp = $1 where id = $2', [xpFor(level), h.A]);
 const reward = (p, id) => p.rewards.find((r) => r.id === id);
 
+// The ladder of Phase 1 and 2 with the text review: the production chain of 1.5.1
+// (14/11/2026). The personaggi scale (23/11) and Premi di Oggi (26/11), staging
+// only, rebuild the ladder later: personaggi-scala-premi-db.test.js and the
+// Premi tests own that one.
+const UNTIL = '20261113232109_revisione_testi.sql';
 let db;
-test.beforeEach(async () => { db = await h.database(); });
+test.beforeEach(async () => { db = await h.database({ until: UNTIL }); });
 test.afterEach(async () => { await db?.close(); db = null; });
 
 test('migration exists and is listed in the cutoff', () => {
+  assert.ok(fs.existsSync(path.join(DIR, UNTIL)), 'the production chain this test rehearses');
   assert.ok(FILE, 'missing supabase/migrations/*_sintonia_rewards_v2_phase1.sql');
   const cutoff = JSON.parse(fs.readFileSync(path.join(__dirname, '../supabase/baseline/MIGRATION_CUTOFF.json'), 'utf8'));
   assert.ok(cutoff.executable_migrations.includes(FILE) && cutoff.forward_migrations.includes(FILE));

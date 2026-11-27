@@ -34,14 +34,13 @@ test('Foundation 01 mantiene il contratto completo di navigation e Oggi', () => 
 
 test('partner apre solo Lasciato per te e il profilo resta un controllo foto', () => {
   const html = read('index.html');
-  const stories = read('stories.js');
 
   assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,180}onclick="usEnvelopeTap\(\)"/);
   assert.doesNotMatch(html, /id="profileAvatarBtn"/, 'nessun avatar/foto legacy nel top chrome');
   assert.match(html, /id="profileAvatarFile"/, 'il flusso foto profilo resta vivo tramite Impostazioni');
   assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);
   assert.doesNotMatch(html, /onclick="openOwnStories\(\)"/);
-  assert.match(stories, /__US_LEFT_FOR_YOU_ACTIVE__/);
+  assert.match(html, /__US_LEFT_FOR_YOU_ACTIVE__/);
   // Redesign definitivo, fase 2 (D6): your character opens the Profilo, on Oggi and the other pages.
   assert.match(html, /class="us-me" data-us-self onclick="go\('settings',\{nav:true\}\)" aria-label="Il tuo profilo e le Impostazioni"/);
   assert.doesNotMatch(html, /id="usSettingsEntry"/);

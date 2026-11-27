@@ -16,7 +16,6 @@ on:
       - 'package-lock.json'
       - 'scripts/build-capacitor-web.mjs'
       - 'scripts/build-web-brand-assets.mjs'
-      - 'scripts/sync-approved-widget-assets.mjs'
       - '.github/workflows/android-internal-release.yml'
 
 permissions:

@@ -47,8 +47,10 @@ test('a calendar signal refreshes Noi when it is open and Oggi\'s next commitmen
   assert.match(read('noi-v2.js'), /refresh:\(\)=>refresh\(\{force:true\}\)/, 'Noi exposes its refresh');
 });
 
-test('stories and post-it expose their refresh; an open post-it the partner removed says so after the reload', () => {
-  assert.match(read('stories.js'), /window\.usRefreshStories = \(\) => refreshStories\(\);/);
+test('post-it exposes its refresh; an open post-it the partner removed says so after the reload', () => {
+  // Stories are retired (27/11/2026): the stories signal is an optional call that does nothing.
+  assert.equal(fs.existsSync(path.join(ROOT, 'stories.js')), false);
+  assert.match(read('app.js'), /if\(kind==='stories'\)return window\.usRefreshStories\?\.\(\);/);
   const notes = read('couple-notes.js');
   assert.match(notes, /api\.refresh=\(\)=>ensure\(\{force:true\}\)/);
   const load = notes.slice(notes.indexOf('async function load(){'), notes.indexOf('function ensure('));

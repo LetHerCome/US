@@ -24,6 +24,15 @@ test('supabase sql workflow: manual only, approved, confirmed, pinned', () => {
   has('echo "::add-mask::${SUPABASE_ACCESS_TOKEN}"');
 });
 
+test('supabase sql workflow: production only from main (file and workflow), staging from any ref', () => {
+  has('SOURCE_REF: ${{ inputs.ref }}');
+  has('WORKFLOW_REF: ${{ github.ref }}');
+  const production = wf.slice(wf.indexOf('            production)'), wf.indexOf('echo "PROJECT_REF=iiakdfsxpywdkxravqjh"'));
+  assert.ok(production.includes('if [ "$SOURCE_REF" != "main" ] || [ "$WORKFLOW_REF" != "refs/heads/main" ]; then'), 'the main check comes before the production project is chosen');
+  const staging = wf.slice(wf.indexOf('            staging)'), wf.indexOf('            production)'));
+  assert.doesNotMatch(staging, /SOURCE_REF|WORKFLOW_REF/);
+});
+
 test('supabase sql workflow: only a migration file that exists on the ref, never free SQL', () => {
   has('if ! [[ "$MIGRATION" =~ ^[0-9]{14}_[a-z0-9_]+\\.sql$ ]] || [ ! -f "supabase/migrations/$MIGRATION" ]; then');
   has('readFileSync("supabase/migrations/" + process.env.MIGRATION, "utf8")');

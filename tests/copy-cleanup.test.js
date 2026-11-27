@@ -9,7 +9,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (name) => fs.readFileSync(path.join(ROOT, name), 'utf8');
 
-const SURFACES = ['index.html', 'app.js', 'settings.js', 'events.js', 'calendar.js', 'left-for-you.js', 'stories.js', 'moments-albums.js', 'games.js', 'fix4.js'];
+const SURFACES = ['index.html', 'app.js', 'settings.js', 'events.js', 'calendar.js', 'left-for-you.js', 'moments-albums.js', 'games.js', 'fix4.js'];
 const all = () => SURFACES.map(read).join('\n');
 
 test('copy: explanatory and duplicate lines removed in this pass stay removed', () => {

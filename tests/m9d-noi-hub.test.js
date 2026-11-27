@@ -29,7 +29,7 @@ test('M9D + HUMAN-UI-02: Sintonia keeps the one-hero geometry, other destination
   const s = css();
   // 1.0 (N10) retired the old hub markup; its rules left with it (25/10 trim).
   assert.doesNotMatch(s, /\.noi-hub\{|\.noi-hub-card/);
-  for (const icon of ['infinity-regular', 'compass-regular', 'calendar-dots-regular', 'flag-banner-regular', 'caret-left-regular']) {
+  for (const icon of ['calendar-dots-regular', 'flag-banner-regular', 'caret-left-regular']) {
     const svg = read(`assets/icons/phosphor/${icon}.svg`);
     assert.match(svg, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 256 256" fill="currentColor">/, `${icon} is an unmodified Phosphor asset`);
   }

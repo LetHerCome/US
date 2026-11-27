@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assetCopyFilter } from './build-asset-filter.mjs';
 import { build } from 'esbuild';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -102,11 +103,9 @@ const RUNTIME_FILES = [
   'noi-v2.js',
   'noi-v2.css',
   'oggi-look.js',
-  // Il vostro cielo (Premi Sintonia V2): the sky and its stars.
   'oggi-fx.js',
   'intro.js',
   'think-reward.js',
-  'assets/data/stars-bsc5-v1.json',
   'oggi-look.css',
   'state-system.css',
   'auth-first-run.css',
@@ -137,7 +136,7 @@ for (const relative of RUNTIME_FILES) {
   await cp(source, destination);
 }
 
-await cp(path.join(ROOT, 'assets'), path.join(OUTPUT, 'assets'), { recursive: true });
+await cp(path.join(ROOT, 'assets'), path.join(OUTPUT, 'assets'), { recursive: true, filter: assetCopyFilter(ROOT) });
 
 const supabaseCandidates = [
   path.join(ROOT, 'node_modules', '@supabase', 'supabase-js', 'dist', 'umd', 'supabase.js'),
@@ -179,10 +178,8 @@ html = html.replace(topChromeLink, '$1\n<link rel="stylesheet" href="/native-fra
 
 html = html
   .replace(/<link\s+rel=["']manifest["'][^>]*>\s*/i, '')
-  // Stories were retired from the product surface. Native must not resurrect
-  // the old partner bubble, Story add control, archive row or runtime.
-  .replace(/<link\s+rel=["']stylesheet["']\s+href=["']\/stories\.css(?:\?v=[^"']+)?["'][^>]*>\s*/i, '')
-  .replace(/<script\s+defer\s+src=["']\/stories\.js(?:\?v=[^"']+)?["']><\/script>\s*/i, '')
+  // Stories were retired from the product surface (stories.js/css are gone
+  // since 27/11/2026). The web archive row stays web-only.
   .replace(/<button\b(?=[^>]*\bdata-us-setting=["']story-archive["'])[^>]*>[\s\S]*?<\/button>\s*/i, '')
   .replace(/<link\s+rel=["']preconnect["']\s+href=["']https:\/\/cdn\.jsdelivr\.net["'][^>]*>\s*/i, '')
   .replace(/<link\s+rel=["']dns-prefetch["']\s+href=["']\/\/cdn\.jsdelivr\.net["'][^>]*>\s*/i, '')

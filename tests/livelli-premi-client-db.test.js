@@ -30,9 +30,9 @@ test('every countdown style, Oggi theme and Oggi effect with a reward says the l
     ...look.THEMES.map((t) => ['oggi-look.js', t]),
     ...look.EFFECTS.map((e) => ['oggi-look.js', e]),
   ].filter(([, item]) => item.reward);
-  // Today: Aurora, Orbita, Cromo; Cinema, Chiaro di luna, Il vostro cielo, Stagioni;
-  // Petali, Lucciole, Luci sfocate, Neve, Aurora. A new one is checked too.
-  assert.ok(client.length >= 12, `only ${client.length} looks with a reward`);
+  // Premi di Oggi (25–26/11/2026): Post-it, Biglietto, Filo rosso; Ora d'oro,
+  // Stagioni; Soffioni, Neve, Foglie, Stelle cadenti, Lanterne, Ricordi. A new one is checked too.
+  assert.ok(client.length >= 11, `only ${client.length} looks with a reward`);
 
   const db = await database({ seed: false });
   try {

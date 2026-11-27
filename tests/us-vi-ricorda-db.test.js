@@ -86,7 +86,9 @@ test('a year ago: a memory, with its place, to one of the two by turns; the othe
 
 test('one line a day, the strongest wins; never the same thing twice; never two questions in a row', async () => {
   await birthday(h.B, 'Beatrice', '2000-12-02');
-  await moment(h.B, '2025-11-25', 'Padova');
+  // Added a year ago too: created now (the default), it would be a new place the
+  // day after the test runs, and the test would depend on the day it runs.
+  await moment(h.B, '2025-11-25', 'Padova', '2025-11-25T18:00:00Z');
   await plan('2026-11-25');
   await plan('2026-11-25');
   const f = await lineOf(h.F, '2026-11-25');

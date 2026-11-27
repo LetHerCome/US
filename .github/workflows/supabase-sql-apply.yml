@@ -9,7 +9,9 @@ name: Supabase SQL (manual)
 # account token lives only in that environment as SUPABASE_ACCESS_TOKEN.
 #
 # * The file must already be on the chosen ref (reviewed and merged); free SQL
-#   is never accepted.
+#   is never accepted. Production takes the file only from main, with the
+#   workflow itself started from main (audit 27/11/2026): a branch or a
+#   commit not merged yet can reach staging only.
 # * The optional check is one SELECT on content and cron tables only, so the
 #   log never shows a couple's private data.
 # * Nothing is written to the migration ledger: production has always been
@@ -24,7 +26,7 @@ on:
         type: choice
         options: [staging, production]
       ref:
-        description: 'Branch o commit da cui prendere il file'
+        description: 'Branch o commit da cui prendere il file (production: solo main)'
         required: true
         default: main
       migration:
@@ -54,6 +56,8 @@ jobs:
       MIGRATION: ${{ inputs.migration }}
       CHECK_SQL: ${{ inputs.check }}
       CONFIRM: ${{ inputs.confirm }}
+      SOURCE_REF: ${{ inputs.ref }}
+      WORKFLOW_REF: ${{ github.ref }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -70,6 +74,7 @@ jobs:
             staging) echo "PROJECT_REF=dugmhngrfkuieeletatb" >> "$GITHUB_ENV" ;;
             production)
               if [ "$CONFIRM" != "PRODUZIONE" ]; then echo "::error::Per production scrivi PRODUZIONE nel campo di conferma"; exit 1; fi
+              if [ "$SOURCE_REF" != "main" ] || [ "$WORKFLOW_REF" != "refs/heads/main" ]; then echo "::error::In production solo da main: avvia il workflow da main con ref main"; exit 1; fi
               echo "PROJECT_REF=iiakdfsxpywdkxravqjh" >> "$GITHUB_ENV" ;;
             *) echo "::error::Destinazione non valida"; exit 1 ;;
           esac
