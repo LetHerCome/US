@@ -33,6 +33,19 @@
 - **US, l'app che si ricorda:** si ricorda le vostre date e i ricordi di un anno fa, e tiene la bacheca, mai più di una volta al giorno.
 - **Finale con battuta su US Plus:** «più vestiti per me, più giochi, più cose vostre… è una sorpresa».
 - Una tappa che non ha niente da mostrare viene saltata, per esempio la distanza se non la condividete. Chi ha già fatto l'intro la rivede dal Profilo.
+### Gioca più piena: voi due, cosa avete scoperto, i giorni insieme (27/11)
+
+**Stato:** ramo `claude/gioca-piena`, verso staging (dal tip fac396a9). Migrazione `20261127184444_gioca_intesa_v1` (una sola funzione in sola lettura, `get_game_intesa_v1`: niente tabelle, niente righe) da applicare su staging insieme al web; senza la migrazione Gioca funziona lo stesso (riquadro «Voi due» con la frase di attesa e i giorni presi dalle ultime partite). Solo web: nessun AAB o TestFlight necessario oltre al solito aggiornamento. Decisioni del grill del 27/11 (D1–D6, D15, D18).
+
+- **In alto i gettoni e la settimana:** sotto i tre gettoni sette pallini, da lunedì a domenica; si accende il giorno in cui avete finito una partita tutti e due («3 giorni insieme questa settimana»). Un giorno vuoto non toglie niente: nessuna serie da perdere.
+- **«Voi due»:** i vostri due personaggi, vicini e girati l'uno verso l'altro, e la vostra intesa: «Su 20 domande avete risposto uguale 14 volte», sulle ultime 20 risposte che si possono confrontare (le scelte fatte da tutti e due; le previsioni di «Quanto mi conosci?» e le risposte libere restano fuori). Mai chi ha vinto. Prima di cinque risposte: «Giocate qualche partita e qui vedrete la vostra intesa». I personaggi hanno la faccia di Come stai, sono contenti quando ci sono risposte pronte e dormono quando i gettoni sono finiti.
+- **Ordine nuovo della pagina:** gettoni e settimana, Voi due, Vi aspetta (con tutti e due i personaggi), Oggi per voi, Cosa avete scoperto, Tutti i giochi, La vostra domanda e in fondo «Il diario delle partite» (prima «Partite completate»). Su un telefono piccolo (360×640) il tasto «Gioca» della prima carta si vede sopra la barra: la carta è più bassa e la descrizione resta all'etichetta.
+- **«Cosa avete scoperto»:** due o tre risposte brevi delle ultime partite che hai già aperto («Tu Sushi · Bea Pizza», «Tutti e due Mare»), prima i giochi leggeri, una scelta nuova ogni giorno. Mai le previsioni, le domande profonde, quelle scritte da voi o le risposte lunghe. Un tocco riapre le risposte di quella partita.
+- **Gettoni finiti:** al posto della pagina grigia, «Intanto rileggete…» con l'ultima risposta in cui avete scelto diverso, «Ne parlate stasera?», Lascia qualcosa e Ti penso, e «Rivedi la partita». Il riquadro dei gettoni dice ancora quando tornano; la riga di US Plus resta piccola.
+- **Oggi per voi secondo come state:** se tutti e due siete felici o innamorati la prima carta è Ridete («Per ridere»); se uno dei due è giù, stanco o non sta bene è Rivivete («Con dolcezza»). Altrimenti l'ordine di oggi. Le altre carte restano nel loro ordine; con i gettoni finiti nessun cambio.
+- **Tutti i giochi:** ogni gioco ha la sua scheda, con l'ultima volta («Giocato ieri») e, quando ci sono abbastanza risposte, «70% risposte uguali». Rivivete sta nella stessa griglia; «✓ Giocato» è nell'angolo della scheda.
+- **Fine di una partita:** sotto le risposte «+15 per il vostro livello», i punti che il server dava già.
+- La sfida fotografica della settimana resta nascosta.
 
 ### I cuoricini volano nell'isola (27/11)
 

@@ -707,3 +707,15 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 
 - Verso la coppia, quello che nei documenti era «Cupido» si chiama US: le battute di US vi ricorda, la bacheca tenuta da US, gli avvisi. «Cupido» resta solo come nome storico nei documenti di progetto (docs/product/2026-11-13-cupido.md).
 - L'intro lo presenta con una tappa sua, dopo l'angolo, e chiude con una battuta su US Plus.
+## 2026-11-27 — Gioca più piena: voi due, cosa avete scoperto, i giorni insieme
+
+**Fonte:** grill del founder del 27/11/2026 su Gioca (D1–D6, D15, D18), tutte accettate («vai mi piace»).
+
+- **D1 Ordine:** gettoni e settimana, «Voi due», (Vi aspetta), Oggi per voi, Cosa avete scoperto, Tutti i giochi, in fondo il diario delle partite. A 360×640 il tasto della prima carta sta sopra la barra.
+- **D2 Cosa avete scoperto:** 2–3 risposte brevi da partite già aperte (mai uno spoiler), giochi leggeri prima, a rotazione per giorno; fuori previsioni, domande di profondità 3, domande scritte dalla coppia, risposte lunghe. Il tocco riapre il reveal. Le risposte dell'altra persona restano solo in memoria.
+- **D3/D18 Intesa, mai una gara:** «Su N domande avete risposto uguale M volte» sulle ultime 20 risposte confrontabili (scelte reciproche fatte da tutti e due). «Hai indovinato» resta solo nel reveal. Sotto 5 risposte la frase di attesa. Dati da `get_game_intesa_v1()` (sola lettura, stessa coppia via `m11a_actor`, solo conteggi e date, SECURITY DEFINER con search_path vuoto, solo authenticated).
+- **D4 Giorni insieme:** sette pallini della settimana di Roma, acceso il giorno con una partita finita da tutti e due; nessuna serie né penalità. A fine reveal «+15 per il vostro livello» (gli stessi 15 di `progression_award 'game'`).
+- **D5 Gettoni finiti:** «Intanto rileggete…» con l'ultima risposta diversa e la mossa del reveal (`revealMove`); la riga US Plus resta piccola.
+- **D6:** la sfida fotografica resta nascosta.
+- **D15 Umore:** tutti e due felici/innamorati/in festa → Ridete prima; uno giù/stanco/malato → Rivivete prima; altrimenti l'ordine di oggi. Il resto della giostra non si muove; con i gettoni finiti nessun cambio.
+- **Codice:** le scelte stanno in `gioca-insieme.js` (funzioni pure); `games.js` legge il server e dipinge.

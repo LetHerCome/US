@@ -59,6 +59,7 @@ const RUNTIME_FILES = [
   'navigation.js',
   'games.css',
   'games.js',
+  'gioca-insieme.js',
   'progression.css',
   'progression.js',
   'countdown.css',

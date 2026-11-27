@@ -171,7 +171,8 @@ test('Gioca: rounds are plain readings of open_rounds / recent, on their tiles; 
   assert.ok(html.indexOf('us-gv2-vi-aspetta') < html.indexOf('us-gv2-choose'), 'Vi aspetta before the games');
   assert.ok(html.indexOf('us-gv2-continue') > html.indexOf('us-gv2-choose'), 'the rest comes after the games');
   const done = html.match(/<details class="us-gv2-done">[\s\S]*?<\/details>/)?.[0] || '';
-  assert.match(done, /<summary><span>Partite completate<\/span><b>1<\/b><\/summary>/);
+  // Gioca più piena (grill 27/11/2026, D1): the diary of your rounds, at the bottom.
+  assert.match(done, /<summary><span>Il diario delle partite<\/span><b>1<\/b><\/summary>/);
   assert.deepEqual([...done.matchAll(/data-gv2-session="([^"]+)"/g)].map((m) => m[1]), ['r2']);
   assert.ok(html.indexOf('us-gv2-done') > html.indexOf('us-gv2-choose'), 'completed rounds stay at the end');
 });
@@ -199,7 +200,7 @@ test('Gioca: game cards keep the existing mode action (start_game_round with the
 test('Gioca: RPC surface is explicit; Swipe adds only its start authority and no client storage', () => {
   const src = read('games.js');
   const rpcs = [...new Set([...src.matchAll(/sb\.rpc\('([a-z_0-9]+)'/g)].map((m) => m[1]))].sort();
-  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
+  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_game_intesa_v1', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
   assert.doesNotMatch(src, /localStorage|sessionStorage|indexedDB/);
 });
 
