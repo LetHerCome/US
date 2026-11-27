@@ -75,10 +75,11 @@ enum UsCharacterShapes {
         (UInt32((a * 255).rounded()) << 24) | (r << 16) | (g << 8) | b
     }
 
-    /// Come stai → the face (personaggi.js FACE); nothing said: happy.
+    /// Come stai → the face (personaggi.js FACE); nothing said: happy. A face name stays itself.
     static func faceOf(_ status: String) -> String {
         switch status {
         case "dorme": return "dorme"
+        case "teso": return "teso"
         case "festa", "innamorato": return "innamorato"
         case "giu", "malato": return "giu"
         case "stanco": return "stanco"
@@ -87,25 +88,41 @@ enum UsCharacterShapes {
         }
     }
 
+    /// Come stai che conta (27/11/2026, D8): what they hold or wear (personaggi.js THING); nothing for the others.
+    static func thingOf(_ status: String) -> String {
+        switch status {
+        case "lavoro": return "valigetta"
+        case "studio": return "libro"
+        case "palestra": return "fascia"
+        case "viaggio": return "valigia"
+        case "tavola": return "forchetta"
+        case "malato": return "termometro"
+        default: return ""
+        }
+    }
+
     // MARK: - The drawing
 
     /// - Parameters:
-    ///   - face: felice, innamorato, dorme, giu, stanco, teso
+    ///   - face: felice, innamorato, dorme, giu, stanco, teso, or a Come stai key (its face and its thing)
     ///   - reaction: "", cuore, festa, saluta or sera (sera sleeps)
     ///   - zz: the colour of the sleeping z's (the ink of the card)
     ///   - mono: one tint, for the lock screen and the tinted Home: the body
     ///     white, the lines dark, no soft light or blush.
     static func draw(_ shapeName: String, color: UInt32, face: String, reaction: String, head: String, faceItem: String, zz: UInt32, mono: Bool = false) -> [Op] {
         let s = shape(shapeName)
-        let f = reaction == "sera" ? "dorme" : !reaction.isEmpty ? "felice" : (face.isEmpty ? "felice" : face)
+        // Not feeling well never falls asleep at night (D8): the face of the state stays.
+        let reactionNow = reaction == "sera" && face == "malato" ? "" : reaction
+        let f = reactionNow == "sera" ? "dorme" : !reactionNow.isEmpty ? "felice" : faceOf(face)
+        let thingNow = f == "dorme" ? "" : thingOf(face)
         let shut = f == "stanco" || f == "innamorato" || f == "dorme"
-        let heartEyes = reaction == "cuore"
-        let big = heartEyes || reaction == "festa"
+        let heartEyes = reactionNow == "cuore"
+        let big = heartEyes || reactionNow == "festa"
         let a = s.a, b = s.b, y = s.ey
         let edgeColor = edge(color)
         var out: [Op] = []
 
-        reactionBack(&out, reaction, s, color)
+        reactionBack(&out, reactionNow, s, color)
         add(&out, ell(s.f0, 97, 9, 5) + " " + ell(s.f1, 97, 9, 5), color, edgeColor, 2.4, false)
         add(&out, s.body, color, edgeColor, 2.6, true)
         add(&out, ell(s.hx, s.hy, 8, 5), rgba(255, 255, 255, 0.5), 0, 0, false)
@@ -144,9 +161,56 @@ enum UsCharacterShapes {
             out.append(text("z", 84, 36, 19, zz, false))
             out.append(text("z", 97, 22, 13, zz, false))
         }
+        if !thingNow.isEmpty { thing(&out, thingNow, s) }
         if !faceItem.isEmpty { look(&out, faceItem, s) }
         if !head.isEmpty { look(&out, head, s) }
         return mono ? monochrome(out) : out
+    }
+
+    /// personaggi.js thingSvg: the same steps, held at the left or worn.
+    static func thing(_ out: inout [Op], _ thing: String, _ s: Shape) {
+        let y = s.ey, r = s.right
+        switch thing {
+        case "valigetta":
+            add(&out, "M5 75 V72 Q5 69 8 69 H12 Q15 69 15 72 V75", 0, ink, 2.4, true)
+            lp(&out, "M1 77 Q1 75 3 75 H17 Q19 75 19 77 V91 Q19 93 17 93 H3 Q1 93 1 91 Z", 0xFF9B_6A43, 2.4)
+            add(&out, "M1 82 H19", 0, ink, 1.6, true)
+            lp(&out, "M8.5 80.5 H11.5 V83.5 H8.5 Z", 0xFFF3_D27A, 1.2)
+        case "valigia":
+            add(&out, "M6 70 V60 H14 V70", 0, ink, 2.4, true)
+            lp(&out, "M0 72 Q0 70 2 70 H18 Q20 70 20 72 V92 Q20 94 18 94 H2 Q0 94 0 92 Z", 0xFFF3_A64B, 2.4)
+            add(&out, "M6 73 V91 M14 73 V91", 0, 0xFFD9_822B, 2, true)
+            lp(&out, ell(4, 96, 2.2, 2.2) + " " + ell(16, 96, 2.2, 2.2), 0xFF3A_3446, 1.4)
+        case "libro":
+            let start = out.count
+            lp(&out, "M1 74 H17 Q19 74 19 76 V92 Q19 94 17 94 H1 Z", 0xFFA9_8BFF, 2.4)
+            add(&out, "M4 91 H17", 0, 0xFFFF_FDF9, 2.4, true)
+            add(&out, "M6 79 H14 M6 83 H12", 0, 0xFFFF_FDF9, 1.8, true)
+            for i in start..<out.count { out[i].rotate = -12; out[i].rx = 10; out[i].ry = 84 }
+        case "forchetta":
+            lp(&out, "M7 70 H11 V92 Q11 94 9 94 Q7 94 7 92 Z", 0xFFD7_DCE3, 2)
+            add(&out, "M4 57 V65 M9 57 V65 M14 57 V65", 0, ink, 2.6, true)
+            add(&out, "M4 64 Q4 70 9 70 Q14 70 14 64", 0, ink, 2.6, true)
+        case "fascia":
+            let y0 = y - 18
+            var band = Op()
+            band.d = "M0 \(n(y0)) Q50 \(n(y0 - 4)) 110 \(n(y0)) V\(n(y0 + 7)) Q50 \(n(y0 + 3)) 0 \(n(y0 + 7)) Z"
+            band.fill = 0xFFFF_5A7A; band.stroke = ink; band.width = 2.2; band.clip = s.body
+            out.append(band)
+            var stripe = Op()
+            stripe.d = "M0 \(n(y0 + 3.5)) Q50 \(n(y0 - 0.5)) 110 \(n(y0 + 3.5))"
+            stripe.stroke = 0xFFFF_FFFF; stripe.width = 1.6; stripe.clip = s.body
+            out.append(stripe)
+            lp(&out, "M\(n(r - 7)) \(n(y0 + 3)) l9 -6 l2 7 Z", 0xFFFF_5A7A, 1.8)
+            lp(&out, "M\(n(r - 7)) \(n(y0 + 4)) l10 3 l-4 6 Z", 0xFFFF_5A7A, 1.8)
+        case "termometro":
+            add(&out, "M53 \(n(y + 12)) L68 \(n(y + 5))", 0, ink, 5.4, true)
+            add(&out, "M53 \(n(y + 12)) L68 \(n(y + 5))", 0, 0xFFFF_FFFF, 3, true)
+            add(&out, "M53 \(n(y + 12)) L59 \(n(y + 9.2))", 0, 0xFFE8_484A, 3, true)
+            lp(&out, ell(53, y + 12, 2.6, 2.6), 0xFFE8_484A, 1.4)
+        default:
+            break
+        }
     }
 
     /// One tint: soft light, blush and glass go; fills turn white, ink stays dark.

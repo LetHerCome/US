@@ -13,6 +13,9 @@ import org.json.JSONObject;
  *
  *  - "look": shape, head, face and two colours, validated again here by
  *    UsWidgetContract.character, written into this account's snapshot;
+ *  - "status" (Come stai che conta, 27/11/2026, D13): their Come stai, one
+ *    of the twelve keys, the words' form and the server's two instants,
+ *    validated again by UsWidgetContract.statusPerson;
  *  - "clear": the same cleanup as logout (credential, snapshot, photos,
  *    portraits), so the widgets forget the partner's name, photo and Come stai.
  */
@@ -28,6 +31,18 @@ public final class UsWidgetSignals {
             new UsWidgetCredentialStore(app).clear();
             new UsWidgetStore(app).clearAll();
             return true;
+        }
+        if ("status".equals(signal)) {
+            try {
+                final JSONObject status = new JSONObject();
+                for (String key : new String[] { "status", "form", "at", "until" }) {
+                    final String value = data.get(key);
+                    status.put(key, value == null ? "" : value);
+                }
+                return new UsWidgetStore(app).writePartnerStatus(status);
+            } catch (Exception ignored) {
+                return false;
+            }
         }
         if (!"look".equals(signal)) return false;
         try {

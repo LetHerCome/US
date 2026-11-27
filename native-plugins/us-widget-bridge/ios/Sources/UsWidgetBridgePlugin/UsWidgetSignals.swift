@@ -10,6 +10,8 @@ import WidgetKit
 ///
 ///  - "look": shape, head, face and two colours, validated by UsWidgetContract.character and
 ///    written as the partner's character in this account's snapshot;
+///  - "status" (Come stai che conta, 27/11/2026, D13): their Come stai, one of the twelve keys,
+///    the words' form and the server's two instants, validated by UsWidgetContract.statusPerson;
 ///  - "clear": the same cleanup as logout (credential, snapshot, photos, portraits).
 ///
 /// iOS delivers background pushes when it decides, and never to an app the person closed by hand:
@@ -33,6 +35,8 @@ public enum UsWidgetSignals {
             changed = true
         case "look":
             changed = store.writePartnerLook(ownerHash: owner, look: widget)
+        case "status":
+            changed = store.writePartnerStatus(ownerHash: owner, status: widget)
         default:
             return false
         }
