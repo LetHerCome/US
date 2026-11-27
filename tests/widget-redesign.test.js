@@ -125,3 +125,72 @@ test('the app hands over both characters and writes again when a shape, colour o
   assert.equal(writes, 2, 'a new shape is written again');
   assert.equal(sandbox.read().characters.me.shape, 'goccia');
 });
+
+// The bridge (platform.js) lets through only what it knows: the characters and the second post-it
+// must cross it, or the phone draws the role's character and a 4x2 with one note (audit 27/11/2026).
+test('the bridge hands the characters and the second post-it to the phone, checked as the contract does', async () => {
+  const written = [];
+  const plugin = { writeSnapshot: async ({ snapshot }) => { written.push(snapshot); } };
+  const sandbox = { console: { warn() {} }, navigator: {}, UsCapacitorRuntime: { isNativePlatform: () => true, isPluginAvailable: (name) => name === 'UsWidgetBridge', registerPlugin: () => plugin } };
+  sandbox.window = sandbox;
+  vm.runInContext(read('platform.js'), vm.createContext(sandbox), { filename: 'platform.js' });
+  const snapshot = {
+    ownerHash: 'a'.repeat(64),
+    couple: { characters: { me: { shape: 'nuvola', head: 'fiocco', face: 'occhiali', color: '#6F9BFF', day: '#8faad6' }, partner: { shape: 'stella', head: '<b>', face: 'gala', color: 'blue', day: '' } } },
+    postit: { state: 'ready', text: 'Ti amo', color: 'pink', by: 'partner', more: 1, at: '2026-11-27T10:00:00.000Z', second: { text: 'Compra il latte', color: 'viola', by: 'me' } }
+  };
+  assert.equal(await sandbox.UsPlatform.writeWidgetSnapshot(snapshot), true);
+  const out = JSON.parse(JSON.stringify(written[0]));
+  assert.deepEqual(out.couple.characters, {
+    me: { shape: 'nuvola', head: 'fiocco', face: 'occhiali', color: '#6f9bff', day: '#8faad6' },
+    partner: { shape: '', head: '', face: 'gala', color: '', day: '' }
+  });
+  assert.deepEqual(out.postit.second, { text: 'Compra il latte', color: 'yellow', by: 'me' });
+  // The same lists as the native contract.
+  const java = read(`${JAVA}/UsWidgetContract.java`), js = read('platform.js');
+  for (const name of ['SHAPE', 'HEAD', 'FACE']) {
+    const list = java.split(`static final Pattern ${name} = Pattern.compile("^(`)[1].split(')$")')[0];
+    assert.ok(/^[a-z|]+$/.test(list), `${name} read from UsWidgetContract.java`);
+    assert.ok(js.includes(`const CHARACTER_${name} = /^(${list})$/;`), `${name} as in UsWidgetContract.java`);
+  }
+  // Nothing written: an empty character and an empty second note.
+  await sandbox.UsPlatform.writeWidgetSnapshot({ ownerHash: 'a'.repeat(64) });
+  const empty = JSON.parse(JSON.stringify(written[1]));
+  assert.deepEqual(empty.couple.characters.me, { shape: '', head: '', face: '', color: '', day: '' });
+  assert.deepEqual(empty.postit.second, { text: '', color: '', by: '' });
+});
+
+// «se i personaggi cambiano di forma, in tutte le cose dove sono presenti ci saranno quei personaggi»:
+// the other person's new look reaches this phone when US comes back to the foreground, not only
+// at the next cold start (audit 27/11/2026). Nothing is read again when nothing changed.
+test('back in the foreground the other person\'s new look is read, and only then the couple again', async (t) => {
+  const { loadChromium } = require('./helpers/oggi-browser');
+  const chromium = loadChromium();
+  if (!chromium) return t.skip('Playwright unavailable');
+  const { start, pageFor } = require('./helpers/countdown-browser');
+  const h = await start();
+  try {
+    const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
+    const before = await page.evaluate(() => window.UsPersonaggi.shapeOf('beatrice'));
+    assert.equal(before, 'quadrato');
+    let events = await page.evaluate(async () => {
+      let n = 0; window.addEventListener('us-identity-change', () => { n += 1; });
+      window.__looks = () => n;
+      document.dispatchEvent(new Event('visibilitychange'));
+      await new Promise((r) => setTimeout(r, 3600));
+      return n;
+    });
+    assert.equal(events, 0, 'nothing changed: no new couple read');
+    events = await page.evaluate(async () => {
+      // A new row, as the server would send (the fake hands out its own objects).
+      window.__QA.tables.profiles = window.__QA.tables.profiles.map((p) => (p.role === 'beatrice' ? { ...p, character_shape: 'goccia', character_head: 'fiocco' } : p));
+      document.dispatchEvent(new Event('visibilitychange'));
+      await new Promise((r) => setTimeout(r, 3600));
+      return window.__looks();
+    });
+    assert.equal(events, 1);
+    assert.deepEqual(await page.evaluate(() => [window.UsPersonaggi.shapeOf('beatrice'), window.UsPersonaggi.lookOf('beatrice').head]), ['goccia', 'fiocco']);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  } finally { await h.close(); }
+});

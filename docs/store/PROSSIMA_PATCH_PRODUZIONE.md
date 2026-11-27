@@ -2,6 +2,14 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Widget coi vostri personaggi davvero, e il personaggio dell'altra persona aggiornato (27/11)
+
+**Stato:** ramo `claude/widget-personaggi-filtro`, verso staging. Trovato nel controllo generale del 27/11. Nessuna migrazione.
+
+**Cosa cambia:**
+- **Widget:** il ponte tra l'app e il telefono (`platform.js`) buttava via i personaggi e il secondo Post-it. Per questo i widget nuovi disegnavano sempre il personaggio di base del ruolo (tondo rosa o quadrato lilla) e il Post-it largo aveva una nota sola. Ora passano, controllati come fa il codice nativo.
+- **Il personaggio dell'altra persona:** se Bea cambia forma, colore o accessori, sul tuo telefono arriva quando riapri US. Prima arrivava solo dopo aver chiuso del tutto l'app. Si rilegge solo quello, e il resto si aggiorna solo se qualcosa è cambiato. Così si aggiornano anche Oggi, l'angolo e i widget.
+
 ### Widget iPhone col redesign e blocca schermo (26/11)
 
 **Stato:** ramo `claude/widget-redesign-ios` (sopra quello Android). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.

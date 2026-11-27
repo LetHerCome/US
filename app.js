@@ -227,8 +227,25 @@ async function hydrateUsCoupleContext(){
     profiles:usCoupleContextState.profiles.map(row=>({...row}))
   };
 }
+// The other person's character on this phone (audit 27/11/2026): their shape, colour and outfit
+// were read only at boot. Back in the foreground the looks are read again, and the whole couple
+// context (with us-identity-change: Oggi, angolo, widgets) only when one of them changed.
+const USC_LOOK_FIELDS=['id','role','person_color','character_shape','character_head','character_face'];
+const uscLookKey=rows=>JSON.stringify((rows||[]).map(row=>USC_LOOK_FIELDS.map(field=>row?.[field]??null)).sort());
+async function refreshUsCoupleLooks(){
+  const profile=window.usProfile,coupleId=profile?.couple_id;
+  if(!profile?.id||!coupleId||usCoupleContextState.identityKey!==`${profile.id}:${coupleId}`)return false;
+  try{
+    const {data,error}=await sb.from('profiles').select(USC_LOOK_FIELDS.join(',')).eq('couple_id',coupleId);
+    if(error||!Array.isArray(data)||window.usProfile!==profile)return false;
+    if(uscLookKey(data)===uscLookKey(usCoupleContextState.profiles))return false;
+    await hydrateUsCoupleContext();
+    return true;
+  }catch(_error){return false;}
+}
 window.UsCoupleContext=Object.freeze({
   hydrate:hydrateUsCoupleContext,
+  refreshLooks:refreshUsCoupleLooks,
   clear:clearUsCoupleContext,
   snapshot:()=>({
     couple:usCoupleContextState.couple?{...usCoupleContextState.couple}:null,
@@ -5670,6 +5687,7 @@ async function refreshVisibleState(options={}){
   if(options.foreground)usAfterForeground(()=>hydrateProfileAvatars(),1500);
   if(options.foreground)usAfterForeground(()=>window.UsPartnerBattery?.onForeground?.('resume'),1700);
   if(options.foreground)usAfterForeground(()=>window.UsMemberStatus?.onForeground?.('resume'),1800);
+  if(options.foreground)usAfterForeground(()=>refreshUsCoupleLooks(),2000);
   if(active==='home'||todayOpen){
     if(options.foreground)hydrateHomePhoto(false).catch(()=>{});
     await hydrateToday();

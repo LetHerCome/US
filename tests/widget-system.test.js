@@ -182,7 +182,7 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   // Lavagna (03/11/2026): whether there is a drawing, who drew last and when; never a stroke.
   assert.deepEqual({ ...sent.lavagna }, { state: 'ready', by: 'partner', at: '2026-11-03T10:00:00.000Z' });
   // Post-it (04/11/2026): the newest post-it's words, its paper, who and how many others; never an id.
-  assert.deepEqual({ ...sent.postit }, { state: 'ready', text: 'prenotare la cena', color: 'yellow', by: 'partner', more: 99, at: '2026-11-04T10:00:00.000Z' });
+  assert.deepEqual(JSON.parse(JSON.stringify(sent.postit)), { state: 'ready', text: 'prenotare la cena', color: 'yellow', by: 'partner', more: 99, at: '2026-11-04T10:00:00.000Z', second: { text: '', color: '', by: '' } });
   assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'lavagna', 'left', 'memories', 'ownerHash', 'photo', 'postit', 'schemaVersion', 'status', 'think', 'updatedAt']);
 
   assert.equal(await platform.writeWidgetSnapshot({ schemaVersion: 2, ownerHash: 'raw-user-id' }), false, 'owner non hash rifiutato');

@@ -177,7 +177,9 @@
         colors: {
           me: /^#[0-9a-f]{6}$/i.test(couple.colors?.me || '') ? couple.colors.me.toLowerCase() : '',
           partner: /^#[0-9a-f]{6}$/i.test(couple.colors?.partner || '') ? couple.colors.partner.toLowerCase() : ''
-        }
+        },
+        // Widget del redesign: each person's character, as the app draws it.
+        characters: { me: widgetCharacter(couple.characters?.me), partner: widgetCharacter(couple.characters?.partner) }
       },
       countdown: {
         active,
@@ -234,16 +236,39 @@
 
   // Post-it (04/11/2026): the newest post-it of the board, its paper, who
   // wrote it and how many others. The couple's own words, never an id or a URL.
+  // The 4x2 shows the one before it too (widget del redesign, 26/11/2026).
   function widgetPostit(postit = {}) {
     const text = safeText(postit?.text, 120);
-    if (postit?.state !== 'ready' || !text) return { state: 'none', text: '', color: '', by: '', more: 0, at: '' };
+    const paper = (value) => (['yellow', 'pink', 'blue', 'green'].includes(value) ? value : 'yellow');
+    const who = (value) => (['me', 'partner'].includes(value) ? value : '');
+    if (postit?.state !== 'ready' || !text) return { state: 'none', text: '', color: '', by: '', more: 0, at: '', second: { text: '', color: '', by: '' } };
+    const secondText = safeText(postit?.second?.text, 120);
     return {
       state: 'ready',
       text,
-      color: ['yellow', 'pink', 'blue', 'green'].includes(postit?.color) ? postit.color : 'yellow',
-      by: ['me', 'partner'].includes(postit?.by) ? postit.by : '',
+      color: paper(postit?.color),
+      by: who(postit?.by),
       more: Math.max(0, Math.min(99, Math.trunc(Number(postit?.more) || 0))),
-      at: safeInstant(postit?.at)
+      at: safeInstant(postit?.at),
+      second: secondText ? { text: secondText, color: paper(postit.second.color), by: who(postit.second.by) } : { text: '', color: '', by: '' }
+    };
+  }
+
+  // I personaggi (UsWidgetContract.character, personaggi.js SHAPES, LOOK_HEAD,
+  // LOOK_FACE): an unknown shape, piece or colour is left empty, and the
+  // widget draws the role's.
+  const CHARACTER_SHAPE = /^(palla|quadrato|triangolo|goccia|nuvola)$/;
+  const CHARACTER_HEAD = /^(cappello|fiocco|cuffie|corona|coroncina|festa|cento)$/;
+  const CHARACTER_FACE = /^(occhiali|sole|sciarpina|gala|macchinetta)$/;
+  function widgetCharacter(character = {}) {
+    const pick = (value, pattern) => (typeof value === 'string' && pattern.test(value) ? value : '');
+    const hex = (value) => (typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : '');
+    return {
+      shape: pick(character?.shape, CHARACTER_SHAPE),
+      head: pick(character?.head, CHARACTER_HEAD),
+      face: pick(character?.face, CHARACTER_FACE),
+      color: hex(character?.color),
+      day: hex(character?.day)
     };
   }
 
