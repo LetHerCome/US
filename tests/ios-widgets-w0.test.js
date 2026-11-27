@@ -128,6 +128,36 @@ test('W0 estensione: target WidgetKit app.uscouple.widgets, incorporato nell\'ap
   assert.match(read('ios/App/App/Info.plist'), /<key>UsWidgetKeychainGroup<\/key>\s*<string>\$\(AppIdentifierPrefix\)app\.uscouple\.shared<\/string>/);
 });
 
+test('Estensione widget: nessuna immagine spedita senza che lo Swift la usi', () => {
+  // Piccolezze prima del rilascio (27/11/2026): the redesign draws the widgets
+  // natively, the old art_* illustrations and the grain left the extension.
+  const IMAGE = /\.(png|jpe?g|webp|gif|heic|pdf|svg)$/i;
+  const walk = (dir) => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((entry) => {
+    const relative = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) return entry.name.endsWith('.imageset') ? [relative] : walk(relative);
+    return IMAGE.test(entry.name) ? [relative] : [];
+  });
+  const swift = [EXT, CORE].flatMap((dir) => fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith('.swift')).map((f) => read(`${dir}/${f}`))).join('\n');
+  const used = (name) => new RegExp(`"${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\.\\w+)?"`).test(swift);
+  for (const file of walk(EXT)) {
+    const name = path.basename(file).replace(/\.(imageset|\w+)$/, '');
+    assert.ok(used(name), `${file}: immagine non usata dallo Swift dei widget`);
+  }
+  // The extension's resources phase carries only what the Swift uses.
+  const pbx = read('ios/App/App.xcodeproj/project.pbxproj');
+  const phase = pbx.match(/B1D6E700000000000000000B \/\* Resources \*\/ = \{[\s\S]*?\};/);
+  assert.ok(phase, 'fase Resources dell\'estensione');
+  const shipped = [...phase[0].matchAll(/\/\* (.+?) in Resources \*\//g)].map((m) => m[1]);
+  assert.ok(shipped.includes('Fraunces.ttf') && shipped.includes('Figtree.ttf'), 'i caratteri restano');
+  // Images, also those of an asset catalog (walked above), only when the Swift names them.
+  for (const file of shipped.filter((f) => IMAGE.test(f))) {
+    assert.ok(used(file.replace(IMAGE, '')), `${file}: spedita ma non usata`);
+  }
+  for (const name of ['art_photo', 'art_think_s', 'art_think_m', 'grain_tile']) {
+    assert.doesNotMatch(pbx, new RegExp(name), `${name} fuori dal progetto`);
+  }
+});
+
 test('W1 caratteri: gli stessi file di Android, byte per byte', () => {
   // The Pastello illustrations and the grain left the Android widgets with the
   // redesign (27/11/2026 cleanup); the iPhone extension no longer draws them either.
