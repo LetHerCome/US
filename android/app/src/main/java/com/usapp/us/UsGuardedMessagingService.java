@@ -19,6 +19,7 @@ import com.usapp.pushsupport.UsPushChannels;
 import com.usapp.pushsupport.UsPushNotices;
 import com.usapp.pushsupport.UsPushOwnerGate;
 import com.usapp.pushsupport.UsPushSupportPlugin;
+import com.usapp.widget.UsWidgetSignals;
 import java.util.Locale;
 import java.util.Map;
 
@@ -41,6 +42,13 @@ public final class UsGuardedMessagingService extends MessagingService {
     @Override
     public void onMessageReceived(@NonNull RemoteMessage message) {
         final Map<String, String> data = message.getData();
+        // Widget signals (27/11/2026): silent v3 (the partner's new look, or
+        // they left). Never a banner, never a JS event: only the widgets move,
+        // and only for the account that owns this installation.
+        if (message.getNotification() == null && "3".equals(data.get("v"))) {
+            applyWidgetSignal(data);
+            return;
+        }
         // Old payloads are not owner-bound; never call Capacitor's generic
         // fireNotification for them. OS auto-display of OLD notification-type
         // packets must be addressed by safe coordinated rollout and QA.
@@ -52,6 +60,22 @@ public final class UsGuardedMessagingService extends MessagingService {
             postPrivateSafeNotice(data.get("installation"), data.get("k"));
         }
         PushNotificationsPlugin.sendRemoteMessage(message);
+    }
+
+    /**
+     * The signal is applied under the owner gate's lock (the same one as
+     * logout), so a packet for another account never touches the widgets.
+     * The widgets are redrawn after it, outside the lock.
+     */
+    private void applyWidgetSignal(Map<String, String> data) {
+        final boolean[] changed = { false };
+        try {
+            UsPushOwnerGate.postIfCurrent(this, data.get("installation"), () -> changed[0] = UsWidgetSignals.apply(this, data));
+            if (changed[0] && "clear".equals(data.get("s"))) UsPushOwnerGate.forgetPartner(this, data.get("installation"));
+            if (changed[0]) UsWidgetSignals.refresh(this);
+        } catch (RuntimeException ignored) {
+            // A widget that cannot be redrawn now is redrawn when US opens.
+        }
     }
 
     private void postPrivateSafeNotice(String installation, String kind) {

@@ -37,6 +37,7 @@ public final class UsPushNotices {
         "test", "think", "think_reply", "daily_turn", "daily_ready", "daily_reaction", "daily_new",
         "quest", "left_for_you", "game_turn", "game_ready", "game_weekly", "game_weekly_turn",
         "calendar", "anniversary", "partner_joined", "lavagna", "postit", "challenge", "challenge_reminder", "challenge_photo",
+        "birthday_week", "birthday", "anniversary_week", "year_ago", "bacheca",
     };
 
     /** A display name: no control characters, trimmed, at most 40 characters. */
@@ -54,6 +55,8 @@ public final class UsPushNotices {
         final boolean en = english(locale);
         final String name = cleanName(partnerName);
         final String who = name.isEmpty() ? (en ? "Your person" : "La tua persona") : name;
+        // Inside a sentence (US vi ricorda, 27/11/2026).
+        final String whom = name.isEmpty() ? (en ? "your person" : "la tua persona") : name;
         switch (kind == null ? "" : kind) {
             case "test":
                 return notice(en, "US.", "US.", "Notifiche attive ♡", "Notifications are on ♡", "oggi");
@@ -117,6 +120,22 @@ public final class UsPushNotices {
             case "challenge_photo":
                 return notice(en, "US. · La sfida della settimana", "US. · This week's challenge",
                     who + " ha messo la sua foto: manca solo la tua", who + " added their photo: only yours is missing", "gioca");
+            // US vi ricorda (27/11/2026): a birthday is always the other person's.
+            case "birthday_week":
+                return notice(en, "US.", "US.",
+                    "Tra una settimana è il compleanno di " + whom + " ♡", who + "’s birthday is a week away ♡", "oggi");
+            case "birthday":
+                return notice(en, "US.", "US.",
+                    "Oggi è il compleanno di " + whom + " ♡", "Today is " + whom + "’s birthday ♡", "oggi");
+            case "anniversary_week":
+                return notice(en, "US.", "US.",
+                    "Tra una settimana è il vostro anniversario ♡", "Your anniversary is a week away ♡", "oggi");
+            case "year_ago":
+                return notice(en, "US.", "US.",
+                    "Un anno fa, oggi: un vostro ricordo ♡", "A year ago today: one of your memories ♡", "oggi");
+            case "bacheca":
+                return notice(en, "US. · Bacheca", "US. · Board",
+                    "US vi ha appeso un ricordo in bacheca ♡", "US pinned a memory on your board ♡", "ricordi");
             default:
                 return new Notice(FALLBACK_TITLE, FALLBACK_BODY, "oggi");
         }
