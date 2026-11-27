@@ -48,6 +48,16 @@ public class UsPushNoticesTest {
     }
 
     @Test
+    public void aPostItOnTheBoardSaysWhoWroteNeverTheTextAndOpensRicordi() {
+        UsPushNotices.Notice it = UsPushNotices.forKind("bacheca_postit", "Bea", IT);
+        assertEquals("US. · Bacheca", it.title);
+        assertEquals("Bea ha scritto su un ricordo in bacheca", it.body);
+        assertEquals("ricordi", it.page);
+        assertEquals("Bea wrote on a memory on your board", UsPushNotices.forKind("bacheca_postit", "Bea", EN).body);
+        assertEquals("La tua persona ha scritto su un ricordo in bacheca", UsPushNotices.forKind("bacheca_postit", null, IT).body);
+    }
+
+    @Test
     public void unknownOrMissingKindIsTheGenericNotice() {
         for (String kind : new String[] { null, "", "drop_table", "THINK" }) {
             UsPushNotices.Notice notice = UsPushNotices.forKind(kind, "Bea", IT);

@@ -2948,6 +2948,7 @@
     'Non riesco a pulire la lavagna adesso.': 'I can’t clean the board right now.',
     'Quando la tua persona disegna sulla lavagna': 'When your person draws on the board',
     'Quando la tua persona disegna o ti lascia un post-it': 'When your person draws or leaves you a sticky note',
+    'Quando la tua persona disegna, ti lascia un post-it o scrive sulla bacheca': 'When your person draws, leaves you a sticky note or writes on the board',
     'US vi ricorda': 'US remembers',
     'Compleanni, un anno fa, la bacheca: al massimo uno al giorno': 'Birthdays, a year ago, the board: one a day at most',
     'L’ultimo disegno sulla vostra lavagna. Toccalo per disegnare.': 'The last drawing on your board. Tap it to draw.',

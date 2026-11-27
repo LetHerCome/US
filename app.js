@@ -822,7 +822,7 @@ window.disableWebPush=disableWebPush;
 // Native Notifications V1: one allow-listed target per notification (Web Push
 // and native alike), never a URL. `ref` (a UUID, native only) narrows the
 // surface; every surface re-reads its data through the normal RLS/RPC paths.
-const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar','events','lavagna']);
+const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar','events','lavagna','bacheca']);
 async function performPushNavigation(target,intent={}){
   if(!US_PUSH_TARGETS.includes(target))return;
   if(!window.usProfile){usPendingPushTarget=target;return;}
@@ -861,6 +861,13 @@ async function performPushNavigation(target,intent={}){
   if(target==='lavagna'){
     if(document.querySelector('.page.active')?.id!=='bond')go('bond',{motionCommit:true});
     setTimeout(()=>window.UsLavagna?.open?.(),120);
+    return;
+  }
+  // La bacheca, fase 2 (27/11/2026): a post-it of the partner on the board of
+  // Ricordi; the board opens centred on its thing (ref, the post-it, on iOS; the newest one elsewhere).
+  if(target==='bacheca'){
+    if(document.querySelector('.page.active')?.id!=='moments')go('moments',{motionCommit:true});
+    setTimeout(()=>window.UsBacheca?.openOn?.({noteId:ref||''}),120);
     return;
   }
   // Mesiversario and anniversary pushes: Eventi on Noi.

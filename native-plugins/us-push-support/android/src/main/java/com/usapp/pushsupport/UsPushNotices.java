@@ -36,7 +36,7 @@ public final class UsPushNotices {
     public static final String[] KINDS = {
         "test", "think", "think_reply", "daily_turn", "daily_ready", "daily_reaction", "daily_new",
         "quest", "left_for_you", "game_turn", "game_ready", "game_weekly", "game_weekly_turn",
-        "calendar", "anniversary", "partner_joined", "lavagna", "postit", "challenge", "challenge_reminder", "challenge_photo",
+        "calendar", "anniversary", "partner_joined", "lavagna", "postit", "bacheca_postit", "challenge", "challenge_reminder", "challenge_photo",
         "invite_reminder",
         "birthday_week", "birthday", "anniversary_week", "year_ago", "bacheca",
     };
@@ -112,6 +112,10 @@ public final class UsPushNotices {
             case "postit":
                 return notice(en, "US. · Lavagna", "US. · Board",
                     who + " ti ha lasciato un post-it", who + " left you a sticky note", "noi");
+            // La bacheca, fase 2 (27/11/2026): never the post-it's text.
+            case "bacheca_postit":
+                return notice(en, "US. · Bacheca", "US. · Board",
+                    who + " ha scritto su un ricordo in bacheca", who + " wrote on a memory on your board", "ricordi");
             case "challenge":
                 return notice(en, "US. · La sfida della settimana", "US. · This week's challenge",
                     "C’è una nuova sfida per voi ♡", "There is a new challenge for you two ♡", "gioca");

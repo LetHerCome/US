@@ -138,6 +138,8 @@ export const ANDROID_NOTICE_KINDS = Object.freeze({
   lavagna: 'lavagna',
   // Noi, Fase B.3: an older app shows the generic line until it knows the kind.
   postit: 'postit',
+  // La bacheca, fase 2 (27/11/2026): the phone writes the line, it opens Ricordi.
+  bacheca_postit: 'bacheca_postit',
   challenge_new: 'challenge',
   challenge_reminder: 'challenge_reminder',
   challenge_photo: 'challenge_photo',
