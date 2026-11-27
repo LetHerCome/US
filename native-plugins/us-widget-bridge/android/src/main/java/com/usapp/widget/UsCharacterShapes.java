@@ -182,28 +182,28 @@ final class UsCharacterShapes {
         double y = s.ey, r = s.right;
         switch (thing) {
             case "valigetta":
-                add(out, "M5 75 V72 Q5 69 8 69 H12 Q15 69 15 72 V75", NONE, INK, 2.4f, true);
-                lp(out, "M1 77 Q1 75 3 75 H17 Q19 75 19 77 V91 Q19 93 17 93 H3 Q1 93 1 91 Z", 0xFF9B6A43, 2.4f);
-                add(out, "M1 82 H19", NONE, INK, 1.6f, true);
-                lp(out, "M8.5 80.5 H11.5 V83.5 H8.5 Z", 0xFFF3D27A, 1.2f);
+                add(out, "M5 72 V68 Q5 65 8 65 H12 Q15 65 15 68 V72", NONE, INK, 2.6f, true);
+                lp(out, "M-3 75 Q-3 72 0 72 H20 Q23 72 23 75 V89 Q23 92 20 92 H0 Q-3 92 -3 89 Z", 0xFF9B6A43, 2.4f);
+                add(out, "M-3 79 H23", NONE, INK, 1.8f, true);
+                lp(out, "M8 76.5 H12 V81.5 H8 Z", 0xFFF3D27A, 1.2f);
                 return;
             case "valigia":
-                add(out, "M6 70 V60 H14 V70", NONE, INK, 2.4f, true);
-                lp(out, "M0 72 Q0 70 2 70 H18 Q20 70 20 72 V92 Q20 94 18 94 H2 Q0 94 0 92 Z", 0xFFF3A64B, 2.4f);
-                add(out, "M6 73 V91 M14 73 V91", NONE, 0xFFD9822B, 2f, true);
-                lp(out, ell(4, 96, 2.2, 2.2) + " " + ell(16, 96, 2.2, 2.2), 0xFF3A3446, 1.4f);
+                add(out, "M4 66 V56 H12 V66", NONE, INK, 2.6f, true);
+                lp(out, "M-4 69 Q-4 66 -1 66 H17 Q20 66 20 69 V91 Q20 94 17 94 H-1 Q-4 94 -4 91 Z", 0xFFF3A64B, 2.4f);
+                add(out, "M2 69 V91 M14 69 V91", NONE, 0xFFD9822B, 2.2f, true);
+                lp(out, ell(1, 96.5, 2.4, 2.4) + " " + ell(15, 96.5, 2.4, 2.4), 0xFF3A3446, 1.4f);
                 return;
             case "libro": {
-                Op cover = lp(out, "M1 74 H17 Q19 74 19 76 V92 Q19 94 17 94 H1 Z", 0xFFA98BFF, 2.4f);
-                Op pages = add(out, "M4 91 H17", NONE, 0xFFFFFDF9, 2.4f, true);
-                Op lines = add(out, "M6 79 H14 M6 83 H12", NONE, 0xFFFFFDF9, 1.8f, true);
-                for (Op op : new Op[] { cover, pages, lines }) { op.rotate = -12; op.rx = 10; op.ry = 84; }
+                Op cover = lp(out, "M-3 70 H19 Q22 70 22 73 V93 Q22 96 19 96 H-3 Z", 0xFFA98BFF, 2.4f);
+                Op pages = add(out, "M0 93 H19", NONE, 0xFFFFFDF9, 2.6f, true);
+                Op lines = add(out, "M3 76 H15 M3 81 H12", NONE, 0xFFFFFDF9, 2f, true);
+                for (Op op : new Op[] { cover, pages, lines }) { op.rotate = -12; op.rx = 9; op.ry = 83; }
                 return;
             }
             case "forchetta":
-                lp(out, "M7 70 H11 V92 Q11 94 9 94 Q7 94 7 92 Z", 0xFFD7DCE3, 2f);
-                add(out, "M4 57 V65 M9 57 V65 M14 57 V65", NONE, INK, 2.6f, true);
-                add(out, "M4 64 Q4 70 9 70 Q14 70 14 64", NONE, INK, 2.6f, true);
+                lp(out, "M5 66 H11 V93 Q11 96 8 96 Q5 96 5 93 Z", 0xFFD7DCE3, 2.2f);
+                add(out, "M2 49 V60 M8 49 V60 M14 49 V60 M2 58 Q2 66 8 66 Q14 66 14 58", NONE, INK, 4.4f, true);
+                add(out, "M2 49 V60 M8 49 V60 M14 49 V60 M2 58 Q2 66 8 66 Q14 66 14 58", NONE, 0xFFD7DCE3, 2f, true);
                 return;
             case "fascia": {
                 double y0 = y - 18;

@@ -114,7 +114,7 @@ test('the things on the characters (D8); at night only who is not unwell sleeps;
   // The same steps on the widgets.
   const java = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsCharacterShapes.java');
   const swift = read('native-plugins/us-widget-bridge/ios/Sources/UsWidgetBridgePlugin/Core/UsCharacterShapes.swift');
-  for (const step of ['M1 77 Q1 75 3 75 H17 Q19 75 19 77 V91 Q19 93 17 93 H3 Q1 93 1 91 Z', 'M0 72 Q0 70 2 70 H18 Q20 70 20 72 V92 Q20 94 18 94 H2 Q0 94 0 92 Z', 'M1 74 H17 Q19 74 19 76 V92 Q19 94 17 94 H1 Z', 'M7 70 H11 V92 Q11 94 9 94 Q7 94 7 92 Z', 'M4 57 V65 M9 57 V65 M14 57 V65']) {
+  for (const step of ['M-3 75 Q-3 72 0 72 H20 Q23 72 23 75 V89 Q23 92 20 92 H0 Q-3 92 -3 89 Z', 'M-4 69 Q-4 66 -1 66 H17 Q20 66 20 69 V91 Q20 94 17 94 H-1 Q-4 94 -4 91 Z', 'M-3 70 H19 Q22 70 22 73 V93 Q22 96 19 96 H-3 Z', 'M5 66 H11 V93 Q11 96 8 96 Q5 96 5 93 Z', 'M2 49 V60 M8 49 V60 M14 49 V60 M2 58 Q2 66 8 66 Q14 66 14 58']) {
     assert.ok(js.includes(step) && java.includes(step) && swift.includes(step), step);
   }
   for (const native of [java, swift]) {

@@ -94,10 +94,10 @@
     if (!s || !an) return '';
     const y = s.ey, r = an.ears[1];
     switch (thing) {
-      case 'valigetta': return ink('M5 75 V72 Q5 69 8 69 H12 Q15 69 15 72 V75', 2.4) + lp('M1 77 Q1 75 3 75 H17 Q19 75 19 77 V91 Q19 93 17 93 H3 Q1 93 1 91 Z', '#9B6A43', 2.4) + ink('M1 82 H19', 1.6) + lp('M8.5 80.5 H11.5 V83.5 H8.5 Z', '#F3D27A', 1.2);
-      case 'valigia': return ink('M6 70 V60 H14 V70', 2.4) + lp('M0 72 Q0 70 2 70 H18 Q20 70 20 72 V92 Q20 94 18 94 H2 Q0 94 0 92 Z', '#F3A64B', 2.4) + ink('M6 73 V91 M14 73 V91', 2, '#D9822B') + lp(`${ell(4, 96, 2.2, 2.2)} ${ell(16, 96, 2.2, 2.2)}`, '#3A3446', 1.4);
-      case 'libro': return `<g transform="rotate(-12 10 84)">${lp('M1 74 H17 Q19 74 19 76 V92 Q19 94 17 94 H1 Z', '#A98BFF', 2.4)}${ink('M4 91 H17', 2.4, '#FFFDF9')}${ink('M6 79 H14 M6 83 H12', 1.8, '#FFFDF9')}</g>`;
-      case 'forchetta': return lp('M7 70 H11 V92 Q11 94 9 94 Q7 94 7 92 Z', '#D7DCE3', 2) + ink('M4 57 V65 M9 57 V65 M14 57 V65', 2.6) + ink('M4 64 Q4 70 9 70 Q14 70 14 64', 2.6);
+      case 'valigetta': return ink('M5 72 V68 Q5 65 8 65 H12 Q15 65 15 68 V72', 2.6) + lp('M-3 75 Q-3 72 0 72 H20 Q23 72 23 75 V89 Q23 92 20 92 H0 Q-3 92 -3 89 Z', '#9B6A43', 2.4) + ink('M-3 79 H23', 1.8) + lp('M8 76.5 H12 V81.5 H8 Z', '#F3D27A', 1.2);
+      case 'valigia': return ink('M4 66 V56 H12 V66', 2.6) + lp('M-4 69 Q-4 66 -1 66 H17 Q20 66 20 69 V91 Q20 94 17 94 H-1 Q-4 94 -4 91 Z', '#F3A64B', 2.4) + ink('M2 69 V91 M14 69 V91', 2.2, '#D9822B') + lp(`${ell(1, 96.5, 2.4, 2.4)} ${ell(15, 96.5, 2.4, 2.4)}`, '#3A3446', 1.4);
+      case 'libro': return `<g transform="rotate(-12 9 83)">${lp('M-3 70 H19 Q22 70 22 73 V93 Q22 96 19 96 H-3 Z', '#A98BFF', 2.4)}${ink('M0 93 H19', 2.6, '#FFFDF9')}${ink('M3 76 H15 M3 81 H12', 2, '#FFFDF9')}</g>`;
+      case 'forchetta': return lp('M5 66 H11 V93 Q11 96 8 96 Q5 96 5 93 Z', '#D7DCE3', 2.2) + ink('M2 49 V60 M8 49 V60 M14 49 V60 M2 58 Q2 66 8 66 Q14 66 14 58', 4.4) + ink('M2 49 V60 M8 49 V60 M14 49 V60 M2 58 Q2 66 8 66 Q14 66 14 58', 2, '#D7DCE3');
       case 'fascia': {
         scarfClips();
         const y0 = y - 18;
@@ -136,7 +136,7 @@
   const FACE = Object.freeze({ dorme: 'dorme', occhiolino: 'felice', felice: 'felice', festa: 'innamorato', innamorato: 'innamorato', giu: 'giu', malato: 'giu', stanco: 'stanco', nervoso: 'teso', lavoro: 'felice', studio: 'felice', palestra: 'felice', viaggio: 'felice', tavola: 'felice' });
   function moodOf(role) {
     let st;
-    try { st = w?.UsMemberStatus?.widgetState?.(); } catch (_) { st = null; }
+    try { st = w?.UsMemberStatus?.faces?.() || w?.UsMemberStatus?.widgetState?.(); } catch (_) { st = null; }
     const pick = role === myRole() ? st?.me : st?.partner;
     return { status: pick?.status || '', form: pick?.form || '' };
   }

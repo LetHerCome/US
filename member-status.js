@@ -456,6 +456,13 @@
     refresh().catch(() => {});
   }
 
+  // What the characters wear on their face now (personaggi.js moodOf): what is
+  // known, even before the first read (a Realtime row), unlike the widget's.
+  function faces() {
+    const pack = (row) => { const m = model(row); return { status: m ? m.key : '', form: validForm(row?.form) || '' }; };
+    return { me: pack(state.mine), partner: pack(state.partner) };
+  }
+
   // undefined until the rows are read: the widget keeps what it shows.
   function widgetState() {
     if (!state.loaded) return undefined;
@@ -493,5 +500,5 @@
   // A state turns twelve hours old, or "da 20 min" moves on, while the page stays open; no network.
   setInterval(() => { if (!d?.hidden && (state.mine || state.partner)) render(); }, 60000);
 
-  return { ...pure, refresh, onForeground, onChange, open, close, choose, chooseForm, widgetState, respond, replyToMe, oggiHint, runHint, partnerTraveling, ricordaLine, tripToCalendar };
+  return { ...pure, refresh, onForeground, onChange, open, close, choose, chooseForm, widgetState, faces, respond, replyToMe, oggiHint, runHint, partnerTraveling, ricordaLine, tripToCalendar };
 });

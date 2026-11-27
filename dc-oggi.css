@@ -160,6 +160,10 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 #home #usOggiNext b{flex:none;color:var(--us-color-text);font-weight:600}
 #home #usOggiNext #usOggiNextTitle{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #home #usOggiNext .us-icon{--us-icon-size:18px;flex:none;color:var(--us-ambra)}
+/* Come stai che conta (27/11/2026, D10): the row's one suggestion (a voice message, a game) reads like the event's title. */
+#home #usOggiNext[data-us-next-kind="hint"] #usOggiNextTitle{color:var(--us-color-text);font-weight:600}
+#home #usOggiNext[data-us-next-kind="hint"] .us-icon{color:var(--us-noi)}
+#home #usOggiNext[data-us-next-kind="hint"] b:empty{display:none}
 #home #homeHero .og-row .home-distance-pill:not([hidden]){
   position:static!important;
   inset:auto!important;
