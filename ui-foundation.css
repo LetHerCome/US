@@ -817,3 +817,11 @@ h1,h2,h3{font-family:var(--us-font-editorial)}
 .us-heart-fx{position:fixed;z-index:10320;width:0;height:0;pointer-events:none}
 .us-heart-fx>i{position:absolute;left:0;top:0;box-sizing:border-box;border-radius:50%}
 .us-heart-fx>.us-heart-wave{background:none}
+
+/* I cuori (ui-foundation.js heartSpray/heartFlight/heartMore/heartPress, 27/11/2026):
+   the little hearts on one canvas over the page, the «×N» on a reply heart and
+   the border that fills while the heart is held to take it back. */
+.us-hearts-fx{position:fixed;inset:0;z-index:10320;width:100%;height:100%;pointer-events:none}
+.us-heart-count{position:absolute;top:-9px;right:-6px;min-width:26px;height:26px;padding:0 7px;box-sizing:border-box;border-radius:13px;background:var(--us-tu);color:#1a1020;font:800 13px/26px var(--us-font-ui);font-variant-numeric:tabular-nums;text-align:center;pointer-events:none}
+.us-heart-hold{position:absolute;left:-3px;top:-3px;overflow:visible;pointer-events:none}
+.us-heart-hold rect{fill:none;stroke:var(--us-tu);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100}
