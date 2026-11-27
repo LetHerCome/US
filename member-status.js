@@ -1,18 +1,9 @@
-// Come stai (founder, 02/11/2026; SQL member_status_v1; docs/missions/widget-come-stai-v1.md).
-// Each member picks how they are from twelve states, in Oggi (the pill beside
-// the distance opens the sheet); the partner sees it in Oggi and in the
-// Android widget "Come stai". It lasts twelve hours (the server's times).
-// No free text, no history. The words are said in the form each
-// member chose once in Settings ('m', 'f'), or undeclined.
-// Come stai che conta (grill del founder del 27/11/2026): under the other
-// person's state one fitting gesture, one tap, one per state (D7/D16, with a
-// push: the exception to «no notification» of 02/11, which was about the
-// changes of state); a change reaches their widgets at once (D13, a silent
-// signal); Oggi's row may suggest one thing (D10); «In viaggio» offers the
-// Noi calendar (D14); US vi ricorda asks lineFor() (D9/D17).
-// - Realtime: one line on the app's one channel (app.js startUsRealtime),
-//   as the battery; never a parallel channel (ARCHITECTURE.md).
-//   The SQL goes before the web: without the table this module stays quiet.
+// Come stai (02/11/2026; docs/missions/widget-come-stai-v1.md; «Come stai che
+// conta», grill and tavola of 27/11/2026, DECISIONS.md). Twelve states, twelve
+// hours (server times), no free text, no history; words in each one's form.
+// One gesture per state of the other person (with its push), the silent widget
+// signal, Oggi's hint, «In viaggio» → Noi, lineFor() for US vi ricorda.
+// Realtime: one line on the app's one channel (app.js startUsRealtime).
 (function (root, factory) {
   const api = factory(root);
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -20,8 +11,7 @@
 })(typeof window !== 'undefined' ? window : null, function (w) {
   'use strict';
 
-  // The founder's twelve (02/11/2026). The same keys, emoji and words are in
-  // the SQL check and in the widget (UsWidgetModels.STATUSES).
+  // The same keys, emoji and words as the SQL check and the widget.
   const STATUSES = Object.freeze([
     { key: 'innamorato', emoji: '🥰', m: 'innamorato', f: 'innamorata', n: 'col cuore pieno' },
     { key: 'felice', emoji: '😊', m: 'felice', f: 'felice', n: 'felice' },
@@ -37,22 +27,20 @@
     { key: 'tavola', emoji: '🍝', m: 'a tavola', f: 'a tavola', n: 'a tavola' }
   ]);
   const BY_KEY = new Map(STATUSES.map((s) => [s.key, s]));
-  // Come stai che conta (grill del founder del 27/11/2026, D7/D16): under the
-  // other person's state, one gesture that fits it, one tap. The same nine are
-  // in the SQL (respond_member_status), the push (notification-core.mjs) and
-  // the Android notices (UsPushNotices status_<gesture>).
-  // label: the button; said: how the other person reads it, with your name.
-  const GESTURES = Object.freeze({
-    abbraccio: { label: 'Ti mando un abbraccio', icon: '🤗', said: (n) => `${n}: Ti mando un abbraccio` },
-    riposati: { label: 'Riposati', icon: '🌙', said: (n) => `${n}: Riposati` },
-    respira: { label: 'Respira, ci sono io', icon: '🫶', said: (n) => `${n}: Respira, ci sono io` },
-    cuore: { label: 'Ti mando un cuore ♡', icon: '♡', said: (n) => `${n} ti manda un cuore ♡` },
-    festa: { label: '🎉', icon: '🎉', aria: 'Festeggia con {name}', said: (n) => `${n}: 🎉` },
-    forza: { label: 'Forza!', icon: '💪', said: (n) => `${n}: Forza!` },
-    spacca: { label: 'Spacca tutto!', icon: '🔥', said: (n) => `${n}: Spacca tutto!` },
-    buon_viaggio: { label: 'Buon viaggio', icon: '👋', said: (n) => `${n}: Buon viaggio` },
-    buon_appetito: { label: 'Buon appetito', icon: '😋', said: (n) => `${n}: Buon appetito` }
+  // The nine gestures (as the SQL, the push and UsPushNotices status_*): emoji,
+  // short word, «Manda …» (the same for him and her), how the other reads it.
+  const GESTURES = Object.freeze({ abbraccio: { icon: '🤗' }, riposati: { icon: '🌙' }, respira: { icon: '🫶' }, cuore: { icon: '♡' }, festa: { icon: '🎉' }, forza: { icon: '💪' }, spacca: { icon: '🔥' }, buon_viaggio: { icon: '👋' }, buon_appetito: { icon: '😋' } });
+  const SHORT = Object.freeze({ abbraccio: 'Abbraccio', riposati: 'Riposati', respira: 'Respira', cuore: 'Cuore', festa: 'Festa', forza: 'Forza!', spacca: 'Spacca tutto!', buon_viaggio: 'Buon viaggio', buon_appetito: 'Buon appetito' });
+  const ACT = Object.freeze({ abbraccio: 'Manda un abbraccio', riposati: 'Manda «Riposati»', respira: 'Manda «Respira, ci sono io»', cuore: 'Manda un cuore', festa: 'Manda 🎉', forza: 'Manda «Forza!»', spacca: 'Manda «Spacca tutto!»', buon_viaggio: 'Manda «Buon viaggio»', buon_appetito: 'Manda «Buon appetito»' });
+  const GOT = Object.freeze({ abbraccio: '{name} ti manda un abbraccio', riposati: '{name} ti dice «Riposati»', respira: '{name} ti dice «Respira, ci sono io»', cuore: '{name} ti manda un cuore', festa: '{name} festeggia con te 🎉', forza: '{name} ti dice «Forza!»', spacca: '{name} ti dice «Spacca tutto!»', buon_viaggio: '{name} ti dice «Buon viaggio»', buon_appetito: '{name} ti dice «Buon appetito»' });
+  // The state in the third person, in each one's form (m, f, n).
+  const THIRD = Object.freeze({
+    innamorato: { m: '{name} è innamorato', f: '{name} è innamorata', n: '{name} ha il cuore pieno' }, felice: '{name} è felice',
+    stanco: { m: '{name} è stanco', f: '{name} è stanca', n: '{name} è senza energie' }, giu: '{name} è giù',
+    nervoso: { m: '{name} è nervoso', f: '{name} è nervosa', n: '{name} ha i nervi tesi' }, malato: '{name} non sta bene',
+    festa: '{name} è in festa', lavoro: '{name} è al lavoro', studio: '{name} è sui libri', palestra: '{name} è in palestra', viaggio: '{name} è in viaggio', tavola: '{name} è a tavola'
   });
+  const REPLY_SHOWN_MS = 3 * 3600e3;
   const GESTURE_OF = Object.freeze({ giu: 'abbraccio', malato: 'abbraccio', stanco: 'riposati', nervoso: 'respira', felice: 'cuore', innamorato: 'cuore', festa: 'festa', lavoro: 'forza', studio: 'forza', palestra: 'spacca', viaggio: 'buon_viaggio', tavola: 'buon_appetito' });
   const gestureOf = (key) => GESTURE_OF[key] || null;
   // The answer saved on a state row (reply_gesture), only while that state shows.
@@ -106,19 +94,16 @@
     };
   }
 
-  // D10: one light suggestion for the Oggi row, from the two states, or null.
-  // partner stanco/giù → a voice message; both happy or in love → a game.
+  // D10: one hint for Oggi's row: they are stanco/giù → a voice message; both glad → a game.
   function hintFor(mine, partner, name) {
     if (!partner) return null;
-    if (partner.key === 'stanco' || partner.key === 'giu') return { kind: 'vocale', icon: 'microphone', title: `Lascia un vocale a ${name}` };
+    if (partner.key === 'stanco' || partner.key === 'giu') return { kind: 'vocale', title: `🎙 Un vocale a ${name}?` };
     const glad = (m) => m && (m.key === 'felice' || m.key === 'innamorato');
-    if (glad(mine) && glad(partner)) return { kind: 'partita', icon: 'game-controller', title: 'Una partita?' };
+    if (glad(mine) && glad(partner)) return { kind: 'partita', title: '🎲 Una partita?' };
     return null;
   }
 
-  // D9/D17: the line of US vi ricorda, decided here (like «ti aspetta»): the
-  // other person giù, non sta bene or nervoso for two hours or more, and no
-  // gesture sent yet. One per state (ref_key), never at night (us-ricorda.js).
+  // D9/D17: US vi ricorda's line: giù, non sta bene or nervoso for 2 hours, no gesture yet, one per state.
   function lineFor(row, { now = Date.now() } = {}) {
     const m = model(row, { now });
     if (!m || !HEAVY.includes(m.key) || replyOf(row, { now })) return null;
@@ -127,7 +112,7 @@
     return { kind: 'come_sta', ref_key: `come_sta:${m.at}`, speaker: 'me', slot: 'mattina', vars: { status: m.key, form: m.form || '', hours, gesture: gestureOf(m.key) } };
   }
 
-  const pure = { STATUSES, FORMS, FORM_LABEL, LASTS_MS, GESTURES, GESTURE_OF, word, since, model, gestureOf, replyOf, hintFor, lineFor };
+  const pure = { STATUSES, FORMS, FORM_LABEL, LASTS_MS, GESTURES, GESTURE_OF, SHORT, ACT, GOT, THIRD, word, since, model, gestureOf, replyOf, hintFor, lineFor };
   if (!w) return pure;
 
   const d = w.document;
@@ -148,8 +133,6 @@
     state.partner = null;
   }
 
-  // ---------- Come stai che conta: the answer, the line, the hint ----------
-
   const meId = () => w.usProfile?.id || '';
   const store = (key, value) => {
     try {
@@ -158,71 +141,185 @@
     } catch (_) { return null; }
     return null;
   };
-  // The answer I sent to the state the other person shows now, if any.
   const sentToPartner = () => replyOf(state.partner);
-  // The answer the other person sent to my state (personaggi.js reactionOf).
   const replyToMe = ({ now = Date.now() } = {}) => replyOf(state.mine, { now });
-  const gestureLabel = (g) => (g === 'festa' ? t('Festeggia con {name}', { name: partnerName() }) : t(GESTURES[g]?.label || ''));
-  // «Mandato ♡» on the Oggi row for a moment after the tap; in the sheet it stays.
-  let flashUntil = 0;
   const painted = { hint: 'null', trip: false };
-
-  function paintRespond() {
+  // Before the SQL of 27/11 (no answer columns) nothing is offered that the server would refuse.
+  const partnerGesture = () => {
     const partner = model(state.partner);
-    // Before the SQL of 27/11 (no answer columns) nothing is offered that the server would refuse.
-    const g = partner && !state.noReplies ? gestureOf(partner.key) : null;
+    return partner && !state.noReplies ? gestureOf(partner.key) : null;
+  };
+  const act = (g) => t(ACT[g] || '');
+  const gotLine = (g, name) => t(GOT[g] || '', { name });
+  const hasPartner = () => {
+    try { const list = w.UsCoupleContext?.snapshot?.()?.profiles; return Array.isArray(list) ? list.length > 1 : true; } catch (_) { return true; }
+  };
+  const roleOfPartner = () => (w.UsPersonaggi?.myRole?.() === 'beatrice' ? 'francesco' : 'beatrice');
+  const faceOf = (size) => {
+    try { return w.UsPersonaggi?.character?.(roleOfPartner(), { size, reaction: '' }) || ''; } catch (_) { return ''; }
+  };
+  const untilText = (iso) => {
+    const at = new Date(iso);
+    return Number.isFinite(at.getTime()) ? `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}` : '';
+  };
+
+  // Oggi's second row (tavola «Come stai di US»: «senza spostare niente»): one
+  // flex item whose basis is its smallest form, so it takes the lines the old
+  // pill took; then the richest form that fits. Levels: my words go first
+  // (1–5), then their name shrinks, my pill yields to a received gesture (6),
+  // their pill keeps only the face (7), the gesture only its emoji (8).
+  const LEVELS = '12345678', FIT_MAX = 8, FIT_KEEP = 5;
+  let fitting = false;
+  function fit() {
+    const group = $('usOggiStatusGroup');
+    if (!group || group.hidden || fitting) return;
+    fitting = true;
+    try {
+      group.dataset.fit = LEVELS;
+      group.dataset.shrink = 'on';
+      group.style.flex = '0 0 0px';
+      const smallest = group.scrollWidth + 2;
+      group.style.flex = '';
+      group.style.setProperty('--us-status-basis', `${smallest}px`);
+      const over = () => group.scrollWidth > group.clientWidth + 1;
+      let level = 0;
+      group.dataset.fit = '';
+      group.dataset.shrink = 'off';
+      while (level < FIT_KEEP && over()) group.dataset.fit = LEVELS.slice(0, ++level);
+      if (!over()) return;
+      group.dataset.shrink = 'on';
+      while (level < FIT_MAX && over()) group.dataset.fit = LEVELS.slice(0, ++level);
+    } finally {
+      fitting = false;
+    }
+  }
+
+  function paintRow() {
+    const group = $('usOggiStatusGroup');
+    const show = Boolean(state.key) && !state.missing;
+    if (group) group.hidden = !show;
+    const mine = model(state.mine);
+    const partner = model(state.partner);
+    const name = partnerName();
+    const g = partnerGesture();
     const sent = sentToPartner();
+
+    const her = $('usOggiPartner');
+    if (her) {
+      her.hidden = !show || !hasPartner();
+      if (!her.hidden) {
+        const face = her.querySelector('[data-status-face]');
+        const html = faceOf(26);
+        if (face && face.__usHtml !== html) { face.innerHTML = html; face.__usHtml = html; }
+        her.querySelector('[data-status-name]').textContent = name;
+        her.querySelector('[data-status-her-word]').textContent = partner ? `· ${t(partner.word)}` : `· ${t('Come sta?')}`;
+        her.dataset.state = partner ? 'set' : 'none';
+        her.setAttribute('aria-label', partner ? `${t(personLine(partner, name))}, ${t(partner.since)}. ${t('Apri')}` : t('{name} non ha ancora detto come sta. Apri', { name }));
+      }
+    }
+
+    const quick = $('usOggiStatusReply');
+    if (quick) {
+      quick.hidden = !show || !g;
+      if (!quick.hidden) {
+        quick.dataset.sent = sent ? 'true' : 'false';
+        quick.querySelector('[data-act-icon]').textContent = sent ? '✓' : GESTURES[g].icon;
+        quick.querySelector('[data-act-word]').textContent = sent ? t('Mandato') : t(SHORT[g]);
+        quick.setAttribute('aria-label', sent ? t('Mandato a {name}', { name }) : act(g));
+        quick.setAttribute('aria-disabled', sent || state.responding ? 'true' : 'false');
+      }
+    }
+
+    const pill = $('usOggiStatus');
+    if (pill) {
+      pill.hidden = !show;
+      if (show) {
+        pill.dataset.mine = mine ? 'set' : 'none';
+        pill.querySelector('[data-status-mine-emoji]').textContent = mine ? mine.emoji : '';
+        pill.querySelector('[data-status-mine]').textContent = mine ? t('Tu') : t('Come stai?');
+        pill.querySelector('[data-status-mine-word]').textContent = mine ? `· ${t(mine.word)}` : '';
+        pill.setAttribute('aria-label', mine ? `${t('Tu')}: ${t(mine.word)}. ${t('Cambia come stai')}` : t('Come stai? Scegli'));
+      }
+    }
+
+    const got = $('usOggiGot');
+    if (got) {
+      const reply = replyToMe();
+      const fresh = reply && Date.now() - Date.parse(reply.at) < REPLY_SHOWN_MS;
+      got.hidden = !show || !fresh;
+      if (group) group.dataset.got = got.hidden ? 'false' : 'true';
+      if (!got.hidden) {
+        got.querySelector('[data-got-icon]').textContent = GESTURES[reply.gesture].icon;
+        got.querySelector('[data-got-word]').textContent = t('da {name}', { name });
+        const line = gotLine(reply.gesture, name);
+        got.setAttribute('aria-label', `${line}. ${t('Cambia come stai')}`);
+        got.title = line;
+      }
+    }
+    fit();
+  }
+
+  function personLine(m, name) {
+    const p = THIRD[m.key];
+    const said = typeof p === 'string' ? p : p ? p[m.form || 'n'] || p.n : '';
+    return said.replace('{name}', name);
+  }
+
+  const personRoot = () => $('usStatusPerson');
+  const personOpened = () => Boolean(personRoot()?.classList.contains('open'));
+  function paintPerson() {
+    const sheet = personRoot();
+    if (!sheet) return;
+    const partner = model(state.partner);
+    const name = partnerName();
+    const g = partnerGesture();
+    const sent = sentToPartner();
+    const char = $('usStatusPersonChar');
+    const html = faceOf(96);
+    if (char && char.__usHtml !== html) { char.innerHTML = html; char.__usHtml = html; }
+    const title = $('usStatusPersonTitle');
+    if (title) title.textContent = partner ? personLine(partner, name) : t('{name} non ha ancora detto come sta', { name });
+    const line = $('usStatusPersonSince');
+    if (line) {
+      line.hidden = !partner;
+      if (partner) line.textContent = `${partner.emoji} ${t(partner.since)} · ${t('fino alle {time}', { time: untilText(partner.until) })}`;
+    }
     const button = $('usStatusRespond');
     if (button) {
       button.hidden = !g;
       if (g) {
-        const done = Boolean(sent);
         button.dataset.gesture = g;
-        button.setAttribute('aria-disabled', done || state.responding ? 'true' : 'false');
-        button.dataset.sent = done ? 'true' : 'false';
-        const label = button.querySelector('[data-status-respond-label]');
-        if (label) label.textContent = done ? t('Mandato ♡') : t(GESTURES[g].label);
-        button.setAttribute('aria-label', done ? t('Mandato a {name}', { name: partnerName() }) : `${gestureLabel(g)}. ${t('Lo mandi a {name}', { name: partnerName() })}`);
-      }
-    }
-    const quick = $('usOggiStatusReply');
-    if (quick) {
-      const flashing = Date.now() < flashUntil;
-      const show = Boolean(state.key) && !state.missing && Boolean(g) && (!sent || flashing);
-      quick.hidden = !show;
-      if (show) {
-        quick.dataset.sent = sent ? 'true' : 'false';
-        quick.textContent = sent ? t('Mandato ♡') : GESTURES[g].icon;
-        quick.setAttribute('aria-label', sent ? t('Mandato a {name}', { name: partnerName() }) : `${t('Rispondi a {name}', { name: partnerName() })}: ${gestureLabel(g)}`);
-        quick.setAttribute('aria-disabled', sent || state.responding ? 'true' : 'false');
+        button.dataset.sent = sent ? 'true' : 'false';
+        button.disabled = Boolean(sent) || Boolean(state.responding);
+        button.setAttribute('aria-disabled', button.disabled ? 'true' : 'false');
+        button.querySelector('[data-status-respond-label]').textContent = sent ? `✓ ${t('Mandato')}` : `${GESTURES[g].icon} ${act(g)}`;
+        button.setAttribute('aria-label', sent ? t('Mandato a {name}', { name }) : act(g));
       }
     }
   }
-
-  // ---------- Oggi: the pill beside the distance ----------
+  function openPerson() {
+    const sheet = personRoot();
+    if (!sheet || !state.key) return false;
+    paintPerson();
+    w.UsUiFoundation?.cancelSurfaceExit?.(sheet);
+    sheet.setAttribute('aria-hidden', 'false');
+    sheet.classList.add('open');
+    w.setTimeout(() => sheet.querySelector('[data-person-close].us-modal-close')?.focus?.({ preventScroll: true }), 60);
+    return true;
+  }
+  function closePerson() {
+    const sheet = personRoot();
+    if (!sheet || !personOpened()) return;
+    const finish = () => { sheet.classList.remove('open'); sheet.setAttribute('aria-hidden', 'true'); };
+    sheet.classList.remove('open');
+    if (!w.UsUiFoundation?.exitSurface?.(sheet, finish)) finish();
+  }
 
   function paint() {
-    const pill = $('usOggiStatus');
-    if (pill) {
-      const show = Boolean(state.key) && !state.missing;
-      pill.hidden = !show;
-      if (show) {
-        const mine = model(state.mine);
-        const partner = model(state.partner);
-        const name = partnerName();
-        pill.querySelector('[data-status-partner]').hidden = !partner;
-        if (partner) pill.querySelector('[data-status-partner]').textContent = `${partner.emoji} ${name}`;
-        pill.querySelector('[data-status-mine]').textContent = mine ? mine.emoji : t('Come stai?');
-        pill.dataset.mine = mine ? 'set' : 'none';
-        const parts = [];
-        if (partner) parts.push(`${name}: ${t(partner.word)}, ${t(partner.since)}`);
-        parts.push(mine ? `${t('Tu')}: ${t(mine.word)}. ${t('Cambia come stai')}` : t('Come stai? Scegli'));
-        pill.setAttribute('aria-label', parts.join('. '));
-      }
-    }
-    paintRespond();
-    if (pill) w.syncOggiRow?.();
+    paintRow();
+    if ($('usOggiStatus')) w.syncOggiRow?.();
     paintSheet();
+    paintPerson();
     const value = $('usStatusFormValue');
     if (value) value.textContent = t(FORM_LABEL[validForm(state.mine?.form)] || 'Da scegliere');
     // D10: the Oggi row and the distance read the states again, only when what they show changes.
@@ -257,16 +354,10 @@
       const value = button.dataset.statusForm || null;
       button.setAttribute('aria-pressed', value === form ? 'true' : 'false');
     });
-    const partner = model(state.partner);
-    const line = $('usStatusPartnerLine');
-    if (line) {
-      line.hidden = !partner;
-      if (partner) line.textContent = `${partnerName()}: ${partner.emoji} ${t(partner.word)} · ${t(partner.since)}`;
-    }
     const clear = $('usStatusClear');
     if (clear) clear.hidden = !mine;
     const note = $('usStatusNote');
-    if (note) note.textContent = t('Lo vede solo {name}, per 12 ore.', { name: partnerName() });
+    if (note) note.textContent = t('{name} lo vede subito, anche nel widget. Dura 12 ore.', { name: partnerName() });
   }
 
   // D14: «In viaggio» chosen: the sheet offers the Noi calendar (dismissable).
@@ -301,8 +392,7 @@
 
   const COLUMNS = 'user_id,status,form,set_at,expires_at,reply_gesture,reply_at';
   const OLD_COLUMNS = 'user_id,status,form,set_at,expires_at';
-  // The couple's rows (mine and the partner's, RLS). Before the SQL of 27/11
-  // the answer's columns do not exist: the old read, and no answers.
+  // The couple's rows (RLS); before the SQL of 27/11, without the answer's columns.
   async function refresh() {
     const profile = w.usProfile;
     const key = identityKey(profile);
@@ -371,7 +461,6 @@
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   };
-  // «Lo segno nel calendario di Noi?»: the event editor of Noi, «In viaggio», today, all day.
   function tripToCalendar() {
     close();
     w.go?.('bond', { nav: true });
@@ -386,14 +475,12 @@
     const db = client();
     if (!g || state.noReplies || !key || key !== state.key || state.responding || sentToPartner() || !db?.rpc) return false;
     state.responding = true;
-    paintRespond();
+    paint();
     try {
       const { data, error } = await db.rpc('respond_member_status', { p_status_set_at: state.partner.set_at, p_gesture: g });
       if (identityKey(w.usProfile) !== key) return false;
       if (error) throw error;
       state.partner = { ...state.partner, reply_gesture: data?.gesture || g, reply_at: data?.at || new Date().toISOString() };
-      flashUntil = Date.now() + 2600;
-      w.setTimeout(paintRespond, 2700);
       w.UsFeedback?.selection?.();
       if (button) w.UsUiFoundation?.done?.(button);
       // The push, like a Ti penso; a retry of an answer already saved sends nothing new.
@@ -413,8 +500,7 @@
     }
   }
 
-  // The other person answered my state: a toast once (also at launch, if not
-  // seen yet) and, for three hours, a reaction on my character (personaggi.js).
+  // An answer to my state: a toast once (also at launch); the reaction is personaggi.js's.
   const SEEN = () => `us:status-reply:v1:${meId()}`;
   function noticeReply() {
     const reply = replyToMe();
@@ -422,7 +508,7 @@
     if (store(SEEN()) === reply.at) return;
     store(SEEN(), reply.at);
     if (Date.now() - Date.parse(reply.at) > LASTS_MS) return;
-    w.toast?.(t(GESTURES[reply.gesture].said(partnerName())));
+    w.toast?.(gotLine(reply.gesture, partnerName()));
     w.UsFeedback?.selection?.();
     w.dispatchEvent(new CustomEvent('us:status-reply', { detail: reply }));
   }
@@ -438,7 +524,6 @@
   // D9/D17: the line for US vi ricorda (us-ricorda.js asks, decides when).
   const ricordaLine = () => lineFor(state.partner);
 
-  // Launch and return to the foreground (app.js).
   async function onForeground() {
     try { await refresh(); } catch (error) { console.warn('[US Come stai]', error); }
   }
@@ -457,8 +542,7 @@
     refresh().catch(() => {});
   }
 
-  // What the characters wear on their face now (personaggi.js moodOf): what is
-  // known, even before the first read (a Realtime row), unlike the widget's.
+  // The faces (personaggi.js moodOf): what is known, even before the first read.
   function faces() {
     const pack = (row) => { const m = model(row); return { status: m ? m.key : '', form: validForm(row?.form) || '' }; };
     return { me: pack(state.mine), partner: pack(state.partner) };
@@ -479,11 +563,19 @@
       const target = event.target;
       if (!target?.closest) return;
       if (target.closest('#usOggiStatusReply')) { respond(target.closest('#usOggiStatusReply')); return; }
-      if (target.closest('#usOggiStatus')) { open('status'); return; }
+      if (target.closest('#usOggiPartner')) { openPerson(); return; }
+      if (target.closest('#usOggiStatus') || target.closest('#usOggiGot')) { open('status'); return; }
+      const person = personRoot();
+      if (person && person.contains(target)) {
+        if (target.closest('[data-person-close]')) { closePerson(); return; }
+        if (target.closest('#usStatusRespond')) { respond(target.closest('#usStatusRespond')); return; }
+        if (target.closest('#usStatusPersonThink')) { closePerson(); w.sendThinkSignal?.(); return; }
+        if (target.closest('#usStatusPersonVoice')) { closePerson(); w.UsLeftForYou?.openComposer?.({ kind: 'audio' }); return; }
+        return;
+      }
       const sheet = root();
       if (!sheet || !sheet.contains(target)) return;
       if (target.closest('[data-status-close]')) { close(); return; }
-      if (target.closest('#usStatusRespond')) { respond(target.closest('#usStatusRespond')); return; }
       if (target.closest('#usStatusTripYes')) { tripToCalendar(); return; }
       if (target.closest('#usStatusTripNo')) { close(); return; }
       const pick = target.closest('[data-status]');
@@ -492,14 +584,20 @@
       const form = target.closest('[data-status-form]');
       if (form) chooseForm(form.dataset.statusForm || null, form);
     });
+    d.addEventListener('keydown', (event) => { if (event.key === 'Escape' && personOpened()) closePerson(); });
+    const group = $('usOggiStatusGroup');
+    if (group && typeof w.ResizeObserver === 'function') new w.ResizeObserver(() => fit()).observe(group);
+    else w.addEventListener('resize', fit);
+    try { d.fonts?.ready?.then(() => fit()); d.fonts?.addEventListener?.('loadingdone', () => fit()); } catch (_) { /* old webview */ }
+    w.addEventListener('us:aspetto', () => w.setTimeout(fit, 0));
   }
   // Signed out or a different couple: nothing of the old one stays.
   w.addEventListener('us-identity-change', (event) => {
-    if (!event.detail?.identityKey) { reset(); state.key = ''; close(); }
+    if (!event.detail?.identityKey) { reset(); state.key = ''; close(); closePerson(); }
     render();
   });
   // A state turns twelve hours old, or "da 20 min" moves on, while the page stays open; no network.
   setInterval(() => { if (!d?.hidden && (state.mine || state.partner)) render(); }, 60000);
 
-  return { ...pure, refresh, onForeground, onChange, open, close, choose, chooseForm, widgetState, faces, respond, replyToMe, oggiHint, runHint, partnerTraveling, ricordaLine, tripToCalendar };
+  return { ...pure, refresh, onForeground, onChange, open, close, openPerson, closePerson, choose, chooseForm, widgetState, faces, respond, replyToMe, oggiHint, runHint, partnerTraveling, ricordaLine, tripToCalendar, fit };
 });

@@ -86,6 +86,13 @@ const layers=[
     close:()=>window.UsMemberStatus?.close?.()
   },
   {
+    // Come stai che conta (27/11/2026): back closes the other person's sheet.
+    name:'statusPerson',
+    find:()=>document.getElementById('usStatusPerson'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsMemberStatus?.closePerson?.()
+  },
+  {
     // Il vostro angolo (redesign definitivo, D3): back closes the sheet.
     name:'angolo',
     find:()=>document.getElementById('usAngolo'),

@@ -1430,7 +1430,7 @@ function renderDistanceCapsule(model){
   root.dataset.usDistanceState=model.state;
   const trip=Boolean(model.visible&&window.UsMemberStatus?.partnerTraveling?.());
   root.dataset.usTrip=trip?'true':'false';
-  value.textContent=trip?'in viaggio':(model.text||'');
+  value.textContent=trip?'🚗 in viaggio':(model.text||'');
   const partner=window.UsIdentity?.current?.()?.partnerName||'La tua persona';
   root.setAttribute('aria-label',trip?`${partner} è in viaggio`:model.visible?(model.near?'Siete a meno di 3 km':`Distanza tra voi: ${model.text}`):'Distanza tra voi');
   if(typeof syncOggiRow==='function')syncOggiRow();
@@ -2156,21 +2156,22 @@ function renderOggiNext(model){
   if(!button)return;
   usOggiNextModel=model||null;
   const icon=button.querySelector('.us-icon');
-  const hint=model&&model.date===localDateISO()?null:window.UsMemberStatus?.oggiHint?.()||null;
+  // Only in place of a commitment that is not today: never a row more (tavola «Come stai di US»).
+  const hint=model&&model.date!==localDateISO()?window.UsMemberStatus?.oggiHint?.()||null:null;
   if(hint){
     document.getElementById('usOggiNextWhen').textContent='';
     document.getElementById('usOggiNextTitle').textContent=hint.title;
     button.dataset.usNextKind='hint';
     button.dataset.usHint=hint.kind;
     delete button.dataset.usEventId;button.dataset.usNextDate='';
-    if(icon)icon.dataset.usIcon=hint.icon;
-    button.setAttribute('aria-label',hint.title);
+    if(icon)icon.hidden=true;
+    button.setAttribute('aria-label',hint.title.replace(/^[^\p{L}]+/u,''));
     button.hidden=false;
     syncOggiRow();
     return;
   }
   delete button.dataset.usHint;
-  if(icon)icon.dataset.usIcon='calendar-blank';
+  if(icon)icon.hidden=false;
   if(!model){button.hidden=true;button.removeAttribute('aria-label');syncOggiRow();return;}
   document.getElementById('usOggiNextWhen').textContent=model.when;
   document.getElementById('usOggiNextTitle').textContent=model.title;

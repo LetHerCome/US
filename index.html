@@ -513,10 +513,15 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
         <div class="og-row" id="usOggiRow" hidden>
           <button type="button" class="og-next" id="usOggiNext" hidden><span class="us-icon" data-us-icon="calendar-blank" aria-hidden="true"></span><b id="usOggiNextWhen"></b><span id="usOggiNextTitle" translate="no"></span></button>
           <button type="button" class="home-distance-pill us-distance-capsule og-pill" id="distanceWidget" onclick="openDistanceDetail()" aria-haspopup="dialog" aria-label="Distanza tra voi" data-us-distance-state="unknown" hidden><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><b id="distanceValue"></b><span class="us-distance-battery" id="distanceBattery" hidden><span class="us-sr-only">Batteria:</span> <span class="us-sr-only" data-battery-name translate="no"></span> <span class="us-icon" data-us-icon="battery-high" data-battery-icon aria-hidden="true"></span><b data-battery-level></b><span class="us-sr-only" data-battery-charging hidden>in carica</span></span></button>
-          <!-- Come stai (02/11/2026): the partner's state and mine; a tap opens the twelve. -->
-          <button type="button" class="og-pill us-status-pill" id="usOggiStatus" aria-haspopup="dialog" aria-label="Come stai? Scegli" hidden><span data-status-partner translate="no" hidden></span><span data-status-mine>Come stai?</span></button>
-          <!-- Come stai che conta (27/11/2026, D7/D16): the gesture to the partner's state, one tap. -->
-          <button type="button" class="og-pill us-status-reply-pill" id="usOggiStatusReply" hidden></button>
+          <!-- Come stai (02/11/2026; tavola «Come stai di US», 27/11/2026): one item of the row, never on two
+               lines. The other person (their face, their state; a tap opens their sheet), the gesture for it,
+               then me (a tap opens the twelve) and, for three hours, the gesture I received. -->
+          <div class="us-status-group" id="usOggiStatusGroup" data-fit="" hidden>
+            <button type="button" class="us-status-her" id="usOggiPartner" aria-haspopup="dialog" hidden><span class="us-status-face" data-status-face aria-hidden="true"></span><span class="us-status-her-text"><b data-status-name translate="no"></b><span data-status-her-word></span></span><span class="us-status-chev" aria-hidden="true">›</span></button>
+            <button type="button" class="us-status-act" id="usOggiStatusReply" hidden><span data-act-icon aria-hidden="true"></span><span data-act-word></span></button>
+            <button type="button" class="us-status-pill" id="usOggiStatus" aria-haspopup="dialog" aria-label="Come stai? Scegli" hidden><span class="us-status-dot" aria-hidden="true"></span><span data-status-mine-emoji aria-hidden="true"></span><span data-status-mine>Come stai?</span><span class="us-status-mine-word" data-status-mine-word></span><small class="us-status-change" data-status-change>· Cambia</small></button>
+            <button type="button" class="us-status-got" id="usOggiGot" aria-haspopup="dialog" hidden><span data-got-icon aria-hidden="true"></span><span class="us-status-got-word" data-got-word translate="no"></span></button>
+          </div>
         </div>
         <!-- The answers read, the card goes away with a swipe or with «Togli» (27/11/2026): it sits on the card's corner. -->
         <button type="button" class="us-daily-ritual-close" id="usDailyRitualClose" hidden aria-label="Togli la domanda di oggi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span><span>Togli</span></button>
@@ -605,16 +610,16 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
     <section class="us-sheet is-bottom us-status-sheet" role="dialog" aria-modal="true" aria-labelledby="usStatusHeading" data-us-modal-panel>
       <header class="us-status-head"><div><span class="tiny">COME STAI</span><h2 id="usStatusHeading">Come stai?</h2></div><button type="button" class="us-modal-close" data-us-modal-close data-status-close aria-label="Chiudi come stai"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
       <div data-status-panel="status">
-        <p class="us-status-partner" id="usStatusPartnerLine" translate="no" hidden></p>
-        <!-- Come stai che conta (27/11/2026, D7/D16): one gesture that fits, once per state. -->
-        <button type="button" class="us-status-respond" id="usStatusRespond" hidden><span data-status-respond-label></span></button>
+        <p class="us-status-note" id="usStatusNote">La tua persona lo vede subito, anche nel widget. Dura 12 ore.</p>
         <div class="us-status-grid" role="group" aria-label="Come stai">
+          <span class="us-status-group-head" aria-hidden="true">Come ti senti</span>
           <button type="button" class="us-status-choice" data-status="innamorato" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🥰</span><span data-status-word>col cuore pieno</span></button>
           <button type="button" class="us-status-choice" data-status="felice" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😊</span><span data-status-word>felice</span></button>
           <button type="button" class="us-status-choice" data-status="stanco" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😴</span><span data-status-word>senza energie</span></button>
           <button type="button" class="us-status-choice" data-status="giu" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😔</span><span data-status-word>giù</span></button>
           <button type="button" class="us-status-choice" data-status="nervoso" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😤</span><span data-status-word>nervi tesi</span></button>
           <button type="button" class="us-status-choice" data-status="malato" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🤒</span><span data-status-word>non sto bene</span></button>
+          <span class="us-status-group-head" aria-hidden="true">Cosa stai facendo</span>
           <button type="button" class="us-status-choice" data-status="festa" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🥳</span><span data-status-word>in festa</span></button>
           <button type="button" class="us-status-choice" data-status="lavoro" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">💼</span><span data-status-word>al lavoro</span></button>
           <button type="button" class="us-status-choice" data-status="studio" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">📚</span><span data-status-word>sui libri</span></button>
@@ -622,7 +627,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
           <button type="button" class="us-status-choice" data-status="viaggio" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🚗</span><span data-status-word>in viaggio</span></button>
           <button type="button" class="us-status-choice" data-status="tavola" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🍝</span><span data-status-word>a tavola</span></button>
         </div>
-        <p class="us-status-note" id="usStatusNote">Lo vede solo la tua persona, per 12 ore.</p>
         <button type="button" class="us-status-clear" id="usStatusClear" hidden>Togli</button>
         <!-- D14: «In viaggio» chosen, the Noi calendar offered once (dismissable). -->
         <div class="us-status-trip" id="usStatusTrip" role="group" aria-labelledby="usStatusTripText" hidden>
@@ -638,6 +642,23 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .4s cubi
           <button type="button" class="us-status-form" data-status-form="" aria-pressed="false"><b>Senza scegliere</b><small>col cuore pieno, senza energie</small></button>
         </div>
       </div>
+    </section>
+  </div>
+
+  <!-- Come stai che conta (tavola «Come stai di US», 27/11/2026): the other person's sheet. Their
+       character big, how they are and until when, the gesture for it, Ti penso, a voice message. -->
+  <div id="usStatusPerson" class="us-status-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+    <div class="us-modal-backdrop" data-person-close></div>
+    <section class="us-sheet is-bottom us-status-sheet us-status-person" role="dialog" aria-modal="true" aria-labelledby="usStatusPersonTitle" data-us-modal-panel>
+      <header class="us-status-head"><div><span class="tiny">COME STA</span></div><button type="button" class="us-modal-close" data-us-modal-close data-person-close aria-label="Chiudi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+      <div class="us-status-person-card">
+        <span class="us-status-person-char" id="usStatusPersonChar" aria-hidden="true"></span>
+        <h2 id="usStatusPersonTitle"></h2>
+        <p id="usStatusPersonSince" hidden></p>
+      </div>
+      <button type="button" class="us-status-respond" id="usStatusRespond" hidden><span data-status-respond-label></span></button>
+      <button type="button" class="us-status-person-think" id="usStatusPersonThink">Ti penso</button>
+      <button type="button" class="us-status-person-voice" id="usStatusPersonVoice">Lascia un vocale</button>
     </section>
   </div>
 

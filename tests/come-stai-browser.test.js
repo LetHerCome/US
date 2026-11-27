@@ -45,48 +45,168 @@ async function ready(page) {
   });
 }
 
-test('the gesture under the other person\'s state: one tap from the sheet, then «Mandato ♡»; the push and the reaction', async (t) => {
+test('the second row: their face and state, the red gesture, «✓ Mandato»; their sheet; my pill and the gesture I got', async (t) => {
   const h = await start();
   if (!h) return t.skip('Playwright unavailable');
   try {
     const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
     await ready(page);
+    // Nobody said anything yet: «Beatrice · Come sta?» and my «Come stai?» with its dot.
+    const her = page.locator('#usOggiPartner');
+    await her.waitFor({ state: 'visible' });
+    assert.equal((await her.innerText()).replace(/\s+/g, ' ').trim(), 'Beatrice · Come sta?');
+    assert.equal(await page.locator('#usOggiStatus').getAttribute('data-mine'), 'none');
+    assert.ok(await page.locator('#usOggiStatus .us-status-dot').isVisible());
+    assert.ok(await her.locator('[data-status-face] svg').count(), 'their real face');
+    await shot(page, 'v2-390-senza-stato');
     await partnerIs(page, 'giu', 3);
-    // The Oggi row: the small action beside the pill.
+    assert.equal((await her.innerText()).replace(/\s+/g, ' ').trim(), 'Beatrice · giù ›');
     const quick = page.locator('#usOggiStatusReply');
     await quick.waitFor({ state: 'visible' });
-    assert.equal(await quick.innerText(), '🤗');
-    assert.match(await quick.getAttribute('aria-label'), /Rispondi a Beatrice: Ti mando un abbraccio/);
-    const box = await quick.boundingBox();
-    assert.ok(box.width >= 44 && box.height >= 44, 'tap target');
-    // The sheet: the partner's line and the gesture under it.
-    await page.click('#usOggiStatus');
+    assert.equal((await quick.innerText()).replace(/\s+/g, ' ').trim(), '🤗 Abbraccio');
+    assert.equal(await quick.getAttribute('aria-label'), 'Manda un abbraccio');
+    const color = await quick.evaluate((el) => getComputedStyle(el).backgroundColor);
+    assert.equal(color, 'rgb(184, 67, 47)', 'ceralacca');
+    for (const el of [her, quick, page.locator('#usOggiStatus')]) {
+      const box = await el.boundingBox();
+      assert.ok(box.height >= 40, 'as tall as every pill of the row');
+    }
+    await shot(page, 'v2-390-con-stato');
+    // Their sheet: the big character, how and until when, the gesture in full, Ti penso, a voice message.
+    await her.click();
+    const sheet = page.locator('#usStatusPerson.open');
+    await sheet.waitFor({ state: 'visible' });
+    assert.equal((await page.locator('#usStatusPersonTitle').innerText()).trim(), 'Beatrice è giù');
+    assert.match(await page.locator('#usStatusPersonSince').innerText(), /^😔 da 3 ore · fino alle \d\d:\d\d$/);
+    assert.ok(await page.locator('#usStatusPersonChar svg').count());
     const respond = page.locator('#usStatusRespond');
-    await respond.waitFor({ state: 'visible' });
-    assert.equal((await respond.innerText()).trim(), 'Ti mando un abbraccio');
-    assert.match(await page.locator('#usStatusPartnerLine').innerText(), /Beatrice: 😔 giù · da 3 ore/);
+    assert.equal((await respond.innerText()).trim(), '🤗 Manda un abbraccio');
     await page.waitForTimeout(400);
-    await shot(page, 'scheda-gesto');
+    await shot(page, 'v2-foglio-persona');
     await respond.click();
     await page.waitForFunction(() => document.getElementById('usStatusRespond')?.dataset.sent === 'true');
-    assert.equal((await respond.innerText()).trim(), 'Mandato ♡');
-    assert.equal(await respond.getAttribute('aria-disabled'), 'true');
+    assert.equal((await respond.innerText()).trim(), '✓ Mandato');
+    assert.equal(await respond.isDisabled(), true);
     const sent = await page.evaluate(() => ({ args: window.__respond, pushes: window.__pushes, setAt: window.__partnerRow.set_at }));
     assert.deepEqual(sent.args, { p_status_set_at: sent.setAt, p_gesture: 'abbraccio' }, 'the state the phone saw, its gesture');
     assert.deepEqual(sent.pushes, ['status_response']);
-    await shot(page, 'scheda-mandato');
-    // A second tap sends nothing.
-    await page.evaluate(() => document.getElementById('usStatusRespond').click());
+    await page.click('#usStatusPerson .us-modal-close');
+    await page.waitForFunction(() => !document.getElementById('usStatusPerson').classList.contains('open'));
+    // On the row: a pale «✓ Mandato» that does nothing more.
+    assert.equal((await quick.innerText()).replace(/\s+/g, ' ').trim(), '✓ Mandato');
+    assert.equal(await quick.getAttribute('aria-disabled'), 'true');
+    await page.evaluate(() => document.getElementById('usOggiStatusReply').click());
     await page.waitForTimeout(200);
     assert.deepEqual(await page.evaluate(() => window.__pushes), ['status_response']);
-    // On the Oggi row «Mandato ♡» for a moment, then the action goes.
-    await page.click('#usStatusSheet [data-status-close].us-modal-close');
-    await page.waitForFunction(() => document.getElementById('usOggiStatusReply')?.hidden === true, null, { timeout: 6000 });
+    await shot(page, 'v2-390-mandato');
+    // Ti penso and the voice message from their sheet.
+    await page.evaluate(() => { window.__thinks = 0; window.sendThinkSignal = () => { window.__thinks += 1; }; window.__opened = null; window.UsLeftForYou = { ...(window.UsLeftForYou || {}), openComposer: (o) => { window.__opened = o; } }; });
+    await her.click();
+    await sheet.waitFor({ state: 'visible' });
+    await page.click('#usStatusPersonThink');
+    assert.equal(await page.evaluate(() => window.__thinks), 1);
+    await her.click();
+    await sheet.waitFor({ state: 'visible' });
+    await page.click('#usStatusPersonVoice');
+    assert.deepEqual(await page.evaluate(() => window.__opened), { kind: 'audio' });
+    await page.waitForFunction(() => document.getElementById('usStatusPerson').getAttribute('aria-hidden') === 'true');
+    await page.waitForTimeout(500);
 
-    // The other way: my state got an answer. A toast once, a heart by my character.
-    await meIs(page, 'stanco', { reply_gesture: 'riposati', reply_at: new Date().toISOString() });
-    await page.waitForFunction(() => /Beatrice: Riposati/.test(document.getElementById('toast')?.textContent || ''));
+    // The other way: my state got an answer. «😴 Tu · stanco», «🌙 da Beatrice» beside it, a toast («Beatrice ti dice «Riposati»»), a heart by my character.
+    await meIs(page, 'stanco', { form: 'm', reply_gesture: 'riposati', reply_at: new Date().toISOString() });
+    await page.waitForFunction(() => /Beatrice ti dice «Riposati»/.test(document.getElementById('toast')?.textContent || ''));
+    const got = page.locator('#usOggiGot');
+    await got.waitFor({ state: 'visible' });
+    assert.equal(await got.getAttribute('title'), 'Beatrice ti dice «Riposati»');
+    assert.match(await got.innerText(), /🌙\s*(da Beatrice)?/);
+    assert.match((await page.locator('#usOggiStatus').innerText()).replace(/\s+/g, ' '), /😴/);
     await page.waitForFunction(() => document.querySelector('.top [data-us-self] svg')?.dataset.reaction === 'coccola');
+    await shot(page, 'v2-390-ricevuto');
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  } finally {
+    await h.close();
+  }
+});
+
+// «Deve entrare tutto lì in Oggi senza spostare niente» (founder, 27/11/2026).
+test('360×640: Oggi does not move or scroll whatever Come stai says, and the second row never wraps', async (t) => {
+  const h = await start();
+  if (!h) return t.skip('Playwright unavailable');
+  try {
+    const { page, ctx, errors } = await pageFor(h, { width: 360, height: 640 });
+    await ready(page);
+    const geometry = () => page.evaluate(() => {
+      const r = (id) => { const e = document.getElementById(id); if (!e || e.hidden) return null; const b = e.getBoundingClientRect(); return [Math.round(b.top), Math.round(b.height)]; };
+      const group = document.getElementById('usOggiStatusGroup');
+      const tops = [...group.children].filter((c) => !c.hidden && c.getBoundingClientRect().width).map((c) => Math.round(c.getBoundingClientRect().top));
+      return {
+        scroll: document.documentElement.scrollHeight - innerHeight,
+        days: r('usCountdownDisplay'), caption: r('usOggiCaption'), row: r('usOggiRow'), card: r('usDailyRitual'),
+        oneLine: new Set(tops).size === 1, overflow: group.scrollWidth - group.clientWidth, fit: group.dataset.fit,
+      };
+    });
+    await page.evaluate(() => { window.__QA.tables.profiles[1].display_name = 'Beatrice Maria Antonietta'; return window.UsCoupleContext?.hydrate?.(); });
+    await page.waitForTimeout(400);
+    const base = await geometry();
+    assert.equal(base.scroll, 0, 'no scroll');
+    assert.ok(base.oneLine);
+    const cases = [
+      ['palestra', null, null], ['giu', 'giu', null], ['viaggio', 'lavoro', 'forza'], ['palestra', 'malato', 'abbraccio'], ['festa', null, 'cuore'],
+    ];
+    for (const [theirs, mine, got] of cases) {
+      await partnerIs(page, theirs, 2);
+      await meIs(page, mine, got ? { reply_gesture: got, reply_at: new Date().toISOString() } : {});
+      await page.waitForTimeout(250);
+      const now = await geometry();
+      const label = `${theirs}/${mine}/${got}`;
+      assert.deepEqual({ days: now.days, caption: now.caption, row: now.row, card: now.card, scroll: now.scroll }, { days: base.days, caption: base.caption, row: base.row, card: base.card, scroll: 0 }, label);
+      assert.ok(now.oneLine, `${label}: one line`);
+      assert.ok(now.overflow <= 1, `${label}: nothing cut off (${now.overflow}px, fit ${now.fit})`);
+      if (theirs === 'palestra' && !got) assert.equal((await page.locator('#usOggiStatusReply [data-act-word]').innerText()).trim(), 'Spacca tutto!', 'the gesture keeps its word');
+    }
+    await partnerIs(page, 'palestra', 2);
+    await meIs(page, 'giu', {});
+    await page.waitForTimeout(250);
+    await shot(page, 'v2-360-con-stato');
+    await meIs(page, 'giu', { reply_gesture: 'abbraccio', reply_at: new Date().toISOString() });
+    await page.waitForTimeout(250);
+    await shot(page, 'v2-360-ricevuto');
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  } finally {
+    await h.close();
+  }
+});
+
+test('the sheet of the twelve: «Beatrice lo vede subito», two groups; both lights readable', async (t) => {
+  const h = await start();
+  if (!h) return t.skip('Playwright unavailable');
+  try {
+    const { page, ctx, errors } = await pageFor(h, { width: 360, height: 640 });
+    await ready(page);
+    await page.click('#usOggiStatus');
+    await page.waitForSelector('#usStatusSheet.open [data-status="festa"]');
+    assert.equal((await page.locator('#usStatusNote').innerText()).trim(), 'Beatrice lo vede subito, anche nel widget. Dura 12 ore.');
+    const heads = await page.locator('#usStatusSheet .us-status-group-head').allInnerTexts();
+    assert.deepEqual(heads.map((x) => x.trim().toLowerCase()), ['come ti senti', 'cosa stai facendo']);
+    await page.waitForTimeout(400);
+    await shot(page, 'v2-foglio-stati');
+    await page.click('#usStatusSheet .us-modal-close');
+    await page.waitForFunction(() => !document.getElementById('usStatusSheet').classList.contains('open'));
+    // Readable in both lights: dark ink on paper, light ink on the night glass.
+    await partnerIs(page, 'stanco', 2);
+    for (const luce of ['giorno', 'notte']) {
+      await page.evaluate((l) => window.UsAspetto?.set?.(l), luce);
+      await page.waitForTimeout(250);
+      const ink = await page.evaluate(() => {
+        const lum = (c) => { const m = c.match(/\d+(\.\d+)?/g).map(Number); const [r, g, b] = m.slice(0, 3).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+        const ratio = (el) => { const cs = getComputedStyle(el); let bg = cs.backgroundColor; if (/rgba\(.*, 0\)|transparent/.test(bg)) return null; const a = lum(cs.color), b = lum(bg); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); };
+        return ['usOggiNext', 'usOggiPartner', 'usOggiStatus'].map((id) => [id, ratio(document.getElementById(id))]);
+      });
+      for (const [id, r] of ink) if (r !== null) assert.ok(r >= 4.5, `${luce} ${id}: contrast ${r?.toFixed(2)}`);
+      await shot(page, `v2-${luce}`, page.locator('#usOggiDock'));
+    }
     assert.deepEqual(errors, []);
     await ctx.close();
   } finally {
@@ -120,7 +240,7 @@ test('the six things on the characters, in the app as on the widgets; the faces 
     assert.deepEqual(things, ['valigetta', 'libro', 'fascia', 'valigia', 'forchetta', 'termometro', 'termometro']);
     assert.equal(await page.locator('#qaThings figure:nth-child(8) text').count(), 2, 'the others sleep');
     assert.equal(await page.locator('#qaThings figure:nth-child(7) text').count(), 0, 'not feeling well never sleeps');
-    await shot(page, 'oggetti');
+    await shot(page, 'v2-oggetti');
     assert.deepEqual(errors, []);
     await ctx.close();
   } finally {
@@ -154,14 +274,14 @@ test('US vi ricorda after two hours, with a fixed clock: «Beatrice è giù da 3
     await page.waitForSelector('#usFumetto[data-open]', { timeout: 8000 });
     assert.equal((await page.locator('#usFumetto [data-us-fumetto-text]').innerText()).trim(), 'Beatrice è giù da 3 ore. Un pensiero?');
     await page.waitForTimeout(500);
-    await shot(page, 'us-ricorda');
+    await shot(page, 'v2-us-ricorda');
     // The sheet: Ti penso or the gesture of their state.
     await page.click('#usFumetto [data-us-fumetto-text]');
     await page.waitForSelector('#usBattuta.open [data-battuta-gesture]');
     assert.equal((await page.locator('#usBattuta [data-battuta-think]').innerText()).trim(), 'Ti penso');
-    assert.equal((await page.locator('#usBattuta [data-battuta-gesture]').innerText()).trim(), 'Ti mando un abbraccio');
+    assert.equal((await page.locator('#usBattuta [data-battuta-gesture]').innerText()).trim(), '🤗 Manda un abbraccio');
     await page.waitForTimeout(400);
-    await shot(page, 'us-ricorda-scheda');
+    await shot(page, 'v2-us-ricorda-scheda');
     await page.click('#usBattuta [data-battuta-gesture]');
     await page.waitForFunction(() => window.__respond?.p_gesture === 'abbraccio');
     // Once per state: said, it is not said again.
@@ -187,28 +307,33 @@ test('Oggi: one light suggestion from your two states, never over today\'s commi
     const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
     await ready(page);
     const next = page.locator('#usOggiNext');
+    // Without a commitment there is no row 1: the suggestion never adds one.
     await partnerIs(page, 'stanco', 1);
-    await page.waitForFunction(() => document.getElementById('usOggiNext')?.dataset.usNextKind === 'hint');
-    assert.equal((await page.locator('#usOggiNextTitle').innerText()).trim(), 'Lascia un vocale a Beatrice');
-    assert.equal(await page.locator('#usOggiNext .us-icon').getAttribute('data-us-icon'), 'microphone');
     await page.waitForTimeout(300);
-    await shot(page, 'oggi-vocale', page.locator('#usOggiDock'));
+    assert.equal(await next.isHidden(), true, 'never a row more');
+    // With tomorrow's commitment, the suggestion takes its place.
+    await page.evaluate(() => window.UsOggiNext.render({ id: 'e9', kind: 'event', date: '2099-01-01', day: 'Domani', time: '', when: 'Domani', title: 'Cena da Marco' }));
+    await page.waitForFunction(() => document.getElementById('usOggiNext')?.dataset.usNextKind === 'hint');
+    assert.equal((await page.locator('#usOggiNextTitle').innerText()).trim(), '🎙 Un vocale a Beatrice?');
+    assert.equal(await page.locator('#usOggiNext .us-icon').isHidden(), true, 'the emoji says it');
+    await page.waitForTimeout(300);
+    await shot(page, 'v2-oggi-vocale', page.locator('#usOggiDock'));
     await page.evaluate(() => { window.__opened = null; window.UsLeftForYou = { ...(window.UsLeftForYou || {}), openComposer: (o) => { window.__opened = o; } }; });
     await next.click();
     assert.deepEqual(await page.evaluate(() => window.__opened), { kind: 'audio' });
     // Both happy: a game.
     await partnerIs(page, 'felice', 1);
     await meIs(page, 'innamorato');
-    await page.waitForFunction(() => document.getElementById('usOggiNextTitle')?.textContent === 'Una partita?');
-    assert.equal(await page.locator('#usOggiNext .us-icon').getAttribute('data-us-icon'), 'game-controller');
-    await shot(page, 'oggi-partita', page.locator('#usOggiDock'));
+    await page.waitForFunction(() => document.getElementById('usOggiNextTitle')?.textContent === '🎲 Una partita?');
+    assert.equal(await page.locator('#usOggiNext .us-icon').isHidden(), true);
+    await shot(page, 'v2-oggi-partita', page.locator('#usOggiDock'));
     // A commitment of today wins; tomorrow's gives way to the suggestion.
     const today = await page.evaluate(() => window.localDateISO());
     await page.evaluate((d) => window.UsOggiNext.render({ id: 'e9', kind: 'event', date: d, day: 'Oggi', time: '20:00', when: 'Oggi, 20:00', title: 'Cena da Marco' }), today);
     assert.equal((await page.locator('#usOggiNextTitle').innerText()).trim(), 'Cena da Marco');
-    assert.equal(await page.locator('#usOggiNext .us-icon').getAttribute('data-us-icon'), 'calendar-blank');
+    assert.equal(await page.locator('#usOggiNext .us-icon').isVisible(), true, 'the calendar icon is back');
     await page.evaluate(() => window.UsOggiNext.render({ id: 'e9', kind: 'event', date: '2099-01-01', day: 'Domani', time: '', when: 'Domani', title: 'Cena da Marco' }));
-    assert.equal((await page.locator('#usOggiNextTitle').innerText()).trim(), 'Una partita?');
+    assert.equal((await page.locator('#usOggiNextTitle').innerText()).trim(), '🎲 Una partita?');
     // Nothing special: the row is the calendar's again.
     await partnerIs(page, 'lavoro', 1);
     await page.waitForFunction(() => document.getElementById('usOggiNextTitle')?.textContent === 'Cena da Marco');
@@ -216,9 +341,9 @@ test('Oggi: one light suggestion from your two states, never over today\'s commi
     await page.evaluate(() => window.renderDistanceCapsule({ visible: true, state: 'ready', near: false, km: 120, text: '120 km' }));
     assert.equal((await page.locator('#distanceValue').innerText()).trim(), '120 km');
     await partnerIs(page, 'viaggio', 1);
-    await page.waitForFunction(() => document.getElementById('distanceValue')?.textContent === 'in viaggio');
+    await page.waitForFunction(() => document.getElementById('distanceValue')?.textContent === '🚗 in viaggio');
     assert.equal(await page.locator('#distanceWidget').getAttribute('aria-label'), 'Beatrice è in viaggio');
-    await shot(page, 'oggi-in-viaggio', page.locator('#usOggiDock'));
+    await shot(page, 'v2-oggi-in-viaggio', page.locator('#usOggiDock'));
     assert.deepEqual(errors, []);
     await ctx.close();
   } finally {
@@ -241,7 +366,7 @@ test('«In viaggio» offers the Noi calendar once: dismissable, or the editor wi
     assert.ok(await page.locator('#usStatusSheet.open').count(), 'the sheet stays open');
     assert.deepEqual(await page.evaluate(() => window.__pushes), ['partner_status'], 'the other person\'s widgets follow');
     await page.waitForTimeout(300);
-    await shot(page, 'viaggio-calendario');
+    await shot(page, 'v2-viaggio-calendario');
     // «No, grazie» closes it.
     await page.click('#usStatusTripNo');
     await page.waitForFunction(() => !document.getElementById('usStatusSheet').classList.contains('open'));

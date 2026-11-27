@@ -20,13 +20,8 @@ const row = (status, hoursAgo = 1, extra = {}) => ({ user_id: 'b', status, form:
 test('one gesture per state, the same nine as the SQL and the push', async () => {
   assert.deepEqual(S.GESTURE_OF, { giu: 'abbraccio', malato: 'abbraccio', stanco: 'riposati', nervoso: 'respira', felice: 'cuore', innamorato: 'cuore', festa: 'festa', lavoro: 'forza', studio: 'forza', palestra: 'spacca', viaggio: 'buon_viaggio', tavola: 'buon_appetito' });
   for (const s of S.STATUSES) assert.ok(S.GESTURES[S.gestureOf(s.key)], s.key);
-  assert.deepEqual(S.GESTURES.abbraccio.label, 'Ti mando un abbraccio');
-  assert.equal(S.GESTURES.respira.label, 'Respira, ci sono io');
-  assert.equal(S.GESTURES.forza.label, 'Forza!');
-  assert.equal(S.GESTURES.spacca.label, 'Spacca tutto!');
-  assert.equal(S.GESTURES.festa.label, '🎉');
-  assert.equal(S.GESTURES.abbraccio.said('Bea'), 'Bea: Ti mando un abbraccio');
-  assert.equal(S.GESTURES.cuore.said('Bea'), 'Bea ti manda un cuore ♡');
+  assert.equal(S.GESTURES.abbraccio.icon, '🤗');
+  assert.equal(S.GESTURES.spacca.icon, '🔥');
   const { STATUS_GESTURES } = await import('../supabase/functions/_shared/notification-core.mjs');
   assert.deepEqual([...STATUS_GESTURES].sort(), Object.keys(S.GESTURES).sort());
   const sql = read('supabase/migrations/20261127184637_come_stai_risposta.sql');
@@ -45,18 +40,19 @@ test('the answer counts only for the state it answered, while it shows', () => {
 
 test('Oggi: one light suggestion from the two states (D10)', () => {
   const m = (status) => S.model(row(status), { now: NOW });
-  assert.deepEqual(S.hintFor(m('felice'), m('stanco'), 'Bea'), { kind: 'vocale', icon: 'microphone', title: 'Lascia un vocale a Bea' });
+  assert.deepEqual(S.hintFor(m('felice'), m('stanco'), 'Bea'), { kind: 'vocale', title: '🎙 Un vocale a Bea?' });
   assert.equal(S.hintFor(null, m('giu'), 'Bea').kind, 'vocale');
-  assert.deepEqual(S.hintFor(m('innamorato'), m('felice'), 'Bea'), { kind: 'partita', icon: 'game-controller', title: 'Una partita?' });
+  assert.deepEqual(S.hintFor(m('innamorato'), m('felice'), 'Bea'), { kind: 'partita', title: '🎲 Una partita?' });
   assert.equal(S.hintFor(m('lavoro'), m('felice'), 'Bea'), null, 'both happy or in love');
   assert.equal(S.hintFor(m('felice'), null, 'Bea'), null);
   assert.equal(S.hintFor(m('felice'), m('viaggio'), 'Bea'), null, 'in viaggio is on the distance, not a suggestion');
   // Never over a commitment of today; the distance says «in viaggio».
   const app = read('app.js');
-  assert.match(app, /const hint=model&&model\.date===localDateISO\(\)\?null:window\.UsMemberStatus\?\.oggiHint\?\.\(\)\|\|null;/);
+  // Only in place of a commitment that is not today: never a row more.
+  assert.match(app, /const hint=model&&model\.date!==localDateISO\(\)\?window\.UsMemberStatus\?\.oggiHint\?\.\(\)\|\|null:null;/);
   assert.match(app, /if\(data\.usNextKind==='hint'&&window\.UsMemberStatus\?\.runHint\?\.\(data\.usHint\)\)return;/);
   assert.match(app, /repaint:\(\)=>renderOggiNext\(usOggiNextModel\)/);
-  assert.match(app, /value\.textContent=trip\?'in viaggio':\(model\.text\|\|''\);/);
+  assert.match(app, /value\.textContent=trip\?'🚗 in viaggio':\(model\.text\|\|''\);/);
   const module = read('member-status.js');
   assert.match(module, /if \(kind === 'vocale'\) \{ w\.UsLeftForYou\?\.openComposer\?\.\(\{ kind: 'audio' \}\); return true; \}/);
   assert.match(module, /if \(kind === 'partita'\) \{ w\.openQuizHub\?\.\(\{ nav: true \}\); return true; \}/);
@@ -124,12 +120,26 @@ test('the things on the characters (D8); at night only who is not unwell sleeps;
 
 test('the sheet and the Oggi row: the gesture, «Mandato ♡», the Noi calendar from «In viaggio»; tap targets', () => {
   const html = read('index.html');
-  assert.match(html, /<button type="button" class="us-status-respond" id="usStatusRespond" hidden><span data-status-respond-label><\/span><\/button>/);
-  assert.match(html, /<button type="button" class="og-pill us-status-reply-pill" id="usOggiStatusReply" hidden><\/button>/);
+  // Tavola «Come stai di US»: the gesture lives in the other person's sheet and beside their pill.
+  const person = html.slice(html.indexOf('<div id="usStatusPerson"'), html.indexOf('<div id="usDistanceSheet"'));
+  assert.match(person, /<button type="button" class="us-status-respond" id="usStatusRespond" hidden><span data-status-respond-label><\/span><\/button>/);
+  assert.match(person, /id="usStatusPersonThink">Ti penso<\/button>/);
+  assert.match(person, /id="usStatusPersonVoice">Lascia un vocale<\/button>/);
+  const row = html.slice(html.indexOf('<div class="us-status-group" id="usOggiStatusGroup"'), html.indexOf('<!-- The answers read'));
+  for (const id of ['usOggiPartner', 'usOggiStatusReply', 'usOggiStatus', 'usOggiGot']) assert.match(row, new RegExp(`id="${id}"`), id);
+  assert.match(row, /<small class="us-status-change" data-status-change>· Cambia<\/small>/);
+  const sheet = html.slice(html.indexOf('<div id="usStatusSheet"'), html.indexOf('<div id="usStatusPerson"'));
+  assert.ok(sheet.indexOf('Come ti senti') < sheet.indexOf('data-status="innamorato"') && sheet.indexOf('Cosa stai facendo') < sheet.indexOf('data-status="festa"') && sheet.indexOf('data-status="malato"') < sheet.indexOf('Cosa stai facendo'), 'two groups');
+  assert.doesNotMatch(sheet, /usStatusPartnerLine|Lo vede solo/);
   assert.match(html, /<p id="usStatusTripText">Lo segno nel calendario di Noi\?<\/p>/);
   const css = read('member-status.css');
-  assert.match(css, /\.us-status-reply-pill:not\(\[hidden\]\)\{[^}]*min-width:44px;[^}]*min-height:44px;/);
-  assert.match(css, /\.us-status-respond\{[^}]*min-height:48px/);
+  // One item of the row, never two lines; 40 px like every pill of the row, 44 px of tap area.
+  assert.match(css, /\.og-row \.us-status-group:not\(\[hidden\]\)\{[^}]*flex:1 1 var\(--us-status-basis,100%\);[^}]*flex-wrap:nowrap;/);
+  assert.match(css, /\.us-status-group>button\{[^}]*height:40px;/);
+  assert.match(css, /\.us-status-group>button::after\{content:"";position:absolute;inset:-2px 0\}/);
+  assert.match(css, /\.us-status-person>button\{[^}]*min-height:48px/);
+  assert.match(css, /\.us-status-act\{background:#b8432f!important/);
+  assert.match(css, /prefers-reduced-motion:reduce\)\{#home #homeHero \.us-status-pill \.us-status-dot\{animation:none\}/);
   assert.match(css, /\.us-status-trip button\{min-height:44px/);
   const module = read('member-status.js');
   assert.match(module, /db\.rpc\('respond_member_status', \{ p_status_set_at: state\.partner\.set_at, p_gesture: g \}\)/);
@@ -139,4 +149,21 @@ test('the sheet and the Oggi row: the gesture, «Mandato ♡», the Noi calendar
   assert.match(read('calendar.js'), /function createCalendarEntryPrefilled\(dateISO, prefill = \{\}\) \{\s*createCalendarEntryForDate\(dateISO\);/);
   // D13: a change of mine tells the other person's widgets, silently.
   assert.match(module, /w\.sendWebPushEvent\?\.\('partner_status'\);/);
+});
+
+test('the clearer version (tavola «Come stai di US»): short words, «Manda …», «ti manda …», the state in the third person', () => {
+  assert.deepEqual({ ...S.SHORT }, { abbraccio: 'Abbraccio', riposati: 'Riposati', respira: 'Respira', cuore: 'Cuore', festa: 'Festa', forza: 'Forza!', spacca: 'Spacca tutto!', buon_viaggio: 'Buon viaggio', buon_appetito: 'Buon appetito' });
+  assert.equal(S.ACT.abbraccio, 'Manda un abbraccio');
+  assert.equal(S.ACT.riposati, 'Manda «Riposati»');
+  assert.equal(S.GOT.abbraccio, '{name} ti manda un abbraccio');
+  assert.equal(S.GOT.riposati, '{name} ti dice «Riposati»');
+  for (const g of Object.keys(S.GESTURES)) assert.ok(S.SHORT[g] && S.ACT[g] && S.GOT[g], g);
+  for (const s of S.STATUSES) assert.ok(S.THIRD[s.key], s.key);
+  assert.deepEqual(S.THIRD.stanco, { m: '{name} è stanco', f: '{name} è stanca', n: '{name} è senza energie' });
+  assert.equal(S.THIRD.malato, '{name} non sta bene');
+  const js = read('member-status.js');
+  // Never a line more: the smallest form is the flex-basis, then the richest form that fits.
+  assert.match(js, /group\.style\.setProperty\('--us-status-basis', `\$\{smallest\}px`\);/);
+  assert.match(js, /if \(target\.closest\('#usOggiPartner'\)\) \{ openPerson\(\); return; \}/);
+  assert.match(read('navigation.js'), /name:'statusPerson',\s*find:\(\)=>document\.getElementById\('usStatusPerson'\)/);
 });

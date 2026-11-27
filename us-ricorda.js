@@ -240,8 +240,8 @@
     }
     // Come stai che conta (D9/D17): «Un pensiero?» offers the two gestures, a Ti penso or the one of their state.
     function comeStaActions(v) {
-      const g = w.UsMemberStatus?.GESTURES?.[v.gesture];
-      return `<button type="button" class="us-battuta-go" data-battuta-think>Ti penso</button>${g ? `<button type="button" class="us-battuta-go is-gesture" data-battuta-gesture>${esc(g.label)}</button>` : ''}`;
+      const M = w.UsMemberStatus, g = M?.GESTURES?.[v.gesture];
+      return `<button type="button" class="us-battuta-go" data-battuta-think>Ti penso</button>${g ? `<button type="button" class="us-battuta-go is-gesture" data-battuta-gesture>${esc(`${g.icon} ${M.ACT[v.gesture]}`)}</button>` : ''}`;
     }
     async function attachPhoto(path, caption) {
       // The memory's photo in Lasciato per te, ready to send (the sender still sends).
