@@ -504,7 +504,7 @@
 #leftForYouComposerOverlay .left-for-you-composer-pick[data-pick] b{font-size:16px;font-weight:600;line-height:1.3}
 #leftForYouComposerOverlay .left-for-you-composer-pick[data-pick] small{font-size:12px;font-weight:400;line-height:1.3;color:var(--us-color-text-3)}
 #leftForYouComposerOverlay .left-for-you-composer-file:empty{display:none}
-#leftForYouComposerOverlay #leftForYouComposerPhotoActions{grid-template-columns:minmax(0,1fr)}
+#leftForYouComposerOverlay .left-for-you-photo-actions{grid-template-columns:minmax(0,1fr)}
 /* Voice: the design's card — a 76px key, a quiet wave, one line. Recording keeps the app's live pill. */
 #leftForYouComposerOverlay .left-for-you-vn-frame{gap:12px;padding:18px 12px;border-radius:22px;background:var(--us-color-surface-2)}
 #leftForYouComposerOverlay .left-for-you-vn[data-phase="idle"]{width:76px;height:76px;border:0;border-radius:50%;background:var(--us-tu);box-shadow:none;color:var(--us-inchiostro)}
