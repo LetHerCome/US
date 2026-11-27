@@ -270,6 +270,96 @@ public class UsWidgetModelsTest {
         assertEquals("Apri", unauthorized.cta);
     }
 
+    // Ti penso ×N dai widget (founder, 27/11/2026): taps in a row add up, one
+    // Ti penso leaves 1.5 s after the last one with all of them.
+    private static final String BURST = "6f1c1f0e-5d2b-4a9b-9a51-1c2d3e4f5a6b";
+
+    @Test
+    public void tapsInARowAddUpOnOneBurst() throws Exception {
+        Instant now = Instant.parse("2026-10-06T10:00:00Z");
+        UsWidgetModels.Tap first = UsWidgetModels.tap(null, true, now);
+        assertEquals(1, first.taps);
+        assertTrue(first.reply);
+        assertFalse(first.full);
+        JSONObject counting = action("counting", "2026-10-06T10:00:00Z").put("taps", 3).put("reply", true);
+        UsWidgetModels.Tap fourth = UsWidgetModels.tap(counting, false, Instant.parse("2026-10-06T10:00:00.400Z"));
+        assertEquals("the same burst, the same id", BURST, fourth.actionId);
+        assertEquals(4, fourth.taps);
+        assertTrue("the reply is the burst's first tap's", fourth.reply);
+        // The 99th tap sends at once; never more than 99.
+        UsWidgetModels.Tap last = UsWidgetModels.tap(counting.put("taps", 98), false, Instant.parse("2026-10-06T10:00:01Z"));
+        assertEquals(99, last.taps);
+        assertTrue(last.full);
+        assertEquals(99, UsWidgetModels.tap(counting.put("taps", 99), false, Instant.parse("2026-10-06T10:00:01Z")).taps);
+        // After a send, a new burst: a new id, one tap.
+        UsWidgetModels.Tap again = UsWidgetModels.tap(action("sent", "2026-10-06T10:00:00Z").put("taps", 5), false, Instant.parse("2026-10-06T10:00:30Z"));
+        assertNotEquals(BURST, again.actionId);
+        assertEquals(1, again.taps);
+        // A failed send is retried with its id, as before.
+        assertEquals(BURST, UsWidgetModels.tap(action("failed", "2026-10-06T10:00:00Z"), false, Instant.parse("2026-10-06T10:00:30Z")).actionId);
+        // A burst left open past two minutes is not continued.
+        assertEquals(1, UsWidgetModels.tap(counting.put("taps", 4), false, Instant.parse("2026-10-06T10:02:00Z")).taps);
+    }
+
+    @Test
+    public void theBurstLeavesOnlyAfterTheLastTapIsQuiet() throws Exception {
+        JSONObject counting = action("counting", "2026-10-06T10:00:00Z").put("taps", 3);
+        assertFalse("a newer tap is still being counted", UsWidgetModels.burstDue(counting, BURST, false, Instant.parse("2026-10-06T10:00:01Z")));
+        assertTrue(UsWidgetModels.burstWaiting(counting, Instant.parse("2026-10-06T10:00:01Z")));
+        assertTrue(UsWidgetModels.burstDue(counting, BURST, false, Instant.parse("2026-10-06T10:00:01.500Z")));
+        assertTrue("the tick, without an id, after the process died", UsWidgetModels.burstDue(counting, null, false, Instant.parse("2026-10-06T10:00:40Z")));
+        assertFalse(UsWidgetModels.burstWaiting(counting, Instant.parse("2026-10-06T10:00:40Z")));
+        assertTrue("the 99th tap", UsWidgetModels.burstDue(counting, BURST, true, Instant.parse("2026-10-06T10:00:00Z")));
+        assertFalse("another burst's timer", UsWidgetModels.burstDue(counting, "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d", false, Instant.parse("2026-10-06T10:00:02Z")));
+        assertFalse("already sending", UsWidgetModels.burstDue(action("sending", "2026-10-06T10:00:00Z"), BURST, true, Instant.parse("2026-10-06T10:00:02Z")));
+        assertFalse("too old to send", UsWidgetModels.burstDue(counting, null, false, Instant.parse("2026-10-06T10:02:00Z")));
+        assertFalse(UsWidgetModels.burstDue(null, null, true, Instant.parse("2026-10-06T10:00:02Z")));
+    }
+
+    @Test
+    public void theHeartSaysHowManyWhileCountingAndAfter() throws Exception {
+        JSONObject counting = action("counting", "2026-10-06T10:00:00Z").put("taps", 3);
+        UsWidgetModels.Think three = UsWidgetModels.think(snapshot(null), counting, true, Instant.parse("2026-10-06T10:00:00.500Z"));
+        assertTrue(three.counting);
+        assertTrue(three.done);
+        assertFalse("one more tap adds one more", three.busy);
+        assertEquals("×3", three.line);
+        assertEquals("tocca ancora", three.when);
+        assertEquals("the tick in case the process dies", Instant.parse("2026-10-06T10:00:02Z"), three.nextChange);
+        UsWidgetModels.Think sending = UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:01.500Z").put("taps", 3), true, Instant.parse("2026-10-06T10:00:02Z"));
+        assertEquals("Inviato ×3", sending.line);
+        assertTrue(sending.busy);
+        assertEquals("Ricambiato ×12", UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:00Z").put("taps", 12).put("reply", true), true, Instant.parse("2026-10-06T10:00:30Z")).line);
+        assertEquals("one tap: no number", "Inviato", UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:00Z").put("taps", 1), true, Instant.parse("2026-10-06T10:00:30Z")).line);
+        // A burst never sent (process gone, no tick) asks to retry after two minutes.
+        UsWidgetModels.Think lost = UsWidgetModels.think(snapshot(null), counting, true, Instant.parse("2026-10-06T10:02:01Z"));
+        assertFalse(lost.counting);
+        assertEquals("Non è partito", lost.line);
+        assertEquals("Riprova", lost.cta);
+    }
+
+    @Test
+    public void theirTiPensoOfSeveralTapsSaysHowMany() throws Exception {
+        Instant now = Instant.parse("2026-10-06T12:00:00Z");
+        JSONObject input = new JSONObject().put("schemaVersion", 2).put("ownerHash", OWNER)
+            .put("think", new JSONObject().put("partnerName", "Beatrice").put("lastReceivedAt", "2026-10-06T11:50:00Z").put("lastReceivedTaps", 5));
+        UsWidgetModels.Think five = UsWidgetModels.think(UsWidgetContract.normalize(input), null, true, now);
+        assertEquals("Beatrice ti ha pensato 5 volte", five.line);
+        assertEquals(5, five.receivedTaps);
+        assertEquals("Ricambia", five.cta);
+        input.getJSONObject("think").put("lastReceivedTaps", 1);
+        assertEquals("Beatrice ti ha pensato", UsWidgetModels.think(UsWidgetContract.normalize(input), null, true, now).line);
+        // The contract keeps only a whole number 1..99; an older app sends none (1).
+        for (Object raw : new Object[] { 0, -2, 2.5, "7", true, JSONObject.NULL }) {
+            input.getJSONObject("think").put("lastReceivedTaps", raw);
+            assertEquals(String.valueOf(raw), 1, UsWidgetContract.normalize(input).getJSONObject("think").getInt("lastReceivedTaps"));
+        }
+        input.getJSONObject("think").put("lastReceivedTaps", 400);
+        assertEquals(99, UsWidgetContract.normalize(input).getJSONObject("think").getInt("lastReceivedTaps"));
+        input.getJSONObject("think").remove("lastReceivedTaps");
+        assertEquals(1, UsWidgetContract.normalize(input).getJSONObject("think").getInt("lastReceivedTaps"));
+    }
+
     @Test
     public void ricambiaOnlyWhileThePartnerThoughtIsUnanswered() throws Exception {
         Instant now = Instant.parse("2026-10-06T12:00:00Z");

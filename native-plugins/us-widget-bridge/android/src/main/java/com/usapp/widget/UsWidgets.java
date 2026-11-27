@@ -145,6 +145,15 @@ final class UsWidgets {
         }
     }
 
+    /**
+     * Ti penso ×N: the tick right after a burst of taps, in case the process
+     * dies before its timer (UsThinkWidgetActionReceiver). It is always the
+     * earliest moment; the tick's refreshAll then schedules the next one.
+     */
+    static void wakeAt(Context context, Instant at) {
+        schedule(context.getApplicationContext(), at);
+    }
+
     private static void schedule(Context context, Instant at) {
         AlarmManager alarms = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (alarms == null) return;

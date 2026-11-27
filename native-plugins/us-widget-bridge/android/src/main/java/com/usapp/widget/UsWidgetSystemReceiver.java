@@ -19,6 +19,9 @@ public final class UsWidgetSystemReceiver extends BroadcastReceiver {
             int id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
             if (UsWidgets.validKind(kind)) UsWidgetBridgePlugin.notifyPinned(kind, id != AppWidgetManager.INVALID_APPWIDGET_ID);
         }
+        // Ti penso ×N: a burst of taps still owed (the process died before its
+        // timer) leaves now with its own id; that send redraws every widget.
+        if (UsWidgets.ACTION_TICK.equals(action) && UsThinkWidgetActionReceiver.flushIfOwed(context, this)) return;
         switch (action) {
             case UsWidgets.ACTION_TICK:
             case UsWidgets.ACTION_PINNED:

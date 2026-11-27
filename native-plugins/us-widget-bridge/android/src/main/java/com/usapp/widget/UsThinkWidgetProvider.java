@@ -19,6 +19,9 @@ import android.widget.RemoteViews;
  * «Bea ti pensa». The 4x2 is you two with the heart between you. Without the
  * send credential the heart is quieter and opens US. The class name is
  * stable: placed widgets keep working.
+ * Ti penso ×N (founder, 27/11/2026): taps in a row show «×3» and leave as one
+ * Ti penso of 3 (UsThinkWidgetActionReceiver); their Ti penso of 5 taps is
+ * «Bea ti ha pensato 5 volte».
  */
 public class UsThinkWidgetProvider extends AppWidgetProvider {
     @Override
@@ -49,22 +52,25 @@ public class UsThinkWidgetProvider extends AppWidgetProvider {
         UsWidgetCharacter.Person partner = UsWidgetCharacter.person(state.snapshot, false);
         String name = model.partner.isEmpty() ? "la tua persona" : model.partner;
         boolean got = !model.done && model.cta.equals("Ricambia");
+        // Ti penso ×N (27/11/2026): their Ti penso of several taps, «Bea ti ha pensato 5 volte».
+        boolean many = got && model.receivedTaps > 1;
+        String gotTitle = many ? model.line : model.partner.isEmpty() ? "Ti pensa" : model.partner + " ti pensa";
         UsWidgetCharacter.heart(views, context, R.id.us_widget_heart, me, partner, wide ? 32 : 68, true);
         views.setInt(R.id.us_widget_heart, "setImageAlpha", !model.canSend || (model.busy && !model.done) ? 140 : 255);
         if (wide) {
             UsWidgetCharacter.put(views, context, R.id.us_think_me, me, UsWidgetCharacter.face(state, true), "", 76);
             UsWidgetCharacter.put(views, context, R.id.us_think_partner, partner, got ? "innamorato" : UsWidgetCharacter.face(state, false), "", 70);
-            String title = model.done ? model.line : got ? (model.partner.isEmpty() ? "Ti pensa" : model.partner + " ti pensa")
+            String title = model.done ? model.line : got ? gotTitle
                 : model.canSend ? "Un pensiero,\nun tocco" : model.line;
             String label = model.done ? model.when : got ? (model.when.isEmpty() ? "Tocca per ricambiare" : model.when + " · tocca per ricambiare")
                 : model.canSend ? "Tocca e " + name + " lo sente subito" : model.hint;
-            UsWidgetArt.serif(views, context, R.id.us_think_title, title, 21f, 170, 2, false, Layout.Alignment.ALIGN_NORMAL);
+            UsWidgetArt.serif(views, context, R.id.us_think_title, title, many ? 19f : 21f, 170, 2, false, Layout.Alignment.ALIGN_NORMAL);
             views.setTextViewText(R.id.us_think_label, label);
         } else {
             views.setViewVisibility(R.id.us_think_send, got ? View.GONE : View.VISIBLE);
             views.setViewVisibility(R.id.us_think_got, got ? View.VISIBLE : View.GONE);
             if (got) {
-                UsWidgetArt.serif(views, context, R.id.us_think_title, model.partner.isEmpty() ? "Ti pensa" : model.partner + " ti pensa", 19f, 140, 2, false, Layout.Alignment.ALIGN_NORMAL);
+                UsWidgetArt.serif(views, context, R.id.us_think_title, gotTitle, many ? 17f : 19f, 140, 2, false, Layout.Alignment.ALIGN_NORMAL);
                 views.setTextViewText(R.id.us_think_when, model.when);
                 UsWidgetCharacter.put(views, context, R.id.us_think_partner, partner, "innamorato", "", 84);
                 UsWidgetCharacter.heart(views, context, R.id.us_think_badge, me, partner, 24, true);

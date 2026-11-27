@@ -151,7 +151,7 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
     schemaVersion: 2,
     ownerHash: OWNER,
     updatedAt: '2026-10-06T10:00:00.000Z',
-    think: { partnerName: 'Bea\u0000trice', lastReceivedAt: '2026-10-06T09:00:00+02:00', lastSentAt: 'ieri', lastAnsweredAt: '', token: 'x' },
+    think: { partnerName: 'Bea\u0000trice', lastReceivedAt: '2026-10-06T09:00:00+02:00', lastReceivedTaps: 400, lastSentAt: 'ieri', lastAnsweredAt: '', token: 'x' },
     couple: { names: ['Francesco', 'Beatrice', 'Terzo'], startedOn: '2026-04-21', frame: '../evil', userId: 'raw' },
     countdown: { active: true, kind: 'clock', title: 'Viaggio', target: '2026-12-01T18:30:00.000Z', style: 'neon' },
     photo: { state: 'ready', key: 'https://example.test/a.jpg', url: 'https://example.test/a.jpg', takenOn: '2026-10-01' },
@@ -168,6 +168,8 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   assert.equal(sent.schemaVersion, 2);
   assert.equal(sent.think.partnerName, 'Bea trice');
   assert.equal(sent.think.lastSentAt, '');
+  // Ti penso ×N (27/11/2026): their last Ti penso's taps, a whole number 1..99.
+  assert.equal(sent.think.lastReceivedTaps, 99);
   assert.deepEqual([...sent.couple.names], ['Francesco', 'Beatrice']);
   assert.equal(sent.couple.frame, '');
   assert.equal(sent.countdown.style, 'editorial');
@@ -281,10 +283,11 @@ test('logout con credential già pronta revoca comunque per device hash', async 
 test('snapshot isolato per account: owner hash, nessun id raw, nessun dato del vecchio account', async () => {
   const harness = loadWidgets({ credential: 'ready' });
   await harness.widgets.authReady({ id: 'account-one' });
-  await harness.widgets.publishThink({ partnerName: 'Prima', lastReceivedAt: '2026-10-06T08:00:00Z', lastSentAt: '' });
+  await harness.widgets.publishThink({ partnerName: 'Prima', lastReceivedAt: '2026-10-06T08:00:00Z', lastReceivedTaps: 5, lastSentAt: '' });
   await settle();
   const first = harness.snapshots().at(-1);
   assert.equal(first.schemaVersion, 2);
+  assert.equal(first.think.lastReceivedTaps, 5, 'Ti penso ×N: the taps of their last Ti penso reach the widget');
   assert.match(first.ownerHash, /^[a-f0-9]{64}$/);
   assert.deepEqual([...first.couple.names], ['Francesco', 'Beatrice']);
   assert.equal(first.couple.startedOn, '2026-04-21');
@@ -436,8 +439,12 @@ test('Ti penso updates its own RemoteViews immediately before the network call',
   const widgets = read(`${JAVA}/UsWidgets.java`);
   const action = read(`${JAVA}/UsThinkWidgetActionReceiver.java`);
   assert.match(widgets, /static void refreshThink\(Context context\)/);
-  assert.match(action, /store\.writeAction\("sending", actionId, UsWidgetModels\.unanswered\([^\n]*\);\s*\/\/[^\n]*\n\s*UsWidgets\.refreshThink\(app\);/);
-  assert.match(action, /UsWidgets\.refreshAll\(app\);\s*pending\.finish\(\)/);
+  // Ti penso ×N (27/11/2026): the tap paints «×N» at once and the burst
+  // paints «Inviato ×N» before the network call; the last held broadcast
+  // is finished after the final redraw.
+  assert.match(action, /writeAction\("counting", tap\.actionId, tap\.reply, tap\.taps\)[\s\S]*?\}\s*\/\/[^\n]*\n\s*UsWidgets\.refreshThink\(app\);/);
+  assert.match(action, /store\.writeAction\("sending", actionId, action\.optBoolean\("reply", false\), taps\);\s*\}\s*UsWidgets\.refreshThink\(app\);/);
+  assert.match(action, /UsWidgets\.refreshAll\(app\);\s*release\(\);/);
 });
 
 test('Hub: pin scrive prima lo stato e passa solo kind validi', async () => {

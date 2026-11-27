@@ -5453,7 +5453,8 @@ async function hydrateThink(){
   const todayCount=(rows||[]).filter(row=>romeDay(row.created_at)===todayDate).length;
   // The characters' heart eyes (personaggi.js reactionOf): the last Ti penso received.
   if(window.usThinkLastReceivedAt!==(received?.created_at||'')){window.usThinkLastReceivedAt=received?.created_at||'';window.dispatchEvent(new Event('us:think-updated'));}
-  window.UsWidgets?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||'',lastAnsweredAt:receivedReaction?.updated_at||'',todayCount,todayDate}).catch(()=>{});
+  // Ti penso ×N dai widget (27/11/2026): «Bea ti ha pensato 5 volte» on the widget of whoever receives.
+  window.UsWidgets?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastReceivedTaps:received?usThinkTaps(received):1,lastSentAt:sent?.created_at||'',lastAnsweredAt:receivedReaction?.updated_at||'',todayCount,todayDate}).catch(()=>{});
 }
 window.hydrateThink=hydrateThink;
 // I cuori (founder, 27/11/2026, «Uno solo ×N»): one send per combo, with its
