@@ -671,3 +671,12 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Ricerca:** sul server (`search_ricordi_v1`, SECURITY DEFINER, solo la coppia di chi chiede, al massimo 60, la query non si salva). Didascalie, posti, post-it, mese e anno, chi l'ha messo, lettere e risposte tenute; mai quello che non è stato tenuto. Senza accenti e senza differenza di maiuscole; `%` e `_` valgono come lettere. La lente è una sola per Raccolta, Bacheca e Mappa; il suo codice si carica al primo tocco (la ricerca vuole comunque la rete).
 - **Appendi e fai spazio:** `bacheca_pin_v1(p_source, p_source_id, p_replace)`: con la bacheca piena stacca la cosa scelta e appende la nuova nella stessa transazione; una cosa fissata non si stacca mai (`fixed`). Con US Plus il limite resta 500.
 - **Fuori:** «Da appuntare» nella Mappa, il gioco «Ti ricordi?».
+
+## 2026-11-27 — I cuori: «Uno solo ×N» e «Resta e cresce»
+
+**Fonte:** founder, 27/11/2026 («tutto ok» sul prototipo https://claude.ai/artifact/2NXZSrS4EypVcsAVBNDRVy).
+
+- **«Uno solo ×N» (Ti penso):** i tocchi rapidi sul cuore della barra si sommano; ~1,15 s dopo l'ultimo parte UN solo Ti penso con i tocchi (`send_think(operation_id, p_taps default 1)`, `shared_messages.think_taps` 1..99, null = 1). Idempotenza invariata (operation_id). App vecchie, widget, Gioca e «La cosa di oggi» mandano 1. La notifica somma i tocchi dei Ti penso nella finestra di 2 minuti («ti ha pensato N volte»); Android riceve solo il tipo `think_many` (mai numeri su FCM) e dice «tante volte». Il conteggio di oggi conta i Ti penso; i tocchi si vedono come «×N» dell'ultimo.
+- **«Resta e cresce» (cuore di risposta):** il primo tocco mette il cuore e lo salva; i tocchi dopo aggiungono cuoricini e «×N» solo a schermo, senza server né notifiche. Il cuore della domanda di oggi si toglie solo tenendolo premuto ~650 ms (o Canc/Backspace); la reazione al Ti penso resta finale come prima.
+- **Movimento:** un solo canvas di cuoricini sopra la pagina, solo mentre volano (`ui-foundation.js`); con movimento ridotto solo il rimbalzo leggero e il numero.
+- **Abbraccio:** il bottone mostra i due personaggi veri della coppia (forma, colore, vestiti) con il viso «innamorato» e un cuore nei due colori; senza personaggi, palla e quadrato nei colori delle persone.
