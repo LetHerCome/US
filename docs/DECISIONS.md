@@ -629,4 +629,4 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 
 - **Scadenza:** 14 giorni invece di 48 ore. Il codice resta quello di MC2 (128 bit casuali, sul server solo l'impronta), quindi la sicurezza non cambia.
 - **Rinnovo:** un codice scaduto si rifà da solo, una volta per apertura, solo se era scaduto. Uno ancora valido non si tocca, perché ne annullerebbe uno già mandato.
-- **Notifiche per chi aspetta:** «Avvisami quando entra» le accende con un tocco, mai da sola. Promemoria al giorno 1 e al giorno 3 dalla creazione della coppia, alle 18 di Roma, solo a una coppia di una persona, una volta sola. L'interruttore «anniversari e ricorrenze» spento lo blocca.
+- **Notifiche per chi aspetta:** «Avvisami quando entra» le accende con un tocco, mai da sola. Promemoria al giorno 1 e al giorno 3 dalla creazione della coppia, alle 18 di Roma, solo a una coppia di una persona, una volta sola. L’interruttore «Ricorrenze» spento lo blocca.
