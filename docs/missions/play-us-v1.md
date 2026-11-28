@@ -1,6 +1,6 @@
 # Play Us v1 — piano tecnico
 
-Stato: **piano, da approvare** (28/11/2026). Decisioni: grill del founder del 28/11, D1–D22, tutte accettate; prototipo approvato: https://claude.ai/artifact/MhLJSTQ8n7XWGNuy14BpPq (labirinto reso più facile su richiesta). Il passo A del grill (quiz vivi) è in staging con la PR #323.
+Stato: **fatto e in staging** (28/11/2026): migrazione applicata su staging, `send-web-push` pubblicata su staging, interfaccia sul ramo `claude/play-us-piano`. Da fare per la produzione: migrazione, Edge, AAB e TestFlight; prova a due telefoni. Decisioni: grill del founder del 28/11, D1–D22, tutte accettate; prototipo approvato: https://claude.ai/artifact/MhLJSTQ8n7XWGNuy14BpPq (labirinto reso più facile su richiesta). Il passo A del grill (quiz vivi) è in staging con la PR #323.
 
 ## Cosa costruiamo
 

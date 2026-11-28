@@ -2,6 +2,17 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Play Us: giocare insieme, dal vivo (28/11)
+
+**Stato:** ramo `claude/play-us-piano`, in staging. Migrazione `20261128090123_play_us_v1` (due tabelle, le funzioni `play_us_*`, le tabelle nella pubblicazione Realtime, regole sul canale privato `us-couple:<coppia>`), applicata su staging il 28/11. Edge `send-web-push` con il tipo `play_invite`, pubblicata su staging. **In produzione:** la migrazione a mano come le altre, `send-web-push`, un **AAB** (frase Android di `play_invite`: un’app vecchia mostra «Apri US per vedere le novità») e una build **TestFlight** con la stessa versione.
+
+**Cosa cambia:**
+- **Play Us in cima a Gioca:** la carta con i due personaggi, «1 partita oggi» e il pallino verde quando l’altra persona ha US aperta (solo quando la presenza funziona). «Sfida Bea» manda l’invito: notifica «Francesco ti sfida a Play Us ♡» e avviso dentro l’app, vale 3 minuti. Se accetta entrate in lobby (3, 2, 1).
+- **Le 8 tappe, decise dal server:** 3 domande lampo da 10 s con il misuratore di intesa e la risposta dell’altra persona che si vede subito; una foto dalla fotocamera (o «Salta»: l’altra persona ritocca una vostra foto dai Ricordi); il ritocco della foto dell’altra persona con adesivi dei personaggi, pennarello e una scritta, che si scopre solo alla fine; «Quanto mi conosci» (rispondi per te e indovina lei); un vocale di 5 s o un gesto; il labirinto di 45 s (cuori, due nuvolette lente, quattro Ti penso dorati) con il punteggio dell’altra persona dal vivo; la rivelazione insieme delle due foto ritoccate, delle risposte, del vocale e della sfida; il ricordo.
+- **Il ricordo:** la partita diventa un ricordo in Ricordi («Play Us · 28 novembre», con le due foto ritoccate), +30 al livello di coppia una volta sola, e chi vince sceglie un pegno dolce che finisce come post-it rosa sulla lavagna di Noi.
+- **Una partita al giorno per coppia,** spesa dalla tappa 4 (un invito rifiutato o una partita lasciata prima non conta). Dopo: «Domani un’altra partita · Con US Plus potrete giocarne di più».
+- **Se uno sparisce:** l’altra persona vede «… si è persa un attimo» e aspetta 60 s, poi la partita si chiude e salva quanto fatto. Una partita ridotta con × resta chiusa finché non tocchi «Rientra».
+
 ### Quiz più vivi (28/11)
 
 **Stato:** ramo `claude/quiz-vivi`, da staging `a366dd37` (dopo la #322). Nessuna migrazione. Primo passo deciso col grill del 28/11 (D1–D2), prima di Play Us.
