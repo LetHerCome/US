@@ -189,8 +189,8 @@
 :root{--us-isola-open-w:min(232px,calc(100vw - 100px))}
 .top.us-premium-top[data-us-isola="open"] .us-isola{width:var(--us-isola-open-w);height:50px;background:rgba(18,13,17,.8);border-color:rgba(247,239,233,.24);box-shadow:0 10px 26px rgba(0,0,0,.35)}
 .top.us-premium-top .us-isola:focus-visible{outline:2px solid #f7efe9;outline-offset:3px}
-.us-isola-window{position:absolute;left:18px;bottom:0;width:72px;height:46px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;pointer-events:none}
-.us-isola-window .us-char{display:block;flex:none;margin-bottom:-5px;transform:translateY(50px);transition:transform .5s cubic-bezier(.2,.9,.25,1.15)}
+.us-isola-window{position:absolute;left:18px;top:0;bottom:0;width:72px;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none}
+.us-isola-window .us-char{display:block;flex:none;margin-top:-3px;transform:translateY(50px);transition:transform .5s cubic-bezier(.2,.9,.25,1.15)}
 .us-isola-window .us-char+.us-char{margin-left:-12px}
 [data-us-isola="open"] .us-isola-window .us-char{transform:none;transition-delay:.12s}
 [data-us-isola="open"] .us-isola-window .us-char+.us-char{transition-delay:.2s}

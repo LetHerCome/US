@@ -460,7 +460,7 @@
     const mine = myRole(), duoRoles = [mine, mine === 'beatrice' ? 'francesco' : 'beatrice'];
     // Receiving the hearts, the other person keeps their heart eyes (and their hop) until the island closes.
     if (!duo || (receiving && duo.dataset.receiving)) return;
-    duo.innerHTML = duoRoles.map((role) => character(role, { size: 42, ...(receiving && role !== mine ? { reaction: 'cuore' } : reaction ? { reaction } : { react: true }) })).join('');
+    duo.innerHTML = duoRoles.map((role) => character(role, { size: 38, ...(receiving && role !== mine ? { reaction: 'cuore' } : reaction ? { reaction } : { react: true }) })).join('');
     if (receiving) duo.dataset.receiving = '1'; else delete duo.dataset.receiving;
   }
   function labelIsola() {
