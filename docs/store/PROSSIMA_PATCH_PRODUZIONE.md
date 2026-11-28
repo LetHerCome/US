@@ -2,6 +2,10 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Contenuti 1.4: domande a scelta in Gioca (28/11)
+
+- **141 domande aperte diventano a scelta**, con 3 o 4 risposte brevi in italiano e inglese: 44 Ridete, 54 Scopritevi, 14 Confrontatevi, 29 Rivivete. Dove serviva la domanda è stata riformulata un poco, nel suo tema; Plus, tema e profondità restano com’erano. **Restano aperte** solo le 25 longitudinali (quelle riproposte mesi dopo con «cosa avevate risposto») e 22 di Rivivete che chiedono un dettaglio di un vostro ricordo preciso (Rivivete ne tiene 25); la domanda di oggi, le domande scritte dalla coppia ed «E se…» non cambiano. Stesso id con versione + 1: le partite già giocate tengono la loro copia (domanda aperta e risposta scritta) e restano leggibili; per chi legge in inglese quelle partite vecchie restano in italiano, come dopo ogni correzione di testo. Play Us pesca da molte più carte. Migrazione `20261128122730_domande_a_scelta` (solo aggiornamenti), dopo `20261128115152_contenuti_hot`; si ferma da sola se una domanda non è più quella attesa. Ramo `claude/domande-a-scelta`, solo locale.
+
 ### Contenuti 1.3: domande «hot» per US Plus (28/11)
 
 - **50 domande nuove, tutte US Plus, italiano e inglese**, su due temi più maliziosi per coppie adulte: **Piccante** (flirt, attrazione, baci, seduzione, appuntamenti audaci) e **Desideri** (vicinanza, fantasie romantiche, coccole, sorprese a letto), 25 per tema: 12 Quanto mi conosci?, 8 Ridete, 8 Scopritevi, 8 Confrontatevi, 6 Rivivete, 8 Questo o quello. Suggeriscono, non descrivono: niente volgarità né parole esplicite (il test ha una lista di parole vietate). Quasi tutte brevi e a scelta, quindi arrivano anche in Play Us; nella vetrina Plus di Gioca compaiono come «Piccante» e «Desideri». Migrazione `20261128115152_contenuti_hot` (solo inserimenti), dopo `20261128113629_contenuti_plus_vetrina`; ramo `claude/contenuti-hot`, solo locale.
