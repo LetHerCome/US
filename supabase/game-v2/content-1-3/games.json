@@ -1,0 +1,941 @@
+{
+  "family": "games",
+  "new": [
+    {
+      "id": "quanto_mi_conosci-109",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "piccante_bacio_preferito",
+      "cooldown_class": "light",
+      "question_text": "Che bacio ti piace di più?",
+      "predict_text": "Che bacio piace di più a {subject}?",
+      "options": [
+        "Quello lento, senza fretta",
+        "Quello rubato di nascosto",
+        "Quello davanti a tutti",
+        "Quello che non finisce più"
+      ],
+      "question_text_en": "Which kind of kiss do you like best?",
+      "predict_text_en": "Which kind of kiss does {subject} like best?",
+      "options_en": [
+        "The slow one, no rush",
+        "The one stolen in secret",
+        "The one in front of everyone",
+        "The one that never ends"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-110",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "piccante_sguardo",
+      "cooldown_class": "light",
+      "question_text": "Cosa ti conquista di più in uno sguardo?",
+      "predict_text": "Cosa conquista di più {subject} in uno sguardo?",
+      "options": [
+        "Quando dura un secondo di troppo",
+        "Il sorriso che arriva dopo",
+        "Quando mi cerca tra la gente",
+        "Un occhiolino al momento giusto"
+      ],
+      "question_text_en": "What wins you over most in a look?",
+      "predict_text_en": "What wins {subject} over most in a look?",
+      "options_en": [
+        "When it lasts a second too long",
+        "The smile that follows it",
+        "When it finds me in a crowd",
+        "A wink at just the right moment"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-111",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "piccante_messaggio_che_fa_arrossire",
+      "cooldown_class": "standard",
+      "question_text": "Un messaggio che ti fa arrossire: come lo vorresti?",
+      "predict_text": "Un messaggio che fa arrossire {subject}: come lo vorrebbe?",
+      "options": [
+        "Una frase sola, misteriosa",
+        "Un ricordo di noi due",
+        "Un invito per più tardi",
+        "Una foto con un sorriso furbo"
+      ],
+      "question_text_en": "A message that makes you blush: what would it be like?",
+      "predict_text_en": "A message that makes {subject} blush: what would it be like?",
+      "options_en": [
+        "One mysterious line",
+        "A memory of the two of us",
+        "An invitation for later",
+        "A photo with a sly smile"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-112",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "piccante_cosa_ti_accende",
+      "cooldown_class": "standard",
+      "question_text": "Cosa faccio che ti accende all’istante?",
+      "predict_text": "Cosa fai tu che accende {subject} all’istante?",
+      "options": [
+        "Quando ti vesti bene",
+        "Quando mi parli all’orecchio",
+        "Quando fai qualcosa con passione",
+        "Quando mi guardi in silenzio"
+      ],
+      "question_text_en": "What do I do that sets you alight in an instant?",
+      "predict_text_en": "What do you do that sets {subject} alight in an instant?",
+      "options_en": [
+        "When you dress up",
+        "When you whisper in my ear",
+        "When you do something with passion",
+        "When you look at me in silence"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-113",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "piccante_appuntamento_audace",
+      "cooldown_class": "light",
+      "question_text": "Un appuntamento audace: quale ti tenta di più?",
+      "predict_text": "Un appuntamento audace: quale tenta di più {subject}?",
+      "options": [
+        "Cena con un dress code segreto",
+        "Una notte in un albergo a caso",
+        "Un bagno di mezzanotte",
+        "Un ballo lento in cucina"
+      ],
+      "question_text_en": "A daring date: which one tempts you most?",
+      "predict_text_en": "A daring date: which one tempts {subject} most?",
+      "options_en": [
+        "Dinner with a secret dress code",
+        "A night in a random hotel",
+        "A midnight swim",
+        "A slow dance in the kitchen"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-114",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "piccante_segnale_in_pubblico",
+      "cooldown_class": "standard",
+      "question_text": "In pubblico, come mi fai capire che mi vuoi?",
+      "predict_text": "In pubblico, come ti fa capire {subject} che ti vuole?",
+      "options": [
+        "Con uno sguardo lungo",
+        "Con una mano sul fianco",
+        "Con una frase a bassa voce",
+        "Con un sorriso che capisci solo tu"
+      ],
+      "question_text_en": "In public, how do you let me know you want me?",
+      "predict_text_en": "In public, how does {subject} let you know they want you?",
+      "options_en": [
+        "With a long look",
+        "A hand on your hip",
+        "A line said under my breath",
+        "A smile only you understand"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-115",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "desideri_coccola_preferita",
+      "cooldown_class": "light",
+      "question_text": "La coccola che non rifiuti mai?",
+      "predict_text": "La coccola che {subject} non rifiuta mai?",
+      "options": [
+        "Carezze lente sul viso",
+        "Un abbraccio da dietro",
+        "La testa sulla tua spalla",
+        "Mani intrecciate sotto le coperte"
+      ],
+      "question_text_en": "The cuddle you never say no to?",
+      "predict_text_en": "The cuddle {subject} never says no to?",
+      "options_en": [
+        "Slow strokes on my face",
+        "A hug from behind",
+        "My head on your shoulder",
+        "Hands laced under the covers"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-116",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "desideri_notte_tutta_per_noi",
+      "cooldown_class": "standard",
+      "question_text": "Una notte tutta per noi: come la prepari?",
+      "predict_text": "Una notte tutta per voi: come la prepara {subject}?",
+      "options": [
+        "Lenzuola fresche e silenzio",
+        "Musica scelta apposta",
+        "Un profumo nell’aria",
+        "Telefoni spenti in un cassetto"
+      ],
+      "question_text_en": "A night all to ourselves: how do you set it up?",
+      "predict_text_en": "A night all to yourselves: how does {subject} set it up?",
+      "options_en": [
+        "Fresh sheets and silence",
+        "Music picked on purpose",
+        "A scent in the air",
+        "Phones off in a drawer"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-117",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "desideri_risveglio_perfetto",
+      "cooldown_class": "light",
+      "question_text": "Il risveglio perfetto accanto a me?",
+      "predict_text": "Il risveglio perfetto di {subject} accanto a te?",
+      "options": [
+        "Coccole senza sveglia",
+        "Colazione portata a letto",
+        "Baci finché non mi alzo",
+        "Sotto le coperte ancora un po’"
+      ],
+      "question_text_en": "The perfect wake-up next to me?",
+      "predict_text_en": "{subject}’s perfect wake-up next to you?",
+      "options_en": [
+        "Cuddles with no alarm",
+        "Breakfast in bed",
+        "Kisses until I get up",
+        "Under the covers a while longer"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-118",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "desideri_fantasia_romantica",
+      "cooldown_class": "standard",
+      "question_text": "Una fantasia romantica che ti fa sognare?",
+      "predict_text": "Una fantasia romantica che fa sognare {subject}?",
+      "options": [
+        "Una baita isolata nella neve",
+        "Una notte in riva al mare",
+        "Un treno notturno per due",
+        "Una suite con vista sulla città"
+      ],
+      "question_text_en": "A romantic fantasy that makes you dream?",
+      "predict_text_en": "A romantic fantasy that makes {subject} dream?",
+      "options_en": [
+        "A remote cabin in the snow",
+        "A night on the beach",
+        "A sleeper train for two",
+        "A suite overlooking the city"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-119",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "desideri_sul_divano",
+      "cooldown_class": "light",
+      "question_text": "Sul divano, come ti piace stare con me?",
+      "predict_text": "Sul divano, come piace stare a {subject} con te?",
+      "options": [
+        "Con la testa sulle tue gambe",
+        "Gambe intrecciate",
+        "Tu dietro di me",
+        "Faccia a faccia, a parlare piano"
+      ],
+      "question_text_en": "On the sofa, how do you like to be with me?",
+      "predict_text_en": "On the sofa, how does {subject} like to be with you?",
+      "options_en": [
+        "Head in your lap",
+        "Legs tangled together",
+        "You behind me",
+        "Face to face, talking softly"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-120",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "desideri_sorpresa_a_letto",
+      "cooldown_class": "standard",
+      "question_text": "Una sorpresa a letto che ti farebbe sorridere?",
+      "predict_text": "Una sorpresa a letto che farebbe sorridere {subject}?",
+      "options": [
+        "Lenzuola nuove e profumate",
+        "Un biglietto sul cuscino",
+        "Una playlist solo nostra",
+        "Un massaggio senza fretta"
+      ],
+      "question_text_en": "A surprise in bed that would make you smile?",
+      "predict_text_en": "A surprise in bed that would make {subject} smile?",
+      "options_en": [
+        "New scented sheets",
+        "A note on the pillow",
+        "A playlist just for us",
+        "An unhurried massage"
+      ]
+    },
+    {
+      "id": "ridete-092",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "piccante_parola_in_codice",
+      "cooldown_class": "light",
+      "question_text": "Ci serve una parola in codice per dire «andiamo a casa, subito». Quale scegliamo?",
+      "question_text_en": "We need a code word for “let’s go home, right now”. Which one do we pick?"
+    },
+    {
+      "id": "ridete-093",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "piccante_tecnica_di_seduzione",
+      "cooldown_class": "light",
+      "question_text": "La tua tecnica di seduzione più infallibile?",
+      "options": [
+        "Lo sguardo da film",
+        "La battuta pessima",
+        "Il profumo giusto",
+        "Cucinare qualcosa di buono"
+      ],
+      "question_text_en": "Your most foolproof seduction move?",
+      "options_en": [
+        "The movie-star look",
+        "The terrible joke",
+        "The right perfume",
+        "Cooking something good"
+      ]
+    },
+    {
+      "id": "ridete-094",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "piccante_film_della_notte",
+      "cooldown_class": "light",
+      "question_text": "Il film della nostra notte più audace: che titolo gli diamo?",
+      "question_text_en": "The film of our most daring night: what do we call it?"
+    },
+    {
+      "id": "ridete-095",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "piccante_complimento_sfacciato",
+      "cooldown_class": "light",
+      "question_text": "Il complimento più sfacciato che potresti farmi?",
+      "options": [
+        "Sei illegale",
+        "Mi distrai anche da lontano",
+        "Dovresti avere un avviso",
+        "Sei la mia distrazione preferita"
+      ],
+      "question_text_en": "The cheekiest compliment you could give me?",
+      "options_en": [
+        "You should be illegal",
+        "You distract me from afar",
+        "You should come with a warning",
+        "You’re my favourite distraction"
+      ]
+    },
+    {
+      "id": "ridete-096",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "desideri_regole_della_camera",
+      "cooldown_class": "light",
+      "question_text": "Scriviamo le regole della nostra camera da letto. Qual è la prima?",
+      "question_text_en": "We’re writing the rules of our bedroom. What’s rule number one?"
+    },
+    {
+      "id": "ridete-097",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "desideri_se_il_letto_parlasse",
+      "cooldown_class": "light",
+      "question_text": "Se il nostro letto potesse parlare, cosa direbbe?",
+      "options": [
+        "Fate piano",
+        "Ancora voi?",
+        "Finalmente un po’ di riposo",
+        "Mi mancavate"
+      ],
+      "question_text_en": "If our bed could talk, what would it say?",
+      "options_en": [
+        "Keep it down",
+        "You two again?",
+        "Finally some rest",
+        "I missed you"
+      ]
+    },
+    {
+      "id": "ridete-098",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "desideri_centro_massaggi",
+      "cooldown_class": "light",
+      "question_text": "Apriamo un centro massaggi solo per te. Come si chiama e cosa c’è nel menù?",
+      "question_text_en": "We open a massage studio just for you. What’s it called and what’s on the menu?"
+    },
+    {
+      "id": "ridete-099",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "desideri_parola_d_ordine",
+      "cooldown_class": "light",
+      "question_text": "La parola d’ordine per entrare sotto le coperte?",
+      "options": [
+        "Per favore",
+        "Ho freddo",
+        "Solo cinque minuti",
+        "Ti ho pensato tutto il giorno"
+      ],
+      "question_text_en": "The password to get under the covers?",
+      "options_en": [
+        "Please",
+        "I’m cold",
+        "Just five minutes",
+        "I thought of you all day"
+      ]
+    },
+    {
+      "id": "scopritevi-091",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "piccante_dettaglio_irresistibile",
+      "cooldown_class": "standard",
+      "question_text": "Quale mio dettaglio trovi irresistibile?",
+      "options": [
+        "Come ridi",
+        "La tua voce al mattino",
+        "Le tue mani",
+        "Come ti muovi quando balli"
+      ],
+      "question_text_en": "Which detail of mine do you find irresistible?",
+      "options_en": [
+        "The way you laugh",
+        "Your morning voice",
+        "Your hands",
+        "How you move when you dance"
+      ]
+    },
+    {
+      "id": "scopritevi-092",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "piccante_sentirsi_irresistibile",
+      "cooldown_class": "standard",
+      "question_text": "Che cosa ti fa sentire irresistibile quando sei con me?",
+      "question_text_en": "What makes you feel irresistible when you’re with me?"
+    },
+    {
+      "id": "scopritevi-093",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "piccante_posto_per_un_bacio",
+      "cooldown_class": "light",
+      "question_text": "Il posto più audace per un bacio?",
+      "options": [
+        "Sotto la pioggia",
+        "In ascensore",
+        "In cima a una ruota panoramica",
+        "In mezzo a una festa"
+      ],
+      "question_text_en": "The most daring place for a kiss?",
+      "options_en": [
+        "In the rain",
+        "In a lift",
+        "At the top of a Ferris wheel",
+        "In the middle of a party"
+      ]
+    },
+    {
+      "id": "scopritevi-094",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "piccante_cosa_ti_seduce",
+      "cooldown_class": "standard",
+      "question_text": "Cosa ti seduce più facilmente?",
+      "options": [
+        "Le parole giuste",
+        "Un gesto inatteso",
+        "La pazienza",
+        "Un pizzico di sfida"
+      ],
+      "question_text_en": "What seduces you most easily?",
+      "options_en": [
+        "The right words",
+        "An unexpected gesture",
+        "Patience",
+        "A pinch of challenge"
+      ]
+    },
+    {
+      "id": "scopritevi-095",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "desideri_desiderio_non_confessato",
+      "cooldown_class": "standard",
+      "question_text": "C’è un desiderio romantico che non mi hai ancora confessato?",
+      "question_text_en": "Is there a romantic wish you haven’t confessed to me yet?"
+    },
+    {
+      "id": "scopritevi-096",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "desideri_gesto_che_scioglie",
+      "cooldown_class": "standard",
+      "question_text": "Quale gesto ti scioglie più di tutti?",
+      "options": [
+        "Una carezza sul collo",
+        "Un bacio sulla fronte",
+        "Le dita tra i capelli",
+        "Una mano sulla schiena"
+      ],
+      "question_text_en": "Which gesture melts you more than any other?",
+      "options_en": [
+        "A stroke on the neck",
+        "A kiss on the forehead",
+        "Fingers in my hair",
+        "A hand on my back"
+      ]
+    },
+    {
+      "id": "scopritevi-097",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "desideri_notte_indimenticabile",
+      "cooldown_class": "standard",
+      "question_text": "Cosa rende una notte con me indimenticabile?",
+      "options": [
+        "L’attesa durante il giorno",
+        "Le parole sussurrate",
+        "Il tempo senza orologio",
+        "Le risate nel mezzo"
+      ],
+      "question_text_en": "What makes a night with me unforgettable?",
+      "options_en": [
+        "The waiting all day",
+        "The whispered words",
+        "Time with no clock",
+        "Laughing in the middle of it"
+      ]
+    },
+    {
+      "id": "scopritevi-098",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "desideri_quando_ci_stringiamo",
+      "cooldown_class": "standard",
+      "question_text": "Quando ci stringiamo, cosa ti piace di più?",
+      "options": [
+        "La lentezza",
+        "Le sorprese",
+        "Gli sguardi",
+        "Il silenzio"
+      ],
+      "question_text_en": "When we hold each other close, what do you like most?",
+      "options_en": [
+        "Slowness",
+        "Surprises",
+        "Eye contact",
+        "Silence"
+      ]
+    },
+    {
+      "id": "confrontatevi-084",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "piccante_prima_mossa",
+      "cooldown_class": "light",
+      "question_text": "La prima mossa: ti piace farla o aspettarla?",
+      "options": [
+        "Farla, sempre",
+        "Aspettarla, con pazienza",
+        "Dipende dallo sguardo",
+        "Farla e fare finta di niente"
+      ],
+      "question_text_en": "The first move: do you like making it or waiting for it?",
+      "options_en": [
+        "Making it, always",
+        "Waiting for it, patiently",
+        "Depends on the look",
+        "Making it, then acting innocent"
+      ]
+    },
+    {
+      "id": "confrontatevi-085",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "piccante_modo_di_flirtare",
+      "cooldown_class": "light",
+      "question_text": "Il tuo modo di flirtare con me?",
+      "options": [
+        "Con l’ironia",
+        "Con gli sguardi",
+        "Con i messaggi",
+        "Con piccoli tocchi"
+      ],
+      "question_text_en": "Your way of flirting with me?",
+      "options_en": [
+        "With irony",
+        "With looks",
+        "With messages",
+        "With little touches"
+      ]
+    },
+    {
+      "id": "confrontatevi-086",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "piccante_quando_mi_trovi_attraente",
+      "cooldown_class": "standard",
+      "question_text": "Quando mi trovi più attraente?",
+      "options": [
+        "Quando mi preparo per uscire",
+        "Quando sono in pigiama",
+        "Quando rido senza freni",
+        "Quando parlo di ciò che amo"
+      ],
+      "question_text_en": "When do you find me most attractive?",
+      "options_en": [
+        "When I get ready to go out",
+        "In my pyjamas",
+        "When I laugh without holding back",
+        "When I talk about what I love"
+      ]
+    },
+    {
+      "id": "confrontatevi-087",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "piccante_appuntamento_a_sorpresa",
+      "cooldown_class": "light",
+      "question_text": "Un appuntamento a sorpresa: quanto vuoi saperne prima?",
+      "options": [
+        "Niente, portami e basta",
+        "Solo come vestirmi",
+        "L’ora e poco altro",
+        "Solo un indizio piccante"
+      ],
+      "question_text_en": "A surprise date: how much do you want to know beforehand?",
+      "options_en": [
+        "Nothing, just take me",
+        "Only what to wear",
+        "The time and little else",
+        "Just one spicy clue"
+      ]
+    },
+    {
+      "id": "confrontatevi-088",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "desideri_chi_prende_l_iniziativa",
+      "cooldown_class": "standard",
+      "question_text": "A letto, chi prende l’iniziativa più spesso?",
+      "options": [
+        "Io, quasi sempre",
+        "Tu, e mi piace",
+        "A turno",
+        "Dipende dalla luna"
+      ],
+      "question_text_en": "In bed, who takes the lead more often?",
+      "options_en": [
+        "Me, almost always",
+        "You, and I like it",
+        "We take turns",
+        "Depends on the moon"
+      ]
+    },
+    {
+      "id": "confrontatevi-089",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "desideri_quanto_coccole",
+      "cooldown_class": "light",
+      "question_text": "Quanto ti piacciono le coccole?",
+      "options": [
+        "Sempre e ovunque",
+        "Solo sotto le coperte",
+        "Quando le chiedo io",
+        "Più di quanto ammetto"
+      ],
+      "question_text_en": "How much do you like cuddles?",
+      "options_en": [
+        "Always and everywhere",
+        "Only under the covers",
+        "When I ask for them",
+        "More than I admit"
+      ]
+    },
+    {
+      "id": "confrontatevi-090",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "desideri_sorprendermi_a_letto",
+      "cooldown_class": "standard",
+      "question_text": "Per sorprendermi a letto, cosa sceglieresti?",
+      "options": [
+        "Una sorpresa tutta da scartare",
+        "Un gioco nuovo da provare",
+        "Una notte in un posto diverso",
+        "Una lettera da leggere ad alta voce"
+      ],
+      "question_text_en": "To surprise me in bed, what would you choose?",
+      "options_en": [
+        "A surprise to unwrap",
+        "A new game to try",
+        "A night somewhere different",
+        "A letter to read aloud"
+      ]
+    },
+    {
+      "id": "confrontatevi-091",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "desideri_durata_notte_perfetta",
+      "cooldown_class": "light",
+      "question_text": "La notte perfetta: quanto deve durare?",
+      "options": [
+        "Fino all’alba",
+        "Un weekend intero",
+        "Quanto basta per sognare",
+        "Non deve finire"
+      ],
+      "question_text_en": "The perfect night: how long should it last?",
+      "options_en": [
+        "Until dawn",
+        "A whole weekend",
+        "Long enough to dream",
+        "It shouldn’t end"
+      ]
+    },
+    {
+      "id": "rivivete-071",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "piccante_vorrei_baciarti",
+      "cooldown_class": "standard",
+      "question_text": "Qual è stato il primo momento in cui hai pensato «vorrei baciarti»?",
+      "question_text_en": "When was the first moment you thought “I’d like to kiss you”?"
+    },
+    {
+      "id": "rivivete-072",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "piccante_bacio_memorabile",
+      "cooldown_class": "standard",
+      "question_text": "Quale nostro bacio ricordi di più?",
+      "options": [
+        "Il primo in assoluto",
+        "Uno rubato in pubblico",
+        "Uno dopo una lunga attesa",
+        "Uno qualunque, ma perfetto"
+      ],
+      "question_text_en": "Which of our kisses do you remember most?",
+      "options_en": [
+        "The very first one",
+        "One stolen in public",
+        "One after a long wait",
+        "An ordinary one, but perfect"
+      ]
+    },
+    {
+      "id": "rivivete-073",
+      "tema": "piccante",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "piccante_serata_da_rifare",
+      "cooldown_class": "light",
+      "question_text": "Quale nostra serata vorresti rifare identica?",
+      "options": [
+        "Quella del primo appuntamento",
+        "Una notte senza programmi",
+        "Una cena finita tardi",
+        "Una festa lasciata a metà"
+      ],
+      "question_text_en": "Which evening of ours would you repeat exactly?",
+      "options_en": [
+        "Our first date",
+        "A night with no plans",
+        "A dinner that ended late",
+        "A party we left halfway"
+      ]
+    },
+    {
+      "id": "rivivete-074",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "desideri_notte_che_torna_in_mente",
+      "cooldown_class": "standard",
+      "question_text": "Quale nostra notte ti torna in mente quando mi pensi?",
+      "question_text_en": "Which night of ours comes back to you when you think of me?"
+    },
+    {
+      "id": "rivivete-075",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "desideri_gesto_che_ha_fatto_capire",
+      "cooldown_class": "standard",
+      "question_text": "Quale gesto ti ha fatto capire per la prima volta che mi volevi?",
+      "options": [
+        "Una mano presa per caso",
+        "Un abbraccio che durava troppo",
+        "Un bacio sul collo",
+        "Uno sguardo a fine serata"
+      ],
+      "question_text_en": "Which gesture first told you that you wanted me?",
+      "options_en": [
+        "A hand taken by chance",
+        "A hug that lasted too long",
+        "A kiss on the neck",
+        "A look at the end of a night"
+      ]
+    },
+    {
+      "id": "rivivete-076",
+      "tema": "desideri",
+      "plus": true,
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "desideri_momento_sotto_le_coperte",
+      "cooldown_class": "light",
+      "question_text": "Quale nostro momento sotto le coperte rifaresti?",
+      "options": [
+        "Una domenica mattina",
+        "Una notte di pioggia",
+        "Un pomeriggio rubato",
+        "Una vacanza lontano da tutto"
+      ],
+      "question_text_en": "Which moment of ours under the covers would you do again?",
+      "options_en": [
+        "A Sunday morning",
+        "A rainy night",
+        "A stolen afternoon",
+        "A holiday far from everything"
+      ]
+    }
+  ]
+}
