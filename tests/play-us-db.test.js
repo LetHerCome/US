@@ -10,6 +10,7 @@ const path = require('node:path');
 let PGlite;
 try { ({ PGlite } = require('@electric-sql/pglite')); } catch (_) { PGlite = null; }
 const MIGRATION = fs.readFileSync(path.join(__dirname, '..', 'supabase/migrations/20261128090123_play_us_v1.sql'), 'utf8');
+const POINTS = fs.readFileSync(path.join(__dirname, '..', 'supabase/migrations/20261128101816_play_us_punti.sql'), 'utf8');
 
 const F = '11111111-1111-4111-8111-111111111111', B = '22222222-2222-4222-8222-222222222222', C1 = 'c1c1c1c1-0000-4000-8000-000000000001';
 const X = '33333333-3333-4333-8333-333333333333', C2 = 'c2c2c2c2-0000-4000-8000-000000000002';
@@ -27,15 +28,10 @@ const FIXTURE = `
   create table public.moment_photos (id uuid primary key, moment_id uuid not null, couple_id uuid not null, created_by uuid not null, storage_path text not null unique, caption text, position smallint not null, created_at timestamptz not null);
   create table public.couple_notes (id uuid primary key default gen_random_uuid(), couple_id uuid not null, title text not null default '', body text not null default '', items jsonb not null default '[]', created_by uuid, updated_by uuid, color text not null default 'yellow');
   create table public.game_v2_catalog (id text primary key, version integer not null default 1, family text not null, source_type text not null default 'curated', mechanic text not null, answer_kind text not null, question_text text not null, predict_text text, options jsonb not null, depth smallint not null default 1, topic text not null default 't', cooldown_class text not null default 'c', longitudinal boolean not null default false, active boolean not null default true, created_at timestamptz not null default now());
-  create table private.awards (couple uuid, actor uuid, kind text, key text, xp integer);
-  create function private.progression_award(target_couple uuid, target_actor uuid, target_source_kind text, target_source_key text, target_xp integer, target_action_at timestamptz default now(), target_counts_rhythm boolean default true, add_to_bond boolean default true)
-    returns jsonb language plpgsql security definer set search_path = '' as $$
-    begin
-      if exists (select 1 from private.awards where kind = target_source_kind and key = target_source_key) then return '{"awarded":false}'; end if;
-      insert into private.awards values (target_couple, target_actor, target_source_kind, target_source_key, target_xp);
-      update public.couples set bond_xp = bond_xp + target_xp where id = target_couple;
-      return '{"awarded":true}';
-    end $$;
+  -- The real points function (20261128101816_play_us_punti) runs on this table; only the unlock sync and the level are stubs.
+  create table public.progression_events (id uuid primary key default gen_random_uuid(), couple_id uuid not null, actor_id uuid, source_kind text not null, source_key text not null, xp_awarded integer not null default 0, counts_rhythm boolean not null default true, action_day date, created_at timestamptz not null default now(), unique (couple_id, source_kind, source_key));
+  create function private.progression_sync_unlocks(c uuid, xp integer) returns void language plpgsql as $$ begin end $$;
+  create function private.progression_level(xp integer) returns integer language sql immutable as $$ select 1 $$;
   insert into public.couples (id) values ('${C1}'), ('${C2}');
   insert into public.profiles values ('${F}', '${C1}', 'francesco', 'Francesco'), ('${B}', '${C1}', 'beatrice', 'Beatrice'), ('${X}', '${C2}', 'francesco', 'Altro');
   insert into public.game_v2_catalog (id, family, mechanic, answer_kind, question_text, options) values
@@ -56,6 +52,7 @@ async function db() {
   const pg = new PGlite();
   await pg.exec(FIXTURE);
   await pg.exec(MIGRATION);
+  await pg.exec(POINTS);
   const as = async (uid, sql, params) => {
     await pg.exec(`reset role; select set_config('request.jwt.claim.sub', '${uid}', false); set role authenticated;`);
     try { return (await pg.query(sql, params)).rows; } finally { await pg.exec('reset role;'); }
@@ -159,7 +156,8 @@ test('play us: invite, answer, live moves, steps, the end with memory, points an
   assert.equal(moment.storage_path, `${C1}/${F}/play-us/${sid}/edit.webp`);
   assert.match(moment.caption, /^Play Us · \d+ [a-z]+$/);
   assert.equal((await sql('select count(*)::int as n from public.moment_photos where moment_id = $1', [s.moment_id]))[0].n, 1);
-  assert.equal((await sql(`select bond_xp from public.couples where id = $1`, [C1]))[0].bond_xp, 30, '+30 once');
+  assert.equal((await sql(`select bond_xp from public.couples where id = $1`, [C1]))[0].bond_xp, 30, '+30 once, through the real progression_award');
+  assert.deepEqual((await sql(`select source_kind, source_key, xp_awarded from public.progression_events`)).map((r) => [r.source_kind, r.source_key, r.xp_awarded]), [['play_us', sid, 30]]);
   await call(F, 'play_us_advance', '$1::uuid', [sid]);
   assert.equal((await sql(`select bond_xp from public.couples where id = $1`, [C1]))[0].bond_xp, 30, 'never twice');
 
