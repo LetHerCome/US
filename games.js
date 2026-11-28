@@ -701,6 +701,7 @@ function renderHub() {
    <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2AllTitle">Tutti i giochi</h3><small>${spent?'tornano domani':'bastano pochi minuti'}</small></div>
    ${allGames(tiles)}
   </section>
+  ${plusTile()}
   ${weeklyCard(home?.weekly)}
   ${continueSection(home,onTiles)}
   ${doneSection(home)}`;
@@ -743,6 +744,46 @@ async function meseEvento() {
 }
 document.addEventListener?.('visibilitychange', () => { if (!document.hidden) { meseEv.shown.clear(); meseEv.timer = meseLater(meseEvento, 2500); } });
 
+// US Plus in vetrina (founder, 28/11/2026): the Plus questions are played only
+// with Plus, but they are seen here: a tile «Sbloccabili con US Plus» and,
+// inside, every one of them with a lock, by theme. With Plus the tile goes.
+const PLUS_THEMES = Object.freeze({ viaggi: 'Viaggi e sogni', casa: 'Casa e abitudini', infanzia: 'Infanzia', cibo: 'A tavola', musica: 'Musica e film', futuro: 'Il vostro futuro', amici: 'Amici e famiglia', tenerezza: 'Tenerezza' });
+const plusPreview = { data: null, at: 0 };
+async function loadPlusPreview() {
+  if (Date.now() - plusPreview.at < 600000 || typeof sb === 'undefined') return;
+  try {
+    const { data, error } = await sb.rpc('get_plus_preview_v1');
+    if (error || !data) return;
+    plusPreview.at = Date.now();
+    plusPreview.data = data;
+    if (view === 'hub') renderHub();
+  } catch (_) { /* no tile until it answers */ }
+}
+function plusTile() {
+  const d = plusPreview.data;
+  if (!d || d.has_plus || !Array.isArray(d.items) || !d.items.length) return '';
+  const themes = new Set(d.items.map((i) => i.theme)).size;
+  const peek = d.items.filter((_, i) => i % Math.max(1, Math.floor(d.items.length / 3)) === 0).slice(0, 3);
+  return `<button type="button" class="us-gv2-plus" data-us-feedback="tap" data-gv2-action="plus-preview" aria-label="Sbloccabili con US Plus: ${d.items.length} domande in più su ${themes} temi">
+    <span class="us-gv2-plus-top"><span class="us-gv2-plus-k">${icon('lock-simple')}Sbloccabili con US Plus</span><b>${d.items.length} domande in più · ${themes} temi</b></span>
+    <span class="us-gv2-plus-peek" aria-hidden="true">${peek.map((i) => `<i>${esc(i.q)}</i>`).join('')}</span>
+    <span class="us-gv2-plus-go">Guardale tutte ›</span></button>`;
+}
+function showPlusPreview() {
+  const d = plusPreview.data; if (!d?.items?.length) return;
+  const by = new Map();
+  for (const i of d.items) { if (!by.has(i.theme)) by.set(i.theme, []); by.get(i.theme).push(i); }
+  const groups = [...by.entries()].map(([theme, list]) => `<section class="us-gv2-plus-group"><h4>${esc(PLUS_THEMES[theme] || theme)} <small>${list.length}</small></h4><ul>${list.map((i) => `<li>${icon('lock-simple')}<span>${esc(i.q)}</span><small>${esc(familyName(i.family))}</small></li>`).join('')}</ul></section>`).join('');
+  showPanel(`<article class="us-gv2-plus-sheet"><p class="us-gv2-plus-lead">Con US Plus queste domande entrano nei vostri giochi e in Play Us. Un abbonamento vale per voi due.</p>${groups}
+    <div class="us-gv2-actions is-single"><button type="button" class="primary" data-gv2-action="plus-join">Avvisatemi quando arriva</button></div></article>`,
+    { kicker: 'US PLUS', title: `${d.items.length} domande in più`, label: 'Sbloccabili con US Plus', tone: 'ambra' });
+}
+async function joinPlusWaitlist(button) {
+  if (button) button.disabled = true;
+  try { const { error } = await sb.rpc('plus_waitlist', { join: true }); if (error) throw error; toast('Ti avvisiamo appena arriva US Plus ♡'); }
+  catch (error) { console.warn('[US Gioca] plus waitlist', error); toast('Non riesco adesso. Riprova.'); if (button) button.disabled = false; }
+}
+
 function renderHubError() {
   const root = byId('quizHub');
   if (root) root.innerHTML = '<div class="us-gv2-empty">Gioca non risponde. <button type="button" data-gv2-action="retry">Riprova</button></div>';
@@ -763,6 +804,7 @@ async function load() {
     checkPerVoiQuestion();
     loadInsieme();
     meseEvento();
+    loadPlusPreview();
     return home;
   } catch (error) {
     console.warn('[US Gioca] home', error);
@@ -1582,6 +1624,8 @@ function onClick(event) {
   if (button.dataset.gv2Slide && button.dataset.gv2Active === 'false' && event.detail !== 0) { centerSlide(button); return; }
   const action = button.dataset.gv2Action;
   if (action === 'per-voi') openPerVoi(button);
+  else if (action === 'plus-preview') showPlusPreview();
+  else if (action === 'plus-join') joinPlusWaitlist(button);
   else if (action === 'swipe') chooseSwipe(button);
   else if (button.dataset.gv2SwipeChoice != null) commitSwipeChoice(Number(button.dataset.gv2SwipeChoice), 'tap');
   else if (action === 'weekly-create') renderWeeklyForm();

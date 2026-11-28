@@ -224,3 +224,17 @@ test('content 1.2: an unknown body of the functions it replaces aborts before an
     assert.equal((await one(db, `select count(*)::int n from information_schema.columns where table_name = 'game_v2_catalog' and column_name = 'plus'`)).n, 0);
   } finally { await db.close(); }
 });
+
+// US Plus in vetrina (28/11/2026): the Plus questions are seen in Gioca with a lock.
+test('content 1.2: get_plus_preview_v1 shows every plus question, only the words, and who has Plus', async () => {
+  const { db } = await world();
+  await db.exec(fs.readFileSync(path.join(ROOT, 'supabase/migrations/20261128113629_contenuti_plus_vetrina.sql'), 'utf8'));
+  const plus = (await one(db, 'select (select count(*) from public.game_v2_catalog where active and plus) + (select count(*) from private.game_swipe_v1_catalog where active and plus) n')).n;
+  const free = await h.as(db, h.F, 'select public.get_plus_preview_v1() r');
+  const paid = await h.as(db, h.U1, 'select public.get_plus_preview_v1() r');
+  assert.equal(free.has_plus, false);
+  assert.equal(paid.has_plus, true);
+  assert.equal(free.items.length, Number(plus));
+  assert.ok(free.items.every((i) => ['family', 'theme', 'q'].every((k) => typeof i[k] === 'string' && i[k]) && Object.keys(i).length === 3), 'only family, theme and the words');
+  assert.ok(free.items.some((i) => i.family === 'swipe'), 'Questo o quello too');
+});
