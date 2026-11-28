@@ -16,6 +16,19 @@ const ROLE_ORDER = ['beatrice', 'francesco'];
 // original duration instead (see originalDurationMinutes) — this constant is
 // only ever a fallback/default, never a forced rewrite of an existing entry.
 const US_CALENDAR_DEFAULT_DURATION_MINUTES = 60;
+// Fine «se vuoi» (founder, 28/11/2026): a timed entry without an end is stored
+// one minute long (the database wants ends_at > starts_at) and reads as its
+// start only; for «what is on now» it still counts the old hour.
+const US_CALENDAR_NO_END_MINUTES = 1;
+function entryHasNoEnd(entry) {
+  if (!entry || entry.is_all_day || !entry.starts_at || !entry.ends_at) return false;
+  const ms = new Date(entry.ends_at) - new Date(entry.starts_at);
+  return ms > 0 && ms <= US_CALENDAR_NO_END_MINUTES * 60000;
+}
+function entryBusyEndMs(entry) {
+  const start = new Date(entry.starts_at).getTime();
+  return entryHasNoEnd(entry) ? start + US_CALENDAR_DEFAULT_DURATION_MINUTES * 60000 : new Date(entry.ends_at).getTime();
+}
 
 function pad2(n) { return String(n).padStart(2, '0'); }
 function isoDate(y, m, d) { return `${y}-${pad2(m + 1)}-${pad2(d)}`; }
@@ -499,15 +512,15 @@ function oggiEventLabel(entries, nowMs) {
   const allDay = entries.find((e) => e.is_all_day);
   if (allDay) return allDay.title;
   const timed = entries.filter((e) => !e.is_all_day).slice().sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
-  const ongoing = timed.find((e) => new Date(e.starts_at).getTime() <= nowMs && new Date(e.ends_at).getTime() > nowMs);
+  const ongoing = timed.find((e) => new Date(e.starts_at).getTime() <= nowMs && entryBusyEndMs(e) > nowMs);
   // Never the earliest event regardless of time — an already-ended event must
   // never be reported as "what's happening": fall through to the next one
   // whose end is still ahead of now, or "Libera" if everything already ended.
-  const upcoming = timed.find((e) => new Date(e.ends_at).getTime() > nowMs);
+  const upcoming = timed.find((e) => entryBusyEndMs(e) > nowMs);
   const chosen = ongoing || upcoming;
   if (!chosen) return 'Libera';
   const fmt = (iso) => { const d = new Date(iso); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
-  return `${chosen.title} ${fmt(chosen.starts_at)}–${fmt(chosen.ends_at)}`;
+  return entryHasNoEnd(chosen) ? `${chosen.title} ${fmt(chosen.starts_at)}` : `${chosen.title} ${fmt(chosen.starts_at)}–${fmt(chosen.ends_at)}`;
 }
 
 // Drops windows that have already fully elapsed and clips a spanning window's
@@ -602,7 +615,7 @@ function oggiNextCommitment(list, nowISO = new Date().toISOString(), today = nul
       span = { start: entry.start_date, end: entry.end_date };
       if (span.end < first) continue;
     } else {
-      const start = new Date(entry.starts_at).getTime(), end = new Date(entry.ends_at).getTime();
+      const start = new Date(entry.starts_at).getTime(), end = entryBusyEndMs(entry);
       if (!Number.isFinite(start) || !Number.isFinite(end) || end <= now) continue;
       span = entryDateSpan(entry);
     }
@@ -624,7 +637,7 @@ function oggiNextCommitment(list, nowISO = new Date().toISOString(), today = nul
 }
 
 const pureApi = {
-  ROLE_ORDER, US_CALENDAR_DEFAULT_DURATION_MINUTES, roleRank, entryLaneRoleFor, entryDateSpan, entryDatesTouched,
+  ROLE_ORDER, US_CALENDAR_DEFAULT_DURATION_MINUTES, US_CALENDAR_NO_END_MINUTES, entryHasNoEnd, entryBusyEndMs, roleRank, entryLaneRoleFor, entryDateSpan, entryDatesTouched,
   formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
   shiftISODate, originalAllDaySpanDays,
   monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, US_FREE_EVENING, freeEveningFor, tempoWindowLabel,
@@ -902,7 +915,7 @@ function entryTimeLabel(entry) {
   const s = new Date(entry.starts_at);
   const e = new Date(entry.ends_at);
   const fmt = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-  return `${fmt(s)} → ${fmt(e)}`;
+  return entryHasNoEnd(entry) ? fmt(s) : `${fmt(s)} → ${fmt(e)}`;
 }
 
 // The detail/editor sheets live at the document root and open directly above
@@ -930,6 +943,7 @@ function openDetail(entryId) {
   const hhmm = (value) => { const d = new Date(value); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
   const dateLabel = entry.is_all_day
     ? (oneDay ? `${longDayLabel(startDay)} · Tutto il giorno` : formatDateRangeLabel(startDay, endDay))
+    : entryHasNoEnd(entry) ? `${longDayLabel(startDay)} · ${hhmm(entry.starts_at)}`
     : oneDay ? `${longDayLabel(startDay)} · ${hhmm(entry.starts_at)}–${hhmm(entry.ends_at)}`
       : `${formatDateRangeLabel(startDay, endDay)} · ${entryTimeLabel(entry)}`;
   const place = entry.location ? `<span class="us-cal-detail-location" translate="no">${esc(entry.location)}</span> · ` : '';
@@ -1143,7 +1157,7 @@ function openForm(mode, entry, dateISO) {
     const end = new Date(entry.ends_at);
     formDateISO = localDateFromInstant(entry.starts_at);
     if (startInput) startInput.value = `${pad2(start.getHours())}:${pad2(start.getMinutes())}`;
-    if (endInput) endInput.value = `${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
+    if (endInput) endInput.value = entryHasNoEnd(entry) ? '' : `${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
   } else {
     formDateISO = dateISO || selectedDate || todayISO();
     if (startInput) startInput.value = '';
@@ -1185,10 +1199,14 @@ async function saveEntry(event) {
   const title = $('usCalendarTitleInput').value.trim();
   const date = $('usCalendarDateInput').value || formDateISO;
   if (!title || !date) return;
-  // One time, «se c'è» (Fase A): none is all day; a time keeps the entry's own
-  // length when it had one, an hour otherwise.
+  // Inizio «se c'è» (Fase A): none is all day. Fine «se vuoi» (28/11): when it
+  // is there it sets the length, when it is not the entry has only its start.
   const startTime = normalizeTimeField('usCalendarStartTimeInput');
+  const endTime = normalizeTimeField('usCalendarEndTimeInput');
   const allDay = !startTime;
+  if (allDay && endTime) { setFormStatus('Metti anche l’ora di inizio, o togli la fine.'); return; }
+  const endMinutes = endTime ? durationMinutesFromTimes(startTime, endTime) : null;
+  if (endTime && !endMinutes) { setFormStatus('La fine deve venire dopo l’inizio.'); return; }
   $('usCalendarAllDayInput').checked = allDay;
   const meet = Boolean($('usCalendarMeetInput')?.checked);
   if (!editingFormEntry && !pendingIdeaLink && $('usCalendarYearlyInput')?.checked) { await saveYearly({ title, date, time: startTime }); return; }
@@ -1197,7 +1215,7 @@ async function saveEntry(event) {
     allDay,
     ideaNote: pendingIdeaLink ? pendingIdeaLink.note : null
   });
-  const durationMinutes = hidden.durationMinutes;
+  const durationMinutes = allDay ? hidden.durationMinutes : (endMinutes || US_CALENDAR_NO_END_MINUTES);
 
   const payload = buildEntryPayload({
     title,

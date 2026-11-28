@@ -540,7 +540,8 @@
 :is(#bond,#usNoiDay) .us-noi-v2-special-line{font-size:14.5px;line-height:1.35;font-weight:700;color:var(--us-color-text)}
 :is(#bond,#usNoiDay) .us-noi-v2-special-open{min-height:44px;padding:0 16px;border:0;border-radius:var(--us-radius-pill,999px);background:var(--us-color-text);color:var(--us-color-bg);font:700 13.5px/1 var(--us-font-ui);cursor:pointer}
 /* The form: Quando and the time side by side; Ci vediamo and Ogni anno as switches. */
-.us-cal-sheet .us-cal-when{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:10px}
+.us-cal-sheet .us-cal-when{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.us-cal-sheet .us-cal-when #usCalendarDateField{grid-column:1/-1}
 .us-cal-sheet .us-cal-switches{display:flex;flex-direction:column;gap:8px}
 .us-cal-sheet .us-cal-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;padding:8px 14px 8px 16px;border-radius:16px;background:var(--us-color-surface-2);cursor:pointer}
 .us-cal-sheet .us-cal-switch[hidden]{display:none}
