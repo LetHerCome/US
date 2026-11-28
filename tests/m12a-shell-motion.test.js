@@ -14,11 +14,14 @@ const topBar = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<ma
 
 // ---------------------------------------------------------------- SHELL
 
-test('shell: Ti penso left, the US mark at the centre, Left for You right', () => {
-  const think = topBar.indexOf('id="thinkButton"');
-  const brand = topBar.indexOf('class="us-top-brand"');
+// Redesign definitivo, fase 2 (23/11/2026, D6): the envelope moved left, your
+// character is on the right, Ti penso is the heart in the middle of the bar.
+test('shell: Left for You left, the US mark at the centre, your character right', () => {
   const envelope = topBar.indexOf('id="leftForYouPartnerEntry"');
-  assert.ok(think > 0 && brand > think && envelope > brand, 'order: Ti penso, US, Left for You');
+  const brand = topBar.indexOf('class="us-top-brand"');
+  const me = topBar.indexOf('data-us-self');
+  assert.ok(envelope > 0 && brand > envelope && me > brand, 'order: Left for You, US, you');
+  assert.doesNotMatch(topBar, /id="thinkButton"/);
   assert.doesNotMatch(topBar, /id="usPerVoiTop"/, 'Per voi belongs to Gioca, not global chrome');
   assert.match(topBar, /<div class="us-top-brand" role="img" aria-label="US"><img[^>]+us-symbol-256-v1\.png/);
   assert.match(identityCss, /\.top\.us-premium-top \.us-top-brand\{grid-column:2;/);
@@ -30,11 +33,11 @@ test('shell: Events no longer owns the global centre slot but stays reachable', 
   assert.doesNotMatch(identityCss, /us-events-top/);
   // Contextual homes: the dates of the Noi calendar (Noi nuova, 03/11/2026: no
   // Eventi tile; an event opens its editor, a mesiversario opens Eventi) and
-  // the Oggi event priority card.
+  // the og-next pill on Oggi (the event priority card left with the redesign, D9).
   assert.doesNotMatch(html, /data-noi-open-link/);
   assert.match(read('noi-v2.js'), /if\(kind==='anniversary'&&item\.dataset\.months!=='0'\)\{window\.openNoiSection\?\.\('eventi'\);return;\}/);
   assert.doesNotMatch(html, /id="usCalendarEventsLink"/);
-  assert.match(read('app.js'), /if\(action==='events'\)window\.openEvents\?\.\(\)/);
+  assert.match(read('app.js'), /if\(data\.usNextKind==='event'&&data\.usEventId&&typeof window\.openEventEditor==='function'\)/);
 });
 
 test('shell: the canonical PWA/launcher mark is used as-is (display cropping only)', () => {
@@ -181,16 +184,13 @@ test('aurora: reduced motion never pulses', () => {
 
 // ---------------------------------------------------------------- ATTENTION
 
-test('attention: global Left for You and Gioca Per voi share the same primitive', () => {
+test('attention: the global Left for You owns the attention primitive in the top bar', () => {
   const envelope = topBar.match(/<button[^>]*id="leftForYouPartnerEntry"[^>]*>/)?.[0] || '';
   assert.match(envelope, /us-attention-orbit/);
   assert.match(envelope, /data-us-attention="off"/);
   assert.equal((topBar.match(/data-us-attention-icon/g) || []).length, 1, 'only the global envelope owns an attention glyph in the top bar');
-  const games = read('games.js');
-  assert.match(games, /us-gv2-pervoi us-attention-orbit/);
-  assert.match(games, /data-gv2-action="per-voi"/);
-  assert.match(games, /data-us-attention=/);
-  assert.match(games, /data-us-attention-icon/);
+  // Fase 6 (D11): Per voi is a tile with a chip; «Vi aspetta» says the turn, no orbit.
+  assert.doesNotMatch(read('games.js'), /us-attention-orbit/);
 });
 
 test('attention: the primitive is generic (no envelope/Per voi selectors), slow with a rest, and reduced-motion aware', () => {
@@ -233,7 +233,7 @@ test('tiles: Gioca destinations share one press + destination primitive', () => 
   assert.doesNotMatch(html, /class="noi-hub-card|id="noiWeekBoardOpen"/);
   const games = read('games.js');
   assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-game/);
-  assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-pervoi/);
+  assert.match(games, /action:'per-voi',extraClass:' is-pervoi'/, 'Per voi is one of the tiles');
   assert.match(foundationCss, /\[data-us-tile\]:active\{transform:scale\(\.975\)\}/);
   assert.match(foundationCss, /@keyframes us-content-enter\{from\{opacity:0;transform:translate3d\(0,8px,0\)\}/);
   assert.match(read('styles.css'), /#bond \.noi-canonical-page:not\(\[data-noi-view="hub"\]\)>:is\(/);

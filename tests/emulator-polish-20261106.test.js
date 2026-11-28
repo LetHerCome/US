@@ -1,5 +1,5 @@
-// Prova nell'emulatore del 06/11/2026: barra di stato leggibile, gattino che non
-// copre i comandi, «Voi due» e «Blackboard» in inglese.
+// Prova nell'emulatore del 06/11/2026: barra di stato leggibile, «Voi due» e
+// «Blackboard» in inglese. (Il gattino è andato in pensione il 23/11/2026, D5.)
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -13,21 +13,6 @@ test('a band under the status bar appears only once the page has scrolled', () =
   const ui = read('ui-foundation.js');
   assert.match(ui, /setAttribute\?\.\('data-us-scrolled', ''\)/);
   assert.match(ui, /addEventListener\?\.\('scroll', syncScrolled, \{ passive: true \}\)/);
-});
-
-test('the cat steps aside, without a hit target, when a control rests under it', () => {
-  const js = read('pet.js');
-  assert.match(js, /function covered\(\)/);
-  assert.match(js, /elementsFromPoint/);
-  // The home spot without the step aside, or the cat would bob up and down.
-  assert.match(js, /left:layer.offsetLeft,top:layer.offsetTop/);
-  assert.match(js, /\[role="switch"\]/);
-  assert.match(js, /layer\.dataset\.petAside=''/);
-  // 13/11/2026 (founder): aside it stays as it is, and taps pass through to the control.
-  const css = read('pet.css');
-  assert.doesNotMatch(css, /\.us-pet-layer\[data-pet-aside\]\{/, 'no fade, no move, no hide');
-  assert.match(css, /\.us-pet-layer\[data-pet-aside\] \.us-pet-hit\{pointer-events:none!important\}/);
-  assert.doesNotMatch(css, /\[data-pet-aside\]\{[^}]*visibility:hidden/, 'never vanishes');
 });
 
 test('English: the shared Settings section and the blackboard keep their own names', () => {

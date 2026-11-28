@@ -12,6 +12,10 @@ function scope(t,cid,users){
   if(t.cols.includes('couple_id'))return `couple_id='${cid}'`;
   if(t.relname==='couples')return `id='${cid}'`;
   if(t.relname==='notification_preferences')return `user_id in('${users.join("','")}')`;
+  // US vi ricorda (25/11/2026): «Non dirmelo più» belongs to one person.
+  if(t.relname==='us_battute_mute')return `user_id in('${users.join("','")}')`;
+  // Il vostro mese (27/11/2026): who opened a pack, through the pack's couple.
+  if(t.relname==='us_mese_aperti')return `pack_id in(select id from public.us_mese_pacchi where couple_id='${cid}')`;
   if(t.relname==='story_views')return `story_id in(select id from public.stories where couple_id='${cid}')`;
   if(t.relname==='think_reactions')return `message_id in(select id from public.shared_messages where couple_id='${cid}')`;
   return null;

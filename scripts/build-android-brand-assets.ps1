@@ -70,7 +70,7 @@ foreach ($copy in $copies) {
 
 $deprecatedBackground = Join-Path $root 'android/app/src/main/res/drawable-nodpi/us_adaptive_background_v1.png'
 if (Test-Path -LiteralPath $deprecatedBackground) { Remove-Item -LiteralPath $deprecatedBackground -Force }
-function Write-AdaptiveForeground([string]$SourceRelative, [string]$Relative) {
+function Write-AdaptiveForeground([string]$SourceRelative, [string]$Relative, [double]$Fit = 1.0, [string]$Operation = 'FIT_CENTER_TRANSPARENT') {
   $image = [System.Drawing.Image]::FromFile($sourceFiles[$SourceRelative])
   $adaptiveSize = 1254
   $adaptive = New-Object System.Drawing.Bitmap $adaptiveSize, $adaptiveSize
@@ -81,14 +81,14 @@ function Write-AdaptiveForeground([string]$SourceRelative, [string]$Relative) {
     $adaptiveGraphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
     $adaptiveGraphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
     $adaptiveGraphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-    $adaptiveScale = [Math]::Min($adaptiveSize / $image.Width, $adaptiveSize / $image.Height)
+    $adaptiveScale = [Math]::Min($adaptiveSize * $Fit / $image.Width, $adaptiveSize * $Fit / $image.Height)
     $adaptiveWidth = [int][Math]::Round($image.Width * $adaptiveScale)
     $adaptiveHeight = [int][Math]::Round($image.Height * $adaptiveScale)
     $adaptiveX = [int](($adaptiveSize - $adaptiveWidth) / 2)
     $adaptiveY = [int](($adaptiveSize - $adaptiveHeight) / 2)
     $adaptiveGraphics.DrawImage($image, (New-Object System.Drawing.Rectangle $adaptiveX, $adaptiveY, $adaptiveWidth, $adaptiveHeight))
     Write-Png $adaptive (Join-Path $root $Relative)
-    Add-Derivative $Relative 'FIT_CENTER_TRANSPARENT' @($SourceRelative)
+    Add-Derivative $Relative $Operation @($SourceRelative)
   } finally {
     $adaptiveGraphics.Dispose()
     $adaptive.Dispose()
@@ -102,6 +102,10 @@ Write-AdaptiveForeground 'assets/source/brand/us-symbol-master-v1.png' 'android/
 # frames it. The master is already fitted to the adaptive safe circle; the
 # splash keeps the framed symbol below.
 Write-AdaptiveForeground 'assets/source/brand/app-icon/us-launcher-symbol-v2.png' 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v2.png'
+# 25/11/2026 (founder): the launcher icon is the one of the staging PWA again, the
+# framed symbol on white, with the frame on the edge of the icon as on the PWA
+# (founder: «voglio il quadrato al confine dell'icona»); round masks cut its corners.
+Write-AdaptiveForeground 'assets/source/brand/us-symbol-master-v1.png' 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v3.png' 1.09 'FIT_EDGE_TRANSPARENT'
 
 $symbol = [System.Drawing.Image]::FromFile($sourceFiles['assets/source/brand/app-icon/us-launcher-symbol-v2.png'])
 try {

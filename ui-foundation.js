@@ -33,8 +33,11 @@
   // Safety only: normal completion comes from the panel's real transform transition.
   const SURFACE_EXIT_FALLBACK_MS = 1000;
 
+  // A surface on its way out (data-us-motion-exiting) is closed already: the
+  // page under it takes taps at once instead of after the exit (25/11/2026,
+  // founder: «i tap non sono reattivi sul calendario»).
   function isOpen(modal) {
-    return !modal.hidden && modal.getAttribute('aria-hidden') !== 'true';
+    return !modal.hidden && modal.getAttribute('aria-hidden') !== 'true' && !modal.hasAttribute('data-us-motion-exiting');
   }
 
   function canFocus(element) {
@@ -373,7 +376,7 @@
       subtree: true,
       childList: true,
       attributes: true,
-      attributeFilter: ['aria-hidden', 'class', 'hidden']
+      attributeFilter: ['aria-hidden', 'class', 'hidden', 'data-us-motion-exiting']
     });
     documentRef.addEventListener('keydown', onKeydown);
     sync();
@@ -508,15 +511,20 @@
     // the first gesture (or by the first meaningful sound), and every later
     // gesture only resumes it, which is cheap and is what iOS needs.
     let warming = false;
-    function warmUp() {
+    function warmUp(force = true) {
       if (warming || context || !preferences.sounds) return;
       warming = true;
-      const build = () => { warming = false; if (preferences.sounds && !context) audioContext(); };
+      // Never in the middle of a page change (Fluidità 2): it waits for the motion to end.
+      const make = () => { warming = false; if (preferences.sounds && !context) audioContext(); };
+      const build = () => { const later = environment.UsDueColori?.afterMotion; if (typeof later === 'function') later(make); else make(); };
       const idle = environment.requestIdleCallback;
       if (typeof idle === 'function') {
         const started = now();
         const wait = (deadline) => {
-          if (deadline?.didTimeout || (deadline?.timeRemaining?.() ?? 50) >= 40 || now() - started > 4000) build();
+          const free = (deadline?.timeRemaining?.() ?? 50) >= 40;
+          // At load (force = false) only a really free moment builds it; after a gesture, 4 s at most.
+          if (free || (force && (deadline?.didTimeout || now() - started > 4000))) build();
+          else if (!force && now() - started > 20000) warming = false;
           else idle.call(environment, wait, { timeout: 4000 });
         };
         idle.call(environment, wait, { timeout: 4000 });
@@ -631,6 +639,15 @@
       unlock
     };
 
+    // Ready from the opening (founder, 28/11/2026: «il suono si sente solo dopo un po»):
+    // the audio session is built, silent and suspended, in the first idle moment after
+    // the page has loaded, so the first gesture only resumes it and the first taps
+    // already sound. Nothing plays before a gesture.
+    if (documentRef && preferences.sounds) {
+      const early = () => warmUp(false);
+      if (documentRef.readyState === 'complete') early();
+      else environment.addEventListener?.('load', early, { once: true });
+    }
     // Audio is allowed only after a real gesture; one delegated listener also
     // gives declarative feedback: [data-us-feedback="tap|action|..."].
     if (documentRef?.addEventListener) {
@@ -845,7 +862,7 @@
   // heart) snaps higher, with a stronger cue and a second, wider wave. One layer
   // over the page, so a redraw of the button does not cut it.
   const LIKE_COLORS = ['--us-rosa', '--us-lilla'];
-  const LIKE_FALLBACK = { '--us-rosa': '#ff7c96', '--us-lilla': '#a98bff' };
+  const LIKE_FALLBACK = { '--us-rosa': '#ff7c96', '--us-lilla': '#a98bff', '--us-tu': '#ff7c96', '--us-partner': '#a98bff' };
   function heartColor(d, name) {
     try { return d.defaultView.getComputedStyle(d.documentElement).getPropertyValue(name).trim() || LIKE_FALLBACK[name]; } catch (_) { return LIKE_FALLBACK[name]; }
   }
@@ -925,6 +942,276 @@
     return true;
   }
 
+  // I cuori (founder, 27/11/2026, prototype https://claude.ai/artifact/2NXZSrS4EypVcsAVBNDRVy):
+  // rapid taps add up. Each tap squashes the heart and springs it back, and
+  // little hearts fly out in your colour and theirs, on ONE canvas over the
+  // page that exists only while they fly; stronger at 3, 6 and 10 (gold from
+  // 10). Reduced motion: the light bounce and the number only, no canvas.
+  const heartLevel = (n) => (n >= 10 ? 3 : n >= 6 ? 2 : n >= 3 ? 1 : 0);
+  function heartCue(n) {
+    const scope = typeof window !== 'undefined' ? window : globalThis;
+    const feel = n >= 10 && n % 10 === 0 ? 'reveal' : n === 6 ? 'success' : n === 3 ? 'action' : 'tap';
+    scope.UsFeedback?.[feel]?.();
+    return feel;
+  }
+  const springs = new WeakMap();
+  function heartSquash(element, { level = 0 } = {}) {
+    const win = element?.ownerDocument?.defaultView;
+    if (!element?.style || typeof win?.requestAnimationFrame !== 'function') return false;
+    const reduced = activeMotion.isReducedMotion();
+    let s = springs.get(element);
+    if (!s) springs.set(element, (s = { x: 1, v: 0, raf: 0, last: 0 }));
+    s.x = reduced ? 0.94 : 0.78 - level * 0.03;
+    s.v = reduced ? 2 : 9 + level * 2.5;
+    element.style.scale = s.x.toFixed(3);
+    const step = (t) => {
+      const dt = Math.min(0.032, (t - s.last) / 1000 || 0.016);
+      s.last = t;
+      s.v += (-520 * (s.x - 1) - 15 * s.v) * dt;
+      s.x += s.v * dt;
+      if (Math.abs(s.v) < 0.002 && Math.abs(s.x - 1) < 0.001) { element.style.scale = ''; s.raf = 0; return; }
+      element.style.scale = s.x.toFixed(4);
+      s.raf = win.requestAnimationFrame(step);
+    };
+    if (!s.raf) { s.last = win.performance?.now?.() ?? 0; s.raf = win.requestAnimationFrame(step); }
+    return true;
+  }
+  const HEART_GOLD = '#ffd27a';
+  let heartsLayer = null;
+  function heartsFx(d) {
+    if (heartsLayer?.doc === d) return heartsLayer;
+    const win = d.defaultView;
+    const canvas = d.createElement('canvas');
+    const ctx = typeof win?.requestAnimationFrame === 'function' ? canvas.getContext?.('2d') : null;
+    if (!ctx) return null;
+    canvas.className = 'us-hearts-fx';
+    canvas.setAttribute('aria-hidden', 'true');
+    const clock = () => win.performance?.now?.() ?? Date.now();
+    let parts = [], raf = 0, w = 0, h = 0, dpr = 1, last = 0;
+    const shape = (x, y, s, rot, color, alpha) => {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s);
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha)); ctx.fillStyle = color;
+      ctx.beginPath(); ctx.moveTo(0, 3.5); ctx.bezierCurveTo(-7, -1.5, -4.5, -8, 0, -4.2); ctx.bezierCurveTo(4.5, -8, 7, -1.5, 0, 3.5);
+      ctx.fill(); ctx.restore();
+    };
+    // A heart reaching its place says so once (the island's character hops).
+    const arrived = (p) => { const fn = p.arrive; p.arrive = null; try { fn(p.i); } catch (_) {} };
+    const tick = (now) => {
+      const dt = Math.min(0.05, (now - last) / 1000 || 1 / 60);
+      last = now;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      parts = parts.filter((p) => { const on = now - p.born < p.life; if (!on && p.arrive) arrived(p); return on; });
+      for (const p of parts) {
+        if (now < p.born) continue;
+        const k = (now - p.born) / p.life;
+        if (p.into) {
+          // Into the island: a soft arc (one control point to the side), a little pop
+          // at the start, then the heart shrinks into its place and is gone.
+          const e = k * (1.6 - 0.6 * k), u = 1 - e;
+          const x = u * u * p.x + 2 * u * e * p.cx + e * e * p.to.x, y = u * u * p.y + 2 * u * e * p.cy + e * e * p.to.y;
+          shape(x, y, p.s * (k < 0.18 ? 0.7 + k * 2.6 : 1.17 - (k - 0.18)), p.rot + Math.sin(k * 6.2832) * 0.25, p.color, k > 0.9 ? (1 - k) / 0.1 : 1);
+          if (k >= 0.92 && p.arrive) arrived(p);
+          continue;
+        }
+        if (p.to) {
+          // The send: each heart flies along a curve towards the other person.
+          const e = 1 - Math.pow(1 - Math.min(1, k * 1.1), 3);
+          shape(p.x + (p.to.x - p.x) * e + Math.sin(e * Math.PI) * p.curve, p.y + (p.to.y - p.y) * e - Math.sin(e * Math.PI) * 40,
+            p.s * (1 - e * 0.6), p.rot, p.color, 1 - Math.max(0, (k - 0.8) * 5));
+          continue;
+        }
+        p.vy += 520 * dt; p.vx *= 0.985; p.vy *= 0.985; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.spin * dt;
+        const a = k < 0.1 ? k * 10 : 1 - Math.pow(Math.max(0, k - 0.45) / 0.55, 1.6);
+        if (p.dot) { ctx.globalAlpha = Math.max(0, a); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, 6.2832); ctx.fill(); }
+        else shape(p.x, p.y, p.s * (k < 0.15 ? 0.4 + k * 4 : 1), p.rot, p.color, a);
+      }
+      ctx.globalAlpha = 1;
+      if (parts.length) raf = win.requestAnimationFrame(tick);
+      else { raf = 0; canvas.remove(); }
+    };
+    heartsLayer = {
+      doc: d,
+      clock,
+      colors: () => [heartColor(d, '--us-tu'), heartColor(d, '--us-partner')],
+      // below: an element (the bar) whose layer the hearts pass under, so its «×N» stays on top;
+      // or a number, the layer itself (into the island: over the toast that says it).
+      add(list, below = null) {
+        let z = '';
+        try { if (typeof below === 'number') z = String(below); else if (below) z = String((parseInt(win.getComputedStyle(below).zIndex, 10) || 1) - 1); } catch (_) { z = ''; }
+        canvas.style.zIndex = z;
+        if (!canvas.isConnected) {
+          w = d.documentElement.clientWidth || win.innerWidth || 0;
+          h = d.documentElement.clientHeight || win.innerHeight || 0;
+          dpr = Math.min(2, win.devicePixelRatio || 1);
+          canvas.width = Math.round(w * dpr);
+          canvas.height = Math.round(h * dpr);
+          d.body.appendChild(canvas);
+        }
+        parts.push(...list);
+        if (!raf) { last = clock(); raf = win.requestAnimationFrame(tick); }
+      }
+    };
+    return heartsLayer;
+  }
+  function heartsFrom(element) {
+    const d = element?.ownerDocument;
+    if (!element?.getBoundingClientRect || !d?.body || activeMotion.isReducedMotion()) return null;
+    const r = element.getBoundingClientRect();
+    if (!r.width && !r.height) return null;
+    const fx = heartsFx(d);
+    return fx ? { fx, d, x: r.left + r.width / 2, y: r.top + r.height / 2 } : null;
+  }
+  function heartSpray(element, { level = 0, below = null } = {}) {
+    const at = heartsFrom(element);
+    if (!at) return false;
+    const [tu, partner] = at.fx.colors(), born = at.fx.clock(), list = [];
+    for (let i = 0; i < 7 + level * 4; i++) {
+      const a = -Math.PI / 2 + (Math.random() - 0.5) * (1.6 + level * 0.35);
+      const v = 220 + Math.random() * 180 + level * 60;
+      list.push({ x: at.x, y: at.y - 10, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: 1.1 + Math.random() * 0.9 + level * 0.15,
+        rot: (Math.random() - 0.5) * 0.6, spin: (Math.random() - 0.5) * 3, color: level >= 3 && i % 5 === 0 ? HEART_GOLD : i % 2 ? tu : partner,
+        born, life: 900 + Math.random() * 400 + level * 120, dot: Math.random() < 0.25 });
+    }
+    at.fx.add(list, below);
+    return true;
+  }
+  // The send: the hearts leave towards the other person (by default up, on their side).
+  // into (I cuoricini nell'isola, 27/11/2026): they rise in arcs to `to` (the other
+  // person's character in the island, personaggi.js) and shrink into it; onArrive(i)
+  // once per heart there. Returns the ms until the last one arrives (or false).
+  function heartFlight(element, { to = null, count = 1, below = null, into = false, onArrive = null } = {}) {
+    const at = heartsFrom(element);
+    if (!at) return false;
+    const target = to || { x: (at.d.documentElement.clientWidth || 360) * 0.74, y: 64 };
+    const [tu, partner] = at.fx.colors(), born = at.fx.clock(), list = [];
+    const n = Math.min(18, 4 + count);
+    if (into && to) {
+      let end = 0;
+      for (let i = 0; i < n; i++) {
+        const x = at.x + (Math.random() - 0.5) * 26, y = at.y + (Math.random() - 0.5) * 16;
+        const side = i % 2 ? 1 : -1, lift = 70 + Math.random() * 110;
+        const life = 820 + Math.random() * 180, start = born + i * 42;
+        end = Math.max(end, start - born + life * 0.92);
+        list.push({ into: true, i, x, y, to: target, cx: (x + target.x) / 2 + side * lift, cy: (y + target.y) / 2 + (Math.random() - 0.3) * 60,
+          s: 1.3 + Math.random() * 0.7, rot: (Math.random() - 0.5) * 0.5, color: count >= 10 && i % 4 === 0 ? HEART_GOLD : i % 2 ? tu : partner,
+          born: start, life, arrive: typeof onArrive === 'function' ? onArrive : null });
+      }
+      // Over the toast that says it (--us-layer-toast), so they reach the island unbroken.
+      let z = 10401;
+      try { z = (parseInt(at.d.defaultView.getComputedStyle(at.d.documentElement).getPropertyValue('--us-layer-toast'), 10) || 10400) + 1; } catch (_) { z = 10401; }
+      at.fx.add(list, typeof below === 'number' ? below : z);
+      return Math.round(end);
+    }
+    for (let i = 0; i < n; i++) {
+      list.push({ x: at.x + (Math.random() - 0.5) * 30, y: at.y + (Math.random() - 0.5) * 20, to: target, curve: (Math.random() - 0.5) * 120,
+        s: 1.4 + Math.random() * 0.8, rot: (Math.random() - 0.5) * 0.5, color: i % 2 ? tu : partner, born: born + i * 35, life: 760 + i * 20 });
+    }
+    at.fx.add(list, below);
+    return true;
+  }
+  // What a screen reader hears («Cuore mandato», «3 cuori», «Cuore tolto»).
+  function heartSay(text, status = null) {
+    const d = status?.ownerDocument || (typeof document !== 'undefined' ? document : null);
+    let el = status || d?.getElementById('usHeartStatus');
+    if (!el && d?.body) {
+      el = d.createElement('p');
+      el.id = 'usHeartStatus';
+      el.className = 'us-sr';
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      d.body.appendChild(el);
+    }
+    if (el) el.textContent = text;
+  }
+  // The reply heart («Resta e cresce»): the first tap gives it; every further
+  // tap keeps it and adds a burst and «×N» on the button. Visual only.
+  function heartMore(button, n, { status = null } = {}) {
+    if (!button?.querySelector) return false;
+    const level = Math.min(2, heartLevel(n));
+    const glyph = button.querySelector('.us-icon, .think-reaction-glyph') || button;
+    if (n > 1) heartSquash(glyph, { level });
+    heartSpray(glyph, { level });
+    if (n > 1) heartCue(n);
+    let badge = button.querySelector('.us-heart-count');
+    if (n > 1) {
+      if (!badge) {
+        badge = button.ownerDocument.createElement('span');
+        badge.className = 'us-heart-count';
+        badge.setAttribute('aria-hidden', 'true');
+        button.appendChild(badge);
+      }
+      badge.textContent = `×${n}`;
+      if (!activeMotion.isReducedMotion() && typeof badge.animate === 'function') badge.animate([{ scale: 1.5 }, { scale: 1 }], { duration: 300, easing: 'cubic-bezier(.2,1.6,.4,1)' });
+    } else badge?.remove();
+    heartSay(n > 1 ? `${n} cuori` : 'Cuore mandato', status);
+    return true;
+  }
+  // Hold to take it back (~650 ms, a border fills while holding); Backspace or
+  // Delete from the keyboard. A hold never also counts as a tap.
+  function heartHoldRing(button, ms) {
+    const d = button.ownerDocument;
+    const r = button.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    const w = Math.round(r.width) + 6, h = Math.round(r.height) + 6;
+    let radius = 0;
+    try { radius = parseFloat(d.defaultView.getComputedStyle(button).borderTopLeftRadius) || 0; } catch (_) { /* square */ }
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = d.createElementNS(ns, 'svg');
+    const rect = d.createElementNS(ns, 'rect');
+    Object.entries({ class: 'us-heart-hold', 'aria-hidden': 'true', width: w, height: h, viewBox: `0 0 ${w} ${h}` }).forEach(([k, v]) => svg.setAttribute(k, String(v)));
+    Object.entries({ x: 1.5, y: 1.5, width: w - 3, height: h - 3, rx: Math.min(radius + 1.5, (h - 3) / 2), pathLength: 100 }).forEach(([k, v]) => rect.setAttribute(k, String(v)));
+    svg.appendChild(rect);
+    button.appendChild(svg);
+    if (typeof rect.animate === 'function') rect.animate([{ strokeDashoffset: 100 }, { strokeDashoffset: 0 }], { duration: ms, easing: 'linear', fill: 'forwards' });
+    else rect.style.strokeDashoffset = '0';
+    return svg;
+  }
+  function heartPress(root, { selector, held = () => true, onHold, holdMs = 650 } = {}) {
+    if (!root?.addEventListener || !selector || typeof onHold !== 'function') return false;
+    const win = root.ownerDocument?.defaultView || globalThis;
+    let timer = 0, ring = null, target = null, swallow = false, swallowTimer = 0;
+    const stop = () => { if (timer) win.clearTimeout(timer); timer = 0; ring?.remove(); ring = null; target = null; };
+    const release = () => {
+      stop();
+      if (swallow) { win.clearTimeout(swallowTimer); swallowTimer = win.setTimeout(() => { swallow = false; }, 450); }
+    };
+    root.addEventListener('pointerdown', (event) => {
+      swallow = false;
+      stop();
+      const button = event.target?.closest?.(selector);
+      if (!button || button.disabled || (event.pointerType === 'mouse' && event.button !== 0) || !held(button)) return;
+      target = button;
+      ring = heartHoldRing(button, holdMs);
+      timer = win.setTimeout(() => {
+        const el = target;
+        stop();
+        swallow = true;
+        heartSay('Cuore tolto');
+        onHold(el);
+      }, holdMs);
+    });
+    root.addEventListener('pointerup', release);
+    root.addEventListener('pointercancel', release);
+    root.addEventListener('pointerout', (event) => { if (target && !target.contains(event.relatedTarget)) release(); });
+    root.addEventListener('click', (event) => {
+      if (!swallow || !event.target?.closest?.(selector)) return;
+      swallow = false;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }, true);
+    root.addEventListener('contextmenu', (event) => { if (event.target?.closest?.(selector)) event.preventDefault(); });
+    root.addEventListener('keydown', (event) => {
+      if (event.key !== 'Backspace' && event.key !== 'Delete') return;
+      const button = event.target?.closest?.(selector);
+      if (!button || !held(button)) return;
+      event.preventDefault();
+      heartSay('Cuore tolto');
+      onHold(button);
+    });
+    return true;
+  }
+
   return {
     install,
     createFeedback,
@@ -934,6 +1221,14 @@
     letterOpen,
     heart,
     heartTurn,
+    heartLevel,
+    heartCue,
+    heartSquash,
+    heartSpray,
+    heartFlight,
+    heartMore,
+    heartPress,
+    heartSay,
     releaseNotesDue,
     auroraPulse: () => activeAurora(),
     playOnce: (element, className, duration) => activePlayOnce(element, className, duration),

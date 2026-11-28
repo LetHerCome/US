@@ -184,9 +184,8 @@ function bindSurface(){
   $('noiEventsAdd')?.addEventListener('click',()=>openEventEditor(null));
 }
 function render(){
-  const upcoming=upcomingRows(),due=dueRows(),done=completedRows();const list=$('usEventsList'),count=$('usEventsCount'),card=$('usNextEventCard'),dot=$('usCalendarDot');
+  const upcoming=upcomingRows(),due=dueRows(),done=completedRows();const list=$('usEventsList'),count=$('usEventsCount'),card=$('usNextEventCard');
   if(count)count.textContent=upcoming.length?`${upcoming.length} ${upcoming.length===1?'evento':'eventi'}`:'';
-  if(dot)dot.hidden=!(upcoming[0]&&upcoming[0].days_left<=7);
   if(!upcoming.length){if(card)card.hidden=true;if(list)list.innerHTML='<div class="us-events-empty"><b>Niente in programma</b></div>';}
   else{
     const next=upcoming[0];if(card){card.hidden=false;card.classList.toggle('us-next-relationship',Boolean(next.system));card.dataset.id=next.system?'':next.id;card.onclick=next.system?null:()=>editEvent(next.id,next.effective_date);$('usNextEventTitle').textContent=next.title;$('usNextEventDate').textContent=capFirst(formatDate(next.effective_date))+(next.event_time?` · ${String(next.event_time).slice(0,5)}`:'');$('usNextEventCountdown').textContent=next.system&&next.awarded?'Festeggiato':countdownLower(next.days_left);}
@@ -285,7 +284,9 @@ else if(!window.usCelebrateXp?.(xp,'Evento vissuto'))toast('Evento vissuto ♡')
 }
 async function saveEvent(event){
   event.preventDefault();if(busy||!window.usProfile)return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');const title=$('usEventTitleInput').value.trim(),date=$('usEventDateInput').value;if(!title||!date)return;
-  const payload={title,event_date:date,event_time:$('usEventTimeInput').value||null,location:$('usEventLocationInput').value.trim()||null,note:$('usEventNoteInput').value.trim()||null,recurs_yearly:$('usEventRecurringInput').checked};busy=true;const saveBtn=$('usEventSaveBtn');saveBtn.disabled=true;$('usEventStatus').textContent='Salvo…';
+  // Date e numeri (26/11/2026): the hour is typed like in the calendar ("21", "2130", "21:30"); an hour that is not one is said, never guessed.
+  const rawTime=$('usEventTimeInput').value.trim(),time=rawTime?(window.UsQuickTime?window.UsQuickTime.normalize(rawTime):rawTime):'';if(rawTime&&!time){$('usEventStatus').textContent='Scrivi l’ora così: 21:30';$('usEventTimeInput').focus();return;}
+  const payload={title,event_date:date,event_time:time||null,location:$('usEventLocationInput').value.trim()||null,note:$('usEventNoteInput').value.trim()||null,recurs_yearly:$('usEventRecurringInput').checked};busy=true;const saveBtn=$('usEventSaveBtn');saveBtn.disabled=true;$('usEventStatus').textContent='Salvo…';
   try{let result;if(editingId)result=await sb.from('shared_events').update(payload).eq('id',editingId);else result=await sb.from('shared_events').insert({...payload,couple_id:window.usProfile.couple_id,created_by:window.usProfile.id});if(result.error)throw result.error;const wasEditing=Boolean(editingId);await hydrateEvents();refreshOggiNextFromEvents();cancelEventEdit();toast(wasEditing?'Evento aggiornato':'Evento aggiunto');}catch(error){console.warn('[US Events] save',error);$('usEventStatus').textContent='Non riesco a salvarlo. Riprova.';}finally{busy=false;saveBtn.disabled=false;}
 }
 async function deleteEvent(){
@@ -296,6 +297,7 @@ async function openEvents(){const overlay=$('usEventsOverlay');if(!overlay)retur
 function closeEvents(){if(busy)return;const overlay=$('usEventsOverlay');if(!overlay)return;const finalize=()=>{const fromSurface=editorReturn==='surface';editorReturn=null;if(fromSurface)afterHistorySettles(restoreSurface);overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.classList.remove('us-events-open');resetForm();showBrowse();};if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(overlay,finalize);else finalize();}
 function captureDeepLink(){try{const url=new URL(location.href);deepLinkPending=url.searchParams.get('open')==='events';if(!deepLinkPending)return;url.searchParams.delete('open');history.replaceState(history.state||{},'',url.pathname+url.search+url.hash);}catch(_){}}
 function flushDeepLink(){if(deepLinkPending&&window.usProfile){deepLinkPending=false;openEvents();}}
+{const input=$('usEventTimeInput');input?.addEventListener('input',(event)=>window.UsQuickTime?.mask(event));input?.addEventListener('blur',()=>{const t=window.UsQuickTime?.normalize(input.value);if(t)input.value=t;});}
 window.hydrateNoiEvents=hydrateNoiEvents;window.openEventEditor=openEventEditor;window.openEvents=openEvents;window.closeEvents=closeEvents;window.beginAddEvent=beginAddEvent;window.editEvent=editEvent;window.cancelEventEdit=cancelEventEdit;window.hydrateEvents=hydrateEvents;window.getTodayEventPrioritySource=getTodayEventPrioritySource;window.completeEvent=completeEvent;
 $('usEventForm')?.addEventListener('submit',saveEvent);$('usEventDeleteBtn')?.addEventListener('click',deleteEvent);$('usEventEditBtn')?.addEventListener('click',editEventFields);$('usEventCompleteBtn')?.addEventListener('click',completeEvent);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('usEventsOverlay')?.classList.contains('open'))closeEvents();});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('usEventsOverlay')?.classList.contains('open'))hydrateEvents();});window.addEventListener('online',()=>{if($('usEventsOverlay')?.classList.contains('open'))hydrateEvents();});
 bindSurface();captureDeepLink();const bootTimer=setInterval(()=>{flushDeepLink();if(window.usProfile)clearInterval(bootTimer);},300);setTimeout(()=>clearInterval(bootTimer),30000);setInterval(()=>{if(!document.hidden&&$('usEventsOverlay')?.classList.contains('open')&&window.usProfile)hydrateEvents();},60000);

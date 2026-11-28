@@ -132,26 +132,74 @@ export const ANDROID_NOTICE_KINDS = Object.freeze({
   game_reveal: 'game_ready',
   game_weekly_created: 'game_weekly',
   game_weekly_turn: 'game_weekly_turn',
+  // Play Us (28/11/2026): the live invite; the phone says it with the partner's name, it opens Gioca.
+  play_invite: 'play_invite',
   calendar_reminder: 'calendar',
   relationship: 'anniversary',
   partner_joined: 'partner_joined',
   lavagna: 'lavagna',
+  // Noi, Fase B.3: an older app shows the generic line until it knows the kind.
+  postit: 'postit',
+  // La bacheca, fase 2 (27/11/2026): the phone writes the line, it opens Ricordi.
+  bacheca_postit: 'bacheca_postit',
   challenge_new: 'challenge',
   challenge_reminder: 'challenge_reminder',
   challenge_photo: 'challenge_photo',
+  // L'invito che si rinnova (27/11/2026).
+  invite_reminder: 'invite_reminder',
+  // US vi ricorda (27/11/2026): the phone says it with the partner's name it already has.
+  ricorda_birthday_week: 'birthday_week',
+  ricorda_birthday: 'birthday',
+  ricorda_anniversary_week: 'anniversary_week',
+  ricorda_year_ago: 'year_ago',
+  ricorda_bacheca: 'bacheca',
+  // Come stai che conta (27/11/2026): an answer to my Come stai. With a known
+  // gesture it travels as its own kind (ANDROID_STATUS_KINDS); this one is the
+  // generic «ha risposto al tuo Come stai» for anything else.
+  status_response: 'status_reply',
 });
+// Come stai che conta (27/11/2026, D7/D16): the gesture is an allow-listed
+// suffix of the kind, so the phone writes «Bea: Ti mando un abbraccio» itself.
+// Never a text, a name or an id: only one of these nine kinds.
+export const ANDROID_STATUS_KINDS = Object.freeze({
+  abbraccio: 'status_abbraccio',
+  riposati: 'status_riposati',
+  respira: 'status_respira',
+  cuore: 'status_cuore',
+  festa: 'status_festa',
+  forza: 'status_forza',
+  spacca: 'status_spacca',
+  buon_viaggio: 'status_buon_viaggio',
+  buon_appetito: 'status_buon_appetito',
+});
+// I cuori (27/11/2026): «Bea ti ha pensato 5 volte». A plural notification
+// picks the plural kind. An older app does not know the kind: the generic line.
+// Ti penso ×N (27/11/2026, founder: the number is not private): the plural
+// kinds alone also carry n, the number of times, digits only, 2..99, and the
+// phone says «Bea ti ha pensato 5 volte»; without n, «tante volte». Never a
+// name, a text, an id or a target: only that one number, on these kinds only.
+export const ANDROID_PLURAL_KINDS = Object.freeze({
+  think: 'think_many',
+});
+const ANDROID_TIMES_KINDS = Object.freeze(Object.values(ANDROID_PLURAL_KINDS));
+const androidTimes = (kind, times) => (ANDROID_TIMES_KINDS.includes(kind) && Number.isInteger(times) && times >= 2 && times <= 99 ? String(times) : '');
 const INSTALLATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const own = (map, key) => (Object.prototype.hasOwnProperty.call(map, key) ? map[key] : '');
 
 /** Strict data-only FCM v2; device is the authenticated dispatcher DB row. */
 export function fcmMessage(notification, device) {
   const installation = String(device?.installation_id || '').toLowerCase();
   if (!INSTALLATION_ID.test(installation)) throw new Error('native_installation_missing');
-  const kind = Object.prototype.hasOwnProperty.call(ANDROID_NOTICE_KINDS, notification?.type)
-    ? ANDROID_NOTICE_KINDS[notification.type] : '';
+  const kind = (notification?.plural === true && own(ANDROID_PLURAL_KINDS, notification?.type))
+    || (notification?.type === 'status_response' && typeof notification?.gesture === 'string' && own(ANDROID_STATUS_KINDS, notification.gesture))
+    || own(ANDROID_NOTICE_KINDS, notification?.type);
+  const times = androidTimes(kind, notification?.times);
+  const data = kind ? { v: '2', installation, k: kind } : { v: '2', installation };
+  if (times) data.n = times;
   return {
     message: {
       token: device.token,
-      data: kind ? { v: '2', installation, k: kind } : { v: '2', installation },
+      data,
       android: {
         priority: notification.urgency === 'high' ? 'HIGH' : 'NORMAL',
         ttl: `${notification.ttl}s`,
@@ -181,6 +229,97 @@ export function apnsRequest(notification, nowMs = Date.now()) {
   return {
     headers,
     body: { aps, us: { v: notification.v, type: notification.type, target: notification.target, ref: notification.ref || '', tag: notification.tag } },
+  };
+}
+
+// Widget signals (founder, 27/11/2026): the other person's character changed,
+// or they left the couple. Silent: no banner, no sound, no JS event, never a
+// notification. v '3' on purpose: an app of before this change accepts only
+// v '2' and drops the packet, so it can never show the generic notice for it.
+// The look is the one the widget snapshot already holds (UsWidgetContract:
+// shape, head, face and two #rrggbb colours); 'clear' carries nothing at all.
+// No name, photo, id, text or account identity.
+export const WIDGET_SIGNAL_VERSION = '3';
+export const WIDGET_SIGNAL_LOOK = Object.freeze({
+  shape: /^(palla|quadrato|triangolo|goccia|nuvola)$/,
+  head: /^(cappello|fiocco|cuffie|corona|coroncina|festa|cento)$/,
+  face: /^(occhiali|sole|sciarpina|gala|macchinetta)$/,
+  color: /^#[0-9a-f]{6}$/,
+  day: /^#[0-9a-f]{6}$/,
+});
+const WIDGET_OWNER = /^[a-f0-9]{64}$/;
+// Come stai che conta (27/11/2026, D13): the other person's Come stai, as the
+// widget snapshot holds it (UsWidgetContract.statusPerson): one of the twelve
+// keys, the words' form and the server's two instants. Nothing else.
+export const WIDGET_SIGNAL_STATUS = Object.freeze({
+  status: /^(innamorato|felice|stanco|giu|nervoso|malato|festa|lavoro|studio|palestra|viaggio|tavola)$/,
+  form: /^(m|f)$/,
+});
+const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/;
+const isoInstant = (value) => {
+  if (typeof value !== 'string' || !ISO_INSTANT.test(value)) return '';
+  const ms = Date.parse(value);
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : '';
+};
+
+/** The allow-listed signal: {s:'look', shape, head, face, color, day} (unknown values empty), {s:'status', status, form, at, until} or {s:'clear'}. */
+export function widgetSignal(input) {
+  if (input?.s === 'clear') return Object.freeze({ s: 'clear' });
+  if (input?.s === 'status') {
+    const key = typeof input.status === 'string' && WIDGET_SIGNAL_STATUS.status.test(input.status) ? input.status : '';
+    const at = key ? isoInstant(input.at) : '';
+    const until = key ? isoInstant(input.until) : '';
+    const shown = Boolean(key && at && until);
+    const form = typeof input.form === 'string' && WIDGET_SIGNAL_STATUS.form.test(input.form) ? input.form : '';
+    // No state (or a broken one) travels as "nothing to show", never half a state.
+    return Object.freeze({ s: 'status', status: shown ? key : '', form, at: shown ? at : '', until: shown ? until : '' });
+  }
+  if (input?.s !== 'look') throw new Error('widget_signal_invalid');
+  const out = { s: 'look' };
+  for (const [key, pattern] of Object.entries(WIDGET_SIGNAL_LOOK)) {
+    const value = typeof input[key] === 'string' ? input[key].toLowerCase() : '';
+    out[key] = pattern.test(value) ? value : '';
+  }
+  return Object.freeze(out);
+}
+
+/** Data-only FCM v3 for one Android device (same owner gate as v2: the installation). */
+export function fcmSignalMessage(signal, device) {
+  const installation = String(device?.installation_id || '').toLowerCase();
+  if (!INSTALLATION_ID.test(installation)) throw new Error('native_installation_missing');
+  const clean = widgetSignal(signal);
+  const clear = clean.s === 'clear';
+  const status = clean.s === 'status';
+  return {
+    message: {
+      token: device.token,
+      data: { v: WIDGET_SIGNAL_VERSION, installation, ...clean },
+      android: {
+        // Leaving matters more than a new hat: it may wake the phone.
+        priority: clear ? 'HIGH' : 'NORMAL',
+        // A Come stai lasts twelve hours: never delivered after it is over.
+        ttl: clear ? '604800s' : status ? '43200s' : '86400s',
+        // A newer look (or Come stai) replaces an older one still waiting.
+        collapse_key: clear ? 'us-widget-clear' : status ? 'us-widget-status' : 'us-widget-look',
+      },
+    },
+  };
+}
+
+/** APNs background push for the iOS widgets (content-available, no alert). */
+export function apnsSignalRequest(signal, ownerHash, nowMs = Date.now()) {
+  if (!WIDGET_OWNER.test(String(ownerHash || ''))) throw new Error('widget_owner_missing');
+  const clean = widgetSignal(signal);
+  const life = clean.s === 'clear' ? 604800 : clean.s === 'status' ? 43200 : 86400;
+  return {
+    headers: {
+      'apns-push-type': 'background',
+      // Apple requires priority 5 for background pushes.
+      'apns-priority': '5',
+      'apns-expiration': String(Math.floor(nowMs / 1000) + life),
+      'apns-collapse-id': clean.s === 'clear' ? 'us-widget-clear' : clean.s === 'status' ? 'us-widget-status' : 'us-widget-look',
+    },
+    body: { aps: { 'content-available': 1 }, us: { v: Number(WIDGET_SIGNAL_VERSION), owner: ownerHash, widget: { ...clean } } },
   };
 }
 
@@ -267,7 +406,7 @@ export function createNativeTransport({ config, fetch: fetchImpl = globalThis.fe
     return value;
   }
 
-  async function sendFcm(device, notification) {
+  async function postFcm(device, build) {
     if (!FCM_TOKEN.test(String(device.token || ''))) return { ok: false, outcome: 'invalid-token' };
     // Old rows without a valid installation UUID cannot be routed safely.
     if (!INSTALLATION_ID.test(String(device.installation_id || ''))) return { ok: false, outcome: 'rejected' };
@@ -279,7 +418,7 @@ export function createNativeTransport({ config, fetch: fetchImpl = globalThis.fe
       response = await timedFetch(fetchImpl, `https://fcm.googleapis.com/v1/projects/${encodeURIComponent(fcm.projectId)}/messages:send`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(fcmMessage(notification, device)),
+        body: JSON.stringify(build()),
       });
     } catch (_) {
       return { ok: false, outcome: 'transient' };
@@ -290,14 +429,14 @@ export function createNativeTransport({ config, fetch: fetchImpl = globalThis.fe
     return { ok: false, outcome: classifyFcmError(response.status, body) };
   }
 
-  async function sendApns(device, notification) {
+  async function postApns(device, build) {
     const token = String(device.token || '');
     if (!APNS_TOKEN.test(token)) return { ok: false, outcome: 'invalid-token' };
     const host = device.apns_environment === 'development' ? 'api.sandbox.push.apple.com' : 'api.push.apple.com';
     let jwt;
     try { jwt = await apnsJwt(); }
     catch (_) { return { ok: false, outcome: 'config' }; }
-    const request = apnsRequest(notification, now());
+    const request = build();
     let response;
     try {
       response = await timedFetch(fetchImpl, `https://${host}/3/device/${token}`, {
@@ -315,12 +454,22 @@ export function createNativeTransport({ config, fetch: fetchImpl = globalThis.fe
   }
 
   async function send(device, notification) {
-    if (device?.provider === 'fcm' && device.platform === 'android' && ready('fcm')) return sendFcm(device, notification);
-    if (device?.provider === 'apns' && device.platform === 'ios' && ready('apns')) return sendApns(device, notification);
+    if (device?.provider === 'fcm' && device.platform === 'android' && ready('fcm')) return postFcm(device, () => fcmMessage(notification, device));
+    if (device?.provider === 'apns' && device.platform === 'ios' && ready('apns')) return postApns(device, () => apnsRequest(notification, now()));
     return { ok: false, outcome: 'config' };
   }
 
-  return Object.freeze({ ready, send });
+  // Widget signals (27/11/2026): silent, never a banner. iOS only with the
+  // widget owner hash of that device's account (see widget-signal-core.mjs).
+  async function sendSignal(device, signal, ownerHash = '') {
+    if (device?.provider === 'fcm' && device.platform === 'android' && ready('fcm')) return postFcm(device, () => fcmSignalMessage(signal, device));
+    if (device?.provider === 'apns' && device.platform === 'ios' && ready('apns') && WIDGET_OWNER.test(String(ownerHash))) {
+      return postApns(device, () => apnsSignalRequest(signal, ownerHash, now()));
+    }
+    return { ok: false, outcome: 'config' };
+  }
+
+  return Object.freeze({ ready, send, sendSignal });
 }
 
 /** Edge glue: the transport configured from Edge secrets (Deno.env.get). */

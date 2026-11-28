@@ -74,7 +74,9 @@ test('M15 iOS: Info.plist dichiara scheme, permessi reali e nessuna capability p
   assert.match(plist, /<key>UIStatusBarStyle<\/key>\s*<string>UIStatusBarStyleLightContent<\/string>/);
   assert.match(plist, /<string>arm64<\/string>/);
   assert.doesNotMatch(plist, /armv7/);
-  for (const forbidden of ['NSAppTransportSecurity', 'NSAllowsArbitraryLoads', 'UIBackgroundModes', 'NSLocationAlwaysAndWhenInUseUsageDescription', 'UIApplicationShortcutItems', 'WKAppBoundDomains']) {
+  // Widget signals (27/11/2026): one background mode, remote-notification only, for the widgets.
+  assert.match(plist, /<key>UIBackgroundModes<\/key>\s*<array>\s*<string>remote-notification<\/string>\s*<\/array>/);
+  for (const forbidden of ['NSAppTransportSecurity', 'NSAllowsArbitraryLoads', 'NSLocationAlwaysAndWhenInUseUsageDescription', 'UIApplicationShortcutItems', 'WKAppBoundDomains']) {
     assert.ok(!keys.includes(forbidden), `${forbidden} appartiene a una milestone successiva`);
   }
   const privacy = read('ios/App/App/PrivacyInfo.xcprivacy');

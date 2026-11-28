@@ -15,10 +15,9 @@ test('pre-native: couple identity is one light bridge with Settings in the top-r
   assert.match(header, /id="pairAvatarFrancesco"/);
   assert.match(header, /id="pairAvatarBeatrice"/);
   assert.match(header, /id="noiCoupleDistance"/);
-  assert.match(header, /id="usSettingsEntry"[\s\S]*?aria-label="Apri impostazioni"/);
-  assert.ok(header.indexOf('id="noiCoupleCard"') < header.indexOf('id="usSettingsEntry"'));
+  // Redesign definitivo, fase 2 (D6): the gear left the couple card; your character opens the Profilo.
+  assert.doesNotMatch(header, /id="usSettingsEntry"/);
   assert.match(styles, /#bond \.noi-couple-card\{/);
-  assert.match(styles, /#bond \.noi-couple-card #usSettingsEntry\{[\s\S]*?right:2px;[\s\S]*?top:4px;/);
   assert.match(styles, /#bond \.noi-couple-card\{[\s\S]*?background:transparent;[\s\S]*?border:0;/);
 });
 

@@ -145,6 +145,15 @@ final class UsWidgets {
         }
     }
 
+    /**
+     * Ti penso ×N: the tick right after a burst of taps, in case the process
+     * dies before its timer (UsThinkWidgetActionReceiver). It is always the
+     * earliest moment; the tick's refreshAll then schedules the next one.
+     */
+    static void wakeAt(Context context, Instant at) {
+        schedule(context.getApplicationContext(), at);
+    }
+
     private static void schedule(Context context, Instant at) {
         AlarmManager alarms = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (alarms == null) return;
@@ -160,12 +169,15 @@ final class UsWidgets {
         alarms.set(AlarmManager.RTC, at.toEpochMilli(), tick);
     }
 
+    /** The widget gallery (androidTest) draws one layout per size, as before Android 12. Never set in the app. */
+    static volatile boolean gallery = false;
+
     /** Pastello: from this width (dp) the 4x2 layout instead of the 2x2. */
     static final float MEDIUM_MIN_WIDTH_DP = 250f;
 
     /** The 2x2 and the 4x2 layout: Android 12+ picks by size itself, before it the reported width decides. */
     static RemoteViews sized(Bundle options, RemoteViews small, RemoteViews medium) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (!gallery && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Map<SizeF, RemoteViews> sizes = new ArrayMap<>();
             sizes.put(new SizeF(110f, 110f), small);
             sizes.put(new SizeF(MEDIUM_MIN_WIDTH_DP, 110f), medium);

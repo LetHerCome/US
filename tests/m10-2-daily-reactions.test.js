@@ -31,16 +31,25 @@ test('1.0 O2: reaction controls only on the partner answer, ♥ and "Mi hai comm
   assert.doesNotMatch(angry.nodes.todayReveal.innerHTML,/data-us-daily-partner-reaction|angry/,'an old "angry" is never shown');
 });
 
-test('1.0 O2: one tap sends set_daily_answer_reaction, the same tap takes it back; only a saved ♥ or cry asks for the push', async () => {
+// I cuori («Resta e cresce», 27/11/2026): the heart stays at the next taps
+// (nothing sent again); it goes only when held ({remove:true}). Cry still toggles.
+test('1.0 O2: one tap sends set_daily_answer_reaction, the heart stays, holding it takes it back; only a saved ♥ or cry asks for the push', async () => {
   const t = installToday();await t.hydrate();
   assert.equal(typeof t.window.setDailyAnswerReaction,'function');
   assert.equal(t.listeners.has('click'),true);
   const click=(reaction)=>t.listeners.get('click')({target:{closest:(sel)=>sel==='[data-daily-reaction]'?{dataset:{dailyReaction:reaction}}:null}});
+  const saves=()=>t.calls.filter(([name])=>name==='set_daily_answer_reaction');
   click('heart');await flush();await flush();
-  assert.deepEqual(t.calls.filter(([name])=>name==='set_daily_answer_reaction').at(-1),['set_daily_answer_reaction',{target_question_id:'q-1',target_reaction:'heart'}]);
+  assert.deepEqual(saves().at(-1),['set_daily_answer_reaction',{target_question_id:'q-1',target_reaction:'heart'}]);
   assert.equal(t.window.todayRevealMeta.my_reaction,'heart');
   click('heart');await flush();await flush();
-  assert.deepEqual(t.calls.filter(([name])=>name==='set_daily_answer_reaction').at(-1),['set_daily_answer_reaction',{target_question_id:'q-1',target_reaction:null}]);
+  assert.equal(saves().length,1,'a second tap keeps the heart: nothing is sent');
+  assert.equal(JSON.stringify(await t.window.setDailyAnswerReaction('heart')),'{"status":"more","count":3}');
+  assert.equal(t.window.todayRevealMeta.my_reaction,'heart');
+  assert.equal((await t.window.setDailyAnswerReaction('cry',{remove:true})).status,'noop','only the reaction given can be taken back');
+  await t.window.setDailyAnswerReaction('heart',{remove:true});
+  assert.deepEqual(saves().at(-1),['set_daily_answer_reaction',{target_question_id:'q-1',target_reaction:null}]);
+  assert.equal(t.window.todayRevealMeta.my_reaction,null);
   assert.equal(await t.window.setDailyAnswerReaction('angry').then((r)=>r.status),'noop','never "arrabbiato"');
   // The server reads the reaction back; taking it back sends nothing.
   assert.deepEqual(t.pushes,[['daily_reaction','q-1']]);
@@ -71,10 +80,10 @@ test('M10.2 nessuna notifica per reazioni/receipt: send-web-push invariato, ness
   // US 1.0 (founder decisions A2, A6, N5, O2, O7) changed it on purpose:
   // daily_reaction and partner_joined events, the reveal only to the partner,
   // copy in the recipient's language (6a4bffaeb2f98f3609f0b217e4a80de22ea8b2804664db8d4f53d32f66e24ee5).
-  // Lavagna V1 (founder, 03/11/2026) adds the lavagna event (tests/lavagna-push.test.js); La sfida della settimana (03/11/2026) adds challenge_photo. Pinned again:
-  assert.equal(crypto.createHash('sha256').update(beforeF2C, 'utf8').digest('hex'), 'c5163bdf7b438d817961d15c9cc30fd6f6b6904b667c9623b557a989b822985e', 'send-web-push content is the US 1.0 source plus only the F2C VAPID edit');
-  assert.match(edge, /const EVENT_TYPES: EventType\[\] = \["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "challenge_photo"\];/, 'the US 1.0 event types, the board and the challenge photo (03/11/2026), no other');
-  const newPaths = [slice('// M10.2 — reveal Daily', 'let usTodayHydrateSeq=0;'), slice('installTodayNoticeSwipe(', 'window.UsTodayPriority=Object.freeze')].join('\n');
+  // Lavagna V1 (founder, 03/11/2026) adds the lavagna event (tests/lavagna-push.test.js); La sfida della settimana (03/11/2026) adds challenge_photo; Noi, Fase B.3 (25/11/2026) adds postit, same rule as the lavagna; the personaggi sempre aggiornati (27/11/2026) add partner_look, a silent widget signal (tests/push-ricorda-personaggio.test.mjs); the bacheca of 27/11/2026 adds bacheca_postit, same rule as the post-it (tests/bacheca-postit-push.test.js); Come stai che conta (27/11/2026) adds partner_status (the silent widget signal of a Come stai) and status_response (the answer to a Come stai, tests/come-stai-push.test.mjs); Play Us (28/11/2026) adds play_invite, the live invite read back from play_us_sessions (tests/play-us-invite-push.test.js). Pinned again:
+  assert.equal(crypto.createHash('sha256').update(beforeF2C, 'utf8').digest('hex'), '27b89777930665d7ec2d5f52c5ab7e7fdbc92970a606cc37fe8308965c5c6ef7', 'send-web-push content is the US 1.0 source plus only the F2C VAPID edit');
+  assert.match(edge, /const EVENT_TYPES: EventType\[\] = \["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "postit", "bacheca_postit", "challenge_photo", "partner_look", "partner_status", "status_response", "play_invite"\];/, 'the US 1.0 event types, the board, the post-it (25/11/2026), the challenge photo (03/11/2026), the widget signal (27/11/2026) and the Play Us invite (28/11/2026), no other');
+  const newPaths = slice('// M10.2 — reveal Daily', 'let usTodayHydrateSeq=0;');
   // US 1.0 (O2): the reveal may ask for the one reaction push, nothing else.
   assert.doesNotMatch(newPaths.replace(/sendWebPushEvent\('daily_reaction',[^)]*\)/g, ''), /sendWebPushEvent|push_event_log|sendNotification/);
   assert.match(app, /sendWebPushEvent\('daily_answer',window\.todayQuestion\.id\)/, 'the second-answer push still originates from the saved answer');

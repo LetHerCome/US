@@ -108,5 +108,30 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // ~4 KB: 3.1 -> 3.15 MB.
   // 1.5.1 (14/11/2026): La cosa di oggi (cosa-di-oggi.js, ~14 KB), the text
   // review and the visual touch-ups cross it by ~2.4 KB on CI: 3.15 -> 3.2 MB.
-  assert.ok(total <= 3.2 * 1024 * 1024, `precache is ${total} bytes: stays under 3.2 MB`);
+  // Aspetto Giorno e Notte and Noi, Fase A (24/11/2026): giorno.css and
+  // aspetto.js, «Vi rivedete tra», the special days and the one form cross it
+  // by ~5 KB: 3.2 -> 3.25 MB.
+  // L'isola and the angolo in three tabs (25/11/2026) add ~12 KB of code and
+  // two icons on top of Noi, Fase B: 3.25 -> 3.3 MB.
+  // Ti penso ricevuto coi personaggi (25/11/2026) adds ~12 KB (the stage, the
+  // three named replies, their motion) and drops ~2 KB of the old sheet: 3.3 -> 3.35 MB.
+  // Gioca, gettoni e giostra (25/11/2026): the carousel of the games, the token
+  // that drops on the server's answer, the descriptions in two languages and the
+  // day colours of the tokens (~13 KB) cross it: 3.35 -> 3.4 MB.
+  // Temi e countdown (26/11/2026): Stagioni drawn in oggi-look.js (the crowns,
+  // the frost, the sea, the beds, built once as still images), Pellicola, Ora d'oro
+  // and the three small countdowns (~14 KB net) cross it: 3.4 -> 3.45 MB.
+  // I cuori (27/11/2026): Ti penso ×N, the reply heart that stays and grows, the
+  // one canvas of little hearts and the hug with the real characters (~20 KB,
+  // minus ~1 KB of the old burst) cross it by ~9 KB: 3.45 -> 3.5 MB.
+  // Come stai che conta (27/11/2026): the gesture to the other person's state,
+  // the things on the characters, US's line, Oggi's hint and, with the clearer
+  // version of the tavola, the second row that fits itself and the other
+  // person's sheet (~40 KB after trimming its own comments and dead strings)
+  // cross it by ~8 KB: 3.5 -> 3.55 MB.
+  // Integration of 28/11/2026 (avvio veloce, apertura, intro, Gioca, Come stai,
+  // Il vostro mese): the founder raised the budget (27/11: «alza il limite»).
+  // The native apps do not use the service worker (platform.js canUseServiceWorker),
+  // only the browser/PWA pays it; the card images stay out of the precache: 3.55 -> 4 MB.
+  assert.ok(total <= 4 * 1024 * 1024, `precache is ${total} bytes: stays under 4 MB`);
 });

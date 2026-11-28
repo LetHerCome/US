@@ -223,11 +223,6 @@
   margin:10px 0 0;
 }
 
-/* Settings is already a control surface; don't cover it with Ti penso. */
-body:has(#settings.page.active) #thinkButton{
-  display:none!important;
-}
-
 @media(max-height:700px){
   #settings .us-settings2-section{margin-top:8px}
   #settings .us-settings2-row{min-height:46px!important;padding-top:5px!important;padding-bottom:5px!important}

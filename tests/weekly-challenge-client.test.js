@@ -166,20 +166,17 @@ test('one change: asked first, then the server picks; its refusals in plain word
   assert.deepEqual(calls, [['confirm', 'Cambiare la sfida?'], ['change_weekly_challenge', { target_challenge_id: ID }], ['toast', 'Con una foto già messa la sfida non si cambia']]);
 });
 
-test('wired in: the module is loaded and cached, Gioca has its slot, Oggi its category, Realtime its lines', () => {
+test('wired in: the module is loaded and cached, Realtime its lines; hidden from Gioca since fase 6 (D10)', () => {
   const index = read('index.html');
   assert.match(index, /<script defer src="\/weekly-challenge\.js\?v=[^"]+"><\/script>/);
   assert.match(read('service-worker.js'), /versioned\("\/weekly-challenge\.js"\)/);
   for (const f of ['scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) assert.match(read(f), /'weekly-challenge\.js'/, f);
   const games = read('games.js');
-  assert.match(games, /data-gv4-daily-slot[^\n]*\n\s*<div class="us-wc-slot" data-wc-slot><\/div>/);
-  assert.match(games, /window\.UsWeeklyChallenge\?\.paint\?\.\(\);/);
+  // Redesign definitivo (D10): the challenge is hidden, its data stays: no slot, no paint, no dot.
+  assert.doesNotMatch(games, /data-wc-slot|UsWeeklyChallenge/);
   const app = read('app.js');
-  assert.match(app, /const US_TODAY_PRIORITY_ORDER=Object\.freeze\(\{[^}]*challenge:6/);
-  assert.match(app, /challenge:'Sfida · scade domenica'/);
-  assert.match(app, /const US_OGGI_PRIMARY_RANK=Object\.freeze\(\{[^}]*challenge:40\}/);
-  assert.match(app, /challenge=await window\.UsWeeklyChallenge\?\.todayPriority\?\.\(\)/);
-  assert.match(app, /if\(action==='challenge'\)window\.UsWeeklyChallenge\?\.open\?\.\(\);/);
+  assert.doesNotMatch(app, /Sfida · scade domenica|action==='challenge'/);
+  assert.doesNotMatch(app, /UsWeeklyChallenge\?\.todayPriority|challenge:challenge/);
   assert.match(app, /table:'couple_weekly_challenges'[^\n]*UsWeeklyChallenge\?\.onChange/);
   assert.match(app, /table:'couple_weekly_challenge_photos'[^\n]*UsWeeklyChallenge\?\.onChange/);
 });

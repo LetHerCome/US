@@ -26,7 +26,7 @@ test('migration exists, is listed in the cutoff, the export and Realtime', async
   const cutoff = JSON.parse(fs.readFileSync(path.join(ROOT, 'supabase/baseline/MIGRATION_CUTOFF.json'), 'utf8'));
   assert.ok(cutoff.executable_migrations.includes(FILE) && cutoff.forward_migrations.includes(FILE));
   const core = fs.readFileSync(path.join(ROOT, 'supabase/functions/_shared/s3-2-export-core.mjs'), 'utf8');
-  assert.match(core, /\['member_status','user_id','user_id,couple_id,status,form,set_at,expires_at,updated_at',true\]/);
+  assert.match(core, /\['member_status','user_id','user_id,couple_id,status,form,set_at,expires_at,updated_at,reply_gesture,reply_at,reply_sent_at',true\]/);
   const paging = fs.readFileSync(path.join(ROOT, 'supabase/functions/_shared/s3-2-export-paging.mjs'), 'utf8');
   assert.match(paging, /member_status:'user_id'/);
   assert.equal((await q("select count(*)::int n from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'member_status'"))[0].n, 1);

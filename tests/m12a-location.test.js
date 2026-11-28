@@ -282,7 +282,8 @@ test('triggers are event driven: launch, foreground and one slow visible-only ch
   assert.match(app, /maybeAutoRefreshLocation\('launch'\)/);
   // 20/10: just after the page on screen has refreshed (usAfterForeground).
   assert.match(app, /if\(options\.foreground\)usAfterForeground\(\(\)=>maybeAutoRefreshLocation\('resume'\),\d+\)/);
-  assert.match(app, /document\.addEventListener\('visibilitychange',\(\)=>\{if\(!document\.hidden&&window\.usProfile\)refreshVisibleState\(\{foreground:true\}\);\}\);/);
+  // Avvio più veloce (27/11/2026): not after only a few seconds away.
+  assert.match(app, /document\.addEventListener\('visibilitychange',\(\)=>\{if\(!document\.hidden&&window\.usProfile&&!usShortAway\(\)\)refreshVisibleState\(\{foreground:true\}\);\}\);/);
   assert.match(app, /if\(document\.hidden\|\|!window\.usProfile\)return;\s*maybeAutoRefreshLocation\('check'\)/);
   assert.doesNotMatch(app, /watchPosition/, 'no continuous geolocation watch');
   assert.doesNotMatch(app, /enableHighAccuracy:true|enableHighAccuracy:!silent/, 'never high accuracy');

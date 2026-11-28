@@ -276,7 +276,6 @@
 #settings [data-us-setting="distance"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/arrows-horizontal-regular.svg")}
 #settings [data-us-setting="app-lock"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/fingerprint-regular.svg")}
 #settings [data-us-setting="feedback"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/waveform-regular.svg")}
-#settings [data-us-setting="maudit"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/cat-regular.svg")}
 #settings [data-us-setting="optimize-ricordi"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/image-regular.svg")}
 #settings [data-us-setting="home-photo"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/arrow-clockwise-regular.svg")}
 #settings [data-us-setting="sync-status"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/cloud-regular.svg")}
@@ -772,50 +771,38 @@
 #usWidgetHub .us-wp-photo .us-wp-photo-days{position:relative;display:block;margin:0;padding:0;background:none}
 #usWidgetHub .us-wp-photo .us-wp-photo-days b{font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}
 #usWidgetHub .us-wp-photo .us-wp-photo-days small{display:none}
-/* Widget Foto protagonista (02/11/2026): each tile is its widget on the Home
-   screen, a soft field of colour (never a flat one), the photo only where it
-   is the content. */
-#usWidgetHub .us-widget-hub-preview>*{--us-wp-aurora:radial-gradient(circle at 22% 25%,#ffbfcd,transparent 62%),radial-gradient(circle at 80% 30%,#dccbff,transparent 60%),radial-gradient(circle at 55% 92%,#ffd8b5,transparent 62%),#fff1ea}
-#usWidgetHub .us-wp-think{background:var(--us-wp-aurora);color:#ff7c96}
-#usWidgetHub .us-wp-think i{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.8);box-shadow:0 0 0 1px rgba(255,255,255,.9)}
-#usWidgetHub .us-wp-think svg{width:17px;height:17px}
-#usWidgetHub .us-wp-countdown{background:var(--us-wp-aurora)}
-#usWidgetHub .us-wp-countdown b{font-family:var(--us-font-editorial);color:#1a1020}
-#usWidgetHub .us-wp-countdown :is(.us-wp-cd-unit,p){color:#5b4a63}
-#usWidgetHub .us-widget-hub-preview>.us-wp-noi{background:var(--us-wp-aurora)!important;color:#1a1020!important}
-#usWidgetHub .us-wp-noi .us-wp-noi-portrait::before,#usWidgetHub .us-wp-noi .us-wp-noi-portrait::after{width:16px;height:16px;box-shadow:0 0 0 2px #fff;background:radial-gradient(circle at 30% 25%,#ffd9b8,#ffbfcd 45%,#dccbff)}
-#usWidgetHub .us-wp-noi .us-wp-noi-portrait::after{background:radial-gradient(circle at 30% 25%,#dccbff,#ffbfcd 60%,#ffd9b8)}
-#usWidgetHub .us-wp-noi .us-wp-noi-info b{color:#5b4a63}
-#usWidgetHub .us-wp-daily{display:grid;place-items:center;background:var(--us-wp-aurora);color:#1a1020}
-#usWidgetHub .us-wp-daily>*{display:none}
-#usWidgetHub .us-wp-daily::after{content:"Oggi";padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.8);font:800 10px/1.2 var(--us-font-ui)}
-#usWidgetHub .us-wp-message{background:var(--us-wp-aurora)}
-#usWidgetHub .us-wp-message-bubble{border-radius:6px;background:#fff6ee;transform:rotate(-3deg);box-shadow:0 2px 6px rgba(26,16,32,.16)}
-#usWidgetHub .us-wp-memories{position:relative;background:var(--us-wp-aurora)}
-#usWidgetHub .us-wp-memories i{position:absolute;left:50%;top:50%;width:30px;height:32px;margin:-17px 0 0 -15px;border-radius:6px;box-shadow:0 3px 8px rgba(26,16,32,.22)}
-#usWidgetHub .us-wp-memories i:nth-child(1){background:linear-gradient(140deg,#bfe3ff,#6d8fd6 55%,#2e2a5a);transform:rotate(-9deg)}
-#usWidgetHub .us-wp-memories i:nth-child(2){background:linear-gradient(140deg,#ffe0b0,#f3b76e 45%,#8a4b3a);transform:rotate(7deg)}
-#usWidgetHub .us-wp-memories i:nth-child(3){box-sizing:border-box;border:2px solid #fff;background:linear-gradient(140deg,#ffd3a8,#ff7c96 52%,#5a2f63)}
-#usWidgetHub .us-wp-status{display:grid;grid-template-columns:1fr 1fr;place-items:center;background:var(--us-wp-aurora);font-size:20px;line-height:1}
-#usWidgetHub .us-wp-photo:not(.has-photo){background:var(--us-wp-aurora)}
+/* Widget del redesign (founder, 26/11/2026; tavola Hkj3ojVe3bwEHfg9XeJf6A):
+   each tile is its widget on the new card, the warm night or the Quaderno's
+   paper with the app; the couple's colours in the things, the characters
+   (personaggi.js) instead of circles and emoji, paper stays paper. */
+#usWidgetHub .us-widget-hub-preview{--us-w-tile:#120d11;background:var(--us-w-tile);box-shadow:inset 0 0 0 1px var(--us-color-line)}
+:root[data-us-luce="giorno"] #usWidgetHub .us-widget-hub-preview{--us-w-tile:#fbf7f0}
+#usWidgetHub .us-widget-hub-preview>*{background:transparent}
+#usWidgetHub .us-widget-hub-preview .us-char{display:block;overflow:visible}
+#usWidgetHub .us-wp-duo{display:flex;align-items:flex-end;justify-content:center}
+#usWidgetHub .us-wp-duo .us-char+.us-char{margin-left:-6px}
+#usWidgetHub .us-wp-think{display:grid;place-items:center}
+#usWidgetHub .us-wp-think i{display:grid;place-items:center;width:36px;height:36px}
+#usWidgetHub .us-wp-think svg{width:36px;height:36px}
+#usWidgetHub .us-widget-hub-preview>.us-wp-noi{display:flex!important;flex-direction:column;align-items:center!important;justify-content:center!important;gap:3px;background:transparent!important;color:var(--us-color-text)!important}
+#usWidgetHub .us-wp-noi>b{display:block;margin:0;font:400 13px/1 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text)}
+#usWidgetHub .us-wp-daily,#usWidgetHub .us-wp-status{display:flex;align-items:center;justify-content:center}
+#usWidgetHub .us-wp-message{display:grid;place-items:center}
+#usWidgetHub .us-wp-envelope{position:relative;width:42px;height:28px;box-sizing:border-box;border-top:3px solid var(--us-partner);border-radius:3px;background:linear-gradient(to bottom right,transparent 49%,rgba(35,27,29,.22) 50%,transparent 52%) left/50% 100% no-repeat,linear-gradient(to bottom left,transparent 49%,rgba(35,27,29,.22) 50%,transparent 52%) right/50% 100% no-repeat,#f3ece1;transform:rotate(-5deg);box-shadow:0 2px 6px rgba(0,0,0,.28)}
+#usWidgetHub .us-wp-envelope::after{content:"";position:absolute;left:50%;top:48%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#b8452f}
+#usWidgetHub .us-wp-memories{display:grid;place-items:center}
+#usWidgetHub .us-wp-memories i{position:relative;display:block;width:36px;height:42px;box-sizing:border-box;padding:3px 3px 9px;background:#fbf7f0;transform:rotate(-4deg);box-shadow:0 3px 8px rgba(0,0,0,.3)}
+#usWidgetHub .us-wp-memories i::before{content:"";display:block;width:100%;height:100%;background:linear-gradient(140deg,#ffd3a8,#ff7c96 52%,#5a2f63)}
+#usWidgetHub .us-wp-memories i::after{content:"";position:absolute;left:9px;top:-4px;width:18px;height:6px;border-radius:1px;background:var(--us-partner);opacity:.8;transform:rotate(-6deg)}
+#usWidgetHub .us-wp-photo:not(.has-photo){background:transparent}
 /* Post-it (04/11/2026): the newest post-it on its paper, as on the Home screen. */
-#usWidgetHub .us-wp-postit{position:relative;display:flex;align-items:center;padding:8px;box-sizing:border-box;background:#f6e27a;color:#3b2a10}
+#usWidgetHub .us-wp-postit{position:relative;display:flex;align-items:center;padding:8px;box-sizing:border-box;background:#f6e27a;color:#1a1020}
+#usWidgetHub .us-widget-hub-preview>.us-wp-postit{width:calc(100% - 16px);height:calc(100% - 16px);margin:8px;border-radius:3px 3px 9px 3px;transform:rotate(2deg);box-shadow:0 3px 8px rgba(0,0,0,.28)}
 #usWidgetHub .us-wp-postit[data-color="pink"]{background:#ffc2cf}
 #usWidgetHub .us-wp-postit[data-color="blue"]{background:#bfe3f5}
 #usWidgetHub .us-wp-postit[data-color="green"]{background:#c9ecc0}
 #usWidgetHub .us-wp-postit b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font:italic 400 11px/1.15 var(--us-font-display)}
 #usWidgetHub .us-wp-postit small{position:absolute;right:6px;bottom:5px;font:700 9px/1 var(--us-font-ui)}
-
-/* ==========================================================================
-   While Settings is open the Noi tab stays marked (mockup PARENT:
-   impostazioni → noi). Presentation only: navigation is still go().
-   ========================================================================== */
-body:has(#settings.page.active) .us-nav{--us-nav-index:1;--us-nav-blob:var(--us-noi)}
-body:has(#settings.page.active) .us-nav .us-nav-indicator{opacity:.16!important}
-body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nicon{color:var(--us-nav-c)!important}
-body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .us-nav-icon-off{display:block!important;color:var(--us-nav-c)!important}
-body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .us-nav-icon-on{display:block!important;color:color-mix(in srgb,var(--us-nav-c) 28%,transparent)!important}
-body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nlabel{font-weight:600;color:var(--us-color-text)}
 
 /* ==========================================================================
    360px and large text: the rows keep their 44px+ targets, nothing clips.
@@ -855,3 +842,8 @@ body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nlabel
 .us-plus-soon-cta{width:100%}
 .us-plus-soon-state{color:var(--us-color-text)}
 .us-plus-soon-leave{justify-self:center}
+
+/* ---------- Interruttori (founder, 25/11/2026): a clear edge when off, the main colour when on, a white knob ---------- */
+#settings .us-settings2-page .us-settings2-switch,#usSettingsModalBody .us-settings2-toggle-row>i{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--us-color-text) 32%,transparent)}
+#settings .us-settings2-page .us-settings2-switch-row[aria-checked="true"] .us-settings2-switch,#usSettingsModalBody .us-settings2-toggle-row>i.on{background:var(--us-accent-gradient);box-shadow:none}
+#settings .us-settings2-page .us-settings2-switch u,#usSettingsModalBody .us-settings2-toggle-row>i u,#settings .us-settings2-page .us-settings2-switch-row[aria-checked="true"] .us-settings2-switch u,#usSettingsModalBody .us-settings2-toggle-row>i.on u{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}

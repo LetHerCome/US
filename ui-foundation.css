@@ -547,60 +547,68 @@ h1,h2,h3{font-family:var(--us-font-editorial)}
 
 /* Icon: official Phosphor SVG painted as a mask, never redrawn. */
 .us-icon {
+  position:relative;
   display:inline-block;
   flex:0 0 auto;
   width:var(--us-icon-size,20px);
   height:var(--us-icon-size,20px);
-  background-color:currentColor;
-  -webkit-mask:var(--us-icon-src) center/contain no-repeat;
-  mask:var(--us-icon-src) center/contain no-repeat;
   pointer-events:none;
 }
+/* Icone a un tono (founder, 25/11/2026: «togliamo il doppio colore dalle
+   icone che non mi piace più»): one line in the icon's own colour. The fill
+   under it (icone a due toni, 24/11/2026) is never shown; ::before stays for
+   the few icons that draw their own mark in it (Eventi: a lived one). */
+.us-icon::before,.us-icon::after{content:"";position:absolute;inset:0;-webkit-mask:var(--us-icon-src) center/contain no-repeat;mask:var(--us-icon-src) center/contain no-repeat}
+.us-icon::before{-webkit-mask-image:var(--us-icon-fill,none);mask-image:var(--us-icon-fill,none);background-color:var(--us-icon-tint,var(--us-partner,#a98bff));opacity:0}
+.us-icon::after{background-color:currentColor}
 .us-icon[data-us-icon="x"]{--us-icon-src:url("/assets/icons/phosphor/x-regular.svg")}
-.us-icon[data-us-icon="camera"]{--us-icon-src:url("/assets/icons/phosphor/camera-regular.svg")}
-.us-icon[data-us-icon="video-camera"]{--us-icon-src:url("/assets/icons/phosphor/video-camera-regular.svg")}
-.us-icon[data-us-icon="microphone"]{--us-icon-src:url("/assets/icons/phosphor/microphone-regular.svg")}
-.us-icon[data-us-icon="camera-rotate"]{--us-icon-src:url("/assets/icons/phosphor/camera-rotate-regular.svg")}
-.us-icon[data-us-icon="monitor"]{--us-icon-src:url("/assets/icons/phosphor/monitor-regular.svg")}
-.us-icon[data-us-icon="flag"]{--us-icon-src:url("/assets/icons/phosphor/flag-regular.svg")}
-.us-icon[data-us-icon="calendar-blank"]{--us-icon-src:url("/assets/icons/phosphor/calendar-blank-regular.svg")}
+.us-icon[data-us-icon="question"]{--us-icon-src:url("/assets/icons/phosphor/question-regular.svg")}
+.us-icon[data-us-icon="game-controller"]{--us-icon-src:url("/assets/icons/phosphor/game-controller-regular.svg")}
+.us-icon[data-us-icon="camera"]{--us-icon-src:url("/assets/icons/phosphor/camera-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/camera-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="video-camera"]{--us-icon-src:url("/assets/icons/phosphor/video-camera-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/video-camera-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="microphone"]{--us-icon-src:url("/assets/icons/phosphor/microphone-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/microphone-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="camera-rotate"]{--us-icon-src:url("/assets/icons/phosphor/camera-rotate-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/camera-rotate-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="monitor"]{--us-icon-src:url("/assets/icons/phosphor/monitor-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/monitor-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="flag"]{--us-icon-src:url("/assets/icons/phosphor/flag-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/flag-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="calendar-blank"]{--us-icon-src:url("/assets/icons/phosphor/calendar-blank-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/calendar-blank-fill.svg");--us-icon-tint-alpha:.5}
 .us-icon[data-us-icon="play"]{--us-icon-src:url("/assets/icons/phosphor/play-regular.svg")}
 .us-icon[data-us-icon="stop"]{--us-icon-src:url("/assets/icons/phosphor/stop-regular.svg")}
 .us-icon[data-us-icon="caret-left"]{--us-icon-src:url("/assets/icons/phosphor/caret-left-regular.svg")}
 .us-icon[data-us-icon="caret-right"]{--us-icon-src:url("/assets/icons/phosphor/caret-right-regular.svg")}
 .us-icon[data-us-icon="caret-down"]{--us-icon-src:url("/assets/icons/phosphor/caret-down-regular.svg")}
 .us-icon[data-us-icon="plus"]{--us-icon-src:url("/assets/icons/phosphor/plus-regular.svg")}
-.us-icon[data-us-icon="bell"]{--us-icon-src:url("/assets/icons/phosphor/bell-regular.svg")}
-.us-icon[data-us-icon="map-pin"]{--us-icon-src:url("/assets/icons/phosphor/map-pin-regular.svg")}
-.us-icon[data-us-icon="battery-low"]{--us-icon-src:url("/assets/icons/phosphor/battery-low-regular.svg")}
-.us-icon[data-us-icon="battery-medium"]{--us-icon-src:url("/assets/icons/phosphor/battery-medium-regular.svg")}
-.us-icon[data-us-icon="battery-high"]{--us-icon-src:url("/assets/icons/phosphor/battery-high-regular.svg")}
-.us-icon[data-us-icon="battery-charging"]{--us-icon-src:url("/assets/icons/phosphor/battery-charging-regular.svg")}
+.us-icon[data-us-icon="bell"]{--us-icon-src:url("/assets/icons/phosphor/bell-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/bell-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="magnifying-glass"]{--us-icon-src:url("/assets/icons/phosphor/magnifying-glass-regular.svg")}
+.us-icon[data-us-icon="map-pin"]{--us-icon-src:url("/assets/icons/phosphor/map-pin-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/map-pin-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="battery-low"]{--us-icon-src:url("/assets/icons/phosphor/battery-low-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/battery-low-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="battery-medium"]{--us-icon-src:url("/assets/icons/phosphor/battery-medium-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/battery-medium-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="battery-high"]{--us-icon-src:url("/assets/icons/phosphor/battery-high-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/battery-high-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="battery-charging"]{--us-icon-src:url("/assets/icons/phosphor/battery-charging-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/battery-charging-fill.svg");--us-icon-tint-alpha:.5}
 .us-icon[data-us-icon="arrows-clockwise"]{--us-icon-src:url("/assets/icons/phosphor/arrows-clockwise-regular.svg")}
 .us-icon[data-us-icon="arrows-left-right"]{--us-icon-src:url("/assets/icons/phosphor/arrows-left-right-regular.svg")}
-.us-icon[data-us-icon="user-circle"]{--us-icon-src:url("/assets/icons/phosphor/user-circle-regular.svg")}
-.us-icon[data-us-icon="image"]{--us-icon-src:url("/assets/icons/phosphor/image-regular.svg")}
-.us-icon[data-us-icon="squares-four"]{--us-icon-src:url("/assets/icons/phosphor/squares-four-regular.svg")}
-.us-icon[data-us-icon="calendar-heart"]{--us-icon-src:url("/assets/icons/phosphor/calendar-heart-regular.svg")}
-.us-icon[data-us-icon="clock-counter-clockwise"]{--us-icon-src:url("/assets/icons/phosphor/clock-counter-clockwise-regular.svg")}
-.us-icon[data-us-icon="heart"]{--us-icon-src:url("/assets/icons/phosphor/heart-straight-regular.svg")}
-.us-icon[data-us-icon="envelope"]{--us-icon-src:url("/assets/icons/phosphor/envelope-simple-regular.svg")}
-.us-icon[data-us-icon="lock"]{--us-icon-src:url("/assets/icons/phosphor/lock-simple-regular.svg")}
-.us-icon[data-us-icon="sparkle"]{--us-icon-src:url("/assets/icons/phosphor/sparkle-regular.svg")}
+.us-icon[data-us-icon="user-circle"]{--us-icon-src:url("/assets/icons/phosphor/user-circle-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/user-circle-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="image"]{--us-icon-src:url("/assets/icons/phosphor/image-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/image-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="squares-four"]{--us-icon-src:url("/assets/icons/phosphor/squares-four-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/squares-four-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="calendar-heart"]{--us-icon-src:url("/assets/icons/phosphor/calendar-heart-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/calendar-heart-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="clock-counter-clockwise"]{--us-icon-src:url("/assets/icons/phosphor/clock-counter-clockwise-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/clock-counter-clockwise-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="heart"]{--us-icon-src:url("/assets/icons/phosphor/heart-straight-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/heart-straight-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="envelope"]{--us-icon-src:url("/assets/icons/phosphor/envelope-simple-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/envelope-simple-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="lock"]{--us-icon-src:url("/assets/icons/phosphor/lock-simple-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/lock-simple-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="sparkle"]{--us-icon-src:url("/assets/icons/phosphor/sparkle-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/sparkle-fill.svg");--us-icon-tint-alpha:.5}
 .us-icon[data-us-icon="check"]{--us-icon-src:url("/assets/icons/phosphor/check-regular.svg")}
-.us-icon[data-us-icon="music-note"]{--us-icon-src:url("/assets/icons/phosphor/music-note-regular.svg")}
-.us-icon[data-us-icon="pencil"]{--us-icon-src:url("/assets/icons/phosphor/pencil-simple-regular.svg")}
-.us-icon[data-us-icon="calendar-dots"]{--us-icon-src:url("/assets/icons/phosphor/calendar-dots-regular.svg")}
-.us-icon[data-us-icon="flag-banner"]{--us-icon-src:url("/assets/icons/phosphor/flag-banner-regular.svg")}
+.us-icon[data-us-icon="music-note"]{--us-icon-src:url("/assets/icons/phosphor/music-note-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/music-note-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="pencil"]{--us-icon-src:url("/assets/icons/phosphor/pencil-simple-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/pencil-simple-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="calendar-dots"]{--us-icon-src:url("/assets/icons/phosphor/calendar-dots-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/calendar-dots-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="flag-banner"]{--us-icon-src:url("/assets/icons/phosphor/flag-banner-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/flag-banner-fill.svg");--us-icon-tint-alpha:.5}
 .us-icon[data-us-icon="list-bullets"]{--us-icon-src:url("/assets/icons/phosphor/list-bullets-regular.svg")}
-.us-icon[data-us-icon="chalkboard-simple"]{--us-icon-src:url("/assets/icons/phosphor/chalkboard-simple-regular.svg")}
+.us-icon[data-us-icon="chalkboard-simple"]{--us-icon-src:url("/assets/icons/phosphor/chalkboard-simple-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/chalkboard-simple-fill.svg");--us-icon-tint-alpha:.5}
 .us-icon[data-us-icon="eraser"]{--us-icon-src:url("/assets/icons/phosphor/eraser-regular.svg")}
 .us-icon[data-us-icon="arrow-counter-clockwise"]{--us-icon-src:url("/assets/icons/phosphor/arrow-counter-clockwise-regular.svg")}
-.us-icon[data-us-icon="palette"]{--us-icon-src:url("/assets/icons/phosphor/palette-regular.svg")}
+.us-icon[data-us-icon="palette"]{--us-icon-src:url("/assets/icons/phosphor/palette-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/palette-fill.svg");--us-icon-tint-alpha:.5}
 .us-icon[data-us-icon="sparkle-fill"]{--us-icon-src:url("/assets/icons/phosphor/sparkle-fill.svg")}
 .us-icon[data-us-icon="heart-fill"]{--us-icon-src:url("/assets/icons/phosphor/heart-straight-fill.svg")}
-.us-icon[data-us-icon="lock-simple"]{--us-icon-src:url("/assets/icons/phosphor/lock-simple-regular.svg")}
-.us-icon[data-us-icon="cat"]{--us-icon-src:url("/assets/icons/phosphor/cat-regular.svg")}
+.us-icon[data-us-icon="lock-simple"]{--us-icon-src:url("/assets/icons/phosphor/lock-simple-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/lock-simple-fill.svg");--us-icon-tint-alpha:.5}
+.us-icon[data-us-icon="cat"]{--us-icon-src:url("/assets/icons/phosphor/cat-regular.svg");--us-icon-fill:url("/assets/icons/phosphor/cat-fill.svg");--us-icon-tint-alpha:.5}
 
 /* Eyebrow: the small uppercase label above a title, one voice everywhere. */
 .tiny,
@@ -809,3 +817,11 @@ h1,h2,h3{font-family:var(--us-font-editorial)}
 .us-heart-fx{position:fixed;z-index:10320;width:0;height:0;pointer-events:none}
 .us-heart-fx>i{position:absolute;left:0;top:0;box-sizing:border-box;border-radius:50%}
 .us-heart-fx>.us-heart-wave{background:none}
+
+/* I cuori (ui-foundation.js heartSpray/heartFlight/heartMore/heartPress, 27/11/2026):
+   the little hearts on one canvas over the page, the «×N» on a reply heart and
+   the border that fills while the heart is held to take it back. */
+.us-hearts-fx{position:fixed;inset:0;z-index:10320;width:100%;height:100%;pointer-events:none}
+.us-heart-count{position:absolute;top:-9px;right:-6px;min-width:26px;height:26px;padding:0 7px;box-sizing:border-box;border-radius:13px;background:var(--us-tu);color:#1a1020;font:800 13px/26px var(--us-font-ui);font-variant-numeric:tabular-nums;text-align:center;pointer-events:none}
+.us-heart-hold{position:absolute;left:-3px;top:-3px;overflow:visible;pointer-events:none}
+.us-heart-hold rect{fill:none;stroke:var(--us-tu);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100}

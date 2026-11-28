@@ -13,12 +13,20 @@ const PERSONAL_CASCADE=new Set([
   'auth.users>profiles.id','auth.users>daily_answers.user_id','auth.users>moods.user_id','auth.users>quiz_responses.user_id',
   // US Plus (29/10/2026): the entitlement goes with the account (Play's subscription is warned about before deletion, D4).
   'auth.users>plus_entitlements.user_id',
+  // Play Us (28/11/2026): a live game and its moves go with the account; the memory it made stays in Ricordi.
+  'profiles>play_us_sessions.invited_by','profiles>play_us_moves.user_id',
   'profiles>calendar_entries.owner_id','profiles>calendar_reminders.recipient_id','profiles>calendar_reminders.requested_by',
   'profiles>conserva_contributions.conserved_by','profiles>couple_locations.user_id',
   // Batteria del partner (31/10/2026): the last level reported goes with the person.
   'profiles>couple_batteries.user_id','profiles>device_push_tokens.user_id',
   // Come stai (02/11/2026): the state and its form go with the person.
   'profiles>member_status.user_id',
+  // US vi ricorda (25/11/2026): the lines said to a person and their «Non dirmelo più» go with them.
+  'profiles>us_battute.recipient_id','profiles>us_battute_mute.user_id',
+  // La bacheca, fase 2 (27/11/2026): a person's post-its on the board go with them.
+  'profiles>us_bacheca_notes.author_id',
+  // Il vostro mese (27/11/2026): who opened which pack goes with the person; the packs are the couple's.
+  'profiles>us_mese_aperti.user_id',
   // La sfida della settimana (03/11/2026): who sent which photo goes with the person (the Ricordo follows its own rule).
   'profiles>couple_weekly_challenge_photos.user_id',
   'profiles>notification_preferences.user_id','profiles>partner_knowledge_attempts.user_id','profiles>progression_reward_views.profile_id',
@@ -29,6 +37,8 @@ const PERSONAL_CASCADE=new Set([
 const OPERATIONAL_SET_NULL=new Set([
   'auth.users>activity.actor_id','auth.users>couple_invites.used_by','auth.users>user_reports.reporter_id','profiles>couple_invites.created_by',
   'profiles>couple_progression_preferences.updated_by','profiles>progression_events.actor_id',
+  // La vostra bacheca (25/11/2026): who pinned or banned a thing is forgotten; the board stays the couple's.
+  'profiles>us_bacheca_pins.pinned_by','profiles>us_bacheca_bans.banned_by',
 ]);
 const SHARED_FAIL_CLOSED=new Set([
   'auth.users>shared_messages.sender_id','auth.users>shared_messages.recipient_id','auth.users>bucket_items.created_by',
@@ -63,7 +73,11 @@ test('every user reference is classified, and shared content fails closed',async
       else assert.fail('unclassified user reference: '+key+' — decide what account deletion does with it');
     }
     for(const key of [...PERSONAL_CASCADE,...OPERATIONAL_SET_NULL,...SHARED_FAIL_CLOSED])assert.ok(seen.has(key),'stale classification '+key);
-    assert.equal(seen.size,45);
+    // La vostra bacheca (25/11/2026): +2 (who pinned, who banned).
+    // La bacheca, fase 2 (27/11/2026): +1 (who wrote the post-it).
+    // Il vostro mese (27/11/2026): +1 (who opened a pack).
+    // Play Us (28/11/2026): +2 (who invited, who moved).
+    assert.equal(seen.size,53);
   }finally{await db.close();}
 });
 

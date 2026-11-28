@@ -18,12 +18,14 @@
 .us-notes-empty b{font:400 20px/1.2 var(--us-font-display);color:var(--us-color-text)}
 .us-notes-empty .ghost{justify-self:start}
 
-/* ---------- The board on Noi: title, the Lavagna slot (phase 2), the post-its ---------- */
+/* ---------- La lavagna on Noi (Fase B): title, «+ Post-it» and «Apri», the drawing with the post-its on it ---------- */
 #bond .us-noi-board{display:flex;flex-direction:column;gap:14px;margin-top:28px;padding:0 2px}
 #bond .noi-canonical-page:not([data-noi-view="hub"]):not([data-noi-view="quest"])>.us-noi-board{display:none!important}
 .us-noi-board-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .us-noi-board-head h2{margin:0;font:400 28px/1 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text)}
 .us-noi-board-head small{display:block;margin-top:4px;font-size:13px;line-height:1.35;color:var(--us-color-text-2)}
+.us-noi-board-actions{display:flex;align-items:center;gap:8px;flex:none}
+#bond .us-noi-board .us-noi-board-open{flex:none;min-height:44px;padding:0 16px;border:1px solid var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text);font:700 14px/1 var(--us-font-ui);box-shadow:none}
 #bond .us-noi-board .us-noi-board-new{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--us-color-text);color:var(--us-inchiostro);font:700 14px/1 var(--us-font-ui);box-shadow:none;--us-icon-size:16px}
 #usNoiLavagnaSlot:empty{display:none}
 #bond .us-noi-board .us-noi-board-all{align-self:center;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text);font:600 14px/1 var(--us-font-ui);box-shadow:none;--us-icon-size:16px}
@@ -87,12 +89,14 @@
 .us-postit .us-notes-title{min-height:40px;padding:2px 0!important;font:600 20px/1.2 var(--us-font-display)}
 .us-postit .us-notes-text{min-height:48px;padding:2px 0!important;resize:none;field-sizing:content;font:400 15px/1.45 var(--us-font-ui)}
 .us-postit :is(.us-notes-title,.us-notes-text,.us-notes-item-text)::placeholder{color:rgba(26,16,32,.55)}
-.us-postit :is(.us-notes-title,.us-notes-text):focus-visible{box-shadow:inset 0 -1px 0 var(--postit-ink)!important}
+.us-postit :is(.us-notes-title,.us-notes-text,.us-notes-item-text):focus-visible{box-shadow:inset 0 -1px 0 var(--postit-ink)!important}
 .us-notes-items{display:grid;margin:0;padding:0;list-style:none}
 .us-notes-item{display:flex;align-items:center;gap:10px;min-height:46px;border-top:1px solid var(--postit-line)}
 .us-notes-item:last-child{border-bottom:1px solid var(--postit-line)}
 .us-notes-check{position:relative;flex:none;display:grid;place-items:center;width:44px;height:44px;margin-left:-10px;cursor:pointer}
 .us-notes-check.is-small{width:30px;height:30px;margin-left:0}
+/* 44px to the finger, the small box stays small. */
+.us-notes-check.is-small input{inset:-7px;width:calc(100% + 14px);height:calc(100% + 14px)}
 .us-notes-check input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
 .us-notes-check span{position:relative;width:20px;height:20px;border:1.6px solid var(--postit-ink,var(--us-color-line-strong));border-radius:5px;background:transparent;transition:background-color .16s ease,border-color .16s ease}
 .us-notes-check.is-small span{width:16px;height:16px;border-radius:4px}
@@ -102,7 +106,7 @@
 .us-notes-check input:focus-visible+span{outline:2px solid var(--us-noi);outline-offset:2px}
 .us-postit .us-notes-item-text{flex:1;min-width:0;min-height:44px;padding:0!important;font:400 15px/1.3 var(--us-font-ui)}
 .us-notes-item.is-done .us-notes-item-text{opacity:.55;text-decoration:line-through}
-.us-notes-item-x{flex:none;display:grid;place-items:center;width:40px;height:40px;margin-right:-8px;border:0;border-radius:50%;background:transparent;color:var(--postit-ink-2);--us-icon-size:16px}
+.us-notes-item-x{position:relative;flex:none;display:grid;place-items:center;width:40px;height:40px;margin-right:-8px;border:0;border-radius:50%;background:transparent;color:var(--postit-ink-2);--us-icon-size:16px}
 .us-postit .us-notes-add-item{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0;border:0;background:transparent;box-shadow:none;color:var(--postit-ink);font:600 14px/1 var(--us-font-ui);--us-icon-size:18px}
 /* «Carta»: the four papers, the chosen one ringed in ink. */
 .us-postit-papers{display:flex;align-items:center;gap:2px}
@@ -117,3 +121,75 @@
 .us-postit .us-notes-done{min-height:40px;margin-left:auto;padding:0 20px;border:0;border-radius:999px;background:var(--postit-ink);color:var(--postit-paper);box-shadow:none;font:600 15px/1 var(--us-font-ui)}
 @media (max-width:340px){.us-postits{gap:14px 10px}.us-postit{padding:11px 10px 10px}.us-postit-papers button{width:36px;height:36px}}
 @media (prefers-reduced-motion:reduce){.us-notes-check span{transition:none}}
+
+/* ---------- Noi, Fase B: the paper of who wrote it (D12) ---------- */
+.us-postit[data-who="tu"]{--postit-paper:color-mix(in oklab,var(--us-tu) 48%,#fff6ef)}
+.us-postit[data-who="partner"]{--postit-paper:color-mix(in oklab,var(--us-partner) 48%,#fff6ef)}
+.us-postit.is-ideas{--postit-paper:#f3e3b8}
+
+/* ---------- The post-its pinned on a lavagna (boards Main and Lavagna) ---------- */
+.us-noi-lav{position:relative}
+.us-postits.is-board{position:absolute;inset:6px;display:block;margin:0;padding:0;pointer-events:none;list-style:none;--pin-w:clamp(96px,32%,124px);--pin-h:104px}
+.us-postits.is-board.is-big{inset:7px;--pin-w:clamp(112px,36%,150px);--pin-h:132px;z-index:2}
+.us-postits.is-board>li{min-width:0}
+.us-postit.is-pin{position:absolute;left:clamp(calc(var(--pin-w) / 2 + 4px),calc(var(--x,.5) * 100%),calc(100% - var(--pin-w) / 2 - 4px));top:clamp(calc(var(--pin-h) / 2 + 4px),calc(var(--y,.5) * 100%),calc(100% - var(--pin-h) / 2 - 4px));width:var(--pin-w);min-height:0;max-height:var(--pin-h);gap:6px;padding:11px 11px 10px;border-radius:2px 2px 10px 2px;box-shadow:0 8px 16px rgba(0,0,0,.45);transform:translate(-50%,-50%) rotate(var(--tilt,0deg));pointer-events:auto;cursor:pointer;transition:box-shadow .16s ease}
+.us-postit-pin{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;min-width:0;min-height:0;margin:0;padding:0;border:0;background:transparent;box-shadow:none;color:var(--postit-ink);text-align:left;font:inherit;cursor:inherit}
+.us-postit-words{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font:italic 400 15px/1.25 var(--us-font-display);overflow-wrap:anywhere}
+.is-big .us-postit-words{-webkit-line-clamp:4;font-size:16px}
+.us-postit-count{font:700 11px/1 var(--us-font-ui);font-variant-numeric:tabular-nums;color:var(--postit-ink-2)}
+.us-postit.is-pin .us-postit-by{margin-top:auto;font-size:10.5px;font-weight:700}
+/* «Le vostre idee» in the top-right corner, straight, with its pin. */
+.us-postits.is-board .us-postit.is-ideas{position:absolute;left:auto;top:-2px;right:-2px;min-height:0;pointer-events:auto;width:clamp(92px,28%,120px);max-height:none;padding:12px 11px 12px;transform:none;cursor:pointer}
+.us-postits.is-board .us-postit.is-ideas::before{content:"";position:absolute;left:50%;top:4px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff9fb5,#c62f4a 70%);box-shadow:0 1px 2px rgba(0,0,0,.35)}
+.us-postits.is-board .us-postit.is-ideas .us-postit-heading{font:700 12.5px/1.2 var(--us-font-ui)}
+.us-postit-lines{display:flex;flex-direction:column;gap:1px;min-width:0;font-size:11.5px;line-height:1.35;color:#5a4a40}
+.us-postit-lines span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.us-postits.is-board .us-notes-empty{position:absolute;left:12px;right:12px;bottom:12px;pointer-events:auto}
+/* On the full-screen lavagna the post-its move with a finger. */
+#usLavagnaNotes .us-postit.is-pin:not(.is-ideas){touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab}
+#usLavagnaNotes .us-postit.is-dragging{z-index:5;cursor:grabbing;box-shadow:0 18px 30px rgba(0,0,0,.55);transform:translate(-50%,-50%) rotate(var(--tilt,0deg)) scale(1.05);transition:none}
+#bond .us-noi-lav :is(.us-postit-pin):focus-visible,#usLavagnaNotes .us-postit-pin:focus-visible{outline:2px solid var(--postit-ink);outline-offset:3px}
+
+/* ---------- A post-it in front (#usPostitFocus), over Noi or the lavagna ---------- */
+.us-postit-focus{position:fixed;inset:0;z-index:calc(var(--us-layer-sheet) + 4);display:none;align-items:flex-start;justify-content:center;padding:calc(var(--us-safe-top,0px) + 64px) 18px calc(var(--us-safe-bottom,0px) + 24px);overflow-y:auto;overscroll-behavior:contain}
+.us-postit-focus.open{display:flex}
+.us-postit-focus [hidden]{display:none!important}
+.us-postit-focus-scrim{position:fixed;inset:0;background:rgba(8,5,8,.62)}
+.us-postit-focus-panel{position:relative;width:min(100%,420px)}
+.us-postits.is-focus{display:block;margin:0;padding:0}
+.us-postits.is-focus>.us-postit{min-height:0;padding:18px 16px 14px;transform:rotate(-1deg);box-shadow:0 24px 50px rgba(0,0,0,.55);cursor:auto}
+.us-postits.is-focus>.us-postit.is-editing{transform:none}
+.us-postits.is-focus .us-postit-heading{font-size:24px;margin-bottom:4px}
+.us-postit-focus button:focus-visible{outline:2px solid var(--postit-ink,var(--us-noi));outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.us-postit.is-pin{transition:none}}
+
+/* ---------- Noi, Fase B.2: «Le vostre idee» (board Idee) ---------- */
+.us-idea-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.us-postit .us-idea-close{position:relative;display:grid;place-items:center;flex:none;width:40px;height:40px;min-height:0;margin:-6px -6px 0 0;padding:0;border:0;border-radius:50%;background:rgba(42,31,42,.08);color:var(--postit-ink);box-shadow:none;--us-icon-size:16px}
+.us-postit .us-idea-close::after,.us-notes-item-x::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
+.us-idea-intro{margin:0;font-size:13.5px;line-height:1.4;color:#5a4a40}
+.us-idea-rows{display:flex;flex-direction:column;margin:2px 0 0;padding:0;list-style:none}
+.us-idea-row{display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 0;border-bottom:1px dashed rgba(42,31,42,.25)}
+.us-idea-row .us-notes-dot{width:10px;height:10px}
+.us-idea-main{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.us-postit .us-idea-title{display:block;min-height:0;margin:0;padding:0;border:0;background:transparent;box-shadow:none;color:var(--postit-ink);text-align:left;font:400 18px/1.2 var(--us-font-display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.us-idea-main small{font-size:12px;line-height:1.3;color:#6b5a52}
+.us-postit .us-idea-go{flex:none;min-height:36px;margin:0;padding:0 12px;border:0;border-radius:999px;background:var(--postit-ink);color:var(--postit-paper);box-shadow:none;font:700 12.5px/1 var(--us-font-ui)}
+.us-idea-chip{flex:none;display:inline-flex;align-items:center;height:30px;padding:0 10px;border-radius:999px;background:color-mix(in oklab,var(--us-partner) 30%,transparent);color:var(--postit-ink);font:700 12px/1 var(--us-font-ui)}
+.us-idea-new{display:flex;flex-direction:column;gap:6px;margin-top:4px;font-size:12px;font-weight:700;color:#6b5a52}
+.us-postit .us-idea-input{width:100%;min-height:46px;margin:0;padding:0 12px!important;border:1px solid rgba(42,31,42,.2)!important;border-radius:12px!important;background:rgba(255,255,255,.45)!important;box-shadow:none!important;color:var(--postit-ink);font:500 15px/1.2 var(--us-font-ui)}
+.us-postit .us-idea-input::placeholder{color:rgba(26,16,32,.5)}
+.us-postits.is-focus .us-postit.is-ideas{gap:14px;padding:24px 20px 18px}
+
+/* ---------- Noi, Fase B.2: «L'avete fatto?» (board Fatto), a sheet from the bottom ---------- */
+.us-postit-focus.is-sheet{align-items:flex-end;padding:0}
+.us-postit-focus.is-sheet .us-postit-focus-panel{width:min(100%,560px)}
+.us-fatto{display:flex;flex-direction:column;align-items:center;gap:16px;padding:12px 20px calc(28px + var(--us-safe-bottom,0px));border-top:1px solid var(--us-color-line);border-radius:28px 28px 0 0;background:var(--us-color-surface,#1b1219);color:var(--us-color-text);text-align:center;list-style:none}
+.us-fatto-grab{width:40px;height:5px;border-radius:3px;background:var(--us-color-line-strong)}
+.us-fatto-duo{display:flex;align-items:flex-end;gap:4px;margin-top:6px}
+.us-fatto-title{margin:0;font:400 28px/1.15 var(--us-font-display);color:var(--us-color-text)}
+.us-fatto-q{margin:-8px 0 0;font-size:15px;line-height:1.4;color:var(--us-color-text-2)}
+.us-fatto-actions{display:flex;flex-direction:column;gap:10px;align-self:stretch}
+.us-fatto .us-fatto-yes{min-height:54px;border:0;border-radius:999px;background:linear-gradient(90deg,var(--us-tu),var(--us-partner));color:#1a1020;font:800 15px/1 var(--us-font-ui);box-shadow:none}
+.us-fatto .us-fatto-no{min-height:50px;border:1px solid var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text);font:700 14.5px/1 var(--us-font-ui);box-shadow:none}
+.us-fatto-note{margin:0;font-size:12.5px;line-height:1.45;color:var(--us-color-text-2)}

@@ -32,11 +32,15 @@ public final class UsPushNotices {
 
     private UsPushNotices() {}
 
-    /** Every kind the server may send. Tests keep it equal to ANDROID_NOTICE_KINDS. */
+    /** Every kind the server may send. Tests keep it equal to ANDROID_NOTICE_KINDS and ANDROID_PLURAL_KINDS. */
     public static final String[] KINDS = {
-        "test", "think", "think_reply", "daily_turn", "daily_ready", "daily_reaction", "daily_new",
-        "quest", "left_for_you", "game_turn", "game_ready", "game_weekly", "game_weekly_turn",
-        "calendar", "anniversary", "partner_joined", "lavagna", "challenge", "challenge_reminder", "challenge_photo",
+        "test", "think", "think_many", "think_reply", "daily_turn", "daily_ready", "daily_reaction", "daily_new",
+        "quest", "left_for_you", "game_turn", "game_ready", "game_weekly", "game_weekly_turn", "play_invite",
+        "calendar", "anniversary", "partner_joined", "lavagna", "postit", "bacheca_postit", "challenge", "challenge_reminder", "challenge_photo",
+        "invite_reminder",
+        "birthday_week", "birthday", "anniversary_week", "year_ago", "bacheca",
+        "status_reply", "status_abbraccio", "status_riposati", "status_respira", "status_cuore", "status_festa",
+        "status_forza", "status_spacca", "status_buon_viaggio", "status_buon_appetito",
     };
 
     /** A display name: no control characters, trimmed, at most 40 characters. */
@@ -50,16 +54,42 @@ public final class UsPushNotices {
         return locale != null && "en".equals(locale.getLanguage());
     }
 
+    /**
+     * Ti penso ×N (27/11/2026, founder: the number is not private): FCM n, how
+     * many times, read only for the plural kind and only as digits 2..99.
+     * Anything else is 0, and the sentence says «tante volte».
+     */
+    public static int times(String kind, String raw) {
+        if (!"think_many".equals(kind) || raw == null || !raw.matches("[1-9][0-9]?")) return 0;
+        final int n = Integer.parseInt(raw);
+        return n >= 2 ? n : 0;
+    }
+
     public static Notice forKind(String kind, String partnerName, Locale locale) {
+        return forKind(kind, partnerName, locale, 0);
+    }
+
+    /** times: UsPushNotices.times(kind, n), 2..99 or 0. */
+    public static Notice forKind(String kind, String partnerName, Locale locale, int times) {
         final boolean en = english(locale);
         final String name = cleanName(partnerName);
         final String who = name.isEmpty() ? (en ? "Your person" : "La tua persona") : name;
+        // Inside a sentence (US vi ricorda, 27/11/2026).
+        final String whom = name.isEmpty() ? (en ? "your person" : "la tua persona") : name;
         switch (kind == null ? "" : kind) {
             case "test":
                 return notice(en, "US.", "US.", "Notifiche attive ♡", "Notifications are on ♡", "oggi");
             case "think":
                 return notice(en, "US. · Ti penso", "US. · Thinking of you",
                     who + " ti sta pensando ♡", who + " is thinking of you ♡", "oggi");
+            // I cuori (27/11/2026): a Ti penso of several taps; with n (Ti penso ×N), the number.
+            case "think_many":
+                if (times >= 2 && times <= 99) {
+                    return notice(en, "US. · Ti penso", "US. · Thinking of you",
+                        who + " ti ha pensato " + times + " volte ♡", who + " thought of you " + times + " times ♡", "oggi");
+                }
+                return notice(en, "US. · Ti penso", "US. · Thinking of you",
+                    who + " ti ha pensato tante volte ♡", who + " thought of you so many times ♡", "oggi");
             case "think_reply":
                 return notice(en, "US. · Ti penso", "US. · Thinking of you",
                     who + " ha risposto al tuo Ti penso ♡", who + " answered your thought ♡", "oggi");
@@ -93,6 +123,10 @@ public final class UsPushNotices {
             case "game_weekly_turn":
                 return notice(en, "US. · Gioca", "US. · Play",
                     "Questa settimana la domanda la scegli tu.", "This week you choose the question.", "gioca");
+            // Play Us (28/11/2026): the live invite, valid 3 minutes.
+            case "play_invite":
+                return notice(en, "US. · Play Us", "US. · Play Us",
+                    who + " ti sfida a Play Us ♡", who + " challenges you to Play Us ♡", "gioca");
             case "calendar":
                 return notice(en, "US. · Calendario", "US. · Calendar",
                     "Hai un promemoria in calendario", "You have a calendar reminder", "noi");
@@ -105,6 +139,13 @@ public final class UsPushNotices {
             case "lavagna":
                 return notice(en, "US. · Lavagna", "US. · Board",
                     who + " ha disegnato sulla lavagna", who + " drew on the board", "noi");
+            case "postit":
+                return notice(en, "US. · Lavagna", "US. · Board",
+                    who + " ti ha lasciato un post-it", who + " left you a sticky note", "noi");
+            // La bacheca, fase 2 (27/11/2026): never the post-it's text.
+            case "bacheca_postit":
+                return notice(en, "US. · Bacheca", "US. · Board",
+                    who + " ha scritto su un ricordo in bacheca", who + " wrote on a memory on your board", "ricordi");
             case "challenge":
                 return notice(en, "US. · La sfida della settimana", "US. · This week's challenge",
                     "C’è una nuova sfida per voi ♡", "There is a new challenge for you two ♡", "gioca");
@@ -114,9 +155,53 @@ public final class UsPushNotices {
             case "challenge_photo":
                 return notice(en, "US. · La sfida della settimana", "US. · This week's challenge",
                     who + " ha messo la sua foto: manca solo la tua", who + " added their photo: only yours is missing", "gioca");
+            case "invite_reminder":
+                return notice(en, "US.", "US.",
+                    "Il vostro spazio vi aspetta: manda il codice alla tua persona ♡", "Your space is waiting: send the code to your person ♡", "oggi");
+            // US vi ricorda (27/11/2026): a birthday is always the other person's.
+            case "birthday_week":
+                return notice(en, "US.", "US.",
+                    "Tra una settimana è il compleanno di " + whom + " ♡", who + "’s birthday is a week away ♡", "oggi");
+            case "birthday":
+                return notice(en, "US.", "US.",
+                    "Oggi è il compleanno di " + whom + " ♡", "Today is " + whom + "’s birthday ♡", "oggi");
+            case "anniversary_week":
+                return notice(en, "US.", "US.",
+                    "Tra una settimana è il vostro anniversario ♡", "Your anniversary is a week away ♡", "oggi");
+            case "year_ago":
+                return notice(en, "US.", "US.",
+                    "Un anno fa, oggi: un vostro ricordo ♡", "A year ago today: one of your memories ♡", "oggi");
+            case "bacheca":
+                return notice(en, "US. · Bacheca", "US. · Board",
+                    "US vi ha appeso un ricordo in bacheca ♡", "US pinned a memory on your board ♡", "ricordi");
+            // Come stai che conta (27/11/2026): the gesture to my Come stai, like a Ti penso.
+            case "status_reply":
+                return status(en, who + " ha risposto al tuo Come stai ♡", who + " answered how you are ♡");
+            case "status_abbraccio":
+                return status(en, who + ": Ti mando un abbraccio", who + ": Sending you a hug");
+            case "status_riposati":
+                return status(en, who + ": Riposati", who + ": Get some rest");
+            case "status_respira":
+                return status(en, who + ": Respira, ci sono io", who + ": Breathe, I’m here");
+            case "status_cuore":
+                return status(en, who + " ti manda un cuore ♡", who + " sends you a heart ♡");
+            case "status_festa":
+                return status(en, who + ": 🎉", who + ": 🎉");
+            case "status_forza":
+                return status(en, who + ": Forza!", who + ": You’ve got this!");
+            case "status_spacca":
+                return status(en, who + ": Spacca tutto!", who + ": Crush it!");
+            case "status_buon_viaggio":
+                return status(en, who + ": Buon viaggio", who + ": Safe travels");
+            case "status_buon_appetito":
+                return status(en, who + ": Buon appetito", who + ": Enjoy your meal");
             default:
                 return new Notice(FALLBACK_TITLE, FALLBACK_BODY, "oggi");
         }
+    }
+
+    private static Notice status(boolean en, String bodyIt, String bodyEn) {
+        return notice(en, "US. · Come stai", "US. · How are you", bodyIt, bodyEn, "oggi");
     }
 
     private static Notice notice(boolean en, String titleIt, String titleEn, String bodyIt, String bodyEn, String page) {

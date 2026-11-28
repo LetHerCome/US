@@ -29,18 +29,18 @@ test('Prossimo sblocco prefers the next headline reward, and adds the estimate',
 
 test('a locked Plus extra says so on its tile', () => {
   const tile = slice('function tileMarkup(', 'function rewardTile(');
-  assert.match(tile, /locked \? \(plus \? `Livello \$\{level\} · US Plus` : `Livello \$\{level\}`\)/);
+  // Out of the ladder (level 1, the app icons since 28/11/2026) it says only US Plus.
+  assert.match(tile, /locked \? \(plusOnly \? 'Con US Plus' : plus \? `Livello \$\{level\} · US Plus` : `Livello \$\{level\}`\)/);
   assert.match(slice('function rewardTile(', 'function defaultTile('), /plus: Boolean\(reward\.requires_plus\)/);
 });
 
 const look = fs.readFileSync(path.join(__dirname, '..', 'oggi-look.js'), 'utf8');
 const lookCss = fs.readFileSync(path.join(__dirname, '..', 'oggi-look.css'), 'utf8');
 
-test('Aurora: the Plus extra of level 4, an effect of Oggi like the others', () => {
-  assert.match(look, /\{ id: 'aurora', name: 'Aurora', note: '[^']+', reward: 'oggi_effect_aurora', level: 4, count: \d+ \}/);
-  assert.match(look, /aurora: \{ s: \[/);
-  assert.match(lookCss, /\.us-oggi-fx\[data-fx="aurora"\]>i\{/);
-  assert.match(lookCss, /@keyframes us-fx-aurora\{/);
+// Premi di Oggi (grill D4–D5, 25/11/2026): Aurora left, and no effect needs Plus.
+test('Aurora left Oggi: no effect of the ladder needs US Plus', () => {
+  assert.doesNotMatch(look, /'aurora'|oggi_effect_aurora/);
+  assert.doesNotMatch(lookCss, /data-fx="aurora"|us-fx-aurora/);
 });
 
 test('a locked Plus look says US Plus, in the chip and on the button', () => {
@@ -51,10 +51,10 @@ test('a locked Plus look says US Plus, in the chip and on the button', () => {
 
 test('Tema delle stagioni: one theme that follows the season in Rome', () => {
   const box = {};
-  vm.runInNewContext(look.slice(look.indexOf('function seasonFor('), look.indexOf('// ---------- particles')) + ';this.f=seasonFor;', box);
+  vm.runInNewContext(look.slice(look.indexOf('function seasonFor('), look.indexOf('// ---------- applying to the real Oggi hero')) + ';this.f=seasonFor;', box);
   assert.deepEqual(['2026-03-01', '2026-05-31', '2026-06-01', '2026-08-31', '2026-09-01', '2026-11-30', '2026-12-01', '2027-02-28'].map((d) => box.f(d)),
     ['spring', 'spring', 'summer', 'summer', 'autumn', 'autumn', 'winter', 'winter']);
-  assert.match(look, /\{ id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: '[^']+', reward: 'oggi_theme_seasonal', level: 10 \}/);
+  assert.match(look, /\{ id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: '[^']+', reward: 'oggi_theme_seasonal', level: 18 \}/);
   assert.match(look, /if \(theme === 'seasonal'\) root\.dataset\.usOggiSeason = seasonFor\(\); else delete root\.dataset\.usOggiSeason;/);
   assert.match(look, /data-oggi-season="\$\{esc\(seasonFor\(\)\)\}"/, 'the preview shows this season too');
   for (const season of ['spring', 'summer', 'winter']) {

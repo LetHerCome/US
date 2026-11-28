@@ -24,7 +24,6 @@
   #leftForYouOverlay,
   #leftForYouComposerOverlay,
   #conservatiOverlay,
-  #usCalendarOverlay,
   #usCalendarDetailSheet,
   #usCalendarFormSheet,
   .us-moment-compose-overlay,
@@ -53,7 +52,6 @@
   #leftForYouOverlay,
   #leftForYouComposerOverlay,
   #conservatiOverlay,
-  #usCalendarOverlay,
   #usCalendarDetailSheet,
   #usCalendarFormSheet,
   .us-moment-compose-overlay,
@@ -114,7 +112,6 @@
   #leftForYouOverlay,
   #leftForYouComposerOverlay,
   #conservatiOverlay,
-  #usCalendarOverlay,
   #usCalendarDetailSheet,
   #usCalendarFormSheet,
   .us-moment-compose-overlay,
@@ -139,7 +136,6 @@
   #leftForYouOverlay,
   #leftForYouComposerOverlay,
   #conservatiOverlay,
-  #usCalendarOverlay,
   #usCalendarDetailSheet,
   #usCalendarFormSheet,
   .us-moment-compose-overlay,
@@ -159,7 +155,6 @@
   #leftForYouOverlay,
   #leftForYouComposerOverlay,
   #conservatiOverlay,
-  #usCalendarOverlay,
   #usCalendarDetailSheet,
   #usCalendarFormSheet,
   .us-moment-compose-overlay,
@@ -187,17 +182,17 @@
    visualViewport height. Dialog contents remain scrollable and reachable. */
 @media (max-height: 540px) {
   :root { --us-popup-safe-height: max(100px, calc(var(--us-viewport-height, 100dvh) - var(--us-safe-top) - var(--us-safe-bottom) - 16px)); }
-  :is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) {
+  :is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) {
     padding-top: max(8px, var(--us-safe-top)) !important;
     padding-bottom: max(8px, var(--us-safe-bottom)) !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-us-motion-surface]:is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) [data-us-modal-panel] {
+  [data-us-motion-surface]:is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) [data-us-modal-panel] {
     transition: none !important;
   }
 }
-:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) [data-us-modal-panel] {
+:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) [data-us-modal-panel] {
   transition: none !important;
 }

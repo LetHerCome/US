@@ -1,10 +1,14 @@
 /* Due colori, un Noi — shell motion, the approved mockup's "marea" (core.js go()).
    A tap on the bottom bar: the tab is marked at once (the indicator slides
-   with the spring, the icon gives one small bounce, Maudit glances at it),
-   the tab colour covers the screen from the tapped button (260 ms), the page
-   changes under the colour, then the new page opens from the same point
-   (340 ms) while its blocks rise in, 50 ms apart. The colour sits under the
-   bottom bar and Maudit, as in the mockup. Only taps on the bottom bar
+   with the spring, the icon gives one small bounce),
+   the tab colour grows from the tapped button and covers the screen
+   (~330 ms visible), the page changes under it, then the colour dissolves
+   (360 ms) while the new page's blocks rise in, 50 ms apart. Fluidità 2
+   (founder, 24/11/2026, «veloci ma non fluide»): every moving part is
+   transform and opacity, so it runs on the compositor and a busy phone
+   cannot stop it halfway (the old clip-path circle and hole were repainted
+   on the main thread at every frame). The colour sits under the
+   bottom bar, as in the mockup. Only taps on the bottom bar
    flood: swipes, back and in-page links keep the instant switch. A second
    tab tap while the colour moves is ignored (mockup: busy). Reduced motion:
    the new page simply fades in (180 ms). Presentation only, the navigation
@@ -17,17 +21,21 @@ window.__usDueColoriInstalled = true;
 const doc = document;
 const root = doc.documentElement;
 const original = window.go;
-// Copied from the mockup (core.js): E.io, E.out, durations in ms. The tide
-// itself is quicker than the mockup (founder, 22/10, Fluidità 1): the new
-// page shows after ~280 ms instead of ~490 ms, same shape and easing.
+// The production tide (founder, 25/11/2026: «vedi su produzione com'è
+// reattivo, devi fare la stessa cosa qui in staging solo con il gradiente»):
+// its times, its curve (the mockup's E.io) and its way with a second tap,
+// with the soft-edged colour of staging («eliminare il bordo netto»). The
+// colour covers in 260 ms, the new page opens through a soft hole from the
+// tap in 340 ms while its blocks rise in, 50 ms apart.
 const COVER_MS = 260;
 const REVEAL_MS = 340;
+const IO = 'cubic-bezier(.7,0,.2,1)';
+const GLIDE = 'cubic-bezier(.45,0,.15,1)';
 const STAGGER_DELAY = 160;
 const STAGGER_STEP = 50;
 const STAGGER_MS = 460;
 const FADE_MS = 180;
 const BOUNCE_MS = 480;
-const IO = 'cubic-bezier(.7,0,.2,1)';
 const OUT = 'cubic-bezier(.2,.8,.2,1)';
 
 function reducedMotion() {
@@ -47,24 +55,68 @@ let job = null;
 // a sub-page starts to slide): work done now costs no frame of the motion.
 let switching = false;
 
+let disc = null;
 function floodLayer() {
   if (!layer) {
     layer = doc.createElement('div');
     layer.className = 'us-flood';
-    layer.hidden = true;
     layer.setAttribute('aria-hidden', 'true');
+    disc = doc.createElement('i');
+    disc.className = 'us-flood-disc';
+    layer.appendChild(disc);
     doc.body.appendChild(layer);
   }
   return layer;
+}
+// The soft hole that opens the new page: a mask on the colour, its radius a
+// registered length the browser can animate (due-colori.css .is-opening).
+// Without it (older webviews) the colour simply dissolves.
+const HOLE_EDGE = 140;
+let holeSupport = null;
+function canHole() {
+  if (holeSupport !== null) return holeSupport;
+  try { window.CSS?.registerProperty?.({ name: '--us-hole', syntax: '<length>', inherits: false, initialValue: '0px' }); } catch (_) { /* already registered */ }
+  try { holeSupport = Boolean(window.CSS?.supports?.('mask-image', 'radial-gradient(circle, #000, transparent)') || window.CSS?.supports?.('-webkit-mask-image', 'radial-gradient(circle, #000, transparent)')) && typeof window.CSS?.registerProperty === 'function'; } catch (_) { holeSupport = false; }
+  return holeSupport;
+}
+// The disc is solid to 52 % of its radius, then fades out (due-colori.css).
+// It is small (DISC px) and drawn once: the layer always stays in the page,
+// transparent while idle, so the phone never redraws a screen-sized circle
+// while it grows; the GPU only enlarges it (soft edges hide the scaling).
+// Grown, its solid core reaches past the farthest corner from the tap (x2
+// the distance, centred on it): the screen is all colour before the disc
+// stops growing, so the page changes then, and the change's long frame
+// passes while the disc still grows off screen (on the compositor, unseen).
+const DISC = 480;
+const OVERSIZE = 2;
+const COVERED = 0.93; // the farthest corner is 97 % colour by then (the core reaches it at .962): the change is unseen
+// Centres the disc on the tap; returns the scale that makes it big enough.
+function placeDisc(at) {
+  disc.style.left = `${at.x - DISC / 2}px`;
+  disc.style.top = `${at.y - DISC / 2}px`;
+  return (at.radius * OVERSIZE * 2) / DISC;
+}
+const flooding = () => Boolean(layer && layer.dataset.on === '1');
+
+// Resolves once the growing disc covers the whole screen (or stops growing).
+function covered(animation) {
+  return new Promise((resolve) => {
+    const check = () => {
+      if (animation.playState !== 'running' || animation.playbackRate < 0) { resolve(); return; }
+      const p = animation.effect?.getComputedTiming?.().progress;
+      if (p == null || p >= COVERED) resolve(); else requestAnimationFrame(check);
+    };
+    requestAnimationFrame(check);
+  });
 }
 
 function clear() {
   entering?.classList.remove('us-marea-in');
   entering = null;
   if (!layer) return;
-  layer.getAnimations().forEach((animation) => animation.cancel());
-  layer.hidden = true;
-  layer.style.removeProperty('clip-path');
+  layer.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
+  layer.classList.remove('is-opening');
+  delete layer.dataset.on;
 }
 
 // A programmatic go() that arrives while the colour is moving lands at once.
@@ -80,7 +132,8 @@ function flushPending() {
 // reading it at the tap would force a style pass in the tap's own frame.
 const colors = new Map();
 function tabColor(button) {
-  const key = `${button.dataset.page}|${root.dataset.usAccent || ''}|${root.dataset.usTheme || ''}|${root.dataset.usMe || ''}`;
+  // Giorno or Notte (aspetto.js) changes every tab's colour too.
+  const key = `${button.dataset.page}|${root.dataset.usLuce || ''}|${root.dataset.usAccent || ''}|${root.dataset.usTheme || ''}|${root.dataset.usMe || ''}|${root.dataset.usPagine || ''}`;
   if (!colors.has(key)) {
     const value = getComputedStyle(button).getPropertyValue('--us-nav-c').trim();
     colors.set(key, value || getComputedStyle(root).getPropertyValue('--us-noi').trim());
@@ -106,21 +159,6 @@ function drainAfter() {
   afterQueue.splice(0).forEach((fn) => { try { fn(); } catch (error) { console.warn('[US Due colori] after motion', error); } });
 }
 
-const circle = (r, x, y) => `circle(${r}px at ${x}px ${y}px)`;
-// The new page opening from the tap point = a growing hole in the colour.
-// path() with evenodd keeps the hole a true circle and lets the browser
-// interpolate the radius with the mockup's easing (no stepped mask).
-function hole(r, x, y, w, h) {
-  const R = Math.max(0, r);
-  return `path(evenodd, "M0 0H${w}V${h}H0Z M${x - R} ${y}a${R} ${R} 0 1 0 ${2 * R} 0a${R} ${R} 0 1 0 ${-2 * R} 0Z")`;
-}
-let holeSupport = null;
-function canHole() {
-  if (holeSupport === null) {
-    try { holeSupport = Boolean(window.CSS?.supports?.('clip-path', 'path(evenodd, "M0 0H1V1H0Z")')); } catch (_) { holeSupport = false; }
-  }
-  return holeSupport;
-}
 
 // The tab is marked at once, before the colour moves (mockup markTab/placeBlob).
 function markNav(button) {
@@ -141,7 +179,7 @@ function bounce(button) {
 // The blocks that rise in. An area marks them with [data-s] (as in the
 // mockup); until it does, the page's top-level blocks stand in for them.
 const STAGGER_FALLBACK = {
-  home: '.app>.top,#usCountdownDisplay,#usCountdownEntry,#usOggiCalendarWidget,#distanceWidget,.home-distance-pill,#usTodayPriorityRegion,#pushOptInCard,#homeEmptyState,#usOggiDock',
+  home: '.app>.top,#usCountdownDisplay,#usCountdownEntry,#usOggiCalendarWidget,#distanceWidget,.home-distance-pill,#homeEmptyState,#usOggiDock',
   bond: '#usNoiV2>*,#usNoiSection>*',
   moments: '#moments>.section>*:not(#momentsGrid),#momentsGrid>*',
   quiz: '#usGiocaTabs,#quizHub>*,#usGiocaSintonia>*',
@@ -182,24 +220,25 @@ async function flood(button, self, id, options) {
   const ticket = ++run;
   busy = true;
   const el = floodLayer();
-  // Read everything first (the tap point, the screen, the colour, Maudit's
-  // place for the glance), then write: no forced style pass in the tap.
+  // Read everything first (the tap point, the screen, the colour), then
+  // write: no forced style pass in the tap.
   const from = doc.querySelector('.page.active')?.id || 'home';
   const at = origin(button);
   const color = tabColor(button);
-  try { window.USPet?.glance?.(at.vx); } catch (_) { /* Maudit is decoration */ }
   clear();
   markNav(button);
   bounce(button);
-  el.style.setProperty('--us-flood', color);
-  el.hidden = false;
+  disc.style.setProperty('--us-flood', color);
+  const grown = placeDisc(at);
+  el.dataset.on = '1';
   const current = { ticket, id, from, at, button, back: false, cover: null };
   job = current;
   pending = { self, args: [id, { ...options, motionCommit: true }] };
   try {
-    current.cover = el.animate([{ clipPath: circle(0, at.x, at.y) }, { clipPath: circle(at.radius, at.x, at.y) }],
-      { duration: COVER_MS, easing: IO, fill: 'forwards' });
-    await current.cover.finished;
+    current.cover = disc.animate([{ transform: 'scale(0.002)', opacity: 1 }, { transform: `scale(${grown.toFixed(3)})`, opacity: 1 }],
+      { duration: COVER_MS, easing: IO, fill: 'both' });
+    await covered(current.cover);
+    if (current.back) await current.cover.finished;
   } catch (_) { /* cancelled by a programmatic go() */ }
   if (ticket !== run) return;
   if (current.back) { // the tab it left was tapped again: the colour went back
@@ -211,19 +250,21 @@ async function flood(button, self, id, options) {
   }
   // The screen is all colour now: the page changes under it (its own fade
   // is off, the mockup's view opens fully opaque), then opens from the tap
-  // (from the last tab tapped, if another came while the colour rose).
-  // The reveal starts on the frame after the change, so the change's style
-  // and layout never eat into it.
+  // (from the last tab tapped, if another came while the colour rose)
+  // through a soft hole. The reveal starts on the frame after the change, so
+  // the change's style and layout never eat into it.
   const to = current.id;
-  const { x, y, w, h, radius } = current.at;
+  const { x, y, radius } = current.at;
   entering = doc.getElementById(to);
   entering?.classList.add('us-marea-in');
   flushPending();
   stagger(doc.getElementById(to), STAGGER_DELAY);
   try {
     if (canHole()) {
-      await el.animate([{ clipPath: hole(0, x, y, w, h) }, { clipPath: hole(radius, x, y, w, h) }],
-        { duration: REVEAL_MS, easing: IO, fill: 'forwards' }).finished;
+      el.style.setProperty('--us-hole-x', `${x}px`);
+      el.style.setProperty('--us-hole-y', `${y}px`);
+      el.classList.add('is-opening');
+      await el.animate([{ '--us-hole': '0px' }, { '--us-hole': `${radius + HOLE_EDGE}px` }], { duration: REVEAL_MS, easing: IO, fill: 'forwards' }).finished;
     } else {
       await el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: REVEAL_MS, easing: IO, fill: 'forwards' }).finished;
     }
@@ -231,14 +272,13 @@ async function flood(button, self, id, options) {
   if (ticket === run) { job = null; clear(); busy = false; drainAfter(); }
 }
 
-// A tab tapped while the colour moves is never lost (the mockup ignored it).
+// A tab tapped while the colour moves is never lost (as in production).
 // While the colour rises the flood turns to the new tab: its colour, its
 // mark, and the page opens from it; the tab it left turns the colour back.
-// Once the page has changed, the new tab starts a flood of its own.
+// Once the page has changed, the new tab starts a flood of its own at once.
 function retarget(button, self, id, options) {
   const current = job;
   if (!current || current.back) return false;
-  const el = floodLayer();
   if (pending) {
     if (id === current.id) return true;
     if (id === current.from) {
@@ -249,7 +289,6 @@ function retarget(button, self, id, options) {
       try { current.cover?.reverse(); } catch (_) { current.cover?.cancel(); }
       return true;
     }
-    const before = getComputedStyle(el).backgroundColor;
     current.id = id;
     current.button = button;
     current.at = origin(button);
@@ -257,8 +296,7 @@ function retarget(button, self, id, options) {
     pending.args = [id, { ...options, motionCommit: true }];
     markNav(button);
     bounce(button);
-    el.style.setProperty('--us-flood', tabColor(button));
-    el.animate?.([{ backgroundColor: before }, { backgroundColor: getComputedStyle(el).backgroundColor }], { duration: 160, easing: OUT });
+    disc.style.setProperty('--us-flood', tabColor(button));
     return true;
   }
   if (id === current.id) return true;
@@ -270,7 +308,7 @@ function retarget(button, self, id, options) {
   return true;
 }
 
-// ---------- Sub-page: Settings over Noi (mockup UP.push / pop) ----------
+// ---------- Sub-page: the Profilo over the page you came from (mockup UP.push / pop) ----------
 // Settings enters from the right (480 ms, E.io) while Noi moves back 24 %
 // and darkens (brightness .6 = a 40 % black veil, composited); its blocks
 // rise 140 ms + 50 ms apart. Back to Noi (the "Noi" button, the Noi tab,
@@ -280,7 +318,10 @@ function retarget(button, self, id, options) {
 const PUSH_MS = 480;
 const POP_MS = 440;
 const PUSH_STAGGER = 140;
-const PARENT = { settings: 'bond' };
+// Il Profilo is a sub-page of the four pages (your character is top right on
+// each, redesign definitivo D6): it slides in over the page you came from and back.
+const TABS = new Set(['home', 'bond', 'moments', 'quiz']);
+const subOf = (child, parent) => child === 'settings' && TABS.has(parent);
 let slideJob = null;
 function finishSlide() {
   const job = slideJob;
@@ -321,7 +362,7 @@ async function slide(kind, self, id, options) {
   const W = Math.round(sb.w);
   const back = Math.round(sb.w * -0.24);
   const T = push ? PUSH_MS : POP_MS;
-  const timing = { duration: T, easing: IO, fill: 'forwards' };
+  const timing = { duration: T, easing: GLIDE, fill: 'forwards' };
   const over = push ? live : ghost;
   const under = push ? ghost : live;
   // Its Atmosfera panel lines up with the screen's (due-colori.css).
@@ -351,7 +392,7 @@ if (typeof original === 'function') {
     if (pending) { run += 1; job = null; clear(); busy = false; flushPending(); drainAfter(); }
     if (slideJob) finishSlide(); // a programmatic go() lands the slide at once
     const sub = id && id !== from && !doc.hidden && !options?.swipe && !options?.motionCommit
-      ? (PARENT[id] === from ? 'push' : (PARENT[from] === id ? 'pop' : null))
+      ? (subOf(id, from) ? 'push' : (subOf(from, id) ? 'pop' : null))
       : null;
     if (sub) {
       if (reducedMotion()) {
@@ -375,9 +416,20 @@ if (typeof original === 'function') {
   };
 }
 
+// The colour layer is made (and its small disc drawn) at start, before the
+// first tap; the tabs' colours are read in a quiet moment, so the first tap
+// does not pay for a style pass either.
+function prepare() {
+  floodLayer();
+  const warm = () => doc.querySelectorAll('.us-nav button[data-page]').forEach((button) => { try { tabColor(button); } catch (_) { /* later */ } });
+  if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: 3000 });
+  else setTimeout(warm, 1200);
+}
+if (doc.body) prepare(); else doc.addEventListener('DOMContentLoaded', prepare, { once: true });
+
 window.UsDueColori = Object.freeze({
   // Tests and other surfaces can ask whether a flood is on screen.
-  isFlooding: () => Boolean(layer && !layer.hidden),
+  isFlooding: flooding,
   // Run heavy work once the colour between tabs has finished (at once when
   // nothing moves). app.js schedules each page's hydration through it.
   afterMotion,
@@ -385,9 +437,9 @@ window.UsDueColori = Object.freeze({
   // (under the full colour, or before a sub-page slides): app.js fills the
   // new page right then, so it opens complete and the motion stays free.
   switching: () => switching,
-  // A sub-page step (Settings over Noi, either way): navigation.js lets Back
+  // A sub-page step (the Profilo over a page, either way): navigation.js lets Back
   // take it through go() so it slides as the mockup's pop().
-  isSubPage: (from, to) => Boolean(from && to && (PARENT[to] === from || PARENT[from] === to)),
+  isSubPage: (from, to) => Boolean(from && to && (subOf(to, from) || subOf(from, to))),
   // The blocks of a page rise in (mockup UP.stagger), e.g. Oggi right after
   // the intro of "Entra in US". Nothing under reduced motion.
   stagger(id, delay = 0) {

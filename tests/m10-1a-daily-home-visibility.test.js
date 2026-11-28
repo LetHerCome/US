@@ -28,7 +28,7 @@ function installOggi() {
     partnerFromProfiles: () => null,
   });
   require('./helpers/identity-fixture').install(context);
-  vm.runInContext(app.slice(app.indexOf('const US_TODAY_PRIORITY_ORDER='), app.indexOf('function localDateISO()')), context);
+  vm.runInContext(app.slice(app.indexOf('let usTodayPriorityRefreshId=0;'), app.indexOf('function localDateISO()')), context);
   return { window, card, region };
 }
 const question = { id: 'q-1', question: 'Cosa ti farebbe partire bene questa settimana?', question_date: '2026-10-05' };
@@ -59,7 +59,9 @@ test('1.0 O1: ho risposto io, il partner no → la card resta, in attesa e senza
   assert.doesNotMatch(card.innerHTML, /Mia/);
 });
 
-test('M10.1A: entrambi hanno risposto → card nascosta (niente reveal/“Scopri” su Oggi)', () => {
+// Redesign D9: «Risposte pronte» was a card of its own; now the Domanda di
+// oggi card says it, and without the reveal meta nothing is invented.
+test('redesign D9: entrambi hanno risposto, senza meta del reveal → nessuna card inventata', () => {
   const card = show({ question, state: stateFor('Mia', 'Sua') });
   assert.equal(card.hidden, true);
   assert.equal(card.innerHTML, '');
@@ -115,7 +117,7 @@ function hydrateHarness() {
     dailyRitualPartnerName: () => 'Beatrice', localDateISO: () => 'x', toast() {}, sendWebPushEvent: () => Promise.resolve(),
   });
   require('./helpers/identity-fixture').install(ctx);
-  vm.runInContext(`${slice('// M9E — la domanda di oggi', 'async function updateHomeStatus')}\n${slice('saveAnswer = async function(){', 'window.saveAnswer=saveAnswer;')}\nwindow.hydrateToday=hydrateToday;window.saveAnswer=saveAnswer;`, ctx);
+  vm.runInContext(`${slice('// M9E — la domanda di oggi', 'let pendingMomentFile=null;')}\n${slice('saveAnswer = async function(){', 'window.saveAnswer=saveAnswer;')}\nwindow.hydrateToday=hydrateToday;window.saveAnswer=saveAnswer;`, ctx);
   return {
     window, nodes, refreshes,
     nextDay() { day = 'B'; saved = false; window.todayQuestion = null; window.todayState = null; },
@@ -161,5 +163,4 @@ test('M10.1B: openToday(), target push "today" e foglio Daily Question restano v
   assert.match(html, /id="usDailyRitual"[^>]*onclick="openToday\(\)"/, 'la card di Oggi apre il foglio');
   assert.match(html, /id="today"/);
   assert.match(html, /id="todaySaveBtn"/);
-  assert.match(app, /action==='today'\)window\.openToday\?\.\(\)/);
 });

@@ -16,6 +16,19 @@ const ROLE_ORDER = ['beatrice', 'francesco'];
 // original duration instead (see originalDurationMinutes) — this constant is
 // only ever a fallback/default, never a forced rewrite of an existing entry.
 const US_CALENDAR_DEFAULT_DURATION_MINUTES = 60;
+// Fine «se vuoi» (founder, 28/11/2026): a timed entry without an end is stored
+// one minute long (the database wants ends_at > starts_at) and reads as its
+// start only; for «what is on now» it still counts the old hour.
+const US_CALENDAR_NO_END_MINUTES = 1;
+function entryHasNoEnd(entry) {
+  if (!entry || entry.is_all_day || !entry.starts_at || !entry.ends_at) return false;
+  const ms = new Date(entry.ends_at) - new Date(entry.starts_at);
+  return ms > 0 && ms <= US_CALENDAR_NO_END_MINUTES * 60000;
+}
+function entryBusyEndMs(entry) {
+  const start = new Date(entry.starts_at).getTime();
+  return entryHasNoEnd(entry) ? start + US_CALENDAR_DEFAULT_DURATION_MINUTES * 60000 : new Date(entry.ends_at).getTime();
+}
 
 function pad2(n) { return String(n).padStart(2, '0'); }
 function isoDate(y, m, d) { return `${y}-${pad2(m + 1)}-${pad2(d)}`; }
@@ -329,7 +342,8 @@ const CALENDAR_BUILTIN_PRESETS = Object.freeze(['Lavoro', 'Università', 'Uscita
 const CALENDAR_PRESET_LIMIT = 8;
 function addCalendarPreset(list, title) {
   const own = Array.isArray(list) ? list.filter((item) => typeof item === 'string' && item.trim()) : [];
-  const clean = String(title ?? '').replace(/\s+/g, ' ').trim().slice(0, 30);
+  // By characters, not UTF-16 units: an emoji at the end is not cut in half.
+  const clean = Array.from(String(title ?? '').replace(/\s+/g, ' ').trim()).slice(0, 30).join('');
   if (!clean) return own;
   const same = (a) => a.toLocaleLowerCase('it-IT') === clean.toLocaleLowerCase('it-IT');
   if (CALENDAR_BUILTIN_PRESETS.some(same) || own.some(same)) return own;
@@ -498,15 +512,15 @@ function oggiEventLabel(entries, nowMs) {
   const allDay = entries.find((e) => e.is_all_day);
   if (allDay) return allDay.title;
   const timed = entries.filter((e) => !e.is_all_day).slice().sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
-  const ongoing = timed.find((e) => new Date(e.starts_at).getTime() <= nowMs && new Date(e.ends_at).getTime() > nowMs);
+  const ongoing = timed.find((e) => new Date(e.starts_at).getTime() <= nowMs && entryBusyEndMs(e) > nowMs);
   // Never the earliest event regardless of time — an already-ended event must
   // never be reported as "what's happening": fall through to the next one
   // whose end is still ahead of now, or "Libera" if everything already ended.
-  const upcoming = timed.find((e) => new Date(e.ends_at).getTime() > nowMs);
+  const upcoming = timed.find((e) => entryBusyEndMs(e) > nowMs);
   const chosen = ongoing || upcoming;
   if (!chosen) return 'Libera';
   const fmt = (iso) => { const d = new Date(iso); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
-  return `${chosen.title} ${fmt(chosen.starts_at)}–${fmt(chosen.ends_at)}`;
+  return entryHasNoEnd(chosen) ? `${chosen.title} ${fmt(chosen.starts_at)}` : `${chosen.title} ${fmt(chosen.starts_at)}–${fmt(chosen.ends_at)}`;
 }
 
 // Drops windows that have already fully elapsed and clips a spanning window's
@@ -601,7 +615,7 @@ function oggiNextCommitment(list, nowISO = new Date().toISOString(), today = nul
       span = { start: entry.start_date, end: entry.end_date };
       if (span.end < first) continue;
     } else {
-      const start = new Date(entry.starts_at).getTime(), end = new Date(entry.ends_at).getTime();
+      const start = new Date(entry.starts_at).getTime(), end = entryBusyEndMs(entry);
       if (!Number.isFinite(start) || !Number.isFinite(end) || end <= now) continue;
       span = entryDateSpan(entry);
     }
@@ -623,7 +637,7 @@ function oggiNextCommitment(list, nowISO = new Date().toISOString(), today = nul
 }
 
 const pureApi = {
-  ROLE_ORDER, US_CALENDAR_DEFAULT_DURATION_MINUTES, roleRank, entryLaneRoleFor, entryDateSpan, entryDatesTouched,
+  ROLE_ORDER, US_CALENDAR_DEFAULT_DURATION_MINUTES, US_CALENDAR_NO_END_MINUTES, entryHasNoEnd, entryBusyEndMs, roleRank, entryLaneRoleFor, entryDateSpan, entryDatesTouched,
   formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
   shiftISODate, originalAllDaySpanDays,
   monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, US_FREE_EVENING, freeEveningFor, tempoWindowLabel,
@@ -651,6 +665,11 @@ let profilesById = new Map();
 // The "+" form: "Solo mio" is a personal entry, "Nostro" a shared one (the
 // entry_type the table already has). "Data speciale" hands over to Eventi.
 let calendarKind = 'personal';
+// Noi, Fase A (24/11/2026): «Ci vediamo» lives in calendar_entries.ci_vediamo
+// (migration 20261124233000, staging first). Until a database has it, the
+// reads and writes go on without it, as before.
+let ciVediamoColumn = true;
+const missingCiVediamo = (error) => Boolean(error) && /ci_vediamo/.test(String(error.message || error.details || error.hint || ''));
 let editingFormEntry = null;
 let noiEditorReadSeq = 0;
 let formDateISO = null; // M9C — il giorno scelto toccando il calendario
@@ -772,10 +791,10 @@ const US_OGGI_NEXT_TOGETHER_HORIZON_DAYS = 7;
 async function fetchEntriesForRange(coupleId, startDateISO, endDateISOExclusive) {
   const win = windowForGrid(parseISODate(startDateISO), parseISODate(endDateISOExclusive));
   const filter = UsCalendarDomain.buildRangeOverlapFilter(win);
-  const { data, error } = await sb.from('calendar_entries')
-    .select('id,couple_id,entry_type,owner_id,title,is_all_day,starts_at,ends_at,start_date,end_date')
-    .eq('couple_id', coupleId)
-    .or(filter);
+  const columns = 'id,couple_id,entry_type,owner_id,title,is_all_day,starts_at,ends_at,start_date,end_date';
+  const read = (withMeet) => sb.from('calendar_entries').select(withMeet ? `${columns},ci_vediamo` : columns).eq('couple_id', coupleId).or(filter);
+  let { data, error } = await read(ciVediamoColumn);
+  if (error && ciVediamoColumn && missingCiVediamo(error)) { ciVediamoColumn = false; ({ data, error } = await read(false)); }
   if (error) throw error;
   return UsCalendarDomain.filterEntriesInWindow(data || [], win);
 }
@@ -896,7 +915,7 @@ function entryTimeLabel(entry) {
   const s = new Date(entry.starts_at);
   const e = new Date(entry.ends_at);
   const fmt = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-  return `${fmt(s)} → ${fmt(e)}`;
+  return entryHasNoEnd(entry) ? fmt(s) : `${fmt(s)} → ${fmt(e)}`;
 }
 
 // The detail/editor sheets live at the document root and open directly above
@@ -924,6 +943,7 @@ function openDetail(entryId) {
   const hhmm = (value) => { const d = new Date(value); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
   const dateLabel = entry.is_all_day
     ? (oneDay ? `${longDayLabel(startDay)} · Tutto il giorno` : formatDateRangeLabel(startDay, endDay))
+    : entryHasNoEnd(entry) ? `${longDayLabel(startDay)} · ${hhmm(entry.starts_at)}`
     : oneDay ? `${longDayLabel(startDay)} · ${hhmm(entry.starts_at)}–${hhmm(entry.ends_at)}`
       : `${formatDateRangeLabel(startDay, endDay)} · ${entryTimeLabel(entry)}`;
   const place = entry.location ? `<span class="us-cal-detail-location" translate="no">${esc(entry.location)}</span> · ` : '';
@@ -984,10 +1004,10 @@ async function deleteEntry() {
   }
 }
 
+// Noi, Fase A: one time, «se c'è»; the end stays hidden and keeps the length.
 function toggleAllDayFields() {
-  const allDay = Boolean($('usCalendarAllDayInput')?.checked);
   const timeFields = $('usCalendarTimeFields');
-  if (timeFields) timeFields.hidden = allDay;
+  if (timeFields) timeFields.hidden = true;
 }
 function longDayLabel(dateISO) {
   const d = parseISODate(dateISO);
@@ -1057,7 +1077,7 @@ function saveNewPreset() {
   const before = ownCalendarPresets();
   const next = addCalendarPreset(before, input?.value);
   if (next.length !== before.length || next.some((item, i) => item !== before[i])) saveOwnCalendarPresets(next);
-  const title = String(input?.value || '').replace(/\s+/g, ' ').trim().slice(0, 30);
+  const title = Array.from(String(input?.value || '').replace(/\s+/g, ' ').trim()).slice(0, 30).join('');
   showPresetComposer(false);
   renderOwnCalendarPresets();
   // The new type is chosen at once, as a tap on it would.
@@ -1092,19 +1112,11 @@ function setFormKind(kind) {
   const sheet = $('usCalendarFormSheet');
   if (sheet?.dataset) sheet.dataset.kind = calendarKind;
 }
-// "Data speciale" is an Eventi date: the form hands the day (and what was
-// already typed) to Noi, which opens the Eventi editor in its place.
+// Solo mio or Nostro (a new entry only: entry_type never changes). «Data
+// speciale» left with Noi, Fase A: a date that comes back is «Ogni anno».
 function chooseFormKind(kind) {
   if (editingFormEntry || pendingIdeaLink || busy) return;
-  if (kind !== 'event') { setFormKind(kind); return; }
-  const open = window.USNoiV2?.addSpecialDate;
-  if (typeof open !== 'function') return;
-  const date = formDateISO || selectedDate || todayISO();
-  const title = $('usCalendarTitleInput')?.value.trim() || '';
-  const allDay = Boolean($('usCalendarAllDayInput')?.checked);
-  const time = allDay ? '' : normalizeQuickTime($('usCalendarStartTimeInput')?.value);
-  closeCalendarFormSheet();
-  open({ date, title, time });
+  setFormKind(kind);
 }
 
 function openForm(mode, entry, dateISO) {
@@ -1127,6 +1139,13 @@ function openForm(mode, entry, dateISO) {
   showPresetComposer(false);
   renderOwnCalendarPresets();
   $('usCalendarAllDayInput').checked = Boolean(entry?.is_all_day);
+  // Ci vediamo: the entry's own; Ogni anno: only a new one, not from an idea.
+  const meet = $('usCalendarMeetInput');
+  if (meet) meet.checked = Boolean(entry?.ci_vediamo);
+  const yearly = $('usCalendarYearlyInput');
+  if (yearly) yearly.checked = false;
+  const yearlyRow = $('usCalendarYearlyRow');
+  if (yearlyRow) yearlyRow.hidden = mode === 'edit';
   const startInput = $('usCalendarStartTimeInput');
   const endInput = $('usCalendarEndTimeInput');
   if (entry?.is_all_day) {
@@ -1138,16 +1157,13 @@ function openForm(mode, entry, dateISO) {
     const end = new Date(entry.ends_at);
     formDateISO = localDateFromInstant(entry.starts_at);
     if (startInput) startInput.value = `${pad2(start.getHours())}:${pad2(start.getMinutes())}`;
-    if (endInput) endInput.value = `${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
+    if (endInput) endInput.value = entryHasNoEnd(entry) ? '' : `${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
   } else {
     formDateISO = dateISO || selectedDate || todayISO();
     if (startInput) startInput.value = '';
     if (endInput) endInput.value = '';
   }
-  // Giorno resta solo in modifica, per spostare un impegno esistente: in
-  // creazione la data è quella toccata sul calendario.
-  const dateField = $('usCalendarDateField');
-  if (dateField) dateField.hidden = mode !== 'edit';
+  // Quando: the day tapped on the calendar, which can be changed (Fase A).
   $('usCalendarDateInput').value = formDateISO;
   toggleAllDayFields();
   renderFormDay(formDateISO, mode);
@@ -1181,22 +1197,25 @@ async function saveEntry(event) {
   if (busy || !window.usProfile) return;
   if (!navigator.onLine) { toast('Sei offline. Riprova quando torni online.'); return; }
   const title = $('usCalendarTitleInput').value.trim();
-  const date = editingFormEntry ? ($('usCalendarDateInput').value || formDateISO) : formDateISO;
+  const date = $('usCalendarDateInput').value || formDateISO;
   if (!title || !date) return;
-  const allDay = $('usCalendarAllDayInput').checked;
-  const startTime = allDay ? '' : normalizeTimeField('usCalendarStartTimeInput');
-  const endTime = allDay ? '' : normalizeTimeField('usCalendarEndTimeInput');
-  const timeError = quickEntryError({ allDay, startTime, endTime });
-  if (timeError) {
-    setFormStatus(timeError === 'start' ? 'Inserisci l’ora di inizio.' : timeError === 'end' ? 'Inserisci l’ora di fine.' : 'Inizio e fine non possono coincidere.');
-    return;
-  }
+  // Inizio «se c'è» (Fase A): none is all day. Fine «se vuoi» (28/11): when it
+  // is there it sets the length, when it is not the entry has only its start.
+  const startTime = normalizeTimeField('usCalendarStartTimeInput');
+  const endTime = normalizeTimeField('usCalendarEndTimeInput');
+  const allDay = !startTime;
+  if (allDay && endTime) { setFormStatus('Metti anche l’ora di inizio, o togli la fine.'); return; }
+  const endMinutes = endTime ? durationMinutesFromTimes(startTime, endTime) : null;
+  if (endTime && !endMinutes) { setFormStatus('La fine deve venire dopo l’inizio.'); return; }
+  $('usCalendarAllDayInput').checked = allDay;
+  const meet = Boolean($('usCalendarMeetInput')?.checked);
+  if (!editingFormEntry && !pendingIdeaLink && $('usCalendarYearlyInput')?.checked) { await saveYearly({ title, date, time: startTime }); return; }
   const hidden = quickEntryHiddenFields({
     editingEntry: editingFormEntry,
     allDay,
     ideaNote: pendingIdeaLink ? pendingIdeaLink.note : null
   });
-  const durationMinutes = allDay ? hidden.durationMinutes : durationMinutesFromTimes(startTime, endTime);
+  const durationMinutes = allDay ? hidden.durationMinutes : (endMinutes || US_CALENDAR_NO_END_MINUTES);
 
   const payload = buildEntryPayload({
     title,
@@ -1209,21 +1228,29 @@ async function saveEntry(event) {
     spanDays: hidden.spanDays
   });
 
+  if (ciVediamoColumn) payload.ci_vediamo = meet;
   busy = true;
   const saveBtn = $('usCalendarFormSave');
   if (saveBtn) saveBtn.disabled = true;
   setFormStatus('Salvo…');
+  // A database without ci_vediamo yet: the same write without it.
+  const write = async (run) => {
+    let result = await run();
+    if (result.error && 'ci_vediamo' in payload && missingCiVediamo(result.error)) { ciVediamoColumn = false; delete payload.ci_vediamo; result = await run(); }
+    return result;
+  };
   try {
     let savedId = null; // M6D — id della riga creata (create-only)
     if (editingFormEntry) {
-      const { data, error } = await sb.from('calendar_entries').update(payload).eq('id', editingFormEntry.id).select('id');
+      const { data, error } = await write(() => sb.from('calendar_entries').update(payload).eq('id', editingFormEntry.id).select('id'));
       const outcome = classifyMutationResult({ data, error });
       if (outcome === 'error') throw error;
       if (outcome === 'not_authorized') throw new Error('update matched 0 rows');
     } else {
       const ideaLink = pendingIdeaLink;
-      const kind = ideaLink ? 'shared' : calendarKind;
-      const result = await sb.from('calendar_entries').insert(withCreateAuthority(payload, kind, window.usProfile)).select('id');
+      // A meeting is the two of you: Ci vediamo makes it Nostro.
+      const kind = ideaLink || meet ? 'shared' : calendarKind;
+      const result = await write(() => sb.from('calendar_entries').insert(withCreateAuthority(payload, kind, window.usProfile)).select('id'));
       if (result.error) throw result.error;
       savedId = Array.isArray(result.data) && result.data[0]?.id ? result.data[0].id : null;
       if (ideaLink) {
@@ -1246,6 +1273,29 @@ async function saveEntry(event) {
     toast(wasEditing ? 'Impegno aggiornato' : (linkedIdea ? 'In calendario' : 'Impegno aggiunto'));
   } catch (error) {
     console.warn('[US Calendar] save', error);
+    setFormStatus('Non riesco a salvarlo. Riprova.');
+  } finally {
+    busy = false;
+    if (saveBtn) saveBtn.disabled = false;
+  }
+}
+
+// «Ogni anno» (Fase A): a date that comes back every year is an Eventi date
+// (shared_events, recurs_yearly), saved from the same form.
+async function saveYearly({ title, date, time }) {
+  busy = true;
+  const saveBtn = $('usCalendarFormSave');
+  if (saveBtn) saveBtn.disabled = true;
+  setFormStatus('Salvo…');
+  try {
+    const { error } = await sb.from('shared_events').insert({ title, event_date: date, event_time: time || null, recurs_yearly: true, couple_id: window.usProfile.couple_id, created_by: window.usProfile.id });
+    if (error) throw error;
+    closeCalendarFormSheet();
+    window.USNoiV2?.refresh?.();
+    window.UsOggiNext?.refresh?.({ calendar: 'fresh' });
+    toast('Aggiunto, torna ogni anno');
+  } catch (error) {
+    console.warn('[US Calendar] save yearly', error);
     setFormStatus('Non riesco a salvarlo. Riprova.');
   } finally {
     busy = false;
@@ -1418,6 +1468,17 @@ async function createCalendarEntryForDate(dateISO) {
   });
 }
 
+// Come stai che conta (27/11/2026, D14): the same editor for a day, already
+// written ({ title, allDay }), e.g. «In viaggio» today; the person still saves it.
+function createCalendarEntryPrefilled(dateISO, prefill = {}) {
+  createCalendarEntryForDate(dateISO);
+  if (pendingIdeaPick || editingFormEntry || !$('usCalendarFormSheet')?.classList.contains('open')) return;
+  const title = $('usCalendarTitleInput');
+  if (title && typeof prefill.title === 'string') title.value = prefill.title.slice(0, 120);
+  const allDay = $('usCalendarAllDayInput');
+  if (allDay && prefill.allDay) { allDay.checked = true; toggleAllDayFields(); }
+}
+
 async function createCalendarEntryForIdeaDate(dateISO){
   const pick=pendingIdeaPick;
   if(!pick||!dateISO||window.usProfile?.id!==pick.userId||window.usProfile?.couple_id!==pick.coupleId)return;
@@ -1444,7 +1505,9 @@ async function openCalendarEntry(entryId, { inPlace = false } = {}) {
   openDetail(entryId);
 }
 
-window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, createForIdeaDate: createCalendarEntryForIdeaDate, cancelIdeaPick: clearIdeaPick, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
+// Date e numeri (26/11/2026): the event editor of Noi types its hour the same way.
+window.UsQuickTime = Object.freeze({ normalize: normalizeQuickTime, mask: maskTimeField });
+window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, createForIdeaDate: createCalendarEntryForIdeaDate, cancelIdeaPick: clearIdeaPick, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, createPrefilled: createCalendarEntryPrefilled, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
 window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth,readRange:readNoiRange,freeEvenings:noiFreeEvenings});
 window.openCalendarSurface = openCalendarSurface;
 window.closeCalendarDetailSheet = closeCalendarDetailSheet;

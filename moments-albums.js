@@ -49,6 +49,7 @@ function ensureUi(){
             <button type="button" class="us-album-place" id="usAlbumPlace"><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><span id="usAlbumPlaceLabel" translate="no">Aggiungi il posto</span></button>
             <div class="us-album-caption-postit" id="usAlbumCoverNote" hidden><p id="usAlbumCoverCaption" translate="no"></p><small id="usAlbumCoverAuthor"></small></div>
             <div class="us-album-photo-actions">
+              <button type="button" class="us-album-solo" id="usAlbumSolo" aria-pressed="false" aria-label="Solo la foto"><span class="us-icon" data-us-icon="eye-slash" aria-hidden="true"></span></button>
               <button type="button" class="us-album-save-photo" id="usAlbumSavePhoto"><span class="us-icon" data-us-icon="download-simple" aria-hidden="true"></span><span>Salva sul telefono</span></button>
             </div>
             <p class="us-album-carousel-status" id="usAlbumCarouselStatus" role="status" aria-live="polite" hidden></p>
@@ -86,6 +87,7 @@ function ensureUi(){
             </div>
             <div class="us-album-grid" id="usAlbumGrid"></div>
           </section>
+          <section class="us-album-bacheca" id="usAlbumBacheca" hidden></section>
         </div>
       </div>
     </div>
@@ -131,6 +133,9 @@ function ensureUi(){
     if(row?.id&&(row?.own||row?.orphan))deleteAlbumPhoto(row.id,row.storage_path,{orphan:!row.own});
   });
   document.getElementById('usAlbumSavePhoto')?.addEventListener('click',()=>savePhotoToPhone(albumCarouselIndex));
+  document.getElementById('usAlbumSolo')?.addEventListener('click',()=>setSoloFoto(!document.getElementById('usAlbumOverlay')?.classList.contains('is-solo-foto')));
+  // Solo la foto: a tap on the photo brings everything back.
+  document.getElementById('usAlbumCarousel')?.addEventListener('click',()=>{if(document.getElementById('usAlbumOverlay')?.classList.contains('is-solo-foto'))setSoloFoto(false);});
   document.getElementById('usAlbumLightboxSave')?.addEventListener('click',event=>{event.stopPropagation();savePhotoToPhone(lightboxIndex);});
   document.getElementById('usAlbumAsk')?.addEventListener('click',askPartnerPhotos);
   const carousel=document.getElementById('usAlbumCarousel');
@@ -939,6 +944,10 @@ async function openAlbum(card,{focusDelete=false}={}){
   if(author)author.textContent=currentAlbum.caption?`Aggiunto da ${currentAlbum.author}`:currentAlbum.author;
   if(note)note.hidden=!currentAlbum.caption;
   renderAlbumStory();
+  // La bacheca, fase 2 (27/11/2026): US's post-it and yours, also when it is not pinned.
+  const board=document.getElementById('usAlbumBacheca');
+  if(board){board.hidden=true;board.innerHTML='';window.UsBacheca?.memoryRow?.(board,{ref:`moment:${id}`,title:currentAlbum.caption||currentAlbum.date||'Un ricordo',mini:true});}
+  setSoloFoto(false);
   overlay?.classList.add('show');
   // The modal bookkeeping (background inert, focus, page scroll lock) restyles
   // the whole page: it waits until the photo has landed, so the first frame of
@@ -964,10 +973,25 @@ async function openAlbum(card,{focusDelete=false}={}){
     }
   }
 }
+// La bacheca: «Vedilo in bacheca» and «fai spazio» close the open memory first.
+window.closeMomentAlbum=function(){if(document.getElementById('usAlbumOverlay')?.classList.contains('show'))closeAlbum();};
 window.refreshOpenMomentAlbum=function(){
   if(currentAlbum?.id&&document.getElementById('usAlbumOverlay')?.classList.contains('show'))return loadAlbum(currentAlbum.id);
   return Promise.resolve();
 };
+// Solo la foto (founder, 28/11/2026): everything on the photo goes away but the
+// close and this button; again, or a tap on the photo, and it all comes back.
+function setSoloFoto(on){
+  const overlay=document.getElementById('usAlbumOverlay'),btn=document.getElementById('usAlbumSolo');
+  if(!overlay)return;
+  overlay.classList.toggle('is-solo-foto',Boolean(on));
+  if(on)document.getElementById('usAlbumScroll')?.scrollTo?.({top:0});
+  if(!btn)return;
+  btn.setAttribute('aria-pressed',on?'true':'false');
+  btn.setAttribute('aria-label',on?'Mostra tutto':'Solo la foto');
+  const icon=btn.querySelector('.us-icon');
+  if(icon)icon.dataset.usIcon=on?'eye':'eye-slash';
+}
 function closeAlbum(){
   const overlay=document.getElementById('usAlbumOverlay');
   if(!overlay)return;
@@ -976,6 +1000,7 @@ function closeAlbum(){
     overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true');
     document.body.classList.remove('us-album-open');
     currentAlbum=null;albumRows=[];albumLoaded=false;albumCarouselTouch=null;
+    setSoloFoto(false);
     paintDeleteControl();
   };
   closeLightbox();
@@ -1142,7 +1167,7 @@ function installHooks(){
 installHooks();
 setTimeout(()=>decorateMomentCards().catch(()=>{}),900);
 document.addEventListener('visibilitychange',()=>{
-  if(!document.hidden&&window.usProfile){
+  if(!document.hidden&&window.usProfile&&!window.UsForeground?.shortAway?.()){
     if(document.getElementById('moments')?.classList.contains('active'))decorateMomentCards().catch(()=>{});
     if(currentAlbum)loadAlbum(currentAlbum.id).catch(()=>{});
   }
@@ -1215,9 +1240,12 @@ console.info('[US] Moments Albums attivo');
       <div class="us-moments-head-actions">
         <span class="us-moments-total" id="usMomentsTotal"></span>
         <button type="button" class="us-moments-add" id="usMomentsAdd" aria-label="Aggiungi un ricordo"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
+        <button type="button" class="us-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button>
       </div>
     `;
     section.insertBefore(head, originalTitle.nextSibling);
+    // Your character top right, as on the other pages (redesign definitivo, D6).
+    window.UsPersonaggi?.paintMe?.();
 
     const overlay = document.createElement('div');
     overlay.className = 'us-moment-compose-overlay';
@@ -1618,7 +1646,7 @@ console.info('[US] Moments Albums attivo');
   let entryRequestId = 0;
   const all = (selector) => [...(document.querySelectorAll?.(selector) || [])];
   async function refreshConservatiEntry() {
-    const entries = [document.getElementById('conservatiEntry'), ...all('[data-conservati-entry]')].filter(Boolean);
+    const entries = all('[data-conservati-entry]');
     const coupleId = window.usProfile?.couple_id;
     if (!entries.length || !coupleId) return;
     let client;
@@ -1633,7 +1661,7 @@ console.info('[US] Moments Albums attivo');
       if (requestId !== entryRequestId) return;
       const total = Number(count) || 0;
       for (const entry of entries) entry.hidden = total < 1;
-      for (const label of [document.getElementById('conservatiCount'), ...all('[data-conservati-count]')].filter(Boolean)) label.textContent = total > 0 ? String(total) : '';
+      for (const label of all('[data-conservati-count]')) label.textContent = total > 0 ? String(total) : '';
     } catch (error) {
       console.warn('[US Conservati] entry', error);
     }

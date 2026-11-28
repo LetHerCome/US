@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The veil at the bottom of the photo, as on Oggi: paper by day, night in the dark, never full. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="90" android:startColor="@color/us_w_velo_start" android:centerColor="@color/us_w_velo_center" android:centerY="0.3" android:endColor="@color/us_w_velo_end" />
+</shape>

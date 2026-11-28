@@ -31,7 +31,7 @@ test('perf 1.0: every versioned runtime file is in the build precache', () => {
 
 test('perf 1.0: native staging copies runtime files except product surfaces deliberately retired from native', () => {
   const staging = read('scripts/build-capacitor-web.mjs');
-  const retiredFromNative = new Set(['stories.js', 'stories.css']);
+  const retiredFromNative = new Set();
   for (const asset of localRuntime()) {
     const file = asset.slice(1).split('?')[0];
     if (retiredFromNative.has(file)) {
@@ -40,8 +40,6 @@ test('perf 1.0: native staging copies runtime files except product surfaces deli
     }
     assert.match(staging, new RegExp(`'${file.replace('.', '\\.')}'`), `${file} is in RUNTIME_FILES`);
   }
-  assert.match(staging, /stories\\\.js/, 'native staging explicitly strips the retired Stories script tag');
-  assert.match(staging, /stories\\\.css/, 'native staging explicitly strips the retired Stories stylesheet');
   assert.match(staging, /\/\(<script defer src="\\\/platform\\\.js\(\?:\\\?v=\[\^"\]\+\)\?"><\\\/script>\)\//, 'native-entry.js is inserted whatever the platform.js query');
 });
 
@@ -100,7 +98,7 @@ test('perf 1.0: a launch inside the same build serves the precached shell withou
   await sw.extendable('install');
   await sw.extendable('activate');
   sw.network.length = 0;
-  for (const asset of [...localRuntime(), '/assets/fonts/Figtree-Latin.woff2', '/assets/derived/runtime/us-icon-settings-128-v1.png', '/assets/derived/runtime/us-symbol-256-v1.png', '/assets/icons/phosphor/house-fill.svg']) {
+  for (const asset of [...localRuntime(), '/assets/fonts/Figtree-Latin.woff2', '/assets/derived/runtime/us-symbol-256-v1.png', '/assets/icons/phosphor/house-fill.svg']) {
     const response = await sw.fetchEvent(asset);
     assert.equal(await response.text(), `asset:${asset.split('?')[0]}`, asset);
   }

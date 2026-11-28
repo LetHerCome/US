@@ -78,8 +78,9 @@ test('M6D (6): entry delete cascades to reminders; the quick form never deletes 
   assert.doesNotMatch(js(), /syncEntryReminders/);
   assert.doesNotMatch(js(), /\.from\('calendar_reminders'\)/, 'the Calendar UI does not touch reminders in 1.0');
   // M7C: a create from Da vivere is forced shared; every other create keeps calendarKind.
-  assert.match(js(), /const kind = ideaLink \? 'shared' : calendarKind;/);
-  assert.match(js(), /const result = await sb\.from\('calendar_entries'\)\.insert\(withCreateAuthority\(payload, kind, window\.usProfile\)\)\.select\('id'\);/);
+  assert.match(js(), /const kind = ideaLink \|\| meet \? 'shared' : calendarKind;/);
+  // Noi, Fase A: the insert goes through write(), which retries without ci_vediamo on an older database.
+  assert.match(js(), /const result = await write\(\(\) => sb\.from\('calendar_entries'\)\.insert\(withCreateAuthority\(payload, kind, window\.usProfile\)\)\.select\('id'\)\);/);
 });
 
 // (7) authorization: personal owner-only, shared couple, recipient in couple, isolation.

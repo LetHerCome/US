@@ -57,9 +57,11 @@ test('top: the pill is only as tall as its 44px controls and content starts righ
   assert.match(tokens, /--us-top-chrome-height:46px;/);
   assert.match(tokens, /--us-top-chrome-clearance:56px;/);
   assert.match(read('identity.css'), /\.top\.us-premium-top\{top:calc\(var\(--us-safe-top\) \+ 6px\);left:max\(34px,var\(--us-safe-left\)\);right:max\(34px,var\(--us-safe-right\)\);padding:0 1px!important;/);
-  // Global shell: Ti penso and Lasciato per te flank the product mark.
+  // Redesign definitivo, fase 2 (23/11/2026, D6): Lasciato per te and your
+  // character flank the product mark; Ti penso is the heart of the bottom bar.
   const top = html.split('\n').find((line) => line.includes('<div class="top us-premium-top">')) || '';
-  assert.match(top, /id="thinkButton" class="us-top-think us-premium-control" onclick="sendThinkSignal\(\)"/);
+  assert.doesNotMatch(top, /id="thinkButton"/);
+  assert.match(top, /data-us-self onclick="go\('settings',\{nav:true\}\)"/);
   assert.match(top, /id="leftForYouPartnerEntry"/);
   assert.match(top, /class="us-top-brand"/);
   assert.doesNotMatch(top, /id="usPerVoiTop"/, 'Per voi belongs to Gioca, not global chrome');
@@ -78,9 +80,10 @@ test('page labels: Ricordi and Gioca stay accessible without a visible top-left 
   assert.doesNotMatch(moments, /<h2>Ricordi<\/h2>/);
   const games = read('games.js');
   assert.match(games, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
-  // Round 3 parity (062): Sfida di oggi leads the hub, then the mockup's week.
-  assert.match(games, /<span class="us-gv4-daily-pending-title">La domanda di oggi<\/span>/);
-  assert.match(games, /<div class="us-gv2-week" id="usGv2Week" data-s role="list" aria-label="Questa settimana">/);
+  // Redesign definitivo (D11): la domanda di oggi left Gioca; since fase 6 the hub starts with the tokens.
+  assert.doesNotMatch(games, /us-gv4-daily-pending-title/);
+  assert.match(games, /<section class="us-gv2-tokens" id="usGv2Tokens"/);
+  assert.doesNotMatch(games, /id="usGv2Week"/);
   assert.doesNotMatch(games, /rhythmStrip|us-gv2-head"/);
 });
 
@@ -124,16 +127,19 @@ const round = (id, family, over = {}) => ({ id, game_family: family, item_count:
 // directly in "Da continuare", completed ones in one disclosure at the end.
 test('Gioca V4: six existing game IDs and hero are in one bento grid', async () => {
   const html = await gioca(homeOf()).hubHtml();
-  const ids = [...html.matchAll(/data-gv2-family="([a-z_]+)"/g)].map((m) => m[1]);
+  const all = html.slice(html.indexOf('class="us-gv2-all"'));
+  const ids = [...all.matchAll(/data-gv2-family="([a-z_]+)"/g)].map((m) => m[1]);
   // G7 1.0 — "E se…?" is no longer offered (old rounds still open by id).
   assert.deepEqual(ids, ['scopritevi', 'confrontatevi', 'ridete', 'quanto_mi_conosci', 'rivivete']);
-  assert.ok(html.indexOf('us-gv2-game-grid') < html.indexOf('data-gv2-action="per-voi"'), 'Per voi is the first bento tile inside the game grid');
+  assert.ok(html.indexOf('us-gv2-giostra-track') < html.indexOf('data-gv2-action="per-voi"'), 'Per voi is the first card of the giostra');
   assert.ok(html.indexOf('data-gv2-action="per-voi"') < html.indexOf('data-gv2-action="swipe"'), 'Per voi precedes Swipe in visual and keyboard order');
   assert.equal((html.match(/data-gv2-action="per-voi"/g) || []).length, 1);
   assert.equal((html.match(/data-gv2-action="swipe"/g) || []).length, 1, 'Swipe has exactly one entry');
-  assert.match(html, /<section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">[\s\S]*?<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3>[\s\S]*?<div class="us-gv2-game-grid" data-s>/);
+  assert.match(html, /<section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">[\s\S]*?<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">Oggi per voi<\/h3>[\s\S]*?<div class="us-gv2-giostra" data-s>/);
+  assert.match(html, /<section class="us-gv2-all" aria-labelledby="usGv2AllTitle">[\s\S]*?id="usGv2AllTitle">Tutti i giochi<\/h3>[\s\S]*?<div class="us-gv2-game-grid" data-s>/);
   assert.doesNotMatch(html, /us-gv2-deck|us-gv2-filters|data-gv2-filter/);
-  assert.doesNotMatch(read('games.css'), /\.us-gv2-game-grid\{[^}]*overflow-x/, 'discovering games never needs a sideways scroll');
+  // La giostra (founder, 25/11/2026) replaces «no sideways deck»: one track, snap to the middle, dots.
+  assert.match(read('dc-gioca.css'), /\.us-gv2-giostra-track\{[^}]*overflow-x:auto[^}]*scroll-snap-type:x mandatory/);
 });
 
 test('Gioca: a fresh week shows no "Da continuare" and no completed list (nothing is invented)', async () => {
@@ -155,11 +161,18 @@ test('Gioca: rounds are plain readings of open_rounds / recent, on their tiles; 
   const rows = [...section.matchAll(/data-gv2-session="([^"]+)" data-tone="([a-z]+)"/g)].map((m) => [m[1], m[2]]);
   assert.deepEqual(rows, [['o2', 'progress']]);
   assert.match(section, /<b>E se…\?<\/b>/);
-  const tiles = [...html.matchAll(/data-gv2-family="([a-z_]+)" data-gv2-mode-state="open" data-gv2-session="([^"]+)" data-tone="([a-z]+)"[^>]*>[\s\S]*?<small>([^<]+)<\/small>/g)].map((m) => m.slice(1));
+  const all = html.slice(html.indexOf('class="us-gv2-all"'));
+  const tiles = [...all.matchAll(/data-gv2-family="([a-z_]+)" data-gv2-mode-state="open" data-gv2-chip="[a-z]+" data-gv2-session="([^"]+)" data-tone="([a-z]+)"[^>]*>[\s\S]*?<small>([^<]+)<\/small>/g)].map((m) => m.slice(1));
   assert.deepEqual(tiles, [['scopritevi', 'o3', 'waiting', 'Aspetti Beatrice'], ['ridete', 'o1', 'turn', 'Tocca a te'], ['rivivete', 'r1', 'ready', 'Risposte pronte']]);
+  // Fase 6 (D11): what waits for me is «Vi aspetta», first, the answers ready before my turn.
+  const waiting = html.match(/<section class="us-gv2-vi-aspetta"[\s\S]*?<\/section>/)?.[0] || '';
+  assert.deepEqual([...waiting.matchAll(/data-gv2-session="([^"]+)" data-tone="([a-z]+)"/g)].map((m) => [m[1], m[2]]), [['r1', 'ready'], ['o1', 'turn']]);
+  assert.match(waiting, /<b>Ridete<\/b><small>Beatrice ha giocato, tocca a te<\/small>/);
+  assert.ok(html.indexOf('us-gv2-vi-aspetta') < html.indexOf('us-gv2-choose'), 'Vi aspetta before the games');
   assert.ok(html.indexOf('us-gv2-continue') > html.indexOf('us-gv2-choose'), 'the rest comes after the games');
   const done = html.match(/<details class="us-gv2-done">[\s\S]*?<\/details>/)?.[0] || '';
-  assert.match(done, /<summary><span>Partite completate<\/span><b>1<\/b><\/summary>/);
+  // Gioca più piena (grill 27/11/2026, D1): the diary of your rounds, at the bottom.
+  assert.match(done, /<summary><span>Il diario delle partite<\/span><b>1<\/b><\/summary>/);
   assert.deepEqual([...done.matchAll(/data-gv2-session="([^"]+)"/g)].map((m) => m[1]), ['r2']);
   assert.ok(html.indexOf('us-gv2-done') > html.indexOf('us-gv2-choose'), 'completed rounds stay at the end');
 });
@@ -187,7 +200,8 @@ test('Gioca: game cards keep the existing mode action (start_game_round with the
 test('Gioca: RPC surface is explicit; Swipe adds only its start authority and no client storage', () => {
   const src = read('games.js');
   const rpcs = [...new Set([...src.matchAll(/sb\.rpc\('([a-z_0-9]+)'/g)].map((m) => m[1]))].sort();
-  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
+  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_carte_v1', 'get_game_intesa_v1', 'get_game_session', 'get_game_v2_home', 'get_plus_preview_v1', 'mark_game_session_reveal_seen', 'plus_waitlist', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
+  // Il vostro mese (27/11/2026): the shortcut reads get_carte_v1 to say a pack is waiting.
   assert.doesNotMatch(src, /localStorage|sessionStorage|indexedDB/);
 });
 
@@ -256,10 +270,11 @@ test('Noi: the couple row stays centered, "La nostra settimana" owns the week, a
   const head = bond.match(/<header class="noi-canonical-head noi-couple-head">[\s\S]*?<\/header>/)?.[0] || '';
   assert.match(head, /id="pairAvatarFrancesco"><img alt="" hidden><span class="fallback"/);
   assert.match(head, /id="pairAvatarBeatrice"><img alt="" hidden><span class="fallback"/);
-  assert.match(head, /id="noiCoupleCard" role="group" aria-label="Voi due, distanza e impostazioni"/);
+  assert.match(head, /id="noiCoupleCard" role="group" aria-label="Voi due e la distanza"/);
   assert.match(head, /id="noiCoupleLink" data-us-distance-state="unknown"/);
-  assert.match(head, /id="usSettingsEntry" onclick="go\('settings',\{nav:true\}\)"/);
-  assert.ok(head.indexOf('id="noiCoupleCard"') < head.indexOf('id="usSettingsEntry"'), 'Settings lives inside the couple card');
+  // No gear in Noi since the redesign (fase 2): your character, top right on every page, opens the Profilo.
+  assert.doesNotMatch(bond, /id="usSettingsEntry"/);
+  assert.match(bond, /class="us-me us-noi-v2-me" data-us-self/);
   assert.match(app, /if\(profile\.role==='francesco'\)setAvatarSlot\('pairAvatarFrancesco',url\);/);
   assert.match(app, /if\(profile\.role==='beatrice'\)setAvatarSlot\('pairAvatarBeatrice',url\);/);
   assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"|id="usCalendarEntry"|noi-hub-card/);
@@ -273,7 +288,7 @@ test('Noi: the couple row stays centered, "La nostra settimana" owns the week, a
 test('Noi density: the one calendar comes first, then the board; no second hero', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
   assert.ok(bond.indexOf('id="usNoiV2Content"') < bond.indexOf('id="usNoiBoard"'), 'the calendar sits above the board');
-  assert.match(bond, /<h2 id="usNoiBoardTitle">Bacheca<\/h2>/);
+  assert.match(bond, /<h2 id="usNoiBoardTitle">La lavagna<\/h2>/);
   assert.doesNotMatch(bond, /data-noi-open-link/);
   assert.doesNotMatch(bond, /class="noi-week-board"|noi-hub-card--resonance/);
 });
@@ -293,7 +308,8 @@ const settingsIn = (chunk) => [...chunk.matchAll(/data-us-setting="([a-z-]+)"/g)
 test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the couple shares', () => {
   // US V3 — Personalizza Oggi was this phone's own choice in TU; since 29/10/2026 (founder) it lives in Sintonia only.
   // US Plus, in arrivo (13/11/2026): «Avvisatemi» is this account's own answer, so it sits in TU.
-  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'person-color', 'status-form', 'plus', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status', 'report']);
+  // L'intro col tuo personaggio (26/11/2026): «Rivedi l'intro» is this phone's, so it sits in TU.
+  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'person-color', 'status-form', 'plus', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'intro', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status', 'report']);
   assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'together-mode', 'story-archive', 'leave-couple']);
   assert.match(scope('voi'), /<article class="us-couple-id-card" id="usCoupleIdCard"/, 'the couple card is shared state');
   assert.match(scope('tu'), /<h3 id="usSettingsTuTitle">Tu<\/h3>/);
@@ -303,7 +319,7 @@ test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the cou
 test('Settings: every control exists exactly once and keeps its existing action', () => {
   const all = settingsIn(settingsPage);
   assert.equal(new Set(all).size, all.length, 'no duplicated control');
-  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'leave-couple', 'location', 'logout', 'maudit', 'notifications', 'optimize-ricordi', 'person-color', 'plus', 'privacy', 'profile-photo', 'relationship-date', 'report', 'status-form', 'story-archive', 'sync-status', 'together-mode', 'widgets']);
+  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'intro', 'leave-couple', 'location', 'logout', 'notifications', 'optimize-ricordi', 'person-color', 'plus', 'privacy', 'profile-photo', 'relationship-date', 'report', 'status-form', 'story-archive', 'sync-status', 'together-mode', 'widgets']);
   const settingsJs = read('settings.js');
   for (const name of all) assert.match(settingsJs, new RegExp(`if\\(name==='${name}'\\)`), `${name} is still handled`);
   for (const id of ['usRelationshipDateValue', 'usNotificationsValue', 'usDistanceUnitValue', 'usLocationState', 'usFeedbackValue', 'usSyncValue', 'usStoryArchiveValue', 'usSettingsBuild', 'usCoupleAvatars', 'usCoupleNames', 'usTogetherLine', 'usSettingsDeviceDot']) {
@@ -345,7 +361,7 @@ test('release: one BUILD_ID owns HTML, version marker and atomic shell cache', (
 
 test('no new dependencies', () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/haptics', '@capacitor/ios', '@capacitor/push-notifications', '@capawesome/capacitor-app-update', '@supabase/supabase-js', '@us/app-icon', '@us/app-lock', '@us/apple-signin', '@us/google-signin', '@us/photo-place', '@us/push-support', '@us/splash-theme', '@us/widget-bridge']); // Accedi con Apple (05/11/2026, iOS Store V1): local apple-signin plugin, iOS only; Mappa dei Ricordi (29/10/2026): local photo-place plugin; Icone dell'app (29/10/2026, Premi Sintonia V2): local app-icon plugin; Aggiornamento dell'app (29/10/2026, founder): Play in-app updates plugin; Accesso con Google (25/10/2026): local Credential Manager plugin; M15: iOS platform; Native Security V1: local app-lock plugin; Native Notifications V1: official push plugin + local push-support; 18/10/2026: local splash-theme plugin (Android splash follows the app theme)
+  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/filesystem', '@capacitor/haptics', '@capacitor/ios', '@capacitor/push-notifications', '@capacitor/share', '@capawesome/capacitor-app-update', '@supabase/supabase-js', '@us/app-icon', '@us/app-lock', '@us/apple-signin', '@us/google-signin', '@us/photo-place', '@us/push-support', '@us/splash-theme', '@us/widget-bridge']); // Il vostro mese (27/11/2026): official Share + Filesystem plugins, to share the 9:16 images on Android; Accedi con Apple (05/11/2026, iOS Store V1): local apple-signin plugin, iOS only; Mappa dei Ricordi (29/10/2026): local photo-place plugin; Icone dell'app (29/10/2026, Premi Sintonia V2): local app-icon plugin; Aggiornamento dell'app (29/10/2026, founder): Play in-app updates plugin; Accesso con Google (25/10/2026): local Credential Manager plugin; M15: iOS platform; Native Security V1: local app-lock plugin; Native Notifications V1: official push plugin + local push-support; 18/10/2026: local splash-theme plugin (Android splash follows the app theme)
   assert.deepEqual(Object.keys(pkg.devDependencies).sort(), ['@capacitor/cli', '@electric-sql/pglite', 'esbuild']);
 });
 
@@ -353,12 +369,14 @@ test('no new dependencies', () => {
 test('Gioca density: played Per voi, game grid and weekly question use compact hub geometry', () => {
   const css = read('games.css');
   assert.match(css, /US-GIOCA-DENSITY-01/);
-  assert.match(css, /#quiz \.us-gv2-pervoi\[data-gv2-state="played"\]\{[\s\S]*?min-height:64px/);
+  // The old Per voi hero (.us-gv2-pervoi) left Gioca; its styles went on 27/11/2026.
+  assert.doesNotMatch(css, /\.us-gv2-pervoi\b/);
   assert.match(css, /US-GIOCA-V3/);
   assert.match(css, /#quiz \.us-gv2-game-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(css, /#quiz \.us-gv2-game\.is-swipe\{[^}]*grid-column:1\/-1/, 'Swipe stands out without taking the page');
   assert.match(css, /#quiz \.us-gv2-weekly\.is-open\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
-  assert.match(css, /body:has\(#quiz\.page\.active\) #thinkButton\{display:none!important\}/);
+  // The Ti penso heart stays in the bar on Gioca (redesign definitivo, fase 2).
+  assert.doesNotMatch(css, /#thinkButton\{display:none/);
 });
 
 
@@ -369,7 +387,8 @@ test('Settings density: utility rows, couple card and footer stay compact withou
   assert.match(css, /#settings \.us-settings2-row\{min-height:58px!important;/);
   assert.match(css, /#settings \.us-settings2-icon\{[\s\S]*?width:28px;[\s\S]*?height:28px;/);
   assert.match(css, /#settings \.us-couple-id-card\{[\s\S]*?padding:10px 11px;/);
-  assert.match(css, /body:has\(#settings\.page\.active\) #thinkButton\{\s*display:none!important;/);
+  // The Ti penso heart stays in the bar on the Profilo (redesign definitivo, fase 2).
+  assert.doesNotMatch(css, /#thinkButton\{\s*display:none/);
   const page = html.match(/<main id="settings"[\s\S]*?<\/main>/)?.[0] || '';
   for (const name of ['profile-photo','notifications','location','distance','feedback','home-photo','sync-status','relationship-date','story-archive']) {
     assert.match(page, new RegExp(`data-us-setting="${name}"`), name);
@@ -377,9 +396,9 @@ test('Settings density: utility rows, couple card and footer stay compact withou
 });
 
 
-// 1.0: the dock above the nav holds one evidence card and the Domanda di oggi;
-// arbitration stays authoritative, the cards keep the mockup geometry (dc-oggi.css).
-test('Oggi density: arbitration stays authoritative; the dock holds one evidence card and the daily card', () => {
+// Redesign D9: the dock above the nav holds the Domanda di oggi only;
+// arbitration stays authoritative, the card keeps the mockup geometry (dc-oggi.css).
+test('Oggi density: arbitration stays authoritative; the dock holds the daily card', () => {
   const dcOggi = read('dc-oggi.css');
   // Parity 2026-10 (mockup .og-bottom / .dq): a 12px column; the card is ring + kicker,
   // the question across, then the status line and the button; short screens keep it smaller (03/11/2026).
@@ -388,14 +407,15 @@ test('Oggi density: arbitration stays authoritative; the dock holds one evidence
   assert.match(dcOggi, /#home #usDailyRitual \.dq-foot\{grid-column:1\/-1;display:flex;/);
   assert.match(dcOggi, /@media\(max-height:600px\)\{\n  #home #usDailyRitual \.us-daily-ritual-question\{font-size:15px\}/);
   const app = read('app.js');
-  assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink'\]\)/);
+  assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usDailyRitual','usOggiCalendarWidget','usDailyRevealLink'\]\)/);
   assert.match(app, /winner\.evidence===id\?'evidence':winner\.daily===id\?'daily':'suppressed'/);
 });
 
 
-test('shell: Ti penso lives in top chrome and Per voi stays inside Gioca', () => {
+test('shell: Ti penso lives in the middle of the bottom bar and Per voi stays inside Gioca', () => {
   const top = html.split('\n').find((line) => line.includes('<div class="top us-premium-top">')) || '';
-  assert.match(top, /id="thinkButton"/);
+  assert.doesNotMatch(top, /id="thinkButton"/);
+  assert.match(html, /<nav class="nav us-nav[\s\S]*?id="thinkButton" class="us-nav-think"/);
   assert.match(top, /id="leftForYouPartnerEntry"/);
   assert.doesNotMatch(top, /usPerVoiTop/);
   assert.equal((html.match(/id="thinkButton"/g) || []).length, 1);

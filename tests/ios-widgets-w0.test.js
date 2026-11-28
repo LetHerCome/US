@@ -128,46 +128,118 @@ test('W0 estensione: target WidgetKit app.uscouple.widgets, incorporato nell\'ap
   assert.match(read('ios/App/App/Info.plist'), /<key>UsWidgetKeychainGroup<\/key>\s*<string>\$\(AppIdentifierPrefix\)app\.uscouple\.shared<\/string>/);
 });
 
-test('W1 disegni e caratteri: gli stessi file di Android, byte per byte', () => {
+test('Estensione widget: nessuna immagine spedita senza che lo Swift la usi', () => {
+  // Piccolezze prima del rilascio (27/11/2026): the redesign draws the widgets
+  // natively, the old art_* illustrations and the grain left the extension.
+  const IMAGE = /\.(png|jpe?g|webp|gif|heic|pdf|svg)$/i;
+  const walk = (dir) => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((entry) => {
+    const relative = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) return entry.name.endsWith('.imageset') ? [relative] : walk(relative);
+    return IMAGE.test(entry.name) ? [relative] : [];
+  });
+  const swift = [EXT, CORE].flatMap((dir) => fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith('.swift')).map((f) => read(`${dir}/${f}`))).join('\n');
+  const used = (name) => new RegExp(`"${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\.\\w+)?"`).test(swift);
+  for (const file of walk(EXT)) {
+    const name = path.basename(file).replace(/\.(imageset|\w+)$/, '');
+    assert.ok(used(name), `${file}: immagine non usata dallo Swift dei widget`);
+  }
+  // The extension's resources phase carries only what the Swift uses.
+  const pbx = read('ios/App/App.xcodeproj/project.pbxproj');
+  const phase = pbx.match(/B1D6E700000000000000000B \/\* Resources \*\/ = \{[\s\S]*?\};/);
+  assert.ok(phase, 'fase Resources dell\'estensione');
+  const shipped = [...phase[0].matchAll(/\/\* (.+?) in Resources \*\//g)].map((m) => m[1]);
+  assert.ok(shipped.includes('Fraunces.ttf') && shipped.includes('Figtree.ttf'), 'i caratteri restano');
+  // Images, also those of an asset catalog (walked above), only when the Swift names them.
+  for (const file of shipped.filter((f) => IMAGE.test(f))) {
+    assert.ok(used(file.replace(IMAGE, '')), `${file}: spedita ma non usata`);
+  }
+  for (const name of ['art_photo', 'art_think_s', 'art_think_m', 'grain_tile']) {
+    assert.doesNotMatch(pbx, new RegExp(name), `${name} fuori dal progetto`);
+  }
+});
+
+test('W1 caratteri: gli stessi file di Android, byte per byte', () => {
+  // The Pastello illustrations and the grain left the Android widgets with the
+  // redesign (27/11/2026 cleanup); the iPhone extension no longer draws them either.
   const pairs = [
-    ['art_photo.webp', 'drawable-nodpi/us_widget_art_photo.webp'], ['art_photo_night.webp', 'drawable-night-nodpi/us_widget_art_photo.webp'],
-    ['art_think_s.webp', 'drawable-nodpi/us_widget_art_think_s.webp'], ['art_think_s_night.webp', 'drawable-night-nodpi/us_widget_art_think_s.webp'],
-    ['art_think_m.webp', 'drawable-nodpi/us_widget_art_think_m.webp'], ['art_think_m_night.webp', 'drawable-night-nodpi/us_widget_art_think_m.webp'],
-    ['grain_tile.png', 'drawable-nodpi/us_widget_grain_tile.png'],
     ['Fraunces.ttf', 'font/us_font_fraunces.ttf'], ['Fraunces-Italic.ttf', 'font/us_font_fraunces_italic.ttf'], ['Figtree.ttf', 'font/us_font_figtree.ttf']
   ];
   for (const [ios, android] of pairs) assert.equal(sha(`${EXT}/Resources/${ios}`), sha(`${ANDROID}/res/${android}`), ios);
   const theme = read(`${EXT}/UsWidgetTheme.swift`);
-  // Android's axes (res/font/us_fraunces.xml, us_figtree.xml) and the heart path of the Android drawables.
+  // Android's axes (res/font/us_fraunces.xml, us_figtree.xml).
   assert.match(theme, /axes: \[wght: 400, opsz: 72\]/);
   assert.match(theme, /axes: \[wght: bold \? 700 : 500\]/);
-  assert.match(read(`${ANDROID}/res/drawable/us_widget_think_heart_empty.xml`), /M12,20\.5s-7\.5,-4\.4 -7\.5,-10\.1A4\.3,4\.3 0,0 1,12 7\.6a4\.3,4\.3 0,0 1,7\.5 2\.8c0,5\.7 -7\.5,10\.1 -7\.5,10\.1z/);
-  assert.match(theme, /M12,20\.5s-7\.5,-4\.4 -7\.5,-10\.1A4\.3,4\.3 0,0 1,12 7\.6/);
-  assert.match(theme, /Color\(red: 1, green: 124 \/ 255, blue: 150 \/ 255\)/, 'rosa #FF7C96');
-  assert.match(theme, /Color\(red: 26 \/ 255, green: 16 \/ 255, blue: 32 \/ 255\)/, 'inchiostro Pastello #1A1020');
+  // Widget del redesign (26/11/2026): the same tokens as the Android widgets, the same Phosphor heart.
+  const day = read(`${ANDROID}/res/values/colors.xml`);
+  const night = read(`${ANDROID}/res/values-night/colors.xml`);
+  for (const [token, hex] of [['us_w_surface', 'FBF7F0'], ['us_w_ink', '231B1D'], ['us_w_label', 'B8452F'], ['us_w_board', 'F3ECE1']]) {
+    assert.match(day, new RegExp(`<color name="${token}">#FF${hex}</color>`), token);
+    assert.match(theme, new RegExp(`0xFF${hex.slice(0, 2)}_${hex.slice(2)}`), `${token} su iPhone`);
+  }
+  for (const [token, hex] of [['us_w_surface', '120D11'], ['us_w_board', '141416']]) {
+    assert.match(night, new RegExp(`<color name="${token}">#FF${hex}</color>`), token);
+    assert.match(theme, new RegExp(`0xFF${hex.slice(0, 2)}_${hex.slice(2)}`), `${token} di notte su iPhone`);
+  }
+  const heart = read(`${ANDROID}/java/com/usapp/widget/UsWidgetCharacter.java`).match(/HEART = "([^"]+)"/)[1];
+  assert.ok(theme.includes(`static let heart = "${heart}"`), 'lo stesso cuore di Android');
+});
+
+// Widget del redesign (26/11/2026): the characters on iPhone are the app's, like Android's.
+test('Personaggi su iPhone: gli stessi corpi e accessori di personaggi.js e di Android', () => {
+  const app = read('personaggi.js');
+  const swift = read(`${CORE}/UsCharacterShapes.swift`);
+  const java = read(`${ANDROID}/java/com/usapp/widget/UsCharacterShapes.java`);
+  for (const name of ['palla', 'quadrato', 'triangolo', 'goccia', 'nuvola']) {
+    const body = app.match(new RegExp(`${name}: \\{ body: '([^']+)'`))[1];
+    assert.ok(swift.includes(`body: "${body}"`), `${name} su iPhone`);
+    assert.ok(java.includes(`"${body}"`), `${name} su Android`);
+  }
+  for (const item of ['cappello', 'fiocco', 'cuffie', 'corona', 'coroncina', 'festa', 'cento', 'occhiali', 'sole', 'sciarpina', 'gala', 'macchinetta']) {
+    assert.match(swift, new RegExp(`case "${item}":`), item);
+  }
+  assert.match(swift, /static let ink: UInt32 = 0xFF14_120E/);
+  assert.match(swift, /static func edge\(_ color: UInt32\) -> UInt32 \{ mix\(color, 0\.42, 0xFF1A_1020\) \}/);
+  const view = read(`${EXT}/UsCharacterView.swift`);
+  assert.match(view, /let oneTint = mono \|\| renderingMode != \.fullColor/, 'blocca schermo e Home colorata: in una tinta');
+  // The new files are in the extension's build (project.pbxproj).
+  const project = read('ios/App/App.xcodeproj/project.pbxproj');
+  for (const file of ['UsCharacterView.swift', 'UsCardWidgets.swift', 'UsCharacterShapes.swift']) {
+    assert.match(project, new RegExp(`/\\* ${file.replace('.', '\\.')} in Sources \\*/,`), `${file} compilato`);
+  }
 });
 
 test('W1 Foto & Noi e Ti penso: taglie, tocchi e link uguali ad Android', () => {
   const bundle = read(`${EXT}/UsWidgetsBundle.swift`);
   assert.match(bundle, /@main/);
-  assert.match(bundle, /UsPhotoWidget\(\)\s+UsThinkWidget\(\)/);
+  // Widget del redesign (26/11/2026): the same nine as Android, then the iOS 18 control.
+  assert.match(bundle, /UsPhotoWidget\(\)\s+UsThinkWidget\(\)\s+UsDailyWidget\(\)\s+UsStatusWidget\(\)\s+UsNoiWidget\(\)\s+UsMessageWidget\(\)\s+UsMemoriesWidget\(\)\s+UsLavagnaWidget\(\)\s+UsPostitWidget\(\)\s+if #available\(iOS 18\.0, \*\) \{\s+UsThinkControl\(\)/);
   const photo = read(`${EXT}/UsPhotoWidget.swift`);
   assert.match(photo, /widgetKind\("photo"\)/);
-  assert.match(photo, /\.supportedFamilies\(\[\.systemSmall, \.systemMedium, \.systemLarge\]\)/);
+  assert.match(photo, /\.supportedFamilies\(\[\.systemSmall, \.systemMedium, \.systemLarge, \.accessoryCircular, \.accessoryInline\]\)/);
   assert.match(photo, /\.widgetURL\(UsWidgetShared\.openURL\("photo"\)\)/);
   assert.match(photo, /\.containerBackgroundRemovable\(false\)/, 'StandBy tiene la foto');
   assert.match(photo, /widgetAccentedRenderingMode\(\.fullColor\)/, 'Home colorata: la foto resta a colori');
   const think = read(`${EXT}/UsThinkWidget.swift`);
   assert.match(think, /widgetKind\("think"\)/);
-  assert.match(think, /\.supportedFamilies\(\[\.systemSmall, \.systemMedium\]\)/);
-  assert.match(think, /if #available\(iOSApplicationExtension 17\.0, \*\) \{\s*if model\.canSend \{\s*Button\(intent: UsThinkIntent\(\)\)/);
-  assert.match(think, /heart\.widgetURL\(UsWidgetShared\.openURL\("think"\)\)/, 'iOS 16 e non collegato: apre US');
+  assert.match(think, /\.supportedFamilies\(\[\.systemSmall, \.systemMedium, \.accessoryCircular, \.accessoryInline\]\)/);
+  assert.match(think, /if #available\(iOS 17\.0, \*\) \{\s*if model\.canSend \{\s*Button\(intent: UsThinkIntent\(\)\)/);
+  assert.match(think, /content\.widgetURL\(UsWidgetShared\.openURL\("think"\)\)/, 'iOS 16 e non collegato: apre US');
   assert.match(think, /static var openAppWhenRun = false/);
-  assert.doesNotMatch(think, /Text\(/, 'solo il cuore, come su Android (le frasi solo per VoiceOver)');
+  assert.match(think, /ControlWidgetButton\(action: UsThinkIntent\(\)\)/, 'il Controllo «Ti penso» di iOS 18');
+  const cards = read(`${EXT}/UsCardWidgets.swift`);
+  for (const kind of ['daily', 'status', 'noi', 'message', 'memories', 'lavagna', 'postit']) {
+    assert.match(cards, new RegExp(`widgetKind\\("${kind}"\\), provider: UsCardProvider\\(kind: "${kind}"\\)`), kind);
+  }
+  // The lock screen (solo iPhone): one tint, never answers, contents or places.
+  assert.match(cards, /\.supportedFamilies\(\[\.systemSmall, \.systemMedium, \.accessoryCircular, \.accessoryRectangular\]\)/);
+  assert.match(cards, /\.supportedFamilies\(\[\.systemSmall, \.systemMedium, \.accessoryRectangular\]\)/);
+  assert.match(cards, /\.supportedFamilies\(\[\.systemSmall, \.systemMedium, \.accessoryCircular, \.accessoryRectangular, \.accessoryInline\]\)/);
+  assert.doesNotMatch(cards, /answer"\]|"text"\]\)\.font|latitude|longitude/);
   const sender = read(`${EXT}/UsThinkSender.swift`);
   assert.match(sender, /X-US-Widget-Token/);
   assert.match(sender, /willPerformHTTPRedirection[\s\S]*completionHandler\(nil\)/, 'mai seguire un redirect col token');
-  assert.match(sender, /guard model\.canSend, !model\.busy, !cooldown else \{ return \}/);
+  // Ti penso ×N (27/11/2026): a tap of a burst being counted is never held back by the cooldown.
+  assert.match(sender, /guard model\.canSend, !model\.busy, !cooldown \|\| model\.counting else \{ return \}/);
   assert.match(sender, /guard store\.owner\(\) == owner else \{ return \}/);
   // Links: the kinds widgets.js already reads (us://widget/<kind>), Giorni insieme not ported.
   const kinds = read('widgets.js').match(/const KINDS = Object\.freeze\(\[([^\]]+)\]\)|const KINDS = \[([^\]]+)\]/);

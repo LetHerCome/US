@@ -146,4 +146,18 @@
          no prompt and the recording fails. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- "Lasciato per te" «Scatta una foto» / «Fai un video» (27/11/2026):
+         <input capture> opens the phone's camera app through Capacitor's
+         BridgeWebChromeClient, which checks resolveActivity() first. From
+         Android 11 the camera app is invisible to that check unless declared
+         here, and the input silently falls back to the gallery picker. -->
+    <queries>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+        <intent>
+            <action android:name="android.media.action.VIDEO_CAPTURE" />
+        </intent>
+    </queries>
 </manifest>

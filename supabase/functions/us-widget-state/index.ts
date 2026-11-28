@@ -35,15 +35,21 @@ function daysBetween(from: string, to: string) {
   return Math.round((dateOnlyUtc(to) - dateOnlyUtc(from)) / 86400000);
 }
 
+// The Sintonia curve, a table since 28/11/2026 (the same as app.js
+// bondLevelStart and private.progression_level_start); after 26, +5000 a level.
+const BOND_LEVEL_STARTS = [0, 150, 300, 475, 675, 875, 1100, 1350, 1625, 1975, 2375, 2800, 3250, 3750, 4275, 4825, 5425, 6050, 6700, 7400, 8125, 8875, 9675, 12075, 15475, 20075];
+function bondLevelStart(level: number) {
+  const n = Math.max(1, Math.floor(Number(level) || 1));
+  const last = BOND_LEVEL_STARTS.length;
+  return n <= last ? BOND_LEVEL_STARTS[n - 1] : BOND_LEVEL_STARTS[last - 1] + (Math.min(n, 1000) - last) * 5000;
+}
+
 function bondLevelInfo(totalXp = 0) {
   const total = Math.max(0, Number(totalXp) || 0);
-  let level = 1, floor = 0, needed = 200;
-  while (total >= floor + needed) {
-    floor += needed;
-    level += 1;
-    needed = 200 + (level - 1) * 150;
-    if (level > 999) break;
-  }
+  let level = 1;
+  while (level < 999 && total >= bondLevelStart(level + 1)) level += 1;
+  const floor = bondLevelStart(level);
+  const needed = Math.max(1, bondLevelStart(level + 1) - floor);
   const current = total - floor;
   return { xp: total, level, current, needed, progress: Math.max(0, Math.min(100, current / needed * 100)) };
 }

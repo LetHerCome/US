@@ -105,13 +105,10 @@ test('M1.5 nasconde la priority region solo in Home e preserva il runtime Daily/
   const html = read('index.html');
   const css = read('identity.css') + read('fix4.css') + read('styles.css');
   const app = read('app.js');
-  assert.match(html, /<main id="home"[\s\S]*id="usTodayPriorityRegion" hidden aria-live="polite"><\/div>/);
-  assert.match(css, /#home #usTodayPriorityRegion\[hidden\]\{display:none!important\}/);
-  assert.match(app, /function dailyTodayPriorityViewModel/);
-  assert.match(app, /function eventTodayPriorityViewModel/);
-  assert.match(app, /data-us-today-action/);
-  assert.match(app, /if\(action==='today'\)window\.openToday\?\./);
-  assert.match(app, /if\(action==='events'\)window\.openEvents\?\./);
+  assert.doesNotMatch(html, /id="usTodayPriorityRegion"/, 'redesign D9: the priority region left Oggi');
+  // The Daily and Events runtime stays: the Domanda di oggi card and the og-next pill.
+  assert.match(app, /function dailyRitualViewModel/);
+  assert.match(app, /window\.getTodayEventPrioritySource\?\.\(\{fresh:freshEvents\}\)/);
 });
 
 test('M1.6 rende Home full-bleed senza cambiare il padding globale delle secondary pages', () => {

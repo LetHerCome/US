@@ -13,30 +13,32 @@ const app = read('app.js');
 const html = read('index.html');
 const slice = (from, to) => { const a = app.indexOf(from); const b = app.indexOf(to, a); assert.ok(a >= 0 && b > a, `${from}…${to}`); return app.slice(a, b); };
 
-// Independent oracle: level n needs 200 + (n-1)*150 XP, thresholds are cumulative.
-const needed = (level) => 200 + (level - 1) * 150;
-const floorOf = (level) => { let f = 0; for (let l = 1; l < level; l++) f += needed(l); return f; };
+// Independent oracle: where each level starts (the table of il grande
+// bilanciamento, 28/11/2026; after 26, +5000 a level).
+const STARTS = [0, 150, 300, 475, 675, 875, 1100, 1350, 1625, 1975, 2375, 2800, 3250, 3750, 4275, 4825, 5425, 6050, 6700, 7400, 8125, 8875, 9675, 12075, 15475, 20075];
+const floorOf = (level) => (level <= STARTS.length ? STARTS[level - 1] : STARTS[STARTS.length - 1] + (level - STARTS.length) * 5000);
+const needed = (level) => floorOf(level + 1) - floorOf(level);
 
 function fakeEl() { const attrs = {}; return { textContent: '', style: {}, dataset: {}, setAttribute: (k, v) => { attrs[k] = String(v); }, getAttribute: (k) => attrs[k] ?? null, attrs }; }
 function harness() {
-  const ids = ['heroBondLevel', 'heroBondXp', 'bondFill', 'bondLevelValue', 'bondTotalXp', 'bondRankTitle', 'bondNextXp', 'bondPageFill', 'bondLevelXp', 'bondResonanceLevel', 'bondProgressTrack', 'noiHubResonanceTitle', 'noiHubResonanceMeta', 'noiHubResonanceFill', 'noiResonanceTotal'];
+  const ids = ['bondLevelValue', 'bondTotalXp', 'bondRankTitle', 'bondNextXp', 'bondPageFill', 'bondLevelXp', 'bondResonanceLevel', 'bondProgressTrack', 'noiHubResonanceTitle', 'noiHubResonanceMeta', 'noiHubResonanceFill', 'noiResonanceTotal'];
   const els = Object.fromEntries(ids.map((id) => [id, fakeEl()]));
   const window = {};
   const context = vm.createContext({ console, window, document: { getElementById: (id) => els[id] || null }, renderBondBadges() {}, escapeHtml: String });
-  vm.runInContext(`${slice('function bondLevelInfo(totalXp=0){', 'function bondBadgeIcon(level){')}\n${slice('function renderBondProgress(totalXp){', 'async function hydrateBondSummary(){')}\nwindow.info=bondLevelInfo;window.render=renderBondProgress;`, context);
+  vm.runInContext(`${slice('function bondLevelStart(level){', 'function bondBadgeIcon(level){')}\n${slice('function renderBondProgress(totalXp){', 'async function hydrateBondSummary(){')}\nwindow.info=bondLevelInfo;window.render=renderBondProgress;`, context);
   return { window, els };
 }
 
 test('M10.1D: progress is measured inside the CURRENT level, never total / next threshold', () => {
   const { window } = harness();
-  // Level 3 starts at 550 and needs 500 (next threshold 1050).
+  // Level 4 starts at 475 and needs 200 (next threshold 675).
   const info = window.info(610);
-  assert.equal(info.level, 3);
-  assert.equal(info.current, 60);
-  assert.equal(info.needed, 500);
-  assert.equal(info.progress, (610 - 550) / 500 * 100);
-  assert.notEqual(info.progress, 610 / 1050 * 100, 'not the naive total / next-threshold ratio');
-  assert.equal(window.info(1035).progress, (1035 - 550) / 500 * 100);
+  assert.equal(info.level, 4);
+  assert.equal(info.current, 135);
+  assert.equal(info.needed, 200);
+  assert.equal(info.progress, (610 - 475) / 200 * 100);
+  assert.notEqual(info.progress, 610 / 675 * 100, 'not the naive total / next-threshold ratio');
+  assert.equal(window.info(660).progress, (660 - 475) / 200 * 100);
 });
 
 test('M10.1D: the level lower bound and the next threshold are respected for every XP value', () => {
@@ -54,15 +56,17 @@ test('M10.1D: the level lower bound and the next threshold are respected for eve
 
 test('M10.1D: crossing a threshold advances the level and restarts the bar in the new range', () => {
   const { window } = harness();
-  const before = window.info(549); const at = window.info(550);
-  assert.equal(before.level, 2);
+  const before = window.info(474); const at = window.info(475);
+  assert.equal(before.level, 3);
   assert.ok(before.progress > 99);
-  assert.equal(at.level, 3);
+  assert.equal(at.level, 4);
   assert.equal(at.current, 0);
   assert.equal(at.progress, 0);
-  assert.equal(window.info(200).level, 2);
-  assert.equal(window.info(199).level, 1);
-  assert.equal(window.info(1050).level, 4);
+  assert.equal(window.info(150).level, 2);
+  assert.equal(window.info(149).level, 1);
+  assert.equal(window.info(675).level, 5);
+  assert.equal(window.info(20075).level, 26);
+  assert.equal(window.info(25075).level, 27);
   assert.equal(window.info(-5).progress, 0, 'negative/invalid XP never yields a bar');
   assert.equal(window.info('abc').level, 1);
 });
@@ -70,33 +74,34 @@ test('M10.1D: crossing a threshold advances the level and restarts the bar in th
 test('M10.1D: the rendered bar, labels and progressbar semantics all come from the same numbers', () => {
   const { window, els } = harness();
   window.render(610);
-  assert.equal(els.bondPageFill.style.width, '12%');
-  assert.equal(els.noiHubResonanceFill.style.width, '12%', 'hub and Risonanza never disagree');
-  assert.equal(els.bondResonanceLevel.textContent, 'Livello 3');
+  assert.equal(els.bondPageFill.style.width, '67.5%');
+  assert.equal(els.noiHubResonanceFill.style.width, '67.5%', 'hub and Risonanza never disagree');
+  assert.equal(els.bondResonanceLevel.textContent, 'Livello 4');
   // Round 3 (mockup parity): under the bar, the points inside the level and the points to the next one.
-  assert.equal(els.bondLevelXp.textContent, '60 / 500 punti');
-  assert.equal(els.bondNextXp.textContent, '440 punti al livello 4');
-  assert.deepEqual(['aria-valuenow', 'aria-valuemax', 'aria-valuetext'].map((a) => els.bondProgressTrack.getAttribute(a)), ['60', '500', '60 di 500 punti nel livello 3']);
+  assert.equal(els.bondLevelXp.textContent, '135 / 200 punti');
+  assert.equal(els.bondNextXp.textContent, '65 punti al livello 5');
+  assert.deepEqual(['aria-valuenow', 'aria-valuemax', 'aria-valuetext'].map((a) => els.bondProgressTrack.getAttribute(a)), ['135', '200', '135 di 200 punti nel livello 4']);
   assert.equal(els.noiResonanceTotal.textContent, '610');
   // XP grows → the bar advances; crossing the threshold → new level range.
-  window.render(800);
-  assert.equal(els.bondPageFill.style.width, `${(800 - 550) / 500 * 100}%`);
-  assert.ok(parseFloat(els.bondPageFill.style.width) > 12);
-  window.render(1049);
-  assert.equal(els.bondNextXp.textContent, '1 punto al livello 4');
-  window.render(1050);
-  assert.equal(els.bondResonanceLevel.textContent, 'Livello 4');
+  window.render(650);
+  assert.equal(els.bondPageFill.style.width, `${(650 - 475) / 200 * 100}%`);
+  assert.ok(parseFloat(els.bondPageFill.style.width) > 67.5);
+  window.render(674);
+  assert.equal(els.bondNextXp.textContent, '1 punto al livello 5');
+  window.render(675);
+  assert.equal(els.bondResonanceLevel.textContent, 'Livello 5');
   assert.equal(els.bondPageFill.style.width, '0%');
-  assert.equal(els.bondNextXp.textContent, '650 punti al livello 5');
-  assert.equal(els.bondProgressTrack.getAttribute('aria-valuemax'), '650');
-  assert.equal(window.usBondXp, 1050);
+  assert.equal(els.bondNextXp.textContent, '200 punti al livello 6');
+  assert.equal(els.bondProgressTrack.getAttribute('aria-valuemax'), '200');
+  assert.equal(window.usBondXp, 675);
 });
 
 test('M10.1D: no static or fake percentage — width is only ever written from bondLevelInfo', () => {
   assert.match(html, /<div id="bondPageFill"><\/div>/, 'no inline width in the markup');
   assert.doesNotMatch(html, /id="(?:bondPageFill|noiHubResonanceFill|bondFill)"[^>]*style=/);
+  // 27/11/2026: the hero bar (#bondFill) left the page long ago; its write went with the dead code.
   const widthWrites = app.match(/(?:pageFill|hubFill|heroFill)\.style\.width=`[^`]*`/g) || [];
-  assert.equal(widthWrites.length, 3);
+  assert.equal(widthWrites.length, 2);
   for (const w of widthWrites) assert.match(w, /\$\{info\.progress\}%/);
   assert.equal((app.match(/function bondLevelInfo\(/g) || []).length, 1, 'a single XP formula');
   assert.doesNotMatch(app, /bondPageFill'\)[^;]*\.style\.width='?\d/);

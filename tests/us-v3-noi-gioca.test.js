@@ -17,12 +17,14 @@ const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
 const noi = bond.match(/<section class="us-noi-v2"[\s\S]*?<\/section>\s*\n\s*<article class="noi-resonance"/)?.[0] || '';
 
 // ------------------------------------------------------------------ icons
-test('Noi icons: well-formed markup, the approved settings icon, a real list icon', () => {
+test('Noi icons: well-formed markup, your character instead of the gear, a real list icon', () => {
   assert.ok(noi.length > 1000, 'Noi V2 markup found');
   assert.doesNotMatch(html, /<span class="us-icon"\s+<img/, 'no half-open icon tag (the old grey square)');
-  assert.match(noi, /class="us-noi-v2-settings"[^>]*><img class="us-approved-custom-icon" src="\/assets\/derived\/runtime\/us-icon-settings-128-v1\.png"/);
-  // Noi nuova (03/11/2026): the two views are words, «Mese» and «Prossimi»; no tiles.
-  assert.match(noi, /id="usNoiV2ModeList"[^>]*>Prossimi<\/button>/);
+  // Redesign definitivo, fase 2 (D6): your character opens the Profilo; no gear.
+  assert.doesNotMatch(noi, /us-noi-v2-settings/);
+  assert.match(noi, /class="us-me us-noi-v2-me" data-us-self onclick="go\('settings',\{nav:true\}\)"/);
+  // Noi, Fase A (24/11/2026): one calendar, no «Mese / Prossimi»; no tiles.
+  assert.doesNotMatch(noi, /id="usNoiV2ModeList"|>Prossimi<\/button>/);
   assert.doesNotMatch(noi, /data-noi-open-link/);
 });
 
@@ -35,10 +37,15 @@ test('Icons: every data-us-icon used by the shell is mapped to an official Phosp
   }
   assert.ok(used.size > 15);
   for (const name of used) {
-    const rule = css.match(new RegExp(`\\.us-icon\\[data-us-icon="${name}"\\]\\{--us-icon-src:url\\("(\\/assets\\/icons\\/phosphor\\/[a-z-]+\\.svg)"\\)\\}`));
+    const rule = css.match(new RegExp(`\\.us-icon\\[data-us-icon="${name}"\\]\\{--us-icon-src:url\\("(\\/assets\\/icons\\/phosphor\\/[a-z-]+\\.svg)"\\)(?:;--us-icon-fill:url\\("(\\/assets\\/icons\\/phosphor\\/[a-z-]+-fill\\.svg)"\\);--us-icon-tint-alpha:\\.5)?\\}`));
     assert.ok(rule, `${name} has a mapping`);
     assert.ok(fs.existsSync(path.join(ROOT, rule[1].slice(1))), `${rule[1]} exists`);
     assert.ok(worker.includes(`"${rule[1]}"`), `${rule[1]} is precached for offline/native`);
+    // Icone a due toni (24/11/2026): the fill under the outline is the official Phosphor file too, precached.
+    if (rule[2]) {
+      assert.ok(fs.existsSync(path.join(ROOT, rule[2].slice(1))), `${rule[2]} exists`);
+      assert.ok(worker.includes(`"${rule[2]}"`), `${rule[2]} is precached`);
+    }
   }
   for (const file of ['list-bullets', 'chalkboard-simple', 'palette']) {
     const svg = read(`assets/icons/phosphor/${file}-regular.svg`);
@@ -134,16 +141,13 @@ test('Noi calendar: only the weeks the month spans, today selected, a label per 
   assert.equal(node('usNoiV2Today').hidden, true, '"Torna a oggi" only when you are elsewhere');
 });
 
-test('Noi calendar: a failed read keeps the grid and offers Riprova; list mode has a real empty state', async () => {
+test('Noi calendar: a failed read keeps the grid and offers Riprova', async () => {
   const { node } = await noiRender({ fail: true });
   const content = node('usNoiV2Content').innerHTML;
   assert.match(content, /role="alert"[\s\S]*data-noi-retry/);
   assert.match(content, /class="us-noi-v2-grid"/, 'the month is still readable');
   assert.equal(node('usNoiV2Content').dataset.state, 'error');
-  // Noi nuova: «Prossimi» has its own read; without one it says it cannot load.
-  node('usNoiV2ModeList').emit('click');
-  assert.match(node('usNoiV2Content').innerHTML, /Carico i prossimi impegni…/);
-  assert.equal(node('usNoiV2Detail').hidden, true, 'list mode does not repeat the day detail');
+  assert.equal(node('usNoiV2Detail').hidden, false, 'the chosen day stays under the grid');
 });
 
 test('Noi calendar: month change animates once and only without reduced motion', () => {
@@ -159,25 +163,27 @@ test('Noi calendar: month change animates once and only without reduced motion',
 // Round 3 parity (062): the mockup's order — Sfida di oggi, the 7-day strip,
 // the bento games, La vostra domanda; rounds no tile stands for and the
 // completed ones follow. The daily slot is painted by app.js.
-test('Gioca round 3: daily first, the week, bento games, weekly question, then the rest', () => {
+// Redesign definitivo (D11): la domanda di oggi left Gioca, the week leads.
+test('Gioca fase 6: tokens, Vi aspetta, the games, weekly question, then the rest', () => {
   const games = read('games.js');
   const hub = games.slice(games.indexOf('function renderHub() {'), games.indexOf('function renderHubError() {'));
-  const order = ['us-gv2-daily-slot', '${weekStrip()}', 'us-gv2-choose', 'data-gv2-action="per-voi"', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
+  assert.doesNotMatch(hub, /us-gv2-daily-slot/);
+  // Gioca più piena (grill 27/11/2026, D1): tokens and the week, Voi due, the
+  // rileggete card when the tokens are spent, Vi aspetta, the giostra, Cosa
+  // avete scoperto, Tutti i giochi, the rest and the diary at the bottom.
+  const order = ['${tokensCard()}', '${voiDueCard(home)}', '${rileggeteSection()}', '${waitingSection(home)}', 'us-gv2-choose', 'giostra(order.map', '${discoveriesSection()}', 'us-gv2-all', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
   const positions = order.map((needle) => hub.indexOf(needle));
   assert.ok(positions.every((p) => p >= 0), JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a, b) => a - b), positions);
   assert.doesNotMatch(hub, /dayRail\(\)/);
-  assert.match(read('app.js'), /const slot=hub\.querySelector\('\.us-gv2-daily-slot'\);/);
   assert.match(games, /\$\{knownPartner\(\) \|\| 'La tua persona'\} la troverà in Gioca: risponderete tutti e due\./, 'write → discover, in one line (mockup wording)');
 });
 
-test('Sintonia: one premium segmented control, keyboard-friendly, and a page that scrolls', () => {
-  // Round 3: [data-s] so the segmented control rises first, as the mockup's .seg.
-  assert.match(html, /<div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia">/);
-  assert.match(noiJs, /\$\('usGiocaTabs'\)\?\.setAttribute\('data-active',giocaTab\)/);
-  assert.match(noiJs, /e\.key!=='ArrowLeft'&&e\.key!=='ArrowRight'/);
-  assert.match(noiCss, /#quiz \.us-gioca-tabs\[data-active="sintonia"\]::before\{transform:translateX\(100%\)\}/);
+// Redesign definitivo (D3): no segmented control in Gioca; Sintonia scrolls inside Il vostro angolo.
+test('Sintonia: no tabs in Gioca, and a sheet that scrolls without a nested scroller', () => {
+  assert.doesNotMatch(html, /id="usGiocaTabs"/);
+  assert.doesNotMatch(noiJs, /usGiocaTabs|giocaTab/);
   // The nested scroller (max-height + overflow:auto + overscroll contain) swallowed the page scroll.
-  assert.match(noiCss, /#quiz \.us-gioca-sintonia \.us-progression-rewards\{max-height:none;overflow:visible;overscroll-behavior:auto;/);
-  assert.doesNotMatch(noiCss, /#quiz \.us-gioca-sintonia[^{]*\{[^}]*overflow-y:auto/);
+  assert.match(noiCss, /#usAngolo \.us-gioca-sintonia \.us-progression-rewards\{max-height:none;overflow:visible;overscroll-behavior:auto;/);
+  assert.doesNotMatch(noiCss, /#usAngolo \.us-gioca-sintonia[^{]*\{[^}]*overflow-y:auto/);
 });

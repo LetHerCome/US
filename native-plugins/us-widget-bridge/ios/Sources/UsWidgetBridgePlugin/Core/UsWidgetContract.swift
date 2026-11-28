@@ -24,6 +24,8 @@ enum UsWidgetContract {
         let think: [String: Any] = [
             "partnerName": text(string(thinkIn["partnerName"]), 40),
             "lastReceivedAt": instantText(string(thinkIn["lastReceivedAt"])),
+            // Ti penso ×N (27/11/2026): the taps of their last Ti penso, 1..99.
+            "lastReceivedTaps": taps(thinkIn["lastReceivedTaps"]),
             "lastSentAt": instantText(string(thinkIn["lastSentAt"])),
             // A reaction to the partner's thought answers it as well as a thought does.
             "lastAnsweredAt": instantText(string(thinkIn["lastAnsweredAt"])),
@@ -56,6 +58,11 @@ enum UsWidgetContract {
             "colors": [
                 "me": matches(meColor, "^#[0-9a-fA-F]{6}$") ? meColor.lowercased() : "",
                 "partner": matches(partnerColor, "^#[0-9a-fA-F]{6}$") ? partnerColor.lowercased() : ""
+            ],
+            // Widget del redesign (26/11/2026): each person's character, as the app draws it.
+            "characters": [
+                "me": character(object(object(coupleIn["characters"])["me"])),
+                "partner": character(object(object(coupleIn["characters"])["partner"]))
             ],
             "batteryLevel": batteryLevel,
             "batteryCharging": batteryLevel >= 0 && bool(coupleIn["batteryCharging"]),
@@ -156,13 +163,23 @@ enum UsWidgetContract {
         let written = string(postitIn["state"]) == "ready" && !postitText.isEmpty
         let paper = string(postitIn["color"])
         let postitBy = string(postitIn["by"])
+        // The one after it, for the medium widget (widget del redesign, 26/11/2026).
+        let secondIn = object(postitIn["second"])
+        let secondText = written ? text(string(secondIn["text"]), 120) : ""
+        let secondPaper = string(secondIn["color"])
+        let secondBy = string(secondIn["by"])
         let postit: [String: Any] = [
             "state": written ? "ready" : "none",
             "text": written ? postitText : "",
             "color": written ? (matches(paper, "^(yellow|pink|blue|green)$") ? paper : "yellow") : "",
             "by": written && (postitBy == "me" || postitBy == "partner") ? postitBy : "",
             "more": written ? max(0, min(99, int(postitIn["more"], 0))) : 0,
-            "at": written ? instantText(string(postitIn["at"])) : ""
+            "at": written ? instantText(string(postitIn["at"])) : "",
+            "second": [
+                "text": secondText,
+                "color": secondText.isEmpty ? "" : (matches(secondPaper, "^(yellow|pink|blue|green)$") ? secondPaper : "yellow"),
+                "by": !secondText.isEmpty && (secondBy == "me" || secondBy == "partner") ? secondBy : ""
+            ]
         ]
 
         let statusIn = object(input["status"])
@@ -183,6 +200,22 @@ enum UsWidgetContract {
                 "me": statusPerson(object(statusIn["me"])),
                 "partner": statusPerson(object(statusIn["partner"]))
             ]
+        ]
+    }
+
+    /// One character (personaggi.js): an unknown shape, head, face or colour is left empty.
+    static func character(_ input: [String: Any]) -> [String: Any] {
+        let shape = string(input["shape"])
+        let head = string(input["head"])
+        let face = string(input["face"])
+        let color = string(input["color"])
+        let day = string(input["day"])
+        return [
+            "shape": matches(shape, "^(palla|quadrato|triangolo|goccia|nuvola)$") ? shape : "",
+            "head": matches(head, "^(cappello|fiocco|cuffie|corona|coroncina|festa|cento)$") ? head : "",
+            "face": matches(face, "^(occhiali|sole|sciarpina|gala|macchinetta)$") ? face : "",
+            "color": matches(color, "^#[0-9a-fA-F]{6}$") ? color.lowercased() : "",
+            "day": matches(day, "^#[0-9a-fA-F]{6}$") ? day.lowercased() : ""
         ]
     }
 
@@ -219,6 +252,15 @@ enum UsWidgetContract {
         }
         if let text = value as? String, let parsed = Int(text.trimmingCharacters(in: .whitespaces)) { return parsed }
         return fallback
+    }
+
+    /// Ti penso ×N: the taps of one Ti penso, a whole number 1..99; anything else
+    /// (a string, a boolean, a fraction) is 1, like UsWidgetContract.java.
+    static func taps(_ value: Any?) -> Int {
+        guard let number = value as? NSNumber, !isBool(number) else { return 1 }
+        let double = number.doubleValue
+        guard double.isFinite, double == double.rounded() else { return 1 }
+        return Int(max(1, min(99, double)))
     }
 
     static func bool(_ value: Any?) -> Bool {

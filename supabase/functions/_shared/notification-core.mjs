@@ -23,7 +23,8 @@ export const NOTIFICATION_SCHEMA_VERSION = 1;
 // app maps each to a surface. There is no URL in the contract.
 // US 1.0: 'events' opens Eventi (mesiversario / anniversario).
 // Lavagna V1 (03/11/2026): 'lavagna' opens the board in Noi.
-export const NOTIFICATION_TARGETS = Object.freeze(['home', 'today', 'think', 'left_for_you', 'quiz', 'bond', 'calendar', 'events', 'lavagna']);
+// La bacheca, fase 2 (27/11/2026): 'bacheca' opens the board of Ricordi on a thing.
+export const NOTIFICATION_TARGETS = Object.freeze(['home', 'today', 'think', 'left_for_you', 'quiz', 'bond', 'calendar', 'events', 'lavagna', 'bacheca']);
 export const NOTIFICATION_CHANNELS = Object.freeze(['partner', 'reminders']);
 export const NOTIFICATION_CATEGORIES = Object.freeze(['think']);
 // US 1.0: the copy follows the RECIPIENT's profiles.locale; anything but 'en'
@@ -53,6 +54,21 @@ const DAILY_REACTION_COPY = Object.freeze({
   heart: (n, en) => pick(en, `${n} ha messo ♥ alla tua risposta`, `${n} left a ♥ on your answer`),
   cry: (n, en) => pick(en, `${n}: mi hai fatto commuovere`, `${n}: you moved me`),
 });
+// Come stai che conta (27/11/2026, D7/D16): the gesture answering my Come
+// stai, like a Ti penso («Bea: Ti mando un abbraccio»). The same nine as the
+// SQL (respond_member_status) and member-status.js GESTURES.
+export const STATUS_GESTURES = Object.freeze(['abbraccio', 'riposati', 'respira', 'cuore', 'festa', 'forza', 'spacca', 'buon_viaggio', 'buon_appetito']);
+const STATUS_REPLY_COPY = Object.freeze({
+  abbraccio: (n, en) => pick(en, `${n}: Ti mando un abbraccio`, `${n}: Sending you a hug`),
+  riposati: (n, en) => pick(en, `${n}: Riposati`, `${n}: Get some rest`),
+  respira: (n, en) => pick(en, `${n}: Respira, ci sono io`, `${n}: Breathe, I’m here`),
+  cuore: (n, en) => pick(en, `${n} ti manda un cuore ♡`, `${n} sends you a heart ♡`),
+  festa: (n) => `${n}: 🎉`,
+  forza: (n, en) => pick(en, `${n}: Forza!`, `${n}: You’ve got this!`),
+  spacca: (n, en) => pick(en, `${n}: Spacca tutto!`, `${n}: Crush it!`),
+  buon_viaggio: (n, en) => pick(en, `${n}: Buon viaggio`, `${n}: Safe travels`),
+  buon_appetito: (n, en) => pick(en, `${n}: Buon appetito`, `${n}: Enjoy your meal`),
+});
 function relationshipCopy(a, en) {
   const months = Number(a.months);
   if (a.kind === 'anniversary') {
@@ -79,13 +95,35 @@ function relationshipCopy(a, en) {
   return { title: a.title, body: a.body };
 }
 
+// US vi ricorda (27/11/2026): the strongest dated lines of the characters and
+// what US hung on the bacheca, at most one a day (us-ricorda-push-core.mjs).
+// One tag: a newer line replaces the older. They open Oggi, where the line is.
+const RICORDA = Object.freeze({ title: 'US.', tag: 'us-ricorda', target: 'home', channel: 'reminders', urgency: 'normal' });
+// The name inside a sentence: lower case when there is none.
+const midName = (value, en = false) => value || (en ? 'your person' : 'la tua persona');
+const yearsCopy = (n, en) => (Number(n) === 1 ? pick(en, 'un anno', 'one year') : pick(en, `${Number(n)} anni`, `${Number(n)} years`));
+function yearAgoCopy(a, en) {
+  if (a.source === 'meet' && a.title) return pick(en, `Un anno fa, oggi: «${a.title}» ♡`, `A year ago today: “${a.title}” ♡`);
+  if (a.source === 'idea' && a.title) return pick(en, `Un anno fa avete fatto «${a.title}» ♡`, `A year ago you did “${a.title}” ♡`);
+  if (a.place) return pick(en, `Un anno fa, oggi, eravate a ${a.place} ♡`, `A year ago today you were in ${a.place} ♡`);
+  return pick(en, 'Un anno fa, oggi: un vostro ricordo ♡', 'A year ago today: one of your memories ♡');
+}
+function bachecaCopy(a, en) {
+  if (a.reason === 'un_anno_fa') return a.place
+    ? pick(en, `In bacheca c’è ${a.place}, un anno fa ♡`, `On your board: ${a.place}, a year ago ♡`)
+    : pick(en, 'US vi ha appeso in bacheca un ricordo di un anno fa ♡', 'US pinned a memory from a year ago on your board ♡');
+  if (a.reason === 'traguardo' && Number(a.count) > 0) return pick(en, `In bacheca c’è un timbro nuovo: ${Number(a.count)} ricordi ♡`, `A new stamp on your board: ${Number(a.count)} memories ♡`);
+  if (a.reason === 'tenuta') return pick(en, 'In bacheca c’è una cosa vostra di questa settimana ♡', 'Something of yours from this week is on your board ♡');
+  return pick(en, 'In bacheca c’è il ricordo della settimana ♡', 'The memory of the week is on your board ♡');
+}
+
 // The catalogue: for every logical event, ONE title/body/target/channel/urgency.
 // Each entry receives (args, en): en is true when the recipient reads English.
 const CATALOGUE = Object.freeze({
   test: (a, en) => ({ title: 'US.', body: pick(en, 'Notifiche attive. US può raggiungerti anche quando è chiusa ♡', 'Notifications are on. US can reach you even when it is closed ♡'), target: 'home', tag: 'us-push-test', channel: 'reminders', urgency: 'normal' }),
   think: (a, en) => ({ title: 'US.', body: Number(a.count) > 1
     ? pick(en, `${name(a.senderName)} ti ha pensato ${Number(a.count)} volte ♡`, `${name(a.senderName, true)} thought of you ${Number(a.count)} times ♡`)
-    : pick(en, `${name(a.senderName)} ti sta pensando ♡`, `${name(a.senderName, true)} is thinking of you ♡`), target: 'think', ref: a.messageId, tag: `think-${a.messageId}`, channel: 'partner', urgency: 'high', category: 'think' }),
+    : pick(en, `${name(a.senderName)} ti sta pensando ♡`, `${name(a.senderName, true)} is thinking of you ♡`), target: 'think', ref: a.messageId, tag: `think-${a.messageId}`, channel: 'partner', urgency: 'high', category: 'think', plural: Number(a.count) > 1, times: Number(a.count) }),
   // O7: the reaction itself, with the name ("Bea ti manda un abbraccio").
   think_reaction: (a, en) => ({ title: pick(en, 'US. · Ti penso', 'US. · Thinking of you'), body: own(THINK_REACTION_COPY, a.reaction)?.(name(a.senderName, en), en) || pick(en, `${name(a.senderName)} ha reagito al tuo Ti penso`, `${name(a.senderName, true)} reacted to your Thinking of you`), target: 'home', ref: a.messageId, tag: `think-reaction-${a.messageId}`, channel: 'partner', urgency: 'normal' }),
   daily_answer: (a, en) => ({ title: DAILY_TITLE(en), body: pick(en, `${name(a.senderName)} ha risposto. Ora tocca a te.`, `${name(a.senderName, true)} answered. Your turn now.`), target: 'today', ref: a.questionId, tag: `daily-answer-${a.questionId}`, channel: 'partner', urgency: 'normal' }),
@@ -103,17 +141,36 @@ const CATALOGUE = Object.freeze({
   game_reveal: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: a.gameName ? pick(en, `Risposte pronte per «${a.gameName}» ♡`, `Answers ready for “${a.gameName}” ♡`) : pick(en, 'Le vostre risposte sono pronte ♡', 'Your answers are ready ♡'), target: 'quiz', ref: a.sessionId, tag: a.tag, channel: 'partner', urgency: 'normal' }),
   game_weekly_created: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: pick(en, `${name(a.senderName)} ha lasciato la domanda della settimana ♡`, `${name(a.senderName, true)} left this week's question ♡`), target: 'quiz', tag: a.tag, channel: 'partner', urgency: 'normal' }),
   game_weekly_turn: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: pick(en, 'Questa settimana la domanda la scegli tu.', 'This week you choose the question.'), target: 'quiz', tag: a.tag, channel: 'reminders', urgency: 'normal' }),
+  // Play Us (28/11/2026): the live invite lasts 3 minutes, so the push dies with it.
+  play_invite: (a, en) => ({ title: pick(en, 'US. · Play Us', 'US. · Play Us'), body: pick(en, `${name(a.senderName)} ti sfida a Play Us ♡`, `${name(a.senderName, true)} challenges you to Play Us ♡`), target: 'quiz', ref: a.sessionId, tag: `play-invite-${a.sessionId}`, channel: 'partner', urgency: 'high', ttl: 180 }),
   calendar_reminder: (a, en) => ({ title: pick(en, 'US. · Calendario', 'US. · Calendar'), body: a.body, target: 'calendar', ref: a.entryId, tag: `calendar-reminder-${a.reminderId}`, channel: 'reminders', urgency: 'high' }),
   // A11/N7: mesiversario / anniversario, no points in the text, opens Eventi.
   relationship: (a, en) => ({ ...relationshipCopy(a, en), target: a.kind ? 'events' : 'home', tag: a.tag, channel: 'reminders', urgency: 'normal', ttl: 60 * 60 * 24 }),
   // Lavagna V1: the partner drew; one tag, so a newer line replaces the older.
   lavagna: (a, en) => ({ title: pick(en, 'US. · Lavagna', 'US. · Board'), body: pick(en, `${name(a.senderName)} ha disegnato sulla lavagna`, `${name(a.senderName, true)} drew on the board`), target: 'lavagna', ref: a.strokeId, tag: 'us-lavagna', channel: 'partner', urgency: 'normal' }),
+  // Noi, Fase B.3 (D15): a new post-it on the lavagna, same tag as the drawing
+  // (one line for the board), it opens the board too.
+  postit: (a, en) => ({ title: pick(en, 'US. · Lavagna', 'US. · Board'), body: pick(en, `${name(a.senderName)} ti ha lasciato un post-it`, `${name(a.senderName, true)} left you a sticky note`), target: 'lavagna', ref: a.noteId, tag: 'us-lavagna', channel: 'partner', urgency: 'normal' }),
+  // La bacheca, fase 2 (27/11/2026): a post-it of the partner on a thing of the
+  // board. Never its text; ref is the post-it, the app centres the board on its thing.
+  bacheca_postit: (a, en) => ({ title: pick(en, 'US. · Bacheca', 'US. · Board'), body: pick(en, `${name(a.senderName)} ha scritto su un ricordo in bacheca`, `${name(a.senderName, true)} wrote on a memory on your board`), target: 'bacheca', ref: a.noteId, tag: 'us-bacheca-postit', channel: 'partner', urgency: 'normal' }),
   // La sfida della settimana (03/11/2026): Monday its title, Saturday a
   // reminder, and for a couple apart the other one's photo. They open Gioca.
   challenge_new: (a, en) => ({ title: CHALLENGE_TITLE(en), body: a.title || pick(en, 'C’è una nuova sfida per voi ♡', 'There is a new challenge for you two ♡'), target: 'quiz', ref: a.challengeId, tag: `challenge-new-${a.challengeId}`, channel: 'reminders', urgency: 'normal' }),
   challenge_reminder: (a, en) => ({ title: CHALLENGE_TITLE(en), body: a.shortTitle ? pick(en, `Domani è l’ultimo giorno per «${a.shortTitle}» ♡`, `Tomorrow is the last day for “${a.shortTitle}” ♡`) : pick(en, 'Domani è l’ultimo giorno per la sfida ♡', 'Tomorrow is the last day for the challenge ♡'), target: 'quiz', ref: a.challengeId, tag: `challenge-reminder-${a.challengeId}`, channel: 'reminders', urgency: 'normal' }),
   challenge_photo: (a, en) => ({ title: CHALLENGE_TITLE(en), body: pick(en, `${name(a.senderName)} ha messo la sua foto: manca solo la tua`, `${name(a.senderName, true)} added their photo: only yours is missing`), target: 'quiz', ref: a.challengeId, tag: `challenge-photo-${a.challengeId}`, channel: 'partner', urgency: 'normal' }),
+  ricorda_birthday_week: (a, en) => ({ ...RICORDA, body: pick(en, `Tra una settimana è il compleanno di ${midName(a.name)}. C’è tempo per una sorpresa ♡`, `${name(a.name, true)}’s birthday is a week away. There is time for a surprise ♡`) }),
+  ricorda_birthday: (a, en) => ({ ...RICORDA, body: pick(en, `Oggi è il compleanno di ${midName(a.name)}. Un pensiero vale tantissimo ♡`, `Today is ${midName(a.name, true)}’s birthday. A thought means a lot ♡`) }),
+  ricorda_anniversary_week: (a, en) => ({ ...RICORDA, body: pick(en, `Tra una settimana fate ${yearsCopy(a.years, en)} insieme. Ci pensiamo? ♡`, `One week until ${yearsCopy(a.years, en)} together. Shall we plan something? ♡`) }),
+  ricorda_year_ago: (a, en) => ({ ...RICORDA, body: yearAgoCopy(a, en) }),
+  ricorda_bacheca: (a, en) => ({ ...RICORDA, title: pick(en, 'US. · Bacheca', 'US. · Board'), body: bachecaCopy(a, en) }),
+  // Come stai che conta: one answer per state (tag per person, a newer one replaces it). Opens Oggi.
+  status_response: (a, en) => ({ title: pick(en, 'US. · Come stai', 'US. · How are you'), body: own(STATUS_REPLY_COPY, a.gesture)?.(name(a.senderName, en), en) || pick(en, `${name(a.senderName)} ha risposto al tuo Come stai ♡`, `${name(a.senderName, true)} answered how you are ♡`), target: 'home', tag: 'us-status-response', channel: 'partner', urgency: 'high', gesture: own(STATUS_REPLY_COPY, a.gesture) ? a.gesture : null }),
   // A2: the partner accepted the invite; sent once, to the creator.
+  // L'invito che si rinnova (27/11/2026): to whoever still waits, day 1 and day 3.
+  invite_reminder: (a, en) => ({ title: 'US.', body: Number(a.day) >= 3
+    ? pick(en, 'Ancora in attesa: rimanda il codice alla tua persona. Vale 14 giorni.', 'Still waiting: send your person the code again. It lasts 14 days.')
+    : pick(en, 'Il vostro spazio vi aspetta: manda il codice alla tua persona ♡', 'Your space is waiting: send the code to your person ♡'), target: 'home', tag: a.tag, channel: 'reminders', urgency: 'normal', ttl: 60 * 60 * 12 }),
   partner_joined: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} ha accettato l’invito: il vostro spazio è pronto`, `${name(a.senderName, true)} joined: your space is ready`), target: 'home', tag: 'us-partner-joined', channel: 'partner', urgency: 'normal' }),
 });
 export const NOTIFICATION_TYPES = Object.freeze(Object.keys(CATALOGUE));
@@ -140,6 +197,16 @@ export function buildNotification(type, args = {}) {
     // Native badge semantics are intentionally binary: "US has something new".
     // The client clears it only after the private app is visible and unlocked.
     badge: Number.isInteger(raw.badge) && raw.badge >= 0 ? raw.badge : 1,
+    // I cuori (27/11/2026): «N volte»: there were several, so Android picks
+    // the plural kind (native-push-transport.mjs ANDROID_PLURAL_KINDS).
+    plural: raw.plural === true,
+    // Ti penso ×N (27/11/2026, founder: the number is not private): how many
+    // times, 2..99, only on a plural notification; 0 otherwise. Android gets
+    // it as the one numeric field n of the plural kinds (native-push-transport.mjs).
+    times: raw.plural === true && Number.isFinite(raw.times) ? Math.max(2, Math.min(99, Math.floor(raw.times))) : 0,
+    // Come stai che conta (27/11/2026): the gesture of a status_response, one
+    // of STATUS_GESTURES or null; Android turns it into its own kind.
+    gesture: type === 'status_response' && STATUS_GESTURES.includes(raw.gesture) ? raw.gesture : null,
   };
   if (!notification.title || !notification.body) throw new Error('notification_copy_missing');
   if (!NOTIFICATION_TARGETS.includes(notification.target)) throw new Error('notification_target_invalid');

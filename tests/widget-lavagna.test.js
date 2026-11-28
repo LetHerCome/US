@@ -33,7 +33,8 @@ test('app: two pictures and who drew last reach native, the link opens the board
   assert.match(platform, /lavagna: widgetLavagna\(input\?\.lavagna\)/);
   const lavagna = read('lavagna.js');
   assert.match(lavagna, /widgets\.syncLavagna\(\{state,by:/);
-  assert.match(lavagna, /picture\(saved,PASTEL\),picture\(saved,COLORS\)/, 'Pastello and Midnight inks');
+  // Noi, Fase B.2 (D12): the couple's colours, deeper on the light Home.
+  assert.ok(lavagna.includes('const pal=palette();[light,dark]=await Promise.all([picture(saved,pastelOf(pal)),picture(saved,pal)]);'), 'Pastello and Midnight inks');
   assert.match(lavagna, /c\.toBlob\(resolve,'image\/webp',0\.92\)/, 'transparent: the paper is the widget\'s');
 });
 
@@ -41,8 +42,12 @@ test('native: a provider of its own, 2x2, the picture by theme, the tap on the b
   const provider = read(`${JAVA}/UsLavagnaWidgetProvider.java`);
   assert.match(provider, /state\.store\.readNoiPortrait\("lavagna"\)/);
   assert.match(provider, /state\.store\.readNoiPortrait\("lavagna_night"\)/);
-  assert.match(provider, /views\.setIcon\(R\.id\.us_lav_drawing, "setImageIcon", Icon\.createWithBitmap\(light\), Icon\.createWithBitmap\(dark\)\)/, 'Android 12+: the launcher switches with the theme');
-  assert.match(provider, /UsWidgets\.night\(context\) \? dark : light/, 'before: the theme of this render');
+  // The two pictures through the shared helper (widget del redesign, 26/11/2026):
+  // Android 12+ the launcher switches them with the theme, before the theme of this render.
+  assert.match(provider, /UsWidgetCharacter\.themed\(views, context, R\.id\.us_lav_drawing, light, dark\);/);
+  assert.match(read(`${JAVA}/UsWidgetCharacter.java`), /static void themed\(RemoteViews views, Context context, int id, Bitmap day, Bitmap night\)/);
+  // 2x2 and 4x2 since the redesign, with the pencil and whoever drew.
+  assert.match(provider, /return UsWidgets\.sized\(options, small, medium\);/);
   assert.match(provider, /UsWidgets\.open\(context, "lavagna", 4901\)/);
   assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(|setOnClickFillInIntent/i);
   const widgetsJava = read(`${JAVA}/UsWidgets.java`);
@@ -61,17 +66,20 @@ test('native: a provider of its own, 2x2, the picture by theme, the tap on the b
   assert.match(info, /android:widgetCategory="home_screen"/);
 });
 
-test('layout: Pastello and Midnight by resource, no Space, nothing under 11sp, no sample', () => {
-  const layout = res('layout/us_widget_lavagna.xml');
-  assert.match(layout, /android:background="@drawable\/us_widget_lavagna_card"\s+android:clipToOutline="true"/);
-  for (const id of ['us_lav_root', 'us_lav_drawing', 'us_lav_empty', 'us_lav_line']) assert.match(layout, new RegExp(`@\\+id/${id}"`), id);
-  assert.doesNotMatch(layout, /<Space\b|android\.widget\.Space/, 'RemoteViews refuse Space: the widget would not show');
-  assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/);
-  assert.doesNotMatch(layout, /android:(textColor|tint)="#/i, 'colours from the theme resources');
-  assert.match(layout, /android:textColor="@color\/us_widget_pastel_sub"/);
-  assert.match(res('drawable/us_widget_lavagna_card.xml'), /<solid android:color="#FFFBF3EC" \/>/);
+test('layout: paper and blackboard by resource, no Space, nothing under 11sp, no sample', () => {
+  for (const name of ['us_widget_lavagna', 'us_widget_lavagna_medium']) {
+    const layout = res(`layout/${name}.xml`);
+    assert.match(layout, /android:background="@drawable\/us_w_board_card"\s+android:clipToOutline="true"/, name);
+    for (const id of ['us_lav_root', 'us_lav_drawing', 'us_lav_empty', 'us_lav_line', 'us_lav_pen_bg', 'us_lav_pen']) assert.match(layout, new RegExp(`@\\+id/${id}"`), `${name} ${id}`);
+    assert.doesNotMatch(layout, /<Space\b|android\.widget\.Space/, 'RemoteViews refuse Space: the widget would not show');
+    assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/);
+    assert.doesNotMatch(layout, /android:(textColor|tint)="#/i, 'colours from the theme resources');
+    assert.match(layout, /android:textColor="@color\/us_w_sub"/);
+  }
+  assert.match(res('layout/us_widget_lavagna_medium.xml'), /@\+id\/us_lav_by"[\s\S]*@string\/us_widget_lavagna_draw"/);
+  assert.match(res('values/colors.xml'), /<color name="us_w_board">#FFF3ECE1<\/color>/);
   // A real blackboard (founder, 04/11/2026), like the board in the app.
-  assert.match(res('drawable-night/us_widget_lavagna_card.xml'), /<solid android:color="#FF141416" \/>/);
+  assert.match(res('values-night/colors.xml'), /<color name="us_w_board">#FF141416<\/color>/);
   assert.match(read('lavagna.css'), /\.us-lav-board\{[^}]*background:#141416;box-shadow:inset 0 0 0 6px #0b0b0d/);
   const preview = res('layout/us_widget_preview_lavagna.xml');
   assert.doesNotMatch(preview, /android:text="[^@]/);

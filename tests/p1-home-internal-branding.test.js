@@ -91,8 +91,9 @@ test('P1 usa esclusivamente Heart e HeartFill Phosphor per la CTA Ti Penso', () 
   const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
   const legacyAsset = manifest.assets.find((asset) => asset.path === 'assets/source/ui/us-icon-ti-penso-v1.png');
   assert.doesNotMatch(thinkButton, /us-icon-ti-penso-v1\.png/);
-  assert.match(thinkButton, /assets\/icons\/think-off\.svg/);
-  assert.match(thinkButton, /assets\/icons\/think-on\.svg/);
+  // Redesign definitivo, fase 2: the heart in the middle of the bar draws the
+  // official HeartFill geometry inline (it takes the ink colour on the gradient).
+  assert.ok(thinkButton.includes(PHOSPHOR_HEART_FILL_PATH), 'the bar heart is the official HeartFill');
   assert.match(thinkOff, /Phosphor Icons Heart,/);
   assert.ok(thinkOff.includes(PHOSPHOR_HEART_REGULAR_PATH), 'OFF deve usare la geometria Heart ufficiale');
   assert.match(thinkOn, /Phosphor Icons HeartFill,/);

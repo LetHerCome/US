@@ -81,7 +81,13 @@ windowsTest('launcher e splash Android usano soltanto il nuovo set brand', () =>
   assert.match(manifest, /android:icon="@mipmap\/ic_launcher"/);
   assert.match(manifest, /android:roundIcon="@mipmap\/ic_launcher_round"/);
   assert.match(adaptive, /@color\/ic_launcher_background/);
-  assert.match(adaptive, /@drawable\/us_adaptive_foreground_v2/);
+  // 25/11/2026 (founder): the icon of the staging PWA, the framed symbol on white…
+  assert.match(adaptive, /@drawable\/us_adaptive_foreground_v3/);
+  // …and on phones with round icons (they load roundIcon) the logo without the frame:
+  // founder, 25/11: «in quella tonda non si veda il quadrato esterno».
+  const round = fs.readFileSync(path.join(ROOT, 'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml'), 'utf8');
+  assert.match(round, /@color\/ic_launcher_background/);
+  assert.match(round, /@drawable\/us_adaptive_foreground_v2/);
   assert.match(baseStyles, /@drawable\/us_splash_background/);
   assert.match(v31Styles, /windowSplashScreenAnimatedIcon/);
   assert.match(v31Styles, /@drawable\/us_splash_symbol/);
@@ -100,6 +106,10 @@ windowsTest('foreground Android deriva dal master trasparente e il launcher ha l
   const framed = brand.derivatives.find((entry) => entry.path.endsWith('/us_adaptive_foreground_v1.png'));
   assert.deepEqual(framed.sources, ['assets/source/brand/us-symbol-master-v1.png'], 'il logo con la cornice resta per le notifiche e il web');
   assert.match(foreground.operation, /FIT_CENTER.*TRANSPARENT/i);
+  // 25/11/2026 (founder): «prendendo questa che é quella della pwa di staging la voglio anche come icona dell'apk».
+  const pwa = brand.derivatives.find((entry) => entry.path.endsWith('/us_adaptive_foreground_v3.png'));
+  assert.deepEqual(pwa.sources, ['assets/source/brand/us-symbol-master-v1.png']);
+  assert.equal(pwa.operation, 'FIT_EDGE_TRANSPARENT');
 
   const colors = fs.readFileSync(path.join(ROOT, 'android/app/src/main/res/values/colors.xml'), 'utf8');
   assert.match(colors, /<color name="ic_launcher_background">#FFFFFF<\/color>/);

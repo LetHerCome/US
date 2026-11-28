@@ -19,7 +19,7 @@ test('Home cleanup: Oggi keeps photo/countdown dominant and retires the dashboar
   assert.match(home, /id="usCountdownDisplay"/);
   assert.match(home, /id="usOggiStack"/, 'legacy state anchors remain mounted for existing authorities');
   assert.match(styles, /#home #usOggiStack\{height:0!important;[^}]*visibility:hidden!important;[^}]*pointer-events:none!important\}/);
-  assert.ok(home.indexOf('id="usTodayPriorityRegion"') < home.indexOf('id="usOggiStack"'), 'actionable notice lives outside the retired dashboard stack');
+  assert.equal(home.indexOf('id="usTodayPriorityRegion"'), -1, 'redesign D9: no cards of suggestions on Oggi');
   assert.match(read('dc-oggi.css'), /#home \.us-oggi-dock\{[\s\S]*?position:fixed;/, 'the actionable notice and the Domanda di oggi share one dock above the nav');
   assert.doesNotMatch(home, /noi-week-board|us-gv2-daily/, 'new destinations do not leak back into Oggi');
 });
@@ -46,7 +46,7 @@ test('Noi: "La nostra settimana" replaces Lavagna and reads the existing calenda
 
 function dailyModel(state, reveal = null) {
   const start = app.indexOf('// ===== 1.0 — La domanda di oggi in Gioca');
-  const end = app.indexOf('function dailyHubMarkup', start);
+  const end = app.indexOf('// F2 — Gioca has no turn API', start);
   const source = app.slice(start, end);
   const window = {
     usProfile: { role: 'francesco' },
@@ -75,15 +75,15 @@ test('Daily Question: Gioca view model follows canonical state and never exposes
   assert.deepEqual({ state: reveal.state, cta: reveal.cta }, { state: 'reveal', cta: 'Scopri' });
 
   for (const model of [fresh, partnerFirst, waiting, reveal]) assert.doesNotMatch(JSON.stringify(model), new RegExp(secret));
-  assert.doesNotMatch(app.slice(app.indexOf('function dailyHubModel'), app.indexOf('function dailyHubMarkup')), /partner_answer/);
+  assert.doesNotMatch(app.slice(app.indexOf('function dailyHubModel'), app.indexOf('// F2 — Gioca has no turn API')), /partner_answer/);
 });
 
-test('1.0 O1/G1: no transient nudge; the Oggi card and the Gioca card open the same sheet where you are', () => {
-  assert.match(gamesCss, /\.us-gv2-daily\{/);
+// Redesign definitivo (D11): the Gioca card is gone; the Oggi card still opens the sheet where you are.
+test('1.0 O1/G1: no transient nudge; the Oggi card opens the sheet where you are', () => {
   assert.doesNotMatch(html, /usDailyNudge|us-daily-nudge/);
   assert.doesNotMatch(app, /openDailyInGioca|window\.openToday\s*=\s*(?!openToday)/, 'openToday is never redirected to another tab');
   assert.match(html, /id="usDailyRitual"[^>]*onclick="openToday\(\)"/);
-  assert.match(app, /if\(!event\.target\.closest\?\.\('\[data-us-daily-entry\]'\)\)return;\n  event\.preventDefault\(\);\n  openToday\(\);/);
+  assert.doesNotMatch(app, /data-us-daily-entry/, 'no daily card in Gioca any more');
   assert.match(app, /if\(target==='today'\)\{openToday\(\);return;\}/, 'the Daily push target still enters openToday');
 });
 

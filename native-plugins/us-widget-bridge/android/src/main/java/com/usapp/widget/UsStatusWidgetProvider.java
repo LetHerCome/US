@@ -8,10 +8,11 @@ import android.widget.RemoteViews;
 import org.json.JSONObject;
 
 /**
- * Come stai (founder, 04/11/2026; docs/missions/widget-come-stai-v1.md): only
- * your two round portraits, each with its emoji as a sticker, in 2x2 and 4x2.
- * No names, no lines: the tap opens the twelve in US, the widget never writes.
- * A state lasts twelve hours.
+ * Come stai (founder, 04/11/2026; widget del redesign 26/11/2026, «Voi due»
+ * of personaggi D11): your characters, with the face of your Come stai and
+ * what you wear, your names and the state; the 2x2 is the other person. The
+ * tap opens the twelve in US, the widget never writes. A state lasts twelve
+ * hours; from 22 to 6 the characters sleep, as in the app.
  */
 public final class UsStatusWidgetProvider extends AppWidgetProvider {
     @Override public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
@@ -30,24 +31,31 @@ public final class UsStatusWidgetProvider extends AppWidgetProvider {
         state.needsUpdateAt(partner.nextChange);
         String partnerName = UsWidgetContract.optObject(state.snapshot, "think").optString("partnerName", "").trim();
         String name = partnerName.isEmpty() ? "La tua persona" : partnerName;
-        byte[] mine = state.store.readNoiPortrait("me");
-        byte[] theirs = state.store.readNoiPortrait("partner");
+        UsWidgetCharacter.Person mine = UsWidgetCharacter.person(state.snapshot, true);
+        UsWidgetCharacter.Person theirs = UsWidgetCharacter.person(state.snapshot, false);
+        String myFace = UsWidgetCharacter.face(state, true);
+        String theirFace = UsWidgetCharacter.face(state, false);
 
         RemoteViews small = new RemoteViews(context.getPackageName(), R.layout.us_widget_status);
         RemoteViews medium = new RemoteViews(context.getPackageName(), R.layout.us_widget_status_medium);
-        UsWidgetArt.art(small, context, R.id.us_status_art, R.id.us_status_grain, R.drawable.us_widget_art_status_s, options, false);
-        UsWidgetArt.art(medium, context, R.id.us_status_art, R.id.us_status_grain, R.drawable.us_widget_art_status_m, options, true);
         String spoken = "Tu: " + (me.shown ? me.line : "nessuno stato") + ". " + spoken(name, partner) + ". Apri Come stai";
+        UsWidgetCharacter.put(small, context, R.id.us_status_partner, theirs, theirFace, "", 88);
+        UsWidgetCharacter.put(medium, context, R.id.us_status_me, mine, myFace, "", 80);
+        UsWidgetCharacter.put(medium, context, R.id.us_status_partner, theirs, theirFace, "", 76);
+        medium.setTextViewText(R.id.us_status_me_line, me.shown ? capital(me.line) : "Tocca per dirlo");
         for (RemoteViews views : new RemoteViews[] { small, medium }) {
-            int size = views == small ? 60 : 96;
             views.setOnClickPendingIntent(R.id.us_status_root, UsWidgets.open(context, "status", 4801));
-            UsWidgetArt.avatar(views, context, mine, R.id.us_status_me_avatar, R.id.us_status_me_initial, "Tu", size);
-            UsWidgetArt.avatar(views, context, theirs, R.id.us_status_partner_avatar, R.id.us_status_partner_initial, partnerName, size);
-            views.setTextViewText(R.id.us_status_me_emoji, me.shown ? me.emoji : "＋");
-            views.setTextViewText(R.id.us_status_partner_emoji, partner.shown ? partner.emoji : "…");
+            views.setTextViewText(R.id.us_status_partner_name, name);
+            views.setTextViewText(R.id.us_status_partner_line, partner.shown ? capital(partner.line) : "Nessuno stato");
             views.setContentDescription(R.id.us_status_root, spoken);
         }
         return UsWidgets.sized(options, small, medium);
+    }
+
+    /** "innamorata · da 1 ora" → "Innamorata · da 1 ora". */
+    static String capital(String line) {
+        if (line == null || line.isEmpty()) return "";
+        return line.substring(0, 1).toUpperCase(java.util.Locale.ITALIAN) + line.substring(1);
     }
 
     static String spoken(String name, UsWidgetModels.StatusPerson partner) {

@@ -1,9 +1,9 @@
 name: US Store S3.2 safe lifecycle design gate
 
+# The push trigger named mission/us-store-s3-2-lifecycle-design-20261012, gone
+# since S3.2 merged (audit 27/11/2026): pull requests and the button only.
 on:
-  push:
-    branches:
-      - mission/us-store-s3-2-lifecycle-design-20261012
+  workflow_dispatch:
   pull_request:
     paths:
       - 'docs/missions/us-store-s3-2-*'

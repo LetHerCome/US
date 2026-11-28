@@ -19,6 +19,7 @@ import com.usapp.pushsupport.UsPushChannels;
 import com.usapp.pushsupport.UsPushNotices;
 import com.usapp.pushsupport.UsPushOwnerGate;
 import com.usapp.pushsupport.UsPushSupportPlugin;
+import com.usapp.widget.UsWidgetSignals;
 import java.util.Locale;
 import java.util.Map;
 
@@ -41,6 +42,13 @@ public final class UsGuardedMessagingService extends MessagingService {
     @Override
     public void onMessageReceived(@NonNull RemoteMessage message) {
         final Map<String, String> data = message.getData();
+        // Widget signals (27/11/2026): silent v3 (the partner's new look, or
+        // they left). Never a banner, never a JS event: only the widgets move,
+        // and only for the account that owns this installation.
+        if (message.getNotification() == null && "3".equals(data.get("v"))) {
+            applyWidgetSignal(data);
+            return;
+        }
         // Old payloads are not owner-bound; never call Capacitor's generic
         // fireNotification for them. OS auto-display of OLD notification-type
         // packets must be addressed by safe coordinated rollout and QA.
@@ -49,12 +57,29 @@ public final class UsGuardedMessagingService extends MessagingService {
         // Preserve presentationOptions=[]: no OS banner while US is visible.
         // The v2 event has no private target/ref and no JS navigation action.
         if (!UsPushSupportPlugin.isActivityResumed()) {
-            postPrivateSafeNotice(data.get("installation"), data.get("k"));
+            // Ti penso ×N (27/11/2026): n, how many times, only digits and only for the plural kind.
+            postPrivateSafeNotice(data.get("installation"), data.get("k"), UsPushNotices.times(data.get("k"), data.get("n")));
         }
         PushNotificationsPlugin.sendRemoteMessage(message);
     }
 
-    private void postPrivateSafeNotice(String installation, String kind) {
+    /**
+     * The signal is applied under the owner gate's lock (the same one as
+     * logout), so a packet for another account never touches the widgets.
+     * The widgets are redrawn after it, outside the lock.
+     */
+    private void applyWidgetSignal(Map<String, String> data) {
+        final boolean[] changed = { false };
+        try {
+            UsPushOwnerGate.postIfCurrent(this, data.get("installation"), () -> changed[0] = UsWidgetSignals.apply(this, data));
+            if (changed[0] && "clear".equals(data.get("s"))) UsPushOwnerGate.forgetPartner(this, data.get("installation"));
+            if (changed[0]) UsWidgetSignals.refresh(this);
+        } catch (RuntimeException ignored) {
+            // A widget that cannot be redrawn now is redrawn when US opens.
+        }
+    }
+
+    private void postPrivateSafeNotice(String installation, String kind, int times) {
         if (Build.VERSION.SDK_INT >= 33
             && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
         final NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -69,7 +94,7 @@ public final class UsGuardedMessagingService extends MessagingService {
         // changed, nothing is posted and no other account's name is read.
         try {
             UsPushOwnerGate.postIfCurrent(this, installation, (String partnerName) -> {
-                final UsPushNotices.Notice notice = UsPushNotices.forKind(kind, partnerName, Locale.getDefault());
+                final UsPushNotices.Notice notice = UsPushNotices.forKind(kind, partnerName, Locale.getDefault(), times);
                 final boolean known = kind != null && java.util.Arrays.asList(UsPushNotices.KINDS).contains(kind);
                 // Opens the matching tab through the public app link (app-links.mjs):
                 // a tab, never an action, a ref or private data.

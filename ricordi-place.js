@@ -450,23 +450,116 @@
     map.on('render', refreshMarkers);
   }
 
-  function setView(view) {
-    const showMap = view === 'map';
+  // ---- Places counted for the switch (the board is bacheca.js since 25/11/2026) ----
+  // «42 ricordi · 9 posti»: the places of the Ricordi, one per ~100 m, in the
+  // order you first went there (from the cards already drawn in the Raccolta).
+  const placeKey = (p) => `${round3(p.lat).toFixed(3)},${round3(p.lon).toFixed(3)}`;
+  function boardPlaces(items) {
+    const groups = new Map();
+    for (const it of items || []) {
+      if (!validCoord(it?.lat, it?.lon)) continue;
+      const key = placeKey(it);
+      let g = groups.get(key);
+      if (!g) { g = { key, lat: round3(it.lat), lon: round3(it.lon), label: '', items: [] }; groups.set(key, g); }
+      g.items.push(it);
+      if (!g.label && it.label) g.label = it.label;
+    }
+    const list = [...groups.values()];
+    for (const g of list) {
+      g.items.sort((a, b) => String(a.iso || '').localeCompare(String(b.iso || '')));
+      g.first = g.items[0]?.iso || '';
+    }
+    return list.sort((a, b) => String(a.first).localeCompare(String(b.first)) || a.key.localeCompare(b.key));
+  }
+  // Fase 8 (D12): Ricordi opens on the Raccolta (the polaroids month by
+  // month); the switch shows the Bacheca or the Mappa. The month grid and the
+  // chapters stay in the page (the pins and the board open their cards), only hidden.
+  const VIEWS = ['story', 'board', 'map', 'carte'];
+  const VIEW_TITLE = { story: 'Mese per mese', board: 'Bacheca', map: 'Mappa', carte: 'Le vostre carte' };
+  // Il vostro mese (27/11/2026): its code and styles come the first time
+  // «Carte» (or the shortcut in Gioca) is tapped, with this file's version.
+  let mese = null;
+  function loadMese() {
+    if (w.UsMese) return Promise.resolve(w.UsMese);
+    if (mese) return mese;
     const doc = w.document;
+    const own = doc.querySelector('script[src*="/ricordi-place.js"]')?.getAttribute('src') || '';
+    const version = own.includes('?') ? own.slice(own.indexOf('?')) : '';
+    mese = new Promise((resolve, reject) => {
+      const link = doc.createElement('link');
+      link.rel = 'stylesheet'; link.href = `/mese.css${version}`;
+      doc.head.appendChild(link);
+      const script = doc.createElement('script');
+      script.src = `/mese.js${version}`;
+      script.onload = () => resolve(w.UsMese);
+      script.onerror = () => { mese = null; script.remove(); reject(new Error('mese')); };
+      doc.head.appendChild(script);
+    });
+    return mese;
+  }
+  function showCarte() {
+    const box = w.document.getElementById('ricordiCarte');
+    return loadMese().then((m) => { m?.showCollection?.(box); return m; })
+      .catch(() => { if (box) box.innerHTML = '<div class="uc-load">Le vostre carte non si aprono: controlla la connessione.</div>'; return null; });
+  }
+  // From Gioca or the end of an opening: Ricordi › Carte, and a pack to open if asked.
+  async function openCarte(opts = {}) {
+    showCarteTab(true); carteKnown = carteKnown || Boolean(opts.pack);
+    if (w.document.querySelector('.page.active')?.id !== 'moments') w.go?.('moments', { nav: true });
+    setView('carte');
+    const m = await loadMese().catch(() => null);
+    if (m && opts.pack) m.openPack(opts.pack);
+    else if (m && opts.latest) m.openLatest();
+  }
+  if (w) w.usOpenCarte = openCarte;
+  // Le vostre carte only once there is a pack (founder, 28/11/2026): before the
+  // first month ends the collection makes no sense, so its tab is not there.
+  let carteKnown = false;
+  function showCarteTab(on) {
+    const tab = w.document?.querySelector?.('#moments [data-ricordi-view="carte"]');
+    if (!tab) return;
+    tab.hidden = !on;
+    if (!on && tab.getAttribute('aria-selected') === 'true') setView('story');
+  }
+  async function checkCarte() {
+    if (carteKnown || !w.usProfile?.couple_id || typeof w.sb === 'undefined' && typeof sb === 'undefined') return;
+    try {
+      const client = typeof sb !== 'undefined' ? sb : w.sb;
+      const { data, error } = await client.rpc('get_carte_v1', { p_year: null });
+      if (error) return;
+      const has = Boolean(data && ((data.waiting || []).length || (data.months || []).some((m) => m.state === 'opened' || m.state === 'closed') || ['opened', 'closed'].includes(data.gold?.state)));
+      carteKnown = has;
+      showCarteTab(has);
+    } catch (_) { /* the tab stays as it is */ }
+  }
+  // Checked when Ricordi draws its grid (and when a pack opens): only there the tab matters,
+  // so the opening of the app and a short trip away read nothing for it.
+  if (w?.addEventListener) w.addEventListener('us:moments-updated', () => { if (w.document?.querySelector?.('.page.active')?.id === 'moments') checkCarte(); });
+  function setView(view, { focus = null } = {}) {
+    const doc = w.document;
+    const next = VIEWS.includes(view) ? view : 'story';
     const box = doc.getElementById('ricordiMap');
     if (!box) return;
-    box.hidden = !showMap;
-    // The month grid and the chapters stay in the page (the pins open their cards), only hidden.
-    doc.getElementById('moments')?.classList.toggle('ricordi-map-on', showMap);
+    box.hidden = next !== 'map';
+    const board = doc.getElementById('ricordiBacheca');
+    if (board) board.hidden = next !== 'board';
+    const carte = doc.getElementById('ricordiCarte');
+    if (carte) carte.hidden = next !== 'carte';
+    if (next === 'carte' && carte && !carte.childElementCount) carte.innerHTML = '<div class="uc-load">Carico le vostre carte…</div>';
+    if (next === 'carte') showCarte();
+    doc.getElementById('moments')?.classList.toggle('ricordi-map-on', next !== 'story');
     const title = doc.getElementById('ricordiStoryTitle');
-    if (title) title.textContent = showMap ? 'Mappa' : 'Mese per mese';
-    const toggle = doc.getElementById('ricordiMapSwitch');
-    if (toggle) {
-      toggle.setAttribute('aria-pressed', String(showMap));
-      const label = toggle.querySelector('[data-switch-label]');
-      if (label) label.textContent = showMap ? 'Mese per mese' : 'Mappa';
+    if (title) title.textContent = VIEW_TITLE[next];
+    for (const tab of doc.querySelectorAll('#moments [data-ricordi-view]')) tab.setAttribute('aria-selected', String(tab.dataset.ricordiView === next));
+    // La vostra bacheca (25/11/2026): the board kept by US (bacheca.js).
+    if (next === 'board') w.UsBacheca?.show?.();
+    if (next === 'map') {
+      Promise.resolve(drawMap()).then(() => {
+        if (!focus || !map) return;
+        const go = () => map.flyTo({ center: [focus.lon, focus.lat], zoom: 14, essential: true });
+        if (map.loaded?.()) go(); else map.once?.('load', go);
+      }).catch(() => {});
     }
-    if (showMap) drawMap();
   }
 
   function toggleMap() {
@@ -474,14 +567,21 @@
   }
 
   if (w?.addEventListener) {
-    // The grid was redrawn (a place added, a new Ricordo): the open map follows.
+    // The grid was redrawn (a place added, a new Ricordo): the open map and board follow.
     w.addEventListener('us:moments-updated', () => {
       if (w.document.getElementById('ricordiMap')?.hidden === false) drawMap();
+      if (w.document.getElementById('ricordiBacheca')?.hidden === false) w.UsBacheca?.refresh?.();
+    });
+    w.document?.addEventListener?.('click', (event) => {
+      const target = event.target;
+      if (!target?.closest) return;
+      const tab = target.closest('#moments [data-ricordi-view]');
+      if (tab) setView(tab.dataset.ricordiView);
     });
   }
 
   return Object.freeze({
     normalize, labelFrom, placesFrom, pointsFrom, viewFor, italianLabel, search, nameOf, fromCoords, fromCard,
-    pickWithPlaces, photoConsent, choose, save, setView, toggleMap,
+    pickWithPlaces, photoConsent, choose, save, setView, toggleMap, boardPlaces, loadMese, openCarte,
   });
 });

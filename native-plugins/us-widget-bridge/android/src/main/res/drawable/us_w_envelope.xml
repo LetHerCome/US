@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lasciato per te: a paper envelope with a ceralacca seal (paper in both themes). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="124dp" android:height="82dp" android:viewportWidth="124" android:viewportHeight="82">
+    <path android:fillColor="@color/us_w_paper" android:strokeColor="#2E231B1D" android:strokeWidth="1"
+        android:pathData="M5,1 H119 A4,4 0 0 1 123,5 V77 A4,4 0 0 1 119,81 H5 A4,4 0 0 1 1,77 V5 A4,4 0 0 1 5,1 Z" />
+    <path android:fillColor="#00000000" android:strokeColor="#38231B1D" android:strokeWidth="1.4"
+        android:pathData="M2,3 L62,46 L122,3" />
+    <path android:fillColor="@color/us_w_ceralacca" android:pathData="M49,45 A13,13 0 1 0 75,45 A13,13 0 1 0 49,45 Z" />
+    <path android:fillColor="@color/us_w_paper" android:pathData="M62,52 C55,48 56,41 62,44 C68,41 69,48 62,52 Z" />
+</vector>

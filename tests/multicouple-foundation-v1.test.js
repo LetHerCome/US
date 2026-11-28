@@ -20,8 +20,12 @@ test('multi-couple V1: relationship age is data-driven, never private-couple har
   const app=read('app.js');
   assert.doesNotMatch(app,/new Date\(['"]2026-04-21/);
   assert.doesNotMatch(app,/2026-04-21T00:00:00/);
-  assert.match(app,/updateTogetherDays\(usCoupleContextState\.couple\?\.started_on\)/);
-  assert.match(app,/Date\.UTC\(year,month-1,day\)/);
+  // The #daysTogether element left with the redesign (27/11/2026 cleanup): Oggi
+  // counts the days in progression.js from the couple's started_on.
+  assert.doesNotMatch(app,/daysTogether|updateTogetherDays/);
+  const progression=read('progression.js');
+  assert.match(progression,/window\.UsCoupleContext\?\.snapshot\?\.\(\)\?\.couple\?\.started_on/);
+  assert.match(progression,/Date\.UTC\(year, month - 1, day\)/);
 });
 
 test('multi-couple V1: auth loss clears tenant context and successful boot hydrates it',()=>{

@@ -1,0 +1,133 @@
+{
+  "family": "swipe",
+  "new": [
+    {
+      "id": "swipe-135",
+      "tema": "piccante",
+      "plus": true,
+      "topic": "piccante_bacio_lento_o_rubato",
+      "question_text": "Un bacio: lento e lungo o rubato e veloce?",
+      "options": [
+        "Lento e lungo",
+        "Rubato e veloce"
+      ],
+      "question_text_en": "A kiss: slow and long or stolen and quick?",
+      "options_en": [
+        "Slow and long",
+        "Stolen and quick"
+      ]
+    },
+    {
+      "id": "swipe-136",
+      "tema": "piccante",
+      "plus": true,
+      "topic": "piccante_sguardo_o_parole",
+      "question_text": "Per sedurre: uno sguardo o le parole giuste?",
+      "options": [
+        "Uno sguardo",
+        "Le parole giuste"
+      ],
+      "question_text_en": "To seduce: a look or the right words?",
+      "options_en": [
+        "A look",
+        "The right words"
+      ]
+    },
+    {
+      "id": "swipe-137",
+      "tema": "piccante",
+      "plus": true,
+      "topic": "piccante_invito_malizioso",
+      "question_text": "Un invito malizioso: per messaggio o sussurrato all’orecchio?",
+      "options": [
+        "Per messaggio",
+        "All’orecchio"
+      ],
+      "question_text_en": "A cheeky invitation: by text or whispered in my ear?",
+      "options_en": [
+        "By text",
+        "Whispered in my ear"
+      ]
+    },
+    {
+      "id": "swipe-138",
+      "tema": "piccante",
+      "plus": true,
+      "topic": "piccante_notte_in_citta_o_fuga",
+      "question_text": "Appuntamento audace: notte in città o fuga improvvisa?",
+      "options": [
+        "Notte in città",
+        "Fuga improvvisa"
+      ],
+      "question_text_en": "A daring date: a night in town or a sudden getaway?",
+      "options_en": [
+        "Night in town",
+        "Sudden getaway"
+      ]
+    },
+    {
+      "id": "swipe-139",
+      "tema": "desideri",
+      "plus": true,
+      "topic": "desideri_coccole_sera_o_mattina",
+      "question_text": "Coccole: la sera prima di dormire o la mattina senza sveglia?",
+      "options": [
+        "La sera",
+        "La mattina"
+      ],
+      "question_text_en": "Cuddles: at night before sleep or in the morning with no alarm?",
+      "options_en": [
+        "At night",
+        "In the morning"
+      ]
+    },
+    {
+      "id": "swipe-140",
+      "tema": "desideri",
+      "plus": true,
+      "topic": "desideri_casa_o_albergo",
+      "question_text": "Una notte speciale: a casa nostra o in un albergo con vista?",
+      "options": [
+        "Casa nostra",
+        "Albergo con vista"
+      ],
+      "question_text_en": "A special night: at our place or a hotel with a view?",
+      "options_en": [
+        "Our place",
+        "Hotel with a view"
+      ]
+    },
+    {
+      "id": "swipe-141",
+      "tema": "desideri",
+      "plus": true,
+      "topic": "desideri_sorpresa_o_attesa",
+      "question_text": "Nell’intimità: sorpresa improvvisa o attesa che cresce tutto il giorno?",
+      "options": [
+        "Sorpresa improvvisa",
+        "Attesa che cresce"
+      ],
+      "question_text_en": "Intimacy: a sudden surprise or a build-up all day long?",
+      "options_en": [
+        "Sudden surprise",
+        "An all-day build-up"
+      ]
+    },
+    {
+      "id": "swipe-142",
+      "tema": "desideri",
+      "plus": true,
+      "topic": "desideri_massaggio_o_bagno",
+      "question_text": "Per sciogliersi insieme: massaggio lento o bagno caldo per due?",
+      "options": [
+        "Massaggio lento",
+        "Bagno per due"
+      ],
+      "question_text_en": "To unwind together: a slow massage or a hot bath for two?",
+      "options_en": [
+        "Slow massage",
+        "Bath for two"
+      ]
+    }
+  ]
+}

@@ -1,24 +1,46 @@
-/* Come stai (02/11/2026): the pill in Oggi beside the distance, and the sheet
-   with the twelve states (or the words' form, from Settings). */
-#home #homeHero .og-row .us-status-pill:not([hidden]){
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  min-height:40px;
-  padding:0 13px;
-  border:1px solid var(--us-color-line-strong);
-  border-radius:999px;
-  background:var(--dc-oggi-glass);
-  -webkit-backdrop-filter:blur(10px);
-  backdrop-filter:blur(10px);
-  color:var(--us-color-text);
-  font:600 13px/1 var(--us-font-ui);
-  white-space:nowrap;
-}
-#home #homeHero .og-row .us-status-pill [hidden]{display:none}
-#home #homeHero .og-row .us-status-pill [data-status-partner]:not([hidden])+[data-status-mine]::before{content:"·";content:"·" / "";margin-right:6px;color:var(--us-color-text-2)}
-#home #homeHero .og-row .us-status-pill[data-mine="none"] [data-status-mine]{color:var(--us-color-text-2)}
+/* Come stai (tavola «Come stai di US», 27/11/2026; ritocchi del founder del
+   28/11): Oggi's second row is ONE pill with the distance's glass (same height,
+   ground and light ink; paper by day, giorno.css), in two halves. Left: the
+   other person's face and short word, and the gesture (a red chip, only its
+   emoji when there is no room). Right, after a line: «＋ Tu» or my emoji, and
+   for three hours the gesture I got. It never wraps inside (member-status.js
+   fit()); below its readable width (112–158 px) it takes the next line of the row. */
+#home #homeHero .og-row .us-status-group:not([hidden]){position:relative;display:flex;flex:1 1 var(--us-status-basis,150px);align-items:center;gap:0;box-sizing:border-box;height:40px;min-width:var(--us-status-basis,150px);max-width:min(100%,var(--us-status-rich,100%));padding:0 3px 0 5px;overflow:hidden;flex-wrap:nowrap;border:1px solid var(--us-color-line-strong);border-radius:999px;background:var(--dc-oggi-glass);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--us-color-text);font:600 13px/1 var(--us-font-ui);white-space:nowrap}
+#home #homeHero .us-status-group [hidden]{display:none!important}
+#home #homeHero .us-status-half{display:flex;align-items:center;gap:4px;min-width:0;height:100%}
+#home #homeHero .us-status-half-her{flex:none}
+#home #homeHero .us-status-half-me{flex:none}
+#home #homeHero .us-status-sep{flex:none;width:1px;height:20px;margin:0 3px;background:currentColor;opacity:.28}
+#home #homeHero .us-status-group button{position:relative;display:inline-flex;align-items:center;gap:6px;flex:none;height:100%;margin:0;padding:0 6px;border:0;border-radius:999px;background:none;box-shadow:none;color:inherit;font:inherit;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#home #homeHero .us-status-group button:focus-visible{outline:2px solid var(--us-noi);outline-offset:-2px}
+#home #homeHero .us-status-her{flex:none!important;min-width:0;padding:0 6px 0 0!important}
+#home #homeHero .us-status-face{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;overflow:hidden;background:rgba(247,239,233,.16)}
+#home #homeHero .us-status-face svg{display:block;width:22px;height:auto}
+#home #homeHero .us-status-her-text{display:flex;flex:none;align-items:baseline;gap:4px;min-width:0;overflow:hidden}
+#home #homeHero .us-status-her-text b{flex:0 1 auto;min-width:0;max-width:8em;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+#home #homeHero .us-status-her-text b::after{content:" ·";content:" ·" / "";font-weight:600;opacity:.7}
+#home #homeHero .us-status-her-text span{flex:none;color:var(--us-color-text-2)}
+#home #homeHero .us-status-her[data-state="set"] .us-status-her-text span{color:inherit}
+/* The gesture: the ceralacca chip of the tavola, inside the left half. */
+#home #homeHero .us-status-group .us-status-act{height:30px;padding:0 10px;margin-right:0;background:#b8432f;color:#fff;font-weight:800;font-size:12px;box-shadow:0 3px 10px rgba(184,67,47,.38)}
+#home #homeHero .us-status-group .us-status-act::after{content:"";position:absolute;inset:-5px -2px}
+#home #homeHero .us-status-group .us-status-act[data-sent="true"]{background:#fbe3e8;color:#a3274a;box-shadow:none;cursor:default}
+/* Me: «＋ Tu» with the plus in pink and a light beat (none with Riduci movimento), or my emoji. */
+#home #homeHero .us-status-pill{padding:0 7px 0 5px!important;gap:4px!important}
+#home #homeHero .us-status-plus{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--us-rosa,#ff7c96);color:#2a1220;font:900 13px/1 var(--us-font-ui);animation:us-status-beat 1.6s ease-in-out infinite}
+#home #homeHero .us-status-pill[data-mine="set"] :is(.us-status-plus,[data-status-mine]){display:none}
+#home #homeHero .us-status-pill [data-status-mine-emoji]{font-size:19px;line-height:1}
+#home #homeHero .us-status-pill[data-mine="none"] [data-status-mine-emoji]{display:none}
+@keyframes us-status-beat{0%,100%{transform:scale(1)}45%{transform:scale(1.18);box-shadow:0 0 0 4px color-mix(in srgb,var(--us-rosa,#ff7c96) 26%,transparent)}}
+:root[data-us-motion="reduced"] #home #homeHero .us-status-plus{animation:none}
+@media (prefers-reduced-motion:reduce){#home #homeHero .us-status-plus{animation:none}}
+#home #homeHero .us-status-group .us-status-got{height:28px;padding:0 9px;background:#fbe3e8;color:#a3274a;font-weight:700;font-size:12px}
+/* No room: words go, a level at a time (fit: data-fit holds every level reached, «12»). */
+#home #homeHero .us-status-group[data-fit*="1"] .us-status-got-word,#home #homeHero .us-status-group[data-fit*="2"] .us-status-act [data-act-word],#home #homeHero .us-status-group[data-fit*="3"] [data-status-name]{display:none}
+#home #homeHero .us-status-group[data-fit*="1"] .us-status-got{width:28px;padding:0;justify-content:center}
+#home #homeHero .us-status-group[data-fit*="2"] .us-status-act{width:30px;padding:0;justify-content:center}
 
+/* ---------- the sheets ---------- */
 .us-status-overlay [hidden]{display:none!important}
 .us-status-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:end;justify-content:center}
 .us-status-overlay[aria-hidden="false"]{display:flex}
@@ -27,12 +49,12 @@
 .us-status-head .tiny{color:var(--us-noi,#d98be0);font-size:10px;font-weight:700;letter-spacing:.16em}
 .us-status-head h2{margin:6px 0 0;font:500 28px/1.1 var(--us-font-editorial)}
 .us-status-head .us-modal-close{min-width:44px;min-height:44px}
-.us-status-partner{margin:10px 0 0;color:var(--us-color-text-2);font-size:14px}
-.us-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
-.us-status-choice{display:grid;justify-items:center;gap:4px;min-height:84px;padding:10px 6px;border:1px solid var(--us-color-line);border-radius:20px;background:rgba(247,239,233,.04);color:var(--us-color-text);font:500 13px/1.2 var(--us-font-ui);text-align:center;cursor:pointer}
-.us-status-emoji{font-size:30px;line-height:1.1}
+.us-status-note{margin:6px 0 0;color:var(--us-color-text-2);font-size:13px;line-height:1.45}
+.us-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.us-status-group-head{grid-column:1/-1;margin:6px 2px 0;color:var(--us-color-text-3);font:800 10px/1.2 var(--us-font-ui);letter-spacing:.16em;text-transform:uppercase}
+.us-status-choice{display:grid;justify-items:center;gap:4px;min-height:76px;padding:9px 6px;border:1px solid var(--us-color-line);border-radius:20px;background:rgba(247,239,233,.04);color:var(--us-color-text);font:500 13px/1.2 var(--us-font-ui);text-align:center;cursor:pointer}
+.us-status-emoji{font-size:28px;line-height:1.1}
 .us-status-choice[aria-pressed="true"]{border-color:color-mix(in srgb,var(--us-rosa,#ff7c96) 70%,transparent);background:color-mix(in srgb,var(--us-rosa,#ff7c96) 14%,transparent)}
-.us-status-note{margin:14px 0 0;color:var(--us-color-text-3);font-size:12px;line-height:1.45}
 .us-status-clear{display:block;min-height:44px;margin:8px auto 0;padding:0 18px;border:0;background:none;color:var(--us-color-text-2);font:600 14px var(--us-font-ui);text-decoration:underline;cursor:pointer}
 .us-status-lead{margin:10px 0 16px;color:var(--us-color-text-2);font-size:15px;line-height:1.5}
 .us-status-forms{display:grid;gap:10px}
@@ -41,3 +63,26 @@
 .us-status-form small{color:var(--us-color-text-2);font-size:13px}
 .us-status-form[aria-pressed="true"]{border-color:color-mix(in srgb,var(--us-noi,#d98be0) 70%,transparent);background:color-mix(in srgb,var(--us-noi,#d98be0) 12%,transparent)}
 @media (prefers-reduced-motion:reduce){.us-status-overlay *{animation:none!important;transition:none!important}}
+
+/* The other person's sheet. */
+.us-status-person{display:flex;flex-direction:column;gap:10px}
+.us-status-person-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:2px 0 6px;text-align:center}
+.us-status-person-char svg{display:block;width:96px;height:auto}
+.us-status-person-card h2{margin:4px 0 0;font:400 24px/1.15 var(--us-font-display)}
+.us-status-person-card p{margin:0;color:var(--us-color-text-2);font:600 13px/1.3 var(--us-font-ui)}
+.us-status-person>button{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;padding:0 18px;border-radius:999px;font:800 15px/1.2 var(--us-font-ui);cursor:pointer}
+.us-status-respond{border:0;background:#b8432f;color:#fff}
+.us-status-respond[data-sent="true"]{background:#fbe3e8;color:#a3274a;cursor:default}
+.us-status-respond:disabled{opacity:1}
+.us-status-person-think{border:0;background:linear-gradient(90deg,var(--us-rosa,#ff7c96),var(--us-lilla,#a98bff));color:#1a1020}
+.us-status-person-voice{border:1px solid var(--us-color-line);background:transparent;color:var(--us-color-text)}
+.us-status-person>button:focus-visible,.us-status-trip button:focus-visible{outline:2px solid var(--us-noi,#d98be0);outline-offset:3px}
+
+/* D14: the Noi calendar offer. */
+.us-status-trip{margin:14px 0 0;padding:14px 16px;border:1px solid var(--us-color-line);border-radius:22px;background:rgba(247,239,233,.04)}
+.us-status-trip p{margin:0;color:var(--us-color-text);font:500 16px/1.35 var(--us-font-ui)}
+.us-status-trip-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.us-status-trip button{min-height:44px;padding:0 16px;border-radius:999px;font:600 14px var(--us-font-ui);cursor:pointer}
+.us-status-trip-yes{border:0;background:var(--us-noi,#d98be0);color:#1a1020}
+.us-status-trip-no{border:1px solid var(--us-color-line);background:none;color:var(--us-color-text-2)}
+#home #homeHero .og-row .home-distance-pill[data-us-trip="true"] b{font-style:italic}

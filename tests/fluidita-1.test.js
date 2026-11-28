@@ -52,10 +52,36 @@ test('the interface says «voi due», never «entrambi»', () => {
   }
 });
 
-test('tab change: the Due colori tide is quicker (founder, 22/10), same shape and easing', () => {
+// Fluidità 2 (founder, 24/11/2026: «veloci ma non fluide»): still quick, but
+// on the compositor (transform and opacity), with a softer curve; the page
+// changes as soon as the colour covers the screen.
+test('tab change: the production tide, with the soft-edged colour', () => {
   const js = read('due-colori.js');
+  const css = read('due-colori.css');
+  // «Vedi su produzione com'è reattivo» (founder, 25/11/2026): production's
+  // times, curve and second tap (retarget), with staging's soft edge.
   assert.match(js, /const COVER_MS = 260;/);
   assert.match(js, /const REVEAL_MS = 340;/);
-  assert.match(js, /const IO = 'cubic-bezier\(\.7,0,\.2,1\)';/, 'same easing as the mockup');
+  assert.match(js, /const IO = 'cubic-bezier\(\.7,0,\.2,1\)';/);
+  assert.match(js, /const STAGGER_DELAY = 160;\nconst STAGGER_STEP = 50;\nconst STAGGER_MS = 460;/);
+  assert.match(js, /if \(button && busy && !slideJob && retarget\(button, this, id, options\)\) return undefined;/);
+  assert.match(js, /function retarget\(button, self, id, options\) \{[\s\S]*?if \(id === current\.from\) \{[\s\S]*?current\.cover\?\.reverse\(\)/, 'the tab it left turns the colour back');
+  assert.match(js, /disc\.style\.setProperty\('--us-flood', tabColor\(button\)\);\n    return true;/, 'while it rises the colour turns to the new tab');
+  assert.doesNotMatch(js, /function rush\(|const discs = \[\]/);
+  // No sharp edge (founder, 24/11/2026): a soft disc covers; a soft hole opens.
+  assert.match(css, /\.us-flood-disc\{[^}]*background:radial-gradient\(circle closest-side,var\(--c\) 52%,[^}]*transparent 100%\)/);
+  assert.match(js, /disc\.animate\(\[\{ transform: 'scale\(0\.002\)', opacity: 1 \}, \{ transform: `scale\(\$\{grown\.toFixed\(3\)\}\)`, opacity: 1 \}\],\n      \{ duration: COVER_MS, easing: IO, fill: 'both' \}\)/, 'the colour grows with transform');
+  assert.match(js, /el\.animate\(\[\{ '--us-hole': '0px' \}, \{ '--us-hole': `\$\{radius \+ HOLE_EDGE\}px` \}\]/, 'the page opens through a soft hole');
+  assert.match(css, /\.us-flood\.is-opening\{-webkit-mask-image:radial-gradient\(circle at var\(--us-hole-x,50%\) var\(--us-hole-y,100%\),transparent calc\(var\(--us-hole,0px\) - 140px\),#000 var\(--us-hole,0px\)\)/);
   assert.match(js, /const FADE_MS = 180;/, 'reduced motion keeps its short fade');
+  // Revisione (24/11/2026): a small disc drawn once, on a layer that stays in the page.
+  assert.match(js, /const DISC = 480;/);
+  assert.match(js, /if \(doc\.body\) prepare\(\); else doc\.addEventListener\('DOMContentLoaded', prepare, \{ once: true \}\);/);
+  assert.match(css, /\.us-flood\{[^}]*opacity:0;will-change:opacity\}\n\.us-flood\[data-on="1"\]\{opacity:1\}/);
+  assert.match(js, /await covered\(current\.cover\);/, 'the page changes once the screen is covered');
+  // The tabs' colours are kept per Giorno and Notte too.
+  assert.match(js, /\$\{button\.dataset\.page\}\|\$\{root\.dataset\.usLuce \|\| ''\}\|/);
+  assert.doesNotMatch(js, /clipPath/);
+  assert.match(css, /\.us-flood-disc\{[^}]*border-radius:50%[^}]*will-change:transform[^}]*\}/);
+  assert.match(read('ui-foundation.js'), /const later = environment\.UsDueColori\?\.afterMotion;/, 'the sound engine is never built mid-motion');
 });

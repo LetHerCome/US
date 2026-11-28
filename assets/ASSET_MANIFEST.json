@@ -1709,6 +1709,94 @@
       "source": "assets/source/brand/app-icon/us-launcher-symbol-v2.png",
       "sourceSha256": "a75c69e23a4e5cf94a6ad06f4b2ae126d8499b281e0a7010f511077427715e4a",
       "operation": "COMPOSE_WHITE_FG_SQUIRCLE_160_WEBP_Q90"
+    },
+    {
+      "path": "assets/mese/pack-holo.webp",
+      "status": "APPROVED",
+      "sha256": "d3337f0e2f5c21cf253bddda6f7eca710b40edc1535c22a1c1b28803e0a70f70",
+      "immutable": true,
+      "purpose": "Il vostro mese: the month pack, holographic pink-lilac foil with the base logo (tavola «Il vostro mese» approved by the founder, 27/11/2026)",
+      "usedBy": [
+        "mese.css",
+        "mese.js"
+      ]
+    },
+    {
+      "path": "assets/mese/pack-gold.webp",
+      "status": "APPROVED",
+      "sha256": "564b2dc19d946b3704873882526eaec2cf658ed3192ab3d0b409737a094dd4b8",
+      "immutable": true,
+      "purpose": "Il vostro mese: the golden pack of the year (tavola «Il vostro mese» approved by the founder, 27/11/2026)",
+      "usedBy": [
+        "mese.css",
+        "mese.js"
+      ]
+    },
+    {
+      "path": "assets/mese/logo-pink.webp",
+      "status": "APPROVED",
+      "sha256": "80ef6dee35de39d8bb7996e32ad8690eedd0a06b393466f53a61834f903f40a5",
+      "immutable": true,
+      "purpose": "Il vostro mese: the base US logo pressed on the month pack and the card back (tavola «Il vostro mese» approved by the founder, 27/11/2026)",
+      "usedBy": [
+        "mese.css",
+        "mese.js"
+      ]
+    },
+    {
+      "path": "assets/mese/logo-gold.webp",
+      "status": "APPROVED",
+      "sha256": "695a9b0c2efbacd7b1fcd01f56fc922bd286c105181bc282e79539c012e0a9ee",
+      "immutable": true,
+      "purpose": "Il vostro mese: the golden US logo of the year pack (tavola «Il vostro mese» approved by the founder, 27/11/2026)",
+      "usedBy": [
+        "mese.css",
+        "mese.js"
+      ]
+    },
+    {
+      "path": "assets/mese/retro.webp",
+      "status": "APPROVED",
+      "sha256": "aa4b59214e615544c8d89338b6e02e4e72d02c32bc19783cc8ebf6bd9d19504a",
+      "immutable": true,
+      "purpose": "Il vostro mese: the pink card back (the base logo replaces the star) (tavola «Il vostro mese» approved by the founder, 27/11/2026)",
+      "usedBy": [
+        "mese.css",
+        "mese.js"
+      ]
+    },
+    {
+      "path": "assets/mese/frame.webp",
+      "status": "APPROVED",
+      "sha256": "ae1653d4cafff6e34bb438bbb08c019f806a2eac918a919beeaf1af23629cd22",
+      "immutable": true,
+      "purpose": "Il vostro mese: the gold frame, only on the rare card (tavola «Il vostro mese» approved by the founder, 27/11/2026)",
+      "usedBy": [
+        "mese.css",
+        "mese.js"
+      ]
+    },
+    {
+      "path": "assets/mese/holo.webp",
+      "status": "APPROVED",
+      "sha256": "5f13cf7691a0b8bea9b32a4211882894ed20e9924d49b898d9dc04037cb03e81",
+      "immutable": true,
+      "purpose": "Il vostro mese: the holographic shine of the rare card (tavola «Il vostro mese» approved by the founder, 27/11/2026)",
+      "usedBy": [
+        "mese.css",
+        "mese.js"
+      ]
+    },
+    {
+      "path": "assets/mese/paper.webp",
+      "status": "APPROVED",
+      "sha256": "063572e761658fec35c6eda223b29ff03b5abf379808f40939d6dbeadb7a0d60",
+      "immutable": true,
+      "purpose": "Il vostro mese: the paper texture of the card fronts (tavola «Il vostro mese» approved by the founder, 27/11/2026)",
+      "usedBy": [
+        "mese.css",
+        "mese.js"
+      ]
     }
   ]
 }

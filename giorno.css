@@ -1,0 +1,242 @@
+/* Aspetto Giorno: il Quaderno (founder, 24/11/2026, tavola «US · Quaderno,
+   giorno e notte», with the three recommended choices: actions in ceralacca,
+   Automatico follows the phone, polaroids and post-its stay paper at night).
+   Carta for the page, foglio for the cards, inchiostro for the words, one
+   ceralacca for actions; the couple's colours turn dustier so ink reads on
+   them. Only under <html data-us-luce="giorno"> (aspetto.js); the night is
+   untouched. Loaded last. Tokens first, then the rules that still had
+   night colours written in. */
+
+:root[data-us-luce="giorno"]{
+  color-scheme:light;
+  --us-carta:#f3ece1;
+  --us-foglio:#fbf7f0;
+  --us-ceralacca:#b8452f;
+  /* Light and dark swap: words written in latte become ink; the dark ink on
+     a light pill becomes paper on a dark pill. */
+  --us-latte:#231b1d;
+  --us-inchiostro:#fbf7f0;
+  /* The couple's colours, dusty (person-colors.js puts a chosen one's day tone in --us-*-giorno). */
+  --us-rosa:var(--us-rosa-giorno,#e7a1ab)!important;
+  --us-lilla:var(--us-lilla-giorno,#ab9ddb)!important;
+  /* Every page speaks with the ceralacca (as text on carta 4.55:1). */
+  --us-pg-home:#b8452f!important;
+  --us-pg-bond:#b8452f!important;
+  --us-pg-moments:#b8452f!important;
+  --us-pg-quiz:#b8452f!important;
+  --us-noi:#b8452f!important;
+  --us-tab:#b8452f;
+  --us-glow:rgba(184,69,47,.10);
+  --us-accent-gradient:linear-gradient(#b8452f,#b8452f)!important;
+  --us-color-text-on-accent:#fbf7f0;
+
+  --us-color-bg:#f3ece1;
+  --us-color-surface:#fbf7f0;
+  --us-color-surface-2:#efe6d8;
+  --us-color-elevated:#e7dccb;
+  --us-color-sheet:#fbf7f0;
+  --us-atmo:linear-gradient(#f3ece1,#f3ece1);
+  --us-color-text:#231b1d;
+  --us-color-text-2:#6b5f5a;
+  --us-color-text-3:#665a54;
+  --us-color-accent-ink:#b8452f;
+  --us-color-accent-soft:rgba(184,69,47,.10);
+  --us-color-accent-line:rgba(184,69,47,.30);
+  --us-color-accent-strong:#b8452f;
+  --us-color-line:rgba(35,27,29,.12);
+  --us-color-line-strong:rgba(35,27,29,.20);
+  --us-color-locked:rgba(35,27,29,.42);
+  --us-color-paper:#fffdf8;
+  --us-color-plum:#e9dfcf;
+  --us-rosso:#b3261e;
+  --us-color-danger-ink:#a3261f;
+  --us-verde:#2f7a4f;
+  --us-glass-1-bg:rgba(35,27,29,.035);
+  --us-glass-3-shadow:0 24px 60px rgba(35,27,29,.16);
+  --us-glass-3-shadow-up:0 -16px 50px rgba(35,27,29,.14);
+  --us-scrim:rgba(35,27,29,.34);
+  --us-graphite:#efe6d8;
+  background:#f3ece1!important;
+}
+/* colori.css paints html with the night: the day wins by specificity. */
+:root[data-us-luce="giorno"],:root[data-us-luce="giorno"] body{background:#f3ece1!important}
+
+/* ---------- The first steps stay night (for now) ----------
+   Sign-in, setup, the tour with the characters, the waiting room and the
+   fingerprint lock have their own approved night drawing: under Giorno
+   they keep the night's tokens until they get a day pass of their own.
+   The photo viewers and the camera stay dark too, as a phone's gallery. */
+:root[data-us-luce="giorno"] :is(.auth-overlay,.us-setup,.us-tour,#usOnboarding,.us-app-lock,#mc3Waiting,#usAlbumOverlay,#momentViewer,#leftForYouCameraOverlay,#usStoryViewer,.us-story-viewer){
+  color-scheme:dark;
+  --us-latte:#f7efe9;--us-inchiostro:#1a1020;
+  --us-rosa:#ff7c96!important;--us-lilla:#a98bff!important;
+  --us-pg-home:#ff7c96!important;--us-pg-bond:#ee7bc2!important;--us-pg-moments:#d181e6!important;--us-pg-quiz:#a98bff!important;--us-noi:#e17dd5!important;
+  --us-accent-gradient:linear-gradient(90deg,var(--us-tu),var(--us-partner))!important;
+  --us-color-text-on-accent:#1a1020;
+  --us-color-bg:#140c14;--us-color-surface:#1d1119;--us-color-surface-2:#26161f;--us-color-elevated:#301c27;--us-color-sheet:#1d1119;
+  --us-color-text:#f7efe9;--us-color-text-2:rgba(247,239,233,.72);--us-color-text-3:rgba(247,239,233,.50);
+  --us-color-accent-ink:color-mix(in srgb,var(--us-noi) 62%,#f7efe9);--us-color-accent-soft:color-mix(in srgb,var(--us-noi) 14%,transparent);--us-color-accent-line:color-mix(in srgb,var(--us-noi) 30%,transparent);--us-color-accent-strong:var(--us-noi);
+  --us-color-line:rgba(247,239,233,.09);--us-color-line-strong:rgba(247,239,233,.17);--us-color-locked:rgba(247,239,233,.42);
+  --us-glass-1-bg:rgba(247,239,233,.035);--us-scrim:rgba(8,5,11,.62);--us-ambra:#f3b76e;--us-rosso:#ff6b6b;--us-color-danger-ink:#ffb0ad;--us-verde:#7fd8a4;
+  color:#f7efe9;
+}
+
+/* ---------- Profilo › Aspetto: three choices (both lights) ---------- */
+.us-aspetto{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 18px}
+.us-aspetto-choice{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:44px;padding:8px 8px 10px;border-radius:18px;border:1px solid var(--us-color-line);background:var(--us-color-surface);color:var(--us-color-text);font:inherit;text-align:left;cursor:pointer}
+.us-aspetto-choice[aria-checked="true"]{border:2px solid var(--us-color-accent-strong,var(--us-tu));padding:7px 7px 9px}
+.us-aspetto-choice b{margin-top:6px;font-size:13.5px;font-weight:800}
+.us-aspetto-choice small{font-size:11px;color:var(--us-color-text-2)}
+.us-aspetto-choice:focus-visible{outline:2px solid var(--us-color-accent-strong,var(--us-tu));outline-offset:2px}
+.us-aspetto-mini{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;width:100%;height:58px;border-radius:11px;overflow:hidden;border:1px solid var(--us-color-line)}
+.us-aspetto-mini i{display:block;background-repeat:no-repeat}
+/* A tiny page: a title line, a card, an action. */
+.us-aspetto-mini .g{background-color:#f3ece1;background-image:linear-gradient(#231b1d,#231b1d),linear-gradient(#fbf7f0,#fbf7f0),linear-gradient(#b8452f,#b8452f);background-size:60% 5px,84% 16px,46% 8px;background-position:8px 9px,8px 20px,8px 42px}
+.us-aspetto-mini .n{background-color:#120d11;background-image:linear-gradient(#f7efe9,#f7efe9),linear-gradient(#1d1119,#1d1119),linear-gradient(90deg,#ff7c96,#a98bff);background-size:60% 5px,84% 16px,46% 8px;background-position:8px 9px,8px 20px,8px 42px}
+.us-aspetto-mini.is-auto .g,.us-aspetto-mini.is-auto .n{background-size:70% 5px,90% 16px,56% 8px;background-position:6px 9px,6px 20px,6px 42px}
+
+/* ---------- Oggi: the photo stays a photo ----------
+   Words and icons over the photo keep the night's light colours; the photo
+   fades into the paper instead of into the night; the dock card is a sheet
+   of paper; «Come stai?» is a paper label, readable wherever it falls. */
+:root[data-us-luce="giorno"] #home #homeHero,:root[data-us-luce="giorno"] .app>.top.us-premium-top{--us-latte:#f7efe9;--us-color-text:#f7efe9;--us-color-text-2:rgba(247,239,233,.8);--us-color-text-3:rgba(247,239,233,.72);--us-inchiostro:#1a1020;color:#f7efe9}
+:root[data-us-luce="giorno"] #home #homeHero #usOggiDock{--us-latte:#231b1d;--us-color-text:#231b1d;--us-color-text-2:#6b5f5a;--us-color-text-3:#72655f;--us-inchiostro:#fbf7f0;color:#231b1d}
+/* Il velo di carta (founder, 25/11/2026: «carino, un po' meno accentuato»). */
+:root[data-us-luce="giorno"] #home .home-photo-shade{background:linear-gradient(180deg,rgba(15,11,19,.5) 0%,rgba(15,11,19,.14) 22%,rgba(15,11,19,0) 36%,rgba(243,236,225,0) 54%,rgba(243,236,225,.32) 76%,rgba(243,236,225,.66) 100%)!important}
+:root[data-us-luce="giorno"] html.us-native #home .home-photo-shade,:root[data-us-luce="giorno"].us-native #home .home-photo-shade{background:linear-gradient(180deg,rgba(15,11,19,.5) 0%,rgba(15,11,19,.14) 22%,rgba(15,11,19,0) 36%,rgba(243,236,225,0) 54%,rgba(243,236,225,.32) 76%,rgba(243,236,225,.66) 100%)!important}
+/* Come stai che conta (27/11/2026): the row's glass pills took the dock's dark
+   ink over the photo (dark on dark): by day they are paper labels too. The
+   second row (Come stai, one pill since 28/11) follows the distance. */
+:root[data-us-luce="giorno"] #home #homeHero :is(#usOggiNext,#distanceWidget,#usOggiStatusGroup){background:#fbf7f0!important;border-color:rgba(35,27,29,.12)!important;color:#231b1d!important;box-shadow:0 4px 12px rgba(35,27,29,.12)!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+:root[data-us-luce="giorno"] #home #homeHero #usOggiStatusGroup .us-status-face{background:#efe8f7}
+:root[data-us-luce="giorno"] #home #homeHero #usOggiStatusGroup .us-status-her-text span{color:#5a4b50}
+:root[data-us-luce="giorno"] #home #homeHero #usOggiStatusGroup .us-status-her[data-state="set"] .us-status-her-text span{color:#231b1d}
+:root[data-us-luce="giorno"] #home #homeHero #usOggiStatusGroup .us-status-plus{background:#d94f73;color:#fff}
+:root[data-us-luce="giorno"] #home #usDailyRitual{background:#fbf7f0!important;border-color:rgba(35,27,29,.12)!important;box-shadow:0 8px 22px rgba(35,27,29,.12)}
+
+/* The caption over the photo (inside the dock's block, drawn on the photo). */
+:root[data-us-luce="giorno"] #home #usOggiCaption{--us-color-text:#f7efe9;--us-color-text-2:rgba(247,239,233,.82);--us-color-text-3:rgba(247,239,233,.76);color:#f7efe9}
+
+/* Switches: a white knob on paper, as light switches are. */
+:root[data-us-luce="giorno"] .us-cal-sheet .us-cal-allday-field input::after,:root[data-us-luce="giorno"] #usEventForm .us-event-repeat input::after{background:#fff!important;box-shadow:0 1px 3px rgba(35,27,29,.3)}
+
+/* ---------- Small words: the third grey and the ambra, darker on paper ---------- */
+:root[data-us-luce="giorno"]{--us-color-text-3:#665a54;--us-ambra:#7a4f12}
+/* Sheet kickers (the small word above a sheet's title) speak with the ceralacca. */
+:root[data-us-luce="giorno"] :is(#leftForYouOverlay,#leftForYouComposerOverlay,#usSettingsOverlay,#usWidgetHub,#usCalendarDetailSheet,.us-notes-overlay,#usNoiLavagna,.noi-sheet,#usCountdownSheet,#today,#usEventsOverlay,#usCalendarFormSheet,#conservatiOverlay,.us-moment-compose-overlay,#ricordiChapterOverlay){--us-sheet-k:#b8452f!important}
+:root[data-us-luce="giorno"]{--us-verde:#2a6b46}
+/* Placeholders in fields: the third grey of the page, never a light one. */
+:root[data-us-luce="giorno"] :is(input,textarea)::placeholder{color:#857771!important;opacity:1}
+
+/* ---------- Generated from the stylesheets (scripts: scratchpad giorno/regole.js) ---------- */
+/* Actions painted in my colour: in Giorno they are ceralacca, with paper ink (5:1). */
+:root[data-us-luce="giorno"] #quiz .us-gv2-daycount-dots i[data-on="true"]{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #quiz #quizHub .us-gv2-pervoi-cta{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #quiz #quizHub .us-gv2-weekly .us-gv2-weekly-cta{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #quiz .us-gv2-flow .us-gv2-actions button.primary,:root[data-us-luce="giorno"] #quiz .us-gv2-flow .us-gv2-submit{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #quiz .us-gv2-swipe-stamp.is-right{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #quiz .us-gv2-swipe-actions button.primary{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #quiz .us-gv5-move-actions button.primary{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-cos-theme-pill{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #usProgressionUnlock .us-progression-unlock-actions .primary{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-level-moment-actions .primary{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #bond .noi-idea-quick-actions .primary,:root[data-us-luce="giorno"] #bond .noi-idea-detail-actions .primary{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #bond .noi-idea-section .noi-idea-quick-actions .primary{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-cal-sheet .us-cal-detail-edit{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-cal-sheet .us-cal-form .us-cal-allday-field input[type="checkbox"]:checked{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-cal-sheet .us-cal-form-save{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #usEventsOverlay .us-event-add{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #usEventForm .us-event-repeat input[type="checkbox"]:checked{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #usEventForm .us-event-complete{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #usEventForm #usEventSaveBtn{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #home #usDailyRitual .us-daily-ritual-cta{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #today #todaySaveBtn{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #today .today-keep-button,:root[data-us-luce="giorno"] #today .today-keep-done{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #usCountdownSheet [aria-pressed="true"] .us-countdown-check{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-look-overlay .us-look-apply.primary{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #leftForYouOverlay #leftForYouConserve{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #leftForYouComposerOverlay #leftForYouComposerSend{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #leftForYouComposerOverlay .left-for-you-vn-mic,:root[data-us-luce="giorno"] #leftForYouComposerOverlay .left-for-you-vn-play{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #leftForYouCameraOverlay #leftForYouCameraUse{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-ob-progress i{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .auth-overlay .us-auth-primary,:root[data-us-luce="giorno"] .auth-overlay #mc3ShareCode,:root[data-us-luce="giorno"] .auth-overlay #mc3Retry,:root[data-us-luce="giorno"] .auth-overlay #usVerifyBack,:root[data-us-luce="giorno"] .us-setup .us-auth-primary{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-auth-icon::before{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-setup-point-icon{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-setup-ready .us-setup-ready-action{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-setup-ready li.is-ok .us-setup-ready-icon::before{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-setup-ready li.is-ok>i{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-app-lock .us-app-lock-icon::before{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-app-lock .us-app-lock-primary{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #usAlbumOverlay[data-us-galleria] .us-album-save{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .us-moment-compose-sheet .moment-save{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #leftForYouComposerOverlay .left-for-you-composer-pick[data-pick]::before{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #leftForYouComposerOverlay .left-for-you-vn[data-phase="idle"]{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #settings .us-settings2-page .us-settings2-section-head::before{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #settings .us-settings2-page .us-settings2-switch-row[aria-checked="true"] .us-settings2-switch{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #usSettingsModalBody .us-settings2-push-master>button.primary{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #usSettingsModalBody .us-settings2-toggle-row>i.on{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] #usWidgetHub .us-widget-hub-add{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+:root[data-us-luce="giorno"] .primary{background:var(--us-ceralacca)!important;color:var(--us-foglio)!important}
+/* «Who» fills keep the pastel; ink is written on them (6.5 to 13:1). */
+:root[data-us-luce="giorno"] .us-notes-dot[data-who="tu"]{color:#231b1d!important}
+:root[data-us-luce="giorno"] #quiz .us-gv2-wd-pair i[data-who="tu"]{color:#231b1d!important}
+:root[data-us-luce="giorno"] #quiz .us-gv5-reveal-answers dl>div:nth-child(1),:root[data-us-luce="giorno"] #quiz .us-gv2-then dl>div:nth-child(1),:root[data-us-luce="giorno"] #quiz .us-gv5-move-pick dl>div:nth-child(1){color:#231b1d!important}
+:root[data-us-luce="giorno"] #quiz .us-wc-pair-cell[data-who="me"] .us-wc-pair-label i{color:#231b1d!important}
+:root[data-us-luce="giorno"] #home #usOggiCaption .dot[data-who="tu"],:root[data-us-luce="giorno"] #today .question .locked .dot[data-who="tu"]{color:#231b1d!important}
+:root[data-us-luce="giorno"] #today .today-reveal--simple .today-answer[data-us-daily-answer="mine"]{color:#231b1d!important}
+:root[data-us-luce="giorno"] .us-tour-dots button[aria-current="true"]::before{color:#231b1d!important}
+:root[data-us-luce="giorno"] #usAlbumOverlay[data-us-galleria] .us-album-byline[data-owner="tu"]::before{color:#231b1d!important}
+:root[data-us-luce="giorno"] #usWidgetHub .us-wp-think{color:#231b1d!important}
+:root[data-us-luce="giorno"] .us-lav-who [data-who="tu"] i{color:#231b1d!important}
+:root[data-us-luce="giorno"] #settings .us-profile-color i{color:#231b1d!important}
+/* Words in a couple colour: the pastel would not read on paper, so a darker ink of it. */
+:root[data-us-luce="giorno"] .us-auth-context span[aria-hidden="true"]{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-cal-detail-delete{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-cal-tempo-heart{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #quiz #quizHub .us-gv2-pervoi-copy small.us-gv2-pervoi-note{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-cal-sheet .us-cal-sheet-kicker{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #home #usDailyRitual .us-daily-ritual-kicker{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #today>.today-sheet.us-sheet[data-us-modal-panel]>.today-sheet-head h2{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #today .today-reveal--simple .today-reaction[aria-pressed="true"]{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #thinkArrival .think-arrival-kicker{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #thinkArrival #thinkArrivalTitle em{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #usCountdownSheet .us-countdown-row em{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-look-card small{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #leftForYouOverlay .left-for-you-head .tiny{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #leftForYouComposerOverlay .left-for-you-head .tiny,:root[data-us-luce="giorno"] #leftForYouCameraOverlay .left-for-you-head .tiny{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #leftForYouOverlay .left-for-you-kind{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .auth-overlay .auth-card h2 em,:root[data-us-luce="giorno"] .us-setup h2 em{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #leftForYouOverlay #leftForYouKind{color:color-mix(in srgb,var(--us-partner) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-plus-soon-list .us-icon{color:color-mix(in srgb,var(--us-tu) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-event-datebox small{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-event-add span{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-event-delete{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-event-heart-date b{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .noi-ev-icon{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .noi-ev-when small{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .noi-ev-row.is-lived>.us-icon{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .noi-ev-row.is-system .noi-ev-when b{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-gv2-row-state[data-tone="turn"],:root[data-us-luce="giorno"] .us-gv2-row-state[data-tone="ready"]{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] #quiz .us-gv5-reveal-group[data-gv5-group="same"] .us-gv5-reveal-group-head strong{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .heart{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-noi-v2-shortcuts .us-icon{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-noi-v2-notice button,:root[data-us-luce="giorno"] .us-noi-v2-text-action{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-noi-v2-item-icon{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-noi-v2-item-icon[data-type="calendar"]{color:color-mix(in srgb,var(--us-color-violet) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-noi-v2-list-date em{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-noi-v2-empty-month>.us-icon{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-look-chip.is-current{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-look-apply.is-current{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-setting-danger .us-setting-main b{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-setting-state.bad{color:color-mix(in srgb,var(--us-color-rose) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-settings-copy p.warn{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-setting-choice button b{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-settings2-device-dot.bad{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-settings2-disconnect{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-account-delete-status{color:color-mix(in srgb,var(--us-color-rose-2) 45%,#231b1d)!important}
+:root[data-us-luce="giorno"] .us-confirm-list li::marker{color:color-mix(in srgb,var(--us-rosa) 45%,#231b1d)!important}
+/* Gioca di giorno (25/11/2026): i gettoni spenti e il riquadro a zero erano
+   tratteggi chiari su carta, quasi invisibili. Inchiostro tenue al loro posto. */
+:root[data-us-luce="giorno"] .us-gv2-token:not(.is-on){border-color:color-mix(in srgb,#231b1d 28%,transparent)!important}
+:root[data-us-luce="giorno"] #quiz #quizHub .us-gv2-tokens[data-gv2-left="0"]{border-color:color-mix(in srgb,#231b1d 14%,transparent)!important;background:var(--us-foglio,#fbf7f0)!important}
+:root[data-us-luce="giorno"] #quiz #quizHub .us-gv2-tokens-plus{border-top-color:color-mix(in srgb,#231b1d 10%,transparent)!important}

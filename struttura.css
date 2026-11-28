@@ -1,0 +1,463 @@
+/* La struttura (redesign definitivo, Fase 2, founder 23/11/2026, D6;
+   docs/missions/redesign-definitivo.md). Ti penso in the middle of the bottom
+   bar, the envelope top left on Oggi, your character top right on the four
+   pages (the way to the Profilo), the Profilo card. Loaded last: it wins over
+   the older layers on purpose. The page colours come with Fase 3. */
+
+/* ---------- The bottom bar: Oggi, Noi, the heart, Ricordi, Gioca ---------- */
+.us-nav.us-nav-premium{grid-template-columns:1fr 1fr 70px 1fr 1fr!important;overflow:visible!important}
+/* The blob slides over the four tabs only; the heart's 70 px sit in the middle. */
+.us-nav-indicator{width:calc((100% - 70px) / 4)!important;transform:translate3d(var(--us-nav-x,0px),0,0)!important}
+.us-nav:has(> button[data-page="home"].active){--us-nav-x:0px}
+.us-nav:has(> button[data-page="bond"].active){--us-nav-x:100%}
+.us-nav:has(> button[data-page="moments"].active){--us-nav-x:calc(200% + 70px)}
+.us-nav:has(> button[data-page="quiz"].active){--us-nav-x:calc(300% + 70px)}
+
+/* The heart: raised out of the bar, your colour into theirs, a dark heart. */
+.us-nav-premium .us-nav-think{
+  position:relative;
+  z-index:2;
+  justify-self:center;
+  align-self:center;
+  display:grid!important;
+  place-items:center;
+  width:58px!important;
+  height:58px!important;
+  min-width:58px!important;
+  min-height:58px!important;
+  margin:-30px 0 0!important;
+  padding:0!important;
+  border:4px solid var(--us-color-bg,#140c14)!important;
+  border-radius:50%!important;
+  background:linear-gradient(135deg,var(--us-tu),var(--us-partner))!important;
+  box-shadow:0 8px 20px rgba(0,0,0,.4)!important;
+  color:#1a1020!important;
+  overflow:visible;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+/* Before sign-in the slot stays, so the four tabs keep their places. */
+.us-nav-premium .us-nav-think[hidden]{display:grid!important;visibility:hidden}
+.us-nav-premium .us-nav-think:disabled{opacity:1!important;filter:none!important}
+.us-nav-premium .us-nav-think:focus-visible{outline:2px solid var(--us-color-text,#f7efe9);outline-offset:3px}
+.us-nav-think-heart{position:relative;z-index:1;display:block;width:26px;height:26px}
+.us-nav-think-heart svg{display:block;width:100%;height:100%;fill:currentColor}
+.us-nav-think:active .us-nav-think-heart{transform:scale(.9)}
+/* A Ti penso arrives: the heart beats once (app.js handleIncomingThink). */
+.us-nav-think.received .us-nav-think-heart{animation:us-nav-think-beat .9s ease-out}
+@keyframes us-nav-think-beat{0%,100%{transform:scale(1)}25%{transform:scale(1.28)}50%{transform:scale(.94)}75%{transform:scale(1.08)}}
+
+/* I cuori (founder, 27/11/2026, prototype «Cuori di US»): rapid taps add up.
+   The heart squashes and springs back at each tap (ui-foundation.js
+   heartSquash), the little hearts fly on one canvas (heartSpray), a glow opens
+   behind it and «×N» shows above it from the 2nd tap (app.js usNavHeartTap). */
+.us-nav-glow{position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--us-tu) 60%,transparent),transparent 70%);opacity:0;pointer-events:none}
+.us-nav-combo{position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);font:italic 600 34px/1 var(--us-font-display);color:var(--us-color-text,#f7efe9);text-shadow:0 0 12px var(--us-color-bg,#140c14),0 4px 18px color-mix(in srgb,var(--us-tu) 65%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+:root[data-us-motion="reduced"] .us-nav-think .us-nav-think-heart{animation:none!important}
+@media (prefers-reduced-motion:reduce){.us-nav-think .us-nav-think-heart{animation:none!important}}
+
+/* While the Profilo is open the page you came from stays marked (app.js go()). */
+:root[data-us-from] body:has(#settings.page.active) .us-nav .us-nav-indicator{opacity:.16!important}
+:root[data-us-from="home"] body:has(#settings.page.active) .us-nav{--us-nav-x:0px;--us-nav-blob:var(--us-pg-home)}
+:root[data-us-from="bond"] body:has(#settings.page.active) .us-nav{--us-nav-x:100%;--us-nav-blob:var(--us-pg-bond)}
+:root[data-us-from="moments"] body:has(#settings.page.active) .us-nav{--us-nav-x:calc(200% + 70px);--us-nav-blob:var(--us-pg-moments)}
+:root[data-us-from="quiz"] body:has(#settings.page.active) .us-nav{--us-nav-x:calc(300% + 70px);--us-nav-blob:var(--us-pg-quiz)}
+:is(:root[data-us-from="home"] body:has(#settings.page.active) .us-nav-premium>button[data-page="home"],:root[data-us-from="bond"] body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"],:root[data-us-from="moments"] body:has(#settings.page.active) .us-nav-premium>button[data-page="moments"],:root[data-us-from="quiz"] body:has(#settings.page.active) .us-nav-premium>button[data-page="quiz"]) :is(.nicon,.us-nav-icon-off){display:block!important;color:var(--us-nav-c)!important}
+:is(:root[data-us-from="home"] body:has(#settings.page.active) .us-nav-premium>button[data-page="home"],:root[data-us-from="bond"] body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"],:root[data-us-from="moments"] body:has(#settings.page.active) .us-nav-premium>button[data-page="moments"],:root[data-us-from="quiz"] body:has(#settings.page.active) .us-nav-premium>button[data-page="quiz"]) .nlabel{font-weight:600;color:var(--us-color-text)}
+
+/* ---------- You, top right on the four pages (D6) ---------- */
+.us-me{
+  flex:none;
+  display:grid;
+  place-items:center;
+  width:46px;
+  height:46px;
+  padding:0;
+  border:1px solid var(--us-color-line,rgba(247,239,233,.14));
+  border-radius:50%;
+  background:rgba(247,239,233,.05);
+  color:var(--us-color-text,#f7efe9);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform var(--us-motion-press,120ms) var(--us-ease-standard,ease);
+}
+.us-me[hidden]{display:none!important}
+.us-me .us-char{display:block;width:34px;height:auto;overflow:visible}
+.us-me:active{transform:scale(.94)}
+.us-me:focus-visible{outline:2px solid var(--us-tu);outline-offset:3px}
+/* On Oggi it sits on the photo, like the envelope. */
+.top.us-premium-top .us-me{border-color:rgba(255,255,255,.2);background:rgba(20,12,20,.38);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+#bond .us-noi-v2 .us-noi-v2-me{width:var(--noi-control,44px);height:var(--noi-control,44px)}
+#moments .us-moments-head-actions{display:flex;align-items:center;gap:8px}
+#moments .us-moments-head-actions .us-me{width:44px;height:44px}
+
+/* A page title with you on the right (Gioca; Noi and Ricordi have theirs). */
+.us-page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}
+.us-page-head h2{margin:0;font:400 34px/1.05 var(--us-font-display,'Fraunces',serif);letter-spacing:0;color:var(--us-color-text,#f7efe9)}
+
+/* ---------- Il Profilo: your card, then the settings ---------- */
+#settings .us-profile-card{display:flex;align-items:center;gap:16px;margin:14px 0 6px;padding:16px;border:1px solid var(--us-color-line,rgba(247,239,233,.1));border-radius:24px;background:var(--us-color-surface,rgba(247,239,233,.045))}
+#settings .us-profile-char{flex:none;display:grid;place-items:center;width:108px;height:100px;border-radius:20px;background:radial-gradient(70% 70% at 50% 72%,color-mix(in srgb,var(--us-tu) 24%,transparent),transparent 76%)}
+#settings .us-profile-char .us-char{display:block;overflow:visible}
+#settings .us-profile-who{display:flex;flex-direction:column;gap:9px;min-width:0}
+#settings .us-profile-who b{font:400 26px/1.1 var(--us-font-display,'Fraunces',serif);color:var(--us-color-text,#f7efe9);overflow-wrap:anywhere}
+#settings .us-profile-chips{display:flex;flex-wrap:wrap;gap:6px}
+#settings .us-profile-chips>span{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0 11px;border-radius:14px;background:rgba(247,239,233,.08);font:600 13px/1.2 var(--us-font-ui,'Figtree',sans-serif);color:var(--us-color-text,#f7efe9)}
+#settings .us-profile-chips>span[hidden]{display:none}
+#settings .us-profile-color i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--us-tu)}
+/* The couple's card goes back under «Voi due»: the Profilo starts with you. */
+#settings .us-settings2-page .us-couple-id-card{order:3}
+
+/* ---------- Voi due on the photo of Oggi, and Il vostro angolo (D2, D3) ---------- */
+#home .us-angolo-entry{justify-self:end;display:flex;align-items:flex-end;margin:0 -2px -6px 0;padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform var(--us-motion-press,120ms) var(--us-ease-standard,ease)}
+#home .us-angolo-entry[hidden]{display:none}
+#home .us-angolo-entry:active{transform:scale(.95)}
+#home .us-angolo-entry:focus-visible{outline:2px solid var(--us-color-text,#f7efe9);outline-offset:4px;border-radius:18px}
+#home .us-angolo-entry .us-duo-one+.us-duo-one{margin-left:-10px}
+:is(#home .us-angolo-entry,.us-angolo-duo) .us-char{display:block;overflow:visible}
+.us-angolo-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:end;justify-content:center}
+.us-angolo-overlay[aria-hidden="false"]{display:flex}
+.us-angolo-sheet{position:relative;width:min(100%,560px);max-height:calc(100% - var(--us-safe-top,0px) - 48px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:14px 16px calc(24px + var(--us-safe-bottom,0px));border-radius:28px 28px 0 0;border-top:1px solid var(--us-color-line,rgba(247,239,233,.1));background:var(--us-color-surface,#1d1119);color:var(--us-color-text,#f7efe9);box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
+.us-angolo-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.us-angolo-head h2{margin:0;font:400 27px/1.1 var(--us-font-display,'Fraunces',serif)}
+.us-angolo-duo{display:flex;justify-content:center;align-items:flex-end;gap:28px;min-height:120px;padding:12px 0 4px;border-radius:24px;background:radial-gradient(70% 90% at 50% 100%,color-mix(in srgb,var(--us-tu) 18%,transparent),color-mix(in srgb,var(--us-partner) 12%,transparent) 55%,transparent 80%)}
+.us-angolo-duo .us-duo-one{display:flex;flex-direction:column;align-items:center;gap:6px}
+.us-angolo-duo .us-duo-name{font:700 12.5px/1.2 var(--us-font-ui,'Figtree',sans-serif);color:var(--us-color-text-2,rgba(247,239,233,.8))}
+#usAngolo .us-gioca-sintonia{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
+#usAngolo .us-gioca-sintonia>*{min-width:0;max-width:100%;margin-left:0;margin-right:0;box-sizing:border-box}
+@media (prefers-reduced-motion:reduce){#home .us-angolo-entry{transition:none}}
+
+/* ---------- Fase 4: the two characters instead of the circles (D2) ---------- */
+/* The daily question on Oggi: mine left, theirs right; dashed until answered;
+   together, with a heart between them, once you have both answered (app.js). */
+#home #usDailyRitual .ring.us-daily-duo{position:relative;display:flex;align-items:flex-end;justify-content:center;width:56px;height:30px;overflow:visible;flex:none}
+#home #usDailyRitual .us-daily-duo :is(.r-me,.r-you){display:block;line-height:0;transition:transform .42s cubic-bezier(.7,0,.2,1)}
+#home #usDailyRitual .us-daily-duo .us-char{display:block;overflow:visible}
+#home #usDailyRitual .us-daily-duo .r-noi{position:absolute;left:50%;top:-11px;width:12px;height:12px;margin-left:-6px;color:var(--us-noi);opacity:0;transition:opacity .3s ease}
+#home #usDailyRitual .us-daily-duo .r-noi svg{display:block;width:100%;height:100%;fill:currentColor}
+#home #usDailyRitual .us-daily-duo:is([data-st="pronte"],[data-st="svelate"]) .r-me{transform:translateX(5px)}
+#home #usDailyRitual .us-daily-duo:is([data-st="pronte"],[data-st="svelate"]) .r-you{transform:translateX(-5px)}
+#home #usDailyRitual .us-daily-duo:is([data-st="pronte"],[data-st="svelate"]) .r-noi{opacity:1}
+
+/* Il vostro angolo: the closer to the next level, the closer they stand (progression.js). */
+.us-angolo-duo{gap:0}
+.us-angolo-duo .us-duo-one+.us-duo-one{margin-left:var(--us-vicini,28px);transition:margin-left .7s cubic-bezier(.2,.8,.2,1)}
+
+/* The couple card in the Profilo: the two characters, no circles. */
+#settings .us-couple-id-card .us-couple-avatar.us-couple-char{display:grid;place-items:end center;padding:0!important;background:none!important;box-shadow:none!important;overflow:visible;border-radius:0}
+#settings .us-couple-id-card .us-couple-avatar.us-couple-char .us-char{overflow:visible}
+#settings .us-profile-look{justify-self:start;align-self:flex-start;min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--us-color-line-strong,rgba(247,239,233,.17));background:none;color:var(--us-color-text,#f7efe9);font:600 13px/1 var(--us-font-ui,'Figtree',sans-serif);cursor:pointer}
+#settings .us-profile-look:focus-visible{outline:2px solid var(--us-tu);outline-offset:3px}
+
+/* ---------- Fase 4: il guardaroba, in the angolo (D4) ---------- */
+.us-angolo-look{display:grid;gap:12px;padding:14px;border-radius:24px;border:1px solid var(--us-color-line,rgba(247,239,233,.09));background:rgba(247,239,233,.03);min-width:0}
+.us-angolo-look:empty{display:none}
+.us-look-title{margin:0;font:400 20px/1.2 var(--us-font-display,'Fraunces',serif);color:var(--us-color-text,#f7efe9)}
+.us-look-row{display:grid;gap:8px;min-width:0}
+.us-look-row>b{font:700 11.5px/1.4 var(--us-font-ui,'Figtree',sans-serif);letter-spacing:.12em;text-transform:uppercase;color:var(--us-color-accent-ink)}
+.us-look-chips{display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:2px;margin:0 -2px}
+.us-look-chips::-webkit-scrollbar{display:none}
+.us-look-chips>.us-look-chip{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;width:78px;min-height:98px;padding:8px 4px;box-sizing:border-box;border-radius:18px;border:1px solid var(--us-color-line,rgba(247,239,233,.09));background:rgba(247,239,233,.04);color:var(--us-color-text,#f7efe9);font:600 11.5px/1.2 var(--us-font-ui,'Figtree',sans-serif);text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.us-look-chips>.us-look-chip .us-char{display:block;overflow:visible}
+.us-look-chips>.us-look-chip[aria-pressed="true"]{border:2px solid var(--us-pg,var(--us-noi));background:color-mix(in srgb,var(--us-pg,var(--us-noi)) 12%,transparent)}
+.us-look-chips>.us-look-chip.is-locked{opacity:.6}
+.us-look-chips>.us-look-chip small{font:600 10.5px/1.2 var(--us-font-ui,'Figtree',sans-serif);color:var(--us-color-text-2,rgba(247,239,233,.72))}
+.us-look-chips>.us-look-chip:focus-visible{outline:2px solid var(--us-color-text,#f7efe9);outline-offset:2px}
+.us-look-next{margin:0;display:grid;gap:4px;font:500 13px/1.35 var(--us-font-ui,'Figtree',sans-serif);color:var(--us-color-text-2,rgba(247,239,233,.72))}
+.us-look-next b{color:var(--us-color-text,#f7efe9)}
+.us-look-meter{display:block;height:8px;border-radius:4px;background:rgba(247,239,233,.1);overflow:hidden}
+.us-look-meter i{display:block;height:100%;border-radius:4px;background:var(--us-accent-gradient)}
+
+/* ---------- Fase 4: the reactions of the characters ---------- */
+.us-char-wave{transform-box:fill-box;transform-origin:15% 90%;animation:us-char-wave 1.6s ease-in-out infinite}
+@keyframes us-char-wave{0%,100%{transform:rotate(0)}50%{transform:rotate(-16deg)}}
+.us-char-confetto{animation:us-char-confetto 2.4s ease-in-out infinite}
+@keyframes us-char-confetto{0%,100%{opacity:.95}50%{opacity:.35}}
+:root[data-us-motion="reduced"] :is(.us-char-wave,.us-char-confetto,.us-angolo-duo .us-duo-one,#home #usDailyRitual .us-daily-duo *){animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){:is(.us-char-wave,.us-char-confetto,.us-angolo-duo .us-duo-one,#home #usDailyRitual .us-daily-duo *){animation:none!important;transition:none!important}}
+
+/* ---------- L'isola (founder, 25/11/2026; tavola «US · Oggi e il vostro angolo», «Oggi · L'isola»):
+   the US symbol in a small capsule; a tap widens it into «Il vostro angolo · Livello N» and the two
+   characters lean out of it (personaggi.js). Fixed night colours: the bar is always on the photo. ---------- */
+.top.us-premium-top>.us-top-brand{z-index:2;transition:opacity .2s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
+.top.us-premium-top[data-us-isola="open"]>.us-top-brand{opacity:0;transform:scale(.6)}
+.top.us-premium-top .us-isola{position:absolute;left:50%;top:50%;z-index:1;width:56px;height:44px;min-height:0;margin:0;padding:0;overflow:hidden;transform:translate(-50%,-50%);border-radius:999px;border:1px solid rgba(247,239,233,.12);background:rgba(18,13,17,.3);box-shadow:none;color:#f7efe9;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:width .46s cubic-bezier(.2,.8,.2,1),height .46s cubic-bezier(.2,.8,.2,1),background-color .3s ease,box-shadow .3s ease,border-color .3s ease}
+.top.us-premium-top .us-isola[hidden]{display:none}
+/* The open island (founder, 28/11/2026: the two «troppo appoggiati a sinistra»): 232 px,
+   or less on a narrow phone; the two centred in their window, 18 px in from the edge.
+   personaggi.js cuoriVerso() and the bubble's tail read the same numbers. */
+:root{--us-isola-open-w:min(232px,calc(100vw - 100px))}
+.top.us-premium-top[data-us-isola="open"] .us-isola{width:var(--us-isola-open-w);height:50px;background:rgba(18,13,17,.8);border-color:rgba(247,239,233,.24);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.top.us-premium-top .us-isola:focus-visible{outline:2px solid #f7efe9;outline-offset:3px}
+.us-isola-window{position:absolute;left:18px;top:0;bottom:0;width:72px;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none}
+.us-isola-window .us-char{display:block;flex:none;margin-top:-3px;transform:translateY(50px);transition:transform .5s cubic-bezier(.2,.9,.25,1.15)}
+.us-isola-window .us-char+.us-char{margin-left:-12px}
+[data-us-isola="open"] .us-isola-window .us-char{transform:none;transition-delay:.12s}
+[data-us-isola="open"] .us-isola-window .us-char+.us-char{transition-delay:.2s}
+.us-isola-words{position:absolute;left:98px;top:50%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;opacity:0;transform:translate(8px,-50%);white-space:nowrap;text-align:left;pointer-events:none;transition:opacity .2s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
+.us-isola-words b{font:800 13.5px/1.1 var(--us-font-ui,'Figtree',sans-serif);color:#f7efe9}
+.us-isola-words span{font:600 11.5px/1.2 var(--us-font-ui,'Figtree',sans-serif);color:rgba(247,239,233,.78)}
+[data-us-isola="open"] .us-isola-words{opacity:1;transform:translate(0,-50%);transition-delay:.18s}
+@media (prefers-reduced-motion:reduce){.top.us-premium-top .us-isola,.us-isola-window .us-char,.us-isola-words,.top.us-premium-top>.us-top-brand{transition:none!important}}
+/* L'apertura che accoglie (27/11/2026): while your two fly in from the opening, the island is already open under it and its own two wait out of sight (personaggi.js accogli). */
+.top.us-premium-top .us-isola[data-us-arriving],.us-isola[data-us-arriving] .us-isola-window .us-char{transition:none}
+.us-isola[data-us-arriving] .us-isola-window .us-char{visibility:hidden}
+/* I cuoricini volano nell'isola (27/11/2026): the island receiving a Ti penso glows a little, «×N» by the other person. */
+.top.us-premium-top[data-us-isola="open"] .us-isola.is-receiving{border-color:rgba(255,138,166,.42);box-shadow:0 10px 26px rgba(0,0,0,.35),0 0 22px rgba(255,90,130,.32)}
+.us-isola-count{position:absolute;left:56px;top:2px;z-index:1;padding:1px 5px;border-radius:999px;background:#ff5a7a;color:#fff;font:800 10.5px/1.25 var(--us-font-ui,'Figtree',sans-serif);pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+
+/* ---------- Il vostro angolo: the level, then Voi · Guardaroba · Premi (tavola, 25/11/2026) ---------- */
+#usAngolo .us-angolo-livello{display:grid;grid-template-columns:minmax(0,1fr);min-width:0}
+#usAngolo .us-angolo-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:999px;border:1px solid var(--us-color-line,rgba(247,239,233,.08));background:color-mix(in srgb,var(--us-color-text,#f7efe9) 6%,transparent)}
+#usAngolo .us-angolo-tabs [role="tab"]{min-height:44px;margin:0;padding:0 6px;border:0;border-radius:999px;background:transparent;box-shadow:none;color:var(--us-color-text,#f7efe9);font:700 13.5px/1 var(--us-font-ui,'Figtree',sans-serif);cursor:pointer;transition:background-color .2s ease,color .2s ease}
+#usAngolo .us-angolo-tabs [role="tab"][aria-selected="true"]{background:var(--us-color-text,#f7efe9);color:var(--us-color-bg,#120d11);font-weight:800}
+#usAngolo .us-angolo-tabs [role="tab"]:focus-visible{outline:2px solid var(--us-color-text,#f7efe9);outline-offset:2px}
+#usAngolo .us-angolo-panel{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
+#usAngolo .us-angolo-panel[hidden]{display:none}
+/* Per crescere insieme: one row for each way the Sintonia grows, each opens its place. */
+#usAngolo .us-angolo-cresci{display:grid;gap:8px;min-width:0}
+#usAngolo .us-angolo-cresci h3{margin:4px 2px 0;font:400 20px/1.2 var(--us-font-display,'Fraunces',serif);color:var(--us-color-text,#f7efe9)}
+#usAngolo .us-angolo-cresci button{display:flex;align-items:center;gap:12px;min-height:58px;margin:0;padding:0 14px;border-radius:18px;border:1px solid var(--us-color-line,rgba(247,239,233,.08));background:color-mix(in srgb,var(--us-color-text,#f7efe9) 4%,transparent);box-shadow:none;color:var(--us-color-text,#f7efe9);text-align:left;cursor:pointer}
+#usAngolo .us-angolo-cresci [data-tone="tu"]{--tone:var(--us-tu,#ff7c96)}
+#usAngolo .us-angolo-cresci [data-tone="partner"]{--tone:var(--us-partner,#a98bff)}
+#usAngolo .us-angolo-cresci [data-tone="noi"]{--tone:var(--us-noi,#e17dd5)}
+#usAngolo .us-angolo-cresci [data-tone="carta"]{--tone:#f3e3b8}
+.us-angolo-cresci-mark{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:12px;background:color-mix(in srgb,var(--tone) 20%,transparent);color:var(--tone);--us-icon-size:17px}
+#usAngolo .us-angolo-cresci button>span:not(.us-angolo-cresci-mark){display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+#usAngolo .us-angolo-cresci b{font:700 14px/1.2 var(--us-font-ui,'Figtree',sans-serif)}
+#usAngolo .us-angolo-cresci small{font-size:12px;line-height:1.3;color:var(--us-color-text-2,rgba(247,239,233,.7))}
+#usAngolo .us-angolo-cresci em{flex:none;font:800 12.5px/1 var(--us-font-ui,'Figtree',sans-serif);font-style:normal;color:var(--tone)}
+:root[data-us-luce="giorno"] #usAngolo .us-angolo-cresci [data-tone="carta"]{--tone:#8a6a2a}
+:root[data-us-luce="giorno"] #usAngolo .us-angolo-cresci em,:root[data-us-luce="giorno"] .us-angolo-cresci-mark{color:color-mix(in srgb,var(--tone) 55%,#231b1d)}
+/* La vostra settimana: a heart for each day lived together, the weekday on top, today ringed. */
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i{position:relative;justify-self:center;width:30px;height:30px;margin-top:16px;border-radius:50%;background:color-mix(in srgb,var(--us-color-text,#f7efe9) 8%,transparent)}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i::before{content:attr(data-day);position:absolute;left:0;right:0;top:-17px;text-align:center;font:700 11px/1 var(--us-font-ui,'Figtree',sans-serif);font-style:normal;color:var(--us-color-text-2,rgba(247,239,233,.6))}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i.on{background:linear-gradient(135deg,var(--us-tu,#ff7c96),var(--us-partner,#a98bff))}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i.on::after{content:"";position:absolute;inset:8px;background:#1a1020;-webkit-mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i.today{box-shadow:0 0 0 2px var(--us-color-bg,#1b1219),0 0 0 4px var(--us-color-text,#f7efe9)}
+#usAngolo .us-gioca-sintonia .us-progression-rhythm-days i.today:not(.on){background:transparent;border:1.5px dashed var(--us-color-line-strong,rgba(247,239,233,.25));box-shadow:none}
+
+/* ---------- US vi ricorda (founder, 25/11/2026; tavola «US · US vi ricorda»): the speech bubble out of the
+   island, from your character (me) or from between the two (both). Fixed colours: it sits on the photo. ---------- */
+.top.us-premium-top .us-fumetto{position:absolute;left:50%;top:calc(50% + 34px);z-index:3;width:min(262px,calc(100vw - 48px));margin-left:calc(min(262px,calc(100vw - 48px)) / -2);transform-origin:var(--us-fumetto-tail,49px) -8px;transform:scale(.4) translateY(-10px);opacity:0;pointer-events:none;transition:transform .42s cubic-bezier(.2,.9,.25,1.15),opacity .2s ease}
+.top.us-premium-top .us-fumetto[hidden]{display:none}
+.top.us-premium-top .us-fumetto[data-speaker="me"]{--us-fumetto-tail:calc(min(262px,calc(100vw - 48px)) / 2 + 39px - var(--us-isola-open-w) / 2)}
+.top.us-premium-top .us-fumetto[data-speaker="both"]{--us-fumetto-tail:calc(min(262px,calc(100vw - 48px)) / 2 + 54px - var(--us-isola-open-w) / 2)}
+.top.us-premium-top .us-fumetto[data-open]{transform:none;opacity:1;pointer-events:auto;transition-delay:.4s}
+.us-fumetto-body{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;min-height:0;margin:0;padding:12px 14px 11px;border:0;border-radius:18px;background:#f7efe9;box-shadow:0 12px 28px rgba(0,0,0,.35);color:#1a1020;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.us-fumetto-body::before{content:"";position:absolute;left:calc(var(--us-fumetto-tail,49px) - 8px);top:-7px;width:16px;height:16px;border-radius:3px;background:#f7efe9;transform:rotate(45deg)}
+.us-fumetto-text{position:relative;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font:600 14.5px/1.35 var(--us-font-ui,'Figtree',sans-serif)}
+.us-fumetto-cta{position:relative;font:800 12px/1 var(--us-font-ui,'Figtree',sans-serif);color:#8f3048}
+.us-fumetto-cta[hidden]{display:none}
+.us-fumetto-body:focus-visible{outline:2px solid #f7efe9;outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.top.us-premium-top .us-fumetto{transition:none!important}}
+
+/* The line's sheet (tavola, «La scheda della battuta»). */
+#usBattuta{--us-sheet-k:var(--us-noi)}
+#usBattuta>.us-battuta-sheet{display:grid;align-content:start;gap:14px;width:min(100%,560px);max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top,0px) - 48px);overflow-y:auto;overscroll-behavior:contain;padding:18px 20px calc(24px + var(--us-safe-bottom,0px));box-sizing:border-box}
+.us-battuta-body{display:flex;flex-direction:column;gap:14px}
+.us-battuta-who{display:flex;align-items:flex-end;gap:12px}
+.us-battuta-chars{display:flex;align-items:flex-end;flex:none}
+.us-battuta-chars .us-char+.us-char{margin-left:-10px}
+.us-battuta-text{flex:1;margin:0;padding:12px 14px;border-radius:18px 18px 18px 4px;background:#f7efe9;color:#1a1020;font:600 15px/1.4 var(--us-font-ui,'Figtree',sans-serif)}
+.us-battuta-photo{display:flex;flex-direction:column;gap:8px;margin:0}
+.us-battuta-img{display:flex;align-items:flex-end;height:220px;padding:12px;box-sizing:border-box;border-radius:18px;background:linear-gradient(160deg,#e9b48f 0%,#cf7f84 55%,#4a2e45 100%) center/cover no-repeat}
+.us-battuta-img span{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:13px;background:rgba(18,13,17,.6);color:#f7efe9;font:700 12px/1 var(--us-font-ui,'Figtree',sans-serif)}
+.us-battuta-img span:empty{display:none}
+.us-battuta-photo figcaption{font:italic 400 15px/1.4 var(--us-font-display,'Fraunces',serif);color:var(--us-color-text-2,rgba(247,239,233,.82))}
+.us-battuta-actions{display:flex;flex-direction:column;gap:10px}
+#usBattuta .us-battuta-go{min-height:54px;margin:0;border:0;border-radius:999px;background:linear-gradient(90deg,var(--us-tu,#ff7c96),var(--us-partner,#a98bff));color:#1a1020;font:800 15px/1 var(--us-font-ui,'Figtree',sans-serif);box-shadow:none}
+#usBattuta .us-battuta-later{min-height:50px;margin:0;border:1px solid var(--us-color-line-strong,rgba(247,239,233,.18));border-radius:999px;background:transparent;color:var(--us-color-text,#f7efe9);font:700 14.5px/1 var(--us-font-ui,'Figtree',sans-serif);box-shadow:none}
+.us-battuta-note{margin:0;font-size:12.5px;line-height:1.45;text-align:center;color:var(--us-color-text-2,rgba(247,239,233,.6))}
+#usBattuta .us-battuta-never{align-self:center;min-height:44px;margin:0;padding:0 12px;border:0;background:transparent;color:var(--us-color-text-2,rgba(247,239,233,.6));font:600 12.5px/1 var(--us-font-ui,'Figtree',sans-serif);text-decoration:underline;box-shadow:none}
+
+/* Voi: «Oggi ti ho detto», until the evening. */
+#usAngolo .us-angolo-oggi[hidden]{display:none}
+#usAngolo .us-angolo-oggi-row{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;margin:0;padding:10px 14px;border-radius:20px;border:1px solid var(--us-color-line,rgba(247,239,233,.1));background:color-mix(in srgb,var(--us-color-text,#f7efe9) 5%,transparent);box-shadow:none;color:var(--us-color-text,#f7efe9);text-align:left;cursor:pointer}
+.us-angolo-oggi-char{flex:none;display:flex}
+.us-angolo-oggi-copy{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.us-angolo-oggi-copy small{font:800 11px/1.2 var(--us-font-ui,'Figtree',sans-serif);letter-spacing:.12em;text-transform:uppercase;color:var(--us-tu,#ff9fb3)}
+.us-angolo-oggi-copy span{font:500 13.5px/1.35 var(--us-font-ui,'Figtree',sans-serif)}
+#usAngolo .us-angolo-oggi-row em{flex:none;font:800 12.5px/1 var(--us-font-ui,'Figtree',sans-serif);font-style:normal;color:var(--us-tu,#ff9fb3)}
+:root[data-us-luce="giorno"] .us-angolo-oggi-copy small,:root[data-us-luce="giorno"] #usAngolo .us-angolo-oggi-row em{color:#b8452f}
+:root[data-us-luce="giorno"] .us-battuta-text{background:#ece0cf}
+
+/* ---------- Lasciato per te nuovo (founder 25/11/2026, tavola «US · Lasciato per te») ----------
+   Receiving: a moment on the whole screen, like the Ti penso. The sender's character on top,
+   an envelope in their colour sealed with their shape; it opens and the letter is a sheet of
+   paper, a photo a polaroid, a vocale a bubble. Writing: a sheet of paper and one thing to add. */
+#leftForYouOverlay,#leftForYouComposerOverlay{align-items:stretch;justify-content:stretch;padding:0}
+#leftForYouOverlay>.left-for-you-sheet[data-us-modal-panel],#leftForYouComposerOverlay>.left-for-you-sheet[data-us-modal-panel]{
+  position:fixed!important;inset:0!important;width:auto!important;max-width:none!important;max-height:none!important;margin:0!important;
+  display:flex;flex-direction:column;padding:calc(var(--us-safe-top) + 64px) 0 calc(var(--us-safe-bottom) + 18px)!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;overflow-x:hidden;overflow-y:auto;transform:none!important;
+  background:radial-gradient(120% 50% at 50% 22%,color-mix(in srgb,var(--us-partner) 30%,transparent),transparent 62%),var(--us-color-bg)!important}
+#leftForYouComposerOverlay>.left-for-you-sheet[data-us-modal-panel]{background:radial-gradient(120% 50% at 50% 16%,color-mix(in srgb,var(--us-tu) 24%,transparent),transparent 62%),var(--us-color-bg)!important}
+:is(#leftForYouOverlay,#leftForYouComposerOverlay)>.left-for-you-sheet::before,:is(#leftForYouOverlay,#leftForYouComposerOverlay)>.left-for-you-sheet::after{display:none!important}
+#leftForYouOverlay>.left-for-you-sheet[data-us-modal-panel]>.left-for-you-head{position:absolute;left:70px;right:70px;top:calc(var(--us-safe-top) + 26px);display:block;padding:0;text-align:center}
+#leftForYouOverlay #leftForYouKind{font:800 11.5px/1.5 var(--us-font-ui);letter-spacing:.16em;text-transform:uppercase;color:var(--us-partner)}
+:is(#leftForYouOverlay,#leftForYouComposerOverlay) :is(#leftForYouClose,#leftForYouComposerClose),:is(#leftForYouOverlay,#leftForYouComposerOverlay) :is(#leftForYouClose,#leftForYouComposerClose):not(:focus-visible){position:fixed!important;top:calc(var(--us-safe-top) + 14px)!important;right:14px!important;left:auto!important;z-index:3;width:44px!important;height:44px!important;margin:0!important;padding:0!important;overflow:visible!important;clip:auto!important;clip-path:none!important;display:grid!important;place-items:center;border:1px solid var(--us-color-line)!important;border-radius:50%!important;background:color-mix(in srgb,var(--us-color-text) 6%,transparent)!important;color:var(--us-color-text)!important;white-space:normal}
+#leftForYouOverlay>.left-for-you-sheet[data-us-modal-panel]>.left-for-you-body{flex:1;display:flex;flex-direction:column;padding:0 22px!important}
+#leftForYouOverlay .left-for-you-card:not([hidden]){flex:1;display:flex;flex-direction:column;gap:14px;padding:0}
+#leftForYouOverlay .left-for-you-cast{order:0;display:grid;place-items:center;min-height:90px}
+#leftForYouOverlay .left-for-you-cast .us-char{display:block;animation:lfy-bob 2.6s ease-in-out infinite}
+@keyframes lfy-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+#leftForYouOverlay .left-for-you-card>#leftForYouContent{order:1}
+#leftForYouOverlay .left-for-you-card[data-left-kind="audio"]>#leftForYouContent{order:0;margin-top:24px}
+#leftForYouOverlay .left-for-you-card[data-left-kind="audio"]>.left-for-you-cast{order:1;justify-items:start;padding-left:18px}
+#leftForYouOverlay .left-for-you-card>.left-for-you-meta{order:2}
+#leftForYouOverlay .left-for-you-meta .left-for-you-from{display:none}
+#leftForYouOverlay .left-for-you-card>.left-for-you-actions{order:3;margin-top:auto}
+/* The envelope, in the sender's colour. */
+#leftForYouOverlay .left-for-you-env-stage{display:grid;place-items:center;width:100%;height:auto;min-height:200px;perspective:800px}
+#leftForYouOverlay .left-for-you-env{position:relative;width:min(270px,100%);height:176px;margin:0;animation:lfy-arrive .7s cubic-bezier(.2,.9,.25,1.2) both}
+@keyframes lfy-arrive{from{opacity:0;transform:translateY(-120px) rotate(-6deg)}to{opacity:1;transform:rotate(-3deg)}}
+#leftForYouOverlay .left-for-you-env-back{position:absolute;inset:0;border-radius:14px;background:color-mix(in srgb,var(--us-partner) 62%,#2a1830);box-shadow:0 18px 40px rgba(0,0,0,.4)}
+#leftForYouOverlay .left-for-you-env-front{position:absolute;inset:0;z-index:2;border-radius:14px;background:linear-gradient(160deg,color-mix(in srgb,var(--us-partner) 82%,#fff),color-mix(in srgb,var(--us-partner) 70%,#3a2040));clip-path:polygon(0 34%,50% 64%,100% 34%,100% 100%,0 100%)}
+#leftForYouOverlay .left-for-you-env-flap{position:absolute;left:0;right:0;top:0;z-index:3;height:60%;border-radius:14px 14px 0 0;background:color-mix(in srgb,var(--us-partner) 74%,#fff);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0}
+#leftForYouOverlay .left-for-you-env-seal{position:absolute;left:50%;top:42%;z-index:4;width:62px;height:62px;margin:0;padding:0;translate:-50% -50%;border:0;border-radius:50%;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--us-partner) 70%,#fff),color-mix(in srgb,var(--us-partner) 55%,#2a1030) 70%);box-shadow:0 4px 10px rgba(0,0,0,.35),inset 0 -3px 6px rgba(0,0,0,.25);cursor:pointer;animation:lfy-seal 1.6s ease-in-out infinite}
+@keyframes lfy-seal{0%,100%{scale:1}50%{scale:1.07}}
+#leftForYouOverlay .left-for-you-env-wax{display:grid;place-items:center;width:100%;height:100%}
+#leftForYouOverlay .left-for-you-env-wax svg{width:38px;height:auto}
+#leftForYouOverlay .left-for-you-env-letter{position:absolute;left:14px;right:14px;top:12px;z-index:1;height:120px;overflow:hidden;opacity:0;padding:20px;border-radius:6px;background:#fbf7f0;color:#231b1d}
+/* Open: the envelope steps away, the paper unfolds where it was. */
+#leftForYouOverlay .left-for-you-env.is-open{width:100%;height:auto;animation:none;transform:none}
+#leftForYouOverlay .left-for-you-env.is-open :is(.left-for-you-env-back,.left-for-you-env-front,.left-for-you-env-flap,.left-for-you-env-seal){display:none}
+#leftForYouOverlay .left-for-you-env.is-open .left-for-you-env-letter,#leftForYouOverlay .left-for-you-env.is-open.is-still .left-for-you-env-letter{translate:none}
+#leftForYouOverlay .left-for-you-env.is-open .left-for-you-env-letter{position:relative;inset:auto;height:auto;overflow:visible;opacity:1;padding:22px 22px 18px;box-shadow:0 20px 44px rgba(0,0,0,.42);transform:rotate(-1deg);animation:lfy-unfold .55s cubic-bezier(.2,.9,.25,1.2) both}
+#leftForYouOverlay .left-for-you-env.is-open.is-still .left-for-you-env-letter{animation:none}
+@keyframes lfy-unfold{from{opacity:0;transform:translateY(40px) scale(.55)}to{opacity:1;transform:rotate(-1deg)}}
+#leftForYouOverlay .left-for-you-env-letter small{display:block;margin:0 0 10px;font:800 11px/1.4 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--us-partner) 55%,#231b1d)}
+#leftForYouOverlay.open .left-for-you-item.is-letter .left-for-you-env-letter :is(.left-for-you-text,.left-for-you-note){margin:0;padding:0;border:0;background:none;font:400 21px/1.4 var(--us-font-display);color:#231b1d;white-space:pre-wrap;overflow-wrap:anywhere}
+#leftForYouOverlay .left-for-you-sign{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:14px;font:italic 400 17px/1 var(--us-font-display);color:color-mix(in srgb,var(--us-partner) 55%,#231b1d)}
+#leftForYouOverlay .left-for-you-sign .us-char{width:26px;height:auto}
+/* A photo: a polaroid. */
+#leftForYouOverlay .left-for-you-item[data-left-kind="photo"] .left-for-you-env.is-open .left-for-you-env-letter{width:min(290px,100%);margin:0 auto;padding:14px 14px 16px;background:#fff;transform:rotate(-3deg)}
+#leftForYouOverlay .left-for-you-item[data-left-kind="photo"] .left-for-you-env-letter small{order:3;margin:10px 0 0}
+#leftForYouOverlay .left-for-you-item[data-left-kind="photo"] .left-for-you-env.is-open .left-for-you-env-letter{display:flex;flex-direction:column}
+#leftForYouOverlay .left-for-you-item[data-left-kind="photo"] .left-for-you-env.is-open .left-for-you-env-photo{order:1;height:auto;aspect-ratio:4/5;margin:0;border-radius:2px}
+#leftForYouOverlay .left-for-you-item[data-left-kind="photo"] .left-for-you-env.is-open .left-for-you-note{order:2;margin-top:12px!important;font-style:italic!important;font-size:19px!important}
+#leftForYouOverlay .left-for-you-item[data-left-kind="photo"] .left-for-you-sign{order:4;margin-top:8px}
+/* A vocale: the sender speaks from a bubble. */
+#leftForYouOverlay .left-for-you-fumetto{position:relative;padding:14px;border-radius:22px;background:#f7efe9;color:#1a1020;box-shadow:0 16px 36px rgba(0,0,0,.4)}
+#leftForYouOverlay .left-for-you-fumetto::after{content:"";position:absolute;left:62px;bottom:-8px;width:18px;height:18px;border-radius:3px;background:inherit;transform:rotate(45deg)}
+#leftForYouOverlay .left-for-you-item[data-left-kind="audio"] .left-for-you-note{margin:22px 0 0;font:italic 400 18px/1.4 var(--us-font-display);color:var(--us-color-text-2)}
+/* Video and song: a frame like a polaroid. */
+#leftForYouOverlay .left-for-you-item:is([data-left-kind="video"],[data-left-kind="music"]){padding:12px;border-radius:6px;background:#fff;color:#231b1d;box-shadow:0 20px 44px rgba(0,0,0,.42);transform:rotate(-1.5deg)}
+#leftForYouOverlay .left-for-you-item:is([data-left-kind="video"],[data-left-kind="music"]) .left-for-you-note{margin:10px 2px 2px;font:italic 400 18px/1.35 var(--us-font-display);color:#231b1d}
+/* What to do with it. */
+#leftForYouOverlay #leftForYouConserve:not(.is-conserved){background:var(--us-partner)!important;color:#1a1020!important}
+#leftForYouOverlay .left-for-you-card>.left-for-you-once{order:4}
+/* ---- Writing: a sheet of paper, then one thing to add. */
+#leftForYouComposerOverlay>.left-for-you-sheet[data-us-modal-panel]>.left-for-you-head{display:block;padding:0 70px 0 22px;margin-top:-40px}
+#leftForYouComposerOverlay #leftForYouComposerKicker{font:800 11.5px/1.5 var(--us-font-ui);letter-spacing:.16em;text-transform:uppercase;color:var(--us-tu)}
+#leftForYouComposerOverlay #leftForYouComposerTitle{margin:4px 0 0;font:400 30px/1.1 var(--us-font-display)}
+#leftForYouComposerOverlay>.left-for-you-sheet[data-us-modal-panel]>.left-for-you-body{flex:1;display:flex;flex-direction:column;gap:14px;padding:16px 22px 0!important}
+#leftForYouComposerOverlay [data-us-composer-panel="text"]{position:relative;display:block;padding:20px 22px 16px;border-radius:6px;background:#fbf7f0;color:#231b1d;box-shadow:0 20px 44px rgba(0,0,0,.42);transform:rotate(-.6deg)}
+#leftForYouComposerOverlay [data-us-composer-panel="text"] .left-for-you-composer-label{display:block;margin:0;font:800 11px/1.4 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--us-tu) 55%,#231b1d)}
+#leftForYouComposerOverlay [data-us-composer-panel="text"] .left-for-you-composer-text{display:block;width:100%;min-height:150px;margin:8px 0 0;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;resize:none;font:400 21px/1.4 var(--us-font-display);color:#231b1d!important}
+#leftForYouComposerOverlay [data-us-composer-panel="text"] .left-for-you-composer-text::placeholder{color:#9a8c86}
+#leftForYouComposerOverlay [data-us-composer-panel="text"] .left-for-you-composer-count{display:block;margin-top:6px;font:600 11px/1 var(--us-font-ui);color:#8a7c76}
+#leftForYouComposerOverlay .left-for-you-sign{position:absolute;right:22px;bottom:14px;font:italic 400 17px/1 var(--us-font-display);color:color-mix(in srgb,var(--us-tu) 55%,#231b1d)}
+#leftForYouComposerOverlay .left-for-you-add-hint{margin:6px 0 0;text-align:center;font:600 13px/1.4 var(--us-font-ui);color:var(--us-color-text-2)}
+#leftForYouComposerOverlay .left-for-you-composer-kinds{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+#leftForYouComposerOverlay .left-for-you-composer-kinds [hidden]{display:none!important}
+#leftForYouComposerOverlay .left-for-you-composer-kinds button{min-height:76px!important;height:auto;padding:8px 4px!important;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1px solid var(--us-color-line)!important;border-radius:22px!important;background:color-mix(in srgb,var(--us-color-text) 7%,transparent)!important;color:var(--us-color-text)!important;font:700 12.5px/1.2 var(--us-font-ui)!important;white-space:nowrap}
+#leftForYouComposerOverlay .left-for-you-composer-kinds button .us-icon{width:24px;height:24px}
+#leftForYouComposerOverlay .left-for-you-composer-kinds button.is-active{border-color:var(--us-tu)!important;background:color-mix(in srgb,var(--us-tu) 20%,transparent)!important}
+#leftForYouComposerOverlay .left-for-you-composer-caption{display:none!important}
+#leftForYouComposerOverlay .left-for-you-composer-actions{margin-top:auto;padding-top:6px}
+#leftForYouComposerOverlay #leftForYouComposerSend:not(:disabled){background:var(--us-tu)!important;color:#1a1020!important}
+#leftForYouComposerOverlay .left-for-you-composer-sheet.is-folding [data-us-composer-panel="text"]{transform:translateY(80px) scale(.3,.1);opacity:0;transition:transform .4s cubic-bezier(.4,0,.2,1),opacity .3s ease .1s}
+.left-for-you-carrier{position:fixed;left:50%;top:44%;z-index:calc(var(--us-layer-sheet) + 5);width:120px;height:110px;margin-left:-60px;pointer-events:none}
+.left-for-you-carrier .us-char{position:absolute;left:18px;bottom:0}
+.left-for-you-carrier-env{position:absolute;left:6px;top:0;width:108px;height:62px;border-radius:9px;background:linear-gradient(160deg,color-mix(in srgb,var(--us-tu) 70%,#fff),var(--us-tu));box-shadow:0 8px 18px rgba(0,0,0,.3)}
+.left-for-you-carrier-env::after{content:"";position:absolute;inset:0;border-radius:9px;background:color-mix(in srgb,var(--us-tu) 82%,#fff);clip-path:polygon(0 0,100% 0,50% 58%)}
+@media (prefers-reduced-motion:reduce){#leftForYouOverlay :is(.left-for-you-cast .us-char,.left-for-you-env,.left-for-you-env-seal,.left-for-you-env-letter){animation:none!important}}
+:root[data-us-motion="reduced"] #leftForYouOverlay :is(.left-for-you-cast .us-char,.left-for-you-env,.left-for-you-env-seal,.left-for-you-env-letter){animation:none!important}
+/* The vocale inside the sender's bubble: the player in the bubble's ink. */
+#leftForYouOverlay .left-for-you-item[data-left-kind="audio"]{padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+#leftForYouOverlay .left-for-you-item[data-left-kind="audio"]::before,#leftForYouOverlay .left-for-you-item[data-left-kind="audio"]::after{content:none}
+#leftForYouOverlay .left-for-you-fumetto .left-for-you-step-player{margin:0 auto}
+#leftForYouOverlay .left-for-you-fumetto .left-for-you-spl-slab{border-color:rgba(26,16,32,.12);background:rgba(26,16,32,.05);box-shadow:none}
+#leftForYouOverlay .left-for-you-fumetto .left-for-you-spl-dot{background:rgba(26,16,32,.18)}
+#leftForYouOverlay .left-for-you-fumetto .left-for-you-spl-ink{background:color-mix(in srgb,var(--us-partner) 60%,#231b1d)}
+#leftForYouOverlay .left-for-you-fumetto .left-for-you-spl-tool{border:0;background:color-mix(in srgb,var(--us-partner) 60%,#231b1d)}
+#leftForYouOverlay .left-for-you-fumetto .left-for-you-spl-go{color:#f7efe9}
+#leftForYouOverlay .left-for-you-fumetto .left-for-you-spl-time{color:#4a3d47;font-size:12px;font-weight:700}
+#leftForYouOverlay>.left-for-you-sheet[data-us-modal-panel]>.left-for-you-head{left:56px;right:56px}
+#leftForYouOverlay #leftForYouKind{font-size:11px;letter-spacing:.12em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#leftForYouOverlay .left-for-you-cast{margin-top:10px}
+
+/* ===== Premi, fase 4 (25/11/2026, grill D24): the precious accessories move
+   only where the character is big (personaggi.js adds is-big from 90px);
+   small characters wear them still, without sparkles. ===== */
+.us-char .us-acc-glint,.us-char .us-acc-gem,.us-char .us-acc-note{opacity:0}
+.us-char.is-big .us-acc-glint{animation:us-acc-glint 3.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.us-char.is-big .us-acc-gem{animation:us-acc-gem 2.1s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.us-char.is-big .us-acc-gem.g2{animation-delay:.7s}.us-char.is-big .us-acc-gem.g3{animation-delay:1.4s}
+.us-char.is-big .us-acc-note{animation:us-acc-note 2.8s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.us-char.is-big .us-acc-note.n2{animation-delay:1.4s}
+.us-char.is-big .us-acc-sway{animation:us-acc-sway 3.4s ease-in-out infinite}
+@keyframes us-acc-glint{0%,70%,100%{opacity:0;transform:scale(.2) rotate(0)}78%{opacity:1;transform:scale(1) rotate(45deg)}88%{opacity:0;transform:scale(.4) rotate(90deg)}}
+@keyframes us-acc-gem{0%,60%,100%{opacity:0;transform:scale(.3)}75%{opacity:1;transform:scale(1)}}
+@keyframes us-acc-note{0%{opacity:0;transform:translate(0,0)}15%{opacity:1}100%{opacity:0;transform:translate(14px,-30px) rotate(18deg)}}
+@keyframes us-acc-sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@media (prefers-reduced-motion:reduce){.us-char.is-big :is(.us-acc-glint,.us-acc-gem,.us-acc-note,.us-acc-sway){animation:none}}
+
+/* ---------- L'intro col tuo personaggio (intro.js, tavola approved 26/11/2026) ---------- */
+.us-intro{position:fixed;inset:0;z-index:var(--us-layer-sheet,10060);opacity:0;transition:opacity .26s ease}
+.us-intro.is-open{opacity:1}
+.us-intro-hole{position:absolute;box-shadow:0 0 0 200vmax rgba(16,10,16,.62),0 0 0 2px rgba(255,255,255,.92) inset,0 0 26px rgba(255,255,255,.32);transition:left .55s cubic-bezier(.3,.8,.25,1),top .55s cubic-bezier(.3,.8,.25,1),width .55s cubic-bezier(.3,.8,.25,1),height .55s cubic-bezier(.3,.8,.25,1),border-radius .3s;pointer-events:none}
+.us-intro-hole.is-none{left:50%;top:50%;width:0;height:0}
+/* The light grows with the opening bar, frame by frame (intro.js followIsola). */
+.us-intro-hole.is-follow{transition:none}
+/* Under the intro the page holds its endless animations (orbits, breaths, beats):
+   less work on every frame, so the intro runs smooth on a phone (28/11/2026). */
+html.us-intro-open .app *,html.us-intro-open .app *::before,html.us-intro-open .app *::after{animation-play-state:paused!important}
+.us-intro-hole.is-tap::after{content:"";position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:rgba(255,255,255,.55);animation:us-intro-tap .7s ease-out both}
+@keyframes us-intro-tap{0%{opacity:.85;transform:scale(.3)}100%{opacity:0;transform:scale(1.9)}}
+.us-intro-guide{position:absolute;left:0;top:0;transition:transform .7s cubic-bezier(.3,.8,.25,1);pointer-events:none}
+.us-intro-guide svg{display:block;width:100%;height:auto;overflow:visible;animation:us-intro-breathe 2.6s ease-in-out infinite}
+.us-intro-guide.is-hop svg{animation:us-intro-hop .7s ease}
+@keyframes us-intro-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-2%)}}
+@keyframes us-intro-hop{0%{transform:translateY(0)}40%{transform:translateY(-14%)}100%{transform:translateY(0)}}
+.us-intro-bubble{position:absolute;left:max(16px,var(--us-safe-left,0px));right:max(16px,var(--us-safe-right,0px));max-width:440px;margin:0 auto;padding:16px 18px 14px;border-radius:22px;background:#fbf4ee;color:#241a20;box-shadow:0 12px 34px rgba(0,0,0,.32);transition:top .55s cubic-bezier(.3,.8,.25,1)}
+.us-intro-bubble::after{content:"";position:absolute;left:calc(var(--us-intro-tail,40px) - max(16px,var(--us-safe-left,0px)));bottom:-7px;width:16px;height:16px;border-radius:3px;background:inherit;transform:rotate(45deg)}
+.us-intro-bubble.is-up::after{bottom:auto;top:-7px}
+.us-intro-say{margin:0;font:600 15.5px/1.4 var(--us-font-ui,'Figtree',sans-serif);text-wrap:pretty}
+.us-intro-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.us-intro-dots{display:flex;gap:5px}
+.us-intro-dots i{width:7px;height:7px;border-radius:4px;background:#dccfd3;transition:width .25s}
+.us-intro-dots i.is-on{width:18px;background:#b8432f}
+.us-intro-btns{display:flex;align-items:center;gap:6px}
+.us-intro-skip{min-height:44px;padding:0 10px;border:0;background:none;color:#8a7a80;font:600 14px/1 var(--us-font-ui,'Figtree',sans-serif)}
+.us-intro-next{min-height:44px;padding:0 20px;border:0;border-radius:999px;background:#b8432f;color:#fff;font:700 15px/1 var(--us-font-ui,'Figtree',sans-serif)}
+.us-intro button:focus-visible{outline:2px solid #a98bff;outline-offset:2px}
+.us-intro-other{position:absolute;right:max(16px,var(--us-safe-right,0px));display:flex;align-items:flex-end;gap:8px;opacity:0;transform:translateY(40px);transition:opacity .3s,transform .5s cubic-bezier(.3,1.4,.4,1);pointer-events:none}
+.us-intro-other.is-on{opacity:1;transform:none}
+.us-intro-other svg{display:block;width:56px;height:auto;overflow:visible}
+.us-intro-other-say{max-width:170px;margin:0 0 30px;padding:9px 12px;border-radius:16px 16px 4px 16px;background:#efe6ff;color:#2a2040;font:600 13.5px/1.3 var(--us-font-ui,'Figtree',sans-serif)}
+html.us-intro-open .us-fumetto{visibility:hidden}
+/* Crea il tuo personaggio (27/11/2026): the shapes and the colours in the bubble, on its paper. */
+.us-intro-maker{margin-top:10px}
+.us-intro-maker[hidden]{display:none}
+.us-intro-maker-label{margin:8px 0 6px;color:#8a7a80;font:700 11.5px/1 var(--us-font-ui,'Figtree',sans-serif);letter-spacing:.04em;text-transform:uppercase}
+.us-intro-shapes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.us-intro-shape{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:64px;padding:7px 2px 6px;border:1.5px solid #e6dad6;border-radius:14px;background:#fff;color:#6d5e64;font:600 11px/1.15 var(--us-font-ui,'Figtree',sans-serif)}
+.us-intro-shape svg{display:block;width:38px;height:auto;overflow:visible}
+.us-intro-shape[aria-pressed="true"]{border-color:#241a20;background:#f3e9e3;color:#241a20}
+.us-intro-swatches{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:2px}
+.us-intro-swatch{display:grid;place-items:center;width:100%;height:44px;padding:0;border:0;background:none}
+.us-intro-swatch i{display:block;width:30px;height:30px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(36,26,32,.14),0 0 0 2px #fbf4ee,0 0 0 2px transparent}
+.us-intro-swatch[aria-pressed="true"] i{box-shadow:inset 0 0 0 1px rgba(36,26,32,.14),0 0 0 2px #fbf4ee,0 0 0 4px #241a20}
+.us-intro-swatch{position:relative}
+.us-intro-swatch:disabled i{opacity:.4}
+.us-intro-swatch:disabled::after{content:"";position:absolute;width:32px;height:2px;border-radius:1px;background:#6d5e64;transform:rotate(-45deg)}
+/* Each colour at least 44px tall and 40px wide (27/11/2026): under 402px the eight go on two rows of four. */
+@media (max-width:401px){.us-intro-swatches{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:4px}}
+.us-intro-maker-note{margin:10px 0 0;color:#6d5e64;font:500 13px/1.35 var(--us-font-ui,'Figtree',sans-serif)}
+@media (prefers-reduced-motion:reduce){.us-intro,.us-intro-hole,.us-intro-guide,.us-intro-bubble,.us-intro-other{transition:none!important}.us-intro-guide svg,.us-intro-hole.is-tap::after{animation:none!important}}
+:root[data-us-motion="reduced"] :is(.us-intro,.us-intro-hole,.us-intro-guide,.us-intro-bubble,.us-intro-other){transition:none!important}
+:root[data-us-motion="reduced"] .us-intro-guide svg{animation:none!important}

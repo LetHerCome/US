@@ -18,6 +18,17 @@ async function seedTenant(db,cid,u,v,n){
     insert into public.member_status(user_id,couple_id,status,form) values('${u}','${cid}','felice','m'),('${v}','${cid}','stanco',null);
     insert into public.lavagna_strokes(id,couple_id,author_id,color,points) values('${id(11)}','${cid}','${u}','rosa','{100,200,300,400}');
     insert into public.lavagna_boards(couple_id,revision,cleared_at) values('${cid}',${n},now());
+    insert into public.us_battute(couple_id,recipient_id,day,kind,ref_key,vars) values('${cid}','${u}','2026-01-0${n}','compleanno','private-${n}-u','{"name":"Private ${n}"}'),('${cid}','${v}','2026-01-0${n}','un_anno_fa','private-${n}-v','{"place":"Private ${n}"}');
+    insert into public.us_battute_mute(user_id,kind) values('${u}','traguardo'),('${v}','*');
+    insert into public.us_bacheca_pins(couple_id,source,source_id,ref_key,reason,vars,item_date,pinned_by) values('${cid}','moment','${id(5)}','moment:${id(5)}','primo','{"place":"Private ${n}"}','2026-01-01','${u}');
+    insert into public.us_bacheca_bans(couple_id,ref_key,banned_by) values('${cid}','moment:private-${n}','${v}');
+    insert into public.us_bacheca_planned(couple_id,day,first_fill) values('${cid}','2026-01-01',true);
+    insert into public.us_bacheca_notes(couple_id,ref_key,author_id,body) values('${cid}','moment:${id(5)}','${u}','Private post-it ${n}');
+    insert into public.us_bacheca_why(couple_id,ref_key,reason) values('${cid}','moment:private-${n}','primo');
+    insert into public.us_mese_pacchi(id,couple_id,kind,period_start,cards) values('${id(13)}','${cid}','mese','2026-01-01','[{"k":"foto","src":"moment","id":"${id(5)}","rare":true}]');
+    insert into public.us_mese_aperti(pack_id,user_id) values('${id(13)}','${u}');
+    insert into public.play_us_sessions(id,couple_id,day,invited_by,status,step,seed,invite_expires_at) values('${id(14)}','${cid}','2026-01-01','${u}','done',8,7,now());
+    insert into public.play_us_moves(session_id,couple_id,user_id,step,kind,slot,payload) values('${id(14)}','${cid}','${u}',1,'answer',0,'{"i":0}');
     insert into public.daily_answers(question_id,user_id,couple_id,answer) values('${qid}','${u}','${cid}','PRIVATE-${n}-one'),('${qid}','${v}','${cid}','PRIVATE-${n}-two');
     insert into public.daily_question_keepsakes(couple_id,question_id,question_text,question_date,francesco_answer,beatrice_answer,revealed_at,kept_by_role)
       values('${cid}','${qid}','Private kept ${n}','2026-01-01','Private one','Private two',now(),'francesco');

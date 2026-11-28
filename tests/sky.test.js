@@ -74,8 +74,6 @@ test('on Oggi the stars lie over the photo: no night disc, no N E S O, a portrai
   assert.doesNotMatch(over, /fill="url\(#n\)"|<text /, 'nothing that hides the photo');
   assert.ok((over.match(/<circle class="s"/g) || []).length > 80, 'the stars of the upper sky');
   assert.equal((over.match(/class="ours"/g) || []).length, 2);
-  const css = fs.readFileSync(path.join(__dirname, '..', 'oggi-look.css'), 'utf8');
-  assert.match(css, /--oggi-deco:var\(--oggi-sky-map,linear-gradient\(transparent,transparent\)\) center\/cover no-repeat;/);
 });
 
 test('the cities: Italian, on the Rome clock, each with its place', () => {
@@ -90,36 +88,14 @@ test('the cities: Italian, on the Rome clock, each with its place', () => {
 
 const read = (name) => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
 
-test('in the app: a theme of Oggi, drawn from «Insieme dal», the city and the level', () => {
+// Premi di Oggi (founder, 25/11/2026, grill D14): «questa roba fa cacare perché
+// non uscirà mai bene». Il vostro cielo left Oggi: the theme, the city and hour,
+// the picture. sky.js stays in the repo, unloaded; couples.sky_city/sky_minutes stay unused.
+test('Il vostro cielo left Oggi: not offered, not loaded, not cached', () => {
   const look = read('oggi-look.js');
-  assert.match(look, /\{ id: 'sky', name: 'Il vostro cielo', kicker: 'Leggenda', note: '[^']+', reward: 'sky_ours', level: 20 \}/);
-  assert.match(read('sky.js'), /fetch\('\/assets\/data\/stars-bsc5-v1\.json'\)/, 'the catalogue is fetched by sky.js, never by oggi-look.js');
-  assert.match(look, /window\.UsSky\.skySvg\(\{ stars, day, city, level, minutes, overlay: true \}\)/, 'over the photo, never a disc that hides it');
-  assert.match(look, /root\.style\.setProperty\('--oggi-sky-map', map\)/);
-  assert.match(read('app.js'), /sb\.from\('couples'\)\.select\('id,name,started_on,sky_city,sky_minutes[^']*'\)/);
-  const css = read('oggi-look.css');
-  assert.ok(css.includes('html[data-us-oggi-theme="sky"],\n.us-look-phone[data-oggi-theme="sky"]{'));
-  assert.match(css, /--oggi-deco:var\(--oggi-sky-map,linear-gradient\(transparent,transparent\)\)/);
-});
-
-test('the city and the hour are asked when the sky is first used, and the picture can be saved', () => {
-  const look = read('oggi-look.js');
-  assert.match(look, /Dove eravate quella sera\?/);
-  assert.match(look, /A che ora è iniziata la vostra storia\?/);
-  assert.match(look, /<input type="time" id="usSkyTime"/);
-  assert.match(read('sky.js'), /sb\.rpc\('set_sky', \{ p_city: city, p_minutes: minutes \}\)/);
-  assert.doesNotMatch(read('sky.js'), /set_sky_city/);
-  assert.match(look, /window\.UsSky\.saveSky\(/);
-  assert.match(look, /Salva l’immagine/);
-  assert.match(read('sky.js'), /canvas\.toBlob\(/);
-});
-
-test('published with the app: sky.js before oggi-look.js, and the star data', () => {
-  const html = read('index.html');
-  assert.ok(html.indexOf('/sky.js?v=') > 0 && html.indexOf('/sky.js?v=') < html.indexOf('/oggi-look.js?v='));
-  for (const list of ['scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) {
-    assert.match(read(list), /'sky\.js',/, list);
-    assert.match(read(list), /'assets\/data\/stars-bsc5-v1\.json',/, list);
-  }
-  assert.match(read('service-worker.js'), /versioned\("\/sky\.js"\)/);
+  assert.doesNotMatch(look, /id: 'sky'|sky_ours|UsSky|Dove eravate quella sera/);
+  assert.doesNotMatch(read('index.html'), /\/sky\.js\?v=/);
+  assert.doesNotMatch(read('service-worker.js'), /versioned\("\/sky\.js"\)/);
+  for (const list of ['scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) assert.doesNotMatch(read(list), /'sky\.js',/, list);
+  assert.match(read('supabase/migrations/20261126000000_premi_oggi_effetti.sql'), /'sky_ours'\);/);
 });

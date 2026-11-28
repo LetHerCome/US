@@ -12,6 +12,9 @@ const path = require('node:path');
 const { database } = require('./helpers/mc2-db');
 
 const FILE = '20261113232109_revisione_testi.sql';
+// Content 1.4 (domande a scelta, 28/11) turns some reviewed prompts into choice
+// with version + 1: the review is rehearsed on the chain as it stood before.
+const UNTIL = '20261128115152_contenuti_hot.sql';
 const SQL = () => fs.readFileSync(path.join(__dirname, '..', 'supabase/migrations', FILE), 'utf8');
 const rows = async (db, sql, params) => (await db.query(sql, params)).rows;
 
@@ -46,7 +49,7 @@ const OLD = [
   /^Il mio posto di oggi$/, /ricordo intenzionale/, /^Un ricordo voluto$/, /strada di casa/, /cielo stasera/, /pensare a chi la riceve/,
   /in call\./, /salvatela in un posto sicuro/, /per tra un anno/, /questa settimana di voi/, /^Colazione fuori$/, /foto Home per US/,
   /Nascondete un piccolo messaggio/, /Organizzate a turno metà/,
-  /^Cinematic$/, /^Moonlight$/, /^Bokeh romantico$/, /^Tema delle stagioni$/, /all[’']altro arriva/, /vi siete messi insieme/,
+  /^Cinematic$/, /^Moonlight$/, /^Bokeh romantico$/, /all[’']altro arriva/, /vi siete messi insieme/,
   /il tempo diventa materia/, /sere speciali/, /[Cc]ontrolli/, /ogni pochi secondi/, /^Icona d'oro$/, /^Ti penso animato$/, /^Ti penso «lettera»$/,
 ];
 // The game cards no longer open with the «Qual è un/una…» calque (the daily bank keeps its own).
@@ -82,6 +85,9 @@ const CHANGED = {
     'oggi_theme_seasonal', 'frame_chrome', 'pet_accessory_gala', 'accent_cherry', 'accent_champagne', 'accent_ice', 'effect_pulse',
     'app_icon_gold', 'app_icon_neon', 'app_icon_night', 'oggi_effect_aurora', 'theme_blue_hour'],
 };
+// Rewards whose texts later migrations own (Premi di Oggi, Simbolo, temi e countdown,
+// 26/11/2026): the review's typography and inclusive rules are checked on its own rows.
+const LATER = new Set(['sky_ours', 'oggi_theme_cinematic', 'oggi_theme_moonlight', 'oggi_effect_bokeh', 'oggi_theme_seasonal', 'frame_chrome', 'effect_pulse', 'oggi_effect_aurora']);
 // Game and Swipe items that were already at version 2 before this review.
 const WAS_V2 = new Set(['confrontatevi-002', 'ridete-001', 'ridete-003', 'rivivete-007', 'scopritevi-003', 'swipe-026', 'swipe-027']);
 
@@ -121,13 +127,14 @@ const fingerprint = async (db) => (await rows(db, `select md5(string_agg(x, '|' 
   union all select p::text from public.progression_reward_catalog p union all select w::text from public.couple_weekly_challenges w) z`))[0].h;
 
 test('the review: new texts in, no old text left among the active rows, inclusive and typographic', async () => {
-  const db = await database({ seed: false });
+  const db = await database({ seed: false, until: UNTIL });
   try {
     for (const row of await activeItalian(db)) {
       for (const old of OLD) assert.doesNotMatch(row.t, old, row.id);
       if (row.id.startsWith('game ')) assert.doesNotMatch(row.t, OLD_GAME, row.id);
     }
     for (const row of await changedTexts(db)) {
+      if (row.id.startsWith('reward') && LATER.has(row.id.split(' ').pop())) continue;
       assert.doesNotMatch(row.t, /'/, `${row.id} typographic apostrophe`);
       for (const rule of INCLUSIVE) assert.doesNotMatch(row.t, rule, `${row.id} inclusive Italian`);
     }
@@ -160,16 +167,19 @@ test('the review: new texts in, no old text left among the active rows, inclusiv
       ['In gita in città', 'Una cosa nuova', 'A letter to open in a year']);
     assert.equal(quests['any-perfect-day-plan'].title, 'Organizzate metà di una giornata perfetta a testa, senza svelare il programma.');
 
+    // Premi di Oggi (26/11/2026, 20261126000000_premi_oggi_effetti.sql, later in the chain)
+    // owns Oggi's looks now: it names the seasons «Tema delle stagioni» again and
+    // retires Cinema, Luci sfocate and Il vostro cielo (inactive, texts kept).
     const rewards = Object.fromEntries((await rows(db, 'select id, title, description from public.progression_reward_catalog where id = any($1)', [CHANGED.rewards])).map((r) => [r.id, r]));
     assert.deepEqual(['oggi_theme_cinematic', 'oggi_theme_moonlight', 'oggi_effect_bokeh', 'oggi_theme_seasonal', 'app_icon_gold', 'ti_penso_hearts', 'ti_penso_letter'].map((id) => rewards[id].title),
-      ['Cinema', 'Chiaro di luna', 'Luci sfocate', 'Stagioni', 'Icona «Oro»', 'Ti penso «Cuori»', 'Ti penso «Lettera»']);
+      ['Cinema', 'Chiaro di luna', 'Luci sfocate', 'Tema delle stagioni', 'Icona «Oro»', 'Ti penso «Cuori»', 'Ti penso «Lettera»']);
     assert.equal(rewards.ti_penso_hearts.description, 'Quando ricevi un Ti penso, arriva un’esplosione di cuori nei vostri colori.');
     assert.equal(rewards.sky_ours.description, 'Le stelle della sera in cui è iniziata la vostra storia, sopra la vostra città.');
   } finally { await db.close(); }
 });
 
 test('the review bumps a version once and re-applying changes nothing', async () => {
-  const db = await database({ seed: false });
+  const db = await database({ seed: false, until: UNTIL });
   try {
     const versions = async () => rows(db, `select id, version from public.game_v2_catalog where id = any($1)
       union all select id, version from public.game_v2_recipes where id = 'calendar_upcoming-001'
@@ -177,6 +187,10 @@ test('the review bumps a version once and re-applying changes nothing', async ()
     const before = await versions();
     assert.equal(before.length, 57 + 1 + 10);
     for (const r of before) assert.equal(r.version, WAS_V2.has(r.id) ? 3 : 2, `${r.id} version + 1, once`);
+    await db.exec(SQL());
+    assert.deepEqual(await versions(), before, 're-applying bumps nothing');
+    // The first re-apply over the whole chain gives back the review's titles to the
+    // rewards the Premi migrations (26/11) renamed later; the review itself is idempotent.
     const print = await fingerprint(db);
     await db.exec(SQL());
     assert.deepEqual(await versions(), before, 're-applying bumps nothing');
@@ -185,7 +199,7 @@ test('the review bumps a version once and re-applying changes nothing', async ()
 });
 
 test('a future day takes the new daily text, a day already shown keeps what people answered', async () => {
-  const db = await database({ seed: false });
+  const db = await database({ seed: false, until: UNTIL });
   try {
     await db.exec(`insert into public.daily_questions (question_date, question, template_id)
       values ('2026-01-07', 'Ricordi una volta in cui ci siamo persi insieme? Dov’eravamo?', 'ricordi-40'),
@@ -202,7 +216,7 @@ test('a future day takes the new daily text, a day already shown keeps what peop
 });
 
 test('the hug, the hidden message and the perfect day are near only; challenges already created keep their title', async () => {
-  const db = await database({ seed: false });
+  const db = await database({ seed: false, until: UNTIL });
   try {
     const three = ['any-hug-twenty', 'any-hidden-note', 'any-perfect-day-plan'];
     const modes = await rows(db, 'select key, mode, challenge, two_places from public.bond_quest_templates where key = any($1) order by key', [three]);

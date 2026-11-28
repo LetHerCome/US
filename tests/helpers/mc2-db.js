@@ -27,11 +27,13 @@ insert into public.couple_invites(couple_id,role,code_hash,used_by,used_at) valu
 const afterMc2=f=>f>FILE && (/_s32_/.test(f) || f>='20261022');
 // s32:false rebuilds the schema as it was before account deletion v1, for
 // the historical #190 rehearsals (naive cascade, parked vault drafts).
-async function database({mc2=true, seed=true, s32=true}={}) {
+// until: the last migration file to apply (inclusive), to rehearse the chain as
+// it stood then, e.g. the production chain while later ones are staging only.
+async function database({mc2=true, seed=true, s32=true, until=null}={}) {
   const db = await newDb();
   try {
     await db.exec(PLATFORM);
-    const files=fs.readdirSync(DIR).filter(f=>f.endsWith('.sql') && f!==FILE).sort();
+    const files=fs.readdirSync(DIR).filter(f=>f.endsWith('.sql') && f!==FILE && (!until || f<=until)).sort();
     for (const f of files.filter(f=>!afterMc2(f))) await db.exec(fs.readFileSync(path.join(DIR,f),'utf8'));
     if(seed) await db.exec(SEED);
     if(mc2) {

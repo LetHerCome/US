@@ -1,5 +1,6 @@
-// M10.2 — Oggi "Risposte pronte": avviso personale, dismiss (swipe + bottone),
-// accesso passivo dopo aperto/nascosto, ricevuta "visto" solo a reveal aperto.
+// M10.2 — Oggi "Risposte pronte", ricevuta "visto" solo a reveal aperto.
+// Redesign definitivo, fase 5 (D9): the notice and its swipe left Oggi; the
+// Domanda di oggi card says the answers are ready until I open them.
 // Stessa tecnica di m10-1a/m9e: il vero app.js eseguito in un contesto vm.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -17,9 +18,8 @@ function fakeEl(extra = {}) {
   return { hidden: true, innerHTML: '', textContent: '', dataset: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = String(v); }, removeAttribute(k) { delete this.attrs[k]; }, addEventListener() {}, ...extra };
 }
 function installOggi({ today } = {}) {
-  const nodes = { usDailyRitual: fakeEl(), usTodayPriorityRegion: fakeEl(), usDailyRevealLink: fakeEl() };
+  const nodes = { usDailyRitual: fakeEl(), usDailyRevealLink: fakeEl() };
   const listeners = new Map();
-  nodes.usTodayPriorityRegion.addEventListener = (type, fn) => listeners.set(type, fn);
   const window = { usProfile: { role: 'francesco' }, usBondProfiles: [], openToday() {} };
   const context = vm.createContext({
     console, Promise, window, setTimeout, Date,
@@ -28,17 +28,17 @@ function installOggi({ today } = {}) {
     partnerFromProfiles: () => null,
     ...(today ? { usDailyQuestionDay: () => today } : {}),
   });
-  vm.runInContext(app.slice(app.indexOf('const US_TODAY_PRIORITY_ORDER='), app.indexOf('function localDateISO()')), context);
+  vm.runInContext(app.slice(app.indexOf('let usTodayPriorityRefreshId=0;'), app.indexOf('function localDateISO()')), context);
   return { nodes, window, listeners, context };
 }
 async function oggi(daily, opts) {
   const t = installOggi(opts);
-  const priorities = await t.window.UsTodayPriority.refresh({ daily });
-  const { usDailyRitual: card, usTodayPriorityRegion: region, usDailyRevealLink: link } = t.nodes;
+  await t.window.UsTodayPriority.refresh({ daily });
+  const { usDailyRitual: card, usDailyRevealLink: link } = t.nodes;
   return {
-    ...t, priorities,
+    ...t,
     dailyCardVisible: card.hidden === false,
-    noticeVisible: region.hidden === false && /data-us-arrival-type="daily-reveal-ready"/.test(region.innerHTML),
+    ready: card.hidden === false && card.dataset.state === 'ready',
     linkVisible: link.hidden === false,
   };
 }
@@ -46,36 +46,35 @@ const source = (me, other, m) => ({ question: QUESTION, state: state(me, other),
 
 // 1.0 (O1): the Daily card stays until both answered (waiting state after mine),
 // and after the reveal it offers "Rivedi" until tomorrow.
-test('M10.2 matrice Oggi: nessuno / uno solo ha risposto → nessun avviso, card Daily per entrambi (in attesa dopo la mia risposta)', async () => {
+test('M10.2 matrice Oggi: nessuno / uno solo ha risposto → card Daily per entrambi (in attesa dopo la mia risposta), mai «pronte»', async () => {
   const neither = await oggi(source(null, null));
-  assert.deepEqual([neither.dailyCardVisible, neither.noticeVisible, neither.linkVisible], [true, false, false]);
+  assert.deepEqual([neither.dailyCardVisible, neither.ready, neither.linkVisible], [true, false, false]);
   const meAnswered = await oggi(source('Mia', null));           // Francesco ha risposto
-  assert.deepEqual([meAnswered.dailyCardVisible, meAnswered.noticeVisible, meAnswered.linkVisible], [true, false, false]);
+  assert.deepEqual([meAnswered.dailyCardVisible, meAnswered.ready, meAnswered.linkVisible], [true, false, false]);
   assert.equal(meAnswered.nodes.usDailyRitual.dataset.state, 'waiting');
   const partnerPending = await oggi(source(null, 'Sua'));        // Beatrice non ha ancora risposto
-  assert.deepEqual([partnerPending.dailyCardVisible, partnerPending.noticeVisible, partnerPending.linkVisible], [true, false, false]);
-  // Un meta arrivato in ritardo non può accendere l'avviso prima del reveal.
+  assert.deepEqual([partnerPending.dailyCardVisible, partnerPending.ready, partnerPending.linkVisible], [true, false, false]);
+  // Un meta arrivato in ritardo non può dire «pronte» prima del reveal.
   const early = await oggi(source('Mia', null, meta({ both_answered: false })));
-  assert.deepEqual([early.noticeVisible, early.linkVisible], [false, false]);
+  assert.deepEqual([early.ready, early.linkVisible], [false, false]);
 });
 
-test('M10.2 matrice Oggi: entrambi hanno risposto, nessuno ha aperto → avviso ON per entrambi, niente card Daily né link', async () => {
+test('redesign D9: entrambi hanno risposto, nessuno ha aperto → la card Daily dice «Risposte pronte» per entrambi, niente link', async () => {
   for (const [me, other] of [['Mia', 'Sua'], ['Sua', 'Mia']]) {
     const t = await oggi(source(me, other, meta()));
-    assert.deepEqual([t.dailyCardVisible, t.noticeVisible, t.linkVisible], [false, true, false]);
-    assert.match(t.nodes.usTodayPriorityRegion.innerHTML, /data-us-attention="on"/, 'personal unread → restrained M10 orbit');
-    assert.match(t.nodes.usTodayPriorityRegion.innerHTML, /Risposte pronte/);
-    assert.match(t.nodes.usTodayPriorityRegion.innerHTML, /Le vostre risposte sono pronte/);
-    assert.match(t.nodes.usTodayPriorityRegion.innerHTML, /Scopri/);
-    assert.doesNotMatch(t.nodes.usTodayPriorityRegion.innerHTML, /Cosa ti farebbe partire|Mia|Sua/, 'no question or answer text on Oggi');
-    assert.match(t.nodes.usTodayPriorityRegion.innerHTML, /aria-label="Nascondi avviso Risposte pronte"/);
-    assert.match(t.nodes.usTodayPriorityRegion.innerHTML, /data-us-question-id="q-1"/);
+    assert.deepEqual([t.dailyCardVisible, t.ready, t.linkVisible], [true, true, false]);
+    const card = t.nodes.usDailyRitual;
+    assert.equal(card.dataset.usAttention, 'off', 'M10E.2: after my answer never the orbit; the words say it');
+    assert.match(card.innerHTML, /Risposte pronte/);
+    assert.match(card.innerHTML, /Le vostre risposte sono pronte/);
+    assert.match(card.innerHTML, /Scopri/);
+    assert.doesNotMatch(card.innerHTML, /Mia|Sua/, 'no answer text on Oggi');
   }
 });
 
-test('M10.2 matrice Oggi: aperto → avviso OFF + card "Rivedi"; nascosto → avviso OFF + card "Rivedi"; il partner non cambia', async () => {
+test('M10.2 matrice Oggi: aperto → card "Rivedi"; nascosto (prima del redesign) → card "Rivedi"; il partner non cambia', async () => {
   const opened = await oggi(source('Mia', 'Sua', meta({ my_reveal_seen_at: '2026-10-05T09:00:00Z' })));
-  assert.deepEqual([opened.dailyCardVisible, opened.noticeVisible, opened.linkVisible], [true, false, true]);
+  assert.deepEqual([opened.dailyCardVisible, opened.ready, opened.linkVisible], [true, false, true]);
   assert.equal(opened.nodes.usDailyRitual.dataset.state, 'revealed');
   assert.match(opened.nodes.usDailyRitual.innerHTML, /Svelate · domani una nuova domanda/);
   assert.match(opened.nodes.usDailyRitual.innerHTML, /Rivedi/);
@@ -84,179 +83,33 @@ test('M10.2 matrice Oggi: aperto → avviso OFF + card "Rivedi"; nascosto → av
   assert.equal(opened.nodes.usDailyRevealLink.dataset.usQuestionId, 'q-1');
 
   const dismissed = await oggi(source('Mia', 'Sua', meta({ my_notice_dismissed_at: '2026-10-05T09:00:00Z' })));
-  assert.deepEqual([dismissed.dailyCardVisible, dismissed.noticeVisible, dismissed.linkVisible], [true, false, true]);
-  assert.equal(dismissed.priorities.length, 0);
+  assert.deepEqual([dismissed.dailyCardVisible, dismissed.ready, dismissed.linkVisible], [true, false, true]);
 
-  // Il partner riceve il proprio meta: il MIO seen/dismiss non lo tocca.
+  // Il partner riceve il proprio meta: il MIO seen non lo tocca.
   const partner = await oggi(source('Sua', 'Mia', meta()));
-  assert.deepEqual([partner.noticeVisible, partner.linkVisible], [true, false]);
+  assert.deepEqual([partner.ready, partner.linkVisible], [true, false]);
 });
 
-test('M10.2 matrice Oggi: senza meta caricata (errore/offline) nessun avviso e nessun link inventati', async () => {
+test('M10.2 matrice Oggi: senza meta caricata (errore/offline) nessuna card «pronte» e nessun link inventati', async () => {
   const t = await oggi(source('Mia', 'Sua', null));
-  assert.deepEqual([t.noticeVisible, t.linkVisible, t.dailyCardVisible], [false, false, false]);
+  assert.deepEqual([t.ready, t.linkVisible, t.dailyCardVisible], [false, false, false]);
   const wrongQuestion = await oggi(source('Mia', 'Sua', meta({ question_id: 'ieri' })));
-  assert.deepEqual([wrongQuestion.noticeVisible, wrongQuestion.linkVisible], [false, false]);
+  assert.deepEqual([wrongQuestion.ready, wrongQuestion.linkVisible], [false, false]);
 });
 
-test('M10.2 cambio giorno Europe/Rome: avviso, link e reazioni di ieri non compaiono; la Daily di oggi non ne è contaminata', async () => {
+test('M10.2 cambio giorno Europe/Rome: «pronte», link e reazioni di ieri non compaiono; la Daily di oggi non ne è contaminata', async () => {
   const yesterday = await oggi(source('Mia', 'Sua', meta()), { today: '2026-10-06' });
-  assert.deepEqual([yesterday.noticeVisible, yesterday.linkVisible], [false, false]);
+  assert.deepEqual([yesterday.ready, yesterday.linkVisible], [false, false]);
   // La nuova domanda di oggi (senza mia risposta) riporta la card Daily anche con meta di ieri in memoria.
   const next = await oggi({ question: { id: 'q-2', question: 'Nuova domanda', question_date: '2026-10-06' }, state: state(null, null), reveal: meta(), partnerName: 'Bea' }, { today: '2026-10-06' });
-  assert.deepEqual([next.dailyCardVisible, next.noticeVisible, next.linkVisible], [true, false, false]);
+  assert.deepEqual([next.dailyCardVisible, next.ready, next.linkVisible], [true, false, false]);
   const same = await oggi(source('Mia', 'Sua', meta()), { today: '2026-10-05' });
-  assert.equal(same.noticeVisible, true);
+  assert.equal(same.ready, true);
 });
 
-test('M10.2 un solo ingresso: se l\'avviso è in coda il link passivo non compare; Ti penso non lo nasconde', async () => {
-  const t = installOggi();
-  t.window.getTodayEventPrioritySource = async () => ({ id: 'e1', title: 'Cena', effective_date: '2026-10-05', days_left: 0, event_time: '20:00' });
-  const priorities = await t.window.UsTodayPriority.refresh({ daily: source('Mia', 'Sua', meta()) });
-  assert.deepEqual(Array.from(priorities, (p) => p.category), ['answers_ready', 'couple_context']);
-  assert.equal(t.nodes.usDailyRevealLink.hidden, true);
-  // Categoria propria: un Ti penso ricevuto (received_ready) non ne prende il posto.
-  const composed = Array.from(t.window.UsTodayPriority.compose([
-    { id: 'think-received:1', factKey: 'think:1', category: 'received_ready', urgency: 1, recency: 1 },
-    { id: 'daily-ready:q-1', factKey: 'daily:q-1', category: 'answers_ready', urgency: 5, recency: 0 },
-  ]), (p) => p.id);
-  assert.deepEqual(composed, ['think-received:1', 'daily-ready:q-1']);
-});
-
-test('M10.2 tap sull\'avviso: apre Today senza nasconderlo localmente (lo stato è canonico, non "consumato")', async () => {
-  const t = installOggi();
-  let opened = 0; t.window.openToday = () => { opened += 1; };
-  await t.window.UsTodayPriority.refresh({ daily: source('Mia', 'Sua', meta()) });
-  const before = t.nodes.usTodayPriorityRegion.innerHTML;
-  const control = { dataset: { usTodayAction: 'today' } };
-  t.listeners.get('click')({ target: { closest: (sel) => (sel === '[data-us-today-action]' ? control : null) } });
-  assert.equal(opened, 1);
-  assert.equal(t.nodes.usTodayPriorityRegion.innerHTML, before, 'still there until mark_daily_reveal_seen succeeds');
-});
-
-// ---------------------------------------------------------------------- swipe
-function fakeItem({ width = 320, questionId = 'q-1' } = {}) {
-  const item = {
-    style: {}, dataset: { usQuestionId: questionId }, isConnected: true, captured: null,
-    getBoundingClientRect: () => ({ width }), setPointerCapture(id) { this.captured = id; },
-  };
-  item.closest = (sel) => (sel === '[data-us-swipe-item]' ? item : null);
-  return item;
-}
-function installSwipe({ dismiss, reduced = false } = {}) {
-  const t = installOggi();
-  t.window.UsUiFoundation = { isReducedMotion: () => reduced };
-  const calls = [];
-  t.window.dismissDailyRevealNotice = dismiss || (async (id) => { calls.push(id); return { status: 'dismissed' }; });
-  const item = fakeItem();
-  const fire = (type, x, y, extra = {}) => t.listeners.get(type)({ pointerId: 1, button: 0, clientX: x, clientY: y, target: item, preventDefault() {}, ...extra });
-  return { ...t, item, calls, fire };
-}
-
-test('M10.2 swipe: sotto soglia → snap back, nessun dismiss', async () => {
-  const s = installSwipe();
-  s.fire('pointerdown', 200, 300); s.fire('pointermove', 180, 302); s.fire('pointermove', 165, 303);
-  assert.equal(s.item.style.transform, 'translateX(-35px)');
-  assert.ok(Number(s.item.style.opacity) < 1 && Number(s.item.style.opacity) > 0.5);
-  s.fire('pointerup', 165, 303);
-  await flush();
-  assert.equal(s.calls.length, 0);
-  assert.equal(s.item.style.transform, 'translateX(0)');
-  assert.match(s.item.style.transition, /transform/);
-});
-
-test('M10.2 swipe: gesto verticale → non trascina, non nasconde (lo scroll resta del browser)', async () => {
-  const s = installSwipe();
-  s.fire('pointerdown', 200, 300); s.fire('pointermove', 205, 340); s.fire('pointermove', 260, 420); s.fire('pointerup', 260, 420);
-  await flush();
-  assert.equal(s.item.style.transform, undefined);
-  assert.equal(s.calls.length, 0);
-  // Diagonale con verticale prevalente: idem.
-  const d = installSwipe();
-  d.fire('pointerdown', 200, 300); d.fire('pointermove', 130, 380); d.fire('pointerup', 130, 380);
-  await flush();
-  assert.equal(d.item.style.transform, undefined);
-  assert.equal(d.calls.length, 0);
-});
-
-test('M10.2 swipe: orizzontale oltre soglia (sinistra e destra) → dismiss canonico sulla domanda dell\'avviso', async () => {
-  for (const dx of [-90, 90]) {
-    const s = installSwipe();
-    s.fire('pointerdown', 200, 300); s.fire('pointermove', 200 + dx / 2, 303); s.fire('pointermove', 200 + dx, 304);
-    assert.equal(s.item.captured, 1, 'pointer captured only after horizontal intent');
-    s.fire('pointerup', 200 + dx, 304);
-    await flush();
-    assert.deepEqual(s.calls, ['q-1']);
-    assert.equal(s.item.style.transform, `translateX(${dx < 0 ? -320 : 320}px)`, 'exits in the swipe direction');
-  }
-});
-
-test('M10.2 swipe: errore del backend → la card torna al suo posto e si può riprovare', async () => {
-  let attempts = 0;
-  const s = installSwipe({ dismiss: async () => { attempts += 1; return attempts === 1 ? { status: 'error' } : { status: 'dismissed' }; } });
-  s.fire('pointerdown', 200, 300); s.fire('pointermove', 100, 300); s.fire('pointerup', 100, 300);
-  await flush();
-  assert.equal(attempts, 1);
-  assert.equal(s.item.style.transform, 'translateX(0)');
-  assert.equal(s.item.style.opacity, '');
-  s.fire('pointerdown', 200, 300); s.fire('pointermove', 100, 300); s.fire('pointerup', 100, 300);
-  await flush();
-  assert.equal(attempts, 2, 'retry allowed');
-});
-
-test('M10.2 swipe: il click dopo un drag non apre il reveal; un tap semplice sì', async () => {
-  const s = installSwipe();
-  let opened = 0; s.window.openToday = () => { opened += 1; };
-  await s.window.UsTodayPriority.refresh({ daily: source('Mia', 'Sua', meta()) });
-  const control = { dataset: { usTodayAction: 'today' } };
-  const click = () => s.listeners.get('click')({ target: { closest: (sel) => (sel === '[data-us-today-action]' ? control : null) }, preventDefault() {} });
-  s.fire('pointerdown', 200, 300); s.fire('pointermove', 190, 301); s.fire('pointerup', 190, 301);
-  click();
-  assert.equal(opened, 0, 'drag → click swallowed');
-  s.fire('pointerdown', 200, 300); s.fire('pointerup', 200, 300);
-  click();
-  assert.equal(opened, 1, 'tap → opens Today');
-});
-
-test('M10.2 swipe: reduced motion — nessuna transizione, stesso comportamento', async () => {
-  const s = installSwipe({ reduced: true });
-  s.fire('pointerdown', 200, 300); s.fire('pointermove', 100, 300);
-  assert.equal(s.item.style.transition, 'none');
-  s.fire('pointerup', 100, 300);
-  await flush();
-  assert.equal(s.item.style.transition, 'none');
-  assert.deepEqual(s.calls, ['q-1']);
-  const short = installSwipe({ reduced: true });
-  short.fire('pointerdown', 200, 300); short.fire('pointermove', 180, 300); short.fire('pointerup', 180, 300);
-  await flush();
-  assert.equal(short.item.style.transition, 'none');
-  assert.equal(short.item.style.transform, 'translateX(0)');
-  assert.equal(short.calls.length, 0);
-});
-
-test('M10.2 swipe: soglia proporzionale 50–70px; il bottone × non avvia un drag e usa la stessa autorità', async () => {
-  const { context } = installOggi();
-  const threshold = vm.runInContext('usTodaySwipeThreshold', context);
-  assert.deepEqual([200, 320, 480, 900].map(threshold), [50, 64, 70, 70]);
-  assert.equal(threshold(0), 50);
-
-  const s = installSwipe();
-  const dismissButton = { closest: (sel) => (sel === '[data-us-today-dismiss]' ? dismissButton : sel === '[data-us-swipe-item]' ? s.item : null) };
-  s.fire('pointerdown', 200, 300, { target: dismissButton });
-  s.fire('pointermove', 100, 300, { target: dismissButton }); s.fire('pointerup', 100, 300, { target: dismissButton });
-  await flush();
-  assert.equal(s.calls.length, 0, 'no drag started from the dismiss button');
-  s.listeners.get('click')({ target: dismissButton, preventDefault() {} });
-  await flush();
-  assert.deepEqual(s.calls, ['q-1'], 'accessible dismiss → same canonical authority');
-});
-
-test('M10.2 markup: dismiss accessibile, swipe verticale libero, nessuna icona inventata', () => {
-  assert.match(css, /\.us-today-priority-swipe\{[^}]*touch-action:pan-y/);
-  // US-UI-UNIFICATION-01: 44px tap target; focus comes from the one global ring.
-  const dismissRule = css.match(/\.us-today-priority-dismiss\{[^}]*\}/)?.[0] || '';
-  assert.match(dismissRule, /width:44px/);
-  assert.match(dismissRule, /height:44px/);
+test('M10.2 markup: il link passivo, niente avviso né swipe su Oggi (redesign D9)', () => {
+  assert.doesNotMatch(html, /usTodayPriorityRegion|us-today-priority/);
+  assert.doesNotMatch(app, /installTodayNoticeSwipe|dismissDailyRevealNotice|data-us-today-dismiss/);
   assert.match(read('ui-foundation.css'), /:where\(button[^{]*\):focus-visible\s*\{\s*outline:2px solid/);
   assert.match(css, /\.us-daily-reveal-link\{[^}]*position:relative/);
   const link = css.match(/\.us-daily-reveal-link\{[^}]*\}/)?.[0] || '';
@@ -264,11 +117,11 @@ test('M10.2 markup: dismiss accessibile, swipe verticale libero, nessuna icona i
   assert.doesNotMatch(css.match(/\.us-daily-reveal-link[^{]*\{[^}]*\}/g).join(''), /orbit|attention/);
   assert.match(html, /<button type="button" class="us-daily-reveal-link" id="usDailyRevealLink" hidden onclick="openToday\(\)"><\/button>/);
   const stack = html.match(/<div class="us-oggi-stack" id="usOggiStack">[\s\S]*?\n {6}<\/div>/)?.[0] || '';
-  assert.ok(stack.indexOf('id="usDailyRevealLink"') > stack.indexOf('id="usDailyRitual"'), 'secondary link sits after the Daily card slot inside the same stack');
+  assert.ok(stack.indexOf('id="usDailyRevealLink"') >= 0, 'the passive link stays in the hidden stack');
   assert.doesNotMatch(html, /id="todayOrb"/, 'the old top-left todayOrb stays removed');
   // Founder 15/10: the Oggi card can be swiped away once both answered and read.
   // That hide is a visual, per-phone choice (dailyRitualDismissedId/dailyRitualDismiss);
-  // reveal seen/notice state stays on the server, so only those two helpers may touch storage.
+  // reveal seen state stays on the server, so only those two helpers may touch storage.
   const cardHide = /function dailyRitualDismissedId\(\)\{[\s\S]*?\n\}\nfunction dailyRitualDismiss\(questionId\)\{[\s\S]*?\n\}\n/;
   assert.match(app, cardHide, 'the card-hide helpers exist as one block');
   assert.doesNotMatch(read('styles.css') + app.replace(cardHide, ''), /localStorage[^;]*(dismiss|reveal)/i, 'no local authority for dismiss/seen');
@@ -301,12 +154,12 @@ test('M10.2 seen: già visto → nessuna seconda scrittura; non pronto → nessu
   const t = installToday({ revealMeta: meta({ my_reveal_seen_at: '2026-10-05T08:00:00Z' }) });
   await t.hydrate();
   assert.ok(!rpcNames(t).includes('mark_daily_reveal_seen'));
-  const src = slice('async function hydrateToday(){', 'async function updateHomeStatus');
+  const src = slice('async function hydrateToday(){', 'let pendingMomentFile=null;');
   assert.match(src, /markDailyRevealSeenIfVisible\(q\.id,seq\)/);
   assert.equal((app.match(/rpc\('mark_daily_reveal_seen'/g) || []).length, 1, 'one single writer of the receipt');
 });
 
-test('M10.2 seen: ricevuta non salvata → reveal leggibile, meta canonica intatta, avviso ancora su Oggi', async () => {
+test('M10.2 seen: ricevuta non salvata → reveal leggibile, meta canonica intatta, «pronte» ancora su Oggi', async () => {
   const t = installToday({ seenResult: async () => ({ data: null, error: { message: 'offline' } }) });
   await t.hydrate();
   assert.match(t.nodes.todayReveal.innerHTML, /Mia[\s\S]*Sua/, 'answers displayed');
@@ -315,27 +168,4 @@ test('M10.2 seen: ricevuta non salvata → reveal leggibile, meta canonica intat
   // Riaprire il foglio riprova.
   const again = await (async () => { const before = t.calls.length; await t.hydrate(); return t.calls.slice(before).map((c) => c[0]); })();
   assert.ok(again.includes('mark_daily_reveal_seen'), 'retry on next open');
-});
-
-test('M10.2 dismiss: solo RPC canonica, non segna visto, aggiorna Oggi; errore → toast e nessun cambio', async () => {
-  const ok = installToday({ sheetOpen: false });
-  await ok.hydrate();
-  ok.calls.length = 0;
-  const done = await ok.window.dismissDailyRevealNotice('q-1');
-  assert.equal(done.status, 'dismissed');
-  assert.deepEqual(rpcNames(ok), ['dismiss_daily_reveal_notice']);
-  assert.ok(ok.window.todayRevealMeta.my_notice_dismissed_at);
-  assert.equal(ok.window.todayRevealMeta.my_reveal_seen_at, null, 'dismiss is not a read receipt');
-  assert.equal(ok.refreshes[ok.refreshes.length - 1], 'refresh');
-
-  const bad = installToday({ sheetOpen: false, dismissResult: async () => ({ data: null, error: { message: 'boom' } }) });
-  await bad.hydrate();
-  const failed = await bad.window.dismissDailyRevealNotice('q-1');
-  assert.equal(failed.status, 'error');
-  assert.equal(bad.window.todayRevealMeta.my_notice_dismissed_at, null);
-  assert.equal(bad.toasts.length, 1);
-  // Meta di un'altra domanda o payload vuoto non contano come successo.
-  const wrong = installToday({ sheetOpen: false, dismissResult: () => ({ data: meta({ question_id: 'altra' }), error: null }) });
-  await wrong.hydrate();
-  assert.equal((await wrong.window.dismissDailyRevealNotice('q-1')).status, 'error');
 });

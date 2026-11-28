@@ -124,6 +124,30 @@ check(UsWidgetModels.actionId(previous: sent, now: now, make: { "new" }) == "new
 t = UsWidgetModels.think(thinkSnapshot, action: ["status": "unauthorized", "at": "2026-11-14T09:00:00Z"], hasCredential: true, now: now)
 check(!t.canSend, "revoked credential: open US")
 
+// Ti penso ×N dai widget (founder, 27/11/2026): taps in a row add up, one Ti penso leaves after the last.
+let burstId = "1b4e28ba-2fa1-41d2-883f-0016d3cca427"
+let counting: [String: Any] = ["status": "counting", "at": "2026-11-14T09:59:59.500Z", "actionId": burstId, "taps": 3]
+t = UsWidgetModels.think(thinkSnapshot, action: counting, hasCredential: true, now: now)
+check(t.counting && t.done && !t.busy && t.line == "×3" && t.when == "tocca ancora", "counting: «×3», one more tap adds one")
+check(t.nextChange == date("2026-11-14T10:00:01.500Z"), "counting: redrawn after the burst")
+t = UsWidgetModels.think(thinkSnapshot, action: ["status": "sent", "at": "2026-11-14T09:59:30Z", "sentAt": "2026-11-14T09:59:30Z", "taps": 3], hasCredential: true, now: now)
+check(t.line == "Inviato ×3" && t.taps == 3, "sent: «Inviato ×3»")
+t = UsWidgetModels.think(thinkSnapshot, action: counting, hasCredential: true, now: date("2026-11-14T10:02:00Z"))
+check(!t.counting && t.line == "Non è partito, riprova", "a burst never sent asks to retry")
+var tap = UsWidgetModels.tap(previous: counting, replyIfNew: false, now: now)
+check(tap.actionId == burstId && tap.taps == 4 && !tap.full, "one more tap, the same burst")
+tap = UsWidgetModels.tap(previous: ["status": "counting", "at": "2026-11-14T09:59:59Z", "actionId": burstId, "taps": 98], replyIfNew: false, now: now)
+check(tap.taps == 99 && tap.full, "the 99th tap sends at once")
+tap = UsWidgetModels.tap(previous: sent, replyIfNew: true, now: now, make: { "new" })
+check(tap.actionId == "new" && tap.taps == 1 && tap.reply, "after a send: a new burst")
+check(UsWidgetModels.actionId(previous: counting, now: now, make: { "new" }) == burstId, "an open burst keeps its id")
+let manySnapshot = UsWidgetContract.normalize(["schemaVersion": 2, "ownerHash": owner,
+    "think": ["partnerName": "Bea", "lastReceivedAt": "2026-11-14T09:50:00Z", "lastReceivedTaps": 5]])
+t = UsWidgetModels.think(manySnapshot, action: nil, hasCredential: true, now: now)
+check(t.unanswered && t.receivedTaps == 5 && t.line == "Bea ti ha pensato 5 volte", "theirs: «Bea ti ha pensato 5 volte»")
+check(UsWidgetContract.taps(400) == 99 && UsWidgetContract.taps(0) == 1 && UsWidgetContract.taps("7") == 1 && UsWidgetContract.taps(true) == 1 && UsWidgetContract.taps(2.5) == 1 && UsWidgetContract.taps(nil) == 1, "taps: a whole number 1..99")
+check((thinkSnapshot?["think"] as? [String: Any])?["lastReceivedTaps"] as? Int == 1, "an older app: 1 tap")
+
 check(UsWidgetModels.bubbleAgo(date("2026-11-14T09:58:00Z"), now: now) == "proprio ora", "just now")
 check(UsWidgetModels.bubbleAgo(date("2026-11-14T08:30:00Z"), now: now) == "1 ora fa", "an hour")
 check(UsWidgetModels.bubbleAgo(date("2026-11-06T10:00:00Z"), now: now) == "", "older than a week: nothing")
@@ -148,6 +172,14 @@ check(!store.writePortrait(ownerHash: owner, slot: "../../x", bytes: jpeg), "unk
 check(store.writeAction(status: "sending", actionId: "id", reply: true), "action written")
 check(store.readAction()?["reply"] as? Bool == true, "reply kept")
 check(store.writeAction(status: "sent", actionId: "id") && UsWidgetContract.bool(store.readAction()?["reply"]), "reply carried over")
+// Ti penso ×N: only the burst's last tap claims the send, with every tap.
+let firstTap = store.countTap(replyIfNew: false)
+let secondTap = store.countTap(replyIfNew: false)
+check(firstTap != nil && secondTap != nil && firstTap!.tap.actionId == secondTap!.tap.actionId && secondTap!.tap.taps == 2, "taps in a row: one burst")
+check(store.claimBurst(actionId: firstTap!.tap.actionId, tapId: firstTap!.tapId) == nil, "an earlier tap does not send")
+check(store.claimBurst(actionId: secondTap!.tap.actionId, tapId: secondTap!.tapId) == 2, "the last tap sends both")
+check(store.claimBurst(actionId: secondTap!.tap.actionId, tapId: secondTap!.tapId) == nil && UsWidgetContract.string(store.readAction()?["status"]) == "sending", "claimed once")
+check(store.writeAction(status: "sent", actionId: secondTap!.tap.actionId) && UsWidgetContract.taps(store.readAction()?["taps"]) == 2, "the sent burst keeps its taps")
 let device = store.deviceId()
 check(UUID(uuidString: device) != nil && store.deviceId() == device, "stable device id")
 check(store.activateAccount(other), "another account")
@@ -159,6 +191,107 @@ try? FileManager.default.removeItem(at: folder)
 check(UsWidgetShared.kind(fromWidgetKind: "us.widget.photo") == "photo", "WidgetKit kind maps back")
 check(UsWidgetShared.kind(fromWidgetKind: "us.widget.days") == nil, "Giorni insieme is not ported")
 check(UsWidgetShared.openURL("think").absoluteString == "us://widget/think", "links widgets.js reads")
+
+// MARK: Widget del redesign (26/11/2026): the characters and the other seven widgets
+
+for shape in UsCharacterShapes.shapes {
+    for head in [""] + UsCharacterShapes.heads {
+        for item in [""] + UsCharacterShapes.faces {
+            for face in ["felice", "innamorato", "dorme", "giu", "stanco", "teso"] {
+                for reaction in ["", "cuore", "festa", "saluta", "sera"] {
+                    for mono in [false, true] {
+                        let ops = UsCharacterShapes.draw(shape, color: 0xFFFF_7C96, face: face, reaction: reaction, head: head, faceItem: item, zz: 0xFFF7_EFE9, mono: mono)
+                        if ops.count < (mono ? 4 : 6) { check(false, "\(shape) \(head) \(item) \(face) \(reaction): too few steps") }
+                        for op in ops where op.text == nil {
+                            let segments = UsCharacterShapes.parse(op.d)
+                            if segments.isEmpty { check(false, "\(shape) \(head) \(item): empty path \(op.d)") }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+check(true, "every shape, look, face and reaction draws and parses")
+let ellipse = UsCharacterShapes.parse(UsCharacterShapes.ell(50, 60, 10, 5))
+if case let .arc(cx, cy, rx, ry, _, sweep) = ellipse[1] {
+    check(abs(cx - 50) < 0.01 && abs(cy - 60) < 0.01 && abs(rx - 10) < 0.01 && abs(ry - 5) < 0.01 && abs(abs(sweep) - 180) < 0.01, "an ellipse is two half arcs")
+} else {
+    check(false, "an ellipse is two half arcs")
+}
+check(UsCharacterShapes.parse("M10 20 h12 v22 h-12 q-4 -11 0 -22 Z")[4] == .quad(6, 31, 10, 20), "relative commands follow the current point")
+check(UsCharacterShapes.edge(0xFFFF_7C96) == UsCharacterShapes.mix(0xFFFF_7C96, 0.42, 0xFF1A_1020), "the outline is the dark of the colour")
+check(UsCharacterShapes.faceOf("nervoso") == "teso" && UsCharacterShapes.faceOf("festa") == "innamorato" && UsCharacterShapes.faceOf("") == "felice", "faces of Come stai")
+check(UsCharacterShapes.shapeOr("", partnerRole: true) == "quadrato" && UsCharacterShapes.shapeOr("nuvola", partnerRole: false) == "nuvola", "the role's shape without a choice")
+let monoOps = UsCharacterShapes.draw("palla", color: 0xFFFF_7C96, face: "felice", reaction: "", head: "corona", faceItem: "occhiali", zz: 0, mono: true)
+check(monoOps.allSatisfy { [0, 0xFFFF_FFFF, 0xFF1C_1A1B].contains($0.fill) && [0, 0xFFFF_FFFF, 0xFF1C_1A1B].contains($0.stroke) }, "one tint: white and dark only")
+
+let sampleNow = date("2026-11-26T15:00:00Z")
+let redesign = UsWidgetContract.normalize([
+    "schemaVersion": 2, "ownerHash": owner,
+    "think": ["partnerName": "Bea"],
+    "couple": ["names": [], "distanceText": "12 km", "distanceAt": "2026-11-26T14:50:00Z", "batteryLevel": 78, "batteryAt": "2026-11-26T14:50:00Z",
+               "characters": ["me": ["shape": "nuvola", "head": "corona", "color": "#6F9BFF", "day": "#8faad6"],
+                              "partner": ["shape": "<svg>", "face": "gala"]]] as [String: Any],
+    "daily": ["date": "2026-11-26", "state": "your_turn", "question": "Una domanda?"],
+    "left": ["kind": "photo", "at": "2026-11-26T14:50:00Z"],
+    "memories": ["state": "ready", "date": "2025-11-26", "day": "2026-11-26", "label": "Un anno fa", "anniversary": true, "title": "Pescara", "count": 4, "stack": 2],
+    "lavagna": ["state": "ready", "by": "partner", "at": "2026-11-26T14:00:00Z"],
+    "postit": ["state": "ready", "text": "cena", "color": "pink", "by": "me", "more": 2, "second": ["text": "lucine", "color": "mauve", "by": "partner"]] as [String: Any],
+    "status": ["partner": ["status": "innamorato", "form": "f", "at": "2026-11-26T13:00:00Z", "until": "2026-11-27T01:00:00Z"]]
+])!
+let me = UsWidgetModels.person(redesign, me: true)
+let them = UsWidgetModels.person(redesign, me: false)
+check(me.shape == "nuvola" && me.head == "corona" && me.night == 0xFF6F_9BFF && me.day == 0xFF8F_AAD6, "my character from the snapshot")
+check(them.shape == "quadrato" && them.face == "gala" && them.night == 0xFFA9_8BFF, "an unknown shape is the role's, the colour lilla")
+check(UsWidgetModels.daily(redesign, now: sampleNow) == UsWidgetModels.Daily(question: "Una domanda?", state: "your_turn"), "the question of today")
+check(UsWidgetModels.daily(redesign, now: date("2026-11-27T10:00:00Z")).state == "stale", "a day later it asks for the new one")
+check(UsWidgetModels.dailyStatus("your_turn", who: "Bea") == ("Bea ha risposto · ", "tocca a te"), "whose turn")
+let coupleNow = UsWidgetModels.couple(redesign, now: sampleNow)
+check(coupleNow.distanceText == "12 km" && coupleNow.distanceAgo == "aggiornato 10 min fa" && coupleNow.batteryLevel == 78 && !coupleNow.batteryOld, "distance and battery")
+check(UsWidgetModels.couple(redesign, now: date("2026-11-27T16:00:00Z")).batteryLevel == -1, "a battery older than a day goes")
+let statusNow = UsWidgetModels.statusPerson(redesign, me: false, now: sampleNow)
+check(statusNow.shown && statusNow.line == "Innamorata · da 2 ore", "Come stai: \(statusNow.line)")
+var rome = Calendar(identifier: .gregorian)
+rome.timeZone = UsWidgetModels.rome
+check(UsWidgetModels.face(redesign, me: false, now: sampleNow, calendar: rome).face == "innamorato", "the face of Come stai")
+check(UsWidgetModels.face(redesign, me: false, now: date("2026-11-26T22:30:00Z"), calendar: rome).face == "dorme", "asleep after 22")
+// Come stai che conta (27/11/2026, D8): the things in their hands or on their head; never asleep when not well.
+let plainOps = UsCharacterShapes.draw("palla", color: 0xFFFF_7C96, face: "felice", reaction: "", head: "", faceItem: "", zz: 0).count
+for status in ["lavoro", "studio", "palestra", "viaggio", "tavola", "malato"] {
+    if UsCharacterShapes.thingOf(status).isEmpty { check(false, "\(status) holds nothing") }
+    for shape in UsCharacterShapes.shapes {
+        for mono in [false, true] {
+            let ops = UsCharacterShapes.draw(shape, color: 0xFFFF_7C96, face: status, reaction: "", head: "corona", faceItem: "", zz: 0, mono: mono)
+            for op in ops where op.text == nil {
+                if UsCharacterShapes.parse(op.d).isEmpty { check(false, "\(status) \(shape): empty path \(op.d)") }
+                if let clip = op.clip, UsCharacterShapes.parse(clip).isEmpty { check(false, "\(status) \(shape): empty clip") }
+            }
+        }
+    }
+    if UsCharacterShapes.draw("palla", color: 0xFFFF_7C96, face: status, reaction: "", head: "", faceItem: "", zz: 0).count <= plainOps { check(false, "\(status): no thing drawn") }
+}
+check(true, "Come stai: the six things draw and parse on every shape")
+check(UsCharacterShapes.thingOf("lavoro") == "valigetta" && UsCharacterShapes.thingOf("malato") == "termometro" && UsCharacterShapes.thingOf("felice").isEmpty, "the things of Come stai")
+check(UsCharacterShapes.faceOf("teso") == "teso" && UsCharacterShapes.faceOf("lavoro") == "felice", "a face name stays itself, a state gives its face")
+let sickNight = UsCharacterShapes.draw("palla", color: 0xFFFF_7C96, face: "malato", reaction: "sera", head: "", faceItem: "", zz: 0xFFF7_EFE9)
+check(!sickNight.contains { $0.text == "z" } && sickNight.contains { $0.stroke == 0xFFE8_484A }, "not feeling well never sleeps at night")
+check(UsCharacterShapes.draw("palla", color: 0xFFFF_7C96, face: "lavoro", reaction: "sera", head: "", faceItem: "", zz: 0xFFF7_EFE9).contains { $0.text == "z" }, "the others sleep, without their thing")
+var sick = redesign
+var sickStatus = UsWidgetContract.object(sick["status"])
+sickStatus["partner"] = ["status": "malato", "form": "", "at": "2026-11-26T13:00:00Z", "until": "2026-11-27T01:00:00Z"]
+sick["status"] = sickStatus
+check(UsWidgetModels.face(sick, me: false, now: date("2026-11-26T22:30:00Z"), calendar: rome).face == "malato", "the widget keeps the thermometer at night")
+check(UsWidgetModels.face(sick, me: false, now: sampleNow, calendar: rome).face == "malato", "the widget draws their state")
+check((UsWidgetContract.statusPerson(["status": "<b>", "form": "x", "at": "ieri", "until": "domani"])["status"] as? String) == "", "a hostile status signal shows nothing")
+check(UsWidgetModels.message(redesign, now: sampleNow).text == "Ti ha lasciato una foto" && UsWidgetModels.message(redesign, now: sampleNow).hint == "la scopri solo dentro US", "Lasciato per te, never what")
+let memoriesNow = UsWidgetModels.memories(redesign, now: sampleNow)
+check(memoriesNow.pill == "Un anno fa" && memoriesNow.title == "Pescara" && memoriesNow.line == "26 novembre · 4 foto", "Ricordi: \(memoriesNow.line)")
+check(UsWidgetModels.memories(redesign, now: date("2026-11-27T10:00:00Z")).pill.isEmpty, "«Un anno fa» only on the day")
+check(UsWidgetModels.lavagna(redesign, now: sampleNow).line == "Bea · 1 ora fa", "the board: who and when")
+let notes = UsWidgetModels.postit(redesign)
+check(notes.written && notes.first.text == "cena" && notes.second == UsWidgetModels.Note(text: "lucine", color: "yellow", by: "partner"), "the last two post-its")
+check(UsWidgetModels.postit(nil).first.text == "Apri US per collegarlo", "a post-it before US")
 
 if failures > 0 {
     print("\(failures) check(s) failed")

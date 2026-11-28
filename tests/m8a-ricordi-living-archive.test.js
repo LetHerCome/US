@@ -101,7 +101,8 @@ test('M8A density pass: Ricordi prioritizes memories over chrome without changin
   assert.match(css, /#moments \.ricordi-rivivi-card:not\(\.ricordi-rivivi-note\)\{[\s\S]*?grid-template-columns:108px minmax\(0,1fr\)/);
   assert.match(css, /#moments \.us-conservati-entry\{[\s\S]*?min-height:54px/);
   assert.match(css, /#moments \.ricordi-story \.moment-card\.moment-postit\.ricordi-feature img\{\s*aspect-ratio:16\/9!important;/);
-  assert.match(css, /body:has\(#moments\.page\.active\) #thinkButton\{\s*display:none!important;/);
+  // Ti penso is the heart in the middle of the bar since the redesign (fase 2): it stays on Ricordi.
+  assert.doesNotMatch(css, /#thinkButton\{\s*display:none/);
   const page = read('index.html').match(/<main id="moments" class="page">[\s\S]*?<\/main>/)?.[0] || '';
   const order = ['id="ricordiRivivi"', 'Mese per mese', 'id="momentsGrid"'].map((s) => page.indexOf(s));
   assert.deepEqual([...order].sort((a,b)=>a-b), order);

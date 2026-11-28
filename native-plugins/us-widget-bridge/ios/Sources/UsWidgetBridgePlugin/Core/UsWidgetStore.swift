@@ -19,6 +19,9 @@ final class UsWidgetStore {
     let directory: URL
     private let media: URL
     private let lock = NSLock()
+    /// Ti penso ×N: every store instance (UsWidgetStore.shared() makes a new
+    /// one per intent) counts taps under this one lock.
+    private static let burstLock = NSLock()
 
     /// The App Group store; nil when the group is not in the entitlements (unsigned builds).
     static func shared() -> UsWidgetStore? {
@@ -94,6 +97,30 @@ final class UsWidgetStore {
         return true
     }
 
+    /// Widget signals (27/11/2026): the other person's new look, from a background push for this
+    /// account only. Validated again by UsWidgetContract.character; nothing else in the snapshot moves.
+    @discardableResult
+    func writePartnerLook(ownerHash: String, look: [String: Any]) -> Bool {
+        guard UsWidgetContract.validOwner(ownerHash), var snapshot = readSnapshot(),
+              (snapshot["ownerHash"] as? String) == ownerHash else { return false }
+        var couple = UsWidgetContract.object(snapshot["couple"])
+        var characters = UsWidgetContract.object(couple["characters"])
+        characters["partner"] = UsWidgetContract.character(look)
+        couple["characters"] = characters
+        snapshot["couple"] = couple
+        return write(snapshot: snapshot)
+    }
+
+    /// Come stai che conta (D13): the other person's Come stai from a widget signal, validated, same owner.
+    func writePartnerStatus(ownerHash: String, status: [String: Any]) -> Bool {
+        guard UsWidgetContract.validOwner(ownerHash), var snapshot = readSnapshot(),
+              (snapshot["ownerHash"] as? String) == ownerHash else { return false }
+        var all = UsWidgetContract.object(snapshot["status"])
+        all["partner"] = UsWidgetContract.statusPerson(status)
+        snapshot["status"] = all
+        return write(snapshot: snapshot)
+    }
+
     func readSnapshot() -> [String: Any]? {
         lock.lock(); defer { lock.unlock() }
         guard let data = try? Data(contentsOf: file("snapshot-v2.json")),
@@ -121,23 +148,57 @@ final class UsWidgetStore {
 
     /// Records the action status; keeps the pending action id for idempotent retries.
     /// reply: the tap answered the partner's thought ("Ricambiato", not "Inviato").
+    /// taps (Ti penso ×N): the burst's taps; nil keeps those of the same action id.
     @discardableResult
-    func writeAction(status: String, actionId: String, reply: Bool? = nil, now: Date = Date()) -> Bool {
+    func writeAction(status: String, actionId: String, reply: Bool? = nil, taps: Int? = nil, now: Date = Date()) -> Bool {
         lock.lock(); defer { lock.unlock() }
+        return writeActionLocked(status: status, actionId: actionId, reply: reply, taps: taps, tap: nil, now: now)
+    }
+
+    private func writeActionLocked(status: String, actionId: String, reply: Bool?, taps: Int?, tap: String?, now: Date) -> Bool {
         let owner = ownerLocked()
         guard !owner.isEmpty else { return false }
         let previous = readActionLocked()
         let stamp = UsWidgetContract.format(now)
-        let next: [String: Any] = [
+        let sameBurst = UsWidgetContract.string(previous?["actionId"]) == actionId
+        var next: [String: Any] = [
             "ownerHash": owner,
             "status": status,
             "at": stamp,
             "actionId": actionId,
             "sentAt": status == "sent" ? stamp : UsWidgetContract.string(previous?["sentAt"]),
-            "reply": reply ?? UsWidgetContract.bool(previous?["reply"])
+            "reply": reply ?? UsWidgetContract.bool(previous?["reply"]),
+            "taps": max(1, min(UsWidgetModels.maxTaps, taps ?? (sameBurst ? UsWidgetContract.taps(previous?["taps"]) : 1)))
         ]
+        if let tap = tap { next["tap"] = tap }
         guard let data = try? JSONSerialization.data(withJSONObject: next) else { return false }
         return write(file("think-action-v1.json"), data)
+    }
+
+    /// Ti penso ×N (27/11/2026): one more tap, atomically (taps in a row run
+    /// as intents at the same time). Each tap gets its own id; only the burst's
+    /// last tap may send (claimBurst). nil without an account.
+    func countTap(replyIfNew: Bool, now: Date = Date()) -> (tap: UsWidgetModels.Tap, tapId: String)? {
+        Self.burstLock.lock(); defer { Self.burstLock.unlock() }
+        lock.lock(); defer { lock.unlock() }
+        let tap = UsWidgetModels.tap(previous: readActionLocked(), replyIfNew: replyIfNew, now: now)
+        let tapId = UUID().uuidString.lowercased()
+        guard writeActionLocked(status: "counting", actionId: tap.actionId, reply: tap.reply, taps: tap.taps, tap: tapId, now: now) else { return nil }
+        return (tap, tapId)
+    }
+
+    /// The burst's last tap: still counting, the same burst and this very tap
+    /// (no tap came after it). The burst becomes "sending" and its taps are
+    /// returned; nil when a later tap will send it, or nothing is owed.
+    func claimBurst(actionId: String, tapId: String, now: Date = Date()) -> Int? {
+        Self.burstLock.lock(); defer { Self.burstLock.unlock() }
+        lock.lock(); defer { lock.unlock() }
+        guard let action = readActionLocked(), UsWidgetContract.string(action["status"]) == "counting",
+              UsWidgetContract.string(action["actionId"]) == actionId,
+              UsWidgetContract.string(action["tap"]) == tapId else { return nil }
+        let taps = UsWidgetContract.taps(action["taps"])
+        guard writeActionLocked(status: "sending", actionId: actionId, reply: UsWidgetContract.bool(action["reply"]), taps: taps, tap: nil, now: now) else { return nil }
+        return taps
     }
 
     // MARK: - Portraits and pictures prepared by the WebView (never a URL)

@@ -16,8 +16,11 @@ const progression = (user = h.F) => h.as(db, user, 'select public.get_progressio
 const setLevel = (level) => db.query('update public.couples set bond_xp = $1 where id = $2', [xpFor(level), h.A]);
 const reward = (p, id) => p.rewards.find((r) => r.id === id);
 
+// The chain before il grande bilanciamento (28/11/2026), which moves the icons
+// to US Plus only and the curve to a table: bilanciamento-v1-db.test.js owns that one.
+const UNTIL = '20261128101816_play_us_punti.sql';
 let db;
-test.beforeEach(async () => { db = await h.database(); });
+test.beforeEach(async () => { db = await h.database({ until: UNTIL }); });
 test.afterEach(async () => { await db?.close(); db = null; });
 
 test('migration exists and is listed in the cutoff', () => {

@@ -116,7 +116,9 @@ test('reveal: reduced motion removes the staging (instant reveal)', () => {
   const css = read('games.css');
   // G2 1.0 — answers are visible at once: no collapsible comparison, so no chevron to animate.
   assert.doesNotMatch(css, /us-gv5-reveal-chevron|\.us-gv5-reveal details/);
-  assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\.us-gv2-reveal\.is-first-reveal \.us-gv2-lightsplit\{display:none\}/);
+  // The light of the old reveal card is gone (27/11/2026); what still moves stops.
+  assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\.us-gv2-reveal\.is-first-reveal :is\([^)]*\.us-gv2-then\)\{animation:none\}/);
+  assert.doesNotMatch(css, /us-gv2-lightsplit/);
 });
 
 async function submitWeekly(h, fields) {
@@ -235,14 +237,14 @@ test('ricordi: reduced motion disables the settle and the light catch', () => {
   assert.match(css, /:root\[data-us-motion="reduced"\] #moments \.moment-card\.ricordi-new/);
 });
 
-test('ti penso: one soft pulse, the shared attention state and the attention tone — no loop', () => {
+test('ti penso: the short notice, the shared attention state and the attention tone — no loop', () => {
   const app = read('app.js');
   const at = app.indexOf('function handleIncomingThink');
   const body = app.slice(at, app.indexOf('const usRealtimeRefreshTimers', at));
   assert.match(body, /window\.UsFeedback\?\.attention\?\.\(\)/);
   assert.match(body, /window\.UsUiFoundation\?\.auroraPulse\?\.\(\)/);
-  assert.match(body, /playOnce\?\.\(card,'us-attention-pulse',900\)/);
-  assert.match(body, /\[data-us-arrival-type="think-received"\]/);
+  // Redesign D9: no card to pulse; the notice once (noticeIncomingThink).
+  assert.match(body, /noticeIncomingThink\(row\);/);
   const css = read('ui-foundation.css');
   assert.match(css, /\.us-attention-pulse::before\{[^}]*animation:us-attention-pulse 900ms [^}]* 1 both\}/);
   assert.doesNotMatch(css.slice(css.indexOf('.us-attention-pulse::before')).split('\n')[0], /infinite/);

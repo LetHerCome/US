@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.regex.Pattern;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -28,6 +29,10 @@ final class UsWidgetContract {
     static final Pattern STATUS_KEY = Pattern.compile("^(innamorato|felice|stanco|giu|nervoso|malato|festa|lavoro|studio|palestra|viaggio|tavola)$");
     private static final Pattern COLOR = Pattern.compile("^#[0-9a-fA-F]{6}$");
     private static final Pattern PAPER = Pattern.compile("^(yellow|pink|blue|green)$");
+    // I personaggi (personaggi.js SHAPES, LOOK_HEAD, LOOK_FACE).
+    static final Pattern SHAPE = Pattern.compile("^(palla|quadrato|triangolo|goccia|nuvola)$");
+    static final Pattern HEAD = Pattern.compile("^(cappello|fiocco|cuffie|corona|coroncina|festa|cento)$");
+    static final Pattern FACE = Pattern.compile("^(occhiali|sole|sciarpina|gala|macchinetta)$");
 
     private UsWidgetContract() {}
 
@@ -49,6 +54,8 @@ final class UsWidgetContract {
             JSONObject think = new JSONObject()
                 .put("partnerName", text(thinkIn.optString("partnerName", ""), 40))
                 .put("lastReceivedAt", instantText(thinkIn.optString("lastReceivedAt", "")))
+                // Ti penso ×N (27/11/2026): the taps of their last Ti penso, 1..99.
+                .put("lastReceivedTaps", taps(thinkIn.opt("lastReceivedTaps")))
                 .put("lastSentAt", instantText(thinkIn.optString("lastSentAt", "")))
                 // A reaction to the partner's thought answers it as well as a thought does.
                 .put("lastAnsweredAt", instantText(thinkIn.optString("lastAnsweredAt", "")))
@@ -89,6 +96,11 @@ final class UsWidgetContract {
             couple.put("colors", new JSONObject()
                 .put("me", COLOR.matcher(meColor).matches() ? meColor.toLowerCase() : "")
                 .put("partner", COLOR.matcher(partnerColor).matches() ? partnerColor.toLowerCase() : ""));
+            // Widget del redesign (26/11/2026): each person's character, as the app draws it.
+            JSONObject charactersIn = optObject(coupleIn, "characters");
+            couple.put("characters", new JSONObject()
+                .put("me", character(optObject(charactersIn, "me")))
+                .put("partner", character(optObject(charactersIn, "partner"))));
             couple.put("batteryLevel", batteryLevel)
                 .put("batteryCharging", batteryLevel >= 0 && coupleIn.optBoolean("batteryCharging", false))
                 .put("batteryAt", batteryAt);
@@ -198,6 +210,15 @@ final class UsWidgetContract {
                 .put("by", written && (postitBy.equals("me") || postitBy.equals("partner")) ? postitBy : "")
                 .put("more", written ? Math.max(0, Math.min(99, postitIn.optInt("more", 0))) : 0)
                 .put("at", written ? instantText(postitIn.optString("at", "")) : "");
+            // The one after it, for the 4x2 (widget del redesign, 26/11/2026).
+            JSONObject secondIn = optObject(postitIn, "second");
+            String secondText = written ? text(secondIn.optString("text", ""), 120) : "";
+            String secondPaper = secondIn.optString("color", "");
+            String secondBy = secondIn.optString("by", "");
+            postit.put("second", new JSONObject()
+                .put("text", secondText)
+                .put("color", secondText.isEmpty() ? "" : (PAPER.matcher(secondPaper).matches() ? secondPaper : "yellow"))
+                .put("by", !secondText.isEmpty() && (secondBy.equals("me") || secondBy.equals("partner")) ? secondBy : ""));
 
             return new JSONObject()
                 .put("schemaVersion", SCHEMA_VERSION)
@@ -215,6 +236,67 @@ final class UsWidgetContract {
                 .put("status", new JSONObject()
                     .put("me", statusPerson(optObject(optObject(input, "status"), "me")))
                     .put("partner", statusPerson(optObject(optObject(input, "status"), "partner"))));
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    /** One character: an unknown shape, head, face or colour is left empty (the widget uses the role's). */
+    static JSONObject character(JSONObject in) throws JSONException {
+        String shape = in.optString("shape", "");
+        String head = in.optString("head", "");
+        String face = in.optString("face", "");
+        String color = in.optString("color", "");
+        String day = in.optString("day", "");
+        return new JSONObject()
+            .put("shape", SHAPE.matcher(shape).matches() ? shape : "")
+            .put("head", HEAD.matcher(head).matches() ? head : "")
+            .put("face", FACE.matcher(face).matches() ? face : "")
+            .put("color", COLOR.matcher(color).matches() ? color.toLowerCase() : "")
+            .put("day", COLOR.matcher(day).matches() ? day.toLowerCase() : "");
+    }
+
+    /**
+     * Widget signal (27/11/2026): the snapshot with the other person's
+     * character replaced (and their colour, when the look has one), then
+     * normalized again. Null without a snapshot or a look; the owner stays.
+     */
+    static JSONObject withPartnerLook(JSONObject snapshot, JSONObject look) {
+        if (snapshot == null || look == null) return null;
+        try {
+            JSONObject next = new JSONObject(snapshot.toString());
+            JSONObject couple = next.optJSONObject("couple");
+            if (couple == null) return null;
+            JSONObject partner = character(look);
+            JSONObject characters = optObject(couple, "characters");
+            characters.put("partner", partner);
+            couple.put("characters", characters);
+            String color = partner.optString("color", "");
+            if (!color.isEmpty()) {
+                JSONObject colors = optObject(couple, "colors");
+                colors.put("partner", color);
+                couple.put("colors", colors);
+            }
+            return normalize(next);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * Widget signal "status" (Come stai che conta, 27/11/2026, D13): the
+     * snapshot with the other person's Come stai replaced, validated like the
+     * app's (statusPerson), then normalized again. Null without a snapshot or
+     * a state; my own Come stai and the owner stay.
+     */
+    static JSONObject withPartnerStatus(JSONObject snapshot, JSONObject status) {
+        if (snapshot == null || status == null) return null;
+        try {
+            JSONObject next = new JSONObject(snapshot.toString());
+            JSONObject all = optObject(next, "status");
+            all.put("partner", statusPerson(status));
+            next.put("status", all);
+            return normalize(next);
         } catch (Exception ignored) {
             return null;
         }
@@ -243,6 +325,14 @@ final class UsWidgetContract {
         if (value == null) return "";
         String clean = value.replaceAll("[\\p{Cntrl}]", " ").trim();
         return clean.length() <= max ? clean : clean.substring(0, max);
+    }
+
+    /** Ti penso ×N: the taps of one Ti penso, a whole number 1..99; anything else is 1. */
+    static int taps(Object value) {
+        if (!(value instanceof Number)) return 1;
+        double n = ((Number) value).doubleValue();
+        if (Double.isNaN(n) || n != Math.rint(n)) return 1;
+        return (int) Math.max(1, Math.min(99, n));
     }
 
     static String civilDate(String value) {

@@ -100,6 +100,17 @@ public final class UsPushOwnerGate {
         }
     }
 
+    /**
+     * The other person left the couple (widget signal v3, 27/11/2026): their
+     * name leaves this owner's notices too. Only for the current installation.
+     */
+    public static boolean forgetPartner(Context context, String installation) {
+        synchronized (LOCK) {
+            if (!isCurrent(context, installation)) return false;
+            return prefs(context).edit().remove(PARTNER).commit();
+        }
+    }
+
     public interface NoticePost { void post(String partnerName); }
 
     /**

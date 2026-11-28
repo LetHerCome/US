@@ -1,0 +1,3413 @@
+{
+  "family": "games",
+  "keep_open": [
+    "rivivete-003",
+    "rivivete-005",
+    "rivivete-006",
+    "rivivete-009",
+    "rivivete-010",
+    "rivivete-011",
+    "rivivete-017",
+    "rivivete-018",
+    "rivivete-019",
+    "rivivete-020",
+    "rivivete-023",
+    "rivivete-025",
+    "rivivete-026",
+    "rivivete-029",
+    "rivivete-035",
+    "rivivete-040",
+    "rivivete-044",
+    "rivivete-045",
+    "rivivete-057",
+    "rivivete-064",
+    "rivivete-066",
+    "rivivete-068"
+  ],
+  "convert": [
+    {
+      "id": "ridete-001",
+      "from": {
+        "version": 3,
+        "plus": false,
+        "topic": "ristorante",
+        "question_text": "Lavoriamo insieme in un ristorante. Chi di noi si farebbe licenziare prima, e perché?",
+        "question_text_en": "We work together in a restaurant. Which of us would get fired first, and why?"
+      },
+      "question_text": "Lavoriamo insieme in un ristorante. Per cosa ci licenziano dopo una settimana?",
+      "question_text_en": "We work together in a restaurant. What gets us fired within a week?",
+      "options": [
+        "Assaggiamo tutto prima di servirlo",
+        "Chiacchieriamo coi clienti per ore",
+        "Sbagliamo ogni ordine, con stile",
+        "Balliamo in cucina in pieno servizio"
+      ],
+      "options_en": [
+        "We taste everything before serving it",
+        "We chat with customers for hours",
+        "We get every order wrong, in style",
+        "We dance in the kitchen mid-service"
+      ]
+    },
+    {
+      "id": "ridete-002",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "reality",
+        "question_text": "Dobbiamo partecipare a un reality insieme. Quale sarebbe il motivo della nostra prima litigata in diretta?",
+        "question_text_en": "We have to go on a reality show together. What would our first on-camera argument be about?"
+      },
+      "question_text": "Partecipiamo a un reality insieme. Su cosa battibecchiamo in diretta?",
+      "question_text_en": "We’re on a reality show together. What do we bicker about on camera?",
+      "options": [
+        "Chi ha finito il caffè",
+        "Il lato del letto",
+        "Il volume della TV",
+        "Chi ha ragione sulla strada"
+      ],
+      "options_en": [
+        "Who finished the coffee",
+        "Which side of the bed is whose",
+        "The TV volume",
+        "Who’s right about the way"
+      ]
+    },
+    {
+      "id": "ridete-004",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "film_su_noi",
+        "question_text": "Se la nostra storia diventasse un film, quale sarebbe la frase sulla locandina?",
+        "question_text_en": "If our story became a movie, what would the tagline on the poster be?"
+      },
+      "question_text": "Se la nostra storia diventasse un film, quale sarebbe la frase sulla locandina?",
+      "question_text_en": "If our story became a movie, what would the tagline on the poster be?",
+      "options": [
+        "Due cuori, un solo telecomando",
+        "Tratto da una storia vera, purtroppo",
+        "L’amore non basta: servono snack",
+        "Prossimamente sul nostro divano"
+      ],
+      "options_en": [
+        "Two hearts, one remote",
+        "Based on a true story, sadly",
+        "Love isn’t enough: you need snacks",
+        "Coming soon to our sofa"
+      ]
+    },
+    {
+      "id": "ridete-006",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "piccole_manie",
+        "question_text": "Qual è la cosa più piccola e assurda che mi hai visto prendere terribilmente sul serio?",
+        "question_text_en": "What’s the smallest, most absurd thing you’ve ever seen me take way too seriously?"
+      },
+      "question_text": "Qual è la cosa più piccola e assurda che mi hai visto prendere terribilmente sul serio?",
+      "question_text_en": "What’s the smallest, most absurd thing you’ve ever seen me take way too seriously?",
+      "options": [
+        "Come si carica la lavastoviglie",
+        "Un gioco da tavolo per bambini",
+        "La forma giusta dei cuscini",
+        "La strada più breve per casa"
+      ],
+      "options_en": [
+        "How to load the dishwasher",
+        "A board game meant for kids",
+        "The right shape for the pillows",
+        "The shortest way home"
+      ]
+    },
+    {
+      "id": "ridete-007",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "band",
+        "question_text": "Formiamo una band. Come si chiama, e qual è il titolo del nostro primo disco?",
+        "question_text_en": "We’re starting a band. What’s it called, and what’s the title of our first album?"
+      },
+      "question_text": "Formiamo una band. Come si chiama?",
+      "question_text_en": "We’re starting a band. What’s it called?",
+      "options": [
+        "I Calzini Spaiati",
+        "Divano Elettrico",
+        "Ritardo Cronico",
+        "Due Cuori e una Moka"
+      ],
+      "options_en": [
+        "The Odd Socks",
+        "Electric Sofa",
+        "Chronically Late",
+        "Two Hearts and a Kettle"
+      ]
+    },
+    {
+      "id": "ridete-009",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "documentario",
+        "question_text": "Un documentario sugli animali racconta la mia routine del mattino. Cosa dice la voce narrante?",
+        "question_text_en": "A wildlife documentary narrates my morning routine. What does the narrator say?"
+      },
+      "question_text": "Un documentario sugli animali racconta la mia routine del mattino. Cosa dice la voce narrante?",
+      "question_text_en": "A wildlife documentary narrates my morning routine. What does the narrator say?",
+      "options": [
+        "«L’esemplare si sveglia, ma non ancora»",
+        "«Senza caffè, meglio non avvicinarsi»",
+        "«Inizia la caccia rituale alle chiavi»",
+        "«Rimanda la sveglia per la quinta volta»"
+      ],
+      "options_en": [
+        "“The specimen wakes, but not yet”",
+        "“Without coffee, keep your distance”",
+        "“The ritual hunt for the keys begins”",
+        "“It snoozes the alarm a fifth time”"
+      ]
+    },
+    {
+      "id": "ridete-011",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "fare_colpo",
+        "question_text": "Qual è la cosa più ridicola che hai fatto per fare colpo su di me, e che forse non ho nemmeno notato?",
+        "question_text_en": "What’s the most ridiculous thing you did to impress me that I may not have even noticed?"
+      },
+      "question_text": "Qual è la cosa più ridicola che hai fatto per fare colpo su di me?",
+      "question_text_en": "What’s the most ridiculous thing you did to impress me?",
+      "options": [
+        "Fingere passione per un tuo hobby",
+        "Preparare una battuta per giorni",
+        "Passare di lì «per caso»",
+        "Fingere di saper cucinare"
+      ],
+      "options_en": [
+        "Faking a passion for your hobby",
+        "Rehearsing a joke for days",
+        "Happening to pass by, “by chance”",
+        "Pretending I could cook"
+      ]
+    },
+    {
+      "id": "ridete-014",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "copia_perfetta",
+        "question_text": "Una mia copia perfetta prende il mio posto per un giorno. Da quale dettaglio capisci subito che non sono io?",
+        "question_text_en": "A perfect double of me takes my place for a day. What detail instantly tells you it’s not me?"
+      },
+      "question_text": "Una mia copia perfetta prende il mio posto per un giorno. Da quale dettaglio capisci subito che non sono io?",
+      "question_text_en": "A perfect double of me takes my place for a day. What detail instantly tells you it’s not me?",
+      "options": [
+        "Arriva in orario",
+        "Non mi ruba il cibo dal piatto",
+        "Lascia tutto in ordine",
+        "Non canta sotto la doccia"
+      ],
+      "options_en": [
+        "It shows up on time",
+        "It doesn’t steal food off my plate",
+        "It leaves everything tidy",
+        "It doesn’t sing in the shower"
+      ]
+    },
+    {
+      "id": "ridete-016",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "prima_pagina",
+        "question_text": "Un quotidiano ci dedica la prima pagina per una cosa minuscola che abbiamo fatto, raccontata come un evento storico. Qual è il titolo?",
+        "question_text_en": "A newspaper puts us on the front page for something tiny we did, reported like a historic event. What’s the headline?"
+      },
+      "question_text": "Finiamo in prima pagina per una cosa minuscola, raccontata come un evento storico. Qual è il titolo?",
+      "question_text_en": "We make the front page for something tiny, reported like a historic event. What’s the headline?",
+      "options": [
+        "«Montato un mobile, zero pezzi avanzati»",
+        "«Scelto un film in meno di un’ora»",
+        "«Puntuali per la prima volta»",
+        "«Una pianta sopravvive alla coppia»"
+      ],
+      "options_en": [
+        "“Flat-pack built, no parts left over”",
+        "“Film chosen in under an hour”",
+        "“On time for the first time”",
+        "“Houseplant survives the couple”"
+      ]
+    },
+    {
+      "id": "ridete-019",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "record_mondiale",
+        "question_text": "Quale record mondiale potremmo battere insieme senza nemmeno allenarci?",
+        "question_text_en": "What world record could we break together without even training?"
+      },
+      "question_text": "Quale record mondiale potremmo battere insieme senza nemmeno allenarci?",
+      "question_text_en": "What world record could we break together without even training?",
+      "options": [
+        "Più episodi visti di fila",
+        "Più tempo per uscire di casa",
+        "Più vocali in un giorno",
+        "Più snack in un solo film"
+      ],
+      "options_en": [
+        "Most episodes in a row",
+        "Longest time to leave the house",
+        "Most voice notes in a day",
+        "Most snacks in one film"
+      ]
+    },
+    {
+      "id": "ridete-022",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "festa_in_maschera",
+        "question_text": "C’è una festa in maschera e ce ne ricordiamo un’ora prima. Da cosa ci travestiamo, con quello che abbiamo sotto mano?",
+        "question_text_en": "There’s a costume party and we only remember an hour before. What do we go as, using whatever we have on hand?"
+      },
+      "question_text": "Festa in maschera, e ce ne ricordiamo un’ora prima. Da cosa ci travestiamo?",
+      "question_text_en": "A costume party, and we only remember an hour before. What do we go as?",
+      "options": [
+        "Due fantasmi col lenzuolo",
+        "Sale e pepe",
+        "Turisti con calzini e sandali",
+        "Un letto ancora da rifare"
+      ],
+      "options_en": [
+        "Two bedsheet ghosts",
+        "Salt and pepper",
+        "Tourists in socks and sandals",
+        "An unmade bed"
+      ]
+    },
+    {
+      "id": "ridete-023",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "archeologi_della_chat",
+        "question_text": "Tra mille anni degli archeologi trovano la nostra chat. Quale messaggio cercano di decifrare per decenni?",
+        "question_text_en": "A thousand years from now, archaeologists find our chat. Which message do they spend decades trying to decipher?"
+      },
+      "question_text": "Tra mille anni degli archeologi trovano la nostra chat. Quale messaggio cercano di decifrare per decenni?",
+      "question_text_en": "A thousand years from now, archaeologists find our chat. Which message do they spend decades trying to decipher?",
+      "options": [
+        "«Ok ma quindi?»",
+        "Una fila di emoji senza senso",
+        "«Prendi il pane» alle tre di notte",
+        "Un vocale di sette minuti"
+      ],
+      "options_en": [
+        "“Ok but so?”",
+        "A row of emojis that make no sense",
+        "“Get bread” at three in the morning",
+        "A seven-minute voice note"
+      ]
+    },
+    {
+      "id": "ridete-026",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "pupazzetti_di_noi",
+        "question_text": "Diventiamo due pupazzetti da collezione, venduti in coppia. Quale accessorio inutile ma indispensabile c’è nella confezione?",
+        "question_text_en": "We become a pair of collectible figurines, sold as a set. What useless but essential accessory comes in the box?"
+      },
+      "question_text": "Diventiamo due pupazzetti da collezione. Quale accessorio inutile c’è nella confezione?",
+      "question_text_en": "We become a pair of collectible figurines. What useless accessory comes in the box?",
+      "options": [
+        "Un telecomando conteso",
+        "Una coperta per due, troppo piccola",
+        "Un sacchetto di snack minuscolo",
+        "Un caricabatterie sempre scarico"
+      ],
+      "options_en": [
+        "A remote we fight over",
+        "A blanket for two, too small",
+        "A tiny bag of snacks",
+        "A charger that’s always flat"
+      ]
+    },
+    {
+      "id": "ridete-028",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "gara_di_ballo",
+        "question_text": "Ci iscrivono per sbaglio a una gara di ballo di coppia e non possiamo ritirarci. Qual è la nostra strategia?",
+        "question_text_en": "We get signed up for a couples dance competition by mistake, and we can’t back out. What’s our strategy?"
+      },
+      "question_text": "Ci iscrivono per sbaglio a una gara di ballo di coppia e non possiamo ritirarci. Qual è la nostra strategia?",
+      "question_text_en": "We get signed up for a couples dance competition by mistake, and we can’t back out. What’s our strategy?",
+      "options": [
+        "Ridere finché nessuno guarda i passi",
+        "Un lento, per tutta la gara",
+        "Copiare la coppia accanto",
+        "Fingere un infortunio, con stile"
+      ],
+      "options_en": [
+        "Laugh until nobody watches our feet",
+        "A slow dance, the whole time",
+        "Copy the couple next to us",
+        "Fake an injury, with style"
+      ]
+    },
+    {
+      "id": "ridete-031",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "pubblicita_noiosa",
+        "question_text": "Ci scelgono come testimonial di un prodotto noiosissimo. Quale prodotto, e qual è il nostro slogan?",
+        "question_text_en": "We get picked to star in an ad for an incredibly boring product. What’s the product, and what’s our slogan?"
+      },
+      "question_text": "Ci scelgono per la pubblicità di un prodotto noiosissimo. Quale?",
+      "question_text_en": "We get picked to star in an ad for an incredibly boring product. Which one?",
+      "options": [
+        "Mollette per il bucato",
+        "Sacchetti per il freezer",
+        "Colla per piastrelle",
+        "Un cavo di ricambio"
+      ],
+      "options_en": [
+        "Clothes pegs",
+        "Freezer bags",
+        "Tile adhesive",
+        "A spare cable"
+      ]
+    },
+    {
+      "id": "ridete-032",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "oggetti_smarriti",
+        "question_text": "Se avessimo un ufficio oggetti smarriti tutto nostro, cosa ci sarebbe sullo scaffale più pieno?",
+        "question_text_en": "If we had a lost and found all our own, what would be on the most crowded shelf?"
+      },
+      "question_text": "Se avessimo un ufficio oggetti smarriti tutto nostro, cosa ci sarebbe sullo scaffale più pieno?",
+      "question_text_en": "If we had a lost and found all our own, what would be on the most crowded shelf?",
+      "options": [
+        "Calzini senza compagno",
+        "Elastici per capelli",
+        "Chiavi di non si sa cosa",
+        "Penne che non scrivono"
+      ],
+      "options_en": [
+        "Socks without their partner",
+        "Hair ties",
+        "Keys to who knows what",
+        "Pens that don’t write"
+      ]
+    },
+    {
+      "id": "ridete-035",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "parlare_in_rima",
+        "question_text": "Per un giorno intero possiamo parlarci solo in rima. Come mi dai la buonanotte?",
+        "question_text_en": "For one whole day we can only talk to each other in rhyme. How do you say goodnight to me?"
+      },
+      "question_text": "Per un giorno intero possiamo parlarci solo in rima. Come mi dai la buonanotte?",
+      "question_text_en": "For one whole day we can only talk to each other in rhyme. How do you say goodnight to me?",
+      "options": [
+        "Con una rima dolcissima e zoppa",
+        "Con un bacio, così non parlo",
+        "Con «cuore» e «amore», un classico",
+        "Canticchiando, per barare"
+      ],
+      "options_en": [
+        "With a sweet rhyme that doesn’t scan",
+        "With a kiss, so I don’t have to talk",
+        "With “heart” and “apart”, a classic",
+        "Humming it, to cheat"
+      ]
+    },
+    {
+      "id": "ridete-037",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "pacchetto_di_lusso",
+        "question_text": "Un’agenzia di viaggi vende una nostra serata qualunque come pacchetto di lusso. Cosa c’è scritto nella descrizione?",
+        "question_text_en": "A travel agency is selling one of our ordinary evenings as a luxury package. What does the description say?"
+      },
+      "question_text": "Un’agenzia vende una nostra serata qualunque come pacchetto di lusso. Cosa promette?",
+      "question_text_en": "An agency sells one of our ordinary evenings as a luxury package. What does it promise?",
+      "options": [
+        "Cena gourmet: pasta alle undici",
+        "Spa con coperta e calzini",
+        "Cinema privato, film scelto in un’ora",
+        "Vista panoramica sul divano"
+      ],
+      "options_en": [
+        "Gourmet dinner: pasta at eleven",
+        "Spa with blanket and socks",
+        "Private cinema, film chosen in an hour",
+        "Panoramic sofa views"
+      ]
+    },
+    {
+      "id": "ridete-040",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "tartaruga_centenaria",
+        "question_text": "Ci chiedono di organizzare la festa per i cento anni di una tartaruga. Qual è il tema, e cosa c’è sulla torta?",
+        "question_text_en": "We’re asked to throw a hundredth birthday party for a tortoise. What’s the theme, and what’s on the cake?"
+      },
+      "question_text": "Organizziamo la festa per i cento anni di una tartaruga. Qual è il tema?",
+      "question_text_en": "We’re throwing a hundredth birthday party for a tortoise. What’s the theme?",
+      "options": [
+        "Lentezza: si arriva quando si vuole",
+        "Pigiama party, alle otto si dorme",
+        "Insalata a volontà",
+        "Discoteca, ma piano"
+      ],
+      "options_en": [
+        "Slowness: arrive whenever you like",
+        "Pyjama party, bed by eight",
+        "All-you-can-eat salad",
+        "Disco, but gently"
+      ]
+    },
+    {
+      "id": "ridete-055",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "nome_della_nostra_squadra",
+        "question_text": "Gara di coppie in TV: come si chiama la nostra squadra, e qual è il grido di battaglia?",
+        "question_text_en": "We’re on a TV couples’ contest. What’s our team called, and what’s our battle cry?"
+      },
+      "question_text": "Gara di coppie in TV: come si chiama la nostra squadra?",
+      "question_text_en": "We’re on a TV couples’ contest. What’s our team called?",
+      "options": [
+        "Le Due Pantofole",
+        "Squadra Pigiama",
+        "Coperta Corta",
+        "Cinque Minuti e Arriviamo"
+      ],
+      "options_en": [
+        "The Two Slippers",
+        "Team Pyjamas",
+        "The Blanket Hogs",
+        "Five Minutes Away"
+      ]
+    },
+    {
+      "id": "ridete-056",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "recensione_di_noi",
+        "question_text": "Scrivi una recensione a cinque stelle della nostra ultima serata, come su un sito di ristoranti.",
+        "question_text_en": "Write a five-star review of our last evening, restaurant-site style."
+      },
+      "question_text": "Recensione della nostra ultima serata, come su un sito di ristoranti: cosa scrivi?",
+      "question_text_en": "A review of our last evening, restaurant-site style: what do you write?",
+      "options": [
+        "«Servizio lento, compagnia top»",
+        "«Porzioni giuste, coccole abbondanti»",
+        "«Torneremo. Anzi, siamo ancora qui»",
+        "«Cinque stelle, ma il dolce era finito»"
+      ],
+      "options_en": [
+        "“Slow service, great company”",
+        "“Fair portions, generous cuddles”",
+        "“We’ll be back. Actually, still here”",
+        "“Five stars, but dessert ran out”"
+      ]
+    },
+    {
+      "id": "ridete-057",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "istruzioni_per_il_mio_umore",
+        "question_text": "Se il mio umore avesse un manuale d’uso, quale sarebbe la prima voce delle «Domande frequenti»?",
+        "question_text_en": "If my mood came with a user manual, what would be the first entry in the FAQ?"
+      },
+      "question_text": "Se il mio umore avesse un manuale d’uso, quale sarebbe la prima voce delle «Domande frequenti»?",
+      "question_text_en": "If my mood came with a user manual, what would be the first entry in the FAQ?",
+      "options": [
+        "«Perché ha fame anche dopo cena?»",
+        "«Si può parlare prima del caffè?»",
+        "«Quando dice niente, cosa intende?»",
+        "«Come si spegne il broncio?»"
+      ],
+      "options_en": [
+        "“Why is it hungry even after dinner?”",
+        "“Can I talk to it before coffee?”",
+        "“What does ‘nothing’ mean?”",
+        "“How do I switch off the sulk?”"
+      ]
+    },
+    {
+      "id": "ridete-058",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "mascotte_della_coppia",
+        "question_text": "Se la nostra coppia avesse una mascotte ufficiale, che animale sarebbe e come si chiamerebbe?",
+        "question_text_en": "If our couple had an official mascot, what animal would it be and what would it be called?"
+      },
+      "question_text": "Se la nostra coppia avesse una mascotte ufficiale, che animale sarebbe?",
+      "question_text_en": "If our couple had an official mascot, what animal would it be?",
+      "options": [
+        "Un bradipo di nome Domani",
+        "Un panda goloso",
+        "Un gatto che giudica",
+        "Un pinguino col papillon"
+      ],
+      "options_en": [
+        "A sloth called Tomorrow",
+        "A greedy panda",
+        "A judgemental cat",
+        "A penguin in a bow tie"
+      ]
+    },
+    {
+      "id": "ridete-059",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "titolo_della_nostra_giornata",
+        "question_text": "Racconta la nostra ultima domenica come il trailer di un film d’azione, in tre frasi.",
+        "question_text_en": "Tell the story of our last Sunday as an action-movie trailer, in three sentences."
+      },
+      "question_text": "La nostra ultima domenica diventa un film. Di che genere?",
+      "question_text_en": "Our last Sunday becomes a film. What genre?",
+      "options": [
+        "Azione: missione colazione",
+        "Horror: il bucato da stendere",
+        "Documentario sul divano",
+        "Commedia romantica, ovvio"
+      ],
+      "options_en": [
+        "Action: mission breakfast",
+        "Horror: the laundry to hang out",
+        "A documentary about the sofa",
+        "Romcom, obviously"
+      ]
+    },
+    {
+      "id": "ridete-060",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "premio_assurdo",
+        "question_text": "Mi consegnano un premio per un mio talento assurdo. Quale talento, e cosa dico nel discorso di ringraziamento?",
+        "question_text_en": "I’m handed an award for one of my absurd talents. Which talent, and what do I say in my thank-you speech?"
+      },
+      "question_text": "Mi consegnano un premio per un mio talento assurdo. Quale?",
+      "question_text_en": "I’m handed an award for one of my absurd talents. Which one?",
+      "options": [
+        "Addormentarti in tre secondi",
+        "Ricordare i compleanni di tutti",
+        "Perdere le cose in tasca",
+        "Trovare sempre parcheggio"
+      ],
+      "options_en": [
+        "Falling asleep in three seconds",
+        "Remembering everyone’s birthday",
+        "Losing things in your own pocket",
+        "Always finding a parking spot"
+      ]
+    },
+    {
+      "id": "ridete-062",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "viaggi_guide_turistiche",
+        "question_text": "Facciamo da guide turistiche nella nostra città. Qual è la tappa più assurda del giro?",
+        "question_text_en": "We’re tour guides in our own town. What’s the most absurd stop on the tour?"
+      },
+      "question_text": "Facciamo da guide turistiche nella nostra città. Qual è la tappa più assurda del giro?",
+      "question_text_en": "We’re tour guides in our own town. What’s the most absurd stop on the tour?",
+      "options": [
+        "Il supermercato, reparto snack",
+        "Il semaforo più lungo del mondo",
+        "La panchina dei nostri pettegolezzi",
+        "Il negozio dove non entriamo mai"
+      ],
+      "options_en": [
+        "The supermarket, snack aisle",
+        "The longest traffic light in the world",
+        "Our gossip bench",
+        "The shop we never go into"
+      ]
+    },
+    {
+      "id": "ridete-063",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "viaggi_souvenir_inutile",
+        "question_text": "Al ritorno da un viaggio portiamo il souvenir più inutile del mondo. Cos’è?",
+        "question_text_en": "We come home from a trip with the most useless souvenir in the world. What is it?"
+      },
+      "question_text": "Al ritorno da un viaggio portiamo il souvenir più inutile del mondo. Cos’è?",
+      "question_text_en": "We come home from a trip with the most useless souvenir in the world. What is it?",
+      "options": [
+        "Una calamita col nome sbagliato",
+        "Un sasso, perché era bello",
+        "Una bottiglia di sabbia",
+        "Un cappello che non metteremo mai"
+      ],
+      "options_en": [
+        "A magnet with the wrong name on it",
+        "A pebble, because it was pretty",
+        "A bottle of sand",
+        "A hat we’ll never wear"
+      ]
+    },
+    {
+      "id": "ridete-065",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "casa_folletto_delle_cose",
+        "question_text": "Un folletto ci nasconde sempre le stesse cose. Cosa ha preso questa volta?",
+        "question_text_en": "A little gremlin keeps hiding the same things from us. What has it taken this time?"
+      },
+      "question_text": "Un folletto ci nasconde sempre le stesse cose. Cosa ha preso questa volta?",
+      "question_text_en": "A little gremlin keeps hiding the same things from us. What has it taken this time?",
+      "options": [
+        "Le chiavi, di nuovo",
+        "Il telecomando",
+        "Un calzino, uno solo",
+        "Il caricabatterie buono"
+      ],
+      "options_en": [
+        "The keys, again",
+        "The remote",
+        "One sock, just the one",
+        "The good charger"
+      ]
+    },
+    {
+      "id": "ridete-066",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "casa_documentario",
+        "question_text": "Ci filmano per un documentario sulla natura: «la coppia nel suo habitat». Cosa dice la voce narrante?",
+        "question_text_en": "We’re filmed for a nature documentary: “the couple in its natural habitat”. What does the narrator say?"
+      },
+      "question_text": "Ci filmano per un documentario sulla natura: «la coppia nel suo habitat». Cosa dice la voce narrante?",
+      "question_text_en": "We’re filmed for a nature documentary: “the couple in its natural habitat”. What does the narrator say?",
+      "options": [
+        "«Ecco il rito della scelta del film»",
+        "«Il nido è fatto di coperte»",
+        "«Si contendono l’ultimo biscotto»",
+        "«Al tramonto, migrano verso il frigo»"
+      ],
+      "options_en": [
+        "“Behold the ritual of choosing a film”",
+        "“The nest is made of blankets”",
+        "“They compete for the last biscuit”",
+        "“At sunset, they migrate to the fridge”"
+      ]
+    },
+    {
+      "id": "ridete-069",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "infanzia_guaio_alle_elementari",
+        "question_text": "Immagina di avermi in classe alle elementari. Quale guaio avremmo combinato insieme?",
+        "question_text_en": "Imagine having me in your class at primary school. What trouble would we have got into together?"
+      },
+      "question_text": "Immagina di avermi in classe alle elementari. Quale guaio avremmo combinato insieme?",
+      "question_text_en": "Imagine having me in your class at primary school. What trouble would we have got into together?",
+      "options": [
+        "Ridere durante il compito",
+        "Scambiarci bigliettini",
+        "Liberare il criceto di classe",
+        "Nascondere il gesso"
+      ],
+      "options_en": [
+        "Giggling during a test",
+        "Passing notes",
+        "Freeing the class hamster",
+        "Hiding the chalk"
+      ]
+    },
+    {
+      "id": "ridete-071",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "infanzia_baratto_della_merenda",
+        "question_text": "Ricreazione alle elementari: cosa ti offrirei in cambio della tua merenda?",
+        "question_text_en": "Break time at primary school: what would I offer you in exchange for your snack?"
+      },
+      "question_text": "Ricreazione alle elementari: cosa ti offrirei in cambio della tua merenda?",
+      "question_text_en": "Break time at primary school: what would I offer you in exchange for your snack?",
+      "options": [
+        "Le figurine doppie",
+        "Una gomma profumata",
+        "Il mio succo di frutta",
+        "Un segreto, da non dire a nessuno"
+      ],
+      "options_en": [
+        "My spare stickers",
+        "A scented eraser",
+        "My juice box",
+        "A secret, not to tell anyone"
+      ]
+    },
+    {
+      "id": "ridete-073",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "cibo_un_solo_piatto",
+        "question_text": "Apriamo un locale con un solo piatto nel menù. Qual è, e come si chiama il posto?",
+        "question_text_en": "We open a place with just one dish on the menu. What is it, and what’s the place called?"
+      },
+      "question_text": "Apriamo un locale con un solo piatto nel menù. Quale?",
+      "question_text_en": "We open a place with just one dish on the menu. Which one?",
+      "options": [
+        "Pasta al pomodoro, e basta",
+        "Toast, ma perfetto",
+        "Pizza fritta",
+        "Uova, a qualsiasi ora"
+      ],
+      "options_en": [
+        "Tomato pasta, that’s it",
+        "Toast, but perfect",
+        "Fried pizza",
+        "Eggs, at any hour"
+      ]
+    },
+    {
+      "id": "ridete-076",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "cibo_programma_di_cucina",
+        "question_text": "Ci invitano a un programma di cucina. Quale disastro finisce in tutti i video?",
+        "question_text_en": "We’re invited onto a cooking show. Which disaster ends up in every clip?"
+      },
+      "question_text": "Ci invitano a un programma di cucina. Quale disastro finisce in tutti i video?",
+      "question_text_en": "We’re invited onto a cooking show. Which disaster ends up in every clip?",
+      "options": [
+        "La pasta che si attacca",
+        "Il fumo che esce dal forno",
+        "Lo zucchero al posto del sale",
+        "Mangiamo tutto prima dei giudici"
+      ],
+      "options_en": [
+        "The pasta sticking together",
+        "Smoke pouring out of the oven",
+        "Sugar instead of salt",
+        "We eat it all before the judges do"
+      ]
+    },
+    {
+      "id": "ridete-077",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "musica_film_film_su_di_noi",
+        "question_text": "Fanno un film sulla nostra storia. Qual è il titolo, e chi ci interpreta?",
+        "question_text_en": "They make a film about our story. What’s the title, and who plays us?"
+      },
+      "question_text": "Fanno un film sulla nostra storia. Che titolo ha?",
+      "question_text_en": "They make a film about our story. What’s it called?",
+      "options": [
+        "Cinque minuti e arrivo",
+        "Ancora un episodio",
+        "Dove hai messo le chiavi?",
+        "Il lato giusto del letto"
+      ],
+      "options_en": [
+        "Five Minutes Away",
+        "Just One More Episode",
+        "Where Did You Put the Keys?",
+        "The Right Side of the Bed"
+      ]
+    },
+    {
+      "id": "ridete-080",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "musica_film_duo_in_tour",
+        "question_text": "Siamo un duo musicale in tour. Qual è la richiesta più strana nel nostro camerino?",
+        "question_text_en": "We’re a music duo on tour. What’s the strangest request in our dressing room?"
+      },
+      "question_text": "Siamo un duo musicale in tour. Qual è la richiesta più strana nel nostro camerino?",
+      "question_text_en": "We’re a music duo on tour. What’s the strangest request in our dressing room?",
+      "options": [
+        "Snack di un colore solo",
+        "Una coperta per due",
+        "Un gatto da accarezzare",
+        "Una piantina da salutare"
+      ],
+      "options_en": [
+        "Snacks in one colour only",
+        "A blanket for two",
+        "A cat to stroke",
+        "A little plant to say hi to"
+      ]
+    },
+    {
+      "id": "ridete-081",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "futuro_abitudine_tra_cinquant_anni",
+        "question_text": "Tra cinquant’anni, quale nostra abitudine farà impazzire i vicini di casa?",
+        "question_text_en": "Fifty years from now, which of our habits will drive the neighbours mad?"
+      },
+      "question_text": "Tra cinquant’anni, quale nostra abitudine farà impazzire i vicini di casa?",
+      "question_text_en": "Fifty years from now, which of our habits will drive the neighbours mad?",
+      "options": [
+        "Cantare sotto la doccia",
+        "Discutere sul parcheggio",
+        "Ballare in cucina a mezzanotte",
+        "Il volume della TV"
+      ],
+      "options_en": [
+        "Singing in the shower",
+        "Arguing about parking",
+        "Dancing in the kitchen at midnight",
+        "The TV volume"
+      ]
+    },
+    {
+      "id": "ridete-083",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "futuro_capsula_del_tempo",
+        "question_text": "Seppelliamo una capsula del tempo. Quale oggetto ridicolo ci mettiamo dentro?",
+        "question_text_en": "We bury a time capsule. Which ridiculous object do we put inside?"
+      },
+      "question_text": "Seppelliamo una capsula del tempo. Quale oggetto ridicolo ci mettiamo dentro?",
+      "question_text_en": "We bury a time capsule. Which ridiculous object do we put inside?",
+      "options": [
+        "Lo scontrino della prima cena",
+        "Un calzino spaiato",
+        "Il telecomando vecchio",
+        "Una foto venuta malissimo"
+      ],
+      "options_en": [
+        "The receipt from our first dinner",
+        "An odd sock",
+        "The old remote",
+        "A terribly blurry photo"
+      ]
+    },
+    {
+      "id": "ridete-087",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "amici_famiglia_chat_di_gruppo",
+        "question_text": "Abbiamo una chat di gruppo con gli amici. Che nome ha, e chi scrive i messaggi più lunghi?",
+        "question_text_en": "We have a group chat with our friends. What’s it called, and who sends the longest messages?"
+      },
+      "question_text": "Abbiamo una chat di gruppo con gli amici. Che nome ha?",
+      "question_text_en": "We have a group chat with our friends. What’s it called?",
+      "options": [
+        "Cena quando?",
+        "Solo meme",
+        "Organizzazione (non funziona)",
+        "Vocali infiniti"
+      ],
+      "options_en": [
+        "Dinner when?",
+        "Memes only",
+        "Planning (it doesn’t work)",
+        "Endless voice notes"
+      ]
+    },
+    {
+      "id": "ridete-088",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "amici_famiglia_torneo_delle_famiglie",
+        "question_text": "Le nostre famiglie si sfidano in un torneo. In quale disciplina, e chi vince?",
+        "question_text_en": "Our families face off in a tournament. In which sport, and who wins?"
+      },
+      "question_text": "Le nostre famiglie si sfidano in un torneo. In quale disciplina?",
+      "question_text_en": "Our families face off in a tournament. In which sport?",
+      "options": [
+        "Carte, con le urla",
+        "Chi cucina di più",
+        "Chi parla più forte",
+        "Calcetto in giardino"
+      ],
+      "options_en": [
+        "Cards, with shouting",
+        "Who cooks the most",
+        "Who talks the loudest",
+        "Five-a-side in the garden"
+      ]
+    },
+    {
+      "id": "ridete-089",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "tenerezza_nomignolo_assurdo",
+        "question_text": "Dammi un nomignolo nuovo, il più assurdo possibile. Quale scegli?",
+        "question_text_en": "Give me a brand-new nickname, as absurd as possible. Which do you choose?"
+      },
+      "question_text": "Dammi un nomignolo nuovo, il più assurdo possibile. Quale scegli?",
+      "question_text_en": "Give me a brand-new nickname, as absurd as possible. Which do you choose?",
+      "options": [
+        "Polpetta",
+        "Raviolino",
+        "Patatina mia",
+        "Capo supremo"
+      ],
+      "options_en": [
+        "Meatball",
+        "Little dumpling",
+        "My little potato",
+        "Supreme leader"
+      ]
+    },
+    {
+      "id": "ridete-092",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "piccante_parola_in_codice",
+        "question_text": "Ci serve una parola in codice per dire «andiamo a casa, subito». Quale scegliamo?",
+        "question_text_en": "We need a code word for “let’s go home, right now”. Which one do we pick?"
+      },
+      "question_text": "Ci serve una parola in codice per dire «andiamo a casa, subito». Quale scegliamo?",
+      "question_text_en": "We need a code word for “let’s go home, right now”. Which one do we pick?",
+      "options": [
+        "Ananas",
+        "Ho lasciato il gas acceso",
+        "Domani si lavora",
+        "Il gatto ci chiama"
+      ],
+      "options_en": [
+        "Pineapple",
+        "I left the gas on",
+        "Work in the morning",
+        "The cat’s calling us"
+      ]
+    },
+    {
+      "id": "ridete-094",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "piccante_film_della_notte",
+        "question_text": "Il film della nostra notte più audace: che titolo gli diamo?",
+        "question_text_en": "The film of our most daring night: what do we call it?"
+      },
+      "question_text": "Il film della nostra notte più audace: che titolo gli diamo?",
+      "question_text_en": "The film of our most daring night: what do we call it?",
+      "options": [
+        "Cinquanta sfumature di sonno",
+        "Missione coperte",
+        "Vietato ai vicini di casa",
+        "La notte che non finisce più"
+      ],
+      "options_en": [
+        "Fifty Shades of Sleep",
+        "Mission: Blankets",
+        "Not Suitable for Neighbours",
+        "The Night That Never Ends"
+      ]
+    },
+    {
+      "id": "ridete-096",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "desideri_regole_della_camera",
+        "question_text": "Scriviamo le regole della nostra camera da letto. Qual è la prima?",
+        "question_text_en": "We’re writing the rules of our bedroom. What’s rule number one?"
+      },
+      "question_text": "Scriviamo le regole della nostra camera da letto. Qual è la prima?",
+      "question_text_en": "We’re writing the rules of our bedroom. What’s rule number one?",
+      "options": [
+        "Niente telefoni dopo mezzanotte",
+        "Chi ha freddo si avvicina",
+        "Le coperte si dividono",
+        "Vietato dormire prima delle coccole"
+      ],
+      "options_en": [
+        "No phones after midnight",
+        "Whoever’s cold moves closer",
+        "The covers get shared",
+        "No sleeping before cuddles"
+      ]
+    },
+    {
+      "id": "ridete-098",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "desideri_centro_massaggi",
+        "question_text": "Apriamo un centro massaggi solo per te. Come si chiama e cosa c’è nel menù?",
+        "question_text_en": "We open a massage studio just for you. What’s it called and what’s on the menu?"
+      },
+      "question_text": "Apriamo un centro massaggi solo per te. Cosa c’è nel menù?",
+      "question_text_en": "We open a massage studio just for you. What’s on the menu?",
+      "options": [
+        "Massaggio alle spalle, senza fine",
+        "Grattini sulla schiena",
+        "Piedi coccolati e tisana",
+        "Tutto, con musica romantica"
+      ],
+      "options_en": [
+        "Endless shoulder rub",
+        "Back scratches",
+        "Pampered feet and herbal tea",
+        "Everything, with romantic music"
+      ]
+    },
+    {
+      "id": "confrontatevi-014",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "capacita_in_prestito",
+        "question_text": "Per un mese possiamo scambiarci una capacità: tu prendi una delle mie, io una delle tue. Quale mi chiedi in prestito?",
+        "question_text_en": "For one month we can swap skills: you borrow one of mine, I borrow one of yours. Which one are you taking?"
+      },
+      "question_text": "Per un mese possiamo scambiarci una capacità. Quale mi chiedi in prestito?",
+      "question_text_en": "We can swap one skill for a month. Which of mine do you borrow?",
+      "options": [
+        "La tua pazienza",
+        "Il tuo senso dell’orientamento",
+        "Come ti addormenti in un attimo",
+        "Il tuo talento in cucina"
+      ],
+      "options_en": [
+        "Your patience",
+        "Your sense of direction",
+        "How you fall asleep in seconds",
+        "Your talent in the kitchen"
+      ]
+    },
+    {
+      "id": "confrontatevi-024",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "ottavo_giorno",
+        "question_text": "Ci regalano un ottavo giorno della settimana, solo per noi. Come lo chiamiamo, e cosa ci facciamo?",
+        "question_text_en": "We’re given an eighth day of the week, just for us. What do we call it, and what do we do with it?"
+      },
+      "question_text": "Ci regalano un ottavo giorno della settimana, solo per noi. Cosa ci facciamo?",
+      "question_text_en": "We’re given an eighth day of the week, just for us. What do we do with it?",
+      "options": [
+        "Niente, ed è bellissimo",
+        "Una gita improvvisata",
+        "Letto, film e colazione lunga",
+        "Le cose rimandate da mesi"
+      ],
+      "options_en": [
+        "Nothing, and it’s wonderful",
+        "A spur-of-the-moment trip",
+        "Bed, films and a long breakfast",
+        "The things we’ve put off for months"
+      ]
+    },
+    {
+      "id": "confrontatevi-029",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "disaccordo_affettuoso",
+        "question_text": "C’è una piccola questione su cui non siamo mai d’accordo e su cui, in fondo, non vorresti mai vincere?",
+        "question_text_en": "Is there a small thing we never agree on that, deep down, you’d never actually want to win?"
+      },
+      "question_text": "Su quale piccola questione non siamo mai d’accordo, ma in fondo non vorresti vincere?",
+      "question_text_en": "Which small thing do we never agree on, but deep down you’d never want to win?",
+      "options": [
+        "La temperatura in casa",
+        "Il film da vedere",
+        "Dove andare a cena",
+        "L’ora di andare a dormire"
+      ],
+      "options_en": [
+        "The temperature at home",
+        "Which film to watch",
+        "Where to go for dinner",
+        "What time to go to bed"
+      ]
+    },
+    {
+      "id": "confrontatevi-033",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "noia_condivisa",
+        "question_text": "Quale cosa noiosa, fatta con me, diventa quasi divertente?",
+        "question_text_en": "What’s something boring that turns almost fun when you do it with me?"
+      },
+      "question_text": "Quale cosa noiosa, fatta con me, diventa quasi divertente?",
+      "question_text_en": "What’s something boring that turns almost fun when you do it with me?",
+      "options": [
+        "La spesa",
+        "Le pulizie di casa",
+        "Le code e le attese",
+        "Le commissioni del sabato"
+      ],
+      "options_en": [
+        "Grocery shopping",
+        "Cleaning the house",
+        "Queues and waiting rooms",
+        "Saturday errands"
+      ]
+    },
+    {
+      "id": "confrontatevi-036",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "te_di_dieci_anni_fa",
+        "question_text": "Una macchina del tempo porta a cena con noi la versione di te di dieci anni fa. Cosa speri che pensi di noi?",
+        "question_text_en": "A time machine brings the you of ten years ago to dinner with us. What do you hope they think of us?"
+      },
+      "question_text": "Una macchina del tempo porta a cena con noi la versione di te di dieci anni fa. Cosa speri che pensi di noi?",
+      "question_text_en": "A time machine brings the you of ten years ago to dinner with us. What do you hope they think of us?",
+      "options": [
+        "«Ce l’hai fatta»",
+        "«Ridete ancora come bambini»",
+        "«Vi scegliete ogni giorno»",
+        "«Voglio anch’io una storia così»"
+      ],
+      "options_en": [
+        "“You made it”",
+        "“You still laugh like kids”",
+        "“You choose each other every day”",
+        "“I want a story like that too”"
+      ]
+    },
+    {
+      "id": "confrontatevi-037",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "rito_minuscolo",
+        "question_text": "Qual è il nostro rito più piccolo, così piccolo che da fuori nessuno lo noterebbe?",
+        "question_text_en": "What’s our smallest ritual, so small that nobody looking in would ever notice it?"
+      },
+      "question_text": "Qual è il nostro rito più piccolo, così piccolo che da fuori nessuno lo noterebbe?",
+      "question_text_en": "What’s our smallest ritual, so small that nobody looking in would ever notice it?",
+      "options": [
+        "Il saluto prima di uscire",
+        "Un messaggio a metà giornata",
+        "La buonanotte, sempre uguale",
+        "Uno sguardo quando c’è gente"
+      ],
+      "options_en": [
+        "The goodbye before going out",
+        "A message in the middle of the day",
+        "Goodnight, always the same way",
+        "A look when other people are around"
+      ]
+    },
+    {
+      "id": "confrontatevi-049",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "ingrediente_segreto_della_coppia",
+        "question_text": "Se la nostra coppia fosse una ricetta, qual sarebbe l’ingrediente segreto?",
+        "question_text_en": "If our couple were a recipe, what would the secret ingredient be?"
+      },
+      "question_text": "Se la nostra coppia fosse una ricetta, qual sarebbe l’ingrediente segreto?",
+      "question_text_en": "If our couple were a recipe, what would the secret ingredient be?",
+      "options": [
+        "Un pizzico di follia",
+        "Tanta pazienza",
+        "Risate, quanto basta",
+        "Abbracci a volontà"
+      ],
+      "options_en": [
+        "A pinch of madness",
+        "Lots of patience",
+        "Laughter, to taste",
+        "Hugs, as many as you like"
+      ]
+    },
+    {
+      "id": "confrontatevi-050",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "regola_della_casa_ideale",
+        "question_text": "Quale regola scriveresti in cima al regolamento ufficiale di noi due?",
+        "question_text_en": "Which rule would you write at the top of the official rulebook of us two?"
+      },
+      "question_text": "Quale regola scriveresti in cima al regolamento ufficiale di noi due?",
+      "question_text_en": "Which rule would you write at the top of the official rulebook of us two?",
+      "options": [
+        "Mai a letto col broncio",
+        "L’ultimo boccone si divide",
+        "Chi cucina non lava i piatti",
+        "Un bacio prima di uscire"
+      ],
+      "options_en": [
+        "Never go to bed sulking",
+        "The last bite gets shared",
+        "Whoever cooks doesn’t wash up",
+        "A kiss before going out"
+      ]
+    },
+    {
+      "id": "confrontatevi-052",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "promessa_leggera",
+        "question_text": "Quale piccola promessa, facile da mantenere, ti piacerebbe che ci facessimo oggi?",
+        "question_text_en": "What small, easy-to-keep promise would you love us to make each other today?"
+      },
+      "question_text": "Quale piccola promessa, facile da mantenere, ti piacerebbe che ci facessimo?",
+      "question_text_en": "What small, easy-to-keep promise would you love us to make each other?",
+      "options": [
+        "Una cena senza telefoni a settimana",
+        "Un messaggio dolce ogni giorno",
+        "Una passeggiata dopo cena",
+        "Dirci grazie più spesso"
+      ],
+      "options_en": [
+        "One phone-free dinner a week",
+        "A sweet message every day",
+        "A walk after dinner",
+        "Saying thank you more often"
+      ]
+    },
+    {
+      "id": "confrontatevi-064",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "infanzia_ricordo_da_regalare",
+        "question_text": "Quale ricordo della tua infanzia vorresti farmi provare, almeno per un giorno?",
+        "question_text_en": "Which memory from your childhood would you love me to experience, even just for a day?"
+      },
+      "question_text": "Quale ricordo della tua infanzia vorresti farmi provare, almeno per un giorno?",
+      "question_text_en": "Which memory from your childhood would you love me to experience, even just for a day?",
+      "options": [
+        "Le estati dai nonni",
+        "I giochi in cortile fino a sera",
+        "La merenda dopo la scuola",
+        "Le vacanze in campeggio"
+      ],
+      "options_en": [
+        "Summers at my grandparents’",
+        "Playing outside until dark",
+        "An after-school snack",
+        "Camping holidays"
+      ]
+    },
+    {
+      "id": "confrontatevi-068",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "cibo_piatto_da_imparare",
+        "question_text": "Quale piatto vorresti che imparassimo a cucinare insieme?",
+        "question_text_en": "Which dish would you like us to learn to cook together?"
+      },
+      "question_text": "Quale piatto vorresti che imparassimo a cucinare insieme?",
+      "question_text_en": "Which dish would you like us to learn to cook together?",
+      "options": [
+        "La pasta fatta in casa",
+        "Un piatto di un paese lontano",
+        "Il dolce della nonna",
+        "Il sushi, con calma"
+      ],
+      "options_en": [
+        "Fresh homemade pasta",
+        "A dish from a faraway country",
+        "Grandma’s dessert",
+        "Sushi, taking our time"
+      ]
+    },
+    {
+      "id": "confrontatevi-072",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "musica_film_canzone_solo_nostra",
+        "question_text": "Se dovessimo scegliere una canzone solo nostra, quale sarebbe, e perché?",
+        "question_text_en": "If we had to choose a song that’s just ours, which would it be, and why?"
+      },
+      "question_text": "Se dovessimo scegliere una canzone solo nostra, di che tipo sarebbe?",
+      "question_text_en": "If we had to pick a song that’s just ours, what kind would it be?",
+      "options": [
+        "Un lento da ballare in cucina",
+        "Una hit da cantare in macchina",
+        "La canzone del nostro inizio",
+        "Un pezzo strano che piace solo a noi"
+      ],
+      "options_en": [
+        "A slow one to dance to in the kitchen",
+        "A hit to sing along to in the car",
+        "The song from when it all began",
+        "An odd track only we like"
+      ]
+    },
+    {
+      "id": "confrontatevi-076",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "futuro_promessa_concreta",
+        "question_text": "Quale promessa piccola e concreta potremmo farci per i prossimi anni?",
+        "question_text_en": "Which small, concrete promise could we make each other for the years ahead?"
+      },
+      "question_text": "Quale promessa piccola e concreta potremmo farci per i prossimi anni?",
+      "question_text_en": "Which small, concrete promise could we make each other for the years ahead?",
+      "options": [
+        "Un viaggio nuovo ogni anno",
+        "Una sera solo nostra a settimana",
+        "Festeggiare ogni piccolo traguardo",
+        "Imparare una cosa nuova insieme"
+      ],
+      "options_en": [
+        "A new trip every year",
+        "One evening just for us each week",
+        "Celebrating every small milestone",
+        "Learning something new together"
+      ]
+    },
+    {
+      "id": "confrontatevi-080",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "amici_famiglia_consigli_di_famiglia",
+        "question_text": "Quale consiglio sull’amore ricevuto in famiglia teniamo, e quale lasciamo perdere?",
+        "question_text_en": "Which piece of advice about love from our families do we keep, and which do we drop?"
+      },
+      "question_text": "Quale consiglio sull’amore ricevuto in famiglia vale la pena tenere?",
+      "question_text_en": "Which piece of advice about love from our families is worth keeping?",
+      "options": [
+        "Fare pace prima di dormire",
+        "Ridere insieme ogni giorno",
+        "Avere sempre qualcosa da raccontarsi",
+        "Scegliersi anche nei giorni storti"
+      ],
+      "options_en": [
+        "Make up before bed",
+        "Laugh together every day",
+        "Always have something to tell each other",
+        "Choose each other on bad days too"
+      ]
+    },
+    {
+      "id": "scopritevi-004",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "talenti_nascosti",
+        "question_text": "C’è una cosa che ti riesce bene e che secondo te nessuno nota?",
+        "question_text_en": "What’s something you’re good at that you feel nobody really notices?"
+      },
+      "question_text": "Quale cosa ti riesce bene, anche se secondo te nessuno la nota?",
+      "question_text_en": "What are you good at that you feel nobody notices?",
+      "options": [
+        "Ascoltare le persone",
+        "Ricordare i dettagli",
+        "Tenere tutto in ordine",
+        "Calmare le acque"
+      ],
+      "options_en": [
+        "Listening to people",
+        "Remembering the details",
+        "Keeping everything organised",
+        "Smoothing things over"
+      ]
+    },
+    {
+      "id": "scopritevi-005",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "infanzia",
+        "question_text": "Quale paura dell’infanzia oggi ti fa sorridere, e quale invece non se n’è mai andata del tutto?",
+        "question_text_en": "Which childhood fear makes you smile now, and which one never quite went away?"
+      },
+      "question_text": "Quale paura dell’infanzia non se n’è mai andata del tutto?",
+      "question_text_en": "Which childhood fear never quite went away?",
+      "options": [
+        "Il buio",
+        "I temporali",
+        "Gli aghi",
+        "Qualcosa sotto il letto"
+      ],
+      "options_en": [
+        "The dark",
+        "Thunderstorms",
+        "Needles",
+        "Something under the bed"
+      ]
+    },
+    {
+      "id": "scopritevi-006",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "sentirsi_a_casa",
+        "question_text": "Quando ti senti davvero a casa, cosa c’è intorno a te: persone, rumori, odori, luce?",
+        "question_text_en": "When you feel truly at home, what’s around you: people, sounds, smells, light?"
+      },
+      "question_text": "Quando ti senti a casa, cosa c’è intorno a te?",
+      "question_text_en": "When you feel at home, what’s around you?",
+      "options": [
+        "Le persone che amo",
+        "Un profumo di cucina",
+        "Una luce calda e tanto silenzio",
+        "Rumori di vita in sottofondo"
+      ],
+      "options_en": [
+        "The people I love",
+        "Something cooking",
+        "Warm light and lots of quiet",
+        "The sounds of life in the background"
+      ]
+    },
+    {
+      "id": "scopritevi-007",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "complimenti_rimasti",
+        "question_text": "Quale complimento ti è rimasto in testa per anni, e chi te l’aveva fatto?",
+        "question_text_en": "What’s a compliment that stuck with you for years, and who gave it to you?"
+      },
+      "question_text": "Che tipo di complimento ti resta in testa per anni?",
+      "question_text_en": "What kind of compliment stays with you for years?",
+      "options": [
+        "Uno sul mio modo di fare",
+        "Uno sul mio lavoro",
+        "Uno sul mio aspetto",
+        "Uno da chi non me l’aspettavo"
+      ],
+      "options_en": [
+        "One about the way I am",
+        "One about my work",
+        "One about how I look",
+        "One from someone I didn’t expect"
+      ]
+    },
+    {
+      "id": "scopritevi-008",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "abitudini_segrete",
+        "question_text": "Hai una piccola abitudine, quando nessuno ti vede, che non mi hai mai raccontato?",
+        "question_text_en": "What’s a little habit you have when no one’s watching that you’ve never told me about?"
+      },
+      "question_text": "Quando nessuno ti vede, quale piccola abitudine hai?",
+      "question_text_en": "When no one’s watching, what little habit do you have?",
+      "options": [
+        "Parlo tra me e me",
+        "Ballo mentre faccio altro",
+        "Canto a squarciagola",
+        "Mangio in piedi davanti al frigo"
+      ],
+      "options_en": [
+        "I talk to myself",
+        "I dance while doing other things",
+        "I sing at the top of my lungs",
+        "I eat standing at the fridge"
+      ]
+    },
+    {
+      "id": "scopritevi-013",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "voce_interiore",
+        "question_text": "Quando parli tra te e te per farti coraggio o per sgridarti, come ti chiami: per nome, per cognome, con un soprannome?",
+        "question_text_en": "When you talk to yourself, to cheer yourself on or to tell yourself off, what do you call yourself: your first name, your last name, a nickname?"
+      },
+      "question_text": "Quando parli tra te e te per farti coraggio o sgridarti, come ti chiami?",
+      "question_text_en": "When you talk to yourself, to cheer yourself on or tell yourself off, what do you call yourself?",
+      "options": [
+        "Per nome",
+        "Per cognome, come a scuola",
+        "Con un soprannome",
+        "Con un «dai, su» e basta"
+      ],
+      "options_en": [
+        "By my first name",
+        "By my surname, like at school",
+        "By a nickname",
+        "Just “come on, you”"
+      ]
+    },
+    {
+      "id": "scopritevi-015",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "libretto_istruzioni",
+        "question_text": "Se avessi un libretto d’istruzioni, cosa troverei scritto alla voce «Avvertenze»? E alla voce «Manutenzione»?",
+        "question_text_en": "If you came with an instruction manual, what would I find under “Warnings”? And under “Care and maintenance”?"
+      },
+      "question_text": "Se avessi un libretto d’istruzioni, cosa troverei alla voce «Avvertenze»?",
+      "question_text_en": "If you came with an instruction manual, what would I find under “Warnings”?",
+      "options": [
+        "Non disturbare prima del caffè",
+        "Nutrire a orari regolari",
+        "Maneggiare con cura",
+        "Si commuove senza preavviso"
+      ],
+      "options_en": [
+        "Do not disturb before coffee",
+        "Feed at regular times",
+        "Handle with care",
+        "May get emotional without warning"
+      ]
+    },
+    {
+      "id": "scopritevi-016",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "coraggio_invisibile",
+        "question_text": "Qual è la cosa più coraggiosa che tu abbia mai fatto e che, vista da fuori, sembrerebbe una sciocchezza?",
+        "question_text_en": "What’s the bravest thing you’ve ever done that would look like nothing from the outside?"
+      },
+      "question_text": "Quale cosa coraggiosa hai fatto che, vista da fuori, sembrerebbe una sciocchezza?",
+      "question_text_en": "What brave thing have you done that would look like nothing from the outside?",
+      "options": [
+        "Dire di no a qualcuno",
+        "Chiedere aiuto",
+        "Cambiare idea davanti a tutti",
+        "Fare una telefonata difficile"
+      ],
+      "options_en": [
+        "Saying no to someone",
+        "Asking for help",
+        "Changing my mind in front of everyone",
+        "Making a difficult phone call"
+      ]
+    },
+    {
+      "id": "scopritevi-017",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "finta_di_capire",
+        "question_text": "Cosa fai finta di capire da anni, pur di non ammettere che non ci hai mai capito niente?",
+        "question_text_en": "What have you been pretending to understand for years, just so you don’t have to admit you’ve never had a clue?"
+      },
+      "question_text": "Cosa fai finta di capire da anni, pur di non ammettere che non ci hai mai capito niente?",
+      "question_text_en": "What have you been pretending to understand for years, just so you don’t have to admit you’ve never had a clue?",
+      "options": [
+        "Il fuorigioco",
+        "Le bollette",
+        "Le regole di un gioco di carte",
+        "L’arte contemporanea"
+      ],
+      "options_en": [
+        "The offside rule",
+        "The bills",
+        "The rules of a card game",
+        "Contemporary art"
+      ]
+    },
+    {
+      "id": "scopritevi-019",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "contraddizioni",
+        "question_text": "Qual è la tua contraddizione preferita, tipo odiare il freddo ma adorare l’inverno?",
+        "question_text_en": "What’s your favorite contradiction about yourself, like hating the cold but loving winter?"
+      },
+      "question_text": "Qual è la tua contraddizione preferita?",
+      "question_text_en": "What’s your favourite contradiction about yourself?",
+      "options": [
+        "Amo dormire, ma odio andare a letto",
+        "Odio il disordine, ma ne creo tanto",
+        "Adoro la gente, ma resto a casa",
+        "Odio il freddo, ma adoro l’inverno"
+      ],
+      "options_en": [
+        "I love sleep, but hate going to bed",
+        "I hate mess, but make plenty",
+        "I love people, but stay home",
+        "I hate the cold, but love winter"
+      ]
+    },
+    {
+      "id": "scopritevi-024",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "scelta_decisiva",
+        "question_text": "C’è una piccola decisione, presa anni fa quasi per caso, senza cui oggi la tua vita sarebbe diversa?",
+        "question_text_en": "What’s a small decision you made years ago, almost by chance, without which your life wouldn’t be the same today?"
+      },
+      "question_text": "Quale piccola decisione, presa quasi per caso, ha cambiato la tua vita?",
+      "question_text_en": "Which small decision, made almost by chance, changed your life?",
+      "options": [
+        "Un corso scelto all’ultimo",
+        "Una festa a cui non volevo andare",
+        "Un trasloco",
+        "Un sì detto senza pensarci"
+      ],
+      "options_en": [
+        "A course picked at the last minute",
+        "A party I didn’t want to go to",
+        "A move to a new place",
+        "A yes said without thinking"
+      ]
+    },
+    {
+      "id": "scopritevi-025",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "pigrizia_apparente",
+        "question_text": "Quale tua abitudine sembra pigrizia, ma in realtà è un sistema perfetto?",
+        "question_text_en": "Which of your habits looks like laziness but is actually a flawless system?"
+      },
+      "question_text": "Quale tua abitudine sembra pigrizia, ma in realtà è un sistema perfetto?",
+      "question_text_en": "Which of your habits looks like laziness but is actually a flawless system?",
+      "options": [
+        "La sedia dei vestiti",
+        "Rimandare, per decidere meglio",
+        "Il pisolino strategico",
+        "La spesa una volta al mese"
+      ],
+      "options_en": [
+        "The clothes chair",
+        "Putting things off, to decide better",
+        "The strategic nap",
+        "Shopping once a month"
+      ]
+    },
+    {
+      "id": "scopritevi-027",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "occhi_lucidi",
+        "question_text": "Cosa ti fa venire gli occhi lucidi ogni volta, anche se non lo ammetteresti volentieri?",
+        "question_text_en": "What makes your eyes well up every single time, even if you’d rather not admit it?"
+      },
+      "question_text": "Cosa ti fa venire gli occhi lucidi ogni volta, anche se non lo ammetteresti volentieri?",
+      "question_text_en": "What makes your eyes well up every single time, even if you’d rather not admit it?",
+      "options": [
+        "I film con un cane",
+        "Le pubblicità di Natale",
+        "I discorsi ai matrimoni",
+        "Le persone che si ritrovano"
+      ],
+      "options_en": [
+        "Films with a dog in them",
+        "Christmas adverts",
+        "Wedding speeches",
+        "People being reunited"
+      ]
+    },
+    {
+      "id": "scopritevi-029",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "note_del_telefono",
+        "question_text": "Qual è la cosa più strana che c’è nelle note del tuo telefono o nei tuoi quaderni?",
+        "question_text_en": "What’s the weirdest thing in the notes on your phone or in your notebooks?"
+      },
+      "question_text": "Qual è la cosa più strana che c’è nelle note del tuo telefono o nei tuoi quaderni?",
+      "question_text_en": "What’s the weirdest thing in the notes on your phone or in your notebooks?",
+      "options": [
+        "Liste della spesa di anni fa",
+        "Idee per un libro mai scritto",
+        "Frasi sentite per strada",
+        "Nomi per un gatto che non ho"
+      ],
+      "options_en": [
+        "Shopping lists from years ago",
+        "Ideas for a book I never wrote",
+        "Things I overheard in the street",
+        "Names for a cat I don’t have"
+      ]
+    },
+    {
+      "id": "scopritevi-031",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "vita_prima_di_noi",
+        "question_text": "Quale pezzo della tua vita prima di noi vorresti farmi vedere almeno una volta: un posto, una persona, un’abitudine?",
+        "question_text_en": "What’s a piece of your life from before us that you’d love me to see at least once: a place, a person, a habit?"
+      },
+      "question_text": "Quale pezzo della tua vita prima di noi vorresti farmi vedere almeno una volta?",
+      "question_text_en": "Which piece of your life before us would you love me to see at least once?",
+      "options": [
+        "Il posto della mia infanzia",
+        "Una persona importante per me",
+        "Un’abitudine che avevo",
+        "Un mio posto segreto"
+      ],
+      "options_en": [
+        "The place I grew up",
+        "Someone important to me",
+        "A habit I used to have",
+        "A secret spot of mine"
+      ]
+    },
+    {
+      "id": "scopritevi-033",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "marachella",
+        "question_text": "Quale tua marachella di anni fa non hai mai confessato a nessuno?",
+        "question_text_en": "What’s a bit of mischief from years ago that you’ve never confessed to a soul?"
+      },
+      "question_text": "Che tipo di marachella non hai mai confessato a nessuno?",
+      "question_text_en": "What kind of mischief have you never confessed to anyone?",
+      "options": [
+        "Una bugia per saltare la scuola",
+        "Un vaso rotto e nascosto",
+        "Un’uscita senza permesso",
+        "Un dolce sparito dalla cucina"
+      ],
+      "options_en": [
+        "A lie to skip school",
+        "A broken vase, hidden away",
+        "Sneaking out without permission",
+        "A cake that vanished from the kitchen"
+      ]
+    },
+    {
+      "id": "scopritevi-037",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "torto_mai_digerito",
+        "question_text": "Quale torto piccolissimo non hai ancora digerito? Tipo l’ultimo biscotto mangiato da qualcun altro o un libro prestato e mai tornato.",
+        "question_text_en": "What’s a tiny injustice you still haven’t gotten over? Like someone else eating the last cookie, or a book you lent that never came back."
+      },
+      "question_text": "Quale torto piccolissimo non hai ancora digerito?",
+      "question_text_en": "What tiny injustice have you still not got over?",
+      "options": [
+        "L’ultimo biscotto, mangiato da altri",
+        "Un libro prestato e mai tornato",
+        "Uno spoiler",
+        "Un posto rubato in fila"
+      ],
+      "options_en": [
+        "The last biscuit, eaten by someone else",
+        "A book lent and never returned",
+        "A spoiler",
+        "Someone cutting the queue"
+      ]
+    },
+    {
+      "id": "scopritevi-039",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "consiglio_rivalutato",
+        "question_text": "C’è un consiglio che ti hanno dato anni fa, che allora ti sembrava assurdo e che oggi invece capisci?",
+        "question_text_en": "Is there a piece of advice you got years ago that sounded absurd back then but makes sense to you now?"
+      },
+      "question_text": "Quale consiglio, che anni fa ti sembrava assurdo, adesso capisci?",
+      "question_text_en": "Which piece of advice that sounded absurd years ago makes sense to you now?",
+      "options": [
+        "Dormire di più",
+        "Mettere da parte qualcosa",
+        "Non preoccuparsi di tutto",
+        "Chiamare casa più spesso"
+      ],
+      "options_en": [
+        "Get more sleep",
+        "Put something aside",
+        "Don’t worry about everything",
+        "Call home more often"
+      ]
+    },
+    {
+      "id": "scopritevi-041",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "nuovi_inizi",
+        "question_text": "Che rito hai per i nuovi inizi, tipo un quaderno nuovo, una pulizia generale o una lista di propositi?",
+        "question_text_en": "What’s your ritual for fresh starts, like a new notebook, a big clear-out or a list of resolutions?"
+      },
+      "question_text": "Che rito hai per i nuovi inizi?",
+      "question_text_en": "What’s your ritual for fresh starts?",
+      "options": [
+        "Un quaderno nuovo",
+        "Una pulizia generale",
+        "Una lista di propositi",
+        "Un taglio di capelli"
+      ],
+      "options_en": [
+        "A new notebook",
+        "A big clear-out",
+        "A list of resolutions",
+        "A haircut"
+      ]
+    },
+    {
+      "id": "scopritevi-043",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "canzone_della_vita",
+        "question_text": "Se la tua vita avesse una colonna sonora, quale canzone partirebbe nei titoli di apertura?",
+        "question_text_en": "If your life had a soundtrack, which song would play over the opening credits?"
+      },
+      "question_text": "Se la tua vita avesse una colonna sonora, che canzone partirebbe nei titoli di apertura?",
+      "question_text_en": "If your life had a soundtrack, what kind of song would play over the opening credits?",
+      "options": [
+        "Qualcosa di epico, con i violini",
+        "Una canzone allegra da cantare",
+        "Un lento malinconico",
+        "La sigla di un cartone animato"
+      ],
+      "options_en": [
+        "Something epic, with violins",
+        "A cheerful singalong",
+        "A wistful slow song",
+        "A cartoon theme tune"
+      ]
+    },
+    {
+      "id": "scopritevi-045",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "oggetto_senza_valore",
+        "question_text": "Quale oggetto senza valore conservi da anni, e che non butteresti mai?",
+        "question_text_en": "Which worthless object have you kept for years and would never throw away?"
+      },
+      "question_text": "Quale oggetto senza valore conservi da anni, e che non butteresti mai?",
+      "question_text_en": "Which worthless object have you kept for years and would never throw away?",
+      "options": [
+        "Il biglietto di un concerto",
+        "Un peluche dell’infanzia",
+        "Una lettera scritta a mano",
+        "Un sasso raccolto in viaggio"
+      ],
+      "options_en": [
+        "A concert ticket",
+        "A childhood soft toy",
+        "A handwritten letter",
+        "A stone picked up on a trip"
+      ]
+    },
+    {
+      "id": "scopritevi-046",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "imbattibile_da_piccoli",
+        "question_text": "In cosa ti sentivi imbattibile, durante l’infanzia?",
+        "question_text_en": "What did you feel unbeatable at when you were little?"
+      },
+      "question_text": "In cosa ti sentivi imbattibile, durante l’infanzia?",
+      "question_text_en": "What did you feel unbeatable at when you were little?",
+      "options": [
+        "Nei giochi in cortile",
+        "A scuola",
+        "A nascondino",
+        "Nell’inventare storie"
+      ],
+      "options_en": [
+        "Games outside",
+        "School",
+        "Hide-and-seek",
+        "Making up stories"
+      ]
+    },
+    {
+      "id": "scopritevi-048",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "imparato_da_grande",
+        "question_text": "Cosa hai imparato a fare da grande che ancora ti dà soddisfazione?",
+        "question_text_en": "What’s something you learned to do as a grown-up that still feels good?"
+      },
+      "question_text": "Cosa hai imparato a fare da grande che ancora ti dà soddisfazione?",
+      "question_text_en": "What’s something you learned to do as a grown-up that still feels good?",
+      "options": [
+        "Cucinare qualcosa di buono",
+        "Guidare",
+        "Aggiustare le cose di casa",
+        "Una lingua nuova"
+      ],
+      "options_en": [
+        "Cooking something good",
+        "Driving",
+        "Fixing things around the house",
+        "A new language"
+      ]
+    },
+    {
+      "id": "scopritevi-049",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "persona_che_mi_ha_cambiato",
+        "question_text": "Chi, oltre alla tua famiglia, ha cambiato il tuo modo di vedere le cose?",
+        "question_text_en": "Who, besides your family, changed the way you see things?"
+      },
+      "question_text": "Chi, oltre alla tua famiglia, ha cambiato il tuo modo di vedere le cose?",
+      "question_text_en": "Who, besides your family, changed the way you see things?",
+      "options": [
+        "Qualcuno a scuola",
+        "Un’amicizia",
+        "Una persona incontrata in viaggio",
+        "Un libro o un film"
+      ],
+      "options_en": [
+        "Someone at school",
+        "A friendship",
+        "Someone I met travelling",
+        "A book or a film"
+      ]
+    },
+    {
+      "id": "scopritevi-051",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "giornata_perfetta_da_soli",
+        "question_text": "Descrivi una giornata perfetta tutta per te, dalla sveglia alla buonanotte.",
+        "question_text_en": "Describe a perfect day just for you, from waking up to goodnight."
+      },
+      "question_text": "Come sarebbe una giornata perfetta tutta per te?",
+      "question_text_en": "What would a perfect day just for you look like?",
+      "options": [
+        "Sveglia tardi e nessun programma",
+        "Sport, aria aperta e una bella cena",
+        "Una città nuova da girare",
+        "Libri, divano e telefono spento"
+      ],
+      "options_en": [
+        "A late start and no plans",
+        "Sport, fresh air and a good dinner",
+        "A new city to explore",
+        "Books, sofa and phone off"
+      ]
+    },
+    {
+      "id": "scopritevi-052",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "lezione_di_tre_ore",
+        "question_text": "Su quale argomento potresti seguire una lezione di tre ore senza annoiarti?",
+        "question_text_en": "What topic could you listen to a three-hour lecture on without getting bored?"
+      },
+      "question_text": "Su quale argomento potresti seguire una lezione di tre ore senza annoiarti?",
+      "question_text_en": "What topic could you listen to a three-hour lecture on without getting bored?",
+      "options": [
+        "Storia e misteri del passato",
+        "Spazio e pianeti",
+        "Cucina, dalla A alla Z",
+        "Animali e natura"
+      ],
+      "options_en": [
+        "History and mysteries of the past",
+        "Space and planets",
+        "Cooking, from A to Z",
+        "Animals and nature"
+      ]
+    },
+    {
+      "id": "scopritevi-054",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "abitudine_che_vorrei",
+        "question_text": "Quale abitudine ammiri negli altri e ti piacerebbe avere anche tu?",
+        "question_text_en": "Which habit do you admire in others and wish you had too?"
+      },
+      "question_text": "Quale abitudine ammiri negli altri e ti piacerebbe avere anche tu?",
+      "question_text_en": "Which habit do you admire in others and wish you had too?",
+      "options": [
+        "Alzarsi presto senza fatica",
+        "Fare sport con costanza",
+        "Leggere ogni sera",
+        "Rispondere subito ai messaggi"
+      ],
+      "options_en": [
+        "Getting up early with no effort",
+        "Exercising regularly",
+        "Reading every evening",
+        "Replying to messages straight away"
+      ]
+    },
+    {
+      "id": "scopritevi-055",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "cosa_mi_emoziona_in_segreto",
+        "question_text": "Quale piccola cosa ti emoziona sempre, anche se non lo dai a vedere?",
+        "question_text_en": "What’s a small thing that always moves you, even if you don’t let it show?"
+      },
+      "question_text": "Quale piccola cosa ti emoziona sempre, anche se non lo dai a vedere?",
+      "question_text_en": "What’s a small thing that always moves you, even if you don’t let it show?",
+      "options": [
+        "Un messaggio inatteso",
+        "Un tramonto",
+        "Una canzone che so a memoria",
+        "Un gesto gentile tra sconosciuti"
+      ],
+      "options_en": [
+        "An unexpected message",
+        "A sunset",
+        "A song I know by heart",
+        "Strangers being kind to each other"
+      ]
+    },
+    {
+      "id": "scopritevi-056",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "versione_migliore",
+        "question_text": "In quali momenti ti piaci di più, e cosa stai facendo?",
+        "question_text_en": "In which moments do you like yourself most, and what are you doing?"
+      },
+      "question_text": "In quali momenti ti piaci di più?",
+      "question_text_en": "When do you like yourself most?",
+      "options": [
+        "Quando aiuto qualcuno",
+        "Quando faccio ridere qualcuno",
+        "Quando finisco una cosa difficile",
+        "Quando mi preparo per uscire"
+      ],
+      "options_en": [
+        "When I’m helping someone",
+        "When I make someone laugh",
+        "When I finish something hard",
+        "When I get ready to go out"
+      ]
+    },
+    {
+      "id": "scopritevi-058",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "messaggio_al_passato",
+        "question_text": "Se potessi mandare un messaggio di una riga alla persona che eri dieci anni fa, cosa scriveresti?",
+        "question_text_en": "If you could send a one-line message to yourself ten years ago, what would you write?"
+      },
+      "question_text": "Se potessi mandare un messaggio di una riga alla persona che eri dieci anni fa, cosa scriveresti?",
+      "question_text_en": "If you could send a one-line message to yourself ten years ago, what would you write?",
+      "options": [
+        "«Andrà tutto bene, giuro»",
+        "«Smetti di preoccuparti»",
+        "«Chiama più spesso chi ami»",
+        "«Il meglio deve ancora arrivare»"
+      ],
+      "options_en": [
+        "“It’ll all be fine, I promise”",
+        "“Stop worrying so much”",
+        "“Call the people you love more often”",
+        "“The best is yet to come”"
+      ]
+    },
+    {
+      "id": "scopritevi-059",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "viaggi_posto_visto_una_volta",
+        "question_text": "Quale posto visto una volta sola ti torna ancora in mente?",
+        "question_text_en": "Which place you saw only once still comes back to you?"
+      },
+      "question_text": "Quale posto visto una volta sola ti torna ancora in mente?",
+      "question_text_en": "Which place you saw only once still comes back to you?",
+      "options": [
+        "Una spiaggia quasi deserta",
+        "Una città di notte",
+        "Una montagna all’alba",
+        "Un paesino senza nome"
+      ],
+      "options_en": [
+        "An almost empty beach",
+        "A city at night",
+        "A mountain at dawn",
+        "A little village with no name"
+      ]
+    },
+    {
+      "id": "scopritevi-061",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "viaggi_parola_straniera",
+        "question_text": "Quale parola di un’altra lingua ti piace così tanto da volerla usare sempre?",
+        "question_text_en": "Which word from another language do you love so much you’d use it all the time?"
+      },
+      "question_text": "Quale parola di un’altra lingua ti piace così tanto da volerla usare sempre?",
+      "question_text_en": "Which word from another language do you love so much you’d use it all the time?",
+      "options": [
+        "Hygge, dal danese",
+        "Saudade, dal portoghese",
+        "Komorebi, dal giapponese",
+        "Cozy, dall’inglese"
+      ],
+      "options_en": [
+        "Hygge, from Danish",
+        "Saudade, from Portuguese",
+        "Komorebi, from Japanese",
+        "Ciao, from Italian"
+      ]
+    },
+    {
+      "id": "scopritevi-063",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "casa_profumo_di_casa",
+        "question_text": "Quale profumo ti fa sentire a casa appena lo senti?",
+        "question_text_en": "Which smell makes you feel at home the moment you notice it?"
+      },
+      "question_text": "Quale profumo ti fa sentire a casa appena lo senti?",
+      "question_text_en": "Which smell makes you feel at home the moment you notice it?",
+      "options": [
+        "Il caffè appena fatto",
+        "Il bucato pulito",
+        "Il pane caldo",
+        "La pioggia sull’asfalto"
+      ],
+      "options_en": [
+        "Fresh coffee",
+        "Clean laundry",
+        "Warm bread",
+        "Rain on the pavement"
+      ]
+    },
+    {
+      "id": "scopritevi-064",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "casa_rito_della_sera",
+        "question_text": "Quale piccolo rito della sera ti aiuta a staccare?",
+        "question_text_en": "Which small evening ritual helps you switch off?"
+      },
+      "question_text": "Quale piccolo rito della sera ti aiuta a staccare?",
+      "question_text_en": "Which small evening ritual helps you switch off?",
+      "options": [
+        "Una doccia calda",
+        "Una tisana",
+        "Una serie sul divano",
+        "Due pagine di un libro"
+      ],
+      "options_en": [
+        "A hot shower",
+        "A herbal tea",
+        "A series on the sofa",
+        "A couple of pages of a book"
+      ]
+    },
+    {
+      "id": "scopritevi-065",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "casa_oggetto_da_tenere",
+        "question_text": "Quale oggetto di casa non butteresti mai, anche se è vecchio?",
+        "question_text_en": "Which thing at home would you never throw away, even though it’s old?"
+      },
+      "question_text": "Quale oggetto di casa non butteresti mai, anche se è vecchio?",
+      "question_text_en": "Which thing at home would you never throw away, even though it’s old?",
+      "options": [
+        "La tazza preferita, anche sbeccata",
+        "Una coperta consumata",
+        "Una sedia di famiglia",
+        "La felpa più comoda"
+      ],
+      "options_en": [
+        "My favourite mug, chipped or not",
+        "A worn-out blanket",
+        "A family chair",
+        "The comfiest hoodie"
+      ]
+    },
+    {
+      "id": "scopritevi-067",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "infanzia_cameretta",
+        "question_text": "Com’era la tua cameretta? Cosa c’era appeso alle pareti?",
+        "question_text_en": "What was your childhood bedroom like? What was on the walls?"
+      },
+      "question_text": "Cosa c’era appeso alle pareti della tua cameretta?",
+      "question_text_en": "What was on the walls of your childhood bedroom?",
+      "options": [
+        "I poster dei miei idoli",
+        "Disegni fatti da me",
+        "Foto e cartoline",
+        "Niente, pareti bianche"
+      ],
+      "options_en": [
+        "Posters of my idols",
+        "My own drawings",
+        "Photos and postcards",
+        "Nothing, bare walls"
+      ]
+    },
+    {
+      "id": "scopritevi-068",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "infanzia_adulto_che_proteggeva",
+        "question_text": "Nella tua infanzia, quale persona adulta ti faceva sentire al sicuro?",
+        "question_text_en": "Growing up, which grown-up made you feel safe?"
+      },
+      "question_text": "Nella tua infanzia, quale persona adulta ti faceva sentire al sicuro?",
+      "question_text_en": "Growing up, which grown-up made you feel safe?",
+      "options": [
+        "I nonni",
+        "Mamma o papà",
+        "Una zia o uno zio",
+        "Qualcuno fuori dalla famiglia"
+      ],
+      "options_en": [
+        "My grandparents",
+        "Mum or Dad",
+        "An aunt or an uncle",
+        "Someone outside the family"
+      ]
+    },
+    {
+      "id": "scopritevi-069",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "infanzia_regola_di_casa",
+        "question_text": "Quale regola di casa, nella tua infanzia, trovi ancora giusta?",
+        "question_text_en": "Which house rule from your childhood do you still think was right?"
+      },
+      "question_text": "Quale regola di casa, nella tua infanzia, trovi ancora giusta?",
+      "question_text_en": "Which house rule from your childhood do you still think was right?",
+      "options": [
+        "Si cena insieme, sempre",
+        "Niente TV a tavola",
+        "Si dice sempre grazie",
+        "A letto a un’ora decente"
+      ],
+      "options_en": [
+        "Dinner together, always",
+        "No TV at the table",
+        "Always say thank you",
+        "Bed at a sensible hour"
+      ]
+    },
+    {
+      "id": "scopritevi-071",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "cibo_sapore_che_riporta_indietro",
+        "question_text": "Quale sapore ti fa tornare indietro nel tempo, a un momento preciso?",
+        "question_text_en": "Which taste takes you back in time, to one particular moment?"
+      },
+      "question_text": "Quale sapore ti fa tornare indietro nel tempo, a un momento preciso?",
+      "question_text_en": "Which taste takes you back in time, to one particular moment?",
+      "options": [
+        "Una merenda dell’infanzia",
+        "Un piatto della nonna",
+        "Il gelato delle vacanze",
+        "Un frutto colto dall’albero"
+      ],
+      "options_en": [
+        "A childhood snack",
+        "A dish my grandma made",
+        "Holiday ice cream",
+        "Fruit picked straight from the tree"
+      ]
+    },
+    {
+      "id": "scopritevi-072",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "cibo_odiato_poi_amato",
+        "question_text": "C’è un cibo che odiavi e che adesso adori?",
+        "question_text_en": "Is there a food you used to hate and now love?"
+      },
+      "question_text": "Quale cibo odiavi e adesso adori?",
+      "question_text_en": "Which food did you use to hate and now love?",
+      "options": [
+        "Le verdure",
+        "Il pesce",
+        "I cibi piccanti",
+        "I formaggi forti"
+      ],
+      "options_en": [
+        "Vegetables",
+        "Fish",
+        "Spicy food",
+        "Strong cheese"
+      ]
+    },
+    {
+      "id": "scopritevi-074",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "cibo_ricetta_da_salvare",
+        "question_text": "Quale ricetta di famiglia vorresti imparare prima che si perda?",
+        "question_text_en": "Which family recipe would you like to learn before it’s lost?"
+      },
+      "question_text": "Quale ricetta di famiglia vorresti imparare prima che si perda?",
+      "question_text_en": "Which family recipe would you like to learn before it’s lost?",
+      "options": [
+        "Il sugo della domenica",
+        "Un dolce delle feste",
+        "La pasta fatta a mano",
+        "Una conserva dell’estate"
+      ],
+      "options_en": [
+        "The Sunday sauce",
+        "A holiday dessert",
+        "Handmade pasta",
+        "A summer preserve"
+      ]
+    },
+    {
+      "id": "scopritevi-075",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "musica_film_canzone_vicina",
+        "question_text": "Quale canzone ti è stata vicina in un periodo difficile?",
+        "question_text_en": "Which song stayed with you through a hard time?"
+      },
+      "question_text": "Che tipo di canzone ti è stata vicina in un periodo difficile?",
+      "question_text_en": "What kind of song stayed with you through a hard time?",
+      "options": [
+        "Una triste, per piangere bene",
+        "Una carica, per ripartire",
+        "Una dolce, da ascoltare a ripetizione",
+        "Una dell’infanzia"
+      ],
+      "options_en": [
+        "A sad one, for a good cry",
+        "An upbeat one, to get going again",
+        "A gentle one, on repeat",
+        "One from my childhood"
+      ]
+    },
+    {
+      "id": "scopritevi-076",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "musica_film_personaggio_che_somiglia",
+        "question_text": "Quale personaggio di un film ti somiglia più di quanto vorresti ammettere?",
+        "question_text_en": "Which film character is more like you than you’d like to admit?"
+      },
+      "question_text": "Che personaggio da film ti somiglia più di quanto vorresti ammettere?",
+      "question_text_en": "Which kind of film character is more like you than you’d like to admit?",
+      "options": [
+        "Chi sbaglia tutto, ma con stile",
+        "Chi brontola ma ha un cuore d’oro",
+        "Chi sogna a occhi aperti",
+        "Chi ha sempre un piano"
+      ],
+      "options_en": [
+        "The one who gets it all wrong, in style",
+        "The grump with a heart of gold",
+        "The daydreamer",
+        "The one who always has a plan"
+      ]
+    },
+    {
+      "id": "scopritevi-077",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "musica_film_concerto_della_vita",
+        "question_text": "Qual è il concerto della tua vita, visto o ancora da vedere?",
+        "question_text_en": "What’s the concert of your life, seen or still to see?"
+      },
+      "question_text": "Qual è il concerto della tua vita, visto o ancora da vedere?",
+      "question_text_en": "What’s the concert of your life, seen or still to see?",
+      "options": [
+        "Un grande nome in uno stadio",
+        "Una band piccola in un locale",
+        "Un’orchestra in un teatro",
+        "Un festival di più giorni"
+      ],
+      "options_en": [
+        "A big name in a stadium",
+        "A small band in a tiny venue",
+        "An orchestra in a theatre",
+        "A festival over several days"
+      ]
+    },
+    {
+      "id": "scopritevi-079",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "futuro_saper_fare_tra_dieci_anni",
+        "question_text": "Cosa vorresti saper fare tra dieci anni che adesso non sai fare?",
+        "question_text_en": "What would you like to be able to do in ten years that you can’t do now?"
+      },
+      "question_text": "Cosa vorresti saper fare tra dieci anni che adesso non sai fare?",
+      "question_text_en": "What would you like to be able to do in ten years that you can’t do now?",
+      "options": [
+        "Suonare uno strumento",
+        "Parlare un’altra lingua",
+        "Cucinare da ristorante",
+        "Ballare senza vergogna"
+      ],
+      "options_en": [
+        "Play an instrument",
+        "Speak another language",
+        "Cook like a restaurant",
+        "Dance without embarrassment"
+      ]
+    },
+    {
+      "id": "scopritevi-080",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "futuro_a_settant_anni",
+        "question_text": "Come ti immagini a settant’anni, in una giornata qualunque?",
+        "question_text_en": "How do you picture yourself at seventy, on an ordinary day?"
+      },
+      "question_text": "Come ti immagini a settant’anni, in una giornata qualunque?",
+      "question_text_en": "How do you picture yourself at seventy, on an ordinary day?",
+      "options": [
+        "In giardino, tra le piante",
+        "In viaggio, con lo zaino",
+        "A cucinare per tanta gente",
+        "A leggere al sole, con calma"
+      ],
+      "options_en": [
+        "In the garden, among the plants",
+        "Travelling, with a backpack",
+        "Cooking for lots of people",
+        "Reading in the sun, slowly"
+      ]
+    },
+    {
+      "id": "scopritevi-082",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "futuro_scelta_coraggiosa",
+        "question_text": "Quale scelta coraggiosa ti piacerebbe fare nei prossimi anni?",
+        "question_text_en": "Which brave choice would you like to make in the coming years?"
+      },
+      "question_text": "Quale scelta coraggiosa ti piacerebbe fare nei prossimi anni?",
+      "question_text_en": "Which brave choice would you like to make in the coming years?",
+      "options": [
+        "Cambiare lavoro",
+        "Vivere in un altro paese",
+        "Iniziare un progetto mio",
+        "Imparare qualcosa da zero"
+      ],
+      "options_en": [
+        "Changing jobs",
+        "Living in another country",
+        "Starting a project of my own",
+        "Learning something from scratch"
+      ]
+    },
+    {
+      "id": "scopritevi-083",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "amici_famiglia_amicizia_piu_lunga",
+        "question_text": "Qual è l’amicizia più lunga che hai, e cosa la tiene viva?",
+        "question_text_en": "What’s your longest friendship, and what keeps it alive?"
+      },
+      "question_text": "Cosa tiene viva la tua amicizia più lunga?",
+      "question_text_en": "What keeps your longest friendship alive?",
+      "options": [
+        "Le risate di sempre",
+        "Sentirci anche dopo mesi",
+        "I ricordi in comune",
+        "Esserci quando serve"
+      ],
+      "options_en": [
+        "The same old laughs",
+        "Picking up even after months",
+        "The memories we share",
+        "Being there when it counts"
+      ]
+    },
+    {
+      "id": "scopritevi-084",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "amici_famiglia_somiglianza_di_famiglia",
+        "question_text": "In cosa somigli di più alla tua famiglia, anche se non lo ammetti?",
+        "question_text_en": "How are you most like your family, even if you won’t admit it?"
+      },
+      "question_text": "In cosa somigli di più alla tua famiglia, anche se non lo ammetti?",
+      "question_text_en": "How are you most like your family, even if you won’t admit it?",
+      "options": [
+        "Nel modo di ridere",
+        "Nella testardaggine",
+        "Nel modo di cucinare",
+        "Nel modo di arrabbiarmi"
+      ],
+      "options_en": [
+        "The way I laugh",
+        "Stubbornness",
+        "The way I cook",
+        "The way I get cross"
+      ]
+    },
+    {
+      "id": "scopritevi-086",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "amici_famiglia_frase_di_famiglia",
+        "question_text": "Quale frase tipica della tua famiglia ti esce di bocca senza volerlo?",
+        "question_text_en": "Which typical family saying slips out of your mouth without meaning to?"
+      },
+      "question_text": "Quale frase tipica della tua famiglia ti esce di bocca senza volerlo?",
+      "question_text_en": "Which typical family saying slips out of your mouth without meaning to?",
+      "options": [
+        "«Copriti che prendi freddo»",
+        "«Non si spreca niente»",
+        "«Te l’avevo detto»",
+        "«Ai miei tempi…»"
+      ],
+      "options_en": [
+        "“Wrap up or you’ll catch cold”",
+        "“Waste not, want not”",
+        "“I told you so”",
+        "“In my day…”"
+      ]
+    },
+    {
+      "id": "scopritevi-087",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "tenerezza_quando_sei_giu",
+        "question_text": "Quando ti senti giù, cosa vorresti che facessi senza chiedertelo?",
+        "question_text_en": "When you’re feeling low, what would you like me to do without asking?"
+      },
+      "question_text": "Quando ti senti giù, cosa vorresti che facessi senza chiedertelo?",
+      "question_text_en": "When you’re feeling low, what would you like me to do without asking?",
+      "options": [
+        "Abbracciarmi e basta",
+        "Portarmi qualcosa di buono",
+        "Farmi ridere",
+        "Lasciarmi un po’ di spazio"
+      ],
+      "options_en": [
+        "Just hug me",
+        "Bring me something tasty",
+        "Make me laugh",
+        "Give me a bit of space"
+      ]
+    },
+    {
+      "id": "scopritevi-088",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "tenerezza_cosa_ti_manca_di_me",
+        "question_text": "Cosa ti manca di più di me quando non siamo insieme?",
+        "question_text_en": "What do you miss most about me when we’re not together?"
+      },
+      "question_text": "Cosa ti manca di più di me quando non siamo insieme?",
+      "question_text_en": "What do you miss most about me when we’re not together?",
+      "options": [
+        "La tua voce",
+        "I tuoi abbracci",
+        "Ridere con te",
+        "Le chiacchiere prima di dormire"
+      ],
+      "options_en": [
+        "Your voice",
+        "Your hugs",
+        "Laughing with you",
+        "Chatting before we fall asleep"
+      ]
+    },
+    {
+      "id": "scopritevi-092",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "piccante_sentirsi_irresistibile",
+        "question_text": "Che cosa ti fa sentire irresistibile quando sei con me?",
+        "question_text_en": "What makes you feel irresistible when you’re with me?"
+      },
+      "question_text": "Che cosa ti fa sentire irresistibile quando sei con me?",
+      "question_text_en": "What makes you feel irresistible when you’re with me?",
+      "options": [
+        "Come mi guardi",
+        "Quando ridi alle mie battute",
+        "I tuoi complimenti a sorpresa",
+        "Quando mi cerchi la mano"
+      ],
+      "options_en": [
+        "The way you look at me",
+        "When you laugh at my jokes",
+        "Your surprise compliments",
+        "When you reach for my hand"
+      ]
+    },
+    {
+      "id": "scopritevi-095",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "desideri_desiderio_non_confessato",
+        "question_text": "C’è un desiderio romantico che non mi hai ancora confessato?",
+        "question_text_en": "Is there a romantic wish you haven’t confessed to me yet?"
+      },
+      "question_text": "Quale desiderio romantico non mi hai ancora confessato?",
+      "question_text_en": "Which romantic wish haven’t you confessed to me yet?",
+      "options": [
+        "Un weekend a sorpresa",
+        "Una cena a lume di candela",
+        "Un lento in mezzo alla strada",
+        "Una lettera d’amore scritta a mano"
+      ],
+      "options_en": [
+        "A surprise weekend away",
+        "A candlelit dinner",
+        "A slow dance in the middle of the street",
+        "A handwritten love letter"
+      ]
+    },
+    {
+      "id": "rivivete-001",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "giorno_qualunque",
+        "question_text": "Quale giorno qualunque tra noi rivivresti volentieri, proprio perché non aveva niente di speciale?",
+        "question_text_en": "What’s an ordinary day of ours that you’d happily live again, precisely because there was nothing special about it?"
+      },
+      "question_text": "Quale giorno qualunque tra noi rivivresti volentieri?",
+      "question_text_en": "Which ordinary day of ours would you happily live again?",
+      "options": [
+        "Una domenica a letto fino a tardi",
+        "Una passeggiata senza meta",
+        "Una spesa finita in risate",
+        "Una cena improvvisata in casa"
+      ],
+      "options_en": [
+        "A Sunday in bed until late",
+        "A walk with nowhere to go",
+        "A food shop that ended in giggles",
+        "A last-minute dinner at home"
+      ]
+    },
+    {
+      "id": "rivivete-002",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "prima_impressione",
+        "question_text": "Qual è la prima cosa di me che ti è rimasta impressa, prima ancora di conoscermi bene?",
+        "question_text_en": "What’s the first thing about me that stuck with you, before you even really knew me?"
+      },
+      "question_text": "Qual è la prima cosa di me che ti è rimasta impressa, prima ancora di conoscermi bene?",
+      "question_text_en": "What’s the first thing about me that stuck with you, before you even really knew me?",
+      "options": [
+        "Il tuo sorriso",
+        "La tua voce",
+        "Come mi guardavi",
+        "Una cosa buffa che hai detto"
+      ],
+      "options_en": [
+        "Your smile",
+        "Your voice",
+        "The way you looked at me",
+        "Something funny you said"
+      ]
+    },
+    {
+      "id": "rivivete-004",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "lessico_nostro",
+        "question_text": "Quale nostra frase, battuta o parola inventata useresti per spiegare noi due a qualcuno?",
+        "question_text_en": "Which of our phrases, inside jokes or made-up words would you use to explain the two of us to someone?"
+      },
+      "question_text": "Per spiegare noi due a qualcuno, cosa useresti?",
+      "question_text_en": "To explain the two of us to someone, what would you use?",
+      "options": [
+        "Una nostra battuta",
+        "Una parola che abbiamo inventato",
+        "Un nostro soprannome",
+        "Una frase che diciamo sempre"
+      ],
+      "options_en": [
+        "One of our inside jokes",
+        "A word we made up",
+        "One of our nicknames",
+        "Something we always say"
+      ]
+    },
+    {
+      "id": "rivivete-008",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "luoghi_nostri",
+        "question_text": "Quale luogo ormai non riesci più a vedere senza pensare a noi?",
+        "question_text_en": "What’s a place you can no longer see without thinking of us?"
+      },
+      "question_text": "Che tipo di luogo ormai non riesci più a vedere senza pensare a noi?",
+      "question_text_en": "What kind of place can you no longer see without thinking of us?",
+      "options": [
+        "Un bar o un ristorante",
+        "Una stazione",
+        "Una spiaggia",
+        "Una strada di città"
+      ],
+      "options_en": [
+        "A café or a restaurant",
+        "A station",
+        "A beach",
+        "A city street"
+      ]
+    },
+    {
+      "id": "rivivete-022",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "un_ora_prima",
+        "question_text": "Cosa stavi facendo un’ora prima del nostro primo incontro? Se non lo ricordi, inventa: basta che sia credibile.",
+        "question_text_en": "What were you doing an hour before we first met? If you don’t remember, make it up, as long as it’s believable."
+      },
+      "question_text": "Cosa stavi facendo un’ora prima del nostro primo incontro?",
+      "question_text_en": "What were you doing an hour before we first met?",
+      "options": [
+        "Mi preparavo con cura",
+        "Lavoravo, senza saperne niente",
+        "Ero in giro con gli amici",
+        "Non lo ricordo, ma era epico"
+      ],
+      "options_en": [
+        "Getting ready, carefully",
+        "Working, with no idea",
+        "Out and about with friends",
+        "I don’t remember, but it was epic"
+      ]
+    },
+    {
+      "id": "rivivete-028",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "vissuto_diverso",
+        "question_text": "C’è un momento nostro che, secondo te, io ho vissuto in modo molto diverso da te?",
+        "question_text_en": "Is there a moment of ours that you think I experienced very differently from you?"
+      },
+      "question_text": "Quale momento nostro, secondo te, ho vissuto in modo molto diverso da te?",
+      "question_text_en": "Which moment of ours do you think I experienced very differently from you?",
+      "options": [
+        "Il nostro primo incontro",
+        "Il primo bacio",
+        "Un viaggio insieme",
+        "Una discussione"
+      ],
+      "options_en": [
+        "The first time we met",
+        "Our first kiss",
+        "A trip together",
+        "An argument"
+      ]
+    },
+    {
+      "id": "rivivete-031",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "piatto_dei_nostri_inizi",
+        "question_text": "Quale cibo ti fa pensare subito ai nostri primi tempi?",
+        "question_text_en": "Which food instantly reminds you of our early days?"
+      },
+      "question_text": "Quale cibo ti fa pensare subito ai nostri primi tempi?",
+      "question_text_en": "Which food instantly reminds you of our early days?",
+      "options": [
+        "La pizza",
+        "Un gelato",
+        "Un piatto ordinato a domicilio",
+        "La colazione al bar"
+      ],
+      "options_en": [
+        "Pizza",
+        "Ice cream",
+        "A takeaway",
+        "Breakfast at a café"
+      ]
+    },
+    {
+      "id": "rivivete-033",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "canzone_di_un_viaggio",
+        "question_text": "Quale canzone associ a un nostro viaggio o a un nostro tragitto?",
+        "question_text_en": "Which song do you link to one of our trips or journeys?"
+      },
+      "question_text": "Che musica associ ai nostri viaggi e ai nostri tragitti?",
+      "question_text_en": "What music do you link to our trips and journeys?",
+      "options": [
+        "Una canzone cantata a squarciagola",
+        "Una playlist fatta apposta",
+        "Quella che passava la radio",
+        "Il silenzio, e va bene così"
+      ],
+      "options_en": [
+        "A song we sang at the top of our lungs",
+        "A playlist made just for it",
+        "Whatever was on the radio",
+        "Silence, and that’s fine"
+      ]
+    },
+    {
+      "id": "rivivete-034",
+      "from": {
+        "version": 2,
+        "plus": false,
+        "topic": "serata_dove_ho_capito",
+        "question_text": "Racconta una nostra serata in cui abbiamo riso come non succedeva da tempo.",
+        "question_text_en": "Tell me about an evening of ours when we had more fun than we’d had in ages."
+      },
+      "question_text": "Che tipo di serata ci fa ridere come non succedeva da tempo?",
+      "question_text_en": "What kind of evening makes us laugh like we haven’t in ages?",
+      "options": [
+        "Una cena con gli amici",
+        "Un film bruttissimo",
+        "Un gioco da tavolo",
+        "Una chiacchierata fino a tardi"
+      ],
+      "options_en": [
+        "Dinner with friends",
+        "A terrible film",
+        "A board game",
+        "Talking until late"
+      ]
+    },
+    {
+      "id": "rivivete-037",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "festa_ricordata",
+        "question_text": "Qual è la festa, il compleanno o la ricorrenza passata insieme che ricordi con più allegria?",
+        "question_text_en": "Which party, birthday or celebration we spent together do you remember most cheerfully?"
+      },
+      "question_text": "Quale festa passata insieme ricordi con più allegria?",
+      "question_text_en": "Which celebration we spent together do you remember most cheerfully?",
+      "options": [
+        "Un compleanno",
+        "Un Capodanno",
+        "Il matrimonio di amici",
+        "Una festa improvvisata"
+      ],
+      "options_en": [
+        "A birthday",
+        "A New Year’s Eve",
+        "A friends’ wedding",
+        "A last-minute party"
+      ]
+    },
+    {
+      "id": "rivivete-038",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "gesto_che_mi_ha_conquistato",
+        "question_text": "Quale mio gesto, all’inizio, ti ha fatto pensare «questa persona mi piace davvero»?",
+        "question_text_en": "Which thing I did early on made you think “I really like this person”?"
+      },
+      "question_text": "Quale mio gesto, all’inizio, ti ha fatto pensare «questa persona mi piace»?",
+      "question_text_en": "Which thing I did early on made you think “I really like this person”?",
+      "options": [
+        "Come mi ascoltavi",
+        "Una sorpresa inattesa",
+        "Come mi hai fatto ridere",
+        "Un messaggio al momento giusto"
+      ],
+      "options_en": [
+        "The way you listened to me",
+        "An unexpected surprise",
+        "The way you made me laugh",
+        "A message at just the right time"
+      ]
+    },
+    {
+      "id": "rivivete-039",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "ricordo_da_custodire",
+        "question_text": "Se potessimo chiudere un solo ricordo nostro in una scatola del tempo, quale sceglieresti?",
+        "question_text_en": "If we could seal just one memory of ours in a time capsule, which would you choose?"
+      },
+      "question_text": "Se potessimo chiudere un solo ricordo nostro in una scatola del tempo, quale sceglieresti?",
+      "question_text_en": "If we could seal just one memory of ours in a time capsule, which would you choose?",
+      "options": [
+        "Il primo bacio",
+        "Un viaggio",
+        "Una giornata qualunque",
+        "Una risata infinita"
+      ],
+      "options_en": [
+        "Our first kiss",
+        "A trip",
+        "An ordinary day",
+        "A laugh that never ended"
+      ]
+    },
+    {
+      "id": "rivivete-041",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "viaggi_gita_da_rifare",
+        "question_text": "Quale gita o viaggio insieme, anche piccolo, rifaresti domani?",
+        "question_text_en": "Which outing or trip together, however small, would you do again tomorrow?"
+      },
+      "question_text": "Che gita insieme rifaresti domani?",
+      "question_text_en": "Which kind of trip together would you do again tomorrow?",
+      "options": [
+        "Una giornata al mare",
+        "Un weekend in una città",
+        "Una camminata in montagna",
+        "Un giro in macchina senza meta"
+      ],
+      "options_en": [
+        "A day at the seaside",
+        "A weekend in a city",
+        "A hike in the mountains",
+        "An aimless drive"
+      ]
+    },
+    {
+      "id": "rivivete-042",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "viaggi_imprevisto_che_fa_ridere",
+        "question_text": "Quale imprevisto, in viaggio o in giro, adesso ci fa ridere?",
+        "question_text_en": "Which mishap, on a trip or out and about, makes us laugh now?"
+      },
+      "question_text": "Quale imprevisto, in viaggio o in giro, adesso ci fa ridere?",
+      "question_text_en": "Which mishap, on a trip or out and about, makes us laugh now?",
+      "options": [
+        "Un treno perso",
+        "Una strada sbagliata",
+        "La pioggia improvvisa",
+        "Una prenotazione sparita"
+      ],
+      "options_en": [
+        "A missed train",
+        "A wrong turn",
+        "A sudden downpour",
+        "A booking that vanished"
+      ]
+    },
+    {
+      "id": "rivivete-046",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "casa_oggetto_della_nostra_storia",
+        "question_text": "Quale oggetto che abbiamo racconta meglio la nostra storia?",
+        "question_text_en": "Which thing we own tells our story best?"
+      },
+      "question_text": "Quale oggetto che abbiamo racconta meglio la nostra storia?",
+      "question_text_en": "Which thing we own tells our story best?",
+      "options": [
+        "Una foto incorniciata",
+        "Un souvenir di viaggio",
+        "Un biglietto conservato",
+        "Un regalo dei primi tempi"
+      ],
+      "options_en": [
+        "A framed photo",
+        "A souvenir from a trip",
+        "A ticket we kept",
+        "A present from the early days"
+      ]
+    },
+    {
+      "id": "rivivete-048",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "casa_primo_posto_come_casa",
+        "question_text": "Qual è il primo posto che abbiamo sentito un po’ casa, anche solo per una notte?",
+        "question_text_en": "What’s the first place that felt a bit like home to us, even just for one night?"
+      },
+      "question_text": "Qual è il primo posto che abbiamo sentito un po’ casa, anche solo per una notte?",
+      "question_text_en": "What’s the first place that felt a bit like home to us, even just for one night?",
+      "options": [
+        "Una casa in affitto per le vacanze",
+        "Un piccolo albergo",
+        "Casa di uno di noi",
+        "Una tenda in campeggio"
+      ],
+      "options_en": [
+        "A holiday rental",
+        "A little hotel",
+        "One of our homes",
+        "A tent at a campsite"
+      ]
+    },
+    {
+      "id": "rivivete-049",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "infanzia_storia_della_mia_infanzia",
+        "question_text": "Quale storia della mia infanzia ti ha fatto più tenerezza quando te l’ho raccontata?",
+        "question_text_en": "Which story from my childhood touched you most when I told it?"
+      },
+      "question_text": "Quale storia della mia infanzia ti ha fatto più tenerezza quando te l’ho raccontata?",
+      "question_text_en": "Which story from my childhood touched you most when I told it?",
+      "options": [
+        "Un guaio combinato a scuola",
+        "Una mia paura d’infanzia",
+        "Una vacanza in famiglia",
+        "Un animale di casa"
+      ],
+      "options_en": [
+        "Some trouble I got into at school",
+        "A childhood fear of mine",
+        "A family holiday",
+        "A pet I had"
+      ]
+    },
+    {
+      "id": "rivivete-051",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "infanzia_racconto_che_citiamo",
+        "question_text": "Quale racconto d’infanzia, tuo o mio, citiamo ancora tra noi come una battuta?",
+        "question_text_en": "Which childhood story, yours or mine, do we still quote like an inside joke?"
+      },
+      "question_text": "Che genere di racconto d’infanzia citiamo ancora tra noi come una battuta?",
+      "question_text_en": "What kind of childhood story do we still quote like an inside joke?",
+      "options": [
+        "Una figuraccia epica",
+        "Una parola detta storta",
+        "Un costume di Carnevale",
+        "Una fuga in bicicletta"
+      ],
+      "options_en": [
+        "An epic embarrassing moment",
+        "A word said all wrong",
+        "A carnival costume",
+        "A getaway on a bike"
+      ]
+    },
+    {
+      "id": "rivivete-053",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "cibo_disastro_in_cucina",
+        "question_text": "Qual è stato il nostro disastro più bello in cucina?",
+        "question_text_en": "What was our best disaster in the kitchen?"
+      },
+      "question_text": "Qual è stato il nostro disastro più bello in cucina?",
+      "question_text_en": "What was our best disaster in the kitchen?",
+      "options": [
+        "Una torta che non si è alzata",
+        "La pasta scotta per le chiacchiere",
+        "L’allarme antifumo che suona",
+        "Una ricetta inventata, mai più"
+      ],
+      "options_en": [
+        "A cake that never rose",
+        "Pasta overcooked while we chatted",
+        "The smoke alarm going off",
+        "An invented recipe, never again"
+      ]
+    },
+    {
+      "id": "rivivete-054",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "cibo_locale_importante",
+        "question_text": "Quale locale o ristorante è legato a un nostro momento importante?",
+        "question_text_en": "Which café or restaurant is tied to an important moment of ours?"
+      },
+      "question_text": "Che tipo di locale è legato a un nostro momento importante?",
+      "question_text_en": "What kind of place is tied to an important moment of ours?",
+      "options": [
+        "Un ristorante elegante",
+        "Una pizzeria qualunque",
+        "Il bar sotto casa",
+        "Un chiosco in riva al mare"
+      ],
+      "options_en": [
+        "A fancy restaurant",
+        "An ordinary pizzeria",
+        "The café round the corner",
+        "A kiosk by the sea"
+      ]
+    },
+    {
+      "id": "rivivete-056",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "musica_film_canzone_di_un_momento",
+        "question_text": "Quale canzone ti riporta subito a un nostro momento?",
+        "question_text_en": "Which song takes you straight back to a moment of ours?"
+      },
+      "question_text": "Che canzone ti riporta subito a un nostro momento?",
+      "question_text_en": "Which song takes you straight back to a moment of ours?",
+      "options": [
+        "Una che abbiamo ballato",
+        "Una sentita in macchina",
+        "Una che canti sempre",
+        "Una passata per caso in un locale"
+      ],
+      "options_en": [
+        "One we danced to",
+        "One we heard in the car",
+        "One you’re always singing",
+        "One that came on by chance somewhere"
+      ]
+    },
+    {
+      "id": "rivivete-059",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "musica_film_serie_divorata",
+        "question_text": "Quale serie abbiamo divorato più in fretta, e chi voleva sempre un altro episodio?",
+        "question_text_en": "Which series did we binge fastest, and who always wanted one more episode?"
+      },
+      "question_text": "Che genere di serie divoriamo più in fretta?",
+      "question_text_en": "What kind of series do we binge fastest?",
+      "options": [
+        "Un giallo pieno di colpi di scena",
+        "Una commedia leggera",
+        "Un fantasy con mille personaggi",
+        "Un reality, senza vergogna"
+      ],
+      "options_en": [
+        "A crime drama full of twists",
+        "A light comedy",
+        "A fantasy with a huge cast",
+        "A reality show, no shame"
+      ]
+    },
+    {
+      "id": "rivivete-060",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "futuro_detto_all_inizio",
+        "question_text": "Quale cosa detta all’inizio tra noi si è avverata?",
+        "question_text_en": "Which thing we said to each other early on has come true?"
+      },
+      "question_text": "Quale cosa detta all’inizio tra noi si è avverata?",
+      "question_text_en": "Which thing we said to each other early on has come true?",
+      "options": [
+        "Che avremmo viaggiato tanto",
+        "Che avremmo riso tantissimo",
+        "Che sarebbe durata",
+        "Che avremmo trovato il nostro posto"
+      ],
+      "options_en": [
+        "That we’d travel a lot",
+        "That we’d laugh so much",
+        "That it would last",
+        "That we’d find our place"
+      ]
+    },
+    {
+      "id": "rivivete-062",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "futuro_decisione_giusta",
+        "question_text": "Quale decisione presa insieme ti fa dire ancora «abbiamo fatto bene»?",
+        "question_text_en": "Which decision we made together still makes you say “we got that right”?"
+      },
+      "question_text": "Quale decisione presa insieme ti fa dire ancora «abbiamo fatto bene»?",
+      "question_text_en": "Which decision we made together still makes you say “we got that right”?",
+      "options": [
+        "Partire per quel viaggio",
+        "Cambiare casa",
+        "Prenderci del tempo per noi",
+        "Dirci tutto, anche le cose difficili"
+      ],
+      "options_en": [
+        "Going on that trip",
+        "Moving house",
+        "Making time for us",
+        "Saying it all, even the hard things"
+      ]
+    },
+    {
+      "id": "rivivete-063",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "futuro_da_raccontare_tra_anni",
+        "question_text": "Di tutto quello che abbiamo vissuto finora, cosa vorresti raccontare tra molti anni?",
+        "question_text_en": "Of everything we’ve been through so far, what would you want to tell people many years from now?"
+      },
+      "question_text": "Di tutto quello che abbiamo vissuto finora, cosa vorresti raccontare tra molti anni?",
+      "question_text_en": "Of everything we’ve been through so far, what would you want to tell people many years from now?",
+      "options": [
+        "Il nostro primo incontro",
+        "I viaggi fatti insieme",
+        "Le risate di ogni giorno",
+        "I momenti difficili superati insieme"
+      ],
+      "options_en": [
+        "How we met",
+        "The trips we took",
+        "The everyday laughter",
+        "The hard times we got through together"
+      ]
+    },
+    {
+      "id": "rivivete-069",
+      "from": {
+        "version": 1,
+        "plus": false,
+        "topic": "tenerezza_ritorno_dopo_qualche_giorno",
+        "question_text": "Ricordi un ritorno, dopo qualche giorno senza vederci, che ti è rimasto in mente?",
+        "question_text_en": "Do you remember a reunion, after a few days apart, that has stayed with you?"
+      },
+      "question_text": "Dopo qualche giorno senza vederci, quale ritorno ti resta in mente?",
+      "question_text_en": "After a few days apart, which kind of reunion stays with you?",
+      "options": [
+        "Un abbraccio in stazione",
+        "Una corsa incontro, come nei film",
+        "La cena già in tavola",
+        "Chiacchiere fino a notte fonda"
+      ],
+      "options_en": [
+        "A hug at the station",
+        "Running to each other, like in films",
+        "Dinner ready and waiting",
+        "Talking late into the night"
+      ]
+    },
+    {
+      "id": "rivivete-070",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "tenerezza_messaggio_riletto",
+        "question_text": "Quale mio messaggio hai riletto più di una volta?",
+        "question_text_en": "Which message of mine have you reread more than once?"
+      },
+      "question_text": "Che tipo di mio messaggio hai riletto più di una volta?",
+      "question_text_en": "What kind of message from me have you reread more than once?",
+      "options": [
+        "Un buongiorno lunghissimo",
+        "Una dichiarazione a sorpresa",
+        "Uno arrivato in un giorno storto",
+        "Uno buffo, che mi fa ancora ridere"
+      ],
+      "options_en": [
+        "A very long good morning",
+        "A surprise declaration",
+        "One that came on a bad day",
+        "A funny one that still makes me laugh"
+      ]
+    },
+    {
+      "id": "rivivete-071",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "piccante_vorrei_baciarti",
+        "question_text": "Qual è stato il primo momento in cui hai pensato «vorrei baciarti»?",
+        "question_text_en": "When was the first moment you thought “I’d like to kiss you”?"
+      },
+      "question_text": "Qual è stato il primo momento in cui hai pensato «vorrei baciarti»?",
+      "question_text_en": "When was the first moment you thought “I’d like to kiss you”?",
+      "options": [
+        "Al primo sguardo",
+        "Mentre ridevi",
+        "Mentre ci salutavamo",
+        "A metà di una chiacchierata"
+      ],
+      "options_en": [
+        "At first sight",
+        "While you were laughing",
+        "As we were saying goodbye",
+        "Halfway through a chat"
+      ]
+    },
+    {
+      "id": "rivivete-074",
+      "from": {
+        "version": 1,
+        "plus": true,
+        "topic": "desideri_notte_che_torna_in_mente",
+        "question_text": "Quale nostra notte ti torna in mente quando mi pensi?",
+        "question_text_en": "Which night of ours comes back to you when you think of me?"
+      },
+      "question_text": "Quale nostra notte ti torna in mente quando mi pensi?",
+      "question_text_en": "Which night of ours comes back to you when you think of me?",
+      "options": [
+        "Una notte sotto le stelle",
+        "Una notte a parlare fino all’alba",
+        "Una notte in viaggio",
+        "Una notte qualunque, sul divano"
+      ],
+      "options_en": [
+        "A night under the stars",
+        "A night talking until dawn",
+        "A night away",
+        "An ordinary night, on the sofa"
+      ]
+    }
+  ]
+}

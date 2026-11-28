@@ -262,14 +262,6 @@ body:has(#home.page.active) .app{padding-bottom:0!important}
 .top.us-premium-top .us-top-brand{grid-column:2;justify-self:center;align-self:center;position:relative;width:48px;height:38px;overflow:hidden;pointer-events:none;user-select:none;-webkit-user-select:none}
 .us-top-brand-art{position:absolute;left:50%;top:50%;height:58px;width:58px;max-width:none;transform:translate(-50%,-50%);-webkit-user-drag:none}
 .top.us-premium-top .us-top-left{grid-column:1;justify-self:start;display:flex;align-items:center;min-width:0}
-/* Game V2 — Per voi top control: the sparkle mirrors the envelope control;
-   its personal state rides the shared attention orbit, never a counter. */
-
-#usPerVoiTop:active{transform:scale(.94);background:rgba(246,111,158,.14);color:var(--us-color-text)}
-#usPerVoiTop.is-loading{opacity:.52;pointer-events:none}
-
-#usPerVoiTop[data-gv2-state="waiting"]{color:rgba(247,242,248,.62)}
-@media(prefers-reduced-motion:reduce){#usPerVoiTop{transition:none}#usPerVoiTop:active{transform:none}}
 .top.us-premium-top .us-brand-symbol-art{width:58px;height:39px}
 .top.us-premium-top .profile-avatar,.top.us-premium-top .us-calendar-btn{min-width:44px;min-height:44px}
 .top.us-premium-top .us-shell-icon{width:20px;height:20px}
@@ -324,37 +316,6 @@ body:has(#home.page.active) .app{padding-bottom:0!important}
 .top.us-premium-top .us-top-left{
   min-width:38px;
 }
-#thinkButton.us-top-think{
-  position:relative;
-  width:38px;
-  height:38px;
-  min-width:38px;
-  min-height:38px;
-  padding:0;
-  border:1px solid rgba(255,234,247,.10);
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  background:rgba(255,255,255,.05);
-  color:rgba(247,242,248,.88);
-  box-shadow:none;
-  overflow:visible;
-  touch-action:manipulation;
-  -webkit-tap-highlight-color:transparent;
-  transition:transform var(--us-motion-press) var(--us-ease-standard),background var(--us-motion-press) var(--us-ease-standard),border-color var(--us-motion-press) var(--us-ease-standard);
-}
-#thinkButton.us-top-think .us-shell-icon{
-  width:20px;
-  height:20px;
-}
-#thinkButton.us-top-think:active{
-  transform:scale(.94);
-  background:rgba(246,111,158,.14);
-  border-color:rgba(246,111,158,.26);
-}
-#thinkButton.us-top-think:disabled{opacity:.45!important}
-#thinkButton.us-top-think.sent{animation:usThinkSent var(--us-motion-base) var(--us-ease-standard)}
-#thinkButton.us-top-think.received{animation:usThinkReceived var(--us-motion-surface) var(--us-ease-standard)}
 @media(max-width:360px){
   .top.us-premium-top{left:max(34px,var(--us-safe-left));right:max(34px,var(--us-safe-right))}
 }

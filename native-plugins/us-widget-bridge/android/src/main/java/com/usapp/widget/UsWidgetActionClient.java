@@ -22,7 +22,8 @@ final class UsWidgetActionClient {
     static final String RATE_LIMITED = "rate_limited";
     private static final int TIMEOUT_MS = 4000;
 
-    String send(String functionsBase, String token, String actionId) {
+    /** taps (Ti penso ×N, 27/11/2026): the taps of the burst, 1..99; an older server ignores them and stores 1. */
+    String send(String functionsBase, String token, String actionId, int taps) {
         HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection) new URL(UsWidgetEndpoints.thinkSend(functionsBase)).openConnection();
@@ -34,7 +35,7 @@ final class UsWidgetActionClient {
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("X-US-Widget-Token", token);
-            byte[] payload = new JSONObject().put("actionId", actionId).toString().getBytes(StandardCharsets.UTF_8);
+            byte[] payload = new JSONObject().put("actionId", actionId).put("taps", Math.max(1, Math.min(UsWidgetModels.MAX_TAPS, taps))).toString().getBytes(StandardCharsets.UTF_8);
             connection.setFixedLengthStreamingMode(payload.length);
             try (OutputStream output = connection.getOutputStream()) { output.write(payload); }
             int status = connection.getResponseCode();

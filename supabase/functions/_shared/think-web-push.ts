@@ -46,8 +46,12 @@ async function thinkPreferenceEnabled(admin: any, recipientId: string) {
 // US 1.0 (O6): at most one Ti penso push every 2 minutes from the same person.
 // The ones in between still reach the app; the next push counts them
 // ("Bea ti ha pensato 3 volte"), looking back at most 10 minutes.
+// I cuori (27/11/2026): a Ti penso can carry several taps (think_taps, 1..99;
+// null = 1), so the push counts the taps of those Ti penso, not the rows.
+// Before the column exists (Edge deployed first) it counts the rows as before.
 export const THINK_PUSH_GAP_MS = 2 * 60 * 1000;
 const THINK_COUNT_WINDOW_MS = 10 * 60 * 1000;
+const THINK_TAPS_MAX = 99;
 
 export async function thinkPushWindow(admin: any, args: ThinkPushArgs, now = Date.now()) {
   const { data: last, error } = await admin.from("push_event_log").select("created_at")
@@ -57,8 +61,14 @@ export async function thinkPushWindow(admin: any, args: ThinkPushArgs, now = Dat
   const lastAt = last?.created_at ? Date.parse(last.created_at) : 0;
   if (lastAt && now - lastAt < THINK_PUSH_GAP_MS) return { throttled: true, count: 0 };
   const since = new Date(Math.max(lastAt, now - THINK_COUNT_WINDOW_MS)).toISOString();
-  const { count, error: countError } = await admin.from("shared_messages").select("id", { count: "exact", head: true })
+  const recent = (columns: string, options?: unknown) => admin.from("shared_messages").select(columns, options)
     .eq("kind", "think").eq("sender_id", args.senderId).eq("recipient_id", args.recipientId).gt("created_at", since);
+  const { data: rows, error: tapsError } = await recent("think_taps").limit(200);
+  if (!tapsError && Array.isArray(rows)) {
+    const taps = rows.reduce((sum: number, row: any) => sum + Math.min(THINK_TAPS_MAX, Math.max(1, Number(row?.think_taps) || 1)), 0);
+    return { throttled: false, count: Math.max(1, taps) };
+  }
+  const { count, error: countError } = await recent("id", { count: "exact", head: true });
   return { throttled: false, count: countError ? 1 : Math.max(1, Number(count) || 1) };
 }
 
