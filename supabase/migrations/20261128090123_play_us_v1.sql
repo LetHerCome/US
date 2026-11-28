@@ -26,6 +26,7 @@ create table if not exists public.play_us_sessions (
 );
 comment on table public.play_us_sessions is 'Play Us (28/11/2026): one live game of the couple, its step and result. Written only by the play_us_* functions.';
 create index if not exists play_us_sessions_couple_idx on public.play_us_sessions (couple_id, created_at desc);
+create index if not exists play_us_sessions_invited_by_idx on public.play_us_sessions (invited_by);
 create unique index if not exists play_us_sessions_one_open on public.play_us_sessions (couple_id) where status in ('invited', 'playing');
 create unique index if not exists play_us_sessions_one_spent_day on public.play_us_sessions (couple_id, day) where spent;
 
@@ -44,6 +45,7 @@ create table if not exists public.play_us_moves (
 );
 comment on table public.play_us_moves is 'Play Us: one move of one member in one step (an answer, a photo path, a score…). Written only by public.play_us_move.';
 create index if not exists play_us_moves_couple_idx on public.play_us_moves (couple_id);
+create index if not exists play_us_moves_user_idx on public.play_us_moves (user_id);
 
 alter table public.play_us_sessions enable row level security;
 alter table public.play_us_moves enable row level security;

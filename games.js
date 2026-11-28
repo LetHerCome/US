@@ -687,6 +687,7 @@ function renderHub() {
  // diary of your rounds at the bottom.
  const html=`
   <h2 class="us-gv2-sr">Gioca</h2>
+  <div id="usPlayUsCard" class="us-play-slot"></div>
   ${tokensCard()}
   ${voiDueCard(home)}
   ${rileggeteSection()}
@@ -710,6 +711,8 @@ function renderHub() {
  root.innerHTML=html;
  settleGiostra();
  window.UsDailyQuestionHub?.paintCard?.();
+ // Play Us (28/11/2026): its card on top of Gioca, painted by play-us.js.
+ window.UsPlayUs?.paintCard?.();
 }
 
 // Il vostro mese (27/11/2026): the shortcut to Le vostre carte, in Ricordi;

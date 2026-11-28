@@ -131,7 +131,7 @@ test('play us: invite, answer, live moves, steps, the end with memory, points an
 
   // Step 4: answer for yourself and guess the other one.
   await call(F, 'play_us_move', `$1::uuid, 4, 'guess', 0, '{"self":0,"guess":1}'::jsonb`, [sid]);
-  await call(B, 'play_us_move', `$1::uuid, 4, 'guess', 0, '{"self":1,"guess":2}'::jsonb`, [sid]);
+  await call(B, 'play_us_move', `$1::uuid, 4, 'guess', 0, '{"self":1,"guess":1}'::jsonb`, [sid]);
   for (const u of [F, B]) await call(u, 'play_us_move', `$1::uuid, 4, 'done', 0, '{}'::jsonb`, [sid]);
   assert.equal((await call(F, 'play_us_advance', '$1::uuid', [sid])).step, 5);
   // Step 5: a gesture.
