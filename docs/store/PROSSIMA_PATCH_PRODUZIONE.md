@@ -2,6 +2,15 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Quiz più vivi (28/11)
+
+**Stato:** ramo `claude/quiz-vivi`, da staging `a366dd37` (dopo la #322). Nessuna migrazione. Primo passo deciso col grill del 28/11 (D1–D2), prima di Play Us.
+
+**Cosa cambia:**
+- **Un tocco basta:** nei quiz a turni (Ridete, Quanto mi conosci, Scopritevi…) toccando una risposta si passa da soli alla domanda dopo; l’ultima chiede ancora «Conferma le risposte». Con la tastiera le frecce scelgono soltanto. Questo o quello resta com’è.
+- **Il sentiero:** sopra la domanda il tuo personaggio cammina sulla barra del progresso, domanda dopo domanda, con un saltello a ogni risposta; in fondo l’altra persona ti aspetta, assonnata.
+- **La rivelazione:** le due risposte arrivano da lati opposti e si incontrano; quelle uguali si accendono d’oro (e restano col bordo dorato), quelle diverse si toccano e si fermano vicine. In cima i due personaggi, con gli occhi a cuore se avete risposto uguale almeno alla metà. Con Riduci movimento niente animazioni.
+
 ### Ritocchi dall'APK del founder: Come stai, isola, cartina dei posti (28/11)
 
 **Stato:** ramo `claude/ritocchi-28-11`, da staging `9636d6b1` (dopo l'integrazione #320), solo commit locali, niente push. Una migrazione, `20261127230104_mese_posti_coordinate` (ridefinisce soltanto `private.us_mese_card`: aggiunge coordinate e giorno ai posti della carta, nessuna tabella, nessun permesso nuovo), da applicare su staging insieme al web; senza la migrazione la carta dei posti mostra i nomi senza puntini, come prima. Il pacchetto web dentro le app cambia: serve un AAB nuovo e una build TestFlight con la stessa versione.

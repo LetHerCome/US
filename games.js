@@ -1169,6 +1169,34 @@ async function commitSwipeChoice(choice, direction = 'tap') {
   }
 }
 
+// Quiz vivi (founder, 28/11/2026): the progress is a path. Your character walks
+// along it question by question, the other one waits at the end; a tap on a
+// choice is enough to go on (the last one still asks for the confirmation).
+let pathFrom = null, pathRound = null, pointerAt = 0, autoNext = 0;
+const pathAt = (i, total) => (total > 1 ? i / (total - 1) : 1);
+function pathMarkup(total) {
+  const me = myRole();
+  const mine = me ? characterOf(me, { size: 30, react: true }) : '';
+  const theirs = me ? characterOf(partnerRoleOf(), { size: 28, reaction: 'sera' }) : '';
+  return `<div class="us-gv2-progress us-gv2-path" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${index + 1}" aria-label="Domanda ${index + 1} di ${total}">${Array.from({ length: total }, (_, i) => `<i data-on="${i <= index ? 'true' : 'false'}"></i>`).join('')}`
+    + (mine ? `<span class="us-gv2-path-me" style="--at:${pathAt(index, total)}" aria-hidden="true">${mine}</span>` : '')
+    + (theirs ? `<span class="us-gv2-path-pa" aria-hidden="true">${theirs}</span>` : '') + '</div>';
+}
+// After a render: the character walks from where it was (WAAPI on left), with a hop.
+function walkPath(root, total) {
+  const el = root?.querySelector?.('.us-gv2-path-me');
+  const to = pathAt(index, total), from = pathRound === current?.id ? pathFrom : null;
+  pathFrom = to; pathRound = current?.id || null;
+  if (!el || from === null || from === to || !canAnimate(el)) return;
+  const at = (v) => `calc(${v} * (100% - 30px))`;
+  el.animate([{ left: at(from) }, { left: at(to) }], { duration: 420, easing: EASE.out });
+  el.firstElementChild?.animate?.([{ transform: 'none' }, { transform: 'translateY(-9px)' }, { transform: 'none' }], { duration: 420, easing: EASE.out });
+}
+function hopMe() {
+  const el = panel()?.querySelector?.('.us-gv2-path-me > *');
+  if (canAnimate(el)) el.animate([{ transform: 'none' }, { transform: 'translateY(-8px) scale(1.06,.94)' }, { transform: 'none' }], { duration: 300, easing: EASE.spring });
+}
+
 function renderPlay({ dir = 1 } = {}) {
   if (current?.game_family === 'swipe') return renderSwipePlay({ dir });
   const item = current?.items?.[index];
@@ -1183,8 +1211,8 @@ function renderPlay({ dir = 1 } = {}) {
     ? `<label class="us-gv2-sr" for="usGv2Answer">La tua risposta</label><textarea id="usGv2Answer" maxlength="1000" rows="3" placeholder="Scrivi…">${esc(value ?? '')}</textarea>`
     : `<fieldset class="us-gv2-choices"><legend class="us-gv2-sr">${item.my_item_role === 'predictor' ? 'La tua previsione' : 'La tua scelta'}</legend>${(item.options || []).map((o, i) => `<label class="us-gv2-choice"><input type="radio" name="gv2choice" value="${i}" ${Number(value) === i && value !== null && value !== undefined ? 'checked' : ''}><i class="us-gv2-choice-key" aria-hidden="true">${key(i)}</i><span${asWritten(coupleWritten(item))}>${esc(o)}</span></label>`).join('')}</fieldset>`;
   const last = index === total - 1;
-  showPanel(`<article class="us-gv2-play" data-gv2-family="${esc(item.family || current.game_family)}">
-    <div class="us-gv2-progress" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${index + 1}" aria-label="Domanda ${index + 1} di ${total}">${Array.from({ length: total }, (_, i) => `<i data-on="${i <= index ? 'true' : 'false'}"></i>`).join('')}</div>
+  const root = showPanel(`<article class="us-gv2-play" data-gv2-family="${esc(item.family || current.game_family)}">
+    ${pathMarkup(total)}
     ${contextChip(item)}${authorChip(item)}
     ${hint ? `<p class="us-gv2-hint">${esc(hint)}</p>` : ''}
     <h2 class="us-gv2-question"${asWritten(coupleWritten(item))}>${esc(item.my_prompt || item.question_text)}</h2>
@@ -1194,6 +1222,7 @@ function renderPlay({ dir = 1 } = {}) {
       <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="prev"${index > 0 ? '' : ' disabled'}>Indietro</button><button type="submit" class="primary"${item.answer_kind === 'open' || chosen ? '' : ' disabled'}>${last ? 'Conferma le risposte' : 'Avanti'}</button></div>
     </form>
   </article>`, { kicker, count: `${index + 1} di ${total}`, label: familyName(current.game_family) }, { dir });
+  walkPath(root, total);
 }
 
 function readInput(item) {
@@ -1340,7 +1369,7 @@ const REVEAL_TAG = Object.freeze({ same: 'Uguali', different: 'Diverse', open: '
 function revealCompactItem(item,number,kind){
   const heading=esc(item.my_prompt||item.question_text||'Una domanda');
   const detailLabel=kind==='same'?'Scelte uguali':kind==='different'?'Scelte diverse':'Le risposte';
-  return `<li class="us-gv5-reveal-item" data-gv5-kind="${kind}" data-gv5-group="${kind}">
+  return `<li class="us-gv5-reveal-item" data-gv5-kind="${kind}" data-gv5-group="${kind}" style="--j:${number - 1}">
     <span class="us-gv5-reveal-tag" data-gv5-tag="${kind}">${REVEAL_TAG[kind]}</span>
     <p class="us-gv5-reveal-title"${asWritten(coupleWritten(item))}><span class="us-gv2-sr">${number}. </span>${heading}</p>
     <div class="us-gv5-reveal-answers" aria-label="${detailLabel}" data-gv2-mechanic="${esc(item.mechanic||'')}">${contextChip(item)}${authorChip(item)}<dl>${revealAnswerRows(item)}</dl>
@@ -1405,6 +1434,7 @@ function renderCompactReveal({first=false,swipe=false}={}){
   const reading=readingLine(current.items);
   const row=swipe?revealSwipeItem:revealCompactItem;
   const root=showPanel(`<article class="us-gv2-reveal us-gv5-reveal${swipe?' is-swipe':''}${first?' is-first-reveal':''}" data-gv5-reveal>
+    ${swipe?'':`<div class="us-gv5-reveal-duo">${duo(44,groups.same.length*2>=Math.max(1,groups.same.length+groups.different.length)?'cuore':undefined)}</div>`}
     <div class="us-gv5-reveal-groups">
       ${swipe?'':'<p class="us-gv5-reveal-label">Cosa avevate risposto</p>'}
       <ol class="us-gv5-reveal-list">${ordered.map(({item,number,kind})=>row(item,number,kind)).join('')}</ol>
@@ -1587,11 +1617,20 @@ function boot() {
     root.addEventListener('click', onClick);
     root.addEventListener('submit', onSubmit);
     // A choice enables "Avanti", as in the mockup.
+    root.addEventListener('pointerdown', () => { pointerAt = Date.now(); }, { capture: true, passive: true });
     root.addEventListener('change', (event) => {
       if (event.target?.name !== 'gv2choice') return;
       const submit = root.querySelector('#usGv2AnswerForm button[type="submit"]');
       if (submit && !busy) submit.disabled = false;
       window.UsFeedback?.selection?.();
+      // Quiz vivi: tapped, the card goes on by itself; the keyboard's arrows only choose.
+      event.target.closest?.('.us-gv2-choice')?.classList?.add('is-picked');
+      hopMe();
+      const tapped = Date.now() - pointerAt < 900;
+      if (tapped && view === 'play' && current && current.game_family !== 'swipe' && index < current.items.length - 1) {
+        clearTimeout(autoNext);
+        autoNext = setTimeout(() => { if (view === 'play' && !busy) submitAnswer(); }, 340);
+      }
     });
   }
   if (window.usProfile) load(); else setTimeout(boot, 250);
