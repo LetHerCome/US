@@ -747,7 +747,7 @@ document.addEventListener?.('visibilitychange', () => { if (!document.hidden) { 
 // US Plus in vetrina (founder, 28/11/2026): the Plus questions are played only
 // with Plus, but they are seen here: a tile «Sbloccabili con US Plus» and,
 // inside, every one of them with a lock, by theme. With Plus the tile goes.
-const PLUS_THEMES = Object.freeze({ viaggi: 'Viaggi e sogni', casa: 'Casa e abitudini', infanzia: 'Infanzia', cibo: 'A tavola', musica: 'Musica e film', futuro: 'Il vostro futuro', amici: 'Amici e famiglia', tenerezza: 'Tenerezza' });
+const PLUS_THEMES = Object.freeze({ viaggi: 'Viaggi e sogni', casa: 'Casa e abitudini', infanzia: 'Infanzia', cibo: 'A tavola', musica: 'Musica e film', futuro: 'Il vostro futuro', amici: 'Amici e famiglia', tenerezza: 'Tenerezza', piccante: 'Piccante', desideri: 'Desideri' });
 const plusPreview = { data: null, at: 0 };
 async function loadPlusPreview() {
   if (Date.now() - plusPreview.at < 600000 || typeof sb === 'undefined') return;
