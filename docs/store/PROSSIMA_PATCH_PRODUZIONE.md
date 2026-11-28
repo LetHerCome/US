@@ -1,6 +1,98 @@
 # Prossima patch in produzione
 
-## Dopo la 1.5.1 (in raccolta)
+## Patch 1.6.0: il redesign, i personaggi e Play Us (28/11/2026)
+
+**Stato:** ramo `release/1.6.0` da `main` (`ad778f78`) con dentro tutto staging (`1e5eb72a`, PR fino alla #330), solo locale. «Sì, prepariamo» del founder il 28/11. Niente ancora in produzione: SQL, funzioni, sito, AAB e TestFlight aspettano ciascuno il suo via in chat.
+
+**Riallineamento:** i 15 conflitti del merge si risolvono tutti con la versione di staging. Il 23/11 staging è ripartito dai file di main `ad778f78` (commit `9cdae71a`) e main da allora non è cambiato, quindi i fix iOS di main (widget W0+W1, firma e invio TestFlight, fogli con la tastiera) sono già dentro. Dopo il merge l'albero è uguale a staging, più questa nota e le Novità. Dopo l'uscita, main va riunito in staging lo stesso giorno, così i due rami tornano uno.
+
+### Novità per Play (1.6.0)
+
+**Italiano (it-IT):**
+US ha un aspetto nuovo. Ognuno di voi ha il suo personaggio, coi vostri colori, e di giorno e di notte. Arriva Play Us: giocate insieme dal vivo, ognuno dal suo telefono. In Gioca ogni giorno tre gettoni e tante domande a scelta. Ricordi diventa a polaroid con la vostra bacheca, Noi ha la lavagna coi post-it e US vi ricorda i vostri momenti.
+
+**English (en-US):**
+US has a new look. Each of you has your own character, in your colours, by day and by night. Meet Play Us: play together live, each on your own phone. In Play, three tokens every day and plenty of multiple-choice questions. Memories turns into polaroids with your own board, Us gets a whiteboard with sticky notes, and US reminds you of your moments.
+
+### Novità in app (id `1.6.0`)
+
+Titolo «US si è aggiornata». Voci (in `app.js` `US_WHATS_NEW`, inglese in `i18n-en.js`):
+- US ha un aspetto nuovo: ognuno di voi ha il suo personaggio, coi vostri colori. In Profilo › Aspetto scegliete Giorno o Notte.
+- Play Us: giocate insieme dal vivo, ognuno dal suo telefono. In Gioca ogni giorno tre gettoni e domande a scelta.
+- In Ricordi le vostre foto diventano istantanee con la vostra bacheca, e Noi ha la lavagna coi post-it. (Niente «polaroid» nel codice: lo vieta `m12a-game-ricordi-motion`.)
+- US vi ricorda i vostri momenti, e i widget mostrano i vostri personaggi.
+
+### Ordine in produzione
+
+Vincolo: dal 27/11 (in staging, entra in main con questa patch) i workflow «Supabase SQL (manual)» ed «Supabase Edge deploy (manual)» in production accettano solo `ref` = `main`, avviati da `main`. Quindi il codice deve essere su `main` **prima** di SQL ed Edge, ma il sito nuovo non deve uscire prima del server. Soluzione proposta: fermare per un'ora la pubblicazione automatica di Cloudflare Pages su `main`.
+
+0. **Controlli in sola lettura (fatti il 28/11, vedi sotto)** e via del founder.
+1. **Cloudflare Pages, progetto `us`:** sospendere le pubblicazioni automatiche della produzione (Impostazioni › Build › Production deployments). Lo fa il founder dal pannello.
+2. **Build id:** `npm run build:id -- us-rilascio-<AAAAMMGG>-110` sul ramo, test, commit.
+3. **Merge su `main`** di `release/1.6.0` (PR, CI verde). Col punto 1 il sito di `www.uscouple.app` resta la 1.5.1.
+4. **33 migrazioni, una per run**, workflow «Supabase SQL (manual)», target production, ref `main`, conferma PRODUZIONE. Le funzioni Edge segnate vanno pubblicate nel punto indicato:
+   1. `20261115183900_personaggi_forma_e_colori` (5 profili su 20 cambiano colore: 3 rubino → prugna, 2 cielo → blu; il sito vecchio non salva più oro, cielo e rubino)
+   2. `20261120232852_personaggi_guardaroba`
+   3. `20261123231417_personaggi_scala_premi`
+   4. `20261124233000_calendario_ci_vediamo`
+   5. `20261125120000_couple_notes_posto`
+   6. `20261125200000_us_vi_ricorda_v1`
+   7. `20261125230000_us_bacheca_v1`
+   8. `20261126000000_premi_oggi_effetti`
+   9. `20261126010000_premi_simbolo`
+   10. `20261126020000_premi_temi_countdown`
+   11. `20261127092454_invito_14_giorni`
+       → **Edge `invite-reminder-job`** (legge la chiave del cron creata qui; va pubblicata prima del cron)
+   12. `20261127092908_invito_promemoria_cron` (crea nel Vault `us_invite_reminder_cron_key`; `us_project_url` di produzione già giusto)
+   13. `20261127093503_push_ricorda_personaggio`
+       → **Edge `us-ricorda-push-worker`**
+   14. `20261127093507_ricorda_push_cron` (crea `us_ricorda_push_cron_key`)
+   15. `20261127093508_prima_settimana`
+   16. `20261127120000_us_battute_mute_bacheca`
+   17. `20261127122511_bacheca_postit_ricerca`
+   18. `20261127130000_premi_apostrofi`
+   19. `20261127141307_cuori_ti_penso`
+   20. `20261127152323_widget_ti_penso_ripetuto`
+   21. `20261127184444_gioca_intesa_v1`
+   22. `20261127184637_come_stai_risposta`
+   23. `20261127184701_come_stai_muto`
+   24. `20261127202326_il_vostro_mese`
+   25. `20261127230104_mese_posti_coordinate`
+   26. `20261128090123_play_us_v1` (regole su `realtime.messages`: oggi in produzione non ce n'è nessuna, RLS attivo)
+   27. `20261128101816_play_us_punti`
+   28. `20261128104908_contenuti_1_2` (si ferma da sola se le tre funzioni non sono quelle controllate: in produzione le due che esistono hanno l'md5 atteso, `play_us_answer` arriva dalla 26)
+   29. `20261128104932_bilanciamento_v1`
+   30. `20261128113629_contenuti_plus_vetrina`
+   31. `20261128115152_contenuti_hot`
+   32. `20261128122730_domande_a_scelta` (141 domande: 76 già in produzione col testo atteso, le altre 65 arrivano dalla 28 e dalla 31)
+   33. `20261128125827_ritocchi_testi`
+5. **Le altre 15 funzioni Edge**, workflow «Supabase Edge deploy (manual)», ref `main`, PRODUZIONE, mai `s3-staging-send-web-push`. Sono tutte quelle il cui codice (o un file di `_shared` che importano) è cambiato dalla 1.5.1:
+   `send-web-push` (tipi `play_invite`, `postit`, `bacheca_postit`, Come stai, segnali dei widget), `widget-think-send` (Ti penso ×N), `widget-device-token`, `delete-account`, `leave-couple`, `account-deletion-worker`, `export-my-data`, `calendar-reminders-worker`, `daily-question-push-worker`, `game-v2-push`, `game-v2-push-worker`, `left-for-you-push-worker`, `monthiversary-job`, `weekly-challenge-job`, `us-widget-state` (**da decidere**, vedi sotto).
+6. **Sito:** riattivare le pubblicazioni di Cloudflare e pubblicare il commit di `main`; controllare che `www.uscouple.app` serva il build id nuovo e che le Novità dicano `1.6.0`.
+7. **AAB 1.6.0** (workflow «Android Play bundle», versionName 1.6.0) e **TestFlight 1.6.0** (`ios-testflight.yml`) dallo stesso commit di `main`. Servono tutte e due: barra di stato, widget col redesign, testo grande, Ti penso ×N, widget aggiornati ad app chiusa.
+8. **Dopo:** prova di Bea su TestFlight; main riunito in staging; nota svuotata; `docs/CURRENT_STATE.md` aggiornato (fermo al 09/11); memoria.
+
+### Controlli in sola lettura sulla produzione (28/11, Supabase CLI, solo SELECT)
+
+- **md5 delle funzioni di `contenuti_1_2`:** `private.game_v2_candidates` = `585d2aa6…` e `public.start_swipe_round` = `e408d3e8…`, uguali ai valori controllati; `public.play_us_answer` non c'è ancora (la crea `play_us_v1`). Nessuna migrazione prima della 28 ridefinisce le prime due.
+- **Le 141 domande di `domande_a_scelta`:** 76 sono in produzione con versione, italiano e inglese uguali a quelli che la migrazione si aspetta; le 65 che mancano sono tutte inserite da `contenuti_1_2` (57) e `contenuti_hot` (8). Nessuna diversa.
+- **`realtime.messages`:** RLS attivo, nessuna regola oggi: dopo `play_us_v1` ci saranno solo `us_couple_channel_listen` e `us_couple_channel_send`.
+- **Vault:** `us_project_url` = `https://iiakdfsxpywdkxravqjh.supabase.co` (quello che i due cron richiedono); le chiavi `us_invite_reminder_cron_key` e `us_ricorda_push_cron_key` non ci sono ancora (le creano le migrazioni 12 e 14).
+- **Funzioni che le migrazioni richiedono:** `private.current_couple_id()` e `private.couple_has_plus(uuid,timestamptz)` ci sono.
+- **Colori:** 20 profili; 11 senza colore, 3 rubino, 2 cielo, 2 salvia, 1 lilla, 1 pesca.
+- **Cron attivi (10):** fra questi `us-weekly-challenge-hourly` e `us-widget-scriptable-state-expiry`.
+- Query in `docs/store/US_CONTROLLI_1_6_0.sql`; da rifare subito prima del punto 4 se passa del tempo.
+
+### Rischi e decisioni prima del via
+
+- **Play Us non è mai stato provato su due telefoni.** Usa Realtime (Presence e Broadcast sul canale privato della coppia): va provato su staging con due account prima del merge, oppure va nascosto per la 1.6.0.
+- **`us-widget-state`:** il codice del repo rifiuta i token «Scriptable». Pubblicarlo spegne il widget Scriptable di Bea, che oggi in produzione funziona ancora (cron `us-widget-scriptable-state-expiry` attivo). Ora i widget iPhone veri ci sono, ma serve un sì esplicito. Senza pubblicarlo, il widget Android della Sintonia usa la curva vecchia dei livelli.
+- **Sfida della settimana:** in app non c'è più, ma il cron `us-weekly-challenge-hourly` manda ancora gli avvisi del lunedì e del sabato. Va deciso se fermarlo (una migrazione nuova, prima su staging).
+- **Colori:** 5 persone vedranno il loro colore cambiare (rubino → prugna, cielo → blu).
+- **Durata:** 33 migrazioni e 17 funzioni sono una cinquantina di run, un'ora circa. Nel frattempo è online il sito vecchio con il server nuovo: quasi tutte le migrazioni aggiungono, ma alcune cambiano dati che il sito vecchio legge (colori, accessori fuori dalla scala nuova, curva dei livelli di `bilanciamento_v1`). Conviene farle di sera, quando l'app si usa poco.
+- **Test:** `npm test` sul ramo in locale, con le Novità 1.6.0: 3139 test, 3090 passati, 0 falliti, 49 saltati; `npm run build:cloudflare-pages` passa; `git diff --check` pulito. Nella prima prova era fallito `dc-primo-first-run-browser` (un foglio di conferma copriva «Entra in US» con la macchina carica): rilanciato da solo passa, ed è da tenere d'occhio. In CI la suite completa gira sulla PR verso `main`.
+
+## Le voci della 1.6.0 (raccolte su staging dal 15 al 28/11)
 
 ### Contenuti 1.4: domande a scelta in Gioca (28/11)
 

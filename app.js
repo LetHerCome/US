@@ -3293,12 +3293,13 @@ function usHeartLike(button){const turn=window.UsUiFoundation?.heartTurn?.(windo
 // Novità (founder, 30/10/2026): the beta testers see once, after the update,
 // what changed. One id per release; a new install does not see it.
 const US_WHATS_NEW=Object.freeze({
-  id:'1.5.1',
+  id:'1.6.0',
   title:'US si è aggiornata',
   items:[
-    'Su Oggi, dopo la domanda, US vi propone il gesto successivo e conta i giorni di fila che passate insieme.',
-    'Abbiamo riletto tutti i testi di US: domande, giochi e notifiche ora sono più chiari.',
-    'I promemoria del calendario dicono l’ora giusta, e «domani» quando serve. E il gattino non sparisce più in Ricordi e Gioca.'
+    'US ha un aspetto nuovo: ognuno di voi ha il suo personaggio, coi vostri colori. In Profilo › Aspetto scegliete Giorno o Notte.',
+    'Play Us: giocate insieme dal vivo, ognuno dal suo telefono. In Gioca ogni giorno tre gettoni e domande a scelta.',
+    'In Ricordi le vostre foto diventano istantanee con la vostra bacheca, e Noi ha la lavagna coi post-it.',
+    'US vi ricorda i vostri momenti, e i widget mostrano i vostri personaggi.'
   ]
 });
 function usShowWhatsNew(returning){

@@ -2674,6 +2674,10 @@
     'Su Oggi, dopo la domanda, US vi propone il gesto successivo e conta i giorni di fila che passate insieme.': 'On Today, after the question, US suggests what to do next and counts the days in a row you spend together.',
     'Abbiamo riletto tutti i testi di US: domande, giochi e notifiche ora sono più chiari.': 'We reread every text in US: questions, games and notifications are now clearer.',
     'I promemoria del calendario dicono l’ora giusta, e «domani» quando serve. E il gattino non sparisce più in Ricordi e Gioca.': 'Calendar reminders now say the right time, and «tomorrow» when needed. And the kitten no longer disappears in Memories and Play.',
+    'US ha un aspetto nuovo: ognuno di voi ha il suo personaggio, coi vostri colori. In Profilo › Aspetto scegliete Giorno o Notte.': 'US has a new look: each of you has your own character, in your colours. In Profile › Appearance pick Day or Night.',
+    'Play Us: giocate insieme dal vivo, ognuno dal suo telefono. In Gioca ogni giorno tre gettoni e domande a scelta.': 'Play Us: play together live, each on your own phone. In Play, three tokens every day and multiple-choice questions.',
+    'In Ricordi le vostre foto diventano istantanee con la vostra bacheca, e Noi ha la lavagna coi post-it.': 'In Memories your photos become instant prints with your own board, and Us gets a whiteboard with sticky notes.',
+    'US vi ricorda i vostri momenti, e i widget mostrano i vostri personaggi.': 'US reminds you of your moments, and the widgets show your characters.',
     'US PLUS': 'US PLUS',
     'Partite illimitate e altro, per tutti e due': 'Unlimited games and more, for both of you',
     // La cosa di oggi (13/11/2026)
