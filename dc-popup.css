@@ -39,6 +39,8 @@
 .us-icon[data-us-icon="sign-out"]{--us-icon-src:url("/assets/icons/phosphor/sign-out-regular.svg")}
 .us-icon[data-us-icon="wifi-slash"]{--us-icon-src:url("/assets/icons/phosphor/wifi-slash-regular.svg")}
 .us-icon[data-us-icon="download-simple"]{--us-icon-src:url("/assets/icons/phosphor/download-simple-regular.svg")}
+.us-icon[data-us-icon="eye"]{--us-icon-src:url("/assets/icons/phosphor/eye-regular.svg")}
+.us-icon[data-us-icon="eye-slash"]{--us-icon-src:url("/assets/icons/phosphor/eye-slash-regular.svg")}
 
 /* ---------- Every sheet: flat night material, hairline, no blur ---------- */
 .us-sheet{

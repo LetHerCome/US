@@ -185,8 +185,9 @@ test('M10.1C/US 1.0: quick create collects presets/title, all-day and explicit s
   const form = html.match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)[0];
   const inputs = [...form.matchAll(/<(?:input|textarea|select)[^>]*id="([^"]+)"/g)].map((m) => m[1]);
   // 04/11/2026: «+» opens a field for a quick title of your own, among the presets.
-  // Noi, Fase A (24/11/2026): Quando and one time, then Ci vediamo and Ogni anno; all day and the end stay hidden.
-  assert.deepEqual(inputs, ['usCalendarPresetNewInput', 'usCalendarTitleInput', 'usCalendarDateInput', 'usCalendarStartTimeInput', 'usCalendarAllDayInput', 'usCalendarMeetInput', 'usCalendarYearlyInput', 'usCalendarEndTimeInput'], 'date input is edit-only; timed entries expose a compact range');
+  // Noi, Fase A (24/11/2026): Quando and Inizio, then Ci vediamo and Ogni anno; all day stays hidden.
+  // 28/11/2026: Fine «se vuoi» sits next to Inizio.
+  assert.deepEqual(inputs, ['usCalendarPresetNewInput', 'usCalendarTitleInput', 'usCalendarDateInput', 'usCalendarStartTimeInput', 'usCalendarEndTimeInput', 'usCalendarAllDayInput', 'usCalendarMeetInput', 'usCalendarYearlyInput'], 'date input is edit-only; timed entries expose a compact range');
   assert.doesNotMatch(form, /Durata|duration|Ricordamelo|reminder|<textarea|Nota/i);
   assert.match(calSrc, /setFormKind\(mode === 'edit' \? entry\.entry_type : 'personal'\);/);
   assert.match(calSrc, /const kind = ideaLink \|\| meet \? 'shared' : calendarKind;/);

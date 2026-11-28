@@ -33,6 +33,10 @@
 #quiz #quizHub .us-gv2-game[data-gv2-family="scopritevi"]{grid-column:2;grid-row:2}
 #quiz #quizHub .us-gv2-game[data-gv2-family]:not([data-gv2-family="scopritevi"]){grid-column:auto;grid-row:auto}
 #quiz #quizHub .us-gv2-game::after{display:none}
+/* Opening a round (28/11/2026): the tapped card says «Apro…» until the server answers. */
+#quiz #quizHub .us-gv2-game[aria-busy="true"]::after{content:"Apro…";display:grid;place-items:center;position:absolute;inset:0;z-index:3;width:auto;height:auto;border-radius:inherit;background:rgba(18,13,17,.55);color:#f7efe9;font:800 15px/1 var(--us-font-ui,'Figtree',sans-serif);pointer-events:none;animation:us-gv2-apro 1.2s ease-in-out infinite}
+@keyframes us-gv2-apro{50%{background:rgba(18,13,17,.4)}}
+@media (prefers-reduced-motion:reduce){#quiz #quizHub .us-gv2-game[aria-busy="true"]::after{animation:none}}
 #quiz #quizHub :is(.us-gv2-game,.us-gv2-pervoi) .us-gv2-glyph{display:block;position:static;width:44px;height:44px;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;color:inherit;opacity:1;animation:none}
 #quiz #quizHub :is(.us-gv2-game,.us-gv2-pervoi) .us-gv2-glyph::before,#quiz #quizHub :is(.us-gv2-game,.us-gv2-pervoi) .us-gv2-glyph::after{content:none;display:none}
 #quiz #quizHub .us-gv2-art{display:block;width:44px;height:44px;overflow:visible}

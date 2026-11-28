@@ -469,7 +469,8 @@ function riseDetail(){
 // and minutes; on the day itself the two are together.
 let meetTimer=0;
 const meetStart=e=>e.is_all_day?dateOf(e.start_date).setHours(0,0,0,0):new Date(e.starts_at).getTime();
-const meetEnd=e=>e.is_all_day?dateOf(e.end_date||e.start_date).setHours(23,59,59,999):new Date(e.ends_at||e.starts_at).getTime();
+// A meeting without an end (Fine «se vuoi», 28/11) lasts until that day ends.
+const meetEnd=e=>{if(e.is_all_day)return dateOf(e.end_date||e.start_date).setHours(23,59,59,999);const s=new Date(e.starts_at),end=new Date(e.ends_at||e.starts_at).getTime();return end-s.getTime()<=60000?new Date(s).setHours(23,59,59,999):end;};
 function nextMeeting(){
   const now=Date.now();
   return (upcoming?.appointments||[]).filter(e=>e.ci_vediamo&&meetEnd(e)>=now).sort((a,b)=>meetStart(a)-meetStart(b))[0]||null;

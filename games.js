@@ -845,10 +845,26 @@ const VENN = '<span class="us-gv2-venn" aria-hidden="true"><i class="is-a"></i><
 
 // ---------------------------------------------------------------- rounds
 
-async function startRound(family) {
+// Opening a round (founder, 28/11/2026: «inizio un gioco, non viene, se ne va il
+// gettone»): the tapped card says «Apro…» while the server works; once it has
+// answered, a round is opened only if Gioca is still on screen (else it waits in
+// the hub as «Da giocare», free to resume, never a sheet in a page you cannot
+// see); and the hub is read again after any failure, so the tokens are the real ones.
+const inGioca = () => document.querySelector('.page.active')?.id === 'quiz';
+function opening(from, on) {
+  if (!from?.setAttribute) return;
+  if (on) from.setAttribute('aria-busy', 'true'); else from.removeAttribute('aria-busy');
+}
+async function openStarted(data) {
+  settleToken(data);
+  if (inGioca()) await present(data);
+  load();
+}
+async function startRound(family, from) {
   const sameIdentity=gameIdentityGuard();
   if (busy) return;
   busy = true;
+  opening(from, true);
   try {
     const requestId = startRequestIds.get(family) || uuid();
     startRequestIds.set(family, requestId);
@@ -856,9 +872,7 @@ async function startRound(family) {
     if(!sameIdentity())return false;
     if (error) throw error;
     startRequestIds.delete(family);
-    settleToken(data);
-    await present(data);
-    load();
+    await openStarted(data);
   } catch (error) {
     console.warn('[US Gioca] start', error);
     paintTokens();
@@ -871,17 +885,18 @@ async function startRound(family) {
       : /weekly allowance exhausted/.test(msg) ? EXHAUSTED
       : /too many open rounds/.test(msg) ? 'Prima finite uno dei giochi in corso.'
       : 'Non riesco ad aprire la partita. Riprova.');
-    if (/weekly|too many open rounds/.test(msg)) load();
-  } finally { busy = false; }
+    load();
+  } finally { busy = false; opening(from, false); }
 }
 
 // A mode tile: resume its open round; a mode already played this week asks
 // once before spending today's game on it; nothing starts once the day's
 // game is spent (history stays one tap away).
-async function startSwipe() {
+async function startSwipe(from) {
   const sameIdentity=gameIdentityGuard();
   if (busy) return;
   busy = true;
+  opening(from, true);
   try {
     const requestId = startRequestIds.get('swipe') || uuid();
     startRequestIds.set('swipe', requestId);
@@ -889,9 +904,7 @@ async function startSwipe() {
     if(!sameIdentity())return false;
     if (error) throw error;
     startRequestIds.delete('swipe');
-    settleToken(data);
-    await present(data);
-    load();
+    await openStarted(data);
   } catch (error) {
     console.warn('[US Gioca] swipe start', error);
     paintTokens();
@@ -901,8 +914,8 @@ async function startSwipe() {
       : /too many open rounds/.test(msg) ? 'Prima finite uno dei giochi in corso.'
       : /not enough swipe content/.test(msg) ? 'Le nuove carte di Questo o quello non sono ancora pronte.'
       : 'Non riesco ad aprire Questo o quello. Riprova.');
-    if (/weekly|too many open rounds/.test(msg)) load();
-  } finally { busy = false; }
+    load();
+  } finally { busy = false; opening(from, false); }
 }
 
 async function chooseSwipe(from) {
@@ -915,7 +928,7 @@ async function chooseSwipe(from) {
     return toast(EXHAUSTED);
   }
   if (canSpend()) flyToken(from);
-  return startSwipe();
+  return startSwipe(from);
 }
 
 async function chooseMode(family, from) {
@@ -928,7 +941,7 @@ async function chooseMode(family, from) {
     return toast(EXHAUSTED);
   }
   if (canSpend()) flyToken(from);
-  return startRound(family);
+  return startRound(family, from);
 }
 
 async function openSession(id) {
@@ -948,7 +961,7 @@ async function openPerVoi(from) {
   if (sid) return openSession(sid);
   if (busy) return;
   if (canSpend()) flyToken(from);
-  return startRound('per_voi');
+  return startRound('per_voi', from);
 }
 
 async function present(state) {

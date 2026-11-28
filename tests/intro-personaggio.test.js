@@ -167,3 +167,15 @@ test('intro: in the real app you make your character, then the tour; once made, 
     await ctx.close();
   } finally { await h.close(); }
 });
+
+test('intro più fluida (28/11/2026): the light grows with the bar, «us» keeps it open, the page holds its endless animations, never over the opening', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'intro.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'struttura.css'), 'utf8');
+  assert.match(src, /id: 'us', target: \(\) => firstVisible\('#usIsola'\), pill: true, keep: true/);
+  assert.match(src, /if \(step\.keep && isolaAperta\(\)\)/);
+  assert.match(src, /function followIsola\(step\)/);
+  assert.match(src, /\}, reduced\(\) \? 200 : 500\);/, 'the bar opens after half a second, not 1.1 s');
+  assert.match(src, /!d\.documentElement\.classList\.contains\('us-launch-play'\)/);
+  assert.match(css, /\.us-intro-hole\.is-follow\{transition:none\}/);
+  assert.match(css, /html\.us-intro-open \.app \*,html\.us-intro-open \.app \*::before,html\.us-intro-open \.app \*::after\{animation-play-state:paused!important\}/);
+});

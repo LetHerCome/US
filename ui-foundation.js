@@ -636,6 +636,15 @@
       unlock
     };
 
+    // Ready from the opening (founder, 28/11/2026: «il suono si sente solo dopo un po»):
+    // the audio session is built, silent and suspended, in the first idle moment after
+    // the page has loaded, so the first gesture only resumes it and the first taps
+    // already sound. Nothing plays before a gesture.
+    if (documentRef && preferences.sounds) {
+      const early = () => warmUp();
+      if (documentRef.readyState === 'complete') early();
+      else environment.addEventListener?.('load', early, { once: true });
+    }
     // Audio is allowed only after a real gesture; one delegated listener also
     // gives declarative feedback: [data-us-feedback="tap|action|..."].
     if (documentRef?.addEventListener) {

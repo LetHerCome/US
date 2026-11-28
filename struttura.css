@@ -189,8 +189,8 @@
 :root{--us-isola-open-w:min(232px,calc(100vw - 100px))}
 .top.us-premium-top[data-us-isola="open"] .us-isola{width:var(--us-isola-open-w);height:50px;background:rgba(18,13,17,.8);border-color:rgba(247,239,233,.24);box-shadow:0 10px 26px rgba(0,0,0,.35)}
 .top.us-premium-top .us-isola:focus-visible{outline:2px solid #f7efe9;outline-offset:3px}
-.us-isola-window{position:absolute;left:18px;bottom:0;width:72px;height:46px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;pointer-events:none}
-.us-isola-window .us-char{display:block;flex:none;margin-bottom:-5px;transform:translateY(50px);transition:transform .5s cubic-bezier(.2,.9,.25,1.15)}
+.us-isola-window{position:absolute;left:18px;top:0;bottom:0;width:72px;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none}
+.us-isola-window .us-char{display:block;flex:none;margin-top:-3px;transform:translateY(50px);transition:transform .5s cubic-bezier(.2,.9,.25,1.15)}
 .us-isola-window .us-char+.us-char{margin-left:-12px}
 [data-us-isola="open"] .us-isola-window .us-char{transform:none;transition-delay:.12s}
 [data-us-isola="open"] .us-isola-window .us-char+.us-char{transition-delay:.2s}
@@ -411,6 +411,11 @@
 .us-intro.is-open{opacity:1}
 .us-intro-hole{position:absolute;box-shadow:0 0 0 200vmax rgba(16,10,16,.62),0 0 0 2px rgba(255,255,255,.92) inset,0 0 26px rgba(255,255,255,.32);transition:left .55s cubic-bezier(.3,.8,.25,1),top .55s cubic-bezier(.3,.8,.25,1),width .55s cubic-bezier(.3,.8,.25,1),height .55s cubic-bezier(.3,.8,.25,1),border-radius .3s;pointer-events:none}
 .us-intro-hole.is-none{left:50%;top:50%;width:0;height:0}
+/* The light grows with the opening bar, frame by frame (intro.js followIsola). */
+.us-intro-hole.is-follow{transition:none}
+/* Under the intro the page holds its endless animations (orbits, breaths, beats):
+   less work on every frame, so the intro runs smooth on a phone (28/11/2026). */
+html.us-intro-open .app *,html.us-intro-open .app *::before,html.us-intro-open .app *::after{animation-play-state:paused!important}
 .us-intro-hole.is-tap::after{content:"";position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:rgba(255,255,255,.55);animation:us-intro-tap .7s ease-out both}
 @keyframes us-intro-tap{0%{opacity:.85;transform:scale(.3)}100%{opacity:0;transform:scale(1.9)}}
 .us-intro-guide{position:absolute;left:0;top:0;transition:transform .7s cubic-bezier(.3,.8,.25,1);pointer-events:none}
