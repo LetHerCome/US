@@ -66,7 +66,7 @@ Vincolo: dal 27/11 (in staging, entra in main con questa patch) i workflow «Sup
    31. `20261128115152_contenuti_hot`
    32. `20261128122730_domande_a_scelta` (141 domande: 76 già in produzione col testo atteso, le altre 65 arrivano dalla 28 e dalla 31)
    33. `20261128125827_ritocchi_testi`
-   34. `20261128141224_sfida_settimana_spenta` (toglie il cron `us-weekly-challenge-hourly`; su staging non c'era, quindi lì non cambia niente)
+   34. `20261128141224_sfida_settimana_spenta` (toglie il cron `us-weekly-challenge-hourly`; applicata su US-STAGING il 28/11, run 46154312574, dove il cron non c'era e non è cambiato niente)
        → **cancellare la funzione `weekly-challenge-job`** dal progetto di produzione (`supabase functions delete weekly-challenge-job --project-ref iiakdfsxpywdkxravqjh`): non va più pubblicata. Il codice resta nel repo per ora.
 5. **Le altre 14 funzioni Edge**, workflow «Supabase Edge deploy (manual)», ref `main`, PRODUZIONE, mai `s3-staging-send-web-push`. Sono tutte quelle il cui codice (o un file di `_shared` che importano) è cambiato dalla 1.5.1:
    `send-web-push` (tipi `play_invite`, `postit`, `bacheca_postit`, Come stai, segnali dei widget), `widget-think-send` (Ti penso ×N), `widget-device-token`, `delete-account`, `leave-couple`, `account-deletion-worker`, `export-my-data`, `calendar-reminders-worker`, `daily-question-push-worker`, `game-v2-push`, `game-v2-push-worker`, `left-for-you-push-worker`, `monthiversary-job`, `us-widget-state` (curva nuova dei livelli; spegne il widget Scriptable di Bea, deciso dal founder il 28/11).
