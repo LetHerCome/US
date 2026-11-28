@@ -127,19 +127,25 @@ test('the sheet and the Oggi row: the gesture, «Mandato ♡», the Noi calendar
   assert.match(person, /id="usStatusPersonVoice">Lascia un vocale<\/button>/);
   const row = html.slice(html.indexOf('<div class="us-status-group" id="usOggiStatusGroup"'), html.indexOf('<!-- The answers read'));
   for (const id of ['usOggiPartner', 'usOggiStatusReply', 'usOggiStatus', 'usOggiGot']) assert.match(row, new RegExp(`id="${id}"`), id);
-  assert.match(row, /<small class="us-status-change" data-status-change>· Cambia<\/small>/);
+  // Ritocchi del 28/11: one pill in two halves, the line between them, «＋ Tu».
+  assert.ok(row.indexOf('us-status-half-her') < row.indexOf('us-status-sep') && row.indexOf('us-status-sep') < row.indexOf('us-status-half-me'), 'her half | me');
+  assert.ok(row.indexOf('id="usOggiStatusReply"') < row.indexOf('us-status-sep'), 'the gesture inside the left half');
+  assert.match(row, /<span class="us-status-plus" aria-hidden="true">＋<\/span><span data-status-mine-emoji aria-hidden="true"><\/span><span data-status-mine>Tu<\/span>/);
+  assert.doesNotMatch(row, /Cambia|Come stai\?<\/span>/);
   const sheet = html.slice(html.indexOf('<div id="usStatusSheet"'), html.indexOf('<div id="usStatusPerson"'));
   assert.ok(sheet.indexOf('Come ti senti') < sheet.indexOf('data-status="innamorato"') && sheet.indexOf('Cosa stai facendo') < sheet.indexOf('data-status="festa"') && sheet.indexOf('data-status="malato"') < sheet.indexOf('Cosa stai facendo'), 'two groups');
   assert.doesNotMatch(sheet, /usStatusPartnerLine|Lo vede solo/);
   assert.match(html, /<p id="usStatusTripText">Lo segno nel calendario di Noi\?<\/p>/);
   const css = read('member-status.css');
-  // One item of the row, never two lines; 40 px like every pill of the row, 44 px of tap area.
-  assert.match(css, /\.og-row \.us-status-group:not\(\[hidden\]\)\{[^}]*flex:1 1 var\(--us-status-basis,100%\);[^}]*flex-wrap:nowrap;/);
-  assert.match(css, /\.us-status-group>button\{[^}]*height:40px;/);
-  assert.match(css, /\.us-status-group>button::after\{content:"";position:absolute;inset:-2px 0\}/);
+  // One pill with the distance's glass, never two lines inside; its readable width is its minimum.
+  assert.match(css, /\.og-row \.us-status-group:not\(\[hidden\]\)\{[^}]*flex:1 1 var\(--us-status-basis,150px\);[^}]*height:40px;min-width:var\(--us-status-basis,150px\);[^}]*border:1px solid var\(--us-color-line-strong\);border-radius:999px;background:var\(--dc-oggi-glass\);[^}]*color:var\(--us-color-text\);/);
+  assert.match(css, /\.us-status-group \.us-status-act::after\{content:"";position:absolute;inset:-5px -2px\}/);
+  assert.match(read('giorno.css'), /:is\(#usOggiNext,#distanceWidget,#usOggiStatusGroup\)\{background:#fbf7f0!important/);
   assert.match(css, /\.us-status-person>button\{[^}]*min-height:48px/);
-  assert.match(css, /\.us-status-act\{background:#b8432f!important/);
-  assert.match(css, /prefers-reduced-motion:reduce\)\{#home #homeHero \.us-status-pill \.us-status-dot\{animation:none\}/);
+  assert.match(css, /\.us-status-group \.us-status-act\{height:30px;[^}]*background:#b8432f;/);
+  assert.match(css, /\.us-status-plus\{[^}]*background:var\(--us-rosa,#ff7c96\);[^}]*animation:us-status-beat/);
+  assert.match(css, /prefers-reduced-motion:reduce\)\{#home #homeHero \.us-status-plus\{animation:none\}/);
+  assert.match(css, /:root\[data-us-motion="reduced"\] #home #homeHero \.us-status-plus\{animation:none\}/);
   assert.match(css, /\.us-status-trip button\{min-height:44px/);
   const module = read('member-status.js');
   assert.match(module, /db\.rpc\('respond_member_status', \{ p_status_set_at: state\.partner\.set_at, p_gesture: g \}\)/);
@@ -162,8 +168,9 @@ test('the clearer version (tavola «Come stai di US»): short words, «Manda …
   assert.deepEqual(S.THIRD.stanco, { m: '{name} è stanco', f: '{name} è stanca', n: '{name} è senza energie' });
   assert.equal(S.THIRD.malato, '{name} non sta bene');
   const js = read('member-status.js');
-  // Never a line more: the smallest form is the flex-basis, then the richest form that fits.
-  assert.match(js, /group\.style\.setProperty\('--us-status-basis', `\$\{smallest\}px`\);/);
+  // The readable form (never under 104 px) is the minimum, then the richest form that fits.
+  assert.match(js, /const LEVELS = '123', FIT_MAX = 3, MIN_READABLE = 104;/);
+  assert.match(js, /const basis = Math\.min\(room, Math\.max\(MIN_READABLE, widths\[FIT_MAX\]\)\);/);
   assert.match(js, /if \(target\.closest\('#usOggiPartner'\)\) \{ openPerson\(\); return; \}/);
   assert.match(read('navigation.js'), /name:'statusPerson',\s*find:\(\)=>document\.getElementById\('usStatusPerson'\)/);
 });

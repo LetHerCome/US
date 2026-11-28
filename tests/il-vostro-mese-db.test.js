@@ -252,6 +252,10 @@ test('every kind read live, mine and theirs from each side; an answer deleted tu
   const places = byK(forF, 'posti');
   assert.deepEqual(places.places.map((p) => p.label), ['Padova', 'Venezia']);
   assert.ok(places.places.every((p) => p.nuovo), 'never seen before October');
+  // 28/11: a real map. Each place has its memory's coordinates and day, in the order of the days.
+  assert.ok(places.places.every((p) => Number(p.lat) === 45.4 && Number(p.lon) === 11.9), 'the memory\'s coordinates');
+  const days = places.places.map((p) => p.day);
+  assert.ok(days.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)) && days.join() === [...days].sort().join(), 'by day');
   assert.deepEqual([byK(forF, 'intesa').same, byK(forF, 'intesa').total], [3, 4]);
   assert.deepEqual([byK(forF, 'numeri').games, byK(forF, 'numeri').questions], [1, 1]);
   await q('delete from public.daily_answers where question_id = $1 and user_id = $2', [qid, h.B]);

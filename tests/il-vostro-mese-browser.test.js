@@ -79,6 +79,11 @@ test('the pack: torn by a drag, ten cards, the rare one last, the fan; one card 
     await page.keyboard.press('ArrowLeft');
     assert.equal(await page.locator('#usMese [data-um="vcount"]').innerText(), '3 / 10');
     assert.equal(await page.locator('#usMese [data-um="pin"]').count(), 0, 'the places: nothing to pin');
+    // 28/11: a real map, the countries from the local file, a point per place, the two pins.
+    await page.waitForFunction(() => (document.querySelector('#usMese [data-um="vbox"] [data-um-land]')?.getAttribute('d') || '').length > 500, null, { timeout: 8000 });
+    assert.equal(await page.locator('#usMese [data-um="vbox"] .map circle').count(), 3);
+    assert.equal(await page.locator('#usMese [data-um="vbox"] .pin').count(), 2);
+    assert.deepEqual(await page.evaluate(() => performance.getEntriesByType('resource').map((e) => e.name).filter((n) => /mondo-110m/.test(n)).length), 1, 'loaded once');
     await page.click('#usMese [data-um="prev"]');
     await page.click('#usMese [data-um="prev"]');
     assert.equal(await page.locator('#usMese [data-um="vcount"]').innerText(), '1 / 10');

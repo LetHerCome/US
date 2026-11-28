@@ -125,6 +125,8 @@
   }
   const identityKey = (profile) => (profile?.id && profile?.couple_id ? `${profile.id}:${profile.couple_id}` : '');
   const partnerName = () => w.UsIdentity?.current?.()?.partnerName || 'La tua persona';
+  // The pill's short name: the first word («Beatrice Maria» → «Beatrice»); the full one stays in the aria-label.
+  const shortName = (name) => (name === 'La tua persona' ? t(name) : String(name || '').trim().split(/\s+/)[0] || name);
   const t = (text, vars) => (typeof w.usT === 'function' ? w.usT(text, vars) : String(text).replace(/\{([a-z]+)\}/gi, (all, k) => vars?.[k] ?? all));
 
   function reset() {
@@ -163,32 +165,44 @@
     return Number.isFinite(at.getTime()) ? `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}` : '';
   };
 
-  // Oggi's second row (tavola «Come stai di US»: «senza spostare niente»): one
-  // flex item whose basis is its smallest form, so it takes the lines the old
-  // pill took; then the richest form that fits. Levels: my words go first
-  // (1–5), then their name shrinks, my pill yields to a received gesture (6),
-  // their pill keeps only the face (7), the gesture only its emoji (8).
-  const LEVELS = '12345678', FIT_MAX = 8, FIT_KEEP = 5;
+  // Oggi's second row (tavola «Come stai di US»; founder, 28/11: «una pillola
+  // unica»): its readable width (every word that may go gone: face, «?» or the
+  // word, the gesture's emoji, «＋ Tu» or my emoji; 112–158 px, never under 104)
+  // is its minimum, so below it the pill takes the next line of the row. A
+  // fixed 150 put «Bea ? | ＋ Tu» on a line of its own at 320 px and Oggi moved
+  // (countdown-oggi-v1-browser); above it, the richest form that fits. Levels: the word of the gesture
+  // I got (1), the gesture's word (2), then the name (3: the face says who).
+  const LEVELS = '123', FIT_MAX = 3, MIN_READABLE = 104;
   let fitting = false;
+  const widthOf = (group, fitLevels) => {
+    group.dataset.fit = fitLevels;
+    // The content plus the pill's own border (scrollWidth leaves it out).
+    return Math.ceil(group.scrollWidth + (group.offsetWidth - group.clientWidth)) + 1;
+  };
   function fit() {
     const group = $('usOggiStatusGroup');
     if (!group || group.hidden || fitting) return;
     fitting = true;
     try {
-      group.dataset.fit = LEVELS;
-      group.dataset.shrink = 'on';
-      group.style.flex = '0 0 0px';
-      const smallest = group.scrollWidth + 2;
-      group.style.flex = '';
-      group.style.setProperty('--us-status-basis', `${smallest}px`);
+      const row = group.parentElement;
+      // The pill's own widths, measured free: the richest form and the readable one.
+      group.style.flex = '0 0 auto';
+      group.style.minWidth = '0px';
+      group.style.maxWidth = 'none';
+      const widths = [''].concat([...LEVELS].map((_, i) => LEVELS.slice(0, i + 1))).map((f) => widthOf(group, f));
+      group.style.flex = group.style.minWidth = group.style.maxWidth = '';
+      const rich = widths[0];
+      const room = row ? row.clientWidth : rich;
+      const basis = Math.min(room, Math.max(MIN_READABLE, widths[FIT_MAX]));
+      group.dataset.readable = String(widths[FIT_MAX]);
+      group.style.setProperty('--us-status-basis', `${basis}px`);
+      group.style.setProperty('--us-status-rich', `${Math.max(basis, rich)}px`);
       const over = () => group.scrollWidth > group.clientWidth + 1;
       let level = 0;
       group.dataset.fit = '';
-      group.dataset.shrink = 'off';
-      while (level < FIT_KEEP && over()) group.dataset.fit = LEVELS.slice(0, ++level);
-      if (!over()) return;
-      group.dataset.shrink = 'on';
       while (level < FIT_MAX && over()) group.dataset.fit = LEVELS.slice(0, ++level);
+      // A level taken: the pill hugs what it shows (no empty glass at its end).
+      if (level) group.style.setProperty('--us-status-rich', `${Math.max(basis, widths[level])}px`);
     } finally {
       fitting = false;
     }
@@ -211,8 +225,8 @@
         const face = her.querySelector('[data-status-face]');
         const html = faceOf(26);
         if (face && face.__usHtml !== html) { face.innerHTML = html; face.__usHtml = html; }
-        her.querySelector('[data-status-name]').textContent = name;
-        her.querySelector('[data-status-her-word]').textContent = partner ? `· ${t(partner.word)}` : `· ${t('Come sta?')}`;
+        her.querySelector('[data-status-name]').textContent = shortName(name);
+        her.querySelector('[data-status-her-word]').textContent = partner ? t(partner.word) : '?';
         her.dataset.state = partner ? 'set' : 'none';
         her.setAttribute('aria-label', partner ? `${t(personLine(partner, name))}, ${t(partner.since)}. ${t('Apri')}` : t('{name} non ha ancora detto come sta. Apri', { name }));
       }
@@ -236,9 +250,9 @@
       if (show) {
         pill.dataset.mine = mine ? 'set' : 'none';
         pill.querySelector('[data-status-mine-emoji]').textContent = mine ? mine.emoji : '';
-        pill.querySelector('[data-status-mine]').textContent = mine ? t('Tu') : t('Come stai?');
-        pill.querySelector('[data-status-mine-word]').textContent = mine ? `· ${t(mine.word)}` : '';
+        pill.querySelector('[data-status-mine]').textContent = t('Tu');
         pill.setAttribute('aria-label', mine ? `${t('Tu')}: ${t(mine.word)}. ${t('Cambia come stai')}` : t('Come stai? Scegli'));
+        pill.title = mine ? t(mine.word) : '';
       }
     }
 

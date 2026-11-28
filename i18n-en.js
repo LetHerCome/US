@@ -3714,6 +3714,7 @@
     '{n} posti nuovi': '{n} new places',
     '1 posto': '1 place',
     '{n} posti': '{n} places',
+    'Anche: {names}': 'Also: {names}',
     'In Gioca avete scelto uguale': 'In Play you chose the same',
     '{a} su {b}': '{a} of {b}',
     su: 'of',
