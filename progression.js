@@ -638,15 +638,15 @@ function celebrateLevelUp(next, pending, fromPct = 0.86) {
   showLevelMoment({ from: seen, level, unlocks: pending.filter(presented), fromPct });
   return true;
 }
-// Proposta A (24/11/2026): the last accessories of the wardrobe start a level
-// (8, 11, 14, 19; personaggi.js LOOK_POINTS): the moment names them.
+// Il grande bilanciamento (28/11/2026): the wardrobe sits on the ladder, each
+// accessory on its level (personaggi.js LOOK_LEVELS): the moment names the
+// ones of the levels just reached.
 function looksStartingLevels(from, level) {
   const P = window.UsPersonaggi;
-  if (!P?.LOOK_POINTS) return [];
-  const starts = new Set();
-  // Level n starts at 200·(n−1) + 150·(n−1)(n−2)/2 points (app.js bondLevelInfo).
-  for (let n = Math.max(1, from) + 1; n <= level; n += 1) starts.add(200 * (n - 1) + 75 * (n - 1) * (n - 2));
-  return Object.entries(P.LOOK_POINTS).filter(([, points]) => starts.has(points)).map(([item]) => P.LOOK_NAMES?.[item]).filter(Boolean);
+  if (!P?.LOOK_LEVELS) return [];
+  const after = Math.max(1, from);
+  return Object.entries(P.LOOK_LEVELS).filter(([, at]) => at > after && at <= level)
+    .sort((a, b) => a[1] - b[1]).map(([item]) => P.LOOK_NAMES?.[item]).filter(Boolean);
 }
 // sintonia.js levelMoment, inside the shared Momento (core.js momento):
 // "Livello 6", "Intesa rara. Il prossimo arriva a 950 punti.", "Un premio
@@ -655,7 +655,8 @@ function looksStartingLevels(from, level) {
 function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
   const rank = rankTitle(level);
   const info = levelInfo(Number(state?.total_xp) || 0);
-  const need = info && info.level === level ? info.needed : 200 + (level - 1) * 150;
+  const need = info && info.level === level ? info.needed
+    : typeof window.bondLevelStart === 'function' ? window.bondLevelStart(level + 1) - window.bondLevelStart(level) : 0;
   const dots = Array.from({ length: 12 }, (_, i) => `<circle class="lvx-dot ${i % 2 ? 'is-b' : 'is-a'}" cx="110" cy="110" r="${i % 3 ? 2.6 : 3.6}"/>`).join('');
   const chip = unlocks.length === 1 ? 'Un premio sbloccato' : unlocks.length > 1 ? `${unlocks.length} premi sbloccati` : '';
   const looks = looksStartingLevels(from, level);
@@ -785,7 +786,8 @@ const chipRank = (category) => { const i = CHIP_ORDER.indexOf(category); return 
 // read from the same server rows, every presented reward of the next level.
 function nextPresentedRewards(next) {
   const rewards = Array.isArray(next?.rewards) ? next.rewards : [];
-  const locked = rewards.filter((reward) => !reward.unlocked && presented(reward) && artItem(reward));
+  // US Plus extras are out of the ladder (28/11/2026): never the next unlock.
+  const locked = rewards.filter((reward) => !reward.unlocked && !reward.requires_plus && presented(reward) && artItem(reward));
   if (!locked.length) return { level: 0, rewards: [] };
   const level = Math.min(...locked.map((reward) => Number(reward.level_required) || 0));
   return {
@@ -889,9 +891,11 @@ function daysEstimate(xp, next) {
 // One tile of the collection (sintonia.js tile): the art, the name and
 // "In uso" / "Livello 6" / "Sbloccato" / "Incluso".
 function tileMarkup({ attrs, cls = '', on, locked, level, free, title, art, plus = false }) {
-  // V2: a Plus extra needs the level and US Plus (nothing to buy yet).
-  const status = on ? 'In uso' : locked ? (plus ? `Livello ${level} · US Plus` : `Livello ${level}`) : free ? 'Incluso' : 'Sbloccato';
-  const label = `${title}${locked ? `, si sblocca al livello ${level}${plus ? ' con US Plus' : ''}` : on ? ', in uso' : ''}`;
+  // V2: a Plus extra needs the level and US Plus (nothing to buy yet); out of
+  // the ladder (level 1, the app icons since 28/11/2026) it needs Plus alone.
+  const plusOnly = plus && !(Number(level) > 1);
+  const status = on ? 'In uso' : locked ? (plusOnly ? 'Con US Plus' : plus ? `Livello ${level} · US Plus` : `Livello ${level}`) : free ? 'Incluso' : 'Sbloccato';
+  const label = `${title}${locked ? (plusOnly ? ', si sblocca con US Plus' : `, si sblocca al livello ${level}${plus ? ' con US Plus' : ''}`) : on ? ', in uso' : ''}`;
   return `<button type="button" class="us-progression-reward${cls ? ` ${cls}` : ''} ${locked ? 'is-locked' : 'is-unlocked'}${on ? ' is-equipped' : ''}" ${attrs}${locked ? ` data-locked="true" data-level="${esc(level)}"` : ''} aria-pressed="${on ? 'true' : 'false'}" aria-label="${esc(label)}"><span class="us-progression-reward-preview" aria-hidden="true">${art}</span><span class="us-progression-reward-copy"><b>${esc(title)}</b><small>${esc(status)}</small></span></button>`;
 }
 function rewardTile(reward) {

@@ -47,14 +47,9 @@ function closeModal(){
 }
 window.closeUsSettingsModal=closeModal;
 
+// The Sintonia level: the one curve of app.js (bondLevelInfo, a table since 28/11/2026).
 function bondLevel(totalXp=0){
-  const total=Math.max(0,Number(totalXp)||0);
-  let level=1,floor=0,needed=200;
-  while(total>=floor+needed){
-    floor+=needed;level+=1;needed=200+(level-1)*150;
-    if(level>999)break;
-  }
-  return level;
+  return typeof window.bondLevelInfo==='function'?window.bondLevelInfo(totalXp).level:1;
 }
 function daysTogether(startedOn){
   if(!startedOn)return 0;

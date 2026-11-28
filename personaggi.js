@@ -38,10 +38,10 @@
   const LOOK_HEAD = Object.freeze(['cappello', 'fiocco', 'cuffie', 'corona', 'coroncina', 'festa', 'cento']);
   const LOOK_FACE = Object.freeze(['occhiali', 'sole', 'sciarpina', 'gala', 'macchinetta']);
   const LOOK_NAMES = Object.freeze({ cappello: 'Cappello', fiocco: 'Fiocco', cuffie: 'Cuffie', corona: 'Corona', coroncina: 'Coroncina', festa: 'Cappello da festa', cento: 'Fascia dei 100', occhiali: 'Occhiali', sole: 'Occhiali da sole', sciarpina: 'Sciarpina', gala: 'Gala', macchinetta: 'Macchinetta' });
-  // The thresholds of the couple's Sintonia points (D19, 21/11/2026; the last four
-  // start levels 8, 11, 14 and 19 since 24/11/2026, «proposta A»), the same the
-  // server checks (migration 20261123231417), and the real moments.
-  const LOOK_POINTS = Object.freeze({ occhiali: 150, cappello: 400, fiocco: 700, sciarpina: 1000, sole: 1350, gala: 4550, cuffie: 8750, coroncina: 14300, corona: 26550 });
+  // The Sintonia level of each accessory: the wardrobe sits on the one ladder,
+  // a reward per level (il grande bilanciamento, 28/11/2026), the same the
+  // server checks (migration 20261128104932_bilanciamento_v1), and the real moments.
+  const LOOK_LEVELS = Object.freeze({ occhiali: 2, cappello: 4, fiocco: 7, sciarpina: 9, sole: 12, gala: 14, cuffie: 17, coroncina: 20, corona: 25 });
   const LOOK_MOMENTS = Object.freeze({ macchinetta: 'il primo Ricordo', cento: '100 giorni in US', festa: 'il primo anno in US' });
   // Where things sit on each shape: the top of the head [x, y, half width] and the sides [left, right, y].
   const ANCHOR = Object.freeze({ palla: { head: [50, 26, 19], ears: [12, 88, 56] }, quadrato: { head: [50, 25, 19], ears: [14, 86, 54] }, triangolo: { head: [50, 21, 11], ears: [23, 77, 60] }, goccia: { head: [50, 21, 10], ears: [16, 84, 60] }, nuvola: { head: [56, 22, 15], ears: [12, 88, 60] } });
@@ -328,10 +328,14 @@
   const client = () => (typeof sb !== 'undefined' ? sb : null); // eslint-disable-line no-undef
   let lookUnlocks = null;
   const totalPoints = () => Number(w?.USProgression?.getState?.()?.total_xp) || 0;
+  // Where a level starts and the couple's level: the one curve of app.js (bondLevelStart, bondLevelInfo).
+  const levelStart = (level) => (typeof w?.bondLevelStart === 'function' ? w.bondLevelStart(level) : null);
+  const coupleLevel = () => (typeof w?.bondLevelInfo === 'function' ? w.bondLevelInfo(totalPoints()).level : 1);
   function unlockedLook() {
     if (Array.isArray(lookUnlocks)) return new Set(lookUnlocks);
     const out = new Set();
-    for (const [item, need] of Object.entries(LOOK_POINTS)) if (totalPoints() >= need) out.add(item);
+    const level = coupleLevel();
+    for (const [item, need] of Object.entries(LOOK_LEVELS)) if (level >= need) out.add(item);
     return out;
   }
   function refreshLookUnlocks() {
@@ -364,7 +368,7 @@
   }
   function wardrobeMarkup() {
     const role = myRole(), mine = lookOf(role), open = unlockedLook(), shapeNow = shapeOf(role);
-    const lockOf = (item) => (LOOK_POINTS[item] ? `${LOOK_POINTS[item]} punti` : LOOK_MOMENTS[item] || '');
+    const lockOf = (item) => (LOOK_LEVELS[item] ? `Livello ${LOOK_LEVELS[item]}` : LOOK_MOMENTS[item] || '');
     const chip = (slot, item) => {
       const on = (slot === 'head' ? mine.head : mine.face) === item;
       const free = item === null || open.has(item);
@@ -374,12 +378,14 @@
       return `<button type="button" class="us-look-chip${free ? '' : ' is-locked'}" data-us-look="${slot}:${item || ''}" aria-pressed="${on}"${free ? '' : ' aria-disabled="true"'} aria-label="${esc(free ? name : `${name}: si sblocca con ${lock}`)}">${preview}<span class="us-look-name">${esc(name)}</span>${lock ? `<small>${esc(lock)}</small>` : ''}</button>`;
     };
     const shapeChip = (shape) => `<button type="button" class="us-look-chip" data-us-shape="${shape}" aria-pressed="${shape === shapeNow}">${character(role, { size: 44, reaction: '', thing: '', shape })}<span class="us-look-name">${esc(SHAPE_NAMES[shape])}</span></button>`;
-    const next = Object.entries(LOOK_POINTS).filter(([item]) => !open.has(item)).sort((x, y) => x[1] - y[1])[0];
+    const next = Object.entries(LOOK_LEVELS).filter(([item]) => !open.has(item)).sort((x, y) => x[1] - y[1])[0];
     let nextRow = '<p class="us-look-next"><b>Avete sbloccato tutto il guardaroba della Sintonia</b></p>';
-    if (next) {
-      const prev = Math.max(0, ...Object.values(LOOK_POINTS).filter((v) => v < next[1]));
-      const pct = Math.max(0, Math.min(100, Math.round(((totalPoints() - prev) / Math.max(1, next[1] - prev)) * 100)));
-      const left = Math.max(0, next[1] - totalPoints());
+    const need = next ? levelStart(next[1]) : null;
+    if (next && need !== null) {
+      // The bar runs from the level of the accessory before to the level of this one.
+      const prev = Math.max(0, ...Object.values(LOOK_LEVELS).filter((v) => v < next[1]).map(levelStart));
+      const pct = Math.max(0, Math.min(100, Math.round(((totalPoints() - prev) / Math.max(1, need - prev)) * 100)));
+      const left = Math.max(0, need - totalPoints());
       nextRow = `<p class="us-look-next"><b>${esc(`Prossimo: ${LOOK_NAMES[next[0]]}`)}</b>${left > 0 ? `<span>${esc(left === 1 ? 'manca 1 punto' : `mancano ${left} punti`)}</span>` : ''}<span class="us-look-meter" role="progressbar" aria-label="${esc(`Verso ${LOOK_NAMES[next[0]]}`)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></span></p>`;
     }
     return `<h3 class="us-look-title">Il tuo guardaroba</h3>`
@@ -813,5 +819,5 @@
     w.UsAngolo = Object.freeze({ open: openAngolo, close: closeAngolo, tab: showTab, isola: setIsola, parla, cuoriVerso, riceviCuori, cuoriArrivo, accogli, eccoti });
   }
 
-  return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, THING, thingSvg, LOOK_HEAD, LOOK_FACE, LOOK_NAMES, LOOK_POINTS, LOOK_MOMENTS, character, slot, shapeOf, lookOf, colorName, myRole, reactionOf, unlockedLook, paintMe, paintDuo, paintWardrobe });
+  return Object.freeze({ SHAPES: Object.keys(SHAPES), SHAPE_NAMES, THING, thingSvg, LOOK_HEAD, LOOK_FACE, LOOK_NAMES, LOOK_LEVELS, LOOK_MOMENTS, character, slot, shapeOf, lookOf, colorName, myRole, reactionOf, unlockedLook, paintMe, paintDuo, paintWardrobe });
 });

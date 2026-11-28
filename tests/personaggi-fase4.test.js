@@ -52,10 +52,10 @@ test('the couple card of the Profilo shows the two characters', () => {
 });
 
 test('the wardrobe: shape, head, face or neck; the thresholds the server checks; Cambia look', () => {
-  // The last four moved to levels 8, 11, 14 and 19 on 24/11/2026 (personaggi-scala-premi.test.js).
-  assert.deepEqual(P.LOOK_POINTS, { occhiali: 150, cappello: 400, fiocco: 700, sciarpina: 1000, sole: 1350, gala: 4550, cuffie: 8750, coroncina: 14300, corona: 26550 });
-  const sql = read('supabase/migrations/20261123231417_personaggi_scala_premi.sql');
-  for (const [item, points] of Object.entries(P.LOOK_POINTS)) assert.ok(sql.includes(`('${item}', ${points})`), `${item} ${points} as on the server`);
+  // Since il grande bilanciamento (28/11/2026) the wardrobe sits on the levels of the one ladder.
+  assert.deepEqual(P.LOOK_LEVELS, { occhiali: 2, cappello: 4, fiocco: 7, sciarpina: 9, sole: 12, gala: 14, cuffie: 17, coroncina: 20, corona: 25 });
+  const sql = read('supabase/migrations/20261128104932_bilanciamento_v1.sql');
+  for (const [item, level] of Object.entries(P.LOOK_LEVELS)) assert.ok(sql.includes(`('${item}', ${level})`), `${item} ${level} as on the server`);
   const js = read('personaggi.js');
   assert.match(js, /saveCharacter\('set_my_character_look', \{ p_head: next\.head, p_face: next\.face \}\);/);
   assert.match(js, /saveCharacter\('set_my_character_shape', \{ p_shape: shape \}\);/);

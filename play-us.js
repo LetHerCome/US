@@ -511,7 +511,7 @@
     box.innerHTML = `<section class="us-play-memory"><span class="us-play-k">Play Us · ${esc(new Date(s.day + 'T12:00:00').toLocaleDateString('it-IT', { day: 'numeric', month: 'long' }))}</span><h3>${head}</h3>
         <p>${r.intesa ?? 0} su 3 uguali · sfida ${mine}–${hers}</p></section>
       ${pegnoHtml}
-      <p class="us-play-center-line"><b>+${r.xp || 30}</b> per il vostro livello${s.moment_id ? ' · salvato in Ricordi' : ''}</p>
+      ${Number(r.xp) > 0 ? `<p class="us-play-center-line"><b>+${Number(r.xp)}</b> per il vostro livello${s.moment_id ? ' · salvato in Ricordi' : ''}</p>` : s.moment_id ? '<p class="us-play-center-line">Salvato in Ricordi</p>' : ''}
       <p class="us-play-sub us-play-center-line">Domani un’altra partita.<br><small>Con US Plus potrete giocarne di più</small></p>
       <button type="button" class="us-play-btn is-ghost" data-play="close">Torna a Gioca</button>`;
     if (pegno || !winner) feedback('success');

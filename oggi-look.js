@@ -19,8 +19,8 @@ if (window.USOggiLook) return;
 const THEMES = Object.freeze([
   { id: 'original', name: 'Originale', note: 'Il vostro Oggi di sempre, senza aggiunte.', reward: null },
   { id: 'film', name: 'Pellicola', note: 'Come una foto di una macchinetta usa e getta: grana, una luce che entra di lato e la data stampata.', reward: null },
-  { id: 'golden', name: 'Ora d’oro', note: 'La luce calda del tramonto su qualsiasi foto, con un riflesso di sole che si muove piano.', reward: 'oggi_theme_golden', level: 6 },
-  { id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: 'Cambia da solo con l’anno: i ciliegi in fiore, il sole e il mare, le castagne e le foglie, il vetro ghiacciato e la neve.', reward: 'oggi_theme_seasonal', level: 12 }
+  { id: 'golden', name: 'Ora d’oro', note: 'La luce calda del tramonto su qualsiasi foto, con un riflesso di sole che si muove piano.', reward: 'oggi_theme_golden', level: 10 },
+  { id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: 'Cambia da solo con l’anno: i ciliegi in fiore, il sole e il mare, le castagne e le foglie, il vetro ghiacciato e la neve.', reward: 'oggi_theme_seasonal', level: 18 }
 ]);
 // Premi di Oggi (grill D3, D8, D14 and the tavola, 25/11/2026): three steps
 // that grow with the level, drawn by oggi-fx.js. Stelle luminose, Lucciole,
@@ -29,12 +29,12 @@ const EFFECTS = Object.freeze([
   { id: 'none', name: 'Nessuno', note: 'Solo la vostra foto.', reward: null },
   { id: 'hearts', name: 'Cuori', step: 'Base', note: 'Coppie di cuori nei vostri due colori che si cercano salendo e si incontrano.', reward: null },
   { id: 'petals', name: 'Petali', step: 'Base', note: 'Tre forme vere di petalo che girano mentre cadono nel vento.', reward: null },
-  { id: 'dandelions', name: 'Soffioni', step: 'Natura', note: 'Semi di tarassaco col loro ombrellino di fili, uno per colore, che salgono piano.', reward: 'oggi_effect_dandelions', level: 4 },
-  { id: 'snow', name: 'Neve', step: 'Natura', note: 'Fiocchi disegnati su tre profondità, lontani, a metà e vicini.', reward: 'oggi_effect_snow', level: 7 },
-  { id: 'leaves', name: 'Foglie', step: 'Natura', note: 'Foglie d’acero e d’autunno che ondeggiano, si posano e svaniscono.', reward: 'oggi_effect_leaves', level: 10 },
-  { id: 'shooting', name: 'Stelle cadenti', step: 'Vostri', note: 'Un cielo che brilla piano e ogni tanto una scia nei vostri colori.', reward: 'oggi_effect_shooting', level: 13 },
-  { id: 'lanterns', name: 'Lanterne', step: 'Vostri', note: 'Lanterne di carta che salgono, ognuna con la luce di uno di voi due.', reward: 'oggi_effect_lanterns', level: 16 },
-  { id: 'memories', name: 'Ricordi in volo', step: 'Vostri', kicker: 'Il più vostro', note: 'Piccole polaroid delle vostre foto galleggiano dietro il conto, col nastro di chi le ha aggiunte.', reward: 'oggi_effect_memories', level: 20 }
+  { id: 'dandelions', name: 'Soffioni', step: 'Natura', note: 'Semi di tarassaco col loro ombrellino di fili, uno per colore, che salgono piano.', reward: 'oggi_effect_dandelions', level: 6 },
+  { id: 'snow', name: 'Neve', step: 'Natura', note: 'Fiocchi disegnati su tre profondità, lontani, a metà e vicini.', reward: 'oggi_effect_snow', level: 11 },
+  { id: 'leaves', name: 'Foglie', step: 'Natura', note: 'Foglie d’acero e d’autunno che ondeggiano, si posano e svaniscono.', reward: 'oggi_effect_leaves', level: 16 },
+  { id: 'shooting', name: 'Stelle cadenti', step: 'Vostri', note: 'Un cielo che brilla piano e ogni tanto una scia nei vostri colori.', reward: 'oggi_effect_shooting', level: 19 },
+  { id: 'lanterns', name: 'Lanterne', step: 'Vostri', note: 'Lanterne di carta che salgono, ognuna con la luce di uno di voi due.', reward: 'oggi_effect_lanterns', level: 22 },
+  { id: 'memories', name: 'Ricordi in volo', step: 'Vostri', kicker: 'Il più vostro', note: 'Piccole polaroid delle vostre foto galleggiano dietro il conto, col nastro di chi le ha aggiunte.', reward: 'oggi_effect_memories', level: 26 }
 ]);
 // What the finger does in Foto a fuoco, said once in the preview.
 const TOUCH = Object.freeze({

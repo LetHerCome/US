@@ -18,7 +18,7 @@ const html = read('index.html');
 // four themes, and eight effects in three steps (Base, Natura, Vostri).
 const THEMES = ['original', 'film', 'golden', 'seasonal'];
 const EFFECTS = ['none', 'hearts', 'petals', 'dandelions', 'snow', 'leaves', 'shooting', 'lanterns', 'memories'];
-const LEVELS = { golden: 6, seasonal: 12, dandelions: 4, snow: 7, leaves: 10, shooting: 13, lanterns: 16, memories: 20 };
+const LEVELS = { golden: 10, seasonal: 18, dandelions: 6, snow: 11, leaves: 16, shooting: 19, lanterns: 22, memories: 26 };
 
 // ------------------------------------------------------------------ fake DOM
 function fakeNode(id = '') {
@@ -80,10 +80,10 @@ function boot({ rewards = [], level = 1, profile = { id: 'f', couple_id: 'c', ro
 const plain = (value) => JSON.parse(JSON.stringify(value)); // vm objects come from another realm
 const reward = (id, category, level, unlocked) => ({ id, token: id, category, level_required: level, unlocked, title: id, description: id, equipped: false });
 const v3Rewards = (level) => [
-  reward('oggi_effect_dandelions', 'oggi_effect', 4, level >= 4), reward('oggi_theme_golden', 'oggi_theme', 6, level >= 6),
-  reward('oggi_effect_snow', 'oggi_effect', 7, level >= 7), reward('oggi_effect_leaves', 'oggi_effect', 10, level >= 10),
-  reward('oggi_theme_seasonal', 'oggi_theme', 12, level >= 12), reward('oggi_effect_shooting', 'oggi_effect', 13, level >= 13),
-  reward('oggi_effect_lanterns', 'oggi_effect', 16, level >= 16), reward('oggi_effect_memories', 'oggi_effect', 20, level >= 20)
+  reward('oggi_effect_dandelions', 'oggi_effect', 6, level >= 6), reward('oggi_theme_golden', 'oggi_theme', 10, level >= 10),
+  reward('oggi_effect_snow', 'oggi_effect', 11, level >= 11), reward('oggi_effect_leaves', 'oggi_effect', 16, level >= 16),
+  reward('oggi_theme_seasonal', 'oggi_theme', 18, level >= 18), reward('oggi_effect_shooting', 'oggi_effect', 19, level >= 19),
+  reward('oggi_effect_lanterns', 'oggi_effect', 22, level >= 22), reward('oggi_effect_memories', 'oggi_effect', 26, level >= 26)
 ];
 
 // ------------------------------------------------------------------ catalog + CSS
@@ -173,12 +173,12 @@ test('Oggi looks: locked looks preview but cannot be applied; looks the server d
   assert.equal(before.look.status('theme', 'golden').state, 'unavailable', 'migration not applied: never shown as a fake reward');
   assert.equal(await before.progression.setLook('theme', 'golden'), false);
 
-  const after = boot({ rewards: v3Rewards(6), level: 6 });
+  const after = boot({ rewards: v3Rewards(10), level: 10 });
   await after.progression.hydrate({ force: true, showUnlocks: false });
-  assert.deepEqual(plain(after.look.status('theme', 'seasonal')), { state: 'locked', level: 12, plus: false });
+  assert.deepEqual(plain(after.look.status('theme', 'seasonal')), { state: 'locked', level: 18, plus: false });
   assert.equal(after.look.status('theme', 'golden').state, 'unlocked');
   assert.equal(after.look.status('effect', 'dandelions').state, 'unlocked');
-  assert.deepEqual(plain(after.look.status('effect', 'memories')), { state: 'locked', level: 20, plus: false });
+  assert.deepEqual(plain(after.look.status('effect', 'memories')), { state: 'locked', level: 26, plus: false });
   assert.equal(await after.progression.setLook('theme', 'seasonal'), false, 'locked');
   assert.equal(await after.progression.setLook('effect', 'memories'), false, 'locked');
   assert.equal(await after.progression.setLook('theme', 'golden'), true);

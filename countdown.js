@@ -11,9 +11,9 @@ const STYLES=Object.freeze([
   {id:'glass',name:'Vetro',note:'Una lente sulla vostra foto.'},
   // Temi e countdown (tavola approved 26/11/2026): the three reward ids keep
   // their rewards and get new art. aurora = Post-it, orbit = Biglietto, chrome = Filo rosso.
-  {id:'aurora',name:'Post-it',note:'Un post-it nei vostri colori, attaccato con lo scotch.',reward:'frame_aurora',level:3},
-  {id:'orbit',name:'Biglietto',note:'Un biglietto del treno, andata per due.',reward:'ring_orbit',level:9},
-  {id:'chrome',name:'Filo rosso',note:'Voi due ai capi di un filo che si accorcia.',reward:'frame_chrome',level:18}
+  {id:'aurora',name:'Post-it',note:'Un post-it nei vostri colori, attaccato con lo scotch.',reward:'frame_aurora',level:5},
+  {id:'orbit',name:'Biglietto',note:'Un biglietto del treno, andata per due.',reward:'ring_orbit',level:15},
+  {id:'chrome',name:'Filo rosso',note:'Voi due ai capi di un filo che si accorcia.',reward:'frame_chrome',level:24}
 ]);
 const civil=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'});
 function dayNumber(value){

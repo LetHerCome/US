@@ -1,6 +1,7 @@
-// Personaggi: the wardrobe on the empty levels of the Sintonia (founder,
-// 24/11/2026, «proposta A»): the client thresholds are the server's, the last
-// four start a level, and the level moment names them. The Simbolo US stays.
+// Personaggi: the wardrobe on the levels of the Sintonia (founder, 24/11/2026,
+// «proposta A»; since il grande bilanciamento, 28/11/2026, every accessory has
+// its own level of the one ladder): the client levels are the server's, and
+// the level moment names them. The Simbolo US stays.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -21,27 +22,20 @@ const fn = (source, name) => {
 };
 const ctx = { window: { UsPersonaggi: P } };
 vm.createContext(ctx);
-vm.runInContext(`${fn(read('app.js'), 'bondLevelInfo')}\n${fn(read('progression.js'), 'looksStartingLevels')}\nthis.bondLevelInfo = bondLevelInfo; this.looksStartingLevels = looksStartingLevels;`, ctx);
+vm.runInContext(`${fn(read('progression.js'), 'looksStartingLevels')}\nthis.looksStartingLevels = looksStartingLevels;`, ctx);
 
-test('the client thresholds are the ones of the new migration', () => {
-  assert.deepEqual({ ...P.LOOK_POINTS }, { occhiali: 150, cappello: 400, fiocco: 700, sciarpina: 1000, sole: 1350, gala: 4550, cuffie: 8750, coroncina: 14300, corona: 26550 });
-  const sql = read('supabase/migrations/20261123231417_personaggi_scala_premi.sql');
-  for (const [item, points] of Object.entries(P.LOOK_POINTS)) assert.ok(sql.includes(`('${item}', ${points})`), `${item} ${points} as on the server`);
+test('the client levels are the ones of the server (20261128104932_bilanciamento_v1)', () => {
+  assert.deepEqual({ ...P.LOOK_LEVELS }, { occhiali: 2, cappello: 4, fiocco: 7, sciarpina: 9, sole: 12, gala: 14, cuffie: 17, coroncina: 20, corona: 25 });
+  const sql = read('supabase/migrations/20261128104932_bilanciamento_v1.sql');
+  for (const [item, level] of Object.entries(P.LOOK_LEVELS)) assert.ok(sql.includes(`('${item}', ${level})`), `${item} ${level} as on the server`);
 });
 
-test('gala, cuffie, coroncina and corona start levels 8, 11, 14 and 19 (bondLevelInfo)', () => {
-  for (const [item, level] of [['gala', 8], ['cuffie', 11], ['coroncina', 14], ['corona', 19]]) {
-    assert.equal(ctx.bondLevelInfo(P.LOOK_POINTS[item]).level, level, `${item} at level ${level}`);
-    assert.equal(ctx.bondLevelInfo(P.LOOK_POINTS[item] - 1).level, level - 1, `${item} not before`);
-  }
-});
-
-test('the level moment names the accessory that starts the level, and takes you to try it', () => {
-  assert.deepEqual([...ctx.looksStartingLevels(7, 8)], ['Gala']);
-  assert.deepEqual([...ctx.looksStartingLevels(10, 11)], ['Cuffie']);
-  assert.deepEqual([...ctx.looksStartingLevels(7, 14)], ['Gala', 'Cuffie', 'Coroncina']);
-  assert.deepEqual([...ctx.looksStartingLevels(1, 7)], [], 'the first five come between levels, not with one');
-  assert.deepEqual([...ctx.looksStartingLevels(18, 19)], ['Corona']);
+test('the level moment names the accessories of the levels just reached, and takes you to try them', () => {
+  assert.deepEqual([...ctx.looksStartingLevels(13, 14)], ['Gala']);
+  assert.deepEqual([...ctx.looksStartingLevels(16, 17)], ['Cuffie']);
+  assert.deepEqual([...ctx.looksStartingLevels(11, 20)], ['Occhiali da sole', 'Gala', 'Cuffie', 'Coroncina']);
+  assert.deepEqual([...ctx.looksStartingLevels(2, 3)], [], 'level 3 is the Battito of the Simbolo, no accessory');
+  assert.deepEqual([...ctx.looksStartingLevels(24, 25)], ['Corona']);
   const js = read('progression.js');
   assert.match(js, /const action = unlocks\.length === 1 \? 'Scoprilo' : unlocks\.length > 1 \? 'Scoprili' : looks\.length \? 'Prova il look' : 'Chiudi';/);
   assert.match(js, /<span class="us-level-moment-chip us-level-moment-look"><i><\/i>\$\{esc\(lookChip\)\}<\/span>/);
