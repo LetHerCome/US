@@ -102,6 +102,28 @@ body.us-gv2-sheet-open{overflow:hidden}
 #quiz .us-gv2-progress,#quiz .us-gv2-swipe-progress{display:flex;gap:5px;height:4px;margin:0;padding:0;overflow:visible;border-radius:0;background:none}
 #quiz .us-gv2-progress i,#quiz .us-gv2-swipe-progress i{flex:1;width:auto;height:4px;min-width:0;border-radius:4px;background:var(--us-color-elevated);box-shadow:none;transform:none;transition:none}
 #quiz .us-gv2-progress i[data-on="true"],#quiz .us-gv2-swipe-progress i[data-state="done"],#quiz .us-gv2-swipe-progress i[data-state="now"]{background:var(--us-menta)}
+/* Quiz vivi (28/11/2026): the path. The bar keeps its segments; your character walks on it, the other one waits at the end. */
+#quiz .us-gv2-progress.us-gv2-path{position:relative;margin:30px 34px 4px 0}
+#quiz .us-gv2-path-me{position:absolute;bottom:2px;left:calc(var(--at) * (100% - 30px));width:30px;pointer-events:none}
+#quiz .us-gv2-path-pa{position:absolute;bottom:-4px;right:-34px;width:28px;pointer-events:none;opacity:.9}
+#quiz :is(.us-gv2-path-me,.us-gv2-path-pa) svg{display:block;width:100%;height:auto;overflow:visible}
+#quiz .us-gv2-choice.is-picked{animation:us-gv2-picked .34s cubic-bezier(.34,1.56,.64,1)}
+@keyframes us-gv2-picked{40%{transform:scale(1.03)}}
+/* The reveal: the two answers come from opposite sides; equal ones light up in gold, different ones touch and step back. */
+#quiz .us-gv5-reveal-duo{display:flex;justify-content:center;margin:0 0 4px}
+#quiz .us-gv5-reveal-item[data-gv5-kind="same"]{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--us-ambra,#f3d27a) 60%,transparent)}
+#quiz .us-gv5-reveal.is-first-reveal .us-gv5-reveal-answers dl>div:nth-child(1){animation:us-gv5-from-left .5s cubic-bezier(.34,1.4,.64,1) calc(.3s + var(--j,0) * .2s) both}
+#quiz .us-gv5-reveal.is-first-reveal .us-gv5-reveal-answers dl>div:nth-child(2){animation:us-gv5-from-right .5s cubic-bezier(.34,1.4,.64,1) calc(.3s + var(--j,0) * .2s) both}
+#quiz .us-gv5-reveal.is-first-reveal .us-gv5-reveal-item[data-gv5-kind="same"]{animation:us-gv5-gold .9s ease-out calc(.75s + var(--j,0) * .2s) both}
+#quiz .us-gv5-reveal.is-first-reveal .us-gv5-reveal-item[data-gv5-kind="same"] .us-gv5-reveal-tag{animation:us-gv5-pop .45s cubic-bezier(.34,1.56,.64,1) calc(.75s + var(--j,0) * .2s) both}
+#quiz .us-gv5-reveal.is-first-reveal .us-gv5-reveal-item[data-gv5-kind="different"] .us-gv5-reveal-answers dl{animation:us-gv5-bump .4s ease-out calc(.75s + var(--j,0) * .2s) both}
+@keyframes us-gv5-from-left{from{opacity:0;transform:translateX(-46px)}}
+@keyframes us-gv5-from-right{from{opacity:0;transform:translateX(46px)}}
+@keyframes us-gv5-gold{0%{box-shadow:inset 0 0 0 1.5px transparent}35%{box-shadow:inset 0 0 0 2px var(--us-ambra,#f3d27a),0 0 26px color-mix(in srgb,var(--us-ambra,#f3d27a) 45%,transparent)}100%{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--us-ambra,#f3d27a) 60%,transparent)}}
+@keyframes us-gv5-pop{from{transform:scale(.4);opacity:0}}
+@keyframes us-gv5-bump{40%{transform:scaleY(.96)}}
+@media (prefers-reduced-motion:reduce){#quiz .us-gv5-reveal.is-first-reveal :is(.us-gv5-reveal-item,.us-gv5-reveal-tag,.us-gv5-reveal-answers dl,.us-gv5-reveal-answers dl>div),#quiz .us-gv2-choice.is-picked{animation:none}}
+:root[data-us-motion="reduced"] #quiz .us-gv5-reveal.is-first-reveal :is(.us-gv5-reveal-item,.us-gv5-reveal-tag,.us-gv5-reveal-answers dl,.us-gv5-reveal-answers dl>div),:root[data-us-motion="reduced"] #quiz .us-gv2-choice.is-picked{animation:none}
 
 #quiz .us-gv2-hint{margin:0!important;color:var(--us-color-text-2)!important;font-size:13px!important}
 #quiz .us-gv2-flow .us-gv2-context{justify-self:start}
