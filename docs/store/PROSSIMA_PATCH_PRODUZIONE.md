@@ -2,7 +2,7 @@
 
 ## Patch 1.6.0: il redesign, i personaggi e Play Us (28/11/2026)
 
-**Stato:** ramo `release/1.6.0` da `main` (`ad778f78`) con dentro tutto staging (`1e5eb72a`, PR fino alla #330), solo locale. «Sì, prepariamo» del founder il 28/11. Niente ancora in produzione: SQL, funzioni, sito, AAB e TestFlight aspettano ciascuno il suo via in chat.
+**Stato:** ramo `release/1.6.0` da `main` (`ad778f78`) con dentro tutto staging (`1e5eb72a`, PR fino alla #330), su GitHub con la PR #331 verso `main`, non unita. «Sì, prepariamo» del founder il 28/11. Niente ancora in produzione: SQL, funzioni, sito, AAB e TestFlight aspettano ciascuno il suo via in chat.
 
 **Riallineamento:** i 15 conflitti del merge si risolvono tutti con la versione di staging. Il 23/11 staging è ripartito dai file di main `ad778f78` (commit `9cdae71a`) e main da allora non è cambiato, quindi i fix iOS di main (widget W0+W1, firma e invio TestFlight, fogli con la tastiera) sono già dentro. Dopo il merge l'albero è uguale a staging, più questa nota e le Novità. Dopo l'uscita, main va riunito in staging lo stesso giorno, così i due rami tornano uno.
 
@@ -30,7 +30,7 @@ Vincolo: dal 27/11 (in staging, entra in main con questa patch) i workflow «Sup
 1. **Cloudflare Pages, progetto `us`:** sospendere le pubblicazioni automatiche della produzione (Impostazioni › Build › Production deployments). Lo fa il founder dal pannello.
 2. **Build id:** `npm run build:id -- us-rilascio-<AAAAMMGG>-110` sul ramo, test, commit.
 3. **Merge su `main`** di `release/1.6.0` (PR, CI verde). Col punto 1 il sito di `www.uscouple.app` resta la 1.5.1.
-4. **33 migrazioni, una per run**, workflow «Supabase SQL (manual)», target production, ref `main`, conferma PRODUZIONE. Le funzioni Edge segnate vanno pubblicate nel punto indicato:
+4. **34 migrazioni, una per run**, workflow «Supabase SQL (manual)», target production, ref `main`, conferma PRODUZIONE. Le funzioni Edge segnate vanno pubblicate nel punto indicato:
    1. `20261115183900_personaggi_forma_e_colori` (5 profili su 20 cambiano colore: 3 rubino → prugna, 2 cielo → blu; il sito vecchio non salva più oro, cielo e rubino)
    2. `20261120232852_personaggi_guardaroba`
    3. `20261123231417_personaggi_scala_premi`
@@ -66,8 +66,10 @@ Vincolo: dal 27/11 (in staging, entra in main con questa patch) i workflow «Sup
    31. `20261128115152_contenuti_hot`
    32. `20261128122730_domande_a_scelta` (141 domande: 76 già in produzione col testo atteso, le altre 65 arrivano dalla 28 e dalla 31)
    33. `20261128125827_ritocchi_testi`
-5. **Le altre 15 funzioni Edge**, workflow «Supabase Edge deploy (manual)», ref `main`, PRODUZIONE, mai `s3-staging-send-web-push`. Sono tutte quelle il cui codice (o un file di `_shared` che importano) è cambiato dalla 1.5.1:
-   `send-web-push` (tipi `play_invite`, `postit`, `bacheca_postit`, Come stai, segnali dei widget), `widget-think-send` (Ti penso ×N), `widget-device-token`, `delete-account`, `leave-couple`, `account-deletion-worker`, `export-my-data`, `calendar-reminders-worker`, `daily-question-push-worker`, `game-v2-push`, `game-v2-push-worker`, `left-for-you-push-worker`, `monthiversary-job`, `weekly-challenge-job`, `us-widget-state` (**da decidere**, vedi sotto).
+   34. `20261128141224_sfida_settimana_spenta` (toglie il cron `us-weekly-challenge-hourly`; su staging non c'era, quindi lì non cambia niente)
+       → **cancellare la funzione `weekly-challenge-job`** dal progetto di produzione (`supabase functions delete weekly-challenge-job --project-ref iiakdfsxpywdkxravqjh`): non va più pubblicata. Il codice resta nel repo per ora.
+5. **Le altre 14 funzioni Edge**, workflow «Supabase Edge deploy (manual)», ref `main`, PRODUZIONE, mai `s3-staging-send-web-push`. Sono tutte quelle il cui codice (o un file di `_shared` che importano) è cambiato dalla 1.5.1:
+   `send-web-push` (tipi `play_invite`, `postit`, `bacheca_postit`, Come stai, segnali dei widget), `widget-think-send` (Ti penso ×N), `widget-device-token`, `delete-account`, `leave-couple`, `account-deletion-worker`, `export-my-data`, `calendar-reminders-worker`, `daily-question-push-worker`, `game-v2-push`, `game-v2-push-worker`, `left-for-you-push-worker`, `monthiversary-job`, `us-widget-state` (curva nuova dei livelli; spegne il widget Scriptable di Bea, deciso dal founder il 28/11).
 6. **Sito:** riattivare le pubblicazioni di Cloudflare e pubblicare il commit di `main`; controllare che `www.uscouple.app` serva il build id nuovo e che le Novità dicano `1.6.0`.
 7. **AAB 1.6.0** (workflow «Android Play bundle», versionName 1.6.0) e **TestFlight 1.6.0** (`ios-testflight.yml`) dallo stesso commit di `main`. Servono tutte e due: barra di stato, widget col redesign, testo grande, Ti penso ×N, widget aggiornati ad app chiusa.
 8. **Dopo:** prova di Bea su TestFlight; main riunito in staging; nota svuotata; `docs/CURRENT_STATE.md` aggiornato (fermo al 09/11); memoria.
@@ -85,11 +87,11 @@ Vincolo: dal 27/11 (in staging, entra in main con questa patch) i workflow «Sup
 
 ### Rischi e decisioni prima del via
 
-- **Play Us non è mai stato provato su due telefoni.** Usa Realtime (Presence e Broadcast sul canale privato della coppia): va provato su staging con due account prima del merge, oppure va nascosto per la 1.6.0.
-- **`us-widget-state`:** il codice del repo rifiuta i token «Scriptable». Pubblicarlo spegne il widget Scriptable di Bea, che oggi in produzione funziona ancora (cron `us-widget-scriptable-state-expiry` attivo). Ora i widget iPhone veri ci sono, ma serve un sì esplicito. Senza pubblicarlo, il widget Android della Sintonia usa la curva vecchia dei livelli.
-- **Sfida della settimana:** in app non c'è più, ma il cron `us-weekly-challenge-hourly` manda ancora gli avvisi del lunedì e del sabato. Va deciso se fermarlo (una migrazione nuova, prima su staging).
+- **Play Us (founder, 28/11: «la proviamo diretto su produzione e TestFlight»):** esce con la 1.6.0 senza una prova a due telefoni su staging. Va provato subito dopo il rilascio, Francesco su Android e Bea su TestFlight; se non va, si nasconde con una patch.
+- **`us-widget-state` (founder, 28/11: «scriptable si spegne, Bea ha i widget di iOS ormai»):** si pubblica, e il widget Scriptable di Bea smette di funzionare. Restano in produzione `widget-scriptable-setup` e il cron `us-widget-scriptable-state-expiry`, che non fanno danni: si possono togliere dopo.
+- **Sfida della settimana (founder, 28/11: «spegnila e la puoi anche eliminare»):** la migrazione 34 toglie il cron e la funzione `weekly-challenge-job` si cancella dal progetto. Tabelle, foto collegate e punti già presi restano. Togliere del tutto la sfida (tabelle, funzioni SQL, `weekly-challenge.js` e il codice della funzione) cancella dati delle coppie: è un lavoro a parte, prima su staging.
 - **Colori:** 5 persone vedranno il loro colore cambiare (rubino → prugna, cielo → blu).
-- **Durata:** 33 migrazioni e 17 funzioni sono una cinquantina di run, un'ora circa. Nel frattempo è online il sito vecchio con il server nuovo: quasi tutte le migrazioni aggiungono, ma alcune cambiano dati che il sito vecchio legge (colori, accessori fuori dalla scala nuova, curva dei livelli di `bilanciamento_v1`). Conviene farle di sera, quando l'app si usa poco.
+- **Durata:** 34 migrazioni, 16 funzioni e una cancellazione sono una cinquantina di passi, un'ora circa. Nel frattempo è online il sito vecchio con il server nuovo: quasi tutte le migrazioni aggiungono, ma alcune cambiano dati che il sito vecchio legge (colori, accessori fuori dalla scala nuova, curva dei livelli di `bilanciamento_v1`). Conviene farle di sera, quando l'app si usa poco.
 - **Test:** `npm test` sul ramo in locale, con le Novità 1.6.0: 3139 test, 3090 passati, 0 falliti, 49 saltati; `npm run build:cloudflare-pages` passa; `git diff --check` pulito. Nella prima prova era fallito `dc-primo-first-run-browser` (un foglio di conferma copriva «Entra in US» con la macchina carica): rilanciato da solo passa, ed è da tenere d'occhio. In CI la suite completa gira sulla PR verso `main`.
 
 ## Le voci della 1.6.0 (raccolte su staging dal 15 al 28/11)
