@@ -168,8 +168,8 @@ test('the clearer version (tavola «Come stai di US»): short words, «Manda …
   assert.deepEqual(S.THIRD.stanco, { m: '{name} è stanco', f: '{name} è stanca', n: '{name} è senza energie' });
   assert.equal(S.THIRD.malato, '{name} non sta bene');
   const js = read('member-status.js');
-  // The readable form (at least 150 px) is the minimum, then the richest form that fits.
-  assert.match(js, /const LEVELS = '123', FIT_MAX = 3, MIN_READABLE = 150;/);
+  // The readable form (never under 104 px) is the minimum, then the richest form that fits.
+  assert.match(js, /const LEVELS = '123', FIT_MAX = 3, MIN_READABLE = 104;/);
   assert.match(js, /const basis = Math\.min\(room, Math\.max\(MIN_READABLE, widths\[FIT_MAX\]\)\);/);
   assert.match(js, /if \(target\.closest\('#usOggiPartner'\)\) \{ openPerson\(\); return; \}/);
   assert.match(read('navigation.js'), /name:'statusPerson',\s*find:\(\)=>document\.getElementById\('usStatusPerson'\)/);

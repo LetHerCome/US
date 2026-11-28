@@ -166,11 +166,13 @@
   };
 
   // Oggi's second row (tavola «Come stai di US»; founder, 28/11: «una pillola
-  // unica»): its readable width (every word that may go gone, never under
-  // 150 px) is its minimum, so below it the pill takes the next line of the
-  // row; above it, the richest form that fits. Levels: the word of the gesture
+  // unica»): its readable width (every word that may go gone: face, «?» or the
+  // word, the gesture's emoji, «＋ Tu» or my emoji; 112–158 px, never under 104)
+  // is its minimum, so below it the pill takes the next line of the row. A
+  // fixed 150 put «Bea ? | ＋ Tu» on a line of its own at 320 px and Oggi moved
+  // (countdown-oggi-v1-browser); above it, the richest form that fits. Levels: the word of the gesture
   // I got (1), the gesture's word (2), then the name (3: the face says who).
-  const LEVELS = '123', FIT_MAX = 3, MIN_READABLE = 150;
+  const LEVELS = '123', FIT_MAX = 3, MIN_READABLE = 104;
   let fitting = false;
   const widthOf = (group, fitLevels) => {
     group.dataset.fit = fitLevels;

@@ -4,7 +4,7 @@
    other person's face and short word, and the gesture (a red chip, only its
    emoji when there is no room). Right, after a line: «＋ Tu» or my emoji, and
    for three hours the gesture I got. It never wraps inside (member-status.js
-   fit()); below its readable width (~150 px) it takes the next line of the row. */
+   fit()); below its readable width (112–158 px) it takes the next line of the row. */
 #home #homeHero .og-row .us-status-group:not([hidden]){position:relative;display:flex;flex:1 1 var(--us-status-basis,150px);align-items:center;gap:0;box-sizing:border-box;height:40px;min-width:var(--us-status-basis,150px);max-width:min(100%,var(--us-status-rich,100%));padding:0 3px 0 4px;overflow:hidden;flex-wrap:nowrap;border:1px solid var(--us-color-line-strong);border-radius:999px;background:var(--dc-oggi-glass);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--us-color-text);font:600 13px/1 var(--us-font-ui);white-space:nowrap}
 #home #homeHero .us-status-group [hidden]{display:none!important}
 #home #homeHero .us-status-half{display:flex;align-items:center;gap:4px;min-width:0;height:100%}

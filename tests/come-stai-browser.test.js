@@ -84,7 +84,7 @@ test('the second row: their face and state, the red gesture, «✓ Mandato»; th
     assert.equal(color, 'rgb(184, 67, 47)', 'ceralacca');
     const box = await page.locator('#usOggiStatusGroup').boundingBox();
     assert.equal(box.height, 40, 'as tall as every pill of the row');
-    assert.ok(box.width >= 150, 'readable');
+    assert.ok(box.width + 1 >= Number(await page.locator('#usOggiStatusGroup').getAttribute('data-readable')), 'readable');
     await shot(page, 'v2-390-con-stato');
     // Their sheet: the big character, how and until when, the gesture in full, Ti penso, a voice message.
     await her.click();
@@ -157,7 +157,7 @@ test('360×640: Oggi does not move or scroll whatever Come stai says, and the se
       return {
         scroll: document.documentElement.scrollHeight - innerHeight,
         days: r('usCountdownDisplay'), caption: r('usOggiCaption'), row: r('usOggiRow'), card: r('usDailyRitual'),
-        oneLine: new Set(tops).size === 1, overflow: group.scrollWidth - group.clientWidth, fit: group.dataset.fit, width: Math.round(group.getBoundingClientRect().width),
+        oneLine: new Set(tops).size === 1, overflow: group.scrollWidth - group.clientWidth, fit: group.dataset.fit, width: Math.round(group.getBoundingClientRect().width), readable: Number(group.dataset.readable),
       };
     });
     await page.evaluate(() => { window.__QA.tables.profiles[1].display_name = 'Beatrice Maria Antonietta'; return window.UsCoupleContext?.hydrate?.(); });
@@ -179,7 +179,7 @@ test('360×640: Oggi does not move or scroll whatever Come stai says, and the se
       assert.ok(now.overflow <= 1, `${label}: nothing cut off (${now.overflow}px, fit ${now.fit})`);
       // No room for its word: the gesture is its emoji, its label stays whole.
       if (theirs === 'palestra' && !got) assert.equal(await page.locator('#usOggiStatusReply').getAttribute('aria-label'), 'Manda «Spacca tutto!»');
-      assert.ok(now.width >= 150, `${label}: readable (${now.width}px)`);
+      assert.ok(now.width + 1 >= now.readable, `${label}: readable (${now.width}px)`);
     }
     await partnerIs(page, 'palestra', 2);
     await meIs(page, 'giu', {});
