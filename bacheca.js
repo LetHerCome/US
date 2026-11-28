@@ -533,12 +533,12 @@
       const notes = t.notes || [];
       const first = why ? { body: why, who: 'us', name: 'US' } : notes[0] ? { body: notes[0].body, who: notes[0].mine ? 'me' : 'you', name: nameOf(notes[0]) } : null;
       const count = (why ? 1 : 0) + notes.length, more = count - 1;
-      const label = count ? `Sulla bacheca: ${count === 1 ? 'un post-it' : `${count} post-it`}. Tocca per leggerli e scrivere il tuo` : 'Sulla bacheca: scrivi un post-it';
+      const label = count ? `Sulla bacheca: ${count === 1 ? 'un post-it. Tocca per leggerlo e scrivere il tuo' : `${count} post-it. Tocca per leggerli e scrivere il tuo`}` : 'Sulla bacheca: scrivi un post-it';
       const note = first
         ? `<span class="ub-pn${first.who === 'us' ? ' is-us' : ''}"${first.who === 'us' ? '' : ` data-who="${first.who}"`}><p translate="no">${esc(first.body)}</p><b translate="no">${esc(first.name)}</b></span>`
         : '<span class="ub-pn is-empty"><p>＋ Un post-it</p></span>';
       const link = t.pin ? '<button type="button" class="ub-mini-link" data-ub-row="see">In bacheca ›</button>'
-        : `<button type="button" class="ub-mini-link" data-ub-row="pin">${count ? 'Riappendi ›' : 'Appendi ›'}</button>`;
+        : '<button type="button" class="ub-mini-link" data-ub-row="pin">Appendi ›</button>';
       return `<button type="button" class="ub-mini-note" data-ub-row="write" aria-label="${esc(label)}">${note}${more > 0 ? `<i class="ub-mini-more" aria-hidden="true">+${more}</i>` : ''}</button>${link}`;
     }
     function rowMarkup(t) {

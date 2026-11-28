@@ -719,7 +719,7 @@ function renderHub() {
 // When a month (or the year) ends and its pack waits, the pack appears by
 // itself on Oggi, once each time US opens, until it is torn; the cards then
 // stay in Ricordi («Le vostre carte»), where an opened pack is never torn again.
-const meseEv = { shown: new Set(), timer: 0, tries: 0 };
+const meseEv = { shown: new Set(), timer: 0, tries: 0, checked: false };
 function meseBlocked() {
   const root = document.documentElement;
   if (document.hidden || !window.usProfile?.couple_id || typeof sb === 'undefined' || typeof document.querySelectorAll !== 'function') return true;
@@ -736,13 +736,15 @@ async function meseEvento() {
   meseEv.tries = 0;
   try {
     const { data, error } = await sb.rpc('get_carte_v1', { p_year: null });
+    if (!error) meseEv.checked = true;
     const next = !error && data?.waiting?.[0];
     if (!next?.pack || meseEv.shown.has(next.pack) || meseBlocked()) return;
     meseEv.shown.add(next.pack);
     window.usOpenCarte?.({ pack: next.pack });
   } catch (_) { /* it tries again the next time US opens */ }
 }
-document.addEventListener?.('visibilitychange', () => { if (!document.hidden) { meseEv.shown.clear(); meseEv.timer = meseLater(meseEvento, 2500); } });
+// A short trip away (UsForeground.shortAway, «Avvio più veloce») rereads nothing.
+document.addEventListener?.('visibilitychange', () => { if (!document.hidden && !window.UsForeground?.shortAway?.()) { meseEv.shown.clear(); meseEv.checked = false; meseEv.timer = meseLater(meseEvento, 2500); } });
 
 // US Plus in vetrina (founder, 28/11/2026): the Plus questions are played only
 // with Plus, but they are seen here: a tile «Sbloccabili con US Plus» and,
@@ -801,7 +803,8 @@ async function load() {
     if (view === 'hub') renderHub();
     checkPerVoiQuestion();
     loadInsieme();
-    meseEvento();
+    // Once per opening (and after a real absence), never with every 45 s refresh of the hub.
+    if (!meseEv.checked) meseEvento();
     loadPlusPreview();
     return home;
   } catch (error) {

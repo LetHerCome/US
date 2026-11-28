@@ -53,6 +53,7 @@ async function db() {
   await pg.exec(FIXTURE);
   await pg.exec(MIGRATION);
   await pg.exec(POINTS);
+  await pg.exec(fs.readFileSync(path.join(__dirname, '..', 'supabase/migrations/20261128125827_ritocchi_testi.sql'), 'utf8'));
   const as = async (uid, sql, params) => {
     await pg.exec(`reset role; select set_config('request.jwt.claim.sub', '${uid}', false); set role authenticated;`);
     try { return (await pg.query(sql, params)).rows; } finally { await pg.exec('reset role;'); }
@@ -164,6 +165,8 @@ test('play us: invite, answer, live moves, steps, the end with memory, points an
   // The forfeit: only the winner, only from the list, once; it is a post-it.
   await assert.rejects(call(B, 'play_us_move', `$1::uuid, 8, 'pegno', 0, '{"text":"Mi devi un caffè"}'::jsonb`, [sid]), /only the winner/);
   await assert.rejects(call(F, 'play_us_move', `$1::uuid, 8, 'pegno', 0, '{"text":"Qualcosa di inventato"}'::jsonb`, [sid]), /pegno invalid/);
+  // Ritocchi dei testi (28/11): the old gendered forfeit is gone.
+  await assert.rejects(call(F, 'play_us_move', `$1::uuid, 8, 'pegno', 0, '{"text":"Una foto di te appena sveglia"}'::jsonb`, [sid]), /pegno invalid/);
   await call(F, 'play_us_move', `$1::uuid, 8, 'pegno', 0, '{"text":"Mi devi un caffè"}'::jsonb`, [sid]);
   await call(F, 'play_us_move', `$1::uuid, 8, 'pegno', 0, '{"text":"Stasera il film lo scelgo io"}'::jsonb`, [sid]);
   const notes = await sql(`select body, created_by, color from public.couple_notes where couple_id = $1`, [C1]);

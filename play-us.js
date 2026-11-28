@@ -9,15 +9,17 @@
 (function () {
   'use strict';
   const w = window, d = document;
-  const STEP_NAMES = ['Lobby', 'Domande lampo', 'Scatta', 'Ritocca', 'Quanto mi conosci', 'Manda', 'La sfida', 'Scoprite', 'Il ricordo'];
-  const PEGNI = ['Mi devi un caffè', 'Stasera il film lo scelgo io', 'Un vocale della buonanotte', 'Una foto di te appena sveglia', 'Un massaggio di dieci minuti', 'La prossima pizza la offri tu'];
+  const STEP_NAMES = ['Lobby', 'Domande lampo', 'Scatta', 'Ritocca', 'Quanto mi conosci', 'Un vocale o un gesto', 'La sfida', 'Scoprite', 'Il ricordo'];
+  const PEGNI = ['Mi devi un caffè', 'Stasera il film lo scelgo io', 'Un vocale della buonanotte', 'Una foto di te al risveglio', 'Un massaggio di dieci minuti', 'La prossima pizza la offri tu'];
   const GESTURES = [['abbraccio', '🤗', 'Abbraccio'], ['bacio', '💋', 'Bacio'], ['cuore', '💗', 'Cuore']];
   const Q_MS = 12000, Q_ANSWER_MS = 10000;
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const db = () => (typeof sb !== 'undefined' ? sb : null);
   const me = () => w.usProfile?.id || null;
   const cid = () => w.usProfile?.couple_id || null;
-  const partnerName = () => { try { return w.UsIdentity?.current?.()?.partnerName || 'La tua persona'; } catch (_) { return 'La tua persona'; } };
+  // The real name, or «la tua persona» (lower case in the middle of a sentence; PN() at its start).
+  const partnerName = () => { try { const n = w.UsIdentity?.current?.()?.partnerName; return n && n !== 'La tua persona' ? n : 'la tua persona'; } catch (_) { return 'la tua persona'; } };
+  const PN = () => { const n = partnerName(); return n.charAt(0).toUpperCase() + n.slice(1); };
   const myRole = () => (w.usProfile?.role === 'beatrice' ? 'beatrice' : 'francesco');
   const otherRole = () => (myRole() === 'beatrice' ? 'francesco' : 'beatrice');
   const character = (role, size, reaction) => { try { return w.UsPersonaggi?.character?.(role, reaction ? { size, reaction } : { size }) || ''; } catch (_) { return ''; } };
@@ -87,7 +89,8 @@
   }
   d.addEventListener('visibilitychange', () => {
     if (!couple) return;
-    try { if (d.hidden) couple.untrack(); else { couple.track({ at: Date.now() }); scheduleRefresh(); } } catch (_) {}
+    // Presence follows at once; the server is reread only after a real absence (UsForeground.shortAway).
+    try { if (d.hidden) couple.untrack(); else { couple.track({ at: Date.now() }); if (!w.UsForeground?.shortAway?.()) scheduleRefresh(); } } catch (_) {}
   });
 
   // ---------------------------------------------------------------- the card in Gioca
@@ -99,12 +102,12 @@
     const s = session, mine = s && s.invited_by === me();
     let line = 'Insieme, adesso. 8 tappe in 6 minuti: domande lampo, una foto da ritoccare, una sfida.';
     let action = `<button type="button" class="us-play-btn" data-play="invite">Sfida ${name}</button>`;
-    if (s?.status === 'invited' && mine) { line = `Invito mandato: ${name} ha 3 minuti per accettare.`; action = '<button type="button" class="us-play-btn is-ghost" data-play="open">Aspetta</button>'; }
-    else if (s?.status === 'invited') { line = `${name} ti sfida a Play Us!`; action = '<button type="button" class="us-play-btn" data-play="accept">Accetta la sfida</button>'; }
+    if (s?.status === 'invited' && mine) { line = `Invito mandato: ${name} ha 3 minuti per accettare.`; action = '<button type="button" class="us-play-btn is-ghost" data-play="open">Vedi l’invito</button>'; }
+    else if (s?.status === 'invited') { line = `${esc(PN())} ti sfida a Play Us!`; action = '<button type="button" class="us-play-btn" data-play="accept">Accetta la sfida</button>'; }
     else if (s?.status === 'playing') { line = 'La vostra partita è in corso.'; action = '<button type="button" class="us-play-btn" data-play="open">Rientra</button>'; }
-    else if (!today.can_invite) { line = 'Avete giocato oggi. Domani un’altra partita.'; action = '<small class="us-play-plus">Con US Plus potrete giocarne di più</small>'; }
+    else if (!today.can_invite) { line = 'Avete già giocato oggi. Domani un’altra partita.'; action = '<small class="us-play-plus">Con US Plus potrete giocarne di più</small>'; }
     // The green dot only once presence works (the couple's private channel); never a guess.
-    const dot = !presenceReady ? '<span></span>' : partnerOnline ? `<span class="us-play-online"><i></i>${name} è nell’app</span>` : `<span class="us-play-online is-off">${name} non è nell’app ora</span>`;
+    const dot = !presenceReady ? '<span></span>' : partnerOnline ? `<span class="us-play-online"><i></i>${esc(PN())} è nell’app</span>` : `<span class="us-play-online is-off">${esc(PN())} non è nell’app ora</span>`;
     slot.innerHTML = `<section class="us-play-card" aria-labelledby="usPlayUsTitle">
       <div class="us-play-card-top">${dot}<span class="us-play-day">${today.can_invite ? '1 partita oggi' : 'Giocata oggi'}</span></div>
       <h3 id="usPlayUsTitle">Play Us</h3>
@@ -125,7 +128,7 @@
       d.body.appendChild(el);
       feedback('attention');
     }
-    el.innerHTML = `<span class="us-play-invite-char" aria-hidden="true">${character(otherRole(), 40, 'saluta')}</span><b>${esc(partnerName())} ti sfida a Play Us</b><button type="button" class="us-play-btn" data-play="accept">Gioca</button><button type="button" class="us-play-link" data-play="decline">Non ora</button>`;
+    el.innerHTML = `<span class="us-play-invite-char" aria-hidden="true">${character(otherRole(), 40, 'saluta')}</span><b>${esc(PN())} ti sfida a Play Us</b><button type="button" class="us-play-btn" data-play="accept">Gioca</button><button type="button" class="us-play-link" data-play="decline">Non ora</button>`;
   }
 
   // ---------------------------------------------------------------- the game sheet
@@ -161,7 +164,7 @@
     // The game starts for both: the inviter is taken in when the other accepts.
     if (s.status === 'playing' && !isOpen() && minimized !== s.id && (s.invited_by === me() || view === 'joined')) open();
     if (isOpen()) {
-      if ((s.status === 'expired' || s.status === 'declined') && s.invited_by === me()) { toastMsg(`${partnerName()} ora non c’è, riprovate più tardi`); close(); return; }
+      if ((s.status === 'expired' || s.status === 'declined') && s.invited_by === me()) { toastMsg(`${PN()} adesso non può: riprovate più tardi`); close(); return; }
       if (s.status === 'abandoned') { renderAbandoned(); return; }
       render();
     }
@@ -240,7 +243,7 @@
     if (!ms) { el?.remove(); return; }
     const left = Math.max(0, 60 - Math.floor(ms / 1000));
     if (!el) { el = d.createElement('div'); el.className = 'us-play-missing'; el.setAttribute('role', 'status'); root().querySelector('.us-play-shell').appendChild(el); }
-    el.textContent = `${partnerName()} si è persa un attimo… aspettiamo ancora ${left} s`;
+    el.textContent = `${PN()} non è più nell’app… aspettiamo ancora ${left} s`;
     if (left <= 0 && !busy) { busy = true; rpc('play_us_abandon', { p_session: session.id }).then((st) => { adopt(st); renderAbandoned(); }).catch(() => {}).finally(() => { busy = false; }); }
   }
   function renderAbandoned() {
@@ -252,7 +255,7 @@
 
   // ---------------------------------------------------------------- wait + lobby
   function mountWait(body) {
-    body.innerHTML = `<div class="us-play-center"><span class="us-play-k">Invito mandato</span><div class="us-play-duo">${character(myRole(), 84, 'saluta')}</div><h2>Aspettiamo ${esc(partnerName())}…</h2><p>Le è arrivato: «Ti sfida a Play Us». Ha <b data-play-invite-left>3:00</b> per accettare.</p><button type="button" class="us-play-link" data-play="cancel">Annulla l’invito</button></div>`;
+    body.innerHTML = `<div class="us-play-center"><span class="us-play-k">Invito mandato</span><div class="us-play-duo">${character(myRole(), 84, 'saluta')}</div><h2>Aspettiamo ${esc(partnerName())}…</h2><p>A ${esc(partnerName())} è arrivato l’invito. Ha <b data-play-invite-left>3:00</b> per accettare.</p><button type="button" class="us-play-link" data-play="cancel">Annulla l’invito</button></div>`;
   }
   function updateWait() {
     const el = root().querySelector('[data-play-invite-left]'); if (!el || !session) return;
@@ -290,7 +293,7 @@
       if (reveal && mine && hers && mine.payload.i === hers.payload.i && card.dataset.cheered !== String(k)) { card.dataset.cheered = String(k); feedback('success'); card.classList.remove('is-same'); void card.offsetWidth; card.classList.add('is-same'); }
     }
     const her = root().querySelector('[data-play-her]');
-    if (her) her.innerHTML = `${character(otherRole(), 30, hers ? '' : 'sera')}<span>${hers ? (reveal ? `${esc(partnerName())} ha risposto` : `${esc(partnerName())} ha già risposto`) : `${esc(partnerName())} sta scegliendo…`}</span>`;
+    if (her) her.innerHTML = `${character(otherRole(), 30, hers ? '' : 'sera')}<span>${hers ? (reveal ? `${esc(PN())} ha risposto` : `${esc(PN())} ha già risposto`) : `${esc(partnerName())} sta scegliendo…`}</span>`;
     const same = [0, 1, 2].filter((i) => { const a = move(me(), 1, 'answer', i), b = move(partnerId(), 1, 'answer', i); return a && b && a.payload.i === b.payload.i && (i < k || reveal); }).length;
     const meter = root().querySelector('[data-play-meter]'); if (meter) meter.style.width = `${(same / 3) * 100}%`;
     if (t >= 3 * Q_MS - 1000) done(1);
@@ -353,7 +356,7 @@
     const cv = body.querySelector('[data-play-canvas]'), g = cv.getContext('2d');
     g.fillStyle = '#2b1a29'; g.fillRect(0, 0, 720, 720);
     photoToEdit().then((url) => {
-      if (!url) { g.fillStyle = '#f7efe9'; g.font = '600 34px Figtree, sans-serif'; g.textAlign = 'center'; g.fillText('Disegna qualcosa per te ♡', 360, 370); return; }
+      if (!url) { g.fillStyle = '#f7efe9'; g.font = '600 34px Figtree, sans-serif'; g.textAlign = 'center'; g.fillText(`Disegna qualcosa per ${partnerName()} ♡`, 360, 370); return; }
       const im = new Image(); im.crossOrigin = 'anonymous';
       im.onload = () => { const k = Math.max(720 / im.width, 720 / im.height); g.drawImage(im, (720 - im.width * k) / 2, (720 - im.height * k) / 2, im.width * k, im.height * k); };
       im.src = url;
@@ -380,7 +383,7 @@
     try {
       const blob = await new Promise((ok) => cv.toBlob(ok, 'image/webp', 0.82));
       const path = await upload(blob, 'edit', 'image/webp');
-      if (await send(3, 'edit', 0, { path })) { toastMsg(`Fatto! ${partnerName()} lo vedrà alla fine`); feedback('success'); done(3); }
+      if (await send(3, 'edit', 0, { path })) { toastMsg(`Fatto! ${PN()} lo vedrà alla fine`); feedback('success'); done(3); }
     } catch (error) { console.warn('[US Play Us] edit', error); toastMsg('Non riesco a salvare il ritocco.'); body.dataset.saving = '0'; }
   }
 
@@ -390,7 +393,7 @@
   function updateGuess() {
     const s = session, card = root().querySelector('[data-play-guess]'); if (!s || !card) return;
     const slot = [0, 1].find((i) => !move(me(), 4, 'guess', i));
-    if (slot === undefined) { card.innerHTML = `<div class="us-play-center"><div class="us-play-duo">${character(myRole(), 64)}</div><h3>Fatto! Scoprite alla fine se hai indovinato.</h3></div>`; updateDoneLine(); done(4); return; }
+    if (slot === undefined) { card.innerHTML = `<div class="us-play-center"><div class="us-play-duo">${character(myRole(), 64)}</div><h3>Fatto! Alla fine scoprirai se hai indovinato.</h3></div>`; updateDoneLine(); done(4); return; }
     const item = s.items?.[3 + slot]; const draft = guessDraft[`${s.id}:${slot}`];
     const sig = `${slot}:${draft ?? '-'}`; if (card.dataset.sig === sig) return; card.dataset.sig = sig;
     const opts = (who) => (item.o || []).map((o, i) => `<button type="button" class="us-play-opt${who === 'self' && draft === i ? ' is-mine' : ''}" data-play-guess-${who}="${i}" data-slot="${slot}"${who === 'guess' && draft === undefined ? ' disabled' : ''}>${esc(o)}</button>`).join('');
@@ -425,7 +428,7 @@
       e.preventDefault();
       if (rec || move(me(), 5, 'voice') || move(me(), 5, 'gesture')) return;
       const MR = w.MediaRecorder;
-      if (!MR || !navigator.mediaDevices?.getUserMedia) { toastMsg('Qui il vocale non si può: manda un gesto'); return; }
+      if (!MR || !navigator.mediaDevices?.getUserMedia) { toastMsg('Da qui non si può mandare un vocale: manda un gesto'); return; }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const type = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find((t) => { try { return MR.isTypeSupported?.(t); } catch (_) { return false; } });
@@ -445,7 +448,7 @@
     body.innerHTML = `<div class="us-play-scores"><div>${character(myRole(), 28)}<span>Tu</span><b data-play-score-me>0</b></div><div>${character(otherRole(), 26)}<span>${esc(partnerName())}</span><b data-play-score-her>0</b></div></div>
       <div class="us-play-canvas is-maze"><canvas width="520" height="520" data-play-maze aria-label="Labirinto: scorri per muoverti"></canvas></div>
       <div class="us-play-pad"><span></span><button type="button" data-play-dir="0,-1" aria-label="Su">▲</button><span></span><button type="button" data-play-dir="-1,0" aria-label="Sinistra">◀</button><button type="button" data-play-dir="0,1" aria-label="Giù">▼</button><button type="button" data-play-dir="1,0" aria-label="Destra">▶</button></div>
-      <p class="us-play-sub">Scorri sul labirinto. Cuore +10 · Ti penso: 3 s invincibile (+30 se prendi una nuvoletta) · una nuvoletta ti toglie 5 punti.</p>`;
+      <p class="us-play-sub">Scorri sul labirinto. Cuore +10 · Ti penso +20 e 3 s invincibile (+30 per ogni nuvoletta presa) · una nuvoletta ti toglie 5 punti.</p>`;
     herLive = 0;
     const M = w.UsPlayUsMaze; if (!M) return;
     let lastBroadcast = 0;
@@ -478,8 +481,8 @@
     const g = GESTURES.find(([k]) => k === gesture);
     body.innerHTML = `<div class="us-play-duo">${character(myRole(), 64, 'cuore')}${character(otherRole(), 60, 'cuore')}</div>
       <div class="us-play-photos"><figure><img data-play-img="mine" alt="La foto di ${esc(partnerName())} ritoccata da te"><figcaption>La sua foto, ritoccata da te</figcaption></figure><figure><img data-play-img="hers" alt="La tua foto ritoccata da ${esc(partnerName())}"><figcaption>La tua, ritoccata da ${esc(partnerName())}</figcaption></figure></div>
-      <ul class="us-play-list"><li>Domande lampo <span>${same} su 3 uguali</span></li><li>Quanto la conosci <span>${myGuessRight} su 2 indovinate</span></li>
-      <li>${esc(partnerName())} ti ha mandato <span>${voice ? '<button type="button" class="us-play-link" data-play="voice">▶ il vocale</button>' : g ? `${g[1]} ${g[2]}` : 'niente'}</span></li><li>La sfida <span>${myScore} a ${herScore}</span></li></ul>
+      <ul class="us-play-list"><li>Domande lampo <span>${same} su 3 uguali</span></li><li>Quanto conosci ${esc(partnerName())} <span>${myGuessRight} su 2 indovinate</span></li>
+      <li>Da ${esc(partnerName())} <span>${voice ? '<button type="button" class="us-play-link" data-play="voice">▶ il vocale</button>' : g ? `${g[1]} ${g[2]}` : 'niente, stavolta'}</span></li><li>La sfida <span>${myScore} a ${herScore}</span></li></ul>
       <button type="button" class="us-play-btn" data-play="ready">Avanti</button><p class="us-play-doneline" data-play-doneline></p>`;
     const mineEdit = move(me(), 3, 'edit')?.payload?.path, hersEdit = move(p, 3, 'edit')?.payload?.path;
     [['mine', mineEdit], ['hers', hersEdit]].forEach(async ([k, path]) => {
@@ -507,11 +510,11 @@
     let pegnoHtml = '';
     if (winner === me() && !pegno) pegnoHtml = `<span class="us-play-k">Scegli il pegno di ${esc(partnerName())}</span><div class="us-play-pegni">${PEGNI.map((p) => `<button type="button" data-play-pegno="${esc(p)}">${esc(p)}</button>`).join('')}</div>`;
     else if (pegno) pegnoHtml = `<div class="us-play-postit">«${esc(pegno)}»<small>${winner === me() ? 'Tu' : esc(partnerName())} · sulla lavagna di Noi</small></div>`;
-    else if (winner) pegnoHtml = `<p class="us-play-sub">${esc(partnerName())} sta scegliendo il tuo pegno…</p>`;
+    else if (winner) pegnoHtml = `<p class="us-play-sub">${esc(PN())} sta scegliendo il tuo pegno…</p>`;
     box.innerHTML = `<section class="us-play-memory"><span class="us-play-k">Play Us · ${esc(new Date(s.day + 'T12:00:00').toLocaleDateString('it-IT', { day: 'numeric', month: 'long' }))}</span><h3>${head}</h3>
         <p>${r.intesa ?? 0} su 3 uguali · sfida ${mine}–${hers}</p></section>
       ${pegnoHtml}
-      ${Number(r.xp) > 0 ? `<p class="us-play-center-line"><b>+${Number(r.xp)}</b> per il vostro livello${s.moment_id ? ' · salvato in Ricordi' : ''}</p>` : s.moment_id ? '<p class="us-play-center-line">Salvato in Ricordi</p>' : ''}
+      ${Number(r.xp) > 0 ? `<p class="us-play-center-line"><b>+${Number(r.xp)}</b> punti per il vostro livello${s.moment_id ? ' · salvato in Ricordi' : ''}</p>` : s.moment_id ? '<p class="us-play-center-line">Salvato in Ricordi</p>' : ''}
       <p class="us-play-sub us-play-center-line">Domani un’altra partita.<br><small>Con US Plus potrete giocarne di più</small></p>
       <button type="button" class="us-play-btn is-ghost" data-play="close">Torna a Gioca</button>`;
     if (pegno || !winner) feedback('success');
@@ -575,6 +578,8 @@
     refresh();
   }
   w.addEventListener('us-identity-change', () => { stopLive(); today = session = null; boot(); });
-  if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot, { once: true }); else boot();
+  // After the first screen (UsAppReady), in an idle moment: Play Us never costs the opening.
+  const start = () => { const go = () => (typeof w.requestIdleCallback === 'function' ? w.requestIdleCallback(() => boot(), { timeout: 3000 }) : setTimeout(boot, 1200)); Promise.resolve(w.UsAppReady?.whenReady).then(go, go); };
+  if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', start, { once: true }); else start();
   w.UsPlayUs = { refresh, paintCard, open, close, isOpen, state: () => ({ today, session, partnerOnline }) };
 })();

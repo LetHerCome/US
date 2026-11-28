@@ -374,7 +374,7 @@ test('M6B (39): quick entry has presets, title, Quando and one keyboard time (No
     assert.doesNotMatch(formBlock, new RegExp(gone), `${gone} is not part of the quick form`);
   }
   assert.match(formBlock, /<label class="us-cal-field" id="usCalendarDateField"><span>Quando<\/span>/);
-  assert.match(formBlock, /<span>Inizio · se c'è<\/span><input id="usCalendarStartTimeInput"/);
+  assert.match(formBlock, /<span>Inizio · se c’è<\/span><input id="usCalendarStartTimeInput"/);
   assert.match(formBlock, /id="usCalendarMeetInput" type="checkbox" role="switch" aria-label="Ci vediamo"/);
   assert.match(formBlock, /id="usCalendarYearlyInput" type="checkbox" role="switch" aria-label="Ogni anno"/);
 });
@@ -389,7 +389,7 @@ test('M6B (40): explicit end time exists without reintroducing end-date or locat
 // (41) concise Inizio/Fine labels replace the old picker wording.
 test('M6B (41): «Inizio · se c\'è» and «Fine · se vuoi»; no hidden end row (28/11/2026)', () => {
   const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
-  assert.match(formBlock, /<span>Inizio · se c'è<\/span>/);
+  assert.match(formBlock, /<span>Inizio · se c’è<\/span>/);
   assert.match(formBlock, /<span>Fine · se vuoi<\/span>/);
   assert.doesNotMatch(formBlock, /id="usCalendarTimeFields"|Data inizio|Ora inizio/);
 });
