@@ -52,7 +52,7 @@ function steps({ force = false } = {}) {
     { id: 'profilo', target: () => firstVisible('#home [data-us-self], .top [data-us-self]'), round: true, say: 'Qui in alto a destra ci sono io: toccami e apri il tuo Profilo, con le Impostazioni, i colori, le notifiche e la vostra data.' },
     { id: 'angolo', target: () => firstVisible('#usIsola'), pill: true, island: true, say: 'Questo è il logo di US: toccalo e si apre la barra con voi due e il vostro livello. Tocca la barra ed entri nel vostro angolo: il guardaroba e i premi.', other: 'Ci vediamo qui ogni giorno!' },
     // US, the app that remembers (the rules behind US vi ricorda and the bacheca), and US Plus (27/11/2026).
-    { id: 'us', target: () => firstVisible('#usIsola'), pill: true, say: 'Ogni tanto parla anche US, l’app: si ricorda le vostre date, i ricordi di un anno fa, e vi tiene la bacheca in Ricordi. Mai più di una volta al giorno, promesso.', other: 'Una specie di amico che non dimentica niente.' },
+    { id: 'us', target: () => firstVisible('#usIsola'), pill: true, keep: true, say: 'Ogni tanto parla anche US, l’app: si ricorda le vostre date, i ricordi di un anno fa, e vi tiene la bacheca in Ricordi. Mai più di una volta al giorno, promesso.', other: 'Una specie di amico che non dimentica niente.' },
     { id: 'plus', say: 'Un giorno arriverà anche US Plus: più vestiti per me, più giochi, più cose vostre… Per ora non posso dire altro, è una sorpresa.', other: 'Io intanto mi prenoto un cappello nuovo.', cta: 'Fine', reaction: 'cuore' }
   ];
 }
@@ -257,13 +257,16 @@ function paint() {
   paintFoot();
   root.dataset.step = step.id;
   clearTimers();
-  // The logo opens into the bar of your two characters, as if tapped; the light follows it.
-  try { w.UsAngolo?.isola?.(false); } catch (_) { /* no island yet */ }
+  // The logo opens into the bar of your two characters, as if tapped; the light grows
+  // with it, frame by frame, until the bar has opened (28/11/2026: no more pause and
+  // jump). «us» keeps the bar open, so the light never rings an empty place.
+  if (step.keep && isolaAperta()) { try { w.UsAngolo?.isola?.(true, { ms: 9000 }); } catch (_) {} }
+  else { try { w.UsAngolo?.isola?.(false); } catch (_) { /* no island yet */ } }
   if (step.island) {
     later(() => {
       root.querySelector('[data-intro-hole]')?.classList.add('is-tap');
-      later(() => { try { w.UsAngolo?.isola?.(true, { ms: 9000 }); } catch (_) {} later(() => place(step), 460); }, 380);
-    }, reduced() ? 300 : 1100);
+      later(() => { try { w.UsAngolo?.isola?.(true, { ms: 9000 }); } catch (_) {} followIsola(step); }, 260);
+    }, reduced() ? 200 : 500);
   }
   const o = root.querySelector('[data-intro-other]');
   o.classList.remove('is-on');
@@ -275,6 +278,21 @@ function paint() {
   }
   place(step);
   requestAnimationFrame(() => place(step));
+}
+
+const isolaAperta = () => d.getElementById('usIsola')?.getAttribute('aria-expanded') === 'true';
+// The light follows the bar while it opens (its width transition), then rests.
+function followIsola(step) {
+  const bar = d.getElementById('usIsola'), hole = root?.querySelector('[data-intro-hole]');
+  if (!bar || !hole || reduced()) { place(step); return; }
+  hole.classList.add('is-follow');
+  const until = Date.now() + 700;
+  const tick = () => {
+    if (!open || list[at] !== step) { hole.classList.remove('is-follow'); return; }
+    place(step);
+    if (Date.now() < until) requestAnimationFrame(tick); else hole.classList.remove('is-follow');
+  };
+  requestAnimationFrame(tick);
 }
 
 function next() {
@@ -350,7 +368,9 @@ function autoStart() {
   autoTries += 1;
   const ready = w.usProfile?.id && w.usProfile?.couple_id && paired() && !setupPending()
     && $('home')?.classList.contains('active') && !d.hidden
-    && !d.documentElement.classList.contains('us-app-locked') && !somethingOpen();
+    && !d.documentElement.classList.contains('us-app-locked') && !somethingOpen()
+    // Never over the opening (28/11/2026): the two fly into the island first.
+    && !d.documentElement.classList.contains('us-launch-play');
   if (ready) { start(); return; }
   setTimeout(autoStart, 1500);
 }

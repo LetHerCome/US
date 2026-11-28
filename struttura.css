@@ -411,6 +411,11 @@
 .us-intro.is-open{opacity:1}
 .us-intro-hole{position:absolute;box-shadow:0 0 0 200vmax rgba(16,10,16,.62),0 0 0 2px rgba(255,255,255,.92) inset,0 0 26px rgba(255,255,255,.32);transition:left .55s cubic-bezier(.3,.8,.25,1),top .55s cubic-bezier(.3,.8,.25,1),width .55s cubic-bezier(.3,.8,.25,1),height .55s cubic-bezier(.3,.8,.25,1),border-radius .3s;pointer-events:none}
 .us-intro-hole.is-none{left:50%;top:50%;width:0;height:0}
+/* The light grows with the opening bar, frame by frame (intro.js followIsola). */
+.us-intro-hole.is-follow{transition:none}
+/* Under the intro the page holds its endless animations (orbits, breaths, beats):
+   less work on every frame, so the intro runs smooth on a phone (28/11/2026). */
+html.us-intro-open .app *,html.us-intro-open .app *::before,html.us-intro-open .app *::after{animation-play-state:paused!important}
 .us-intro-hole.is-tap::after{content:"";position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:rgba(255,255,255,.55);animation:us-intro-tap .7s ease-out both}
 @keyframes us-intro-tap{0%{opacity:.85;transform:scale(.3)}100%{opacity:0;transform:scale(1.9)}}
 .us-intro-guide{position:absolute;left:0;top:0;transition:transform .7s cubic-bezier(.3,.8,.25,1);pointer-events:none}
