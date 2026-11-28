@@ -9,9 +9,11 @@ const STYLES=Object.freeze([
   {id:'editorial',name:'Editoriale',note:'Il tempo, in copertina.'},
   {id:'signal',name:'Partenze',note:'Come un tabellone in stazione.'},
   {id:'glass',name:'Vetro',note:'Una lente sulla vostra foto.'},
-  {id:'aurora',name:'Aurora',note:'La luce dentro le cifre.',reward:'frame_aurora',level:4},
-  {id:'orbit',name:'Orbita',note:'Un giro di luce ogni minuto.',reward:'ring_orbit',level:8},
-  {id:'chrome',name:'Cromo',note:'Cifre lucide come il metallo.',reward:'frame_chrome',level:10}
+  // Temi e countdown (tavola approved 26/11/2026): the three reward ids keep
+  // their rewards and get new art. aurora = Post-it, orbit = Biglietto, chrome = Filo rosso.
+  {id:'aurora',name:'Post-it',note:'Un post-it nei vostri colori, attaccato con lo scotch.',reward:'frame_aurora',level:5},
+  {id:'orbit',name:'Biglietto',note:'Un biglietto del treno, andata per due.',reward:'ring_orbit',level:15},
+  {id:'chrome',name:'Filo rosso',note:'Voi due ai capi di un filo che si accorcia.',reward:'frame_chrome',level:24}
 ]);
 const civil=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'});
 function dayNumber(value){
@@ -80,7 +82,15 @@ function install(w){
   // own: the title is the one you wrote (not "Insieme da" or the editor's placeholder), kept as written.
   function markup(view,title,style,together=false,own=!together&&Boolean(title)){
     if(!view)return '';
-    return `<span class="us-countdown-art" data-countdown-style="${esc(style)}" data-countdown-clock="${view.value.includes(':')}"${together?' data-countdown-kind="together"':''}><span class="us-countdown-deco" aria-hidden="true"><i></i></span><span class="us-countdown-title"${own?' translate="no"':''}>${esc(title)}</span><span class="us-countdown-number" aria-hidden="true">${[...view.value].map(c=>`<span class="us-countdown-digit${/\d/.test(c)?'':' is-sep'}">${esc(c)}</span>`).join('')}</span><span class="us-countdown-unit">${esc(view.unit)}</span>${together?'<span class="us-countdown-tail" aria-hidden="true">insieme</span>':''}<span class="us-countdown-sub">${esc(view.label)}</span></span>`;
+    return `<span class="us-countdown-art" data-countdown-style="${esc(style)}" data-countdown-clock="${view.value.includes(':')}"${together?' data-countdown-kind="together"':''}><span class="us-countdown-deco" aria-hidden="true"><i></i></span><span class="us-countdown-title"${own?' translate="no"':''}>${esc(title)}</span><span class="us-countdown-number" aria-hidden="true">${[...view.value].map(c=>`<span class="us-countdown-digit${/\d/.test(c)?'':' is-sep'}">${esc(c)}</span>`).join('')}</span><span class="us-countdown-unit">${esc(view.unit)}</span>${together?'<span class="us-countdown-tail" aria-hidden="true">insieme</span>':''}<span class="us-countdown-sub">${esc(view.label)}</span>${style==='chrome'?filo(view):''}</span>`;
+  }
+  // Filo rosso: you on the left, the other person on the right, a red thread
+  // between you that shortens as the day comes (30 days or more: as long as it gets).
+  function filoK(view){const n=/^\d+$/.test(view?.value||'')?Number(view.value):0;return Math.max(0,Math.min(1,n/30)).toFixed(3);}
+  function filo(view){
+    const P=w.UsPersonaggi,me=P?.myRole?.()||'francesco',other=me==='beatrice'?'francesco':'beatrice';
+    const one=role=>{try{return P?.character?.(role,{size:30})||'';}catch(_){return '';}};
+    return `<span class="us-cd-filo" aria-hidden="true" style="--k:${filoK(view)}"><span class="us-cd-filo-one">${one(me)}</span><span class="us-cd-filo-thread"></span><span class="us-cd-filo-one">${one(other)}</span></span>`;
   }
   function tick(){
     if(key()!==owner){clear();if(key())hydrate();return;}
@@ -99,12 +109,10 @@ function install(w){
       [...view.value].forEach((c,i)=>{if(digits[i].textContent!==c){digits[i].textContent=c;w.UsUiFoundation?.playOnce?.(digits[i],'is-changing',380);}});
       surface.querySelector('.us-countdown-unit').textContent=view.unit;
       surface.querySelector('.us-countdown-sub').textContent=view.label;
+      surface.querySelector('.us-cd-filo')?.style.setProperty('--k',filoK(view));
     }
-    const art=surface.querySelector('.us-countdown-art');if(art){art.dataset.countdownClock=String(view.value.includes(':'));if(e.style==='orbit')sweep(art);}
+    const art=surface.querySelector('.us-countdown-art');if(art)art.dataset.countdownClock=String(view.value.includes(':'));
   }
-  // Orbita: the light advances one tick per real second. Any jump (first paint,
-  // return from background, hour wrap) is applied without a transition.
-  function sweep(art){const s=Math.floor(Date.now()/1000)%3600,prev=Number(art.dataset.sweep);art.toggleAttribute('data-sweep-jump',s!==prev+1);art.dataset.sweep=String(s);art.style.setProperty('--us-cd-sweep',`${s*6}deg`);}
   // The day each row counts to, as the list reads it: "Sabato 31 ottobre, 7:40".
   const tag=()=>w.UsI18n?.tag||'it-IT';
   const cap=v=>v?v.charAt(0).toLocaleUpperCase(tag())+v.slice(1):'';
@@ -330,8 +338,9 @@ function install(w){
     if(!available(s.id,progression())){w.toast?.(`Si sblocca al livello ${s.level} di Sintonia`,{quiet:true,icon:'lock-simple'});return;}
     draft.style=s.id;touched=true;styleTiles();
     // Only the style changes: the sample keeps its markup (no rebuild, no style read) and pops (mockup).
-    const art=$('usCountdownPreview').querySelector('.us-countdown-art');
-    if(art)art.dataset.countdownStyle=s.id;else preview();
+    let art=$('usCountdownPreview').querySelector('.us-countdown-art');
+    // Filo rosso carries the two characters: going to or from it rebuilds the sample.
+    if(art&&s.id!=='chrome'&&art.dataset.countdownStyle!=='chrome')art.dataset.countdownStyle=s.id;else{preview();art=$('usCountdownPreview').querySelector('.us-countdown-art');}
     if(art&&!reduced()&&typeof art.animate==='function')art.animate([{opacity:0,scale:.92},{opacity:1,scale:1}],{duration:320,easing:'cubic-bezier(.22,1.15,.36,1)'});
   });
   // Native date/time pickers (iOS wheels, Android dialogs) may report only
@@ -382,7 +391,7 @@ function install(w){
     const next=copy();next.items=next.items.filter(e=>e.id!==id);if(next.active_id===id)next.active_id=null;
     if(await persist(next)){collection(-1);w.toast?.('Countdown eliminato',{quiet:true});}
   });
-  d.addEventListener('visibilitychange',()=>{w.clearInterval(timer);timer=null;if(!d.hidden){tick();if(key())hydrate();startTimer();}});
+  d.addEventListener('visibilitychange',()=>{w.clearInterval(timer);timer=null;if(!d.hidden){tick();if(key()&&!w.UsForeground?.shortAway?.())hydrate();startTimer();}});
   w.addEventListener('us:progression-updated',()=>{paint();if(draft&&opened()){styleTiles();preview();}});
   // Reconcile partner changes at most once per minute, only while Oggi is visible.
   // Identity changes clear immediately on the next lifecycle tick. No private local storage.

@@ -49,9 +49,10 @@ test('M5E integrates server-authoritative seen and Conserva RPCs', () => {
   assert.match(source, /rpc\('mark_left_item_seen'/);
   assert.match(source, /rpc\('conserve_left_for_you'/);
   assert.match(source, /status.*existing|existing.*status/);
-  assert.match(source, /Conservato/);
-  assert.ok(/setStatus\(['"]Conservato nei Ricordi\./.test(source),
-    'successful conservation must identify Ricordi as the destination');
+  // Lasciato per te nuovo (25/11/2026): «Tienila», and the place it goes is named.
+  assert.match(source, /Tenuta|Tenuto/);
+  assert.ok(/setStatus\(data\?\.status === 'existing' \? 'Era già nei vostri Conservati\.' : 'Nei vostri Conservati\.'/.test(source),
+    'successful conservation must identify Conservati as the destination');
 });
 
 test('M5E has loading, empty, retry and no Stories semantics in the UI owner', () => {
@@ -66,10 +67,9 @@ test('M5E has loading, empty, retry and no Stories semantics in the UI owner', (
 
 test('M5E disables the legacy media surface in the active Web/PWA shell', () => {
   const html = read('index.html');
-  const stories = read('stories.js');
   assert.match(html, /__US_LEFT_FOR_YOU_ACTIVE__/);
   assert.doesNotMatch(html, /usTopProfiles|usStoryPartner|usStoryPartnerOpen|openOwnStories\(\)/);
-  assert.match(stories, /if \(window\.__US_LEFT_FOR_YOU_ACTIVE__\) return/);
+  assert.equal(fs.existsSync(path.join(ROOT, 'stories.js')), false, 'the Stories runtime is retired');
   assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,220}usEnvelopeTap/);
 });
 

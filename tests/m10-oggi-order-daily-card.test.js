@@ -16,7 +16,7 @@ const app = read('app.js');
 const hero = html.match(/<section class="hero home-hero-only" id="homeHero"[\s\S]*?<\/section>/)?.[0] || '';
 
 function installCard() {
-  const source = app.slice(app.indexOf('const US_TODAY_PRIORITY_ORDER='), app.indexOf('function localDateISO()'));
+  const source = app.slice(app.indexOf('let usTodayPriorityRefreshId=0;'), app.indexOf('function localDateISO()'));
   const card = { hidden: true, innerHTML: '', dataset: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, removeAttribute(k) { delete this.attrs[k]; } };
   const window = { usProfile: { role: 'francesco' }, usBondProfiles: [] };
   const context = vm.createContext({
@@ -30,30 +30,28 @@ function installCard() {
 }
 const question = { id: 'q-1', question: 'Cosa ti farebbe partire bene questa settimana?', question_date: '2026-10-05' };
 
-test('M10A follow-up: Oggi keeps only the actionable notice outside the retired Calendar/Daily stack', () => {
+test('M10A follow-up → redesign D9: Oggi keeps the Domanda di oggi outside the retired Calendar/Daily stack', () => {
   const stack = hero.match(/<div class="us-oggi-stack" id="usOggiStack">[\s\S]*?\n {6}<\/div>/)?.[0] || '';
   assert.ok(stack, 'legacy Oggi stack remains mounted for existing authorities');
-  assert.equal(stack.indexOf('id="usTodayPriorityRegion"'), -1, 'personal notice no longer lives in the retired stack');
-  assert.ok(hero.indexOf('id="usTodayPriorityRegion"') >= 0, 'personal notice remains inside the Home hero');
-  assert.ok(hero.indexOf('id="usTodayPriorityRegion"') < hero.indexOf('id="usOggiStack"'), 'notice is structurally separate from the retired stack');
+  for (const gone of ['id="usTodayPriorityRegion"', 'id="pushOptInCard"']) assert.equal(hero.indexOf(gone), -1, `${gone}: no cards of suggestions on Oggi (D9)`);
   for (const legacy of ['id="usOggiCalendarWidget"', 'id="usDailyRevealLink"']) assert.ok(stack.indexOf(legacy) >= 0, `${legacy} remains mounted for its authority`);
-  for (const passive of ['id="distanceWidget"', 'id="pushOptInCard"', 'id="homeEmptyState"', 'id="usDailyRitual"']) {
+  for (const passive of ['id="distanceWidget"', 'id="homeEmptyState"', 'id="usDailyRitual"']) {
     assert.equal(stack.indexOf(passive), -1, `${passive} is not in the retired stack`);
   }
   assert.match(css, /#home #usOggiStack\{height:0!important;[^}]*visibility:hidden!important;[^}]*pointer-events:none!important\}/);
-  // 1.0: one dock above the nav — what waits for me (or the notifications invite), then the Domanda di oggi.
+  // Redesign D9: one dock above the nav — the caption, the row, then the Domanda di oggi.
   const dock = hero.match(/<div class="us-oggi-dock[^"]*" id="usOggiDock">[\s\S]*?\n {6}<\/div>/)?.[0] || '';
-  const order = ['id="usTodayPriorityRegion"', 'id="pushOptInCard"', 'id="usDailyRitual"'].map((id) => dock.indexOf(id));
+  const order = ['id="usOggiCaption"', 'id="usOggiRow"', 'id="usDailyRitual"'].map((id) => dock.indexOf(id));
   assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), `dock order ${order}`);
   assert.ok(hero.indexOf('id="usOggiDock"') < hero.indexOf('id="usOggiStack"'));
   const dcOggi = read('dc-oggi.css');
-  // Parity 2026-10: the mockup's .og-bottom sits 130px from the bottom edge (nav + Maudit's band).
-  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?position:fixed;[\s\S]*?bottom:calc\(var\(--us-safe-bottom\) \+ 130px\);/, 'a band above the nav stays free for Maudit');
-  assert.match(dcOggi, /#home #usOggiDock #usTodayPriorityRegion\{[\s\S]*?position:static!important;/);
+  // Founder 25/11/2026: Maudit is gone, so the column sits down near the nav (above the heart).
+  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?position:fixed;[\s\S]*?bottom:calc\(var\(--us-safe-bottom\) \+ var\(--us-nav-height\) \+ 44px\);/, 'down near the nav');
+  assert.doesNotMatch(dcOggi, /usPetLayer/);
   assert.equal((html.match(/id="usOggiCalendarWidget"/g) || []).length, 1);
   assert.match(app, /const fact=await window\.getOggiCalendarInsightSource\?\.\(\);/);
-  assert.match(app, /target\.closest\('#usTodayPriorityRegion,/);
-  assert.match(app, /const fadeTargets=\[document\.getElementById\('usTodayPriorityRegion'\),document\.getElementById\('usOggiCalendarWidget'\),document\.getElementById\('usDailyRitual'\)/);
+  assert.match(app, /target\.closest\('\.us-oggi-dock,\.us-oggi-stack,/);
+  assert.match(app, /const fadeTargets=\[document\.getElementById\('usOggiCalendarWidget'\),document\.getElementById\('usDailyRitual'\)/);
 });
 
 test('M10A: gli impegni del Calendario sono informazione, mai attenzione animata', () => {

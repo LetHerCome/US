@@ -4,16 +4,18 @@ import webpush from "npm:web-push@3.6.7";
 import { vapidSubject } from "../_shared/web-push-vapid.mjs";
 import { dispatchThinkReactionWebPush, dispatchThinkWebPush } from "../_shared/think-web-push.ts";
 import { dispatchLeftForYouPush } from "../_shared/left-for-you-push-core.mjs";
-import { dispatchLavagnaPush } from "../_shared/lavagna-push-core.mjs";
+import { dispatchBachecaPostitPush, dispatchLavagnaPush, dispatchPostitPush } from "../_shared/lavagna-push-core.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 import { buildNotification, deliverNotification, recipientLocale } from "../_shared/notification-core.mjs";
 import { nativeTransport } from "../_shared/native-push-env.ts";
+import { dispatchPartnerLook, dispatchPartnerStatus } from "../_shared/widget-signal-core.mjs";
+import { statusResponseEvent } from "../_shared/come-stai-push-core.mjs";
 
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,x-client-info,apikey,content-type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Content-Type": "application/json" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
-type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "lavagna" | "challenge_photo";
-const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "challenge_photo"];
+type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "lavagna" | "postit" | "bacheca_postit" | "challenge_photo" | "partner_look" | "partner_status" | "status_response" | "play_invite";
+const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "postit", "bacheca_postit", "challenge_photo", "partner_look", "partner_status", "status_response", "play_invite"];
 // US 1.0 (A2): a join older than this is not "just joined" (legacy couples, stale retries).
 const PARTNER_JOINED_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -36,6 +38,20 @@ Deno.serve(async (request) => {
     const { data: sender, error: senderError } = await admin.from("profiles").select("id,couple_id,display_name,role").eq("id", authData.user.id).maybeSingle();
     if (senderError || !sender?.couple_id) return json({ error: "Profile not linked" }, 403);
     const { data: partner } = await admin.from("profiles").select("id,display_name,role").eq("couple_id", sender.couple_id).neq("id", sender.id).maybeSingle();
+
+    if (type === "partner_look") {
+      // I personaggi sempre aggiornati (27/11/2026): the caller just changed
+      // colour, shape or outfit. A silent widget signal to the partner's phones,
+      // the look read back from the server, one per couple_sync revision.
+      return json(await dispatchPartnerLook(admin, { sender, partner, native: nativeTransport() }));
+    }
+
+    if (type === "partner_status") {
+      // Come stai che conta (27/11/2026, D13): the caller just changed their
+      // Come stai. The same silent widget signal, the state read back from the
+      // server, so the partner's widgets follow with US closed.
+      return json(await dispatchPartnerStatus(admin, { sender, partner, native: nativeTransport() }));
+    }
 
     if (type === "think") {
       if (!partner || !body.reference_id) return json({ error: "Missing think reference" }, 400);
@@ -101,13 +117,17 @@ Deno.serve(async (request) => {
       }));
     }
 
-    if (type === "lavagna") {
+    if (type === "lavagna" || type === "postit" || type === "bacheca_postit") {
       // Lavagna V1 (03/11/2026): reference_id = the stroke the caller just
       // saved. At most one push every 2 hours for the partner (lavagna-push-core).
+      // Noi, Fase B.3 (D15): or the post-it the caller just wrote, same rule.
+      // La bacheca, fase 2 (27/11/2026): or the post-it on a thing of the board.
       if (!partner || typeof body.reference_id !== "string" || !UUID.test(body.reference_id)) return json({ error: "Missing lavagna reference" }, 400);
       try {
-        const result = await dispatchLavagnaPush(admin, {
+        const dispatch = type === "postit" ? dispatchPostitPush : type === "bacheca_postit" ? dispatchBachecaPostitPush : dispatchLavagnaPush;
+        const result = await dispatch(admin, {
           strokeId: body.reference_id,
+          noteId: body.reference_id,
           sender,
           partnerId: partner.id,
           web: {
@@ -135,7 +155,7 @@ Deno.serve(async (request) => {
     let recipientIds: string[] = [];
     let compose: ((locale: string) => Promise<ReturnType<typeof buildNotification>>) | null = null;
     let dedupeKey: string | null = null;
-    let prefKey: "today" | "bond" | null = null;
+    let prefKey: "today" | "bond" | "think" | "games" | null = null;
     if (type === "test") {
       recipientIds = [sender.id];
       compose = async (locale) => buildNotification("test", { locale });
@@ -221,6 +241,24 @@ Deno.serve(async (request) => {
       dedupeKey = `challenge-photo:${challengeId}:${sender.id}`;
       prefKey = "bond";
     }
+    if (type === "play_invite") {
+      // Play Us (28/11/2026): the caller just invited the partner to play live.
+      // Read back from the server: this couple's session, invited by the
+      // caller, still waiting and not expired (the invite lasts 3 minutes).
+      if (!partner || typeof body.reference_id !== "string" || !UUID.test(body.reference_id)) return json({ error: "Missing play_invite reference" }, 400);
+      const sessionId = body.reference_id.toLowerCase();
+      const { data: session, error: sessionError } = await admin.from("play_us_sessions")
+        .select("id,couple_id,invited_by,status,invite_expires_at")
+        .eq("id", sessionId).maybeSingle();
+      if (sessionError) throw sessionError;
+      if (!session || session.couple_id !== sender.couple_id || session.invited_by !== sender.id) return json({ error: "Invalid play_invite event" }, 403);
+      const expiresAt = Date.parse(String(session.invite_expires_at || ""));
+      if (session.status !== "invited" || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) return json({ error: "Invite not waiting" }, 409);
+      recipientIds = [partner.id];
+      compose = async (locale) => buildNotification("play_invite", { senderName: sender.display_name, sessionId, locale });
+      dedupeKey = `play-invite:${sessionId}`;
+      prefKey = "games";
+    }
     if (type === "partner_joined") {
       // US 1.0 (A2): the joiner's own client, right after accept_partner_invite,
       // names its couple. Server-side: the caller used this couple's invite
@@ -243,9 +281,22 @@ Deno.serve(async (request) => {
       compose = async (locale) => buildNotification("partner_joined", { senderName: sender.display_name, locale });
       dedupeKey = `partner-joined:${sender.couple_id}`;
     }
+    if (type === "status_response") {
+      // Come stai che conta (27/11/2026, D7/D16): the caller just answered the
+      // partner's Come stai (respond_member_status). The gesture is read back
+      // from the partner's row, one push per state, like a Ti penso: it always
+      // goes, even while the partner is at work (D11).
+      if (!partner) return json({ delivered: 0, reason: "no-recipient" });
+      const event = await statusResponseEvent(admin, { sender, partner });
+      if ("reason" in event) return json({ delivered: 0, reason: event.reason });
+      recipientIds = [partner.id];
+      compose = async (locale) => buildNotification("status_response", { senderName: sender.display_name, gesture: event.gesture, locale });
+      dedupeKey = event.dedupeKey;
+      prefKey = "think";
+    }
     if (!recipientIds.length || !compose) return json({ delivered: 0, reason: "no-recipient" });
     if (prefKey) {
-      const { data: preferences } = await admin.from("notification_preferences").select("user_id,think,today,bond,relationship").in("user_id", recipientIds);
+      const { data: preferences } = await admin.from("notification_preferences").select("user_id,think,today,bond,relationship,games").in("user_id", recipientIds);
       const byUser = new Map((preferences || []).map((preference: any) => [preference.user_id, preference]));
       recipientIds = recipientIds.filter((id) => byUser.has(id) ? Boolean(byUser.get(id)[prefKey!]) : true);
       if (!recipientIds.length) return json({ delivered: 0, reason: "disabled-by-preference" });

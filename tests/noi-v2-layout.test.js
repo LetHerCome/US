@@ -11,7 +11,12 @@ test('Noi V2: calendar-first overview, full-size day detail, list toggle and ret
   assert.match(bond, /id="usNoiV2"/);
   // 1.0 (N10): the old invisible Lavagna and hub are gone; Noi V2 is the page.
   assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"/);
-  for (const id of ['usNoiV2Month','usNoiV2ModeCalendar','usNoiV2ModeList','usNoiV2Content','usNoiV2Detail','usNoiV2Today','usNoiBoard']) {
+  // Noi, Fase A (24/11/2026): one calendar, «Vi rivedete tra» above it; no «Mese / Prossimi».
+  assert.doesNotMatch(bond, /usNoiV2ModeCalendar|usNoiV2ModeList/);
+  // Il giorno (founder, 25/11/2026): no day card under the calendar; the day opens in #usNoiDay.
+  assert.doesNotMatch(bond,/id="usNoiV2Detail"/);
+  assert.match(html,/<div class="us-cal-sheet-overlay us-noi-day" id="usNoiDay" aria-hidden="true" data-us-modal data-us-motion-surface>[\s\S]*?<section id="usNoiV2Detail"/);
+  for (const id of ['usNoiV2Meet','usNoiV2Month','usNoiV2Content','usNoiV2Today','usNoiBoard']) {
     assert.match(bond,new RegExp(`id="${id}"`));
   }
   // Noi nuova (founder, 03/11/2026): no tiles and no «Il nostro giorno» (the
@@ -23,16 +28,21 @@ test('Noi V2: calendar-first overview, full-size day detail, list toggle and ret
   assert.match(read('noi-v2.css'),/#bond \.noi-canonical-page\[data-noi-view="hub"\]/);
 });
 
-test('Gioca: Sintonia gets a real second tab using the original progression nodes', () => {
+// Redesign definitivo (23/11/2026, D3): Sintonia is no longer a tab of Gioca;
+// its original nodes move into «Il vostro angolo» (personaggi.js opens it).
+test('Sintonia lives in Il vostro angolo, using the original progression nodes', () => {
   const html=read('index.html');
   const quiz=html.match(/<main id="quiz"[\s\S]*?<\/main>/)?.[0]||'';
-  for(const id of ['usGiocaTabGames','usGiocaTabSintonia','usGiocaGames','usGiocaSintonia','quizHub','usGameV2Panel'])assert.match(quiz,new RegExp(`id="${id}"`));
-  assert.match(quiz,/role="tablist"/);
+  for(const id of ['usGiocaGames','quizHub','usGameV2Panel'])assert.match(quiz,new RegExp(`id="${id}"`));
+  assert.doesNotMatch(quiz,/role="tablist"|usGiocaTabGames|usGiocaTabSintonia|usGiocaSintonia/);
+  const angolo=html.match(/<div id="usAngolo"[\s\S]*?<div id="usStatusSheet"/)?.[0]||'';
+  assert.match(angolo,/id="usGiocaSintonia"/);
   const js=read('noi-v2.js');
   for(const selector of ['.noi-resonance','.us-progression-next','.us-progression-rewards-section','.noi-resonance-history','.noi-resonance-guide'])assert.ok(js.includes(selector),selector);
-  assert.match(js,/target\.appendChild\(element\)/,'original DOM nodes move; no duplicated progression state');
-  assert.match(js,/window\.USProgression\?\.hydrate\?\./);
-  assert.ok(js.includes("document.querySelector('.nav button[data-page=") && js.includes("setTab('giochi'),true"), 'Gioca nav returns to Giochi');
+  assert.match(js,/host\.appendChild\(element\)/,'original DOM nodes move; no duplicated progression state');
+  // 25/11/2026: into the angolo's slots: the level on top, Voi, Premi.
+  assert.ok(js.includes("const slots={livello:['.noi-resonance'],voi:['.us-progression-rhythm','.noi-resonance-history','.noi-resonance-guide'],premi:['.us-progression-next','.us-progression-rewards-section']};"));
+  assert.match(read('personaggi.js'),/w\.USProgression\?\.hydrate\?\./);
   const nav=html.match(/<nav class="nav us-nav[\s\S]*?<\/nav>/)?.[0]||'';
   assert.equal((nav.match(/data-page=/g)||[]).length,4,'four primary pages remain');
 });

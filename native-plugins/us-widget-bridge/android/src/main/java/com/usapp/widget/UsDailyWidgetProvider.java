@@ -12,10 +12,12 @@ import android.text.style.StyleSpan;
 import android.widget.RemoteViews;
 
 /**
- * La domanda di oggi (founder, 04/11/2026): the question first, in Fraunces
- * and as big as it fits, then «Rispondi», which opens it in US; the 4x2 also
- * says who has answered. Never an answer. At midnight in Rome it asks to open
- * US for the new one: the widget never reads the network.
+ * La domanda di oggi (founder, 04/11/2026; widget del redesign 26/11/2026):
+ * the question first, in Fraunces and as big as it fits, then «Rispondi»
+ * (the two of you blended at night, ceralacca on paper), which opens it in
+ * US; the 4x2 adds their character, waving once they answered, and who has
+ * answered. Never an answer. At midnight in Rome it asks to open US for the
+ * new one: the widget never reads the network.
  */
 public final class UsDailyWidgetProvider extends AppWidgetProvider {
     @Override public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
@@ -34,11 +36,18 @@ public final class UsDailyWidgetProvider extends AppWidgetProvider {
             ? R.string.us_widget_daily_new : R.string.us_widget_daily_open);
         String button = button(daily.state);
 
-        RemoteViews small = base(context, R.layout.us_widget_daily, R.drawable.us_widget_art_daily_s, options, false, button);
-        UsWidgetArt.serif(small, context, R.id.us_daily_question, question, 18f, 140, 4, false, Layout.Alignment.ALIGN_NORMAL);
-        RemoteViews medium = base(context, R.layout.us_widget_daily_medium, R.drawable.us_widget_art_daily_m, options, true, button);
-        UsWidgetArt.serif(medium, context, R.id.us_daily_question, question, 23f, 300, 3, false, Layout.Alignment.ALIGN_NORMAL);
+        UsWidgetCharacter.Person me = UsWidgetCharacter.person(state.snapshot, true);
+        UsWidgetCharacter.Person them = UsWidgetCharacter.person(state.snapshot, false);
+        RemoteViews small = base(context, R.layout.us_widget_daily, button, me, them);
+        UsWidgetArt.serif(small, context, R.id.us_daily_question, question, 17f, 140, 4, false, Layout.Alignment.ALIGN_NORMAL);
+        RemoteViews medium = base(context, R.layout.us_widget_daily_medium, button, me, them);
+        UsWidgetArt.serif(medium, context, R.id.us_daily_question, question, 19f, 310, 3, false, Layout.Alignment.ALIGN_NORMAL);
         medium.setTextViewText(R.id.us_daily_status, status(daily.state, who));
+        // Their character: waving once they answered and you have not (personaggi.js reactionOf).
+        UsWidgetCharacter.put(medium, context, R.id.us_daily_partner, them, UsWidgetCharacter.face(state, false), daily.state.equals("your_turn") ? "saluta" : "", 34);
+        int label = me.night;
+        UsWidgets.themedColor(small, context, R.id.us_daily_label, "setTextColor", 0xFFB8452F, label);
+        UsWidgets.themedColor(medium, context, R.id.us_daily_label, "setTextColor", 0xFFB8452F, label);
         String spoken = context.getString(R.string.us_widget_daily_name) + ". " + question + ". " + status(daily.state, who);
         small.setContentDescription(R.id.us_daily_root, spoken);
         medium.setContentDescription(R.id.us_daily_root, spoken);
@@ -47,13 +56,13 @@ public final class UsDailyWidgetProvider extends AppWidgetProvider {
         return UsWidgets.sized(options, small, medium);
     }
 
-    private static RemoteViews base(Context context, int layout, int art, Bundle options, boolean wide, String button) {
+    private static RemoteViews base(Context context, int layout, String button, UsWidgetCharacter.Person me, UsWidgetCharacter.Person them) {
         RemoteViews views = new RemoteViews(context.getPackageName(), layout);
         views.setOnClickPendingIntent(R.id.us_daily_root, UsWidgets.open(context, "daily", 4501));
         views.setOnClickPendingIntent(R.id.us_daily_answer, UsWidgets.open(context, "daily", 4502));
         views.setTextViewText(R.id.us_daily_answer, button);
         views.setContentDescription(R.id.us_daily_answer, button);
-        UsWidgetArt.art(views, context, R.id.us_daily_art, R.id.us_daily_grain, art, options, wide);
+        UsWidgetCharacter.pill(views, context, R.id.us_daily_pill, me, them, 104, 36);
         return views;
     }
 

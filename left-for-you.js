@@ -16,6 +16,19 @@
   const VIDEO_MAX_BYTES = 20 * 1024 * 1024;
   const VIDEO_MAX_SECONDS = 30;
   const VIDEO_TYPES = new Set(['video/mp4', 'video/webm', 'video/quicktime']);
+  // «Fai un video» inside US (27/11): the phone camera at full quality filled
+  // 20 MB in ~10 s. Here the quality is ours: ~720p H.264 at 3 Mbit/s plus AAC
+  // at 128 kbit/s = 3.128 Mbit/s, about 11.7 MB (11.2 MiB) for 30 s, so the
+  // encoder may overshoot by ~75% before reaching 20 MB. If it does anyway,
+  // the recording stops itself at 18.5 MB and the take stays usable.
+  const VIDEO_RECORD_VIDEO_BPS = 3000000;
+  const VIDEO_RECORD_AUDIO_BPS = 128000;
+  const VIDEO_RECORD_GUARD_BYTES = Math.floor(18.5 * 1024 * 1024);
+  const VIDEO_RECORD_SLICE_MS = 1000;
+  // MP4 only (H.264 + AAC), so the file is the same as a gallery MP4 for the
+  // checks, the bucket and the other phone. No MP4 recorder: the phone camera.
+  const VIDEO_RECORD_TYPES = ['video/mp4;codecs=avc1.42E01F,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4;codecs=avc1.4D401F,mp4a.40.2'];
+  const CAMERA_DENIED_EVENT = 'uscamerapermissiondenied';
   const RECEIVER_AUDIO_STEPS = 5;
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   let activeAudioPlayer = null;
@@ -61,6 +74,17 @@
     cameraCapture: null,
     cameraOpen: false,
     cameraRequestId: 0,
+    cameraMode: 'photo',
+    videoRecorder: null,
+    videoChunks: [],
+    videoBytes: 0,
+    videoStartedAt: 0,
+    videoTicker: null,
+    videoMaxTimer: null,
+    videoStopReason: '',
+    videoEndedAt: 0,
+    videoCapture: null,
+    videoTake: null,
     photoPreview: null,
   };
   // Captions are optional and only for a photo or a vocale (the server keeps
@@ -293,7 +317,7 @@
       content = renderLetterMarkup(item, `<button type="button" class="left-for-you-env-photo" aria-expanded="false" aria-label="Apri la foto"><img ${media} alt="" loading="eager"></button>${body}`)
         + `<img class="left-for-you-photo" ${media} alt="Foto lasciata per te" loading="eager">`;
     }
-    if (kind === 'audio') content = `${renderAudioStepPlayerMarkup(mediaUrl)}${body}`;
+    if (kind === 'audio') content = `<div class="left-for-you-fumetto">${renderAudioStepPlayerMarkup(mediaUrl)}</div>${body}`;
     if (kind === 'video') content = `<video class="left-for-you-video" controls preload="metadata" playsinline src="${escapeHtml(mediaUrl)}"></video>${body}`;
     if (kind === 'music') {
       const trackId = extractSpotifyTrackId(item?.media_path || '');
@@ -301,53 +325,76 @@
         ? `<div class="left-for-you-music-embed"><iframe src="${escapeHtml(spotifyEmbedUrl(trackId))}" width="100%" height="152" frameborder="0" allow="encrypted-media" loading="lazy" title="Brano Spotify"></iframe><a class="left-for-you-music-fallback" href="${escapeHtml(canonicalSpotifyTrackUrl(trackId))}" target="_blank" rel="noreferrer noopener">Apri su Spotify ↗</a></div>${body}`
         : `<a class="left-for-you-music" href="${escapeHtml(item?.media_path || '')}" target="_blank" rel="noreferrer noopener"><span class="left-for-you-music-mark" aria-hidden="true">♪</span><span><b>Apri il brano</b><small>${escapeHtml(item?.media_path || '')}</small></span><span aria-hidden="true">↗</span></a>${body}`;
     }
+    if (kind === 'music') content += body;
     const letter = kind === 'text' || kind === 'photo';
     return `<article class="left-for-you-item${letter ? ' is-letter' : ''}" data-left-kind="${kind}"><div class="left-for-you-kind">${labelForKind(kind)}</div>${content}</article>`;
   }
 
-  // Mockup 039: an envelope with a wax seal; the seal fades, the flap opens and the letter rises.
+  // Lasciato per te nuovo (founder 25/11/2026, tavola «US · Lasciato per te»): the sender's
+  // character brings an envelope in their colour, sealed with their own shape; it opens
+  // by itself after a moment (or at a tap on the seal) and the letter becomes a sheet of
+  // paper, a photo a polaroid. Signed with their name and their character.
+  function senderOf(item) {
+    const profile = profiles.get(item?.sender_id);
+    const name = profile?.display_name || (typeof window === 'undefined' ? PARTNER_FALLBACK : partnerName());
+    const role = profile?.role === 'beatrice' || profile?.role === 'francesco' ? profile.role : '';
+    return { name, role };
+  }
+  function characterOf(role, size) {
+    if (typeof window === 'undefined' || !role) return '';
+    try { return window.UsPersonaggi?.character?.(role, { size, reaction: '', mood: '' }) || ''; } catch (_) { return ''; }
+  }
+  // "oggi alle 9:12", "ieri alle 21:40", "il 3 novembre".
+  function leftWhen(value, now = new Date()) {
+    const at = new Date(value || '');
+    if (Number.isNaN(at.getTime())) return '';
+    const time = at.toLocaleTimeString(localeTag(), { hour: 'numeric', minute: '2-digit' });
+    const days = Math.round((dayStart(now) - dayStart(at)) / 86400000);
+    if (days <= 0) return `oggi alle ${time}`;
+    if (days === 1) return `ieri alle ${time}`;
+    return `il ${at.toLocaleDateString(localeTag(), { day: 'numeric', month: 'long' })}`;
+  }
+  // The words on top: "stamattina", "oggi pomeriggio", "stasera", "ieri", "il 3 novembre".
+  function leftMoment(value, now = new Date()) {
+    const at = new Date(value || '');
+    if (Number.isNaN(at.getTime())) return '';
+    const days = Math.round((dayStart(now) - dayStart(at)) / 86400000);
+    if (days <= 0) return at.getHours() < 12 ? 'stamattina' : at.getHours() < 18 ? 'oggi pomeriggio' : 'stasera';
+    if (days === 1) return 'ieri';
+    return `il ${at.toLocaleDateString(localeTag(), { day: 'numeric', month: 'long' })}`;
+  }
   function renderLetterMarkup(item, inner) {
-    const from = escapeHtml(profiles.get(item?.sender_id)?.display_name || (typeof window === 'undefined' ? PARTNER_FALLBACK : partnerName()));
+    const { name, role } = senderOf(item);
+    const from = escapeHtml(name);
+    const when = escapeHtml(leftWhen(item?.created_at));
     return `<div class="left-for-you-env-stage"><div class="left-for-you-env"><div class="left-for-you-env-back"></div>`
-      + `<div class="left-for-you-env-letter"><small>Da <span translate="no">${from}</span></small>${inner}</div>`
+      + `<div class="left-for-you-env-letter"><small>Da <span translate="no">${from}</span>${when ? ` · ${when}` : ''}</small>${inner}`
+      + `<span class="left-for-you-sign"><span translate="no">${from}</span>${characterOf(role, 26)}</span></div>`
       + '<div class="left-for-you-env-front"></div><div class="left-for-you-env-flap"></div>'
-      + '<svg class="left-for-you-env-seal" viewBox="0 0 30 20" aria-hidden="true"><circle cx="11" cy="10" r="9" fill="var(--us-rosa,#ff8fa3)"/><circle cx="19" cy="10" r="9" fill="var(--us-lilla,#b69cff)" style="mix-blend-mode:screen"/></svg></div></div>';
+      + `<button type="button" class="left-for-you-env-seal" aria-label="Apri la lettera di ${from}"><span class="left-for-you-env-wax">${characterOf(role, 30) || '<svg viewBox="0 0 30 20" aria-hidden="true"><circle cx="11" cy="10" r="9" fill="var(--us-rosa,#ff8fa3)"/><circle cx="19" cy="10" r="9" fill="var(--us-lilla,#b69cff)" style="mix-blend-mode:screen"/></svg>'}</span></button></div></div>`;
   }
 
-  const LETTER_HEIGHT = 118;
-  // A letter longer than the mockup's rises further, so all of it stays readable above the envelope.
-  function fitLetter(env) {
-    const letter = env?.querySelector?.('.left-for-you-env-letter');
-    if (!letter || !env.style?.setProperty) return 0;
-    const extra = Math.max(0, Math.ceil((letter.scrollHeight || 0) - LETTER_HEIGHT));
-    env.style.setProperty('--letter-extra', `${extra}px`);
-    return extra;
-  }
-
+  // The seal pops, the flap turns, then the envelope steps away and the paper unfolds (CSS).
   function openLetter(scope) {
     const env = scope?.querySelector?.('.left-for-you-env');
-    if (!env || typeof env.animate !== 'function' || !env.classList?.contains('left-for-you-env')) return;
-    const letter = env.querySelector('.left-for-you-env-letter');
+    if (!env || !env.classList?.contains('left-for-you-env') || env.dataset?.opening) return;
+    if (env.dataset) env.dataset.opening = '1';
     const flap = env.querySelector('.left-for-you-env-flap');
     const seal = env.querySelector('.left-for-you-env-seal');
-    const extra = fitLetter(env);
-    if (reducedMotion() || !letter || !flap || !seal) { env.classList.add('is-open', 'is-still'); return; }
-    seal.animate([{ opacity: 1, scale: 1 }, { opacity: 0, scale: 1.4 }], { duration: 260, delay: 420, fill: 'forwards' });
-    flap.animate([{ transform: 'rotateX(0deg)' }, { transform: 'rotateX(180deg)' }], { duration: 520, delay: 560, easing: 'cubic-bezier(.7,0,.2,1)', fill: 'forwards' })
+    if (reducedMotion() || typeof env.animate !== 'function' || !flap || !seal) { env.classList.add('is-open', 'is-still'); return; }
+    seal.animate([{ opacity: 1, scale: 1 }, { opacity: 0, scale: 1.5 }], { duration: 240, fill: 'forwards' });
+    flap.animate([{ transform: 'rotateX(0deg)' }, { transform: 'rotateX(180deg)' }], { duration: 420, delay: 120, easing: 'cubic-bezier(.7,0,.2,1)', fill: 'forwards' })
       .finished.then(() => {
-        if (!env.isConnected) return;
-        flap.style.zIndex = '0';
-        return letter.animate([
-          { translate: '0 0', height: `${LETTER_HEIGHT}px` },
-          { translate: `0 ${-64 - extra}px`, height: `${LETTER_HEIGHT + extra}px` },
-        ], { duration: 620, easing: 'cubic-bezier(.22,1.15,.36,1)', fill: 'forwards' }).finished;
-      })
-      .then(() => {
         if (!env.isConnected) return;
         env.classList.add('is-open');
         env.getAnimations?.({ subtree: true }).forEach((animation) => animation.cancel());
       })
       .catch(() => {});
+  }
+  let letterTimer = null;
+  function scheduleLetter(scope) {
+    clearTimeout(letterTimer);
+    letterTimer = setTimeout(() => openLetter(scope), 950);
   }
 
   function toggleLetterPhoto(button) {
@@ -517,6 +564,16 @@
     if (counter) counter.textContent = items.length > 1 ? `${currentIndex + 1} di ${items.length}` : '';
     if (next) next.hidden = currentIndex >= items.length - 1;
     if (once) once.hidden = !item || Boolean(item.conserved);
+    if (once && item) once.textContent = `Si apre una volta sola. Se vuoi, ${keepWord(item.kind).toLowerCase()}.`;
+  }
+  // A letter, a photo: «Tienila»; a vocale, a video, a song: «Tienilo».
+  function keepWord(kind) { return kind === 'text' || kind === 'photo' ? 'Tienila' : 'Tienilo'; }
+  function keptWord(kind) { return kind === 'text' || kind === 'photo' ? '✓ Tenuta' : '✓ Tenuto'; }
+  function paintCast(item) {
+    const cast = document.getElementById('leftForYouCast');
+    const card = document.getElementById('leftForYouCard');
+    if (card?.dataset) card.dataset.leftKind = item?.kind || '';
+    if (cast) cast.innerHTML = characterOf(senderOf(item).role, item?.kind === 'audio' ? 120 : 104);
   }
 
   async function renderCurrent() {
@@ -530,15 +587,17 @@
     stopActiveAudioPlayer();
     content.innerHTML = renderItemMarkup(item, url);
     const kindLabel = document.getElementById('leftForYouKind');
-    if (kindLabel) kindLabel.textContent = `Lasciato per te · ${labelForKind(item.kind)}`;
+    const when = leftMoment(item.created_at);
+    if (kindLabel) kindLabel.textContent = when ? `Lasciato per te · ${when}` : `Lasciato per te · ${labelForKind(item.kind)}`;
+    paintCast(item);
     if (item.kind === 'audio') bindAudioStepPlayer(content);
-    openLetter(content);
+    scheduleLetter(content);
     lastRenderedItemId = item.id;
     updateViewerControls();
     if (conserve) {
       conserve.disabled = false;
       conserve.classList.toggle('is-conserved', Boolean(item.conserved));
-      conserve.innerHTML = item.conserved ? '✓ Conservato' : 'Conserva';
+      conserve.innerHTML = item.conserved ? keptWord(item.kind) : keepWord(item.kind);
     }
     await markSeenWhenShown(item, content);
   }
@@ -586,6 +645,7 @@
   function close() {
     const modal = root();
     if (!modal) return;
+    clearTimeout(letterTimer);
     stopActiveAudioPlayer();
     modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true');
     activeItem = null;
@@ -603,13 +663,13 @@
       const { data, error } = await client.rpc('conserve_left_for_you', { target_item_id: item.id });
       if (error) throw error;
       item.conserved = true;
-      if (button) { button.classList.add('is-conserved'); button.textContent = data?.status === 'existing' ? '✓ Già conservato' : '✓ Conservato'; }
+      if (button) { button.classList.add('is-conserved'); button.textContent = keptWord(item.kind); }
       announceOpened();
       if (items[currentIndex] === item) updateViewerControls();
-      setStatus('Conservato nei Ricordi.', 'success');
+      setStatus(data?.status === 'existing' ? 'Era già nei vostri Conservati.' : 'Nei vostri Conservati.', 'success');
     } catch (error) {
       console.warn('[US Left for You] conserve', error);
-      if (button) { button.disabled = false; button.textContent = 'Conserva'; }
+      if (button) { button.disabled = false; button.textContent = keepWord(item.kind); }
       setStatus('Non riesco a conservarlo. Riprova.', 'error');
     } finally { busy = false; }
   }
@@ -674,9 +734,12 @@
 
   // ---- M5F sender composer ----
 
-  function setComposerStatus(message, kind = '') {
+  function setComposerStatus(message, kind = '', settings = false) {
     const status = document.getElementById('leftForYouComposerStatus');
     if (status) { status.textContent = message || ''; status.dataset.kind = kind; }
+    // «Apri le impostazioni» only next to a refused permission, and only where it can open them.
+    const open = document.getElementById('leftForYouComposerSettings');
+    if (open) open.hidden = !(settings && canOpenAppSettings());
   }
 
   // "per Bea" / "per la tua persona".
@@ -695,6 +758,12 @@
     const send = document.getElementById('leftForYouComposerSend');
     const audioRecord = document.getElementById('leftForYouComposerAudioRecord');
     if (title) title.textContent = `Lascia qualcosa ${toPartner()}`;
+    const kicker = document.getElementById('leftForYouComposerKicker');
+    if (kicker) kicker.textContent = knownPartnerName() ? `Per ${knownPartnerName()}` : 'Per voi due';
+    const label = document.querySelector('label[for="leftForYouComposerText"]');
+    if (label) label.textContent = knownPartnerName() ? `${knownPartnerName()},` : 'Il tuo messaggio';
+    const sign = document.getElementById('leftForYouComposerSign');
+    if (sign) sign.textContent = typeof window !== 'undefined' ? (window.usProfile?.display_name || '') : '';
     if (send && !composer.sending) send.textContent = `Lascia per ${composerPartnerName()}`;
     const text = document.getElementById('leftForYouComposerText');
     if (text) text.placeholder = `Scrivi qualcosa per ${composerPartnerName()}…`;
@@ -791,8 +860,11 @@
       tab.setAttribute('aria-selected', kind === tab.dataset.usComposerKind ? 'true' : 'false');
     });
     document.querySelectorAll('[data-us-composer-panel]').forEach((panel) => {
-      panel.hidden = panel.dataset.usComposerPanel !== kind;
+      // The sheet of paper stays: what is written travels with the photo, the vocale, the video or the song.
+      panel.hidden = panel.dataset.usComposerPanel !== kind && panel.dataset.usComposerPanel !== 'text';
     });
+    const text = document.getElementById('leftForYouComposerText');
+    if (text) text.maxLength = kind === 'text' ? 1000 : CAPTION_MAX;
     updateComposerValidity();
   }
 
@@ -839,6 +911,7 @@
 
   function selectedComposerFile(kind = composer.kind) {
     if (kind === 'photo' && composer.cameraCapture?.selected && composer.cameraCapture.file) return composer.cameraCapture.file;
+    if (kind === 'video' && composer.videoTake?.file) return composer.videoTake.file;
     const id = { photo: 'leftForYouComposerPhotoFile', video: 'leftForYouComposerVideoFile' }[kind];
     return id ? document.getElementById(id)?.files?.[0] || null : null;
   }
@@ -846,8 +919,9 @@
   function composerCaption(kind = composer.kind) {
     const id = CAPTION_FIELDS[kind];
     const value = id ? String(document.getElementById(id)?.value || '').trim() : '';
-    return value || null;
+    return value || paperText() || null;
   }
+  function paperText() { return String(document.getElementById('leftForYouComposerText')?.value || '').trim(); }
 
   // ---- L6: the chosen photo is shown, not just its file name ----
   function releasePhotoPreview() {
@@ -901,8 +975,32 @@
   }
 
   function permissionDeniedText(device) {
+    if (device === 'video') return `Per i video servono la fotocamera e il microfono. Attivali ${permissionPlace()}.`;
     const what = device === 'camera' ? 'la fotocamera' : 'il microfono';
     return `Manca il permesso per ${what}. Attivalo ${permissionPlace()}.`;
+  }
+
+  // US's page in the phone's Settings (the widget bridge's helper: app details
+  // on Android, Settings › US on iOS). Without it the sentence says the way.
+  function canOpenAppSettings() {
+    const platform = window.UsPlatform;
+    return Boolean(platform?.isNative && typeof platform.openWidgetSettings === 'function' && platform.hasWidgetBridge?.() !== false);
+  }
+
+  function showPermissionProblem(device) {
+    setComposerStatus(permissionDeniedText(device), 'error', true);
+    // The line sits under «Lascia per…»: bring it on screen, it answers the tap just made.
+    const shown = document.getElementById('leftForYouComposerSettings');
+    const target = shown && !shown.hidden ? shown : document.getElementById('leftForYouComposerStatus');
+    try { target?.scrollIntoView?.({ block: 'nearest' }); } catch (_) { /* older engines */ }
+  }
+
+  async function openAppSettings() {
+    const open = document.getElementById('leftForYouComposerSettings');
+    let opened = false;
+    try { opened = canOpenAppSettings() && await window.UsPlatform.openWidgetSettings() === true; } catch (_) { opened = false; }
+    // Never a dead button: if Settings did not open, the sentence alone stays.
+    if (!opened && open) open.hidden = true;
   }
 
   // Reads only the video's metadata. Unknown (a format the browser cannot
@@ -1088,7 +1186,7 @@
 
   function updateComposerValidity() {
     const count = document.getElementById('leftForYouComposerCount');
-    if (count) count.textContent = `${(document.getElementById('leftForYouComposerText')?.value || '').length} / 1000`;
+    if (count) count.textContent = `${(document.getElementById('leftForYouComposerText')?.value || '').length} / ${composer.kind === 'text' ? 1000 : CAPTION_MAX}`;
     const button = document.getElementById('leftForYouComposerSend');
     if (button) button.disabled = !composerCanSend();
     updateRecorderUi();
@@ -1118,14 +1216,45 @@
     const use = document.getElementById('leftForYouCameraUse');
     const retake = document.getElementById('leftForYouCameraRetake');
     const switcher = document.getElementById('leftForYouCameraSwitch');
-    const hasCapture = Boolean(composer.cameraCapture);
-    if (overlay) { overlay.classList.toggle('open', composer.cameraOpen); overlay.setAttribute('aria-hidden', composer.cameraOpen ? 'false' : 'true'); }
+    const video = composer.cameraMode === 'video';
+    const take = video ? composer.videoCapture : composer.cameraCapture;
+    const hasCapture = Boolean(take);
+    const recording = Boolean(composer.videoRecorder);
+    if (overlay) {
+      overlay.classList.toggle('open', composer.cameraOpen);
+      overlay.setAttribute('aria-hidden', composer.cameraOpen ? 'false' : 'true');
+      overlay.setAttribute('data-mode', video ? 'video' : 'photo');
+    }
+    // One viewfinder, two uses: the words say which.
+    const kicker = document.getElementById('leftForYouCameraKicker');
+    if (kicker) kicker.textContent = video ? 'VIDEO PRIVATO' : 'FOTO PRIVATA';
+    const title = document.getElementById('leftForYouCameraTitle');
+    if (title) title.textContent = video ? 'Fai un video' : 'Scatta una foto';
     if (preview) preview.hidden = hasCapture;
-    if (captured) { captured.hidden = !hasCapture; if (hasCapture && composer.cameraCapture.url) captured.src = composer.cameraCapture.url; }
-    if (capture) capture.hidden = hasCapture;
-    if (use) use.hidden = !hasCapture;
+    if (captured) { captured.hidden = video || !hasCapture; if (!video && hasCapture && take.url) captured.src = take.url; }
+    const recorded = document.getElementById('leftForYouCameraRecorded');
+    if (recorded) {
+      recorded.hidden = !video || !hasCapture;
+      if (video && hasCapture && take.url) { if (recorded.getAttribute?.('src') !== take.url) recorded.src = take.url; } else if (recorded.getAttribute?.('src')) { recorded.pause?.(); recorded.removeAttribute('src'); }
+    }
+    if (capture) {
+      capture.hidden = hasCapture;
+      capture.classList?.toggle('is-video', video);
+      capture.classList?.toggle('is-recording', recording);
+      capture.setAttribute('aria-label', video ? (recording ? 'Ferma il video' : 'Inizia il video') : 'Scatta foto');
+      capture.setAttribute('aria-pressed', video && recording ? 'true' : 'false');
+    }
+    if (use) { use.hidden = !hasCapture; use.textContent = video ? 'Usa video' : 'Usa foto'; }
     if (retake) retake.hidden = !hasCapture;
-    if (switcher) switcher.hidden = hasCapture || switcher.disabled;
+    // A recording keeps its camera: switching would end the stream it records.
+    if (switcher) switcher.hidden = hasCapture || recording || switcher.disabled;
+    updateVideoTimer();
+  }
+
+  function cameraConstraints(facing) {
+    if (composer.cameraMode !== 'video') return { video: { facingMode: facing }, audio: false };
+    // ~720p at 30 fps: enough for a phone screen, and what the bitrate above is for.
+    return { video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: true };
   }
 
   async function requestCameraStream(facing = composer.cameraFacing) {
@@ -1134,7 +1263,7 @@
     const requestId = ++composer.cameraRequestId;
     releaseCameraStream();
     try {
-      const stream = await mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: false });
+      const stream = await mediaDevices.getUserMedia(cameraConstraints(facing));
       if (!composer.cameraOpen || requestId !== composer.cameraRequestId) { releaseCameraStream(stream); return null; }
       composer.cameraStream = stream;
       composer.cameraFacing = facing;
@@ -1150,37 +1279,90 @@
     }
   }
 
+  // The phone's own camera (27/11): the same file input, opened with capture.
+  // Android hands it to the camera app (BridgeWebChromeClient; <queries> in
+  // the manifest), iOS to its camera; where capture is ignored (a computer)
+  // it is the usual picker. Without a camera type the input is back to the gallery.
+  function pickFile(input, cameraType = '') {
+    if (!input) return;
+    const gallery = input.dataset.accept || (input.dataset.accept = input.getAttribute('accept') || '');
+    input.setAttribute('accept', cameraType || gallery);
+    if (cameraType) input.setAttribute('capture', 'environment'); else input.removeAttribute('capture');
+    input.click();
+  }
+
   async function openCamera() {
+    // In the apps «Scatta una foto» is the phone camera; the browser keeps the viewfinder below.
+    if (window.UsPlatform?.isNative) { pickFile(document.getElementById('leftForYouComposerPhotoFile'), 'image/*'); return; }
     if (composer.cameraOpen) return;
+    composer.cameraMode = 'photo';
+    await openViewfinder('camera');
+  }
+
+  // Opens the in-app viewfinder for a photo or a video; a refusal says where
+  // to turn the permission back on. Resolves false when it did not open.
+  async function openViewfinder(device) {
     composer.cameraOpen = true;
     discardCameraCapture();
     composer.cameraFacing = 'environment';
+    setCameraStatus('');
     updateCameraUi();
     try {
       const devices = await window.navigator?.mediaDevices?.enumerateDevices?.();
       const switcher = document.getElementById('leftForYouCameraSwitch');
-      if (switcher) switcher.hidden = (devices || []).filter((device) => device.kind === 'videoinput').length < 2;
+      if (switcher) switcher.hidden = (devices || []).filter((item) => item.kind === 'videoinput').length < 2;
       await requestCameraStream('environment');
+      return true;
     } catch (error) {
       composer.cameraOpen = false;
       releaseCameraStream();
       updateCameraUi();
-      setComposerStatus(isPermissionDenied(error) ? permissionDeniedText('camera') : 'Non riesco ad aprire la fotocamera su questo dispositivo.', 'error');
+      if (isPermissionDenied(error)) showPermissionProblem(device);
+      else setComposerStatus('Non riesco ad aprire la fotocamera su questo dispositivo.', 'error');
+      return isPermissionDenied(error) ? null : false;
     }
   }
 
+  // «Fai un video» (27/11): recorded inside US where the WebView can make an
+  // MP4 with a camera and a microphone; elsewhere the phone's own camera.
+  function videoRecordingMimeType() {
+    const MediaRecorderCtor = window.MediaRecorder;
+    if (typeof MediaRecorderCtor?.isTypeSupported !== 'function') return '';
+    const supported = (type) => { try { return MediaRecorderCtor.isTypeSupported(type) === true; } catch (_) { return false; } };
+    const exact = VIDEO_RECORD_TYPES.find(supported);
+    if (exact) return exact;
+    // A bare video/mp4 is H.264 + AAC in WebKit; where VP9 fits in MP4 it could be VP9.
+    return supported('video/mp4') && !supported('video/mp4;codecs=vp9') ? 'video/mp4' : '';
+  }
+
+  function canRecordVideoInApp() {
+    return typeof window.navigator?.mediaDevices?.getUserMedia === 'function' && Boolean(videoRecordingMimeType());
+  }
+
+  async function openVideoCamera() {
+    const input = document.getElementById('leftForYouComposerVideoFile');
+    if (!canRecordVideoInApp()) { pickFile(input, 'video/*'); return; }
+    if (composer.cameraOpen) return;
+    composer.cameraMode = 'video';
+    const opened = await openViewfinder('video');
+    // No camera here after all (not a refusal): the phone's camera, as before.
+    if (opened === false) pickFile(input, 'video/*');
+  }
+
   function closeCamera() {
+    cancelVideoRecording();
     composer.cameraOpen = false;
     ++composer.cameraRequestId;
     releaseCameraStream();
     if (composer.cameraCapture?.url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(composer.cameraCapture.url);
     composer.cameraCapture = null;
+    discardVideoCapture();
     updateCameraUi();
     updateComposerValidity();
   }
 
   async function switchCamera() {
-    if (!composer.cameraOpen || composer.cameraCapture) return;
+    if (!composer.cameraOpen || composer.cameraCapture || composer.videoCapture || composer.videoRecorder) return;
     const next = composer.cameraFacing === 'environment' ? 'user' : 'environment';
     try { await requestCameraStream(next); } catch (_) { setCameraStatus('Questa fotocamera non è disponibile.', 'error'); }
   }
@@ -1189,12 +1371,14 @@
     if (!composer.cameraOpen) return;
     if (composer.cameraCapture?.url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(composer.cameraCapture.url);
     composer.cameraCapture = null;
+    discardVideoCapture();
     setCameraStatus('');
     updateCameraUi();
     requestCameraStream(composer.cameraFacing).catch(() => setCameraStatus('Non riesco a riaprire la fotocamera.', 'error'));
   }
 
   function useCameraPhoto() {
+    if (composer.cameraMode === 'video') { useCameraVideo(); return; }
     if (!composer.cameraCapture) return;
     composer.cameraCapture.selected = true;
     composer.cameraOpen = false;
@@ -1205,6 +1389,8 @@
   }
 
   async function captureCameraPhoto() {
+    // The same round button records in video mode: a tap starts, a tap stops.
+    if (composer.cameraMode === 'video') { toggleVideoRecording(); return; }
     if (!composer.cameraOpen || !composer.cameraStream) return;
     const preview = document.getElementById('leftForYouCameraPreview');
     const width = preview.videoWidth || preview.clientWidth || 1280;
@@ -1228,6 +1414,179 @@
   function discardCameraCapture() {
     if (composer.cameraCapture?.url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(composer.cameraCapture.url);
     composer.cameraCapture = null;
+    updateComposerValidity();
+  }
+
+  // ---- «Fai un video» inside US: record, stop by itself at 30 s, review, use ----
+  function revokeObjectUrl(url) {
+    if (url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(url);
+  }
+
+  function clearVideoTimers() {
+    if (composer.videoTicker) clearInterval(composer.videoTicker);
+    if (composer.videoMaxTimer) clearTimeout(composer.videoMaxTimer);
+    composer.videoTicker = null;
+    composer.videoMaxTimer = null;
+  }
+
+  function updateVideoTimer() {
+    const timer = document.getElementById('leftForYouCameraTimer');
+    if (!timer) return;
+    const show = composer.cameraOpen && composer.cameraMode === 'video' && !composer.videoCapture;
+    timer.hidden = !show;
+    if (!show) return;
+    const recording = Boolean(composer.videoRecorder && composer.videoStartedAt);
+    const elapsed = recording ? Math.min(VIDEO_MAX_SECONDS, (Date.now() - composer.videoStartedAt) / 1000) : 0;
+    timer.setAttribute('data-recording', recording ? 'true' : 'false');
+    timer.textContent = `${formatRecordingDuration(elapsed)} / ${formatRecordingDuration(VIDEO_MAX_SECONDS)}`;
+  }
+
+  function toggleVideoRecording() {
+    if (composer.videoRecorder) stopVideoRecording();
+    else startVideoRecording();
+  }
+
+  function startVideoRecording() {
+    const stream = composer.cameraStream;
+    const MediaRecorderCtor = window.MediaRecorder;
+    const mimeType = videoRecordingMimeType();
+    if (!composer.cameraOpen || composer.cameraMode !== 'video' || !stream || composer.videoRecorder || composer.videoCapture || !MediaRecorderCtor || !mimeType) return;
+    let recorder;
+    try {
+      recorder = new MediaRecorderCtor(stream, { mimeType, videoBitsPerSecond: VIDEO_RECORD_VIDEO_BPS, audioBitsPerSecond: VIDEO_RECORD_AUDIO_BPS });
+    } catch (error) {
+      console.warn('[US Left for You] video recorder', error);
+      setCameraStatus('Non riesco a registrare il video. Riprova.', 'error');
+      return;
+    }
+    composer.videoRecorder = recorder;
+    composer.videoChunks = [];
+    composer.videoBytes = 0;
+    composer.videoStopReason = '';
+    composer.videoEndedAt = 0;
+    recorder.ondataavailable = (event) => {
+      if (recorder !== composer.videoRecorder || !event.data?.size) return;
+      composer.videoChunks.push(event.data);
+      composer.videoBytes += event.data.size;
+      // An encoder that ignores the bitrate still ends under 20 MB.
+      if (composer.videoBytes >= VIDEO_RECORD_GUARD_BYTES && recorder.state === 'recording') stopVideoRecording('size');
+    };
+    recorder.onerror = (event) => {
+      console.warn('[US Left for You] video recorder', event?.error || event);
+      if (recorder !== composer.videoRecorder) return;
+      composer.videoStopReason = 'error';
+      stopVideoRecording('error');
+    };
+    recorder.onstop = () => finishVideoRecording(recorder);
+    try {
+      recorder.start(VIDEO_RECORD_SLICE_MS);
+    } catch (error) {
+      console.warn('[US Left for You] video recorder start', error);
+      composer.videoRecorder = null;
+      setCameraStatus('Non riesco a registrare il video. Riprova.', 'error');
+      updateCameraUi();
+      return;
+    }
+    composer.videoStartedAt = Date.now();
+    composer.videoTicker = typeof setInterval === 'function' ? setInterval(updateVideoTimer, 250) : null;
+    composer.videoMaxTimer = setTimeout(() => stopVideoRecording('time'), VIDEO_MAX_SECONDS * 1000);
+    setCameraStatus('Registrazione in corso. Si ferma da sola a 30 secondi.');
+    updateCameraUi();
+  }
+
+  function stopVideoRecording(reason = '') {
+    const recorder = composer.videoRecorder;
+    if (!recorder) return;
+    if (!composer.videoStopReason) composer.videoStopReason = reason;
+    if (!composer.videoEndedAt) composer.videoEndedAt = Date.now();
+    clearVideoTimers();
+    if (recorder.state === 'inactive') { finishVideoRecording(recorder); return; }
+    try { recorder.stop(); } catch (_) { finishVideoRecording(recorder); }
+  }
+
+  function finishVideoRecording(recorder) {
+    if (recorder !== composer.videoRecorder) return;
+    clearVideoTimers();
+    const chunks = composer.videoChunks;
+    const reason = composer.videoStopReason;
+    const seconds = Math.min(VIDEO_MAX_SECONDS, Math.max(0, ((composer.videoEndedAt || Date.now()) - composer.videoStartedAt) / 1000));
+    composer.videoRecorder = null;
+    composer.videoChunks = [];
+    composer.videoBytes = 0;
+    composer.videoStartedAt = 0;
+    composer.videoEndedAt = 0;
+    composer.videoStopReason = '';
+    if (!composer.cameraOpen || composer.cameraMode !== 'video') { updateCameraUi(); return; }
+    if (reason === 'error' || !chunks.length) {
+      setCameraStatus('Non riesco a registrare il video. Riprova.', 'error');
+      updateCameraUi();
+      return;
+    }
+    if (seconds < 1) {
+      setCameraStatus('Il video è troppo corto. Riprova.', 'error');
+      updateCameraUi();
+      return;
+    }
+    const BlobCtor = window.Blob || globalThis.Blob;
+    // MP4 whatever codecs the recorder names: the same type as a gallery MP4 for the checks and the bucket.
+    const blob = new BlobCtor(chunks, { type: 'video/mp4' });
+    const name = `video-${Date.now()}.mp4`;
+    const file = typeof File === 'function' ? new File([blob], name, { type: 'video/mp4' }) : Object.assign(blob, { name });
+    const url = typeof window.URL?.createObjectURL === 'function' ? window.URL.createObjectURL(blob) : '';
+    composer.videoCapture = { file, url, seconds };
+    // Under review the camera is off: «Rifai» turns it back on.
+    releaseCameraStream();
+    setCameraStatus(reason === 'size' ? `Fermato a ${formatRecordingDuration(seconds)}: il video aveva raggiunto 20 MB.` : '');
+    updateCameraUi();
+  }
+
+  // Closing the camera mid-recording throws the take away, nothing is kept.
+  function cancelVideoRecording() {
+    const recorder = composer.videoRecorder;
+    if (!recorder) return;
+    clearVideoTimers();
+    recorder.ondataavailable = null;
+    recorder.onstop = null;
+    recorder.onerror = null;
+    composer.videoRecorder = null;
+    composer.videoChunks = [];
+    composer.videoBytes = 0;
+    composer.videoStartedAt = 0;
+    composer.videoEndedAt = 0;
+    composer.videoStopReason = '';
+    try { if (recorder.state !== 'inactive') recorder.stop(); } catch (_) { /* already stopped */ }
+  }
+
+  function discardVideoCapture() {
+    revokeObjectUrl(composer.videoCapture?.url);
+    composer.videoCapture = null;
+  }
+
+  function discardVideoTake() {
+    revokeObjectUrl(composer.videoTake?.url);
+    composer.videoTake = null;
+  }
+
+  // «Usa video»: the same checks as a video from the gallery, then it is the composer's video.
+  async function useCameraVideo() {
+    const take = composer.videoCapture;
+    if (!take) return;
+    const problem = await videoProblem(take.file);
+    if (take !== composer.videoCapture) return;
+    if (problem) { setCameraStatus(problem, 'error'); return; }
+    discardVideoTake();
+    composer.videoTake = take;
+    composer.videoCapture = null;
+    const input = document.getElementById('leftForYouComposerVideoFile');
+    if (input) { try { input.value = ''; } catch (_) { /* read-only in some test shims */ } }
+    const slot = document.getElementById('leftForYouComposerVideoName');
+    if (slot) slot.textContent = `Video registrato · ${formatRecordingDuration(take.seconds)}`;
+    composer.cameraOpen = false;
+    ++composer.cameraRequestId;
+    releaseCameraStream();
+    setCameraStatus('');
+    setComposerStatus('');
+    updateCameraUi();
     updateComposerValidity();
   }
 
@@ -1554,7 +1913,8 @@
       composer.mediaRecorder = null;
       composer.recordingState = 'idle';
       updateRecorderUi();
-      setComposerStatus(isPermissionDenied(error) ? permissionDeniedText('microphone') : 'Non riesco ad avviare la registrazione. Riprova.', 'error');
+      if (isPermissionDenied(error)) showPermissionProblem('microphone');
+      else setComposerStatus('Non riesco ad avviare la registrazione. Riprova.', 'error');
       updateComposerValidity();
     }
   }
@@ -1625,6 +1985,7 @@
     closeCamera();
     discardRecording();
     discardCameraCapture();
+    discardVideoTake();
     const text = document.getElementById('leftForYouComposerText');
     if (text) text.value = '';
     document.querySelectorAll('[data-us-composer-panel] input[type="file"]').forEach((input) => { input.value = ''; });
@@ -1684,6 +2045,8 @@
         if (problem) { setComposerStatus(problem, 'error'); return; }
       } else if (file.size > 25 * 1024 * 1024) { setComposerStatus('La foto è troppo grande (massimo 25 MB).', 'error'); return; }
     }
+    if (kind === 'video' || kind === 'music') body = paperText() || null;
+    if (body && kind !== 'text' && body.length > CAPTION_MAX) { setComposerStatus('Con una cosa aggiunta, le parole stanno in 280 caratteri.', 'error'); return; }
     if (CAPTION_FIELDS[kind]) {
       body = composerCaption(kind);
       if (body && body.length > CAPTION_MAX) { setComposerStatus('La didascalia è troppo lunga (massimo 280 caratteri).', 'error'); return; }
@@ -1709,15 +2072,42 @@
       if (error) throw error;
       if (inserted?.id) window.sendWebPushEvent?.('left_for_you', inserted.id).catch?.(() => {});
       setComposerStatus(`Lasciato per ${personName} ♡`, 'success');
+      carryAway();
       resetComposerInputs();
       refreshLastOutcome();
-      setTimeout(() => { if (!composer.sending) closeComposer(); }, 900);
+      setTimeout(() => { if (!composer.sending) closeComposer(); }, 1100);
     } catch (error) {
       console.warn('[US Left for You] send', error);
       setComposerStatus(`Non riesco a lasciarlo ${toPartner()} ora. Riprova, è ancora qui.`, 'error');
     } finally {
       setComposerBusy(false);
     }
+  }
+
+  function carryAway() {
+    try {
+      const sheet = document.querySelector('#leftForYouComposerOverlay .left-for-you-composer-sheet');
+      const target = envelopeEl()?.getBoundingClientRect?.();
+      if (!sheet || !target || reducedMotion() || typeof document.createElement !== 'function') return;
+      const me = window.UsPersonaggi?.myRole?.();
+      const carrier = document.createElement('div');
+      carrier.className = 'left-for-you-carrier';
+      carrier.setAttribute('aria-hidden', 'true');
+      carrier.innerHTML = `<span class="left-for-you-carrier-env"></span>${characterOf(me, 84)}`;
+      document.body.appendChild(carrier);
+      sheet.classList.add('is-folding');
+      const from = carrier.getBoundingClientRect();
+      const dx = target.left + target.width / 2 - (from.left + from.width / 2);
+      const dy = target.top + target.height / 2 - (from.top + from.height / 2);
+      const flight = carrier.animate([
+        { transform: 'translateY(60px) scale(.6)', opacity: 0 },
+        { transform: 'translateY(0) scale(1)', opacity: 1, offset: 0.35 },
+        { transform: `translate(${dx}px, ${dy}px) scale(.2)`, opacity: 0.9, offset: 0.95 },
+        { transform: `translate(${dx}px, ${dy}px) scale(.1)`, opacity: 0 }
+      ], { duration: 1100, easing: 'cubic-bezier(.4,0,.2,1)' });
+      const done = () => { carrier.remove(); sheet.classList.remove('is-folding'); };
+      flight.finished.then(done, done);
+    } catch (_) { /* the letter left anyway */ }
   }
 
   function bindComposer() {
@@ -1730,7 +2120,8 @@
     });
     document.getElementById('leftForYouComposerSend')?.addEventListener('click', send);
     document.querySelectorAll('[data-us-composer-kind]').forEach((tab) => {
-      tab.addEventListener('click', () => setComposerKind(tab.dataset.usComposerKind));
+      // A second tap on what was added takes it away: back to the letter alone.
+      tab.addEventListener('click', () => setComposerKind(composer.kind === tab.dataset.usComposerKind ? 'text' : tab.dataset.usComposerKind));
     });
     const pickBindings = [
       ['leftForYouComposerPhotoPick', 'leftForYouComposerPhotoFile', 'leftForYouComposerPhotoName'],
@@ -1739,9 +2130,11 @@
     for (const [pickId, fileId, nameId] of pickBindings) {
       const pick = document.getElementById(pickId);
       const file = document.getElementById(fileId);
-      pick?.addEventListener('click', () => file?.click());
+      pick?.addEventListener('click', () => pickFile(file));
       file?.addEventListener('change', () => {
         if (fileId === 'leftForYouComposerPhotoFile' && file.files?.[0]) discardCameraCapture();
+        // A video from the gallery (or the phone camera) replaces one recorded in US.
+        if (fileId === 'leftForYouComposerVideoFile' && file.files?.[0]) discardVideoTake();
         // The photo shows itself (preview); the video keeps its file name.
         const slot = document.getElementById(nameId);
         if (slot && fileId !== 'leftForYouComposerPhotoFile') slot.textContent = file.files?.[0]?.name || '';
@@ -1773,6 +2166,13 @@
     });
     document.getElementById('leftForYouMusicClear')?.addEventListener('click', clearMusicSelection);
     document.getElementById('leftForYouComposerPhotoCamera')?.addEventListener('click', openCamera);
+    document.getElementById('leftForYouComposerVideoCamera')?.addEventListener('click', openVideoCamera);
+    document.getElementById('leftForYouComposerSettings')?.addEventListener('click', openAppSettings);
+    // Android (UsWebChromeClient): the phone camera was refused, also for good.
+    window.addEventListener?.(CAMERA_DENIED_EVENT, () => {
+      if (!document.getElementById('leftForYouComposerOverlay')?.classList?.contains('open')) return;
+      showPermissionProblem('camera');
+    });
     const cameraOverlay = document.getElementById('leftForYouCameraOverlay');
     const cameraBackdrop = document.getElementById('leftForYouCameraBackdrop');
     cameraOverlay?.addEventListener('click', (event) => {
@@ -1842,6 +2242,8 @@
     document.getElementById('leftForYouConserve')?.addEventListener('click', conserve);
     document.getElementById('leftForYouReply')?.addEventListener('click', reply);
     document.getElementById('leftForYouContent')?.addEventListener('click', (event) => {
+      const seal = event.target?.closest?.('.left-for-you-env-seal');
+      if (seal) { clearTimeout(letterTimer); openLetter(document.getElementById('leftForYouContent')); return; }
       const strip = event.target?.closest?.('.left-for-you-env-photo');
       if (strip) toggleLetterPhoto(strip);
     });
@@ -1870,7 +2272,8 @@
     setComposerKind, openComposer, closeComposer, send, updateComposerValidity, composerCanSend,
     startRecording, stopRecording, discardRecording, toggleVoiceRecording,
     bindAudioStepPlayer, paintAudioStepPlayer, stopActiveAudioPlayer,
-    openCamera, closeCamera, switchCamera, captureCameraPhoto, useCameraPhoto, retakeCameraPhoto, discardCameraCapture, composer,
+    openCamera, pickFile, closeCamera, switchCamera, captureCameraPhoto, useCameraPhoto, retakeCameraPhoto, discardCameraCapture, composer,
+    openVideoCamera, canRecordVideoInApp, videoRecordingMimeType, toggleVideoRecording, startVideoRecording, stopVideoRecording, useCameraVideo, openAppSettings,
     extractSpotifyTrackId, canonicalSpotifyTrackUrl, spotifyEmbedUrl,
     renderMusicResults, selectMusicResult, clearMusicSelection, resetMusicSearchUi, runMusicSearch, scheduleMusicSearch, musicSearch, musicSearchErrorMessage,
   };

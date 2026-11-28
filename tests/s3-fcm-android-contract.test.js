@@ -90,6 +90,27 @@ test('every notification type becomes a v2 packet with one allow-listed kind; no
   }
   // One banner slot for every kind; the kind is the only event metadata.
   assert.deepEqual([...seen], ['us-private-notice']);
+  // I cuori (27/11/2026): a Ti penso of several taps picks the plural kind.
+  // Ti penso ×N (27/11/2026, founder: the number is not private): the plural
+  // kind alone carries n, the number of times, digits only, 2..99. Still no copy, name or id.
+  const { ANDROID_PLURAL_KINDS } = await load(TRANSPORT);
+  assert.deepEqual(ANDROID_PLURAL_KINDS, { think: 'think_many' });
+  for (const [count, n] of [[2, '2'], [5, '5'], [99, '99'], [150, '99']]) {
+    const many = fcmMessage(buildNotification('think', { senderName: 'PRIVATE_SENDER_NAME', messageId: REF, count }), { token: 'fcm:' + 'Z'.repeat(80), installation_id: INSTALL_A }).message;
+    assert.deepEqual(many.data, { v: '2', installation: INSTALL_A, k: 'think_many', n }, 'the kind and the number only, no copy');
+    assert.match(many.data.n, /^[1-9][0-9]?$/);
+    assert.doesNotMatch(JSON.stringify(many), /PRIVATE_SENDER_NAME|volte|times|eb72e072/);
+  }
+  const one = fcmMessage(buildNotification('think', { senderName: 'B', messageId: REF, count: 1 }), { token: 'fcm:' + 'Z'.repeat(80), installation_id: INSTALL_A }).message;
+  assert.deepEqual(one.data, { v: '2', installation: INSTALL_A, k: 'think' }, 'one thought: no number');
+  // A plural flag on a type without a plural kind keeps its own kind, and never a number.
+  const lavagna = fcmMessage({ ...buildNotification('lavagna', { senderName: 'B' }), plural: true, times: 5 }, { token: 'fcm:' + 'Z'.repeat(80), installation_id: INSTALL_A }).message;
+  assert.deepEqual(lavagna.data, { v: '2', installation: INSTALL_A, k: ANDROID_NOTICE_KINDS.lavagna });
+  // A forged or broken number never travels: only integers 2..99 on a plural kind.
+  for (const times of [1, 0, 100, 2.5, '7', -3, NaN]) {
+    const forged = fcmMessage({ ...buildNotification('think', { senderName: 'B', messageId: REF, count: 3 }), times }, { token: 'fcm:' + 'Z'.repeat(80), installation_id: INSTALL_A }).message;
+    assert.deepEqual(forged.data, { v: '2', installation: INSTALL_A, k: 'think_many' }, `times ${times}`);
+  }
   // An unknown type (e.g. a newer server) travels without kind: generic copy.
   const unknown = fcmMessage({ type: 'not_a_type', urgency: 'normal', ttl: 60 }, { token: 'fcm:' + 'Z'.repeat(80), installation_id: INSTALL_A }).message;
   assert.deepEqual(unknown.data, { v: '2', installation: INSTALL_A });
@@ -174,10 +195,10 @@ const GATE = 'native-plugins/us-push-support/android/src/main/java/com/usapp/pus
 const PLUGIN = 'native-plugins/us-push-support/android/src/main/java/com/usapp/pushsupport/UsPushSupportPlugin.java';
 
 test('notices: the phone knows exactly the kinds the server sends, and writes each one', async () => {
-  const { ANDROID_NOTICE_KINDS, ANDROID_SAFE_COPY } = await load(TRANSPORT);
+  const { ANDROID_NOTICE_KINDS, ANDROID_PLURAL_KINDS, ANDROID_STATUS_KINDS, ANDROID_SAFE_COPY } = await load(TRANSPORT);
   const notices = read(NOTICES);
   const javaKinds = [...notices.match(/KINDS = \{([^}]*)\}/)[1].matchAll(/"([a-z_]+)"/g)].map((m) => m[1]);
-  assert.deepEqual([...javaKinds].sort(), [...new Set(Object.values(ANDROID_NOTICE_KINDS))].sort());
+  assert.deepEqual([...javaKinds].sort(), [...new Set([...Object.values(ANDROID_NOTICE_KINDS), ...Object.values(ANDROID_PLURAL_KINDS), ...Object.values(ANDROID_STATUS_KINDS)])].sort());
   for (const kind of javaKinds) assert.match(notices, new RegExp(`case "${kind}":`), `${kind} has its sentence`);
   assert.equal(javaString(notices, 'FALLBACK_TITLE'), ANDROID_SAFE_COPY.title);
   assert.equal(javaString(notices, 'FALLBACK_BODY'), ANDROID_SAFE_COPY.body);
@@ -190,11 +211,17 @@ test('notices: the phone knows exactly the kinds the server sends, and writes ea
 
 test('notices: the kind only picks a sentence; the name is read inside the owner lock', () => {
   const service = read(SERVICE);
-  assert.match(service, /postPrivateSafeNotice\(data\.get\("installation"\), data\.get\("k"\)\)/);
+  // Ti penso ×N (27/11/2026): n, the number of times, is the only other field read, and only as digits.
+  assert.match(service, /postPrivateSafeNotice\(data\.get\("installation"\), data\.get\("k"\), UsPushNotices\.times\(data\.get\("k"\), data\.get\("n"\)\)\)/);
+  assert.deepEqual([...service.matchAll(/data\.get\("([a-z]+)"\)/g)].map((m) => m[1]).filter((key, i, all) => all.indexOf(key) === i).sort(), ['installation', 'k', 'n', 's', 'v'], 'n is the one new field; s belongs to the silent widget signals (v3)');
   assert.doesNotMatch(service, /data\.get\("(?:title|body|type|target|ref|sender|name|partner)"\)/);
   const post = service.slice(service.indexOf('UsPushOwnerGate.postIfCurrent(this, installation, (String partnerName) ->'));
   assert.ok(post.length > 0, 'notice built inside the owner-gate critical section');
-  assert.match(post, /UsPushNotices\.forKind\(kind, partnerName, Locale\.getDefault\(\)\)/);
+  assert.match(post, /UsPushNotices\.forKind\(kind, partnerName, Locale\.getDefault\(\), times\)/);
+  const notices = read(NOTICES);
+  assert.match(notices, /public static int times\(String kind, String raw\)/);
+  assert.match(notices, /"think_many"\.equals\(kind\)/);
+  assert.match(notices, /\[1-9\]\[0-9\]\?/);
   assert.ok(post.indexOf('UsPushNotices.forKind') < post.indexOf('manager.notify('));
   assert.match(service, /Uri\.parse\("com\.usapp\.us:\/\/open\/" \+ notice\.page\)/);
   assert.match(service, /setVisibility\(NotificationCompat\.VISIBILITY_PRIVATE\)/);

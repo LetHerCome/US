@@ -26,6 +26,14 @@ final class UsWidgetModels {
     static final long FAILED_VISIBLE_MS = 10 * 60_000L;
     /** A "sending" older than this was interrupted (process killed). */
     static final long SENDING_STALE_MS = 45_000L;
+    /**
+     * Ti penso ×N dai widget (founder, 27/11/2026): taps in a row add up; the
+     * Ti penso leaves this long after the last one, with all of them, like
+     * the app's heart (app.js usThinkComboSend).
+     */
+    static final long BURST_MS = 1_500L;
+    /** At most 99 taps in one Ti penso (shared_messages.think_taps): the 99th sends at once. */
+    static final int MAX_TAPS = 99;
 
     private UsWidgetModels() {}
 
@@ -310,7 +318,23 @@ final class UsWidgetModels {
         boolean done = false;
         /** The other person's name, as the app shows it. */
         String partner = "";
+        /** Ti penso ×N: taps are adding up, the send leaves after the last one. */
+        boolean counting = false;
+        /** The taps of the burst being counted, sent or just sent (1..99). */
+        int taps = 1;
+        /** The taps of their last Ti penso (1..99): «Bea ti ha pensato 5 volte». */
+        int receivedTaps = 1;
         Instant nextChange = null;
+    }
+
+    /** The taps of an action or a snapshot: a whole number 1..99, anything else 1. */
+    static int taps(JSONObject from, String key) {
+        return from == null ? 1 : UsWidgetContract.taps(from.opt(key));
+    }
+
+    /** "Inviato ×5": the number only when there were several. */
+    static String times(int taps) {
+        return taps > 1 ? " ×" + taps : "";
     }
 
     /**
@@ -340,18 +364,32 @@ final class UsWidgetModels {
             return out;
         }
         out.canSend = true;
+        out.taps = taps(action, "taps");
+        // Ti penso ×N: the taps add up on the heart; another tap adds one more.
+        // Until RETRY_SAME_ACTION_MS the burst is still owed (the tick sends it
+        // if the process died before the send); then it is a failed send.
+        if (status.equals("counting") && actionAt != null && sinceAction < RETRY_SAME_ACTION_MS) {
+            out.done = true;
+            out.counting = true;
+            out.line = "×" + out.taps;
+            out.when = "tocca ancora";
+            out.cta = "Ancora";
+            out.nextChange = actionAt.plusMillis(sinceAction < BURST_MS ? BURST_MS + 500 : RETRY_SAME_ACTION_MS);
+            return out;
+        }
         boolean sending = status.equals("sending") && sinceAction < SENDING_STALE_MS;
         if (sending || (status.equals("sent") && sinceAction < SENT_VISIBLE_MS)) {
             // Shown the moment the heart is tapped, before the server answers.
             out.done = true;
-            out.line = action.optBoolean("reply", false) ? "Ricambiato" : "Inviato";
+            out.line = (action.optBoolean("reply", false) ? "Ricambiato" : "Inviato") + times(out.taps);
             out.when = "adesso";
             out.cta = "Ancora";
             out.busy = sending || sinceAction < SEND_COOLDOWN_MS;
             out.nextChange = actionAt.plusMillis(sending ? SENDING_STALE_MS : out.busy ? SEND_COOLDOWN_MS : SENT_VISIBLE_MS);
             return out;
         }
-        if ((status.equals("failed") || (status.equals("sending") && sinceAction >= SENDING_STALE_MS)) && sinceAction < FAILED_VISIBLE_MS) {
+        boolean lost = (status.equals("sending") && sinceAction >= SENDING_STALE_MS) || status.equals("counting");
+        if ((status.equals("failed") || lost) && actionAt != null && sinceAction < FAILED_VISIBLE_MS) {
             out.line = "Non è partito";
             out.cta = "Riprova";
             out.nextChange = actionAt.plusMillis(FAILED_VISIBLE_MS);
@@ -366,7 +404,9 @@ final class UsWidgetModels {
 
         Instant received = UsWidgetContract.instant(t.optString("lastReceivedAt", ""));
         if (unanswered(t, action)) {
-            out.line = who + " ti ha pensato";
+            // Ti penso ×N (27/11/2026): «Bea ti ha pensato 5 volte».
+            out.receivedTaps = taps(t, "lastReceivedTaps");
+            out.line = who + " ti ha pensato" + (out.receivedTaps > 1 ? " " + out.receivedTaps + " volte" : "");
             out.when = bubbleAgo(received, now);
             out.cta = "Ricambia";
             if (!out.when.isEmpty()) out.nextChange = bubbleNextChange(received, now);
@@ -685,6 +725,64 @@ final class UsWidgetModels {
     static final long RETRY_SAME_ACTION_MS = 2 * 60_000L;
 
     /**
+     * Ti penso ×N: what one more tap does to the action state. A burst still
+     * open (counting, under RETRY_SAME_ACTION_MS) gets one more tap with the
+     * same id; otherwise a new burst of 1 starts (a retry after a failed send
+     * keeps the id, actionIdFor). The taps stop at MAX_TAPS.
+     */
+    static final class Tap {
+        String actionId;
+        int taps;
+        /** The burst answers their thought («Ricambiato»), fixed at its first tap. */
+        boolean reply;
+        /** The 99th tap: the send leaves at once. */
+        boolean full;
+    }
+
+    static Tap tap(JSONObject previous, boolean replyIfNew, Instant now) {
+        Tap out = new Tap();
+        String status = previous == null ? "" : previous.optString("status", "");
+        Instant at = previous == null ? null : UsWidgetContract.instant(previous.optString("at", ""));
+        String id = previous == null ? "" : previous.optString("actionId", "");
+        boolean open = status.equals("counting") && at != null && !at.isAfter(now)
+            && now.toEpochMilli() - at.toEpochMilli() < RETRY_SAME_ACTION_MS && isUuid(id);
+        if (open) {
+            out.actionId = id;
+            out.taps = Math.min(MAX_TAPS, taps(previous, "taps") + 1);
+            out.reply = previous.optBoolean("reply", false);
+        } else {
+            out.actionId = actionIdFor(previous, now);
+            out.taps = 1;
+            out.reply = replyIfNew;
+        }
+        out.full = out.taps >= MAX_TAPS;
+        return out;
+    }
+
+    /**
+     * The burst may leave: still counting, this burst, and quiet for
+     * BURST_MS since its last tap (a later tap sets its own time). force: the
+     * 99th tap. The tick after the process died does not force: it may come
+     * while a newer burst is still being tapped.
+     */
+    static boolean burstDue(JSONObject action, String actionId, boolean force, Instant now) {
+        if (action == null || !"counting".equals(action.optString("status", ""))) return false;
+        if (actionId != null && !actionId.equals(action.optString("actionId", ""))) return false;
+        Instant at = UsWidgetContract.instant(action.optString("at", ""));
+        if (at == null || !isUuid(action.optString("actionId", ""))) return false;
+        long since = now.toEpochMilli() - at.toEpochMilli();
+        if (since >= RETRY_SAME_ACTION_MS) return false;
+        return force || since >= BURST_MS - 50;
+    }
+
+    /** Still being tapped: a later tap's timer will send the burst. */
+    static boolean burstWaiting(JSONObject action, Instant now) {
+        if (action == null || !"counting".equals(action.optString("status", ""))) return false;
+        Instant at = UsWidgetContract.instant(action.optString("at", ""));
+        return at != null && now.toEpochMilli() - at.toEpochMilli() < BURST_MS - 50;
+    }
+
+    /**
      * A retry right after a failed or interrupted send reuses the action id:
      * the server then answers "duplicate" instead of sending a second thought.
      */
@@ -693,7 +791,8 @@ final class UsWidgetModels {
             String status = previous.optString("status", "");
             Instant at = UsWidgetContract.instant(previous.optString("at", ""));
             String id = previous.optString("actionId", "");
-            boolean retryable = status.equals("failed") || status.equals("sending") || status.equals("rate_limited");
+            // A burst still being counted (or owed) keeps its id too: Ti penso ×N.
+            boolean retryable = status.equals("failed") || status.equals("sending") || status.equals("rate_limited") || status.equals("counting");
             if (retryable && at != null && now.toEpochMilli() - at.toEpochMilli() < RETRY_SAME_ACTION_MS && isUuid(id)) return id;
         }
         return UUID.randomUUID().toString();

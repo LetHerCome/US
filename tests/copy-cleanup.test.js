@@ -9,7 +9,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (name) => fs.readFileSync(path.join(ROOT, name), 'utf8');
 
-const SURFACES = ['index.html', 'app.js', 'settings.js', 'events.js', 'calendar.js', 'left-for-you.js', 'stories.js', 'moments-albums.js', 'games.js', 'fix4.js'];
+const SURFACES = ['index.html', 'app.js', 'settings.js', 'events.js', 'calendar.js', 'left-for-you.js', 'moments-albums.js', 'games.js', 'fix4.js'];
 const all = () => SURFACES.map(read).join('\n');
 
 test('copy: explanatory and duplicate lines removed in this pass stay removed', () => {
@@ -53,7 +53,9 @@ test('copy: empty, loading and error states are a title, not a paragraph', () =>
   assert.match(read('noi-v2.js'), /<b>Niente in arrivo<\/b>/);
   assert.match(html, /<h3>Non riesco ad aprirlo<\/h3><button/);
   assert.doesNotMatch(html, /Preparo i vostri Conservati|Preparo qualcosa per te|Preparo Gioca/);
-  assert.match(read('app.js'), /<b>La vostra storia parte da qui<\/b><\/div>/);
+  // First use (27/11/2026): one button, the same gallery as the + of Ricordi.
+  assert.match(read('app.js'), /<b>La vostra storia parte da qui<\/b><button type="button" class="primary ricordi-empty-add" data-ricordi-first-photo>Aggiungi la prima foto<\/button><\/div>/);
+  assert.match(read('app.js'), /if\(event\.target\.closest\('\[data-ricordi-first-photo\]'\)\)\{window\.UsMomentComposer\?\.pick\?\.\(\);return;\}/);
 });
 
 test('copy: Noi and Settings rows carry a label, not a description', () => {
@@ -64,5 +66,6 @@ test('copy: Noi and Settings rows carry a label, not a description', () => {
   assert.match(html, /<b>Distanza<\/b><\/span>/);
   // Noi nuova (03/11/2026): no tiles; the board under the calendar has a title.
   assert.doesNotMatch(html, /data-noi-open-link/);
-  assert.match(html, /<h2 id="usNoiBoardTitle">Bacheca<\/h2><small>Per le cose senza data<\/small>/);
+  // Noi, Fase B (D3): the board on Noi is «La lavagna»; «Bacheca» is Ricordi's.
+  assert.match(html, /<h2 id="usNoiBoardTitle">La lavagna<\/h2><small>Disegni, post-it e le vostre idee<\/small>/);
 });

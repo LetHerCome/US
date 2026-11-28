@@ -82,6 +82,24 @@ test('colours: the four of the board, and the Pastello forms for the light widge
   assert.deepEqual(L.LIMITS, { points: 600, strokes: 1500 });
 });
 
+// Noi, Fase B.2 (D12): the pens are you, your person, Noi and white, with the
+// keys the server already keeps (rosa = francesco, lilla = beatrice, ambra =
+// Noi now, latte = white): no migration, old strokes take the new colours.
+test('pens: the couple\'s colours on the same four keys, yours first', () => {
+  assert.deepEqual(L.pensFor('francesco'), ['rosa', 'lilla', 'ambra', 'latte']);
+  assert.deepEqual(L.pensFor('beatrice'), ['lilla', 'rosa', 'ambra', 'latte']);
+  assert.deepEqual(L.couplePalette({ rosa: '#6f9bff', lilla: '', noi: ' #9a8cf0 ' }), { rosa: '#6f9bff', lilla: '#a98bff', ambra: '#9a8cf0', latte: '#f7efe9' });
+  assert.equal(L.couplePalette({}).ambra, '#e17dd5', 'the usual Noi, never the amber');
+  assert.equal(L.couplePalette({ rosa: 'var(--x)' }).rosa, '#ff7c96', 'only a real colour');
+  const pastel = L.pastelOf(L.couplePalette({}));
+  assert.equal(pastel.latte, '#1a1020');
+  assert.equal(L.deepen('#ffffff', 0.5), '#8d8890', 'half way to the ink');
+  assert.match(pastel.rosa, /^#[0-9a-f]{6}$/);
+  const js = fs.readFileSync(path.join(__dirname, '..', 'lavagna.js'), 'utf8');
+  assert.ok(js.includes("st?.getPropertyValue?.('--us-rosa')"), 'the couple colours from <html>, inline (the night ones)');
+  assert.ok(js.includes("[pens[0]]:'Il tuo colore'") && js.includes("ambra:'Il colore di Noi',latte:'Bianco'"));
+});
+
 test('module: pointer events, one finger, strokes saved on lift with their own id, undo and clear on the server', () => {
   const src = read('lavagna.js');
   for (const event of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel']) assert.ok(src.includes(`'${event}'`), event);

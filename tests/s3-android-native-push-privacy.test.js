@@ -35,6 +35,21 @@ test('FCM for every US event is data-only, owner-routed, no private text, no dee
  }
 });
 
+// Ti penso ×N (27/11/2026, founder: the number is not private): the allow-list
+// grows by ONE numeric field, n, on the plural Ti penso kind only (2..99, digits).
+test('the plural Ti penso carries only its number n; no other type ever carries n',async()=>{
+ const { fcmMessage }=await load('native-push-transport.mjs');
+ const { buildNotification, NOTIFICATION_TYPES }=await load('notification-core.mjs');
+ const many=fcmMessage(buildNotification('think',{senderName:'PRIVATE_SENDER_BEATRICE',messageId:REF,count:7}),device(INSTALL_A)).message;
+ assert.deepEqual(many.data,{v:'2',installation:INSTALL_A,k:'think_many',n:'7'});
+ assert.doesNotMatch(JSON.stringify(many),/PRIVATE_SENDER_BEATRICE|eb72e072|volte|times|"target"|"ref"/i);
+ for(const type of NOTIFICATION_TYPES){
+  if(type==='think')continue;
+  const msg=fcmMessage(buildNotification(type,{senderName:'B',messageId:REF,questionId:REF,questId:REF,itemId:REF,sessionId:REF,reminderId:'r',entryId:REF,title:'T',body:'B',tag:'private-event-tag',count:7}),device(INSTALL_A)).message;
+  assert.equal(Object.hasOwn(msg.data,'n'),false,type);
+ }
+});
+
 test('A and B differ ONLY by routing installation, never by private event copy',async()=>{
  const { fcmMessage }=await load('native-push-transport.mjs');
  const { buildNotification }=await load('notification-core.mjs');

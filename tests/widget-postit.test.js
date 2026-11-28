@@ -14,14 +14,21 @@ const JAVA = `${PLUGIN}/java/com/usapp/widget`;
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const res = (file) => read(`${PLUGIN}/res/${file}`);
 
-test('layout: the paper, the tape, the words as a picture, who and how many others', () => {
+// Widget del redesign (26/11/2026): the post-it turned a little on the card,
+// the tape in the colour of whoever wrote it; the 4x2 has the last two.
+test('layout: the paper on the card, the tape, the words as a picture, how many others', () => {
   const layout = res('layout/us_widget_postit.xml');
-  assert.match(layout, /android:id="@\+id\/us_postit_root"[\s\S]*?android:background="@drawable\/us_widget_postit_yellow"/);
-  assert.match(layout, /@drawable\/us_widget_postit_tape"/);
+  assert.match(layout, /android:id="@\+id\/us_postit_root"[\s\S]*?android:background="@drawable\/us_w_card"/);
+  assert.match(layout, /android:id="@\+id\/us_postit_paper"[\s\S]*?android:background="@drawable\/us_widget_postit_yellow"[\s\S]*?android:rotation="2"/);
+  assert.match(layout, /android:id="@\+id\/us_postit_tape"[\s\S]*?@drawable\/us_w_tape"/);
   assert.match(layout, /<ImageView\s+android:id="@\+id\/us_postit_text"/);
-  for (const id of ['us_postit_dot', 'us_postit_by', 'us_postit_more']) assert.ok(layout.includes(`@+id/${id}"`), id);
-  assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, 'nothing under 11sp');
-  assert.doesNotMatch(layout, /android:text="[^@]/, 'text from strings.xml');
+  assert.ok(layout.includes('@+id/us_postit_more"'));
+  const medium = res('layout/us_widget_postit_medium.xml');
+  for (const id of ['us_postit_paper', 'us_postit_text', 'us_postit_tape', 'us_postit_second', 'us_postit_paper2', 'us_postit_text2', 'us_postit_tape2', 'us_postit_more']) assert.ok(medium.includes(`@+id/${id}"`), id);
+  for (const file of [layout, medium]) {
+    assert.doesNotMatch(file, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, 'nothing under 11sp');
+    assert.doesNotMatch(file, /android:text="[^@]/, 'text from strings.xml');
+  }
   // The papers of the board (couple-notes.css), the same in both themes.
   for (const [color, hex] of [['yellow', 'F6E27A'], ['pink', 'FFC2CF'], ['blue', 'BFE3F5'], ['green', 'C9ECC0']]) {
     assert.match(res(`drawable/us_widget_postit_${color}.xml`), new RegExp(`#FF${hex}`), color);
@@ -35,8 +42,10 @@ test('layout: the paper, the tape, the words as a picture, who and how many othe
 test('provider: its paper, the words in Fraunces italic and dark ink, opens the board, never the network', () => {
   const provider = read(`${JAVA}/UsPostitWidgetProvider.java`);
   assert.match(provider, /UsWidgets\.open\(context, "postit", 5001\)/);
-  assert.match(provider, /views\.setInt\(R\.id\.us_postit_root, "setBackgroundResource", paper\(color\)\);/);
-  assert.ok(provider.includes('UsWidgetArt.serif(views, context, R.id.us_postit_text, text, 19f, 140, 4, true, Layout.Alignment.ALIGN_NORMAL, INK, INK);'));
+  assert.match(provider, /views\.setInt\(R\.id\.us_postit_paper, "setBackgroundResource", paper\(color\)\);/);
+  assert.ok(provider.includes('UsWidgetArt.serif(views, context, R.id.us_postit_text, text, wide ? 16f : 17f, wide ? 130 : 120, 4, true, Layout.Alignment.ALIGN_NORMAL, INK, INK);'));
+  assert.match(provider, /UsWidgets\.themedColor\(views, context, id, "setColorFilter", p\.day, p\.night\);/, 'the tape of whoever wrote it');
+  assert.match(provider, /return UsWidgets\.sized\(options, small, medium\);/);
   assert.match(provider, /R\.string\.us_widget_postit_empty/);
   assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(/i);
   const widgets = read(`${JAVA}/UsWidgets.java`);
@@ -67,8 +76,9 @@ test('syncPostit writes once per change and empties itself when the board is emp
   const sandbox = {
     window: { UsCoupleNotes: { widgetState: () => state } },
     ownerHash: 'h',
-    postit: { state: 'none', text: '', color: '', by: '', more: 0, at: '' },
-    emptyPostit: () => ({ state: 'none', text: '', color: '', by: '', more: 0, at: '' }),
+    postit: { state: 'none', text: '', color: '', by: '', more: 0, at: '', second: { text: '', color: '', by: '' } },
+    emptySecond: () => ({ text: '', color: '', by: '' }),
+    emptyPostit: () => ({ state: 'none', text: '', color: '', by: '', more: 0, at: '', second: { text: '', color: '', by: '' } }),
     cleanText: (value, max) => String(value || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max),
     isoInstant: (value) => (value ? new Date(value).toISOString() : ''),
     scheduleWrite: () => { writes += 1; return Promise.resolve(true); }
@@ -79,9 +89,14 @@ test('syncPostit writes once per change and empties itself when the board is emp
   await sandbox.syncPostit();
   await sandbox.syncPostit();
   assert.equal(writes, 1, 'the same post-it twice: one write');
-  assert.deepEqual({ ...sandbox.read() }, { state: 'ready', text: 'comprare il latte', color: 'pink', by: 'me', more: 2, at: '2026-11-04T10:00:00.000Z' });
+  assert.deepEqual(JSON.parse(JSON.stringify(sandbox.read())), { state: 'ready', text: 'comprare il latte', color: 'pink', by: 'me', more: 2, at: '2026-11-04T10:00:00.000Z', second: { text: '', color: '', by: '' } });
+  // Widget del redesign (26/11/2026): the one after it, for the 4x2.
+  state = { ...state, second: { text: 'le lucine', color: 'mauve', by: 'partner' } };
+  await sandbox.syncPostit();
+  assert.equal(writes, 2);
+  assert.deepEqual(JSON.parse(JSON.stringify(sandbox.read().second)), { text: 'le lucine', color: 'yellow', by: 'partner' }, 'an unknown paper reads as yellow');
   state = { state: 'none' };
   await sandbox.syncPostit();
   assert.equal(sandbox.read().state, 'none');
-  assert.equal(writes, 2);
+  assert.equal(writes, 3);
 });

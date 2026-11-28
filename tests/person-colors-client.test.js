@@ -12,9 +12,11 @@ const read = (name) => fs.readFileSync(path.join(__dirname, '..', name), 'utf8')
 const F = { id: 'f', role: 'francesco', display_name: 'Francesco', person_color: null };
 const B = { id: 'b', role: 'beatrice', display_name: 'Beatrice', person_color: null };
 
+// Palette of 15/11/2026: oro, cielo and rubino left for blu, prugna and menta
+// (migration 20261115183900, staging only; kept on 23/11/2026, D8).
 test('the 8 colours match the server, rosa and lilla are the usual ones', () => {
-  assert.deepEqual(Object.keys(C.PALETTE), ['rosa', 'lilla', 'cielo', 'salvia', 'oro', 'pesca', 'rubino', 'perla']);
-  const sql = read('supabase/migrations/20261029014653_person_colors_plus_v1.sql');
+  assert.deepEqual(Object.keys(C.PALETTE), ['rosa', 'lilla', 'blu', 'salvia', 'pesca', 'prugna', 'menta', 'perla']);
+  const sql = read('supabase/migrations/20261115183900_personaggi_forma_e_colori.sql');
   assert.ok(sql.includes(`check (person_color in (${Object.keys(C.PALETTE).map((k) => `'${k}'`).join(', ')}))`));
   assert.equal(C.PALETTE.rosa, '#ff7c96');
   assert.equal(C.PALETTE.lilla, '#a98bff');
@@ -24,23 +26,30 @@ test('the 8 colours match the server, rosa and lilla are the usual ones', () => 
 
 test('each person\'s token takes their chosen colour, or stays the usual one', () => {
   assert.deepEqual(C.coupleColors([F, B]), { rosa: null, lilla: null });
-  assert.deepEqual(C.coupleColors([{ ...F, person_color: 'cielo' }, { ...B, person_color: 'rosa' }]), { rosa: '#6fb8ff', lilla: '#ff7c96' });
+  assert.deepEqual(C.coupleColors([{ ...F, person_color: 'blu' }, { ...B, person_color: 'rosa' }]), { rosa: '#6f9bff', lilla: '#ff7c96' });
+  // Until the migration moves them, the retired names read as the nearest new colour.
+  assert.deepEqual(C.coupleColors([{ ...F, person_color: 'cielo' }, { ...B, person_color: 'rubino' }]), { rosa: '#6f9bff', lilla: '#c98bd6' });
   assert.deepEqual(C.coupleColors([{ ...F, person_color: 'boh' }]), { rosa: null, lilla: null });
 });
 
 test('applied on the page root, and removed back to the design tokens', () => {
   const set = new Map();
   const style = { setProperty: (k, v) => set.set(k, v), removeProperty: (k) => set.delete(k) };
-  C.applyCoupleColors([{ ...F, person_color: 'oro' }, B], { style });
-  assert.deepEqual([...set], [['--us-rosa', '#f2cf6b']]);
+  C.applyCoupleColors([{ ...F, person_color: 'oro' }, B], { style }, 'francesco');
+  assert.equal(set.get('--us-rosa'), '#ff9f6e', 'oro reads as pesca');
+  assert.equal(set.has('--us-lilla'), false);
+  // Redesign definitivo, fase 3 (D7): the four page steps follow, from pesca to lilla.
+  assert.equal(set.get('--us-pg-home'), '#ff9f6e');
+  assert.equal(set.get('--us-pg-quiz'), '#a98bff');
   C.applyCoupleColors([], { style });
   assert.equal(set.size, 0);
 });
 
 test('the picker: mine marked, the partner\'s (or their usual one) taken', () => {
-  const choices = C.choices([{ ...F, person_color: 'cielo' }, B], 'f');
+  const choices = C.choices([{ ...F, person_color: 'blu' }, B], 'f');
   assert.equal(choices.length, 8);
-  assert.deepEqual(choices.find((c) => c.id === 'cielo'), { id: 'cielo', name: 'Cielo', hex: '#6fb8ff', mine: true, taken: false });
+  assert.deepEqual(choices.find((c) => c.id === 'blu'), { id: 'blu', name: 'Blu', hex: '#6f9bff', mine: true, taken: false });
+  assert.equal(C.choices([{ ...F, person_color: 'cielo' }, B], 'f').find((c) => c.id === 'blu').mine, true, 'cielo reads as blu');
   assert.deepEqual(choices.find((c) => c.id === 'lilla'), { id: 'lilla', name: 'Lilla', hex: '#a98bff', mine: false, taken: true });
   assert.equal(C.choices([F, B], 'f').find((c) => c.id === 'rosa').mine, true, 'no choice yet: the usual one is mine');
   assert.equal(C.nameOf([F, { ...B, person_color: 'salvia' }], 'b'), 'Salvia');

@@ -98,22 +98,25 @@ test('native: a new provider, 2x2 and 4x2, the label only on the day', () => {
   const info = res('xml/us_widget_memories_info.xml');
   assert.match(info, /android:previewLayout="@layout\/us_widget_preview_memories"/);
   assert.match(info, /android:targetCellWidth="2"[\s\S]*android:targetCellHeight="2"/);
+  // Widget del redesign (26/11/2026): polaroids as in Ricordi, drawn by US.
   for (const name of ['us_widget_memories', 'us_widget_memories_medium']) {
     const layout = res(`layout/${name}.xml`);
-    assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/, name);
-    for (const id of ['us_mem_root', 'us_mem_art', 'us_mem_grain', 'us_mem_content', 'us_mem_stack', 'us_mem_title', 'us_mem_empty']) assert.match(layout, new RegExp(`@\\+id/${id}"`), `${name} ${id}`);
+    assert.match(layout, /android:background="@drawable\/us_w_card"\s+android:clipToOutline="true"/, name);
+    assert.doesNotMatch(layout, /us_widget_art_|us_widget_grain|us_widget_fade/, name);
+    for (const id of ['us_mem_root', 'us_mem_stack', 'us_mem_empty']) assert.match(layout, new RegExp(`@\\+id/${id}"`), `${name} ${id}`);
     assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, `${name}: nothing under 11sp`);
   }
-  // Foto protagonista: in the 2x2 the photo fills the widget and melts into the paper; the day on its own line.
-  const small = res('layout/us_widget_memories.xml');
-  assert.match(small, /android:id="@\+id\/us_mem_stack"[\s\S]*?android:scaleType="centerCrop"[\s\S]*?@drawable\/us_widget_fade"/);
-  assert.ok(small.indexOf('us_mem_date"') < small.indexOf('us_mem_title"'), 'the date above the title, never beside it');
-  assert.ok(provider.includes('UsWidgetArt.serif(small, context, R.id.us_mem_title, model.title, 18f, 144, 2'));
+  // The 2x2 is the polaroid alone: its date is on it.
+  assert.doesNotMatch(res('layout/us_widget_memories.xml'), /us_mem_title|us_mem_date/);
   const medium = res('layout/us_widget_memories_medium.xml');
-  for (const id of ['us_mem_pill', 'us_mem_line']) assert.match(medium, new RegExp(`@\\+id/${id}"`), id);
+  for (const id of ['us_mem_content', 'us_mem_label', 'us_mem_title', 'us_mem_line']) assert.match(medium, new RegExp(`@\\+id/${id}"`), id);
+  assert.ok(provider.includes('UsWidgetArt.serif(medium, context, R.id.us_mem_title, model.pill.isEmpty() ? model.title : model.pill, 21f'));
   const widgets = read('widgets.js');
-  assert.match(widgets, /const STACK_SMALL = \{ width: 176, height: 176, radius: 18, border: 0, cards: \[/);
-  assert.match(widgets, /const inset = i === 0 \? layout\.border \* S : 0;/);
+  assert.match(widgets, /const STACK_SMALL = \{ width: 176, height: 176, cards: \[\{ x: 88, y: 90, w: 128, h: 150, turn: -3 \}\] \};/);
+  assert.match(widgets, /ctx\.fillStyle = '#fbf7f0';/, 'the paper of the polaroid, the same in both themes');
+  assert.match(widgets, /ctx\.font = `italic 420 \$\{12 \* S\}px Fraunces, Georgia, serif`;/, 'the date in Fraunces italic');
+  assert.match(widgets, /const tint = \(row\) => couple\.characters\?\.\[row\?\.by === 'me' \? 'me' : 'partner'\]\?\.color/, 'the tape of whoever added it');
+  assert.match(read('app.js'), /by:row\.created_by===profile\.id\?'me':'partner'/);
   const preview = res('layout/us_widget_preview_memories.xml');
   assert.doesNotMatch(preview, /android:text="[^@]/);
   assert.match(preview, /@drawable\/us_widget_preview_memories"/);

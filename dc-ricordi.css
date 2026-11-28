@@ -150,6 +150,8 @@
 #moments .ricordi-daily-answer b{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--us-color-text-3)}
 #moments .ricordi-daily-answer p{font-size:15px;color:var(--us-color-text)}
 #moments .ricordi-empty b{font-family:var(--us-font-display);font-weight:400;font-size:22px}
+#moments .ricordi-empty{grid-column:1/-1}
+#moments .ricordi-empty-add{margin-top:14px;min-height:48px;padding:0 22px}
 /* R6: something lived without its photo yet, with the way to add it. */
 #moments #momentsGrid.ricordi-story .ricordi-lived{grid-column:1/-1;display:grid;gap:0;border-radius:20px;border:1px solid var(--us-color-line);background:var(--us-color-surface);overflow:hidden}
 #moments #momentsGrid.ricordi-story .ricordi-lived>.ricordi-experience{border:0;border-radius:0;background:none}
@@ -216,6 +218,15 @@
 #usAlbumOverlay[data-us-galleria] .us-album-carousel-counter[hidden]{display:none!important}
 #usAlbumOverlay[data-us-galleria] .us-album-close,#usAlbumOverlay[data-us-galleria] .us-album-save-photo{position:absolute;z-index:6;left:auto;right:16px;top:calc(var(--us-safe-top,0px) + 16px);width:46px;height:46px;min-height:46px;margin:0;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid color-mix(in srgb,var(--us-latte) 17%,transparent);background:rgba(15,11,19,.42);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:none;color:var(--us-latte);font-size:0}
 #usAlbumOverlay[data-us-galleria] .us-album-save-photo{right:72px}
+/* Solo la foto (founder, 28/11/2026): the eye beside Salva; on, only the photo, the close and the eye stay. */
+#usAlbumOverlay[data-us-galleria] .us-album-solo{position:absolute;z-index:6;right:128px;top:calc(var(--us-safe-top,0px) + 16px);width:46px;height:46px;min-height:46px;margin:0;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid color-mix(in srgb,var(--us-latte) 22%,transparent);background:rgba(15,11,19,.48);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:none;color:var(--us-latte);cursor:pointer}
+#usAlbumOverlay[data-us-galleria] .us-album-solo .us-icon{--us-icon-size:22px}
+#usAlbumOverlay[data-us-galleria] .us-album-solo:focus-visible{outline:2px solid var(--us-ambra);outline-offset:3px}
+#usAlbumOverlay:not([data-us-galleria]) .us-album-solo{display:none}
+#usAlbumOverlay.is-solo-foto .us-album-scroll>:not(#usAlbumCarousel):not(.us-album-info),#usAlbumOverlay.is-solo-foto .us-album-info>:not(.us-album-photo-actions),#usAlbumOverlay.is-solo-foto .us-album-photo-actions>:not(.us-album-solo),#usAlbumOverlay.is-solo-foto #usAlbumCarousel>:not(img){visibility:hidden;pointer-events:none}
+#usAlbumOverlay.is-solo-foto .us-album-cover-stage::after{opacity:0}
+#usAlbumOverlay.is-solo-foto .us-album-scroll{overflow:hidden}
+#usAlbumOverlay.is-solo-foto[data-us-galleria] .us-album-solo{right:72px}
 #usAlbumOverlay[data-us-galleria] .us-album-save-photo>span:not(.us-icon){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 #usAlbumOverlay[data-us-galleria] :is(.us-album-close,.us-album-save-photo) .us-icon{--us-icon-size:22px}
 #usAlbumOverlay[data-us-galleria] .us-album-save-photo[hidden]{display:none!important}
@@ -502,7 +513,7 @@
 #leftForYouComposerOverlay .left-for-you-composer-pick[data-pick] b{font-size:16px;font-weight:600;line-height:1.3}
 #leftForYouComposerOverlay .left-for-you-composer-pick[data-pick] small{font-size:12px;font-weight:400;line-height:1.3;color:var(--us-color-text-3)}
 #leftForYouComposerOverlay .left-for-you-composer-file:empty{display:none}
-#leftForYouComposerOverlay #leftForYouComposerPhotoActions{grid-template-columns:minmax(0,1fr)}
+#leftForYouComposerOverlay .left-for-you-photo-actions{grid-template-columns:minmax(0,1fr)}
 /* Voice: the design's card — a 76px key, a quiet wave, one line. Recording keeps the app's live pill. */
 #leftForYouComposerOverlay .left-for-you-vn-frame{gap:12px;padding:18px 12px;border-radius:22px;background:var(--us-color-surface-2)}
 #leftForYouComposerOverlay .left-for-you-vn[data-phase="idle"]{width:76px;height:76px;border:0;border-radius:50%;background:var(--us-tu);box-shadow:none;color:var(--us-inchiostro)}
@@ -542,6 +553,25 @@
 #leftForYouCameraOverlay :is(.left-for-you-close,#leftForYouCameraSwitch){background:rgba(15,11,19,.42)}
 #leftForYouCameraOverlay #leftForYouCameraSwitch{left:17px}
 #leftForYouCameraOverlay .left-for-you-camera-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+/* «Fai un video» (27/11): the same viewfinder records. A red dot that turns
+   square while recording, the time up top, the take between head and buttons. */
+#leftForYouCameraOverlay .left-for-you-camera-shutter.is-video{background:transparent;box-shadow:inset 0 0 0 5px #fff,0 0 0 5px rgba(0,0,0,.25)}
+#leftForYouCameraOverlay .left-for-you-camera-shutter.is-video span{display:block;width:56px;height:56px;border-radius:50%;background:var(--us-color-danger);transition:width .2s ease,height .2s ease,border-radius .2s ease}
+#leftForYouCameraOverlay .left-for-you-camera-shutter.is-video.is-recording span{width:28px;height:28px;border-radius:7px}
+#leftForYouCameraOverlay .left-for-you-camera-timer{position:absolute;z-index:2;top:calc(var(--us-safe-top) + 80px);left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(15,11,19,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--us-color-text);font:600 15px/1.2 var(--us-font-ui);font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+#leftForYouCameraOverlay .left-for-you-camera-timer::before{content:"";width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.55)}
+#leftForYouCameraOverlay .left-for-you-camera-timer[data-recording="true"]::before{background:var(--us-color-danger);animation:dcLftRecDot 1s ease-in-out infinite}
+@keyframes dcLftRecDot{50%{opacity:.3}}
+#leftForYouCameraOverlay .left-for-you-camera-preview-wrap video.left-for-you-camera-recorded{position:absolute;left:0;right:0;top:calc(var(--us-safe-top) + 76px);height:calc(100% - var(--us-safe-top) - var(--us-safe-bottom) - 226px);object-fit:contain;background:#000}
+:root[data-us-motion="reduced"] #leftForYouCameraOverlay .left-for-you-camera-shutter.is-video span{transition:none}
+:root[data-us-motion="reduced"] #leftForYouCameraOverlay .left-for-you-camera-timer::before{animation:none!important}
+@media (prefers-reduced-motion:reduce){
+  #leftForYouCameraOverlay .left-for-you-camera-shutter.is-video span{transition:none}
+  #leftForYouCameraOverlay .left-for-you-camera-timer::before{animation:none!important}
+}
+/* A refused camera or microphone: the way to US's page in Settings, where it exists. */
+#leftForYouComposerOverlay .left-for-you-composer-settings{display:flex;align-items:center;justify-content:center;min-height:44px;margin:8px auto 0;padding:0 20px;border:0;border-radius:999px;font:600 14px/1 var(--us-font-ui)}
+#leftForYouComposerOverlay .left-for-you-composer-settings[hidden]{display:none}
 
 /* ==========================================================================
    Reduced motion: fades only, nothing travels
@@ -591,10 +621,10 @@
 /* La sfida della settimana (03/11/2026): the «Sfida» sign on the Ricordo a challenge photo went into (weekly-challenge.js). */
 #moments #momentsGrid .moment-card>.us-wc-mark{position:absolute;z-index:4;top:10px;left:10px;padding:3px 9px;border-radius:999px;background:var(--us-ambra);color:var(--us-inchiostro);font:700 11px/1.5 var(--us-font-ui);letter-spacing:.06em;text-transform:uppercase;pointer-events:none}
 
-/* Ricordi is the album (founder, 04/11/2026; tavola Ricordi.dc.html): only the
-   photos, three a row, all square, month by month. Caption, day and author
-   stay on the card for the viewer, never drawn on the grid. */
-#moments #momentsGrid.moment-grid.ricordi-story{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important}
+/* Ricordi is the album (founder, 04/11/2026): only the photos, month by month.
+   Since the redesign (fase 8, D12) they are polaroids, two a row, with the
+   caption and the day written on them: see the block at the end. */
+#moments #momentsGrid.moment-grid.ricordi-story{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important}
 #moments #momentsGrid.ricordi-story .ricordi-period{margin:22px 0 6px}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit,
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide){grid-column:auto!important;min-height:0!important;border-radius:10px!important}
@@ -603,3 +633,181 @@
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit>.moment-meta{display:none!important}
 #moments #momentsGrid.ricordi-story .moment-card .ricordi-new-label{top:6px;left:6px;max-width:calc(100% - 12px);min-height:20px;padding:0 7px;font-size:10px}
 #moments #momentsGrid .moment-card>.us-wc-mark{top:auto;bottom:6px;left:6px;padding:2px 7px;font-size:10px}
+
+/* ===== Redesign definitivo, fase 8 (D12): la raccolta a polaroid, la bacheca =====
+   The approved tavole «Ricordi», «Bacheca» and «Bacheca intera» (23/11/2026).
+   The caption is Fraunces italic (the app has no handwriting font). */
+#moments .ricordi-story-head{display:grid!important;grid-template-columns:minmax(0,1fr);gap:8px;margin:4px 0 14px}
+#moments .ricordi-views{width:100%;min-width:100%;justify-self:stretch;box-sizing:border-box;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:4px;border-radius:22px;background:rgba(247,239,233,.06)}
+#moments .ricordi-views button{min-height:44px;margin:0;padding:0;border:0;border-radius:18px;background:none;color:var(--us-color-text-2);font:600 13.5px/1 var(--us-font-ui);box-shadow:none}
+#moments .ricordi-views button[aria-selected="true"]{background:var(--us-pg);color:var(--us-color-text-on-accent,#1a1020);font-weight:700}
+#moments .ricordi-views button:focus-visible{outline:2px solid var(--us-pg);outline-offset:2px}
+#moments #momentsGrid.moment-grid.ricordi-story{gap:24px 14px!important;padding:8px 6px 0!important}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit{padding:8px 8px 0!important;border-radius:3px!important;overflow:visible!important;background:#f6f0e6!important;box-shadow:0 10px 22px rgba(0,0,0,.45)!important;transform:rotate(var(--pol-tilt,-1.5deg))!important}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:nth-of-type(4n+1){--pol-tilt:-2.5deg}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:nth-of-type(4n+2){--pol-tilt:2deg}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:nth-of-type(4n+3){--pol-tilt:1.5deg}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:nth-of-type(4n){--pol-tilt:-1.5deg}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:active{transform:rotate(var(--pol-tilt,-1.5deg)) scale(.98)!important}
+/* the tape, in the colour of who put the photo there */
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit::before{content:"";position:absolute;z-index:4;left:50%;top:-9px;width:60px;height:18px;margin-left:-30px;background:color-mix(in srgb,var(--us-partner) 78%,transparent);transform:rotate(-4deg);pointer-events:none}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit[data-moment-by="tu"]::before{background:color-mix(in srgb,var(--us-tu) 78%,transparent);transform:rotate(3deg)}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit>img{aspect-ratio:1/1!important;border-radius:1px!important}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide)>img{aspect-ratio:4/3!important}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit>.moment-meta{position:static!important;display:flex!important;align-items:center;justify-content:space-between;gap:6px;min-height:40px!important;padding:4px 2px 6px!important;background:none!important;color:#2a1f2a}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit .moment-meta p{flex:1;min-width:0;-webkit-line-clamp:1!important;font-family:var(--us-font-display)!important;font-style:italic;font-weight:400;font-size:16px!important;line-height:1.2!important;color:#2a1f2a!important}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit .moment-meta .ricordi-moment-source{display:none}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit .moment-line{flex:none;margin-left:auto;font-size:10.5px;font-weight:700;color:#7a6a73}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit .moment-line :is(.moment-dot,.moment-by,[aria-hidden="true"]){display:none}
+#moments #momentsGrid.ricordi-story article.moment-card.moment-postit .moment-line b{font-weight:700;color:#7a6a73}
+
+/* La bacheca: a cork-dark board, tags pinned where the places are, a red string. */
+#moments .ricordi-bacheca[hidden]{display:none}
+/* La vostra bacheca (founder 25/11/2026, tavola «US · La vostra bacheca»): an endless corkboard
+   kept by US, moved with the fingers; the red string is the road of your story (bacheca.js). */
+#moments .ricordi-bacheca{position:relative;margin:0 -12px;height:calc(100dvh - var(--us-safe-top) - var(--us-nav-height) - var(--us-safe-bottom) - 190px);min-height:420px}
+#moments .ub-view{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:grab;border-radius:22px;background:#2e1f18;perspective:1100px;outline:none;user-select:none;-webkit-user-select:none}
+#moments .ub-view:focus-visible{box-shadow:0 0 0 2px var(--us-pg)}
+#moments .ub-tilt{position:absolute;inset:0;transform-style:preserve-3d;transform-origin:50% 40%;transition:transform .3s ease}
+#moments .ub-world{position:absolute;left:0;top:0;transform-origin:0 0;transform-style:preserve-3d;will-change:transform}
+#moments .ub-cork{position:absolute;background-color:#4a3428;background-image:radial-gradient(rgba(0,0,0,.2) 1.2px,transparent 1.7px),radial-gradient(rgba(255,255,255,.06) 1px,transparent 1.5px);background-size:10px 10px,15px 15px;background-position:0 0,5px 7px}
+#moments .ub-year{position:absolute;top:620px;font:400 120px/1 var(--us-font-display);color:rgba(255,255,255,.07);pointer-events:none}
+#moments .ub-road{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+#moments .ub-road path{fill:none;stroke:#c0392b;stroke-width:3;stroke-linecap:round}
+#moments .ub-item{position:absolute;margin:0;padding:0;border:0;border-radius:4px;background:none;box-shadow:0 12px 24px rgba(0,0,0,.45);color:inherit;text-align:left;cursor:grab;transform:translateZ(24px) rotate(var(--r,0deg));transition:transform .25s ease,box-shadow .25s ease;touch-action:none}
+#moments .ub-item.is-dragging{z-index:5;cursor:grabbing;transform:translateZ(60px) rotate(var(--r,0deg)) scale(1.06);box-shadow:0 26px 40px rgba(0,0,0,.5);transition:none}
+#moments .ub-item:focus-visible{outline:3px solid #f7efe9;outline-offset:5px}
+#moments .ub-pin{position:absolute;left:50%;top:-8px;z-index:2;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8,var(--ub-pin,#f3d27a) 60%);box-shadow:0 3px 5px rgba(0,0,0,.45)}
+#moments .ub-item[data-who="me"]{--ub-pin:var(--us-tu)}
+#moments .ub-item[data-who="you"]{--ub-pin:var(--us-partner)}
+#moments .ub-date{position:absolute;left:50%;top:-30px;padding:2px 7px;border-radius:6px;background:rgba(0,0,0,.5);color:#f7efe9;font:700 11px/1.4 var(--us-font-ui);white-space:nowrap;transform:translateX(-50%)}
+#moments .ub-pol{display:block;padding:7px 7px 10px;border-radius:2px;background:#fff}
+#moments .ub-photo{display:block;aspect-ratio:1/0.9;background:linear-gradient(160deg,#f6c38a,#e8829a 60%,#8a5fc2);overflow:hidden}
+#moments .ub-photo img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+#moments .ub-cap{display:block;margin-top:6px;overflow:hidden;font:italic 400 15px/1.15 var(--us-font-display);color:#2c2420;white-space:nowrap;text-overflow:ellipsis}
+#moments .ub-letter{position:relative;display:block;height:112px;overflow:hidden;border-radius:6px;background:color-mix(in srgb,var(--us-partner) 22%,#fff)}
+#moments .ub-flap{position:absolute;left:0;right:0;top:0;height:54px;background:color-mix(in srgb,var(--us-partner) 45%,#fff);clip-path:polygon(0 0,100% 0,50% 100%)}
+#moments .ub-letter-text{position:absolute;left:12px;right:12px;bottom:12px;font:italic 400 14px/1.25 var(--us-font-display);color:#2c2030}
+#moments .ub-note{display:grid;gap:6px;padding:14px 12px;background:#fff3c4;font:italic 400 15px/1.25 var(--us-font-display);color:#3a2a18}
+#moments .ub-note b{font:800 11px/1.3 var(--us-font-ui);letter-spacing:.06em;text-transform:uppercase;color:#7a5a20}
+#moments .ub-ans{display:block;padding-left:8px;border-left:3px solid var(--us-partner)}
+#moments .ub-ans[data-who="me"]{border-left-color:var(--us-tu)}
+#moments .ub-stamp{display:grid;place-items:center;width:120px;height:120px;border-radius:50%;border:3px dashed #f3d27a;background:rgba(0,0,0,.2);color:#f3d27a;font:800 15px/1.15 var(--us-font-ui);text-align:center}
+#moments .ub-item.ub-stamp-item,#moments .ub-item:has(.ub-stamp){box-shadow:none}
+#moments .ub-postit{position:absolute;left:38%;bottom:-30px;padding:6px 9px;background:#ffd6e2;box-shadow:0 6px 12px rgba(0,0,0,.35);font:italic 400 14px/1.1 var(--us-font-display);color:#5a1f33;white-space:nowrap;transform:rotate(3deg)}
+#moments .ub-flag{position:absolute;left:-10px;top:-12px;padding:3px 8px;border-radius:10px;background:#1d1119;color:#f7efe9;font:800 10.5px/1.3 var(--us-font-ui);letter-spacing:.06em;text-transform:uppercase}
+#moments .ub-end{position:absolute;display:grid;gap:6px;width:150px;padding:16px 14px;border:2px dashed rgba(247,239,233,.4);border-radius:8px;color:rgba(247,239,233,.85);font:700 13px/1.3 var(--us-font-ui);text-align:center}
+#moments .ub-end span{font-weight:600;color:rgba(247,239,233,.65)}
+#moments .ub-controls{position:absolute;left:12px;bottom:12px;z-index:2;display:flex;gap:8px}
+#moments .ub-controls button{min-height:42px;padding:0 16px;border-radius:21px;font:800 13.5px/1 var(--us-font-ui);box-shadow:0 8px 18px rgba(0,0,0,.35)}
+#moments .ub-now{border:0;background:#f7efe9;color:#1a1020}
+#moments .ub-all{border:1px solid rgba(247,239,233,.3);background:rgba(29,17,25,.85);color:#f7efe9}
+#moments .ub-count{position:absolute;right:12px;bottom:62px;z-index:2;padding:3px 8px;border-radius:8px;background:rgba(29,17,25,.85);color:rgba(247,239,233,.85);font:700 11px/1.4 var(--us-font-ui)}
+#moments .ub-mini{position:absolute;right:12px;bottom:12px;z-index:2;width:104px;height:42px;overflow:hidden;border:1px solid rgba(247,239,233,.2);border-radius:10px;background:rgba(29,17,25,.85);pointer-events:none}
+#moments .ub-mini svg{position:absolute;inset:0;width:100%;height:100%}
+#moments .ub-mini path{fill:none;stroke:#c0392b;stroke-width:40}
+#moments .ub-mini-frame{position:absolute;border:1.5px solid #f7efe9;border-radius:3px;box-sizing:border-box}
+#moments .ub-empty{display:grid;place-items:center;height:100%;padding:24px;border-radius:22px;border:1px dashed rgba(247,239,233,.25);text-align:center;color:var(--us-color-text-2);font-size:14px;line-height:1.45}
+#moments .ub-retry{display:block;min-height:44px;margin:12px auto 0;padding:0 20px}
+#usBachecaSheet .ub-sheet-title{margin:4px 0 0;font:400 24px/1.15 var(--us-font-display);color:var(--us-color-text)}
+#usBachecaSheet .ub-sheet-why{margin:6px 0 14px;font-size:13.5px;line-height:1.4;color:var(--us-color-text-2)}
+#usBachecaSheet .ub-sheet-actions{display:grid;gap:8px}
+#usBachecaSheet .ub-sheet-actions button{min-height:50px;padding:0 16px;border:0;border-radius:16px;background:color-mix(in srgb,var(--us-color-text) 8%,transparent);color:var(--us-color-text);font:700 15px/1.2 var(--us-font-ui);text-align:left}
+#usBachecaSheet .ub-sheet-actions [hidden]{display:none}
+#usBachecaSheet .ub-sheet-actions .is-never{color:color-mix(in srgb,#ff7c96 80%,var(--us-color-text))}
+@media (prefers-reduced-motion:reduce){#moments .ub-tilt,#moments .ub-item{transition:none}}
+@media(prefers-reduced-motion:reduce){#moments #momentsGrid.ricordi-story article.moment-card.moment-postit:active{transform:rotate(var(--pol-tilt,-1.5deg))!important}}
+#usBachecaSheet{--us-sheet-k:var(--us-pg-moments)}
+#usBachecaSheet>[data-us-modal-panel]{display:grid;align-content:start;width:min(100%,560px);max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top,0px) - 48px);overflow-y:auto;overscroll-behavior:contain;padding:18px 20px calc(24px + var(--us-safe-bottom,0px));box-sizing:border-box}
+
+/* ===== La bacheca, fasi 2 e 3 (founder, grill 27/11/2026, tavola approvata) =====
+   Your post-its (one per person, in the writer's colour, next to US's yellow
+   one), «Sulla bacheca» in the memory and in a search result, «fai spazio». */
+#moments .ub-notes{position:absolute;left:-8px;top:calc(100% + 34px);z-index:3;display:flex;gap:8px;width:max-content;max-width:300px;pointer-events:none}
+#moments .ub-pn{display:grid;gap:4px;width:118px;padding:8px 9px 9px;background:color-mix(in srgb,var(--ub-who,var(--us-partner)) 30%,#fff);box-shadow:0 8px 14px rgba(0,0,0,.4);color:#2c2030;transform:rotate(3deg)}
+#moments .ub-pn+.ub-pn{transform:rotate(-2deg)}
+#moments .ub-pn[data-who="me"],.ub-row .ub-pn[data-who="me"],#usBachecaSheet .ub-pn[data-who="me"]{--ub-who:var(--us-tu)}
+#moments .ub-pn[data-who="you"],.ub-row .ub-pn[data-who="you"],#usBachecaSheet .ub-pn[data-who="you"]{--ub-who:var(--us-partner)}
+#moments .ub-pn-text{font:italic 400 13px/1.2 var(--us-font-display);overflow-wrap:anywhere}
+#moments .ub-pn b{font:700 10.5px/1.2 var(--us-font-ui);color:color-mix(in srgb,var(--ub-who) 55%,#2c2030)}
+#moments .ub-item.is-focus{outline:3px solid var(--us-pg);outline-offset:8px;animation:ub-focus 1.2s ease-in-out 2}
+@keyframes ub-focus{50%{outline-offset:14px}}
+/* Fai spazio: the fixed things stay dimmed, the one picked is checked. */
+#moments .ricordi-bacheca.is-room :is(.ub-controls,.ub-mini,.ub-count){display:none}
+#moments .ub-item.is-locked{opacity:.42;filter:saturate(.4);cursor:not-allowed}
+#moments .ub-item.is-picked{outline:3px solid var(--us-pg);outline-offset:6px}
+#moments .ub-check{position:absolute;right:-12px;top:-12px;z-index:4;width:34px;height:34px;border-radius:50%;background:var(--us-pg);box-shadow:0 4px 10px rgba(0,0,0,.4)}
+#moments .ub-check::after{content:"";position:absolute;left:12px;top:7px;width:8px;height:15px;border:solid #1a1020;border-width:0 3px 3px 0;transform:rotate(45deg)}
+#moments .ub-room-head{position:absolute;left:12px;right:12px;top:12px;z-index:4;display:grid;gap:3px;padding:12px 14px;border-radius:16px;background:rgba(29,17,25,.9);color:#f7efe9;outline:none}
+#moments .ub-room-head b{font:800 13px/1.3 var(--us-font-ui)}
+#moments .ub-room-head span{font:400 17px/1.25 var(--us-font-display)}
+#moments .ub-room-head small{font:600 12px/1.35 var(--us-font-ui);color:rgba(247,239,233,.7)}
+#moments .ub-room-bar{position:absolute;left:12px;right:12px;bottom:12px;z-index:4;display:grid;gap:10px;padding:12px 14px;border-radius:18px;background:rgba(29,17,25,.92);color:#f7efe9}
+#moments .ub-room-say{margin:0;font:600 13px/1.4 var(--us-font-ui)}
+#moments .ub-room-acts{display:flex;gap:10px}
+#moments .ub-room-acts button{flex:1;min-height:48px;border-radius:24px;font:800 14.5px/1 var(--us-font-ui)}
+#moments .ub-room-cancel{border:1px solid rgba(247,239,233,.3);background:transparent;color:#f7efe9}
+#moments .ub-room-go{flex:1.4!important}
+#moments .ub-room-go:disabled{opacity:.45}
+
+/* The sheet: «I vostri post-it», then yours to write (80 characters). */
+#usBachecaSheet .ub-sheet-actions[hidden]{display:none}
+#usBachecaSheet .ub-notes-sec{display:grid;gap:10px;margin-top:18px}
+#usBachecaSheet .ub-notes-kicker,.ub-row .ub-row-kicker{margin:0;font:800 12px/1.3 var(--us-font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--us-color-text-2)}
+#usBachecaSheet .ub-notes-list,.ub-row .ub-row-notes{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+#usBachecaSheet .ub-pn,.ub-row .ub-pn{display:grid;gap:5px;max-width:240px;padding:9px 11px 10px;background:color-mix(in srgb,var(--ub-who,var(--us-partner)) 28%,#fff);color:#2c2030;transform:rotate(-1.5deg);box-shadow:0 6px 12px rgba(0,0,0,.18)}
+#usBachecaSheet .ub-pn:nth-child(2n),.ub-row .ub-pn:nth-child(2n){transform:rotate(1.5deg)}
+:is(#usBachecaSheet,.ub-row) .ub-pn.is-us{background:#fff3c4}
+:is(#usBachecaSheet,.ub-row) .ub-pn p{margin:0;font:italic 400 15px/1.25 var(--us-font-display);overflow-wrap:anywhere}
+:is(#usBachecaSheet,.ub-row) .ub-pn b{font:700 11.5px/1.2 var(--us-font-ui);color:color-mix(in srgb,var(--ub-who,#c9a227) 50%,#2c2030)}
+:is(#usBachecaSheet,.ub-row) .ub-pn.is-us b{color:#8a6a2a}
+#usBachecaSheet .ub-notes-none{margin:0;font-size:13.5px;color:var(--us-color-text-2)}
+#usBachecaSheet .ub-note-label{margin-top:4px;font:700 14px/1.3 var(--us-font-ui);color:var(--us-color-text)}
+#usBachecaSheet .ub-note-edit{position:relative;padding:12px 14px 30px;background:color-mix(in srgb,var(--us-tu) 28%,#fff);box-shadow:0 6px 12px rgba(0,0,0,.18)}
+#usBachecaSheet .ub-note-edit textarea{display:block;width:100%;min-height:52px;box-sizing:border-box;margin:0;padding:0!important;border:0!important;border-radius:0!important;resize:none;background:transparent!important;box-shadow:none!important;color:#2c2030!important;font:italic 400 17px/1.25 var(--us-font-display)}
+#usBachecaSheet .ub-note-edit textarea::placeholder{color:color-mix(in srgb,#2c2030 55%,transparent)}
+#usBachecaSheet .ub-note-edit:focus-within{outline:2px solid var(--us-pg);outline-offset:3px}
+#usBachecaSheet .ub-note-edit textarea:focus{outline:none}
+#usBachecaSheet .ub-note-count{position:absolute;right:12px;bottom:8px;font:700 12px/1 var(--us-font-ui);color:color-mix(in srgb,var(--us-tu) 45%,#2c2030)}
+#usBachecaSheet .ub-note-hint{margin:0;font-size:13px;line-height:1.4;color:var(--us-color-text-2)}
+#usBachecaSheet .ub-note-actions{display:flex;gap:10px;margin-top:4px}
+#usBachecaSheet .ub-note-actions button{flex:1;min-height:52px;border-radius:26px;font:800 15px/1 var(--us-font-ui)}
+#usBachecaSheet .ub-note-actions [hidden]{display:none}
+#usBachecaSheet .ub-note-remove{border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text-2)}
+#usBachecaSheet .ub-note-save{flex:1.4!important}
+
+/* «Sulla bacheca»: under the memory, and in a search result. */
+.ub-row{display:grid;gap:12px;padding:16px;border-radius:20px;background:color-mix(in srgb,var(--us-color-text) 6%,transparent);color:var(--us-color-text)}
+.ub-row[hidden]{display:none}
+.ub-row .ub-row-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ub-row .ub-row-kicker{display:flex;align-items:center;gap:8px;color:var(--us-ambra,var(--us-pg))}
+.ub-row .ub-row-pinned{display:inline-block;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8,var(--us-pg) 60%)}
+.ub-row .ub-row-write{min-height:44px;padding:0 4px;border:0;background:none;color:var(--us-pg);font:700 14px/1 var(--us-font-ui);box-shadow:none}
+.ub-row .ub-row-say{margin:0;font-size:13.5px;line-height:1.4;color:var(--us-color-text-2)}
+.ub-row .ub-row-pin{min-height:48px;border-radius:24px;font:800 15px/1 var(--us-font-ui)}
+.ub-row .ub-row-pin:not(.primary){border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text)}
+.ub-row :is(button):focus-visible{outline:2px solid var(--us-pg);outline-offset:3px}
+#usAlbumOverlay .us-album-bacheca{margin:16px 20px 24px}
+#usAlbumOverlay[data-us-galleria] .us-album-bacheca{grid-column:1;grid-row:11;position:relative;z-index:4;margin:18px 20px calc(24px + var(--us-safe-bottom,0px))}
+/* The open photo (28/11/2026): only a small post-it top left, «+N», and «In bacheca ›» / «Appendi ›» under it. */
+#usAlbumOverlay[data-us-galleria] .us-album-bacheca.is-mini{position:absolute;grid-area:auto;left:16px;top:calc(var(--us-safe-top,0px) + 18px);z-index:5;display:grid;justify-items:start;gap:4px;max-width:min(168px,calc(100% - 196px));margin:0;padding:0;border-radius:0;background:none}
+#usAlbumOverlay[data-us-galleria] .us-album-scroll:has(#usAlbumCarouselCounter:not([hidden])) .us-album-bacheca.is-mini{top:calc(var(--us-safe-top,0px) + 66px)}
+.ub-row.is-mini .ub-mini-note{position:relative;display:block;max-width:100%;min-height:44px;margin:0;padding:0;border:0;background:none;box-shadow:none;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ub-row.is-mini .ub-pn{max-width:100%;padding:7px 9px 8px;gap:3px;box-shadow:0 6px 16px rgba(0,0,0,.32)}
+.ub-row.is-mini .ub-pn p{font-size:13.5px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ub-row.is-mini .ub-pn b{font-size:10.5px}
+.ub-row.is-mini .ub-pn.is-empty{background:rgba(255,243,196,.16);border:1.5px dashed rgba(255,243,196,.6);box-shadow:none;color:var(--us-latte)}
+.ub-row.is-mini .ub-pn.is-empty p{font:700 12.5px/1.2 var(--us-font-ui);font-style:normal}
+.ub-row.is-mini .ub-mini-more{position:absolute;right:-8px;top:-8px;padding:2px 6px;border-radius:999px;background:var(--us-pg,#ff7c96);color:#2a1220;font:800 10.5px/1.2 var(--us-font-ui);font-style:normal}
+.ub-row.is-mini .ub-mini-link{min-height:32px;margin:0;padding:0 2px;border:0;background:none;box-shadow:none;color:var(--us-latte);font:700 12.5px/1 var(--us-font-ui);text-shadow:0 1px 6px rgba(0,0,0,.55);cursor:pointer}
+.ub-row.is-mini :is(button):focus-visible{outline:2px solid var(--us-ambra,#f3d27a);outline-offset:3px}
+
+/* The lens: one button next to Raccolta · Bacheca · Mappa. */
+#moments .ricordi-story-head:has(.ricordi-lens){grid-template-columns:minmax(0,1fr) auto!important;align-items:center}
+#moments .ricordi-views>[data-ricordi-view][hidden]{display:none}
+#moments .ricordi-views:has(>[data-ricordi-view="carte"][hidden]){grid-template-columns:repeat(3,minmax(0,1fr))}
+#moments .ricordi-story-head:has(.ricordi-lens) .ricordi-views{grid-column:1;grid-row:1;min-width:0}
+#moments .ricordi-lens{grid-column:2;grid-row:1;display:grid;place-items:center;width:52px;height:52px;margin:0;padding:0;border:1px solid var(--us-color-line-strong);border-radius:50%;background:color-mix(in srgb,var(--us-color-text) 6%,transparent);color:var(--us-color-text);box-shadow:none;--us-icon-size:21px}
+#moments .ricordi-lens:focus-visible{outline:2px solid var(--us-pg);outline-offset:2px}
+
+@media (prefers-reduced-motion:reduce){#moments .ub-item.is-focus{animation:none}}

@@ -19,6 +19,24 @@ const COLORS=Object.freeze({rosa:'#ff7c96',lilla:'#a98bff',ambra:'#f3b76e',latte
 // The widget on a light Home (Pastello): the same four, deep enough for cream paper.
 const PASTEL=Object.freeze({rosa:'#e0567a',lilla:'#7a5ad9',ambra:'#d98a2e',latte:'#1a1020'});
 const COLOR_NAMES=Object.freeze({rosa:'Rosa',lilla:'Lilla',ambra:'Ambra',latte:'Latte'});
+// Noi, Fase B.2 (D12): the pens are you, your person, Noi and white. The
+// keys the server keeps stay the same (no migration): rosa is the colour of
+// «francesco», lilla of «beatrice» (person-colors.js TOKEN), ambra is now
+// the colour of Noi, latte the white. The board is black in both themes, so
+// the night colours; the widget on a light Home gets them deeper.
+function deepen(hex,k=.3){
+  const m=/^#?([0-9a-f]{6})$/i.exec(String(hex||'').trim());
+  if(!m)return hex;
+  const n=parseInt(m[1],16),ink=[26,16,32];
+  return '#'+[(n>>16)&255,(n>>8)&255,n&255].map((c,i)=>Math.round(c*(1-k)+ink[i]*k).toString(16).padStart(2,'0')).join('');
+}
+function couplePalette(tokens={}){
+  const pick=(v,d)=>/^#[0-9a-f]{6}$/i.test(String(v||'').trim())?String(v).trim():d;
+  return Object.freeze({rosa:pick(tokens.rosa,COLORS.rosa),lilla:pick(tokens.lilla,COLORS.lilla),ambra:pick(tokens.noi,'#e17dd5'),latte:COLORS.latte});
+}
+function pastelOf(palette){return Object.freeze({rosa:deepen(palette.rosa),lilla:deepen(palette.lilla),ambra:deepen(palette.ambra),latte:PASTEL.latte});}
+// The four pens in their order: yours, your person's, Noi, white.
+const pensFor=role=>role==='beatrice'?['lilla','rosa','ambra','latte']:['rosa','lilla','ambra','latte'];
 const PEN=Object.freeze({1:7,2:16}),ERASER=Object.freeze({1:40,2:90});
 const LIMITS=Object.freeze({points:600,strokes:1500});
 const PUSH_GAP_MS=2*60*60*1000,PUSH_IDLE_MS=8000;
@@ -112,6 +130,17 @@ function applyBoard(strokes,row,state){
   return {strokes:next,reload:!removed&&!cleared,revision,clearedAt:cleared||state?.clearedAt||''};
 }
 const pushDue=(lastAt,now=Date.now())=>!lastAt||now-lastAt>=PUSH_GAP_MS;
+// A failed insert: the board is full, the row is already there (a resend
+// after a lost answer: the id is ours), the server said no for good, or the
+// network (and anything else) failed and the stroke waits to be sent again.
+function saveOutcome(error){
+  if(!error)return 'ok';
+  const code=String(error.code||''),text=String(error.message||'');
+  if(/lavagna_full/.test(text))return 'full';
+  if(code==='23505'||/duplicate key/i.test(text))return 'duplicate';
+  if(/^(22|23|42|P0)/.test(code))return 'drop';
+  return 'retry';
+}
 
 // A stroke on a 2D canvas: curves through the midpoints, a dot for a tap.
 function trace(ctx,pts,view){
@@ -130,12 +159,14 @@ function paint(ctx,strokes,view){
   ctx.lineCap='round';ctx.lineJoin='round';
   for(const s of strokes){
     ctx.globalCompositeOperation=s.tool==='eraser'?'destination-out':'source-over';
+    // A stroke waiting for the network: lighter until it is saved.
+    ctx.globalAlpha=s.waiting&&s.tool!=='eraser'?.45:1;
     const color=s.tool==='eraser'?'#000':(view.palette[s.color]||view.palette.latte);
     ctx.strokeStyle=color;ctx.fillStyle=color;
     ctx.lineWidth=((s.tool==='eraser'?ERASER:PEN)[s.width]||PEN[1])*view.scale*(view.k||1);
     trace(ctx,s.points,view);
   }
-  ctx.globalCompositeOperation='source-over';
+  ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
 }
 
 function install(w){
@@ -143,13 +174,19 @@ function install(w){
   if(!d?.body)return;
   const api=w.UsLavagna,$=id=>d.getElementById(id);
   const db=()=>typeof sb!=='undefined'?sb:null;
+  // The couple's colours as person-colors.js puts them on <html> (inline,
+  // so the day theme's dustier ones never reach the black board).
+  function palette(){
+    const st=d.documentElement?.style;
+    return couplePalette({rosa:st?.getPropertyValue?.('--us-rosa'),lilla:st?.getPropertyValue?.('--us-lilla'),noi:st?.getPropertyValue?.('--us-noi')});
+  }
   const me=()=>w.usProfile?.id||'';
   const key=()=>w.usProfile?`${w.usProfile.id}:${w.usProfile.couple_id}`:'';
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   // gone: ids taken back here (undo, «Pulisci»), so their late Realtime echo never brings them back.
   let strokes=[],loaded=false,loading=null,owner='',board={revision:0,clearedAt:''},gone=new Set();
-  let tool='pen',color='rosa',width=2,active=null,current=null,frameAsked=false;
-  let saveChain=Promise.resolve(),failed=0,pushTimer=0,pushStroke='',pushedAt=0;
+  let tool='pen',color='rosa',width=2,active=null,current=null,frameAsked=false,penPicked=false;
+  let saveChain=Promise.resolve(),outbox=[],pushTimer=0,pushStroke='',pushedAt=0;
   let widgetTimer=0,widgetSignature='',dpr=1,scale=1;
   const PUSH_KEY=()=>`us:lavagna:v1:push:${me()}`;
   // This person's last push, read when needed (the profile arrives after this script).
@@ -211,41 +248,72 @@ function install(w){
     if(out.strokes.length!==strokes.length){strokes=out.strokes;changed({widget:true});}
   }
   function reset(){
-    strokes=[];loaded=false;owner='';board={revision:0,clearedAt:''};gone=new Set();current=null;active=null;failed=0;
+    strokes=[];loaded=false;owner='';board={revision:0,clearedAt:''};gone=new Set();current=null;active=null;outbox=[];
     clearTimeout(pushTimer);pushStroke='';pushedAt=0;clearTimeout(widgetTimer);widgetSignature='';placed=null;
     if(opened()){root.classList.remove('open');root.setAttribute('aria-hidden','true');}
     paintTile();
   }
 
-  // Saved one after another, in the order they were drawn.
+  // Saved one after another, in the order they were drawn. Without network a
+  // stroke stays on the board, lighter, and waits in the outbox with the ones
+  // after it; they leave in order when the network is back, at the next
+  // stroke or when US comes back to the front. The id is made here, so a
+  // resend never makes a copy.
   function commit(points){
     const flat=pack(points);
     if(!flat)return;
     if(strokes.length>=LIMITS.strokes){say('La lavagna è piena: puliscila per continuare');return;}
     const s={id:w.crypto?.randomUUID?.()||fallbackId(),tool,color:tool==='eraser'?null:color,width,points:flat,author_id:me(),created_at:null,pending:true};
-    strokes.push(s);
+    strokes.push(s);outbox.push(s);
     changed({added:s});
-    saveChain=saveChain.then(()=>save(s));
+    flush();
+  }
+  function flush(){
+    saveChain=saveChain.then(async()=>{
+      while(outbox.length){
+        const s=outbox[0];
+        // Undone before it left: it never reaches the server.
+        if(!strokes.includes(s)){outbox.shift();continue;}
+        if(await save(s)==='retry')return;
+        outbox.shift();
+      }
+    });
+    return saveChain;
   }
   async function save(s){
     const client=db();
-    // Undone before it left: it never reaches the server.
-    if(!client||!strokes.includes(s))return;
+    if(!client)return 'retry';
     const {data,error}=await client.from('lavagna_strokes').insert({id:s.id,couple_id:w.usProfile.couple_id,tool:s.tool,color:s.color,width:s.width,points:s.points}).select(COLS).single();
-    if(error||!data){
+    let row=data,outcome=error||!data?saveOutcome(error||{}):'ok';
+    if(outcome==='duplicate'){
+      // Already saved (the answer was lost): take the server's row.
+      const again=await client.from('lavagna_strokes').select(COLS).eq('id',s.id).maybeSingle();
+      row=again?.data||null;
+    }
+    if(outcome==='retry'){
+      console.warn('[US Lavagna] save, waiting',error);
+      if(!s.waiting){s.waiting=true;if(strokes.includes(s))changed({});}
+      say('Senza rete: il tratto resta qui e parte appena torna la connessione.');
+      return 'retry';
+    }
+    if(outcome==='full'||outcome==='drop'){
       console.warn('[US Lavagna] save',error);
       const was=strokes.includes(s);
-      strokes=strokes.filter(x=>x!==s);failed++;
-      say(/lavagna_full/.test(error?.message||'')?'La lavagna è piena: puliscila per continuare':'Tratto non salvato. Riprova tra poco.');
+      strokes=strokes.filter(x=>x!==s);
+      say(outcome==='full'?'La lavagna è piena: puliscila per continuare':'Tratto non salvato. Riprova tra poco.');
       if(was)changed({});
-      return;
+      return outcome;
     }
     s.saved=true;
+    const wasWaiting=s.waiting;delete s.waiting;
     const at=strokes.indexOf(s);
-    if(at<0)return;
-    strokes[at]=data;
-    changed({widget:true,quiet:true});
-    pushLater(data.id);
+    if(at<0)return 'ok';
+    // A duplicate whose row could not be read: it stays, the next load brings it.
+    if(!row){if(wasWaiting)changed({});return 'ok';}
+    strokes[at]=row;
+    changed(wasWaiting?{widget:true}:{widget:true,quiet:true});
+    pushLater(row.id);
+    return 'ok';
   }
   function fallbackId(){
     const b=new Uint8Array(16);(w.crypto||globalThis.crypto).getRandomValues(b);b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;
@@ -274,10 +342,13 @@ function install(w){
     const client=db();
     if(!client)return;
     const before=strokes;
-    strokes=strokes.filter(s=>s.pending);before.forEach(s=>{if(!s.pending)gone.add(s.id);});
+    const queued=outbox;
+    // What waits for the network was drawn before the cleaning: it goes too.
+    strokes=strokes.filter(s=>s.pending&&!s.waiting);before.forEach(s=>{if(!s.pending)gone.add(s.id);});
+    outbox=outbox.filter(s=>strokes.includes(s));
     changed({widget:true});
     const {error}=await client.rpc('lavagna_clear');
-    if(error){console.warn('[US Lavagna] clear',error);strokes=before;before.forEach(s=>gone.delete(s.id));changed({widget:true});say('Non riesco a pulire la lavagna adesso.');}
+    if(error){outbox=queued;console.warn('[US Lavagna] clear',error);strokes=before;before.forEach(s=>gone.delete(s.id));changed({widget:true});say('Non riesco a pulire la lavagna adesso.');}
   }
 
   // «X ha disegnato sulla lavagna»: once the drawing pauses (or US closes),
@@ -300,11 +371,11 @@ function install(w){
   const root=d.createElement('div');
   root.id='usLavagna';root.className='us-lav-overlay';
   root.setAttribute('aria-hidden','true');root.setAttribute('data-us-modal','');root.setAttribute('data-us-motion-surface','');
-  const swatch=c=>`<button type="button" class="us-lav-swatch" data-lav-color="${c}" aria-label="${COLOR_NAMES[c]}" aria-pressed="false"><span style="--c:${COLORS[c]}"></span></button>`;
+  const swatch=(c,i)=>`<button type="button" class="us-lav-swatch" data-lav-color="${c}" data-lav-pen="${i}" aria-label="${COLOR_NAMES[c]}" aria-pressed="false"><span style="--c:${COLORS[c]}"></span></button>`;
   root.innerHTML=`<section class="us-lav-sheet" role="dialog" aria-modal="true" aria-labelledby="usLavagnaTitle" data-us-modal-panel>
     <header class="us-lav-head">
       <button type="button" class="us-lav-back" data-lav-close aria-label="Torna a Noi"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
-      <div class="us-lav-titles"><h2 id="usLavagnaTitle">Lavagna</h2><small class="us-lav-last" id="usLavagnaLast" aria-live="polite"></small></div>
+      <div class="us-lav-titles"><h2 id="usLavagnaTitle">La lavagna</h2><small class="us-lav-last" id="usLavagnaLast" aria-live="polite"></small></div>
       <button type="button" class="us-lav-clear" data-lav-clear>Pulisci</button>
     </header>
     <div class="us-lav-stage" id="usLavagnaStage">
@@ -312,10 +383,12 @@ function install(w){
         <canvas class="us-lav-canvas" id="usLavagnaCanvas" role="img" aria-label="La vostra lavagna"></canvas>
         <p class="us-lav-hint" id="usLavagnaHint" hidden><b>La lavagna è vuota</b><span>Disegnate qualcosa: lo vedete tutti e due</span></p>
         <span class="us-lav-who" id="usLavagnaWho" aria-hidden="true"></span>
+        <ul class="us-postits is-board is-big" id="usLavagnaNotes" aria-label="Post-it"></ul>
+        <button type="button" class="us-lav-postit" data-lav-postit><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Post-it</span></button>
       </div>
     </div>
     <div class="us-lav-tools" role="toolbar" aria-label="Strumenti della lavagna">
-      ${Object.keys(COLORS).map(swatch).join('')}
+      ${pensFor('').map(swatch).join('')}
       <span class="us-lav-sep" aria-hidden="true"></span>
       <button type="button" class="us-lav-size" data-lav-width="1" aria-label="Tratto sottile" aria-pressed="false"><span></span></button>
       <button type="button" class="us-lav-size is-thick" data-lav-width="2" aria-label="Tratto spesso" aria-pressed="false"><span></span></button>
@@ -331,7 +404,19 @@ function install(w){
   const opened=()=>root.classList.contains('open');
 
   function say(text){const el=$('usLavagnaStatus');if(el)el.textContent=text||'';if(text)setTimeout(()=>{if(el?.textContent===text)el.textContent='';},4000);}
+  // The pens: yours first, then your person's, Noi, white (D12).
+  function paintPens(){
+    const pens=pensFor(w.usProfile?.role),pal=palette();
+    let partner='La tua persona';try{partner=w.usIdentity?.()?.partnerName||partner;}catch(_){}
+    const names={[pens[0]]:'Il tuo colore',[pens[1]]:`Il colore di ${partner}`,ambra:'Il colore di Noi',latte:'Bianco'};
+    root.querySelectorAll('[data-lav-pen]').forEach(b=>{
+      const c=pens[Number(b.dataset.lavPen)]||'latte';
+      b.dataset.lavColor=c;b.setAttribute('aria-label',names[c]);
+      b.querySelector('span')?.style.setProperty('--c',pal[c]);
+    });
+  }
   function paintTools(){
+    paintPens();
     root.querySelectorAll('[data-lav-color]').forEach(b=>b.setAttribute('aria-pressed',String(tool==='pen'&&b.dataset.lavColor===color)));
     root.querySelectorAll('[data-lav-width]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.lavWidth)===width)));
     root.querySelector('[data-lav-eraser]')?.setAttribute('aria-pressed',String(tool==='eraser'));
@@ -360,7 +445,7 @@ function install(w){
   function repaintLayer(){
     if(!layerCtx)return;
     layerCtx.setTransform(1,0,0,1,0,0);layerCtx.clearRect(0,0,layer.width,layer.height);
-    paint(layerCtx,strokes,{x:0,y:0,scale:scale*dpr,palette:COLORS});
+    paint(layerCtx,strokes,{x:0,y:0,scale:scale*dpr,palette:palette()});
     draw();
   }
   function draw(){
@@ -368,13 +453,13 @@ function install(w){
     if(!ctx)return;
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.drawImage(layer,0,0);
-    if(current&&current.raw.length)paint(ctx,[{tool:current.tool,color:current.color,width:current.width,points:current.raw}],{x:0,y:0,scale:scale*dpr,palette:COLORS});
+    if(current&&current.raw.length)paint(ctx,[{tool:current.tool,color:current.color,width:current.width,points:current.raw}],{x:0,y:0,scale:scale*dpr,palette:palette()});
   }
   const askFrame=()=>{if(!frameAsked){frameAsked=true;(w.requestAnimationFrame||setTimeout)(draw);}};
   function changed({widget=false,added=null,quiet=false}={}){
     if(opened()){
       // A new stroke on top is painted on the layer; anything else repaints it.
-      if(added&&added===strokes[strokes.length-1]&&layerCtx){paint(layerCtx,[added],{x:0,y:0,scale:scale*dpr,palette:COLORS});draw();}
+      if(added&&added===strokes[strokes.length-1]&&layerCtx){paint(layerCtx,[added],{x:0,y:0,scale:scale*dpr,palette:palette()});draw();}
       else if(!quiet)repaintLayer();
       paintHead();paintTools();
     }
@@ -417,10 +502,12 @@ function install(w){
   root.addEventListener('click',e=>{
     const t=e.target;
     if(t.closest('[data-lav-close]'))return close();
+    // Noi, Fase B: the post-its are on the board (couple-notes.js).
+    if(t.closest('[data-lav-postit]'))return w.UsCoupleNotes?.write?.();
     if(t.closest('[data-lav-clear]'))return clearAll();
     if(t.closest('[data-lav-undo]'))return undo();
     const c=t.closest('[data-lav-color]');
-    if(c){tool='pen';color=c.dataset.lavColor;paintTools();return;}
+    if(c){tool='pen';color=c.dataset.lavColor;penPicked=true;paintTools();return;}
     const s=t.closest('[data-lav-width]');
     if(s){width=Number(s.dataset.lavWidth)===1?1:2;paintTools();return;}
     if(t.closest('[data-lav-eraser]')){tool=tool==='eraser'?'pen':'eraser';paintTools();}
@@ -434,7 +521,10 @@ function install(w){
     if(owner&&owner!==key())reset();
     w.UsUiFoundation?.cancelSurfaceExit?.(root);
     root.classList.add('open');root.setAttribute('aria-hidden','false');
+    // Your pen first, the first time.
+    if(!penPicked)color=pensFor(w.usProfile?.role)[0];
     layout();paintHead();paintTools();
+    w.UsCoupleNotes?.showBoard?.();
     load().then(()=>{if(opened())repaintLayer();});
   }
   function close(){
@@ -453,9 +543,7 @@ function install(w){
     slot.dataset.lavMounted='1';
     slot.innerHTML=`<button type="button" class="us-lav-tile" data-lav-open aria-label="Apri la lavagna">
       <canvas class="us-lav-tile-canvas" aria-hidden="true"></canvas>
-      <span class="us-lav-tile-label"><b>Lavagna</b><span class="us-lav-tile-by"></span></span>
-      <span class="us-lav-tile-empty" hidden>Disegnate qualcosa: lo vedete tutti e due</span>
-      <span class="us-lav-tile-go"><span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span><span>Disegna</span></span>
+      <span class="us-lav-tile-empty" hidden><span class="us-lav-tile-duo" aria-hidden="true"></span><span>Disegnate qualcosa o lasciate un post-it</span></span>
     </button>`;
     tileCanvas=slot.querySelector('canvas');
     slot.addEventListener('click',e=>{if(e.target.closest('[data-lav-open]'))open();});
@@ -472,14 +560,18 @@ function install(w){
     if(!tileCanvas)return;
     const last=lastLine(),by=slot.querySelector('.us-lav-tile-by');
     if(by)by.innerHTML=last?`<span translate="no">${esc(last.who)}</span><span>${esc(last.when)}</span>`:'';
-    slot.querySelector('.us-lav-tile-empty').hidden=!loaded||strokes.length>0;
+    const empty=slot.querySelector('.us-lav-tile-empty');
+    empty.hidden=!loaded||strokes.length>0;
+    // D5: empty, the two characters invite you to draw.
+    const duo=empty.querySelector('.us-lav-tile-duo');
+    if(!empty.hidden&&duo&&!duo.firstChild&&w.UsPersonaggi?.character){try{duo.innerHTML=['francesco','beatrice'].map(role=>w.UsPersonaggi.character(role,{size:52})).join('');}catch(_){}}
     const r=tileCanvas.getBoundingClientRect();
     if(!r.width||!r.height||!tileSeen)return;
     const ratio=Math.min(3,w.devicePixelRatio||1);
     tileCanvas.width=Math.round(r.width*ratio);tileCanvas.height=Math.round(r.height*ratio);
     const c=tileCanvas.getContext?.('2d');
     if(!c)return;
-    renderInto(c,tileCanvas.width,tileCanvas.height,strokes,COLORS,1);
+    renderInto(c,tileCanvas.width,tileCanvas.height,strokes,palette(),1);
   }
   // The drawing framed for a small surface (the tile, the widget).
   function renderInto(c,cw,ch,list,palette,k){
@@ -513,7 +605,7 @@ function install(w){
     const state=saved.length?'ready':'empty';
     let light='',dark='';
     if(saved.length){
-      try{[light,dark]=await Promise.all([picture(saved,PASTEL),picture(saved,COLORS)]);}
+      try{const pal=palette();[light,dark]=await Promise.all([picture(saved,pastelOf(pal)),picture(saved,pal)]);}
       catch(error){console.warn('[US Lavagna] widget',error);return false;}
     }
     const ok=await widgets.syncLavagna({state,by:!last?.author_id?'':last.author_id===me()?'me':'partner',at:last?.created_at||'',light,dark});
@@ -540,7 +632,7 @@ function install(w){
       const c=d.createElement('canvas');c.width=240;c.height=192;
       const g=c.getContext('2d');
       if(!g)return '';
-      renderInto(g,c.width,c.height,saved,COLORS,1.6);
+      renderInto(g,c.width,c.height,saved,palette(),1.6);
       return c.toDataURL('image/png');
     }catch(_){return '';}
   }
@@ -549,8 +641,11 @@ function install(w){
   d.addEventListener('visibilitychange',()=>{
     if(d.hidden){if(pushStroke)sendPush();return;}
     placed=null;
-    if(loaded&&key()===owner)load({force:true});
+    if(outbox.length)flush();
+    if(loaded&&key()===owner&&!w.UsForeground?.shortAway?.())load({force:true});
   });
+  // The network is back: the strokes that waited leave, in order.
+  w.addEventListener('online',()=>{if(outbox.length)flush();});
   // A widget placed on the Home: bring it the drawing, once the app is ready.
   w.addEventListener('us-auth-resolved',e=>{
     if(!e?.detail?.paired)return;
@@ -562,5 +657,5 @@ function install(w){
   // mount: for a Noi that draws #usNoiLavagnaSlot after this script ran.
   api.open=open;api.close=close;api.reset=reset;api.onStroke=onStroke;api.onBoard=onBoard;api.syncWidget=syncWidget;api.load=load;api.mount=paintTile;api.preview=preview;
 }
-return {BOARD,COLORS,PASTEL,LIMITS,pack,unpack,simplify,contentBox,frame,ago,newest,applyBoard,pushDue,paint,install};
+return {BOARD,COLORS,PASTEL,LIMITS,deepen,couplePalette,pastelOf,pensFor,pack,unpack,simplify,contentBox,frame,ago,newest,applyBoard,pushDue,saveOutcome,paint,install};
 });

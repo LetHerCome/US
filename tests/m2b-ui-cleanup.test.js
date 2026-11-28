@@ -82,17 +82,17 @@ function settingsModalHarness() {
   return { context, document, elements, events };
 }
 
-test('Stories usa CSS statico senza reiniezione runtime', () => {
-  const stories = read('stories.js');
-  const css = read('stories.css');
+test('Stories sono ritirate: niente runtime, foglio, precache né copia nelle build', () => {
+  for (const file of ['stories.js', 'stories.css']) assert.equal(fs.existsSync(path.join(ROOT, file)), false, `${file} is gone`);
   const html = read('index.html');
-
-  assert.match(stories, /window\.__usStoriesV19Installed/);
-  assert.doesNotMatch(stories, /function addStyles|createElement\(['"]style['"]\)|usStoriesV19Styles/);
-  assert.match(css, /\.us-top-story-ring/);
-  assert.match(css, /\.us-story-viewer\.open/);
-  assert.match(css, /\.us-camera-viewer/);
-  assert.match(html, /<link rel="stylesheet" href="\/stories\.css(?:\?v=[^"]+)?"\/>/);
+  assert.doesNotMatch(html, /\/stories\.(?:js|css)/);
+  assert.doesNotMatch(read('service-worker.js'), /stories\.(?:js|css)|us-icon-stories-128/);
+  for (const script of ['scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) {
+    assert.doesNotMatch(read(script), /'stories\.(?:js|css)'/, `${script} does not copy Stories`);
+  }
+  // The archive of the Stories already shared stays in Settings (settings.js), web only.
+  assert.match(html, /data-us-setting="story-archive"/);
+  assert.match(read('settings.js'), /function showStoryArchive|showStoryArchive=/);
 });
 
 test('Motion 3 legacy e Motion Pass inutilizzato non restano nel runtime', () => {
@@ -152,7 +152,7 @@ test('le conferme Settings mantengono il focus e non anticipano il logout', asyn
   assert.deepEqual(events, ['revoke', 'signOut', 'reload']);
 });
 
-test('shell, build e asset Stories restano coerenti per upgrade e offline', () => {
+test('shell e build restano coerenti per upgrade e offline', () => {
   const worker = read('service-worker.js');
   const html = read('index.html');
   const version = JSON.parse(read('version.json')).version;
@@ -163,7 +163,7 @@ test('shell, build e asset Stories restano coerenti per upgrade e offline', () =
   assert.ok(worker.includes(`const BUILD_ID = "${build}";`));
   assert.ok(worker.includes('const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;'));
   assert.ok(html.includes(`/settings.js?v=${build}`));
-  assert.match(worker, /versioned\("\/stories\.css"\)/);
+  assert.doesNotMatch(worker, /versioned\("\/stories\.css"\)/);
   assert.doesNotMatch(worker, /"\/motion3\.css"/);
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);
 });

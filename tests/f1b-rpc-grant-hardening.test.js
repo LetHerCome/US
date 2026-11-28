@@ -109,7 +109,9 @@ const byName = new Map(MATRIX.map((row) => [row.name, row]));
 // V6 removes the unused frontend actions, not their historical server ACLs.
 // 1.0 O2 brings the one-tap reaction back, so set_daily_answer_reaction is
 // called again by the client (it never lost its authenticated grant).
-const RETIRED_DAILY_UI = new Set(['save_daily_question_outcome', 'delete_daily_question_outcome']);
+// Redesign D9 (24/11/2026): the «Risposte pronte» card and its swipe left Oggi;
+// the server keeps dismiss_daily_reveal_notice (and its grant) for the apps already out.
+const RETIRED_DAILY_UI = new Set(['save_daily_question_outcome', 'delete_daily_question_outcome', 'dismiss_daily_reveal_notice']);
 // La sfida della settimana (03/11/2026) replaces the weekly missions: the app
 // no longer calls them, the server keeps them (and their grants) for old apps.
 const RETIRED_MISSIONS_UI = new Set(['confirm_bond_quest', 'reroll_bond_quest', 'ensure_bond_week']);

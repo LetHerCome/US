@@ -35,7 +35,8 @@ test('Swipe V1 client: Gioca exposes a dedicated sealed 8-card swipe flow', () =
   assert.match(css, /data-gv2-icon="cards-three"[^\n]*cards-three-regular\.svg/);
   assert.match(css, /\.us-gv2-swipe-card/);
   assert.match(css, /touch-action:pan-y/);
-  assert.match(css, /\.us-gv2-swipe-reveal-card/);
+  // The reveal is renderCompactReveal's (data-gv5-group); the old swipe cards' styles are gone.
+  assert.doesNotMatch(css, /\.us-gv2-swipe-reveal-card/);
   assert.match(css, /prefers-reduced-motion/);
 });
 

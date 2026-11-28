@@ -38,20 +38,28 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
         String partner = UsWidgetContract.optObject(state.snapshot, "think").optString("partnerName", "").trim();
         state.needsUpdateAt(couple.batteryNextChange);
         state.needsUpdateAt(couple.distanceNextChange);
-        RemoteViews row = fill(context, state, couple, partner, R.layout.us_widget_noi, R.drawable.us_widget_art_noi_m, options, 34, 24f, 150);
-        RemoteViews small = fill(context, state, couple, partner, R.layout.us_widget_noi_small, R.drawable.us_widget_art_noi_s, options, 22, 34f, 150);
-        RemoteViews medium = fill(context, state, couple, partner, R.layout.us_widget_noi_medium, R.drawable.us_widget_art_noi_m, options, 46, 40f, 230);
+        RemoteViews row = fill(context, state, couple, partner, R.layout.us_widget_noi, 26f, 150);
+        RemoteViews small = fill(context, state, couple, partner, R.layout.us_widget_noi_small, 40f, 140);
+        RemoteViews medium = fill(context, state, couple, partner, R.layout.us_widget_noi_medium, 36f, 170);
         // 2x1: the battery, or how old the distance is when the battery is unknown.
-        if (!couple.batteryShown()) row.setTextViewText(R.id.us_noi_battery, couple.distanceAgo);
-        // 2x2 and 4x2: her name, her battery beside it, the age under the distance.
+        if (!couple.batteryShown()) {
+            row.setViewVisibility(R.id.us_noi_battery, View.VISIBLE);
+            row.setTextViewText(R.id.us_noi_battery, couple.distanceAgo);
+        }
+        // 2x2 and 4x2: their character, their name, their battery beside it (widget del redesign, 26/11/2026).
+        UsWidgetCharacter.Person me = UsWidgetCharacter.person(state.snapshot, true);
+        UsWidgetCharacter.Person them = UsWidgetCharacter.person(state.snapshot, false);
+        String theirFace = UsWidgetCharacter.face(state, false);
+        UsWidgetCharacter.put(small, context, R.id.us_noi_partner, them, theirFace, "", 30);
+        UsWidgetCharacter.put(medium, context, R.id.us_noi_partner, them, theirFace, "", 50);
+        UsWidgetCharacter.put(medium, context, R.id.us_noi_me, me, UsWidgetCharacter.face(state, true), "", 52);
+        for (RemoteViews views : new RemoteViews[] { small, medium }) UsWidgets.themedColor(views, context, R.id.us_noi_label, "setTextColor", 0xFFB8452F, me.night);
         small.setViewVisibility(R.id.us_noi_battery_row, couple.batteryShown() ? View.VISIBLE : View.GONE);
         small.setTextViewText(R.id.us_noi_partner_name, partner.isEmpty() ? "La tua persona" : partner);
-        small.setTextViewText(R.id.us_noi_caption, couple.distanceAgo);
-        small.setViewVisibility(R.id.us_noi_caption, couple.distanceAgo.isEmpty() ? View.GONE : View.VISIBLE);
         medium.setTextViewText(R.id.us_noi_partner_name, partner.isEmpty() ? "La tua persona" : partner);
         medium.setTextViewText(R.id.us_noi_caption, couple.distanceAgo);
         medium.setViewVisibility(R.id.us_noi_caption, couple.distanceAgo.isEmpty() ? View.GONE : View.VISIBLE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (!UsWidgets.gallery && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Map<SizeF, RemoteViews> sizes = new ArrayMap<>();
             sizes.put(new SizeF(110f, 40f), row);
             sizes.put(new SizeF(110f, 110f), small);
@@ -65,12 +73,11 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
     }
 
     private static RemoteViews fill(Context context, UsWidgets.State state, UsWidgetModels.Couple couple, String partner, int layout,
-                                    int art, Bundle options, int portraitDp, float distanceSp, int distanceWidthDp) {
+                                    float distanceSp, int distanceWidthDp) {
         RemoteViews views = new RemoteViews(context.getPackageName(), layout);
         views.setOnClickPendingIntent(R.id.us_noi_root, UsWidgets.open(context, "noi", 4401));
-        UsWidgetArt.art(views, context, R.id.us_noi_art, R.id.us_noi_grain, art, options, art == R.drawable.us_widget_art_noi_m);
-        UsWidgetArt.avatar(views, context, state.store.readNoiPortrait("partner"), R.id.us_noi_partner, R.id.us_noi_partner_initial, partner, portraitDp);
-        UsWidgetArt.serif(views, context, R.id.us_noi_distance, distance(context, couple), distanceSp, distanceWidthDp, 2, false, Layout.Alignment.ALIGN_CENTER);
+        UsWidgetArt.serif(views, context, R.id.us_noi_distance, distance(context, couple), distanceSp, distanceWidthDp, 2, false,
+            layout == R.layout.us_widget_noi_medium ? Layout.Alignment.ALIGN_CENTER : Layout.Alignment.ALIGN_NORMAL);
         renderBattery(context, views, couple);
         views.setContentDescription(R.id.us_noi_root, description(couple, partner));
         return views;
@@ -99,8 +106,8 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
         views.setViewVisibility(R.id.us_noi_battery_icon, visibility);
         views.setViewVisibility(R.id.us_noi_battery, visibility);
         if (!couple.batteryShown()) return;
-        int color = couple.batteryOld ? 0x995B4A63 : couple.batteryLow() ? 0xFFE5484D : 0xFF5B4A63;
-        int dark = couple.batteryOld ? 0x66F7EFE9 : couple.batteryLow() ? 0xFFFF8B7B : 0xB8F7EFE9;
+        int color = couple.batteryOld ? 0x996B5F5A : couple.batteryLow() ? 0xFFB3261E : 0xFF231B1D;
+        int dark = couple.batteryOld ? 0x66F7EFE9 : couple.batteryLow() ? 0xFFFF8B7B : 0xFFF7EFE9;
         int glyph;
         switch (couple.batteryGlyph()) {
             case "charging": glyph = R.drawable.us_widget_battery_charging; break;

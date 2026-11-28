@@ -94,6 +94,21 @@ final class UsWidgetStore {
         return true;
     }
 
+    /**
+     * Widget signal (27/11/2026): the other person's new look, written into
+     * this account's snapshot. No snapshot yet (US never opened): nothing.
+     */
+    synchronized boolean writePartnerLook(JSONObject look) {
+        JSONObject next = UsWidgetContract.withPartnerLook(read(), look);
+        return next != null && write(next);
+    }
+
+    /** Come stai che conta (D13): the other person's Come stai from a widget signal. */
+    synchronized boolean writePartnerStatus(JSONObject status) {
+        JSONObject next = UsWidgetContract.withPartnerStatus(read(), status);
+        return next != null && write(next);
+    }
+
     synchronized JSONObject read() {
         String json = readAtomic(snapshotFile);
         if (json.isEmpty()) return null;
@@ -120,14 +135,21 @@ final class UsWidgetStore {
         }
     }
 
-    /** Records the action status; keeps the pending action id for idempotent retries. */
+    /** Records the action status; keeps the pending action id, its reply and its taps for idempotent retries. */
     synchronized boolean writeAction(String status, String actionId) {
         JSONObject previous = readAction();
-        return writeAction(status, actionId, previous != null && previous.optBoolean("reply", false));
+        boolean same = previous != null && actionId != null && actionId.equals(previous.optString("actionId", ""));
+        return writeAction(status, actionId, previous != null && previous.optBoolean("reply", false),
+            same ? UsWidgetModels.taps(previous, "taps") : 1);
     }
 
     /** reply: the tap answered the partner's thought ("Ricambiato", not "Inviato"). */
     synchronized boolean writeAction(String status, String actionId, boolean reply) {
+        return writeAction(status, actionId, reply, 1);
+    }
+
+    /** taps (Ti penso ×N, 27/11/2026): how many taps this burst carries, 1..99. */
+    synchronized boolean writeAction(String status, String actionId, boolean reply, int taps) {
         String owner = owner();
         if (owner.isEmpty()) return false;
         JSONObject previous = readAction();
@@ -139,7 +161,8 @@ final class UsWidgetStore {
                 .put("at", now)
                 .put("actionId", actionId == null ? "" : actionId)
                 .put("sentAt", status.equals("sent") ? now : previous == null ? "" : previous.optString("sentAt", ""))
-                .put("reply", reply);
+                .put("reply", reply)
+                .put("taps", Math.max(1, Math.min(UsWidgetModels.MAX_TAPS, taps)));
             return writeAtomic(actionFile, next.toString());
         } catch (Exception ignored) {
             return false;

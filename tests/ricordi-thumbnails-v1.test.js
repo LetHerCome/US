@@ -16,10 +16,34 @@ const deleteMoment = read('supabase/functions/delete-moment/index.ts');
 
 test('Ricordi thumbnails keep the original and add one optional derivative path', () => {
   assert.match(migration, /add column if not exists thumbnail_path text/);
-  assert.match(app, /compressImageFile\(file,\{maxDimension:1920,quality:\.82\}\)/);
-  assert.match(app, /compressImageFile\(file,\{maxDimension:720,quality:\.72\}\)/);
+  // 27/11/2026: the Ricordo and its thumbnail come from one decode of the photo.
+  assert.match(app, /const \[compressed,thumbnail\]=await compressImageVariants\(file,\[\{maxDimension:1920,quality:\.82\},\{maxDimension:720,quality:\.72\}\]\);/);
   assert.match(app, /storage_path:path,\s*thumbnail_path:uploadedThumbnail\?thumbnailPath:null/);
   assert.match(app, /derived-thumbnails/);
+});
+
+test('a new Ricordo decodes its photo once for the full picture and the thumbnail', async () => {
+  const vm = require('node:vm');
+  const source = app.slice(app.indexOf('async function compressImageFile('), app.indexOf('let usRicordiThumbnailBackfillBusy'));
+  let decodes = 0, closed = 0;
+  const drawn = [];
+  const context = vm.createContext({
+    window: { createImageBitmap: true },
+    createImageBitmap: async () => { decodes++; return { width: 4000, height: 3000, close() { closed++; } }; },
+    document: { createElement: () => { const c = { width: 0, height: 0, getContext: () => ({ drawImage: (_s, _x, _y, w, h) => drawn.push([w, h]) }), toBlob: (cb, type, q) => cb({ type, q }) }; return c; } },
+    File: class { constructor(parts, name, opts) { this.parts = parts; this.name = name; this.type = opts.type; } },
+    URL, Promise, Math, Date, Error,
+  });
+  vm.runInContext(source, context);
+  const file = { size: 3_000_000, name: 'foto.jpg' };
+  const [full, thumb] = await context.compressImageVariants(file, [{ maxDimension: 1920, quality: 0.82 }, { maxDimension: 720, quality: 0.72 }]);
+  assert.equal(decodes, 1, 'one decode');
+  assert.equal(closed, 1, 'the bitmap is released once both are made');
+  assert.deepEqual(drawn, [[1920, 1440], [720, 540]]);
+  assert.deepEqual([full.name, full.parts[0].q, thumb.parts[0].q], ['foto.webp', 0.82, 0.72]);
+  const one = await context.compressImageFile(file, { maxDimension: 512, quality: 0.82 });
+  assert.equal(one.name, 'foto.webp');
+  assert.equal(decodes, 2);
 });
 
 test('same-couple thumbnail RPC is narrow and caller-owned', () => {
@@ -41,7 +65,7 @@ test('Ricordi cards download thumbnail previews but retain full originals for vi
   assert.match(app, /const previewUrl=ricordiPreviewUrl\(row,signedUrls\)/);
   assert.match(app, /data-url="\$\{escapeHtml\(fullUrl\)\}"/);
   assert.match(app, /src="\$\{escapeHtml\(previewUrl\)\}"/);
-  assert.match(app, /select\('id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at'\)/);
+  assert.match(app, /const US_MOMENT_COLUMNS='id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at';/);
   assert.match(app, /flatMap\(row=>\[row\.storage_path,row\.thumbnail_path\]\)/);
 });
 

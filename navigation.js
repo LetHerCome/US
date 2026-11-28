@@ -64,6 +64,13 @@ const layers=[
     close:()=>window.USNoiV2?.closeWeek?.()
   },
   {
+    // Il giorno (25/11/2026): the day tapped in Noi, over the calendar.
+    name:'noi-day',
+    find:()=>document.getElementById('usNoiDay'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.USNoiV2?.closeDay?.()
+  },
+  {
     // M9D — a Noi section open in place (Missioni, Eventi): its bar is shown.
     // Low in the list: an Eventi editor or an idea opened from it sits above.
     name:'noi-section',
@@ -77,6 +84,20 @@ const layers=[
     find:()=>document.getElementById('usStatusSheet'),
     open:el=>el?.classList.contains('open'),
     close:()=>window.UsMemberStatus?.close?.()
+  },
+  {
+    // Come stai che conta (27/11/2026): back closes the other person's sheet.
+    name:'statusPerson',
+    find:()=>document.getElementById('usStatusPerson'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsMemberStatus?.closePerson?.()
+  },
+  {
+    // Il vostro angolo (redesign definitivo, D3): back closes the sheet.
+    name:'angolo',
+    find:()=>document.getElementById('usAngolo'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsAngolo?.close?.()
   },
   {
     name:'distance',
@@ -97,6 +118,40 @@ const layers=[
     find:()=>document.getElementById('usNotesSheet'),
     open:el=>el?.classList.contains('open'),
     close:()=>window.UsCoupleNotes?.back?.()
+  },
+  {
+    // Noi, Fase B: the post-it in front (over Noi or the lavagna) is above both: listed after them.
+    name:'postit',
+    find:()=>document.getElementById('usPostitFocus'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsCoupleNotes?.back?.()
+  },
+  {
+    // La bacheca, fase 3 (27/11/2026): «fai spazio» asks what to take down; back cancels it.
+    name:'bacheca-spazio',
+    find:()=>document.getElementById('ricordiBacheca'),
+    open:()=>Boolean(window.UsBacheca?.inRoom?.()),
+    close:()=>window.UsBacheca?.cancelRoom?.()
+  },
+  {
+    // La lente di Ricordi (27/11/2026): back goes from a result to the list, then out.
+    name:'ricordi-cerca',
+    find:()=>document.getElementById('usRicordiCerca'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsRicordiCerca?.back?.()
+  },
+  {
+    // US vi ricorda (25/11/2026): the sheet of the characters' line.
+    name:'bacheca',
+    find:()=>document.getElementById('usBachecaSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsBacheca?.closeSheet?.()
+  },
+  {
+    name:'battuta',
+    find:()=>document.getElementById('usBattuta'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsRicorda?.close?.()
   },
   {
     name:'year-recap',
@@ -256,6 +311,13 @@ const layers=[
     find:()=>document.getElementById('usLookDetail'),
     open:el=>el?.classList.contains('open'),
     close:()=>window.USOggiLook?.back?.()
+  },
+  {
+    // Il vostro mese (27/11/2026): back goes from a card to the fan, the share, the pack, then out.
+    name:'mese',
+    find:()=>document.getElementById('usMese'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsMese?.back?.()
   },
   {
     // Sintonia: the reward window and the level moment sit above everything.

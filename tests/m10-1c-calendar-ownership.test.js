@@ -147,7 +147,7 @@ test('M10.1C: the day already in the form shows title, time and owner of each co
   const out = dayList(load({ entries: [timed(BE.id, 'personal', 9, 'Università', { location: 'Aula 3' }), timed(FR.id, 'personal', 15, 'Lavoro'), timed(FR.id, 'shared', 21, 'Cena')] }));
   for (const needle of ['09:00 → 10:00', 'Università', '15:00 → 16:00', 'Lavoro', '21:00 → 22:00', 'Cena', 'Già quel giorno']) assert.ok(out.includes(needle), needle);
   // Parity: the day title is the mockup's (with the year only outside the current one).
-  assert.match(noi, /<h3>\$\{esc\(dayTitle\(selected\)\)\}<\/h3>/, 'the Noi day detail names the day');
+  assert.match(noi, /<h3 id="usNoiDayTitle">\$\{esc\(dayTitle\(selected\)\)\}<\/h3>/, 'the Noi day detail names the day');
 });
 
 test('M10.1C: empty lanes are never fabricated; an empty day says so once', () => {
@@ -185,10 +185,12 @@ test('M10.1C/US 1.0: quick create collects presets/title, all-day and explicit s
   const form = html.match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)[0];
   const inputs = [...form.matchAll(/<(?:input|textarea|select)[^>]*id="([^"]+)"/g)].map((m) => m[1]);
   // 04/11/2026: «+» opens a field for a quick title of your own, among the presets.
-  assert.deepEqual(inputs, ['usCalendarPresetNewInput', 'usCalendarTitleInput', 'usCalendarDateInput', 'usCalendarAllDayInput', 'usCalendarStartTimeInput', 'usCalendarEndTimeInput'], 'date input is edit-only; timed entries expose a compact range');
+  // Noi, Fase A (24/11/2026): Quando and Inizio, then Ci vediamo and Ogni anno; all day stays hidden.
+  // 28/11/2026: Fine «se vuoi» sits next to Inizio.
+  assert.deepEqual(inputs, ['usCalendarPresetNewInput', 'usCalendarTitleInput', 'usCalendarDateInput', 'usCalendarStartTimeInput', 'usCalendarEndTimeInput', 'usCalendarAllDayInput', 'usCalendarMeetInput', 'usCalendarYearlyInput'], 'date input is edit-only; timed entries expose a compact range');
   assert.doesNotMatch(form, /Durata|duration|Ricordamelo|reminder|<textarea|Nota/i);
   assert.match(calSrc, /setFormKind\(mode === 'edit' \? entry\.entry_type : 'personal'\);/);
-  assert.match(calSrc, /const kind = ideaLink \? 'shared' : calendarKind;/);
+  assert.match(calSrc, /const kind = ideaLink \|\| meet \? 'shared' : calendarKind;/);
   assert.equal(cal.withCreateAuthority({}, 'personal', { id: 'me', couple_id: 'c' }).owner_id, 'me');
   const shared = cal.withCreateAuthority({}, 'shared', { id: 'me', couple_id: 'c' });
   assert.equal(shared.entry_type, 'shared');

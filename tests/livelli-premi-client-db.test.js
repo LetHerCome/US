@@ -30,9 +30,9 @@ test('every countdown style, Oggi theme and Oggi effect with a reward says the l
     ...look.THEMES.map((t) => ['oggi-look.js', t]),
     ...look.EFFECTS.map((e) => ['oggi-look.js', e]),
   ].filter(([, item]) => item.reward);
-  // Today: Aurora, Orbita, Cromo; Cinema, Chiaro di luna, Il vostro cielo, Stagioni;
-  // Petali, Lucciole, Luci sfocate, Neve, Aurora. A new one is checked too.
-  assert.ok(client.length >= 12, `only ${client.length} looks with a reward`);
+  // Premi di Oggi (25–26/11/2026): Post-it, Biglietto, Filo rosso; Ora d'oro,
+  // Stagioni; Soffioni, Neve, Foglie, Stelle cadenti, Lanterne, Ricordi. A new one is checked too.
+  assert.ok(client.length >= 11, `only ${client.length} looks with a reward`);
 
   const db = await database({ seed: false });
   try {
@@ -49,8 +49,10 @@ test('every countdown style, Oggi theme and Oggi effect with a reward says the l
   }
 });
 
-test('Orbita unlocks at 8 and Cromo at 10, as on the server', () => {
+// Temi e countdown (26/11/2026) on the old ids; levels of il grande bilanciamento (28/11/2026): Post-it 5, Biglietto 15, Filo rosso 24.
+test('Post-it unlocks at 5, Biglietto at 15 and Filo rosso at 24, as on the server', () => {
   const level = (id) => Countdown.STYLES.find((s) => s.id === id).level;
-  assert.equal(level('orbit'), 8);
-  assert.equal(level('chrome'), 10);
+  assert.equal(level('aurora'), 5);
+  assert.equal(level('orbit'), 15);
+  assert.equal(level('chrome'), 24);
 });

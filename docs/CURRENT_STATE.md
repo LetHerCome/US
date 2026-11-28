@@ -1,17 +1,32 @@
 # US — Current State
 
 **Status:** OPERATIONAL STATUS AUTHORITY
-**Verified snapshot:** 2026-11-09 (la sezione del 09/11; le sezioni più vecchie restano alle loro date)
-**Verified main SHA:** 0d47c3b2 (PR #247 merged, rilascio 1.4.1)
+**Verified snapshot:** 2026-11-27 (la sezione del 27/11, dal repository; le sezioni più vecchie restano alle loro date)
+**Verified main SHA:** ad778f78 (PR #265, TestFlight); ultimo rilascio del sito: PR #251, 1.5.1
+**Staging SHA:** 8ee95d29 (PR #314) sul ramo `mission/us-store-s3-1-public-auth-staging-20261011`
 
 Stati: PROGETTATO / IN BRANCH / MERGED / SQL o Edge APPLICATO (staging? produzione?) / TESTATO SU DEVICE. Non confonderli. Ogni merge su `main` pubblica il web di produzione (Cloudflare Pages), ma non applica SQL né Edge. Merge, SQL di produzione, deploy Edge e pubblicazione Store richiedono ciascuno un'autorizzazione separata del founder.
+
+## Aggiornamento 27/11 — 1.5.1 in produzione, redesign su staging
+
+- **In produzione** (dettagli e ordine nella [nota della patch](store/PROSSIMA_PATCH_PRODUZIONE.md)):
+  - **1.4.2** (errori dell'app su Supabase con `client_errors_v1`, la domanda di oggi mentre si aspetta il partner) e **1.5** (versione pubblica, tre partite al giorno, «US Plus, in arrivo» con Avvisatemi): uscite insieme il 13/11, PR #248, build `us-rilascio-20261113-108`, AAB 1.5.0 (456011) nel test interno.
+  - **1.5.1** (La cosa di oggi, revisione dei testi, promemoria del calendario, livelli di Orbita e Cromo): 14/11, PR #251, build `us-rilascio-20261114-109`, AAB 1.5.1 (457473) nel test interno. È ancora il sito di produzione.
+- **iPhone:** Apple Developer attivo dal 13/11 (bundle `app.uscouple`); prima build TestFlight il 14/11 (1.5.0, build 457477), poi 457497 col client Google iOS. Su `main` dopo il 14/11 solo lavoro iOS e TestFlight (#249–#265: firma, distribuzione ai tester, lettura dello stato); nessun cambio al sito. L'app iOS parla solo con la produzione.
+- **Su staging, non in produzione** (branch fisso ripartito da `main` il 23/11, #280; il diario pulito #255–#278 è archiviato in `archivio/staging-diario-pulito-20261123`):
+  - redesign definitivo (#280–#290): struttura, colori della coppia, via le mascotte, personaggi e guardaroba, scala dei premi, Oggi senza schede, Gioca coi gettoni, Ricordi a polaroid, intro coi personaggi, stile unico, Giorno e Notte, transizioni (#291–#297);
+  - Noi, il vostro tempo insieme: Fase A, lavagna coi post-it, idee, «L'avete fatto?», avviso del post-it (#298–#300);
+  - l'isola e Il vostro angolo (#301), US vi ricorda (#304), la bacheca tenuta da US (#308), Lasciato per te nuovo (#307), Gioca con la giostra (#309), Premi di Oggi fasi 1–5 (#311, #312), intro col personaggio;
+  - widget del redesign Android (#313) e iPhone con blocca schermo (#314): arrivano solo con un AAB e una build TestFlight nuovi.
+  Le migrazioni dei personaggi, di Noi, di US vi ricorda, della bacheca e dei premi sono applicate su US-STAGING, non in produzione.
+- **In branch `claude/controllo-build-ci` (27/11):** build id automatico in produzione, `assets/source` e asset ritirati fuori da APK e sito, Stories tolte, 94 drawable dei widget tolti, `npm test` completo in CI. Vedi la nota della patch.
+- **Ancora nell'app:** niente pagamenti (RevenueCat), niente richiesta di recensione, nessuna misura d'uso oltre ai conteggi del database.
 
 ## Aggiornamento 09/11 — 1.4.1 in produzione; errori dell'app e domanda in attesa verso staging
 
 - **In produzione dal 06/11 (col via del founder):** la patch 1.4.1 (audit, pulizia, ritocchi). Le tre migrazioni sono applicate e verificate in sola lettura; `www.uscouple.app` serve `us-rilascio-20261106-105` (PR #247); l'AAB 1.4.1 (446281) è nel test interno. Dettagli nella [nota della patch](store/PROSSIMA_PATCH_PRODUZIONE.md).
 - **Uso al 09/11 (solo conteggi):** 8 coppie complete, 2 in attesa del partner (da 14 e 4 giorni); coppie attive 6 (la settimana prima 7); Ti penso 16 (32); risposte alla domanda del giorno 26 (29); 5 persone su 14 ancora attive dopo 7 giorni di coppia. Si rifà con `docs/store/US_NUMERI_DELLA_SETTIMANA.sql`.
-- **In branch (`claude/misure-e-attesa`), patch 1.4.2:** errori JavaScript dell'app salvati su Supabase senza servizi esterni (migrazione `client_errors_v1`), la domanda di oggi nella schermata d'attesa del partner con il gancio nell'invito, informativa IT/EN aggiornata. Prima su staging.
-- **Ancora nell'app:** niente pagamenti (RevenueCat), niente richiesta di recensione, nessuna misura d'uso oltre ai conteggi del database.
+- **Patch 1.4.2** (allora in branch `claude/misure-e-attesa`, poi su staging dal 09/11): errori JavaScript dell'app salvati su Supabase senza servizi esterni (migrazione `client_errors_v1`), la domanda di oggi nella schermata d'attesa del partner con il gancio nell'invito, informativa IT/EN aggiornata. **In produzione dal 13/11, con la 1.5** (PR #248).
 
 ## Controllo del 05/11 — audit della produzione (sola lettura)
 
@@ -19,7 +34,7 @@ Stati: PROGETTATO / IN BRANCH / MERGED / SQL o Edge APPLICATO (staging? produzio
 - **Uso (solo conteggi):** 28 account, 9 coppie (8 complete), 6 coppie attive negli ultimi 7 giorni; dal 25/10 15 iscrizioni, 12 finite in una coppia completa.
 - **Esito:** nessun problema grave; 18 punti da sistemare, i primi sono l'uscita «Scollega questo telefono» che scollega tutti i dispositivi, le cancellazioni che non arrivano in tempo reale, il primo caricamento lento del sito e il codice preso da jsDelivr senza controllo di integrità. Dettagli: [audit](audit/2026-11-05-audit-produzione.md). Confronto con i concorrenti e piano economico: [proposta](product/2026-11-05-concorrenti-e-piano-economico.md).
 - **Registro delle migrazioni di produzione:** 9 versioni su 41 del repo. Non usare `supabase db push` né `supabase migration list` sulla produzione finché non è riallineato.
-- **Widget Scriptable:** ritirato nel repo il 06/10, ma mai pubblicato: in produzione `us-widget-state` v9 e `widget-scriptable-setup` v6 servono ancora il widget sull'iPhone di Bea (token usato il 5/11). Non pubblicare `us-widget-state` dal repo senza una decisione del founder.
+- **Widget Scriptable:** gli script Scriptable sono tolti dal repo dal 06/10, ma la function `supabase/functions/us-widget-state` è ancora nel repo e il ritiro non è mai stato pubblicato: in produzione `us-widget-state` v9 e `widget-scriptable-setup` v6 servono ancora il widget sull'iPhone di Bea (token usato il 5/11). Non pubblicare `us-widget-state` dal repo senza una decisione del founder.
 - **Patch 1.4.1 (su staging dal 05/11; in produzione dal 06/11, vedi la sezione del 09/11):** le correzioni dell'audit unite nel branch di staging (`mission/us-store-s3-1-public-auth-staging-20261011`, build `us-staging-20261105-102`); le tre migrazioni (`couple_sync_v1`, `calendar_reminders_insert_rule`, `rls_initplan_fk_indexes`) applicate su US-STAGING col workflow. Su staging restano non avvolte una regola e una chiave del «Punto della settimana», che esiste solo lì. Nota: [prossima patch](store/PROSSIMA_PATCH_PRODUZIONE.md).
 - **App iPhone:** dal 05/11 una sessione a parte («App iOS al livello di Android», con il suo branch) la porta al livello dell'Android di produzione, in attesa dell'account Apple Developer.
 
@@ -121,20 +136,22 @@ Fino al 15/10: #187 FCM con owner gate, #189 registrazione solo STAGING, #195 po
 
 ## PR e issue aperte
 
-- [#190](https://github.com/LetHerCome/US/pull/190) DRAFT — eliminazione account (Policy A) e ciclo di vita della coppia. Su staging, non in produzione. **Blocca lo Store** (issue #183).
-- [#196](https://github.com/LetHerCome/US/pull/196) DRAFT, sopra #190 — Esci dalla coppia, Segnala, export dati. Flag spenti al merge.
-- [#194](https://github.com/LetHerCome/US/pull/194) DRAFT — bozze Play allineate a #190. Merge dopo #190.
+(Elenco del 17/10, non riverificato su GitHub il 27/11.)
+
+- #190 eliminazione account, #196 Esci dalla coppia / Segnala / export e #194 bozze Play: **su `main` dal 17/10**, schema ed Edge in produzione (sezione del 22/10).
 - [#180](https://github.com/LetHerCome/US/pull/180) DRAFT — S2 settimana condivisa in Gioca; SQL solo su STAGING.
 - [#144](https://github.com/LetHerCome/US/pull/144) e [#67](https://github.com/LetHerCome/US/pull/67) ferme — da chiudere o riprendere.
 - Issue [#181](https://github.com/LetHerCome/US/issues/181) (notifiche) e [#183](https://github.com/LetHerCome/US/issues/183) (eliminazione account).
 
 ## Gate Store ancora aperti ([Quality Gates](store/US_STORE_1_0_QUALITY_GATES.md))
 
-- Registrazione pubblica **spenta** (`PRODUCTION_SIGNUP_RELEASED = false`, `enable_signup = false`); niente SMTP.
-- Nessun dominio personalizzato. Privacy e Termini pubblicati su `us-a33.pages.dev/privacy` e `/termini` (IT ed EN), da far rivedere a un consulente (D-10).
-- #190/#196: finire i test su staging, poi merge, SQL ed Edge in produzione.
-- Piano Free oltre quota di egress, nessun backup di produzione.
-- Play: Data Safety, test chiuso. iOS/APNs non provato.
+Aggiornati il 27/11 (il resto della sezione è del 17/10):
+
+- Registrazione pubblica **aperta** dal 26/10 con Accesso V1, #229 (`PRODUCTION_SIGNUP_RELEASED = true` in `public-auth.js:22`); mail dell'account da Resend (`noreply@uscouple.app`) dal 30/10.
+- Dominio `www.uscouple.app` (principale) e `uscouple.app` dal 30/10, `us-a33.pages.dev` resta come alias. Privacy e Termini su `www.uscouple.app/privacy` e `/termini` (IT ed EN), da far rivedere a un consulente (D-10).
+- #190/#196: su `main` e in produzione dal 17/10 (vedi sopra).
+- Supabase di produzione su piano Pro con un backup al giorno, senza PITR (dal 26/10).
+- Play: test chiuso «Alpha» dal 26/10, Sicurezza dei dati da tenere allineata a ogni AAB. iOS: TestFlight dal 14/11; APNs configurato in produzione il 14/11; accesso e notifiche su iPhone da provare con Bea (non verificato da qui).
 
 **Working plan:** [Carta Store](store/US_STORE_1_0_CHARTER.md) · [Baseline](store/US_STORE_1_0_BASELINE.md) · [Execution](store/US_STORE_1_0_EXECUTION.md) · [Quality Gates](store/US_STORE_1_0_QUALITY_GATES.md).
 

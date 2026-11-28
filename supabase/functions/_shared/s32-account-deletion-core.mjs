@@ -298,10 +298,39 @@ export async function finishAccountDeletion({ uid, admin, storage, rpc, log = no
 
 const MODES = new Set(['no_couple', 'departed', 'couple_erased']);
 
+// I personaggi sempre aggiornati (27/11/2026): who stays in the couple, read
+// before the leave or the deletion detaches the caller, so their phones can
+// clear the partner from the widgets. Any failure: null (nothing is told).
+export async function partnersOf(client, uid) {
+  try {
+    const { data: me, error } = await client.from('profiles').select('couple_id').eq('id', uid).maybeSingle();
+    const coupleId = me?.couple_id;
+    if (error || !UUID.test(String(coupleId || ''))) return null;
+    const { data: others, error: othersError } = await client.from('profiles').select('id').eq('couple_id', coupleId).neq('id', uid);
+    if (othersError) return null;
+    const partnerIds = (others || []).map((row) => row?.id).filter((id) => UUID.test(String(id || '')));
+    return partnerIds.length ? { coupleId, partnerIds } : null;
+  } catch {
+    return null;
+  }
+}
+
+// Best effort, after the DB step: a failed signal never fails the request.
+export async function tellPartnerWidgets(notifyPartnerLeft, stays, client, log = noop) {
+  if (typeof notifyPartnerLeft !== 'function' || !stays) return;
+  try {
+    const result = await notifyPartnerLeft({ client, coupleId: stays.coupleId, partnerIds: stays.partnerIds });
+    log({ step: 'partner_widgets', outcome: result?.delivered ? 'ok' : 'skipped' });
+  } catch {
+    log({ step: 'partner_widgets', outcome: 'error' });
+  }
+}
+
 // Full request flow. `client` is a service-role supabase-js client (created
 // lazily, only after all cheap request checks have passed).
 // Returns {status, body} — the Edge wrapper adds headers.
-export async function handleDeleteAccount({ method, origin, authorization, readBody, env, nowSeconds, createClient, log = noop }) {
+// notifyPartnerLeft (optional): async ({client, coupleId, partnerIds}) after the DB step.
+export async function handleDeleteAccount({ method, origin, authorization, readBody, env, nowSeconds, createClient, log = noop, notifyPartnerLeft = null }) {
   if (!isDeletionEnabled(env)) return { status: 503, body: { error: 'deletion_disabled' } };
   if (!isOriginAllowed(origin, env?.US_ALLOWED_ORIGINS)) return { status: 403, body: { error: 'origin_denied' } };
   if (method === 'OPTIONS') return { status: 204, body: null };
@@ -352,6 +381,7 @@ export async function handleDeleteAccount({ method, origin, authorization, readB
   }
 
   // 2. Single DB transaction (separation + personal rows + anonymisation + receipt).
+  const stays = notifyPartnerLeft ? await partnersOf(client, uid) : null;
   const db = await callRpc(rpc, 's32_delete_account_data', { p_user: uid, p_channel: channel });
   if (db.error) {
     log({ step: 'delete_data', outcome: 'error', code: db.error });
@@ -359,6 +389,7 @@ export async function handleDeleteAccount({ method, origin, authorization, readB
   }
   const result = db.data;
   log({ step: 'delete_data', outcome: 'ok', code: typeof result?.status === 'string' && SAFE_CODE.test(result.status) ? result.status : 'unexpected' });
+  await tellPartnerWidgets(notifyPartnerLeft, stays, client, log);
 
   // Fresh run with a well-formed result: use it directly. Otherwise (retry of
   // an earlier request, or unexpected shape) recompute from the receipt.

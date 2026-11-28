@@ -29,22 +29,21 @@ test('Foundation 01 mantiene il contratto completo di navigation e Oggi', () => 
   // Store S1-A (#179): no global swipe between tabs.
   assert.doesNotMatch(app, /const swipePages=/);
   assert.doesNotMatch(html, /data-page="settings"/);
-  assert.match(html, /id="usTodayPriorityRegion" hidden aria-live="polite"><\/div>/);
-  assert.doesNotMatch(html, /usTodayPriorityRegion[^>]*>[\s\S]*?(received|reveal ready|waiting for me|priority card)/i);
+  assert.doesNotMatch(html, /usTodayPriorityRegion/, 'redesign D9: no cards of suggestions on Oggi');
 });
 
 test('partner apre solo Lasciato per te e il profilo resta un controllo foto', () => {
   const html = read('index.html');
-  const stories = read('stories.js');
 
   assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,180}onclick="usEnvelopeTap\(\)"/);
   assert.doesNotMatch(html, /id="profileAvatarBtn"/, 'nessun avatar/foto legacy nel top chrome');
   assert.match(html, /id="profileAvatarFile"/, 'il flusso foto profilo resta vivo tramite Impostazioni');
   assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);
   assert.doesNotMatch(html, /onclick="openOwnStories\(\)"/);
-  assert.match(stories, /__US_LEFT_FOR_YOU_ACTIVE__/);
-  assert.match(html, /id="usSettingsEntry"[\s\S]{0,160}onclick="go\('settings',\{nav:true\}\)"/);
-  assert.match(read('identity.css'), /\.us-calendar-btn\{width:44px;min-width:44px;height:44px;min-height:44px/);
+  assert.match(html, /__US_LEFT_FOR_YOU_ACTIVE__/);
+  // Redesign definitivo, fase 2 (D6): your character opens the Profilo, on Oggi and the other pages.
+  assert.match(html, /class="us-me" data-us-self onclick="go\('settings',\{nav:true\}\)" aria-label="Il tuo profilo e le Impostazioni"/);
+  assert.doesNotMatch(html, /id="usSettingsEntry"/);
   assert.doesNotMatch(html, /id="usCalendarBtn"/);
   // M12A: il centro è il marchio US; "I nostri eventi" resta raggiungibile da Noi
   // (US 1.0: il vecchio calendario a schermo intero non c'è più, Eventi è il link sotto il calendario di Noi).

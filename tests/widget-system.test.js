@@ -151,7 +151,7 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
     schemaVersion: 2,
     ownerHash: OWNER,
     updatedAt: '2026-10-06T10:00:00.000Z',
-    think: { partnerName: 'Bea\u0000trice', lastReceivedAt: '2026-10-06T09:00:00+02:00', lastSentAt: 'ieri', lastAnsweredAt: '', token: 'x' },
+    think: { partnerName: 'Bea\u0000trice', lastReceivedAt: '2026-10-06T09:00:00+02:00', lastReceivedTaps: 400, lastSentAt: 'ieri', lastAnsweredAt: '', token: 'x' },
     couple: { names: ['Francesco', 'Beatrice', 'Terzo'], startedOn: '2026-04-21', frame: '../evil', userId: 'raw' },
     countdown: { active: true, kind: 'clock', title: 'Viaggio', target: '2026-12-01T18:30:00.000Z', style: 'neon' },
     photo: { state: 'ready', key: 'https://example.test/a.jpg', url: 'https://example.test/a.jpg', takenOn: '2026-10-01' },
@@ -168,6 +168,8 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   assert.equal(sent.schemaVersion, 2);
   assert.equal(sent.think.partnerName, 'Bea trice');
   assert.equal(sent.think.lastSentAt, '');
+  // Ti penso ×N (27/11/2026): their last Ti penso's taps, a whole number 1..99.
+  assert.equal(sent.think.lastReceivedTaps, 99);
   assert.deepEqual([...sent.couple.names], ['Francesco', 'Beatrice']);
   assert.equal(sent.couple.frame, '');
   assert.equal(sent.countdown.style, 'editorial');
@@ -182,7 +184,7 @@ test('snapshot v2 è allow-list: niente token, URL, id raw o stringhe di control
   // Lavagna (03/11/2026): whether there is a drawing, who drew last and when; never a stroke.
   assert.deepEqual({ ...sent.lavagna }, { state: 'ready', by: 'partner', at: '2026-11-03T10:00:00.000Z' });
   // Post-it (04/11/2026): the newest post-it's words, its paper, who and how many others; never an id.
-  assert.deepEqual({ ...sent.postit }, { state: 'ready', text: 'prenotare la cena', color: 'yellow', by: 'partner', more: 99, at: '2026-11-04T10:00:00.000Z' });
+  assert.deepEqual(JSON.parse(JSON.stringify(sent.postit)), { state: 'ready', text: 'prenotare la cena', color: 'yellow', by: 'partner', more: 99, at: '2026-11-04T10:00:00.000Z', second: { text: '', color: '', by: '' } });
   assert.deepEqual(Object.keys(sent).sort(), ['countdown', 'couple', 'daily', 'lavagna', 'left', 'memories', 'ownerHash', 'photo', 'postit', 'schemaVersion', 'status', 'think', 'updatedAt']);
 
   assert.equal(await platform.writeWidgetSnapshot({ schemaVersion: 2, ownerHash: 'raw-user-id' }), false, 'owner non hash rifiutato');
@@ -281,10 +283,11 @@ test('logout con credential già pronta revoca comunque per device hash', async 
 test('snapshot isolato per account: owner hash, nessun id raw, nessun dato del vecchio account', async () => {
   const harness = loadWidgets({ credential: 'ready' });
   await harness.widgets.authReady({ id: 'account-one' });
-  await harness.widgets.publishThink({ partnerName: 'Prima', lastReceivedAt: '2026-10-06T08:00:00Z', lastSentAt: '' });
+  await harness.widgets.publishThink({ partnerName: 'Prima', lastReceivedAt: '2026-10-06T08:00:00Z', lastReceivedTaps: 5, lastSentAt: '' });
   await settle();
   const first = harness.snapshots().at(-1);
   assert.equal(first.schemaVersion, 2);
+  assert.equal(first.think.lastReceivedTaps, 5, 'Ti penso ×N: the taps of their last Ti penso reach the widget');
   assert.match(first.ownerHash, /^[a-f0-9]{64}$/);
   assert.deepEqual([...first.couple.names], ['Francesco', 'Beatrice']);
   assert.equal(first.couple.startedOn, '2026-04-21');
@@ -436,8 +439,12 @@ test('Ti penso updates its own RemoteViews immediately before the network call',
   const widgets = read(`${JAVA}/UsWidgets.java`);
   const action = read(`${JAVA}/UsThinkWidgetActionReceiver.java`);
   assert.match(widgets, /static void refreshThink\(Context context\)/);
-  assert.match(action, /store\.writeAction\("sending", actionId, UsWidgetModels\.unanswered\([^\n]*\);\s*\/\/[^\n]*\n\s*UsWidgets\.refreshThink\(app\);/);
-  assert.match(action, /UsWidgets\.refreshAll\(app\);\s*pending\.finish\(\)/);
+  // Ti penso ×N (27/11/2026): the tap paints «×N» at once and the burst
+  // paints «Inviato ×N» before the network call; the last held broadcast
+  // is finished after the final redraw.
+  assert.match(action, /writeAction\("counting", tap\.actionId, tap\.reply, tap\.taps\)[\s\S]*?\}\s*\/\/[^\n]*\n\s*UsWidgets\.refreshThink\(app\);/);
+  assert.match(action, /store\.writeAction\("sending", actionId, action\.optBoolean\("reply", false\), taps\);\s*\}\s*UsWidgets\.refreshThink\(app\);/);
+  assert.match(action, /UsWidgets\.refreshAll\(app\);\s*release\(\);/);
 });
 
 test('Hub: pin scrive prima lo stato e passa solo kind validi', async () => {
@@ -492,8 +499,9 @@ test('Distanza e batteria opens Noi, its one action', () => {
   const app = read('app.js');
   assert.match(provider, /UsWidgets\.open\(context, "noi", 4401\)/);
   assert.doesNotMatch(provider, /"noi\/play"|us_noi_cta/);
-  assert.match(layout, /@\+id\/us_noi_partner"/);
-  assert.doesNotMatch(layout, /us_noi_me/, 'only the other person (04/11/2026)');
+  // The 2x1 is the distance and their battery; their character is in the 2x2 and 4x2 (widget del redesign, 26/11/2026).
+  assert.match(read(`${PLUGIN}/res/layout/us_widget_noi_small.xml`), /@\+id\/us_noi_partner"/);
+  assert.doesNotMatch(layout, /us_noi_me/);
   assert.match(layout, /@\+id\/us_noi_distance/);
   assert.doesNotMatch(layout, /us_noi_cta|GIOCA/);
   assert.match(store, /writeNoiPortrait/);
@@ -599,15 +607,13 @@ test('nessun Stories o Scriptable risorge nel layer widget', () => {
   assert.doesNotMatch(sources, /stories|scriptable/i);
 });
 
-test('derivative widget sono byte-identiche agli APPROVED e il sync è deterministico', () => {
-  execFileSync(process.execPath, ['scripts/sync-approved-widget-assets.mjs'], { cwd: ROOT });
-  const firstIcon = sha256(`${PLUGIN}/res/drawable-nodpi/us_icon_ti_penso_v1.png`);
-  const firstWordmark = sha256(`${PLUGIN}/res/drawable-nodpi/us_wordmark_v1.png`);
-  execFileSync(process.execPath, ['scripts/sync-approved-widget-assets.mjs'], { cwd: ROOT });
-  assert.equal(firstIcon, sha256('assets/source/ui/us-icon-ti-penso-v1.png'));
-  assert.equal(firstWordmark, sha256('assets/source/brand/us-wordmark-v1.png'));
-  assert.equal(firstIcon, sha256(`${PLUGIN}/res/drawable-nodpi/us_icon_ti_penso_v1.png`));
-  assert.equal(firstWordmark, sha256(`${PLUGIN}/res/drawable-nodpi/us_wordmark_v1.png`));
+test('le derivative di Ti penso e del wordmark non vanno più nell’APK (mai usate dai widget, 1,6 MB)', () => {
+  assert.equal(fs.existsSync(path.join(ROOT, 'scripts/sync-approved-widget-assets.mjs')), false);
+  assert.equal(fs.existsSync(path.join(ROOT, `${PLUGIN}/res/drawable-nodpi/us_icon_ti_penso_v1.png`)), false);
+  assert.equal(fs.existsSync(path.join(ROOT, `${PLUGIN}/res/drawable-nodpi/us_wordmark_v1.png`)), false);
+  // The approved masters stay in the repository.
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/source/ui/us-icon-ti-penso-v1.png')));
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/source/brand/us-wordmark-v1.png')));
 });
 
 test('Impostazioni native: la riga Stories rimossa dal bundle non rompe l’idratazione', () => {

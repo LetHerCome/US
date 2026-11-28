@@ -1,0 +1,40 @@
+name: US full test suite
+
+# The whole `npm test` (unit, PGlite database and Playwright browser tests) on
+# every pull request to staging and to production (audit 27/11/2026: until
+# then only subsets ran in CI). Read-only: no secrets, no deploy.
+on:
+  pull_request:
+    branches:
+      - main
+      - mission/us-store-s3-1-public-auth-staging-20261011
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: full-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  npm-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # pwa-startup-browser serves the production V5 commit.
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install isolated browser test tooling
+        run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.62.1
+      - run: npx playwright install --with-deps chromium
+      - name: npm test
+        run: npm test
+      - name: Production bundle builds
+        run: npm run build:cloudflare-pages

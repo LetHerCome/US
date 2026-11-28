@@ -8,7 +8,7 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
 function sendThinkBlock() {
   const source = read('app.js');
-  const start = source.indexOf('async function sendThinkSignal()');
+  const start = source.indexOf('function sendThinkSignal({taps=1}={})');
   const end = source.indexOf('window.sendThinkSignal=', start);
   assert.notEqual(start, -1);
   assert.notEqual(end, -1);
@@ -24,12 +24,12 @@ test('M4B send Web usa send_think con operation id stabile e retry-safe', () => 
   assert.match(block, /sendWebPushEvent\('think'/);
 });
 
-test('M4B integra Ti Penso ricevuto nella Arrival Surface M2', () => {
+// Redesign D9: the Arrival Surface card left Oggi; a short notice opens the reactions.
+test('M4B: il Ti penso ricevuto apre le reazioni dall’avviso breve', () => {
   const app = read('app.js');
-  assert.match(app, /arrivalType.*think-received|think-received.*arrivalType/);
-  assert.match(app, /action.*think|think.*action/);
+  // I cuori (27/11/2026): a Ti penso of several taps says how many.
+  assert.match(app, /toast\(taps>1\?`\$\{who\} ti ha pensato \$\{taps\} volte ♡`:`\$\{who\} ti pensa ♡`,\{action:\{label:'Apri',onClick:\(\)=>openThinkArrival\(\)\}\}\);/);
   assert.match(app, /openThinkArrival/);
-  assert.match(app, /refreshTodayPriorities/);
   assert.match(app, /table:'think_reactions'/);
   assert.match(read('navigation.js'), /name:'think-arrival'/);
 });

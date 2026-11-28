@@ -2,6 +2,877 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Contenuti 1.4: domande a scelta in Gioca (28/11)
+
+- **141 domande aperte diventano a scelta**, con 3 o 4 risposte brevi in italiano e inglese: 44 Ridete, 54 Scopritevi, 14 Confrontatevi, 29 Rivivete. Dove serviva la domanda è stata riformulata un poco, nel suo tema; Plus, tema e profondità restano com’erano. **Restano aperte** solo le 25 longitudinali (quelle riproposte mesi dopo con «cosa avevate risposto») e 22 di Rivivete che chiedono un dettaglio di un vostro ricordo preciso (Rivivete ne tiene 25); la domanda di oggi, le domande scritte dalla coppia ed «E se…» non cambiano. Stesso id con versione + 1: le partite già giocate tengono la loro copia (domanda aperta e risposta scritta) e restano leggibili; per chi legge in inglese quelle partite vecchie restano in italiano, come dopo ogni correzione di testo. Play Us pesca da molte più carte. Migrazione `20261128122730_domande_a_scelta` (solo aggiornamenti), dopo `20261128115152_contenuti_hot`; si ferma da sola se una domanda non è più quella attesa. Ramo `claude/domande-a-scelta`, solo locale.
+
+### Contenuti 1.3: domande «hot» per US Plus (28/11)
+
+- **50 domande nuove, tutte US Plus, italiano e inglese**, su due temi più maliziosi per coppie adulte: **Piccante** (flirt, attrazione, baci, seduzione, appuntamenti audaci) e **Desideri** (vicinanza, fantasie romantiche, coccole, sorprese a letto), 25 per tema: 12 Quanto mi conosci?, 8 Ridete, 8 Scopritevi, 8 Confrontatevi, 6 Rivivete, 8 Questo o quello. Suggeriscono, non descrivono: niente volgarità né parole esplicite (il test ha una lista di parole vietate). Quasi tutte brevi e a scelta, quindi arrivano anche in Play Us; nella vetrina Plus di Gioca compaiono come «Piccante» e «Desideri». Migrazione `20261128115152_contenuti_hot` (solo inserimenti), dopo `20261128113629_contenuti_plus_vetrina`; ramo `claude/contenuti-hot`, solo locale.
+
+### US Plus in vetrina in Gioca (28/11)
+
+- Le 72 domande Plus del contenuto 1.2 si giocano solo con US Plus, ma si vedono: in Gioca, sotto «Tutti i giochi», il riquadro «Sbloccabili con US Plus · 72 domande in più · 8 temi» con tre domande d’assaggio; toccandolo si leggono tutte, col lucchetto, divise per tema, con «Avvisatemi quando arriva». Con US Plus il riquadro sparisce. Migrazione `20261128113629_contenuti_plus_vetrina` (`get_plus_preview_v1`: solo il testo delle domande, nella lingua di chi legge).
+
+### Il grande bilanciamento dei punti e dei premi (28/11)
+
+**Stato:** ramo `claude/bilanciamento-v1`, da staging dopo la #325, solo commit locali, niente push. Una migrazione, `20261128104932_bilanciamento_v1` (ridefinisce le funzioni dei punti e del livello, il catalogo dei premi e il guardaroba; nessuna tabella nuova, nessun permesso nuovo), da applicare su staging insieme al web. Edge `us-widget-state` con la curva nuova. Il pacchetto web dentro le app cambia: serve un AAB nuovo e una build TestFlight con la stessa versione. Deciso sulla tavola approvata dal founder il 28/11.
+
+**Cosa cambia:**
+- **I punti:** la domanda di oggi vale 15 (prima 10); le partite a turni 15 la prima del giorno, 8 la seconda e la terza, 0 le altre; Play Us 25 la prima del giorno (prima 30), 0 le altre, e il suo ricordo non dà più i +10 della foto; Ti penso 3 a testa al giorno (prima 2); la busta del mese +20 la prima volta che la coppia la apre. Foto, impegni e traguardi restano uguali.
+- **Livelli più vicini all’inizio:** il livello 2 arriva a 150 punti, poi 300, 475, 675… fino al 26 a 20075; dopo il 26 un livello ogni 5000 punti. Un premio per livello.
+- **Una scala sola:** 2 Occhiali, 3 Battito, 4 Cappello, 5 Countdown Post-it, 6 Soffioni, 7 Fiocco, 8 Ti penso Cuori, 9 Sciarpina, 10 Ora d’oro, 11 Neve, 12 Occhiali da sole, 13 Due colori, 14 Gala, 15 Countdown Biglietto, 16 Foglie, 17 Cuffie, 18 Stagioni, 19 Stelle cadenti, 20 Coroncina, 21 Ti penso Lettera, 22 Lanterne, 23 Costellazione, 24 Countdown Filo rosso, 25 Corona, 26 Ricordi in volo. Il guardaroba ora si sblocca a livelli («Livello 9» invece di «1000 punti»); macchinetta, cento e festa restano legati ai loro momenti.
+- **US Plus dà più gioco, non più punti:** le icone Neon, Notte e Oro sono solo per US Plus («Con US Plus»), fuori dalla scala.
+- **Per chi c’è già:** quello che una coppia sblocca di colpo con la curva nuova risulta già visto (niente raffica di annunci); un accessorio indossato che con la scala nuova non è ancora sbloccato si toglie.
+
+### Contenuti 1.2: più domande in Gioca, di più con US Plus (28/11)
+
+**Stato:** ramo `claude/contenuti-1-2`, solo locale (niente push, niente staging). Migrazione `20261128104908_contenuti_1_2` da applicare prima su staging, poi in produzione a mano come le altre; si ferma da sola se una delle tre funzioni che riscrive (`private.game_v2_candidates`, `public.start_swipe_round`, `public.play_us_answer`) non è quella attesa. Va dopo Play Us (`20261128090123_play_us_v1`). Nessun cambio al client, nessuna build.
+
+**Cosa cambia:**
+- **188 carte nuove, italiano e inglese:** 32 per Quanto mi conosci?, 31 per Ridete, 32 per Scopritevi, 31 per Confrontatevi, 30 per Rivivete e 32 per Questo o quello, su otto temi: viaggi, casa, infanzia, cibo, musica e film, futuro, amici e famiglia, tenerezza. Ridete ha anche i «Se fossimo…». Molte sono brevi e a scelta, quindi arrivano anche in Play Us.
+- **US Plus:** 72 delle nuove (38%, in ogni gioco e in ogni tema) le riceve solo una coppia con Plus attivo (`private.couple_has_plus`), nelle partite, in Per voi, in Questo o quello e in Play Us. Nessuna carta che c’era già è diventata Plus. L’interruttore `plus_on_sale` qui non conta: chi ha un Plus «beta» le vede già.
+- **Play Us** non sceglie più le carte «Chi di noi due…» con i nomi nelle risposte: Play Us mostra il testo così com’è e si sarebbe letto `{francesco}`.
+
+### Intro e collezione (28/11)
+
+- **L’intro spiega tutto:** Noi (calendario, «Ci vediamo», lavagna, post-it), Ricordi (album, bacheca, mappa, lente), Gioca a turni con i tre gettoni, una tappa nuova per Play Us («Ti batto io, vedrai»), una per la busta del mese («Io faccio collezione di quelle rare») e US Plus più preciso: più partite e Play Us, più vestiti, una bacheca più grande, e chi non lo prende non perde niente. Anche in inglese.
+- **«Carte» in Ricordi compare solo dopo la prima busta:** prima del primo mese la collezione non ha senso, quindi Ricordi ha tre schede.
+
+### Il vostro mese come evento (28/11)
+
+**Stato:** ramo `claude/bustine-evento`, da staging dopo la #324. Nessuna migrazione.
+
+- **Niente più riga «Il vostro mese» in Gioca.** Quando finisce il mese (o l’anno) e la busta vi aspetta, compare da sola su Oggi, a ogni apertura di US, finché non la strappate; mai sopra l’apertura, l’intro, il blocco dell’app o Play Us. Strappata, le carte restano in Ricordi, «Le vostre carte»: lì un mese aperto mostra le sue carte e non si strappa di nuovo; una busta mai aperta resta lì ad aspettarvi.
+
+### Play Us: giocare insieme, dal vivo (28/11)
+
+**Stato:** ramo `claude/play-us-piano`, in staging. Migrazione `20261128090123_play_us_v1` (due tabelle, le funzioni `play_us_*`, le tabelle nella pubblicazione Realtime, regole sul canale privato `us-couple:<coppia>`), applicata su staging il 28/11. Edge `send-web-push` con il tipo `play_invite`, pubblicata su staging. **In produzione:** la migrazione a mano come le altre, `send-web-push`, un **AAB** (frase Android di `play_invite`: un’app vecchia mostra «Apri US per vedere le novità») e una build **TestFlight** con la stessa versione.
+
+**Cosa cambia:**
+- **Play Us in cima a Gioca:** la carta con i due personaggi, «1 partita oggi» e il pallino verde quando l’altra persona ha US aperta (solo quando la presenza funziona). «Sfida Bea» manda l’invito: notifica «Francesco ti sfida a Play Us ♡» e avviso dentro l’app, vale 3 minuti. Se accetta entrate in lobby (3, 2, 1).
+- **Le 8 tappe, decise dal server:** 3 domande lampo da 10 s con il misuratore di intesa e la risposta dell’altra persona che si vede subito; una foto dalla fotocamera (o «Salta»: l’altra persona ritocca una vostra foto dai Ricordi); il ritocco della foto dell’altra persona con adesivi dei personaggi, pennarello e una scritta, che si scopre solo alla fine; «Quanto mi conosci» (rispondi per te e indovina lei); un vocale di 5 s o un gesto; il labirinto di 45 s (cuori, due nuvolette lente, quattro Ti penso dorati) con il punteggio dell’altra persona dal vivo; la rivelazione insieme delle due foto ritoccate, delle risposte, del vocale e della sfida; il ricordo.
+- **Il ricordo:** la partita diventa un ricordo in Ricordi («Play Us · 28 novembre», con le due foto ritoccate), +30 al livello di coppia una volta sola, e chi vince sceglie un pegno dolce che finisce come post-it rosa sulla lavagna di Noi.
+- **Una partita al giorno per coppia,** spesa dalla tappa 4 (un invito rifiutato o una partita lasciata prima non conta). Dopo: «Domani un’altra partita · Con US Plus potrete giocarne di più».
+- **Se uno sparisce:** l’altra persona vede «… si è persa un attimo» e aspetta 60 s, poi la partita si chiude e salva quanto fatto. Una partita ridotta con × resta chiusa finché non tocchi «Rientra».
+
+### Quiz più vivi (28/11)
+
+**Stato:** ramo `claude/quiz-vivi`, da staging `a366dd37` (dopo la #322). Nessuna migrazione. Primo passo deciso col grill del 28/11 (D1–D2), prima di Play Us.
+
+**Cosa cambia:**
+- **Un tocco basta:** nei quiz a turni (Ridete, Quanto mi conosci, Scopritevi…) toccando una risposta si passa da soli alla domanda dopo; l’ultima chiede ancora «Conferma le risposte». Con la tastiera le frecce scelgono soltanto. Questo o quello resta com’è.
+- **Il sentiero:** sopra la domanda il tuo personaggio cammina sulla barra del progresso, domanda dopo domanda, con un saltello a ogni risposta; in fondo l’altra persona ti aspetta, assonnata.
+- **La rivelazione:** le due risposte arrivano da lati opposti e si incontrano; quelle uguali si accendono d’oro (e restano col bordo dorato), quelle diverse si toccano e si fermano vicine. In cima i due personaggi, con gli occhi a cuore se avete risposto uguale almeno alla metà. Con Riduci movimento niente animazioni.
+
+### Ritocchi dall'APK del founder: Come stai, isola, cartina dei posti (28/11)
+
+**Stato:** ramo `claude/ritocchi-28-11`, da staging `9636d6b1` (dopo l'integrazione #320), solo commit locali, niente push. Una migrazione, `20261127230104_mese_posti_coordinate` (ridefinisce soltanto `private.us_mese_card`: aggiunge coordinate e giorno ai posti della carta, nessuna tabella, nessun permesso nuovo), da applicare su staging insieme al web; senza la migrazione la carta dei posti mostra i nomi senza puntini, come prima. Il pacchetto web dentro le app cambia: serve un AAB nuovo e una build TestFlight con la stessa versione.
+
+**Cosa cambia:**
+- **Come stai in Oggi è una pillola sola,** con lo stesso vetro scuro della distanza (di giorno la stessa carta), stessa altezza e testo chiaro. A sinistra la faccina dell'altra persona e la sua parola («Bea · giù», oppure «Bea · ?» se non ha detto niente); il tocco apre il suo foglio. A destra, dopo una riga sottile, il tuo stato: senza stato «＋ Tu» col più rosa che batte piano (fermo con Riduci movimento), il tocco apre i 12 stati; con lo stato la tua emoji. Il gesto («🤗 Abbraccio») sta nella metà sinistra e quando manca spazio resta solo l'emoji. Sotto la sua larghezza leggibile (112–158 px secondo cosa mostra; quando serve il nome sparisce e resta la faccina) la pillola va nella riga dopo, come il «Come stai?» di prima. Oggi non si sposta e non scorre: confrontato con staging prima della #320 a 320, 360, 390 e 430 px, con e senza foto e impegno, cambia solo a 320 px senza stati (lì accanto a una distanza lunga non c'è posto).
+- **Corretto un tocco rubato:** l'anello di tocco della pillola della distanza copriva tutta la riga, quindi toccando Come stai si poteva aprire la distanza.
+- **Isola:** i due personaggi stanno al centro della loro finestra, con aria dal bordo sinistro; l'isola aperta è un po' più larga (232 px, meno sui telefoni stretti). I cuoricini del Ti penso, la coda del fumetto e il «×N» seguono le nuove posizioni.
+- **Isola e Come stai, personaggi al centro (dallo screenshot del telefono):** nella barra «Il vostro angolo» i due personaggi non poggiano più sul fondo (uscivano di 4 px): stanno a metà altezza, un filo più in alto, e un po’ più piccoli (38 px) per avere aria. Nella pillola di Come stai la faccina sta al centro del suo cerchio, non più appoggiata sul fondo.
+- **Calendario, «Fine · se vuoi»:** accanto a «Inizio · se c’è» c’è di nuovo l’ora di fine, facoltativa. Senza fine l’impegno non prende più un’ora inventata: si legge solo l’inizio («Sabato 28 novembre · 10:30», «Dentista 10:00» in Oggi). Nel database resta lungo un minuto (la tabella vuole una fine dopo l’inizio): nessuna migrazione. Per «cosa c’è adesso» in Oggi conta ancora un’ora; un «Ci vediamo» senza fine dura fino a fine giornata. Fine prima dell’inizio: «La fine deve venire dopo l’inizio.» «Quando» ora sta su una riga intera, Inizio e Fine sotto. Le app di prima, sul telefono dell’altra persona, mostrano «10:00–10:01» finché non si aggiornano.
+- **Foto aperta di Ricordi, la foto prima di tutto:** il riquadro «Sulla bacheca» sotto la foto non c’è più. In alto a sinistra resta un post-it piccolo (quello di US o il primo, «+N» per gli altri; senza post-it uno tratteggiato «＋ Un post-it»): toccandolo si leggono tutti e si scrive il proprio. Sotto, «In bacheca ›» o «Appendi ›». Accanto a Salva c’è un occhio, «Solo la foto»: restano la foto, la X e l’occhio; di nuovo l’occhio, o un tocco sulla foto, e torna tutto.
+- **Gioca, il gettone che spariva:** toccando un gioco il gettone volava via subito, ma la partita arrivava dal server dopo, senza segni d’attesa; se intanto si usciva da Gioca la partita si apriva in una pagina nascosta (e Oggi non scorreva più) e tornando restava solo «Ancora 2 su 3». Ora la carta toccata dice «Apro…» finché il server risponde; se Gioca non è più a schermo la partita resta nell’elenco come «Da giocare» e riprenderla non costa; dopo qualsiasi errore Gioca si rilegge, così i gettoni sono quelli veri.
+- **Suoni pronti dall’apertura:** l’audio si prepara, muto, appena l’app è caricata; prima si preparava solo dopo il primo tocco e un momento libero (fino a 4 s), e i primi tocchi erano muti.
+- **Intro più fluida:** nella tappa «Il vostro angolo» la barra si apre dopo mezzo secondo (prima 1,1 s di pausa) e la luce cresce insieme a lei invece di arrivare dopo; nella tappa «US» la barra resta aperta e la luce non gira più intorno a un posto vuoto; sotto l’intro la pagina mette in pausa le sue animazioni infinite (meno lavoro a ogni frame sul telefono); l’intro non parte più sopra l’apertura, così i due personaggi volano nell’isola prima. I cuoricini del Ti penso puntano al personaggio vero nell’isola.
+- **La carta «Dove siete stati» del Vostro mese è una vera cartina:** paesi di Natural Earth 1:110m (pubblico dominio) in un file locale di 56 KB (18 KB compresso), caricato solo con il mese e mai nel precache, nessun servizio esterno. Si centra sui posti del mese: dall'Abruzzo intero per Chieti e Pescara fino al mondo per Pescara e Tokyo. Puntini veri, linea tratteggiata in ordine di data, nomi in corsivo, il timbro «N posti nuovi», i personaggi come puntine sul primo e sull'ultimo posto. Un posto senza coordinate resta scritto sotto («Anche: …»). Uguale nel visore e nelle immagini 9:16 da condividere.
+
+### L'apertura che vi accoglie (27/11)
+
+**Stato:** ramo `claude/apertura-accoglie`, da `claude/avvio-veloce` (serve il suo momento «app pronta»), non ancora spinto. Solo app (web): niente migrazioni, niente funzioni. Il pacchetto web dentro le app cambia, quindi serve un AAB nuovo e una build TestFlight con la stessa versione. Da provare sui telefoni veri: apertura da app chiusa (rete buona e rete lenta), «Riduci movimento» acceso, ritorno dopo più di un'ora.
+
+**Cosa cambia:**
+- **L'apertura di quando apri US da chiusa è nuova** (sostituisce l'«Apertura A» del 25/11). Parte uguale alla schermata di avvio, poi i vostri due personaggi escono da dietro il logo, si girano uno verso l'altro e tra loro nasce un cuore. Sul telefono c'è una vibrazione leggera quando nasce il cuore (se le vibrazioni sono accese nelle Impostazioni).
+- **Vi saluta per nome:** «Buongiorno», «Buon pomeriggio», «Buonasera» o «Notte fonda», col tuo nome, e sotto «tu e <nome> · N giorni insieme». Nomi e data «Insieme dal» sono quelli salvati sul telefono l'ultima volta: il saluto non aspetta la rete. Senza nomi salvati (primo avvio, dopo l'uscita dall'account) resta solo il logo.
+- **Non dura più un tempo fisso.** Prima erano sempre 1,9 s, anche se sotto la pagina era ancora vuota. Ora aspetta che la prima pagina sia pronta: almeno 1,4 s, al massimo 3,2 s. Se c'è da aspettare, i personaggi respirano e il cuore batte; dopo 2,1 s compare «Un attimo, vi preparo la giornata».
+- **Alla fine i personaggi volano nell'isola in alto,** dove abitano, e l'app si apre da dietro con un leggero avvicinamento. L'isola resta aperta un paio di secondi e si richiude. Se l'isola non c'è o è coperta (l'accesso, il blocco con l'impronta, la coppia non completa) l'apertura sfuma come prima.
+- **Con «Riduci movimento»** prima l'apertura non c'era; ora restano logo e saluto, poi una dissolvenza quando l'app è pronta (almeno 0,9 s).
+- **Quando torni in US dopo più di un'ora** (non da chiusa) i personaggi saltellano nell'isola e la scritta diventa «Eccoti, <nome>» per circa 2,6 s, poi torna com'era. Non succede se l'isola è coperta o sta già facendo altro, né se torni prima dell'ora.
+- All'uscita dall'account il telefono dimentica anche i nomi salvati per il saluto.
+
+### Avvio più veloce (27/11)
+
+**Stato:** ramo `claude/avvio-veloce`, dalla punta di staging `fac396a9`, non ancora spinto. Web e app: niente migrazioni, niente funzioni. Serve un AAB nuovo e una build TestFlight con la stessa versione (il pacchetto web dentro le app cambia, e su Android cambia il colore della WebView in `capacitor.config.json`). Da provare sui telefoni: avvio da app chiusa e ritorno dall'app di WhatsApp o dalla galleria, su Android e iPhone.
+
+**Cosa cambia:**
+- **L'app apre prima da chiusa.** Il codice e gli stili dentro l'app Android e iPhone ora sono compressi come sul sito: a ogni avvio il telefono legge circa 2,2 MB invece di 3,1 MB. Chi usa US in italiano non carica più il dizionario inglese (circa 230 KB), che prima bloccava la pagina prima del primo disegno. Nella prova sul PC (telefono simulato 4 volte più lento, rete finta con 150 ms per lettura, 7 avvii a testa, valore di mezzo) la domanda di oggi compare dopo 2,2 s invece di 3,5 s, l'app si sblocca dall'accesso dopo 1,7 s invece di 2,9 s, il primo colore della pagina arriva dopo 0,35 s invece di 0,53 s e i blocchi lunghi del telefono durante l'avvio scendono da 2,0 s a 0,9 s. Il PC era carico: nel caso migliore la differenza è più piccola (1,8 s invece di 1,9 s per la domanda). Sul telefono vero va riprovato.
+- **Su Android niente lampo bianco** tra la schermata di avvio e la prima pagina: la WebView parte nel colore della splash (#26142E), come su iPhone già succedeva.
+- **Tornare in US dopo pochi secondi non ricarica tutto.** Se US è rimasta in secondo piano meno di 30 secondi (una foto scelta dalla galleria, un messaggio su WhatsApp) non rilegge la domanda, la foto, il countdown, i widget e il resto: prima erano 16 letture al server a ogni ritorno, ora nessuna. Dopo 30 secondi o più si rilegge tutto come prima; il blocco con l'impronta, le notifiche toccate e i tratti della lavagna in attesa restano come prima, e ogni minuto la pagina in vista si aggiorna comunque.
+- All'avvio «La cosa di oggi» si legge una volta sola invece di due.
+- Per l'animazione d'entrata che verrà: un solo momento «la prima pagina è pronta» (Oggi con domanda e foto, oppure l'accesso o il blocco), al massimo 2,5 s dopo che Oggi si apre (8 s se qualcosa si blocca). Nessun cambio visivo per ora.
+### L'intro racconta di più (27/11)
+
+**Stato:** ramo `claude/intro-nuove-tappe`, verso staging. Tappe approvate dal founder il 27/11 («Approvo, vai»).
+
+- **Tappe nuove:** distanza e batteria («così sai se un silenzio è solo un telefono scarico»), Come stai, e il Ti penso spiegato coi tocchi ripetuti («più tocchi, più cuori… e Bea legge quante volte l'hai pensata»).
+- **US, l'app che si ricorda:** si ricorda le vostre date e i ricordi di un anno fa, e tiene la bacheca, mai più di una volta al giorno.
+- **Finale con battuta su US Plus:** «più vestiti per me, più giochi, più cose vostre… è una sorpresa».
+- Una tappa che non ha niente da mostrare viene saltata, per esempio la distanza se non la condividete. Chi ha già fatto l'intro la rivede dal Profilo.
+### Gioca più piena: voi due, cosa avete scoperto, i giorni insieme (27/11)
+
+**Stato:** ramo `claude/gioca-piena`, verso staging (dal tip fac396a9). Migrazione `20261127184444_gioca_intesa_v1` (una sola funzione in sola lettura, `get_game_intesa_v1`: niente tabelle, niente righe) da applicare su staging insieme al web; senza la migrazione Gioca funziona lo stesso (riquadro «Voi due» con la frase di attesa e i giorni presi dalle ultime partite). Solo web: nessun AAB o TestFlight necessario oltre al solito aggiornamento. Decisioni del grill del 27/11 (D1–D6, D15, D18).
+
+- **In alto i gettoni e la settimana:** sotto i tre gettoni sette pallini, da lunedì a domenica; si accende il giorno in cui avete finito una partita tutti e due («3 giorni insieme questa settimana»). Un giorno vuoto non toglie niente: nessuna serie da perdere.
+- **«Voi due»:** i vostri due personaggi, vicini e girati l'uno verso l'altro, e la vostra intesa: «Su 20 domande avete risposto uguale 14 volte», sulle ultime 20 risposte che si possono confrontare (le scelte fatte da tutti e due; le previsioni di «Quanto mi conosci?» e le risposte libere restano fuori). Mai chi ha vinto. Prima di cinque risposte: «Giocate qualche partita e qui vedrete la vostra intesa». I personaggi hanno la faccia di Come stai, sono contenti quando ci sono risposte pronte e dormono quando i gettoni sono finiti.
+- **Ordine nuovo della pagina:** gettoni e settimana, Voi due, Vi aspetta (con tutti e due i personaggi), Oggi per voi, Cosa avete scoperto, Tutti i giochi, La vostra domanda e in fondo «Il diario delle partite» (prima «Partite completate»). Su un telefono piccolo (360×640) il tasto «Gioca» della prima carta si vede sopra la barra: la carta è più bassa e la descrizione resta all'etichetta.
+- **«Cosa avete scoperto»:** due o tre risposte brevi delle ultime partite che hai già aperto («Tu Sushi · Bea Pizza», «Tutti e due Mare»), prima i giochi leggeri, una scelta nuova ogni giorno. Mai le previsioni, le domande profonde, quelle scritte da voi o le risposte lunghe. Un tocco riapre le risposte di quella partita.
+- **Gettoni finiti:** al posto della pagina grigia, «Intanto rileggete…» con l'ultima risposta in cui avete scelto diverso, «Ne parlate stasera?», Lascia qualcosa e Ti penso, e «Rivedi la partita». Il riquadro dei gettoni dice ancora quando tornano; la riga di US Plus resta piccola.
+- **Oggi per voi secondo come state:** se tutti e due siete felici o innamorati la prima carta è Ridete («Per ridere»); se uno dei due è giù, stanco o non sta bene è Rivivete («Con dolcezza»). Altrimenti l'ordine di oggi. Le altre carte restano nel loro ordine; con i gettoni finiti nessun cambio.
+- **Tutti i giochi:** ogni gioco ha la sua scheda, con l'ultima volta («Giocato ieri») e, quando ci sono abbastanza risposte, «70% risposte uguali». Rivivete sta nella stessa griglia; «✓ Giocato» è nell'angolo della scheda.
+- **Fine di una partita:** sotto le risposte «+15 per il vostro livello», i punti che il server dava già.
+- La sfida fotografica della settimana resta nascosta.
+### Come stai che conta (27/11)
+
+**Stato:** ramo `claude/come-stai-vivo` (da staging fac396a9), commit locali, non pushato. Grill del founder del 27/11 (D7–D14, D16, D17, D19), voce in `docs/DECISIONS.md`.
+
+**Da applicare, in ordine (su staging, ognuno col suo sì):**
+1. migrazione `20261127184637_come_stai_risposta` (colonne della risposta su `member_status`, trigger, RPC `respond_member_status`);
+2. migrazione `20261127184701_come_stai_muto` (il «Non dirmelo più» accetta `come_sta`, tiene tutti i tipi di prima);
+3. funzioni: `send-web-push` (tipi `status_response` e `partner_status`), `game-v2-push` e `game-v2-push-worker`, `daily-question-push-worker`, `us-ricorda-push-worker` (le push che aspettano lavoro e studio). Usano i file condivisi `_shared/come-stai-push-core.mjs`, `notification-core.mjs`, `native-push-transport.mjs`, `widget-signal-core.mjs`, `game-v2-push-core.mjs`, `daily-question-push-core.mjs`, `us-ricorda-push-core.mjs`.
+4. web (Cloudflare Pages). L’app nuova regge anche prima della migrazione: legge le colonne di prima e non offre il gesto finché le colonne nuove non ci sono.
+
+Servono un **AAB** nuovo (frasi Android della risposta `status_*`, oggetti sui personaggi dei widget, segnale «status» ad app chiusa) e una build **TestFlight** con la stessa versione (oggetti e segnale «status» sui widget dell'iPhone). Senza, le app di prima mostrano l'avviso generico «Apri US per vedere le novità» per la risposta e scartano il segnale «status» (v3 sconosciuto: niente di visibile). Da provare sui telefoni: la notifica della risposta (Android e iPhone), il widget dell'altra persona che cambia col Come stai ad app chiusa, gli oggetti sui widget, la pausa delle notifiche di Gioca mentre si è «al lavoro».
+
+**Cosa cambia** (versione più chiara approvata dal founder il 27/11, tavola «Come stai di US»; Oggi non si sposta: stessi posti di staging per i giorni, le righe e la domanda, controllati a 320, 360 e 390 px):
+- **La seconda riga di Oggi è Come stai, tutta su una riga.** Prima la pillola dell'altra persona: la faccina vera del suo personaggio in un cerchio (con l'oggetto del suo stato), poi «**Beatrice** · giù ›»; senza stato «**Beatrice** · Come sta?». Accanto il bottone rosso del gesto con emoji e parola corta (Abbraccio, Riposati, Respira, Cuore, Festa, Forza!, Spacca tutto!, Buon viaggio, Buon appetito); il lettore di schermo legge la frase intera («Manda un abbraccio», «Manda «Riposati»»…). Dopo l'invio diventa «✓ Mandato», rosa chiaro, e non si tocca più. Poi la tua pillola: senza stato «Come stai?» con un puntino rosa che pulsa (fermo con Riduci movimento), con lo stato «😔 Tu · giù · Cambia». Per 3 ore dopo un gesto ricevuto, accanto, la pillolina rosa «🤗 da Francesco» (la frase intera nel titolo: «Francesco ti manda un abbraccio»; toccandola si sceglie il proprio stato). Mai a capo: se manca posto se ne vanno prima le tue parole («· Cambia», poi il resto), poi si accorcia con i puntini il nome dell'altra persona; sui telefoni più stretti, quando la riga è già occupata dalla distanza, restano la faccina e il puntino. La riga occupa le stesse righe di prima: non spinge mai su il resto di Oggi.
+- **Il foglio dell'altra persona:** toccando la sua pillola si apre il suo personaggio grande con l'oggetto, «Beatrice è stanca» e sotto «😴 da 2 ore · fino alle 01:40» (la fine delle 12 ore), poi tre bottoni: il gesto con la frase intera («🌙 Manda «Riposati»», o «✓ Mandato» spento), Ti penso, Lascia un vocale (apre il vocale di Lasciato per te).
+- **Il foglio dei 12 stati:** sotto il titolo «Beatrice lo vede subito, anche nel widget. Dura 12 ore.», e gli stati in due gruppi, «Come ti senti» (innamorato, felice, stanco, giù, nervoso, malato) e «Cosa stai facendo» (festa, lavoro, studio, palestra, viaggio, tavola).
+- **Il gesto, uno per stato.** Giù o non sta bene → abbraccio, stanco → «Riposati», nervoso → «Respira, ci sono io», felice o innamorato → un cuore, in festa → 🎉, al lavoro o sui libri → «Forza!», in palestra → «Spacca tutto!», in viaggio → «Buon viaggio», a tavola → «Buon appetito». Chi lo riceve ha una notifica come un Ti penso («Bea: Ti mando un abbraccio», anche in inglese), un avviso dentro l'app, la pillolina accanto alla sua e per tre ore un cuoricino accanto al suo personaggio (occhi a cuore per il cuore, coriandoli per la festa). È l'unica notifica di Come stai: i cambi di stato restano senza notifica.
+- **Le pillole di Oggi si leggono in tutti e due i temi:** di giorno il prossimo impegno e la distanza erano scritti scuri su vetro scuro; ora sono etichette di carta come la riga di Come stai.
+- **I personaggi portano gli oggetti del momento,** nell'app e nei widget: al lavoro la valigetta, sui libri il libro, in palestra la fascia in testa, in viaggio la valigia, a tavola la forchetta, se non stai bene il termometro. In festa resta la faccia di festa. Di notte chi non sta bene non si addormenta: tiene la sua faccia e il termometro. Le facce cambiano subito quando cambia il Come stai (prima aspettavano fino a un minuto).
+- **US se ne accorge:** quando l'altra persona è giù, non sta bene o nervosa da almeno 2 ore, US lo dice una volta sola, nel fumetto dell'isola: «Bea è giù da 3 ore. Un pensiero?». Toccandolo si sceglie Ti penso o il gesto del suo stato. Mai di notte, dentro la battuta al giorno di US vi ricorda, e si spegne con «Non dirmelo più» come le altre (in Profilo › Notifiche: «Quando la tua persona non sta bene»). Se le hai già mandato il gesto, non lo dice.
+- **Oggi si adatta, poco:** al posto del prossimo impegno (mai di uno di oggi, e mai una riga in più: senza impegno non compare) può esserci un suggerimento leggero, uno solo: se l'altra persona è stanca o giù «🎙 Un vocale a Bea?» (apre Lasciato per te sul vocale); se siete tutti e due felici o innamorati «🎲 Una partita?» (apre Gioca). Se è in viaggio, la pillola della distanza dice «🚗 in viaggio».
+- **Lavoro e studio rispettati:** mentre sei «al lavoro» o «sui libri» le notifiche che possono aspettare aspettano: le partite di Gioca, il promemoria serale della domanda di oggi e quelle di US vi ricorda. Arrivano quando lo stato finisce o scade (al massimo 12 ore), negli orari di sempre (Gioca 9–22, la sera della domanda fino alle 22, US vi ricorda fino alle 21). Ti penso, Lasciato per te, post-it e risposte al Come stai arrivano sempre.
+- **Il widget dell'altra persona si aggiorna subito,** anche con l'app chiusa, quando cambi il tuo Come stai (avviso silenzioso, come per il cambio di look; su iPhone quando iOS lo consegna).
+- **«In viaggio» e il calendario di Noi:** scegliendo «in viaggio» la scheda chiede «Lo segno nel calendario di Noi?»; «Sì, segnalo» apre l'impegno già scritto («In viaggio», oggi, tutto il giorno) e lo salvi tu, «No, grazie» chiude.
+- Niente storico del Come stai: la risposta sta sulla riga dello stato e se ne va con lui.
+### Il vostro mese: il pacchetto di carte del mese (27/11)
+
+**Stato:** ramo `claude/il-vostro-mese`, verso staging, dalla tavola «Il vostro mese» approvata il 27/11. Ordine: 1) migrazione `20261127202326_il_vostro_mese` (nessuna funzione Edge, nessun cron); 2) il web. Servono un AAB nuovo e una build TestFlight con la stessa versione per condividere le immagini dall'app: arrivano due plugin ufficiali di Capacitor 8, `@capacitor/share` 8.0.3 e `@capacitor/filesystem` 8.1.6. Senza, l'app vecchia apre e guarda le carte come la nuova, ma per condividere dice che serve la nuova versione (su iPhone la condivisione del sistema può funzionare già ora). Da provare sui telefoni: strappo, vibrazione, condivisione su TikTok.
+
+- **Il primo di ogni mese arriva un pacchetto** con le carte del mese appena finito; il 31 dicembre quello d'oro con le carte più belle dell'anno. Ognuno lo apre quando vuole: si strappa trascinando il dito lungo la linea in alto (o «Apri senza strappare»), si gira una carta alla volta e si lancia via; l'ultima è la rara, che trema, si gira d'oro e brilla seguendo il dito. Alla fine le carte si aprono a ventaglio.
+- **Le carte** sono al massimo 10 e sempre vere: foto (al massimo 3), domande a cui avete risposto e che avete letto tutti e due (al massimo 2), una lettera tenuta, una prima volta segnata in Noi, una scelta uguale a Questo o quello, i vostri numeri, dove siete stati, l'intesa in Gioca. Vincono le cose fissate in bacheca, quelle tenute, le prime volte, le risposte lunghe, i posti nuovi e i cuori. Un mese con poche cose ha meno carte, mai inventate. La carta «Il vostro Come stai» non c'è: Come stai non tiene uno storico.
+- **Le stesse carte per tutti e due,** scelte una volta sola. Si vede se l'altra persona non l'ha ancora aperto. Un pacchetto non aperto resta per sempre.
+- **Le vostre carte** in Ricordi (scheda «Carte»): un album per anno, 12 posti e il posto d'oro; i mesi prima di voi restano chiari. Si arriva anche da Gioca («Il vostro mese», che dice «È arrivato il vostro novembre» quando c'è un pacchetto da aprire) e dalla fine dell'apertura.
+- **Una carta alla volta:** toccando una carta del ventaglio (alla fine o nel mese della collezione) si apre grande; si scorre a destra e sinistra con «3 / 10»; su ogni carta «Metti in bacheca» (quando è un ricordo, una lettera o una risposta tenuta) e «Salva come immagine».
+- **Condividi il mese:** un carosello 9:16 (1080×1920), la copertina più una immagine per carta, con «US · uscouple.app» in basso. Foto e risposte sono nascoste finché non accendi i due interruttori.
+- Se un ricordo viene cancellato, la sua carta si spegne con «Questo ricordo non c'è più»: le carte tengono solo il riferimento, mai una copia di foto o testi. Chi esce dalla coppia o elimina l'account perde solo il segno di cosa ha aperto; i pacchetti restano alla coppia.
+- Gratis. Vibrazione sì, suoni no. Con «Riduci movimento» niente tremolio, scintille e voli.
+
+### I cuoricini volano nell'isola (27/11)
+
+**Stato:** ramo `claude/cuori-verso-isola`, verso staging, dopo «I cuori» (#317) e i widget (#318). Solo app (web): niente migrazioni, niente funzioni, nessun AAB o TestFlight necessario oltre al solito aggiornamento del web. Da provare sui telefoni (US LIVE su Android, TestFlight su iPhone) che il volo resti fluido.
+
+**Cosa cambia:**
+- **Quando mandi un Ti penso ×N i cuoricini vanno nell'isola in alto,** dove vivono i vostri personaggi. Mentre tocchi il cuore della barra tutto resta come prima (cuoricini intorno al cuore e «×N»). Quando ti fermi, l'isola si apre, i cuoricini salgono in curve morbide dal cuore della barra e si rimpiccioliscono dentro il personaggio dell'altra persona: ha gli occhi a cuore, fa un saltello a ogni ondata che arriva e accanto ha «×5». Il tuo personaggio resta com'è. Circa due secondi dopo l'ultimo cuoricino l'isola si richiude nel simbolo US.
+- Succede su Oggi, Noi, Ricordi e Gioca, dove l'isola si vede. Se l'isola non c'è o è coperta (Impostazioni, un foglio aperto, la coppia non ancora completa, Oggi a schermo intero), se sta già facendo altro (la prima occhiata, un livello nuovo, US vi ricorda che parla) o durante l'introduzione, i cuoricini volano come prima e l'isola resta com'è. Un livello nuovo che arriva in quel momento aspetta che l'isola si richiuda.
+- Se il Ti penso non parte (niente rete), l'isola si richiude subito: non fa finta che l'altra persona l'abbia ricevuto.
+- Con «Riduci movimento» niente volo: l'isola si apre per un attimo con gli occhi a cuore e «×N». Il messaggio «Ti penso ×5 inviato a <Nome>» resta quello di sempre; non si aggiunge niente da toccare.
+### Widget Ti penso: i tocchi veloci contano anche su Samsung (27/11)
+
+**Stato:** ramo `claude/widget-tocchi-samsung`, verso staging. Trovato dal founder sull'APK 1795795958: il widget contava un tocco solo.
+
+- Mentre il cuore grande è aperto sopra la Home, ogni tocco vicino al widget conta come un altro tocco. Prima contava solo un tocco esattamente nel rettangolo del widget, e su Samsung le coordinate potevano essere un po' spostate: il tocco cadeva «fuori» e il cuore si chiudeva senza contare. Serve l'AAB nuovo.
+
+### Ti penso ×N anche dai widget e nell'avviso Android (27/11)
+
+**Stato:** ramo `claude/widget-ti-penso-ripetuto`, verso staging, dopo «I cuori» (#317). Ordine: 1) migrazione `20261127152323_widget_ti_penso_ripetuto` (dopo `20261127141307_cuori_ti_penso`, che aggiunge `think_taps`); 2) funzioni `widget-think-send` (accetta i tocchi) e `send-web-push` (il catalogo condiviso ora mette il numero nel pacchetto Android). La funzione nuova funziona anche prima della migrazione (manda 1 tocco) e quella vecchia anche dopo (la firma vecchia è coperta dal valore predefinito). Servono un AAB nuovo (widget Android e frase dell'avviso) e una build TestFlight (widget iPhone e Controllo) con la stessa versione; senza, i widget di prima mandano 1 come oggi. Da provare sui telefoni: Android (anche con l'app chiusa da tempo) e iPhone via TestFlight.
+
+**Cosa cambia:**
+- **Il cuore del widget si può toccare tante volte di fila,** su Android, su iPhone e dal Controllo «Ti penso» dell'iPhone (blocca schermo, Centro di Controllo, tasto Azione). A ogni tocco il widget mostra subito «×2», «×3»… e quando ti fermi per un secondo e mezzo parte un solo Ti penso con quante volte hai premuto; poi il widget dice «Inviato ×5» (o «Ricambiato ×5»). Su Android anche i tocchi sul cuore che si apre sopra la Home contano. Al 99° tocco parte subito.
+- **Il widget di chi lo riceve dice quante volte:** «Bea ti ha pensato 5 volte»; sul blocca schermo dell'iPhone il cerchio mostra il cuore con «×5» e la riga sopra l'orologio «Bea ti pensa ×5». Con un tocco solo resta come prima.
+- **L'avviso Android dice il numero:** «Bea ti ha pensato 5 volte ♡» (in inglese «Bea thought of you 5 times ♡») al posto di «tante volte». Il telefono riceve solo quel numero, e solo per questo avviso: mai nomi, testi o altro.
+
+### I cuori: Ti penso ×N e il cuore che resta (27/11)
+
+**Stato:** ramo `claude/cuori-ti-penso`, verso staging; migrazione `20261127141307_cuori_ti_penso` da applicare su staging prima delle funzioni; funzioni da deployare dopo: `send-web-push` e `widget-think-send` (tutte e due usano `_shared/think-web-push.ts`, che ora conta i tocchi, e il catalogo condiviso col tipo Android «tante volte»). Per avere la frase «tante volte» su Android serve un AAB nuovo (`UsPushNotices.java`); senza, Android dice ancora «ti sta pensando». Prototipo approvato: https://claude.ai/artifact/2NXZSrS4EypVcsAVBNDRVy.
+
+**Cosa cambia:**
+- **Ti penso ×N.** Il cuore in mezzo alla barra si può toccare tante volte di fila: a ogni tocco si schiaccia e rimbalza, escono cuoricini nei vostri due colori e sopra compare «×2», «×3»… A 3, 6 e 10 tocchi la scossa è più forte (più cuoricini, più luce, una vibrazione più piena; dorati da 10). Quando ti fermi per poco più di un secondo parte un solo Ti penso con quante volte hai premuto, i cuoricini volano verso l'altra persona e il messaggio dice «Ti penso ×5 inviato a <Nome>». Il cuore non si blocca più tra un tocco e l'altro.
+- **Chi lo riceve legge quante volte:** la notifica dice «<Nome> ti ha pensato 5 volte ♡» (in inglese «thought of you 5 times»), l'avviso dentro l'app lo stesso, e il foglio del Ti penso ricevuto dice «ti pensa ×5». Su Android, con la voce «Ti penso ×N anche dai widget» qui sopra, l'avviso dice anche il numero. Gioca e «La cosa di oggi» mandano un Ti penso da 1; i widget sommano i tocchi (voce qui sopra); il conteggio di oggi conta i Ti penso, non i tocchi.
+- **Il cuore che resta.** Nella risposta al Ti penso e sotto la risposta della domanda di oggi il primo tocco mette il cuore come prima; i tocchi dopo lo tengono e aggiungono cuoricini e «×N» sul bottone, senza mandare altro (niente notifiche in più). Il cuore della domanda di oggi si toglie solo tenendolo premuto (un bordo si riempie in mezzo secondo e poi si svuota) o con Canc dalla tastiera; un tocco non lo toglie più. La reazione al Ti penso resta una sola, come prima: dopo il cuore nel foglio resta solo il cuore, pieno, da ritoccare, e il foglio si chiude da solo poco dopo l'ultimo tocco.
+- **L'abbraccio coi vostri personaggi.** Il bottone «Un abbraccio» non è più il disegnino: mostra i vostri due personaggi veri, con le vostre forme, colori e vestiti, guancia a guancia con gli occhi chiusi e felici e un cuoricino nei vostri due colori sopra. Se cambiate forma, cambia anche lui.
+- Con «Riduci movimento» acceso restano il rimbalzo leggero e il numero, senza cuoricini. Lettori di schermo: «Cuore mandato», «3 cuori», «Cuore tolto».
+
+### Sicurezza: le funzioni vanno in produzione solo da main (27/11)
+
+**Stato:** ramo `claude/sicurezza-deploy`, verso staging. Dal controllo generale.
+
+**Cosa cambia:**
+- Il bottone che pubblica le funzioni del server in produzione accetta solo il codice di `main`, avviato da `main`, come già quello delle migrazioni. Un ramo non ancora unito può arrivare solo su staging. Per chi usa l'app non cambia niente.
+### Piccolezze prima del rilascio (27/11)
+
+**Stato:** ramo `claude/piccolezze-pre-rilascio`, verso staging; migrazione `20261127130000_premi_apostrofi` da applicare su staging.
+
+- I widget dell'iPhone non portano più dentro le vecchie illustrazioni e la grana che non usano: l'app è un po' più leggera, i widget restano uguali.
+- I testi dei premi aggiunti il 26/11 hanno l'apostrofo tipografico come tutti gli altri: «Ora d’oro», «Oggi cambia con l’anno…», «Foglie d’acero e d’autunno…», «…dell’altra persona».
+- Su un telefono lento la prima apertura dell'isola su Oggi non si perde più: aspetta che coppia e livello arrivino, anche dopo molti secondi. Mai durante l'intro, mai due volte.
+- Tolto un pezzo di codice morto che cercava un contatore dei giorni che non esiste più. Nessun cambio visibile.
+### Lasciato per te: video di 30 secondi pieni (27/11)
+
+**Stato:** ramo `claude/lasciato-video-30s`, verso staging. Trovato dal founder: con la fotocamera del telefono ad alta qualità i 20 MB finivano dopo ~10 secondi e il video si fermava prima. Nessuna migrazione: stessi limiti (30 secondi, 20 MB, MP4) e stesso caricamento di un video dalla galleria. Serve un AAB nuovo (cambia anche `UsWebChromeClient.java`) e una build TestFlight nuova per averlo sull'iPhone.
+
+- **«Fai un video» registra dentro US**, con la stessa schermata della foto: fotocamera dietro, pulsante per girarla, audio acceso. In alto il tempo che corre fino a 0:30; a 30 secondi il video si ferma da solo. Poi lo rivedi e scegli «Rifai» o «Usa video».
+- **La qualità la decide US:** circa 720p, 3 Mbit/s di video più 128 kbit/s di audio. 30 secondi pesano circa 11 MB, ben sotto i 20 MB. Se un telefono registrasse più pesante del previsto, US ferma il video a 18,5 MB e lo tiene buono (dice a che secondo si è fermato).
+- **Il file è un MP4 (H.264 + AAC)** e passa dagli stessi controlli di un video della galleria (durata, peso, tipo), con gli stessi messaggi.
+- **Dove il telefono non sa registrare MP4 dentro un'app** (WebView vecchi, iPhone prima di iOS 14.3) resta la fotocamera del telefono come prima. Anche se US non trova la fotocamera, apre quella del telefono.
+- **Permessi:** se fotocamera o microfono sono negati, US dice dove riattivarli e, nelle app, mostra «Apri le impostazioni» (la pagina di US nelle Impostazioni del telefono). Se le Impostazioni non si aprono, il pulsante sparisce e resta la frase.
+- **Android, «Scatta una foto» e la vecchia «Fai un video»:** con la fotocamera negata (anche per sempre) prima non succedeva niente; ora compare lo stesso messaggio con «Apri le impostazioni».
+- Da provare su telefono vero: un video di 30 secondi su Android e su iPhone (peso finale, audio, che si veda sull'altro telefono), il permesso negato per sempre su Android.
+### La bacheca: i vostri post-it e la ricerca in Ricordi (27/11)
+
+**Stato:** ramo `claude/bacheca-fasi-2-3`, verso staging; migrazioni da applicare su staging: `20261127122511_bacheca_postit_ricerca.sql` (dopo `20261125230000_us_bacheca_v1.sql` e `20261127120000_us_battute_mute_bacheca.sql`); funzioni da deployare: `send-web-push` (nuovo avviso `bacheca_postit`). Android: serve un AAB nuovo perché il telefono scriva la frase dell'avviso (le app vecchie mostrano la frase generica). Fonte: grill del 27/11 (D1–D16) e tavola approvata.
+
+- **I vostri post-it sulla bacheca:** su ogni cosa appesa (una foto, una lettera tenuta, una risposta tenuta, un traguardo) ognuno di voi può attaccare un suo post-it, al massimo 80 caratteri, nel suo colore, accanto a quello giallo di US. Uno a testa per cosa: ognuno cambia o toglie solo il suo, l'altra persona scrive il suo. Non occupano posto tra i 12.
+- **Scrivere un post-it fa la cosa «vostra»:** US non la stacca più da sola.
+- **I post-it restano con il ricordo:** se staccate la cosa dalla bacheca i post-it restano e tornano quando la riappendete. Se cancellate il ricordo, se ne vanno con lui.
+- **«Sulla bacheca» nel ricordo:** aprendo un ricordo, sotto la foto, ci sono il post-it di US e i vostri, anche quando non è appeso, con «Scrivi il tuo» e «Riappendi in bacheca» (oppure «Vedilo in bacheca» se è appeso).
+- **L'avviso:** «Francesco ha scritto su un ricordo in bacheca», mai il testo del post-it, al massimo uno ogni 2 ore, sotto l'interruttore «Lavagna» (che ora dice «Quando la tua persona disegna, ti lascia un post-it o scrive sulla bacheca»). Su web e iPhone apre la bacheca centrata su quella cosa; su Android apre Ricordi.
+- **La lente in Ricordi:** un tasto con la lente accanto a Raccolta · Bacheca · Mappa. Cerca nelle didascalie, nei posti, nei post-it (di US e vostri), nel mese e nell'anno, nel nome di chi l'ha messo, nelle lettere e nelle risposte che avete tenuto. Mai in quello che non avete tenuto. Filtri: Tutti / Le mie / Di Bea, anno, posto. A campo vuoto: «Un anno fa», i vostri anni, i 3 posti con più ricordi, «Le mie», «Di Bea». I risultati arrivano per mese: foto come polaroid, lettere come buste, risposte come foglietti; quelli già in bacheca hanno la puntina.
+- **Appendi in bacheca** da un risultato (foto, lettere e risposte tenute): «Appesa in bacheca ♡ · 9 di 12». Se è già appesa: «Vedilo in bacheca».
+- **Bacheca piena (12, gratis):** la bacheca chiede cosa staccare. Le cose fissate non si possono scegliere; tocchi una delle altre e «Stacca e appendi» le scambia in un colpo solo. Con US Plus il limite resta 500.
+- Ricerca e post-it sono gratis per tutti. La ricerca gira sul server, solo sui vostri ricordi, al massimo 60 risultati, e quello che scrivete non viene salvato.
+
+### Widget dell'iPhone aggiornati anche ad app chiusa (27/11)
+
+**Stato:** ramo `claude/controllo-integrazione`, verso staging. Chiesto dal founder il 27/11 («fai fix per ios»). Arriva con una build TestFlight nuova. Servono anche le funzioni `send-web-push`, `leave-couple` e `delete-account` aggiornate su staging.
+
+**Cosa cambia:**
+- Quando l'altra persona cambia forma, colore o accessori, o lascia la coppia, anche i widget dell'iPhone si aggiornano con US chiusa, come su Android: arriva un avviso silenzioso, senza banner, che contiene solo il personaggio.
+- iOS consegna questi avvisi quando decide lui (di solito entro pochi minuti) e mai a un'app chiusa a mano dal multitasking: lì il personaggio si aggiorna alla prossima apertura.
+
+### Oggi senza la striscia bianca in alto (27/11)
+
+**Stato:** ramo `claude/controllo-integrazione`, verso staging. Segnalata dal founder con uno screenshot dell'APK di staging.
+
+**Cosa cambia:**
+- Col tema chiaro in cima a Oggi c'era una riga bianca di un pixel: la foto ora arriva fino al bordo, anche ai lati. Era il bordo rimasto dalla vecchia scheda della foto.
+
+### Avvisi di US vi ricorda e personaggi sempre aggiornati (27/11)
+
+**Stato:** ramo `claude/push-ricorda-personaggio`, verso staging; migrazioni e funzioni da applicare su staging.
+
+**Cosa cambia:**
+- **US vi ricorda arriva anche sul telefono:** le battute più importanti diventano una notifica. Il compleanno dell'altra persona una settimana prima e il giorno stesso, l'anniversario una settimana prima, «un anno fa, oggi», un ricordo che US ha appeso in bacheca. Al massimo una al giorno, solo alle 10 o alle 18, mai una battuta già vista nell'app.
+- **Nuovo interruttore** in Profilo › Notifiche: «US vi ricorda», acceso di serie. Valgono anche «Non dirmelo più» e «Le voci dei personaggi».
+- **Il personaggio dell'altra persona dal vivo:** se Bea cambia forma, colore o accessori mentre hai US aperta, lo vedi cambiare in pochi secondi.
+- **Widget Android anche ad app chiusa:** il nuovo personaggio arriva ai widget con un avviso silenzioso, senza notifica. Se l'altra persona esce dalla coppia o cancella l'account, i widget si svuotano (nome, foto, Come stai). Serve un AAB nuovo.
+- **iPhone:** per ora il personaggio arriva con l'app aperta o quando la riapri; l'avviso silenzioso ai widget iPhone resta da decidere.
+
+### Widget coi vostri personaggi davvero, e il personaggio dell'altra persona aggiornato (27/11)
+
+**Stato:** ramo `claude/widget-personaggi-filtro`, verso staging. Trovato nel controllo generale del 27/11. Nessuna migrazione.
+
+**Cosa cambia:**
+- **Widget:** il ponte tra l'app e il telefono (`platform.js`) buttava via i personaggi e il secondo Post-it. Per questo i widget nuovi disegnavano sempre il personaggio di base del ruolo (tondo rosa o quadrato lilla) e il Post-it largo aveva una nota sola. Ora passano, controllati come fa il codice nativo.
+- **Il personaggio dell'altra persona:** se Bea cambia forma, colore o accessori, sul tuo telefono arriva quando riapri US. Prima arrivava solo dopo aver chiuso del tutto l'app. Si rilegge solo quello, e il resto si aggiorna solo se qualcosa è cambiato. Così si aggiornano anche Oggi, l'angolo e i widget.
+- **Colore:** cambiato nel Profilo o alla prima apertura, arriva subito anche alla scheda del Profilo, ai personaggi e ai widget. Prima il Profilo diceva ancora «Rosa». «Torna al colore di sempre» non compare più quando quel colore è dell'altra persona: prima vi ritrovavate tutti e due dello stesso colore.
+### Oggi, personaggi e US vi ricorda: correzioni dal controllo (27/11)
+
+**Stato:** ramo `claude/controllo-oggi-personaggi` (sopra `claude/intro-crea-personaggio`), verso staging. Nessuna migrazione: si riusano `set_my_battute_mute_v1` e la lettura di `us_battute_mute` che ci sono già.
+
+- **«Non dirmelo più» si può davvero riaccendere.** In Profilo › Notifiche, sotto «Le voci dei personaggi», compare «Le voci che hai spento»: ogni tipo spento (compleanni, anniversari, un anno fa, quando tocca a te…) ha il suo interruttore per riaccenderlo. Se il salvataggio di «Non dirmelo più» non riesce, US lo dice e non fa finta di averlo spento.
+- **L'interruttore «Le voci dei personaggi» mostra lo stato vero**, letto dal server prima di aprire la scheda, non quello che Oggi aveva caricato.
+- **Dopo l'intro** tornano le cose che aveva trattenuto: il nuovo livello sull'isola e la frase dei personaggi.
+- **Intro più solida:** se la domanda di oggi o l'isola non sono ancora sullo schermo quando parte, l'intro le aspetta un attimo; se non arrivano salta quella tappa, e l'ultima tappa mostrata dice sempre «Fine». Il colore dell'altra persona risulta già preso anche quando il suo profilo non è ancora arrivato.
+- **Più facile da toccare:** i colori dell'intro sono alti 44 px e, sui telefoni stretti, vanno su due righe da quattro; l'isola chiusa, le schede del vostro angolo e «Non dirmelo più» arrivano a 44 px. La domanda di oggi già svelata ha un pulsante «Togli» visibile, oltre allo scorrere di lato. Nella prima apertura un colore preso dice di chi è.
+- **Parole neutre:** via «Pronto?», «Siete arrivati», «vi siete visti», «tutti e due» (frasi dei personaggi, intro, colori e US Plus). Il nome all'inizio di una frase ha la maiuscola anche quando è «La tua persona».
+- **Widget:** l'app passa sempre ai widget forma e colori di ciascun personaggio secondo il ruolo, come li disegna l'app (chi ha creato la coppia il tondo rosa, chi è entrato il quadrato lilla); il nastro delle polaroid, senza colore, usa quello del ruolo di chi ha messo la foto.
+- **Guardaroba:** il ridisegno di ogni minuto non tocca più il vostro angolo aperto, e chi usa la tastiera non perde il punto in cui era.
+- **Pulizia:** tolto codice che cercava pezzi di pagina spariti da tempo (ricordo in home, barra del legame, contatori, vecchi badge e pulsanti) e le regole CSS morte del vecchio Ti penso in alto e del vecchio calendario a tutto schermo. Una lettura in meno al server per i Ti penso del mese (non serviva più).
+### Inglese completo (27/11)
+
+**Stato:** ramo `claude/inglese-mancanti` (sopra `claude/intro-crea-personaggio`), verso staging.
+
+- Con il telefono in inglese non restano più frasi in italiano nell'intro col personaggio (anche la nuova parte «crea»: forme, colori, «Gli accessori arrivano dopo…», «Eccomi!…»), nelle battute di US vi ricorda e nella loro scheda, nella bacheca tenuta da US, nei temi ed effetti di Oggi (nomi, descrizioni, cosa fa il dito), nei countdown, nel guardaroba e nell'angolo, nel widget Post-it e in Noi («Vi rivedete tra», «Oggi vi vedete», il giorno speciale). Circa 270 voci nuove nel dizionario inglese.
+- In inglese le date delle battute escono in inglese («December 2»), e il testo già pronto di Lasciato per te e il titolo «Compleanno di…» arrivano tradotti.
+- In italiano non cambia nulla: le frasi sono le stesse, solo scritte intere (con e senza nome, «un anno» e «N anni») perché il dizionario le trovi.
+- Un test nuovo (`tests/i18n-coverage.test.js`) fallisce se in quei file compare una frase italiana senza la sua voce inglese. Lo script `scripts/i18n-extract.mjs` ora gira anche su Windows e vede anche le frasi con una parte che cambia.
+- Il dizionario cresce di ~24 KB: il budget della precache (3,45 MB) si supera di ~21 KB finché non entra il ramo che toglie i file delle Stories.
+
+### Intro: prima crei il tuo personaggio (27/11)
+
+**Stato:** ramo `claude/intro-crea-personaggio`, verso staging. Chiesto dal founder dopo la prova dell'APK di staging: «aggiungi nell'intro una parte che … ti fa scegliere il personaggio prima del tutorial … senza il guardaroba che si sblocca dopo». Nessuna migrazione: usa `set_my_character_shape` e `set_my_color` che ci sono già.
+
+- **Chi non ha mai fatto il suo personaggio** (chi ha già l'app e riceve l'aggiornamento, o chi nella prima apertura ha lasciato tutto com'era) prima del giro dell'intro lo crea: il personaggio spiega che è il suo e che lo segue in tutta l'app, anche nei widget. Si scelgono le cinque forme, ognuna col tuo personaggio dentro, e gli otto colori. Quello dell'altra persona è barrato. Il personaggio cambia subito mentre scegli.
+- Niente guardaroba lì: una riga dice che gli accessori arrivano dopo e si sbloccano insieme nel vostro angolo.
+- Poi «Eccomi!» e il giro di sempre (otto tappe). Chi ha già scelto forma o colore parte direttamente dal giro. «Rivedi l'intro» nel Profilo mostra anche la scelta, con quello che hai adesso.
+- Se il salvataggio non riesce, torna la scelta di prima con un avviso. Il colore dell'altra persona non si può prendere, e quando US Plus sarà in vendita il colore chiederà Plus come nelle Impostazioni.
+### Noi, Ricordi e Gioca: correzioni dal controllo (27/11)
+
+**Stato:** ramo `claude/controllo-noi-ricordi-gioca`, verso staging. Una migrazione nuova, `20261127120000_us_battute_mute_bacheca.sql`, scritta ma non applicata (serve il sì, prima su staging).
+
+- **Lavagna senza rete**: un tratto non sparisce più. Resta sulla lavagna, più chiaro, e parte da solo appena torna la connessione (o al tratto dopo, o quando riaprite US), in ordine. Mai doppio.
+- **Bacheca**: se non si riesce a leggerla dice «La bacheca non risponde» con «Riprova», invece di sembrare vuota. Le risposte tenute mostrano la domanda e le risposte di tutti e due, ognuna col segno nel colore di chi l'ha scritta. Le cose appese si aprono anche con la tastiera e col lettore di schermo.
+- **«L'avete fatto?»**: dopo il primo «Sì» la carta dice «Ora manca Bea» e non propone più la foto; la foto arriva solo quando l'idea è fatta davvero, coi sì di tutti e due. Anche la frase sotto lo spiega.
+- **Post-it**: se la rete cade proprio mentre se ne salva uno nuovo, non nasce più una copia.
+- **Tocchi più comodi** (44 punti): la casella piccola delle liste nei post-it, le frecce del mese nel calendario, la X delle idee e delle voci dei post-it, le schede Raccolta/Bacheca/Mappa.
+- **Gioca**: con la tastiera o il lettore di schermo la carta di lato parte subito; col dito prima viene al centro, come prima. Testi: «Le cose che ancora non sapete di voi due», e senza il nome dell'altra persona «Aspetti la tua persona» (non più «Aspetti La tua persona»).
+- **Date**: le partite finite dopo mezzanotte mostrano il giorno giusto (quello italiano). Il calendario di Noi e «oggi» per le foto contano il giorno come il resto di US (ora italiana), anche se il telefono ha un altro fuso.
+- **Ricordi, la prima volta**: sotto «La vostra storia parte da qui» c'è «Aggiungi la prima foto», che apre la galleria come il +. Il riquadro vuoto non luccica più come se stesse caricando.
+- **US vi ricorda**: anche il fumetto della Bacheca si può zittire tenendolo premuto («Non dirmelo più»); la migrazione fa ricordare la scelta al server.
+- La foto di un Ricordo nuovo viene letta una volta sola per fare l'immagine e la miniatura (meno lavoro per il telefono). Tolti pezzi di codice e di stile rimasti dal redesign, senza cambiare nulla di visibile.
+### Lasciato per te: fotocamera e video (27/11)
+
+**Stato:** ramo `claude/lasciato-fotocamera-video`, verso staging. Nessuna migrazione. Nelle app arriva solo con un AAB nuovo (cambiano anche manifest e codice Android) e una build TestFlight nuova (il web sta dentro l'app). Nel sito basta il rilascio web: lì c'è solo «Fai un video».
+
+- **Scatta una foto:** nelle app apre la fotocamera del telefono, quella di sempre, al posto del mirino dentro US. Nel browser resta il mirino di US.
+- **Fai un video:** nuovo, sopra «Scegli un video». Apre la fotocamera del telefono in modalità video, con l'audio. Valgono gli stessi limiti dei video della galleria (30 secondi e 20 MB) e lo stesso messaggio se il video è troppo lungo o troppo grande. Sul computer, dove la fotocamera non si apre, mostra la scelta dei file.
+- **Android, il pezzo che mancava:** da Android 11 un'app «vede» la fotocamera del telefono solo se lo dichiara nel manifest; senza, il bottone avrebbe aperto la galleria. Ora è dichiarato, per le foto e per i video.
+- **Android, video:** la fotocamera riceve i limiti di US (30 secondi, poco meno di 20 MB) e si ferma da sola, se l'app della fotocamera li rispetta. Con la qualità alta del telefono 20 MB possono bastare per soli 10 secondi circa.
+- **iPhone:** le frasi per fotocamera e microfono c'erano già. iOS non riceve limiti: con un video più lungo di 30 secondi o più grande di 20 MB compare il messaggio e il video non parte.
+### L'invito che si rinnova (27/11)
+
+**Stato:** ramo `claude/invito-rinnovo`, verso staging. Dal controllo generale del 27/11 («per il resto va bene tutto»). **Da applicare su staging:** le migrazioni `20261127092454_invito_14_giorni` e `20261127092908_invito_promemoria_cron`, e la funzione `invite-reminder-job`. Su staging i lavori a orario restano spenti di proposito: lì il promemoria si prova a mano.
+
+- **Il codice d'invito vale 14 giorni** invece di 48 ore: le coppie aspettano l'altra persona anche una o due settimane, e chi apriva un link vecchio trovava «Codice non valido».
+- **Se il codice è scaduto, US ne fa uno nuovo da solo** quando apri la schermata d'attesa, e te lo dice.
+- **«Avvisami quando entra»** nella schermata d'attesa: accende le notifiche (prima si chiedevano solo dopo essere in due). Così arriva l'avviso quando l'altra persona entra.
+- **Promemoria per chi aspetta:** il giorno dopo e tre giorni dopo, alle 18, «Il vostro spazio vi aspetta: manda il codice alla tua persona ♡». Solo a chi ha acceso le notifiche, una volta sola. Su Android serve l'APK nuovo per leggere la frase giusta: prima mostra quella generica.
+### La prima settimana guidata, solo per le coppie nuove (27/11)
+
+**Stato:** ramo `claude/prima-settimana`, verso staging. **Da applicare su staging:** la migrazione `20261127093508_prima_settimana`. Chiesto dal founder il 27/11: «solamente per gli account appena creati, quindi per i Beta tester no».
+
+- Per i primi sette giorni dopo che l'altra persona entra, i personaggi di «US vi ricorda» suggeriscono un piccolo passo al giorno:
+  1. la domanda di oggi
+  2. la prima foto
+  3. una partita
+  4. un post-it
+  5. il Ti penso
+  6. i compleanni nel calendario
+  7. «una settimana insieme in US!»
+- Ogni frase ha il suo tasto, che porta dritto al posto giusto.
+- **Solo le coppie nate dopo la migrazione:** chi usa già US (i beta tester) non lo vede mai.
+- Un passo già fatto si salta: se la foto c'è già, o il tuo compleanno è già nel calendario. Compleanni e anniversario vincono comunque la giornata. Come ogni frase, si può spegnere per sempre con «Non dirmelo più».
+### Build più leggera, cache sicura e test verdi (27/11)
+
+**Stato:** ramo `claude/controllo-build-ci`, verso staging.
+
+- **Telefoni sempre coi file nuovi:** la build del sito di produzione mette da sola nel numero di versione un'impronta dei file (`<rilascio>-<impronta>`). Prima, se un rilascio cambiava il codice senza `npm run build:id` fatto a mano, i telefoni con l'app installata tenevano i file vecchi dalla cache (dall'ultimo id `us-rilascio-20261114-109` sono cambiati 23 file JS/CSS). Se cambiano solo documenti o test l'impronta resta uguale e non compare il banner di aggiornamento. Chi usa l'app non vede altro.
+- **App più leggera:** le immagini originali dei disegni (`assets/source`, 34 MB) non finiscono più nell'APK né sul sito, e nemmeno i compagni ritirati, le icone di Impostazioni e Stories che non si vedono più e il catalogo delle stelle che non si carica più (restano nel repository, sono APPROVED). La parte web dell'APK passa da 40,6 MB a 5,1 MB; il sito da 39,5 a 4,1 MB.
+- **Widget Android:** tolti 94 disegni dei widget vecchi (Pastello, vetro, grana, wordmark e icona Ti penso copiati dai master), 1,8 MB, che nessun widget usa più. I widget già sul telefono non cambiano: resta tutto quello che usano, Giorni insieme compreso. Arriva con un AAB nuovo.
+- **Stories via davvero:** `stories.js` e `stories.css` (57 KB) si scaricavano e si tenevano offline senza fare niente; ora non ci sono più. L'archivio delle Stories in Impostazioni resta. La cache offline scende da 3.606.631 a 3.529.396 byte (margine sul limite da 11 a 88 KB).
+- **Solo per chi sviluppa:** `npm test` completo (anche database e browser) su ogni PR verso staging e `main`; i workflow non aspettano più rami che non esistono; il SQL di produzione dal workflow parte solo da `main`; i test rimasti indietro col redesign sono allineati all'app.
+
+**Test:** `tests/build-leggera.test.mjs`, `tests/widget-drawables-referenced.test.js`, `tests/ci-workflows.test.js`, `tests/cloudflare-pages-migration.test.js`, `tests/supabase-sql-workflow.test.js`.
+
+**Novità per Play:** nessuna voce a sé («Piccole correzioni»).
+
+### Widget iPhone col redesign e blocca schermo (26/11)
+
+**Stato:** in staging (#314, sopra Android #313). Stessa tavola approvata. Arriva solo con una build TestFlight nuova.
+
+**Cosa cambia:**
+- Su iPhone gli stessi nove widget di Android (prima c'erano solo Foto e Ti penso, nello stile vecchio), col foglio di giorno e il nero caldo di notte e i personaggi veri disegnati dall'estensione.
+- **Blocca schermo:** Ti penso e Giorni in un cerchio, Come sta l'altra persona, la Distanza con l'anello della batteria, la busta; rettangoli per Voi due, La domanda, Lasciato per te e Distanza; una riga sopra l'ora (giorni insieme, «Bea ti pensa», «Bea ti ha lasciato una foto»). In una tinta sola, con le sagome dei personaggi.
+- **Il Controllo «Ti penso»** (iOS 18): sul blocca schermo al posto della torcia, nel Centro di Controllo o sul tasto Azione, manda il cuore senza aprire US.
+
+### Widget Android col redesign (26/11)
+
+**Stato:** in staging (#313), provato sull'APK di staging 1795730573 (27/11: «va tutto quanto bene»). Tavola «US · Widget del redesign» (https://claude.ai/artifact/Hkj3ojVe3bwEHfg9XeJf6A) approvata: «Android ok», poi «tutte okay». Nessuna migrazione. Arriva solo con un AAB nuovo (codice nativo): il web da solo non basta.
+
+**Cosa cambia:**
+- I nove widget Android parlano come l'app: di giorno il foglio del Quaderno, di notte il nero caldo, col tema del telefono. Via le sfumature pastello, le illustrazioni e i cerchi con le emoji.
+- **I personaggi veri** al posto delle foto tonde e delle emoji: la forma, il colore e gli accessori di ognuno, con la faccia del Come stai e addormentati dalle 22 alle 6. Se uno di voi cambia forma, colore o accessori, cambiano anche nei widget appena l'app si apre.
+- **Ti penso**: il cuore dal tuo colore al suo (l'unico posto con i due colori insieme); quando arriva il suo pensiero, il suo personaggio innamorato e «Bea ti pensa». Nel medio voi due col cuore in mezzo.
+- **Foto di Oggi** col velo come in Oggi e, dal medio, voi due piccoli nell'angolo. **La domanda di oggi** col tasto nei vostri due colori (ceralacca di giorno) e il suo personaggio che saluta quando ha risposto. **Come stai** diventa «Voi due». **Distanza**: «Tra voi», niente arco, nel medio un filo dritto fra i due personaggi.
+- **Lasciato per te** è una busta di carta con la ceralacca, bordata nel colore di chi scrive. **Ricordi** sono polaroid col nastro di chi ha caricato la foto. **Post-it** di carta girati appena sulla carta del widget; **Lavagna** con la matita. Lavagna e Post-it arrivano anche in 4x2 (il Post-it medio mostra gli ultimi due, uno a testa).
+- Anteprime nuove nella lista dei widget del telefono e tessere nuove in Impostazioni › Widget.
+- iPhone e blocca schermo: stessa tavola approvata, ancora da fare (i dati dei personaggi arrivano già anche all'estensione iOS).
+### Intro col personaggio e correzioni (26/11)
+
+**Stato:** ramo `claude/premi-fase5-countdown-temi`, verso staging. Tavola «L'intro col tuo personaggio» (https://claude.ai/artifact/5bU5oAjgf9osRX8aumr1z4) approvata: «Sì, vai al codice». Nessuna migrazione.
+
+**Cosa cambia:**
+- **Intro**: subito dopo il primo «Entra in US», su Oggi, il tuo personaggio ti porta in giro in otto tappe (benvenuto, domanda di oggi, Ti penso, Noi, Ricordi, Gioca, Profilo e Impostazioni, il logo che si apre nella barra dei personaggi e nel vostro angolo). Illumina la cosa vera, una frase, Avanti; «Salta» sempre. Il personaggio dell'altra persona dice due battute. Una volta per persona su ogni telefono, non per chi rientra su un telefono nuovo. **Chi ha già l'app (i beta tester)** la vede una volta da sola col primo avvio dopo l'aggiornamento, su Oggi, quando siete in due e non c'è niente aperto (founder, 26/11). «Rivedi l'intro» nel Profilo. Mentre c'è, il fumetto di «US vi ricorda» aspetta.
+- Chi crea la coppia e aspetta l'altra persona vede una riga del suo personaggio nella schermata del codice.
+- **Premi**: le miniature dei temi di Oggi sono le anteprime vere (prima erano sfumature uguali).
+- **Fluidità**: Pellicola e Ora d'oro senza fusione di colore sugli strati che si muovono (Pellicola con un effetto da ~48 a ~58 fps su un telefono modesto); gli alberi di Stagioni diventano un'immagine una volta sola.
+- **Eventi di Noi**: l'ora si scrive come nel calendario (i due punti da soli, «2130» = 21:30); un'ora sbagliata viene detta.
+- **Oggi senza foto sui telefoni bassi**: resta solo «Aggiungi un ricordo», non copre più countdown e domanda.
+- «Torna a Oggi» di Foto a fuoco era invisibile ma raggiungibile da tastiera e lettore di schermo: ora è nascosto davvero.
+
+### Premi, fase 5: temi di Oggi e countdown (26/11)
+
+**Stato:** ramo `claude/premi-fase5-countdown-temi` (sopra le fasi 1–4). Tavola «Temi e countdown di Oggi» (https://claude.ai/artifact/Gh85EKBZ7bsKTJ72qNnZUY) approvata: «Sì, vai al codice». Migrazione `20261126020000_premi_temi_countdown.sql` solo su staging col sì; in produzione solo con un sì separato.
+
+**Cosa cambia:**
+- **Temi di Oggi**: Originale e **Pellicola** gratis (grana, una luce che entra di lato, la data di oggi stampata in arancione), **Ora d'oro** al livello 6 (luce calda e un riflesso di sole che si muove piano), **Stagioni** al 12 disegnata di nuovo: in primavera i ciliegi giapponesi in fiore dagli angoli in alto e i petali dietro la domanda di oggi, in estate il sole in alto a destra e il mare dietro la domanda, in autunno gli alberi rossi e oro, le castagne sui bordi e un letto di foglie, in inverno il vetro ghiacciato agli angoli e la neve. Non cade niente: quello lo fanno gli effetti.
+- Escono **Romantico** e **Chiaro di luna**: chi li aveva torna su Originale.
+- **Countdown**: Editoriale, Partenze e Vetro restano gratis. Escono Aurora, Orbita e Cromo; sugli stessi premi arrivano **Post-it** (livello 3: il tuo post-it attaccato con lo scotch, sotto quello dell'altra persona col cuoricino), **Biglietto** (9: un biglietto del treno, andata per due) e **Filo rosso** (18: i vostri due personaggi ai capi di un filo che si accorcia man mano che il giorno arriva). Tutti piccoli. Chi usava Aurora, Orbita o Cromo trova il nuovo disegno sullo stesso premio.
+- Nei Premi l'anteprima dei tre countdown è quella vera.
+- I widget del telefono (Android e iPhone) disegnano ancora gli stili vecchi per Post-it, Biglietto e Filo rosso: da rifare a parte.
+
+### Premi, fase 3a e 4: Simbolo US e guardaroba (26/11)
+
+**Stato:** rami `claude/premi-fase3-countdown-simbolo` e `claude/premi-fase4-guardaroba` (sopra le fasi 1–2). Migrazione `20261126010000_premi_simbolo.sql` solo su staging col sì.
+
+**Cosa cambia:**
+- **Simbolo US**: «Battito» (livello 2) batte due volte come un cuore con un alone nel tuo colore; «Due colori» (livello 8, nuovo) fa girare i vostri due colori dentro le lettere; «Costellazione» resta e passa al livello 17; «Riflesso» esce (il suo lampo usciva dal simbolo).
+- **Guardaroba**: Gala diventa colletto e papillon vero con un luccichio, dalle Cuffie esce una nota, la Coroncina ha fiori più grandi che ondeggiano, la Corona ha le gemme che brillano; ritoccati Occhiali (montatura vera) e Sciarpina (nodo e code). Le animazioni solo dove il personaggio è grande.
+- La sciarpina non esce più dal corpo quando un altro personaggio con la sciarpina è nascosto nella pagina.
+
+### Premi, fase 2: Ti penso (26/11)
+
+**Stato:** ramo `claude/premi-fase2-tipenso` (sopra la fase 1), verso il ramo fisso di staging. Solo app, niente SQL.
+
+**Cosa cambia:**
+- **Il premio del Ti penso si vede sempre**: parte quando apri il Ti penso, dopo la scena dei personaggi, anche se lo leggi più tardi (prima solo se arrivava con US aperta).
+- **Cuori** (livello 5): escono dagli occhi a cuore di chi ti pensa, nei vostri due colori; toccandoli scoppiano.
+- **Lettera** (livello 15): una busta vera nel colore di chi ti pensa, con l'interno a cuoricini e il sigillo di ceralacca col suo personaggio. Tocchi il sigillo: si spezza, il lembo si apre e il foglio viene avanti con «Ti penso» e il suo nome.
+
+### Premi di Oggi, fase 1: effetti e temi (25/11)
+
+**Stato:** ramo `claude/premi-fase1-effetti`, verso il ramo fisso di staging. Grill D1–D25 e tavola «Premi di Oggi» (https://claude.ai/artifact/M8dY8C3Rvu4Mwvb6Rnw362) approvata: «Approvo, vai». La migrazione `20261126000000_premi_oggi_effetti.sql` va applicata a US-STAGING col via del founder; in produzione solo con un sì separato.
+
+**Cosa cambia:**
+- **Effetti di Oggi nuovi, disegnati a mano nei vostri due colori**, di giorno e di notte. Subito e gratis: **Cuori** (coppie che si cercano salendo e si incontrano) e **Petali**. Poi **Soffioni** (livello 4), **Neve** (7), **Foglie** (10), **Stelle cadenti** (13), **Lanterne** (16) e in cima **Ricordi in volo** (20): piccole polaroid delle vostre foto vere che galleggiano su Oggi.
+- **Gli effetti rispondono al dito** in Foto a fuoco: i cuori scoppiano, i petali e la neve volano via, le stelle e le lanterne partono dal dito, una polaroid apre il suo ricordo. Gli ultimi tre rispondono anche allo swipe. Con un effetto acceso si torna a Oggi con «Torna a Oggi».
+- **L'effetto brilla di più** quando arriva un Ti penso, nei giorni speciali e quando salite di livello.
+- **Escono** gli effetti Stelle luminose, Lucciole, Luci sfocate e Aurora, e i temi Cinema, Sogno pastello e Il vostro cielo: chi li aveva torna a «Nessuno» e «Originale».
+- In Personalizza Oggi le etichette «In uso», «Incluso» e «Sbloccato» tornano piccole (erano diventate riquadri vuoti).
+
+**In produzione:** migrazione del catalogo (col sì), sito e app (stessa versione su AAB e TestFlight).
+
+### Gioca: gettoni e giostra dei giochi (25/11)
+
+**Stato:** ramo `claude/gestioni-giochi-carosello-8d958b`, verso il ramo fisso di staging. Solo app (niente SQL).
+
+**Cosa cambia:**
+- **I gettoni scendono davvero:** quando parte una partita nuova il gettone vola e la scritta passa subito a «Ancora 2 su 3 oggi»; chiudendo la partita non torna più a 3. Riprendere una partita già aperta non costa niente e il gettone resta acceso.
+- **Oggi per voi:** in cima ai giochi, tre carte grandi da scorrere col dito: Per voi, «Il gioco di oggi» (cambia ogni giorno) e Questo o quello. Ogni carta ha il disegno del gioco, due righe su cosa si fa, la durata e il tasto: «Gioca» col gettone che costa, «Continua», «Rispondi» o «Scopri» quando la partita è già aperta, «Domani» quando i gettoni sono finiti. La carta al centro è quella che parte.
+- **Tutti i giochi:** sotto restano le schede di sempre, due per riga. Quando arriveranno altri giochi si divideranno da sole per genere (Per conoscervi, Per parlarvi, Per ridere, Per ricordare).
+- **Di giorno** i gettoni spenti e il riquadro «Domani altre 3» ora si vedono.
+
+**In produzione:** solo sito e app (stessa versione su AAB e TestFlight); nessuna migrazione.
+
+### La vostra bacheca, tenuta da US (25/11) — fase 1
+
+**Stato:** ramo `claude/bacheca-us`, verso il ramo fisso di staging. Grill-me D1–D27 e tavola «US · La vostra bacheca» (https://claude.ai/artifact/8LuLvzRzMcVTDmsHdKnUWG) approvata: «Approvo, vai». La migrazione `20261125230000_us_bacheca_v1.sql` va applicata a US-STAGING col via del founder. Fasi dopo: i vostri post-it, la ricerca in Ricordi (con «Appendi»), «Da appuntare» nella Mappa.
+
+**Cosa cambia:**
+- **La Bacheca in Ricordi** non è più la mappa dei posti disegnata a bacheca: è la vostra «anta del frigo», **tenuta da US**. Ci appende le vostre cose: ricordi, lettere tenute di Lasciato per te, risposte tenute della domanda di oggi, timbri dei traguardi.
+- **La prima volta** la riempie con la vostra storia (fino a 8: il primo ricordo, le prime volte nei posti nuovi, un ricordo per alcuni mesi, il ricordo della settimana). Poi al massimo una cosa al giorno (un anno fa, l'anniversario, i ricordi tondi) e due il lunedì (il ricordo della settimana, una cosa tenuta). Mai una didascalia con parole delicate.
+- **È uno spazio infinito**: un dito trascina, due dita (o la rotella) avvicinano, doppio tocco su una cosa la avvicina; «Adesso» porta alle cose più nuove, «Tutta la storia» allontana; la piccola mappa in basso dice dove sei. Il filo rosso è la strada della vostra storia, con gli anni scritti sul sughero.
+- **Ogni cosa di US ha il suo post-it** che dice perché è lì («Un anno fa, a Padova», «Il ricordo della settimana»). Le puntine: gialle per US, nel tuo colore per le tue, nel colore dell'altra persona per le sue.
+- **L'ultima parola è vostra**: toccando una cosa si apre il foglio con «Apri il ricordo», «Fissa» (US non la toglie più), «Stacca» (torna al suo posto, l'originale resta) e «Non appenderla più». Trascinandola la sposti, e diventa vostra.
+- **12 cose gratis** (quelle di US e le vostre insieme); con US Plus senza limite. Quando la bacheca è piena, US fa posto solo togliendo una delle sue non fissate.
+- **US lo dice col fumetto**: quando appende una cosa nuova, il fumetto dall'isola lo dice («Vi ho appeso una foto in bacheca: un anno fa eravate a Padova») e toccandolo si apre la bacheca. Conta come la battuta del giorno; le date importanti vengono prima.
+
+**Server:** tabelle `us_bacheca_pins` (riferimento alla cosa, motivo, valori del post-it, fissata, posizione, chi l'ha spostata), `us_bacheca_bans`, `us_bacheca_planned`; regole in `private.us_bacheca_plan`; funzioni `get_bacheca_v1`, `bacheca_pin_action_v1`, `bacheca_pin_v1`. Il contenuto si legge sempre dal vivo: un ricordo cancellato esce dalla bacheca da solo. Nessuna AI.
+
+### Lasciato per te nuovo (25/11)
+
+**Stato:** ramo `claude/lasciato-nuovo`, verso il ramo fisso di staging. Tavola «US · Lasciato per te» (https://claude.ai/artifact/95kvj2AwMbwjXgRtiPbSmL) approvata: «perfetto puoi unire».
+
+**Cosa cambia:**
+- **Quando arriva qualcosa** si apre a schermo intero, come il Ti penso. In alto c'è il personaggio di chi l'ha lasciato e, sopra, «Lasciato per te · stamattina» (o oggi pomeriggio, stasera, ieri, una data).
+- **La lettera** arriva in una busta del colore di chi la manda, chiusa da un sigillo con il suo personaggio. Si apre da sola dopo un attimo, o subito toccando il sigillo, e diventa un foglio di carta: «Da Beatrice · oggi alle 9:12», il testo scritto grande e la firma col suo personaggio.
+- **La foto** diventa una polaroid con la didascalia scritta a mano; toccandola si vede grande come prima. **Il vocale** esce da un fumetto sopra il personaggio. **Video e musica** stanno in una cornice bianca, con le loro parole.
+- **«Conserva» diventa «Tienila»** (per lettera e foto) o «Tienilo» (vocale, video, brano); poi «✓ Tenuta» e «Nei vostri Conservati.». Sotto: «Si apre una volta sola. Se vuoi, tienila.»
+- **Per scrivere** c'è un foglio di carta che comincia col nome dell'altra persona e finisce con la tua firma. Sotto, «Aggiungi una cosa, se vuoi»: Foto, Vocale, Video, Musica, con le icone a un tono. Le parole scritte sul foglio viaggiano con la cosa aggiunta (al massimo 280 caratteri, 1000 per la lettera sola); toccando di nuovo la cosa scelta torna la lettera da sola.
+- **Quando lasci qualcosa** il foglio si piega e il tuo personaggio porta la busta fino a quella in alto.
+- Niente cambia sul server: stessi tipi, stessi limiti, stessa regola «si apre una volta».
+
+### Icona dell'app e apertura nuove (25/11)
+
+**Stato:** ramo `claude/icona-splash`, verso il ramo fisso di staging. Tavola «US · Icona e apertura» (https://claude.ai/artifact/JyMuw3y4fXnP3PCmQuxKbF): il founder ha scelto l'apertura «A».
+
+**Cosa cambia:**
+- **Icona Android:** torna quella della PWA di staging, il logo con la cornice su bianco, con la cornice sul bordo dell'icona (founder: «voglio il quadrato al confine dell'icona»). Sui telefoni con le icone tonde, che usano l'icona tonda dell'app, c'è il logo senza cornice («in quella tonda non si veda il quadrato esterno»). Le icone a scelta Notte, Oro e Neon non cambiano. Serve un APK nuovo; chi aggiorna vede l'icona nuova dopo l'aggiornamento.
+- **Apertura (app installata, solo all'avvio):** parte dal colore e dal logo della splash di Android; da dietro il logo escono i vostri due personaggi, uno per lato, poi un cuoricino sopra e «il vostro spazio» sotto, e l'app si apre su Oggi. Circa due secondi (prima uno). I personaggi sono quelli dell'ultima volta, salvati sul telefono con forme e colori; alla primissima apertura, o dopo essere usciti dall'account, c'è solo il logo. Con «Riduci animazioni» non c'è.
+- **Il primo istante** resta quello di Android (colore e logo con la cornice): Android non permette di disegnarci altro.
+
+### Ti penso ricevuto coi personaggi (25/11)
+
+**Stato:** ramo `claude/oggi-giu`, verso il ramo fisso di staging. Tavola «US · Ti penso ricevuto» (https://claude.ai/artifact/YQ12MPCHsZUiqiRd4ZXCUL) approvata dal founder il 25/11, icona dell'abbraccio «A».
+
+**Cosa cambia:**
+- **Quando arriva un Ti penso** e lo apri, il personaggio dell'altra persona scende dall'alto con gli occhi a cuore, ondeggia tra cuoricini che salgono e dice «Ti penso!» in un fumetto. Sotto: il nome e «ti pensa», e quando è arrivato.
+- **Tre risposte** grandi, a un tono e col loro nome: «Un cuore», «Un abbraccio» (icona nuova: i vostri due personaggi guancia a guancia), «Anch'io» (la nuvola). Al posto di «Chiudi» c'è «Più tardi», e la X in alto.
+- **Al tocco arriva il tuo personaggio** e risponde: col cuore gli manda un cuore che vola, con l'abbraccio vi stringete guancia a guancia con un cuore sopra (niente braccia, founder 25/11), con «Anch'io» sopra di voi sale una nuvoletta con un cuore. Poi la schermata si chiude da sola dopo circa due secondi.
+- **Di giorno** usa la luce chiara come il resto dell'app. Con «Riduci animazioni» non c'è movimento.
+- Le tre reazioni mandate al server sono le stesse di prima.
+
+### Oggi più in basso, vicino alla barra (25/11)
+
+**Stato:** ramo `claude/oggi-giu`, verso il ramo fisso di staging. Founder, 25/11, dall'APK: «la domanda del giorno e le altre barre sopra possono scendere un po' sotto vicino alla nav bar».
+
+**Cosa cambia:**
+- **Oggi:** la colonna in basso (la didascalia della foto, distanza e batteria, Come stai, la domanda di oggi) scende vicino alla barra, appena sopra il cuore. La striscia vuota che c'era sopra la barra era tenuta per Maudit, il gattino, che non c'è più dal redesign; la regola che doveva toglierla cercava un elemento sparito e non scattava mai. La foto resta più libera in alto.
+
+### US vi ricorda: i personaggi parlano (25/11)
+
+**Stato:** ramo `claude/us-ricorda`, verso il ramo fisso di staging; la migrazione va applicata a US-STAGING col via del founder. Su staging prova solo il founder; in produzione forse direttamente con la seconda versione (founder, 25/11). Progetto: `docs/product/2026-11-25-us-vi-ricorda.md`, tavola «US · US vi ricorda» (https://claude.ai/artifact/DTNvLPsQM8ZVATXuhxUUpv), approvata: «Approvo la tavola».
+
+**Cosa cambia:**
+- **US si ricorda le vostre cose e ogni tanto ve le dice**, al massimo una volta al giorno e solo quando c'è qualcosa di vero, dalle 9 alle 21 (i ricordi dalle 17):
+  - il compleanno dell'altra persona, 7 giorni prima, il giorno prima e il giorno stesso, detto solo a te;
+  - l'anniversario, una settimana prima a ognuno come sorpresa e il giorno stesso a tutti e due;
+  - i mesiversari e i giorni tondi (100, 200…);
+  - «un anno fa»: un ricordo (col luogo), un «Ci vediamo» o un'idea fatta, a uno dei due a turno;
+  - le prime volte in un posto nuovo e i numeri tondi dei ricordi;
+  - «ti aspetta», quando l'altro ha risposto o giocato e tu no;
+  - una domanda per conoscervi quando manca qualcosa (il tuo compleanno, il primo ricordo), mai due giorni di fila.
+- **Il fumetto:** quando c'è una battuta l'isola si apre da sola, i personaggi si affacciano e dal tuo esce un fumetto con la frase; per le cose di coppia parlano tutti e due. La prima volta si presentano. Il livello nuovo ora si dice anche lui col fumetto, coi personaggi in festa. Dopo 8 secondi si richiude.
+- **La scheda:** toccando il fumetto si apre la scheda con la frase, la foto del ricordo se c'è, il tasto del gesto già pronto (Lasciato per te col testo o con la foto dentro, Ricordi, il calendario per il compleanno, la domanda, Gioca) e «Non ora». Si manda sempre da sé: US non manda niente per nessuno.
+- **Dire di no:** tenendo premuto il fumetto, o dalla scheda, «Non dirmelo più» spegne quel tipo di battuta. In Profilo › Notifiche c'è «Le voci dei personaggi», acceso di base.
+- **Nella scheda Voi** dell'angolo, «Oggi ti ho detto» tiene la battuta del giorno fino a sera.
+- **Isola:** quando era aperta, un tocco sulla busta o sul profilo apriva l'angolo; ora lo apre solo il tocco sull'isola.
+- **Le frasi** sono scritte a mano, 5 varianti per tipo, solo in italiano per ora.
+
+**Server:** nuova migrazione `20261125200000_us_vi_ricorda_v1.sql`: le tabelle `us_battute` (la battuta del giorno di ognuno: tipo e pochi valori, mai il testo), `us_battute_planned` e `us_battute_mute`; le regole in `private.us_ricorda_plan_couple` (solo dati che entrambi vedono già, con una lista di parole delicate escluse); le funzioni `get_my_battuta_v1`, `mark_my_battuta_v1`, `set_my_battute_mute_v1`. La giornata della coppia si prepara alla prima apertura dell'app di quel giorno, senza lavori programmati. Nessuna AI: i dati non escono da US.
+
+### Tocchi pronti dopo ogni foglio (25/11)
+
+**Stato:** in staging il 25/11 (PR #303, merge 55c88bcf). Founder, 25/11: «i tap non sono reattivi sul calendario».
+
+**Cosa cambia:**
+- **La causa:** chiuso un foglio (il giorno di Noi, ma anche gli altri), l'app restava bloccata finché il foglio non finiva di sparire. Per il giorno di Noi, che non aveva una sua animazione d'uscita, il blocco durava un secondo intero: il tocco sul giorno dopo si perdeva.
+- **Ora:** un foglio che sta uscendo conta già come chiuso, e la pagina sotto risponde subito, ovunque nell'app. Nel calendario ogni tocco apre il giorno in circa 25 millisecondi, anche subito dopo averne chiuso un altro.
+- **Il giorno di Noi** sale e scende come gli altri fogli del calendario, con la maniglia in alto.
+
+**Server:** niente.
+
+### Icone a un tono e il giorno in un riquadro (25/11)
+
+**Stato:** in staging il 25/11 (PR #302, merge afbe1ecc, sito …-safbe1ecc). Founder, 25/11: «togliamo ora il doppio colore dalle icone che non mi piace più», poi «premendo il giorno si apra una sorta di popup con scritto gli impegni di quel giorno, togliendo la barra di sotto inutile».
+
+**Cosa cambia:**
+- **Icone a un tono:** le icone tornano a un solo tratto nel loro colore. Esce il pieno nel colore dell'altra persona sotto il contorno (le «icone a due toni» del 24/11), anche nella barra in basso: la pagina aperta torna un'icona piena in un colore solo.
+- **Il giorno in un riquadro:** in Noi la scheda del giorno scelto sotto il calendario esce. Toccando un giorno sale dal basso un riquadro con il giorno, i suoi ricordi, gli impegni, i giorni speciali coi personaggi e «Aggiungi a questo giorno». Si chiude con la X, toccando fuori o col tasto indietro. Quello che apri da lì (un impegno, un ricordo, il modulo per aggiungere) sale al posto del riquadro.
+- **Noi** ora va dal prossimo incontro al calendario e poi alla lavagna.
+
+**Server:** niente.
+
+### L'isola e Il vostro angolo in tre parti (25/11)
+
+**Stato:** in staging il 25/11 (PR #301, merge bc1a92cb, sito …-sbc1a92cb). Founder, 25/11, sulla tavola «US · Oggi e il vostro angolo» (https://claude.ai/artifact/QtAJmuJTt6cRvertx7ycJm): «Voi, guardaroba, premi mi piace perché divide il tutto», ma i personaggi grandi sulla foto «coprono la foto»; poi la sua idea dell'isola, provata sulla tavola: «Molto bello, proviamo come hai consigliato».
+
+**Cosa cambia:**
+- **L'isola:** il simbolo US in alto sta in una piccola capsula. Toccandolo, la capsula si allarga in «Il vostro angolo · Livello N · tocca qui» e i due personaggi si affacciano da dentro, uno dopo l'altro. Un secondo tocco apre l'angolo; se non la tocchi, dopo 6 secondi torna il simbolo. Il disegno del simbolo è lo stesso, e gli effetti del simbolo (premi della Sintonia) restano. Senza la coppia completa resta solo il simbolo.
+- **Si apre da sola:** la prima volta in Oggi, coi personaggi che mandano un cuore, e ogni volta che arrivate a un livello nuovo, coi personaggi in festa. Ogni telefono se lo ricorda per conto suo.
+- **Via i personaggi dalla foto:** il bottone dei personaggi sopra la data in Oggi esce, perché ora la strada è l'isola.
+- **Il vostro angolo:** in cima i personaggi e il livello, poi tre schede.
+  - **Voi:** «La vostra settimana», con un cuore per ogni giorno fatto insieme, l'iniziale del giorno e oggi cerchiato; senza giorni dice «Iniziate oggi: basta una risposta alla domanda». Poi «Per crescere insieme»: la domanda di oggi, Gioca, Ricordi e Ti penso, Le vostre idee, ognuna col tasto che porta lì. Poi gli ultimi progressi, aperti, e come cresce la Sintonia.
+  - **Guardaroba:** forma, testa, viso, come prima. «Cambia look» dal Profilo apre direttamente questa scheda.
+  - **Premi:** il prossimo sblocco e i vostri sblocchi.
+- **Il ritmo** diventa «3 giorni di fila»; a zero giorni non mostra più «0 giorni».
+
+**Server:** niente.
+
+### Noi, Fase B.3: «Bea ti ha lasciato un post-it» (25/11)
+
+**Stato:** in staging il 25/11 (PR #300, merge 6e0aa473); `send-web-push` pubblicata su staging (run 45569314713). Founder, 25/11: «Chiudiamo Noi come hai proposto». Decisione D15 del grill-me di Noi.
+
+**Cosa cambia:**
+- **L'avviso:** chi scrive un post-it nuovo, quando lo chiude con qualcosa scritto, fa arrivare alla sua persona «Bea ti ha lasciato un post-it». Toccato, apre la lavagna.
+- **La stessa regola della lavagna:** stesso interruttore in Profilo › Notifiche, che ora dice «Quando la tua persona disegna o ti lascia un post-it». Al massimo un avviso ogni 2 ore, condiviso col disegno: se in un'ora disegni e lasci un post-it, arriva un avviso solo. Contano solo i post-it scritti da te negli ultimi 30 minuti.
+- **Android:** il telefono scrive l'avviso da sé, dal tipo «postit». Le app installate prima di questa versione mostrano l'avviso generico di US finché non si aggiornano.
+
+**Server:** la funzione `send-web-push` accetta il tipo `postit` (`dispatchPostitPush` in `_shared/lavagna-push-core.mjs`) e registra l'avviso come uno della lavagna. Nessuna migrazione.
+
+### Noi, Fase B.2: le idee diventano impegni, «L'avete fatto?», le penne della coppia (25/11)
+
+**Stato:** in staging il 25/11 (PR #299, merge fafe2b95, sito …-sfafe2b95). Founder, 25/11: «Push e unione poi andiamo avanti con il resto». Decisioni D12 e D13 del grill-me di Noi; tavola «US · Noi, il vostro tempo» (schermate Idee e Fatto).
+
+**Cosa cambia:**
+- **Le vostre idee:** in primo piano, ogni idea ha il pallino del colore di chi l'ha avuta. Accanto c'è «Scegli il giorno», che chiude il post-it e fa scegliere il giorno nel calendario di Noi (la stessa scelta del dettaglio dell'idea); poi l'idea diventa un impegno e mostra «Fissata» col suo giorno. Se la tua persona dice che l'avete fatta, c'è «Sì, fatto» per confermare. In fondo c'è il campo «Un'idea nuova» e quante ne avete già fatte. Esce la spunta «vissuta» sul post-it (D13).
+- **«L'avete fatto?»:** il giorno dopo un impegno nato da un'idea (o dopo l'ultimo giorno, se durava di più), aprendo Noi sale un foglio coi due personaggi. «Sì, l'abbiamo fatto» segna l'idea come fatta, con la stessa regola in due di prima, e propone una foto in Ricordi. «Non ancora, scegliamo un altro giorno» apre l'impegno per spostarlo. Lo chiede una volta sola per idea e solo per la settimana dopo (D13).
+- **Le penne della lavagna:** sono il tuo colore, quello della tua persona, quello di Noi e il bianco, nei colori scelti dalla coppia. L'ambra esce: i tratti già fatti in ambra prendono il colore di Noi, quelli in rosa e lilla il colore di Francesco e di Beatrice. Anche il widget della lavagna disegna coi colori della coppia (D12).
+
+**Server:** niente. Le penne usano le stesse chiavi che il server già tiene (rosa, lilla, ambra, latte), con un significato nuovo.
+
+### Noi, Fase B.1: La lavagna con i post-it sopra (25/11)
+
+**Stato:** in staging il 25/11 (PR #298, merge a436904f, sito …-sa436904f); migrazione applicata a US-STAGING il 25/11 con «Supabase SQL (manual)» (run 45568004170), in produzione no. Founder, 25/11: «non abbiamo ancora inserito i post-it all'interno di lavagna», poi «si concordo» al piano (Fase B dopo gli interruttori). Decisioni D3–D5, D11, D12 del grill-me di Noi e tavola «US · Noi, il vostro tempo» (schermate Main e Lavagna).
+
+**Cosa cambia:**
+- **«La lavagna» al posto di «Bacheca»:** in Noi, sotto il giorno scelto, il disegno della lavagna più grande, con «+ Post-it» e «Apri». Sopra il disegno, i tre post-it più recenti e, nell'angolo in alto a destra, «Le vostre idee» con quante ne restano da vivere. Senza disegno e senza post-it, i due personaggi invitano a disegnare (D3, D5, D11).
+- **La lavagna a schermo intero:** si chiama «La lavagna». Mostra i sei post-it più recenti sopra il disegno e il tasto «+ Post-it» sul tabellone. Ogni post-it si trascina con un dito e resta dove lo lasci, per tutti e due (D4). Quelli mai spostati prendono un posto libero, in due colonne.
+- **Il post-it in primo piano:** toccato, un post-it viene davanti sopra un velo scuro, e lì si scrive, si spunta la lista e si stacca. Lo stesso vale per «Le vostre idee». Il tasto indietro e un tocco fuori lo chiudono salvando.
+- **La carta di chi scrive:** il post-it ha il colore di chi l'ha scritto, tu o la tua persona. Esce la scelta della carta (giallo, rosa, azzurro, verde). In «Tutti i post-it» i filtri sono Tutti, Tuoi e quelli della tua persona (D12).
+- **Non in questa fase:** «Scegli il giorno» per le idee, «L'avete fatto?», le penne tu/partner/Noi/bianco senza ambra e il widget (B.2); l'avviso «X ti ha lasciato un post-it» (B.3).
+
+**Server:** nuova migrazione `20261125120000_couple_notes_posto.sql`, con le colonne `couple_notes.board_x` e `board_y` (da 0 a 1, vuote finché il post-it non si sposta) e un vincolo. Il controllo dei post-it (`private.couple_notes_guard`) fa crescere la revisione anche per uno spostamento, ma lascia com'erano chi l'ha cambiato e quando: il post-it continua a dire «Bea · ieri». Finché la migrazione non c'è, l'app legge i post-it senza posto e lo spostamento resta solo sul telefono. L'esportazione dei dati non cambia.
+
+### Interruttori più chiari (25/11)
+
+**Stato:** ramo `claude/interruttori`, verso il ramo fisso di staging. Founder, 25/11 (screenshot del nuovo impegno): «studia questi bottoni on/off, fai vedere meglio il bordo e quando sono accesi colorali».
+
+**Cosa cambia:** gli interruttori hanno un bordo ben visibile da spenti e si colorano da accesi: di notte con la sfumatura dei vostri due colori, di giorno in ceralacca; il pallino è bianco con un'ombra. Vale per il nuovo impegno («Ci vediamo», «Ogni anno»), gli eventi, il Profilo e le sue finestre. Prima l'acceso restava scuro: una regola generale dei campi copriva il colore.
+
+**Server:** niente.
+
+### Oggi: il velo in fondo alla foto (25/11)
+
+**Stato:** ramo `claude/oggi-velo`, verso il ramo fisso di staging. Founder, 25/11: «il velo è carino, lo farei un po' meno accentuato e lo metterei anche alla dark mode, ovviamente nera».
+
+**Cosa cambia:** in Oggi la foto sfuma in fondo, sopra la barra, con la stessa forma di giorno e di notte: trasparente fino a metà, poi un velo che sale piano senza mai coprire del tutto. Di giorno è color carta e più leggero di prima; di notte è nero e sostituisce la fascia scura di prima, che diventava nero pieno. Anche nell'app nativa.
+
+**Server:** niente.
+
+### Transizioni: come in produzione, col colore sfumato (25/11)
+
+**Stato:** ramo `claude/transizioni-ogni-tocco`, verso il ramo fisso di staging. Founder, 25/11: «se passo velocemente da una pagina all'altra non è reattivo, non rifà una nuova transizione», poi «vedi su produzione com'è reattivo, devi fare la stessa cosa qui in staging solo con il gradiente che abbiamo».
+
+**Cosa cambia:**
+- **La logica di produzione:** il colore copre in 260 ms; mentre sale, un tocco su un'altra scheda gli fa cambiare subito colore e pagina di arrivo (sulla scheda di partenza il colore torna indietro); a pagina cambiata, un tocco fa partire subito una transizione nuova. Prima ogni tocco a metà cambiava pagina di colpo.
+- **Col colore sfumato:** il cerchio che copre ha il bordo morbido, e la pagina nuova si apre da un buco morbido che si allarga dal tasto (in produzione entrambi hanno il bordo netto). Sui telefoni che non sanno animare il buco, il colore si dissolve.
+- **Giorno e Notte:** i colori delle schede si ricordano anche per tema; prima, dopo un cambio di Aspetto (o Automatico al tramonto), il colore tra le pagine restava quello del tema di prima.
+
+**Server:** niente.
+
+### Noi, Fase A: il vostro tempo insieme (24/11)
+
+**Stato:** ramo `claude/revisione-temi-transizioni`, verso il ramo fisso di staging; la migrazione va applicata a US-STAGING col via del founder. Founder, 24/11: «noi è ancora uguale a prima»; decisioni del grill-me D1–D16 e tavola «US · Noi, il vostro tempo» (https://claude.ai/artifact/WZ1Q5PgRMq6VaJmuY9gpUh).
+
+**Cosa cambia:**
+- **Un calendario solo:** escono «Mese / Prossimi» e la vista «Prossimi». Il calendario del mese resta com'è (D1–D2).
+- **«Vi rivedete tra»:** per le coppie a distanza (`couples.distance_mode = far`) una scheda in cima con i due personaggi ai lati e un timer in giorni, ore e minuti, verso il prossimo impegno con «Ci vediamo» acceso. Il giorno stesso dice «Oggi vi vedete» e i personaggi hanno il cuore (D6).
+- **Un modulo solo:** «Che cosa», «Quando» (si può cambiare anche creando), «Ora · se c'è» (senza ora è tutto il giorno; con l'ora dura un'ora, o quanto durava se lo modifichi), «Solo mio / Nostro», gli interruttori «Ci vediamo» (lo rende Nostro) e «Ogni anno» (lo salva tra le date che tornano ogni anno, negli eventi). «Data speciale» non c'è più. Nel database impegni ed eventi restano separati (D7–D8).
+- **Giorni speciali:** nel giorno scelto i due personaggi vestiti per l'occasione: compleanno (cappello da festa), mesiversario e cento giorni (festa), «Ci vediamo» (cuore). Il giorno dell'anno in US dice «il vostro anno è pronto da sfogliare» con «Apri Il vostro anno» (D10, D14).
+- **Non in questa fase:** il promemoria nel modulo; la lavagna con post-it e idee, gli avvisi (Fase B); «Bacheca» di Noi resta col suo nome fino alla Fase B.
+
+**Server:** nuova migrazione `20261124233000_calendario_ci_vediamo.sql`: colonna `calendar_entries.ci_vediamo boolean not null default false` e un indice parziale. Finché non c'è, l'app legge e scrive come prima (senza «Ci vediamo»).
+
+### Revisione di transizioni e temi (24/11)
+
+**Stato:** ramo `claude/revisione-temi-transizioni`, verso il ramo fisso di staging. Founder, 24/11: «le transizioni non vanno ancora bene e i temi light e dark hanno un po' di problemi».
+
+**Cosa cambia:**
+- **Transizioni:** il cerchio di colore è piccolo (480 px), disegnato una volta su un livello che resta sempre nella pagina, e la GPU lo ingrandisce: prima era un livello da circa 4000 px che il telefono ridisegnava a pezzi mentre cresceva. I colori delle schede si leggono in un momento quieto, così il primo tocco non paga un ricalcolo. I blocchi della pagina nuova entrano subito, 30 ms l'uno dall'altro.
+- **Giorno:** scritte piccole e testo d'esempio nei campi più scuri; il titoletto sopra i fogli in ceralacca (prima era rosa pastello e non si leggeva); scritte nei colori della coppia più scure; verde più scuro. I visori delle foto e la fotocamera restano scuri, come la galleria del telefono.
+- **Controllato:** contrasto di ogni scritta su 18 fogli, di giorno e di notte.
+
+### Aspetto: Giorno e Notte (24/11)
+
+**Stato:** in staging dal 24/11 (PR #293, merge `6e568df5`, sito `…-s6e568df5`). Founder, 24/11, dalla tavola «US · Quaderno, giorno e notte»: «Mi vanno bene i consigli sulle tre scelte, mi piace, applica il tema light e quello dark con la possibilità di scelta nelle impostazioni».
+
+**Cosa cambia:**
+- **Giorno, il Quaderno:** carta (`#f3ece1`) per le pagine, fogli (`#fbf7f0`) per le schede, inchiostro (`#231b1d`) per le parole, ceralacca (`#b8452f`) per i tasti, per la scheda aperta nella barra e per le scritte piccole sopra i titoli. I vostri colori sono gli stessi che avete scelto, più polverosi, perché sulla carta si leggano: personaggi, «chi l'ha messo», nastri.
+- **Notte:** è la notte di adesso, identica.
+- **Profilo › Aspetto:** Automatico (segue il tema chiaro o scuro del telefono), Giorno o Notte. Vale per quel telefono. Il tema si applica prima che la pagina si disegni, quindi niente lampo scuro.
+- **Oggi:** la foto resta una foto. Scritte e icone sopra restano chiare, la foto sfuma nella carta, la scheda della domanda è di carta, «Come stai?» è un'etichetta di carta.
+- **Polaroid e post-it:** restano di carta anche di notte, come prima.
+- **Per ora sempre di notte:** accesso, primo avvio, il giro con i personaggi, l'attesa del partner e il blocco con l'impronta, che hanno un disegno notturno approvato.
+- **Controllato:** il contrasto di ogni scritta visibile, di giorno e di notte, su Oggi, Noi, Ricordi, Gioca, Profilo e sui fogli (domanda, Come stai, countdown, angolo, nuovo impegno, Prossimi, nuovo ricordo, bacheca, Ti penso).
+- **Da fare a parte:** su Android ora, batteria e notifiche in alto restano bianche anche di giorno (serve un plugin nativo e un APK nuovo); i widget e l'anteprima nel Profilo restano scuri; non ho ancora controllato tutti i fogli rari (giochi in corso, lettere, album, Il vostro anno).
+
+**Server:** niente.
+
+### Transizioni fluide (24/11)
+
+**Stato:** in staging dal 24/11 (PR #291, merge `cb9d0c11`, sito `…-scb9d0c11`); la parte «reattiva» sul ramo `claude/transizioni-reattive`, verso il ramo fisso di staging. Founder, 24/11: le transizioni «al momento sono veloci ma se ci fai caso non fluide», poi, provate su staging: «se cambi velocemente le pagine non reagiscono, forse sono un po' lentine».
+
+**Cosa cambia:**
+- **Reattive:** un tocco sulla barra mentre il colore si muove cambia pagina subito (36–82 ms col telefono medio simulato) e il colore rimasto sfuma in 160 ms; prima ogni tocco aspettava la fine del cerchio e ne faceva partire un altro. Il cerchio è anche più corto: 460 ms, dissolvenza 300 (circa 0,8 secondi in tutto).
+- **Cambio pagina dalla barra:** il colore che copre lo schermo ora è un disco che si allarga con una trasformazione, sulla GPU. Prima era un ritaglio (clip-path) ridisegnato a ogni frame dal processore, e si fermava quando il telefono era occupato. La pagina cambia appena il colore copre lo schermo, poi il colore si dissolve mentre salgono i blocchi della pagina nuova. Al posto del «buco» che si apriva dal tasto c'è la dissolvenza. **Niente bordo netto:** il cerchio è pieno fino a metà e poi sfuma, così nasce dal tasto come un bagliore e prende la pagina piano piano, poi si dissolve. Founder, 24/11: su una prima versione a 300 ms «non sono un po' troppo veloci?»; poi «volevo eliminare il bordo netto e fare sì che prendesse piano piano la pagina» (un'onda dal basso provata in mezzo è stata scartata).
+- **Profilo:** stesso scorrimento di prima, con la curva più morbida.
+- **Suoni:** la preparazione dell'audio (la prima volta costa un frame lungo) non cade più in mezzo a un cambio pagina.
+- **Misurato:** il colore pieno resta 70–100 ms con la CPU normale e 115–150 ms con la CPU rallentata 4 volte (un telefono medio), il tempo di preparare la pagina sotto; la marea non si blocca più a metà.
+
+**Server:** niente.
+
+### Redesign: uno stile solo (24/11)
+
+**Stato:** in staging dal 24/11 (PR #290, merge `449d3bda`). Founder, 24/11, dalla tavola «Una mano sola» (fogli «Gioca · com'è adesso», «Gioca · una mano sola», «Le regole di disegno»): «Concordo».
+
+**Cosa cambia:**
+- **Personaggi:** contorno sottile nel colore scuro della loro forma, mai nero, e niente più alone chiaro intorno (Oggi, angolo, Profilo, Gioca, intro). Le guance prendono lo stesso tono.
+- **Icone dei giochi ridisegnate:** sono i due personaggi che giocano (Per voi, Scopritevi con la lente, Confrontatevi coi due fumetti, Ridete, Quanto mi conosci, Rivivete con la polaroid, Questo o quello con le due carte), solo nei vostri due colori più il chiaro della carta; esce l'ambra.
+- **Via «Pronto»:** una casella pronta non ha etichetta; restano «Giocato» e «Domani».
+- **Da decidere:** i temi e gli effetti di Oggi e i countdown oro e cromo hanno colori loro (ricolorarli coi vostri due, o tenerne pochi).
+
+**Server:** niente.
+
+### Redesign: icone a due toni e sfondo nero caldo (24/11)
+
+**Stato:** icone in staging dal 24/11 (PR #288, merge `64660439`), nero caldo dal 24/11 (PR #289, merge `ed27d331`). Founder, 24/11, dalla tavola «US · icone e colori»: «Possiamo provare B e marea», poi, provati Marea, Due luci e Aurora: «Nero caldo».
+
+**Cosa cambia:**
+- **Icone a due toni:** sotto il contorno di ogni icona c'è la sua versione piena ufficiale di Phosphor nel colore dell'altra persona, a metà. Le icone senza versione piena (croce, più, frecce) restano a una linea; sui tasti colorati il riempimento non c'è. Anche la barra in basso: il riempimento dell'altra persona sotto ogni icona, più forte su quella aperta.
+- **Sfondo nero caldo:** nessuno sfondo colorato e niente più luce colorata in alto: un nero appena caldo (`#120d11`) su tutte le pagine; il colore della coppia sta nelle cose (personaggi, icone, nastri, gettoni). Marea e le varianti per confrontarle (`?sfondo=…`) sono state tolte.
+- 27 icone piene nuove in `assets/icons/phosphor/` (file ufficiali Phosphor, licenza MIT), in cache.
+
+**Server:** niente.
+
+### Redesign, fase 8: Ricordi a polaroid e la bacheca (24/11)
+
+**Stato:** in staging dal 24/11 (PR #287, merge `19bddbbf`, sito `…-s19bddbbf`). Founder, 24/11: «Vai allora andiamo avanti». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D12; tavole «Ricordi», «Bacheca» e «Bacheca intera» approvate il 23/11.
+
+**Cosa cambia:**
+- **La Raccolta a polaroid:** due per riga, mese per mese, un po' storte, col nastro nel colore di chi ha messo la foto, la didascalia scritta sotto (in corsivo) e il giorno.
+- **Raccolta · Bacheca · Mappa** in cima a Ricordi al posto del tasto «Mappa».
+- **La bacheca da detective:** i posti sono cartellini appuntati, messi come su una cartina vera (nord in alto), con fino a tre polaroid intorno e «+N» se ce ne sono di più; un filo rosso unisce i posti nell'ordine in cui ci siete stati la prima volta. Il cartellino apre la mappa lì, la polaroid apre il Ricordo.
+- **«Da appuntare»:** i Ricordi senza posto, con «Aggiungi il posto».
+- Si dispone da sola con quello che la pagina ha già: nessun dato nuovo, nessuna lettura in più.
+
+**Server:** niente. **Da sapere:** la didascalia è in Fraunces corsivo, perché l'app non ha un carattere scritto a mano (Caveat, nella tavola, andrebbe aggiunto). Il centraggio delle facce (#279) non c'è ancora: le polaroid tagliano la foto al centro.
+
+### Redesign, fase 7: l'intro con i personaggi (24/11)
+
+**Stato:** in staging dal 24/11 (PR #287, merge `19bddbbf`). Founder, 24/11: «Vai allora andiamo avanti». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D14; tavole dell'intro approvate il 23/11.
+
+**Cosa cambia:**
+- **Il giro prima dell'accesso** sono tre scene con i due personaggi (un tondo rosa e un quadrato lilla): uno accanto all'altro con «Un posto solo per voi due», un Ti penso che vola dall'uno all'altro (occhi a cuore), la festa dentro l'anello della Sintonia.
+- **«Chi sei in US?»** al posto del passo coi cerchi: chi crea la coppia e chi entra scelgono la forma (Tondo, Quadrato, Triangolo, Goccia, Nuvola) e il colore, e vedono subito il loro personaggio. La forma si salva come nel guardaroba.
+- **Nell'attesa** il tuo personaggio aspetta accanto al posto vuoto dell'altra persona, sopra il codice.
+- **Quando l'altra persona entra**, chi aspettava vede «Ora siete in due» coi due personaggi che fanno festa.
+
+**Server:** niente di nuovo (usa `set_my_character_shape`, già su US-STAGING con le migrazioni dei personaggi, non in produzione).
+
+### Redesign, fase 6: Gioca con i gettoni (24/11)
+
+**Stato:** in staging dal 24/11 (PR #287, merge `19bddbbf`). Founder, 24/11: «Vai allora andiamo avanti» (le fasi 6–8, poi un controllo insieme). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D10 e D11; tavole «Gioca» e «Gioca, gettoni finiti» approvate il 23/11.
+
+**Cosa cambia:**
+- **Tre gettoni grandi in cima a Gioca** al posto del contatore con i tre pallini: «Ancora 2 su 3 oggi · Ogni partita nuova usa un gettone». Il numero resta quello del server.
+- **Il gettone vola nel gioco** quando parte una partita nuova, al posto della finestra «Userete 1 delle 3 partite di oggi» (anche quella per rigiocare un gioco della settimana). Con «Riduci movimento» il gettone si spegne e basta.
+- **A zero gettoni:** «Domani altre 3» con l'ora del rinnovo («tra 6 ore e 12 minuti», mezzanotte di Roma) e, solo lì, la riga «Partite illimitate con US Plus · In arrivo» con «Avvisami».
+- **«Vi aspetta» in alto:** le partite dove tocca a te o dove le risposte sono pronte, col personaggio dell'altra persona, il gioco, «Bea ha giocato, tocca a te» e un tasto («Gioca» o «Scopri»).
+- **I vostri giochi:** Per voi è la prima casella (nel colore della pagina), poi i cinque giochi e Questo o quello in fondo. Ogni casella dice una cosa sola: **Pronto**, **Giocato** o **Domani**; sotto, il tipo di gioco o a che punto siete.
+- **Esce la sfida della settimana** (D10): niente più scheda in Gioca né pallino su Gioca per la foto dell'altra persona. I dati restano, si nasconde soltanto.
+- **Esce la striscia dei 7 giorni** in cima a Gioca: era legata alla domanda di oggi, che è già uscita da Gioca.
+- Restano «La vostra domanda», «Da continuare» (solo per le partite che nessuna casella rappresenta) e «Partite completate».
+
+**Server:** niente. **Da decidere:** le notifiche della sfida della settimana (lunedì e sabato) partono ancora dal server: vanno fermate prima della produzione, e su staging col via del founder.
+
+### Redesign, fase 5: Oggi senza schede di suggerimento (24/11)
+
+**Stato:** in staging dal 24/11 (PR #286, merge `48335bb5`, sito `…-s48335bb5`). Founder, 24/11: «Fase 5 vai». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D9.
+
+**Cosa cambia:**
+- **Via la zona delle schede su Oggi.** Sopra la barra restano la didascalia della foto, la riga (prossimo impegno, distanza, Come stai) e la domanda di oggi. Ogni avviso che passava di lì ha ora il suo posto.
+- **Ti penso ricevuto:** un avviso breve in alto, «Bea ti pensa ♡» con «Apri» (le reazioni), una sola volta per ogni Ti penso su quel telefono: subito se US è aperta, altrimenti la prima volta che la apri entro un giorno. Restano gli occhi a cuore del tuo personaggio per 3 ore. Dalla notifica il foglio delle reazioni si apre da solo, senza avviso sopra.
+- **Lasciato per te:** il pallino sulla busta, uno solo, nel colore di chi l'ha lasciato (prima erano due, rosa e lilla).
+- **Tocca a te:** quando l'altra persona vi aspetta in una partita (o in «Per voi»), il pallino è su Gioca; quando ha già risposto alla domanda di oggi e tu no, resta su Oggi.
+- **Risposte pronte:** lo dice la scheda della domanda («Risposte pronte · Scopri», i due personaggi vicini con il cuore) finché non le apri; prima era una scheda a parte, che si poteva nascondere scorrendo. La funzione del server che la nascondeva resta per le app già uscite.
+- **Mesiversario, anniversario e ogni 100 giorni insieme:** la festa dei personaggi (per i 100 giorni è nuova; prima era una scheda).
+- **Notifiche:** niente invito su Oggi. Le chiede l'iscrizione; dopo, Profilo › Notifiche mostra lo stato e le attiva. Sul telefono, se dopo «Attiva» la rete non risponde, lì si legge «In attivazione · Le attivo appena la rete risponde» con «Riprova» (prima lo diceva la scheda di Oggi).
+- **«La cosa di oggi»:** via i passi della prima settimana (pallini, «Fatto ♡ · Domani: …», «Settimana finita»). Il server li conta ancora. Restano la serie, «Manda un Ti penso» e «Oggi c'eravate voi due ♡».
+- **La domanda «Vi vedete spesso?»** non compare più su Oggi: si sceglie in Impostazioni › Voi.
+- **La sfida della settimana** non è più su Oggi (D10). In Gioca resta fino alla fase 6, e la foto dell'altra persona accende ancora il pallino su Gioca.
+
+**Server:** niente.
+
+**Test:** `tests/oggi-pulita-fase5.test.js` e `tests/m12a-oggi-priority.test.js` (riscritto); aggiornati i test che descrivevano le schede.
+
+### Redesign: il guardaroba sui livelli vuoti della Sintonia (24/11)
+
+**Stato:** in staging dal 24/11 (PR #285, merge `58bac1b0`, sito `…-s58bac1b0`); migrazione applicata su US-STAGING il 24/11 (run 45288670020), non in produzione. Decisione del founder del 24/11 («proposta A», tenendo il Simbolo US).
+
+**Cosa cambia:**
+- Dopo l'uscita di Atmosfere, Colore di Noi, compagni e accessori, i livelli 8, 11, 14 e 19 non davano più niente. I primi cinque accessori del guardaroba restano dove sono (occhiali 150 punti, cappello 400, fiocco 700, sciarpina 1000, occhiali da sole 1350); gli ultimi quattro arrivano con quei livelli: gala al livello 8 (4550 punti), cuffie all'11 (8750), coroncina al 14 (14300), corona al 19 (26550). I momenti (macchinetta, fascia dei 100, cappello da festa) non cambiano.
+- Il momento del nuovo livello nomina l'accessorio che arriva («Gala nel guardaroba») e, se non ci sono altri premi, il tasto «Prova il look» apre il guardaroba nell'angolo.
+- Il Simbolo US resta tra i premi della Sintonia (livelli 6, 9 e 13), come prima.
+
+**Server:** nuova migrazione `20261123231417_personaggi_scala_premi.sql` (dopo quella del guardaroba): cambia le soglie in `private.character_unlocks` e toglie a chi lo porta un accessorio che con la scala nuova non è più sbloccato. **Solo staging** finché il founder non dice altro; in produzione va con le altre due dei personaggi, prima del sito.
+
+**Test:** `tests/personaggi-scala-premi-db.test.js` (database) e `tests/personaggi-scala-premi.test.js`.
+
+### Redesign, fase 4: i personaggi al posto dei cerchi e il guardaroba (23/11)
+
+**Stato:** in staging dal 23/11 (PR #284, merge `f0bc68fe`, sito `…-sf0bc68fe`). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D2 e D4.
+
+**Cosa cambia:**
+- **La domanda di oggi su Oggi:** al posto dei due cerchi, i due personaggi (il tuo a sinistra, il suo a destra). Il posto di chi non ha ancora risposto è tratteggiato; quando avete risposto tutti e due si avvicinano e tra loro sale un cuore. Se rispondi per secondo, li vedi avvicinarsi.
+- **La Sintonia nell'angolo:** via i due cerchi; i due personaggi in cima all'angolo stanno più vicini quanto più siete vicini al livello successivo, e a un livello nuovo saltano insieme.
+- **La scheda della coppia nel Profilo:** i due personaggi al posto dei cerchi con l'iniziale o la foto.
+- **Le reazioni dei personaggi** (portate da staging): festa con i coriandoli nel giorno del mesiversario e dell'anniversario; occhi a cuore per 3 ore dopo un Ti penso ricevuto (il proprio personaggio); l'altro saluta con la mano quando ha già risposto alla domanda e tu no; assonnati dalle 22 alle 6. Senza animazioni con il movimento ridotto.
+- **Il guardaroba nell'angolo** («Il tuo guardaroba»): la forma (tondo, quadrato, triangolo, goccia, nuvola), una cosa in testa e una sul viso o al collo, con le soglie già decise il 21/11 e controllate dal server (occhiali 150 punti, cappello 400, fiocco 700, sciarpina 1000, occhiali da sole 1350, gala 1700, cuffie 2100, coroncina 2550, corona 3000, poi spostate il 24/11, vedi sopra; macchinetta al primo Ricordo, fascia dei 100 a 100 giorni, cappello da festa al primo anno). Sotto, il prossimo da sbloccare con la barra. Nel Profilo, «Cambia look» porta lì.
+- Il personaggio in alto a destra e quelli sulla foto mostrano subito il nuovo look.
+
+**Server:** usa `set_my_character_look`, `set_my_character_shape` e `my_character_unlocks` delle migrazioni dei personaggi (già su US-STAGING; in produzione vanno prima del sito, vedi sotto).
+
+**Non ancora:** la scala nuova dei premi della Sintonia (fatta il 24/11, vedi sopra). Il passo del colore all'iscrizione resta con i cerchi fino alla fase 7 (intro).
+
+**Test:** `tests/personaggi-fase4.test.js` più i test aggiornati.
+
+### Redesign: la domanda esce da Gioca, la Sintonia va in «Il vostro angolo» (23/11)
+
+**Stato:** in staging dal 23/11 (PR #283, merge `cccc4c0d`, sito `…-scccc4c0d`). Founder, 23/11: «ricorda di togliere la domanda di oggi e di spostare sintonia come nel redesign». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D2, D3 e D11.
+
+**Cosa cambia:**
+- **Gioca senza la domanda di oggi:** la domanda resta solo su Oggi. In Gioca restano la settimana delle risposte e i giochi; gettoni, «Vi aspetta» e i tre stati arrivano con la fase 6.
+- **Gioca senza le schede Giochi/Sintonia:** Gioca è solo i giochi.
+- **I due personaggi sulla foto di Oggi** (sopra la riga della foto, a destra), nello stesso ordine sui due telefoni: chi ha creato la coppia, poi chi è entrato. Si vedono solo quando ci siete tutti e due.
+- **«Il vostro angolo»:** toccando i personaggi si apre un foglio dal basso con i due personaggi e i loro nomi, poi la Sintonia di prima, uguale: livello, ritmo, prossimo sblocco, «I vostri sblocchi» (temi ed effetti di Oggi, stili del countdown, Ti penso, icona), ultimi progressi, «Come cresce la Sintonia». Si chiude con la X, toccando fuori, con Esc o con il tasto indietro di Android. Ha il colore di Noi, il punto di mezzo tra i vostri due.
+- Si apre l'angolo anche dai collegamenti che portavano alla scheda Sintonia, e dopo una missione completata, sulla pagina dove sei.
+- Restano per la fase 4: i cerchi del livello diventano i personaggi, il guardaroba, la scala nuova dei premi (numeri da mostrare prima).
+
+**Test:** `tests/angolo.test.js`, un test nuovo in `tests/struttura-browser.test.js` (si apre dai personaggi, la Sintonia c'è e non esce dal foglio, Gioca senza domanda e senza schede).
+
+### Redesign: via le mascotte (23/11)
+
+**Stato:** in staging dal 23/11 (PR #283, merge `cccc4c0d`). Founder, 23/11: «ricorda di togliere le mascotte». Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D5 (Compagni in pensione per tutti).
+
+**Cosa cambia:**
+- **Nessuno siede più sopra la barra:** Maudit, Milo, Bea e Firix non compaiono più, per nessuno. Tolti dall'app `pet.js`, `companions.js`, `pet.css`, `companions.css` (anche dai build e dalla cache offline).
+- **Via** la riga «Compagni» dalle Impostazioni, l'avviso «È arrivato…» su Oggi, il gruppo «Compagni» e gli «Accessori» del compagno tra i premi della Sintonia (ritirati: le scelte salvate restano leggibili).
+- **Restano:** la funzione del server `get_companions_v1` con i suoi dati, e le immagini approvate in `assets/derived/pet/` (1,1 MB, ancora copiate nel pacchetto: toglierle è un asset approvato, serve il sì del founder).
+- Gli accessori già presi passeranno ai personaggi con il guardaroba (fase 4).
+
+**Novità all'uscita (D5):** una riga del tipo «I compagni sono andati in pensione: al loro posto, accessori per i vostri personaggi». Va scritta solo quando il guardaroba dei personaggi è in staging.
+
+**Test:** `tests/via-mascotte.test.js`; tolti i test che provavano solo le mascotte nel client (`pet-foundation`, `pet-foundation-browser`, `maudit-interaction`, `maudit-interaction-browser`, `companions-v1-client`, `pet-accessories`). Resta `companions-v1-db.test.js` per il server.
+
+### Redesign, fase 3: i colori della coppia (23/11)
+
+**Stato:** in staging dal 23/11 (PR #282, merge `7fa2ca82`, sito `…-s7fa2ca82`). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D7 e D8.
+
+**Cosa cambia:**
+- **Le quattro pagine sono quattro passi dal tuo colore a quello dell'altra persona:** Oggi è il tuo, Noi a un terzo, Ricordi a due terzi, Gioca il suo. Ogni telefono parte dal suo. I passi si mescolano in OKLCH (`person-colors.js`): anche tra due colori opposti, come blu e pesca, non passano dal grigio. Il colore di Noi (le cose di tutti e due) è il punto di mezzo.
+- **Cosa prende il colore della pagina:** la barra (icona e sfondo della scheda aperta), il colore che riempie lo schermo cambiando pagina, il bagliore in cima alla notte, le scritte, le icone e i contorni dentro ogni pagina. Le regole di prima non sono state riscritte: corallo, orchidea, ambra e menta ora vogliono dire «il colore di questa pagina» (`colori.css`).
+- **I tasti principali** sono la sfumatura dei due colori, invece del solo tuo.
+- **Ciò che fa ognuno resta nel suo colore** (la tua risposta, la sua, il cuore del Ti penso).
+- **Leggibilità:** ogni passo di ogni coppia della tavolozza ha almeno 7:1 di contrasto sulla notte e 6,8:1 sotto l'inchiostro scuro dei tasti. Per questo il colore stesso fa da colore delle scritte, senza una seconda versione.
+- **Via le Atmosfere e il Colore di Noi:** non si vedono più tra i premi e non si dipingono. Le scelte salvate restano leggibili nel database. I livelli che davano un'Atmosfera o un Colore di Noi restano senza premio visibile finché non arriva la scala nuova (fase 4).
+- Lo sfondo resta vino: cambia solo la luce in cima, nel colore della pagina.
+
+**Prima della produzione:** niente di nuovo sul server. Con le migrazioni dei personaggi già annotate qui sotto, i colori scelti con US Plus si leggono nella tavolozza nuova.
+
+**Test:** `tests/colori-coppia.test.js` (contrasto di tutte le coppie, niente grigio a metà, i passi sui due telefoni, Atmosfere e Colore di Noi ritirati) più i test aggiornati dei colori fissi e delle Atmosfere.
+
+**Novità per Play:** da scrivere con l'uscita del redesign.
+
+### Redesign, fase 2: la struttura (23/11)
+
+**Stato:** in staging dal 23/11 (PR #281, merge `38ff0468`, sito `…-s38ff0468`). Tavola approvata dal founder il 23/11 («Concordo»). Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md), D6.
+
+**Cosa cambia:**
+- **Ti penso al centro della barra:** un cuore rialzato con la sfumatura dal tuo colore a quello dell'altra persona. Un tocco lo fa scoppiare subito (disco nel tuo colore, anello nel suo, sette coppie di puntini) e manda il Ti penso. Con il movimento ridotto non c'è lo scoppio. Non c'è più in alto a sinistra su Oggi, e non sparisce più su Ricordi, Gioca e Impostazioni.
+- **La busta di Lasciato per te** va in alto a sinistra, solo su Oggi.
+- **Il tuo personaggio in alto a destra** su Oggi, Noi, Ricordi e Gioca (Gioca ha ora il titolo): apre il Profilo. Lo disegna il nuovo `personaggi.js` (forma, colore, accessori già indossati, faccia di Come stai), portato dai personaggi di staging senza reazioni né guardaroba (fase 4).
+- **Le Impostazioni diventano il Profilo:** in cima la tua scheda (personaggio, nome, forma, colore, Come stai), poi le Impostazioni di prima. La scheda della coppia torna sotto «Voi due». La freccia torna alla pagina da cui l'hai aperto, e la barra la tiene segnata.
+- **Via la rotella da Noi** (le due che c'erano).
+- **Lettura dei personaggi:** `profiles` legge anche `character_shape`, `character_head`, `character_face`. Se il server non li ha (produzione senza le migrazioni dei personaggi), rilegge le colonne di prima: nessun errore, solo i personaggi predefiniti.
+
+**Prima della produzione:** le migrazioni dei personaggi della sezione qui sotto. Senza, ognuno vede il tondo rosa o il quadrato lilla.
+
+**Test:** `tests/struttura.test.js` più i test aggiornati della barra, della testata di Oggi e delle Impostazioni.
+
+**Novità per Play:** da scrivere con l'uscita del redesign.
+
+### Staging riparte da main (23/11)
+
+**Stato:** ramo `claude/staging-da-main`, verso il ramo fisso di staging. Il diario pulito di staging (#255–#278) è archiviato nell'etichetta `archivio/staging-diario-pulito-20261123` (`6c7aa160`) e non andrà in produzione. Missione: [redesign-definitivo.md](../missions/redesign-definitivo.md).
+
+**Cosa porta in produzione, quando uscirà il redesign:**
+- **Migrazioni dei personaggi** `20261115183900_personaggi_forma_e_colori.sql`, `20261120232852_personaggi_guardaroba.sql` e `20261123231417_personaggi_scala_premi.sql`, in quest'ordine (su US-STAGING, non in produzione): vanno applicate **prima** del sito. La prima cambia la tavolozza delle persone (oro, cielo e rubino diventano pesca, blu e prugna): prima dell'uscita contare in sola lettura chi li ha scelti.
+- **Tavolozza** in `person-colors.js`: rosa, lilla, blu, salvia, pesca, prugna, menta, perla; i nomi vecchi si leggono come il colore nuovo più vicino finché la migrazione non li sposta.
+- **Testo grande del telefono:** Android `setTextZoom` in `UsWebView.java` (vale solo da un APK nuovo), iPhone `-webkit-text-size-adjust` in `platform.js` (da provare con TestFlight); `aria-description` tradotto.
+- **Tastiera ed emoji:** i campi delle parole di conferma non vengono riscritti su Android; i titoli dei tipi del calendario si tagliano per carattere; il nome dello spazio accetta emoji e suggerimenti.
+- **Solo staging:** la versione `<rilascio>-s<commit>` a ogni pubblicazione e la pagina segnaposto dei rami di prova (script di build, nessun effetto sulla produzione).
+
+**Test:** `tests/staging-build-id.test.js`, `tests/s3-1-public-auth.test.js`, `tests/accessibilita.test.js`, `tests/keyboard-emoji.test.js`, `tests/person-colors-*.test.js`, `tests/content-1-0-catalog.test.js`.
+
+**Novità per Play:** nessuna voce a sé finché non escono le fasi del redesign.
+
 ### Fogli con la tastiera su iPhone (17/11)
 
 **Stato:** branch `claude/whatsapp-video-review-99dc83`, da `main`. Trovato da Bea su TestFlight (video del 17/11): rispondendo alla domanda del giorno, sotto «Invia la mia risposta» ricompariva la pagina Oggi con la card della domanda. Provato col test nel browser che simula la tastiera di iPhone; da riprovare su TestFlight. Non su staging né in produzione.

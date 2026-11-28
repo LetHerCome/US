@@ -32,13 +32,17 @@ let unlockBusy = false;
 const SLOTS = Object.freeze({
   oggi_theme: { pref: 'oggi_theme', look: 'theme', label: 'Temi di Oggi', place: 'atmosfera, foto e countdown', unlock: 'Nuovo tema di Oggi', where: 'Oggi, attorno alla vostra foto' },
   oggi_effect: { pref: 'oggi_effect', look: 'effect', label: 'Effetti di Oggi', place: 'sopra la vostra foto', unlock: 'Nuovo effetto di Oggi', where: 'Oggi, sopra la vostra foto' },
-  theme: { pref: 'theme_reward_id', label: 'Atmosfera', place: 'lo sfondo di tutta US', unlock: 'Nuova atmosfera', where: 'In tutta US' },
-  accent: { pref: 'accent_reward_id', label: 'Colore di Noi', place: 'selezioni, progressi, navigazione', unlock: 'Nuovo colore di Noi', where: 'Selezioni e progressi, in tutta US' },
+  // Atmosfere and Colore di Noi retired (redesign definitivo, 23/11/2026, D7):
+  // the couple's two colours paint US now. Stored choices stay readable.
+  theme: { pref: 'theme_reward_id', retired: true, label: 'Atmosfera', place: 'lo sfondo di tutta US', unlock: 'Nuova atmosfera', where: 'In tutta US' },
+  accent: { pref: 'accent_reward_id', retired: true, label: 'Colore di Noi', place: 'selezioni, progressi, navigazione', unlock: 'Nuovo colore di Noi', where: 'Selezioni e progressi, in tutta US' },
   effect: { pref: 'effect_reward_id', label: 'Simbolo US', place: 'il simbolo in alto', unlock: 'Nuovo effetto del simbolo', where: 'Il simbolo in alto su Oggi' },
   // Premi Sintonia V2: how this phone receives a Ti penso.
   ti_penso: { pref: 'ti_penso', label: 'Ti penso', place: 'quando ne ricevi uno', unlock: 'Nuovo Ti penso', where: 'Quando ricevi un Ti penso' },
   // Premi Sintonia V2, Fase 2: what the companion wears on this phone (pet.css).
-  pet_accessory: { pref: 'pet_accessory', label: 'Accessori', place: 'sul vostro compagno', unlock: 'Nuovo accessorio', where: 'Sul vostro compagno, sopra la barra' },
+  // Compagni retired for everyone (redesign definitivo, 23/11/2026, D5): their
+  // accessories go to the characters with the wardrobe (fase 4).
+  pet_accessory: { pref: 'pet_accessory', retired: true, label: 'Accessori', place: 'sul vostro compagno', unlock: 'Nuovo accessorio', where: 'Sul vostro compagno, sopra la barra' },
   // and the icon of US on this phone (native-plugins/us-app-icon, the Android app).
   app_icon: { pref: 'app_icon', label: 'Icona dell’app', place: 'sul tuo telefono', unlock: 'Nuova icona', where: 'L’icona di US sul tuo telefono, nell’app Android' },
   frame: { pref: 'frame_reward_id', retired: true, label: 'Cornici', place: 'sulla foto di Oggi', unlock: 'NUOVA CORNICE', where: 'Sulla foto di Oggi' },
@@ -267,10 +271,10 @@ const ATM = Object.freeze({ us: ['#22101D', 'rgba(255,124,150,.5)'], rose: ['#1B
 const ITEM_COLOR = Object.freeze({
   theme: { rose: '#C56EBE', midnight: '#968CFF', film: '#F0A65A', blue_hour: '#5B7CF0', graphite: '#C9C3D4' },
   accent: { orchidea: '#D98BE0', cherry: '#F0566C', champagne: '#E6C78E', ice: '#9FD2FF' },
-  oggi_theme: { cinematic: '#C06A6A', moonlight: '#5B6CC8', seasonal: '#E0A050' },
-  oggi_effect: { petals: '#FF8BA8', fireflies: '#F3B76E', bokeh: '#FF7C96', snow: '#CFE3FF' },
-  effect: { pulse: '#FF7C96', constellation: '#A98BFF', shimmer: '#E8E2F0' },
-  countdown: { aurora: '#F3B76E', orbit: '#F3B76E', chrome: '#C9C3D4' }
+  oggi_theme: { golden: '#F3B76E', seasonal: '#E0A050' },
+  oggi_effect: { hearts: '#FF7C96', petals: '#FF8BA8', dandelions: '#F4EEE6', snow: '#CFE3FF', leaves: '#D27A3E', shooting: '#A98BFF', lanterns: '#F3B76E', memories: '#FFE2D6' },
+  effect: { pulse: '#FF7C96', constellation: '#A98BFF', duo: '#D98BE0' },
+  countdown: { aurora: '#FFD98A', orbit: '#F6E7C8', chrome: '#E0605A' }
 });
 // The free look of the three device slots that have no reward row: choosing
 // it simply clears the slot on this phone.
@@ -294,7 +298,7 @@ function artItem(reward) {
   return { cat: reward?.category, id: slotValue(reward?.category, reward?.token) };
 }
 // Days together for the tiny Oggi ("430 giorni" in the mockup), counted by
-// calendar days as Oggi counts them (app.js updateTogetherDays).
+// calendar days in UTC from the couple's started_on.
 function daysTogether() {
   try {
     const started = window.UsCoupleContext?.snapshot?.()?.couple?.started_on;
@@ -311,12 +315,9 @@ function miniCount() {
 }
 // Premi Sintonia V2, Fase 2: pictures fetched only when a tile shows them.
 const REWARD_ART = '/assets/derived/rewards/';
-// An accessory tile shows this phone's companion wearing it; one not drawn on
-// the companions yet shows the accessory alone.
+// An accessory tile shows the accessory alone (the companions are retired; it
+// goes to the characters with the wardrobe, fase 4).
 function accessoryArt(id) {
-  const pet = window.USPet;
-  const who = pet?.companion?.();
-  if (id === 'none' || pet?.WORN?.includes(id)) return pet?.wornArt?.(who, id === 'none' ? '' : id) || '/assets/derived/pet/us-pet-maudit-awake-v2.webp';
   return `${REWARD_ART}us-acc-${id}-v1.webp`;
 }
 function artMarkup(item, big = false) {
@@ -325,8 +326,14 @@ function artMarkup(item, big = false) {
   if (cat === 'ti_penso') return `<span class="us-cos-think" data-think="${esc(id)}"${id === 'letter' ? ` style="--art:url('${REWARD_ART}us-think-letter-closed-v1.webp')"` : ''}><i></i><i></i><i></i></span>`;
   if (cat === 'app_icon') return `<span class="us-cos-acc us-cos-icon" data-icon="${esc(id)}" style="--art:url('${REWARD_ART}us-app-icon-${esc(id)}-v1.webp')"></span>`;
   if (cat === 'pet_accessory') return `<span class="us-cos-acc" data-acc="${esc(id)}" style="--art:url('${esc(accessoryArt(id))}')"></span>`;
-  if (cat === 'oggi_theme') return `<span class="mini" data-theme="${esc(id)}">${miniCount()}</span>`;
-  if (cat === 'oggi_effect') return `<span class="mini">${id !== 'none' && FX.has(id) ? `<canvas data-fx="${esc(id)}"></canvas>` : ''}${miniCount()}</span>`;
+  if (cat === 'oggi_theme') {
+    // Temi e countdown (26/11/2026): the tile is the real preview of the theme (the trees, the
+    // sea, the film stamp), as the gallery paints it; the plain gradient only without oggi-look.js.
+    const real = window.USOggiLook?.previewMarkup?.('theme', id);
+    if (real) return `<span class="mini us-progression-reward-preview" data-theme="${esc(id)}">${real}</span>`;
+    return `<span class="mini" data-theme="${esc(id)}">${miniCount()}</span>`;
+  }
+  if (cat === 'oggi_effect') return `<span class="mini">${id !== 'none' && FX.has(id) ? `<span class="us-oggi-fx mini-fx" data-fx="${esc(id)}" data-fx-scale="0.5"></span>` : ''}${miniCount()}</span>`;
   if (cat === 'theme') {
     const [night, glow] = ATM[id] || ATM.us;
     return `<span class="swatch-pv atm" style="background:radial-gradient(90% 60% at 50% 0%,${glow},transparent 70%),${night}"><span class="ui"><i></i><i></i><i class="pill"></i><i></i></span></span>`;
@@ -337,6 +344,9 @@ function artMarkup(item, big = false) {
   }
   if (cat === 'effect') return `<span class="logo-pv"><span class="logo-wrap" data-fx="${esc(id)}"><img class="og-logo" src="${US_SYMBOL}" alt="" decoding="async" draggable="false"><span class="shine"></span><span class="stars"><i style="left:4px;top:10px"></i><i style="right:2px;top:2px;animation-delay:.8s"></i><i style="right:6px;bottom:4px;animation-delay:1.6s"></i></span></span></span>`;
   if (cat === 'countdown') {
+    // Temi e countdown (26/11/2026): the three reward styles are shown with the real countdown markup.
+    const real = ['aurora', 'orbit', 'chrome'].includes(id) ? window.USCountdown?.previewMarkup?.(id) : '';
+    if (real) return `<span class="cd-pv"><span class="cd cd-real">${real}</span></span>`;
     const days = daysTogether() || '0';
     const digits = id === 'signal' ? days.split('').map((d) => `<span>${esc(d)}</span>`).join('') : esc(days);
     return `<span class="cd-pv"><span class="cd" data-style="${esc(id)}"><span class="cdb"><span class="num">${digits}</span><span class="lbl">giorni</span></span></span></span>`;
@@ -344,86 +354,11 @@ function artMarkup(item, big = false) {
   return '<span class="us-cos-stage"></span>';
 }
 
-// The mockup's particle engine for the Oggi effect previews (sintonia.js FX).
-// Only canvases on screen draw; nothing runs under reduced motion.
-const FX = (() => {
-  // The canvases being drawn ({ c, g, kind, ps, on, w, h }).
-  let live = [];
-  const find = (c) => live.find((s) => s.c === c);
-  let raf = 0;
-  let seen = null;
-  const R = Math.random;
-  const heart = (g, x, y, s) => { g.beginPath(); g.moveTo(x, y + s * 0.35); g.bezierCurveTo(x, y, x - s * 0.5, y, x - s * 0.5, y + s * 0.35); g.bezierCurveTo(x - s * 0.5, y + s * 0.7, x, y + s * 0.85, x, y + s); g.bezierCurveTo(x, y + s * 0.85, x + s * 0.5, y + s * 0.7, x + s * 0.5, y + s * 0.35); g.bezierCurveTo(x + s * 0.5, y, x, y, x, y + s * 0.35); g.fill(); };
-  const KINDS = {
-    hearts: { n: 10, init: (p, w, h, first) => { p.x = R() * w; p.y = first ? R() * h : h + 12; p.s = 6 + R() * 7; p.v = 0.18 + R() * 0.22; p.a = 0.35 + R() * 0.35; p.ph = R() * 6; p.c = R() < 0.6 ? '255,124,150' : '255,179,194'; },
-      step: (p, w, h, t) => { p.y -= p.v; p.x += Math.sin(t / 900 + p.ph) * 0.25; if (p.y < -14) Object.assign(p, { y: h + 12, x: R() * w }); },
-      draw: (g, p) => { g.fillStyle = `rgba(${p.c},${p.a})`; heart(g, p.x, p.y, p.s); } },
-    stars: { n: 38, init: (p, w, h) => { p.x = R() * w; p.y = R() * h * 0.62; p.s = 0.5 + R() * 1.3; p.sp = 0.6 + R() * 1.4; p.ph = R() * 6; },
-      step: () => {}, draw: (g, p, t) => { const a = 0.15 + 0.85 * (0.5 + 0.5 * Math.sin(t / 1000 * p.sp + p.ph)); g.fillStyle = `rgba(255,248,240,${a})`; g.beginPath(); g.arc(p.x, p.y, p.s, 0, 7); g.fill();
-        if (p.s > 1.4) { g.strokeStyle = `rgba(255,248,240,${a * 0.6})`; g.lineWidth = 0.6; g.beginPath(); g.moveTo(p.x - p.s * 3, p.y); g.lineTo(p.x + p.s * 3, p.y); g.moveTo(p.x, p.y - p.s * 3); g.lineTo(p.x, p.y + p.s * 3); g.stroke(); } } },
-    petals: { n: 14, init: (p, w, h, first) => { p.x = R() * w; p.y = first ? R() * h : -10; p.s = 4 + R() * 4; p.v = 0.35 + R() * 0.5; p.r = R() * 6; p.vr = (R() - 0.5) * 0.03; p.ph = R() * 6; p.c = ['255,170,190', '255,140,165', '255,210,220'][R() * 3 | 0]; },
-      step: (p, w, h, t) => { p.y += p.v; p.x += Math.sin(t / 700 + p.ph) * 0.45; p.r += p.vr; if (p.y > h + 12) Object.assign(p, { y: -10, x: R() * w }); },
-      draw: (g, p) => { g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = `rgba(${p.c},.78)`; g.beginPath(); g.ellipse(0, 0, p.s, p.s * 0.55, 0, 0, 7); g.fill(); g.restore(); } },
-    fireflies: { n: 14, add: true, init: (p, w, h) => { p.x = R() * w; p.y = h * 0.25 + R() * h * 0.7; p.a = R() * 6; p.v = 0.18 + R() * 0.22; p.ph = R() * 6; p.s = 1.6 + R() * 1.6; },
-      step: (p, w, h) => { p.a += (R() - 0.5) * 0.18; p.x += Math.cos(p.a) * p.v; p.y += Math.sin(p.a) * p.v; if (p.x < -10) p.x = w + 10; if (p.x > w + 10) p.x = -10; if (p.y < h * 0.15) p.a = 1.57; if (p.y > h) p.a = -1.57; },
-      draw: (g, p, t) => { const k = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t / 650 + p.ph)), r = p.s * 7; const q = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); q.addColorStop(0, `rgba(255,226,150,${0.9 * k})`); q.addColorStop(0.25, `rgba(255,196,110,${0.35 * k})`); q.addColorStop(1, 'rgba(255,180,90,0)'); g.fillStyle = q; g.beginPath(); g.arc(p.x, p.y, r, 0, 7); g.fill(); } },
-    bokeh: { n: 9, add: true, init: (p, w, h) => { p.x = R() * w; p.y = R() * h; p.r = 16 + R() * 34; p.vx = (R() - 0.5) * 0.12; p.vy = -0.05 - R() * 0.1; p.ph = R() * 6; p.c = ['255,124,150', '243,183,110', '169,139,255', '255,236,220'][R() * 4 | 0]; },
-      step: (p, w, h) => { p.x += p.vx; p.y += p.vy; if (p.y < -p.r) p.y = h + p.r; if (p.x < -p.r) p.x = w + p.r; if (p.x > w + p.r) p.x = -p.r; },
-      draw: (g, p, t) => { const a = 0.08 + 0.12 * (0.5 + 0.5 * Math.sin(t / 1600 + p.ph)); const q = g.createRadialGradient(p.x, p.y, p.r * 0.55, p.x, p.y, p.r); q.addColorStop(0, `rgba(${p.c},${a})`); q.addColorStop(0.85, `rgba(${p.c},${a * 1.4})`); q.addColorStop(1, `rgba(${p.c},0)`); g.fillStyle = q; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7); g.fill(); } },
-    snow: { n: 46, init: (p, w, h, first) => { p.x = R() * w; p.y = first ? R() * h : -6; p.r = 0.8 + R() * 1.9; p.v = 0.3 + R() * 0.7; p.ph = R() * 6; },
-      step: (p, w, h, t) => { p.y += p.v; p.x += Math.sin(t / 1200 + p.ph) * 0.3; if (p.y > h + 6) Object.assign(p, { y: -6, x: R() * w }); },
-      draw: (g, p) => { g.fillStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7); g.fill(); } }
-  };
-  function size(s) {
-    const c = s.c, dpr = Math.min(2, window.devicePixelRatio || 1), w = c.clientWidth || c.parentElement?.clientWidth || 100, h = c.clientHeight || c.parentElement?.clientHeight || 100;
-    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); s.g.setTransform(dpr, 0, 0, dpr, 0, 0); }
-    s.w = w; s.h = h;
-    if (!s.ps.length) {
-      const K = KINDS[s.kind];
-      const n = Math.max(4, Math.round(K.n * Math.min(1.2, (w * h) / (390 * 700))));
-      for (let i = 0; i < n; i++) { const p = {}; K.init(p, w, h, true); s.ps.push(p); }
-    }
-  }
-  function paint(s, t, move) {
-    const K = KINDS[s.kind];
-    s.g.clearRect(0, 0, s.w, s.h);
-    s.g.globalCompositeOperation = K.add ? 'lighter' : 'source-over';
-    for (const p of s.ps) { if (move) K.step(p, s.w, s.h, t); K.draw(s.g, p, t); }
-  }
-  function frame(t) {
-    raf = 0;
-    let any = false;
-    for (const s of live) {
-      if (!s.c.isConnected) { stop(s.c); continue; }
-      if (!s.on) continue;
-      any = true;
-      if (!s.w) size(s);
-      paint(s, t, true);
-    }
-    if (any && !reducedMotion()) raf = requestAnimationFrame(frame);
-  }
-  function kick() { if (!raf && !reducedMotion() && live.some((s) => s.on)) raf = requestAnimationFrame(frame); }
-  function watch(c) {
-    if (typeof IntersectionObserver !== 'function') { const s = find(c); if (s) s.on = true; return; }
-    if (!seen) seen = new IntersectionObserver((entries) => { for (const e of entries) { const s = find(e.target); if (s) { s.on = e.isIntersecting; if (s.on) s.w = 0; } } kick(); });
-    seen.observe(c);
-  }
-  function start(c, kind) {
-    stop(c);
-    const g = KINDS[kind] && c.getContext?.('2d');
-    if (!g) return;
-    const s = { c, g, kind, ps: [], on: false, w: 0, h: 0 };
-    live.push(s);
-    // Measured on its first frame, never right after the markup lands (a
-    // read here would force a layout in the middle of a render).
-    if (reducedMotion()) { requestAnimationFrame(() => { if (!c.isConnected) return; size(s); paint(s, performance.now(), false); }); return; }
-    watch(c);
-  }
-  function stop(c) { if (!find(c)) return; seen?.unobserve?.(c); live = live.filter((s) => s.c !== c); }
-  return { start, has: (kind) => Boolean(KINDS[kind]), kick };
-})();
+// Premi di Oggi, fase 1 (25/11/2026): the previews of the Oggi effects are
+// painted by the same engine as Oggi (oggi-fx.js), only while on screen.
+const FX = Object.freeze({ has: (kind) => Boolean(window.UsOggiFx?.supports?.(kind)) });
 function startCanvases(root) {
-  root?.querySelectorAll?.('canvas[data-fx]')?.forEach?.((c) => FX.start(c, c.dataset.fx));
+  window.USOggiLook?.mountPreviews?.(root);
 }
 
 // ---------- Due colori · points: +XP, sparks, the bar that grows ----------
@@ -499,7 +434,8 @@ function releaseCard() { gain = null; }
 const sintoniaPanel = () => $('usGiocaSintonia');
 function sintoniaVisible() {
   const panel = sintoniaPanel();
-  return Boolean(panel && !panel.hidden && $('quiz')?.classList?.contains('active') && !document.hidden);
+  // Il vostro angolo (redesign definitivo, D3): Sintonia shows while its sheet is open.
+  return Boolean(panel && $('usAngolo')?.classList?.contains('open') && !document.hidden);
 }
 // The bar: a full-width fill that slides inside its rounded track.
 function animBar(fromPct, toPct, ms) {
@@ -551,14 +487,13 @@ async function playGain(fromXp, toXp) {
   const line = $('bondLevelXp');
   setText(line, `${fmt(before.needed)} / ${fmt(before.needed)} punti`);
   await tweenLens(86 / 46, 380, (t) => t * t);
-  const bloom = sintoniaVenn()?.querySelector?.('.is-bloom');
-  if (canAnimate(bloom)) bloom.animate([{ opacity: 0.95, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.9)' }], { duration: 900, easing: EASE.out });
+  // A new level: the two characters hop together.
+  sintoniaVenn()?.querySelectorAll?.('.us-duo-one').forEach((one, i) => { if (canAnimate(one)) one.animate([{ transform: 'none' }, { transform: 'translateY(-14px)', offset: 0.4 }, { transform: 'none' }], { duration: 620, delay: i * 80, easing: EASE.out }); });
   const label = $('bondResonanceLevel');
   if (canAnimate(label)) label.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.25)', offset: 0.4 }, { transform: 'scale(1)' }], { duration: 520, easing: EASE.spring });
   paintCard(toXp);
   const bar = $('bondPageFill');
   if (bar) bar.style.width = '100%';
-  window.USPet?.react?.('reward');
   window.UsFeedback?.success?.();
   await Promise.all([animBar(100, 0, 10), tweenLens(after.current / after.needed, 900, (t) => 1 - (1 - t) ** 4)]);
   await animBar(0, pct(after), 400);
@@ -610,18 +545,16 @@ function applyPreferences(next = state) {
   const root = document.documentElement;
   const hero = $('homeHero');
   const prefs = next?.preferences || {};
-  const value = (category) => slotValue(category, rewardToken(prefs[SLOTS[category].pref]));
+  const value = (category) => (SLOTS[category].retired ? '' : slotValue(category, rewardToken(prefs[SLOTS[category].pref])));
   const theme = value('theme');
   const accent = value('accent');
   const effect = value('effect');
   const think = value('ti_penso');
-  const accessory = value('pet_accessory');
   syncAppIcon(value('app_icon'));
   // A data attribute on <html> restyles the whole page: written only when it changes.
   if (root.dataset.usTheme !== (theme || undefined)) { if (theme) root.dataset.usTheme = theme; else delete root.dataset.usTheme; }
   syncSplashTheme(theme);
   if (root.dataset.usThinkFx !== (think || undefined)) { if (think) root.dataset.usThinkFx = think; else delete root.dataset.usThinkFx; }
-  window.USPet?.setAppearance?.({ accessory: accessory || '' });
   if (root.dataset.usAccent !== (accent || undefined)) { if (accent) root.dataset.usAccent = accent; else delete root.dataset.usAccent; }
   if (root.dataset.usEffect !== (effect || undefined)) { if (effect) root.dataset.usEffect = effect; else delete root.dataset.usEffect; }
   clearRetiredCosmetics(root, hero);
@@ -640,28 +573,17 @@ const levelInfo = (xp) => (typeof window.bondLevelInfo === 'function' ? window.b
 const rankTitle = (level) => (typeof window.bondRankTitle === 'function' ? window.bondRankTitle(level) : '');
 let vennProgress = null;
 let vennFrame = 0;
+// Redesign definitivo (D2): the two circles became the two characters at the
+// top of Il vostro angolo; the closer you are to the next level, the closer they stand.
 function sintoniaVenn() {
-  const card = document.querySelector?.('.noi-resonance');
-  if (!card) return null;
-  let svg = card.querySelector('.us-sintonia-venn');
-  if (!svg) {
-    const anchor = card.querySelector('.noi-resonance-top .tiny');
-    if (!anchor) return null;
-    anchor.insertAdjacentHTML('afterend', '<svg class="us-sintonia-venn" viewBox="0 0 210 120" aria-hidden="true" focusable="false"><circle class="is-a" cy="60" r="50"/><circle class="is-b" cy="60" r="50"/><path class="is-noi"/></svg>');
-    svg = card.querySelector('.us-sintonia-venn');
-  }
-  return svg;
+  return document.querySelector?.('#usAngolo .us-angolo-duo') || null;
 }
-function paintLens(svg, p) {
-  const R = 50;
-  const d = Math.max(0, 86 - 46 * Math.max(0, Math.min(86 / 46, p)));
-  const h = Math.sqrt(Math.max(0, R * R - (d / 2) ** 2));
-  const key = d.toFixed(3);
-  if (svg.__usLens === key) return;
-  svg.__usLens = key;
-  svg.querySelector('.is-a')?.setAttribute('cx', String(105 - d / 2));
-  svg.querySelector('.is-b')?.setAttribute('cx', String(105 + d / 2));
-  svg.querySelector('.is-noi')?.setAttribute('d', `M105 ${60 - h}A${R} ${R} 0 0 1 105 ${60 + h}A${R} ${R} 0 0 1 105 ${60 - h}Z`);
+function paintLens(duo, p) {
+  const near = Math.max(0, Math.min(1, p));
+  const gap = Math.round(44 - 54 * near);
+  if (duo.__usGap === gap) return;
+  duo.__usGap = gap;
+  duo.style.setProperty('--us-vicini', `${gap}px`);
 }
 function renderSintoniaArt(next = state) {
   const svg = sintoniaVenn();
@@ -716,6 +638,16 @@ function celebrateLevelUp(next, pending, fromPct = 0.86) {
   showLevelMoment({ from: seen, level, unlocks: pending.filter(presented), fromPct });
   return true;
 }
+// Il grande bilanciamento (28/11/2026): the wardrobe sits on the ladder, each
+// accessory on its level (personaggi.js LOOK_LEVELS): the moment names the
+// ones of the levels just reached.
+function looksStartingLevels(from, level) {
+  const P = window.UsPersonaggi;
+  if (!P?.LOOK_LEVELS) return [];
+  const after = Math.max(1, from);
+  return Object.entries(P.LOOK_LEVELS).filter(([, at]) => at > after && at <= level)
+    .sort((a, b) => a[1] - b[1]).map(([item]) => P.LOOK_NAMES?.[item]).filter(Boolean);
+}
 // sintonia.js levelMoment, inside the shared Momento (core.js momento):
 // "Livello 6", "Intesa rara. Il prossimo arriva a 950 punti.", "Un premio
 // sbloccato", Scoprilo. The beats: 1 the Sintonia ring closes, 2 the two
@@ -723,10 +655,13 @@ function celebrateLevelUp(next, pending, fromPct = 0.86) {
 function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
   const rank = rankTitle(level);
   const info = levelInfo(Number(state?.total_xp) || 0);
-  const need = info && info.level === level ? info.needed : 200 + (level - 1) * 150;
+  const need = info && info.level === level ? info.needed
+    : typeof window.bondLevelStart === 'function' ? window.bondLevelStart(level + 1) - window.bondLevelStart(level) : 0;
   const dots = Array.from({ length: 12 }, (_, i) => `<circle class="lvx-dot ${i % 2 ? 'is-b' : 'is-a'}" cx="110" cy="110" r="${i % 3 ? 2.6 : 3.6}"/>`).join('');
   const chip = unlocks.length === 1 ? 'Un premio sbloccato' : unlocks.length > 1 ? `${unlocks.length} premi sbloccati` : '';
-  const action = unlocks.length === 1 ? 'Scoprilo' : unlocks.length > 1 ? 'Scoprili' : 'Chiudi';
+  const looks = looksStartingLevels(from, level);
+  const lookChip = looks.length ? `${looks.join(', ')} nel guardaroba` : '';
+  const action = unlocks.length === 1 ? 'Scoprilo' : unlocks.length > 1 ? 'Scoprili' : looks.length ? 'Prova il look' : 'Chiudi';
   const root = document.createElement('div');
   root.className = 'us-level-moment';
   root.setAttribute('role', 'dialog');
@@ -738,6 +673,7 @@ function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
     <h2 id="usLevelMomentTitle">Livello <em>${level}</em></h2>
     <p>${esc(rank ? `${rank}. Il prossimo arriva a ${fmt(need)} punti.` : `Il prossimo arriva a ${fmt(need)} punti.`)}</p>
     ${chip ? `<span class="us-level-moment-chip"><i></i>${esc(chip)}</span>` : ''}
+    ${lookChip ? `<span class="us-level-moment-chip us-level-moment-look"><i></i>${esc(lookChip)}</span>` : ''}
     <div class="us-level-moment-actions"><button type="button" class="primary" data-us-level-go>${action}</button></div>
   </div>`;
   document.body.appendChild(root);
@@ -746,7 +682,7 @@ function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
   const visual = root.querySelector('.lvx');
   // From system Back the rewards come a moment later, once navigation.js has
   // finished unwinding history, so that same Back cannot also close them.
-  const close = ({ fromBack = false } = {}) => {
+  const close = ({ fromBack = false, look = false } = {}) => {
     if (!root.isConnected || root.dataset.closing) return;
     root.dataset.closing = '1';
     root.removeEventListener('keydown', onKey);
@@ -754,9 +690,11 @@ function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
       root.remove();
       levelMomentOpen = false;
       levelMomentClose = null;
+      // Premi di Oggi (grill D12): a new level makes the effect on Oggi shine brighter.
+      window.USOggiLook?.burst?.();
       if (unlocks.length && fromBack) setTimeout(() => startUnlockQueue(unlocks), 120);
       else if (unlocks.length) startUnlockQueue(unlocks);
-      else window.USPet?.react?.('reward');
+      else if (look) window.UsAngolo?.open?.('look');
     };
     if (reduced || typeof root.animate !== 'function') return done();
     // core.js closeMoment: the Momento fades in 280 ms.
@@ -764,7 +702,7 @@ function showLevelMoment({ from, level, unlocks, fromPct = 0.86 }) {
   };
   const onKey = (event) => { if (event.key === 'Escape') close(); };
   root.addEventListener('keydown', onKey);
-  root.querySelector('[data-us-level-go]').addEventListener('click', () => close());
+  root.querySelector('[data-us-level-go]').addEventListener('click', () => close({ look: !unlocks.length && looks.length > 0 }));
   // S10 — system Back (navigation.js) does what the button does.
   levelMomentClose = close;
   const focusLater = (ms) => setTimeout(() => root.querySelector('[data-us-level-go]')?.focus?.({ preventScroll: true }), ms);
@@ -820,13 +758,22 @@ function renderRhythm(next = state) {
   const compact = days === 1 ? '1 giorno' : `${days} giorni`;
   const value = $('usProgressionRhythmValue');
   const copy = $('usProgressionRhythmCopy');
-  setText(value, compact);
+  // La vostra settimana (Il vostro angolo, 25/11/2026): «3 giorni di fila»,
+  // a heart for each day; with none, an invitation, never an empty score.
+  setText(value, days > 0 ? `${compact} di fila` : '');
   setText(copy, next.rhythm_today
     ? 'Oggi c’eravate.'
-    : days > 0 ? 'Una piccola cosa oggi mantiene il Ritmo.' : 'Fate una piccola cosa insieme per iniziare.');
+    : days > 0 ? 'Una piccola cosa oggi mantiene il Ritmo.' : 'Iniziate oggi: basta una risposta alla domanda.');
   const segments = Array.from($('usProgressionRhythmDays')?.children || []);
   const last = next.rhythm_today ? segments.length - 1 : segments.length - 2;
   segments.forEach((segment, i) => segment.classList?.toggle?.('on', i <= last && i > last - days));
+  // The seven days end today: each knows its weekday (L M M G V S D), today is marked.
+  const today = new Date();
+  segments.forEach((segment, i) => {
+    const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (segments.length - 1 - i));
+    segment.dataset && (segment.dataset.day = 'DLMMGVS'[day.getDay()]);
+    segment.classList?.toggle?.('today', i === segments.length - 1);
+  });
   const hub = $('noiHubResonanceMeta');
   setText(hub, `Livello ${next.level} · Ritmo ${days}`);
 }
@@ -839,7 +786,8 @@ const chipRank = (category) => { const i = CHIP_ORDER.indexOf(category); return 
 // read from the same server rows, every presented reward of the next level.
 function nextPresentedRewards(next) {
   const rewards = Array.isArray(next?.rewards) ? next.rewards : [];
-  const locked = rewards.filter((reward) => !reward.unlocked && presented(reward) && artItem(reward));
+  // US Plus extras are out of the ladder (28/11/2026): never the next unlock.
+  const locked = rewards.filter((reward) => !reward.unlocked && !reward.requires_plus && presented(reward) && artItem(reward));
   if (!locked.length) return { level: 0, rewards: [] };
   const level = Math.min(...locked.map((reward) => Number(reward.level_required) || 0));
   return {
@@ -884,7 +832,8 @@ function paintHTML(root, markup) {
   return true;
 }
 // "Prossimo sblocco · Livello 6 / Lucciole / e Respiro · mancano 40 punti".
-// The next companion still locked (companions.js), with its level.
+// The next companion still locked. Compagni retired (23/11/2026, D5): companions.js
+// is gone, so this and the Compagni group read nothing until fase 4 rewrites the collection.
 function nextCompanion() {
   const list = window.UsCompanions?.list?.() || [];
   return list.find((c) => !c.unlocked) || null;
@@ -942,9 +891,11 @@ function daysEstimate(xp, next) {
 // One tile of the collection (sintonia.js tile): the art, the name and
 // "In uso" / "Livello 6" / "Sbloccato" / "Incluso".
 function tileMarkup({ attrs, cls = '', on, locked, level, free, title, art, plus = false }) {
-  // V2: a Plus extra needs the level and US Plus (nothing to buy yet).
-  const status = on ? 'In uso' : locked ? (plus ? `Livello ${level} · US Plus` : `Livello ${level}`) : free ? 'Incluso' : 'Sbloccato';
-  const label = `${title}${locked ? `, si sblocca al livello ${level}${plus ? ' con US Plus' : ''}` : on ? ', in uso' : ''}`;
+  // V2: a Plus extra needs the level and US Plus (nothing to buy yet); out of
+  // the ladder (level 1, the app icons since 28/11/2026) it needs Plus alone.
+  const plusOnly = plus && !(Number(level) > 1);
+  const status = on ? 'In uso' : locked ? (plusOnly ? 'Con US Plus' : plus ? `Livello ${level} · US Plus` : `Livello ${level}`) : free ? 'Incluso' : 'Sbloccato';
+  const label = `${title}${locked ? (plusOnly ? ', si sblocca con US Plus' : `, si sblocca al livello ${level}${plus ? ' con US Plus' : ''}`) : on ? ', in uso' : ''}`;
   return `<button type="button" class="us-progression-reward${cls ? ` ${cls}` : ''} ${locked ? 'is-locked' : 'is-unlocked'}${on ? ' is-equipped' : ''}" ${attrs}${locked ? ` data-locked="true" data-level="${esc(level)}"` : ''} aria-pressed="${on ? 'true' : 'false'}" aria-label="${esc(label)}"><span class="us-progression-reward-preview" aria-hidden="true">${art}</span><span class="us-progression-reward-copy"><b>${esc(title)}</b><small>${esc(status)}</small></span></button>`;
 }
 function rewardTile(reward) {
@@ -1238,8 +1189,6 @@ async function advanceUnlock({ used = '', oggi = false } = {}) {
   hideUnlock();
   unlockQueue = [];
   unlockIndex = 0;
-  // The moment is over and the shell is visible again: the PET may celebrate.
-  window.USPet?.react?.('reward');
   await hydrate({ showUnlocks: false, force: true });
 }
 async function dismissUnlock() {
@@ -1366,12 +1315,8 @@ function missionCompleted({ xp, questId } = {}) {
     await wait(700);
     window.closeNoiSection?.();
     await wait(280);
-    if (document.querySelector('.page.active')?.id !== 'quiz') {
-      window.openQuizHub?.({ nav: true });
-      await waitFlood();
-    }
-    const tab = $('usGiocaTabSintonia');
-    if (tab && tab.getAttribute('aria-selected') !== 'true') tab.click();
+    // Il vostro angolo opens where you are (redesign definitivo, D3).
+    window.UsAngolo?.open?.();
     await wait(500);
     window.toast?.(`Missione completata · +${points} punti ♡`, { icon: 'sparkle', quiet: false });
     await wait(700);
@@ -1482,8 +1427,6 @@ $('usProgressionRewards')?.addEventListener('click', async (event) => {
     ok = await window.USCountdown?.setStyle?.(data.countdownStyleSelect);
     if (ok) renderRewards(state);
   } else if (data.lookSlot) {
-    // Il vostro cielo needs its city and hour: it opens its own page first.
-    if (data.lookSlot === 'theme' && data.lookId === 'sky') { window.USOggiLook?.openGallery?.({ tab: 'theme', look: 'sky' }); return; }
     category = LOOK_SLOT[data.lookSlot] || '';
     ok = setDeviceLook(data.lookSlot, data.lookId);
   } else if (data.progressionDefault) {
@@ -1492,10 +1435,6 @@ $('usProgressionRewards')?.addEventListener('click', async (event) => {
   } else if (data.progressionReward) {
     category = rewardById(data.progressionReward)?.category || '';
     ok = await equipReward(data.progressionReward);
-  } else if (data.companionPick) {
-    category = 'companion';
-    ok = Boolean(window.UsCompanions?.choose?.(data.companionPick));
-    if (ok) renderRewards(state);
   }
   if (!ok) {
     window.toast?.('Non riesco ad applicarlo ora. Riprova.');
@@ -1530,13 +1469,20 @@ document.querySelectorAll?.('[data-sintonia-fold]')?.forEach?.((button) => butto
   if (open && canAnimate(body)) body.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: EASE.out });
 }));
 
-// S5 — inside "Come cresce la Sintonia" each source opens its own place.
-$('usSintoniaGrow')?.addEventListener('click', (event) => {
+// S5 — inside "Come cresce la Sintonia" each source opens its own place;
+// «Per crescere insieme» in Il vostro angolo (25/11/2026) does the same, and
+// the angolo steps aside first.
+function goGrow(event) {
   const target = event.target.closest?.('[data-sintonia-go]')?.dataset?.sintoniaGo;
   if (!target) return;
-  if (target === 'daily') window.openToday?.();
+  if (target !== 'games') window.UsAngolo?.close?.();
+  if (target === 'ideas') {
+    window.go?.('bond', { nav: true });
+    setTimeout(() => window.UsCoupleNotes?.ideas?.(), 60);
+  } else if (target === 'daily') window.openToday?.();
   else if (target === 'games') {
-    $('usGiocaTabGames')?.click?.();
+    window.UsAngolo?.close?.();
+    window.openQuizHub?.({ nav: true });
     window.scrollTo?.({ top: 0, behavior: 'auto' });
   } else if (target === 'quest') {
     window.go?.('bond', { nav: true });
@@ -1545,7 +1491,9 @@ $('usSintoniaGrow')?.addEventListener('click', (event) => {
     window.go?.('moments', { nav: true });
     setTimeout(() => window.UsMomentComposer?.open?.(), 60);
   }
-});
+}
+$('usSintoniaGrow')?.addEventListener('click', goGrow);
+$('usAngoloCresci')?.addEventListener('click', goGrow);
 
 // S10 — system Back closes the reward window and the level moment exactly
 // like their own buttons (navigation.js layers).

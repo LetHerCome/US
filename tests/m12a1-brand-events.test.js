@@ -35,7 +35,8 @@ test('top bar: accessible, inert, centred, and still three balanced zones', () =
   const css = read('identity.css');
   assert.match(css, /\.top\.us-premium-top \.us-top-brand\{grid-column:2;[^}]*overflow:hidden;pointer-events:none/);
   assert.match(css, /\.us-top-brand-art\{[^}]*height:58px;width:58px/, 'the square mark is cropped inside the 38px bar slot');
-  assert.ok(topBar.indexOf('id="usPerVoiTop"') < topBar.indexOf('us-top-brand') && topBar.indexOf('us-top-brand') < topBar.indexOf('id="leftForYouPartnerEntry"'));
+  // Since the redesign (fase 2) the envelope is left and your character right of the mark.
+  assert.ok(topBar.indexOf('id="leftForYouPartnerEntry"') < topBar.indexOf('us-top-brand') && topBar.indexOf('us-top-brand') < topBar.indexOf('data-us-self'));
 });
 
 // ---------------------------------------------------------------- AURORA

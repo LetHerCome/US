@@ -15,7 +15,6 @@ const CUSTOM_ICONS = {
 
 test('V0E usa direttamente i sei master custom approvati nelle rispettive superfici', () => {
   const html = read('index.html');
-  const stories = read('stories.js');
   const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
 
   Object.entries(CUSTOM_ICONS).forEach(([id, asset]) => {
@@ -30,7 +29,6 @@ test('V0E usa direttamente i sei master custom approvati nelle rispettive superf
   assert.doesNotMatch(html, /id="todayOrb"/);
   assert.match(html, /id="usDailyRitual"/);
   assert.doesNotMatch(html.match(/<button[^>]+id="thinkButton"[\s\S]*?<\/button>/)?.[0] || '', /us-icon-ti-penso-v1\.png/);
-  assert.match(stories, /id="usStoryAdd"[\s\S]{0,340}assets\/derived\/runtime\/us-icon-stories-128-v1\.png/);
 });
 
 test('V0E conserva i master senza stretching o decorazioni CSS duplicate; il runtime precarica solo i derivati dimensionati', () => {
@@ -43,15 +41,18 @@ test('V0E conserva i master senza stretching o decorazioni CSS duplicate; il run
   assert.match(css, /\.us-approved-custom-icon\{[\s\S]*box-shadow:none/);
 
   // Perf 1.0: the masters (1.3-1.8 MB each) are never loaded or precached by the shell.
-  // Settings and Stories are shown at icon size, through their 128 px derivatives.
+  // Redesign definitivo, fase 2 (D6): the gear left Noi; Stories are retired
+  // (27/11/2026). Both 128 px derivatives stay approved in the repository but
+  // are no longer loaded, precached or copied into the builds.
   for (const [id, runtime] of [['settings', 'assets/derived/runtime/us-icon-settings-128-v1.png'], ['stories', 'assets/derived/runtime/us-icon-stories-128-v1.png']]) {
     const derived = manifest.assets.find((entry) => entry.path === runtime);
     assert.equal(derived?.status, 'APPROVED', runtime);
     assert.equal(derived?.source, CUSTOM_ICONS[id], 'derived from the approved master, which stays untouched');
-    assert.ok(worker.includes(`"/${runtime}"`), `${runtime} is precached`);
+    assert.ok(fs.existsSync(path.join(ROOT, runtime)), `${runtime} stays in the repository`);
   }
-  assert.match(read('index.html'), /us-approved-custom-icon" src="\/assets\/derived\/runtime\/us-icon-settings-128-v1\.png"/);
-  for (const file of ['index.html', 'stories.js', 'identity.css', 'stories.css']) {
+  assert.doesNotMatch(worker, /us-icon-(?:settings|stories)-128-v1\.png/, 'no retired derivative is precached');
+  assert.doesNotMatch(read('index.html'), /us-icon-settings-128-v1\.png/, 'no gear since the Profilo opens from your character');
+  for (const file of ['index.html', 'identity.css']) {
     assert.doesNotMatch(read(file), /us-icon-(settings|stories)-v1\.png/, `${file} loads no master`);
   }
   Object.values(CUSTOM_ICONS).forEach((asset) => {

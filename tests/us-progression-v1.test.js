@@ -35,10 +35,10 @@ test('Progression V1: unlock authority stays server-side while cosmetic equip is
 });
 
 test('Progression UI: collection uses two large columns, no inner scroll and collapsible categories',()=>{
-  // US V3 — Sintonia (and its collection) lives in Gioca now.
+  // US V3 — Sintonia (and its collection) lives in Il vostro angolo since the redesign (D3).
   const sintonia = read('noi-v2.css');
-  assert.match(sintonia, /#quiz \.us-gioca-sintonia \.us-reward-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(sintonia, /#quiz \.us-gioca-sintonia \.us-progression-rewards\{max-height:none;overflow:visible;/);
+  assert.match(sintonia, /#usAngolo \.us-gioca-sintonia \.us-reward-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(sintonia, /#usAngolo \.us-gioca-sintonia \.us-progression-rewards\{max-height:none;overflow:visible;/);
   assert.match(js, /<summary class="us-reward-group-head"/);
 });
 
@@ -50,7 +50,7 @@ test('Progression V1: cosmetic preferences map only to explicit theme/frame/effe
   assert.match(css,/:root\[data-us-theme="midnight"\]/);
   // US V3 — frames are retired; Oggi looks use their own scoped attribute.
   assert.doesNotMatch(css,/#homeHero\[data-us-frame=/);
-  assert.match(read('oggi-look.css'),/html\[data-us-oggi-theme="romantic"\]/);
+  assert.match(read('oggi-look.css'),/html\[data-us-oggi-theme="film"\]/);
   assert.match(css,/:root\[data-us-effect="pulse"\] \.us-top-brand-art/);
 });
 

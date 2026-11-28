@@ -34,14 +34,10 @@
 		B1D6E7000000000000000027 /* Fraunces.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000026 /* Fraunces.ttf */; };
 		B1D6E7000000000000000029 /* Fraunces-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000028 /* Fraunces-Italic.ttf */; };
 		B1D6E700000000000000002B /* Figtree.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000002A /* Figtree.ttf */; };
-		B1D6E700000000000000002D /* art_photo.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000002C /* art_photo.webp */; };
-		B1D6E700000000000000002F /* art_photo_night.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000002E /* art_photo_night.webp */; };
-		B1D6E7000000000000000031 /* art_think_s.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000030 /* art_think_s.webp */; };
-		B1D6E7000000000000000033 /* art_think_s_night.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000032 /* art_think_s_night.webp */; };
-		B1D6E7000000000000000035 /* art_think_m.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000034 /* art_think_m.webp */; };
-		B1D6E7000000000000000037 /* art_think_m_night.webp in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000036 /* art_think_m_night.webp */; };
-		B1D6E7000000000000000039 /* grain_tile.png in Resources */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000038 /* grain_tile.png */; };
 		B1D6E7000000000000000002 /* UsWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B1D6E7000000000000000001 /* UsWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B1D6E700000000000000003B /* UsCharacterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000003A /* UsCharacterView.swift */; };
+		B1D6E700000000000000003D /* UsCardWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000003C /* UsCardWidgets.swift */; };
+		B1D6E700000000000000003F /* UsCharacterShapes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D6E700000000000000003E /* UsCharacterShapes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -79,13 +75,9 @@
 		B1D6E7000000000000000026 /* Fraunces.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fraunces.ttf; sourceTree = "<group>"; };
 		B1D6E7000000000000000028 /* Fraunces-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Fraunces-Italic.ttf"; sourceTree = "<group>"; };
 		B1D6E700000000000000002A /* Figtree.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Figtree.ttf; sourceTree = "<group>"; };
-		B1D6E700000000000000002C /* art_photo.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_photo.webp; sourceTree = "<group>"; };
-		B1D6E700000000000000002E /* art_photo_night.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_photo_night.webp; sourceTree = "<group>"; };
-		B1D6E7000000000000000030 /* art_think_s.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_think_s.webp; sourceTree = "<group>"; };
-		B1D6E7000000000000000032 /* art_think_s_night.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_think_s_night.webp; sourceTree = "<group>"; };
-		B1D6E7000000000000000034 /* art_think_m.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_think_m.webp; sourceTree = "<group>"; };
-		B1D6E7000000000000000036 /* art_think_m_night.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = art_think_m_night.webp; sourceTree = "<group>"; };
-		B1D6E7000000000000000038 /* grain_tile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = grain_tile.png; sourceTree = "<group>"; };
+		B1D6E700000000000000003A /* UsCharacterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsCharacterView.swift; sourceTree = "<group>"; };
+		B1D6E700000000000000003C /* UsCardWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsCardWidgets.swift; sourceTree = "<group>"; };
+		B1D6E700000000000000003E /* UsCharacterShapes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsCharacterShapes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -180,6 +172,8 @@
 				B1D6E7000000000000000016 /* UsPhotoWidget.swift */,
 				B1D6E7000000000000000018 /* UsThinkWidget.swift */,
 				B1D6E700000000000000001A /* UsThinkSender.swift */,
+				B1D6E700000000000000003C /* UsCardWidgets.swift */,
+				B1D6E700000000000000003A /* UsCharacterView.swift */,
 				B1D6E7000000000000000006 /* Info.plist */,
 				B1D6E7000000000000000007 /* UsWidgets.entitlements */,
 				B1D6E7000000000000000005 /* Resources */,
@@ -194,13 +188,6 @@
 				B1D6E7000000000000000026 /* Fraunces.ttf */,
 				B1D6E7000000000000000028 /* Fraunces-Italic.ttf */,
 				B1D6E700000000000000002A /* Figtree.ttf */,
-				B1D6E700000000000000002C /* art_photo.webp */,
-				B1D6E700000000000000002E /* art_photo_night.webp */,
-				B1D6E7000000000000000030 /* art_think_s.webp */,
-				B1D6E7000000000000000032 /* art_think_s_night.webp */,
-				B1D6E7000000000000000034 /* art_think_m.webp */,
-				B1D6E7000000000000000036 /* art_think_m_night.webp */,
-				B1D6E7000000000000000038 /* grain_tile.png */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -213,6 +200,7 @@
 				B1D6E7000000000000000020 /* UsWidgetStore.swift */,
 				B1D6E7000000000000000022 /* UsWidgetCredentials.swift */,
 				B1D6E7000000000000000024 /* UsWidgetModels.swift */,
+				B1D6E700000000000000003E /* UsCharacterShapes.swift */,
 			);
 			name = Core;
 			path = "../../native-plugins/us-widget-bridge/ios/Sources/UsWidgetBridgePlugin/Core";
@@ -325,13 +313,6 @@
 				B1D6E7000000000000000027 /* Fraunces.ttf in Resources */,
 				B1D6E7000000000000000029 /* Fraunces-Italic.ttf in Resources */,
 				B1D6E700000000000000002B /* Figtree.ttf in Resources */,
-				B1D6E700000000000000002D /* art_photo.webp in Resources */,
-				B1D6E700000000000000002F /* art_photo_night.webp in Resources */,
-				B1D6E7000000000000000031 /* art_think_s.webp in Resources */,
-				B1D6E7000000000000000033 /* art_think_s_night.webp in Resources */,
-				B1D6E7000000000000000035 /* art_think_m.webp in Resources */,
-				B1D6E7000000000000000037 /* art_think_m_night.webp in Resources */,
-				B1D6E7000000000000000039 /* grain_tile.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -364,6 +345,9 @@
 				B1D6E7000000000000000021 /* UsWidgetStore.swift in Sources */,
 				B1D6E7000000000000000023 /* UsWidgetCredentials.swift in Sources */,
 				B1D6E7000000000000000025 /* UsWidgetModels.swift in Sources */,
+				B1D6E700000000000000003F /* UsCharacterShapes.swift in Sources */,
+				B1D6E700000000000000003D /* UsCardWidgets.swift in Sources */,
+				B1D6E700000000000000003B /* UsCharacterView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

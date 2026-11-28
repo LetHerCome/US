@@ -4,7 +4,10 @@ const { start, pageFor } = require('./helpers/countdown-browser');
 
 const VIEWPORTS = [[320, 844], [390, 844], [412, 915]];
 
-test('pre-native browser: couple card stays compact, contained and opens Settings at phone widths', async (t) => {
+// Redesign definitivo (23–24/11/2026): Noi opens on the calendar with your
+// character in the head (it opens the Profilo, D6); the old couple card with the
+// two avatars and the gear is no longer drawn.
+test('pre-native browser: Noi stays contained; the couple card is gone and your character opens Settings at phone widths', async (t) => {
   const h = await start();
   if (!h) return t.skip('Playwright unavailable');
   try {
@@ -22,27 +25,19 @@ test('pre-native browser: couple card stays compact, contained and opens Setting
         return {
           viewport: { width: innerWidth, scrollWidth: document.scrollingElement.scrollWidth },
           card: box('#noiCoupleCard'),
-          settings: box('#usSettingsEntry'),
-          francesco: box('#pairAvatarFrancesco'),
-          beatrice: box('#pairAvatarBeatrice'),
-          // US 1.0 (N10): the old Lavagna board is gone; the Noi calendar sits below the card.
-          board: box('#usNoiV2'),
-          names: [...document.querySelectorAll('.noi-couple-name')].map((el) => el.textContent.trim())
+          me: box('#bond [data-us-self]'),
+          board: box('#usNoiV2')
         };
       });
 
-      assert.ok(geometry.card.left >= 0 && geometry.card.right <= geometry.viewport.width + 0.5, width + ': card contained');
-      assert.ok(geometry.card.height >= 72 && geometry.card.height <= 98, width + ': light bridge stays compact');
-      assert.ok(geometry.settings.left >= geometry.card.left && geometry.settings.right <= geometry.card.right, width + ': Settings inside card');
-      assert.ok(geometry.settings.top >= geometry.card.top && geometry.settings.bottom <= geometry.card.bottom, width + ': Settings stays inside the bridge bounds');
-      assert.ok(geometry.settings.left >= geometry.beatrice.right - 1, width + ': Settings does not cover Beatrice');
-      assert.ok(geometry.board.top > geometry.card.bottom, width + ': the calendar stays below the card');
-      assert.deepEqual(geometry.names, ['Francesco', 'Beatrice']);
+      assert.equal(geometry.card.height, 0, width + ': the old couple card is not drawn');
+      assert.ok(geometry.me.left >= 0 && geometry.me.right <= geometry.viewport.width + 0.5 && geometry.me.width >= 43.5 && geometry.me.height >= 43.5, width + ': your character is a contained 44px control ' + JSON.stringify(geometry.me));
+      assert.ok(geometry.board.left >= 0 && geometry.board.right <= geometry.viewport.width + 0.5 && geometry.board.height > 0, width + ': the calendar is contained');
       assert.ok(geometry.viewport.scrollWidth <= geometry.viewport.width, width + ': no horizontal overflow');
 
-      await page.click('#usSettingsEntry');
+      await page.click('#bond [data-us-self]');
       await page.waitForTimeout(250);
-      assert.equal(await page.locator('#settings').evaluate((el) => el.classList.contains('active')), true, width + ': gear opens Settings');
+      assert.equal(await page.locator('#settings').evaluate((el) => el.classList.contains('active')), true, width + ': your character opens Settings');
       assert.deepEqual(view.errors, [], width + ': no page errors');
       await view.ctx.close();
     }
@@ -61,6 +56,10 @@ test('Noi return: the calendar keeps resolved content visible while it refreshes
     const { page } = view;
     await page.evaluate(() => window.go('bond', { nav: true }));
     await page.waitForFunction(() => document.getElementById('usNoiV2Content')?.dataset.state === 'ready');
+    // Fluidità 2 (24/11/2026): a tap during a motion lands at once, so the
+    // snapshot waits for the first change to settle (its hydration included).
+    await page.waitForFunction(() => !window.UsDueColori?.isFlooding?.());
+    await page.waitForTimeout(400);
     const before = await page.locator('#usNoiV2Content').innerHTML();
     await page.evaluate(() => window.go('home', { nav: true }));
     await page.waitForTimeout(80);

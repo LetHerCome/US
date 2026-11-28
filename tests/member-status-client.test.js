@@ -47,7 +47,7 @@ test('model: twelve hours from the server time, then nothing', () => {
   assert.equal(status.since(3 * 3600 * 1000), 'da 3 ore');
 });
 
-test('app: Oggi pill, the sheet, Settings, Realtime on the one channel, no push', () => {
+test('app: Oggi pill, the sheet, Settings, Realtime on the one channel; the only pushes are the silent signal and the gesture', () => {
   const html = read('index.html');
   assert.match(html, /id="usOggiStatus"[^>]*aria-haspopup="dialog"/);
   assert.match(html, /<div id="usStatusSheet" class="us-status-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>/);
@@ -64,7 +64,10 @@ test('app: Oggi pill, the sheet, Settings, Realtime on the one channel, no push'
   assert.match(module, /db\.rpc\(rpc, args\)/);
   assert.match(module, /write\('set_member_status', \{ p_status: status \}/);
   assert.match(module, /write\('set_member_form', \{ p_form: validForm\(form\) \}/);
-  assert.doesNotMatch(module, /\.channel\(|notif|sendPush/i);
+  // Come stai che conta (27/11/2026): no channel of its own; a change of state is never a
+  // notification (02/11), only the silent widget signal; the gesture is the one push (D7/D16).
+  assert.doesNotMatch(module, /\.channel\(|sendPush/i);
+  assert.deepEqual([...module.matchAll(/sendWebPushEvent\?\.\('([a-z_]+)'\)/g)].map((m) => m[1]).sort(), ['partner_status', 'status_response']);
   for (const build of ['scripts/build-capacitor-web.mjs', 'scripts/build-cloudflare-pages.mjs']) {
     assert.match(read(build), /'member-status\.js',/);
     assert.match(read(build), /'member-status\.css',/);
@@ -85,17 +88,20 @@ test('widget: a new kind, both halves, the tap opens the twelve, never a write',
   const manifest = read(`${PLUGIN}/AndroidManifest.xml`);
   assert.match(manifest, /<receiver\s+android:name="com\.usapp\.widget\.UsStatusWidgetProvider"\s+android:exported="false"/);
   assert.match(read(`${PLUGIN}/res/xml/us_widget_status_info.xml`), /android:previewLayout="@layout\/us_widget_preview_status"/);
-  // 04/11/2026 (founder): only your two portraits, each with its state; no names, no lines.
-  for (const name of ['us_widget_status', 'us_widget_status_medium']) {
-    const layout = read(`${PLUGIN}/res/layout/${name}.xml`);
-    for (const id of ['us_status_root', 'us_status_me_avatar', 'us_status_me_initial', 'us_status_me_emoji', 'us_status_partner_avatar', 'us_status_partner_initial', 'us_status_partner_emoji']) assert.match(layout, new RegExp(`@\\+id/${id}"`), `${name} ${id}`);
-    assert.ok(layout.indexOf('us_status_me_avatar') < layout.indexOf('us_status_partner_avatar'), `${name}: you on the left`);
-    assert.doesNotMatch(layout, /us_status_(?:me|partner)_(?:name|line)|us_widget_pastel_heart"/, `${name}: only the two portraits`);
-    assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, `${name}: nothing under 11sp`);
+  // Widget del redesign (founder, 26/11/2026; «Voi due», personaggi D11): the
+  // characters with the faces of your Come stai and what you wear, names and
+  // states; the 2x2 is the other person.
+  const small = read(`${PLUGIN}/res/layout/us_widget_status.xml`);
+  const medium = read(`${PLUGIN}/res/layout/us_widget_status_medium.xml`);
+  for (const id of ['us_status_root', 'us_status_partner', 'us_status_partner_name', 'us_status_partner_line']) assert.match(small, new RegExp(`@\\+id/${id}"`), `small ${id}`);
+  for (const id of ['us_status_root', 'us_status_me', 'us_status_me_name', 'us_status_me_line', 'us_status_partner', 'us_status_partner_name', 'us_status_partner_line']) assert.match(medium, new RegExp(`@\\+id/${id}"`), `medium ${id}`);
+  assert.ok(medium.indexOf('us_status_me"') < medium.indexOf('us_status_partner"'), 'you on the left');
+  for (const layout of [small, medium]) {
+    assert.match(layout, /android:background="@drawable\/us_w_card"/);
+    assert.doesNotMatch(layout, /us_widget_art_|_avatar"|_emoji"/, 'characters, not portraits and emoji');
+    assert.doesNotMatch(layout, /android:textSize="(?:[0-9]|10)(?:\.\d)?sp"/, 'nothing under 11sp');
   }
-  assert.match(read(`${PLUGIN}/res/layout/us_widget_status.xml`), /@drawable\/us_widget_art_status_s"/);
-  assert.match(read(`${PLUGIN}/res/layout/us_widget_status_medium.xml`), /@drawable\/us_widget_art_status_m"/);
-  assert.ok(provider.includes('UsWidgetArt.avatar(views, context, theirs, R.id.us_status_partner_avatar, R.id.us_status_partner_initial, partnerName, size);'));
-  assert.ok(provider.includes('UsWidgetArt.avatar(views, context, mine, R.id.us_status_me_avatar, R.id.us_status_me_initial, "Tu", size);'));
+  assert.ok(provider.includes('UsWidgetCharacter.put(small, context, R.id.us_status_partner, theirs, theirFace, "", 88);'));
+  assert.ok(provider.includes('UsWidgetCharacter.put(medium, context, R.id.us_status_me, mine, myFace, "", 80);'));
   assert.match(read('widget-hub.js'), /\{ kind: 'status', name: 'Come stai', copy: '[^']+', shape: 'wide' \}/);
 });

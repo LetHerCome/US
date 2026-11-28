@@ -47,14 +47,9 @@ function closeModal(){
 }
 window.closeUsSettingsModal=closeModal;
 
+// The Sintonia level: the one curve of app.js (bondLevelInfo, a table since 28/11/2026).
 function bondLevel(totalXp=0){
-  const total=Math.max(0,Number(totalXp)||0);
-  let level=1,floor=0,needed=200;
-  while(total>=floor+needed){
-    floor+=needed;level+=1;needed=200+(level-1)*150;
-    if(level>999)break;
-  }
-  return level;
+  return typeof window.bondLevelInfo==='function'?window.bondLevelInfo(totalXp).level:1;
 }
 function daysTogether(startedOn){
   if(!startedOn)return 0;
@@ -90,7 +85,7 @@ async function pushState(){
   if(window.UsNotifications?.supported?.()){
     // Native app: state of THIS installation (FCM on Android, APNs on iOS).
     const state=await window.UsNotifications.getState();
-    return {native:true,kind:state.kind,active:state.kind==='active',permission:state.kind==='denied'?'denied':'native'};
+    return {native:true,kind:state.kind,active:state.kind==='active',pending:Boolean(state.pending),permission:state.kind==='denied'?'denied':'native'};
   }
   if(!('Notification' in window))return {permission:'unsupported',active:false};
   const permission=Notification.permission;
@@ -100,13 +95,32 @@ async function pushState(){
   }
   return {permission,active};
 }
+// The couple card (redesign definitivo, D2): the two characters instead of the circles with photo or initial.
 function avatarMarkup(profile,url){
   const name=profile?.display_name||'?';
+  const role=profile?.role==='beatrice'?'beatrice':'francesco';
+  const drawn=window.UsPersonaggi?.character?.(role,{size:48,react:true,label:name});
+  if(drawn)return `<span class="us-couple-avatar us-couple-char">${drawn}</span>`;
   if(url)return `<span class="us-couple-avatar"><img src="${esc(url)}" alt="${esc(name)}"></span>`;
   return `<span class="us-couple-avatar"><b>${esc(name.trim().slice(0,1).toUpperCase()||'?')}</b></span>`;
 }
 
+// The back arrow of the Profilo (redesign definitivo, D6; #270): back to the
+// page you opened it from, your character being top right on all four.
+const US_SETTINGS_FROM=Object.freeze({home:'Oggi',bond:'Noi',moments:'Ricordi',quiz:'Gioca'});
+function usSettingsOrigin(){return US_SETTINGS_FROM[window.usSettingsFrom]?window.usSettingsFrom:'home';}
+function paintSettingsBack(){const label=$('usSettingsFromLabel');if(label)label.textContent=US_SETTINGS_FROM[usSettingsOrigin()];}
+function usSettingsReturn(){
+  const from=usSettingsOrigin();
+  if(from==='quiz'&&typeof window.openQuizHub==='function')return window.openQuizHub({nav:true});
+  return window.go?.(from,{nav:true});
+}
+window.usSettingsReturn=usSettingsReturn;
+window.usPaintSettingsBack=paintSettingsBack;
+
 async function hydrateUsSettings(){
+  paintSettingsBack();
+  window.UsPersonaggi?.paintMe?.();
   if(!window.usProfile)return;
   const identityProfile=window.usProfile;
   const cid=identityProfile.couple_id;
@@ -128,7 +142,7 @@ async function hydrateUsSettings(){
   if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==cid)return;
   const couple=coupleRes.data||{};
   const profiles=profilesRes.data||[];
-  settingsSnapshot={couple,profiles,loc,push,prefs:prefsRes.data||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true,lavagna:true}};
+  settingsSnapshot={couple,profiles,loc,push,prefs:prefsRes.data||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true,lavagna:true,ricorda:true}};
   // Colori a scelta (founder, 29/10): with Plus the colour; without it the
   // row stays, locked, to show that Plus unlocks it.
   const plusActive=plusRes?.data?.active===true;
@@ -158,7 +172,6 @@ async function hydrateUsSettings(){
   const feedbackValue=$('usFeedbackValue');if(feedbackValue)feedbackValue.textContent=feedbackSummary();
   // Mockup "1 attivo": the widgets already on this phone's Home (native only).
   const widgetsValue=$('usWidgetsValue');if(widgetsValue&&window.UsWidgets?.isAvailable?.())Promise.resolve(window.UsWidgets.installed?.()).then(device=>{const n=Object.values(device?.installed||{}).reduce((sum,count)=>sum+(Number(count)||0),0);widgetsValue.textContent=n===1?'1 attivo':n?`${n} attivi`:'Nessuno';}).catch(()=>{});
-  syncMauditSetting();
   syncAppLockSetting().catch(()=>{});
   syncRicordiOptimizationSetting().catch(()=>{});
   $('usSettingsBuild').textContent=currentBuild();
@@ -294,7 +307,7 @@ function distanceModal(){
 // sale (D4: the closed test sees no payments).
 function personColorLockedModal(){
   const list=window.UsPersonColors?.choices?.(settingsSnapshot?.profiles||[],window.usProfile?.id)||[];
-  openModal('Il tuo colore',`<p class="us-person-color-locked">Si sblocca con US Plus: ognuno di voi sceglie il suo colore tra 8, e lo vedete tutti e due.</p><div class="us-setting-choice us-person-colors is-locked">${list.map(c=>`<button type="button" aria-disabled="true" data-person-color-locked><span><i class="us-person-swatch" style="background:${esc(c.hex)}" aria-hidden="true"></i>${esc(c.name)}</span><b>${c.mine?'Il tuo':''}</b></button>`).join('')}</div>`,'US PLUS');
+  openModal('Il tuo colore',`<p class="us-person-color-locked">Si sblocca con US Plus: scegli il tuo colore tra 8, e lo vede anche l’altra persona.</p><div class="us-setting-choice us-person-colors is-locked">${list.map(c=>`<button type="button" aria-disabled="true" data-person-color-locked><span><i class="us-person-swatch" style="background:${esc(c.hex)}" aria-hidden="true"></i>${esc(c.name)}</span><b>${c.mine?'Il tuo':''}</b></button>`).join('')}</div>`,'US PLUS');
   $('usSettingsModalBody').querySelectorAll('[data-person-color-locked]').forEach(btn=>btn.addEventListener('click',()=>toast('Si sblocca con US Plus')));
 }
 // US Plus, in arrivo (13/11/2026, verso l'uscita pubblica): what Plus will
@@ -303,7 +316,7 @@ function personColorLockedModal(){
 const PLUS_SOON=['Partite illimitate a Gioca','«Il vostro anno» completo','L’archivio delle domande passate','Pacchetti di domande a tema'];
 async function plusSoonModal(){
   const overlay=$('usSettingsOverlay');if(overlay?.dataset)overlay.dataset.usSettingsSheet='plus';
-  openModal('In arrivo',`<div class="us-plus-soon"><p class="us-plus-soon-lead">Un abbonamento per la coppia: se ne paga uno, vale per tutti e due.</p><ul class="us-plus-soon-list">${PLUS_SOON.map(t=>`<li><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span><span>${esc(t)}</span></li>`).join('')}</ul><p class="us-plus-soon-free">Quello che usate oggi resta gratis, per sempre.</p><button type="button" class="primary us-plus-soon-cta" data-plus-soon-join disabled>Avvisami quando arriva</button><p class="us-plus-soon-state" data-plus-soon-state hidden>Ti avviseremo qui su US ♡</p><button type="button" class="us-ob-link us-plus-soon-leave" data-plus-soon-leave hidden>Non avvisarmi più</button></div>`,'US PLUS');
+  openModal('In arrivo',`<div class="us-plus-soon"><p class="us-plus-soon-lead">Un abbonamento per la coppia: se ne paga uno, vale per voi due.</p><ul class="us-plus-soon-list">${PLUS_SOON.map(t=>`<li><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span><span>${esc(t)}</span></li>`).join('')}</ul><p class="us-plus-soon-free">Quello che usate oggi resta gratis, per sempre.</p><button type="button" class="primary us-plus-soon-cta" data-plus-soon-join disabled>Avvisami quando arriva</button><p class="us-plus-soon-state" data-plus-soon-state hidden>Ti avviseremo qui su US ♡</p><button type="button" class="us-ob-link us-plus-soon-leave" data-plus-soon-leave hidden>Non avvisarmi più</button></div>`,'US PLUS');
   const body=$('usSettingsModalBody');
   const join=body.querySelector('[data-plus-soon-join]'),state=body.querySelector('[data-plus-soon-state]'),leave=body.querySelector('[data-plus-soon-leave]');
   const paint=joined=>{join.hidden=joined;join.disabled=false;state.hidden=!joined;leave.hidden=!joined;};
@@ -330,14 +343,16 @@ function personColorModal(){
   const profiles=settingsSnapshot?.profiles||[],meId=window.usProfile?.id;
   const me=profiles.find(p=>p.id===meId),partner=profiles.find(p=>p.id!==meId)?.display_name||'la tua persona';
   const list=window.UsPersonColors?.choices?.(profiles,meId)||[];
-  openModal('Il tuo colore',`<div class="us-setting-choice us-person-colors">${list.map(c=>`<button data-person-color="${esc(c.id)}" class="${c.mine?'active':''}"${c.taken?' disabled':''}><span><i class="us-person-swatch" style="background:${esc(c.hex)}" aria-hidden="true"></i>${esc(c.name)}</span><b>${c.mine?'Il tuo':c.taken?esc(partner):''}</b></button>`).join('')}</div>${me?.person_color?'<button type="button" class="us-ob-link us-person-color-reset" data-person-color="">Torna al colore di sempre</button>':''}`,'US PLUS');
+  // The usual colour is no way back when the other person has taken it (the server checks only a chosen one).
+  const usualFree=!list.find(c=>c.id===(me?.role==='beatrice'?'lilla':'rosa'))?.taken;
+  openModal('Il tuo colore',`<div class="us-setting-choice us-person-colors">${list.map(c=>`<button data-person-color="${esc(c.id)}" class="${c.mine?'active':''}"${c.taken?' disabled':''}><span><i class="us-person-swatch" style="background:${esc(c.hex)}" aria-hidden="true"></i>${esc(c.name)}</span><b>${c.mine?'Il tuo':c.taken?esc(partner):''}</b></button>`).join('')}</div>${me?.person_color&&usualFree?'<button type="button" class="us-ob-link us-person-color-reset" data-person-color="">Torna al colore di sempre</button>':''}`,'US PLUS');
   $('usSettingsModalBody').querySelectorAll('[data-person-color]').forEach(btn=>btn.addEventListener('click',async()=>{
     if(btn.disabled)return;
     const color=btn.dataset.personColor||null;
     const {error}=await sb.rpc('set_my_color',{p_color:color});
     if(error){toast(/partner color/.test(error.message||'')?`È il colore di ${partner}`:'Non riesco a cambiare il colore. Riprova.');return;}
     if(me)me.person_color=color;
-    window.UsPersonColors?.applyCoupleColors?.(profiles);
+    window.UsPersonColors?.applyCoupleColors?.(profiles);Promise.resolve(window.UsCoupleContext?.hydrate?.()).catch(()=>{});
     closeModal();hydrateUsSettings();toast('Colore aggiornato ♡');
   }));
 }
@@ -381,9 +396,30 @@ async function locationAction(){
   setTimeout(hydrateUsSettings,450);
 }
 
+// US vi ricorda (25/11/2026, D22): the characters' lines, on by default; off is the '*' mute (us-ricorda.js).
+// `ricorda`: what the server keeps (UsRicorda.loadMutes), read before the sheet opens; null when it could not be read.
+function vociToggle(ricorda){
+  if(!window.UsRicorda?.setVoci)return '';
+  const on=ricorda?ricorda.voci!==false:window.UsRicorda.voci?.()!==false;
+  return `<button type="button" class="us-settings2-toggle-row" data-us-voci aria-pressed="${on?'true':'false'}">
+    <span><b>Le voci dei personaggi</b><small>Ogni tanto vi ricordano le vostre cose</small></span>
+    <i class="${on?'on':''}"><u></u></i>
+  </button>`;
+}
+// «Non dirmelo più» (long press on a line) switches off one kind: each one comes back here, with its own switch.
+function vociKindsToggles(ricorda){
+  const names=window.UsRicorda?.KIND_NAMES||{};
+  const kinds=(ricorda?.kinds||[]).filter(kind=>names[kind]);
+  if(!kinds.length||!window.UsRicorda?.setKind)return '';
+  return `<p class="us-settings2-group-label">Le voci che hai spento</p>
+    <div class="us-settings2-toggle-list" data-us-voci-kinds>${kinds.map(kind=>`<button type="button" class="us-settings2-toggle-row" data-us-voce="${esc(kind)}" aria-pressed="false">
+      <span><b>${esc(names[kind])}</b><small>Spente con «Non dirmelo più»</small></span>
+      <i><u></u></i>
+    </button>`).join('')}</div>`;
+}
 function preferenceToggle(key,label,checked){
   return `<button type="button" class="us-settings2-toggle-row" data-pref="${key}" aria-pressed="${checked?'true':'false'}">
-    <span><b>${label}</b><small>${key==='think'?'Quando la tua persona ti pensa':key==='today'?'Quando arriva e quando le risposte sono pronte':key==='bond'?'Il lunedì la nuova, il sabato un promemoria':key==='left_for_you'?'Quando la tua persona ti lascia qualcosa':key==='games'?'Quando tocca a te':key==='lavagna'?'Quando la tua persona disegna sulla lavagna':'Mesiversario, anniversario ed eventi'}</small></span>
+    <span><b>${label}</b><small>${key==='think'?'Quando la tua persona ti pensa':key==='today'?'Quando arriva e quando le risposte sono pronte':key==='bond'?'Il lunedì la nuova, il sabato un promemoria':key==='left_for_you'?'Quando la tua persona ti lascia qualcosa':key==='games'?'Quando tocca a te':key==='lavagna'?'Quando la tua persona disegna, ti lascia un post-it o scrive sulla bacheca':key==='ricorda'?'Compleanni, un anno fa, la bacheca: al massimo uno al giorno':'Mesiversario, anniversario ed eventi'}</small></span>
     <i class="${checked?'on':''}"><u></u></i>
   </button>`;
 }
@@ -563,20 +599,6 @@ async function toggleAppLock(){
   }
 }
 
-// Maudit V1 — device-local On/Off, owned by USPet (pet.js). Off unmounts it.
-function mauditEnabled(){
-  if(typeof window.USPet?.isEnabled==='function')return window.USPet.isEnabled();
-  try{return localStorage.getItem('us:maudit:v1:enabled')!=='0';}catch(_){return true;}
-}
-function syncMauditSetting(){
-  const row=$('usMauditSetting');
-  if(row)row.setAttribute('aria-checked',mauditEnabled()?'true':'false');
-}
-function toggleMaudit(){
-  const next=!mauditEnabled();
-  window.USPet?.setEnabled?.(next); // USPet owns the device-local preference
-  syncMauditSetting();
-}
 
 // Native Notifications V1: what this phone can do, in the person's words.
 // Mockup set-notifiche / set-notifiche-negate: a banner in my colour with a
@@ -585,6 +607,8 @@ function toggleMaudit(){
 const US_NATIVE_PUSH_COPY=Object.freeze({
   active:{title:'Attive su questo telefono',detail:'Ricevi i Ti penso anche a US chiusa.',action:'Disattiva',kind:'ghost'},
   inactive:{title:'Non attive',detail:'Non ricevi niente quando US è chiusa.',action:'Attiva',kind:'primary'},
+  // 25/10/2026: «Attiva» tapped but Google's token did not come; US finishes by itself (on Oggi until the redesign, D9).
+  pending:{title:'In attivazione',detail:'Le attivo appena la rete risponde. Con il Wi-Fi è subito.',action:'Riprova',kind:'primary'},
   denied:{title:'Permesso negato',detail:'Il telefono blocca le notifiche di US.',action:'Apri impostazioni di sistema',kind:'primary',warn:true},
   settings:{title:'Da attivare nelle impostazioni',detail:'Le notifiche di US sono spente nel telefono.',action:'Apri impostazioni di sistema',kind:'primary',warn:true},
   unavailable:{title:'Configurazione non disponibile',detail:'Questa versione di US non può ancora ricevere notifiche.',action:'',kind:'ghost',warn:true}
@@ -592,7 +616,7 @@ const US_NATIVE_PUSH_COPY=Object.freeze({
 const US_PUSH_BLOCKED_LEAD='<div class="us-settings2-modal-copy">Per ricevere i Ti penso anche a US chiusa, consenti le notifiche dalle impostazioni del telefono.</div>';
 function pushMasterMarkup(state){
   if(state.native){
-    const copy=US_NATIVE_PUSH_COPY[state.kind]||US_NATIVE_PUSH_COPY.unavailable;
+    const copy=(state.kind==='inactive'&&state.pending?US_NATIVE_PUSH_COPY.pending:US_NATIVE_PUSH_COPY[state.kind])||US_NATIVE_PUSH_COPY.unavailable;
     if(copy.warn)return `<div class="us-settings2-push-master is-warn" data-push-state="${esc(state.kind||'unavailable')}">
       <span><b>${copy.title}</b><small>${copy.detail}</small></span>
     </div>${copy.action?`${US_PUSH_BLOCKED_LEAD}<div class="us-settings2-action-stack"><button type="button" class="${copy.kind}" id="usSettingsPushAction">${copy.action}</button></div>`:''}`;
@@ -624,7 +648,9 @@ async function nativePushAction(state){
 async function notificationsModal(){
   const state=await pushState();
   const {data:prefs}=await sb.rpc('get_notification_preferences');
-  const p=prefs||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true,lavagna:true};
+  const p=prefs||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true,lavagna:true,ricorda:true};
+  // The characters' switches as the server keeps them, not as Oggi last loaded them.
+  const ricorda=await window.UsRicorda?.loadMutes?.()||null;
   openModal('Notifiche',`
     ${pushMasterMarkup(state)}
     <p class="us-settings2-group-label">Cosa ricevere</p>
@@ -636,7 +662,10 @@ async function notificationsModal(){
       ${preferenceToggle('left_for_you','Lasciato per te',p.left_for_you!==false)}
       ${preferenceToggle('games','Gioca',p.games!==false)}
       ${preferenceToggle('lavagna','Lavagna',p.lavagna!==false)}
+      ${preferenceToggle('ricorda','US vi ricorda',p.ricorda!==false)}
+      ${vociToggle(ricorda)}
     </div>
+    ${vociKindsToggles(ricorda)}
     <p class="us-settings2-note">Valgono per il tuo account, su ogni telefono.</p>
   `,state.native?(state.kind==='denied'||state.kind==='settings'?'PERMESSO':'NOTIFICHE'):state.permission==='denied'?'PERMESSO':'NOTIFICHE');
 
@@ -647,6 +676,22 @@ async function notificationsModal(){
     closeModal();setTimeout(()=>{hydrateUsSettings();notificationsModal();},250);
   });
 
+  $('usSettingsModalBody').querySelector('[data-us-voci]')?.addEventListener('click',async e=>{
+    const btn=e.currentTarget,next=btn.getAttribute('aria-pressed')!=='true';
+    btn.disabled=true;
+    const ok=await window.UsRicorda?.setVoci?.(next);
+    btn.disabled=false;
+    if(!ok){window.toast?.('Non riesco a salvarlo. Riprova.');return;}
+    btn.setAttribute('aria-pressed',String(next));btn.querySelector('i')?.classList.toggle('on',next);
+  });
+  $('usSettingsModalBody').querySelectorAll('[data-us-voce]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const next=btn.getAttribute('aria-pressed')!=='true';
+    btn.disabled=true;
+    const ok=await window.UsRicorda?.setKind?.(btn.dataset.usVoce,next);
+    btn.disabled=false;
+    if(!ok){window.toast?.('Non riesco a salvarlo. Riprova.');return;}
+    btn.setAttribute('aria-pressed',String(next));btn.querySelector('i')?.classList.toggle('on',next);
+  }));
   $('usSettingsModalBody').querySelectorAll('[data-pref]').forEach(btn=>btn.addEventListener('click',async()=>{
     const key=btn.dataset.pref;
     const next=btn.getAttribute('aria-pressed')!=='true';
@@ -1075,8 +1120,10 @@ async function logout(){
 }
 
 async function action(name){
+  // L'intro col tuo personaggio (26/11/2026): it starts again on Oggi.
+  if(name==='intro'){window.usSettingsReturn?.();return window.UsIntro?.start?.({force:true});}
   // Which sheet is open: dc-settings.css gives each one the mockup's blocks.
-  const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='maudit'&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
+  const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
   if(name==='relationship-date')return relationshipDateModal();
   if(name==='plus')return plusSoonModal();
   if(name==='together-mode')return window.UsDistance?.open?.();
@@ -1090,7 +1137,6 @@ async function action(name){
   if(name==='location')return locationAction();
   if(name==='feedback')return feedbackModal();
   if(name==='optimize-ricordi')return ricordiOptimizationModal();
-  if(name==='maudit')return toggleMaudit();
   if(name==='app-lock')return toggleAppLock();
   if(name==='widgets')return window.UsWidgetHub?.open?.();
   if(name==='sync-status')return syncStatusModal();
@@ -1114,7 +1160,6 @@ function hydrateWhenHomeSettles(){
 }
 
 function boot(){
-  syncMauditSetting();
   syncAppLockSetting().catch(()=>{});
   document.querySelectorAll('[data-us-setting]').forEach(row=>row.addEventListener('click',()=>action(row.dataset.usSetting)));
   document.querySelectorAll('[data-us-settings-close]').forEach(el=>el.addEventListener('click',closeModal));
@@ -1126,7 +1171,7 @@ function boot(){
   setTimeout(()=>clearInterval(wait),30000);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.getElementById('settings')?.classList.contains('active')&&!window.UsForeground?.shortAway?.())hydrateUsSettings();});
 window.addEventListener('online',()=>{if(document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
 // A new profile photo (Foto profilo) shows on the couple card at once.
 window.addEventListener('us:noi-portraits-ready',()=>{if(document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});

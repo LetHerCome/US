@@ -21,14 +21,13 @@
     { kind: 'daily', name: 'La domanda di oggi', copy: 'La domanda di oggi e a chi tocca rispondere. Mai le risposte.', shape: 'wide' },
     { kind: 'message', name: 'Lasciato per te', copy: 'Il Lasciato per te ancora chiuso: solo che cosa è e quando.', shape: 'square' },
     { kind: 'memories', name: 'Ricordi a pila', copy: 'Le vostre foto di questo giorno, un anno fa. Altrimenti le più recenti.', shape: 'square' },
-    { kind: 'status', name: 'Come stai', copy: 'Come state tu e la tua persona, con un’emoji. Dura 12 ore.', shape: 'wide' },
+    { kind: 'status', name: 'Come stai', copy: 'Come state tu e la tua persona: i vostri personaggi con la faccia del momento. Dura 12 ore.', shape: 'wide' },
     { kind: 'lavagna', name: 'Lavagna', copy: 'L’ultimo disegno sulla vostra lavagna. Toccalo per disegnare.', shape: 'square' }
   ]);
   window.UsWidgetCatalog = CATALOG;
 
   const $ = (id) => document.getElementById(id);
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-  const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.28 2,8.5C2,5.42 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.09C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.42 22,8.5C22,12.28 18.6,15.36 13.45,20.04L12,21.35Z"/></svg>';
   const IMAGE = '<svg viewBox="0 0 256 256" aria-hidden="true"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.75l-26.07-26.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L40,149.37V56ZM40,172l52-52,80,80H40Zm176,28H194.63l-36-36,20-20L216,181.38V200ZM144,100a12,12,0,1,1,12,12A12,12,0,0,1,144,100Z"/></svg>';
 
   let device = { installed: {}, pinSupported: false, vendor: 'android' };
@@ -46,6 +45,15 @@
     return startedOn ? window.USCountdown?.relationship?.(startedOn) || null : null;
   }
 
+  // Widget del redesign (founder, 26/11/2026): the tiles speak like the
+  // widgets, on the warm night or the Quaderno's paper with the app, the
+  // characters as personaggi.js draws them (shape, colour, look, Come stai).
+  const meRole = () => (window.usProfile?.role === 'beatrice' ? 'beatrice' : 'francesco');
+  const themRole = () => (meRole() === 'beatrice' ? 'francesco' : 'beatrice');
+  const who = (role, options = {}) => window.UsPersonaggi?.character?.(role, { size: 28, ...options }) || '';
+  // The heart from your colour to theirs: the only place where the two blend.
+  const BLENDED = '<svg viewBox="0 0 256 256" aria-hidden="true"><defs><linearGradient id="usWpHeart" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--us-tu)"/><stop offset="1" style="stop-color:var(--us-partner)"/></linearGradient></defs><path d="M128,224S24,168,24,102A54,54,0,0,1,128,81.4,54,54,0,0,1,232,102C232,168,128,224,128,224Z" fill="url(#usWpHeart)"/></svg>';
+
   function thinkPreview(snapshot) {
     const think = snapshot.think || {};
     const partner = window.UsIdentity?.current().partnerName || 'La tua persona';
@@ -53,7 +61,7 @@
     const answered = Math.max(Date.parse(think.lastSentAt || '') || 0, Date.parse(think.lastAnsweredAt || '') || 0);
     const ricambia = received && received > answered;
     const message = ricambia ? `${partner} ti sta pensando` : `Pensa a ${partner}`;
-    return `<div class="us-wp-think"><b>${esc(message)}</b><i>${HEART}</i><small>${ricambia ? 'Ricambia' : 'Ti penso'}</small></div>`;
+    return `<div class="us-wp-think" aria-label="${esc(message)}"><i>${BLENDED}</i></div>`;
   }
 
   function daysLine(snapshot) {
@@ -68,9 +76,9 @@
     const sub=known
       ? (snapshot.couple?.distanceState === 'stale' ? 'ULTIMA DISTANZA' : 'TRA VOI')
       : 'APRI NOI';
-    return `<div class="us-wp-noi us-wp-noi-light">
-      <span class="us-wp-noi-portrait">♡ ♡</span>
-      <span class="us-wp-noi-info"><small>US · NOI</small><b>${esc(distance)}</b><small>${esc(sub)}</small></span>
+    return `<div class="us-wp-noi us-wp-noi-light" aria-label="${esc(sub)}">
+      <b>${esc(distance)}</b>
+      <span class="us-wp-duo">${who(meRole(), { size: 22 })}${who(themRole(), { size: 22 })}</span>
     </div>`;
   }
 
@@ -78,12 +86,13 @@
   function dailyPreview(snapshot) {
     const d = snapshot.daily || {};
     const shown = d.state && d.state !== 'none' && d.question;
-    return `<div class="us-wp-daily"><small>LA DOMANDA DI OGGI</small><b>${esc(shown ? d.question : 'La domanda di oggi vi aspetta in US')}</b><i>${esc(shown ? DAILY_STATUS[d.state] || '' : 'Apri US per la domanda nuova')}</i></div>`;
+    // Their character, waving once they answered (personaggi.js reactionOf).
+    return `<div class="us-wp-daily" aria-label="${esc(shown ? DAILY_STATUS[d.state] || '' : 'Apri US per la domanda nuova')}">${who(themRole(), { size: 34, reaction: d.state === 'your_turn' ? 'saluta' : '' })}</div>`;
   }
 
-  // Messaggio: a latte bubble with the small heart, as on the Home screen.
+  // Lasciato per te: the paper envelope with the ceralacca seal, its edge in their colour.
   function messagePreview() {
-    return `<div class="us-wp-message"><span class="us-wp-message-bubble"><i>${HEART}</i></span></div>`;
+    return `<div class="us-wp-message"><span class="us-wp-envelope"></span></div>`;
   }
 
   function photoPreview(snapshot, previewUrl) {
@@ -99,7 +108,8 @@
   function memoriesPreview(snapshot) {
     const m = snapshot.memories || {};
     const text = m.state === 'ready' ? [m.label, m.title].filter(Boolean).join(' · ') : 'I vostri ricordi appariranno qui';
-    return `<div class="us-wp-memories" aria-label="${esc(text)}"><i></i><i></i><i></i></div>`;
+    // A polaroid, as in Ricordi; never the photos here.
+    return `<div class="us-wp-memories" aria-label="${esc(text)}"><i></i></div>`;
   }
 
   // Lavagna: the drawing as the board shows it now, or the empty board.
@@ -116,12 +126,9 @@
     return `<div class="us-wp-postit" data-color="${esc(ready ? p.color || 'yellow' : 'yellow')}"><b translate="no">${esc(ready ? p.text : 'Scrivi il primo post-it')}</b>${ready && p.more ? `<small>+${esc(p.more)}</small>` : ''}</div>`;
   }
 
-  // Come stai: the two emoji as the app shows them now.
+  // Come stai, «Voi due»: your characters with the faces of your Come stai.
   function statusPreview() {
-    const s = window.UsMemberStatus;
-    const now = s?.widgetState?.() || {};
-    const emoji = (person) => s?.STATUSES?.find((item) => item.key === person?.status)?.emoji || '·';
-    return `<div class="us-wp-status"><span>${esc(emoji(now.me))}</span><span>${esc(emoji(now.partner))}</span></div>`;
+    return `<div class="us-wp-status"><span class="us-wp-duo">${who(meRole(), { size: 30 })}${who(themRole(), { size: 28 })}</span></div>`;
   }
 
   function preview(kind, view) {

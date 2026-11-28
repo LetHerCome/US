@@ -956,11 +956,6 @@ body.us-keyboard-open .us-album-floating-add,
   font-size:8.5px!important;
 }
 
-/* On Ricordi the photos are the content: Ti penso does not float over them. */
-body:has(#moments.page.active) #thinkButton{
-  display:none!important;
-}
-
 @media(max-height:700px){
   #moments .us-moments-head{margin-bottom:9px}
   #moments .ricordi-rivivi-card:not(.ricordi-rivivi-note){

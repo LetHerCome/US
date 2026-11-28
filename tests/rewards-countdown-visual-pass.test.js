@@ -29,22 +29,22 @@ test('Countdown visual pass: every style owns typography, composition and its ow
     assert.match(rules, /\.us-countdown-number\{[^}]*font/, `${style.id} number typography`);
     assert.match(rules, /\.us-countdown-(title|unit)\{/, `${style.id} composition`);
   }
-  // One motion signature each (orbit is driven by real seconds, not a keyframe).
+  // The two free moving styles keep their signature; Vetro and the three small reward styles are still.
   assert.match(block('editorial'), /us-countdown-rise/);
   assert.match(block('signal'), /us-countdown-flap/);
-  // Parity 2026-10: in the mockup Vetro and Cromo are still (no glint, no sheen loop).
+  // Parity 2026-10: in the mockup Vetro is still (no glint, no sheen loop).
   assert.doesNotMatch(block('glass'), /animation:/);
-  assert.match(block('aurora'), /us-countdown-aurora/);
-  assert.match(block('orbit'), /transform:rotate\(var\(--us-cd-sweep,0deg\)\);transition:transform 1s linear/);
-  assert.match(block('orbit'), /\[data-sweep-jump\]::after\{transition:none;\}/);
-  assert.doesNotMatch(block('chrome'), /animation:/);
+  // Temi e countdown (26/11/2026): Post-it, Biglietto and Filo rosso are small and still;
+  // only the red thread eases to its new length when a day goes by.
+  for (const id of ['aurora', 'orbit', 'chrome']) assert.doesNotMatch(block(id), /animation:/, id);
+  assert.match(countdownCss, /\.us-cd-filo-thread\{[^}]*width:calc\(14px \+ var\(--k,\.5\) \* 150px\)[^}]*transition:width \.6s/);
+  assert.doesNotMatch(countdownCss, /us-countdown-aurora|--us-cd-sweep/, 'Aurora and Orbita are gone');
   assert.match(countdownCss, /\.us-countdown-art \.us-countdown-title:empty\{display:none!important\}/);
 });
 
 test('Countdown visual pass: reduced motion freezes everything, background and inactive Oggi pause it', () => {
   assert.match(countdownCss, /@media\(prefers-reduced-motion:reduce\)\{\.us-countdown-art \*,\.us-countdown-art::after\{animation:none!important;transition:none!important;\}/);
   assert.match(countdownCss, /:root\[data-us-motion="reduced"\] \.us-countdown-art \*,:root\[data-us-motion="reduced"\] \.us-countdown-art::after\{animation:none!important;transition:none!important;\}/);
-  assert.match(countdownCss, /:root\[data-us-motion="reduced"\] \[data-countdown-style="orbit"\]::after\{transform:none!important;\}/);
   assert.match(countdownCss, /html\[data-us-visibility="hidden"\] \.us-countdown-art \*/);
   assert.match(countdownCss, /#home:not\(\.active\) \.us-countdown-art \*/);
   // Only compositor-friendly properties are animated by the new keyframes.
@@ -54,10 +54,12 @@ test('Countdown visual pass: reduced motion freezes everything, background and i
   }
 });
 
-test('Countdown visual pass: separators are marked, the orbit light jumps without spinning after background', () => {
+test('Countdown visual pass: separators are marked, the red thread follows the days', () => {
   assert.match(countdownJs, /us-countdown-digit\$\{\/\\d\/\.test\(c\)\?'':' is-sep'\}/);
   assert.match(countdownJs, /<span class="us-countdown-deco" aria-hidden="true"><i><\/i><\/span>/);
-  assert.match(countdownJs, /art\.toggleAttribute\('data-sweep-jump',s!==prev\+1\)/);
+  assert.match(countdownJs, /function filoK\(view\)\{const n=\/\^\\d\+\$\/\.test/);
+  assert.match(countdownJs, /surface\.querySelector\('\.us-cd-filo'\)\?\.style\.setProperty\('--k',filoK\(view\)\)/);
+  assert.doesNotMatch(countdownJs, /data-sweep-jump/);
   assert.match(countdownJs, /api\.previewMarkup=style=>STYLES\.some/);
 });
 
@@ -80,9 +82,9 @@ function fakeElement(id) {
 
 const catalog = [
   { id: 'badge_day_one', level_required: 1, category: 'badge', title: 'Day One', description: 'Spilla', token: 'badge_day_one' },
-  { id: 'frame_aurora', level_required: 4, category: 'frame', title: 'Aurora', description: 'Bordo', token: 'frame_aurora' },
-  { id: 'ring_orbit', level_required: 8, category: 'ring', title: 'Orbita', description: 'Anello', token: 'ring_orbit' },
-  { id: 'frame_chrome', level_required: 10, category: 'frame', title: 'Cromo', description: 'Metallo', token: 'frame_chrome' }
+  { id: 'frame_aurora', level_required: 5, category: 'frame', title: 'Countdown Post-it', description: 'Post-it', token: 'frame_aurora' },
+  { id: 'ring_orbit', level_required: 15, category: 'ring', title: 'Countdown Biglietto', description: 'Biglietto', token: 'ring_orbit' },
+  { id: 'frame_chrome', level_required: 24, category: 'frame', title: 'Countdown Filo rosso', description: 'Filo rosso', token: 'frame_chrome' }
 ];
 
 function runProgression({ level, pending = [], withCountdown = true }) {
@@ -126,46 +128,47 @@ function runProgression({ level, pending = [], withCountdown = true }) {
 // one is never announced. A legacy reward that entitles a Countdown style is
 // announced as that style, where it really lives.
 test('Unlock moment: tells where the piece lives; retired pieces are never announced', async () => {
-  const { api, el, reactions, applied } = runProgression({ level: 4, pending: ['badge_day_one', 'frame_aurora'] });
+  const { api, el, reactions, applied } = runProgression({ level: 5, pending: ['badge_day_one', 'frame_aurora'] });
   await api.hydrate({ showUnlocks: true, force: true });
-  assert.equal(el('usProgressionUnlock').dataset.category, 'countdown', 'the badge is skipped, Aurora comes first');
+  assert.equal(el('usProgressionUnlock').dataset.category, 'countdown', 'the badge is skipped, Post-it comes first');
   assert.equal(el('usProgressionUnlockCount').textContent, '', 'a single real unlock, not "1 di 2"');
   assert.equal(el('usProgressionUnlockKicker').textContent, 'Nuovo stile countdown');
-  assert.equal(el('usProgressionUnlockTitle').textContent, 'Aurora', 'the mockup names the style itself');
+  assert.equal(el('usProgressionUnlockTitle').textContent, 'Post-it', 'the mockup names the style itself');
   assert.equal(el('usProgressionUnlockPlace').textContent, 'Il countdown di Oggi');
   assert.equal(el('usProgressionUnlockPlace').hidden, false);
   assert.equal(el('usProgressionUnlockExtra').hidden, true, 'the style is the reward itself, not an extra');
-  assert.match(el('usProgressionUnlockPreview').innerHTML, /class="cd" data-style="aurora"/);
+  assert.match(el('usProgressionUnlockPreview').innerHTML, /class="cd cd-real"><span class="us-countdown-art" data-countdown-style="aurora"/, 'the real countdown markup');
   assert.equal(el('usProgressionUnlockUse').textContent, 'Usalo nel countdown');
-  assert.deepEqual(reactions, [], 'the PET waits until the moment is over');
+  assert.deepEqual(reactions, [], 'no companion reacts');
   await el('usProgressionUnlockUse').emit('click');
   assert.deepEqual(applied, ['aurora'], '"Usalo" applies the countdown style through USCountdown');
-  assert.deepEqual(reactions, ['reward']);
+  // The companions are retired (redesign definitivo, D5): nobody hops afterwards.
+  assert.deepEqual(reactions, []);
 });
 
 test('Collection: Countdown styles are a visible group whose locks follow the existing reward rows', async () => {
-  const { api, el, applied } = runProgression({ level: 9 });
+  const { api, el, applied } = runProgression({ level: 15 });
   await api.hydrate({ showUnlocks: false, force: true });
   let markup = el('usProgressionRewards').innerHTML;
   assert.match(markup, /data-category="countdown" aria-label="Countdown"/);
-  assert.match(markup, /<em>5\/6<\/em>/, 'three free + Aurora (L4) + Orbita (L8); Cromo (L10) still locked');
-  // Round 3 (mockup parity): a locked tile still answers a tap ("Si sblocca al livello 10 di Sintonia").
-  assert.match(markup, /data-countdown-style-select="chrome" data-locked="true" data-level="10"/);
-  assert.match(markup, />Cromo<\/b><small>Livello 10<\/small>/);
+  assert.match(markup, /<em>5\/6<\/em>/, 'three free + Post-it (L5) + Biglietto (L15); Filo rosso (L24) still locked');
+  // Round 3 (mockup parity): a locked tile still answers a tap ("Si sblocca al livello 24 di Sintonia").
+  assert.match(markup, /data-countdown-style-select="chrome" data-locked="true" data-level="24"/);
+  assert.match(markup, />Filo rosso<\/b><small>Livello 24<\/small>/);
   assert.doesNotMatch(markup, /data-countdown-style-select="orbit" data-locked/);
   assert.match(markup, /class="[^"]*us-progression-countdown-style[^"]*is-equipped[^"]*"[^>]*data-countdown-style-select="editorial"[^>]*aria-pressed="true"/);
-  assert.equal((markup.match(/us-progression-reward-plus/g) || []).length, 0, 'US V3: Aurora, Orbita and Cromo are presented as the styles themselves, not as frames/rings');
+  assert.equal((markup.match(/us-progression-reward-plus/g) || []).length, 0, 'Post-it, Biglietto and Filo rosso are presented as the styles themselves, not as frames/rings');
   assert.doesNotMatch(markup, /data-progression-reward="(?:badge|frame|ring)_/, 'retired categories have no tile');
   assert.equal(el('usProgressionRewardsCount').textContent, '5 di 6', 'the count covers every piece with a visible destination, the styles included (the mockup\'s 18 di 33)');
   await el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { countdownStyleSelect: 'orbit' }, getAttribute: () => null }) } });
   assert.deepEqual(applied, ['orbit']);
   markup = el('usProgressionRewards').innerHTML;
   assert.match(markup, /class="[^"]*us-progression-countdown-style[^"]*is-equipped[^"]*"[^>]*data-countdown-style-select="orbit"[^>]*aria-pressed="true"/);
-  assert.match(markup, />Orbita<\/b><small>In uso<\/small>/);
+  assert.match(markup, />Biglietto<\/b><small>In uso<\/small>/);
 });
 
 test('Collection: without the Countdown runtime the collection is unchanged', async () => {
-  const { api, el } = runProgression({ level: 9, withCountdown: false });
+  const { api, el } = runProgression({ level: 15, withCountdown: false });
   await api.hydrate({ showUnlocks: false, force: true });
   assert.doesNotMatch(el('usProgressionRewards').innerHTML, /data-category="countdown"|us-progression-reward-plus/);
 });

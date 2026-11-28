@@ -46,7 +46,7 @@ function installToday({ role = 'francesco', sheetOpen = true, revealMeta, seenRe
     sendWebPushEvent: (type, id) => { pushes.push([type, id]); return Promise.resolve(); },
   });
   require('./identity-fixture').install(context);
-  vm.runInContext(`${slice('// M9E — la domanda di oggi', 'async function updateHomeStatus')}\nwindow.hydrateToday=hydrateToday;`, context);
+  vm.runInContext(`${slice('// M9E — la domanda di oggi', 'let pendingMomentFile=null;')}\nwindow.hydrateToday=hydrateToday;`, context);
   return { nodes, calls, refreshes, toasts, pushes, listeners, window, hydrate: () => window.hydrateToday(), currentMeta: () => currentMeta };
 }
 

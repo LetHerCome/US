@@ -277,7 +277,7 @@ function createAuthStorageContext({ idbEntries = [], localEntries = [] } = {}) {
   return { context, idb, local };
 }
 
-function createStoriesContext() {
+function createPageContext() {
   const effects = { styles: 0, authListeners: 0, documentListeners: 0, windowListeners: 0 };
   const createElement = () => ({
     id: '',
@@ -324,7 +324,7 @@ test('/app.js viene servito dal service worker senza trasformazioni', async () =
   assert.equal(await response.text(), harness.rawApp);
 });
 
-test('index carica Supabase, auth storage, public auth, app e Stories in questo ordine', () => {
+test('index carica Supabase, auth storage, public auth e app in questo ordine', () => {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const sources = [...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)]
     .map((match) => match[1]);
@@ -337,13 +337,12 @@ test('index carica Supabase, auth storage, public auth, app e Stories in questo 
   // Accesso con Google: app.js creates window.usGoogleAuth at load as well.
   const googleAuthIndex = sources.findIndex((src) => src.startsWith('/google-auth.js'));
   const progressionIndex = sources.findIndex((src) => src.startsWith('/progression.js'));
-  const storiesIndex = sources.findIndex((src) => src.startsWith('/stories.js'));
   const firstExistingScriptIndex = sources.findIndex((src) => src.startsWith('/fix4.js'));
 
   assert.ok(supabaseIndex >= 0, 'script Supabase non trovato');
   assert.deepEqual(
-    [authIndex, onboardingIndex, publicAuthIndex, googleAuthIndex, appIndex, progressionIndex, storiesIndex, firstExistingScriptIndex],
-    [supabaseIndex + 1, supabaseIndex + 2, supabaseIndex + 3, supabaseIndex + 4, supabaseIndex + 5, supabaseIndex + 6, supabaseIndex + 7, supabaseIndex + 8]
+    [authIndex, onboardingIndex, publicAuthIndex, googleAuthIndex, appIndex, progressionIndex, firstExistingScriptIndex],
+    [supabaseIndex + 1, supabaseIndex + 2, supabaseIndex + 3, supabaseIndex + 4, supabaseIndex + 5, supabaseIndex + 6, supabaseIndex + 7]
   );
 });
 
@@ -362,27 +361,13 @@ test('build marker, worker, tutti i riferimenti HTML e icone manifest restano al
   for (const icon of manifest.icons) assert.equal(new URL(icon.src, ORIGIN).searchParams.get('v'), build, icon.src);
 });
 
-test('Stories si inizializza una sola volta anche se lo script viene eseguito due volte', () => {
-  const source = readRequiredRuntimeFile('stories.js');
-  const { context, effects } = createStoriesContext();
-
-  vm.runInContext(source, context, { filename: 'stories-legacy-injected.js' });
-  vm.runInContext(source, context, { filename: 'stories.js' });
-
-  assert.equal(context.window.__usStoriesV19Installed, true);
-  assert.equal(effects.styles, 0);
-  assert.equal(effects.authListeners, 1);
-  assert.equal(effects.documentListeners, 2);
-});
-
-test('pagina mista: il vecchio wrapper auth può caricare il nuovo runtime senza doppie Stories', () => {
+test('pagina mista: il vecchio wrapper auth può caricare il nuovo runtime con un solo client', () => {
   const authSource = readRequiredRuntimeFile('auth-storage.js');
-  const storiesSource = readRequiredRuntimeFile('stories.js');
   const appSource = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
   const clientBlock = appSource.match(/const SB_URL[\s\S]*?(?=const US_SIGNED_URL_CACHE)/)?.[0];
   assert.ok(clientBlock, 'blocco di inizializzazione Supabase non trovato');
 
-  const { context, effects } = createStoriesContext();
+  const { context, effects } = createPageContext();
   const calls = [];
   const legacyStorage = { getItem() {}, setItem() {}, removeItem() {} };
   context.navigator.storage = { persist: async () => true };
@@ -412,13 +397,11 @@ test('pagina mista: il vecchio wrapper auth può caricare il nuovo runtime senza
 
   context.window.addEventListener ||= ()=>{};
   vm.runInContext(clientBlock, context, { filename: 'app-client.js' });
-  vm.runInContext(storiesSource, context, { filename: 'legacy-transformed-stories.js' });
-  vm.runInContext(storiesSource, context, { filename: 'stories.js' });
 
   assert.equal(calls.length, 1);
   assert.equal(calls[0].options.auth.storage, legacyStorage);
   assert.equal(calls[0].options.auth.persistSession, true);
-  assert.equal(effects.authListeners, 1);
+  assert.equal(effects.styles, 0);
 });
 
 test('auth storage conserva database, store e migra la sessione con expiry maggiore', async () => {
@@ -506,8 +489,7 @@ test('installazione pulita precachea l’intero runtime statico prima di skipWai
   const v = (path) => `${ORIGIN}${path}?v=${CURRENT_BUILD}`;
   assert.ok(shell.has(v('/auth-storage.js')));
   assert.ok(shell.has(v('/app.js')));
-  assert.ok(shell.has(v('/stories.js')));
-  assert.ok(shell.has(v('/stories.css')));
+  assert.ok(!shell.has(v('/stories.js')), 'Stories are retired');
   assert.ok(shell.has(v('/ui-foundation.css')));
   assert.ok(shell.has(v('/ui-foundation.js')));
   assert.ok(shell.has(v('/countdown.js')));
@@ -595,14 +577,12 @@ test('reload offline usa index e runtime della nuova shell cache', async () => {
 
   const documentResponse = await harness.dispatchFetch('/home', { mode: 'navigate' });
   const appResponse = await harness.dispatchFetch(`/app.js?v=${CURRENT_BUILD}`);
-  const storiesResponse = await harness.dispatchFetch(`/stories.js?v=${CURRENT_BUILD}`);
-  const storiesCssResponse = await harness.dispatchFetch(`/stories.css?v=${CURRENT_BUILD}`);
+  const cssResponse = await harness.dispatchFetch(`/styles.css?v=${CURRENT_BUILD}`);
 
   // The shell document is precached from "/", the canonical non-redirected URL.
   assert.equal(await documentResponse.text(), 'asset:/');
   assert.equal(await appResponse.text(), harness.rawApp);
-  assert.equal(await storiesResponse.text(), 'asset:/stories.js');
-  assert.equal(await storiesCssResponse.text(), 'asset:/stories.css');
+  assert.equal(await cssResponse.text(), 'asset:/styles.css');
 });
 
 test('Android PWA: cache del documento assente + primo 404 ripiega sul documento canonico /', async () => {

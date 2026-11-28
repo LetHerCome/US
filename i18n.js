@@ -17,7 +17,7 @@
   const STORE_KEY = 'us:lang:v1';
   const SUPPORTED = ['it', 'en'];
   const TAGS = Object.freeze({ it: 'it-IT', en: 'en-US' });
-  const ATTRS = ['placeholder', 'aria-label', 'title', 'alt'];
+  const ATTRS = ['placeholder', 'aria-label', 'aria-description', 'title', 'alt'];
   const SKIP = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'NOSCRIPT', 'CODE', 'PRE', 'svg', 'SVG']);
   const PLACEHOLDER = /\{([a-z][a-z0-9_]*)\}/gi;
   const HAS_PLACEHOLDER = /\{[a-z][a-z0-9_]*\}/i;
@@ -211,6 +211,15 @@
   }
 
   if (w) w.usT = t;
+
+  // Avvio più veloce (27/11/2026): the English dictionary (about 230 KB) is
+  // read only when the app speaks English. index.html names it on this tag
+  // (data-us-en); written while the page is parsed, it still runs before the
+  // body, so nothing paints in Italian first.
+  if (w && locale === 'en' && w.document?.readyState === 'loading') {
+    const src = w.document.currentScript?.getAttribute?.('data-us-en') || '';
+    if (/^\/i18n-en\.js(\?v=[\w.-]+)?$/.test(src)) w.document.write(`<script src="${src}"></script>`);
+  }
 
   return Object.freeze({
     locale,

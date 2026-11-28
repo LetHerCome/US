@@ -24,8 +24,9 @@ test('M6C.1 (1): the quick form has no duration UI; the domain keeps duration (e
 });
 
 // (2) all-day hides Ora only; there is no duration UI left to hide.
-test('M6C.1 (2): with Tutto il giorno only Ora disappears', () => {
-  assert.match(js(), /timeFields\.hidden = allDay/);
+// Noi, Fase A (24/11/2026): one time, «se c'è»; the end row stays hidden.
+test('M6C.1 (2): the end row stays hidden; no duration field', () => {
+  assert.match(js(), /timeFields\.hidden = true/);
   assert.doesNotMatch(js(), /durationField/);
   assert.match(js(), /function toggleAllDayFields\(\)/);
 });

@@ -294,7 +294,8 @@ test('M6B (30): a failed refresh shows an error/retry banner and keeps existing 
 // (31) Back closes form/detail, then the week view, through navigation.js layers only.
 test('M6B (31): browser Back is wired exclusively through navigation.js layers, in nesting order', () => {
   const layerNames = [...nav().matchAll(/name:'((?:calendar|noi)[\w-]*)'/g)].map((m) => m[1]);
-  assert.deepEqual(layerNames, ['noi-week', 'noi-section', 'noi-idea-detail', 'calendar-detail', 'calendar-form']);
+  // Il giorno (25/11/2026): the day tapped in Noi is a sheet over the calendar.
+  assert.deepEqual(layerNames, ['noi-week', 'noi-day', 'noi-section', 'noi-idea-detail', 'calendar-detail', 'calendar-form']);
   assert.doesNotMatch(js(), /history\.(push|replace)State|addEventListener\('popstate'/, 'no parallel history system inside calendar.js');
 });
 
@@ -322,12 +323,15 @@ test('M6B (34): Left for You is untouched by the calendar feature', () => {
 });
 
 // (35) Eventi / shared_events unaffected — calendar_entries only, no cross-authority.
-test('M6B (35): Eventi/shared_events keeps rendering exactly as before; the calendar writes only calendar_entries', () => {
+test('M6B (35): Eventi/shared_events keeps rendering exactly as before; the calendar writes calendar_entries, and Ogni anno one Eventi date', () => {
   assert.match(read('events.js'), /shared_events/);
-  // Noi Calendar V4 (2026-10-09) shows Events in the month: a read, never a write.
-  const mentions = [...js().matchAll(/shared_events/g)].length;
+  // Noi Calendar V4 (2026-10-09) shows Events in the month: a read. Noi, Fase A
+  // (24/11/2026): «Ogni anno» in the form saves one Eventi date, nothing else.
+  const mentions = [...js().matchAll(/sb\.from\('shared_events'\)/g)].length;
   const reads = [...js().matchAll(/sb\.from\('shared_events'\)\.select\(/g)].length;
-  assert.equal(mentions, reads, 'shared_events appears in calendar.js only as a select');
+  const yearly = [...js().matchAll(/sb\.from\('shared_events'\)\.insert\(\{ title, event_date: date, event_time: time \|\| null, recurs_yearly: true,/g)].length;
+  assert.equal(mentions, reads + yearly, 'shared_events in calendar.js: the reads and the one «Ogni anno» insert');
+  assert.equal(yearly, 1);
   assert.match(js(), /sb\.from\('calendar_entries'\)/);
 });
 
@@ -356,18 +360,23 @@ test('M6B (38): the private media cache name is preserved exactly', () => {
 // --- Quick-entry form refinement -----------------------------------------
 
 // (39) 1.0: the quick form exposes presets plus explicit start/end without the native clock picker.
-test('M6B (39): quick entry has presets, title, all-day and keyboard start/end fields', () => {
+test('M6B (39): quick entry has presets, title, Quando and one keyboard time (Noi, Fase A)', () => {
   const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
   for (const preset of ['Lavoro', 'Università', 'Uscita']) assert.match(formBlock, new RegExp(`data-us-calendar-preset="${preset}"`));
   assert.match(formBlock, /id="usCalendarTitleInput"/);
-  assert.match(formBlock, /id="usCalendarAllDayInput"/);
+  // All day stays in the form, hidden: no time is all day. Fine «se vuoi»
+  // (28/11/2026) sits next to Inizio in the Quando row.
+  assert.match(formBlock, /<label class="us-cal-field us-cal-allday-field" hidden><input id="usCalendarAllDayInput"/);
   assert.match(formBlock, /id="usCalendarStartTimeInput"[^>]*type="text"[^>]*inputmode="numeric"/);
-  assert.match(formBlock, /id="usCalendarEndTimeInput"[^>]*type="text"[^>]*inputmode="numeric"/);
+  assert.match(formBlock, /<div class="us-cal-when">[\s\S]*?id="usCalendarStartTimeInput"[\s\S]*?id="usCalendarEndTimeInput"[^>]*type="text"[^>]*inputmode="numeric"[\s\S]*?<\/div>/);
   assert.doesNotMatch(formBlock, /type="time"/, 'native clock picker must not return');
   for (const gone of ['usCalendarKindPicker', 'usCalendarNoteInput', 'usCalendarDurationField', 'usCalendarReminderField']) {
     assert.doesNotMatch(formBlock, new RegExp(gone), `${gone} is not part of the quick form`);
   }
-  assert.match(formBlock, /<label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno<\/span>/);
+  assert.match(formBlock, /<label class="us-cal-field" id="usCalendarDateField"><span>Quando<\/span>/);
+  assert.match(formBlock, /<span>Inizio · se c’è<\/span><input id="usCalendarStartTimeInput"/);
+  assert.match(formBlock, /id="usCalendarMeetInput" type="checkbox" role="switch" aria-label="Ci vediamo"/);
+  assert.match(formBlock, /id="usCalendarYearlyInput" type="checkbox" role="switch" aria-label="Ogni anno"/);
 });
 
 // (40) end time is explicit; end date/location remain out of the quick form.
@@ -378,27 +387,29 @@ test('M6B (40): explicit end time exists without reintroducing end-date or locat
 });
 
 // (41) concise Inizio/Fine labels replace the old picker wording.
-test('M6B (41): time labels are compact Inizio and Fine', () => {
+test('M6B (41): «Inizio · se c\'è» and «Fine · se vuoi»; no hidden end row (28/11/2026)', () => {
   const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
-  assert.match(formBlock, /<span>Inizio<\/span>/);
-  assert.match(formBlock, /<span>Fine<\/span>/);
-  assert.doesNotMatch(formBlock, /Data inizio|Ora inizio/);
+  assert.match(formBlock, /<span>Inizio · se c’è<\/span>/);
+  assert.match(formBlock, /<span>Fine · se vuoi<\/span>/);
+  assert.doesNotMatch(formBlock, /id="usCalendarTimeFields"|Data inizio|Ora inizio/);
 });
 
 // (42) the whole Inizio/Fine row hides for all-day entries.
-test('M6B (42): Inizio/Fine visibility follows Tutto il giorno', () => {
+test('M6B (42): no time is all day; the end row stays hidden', () => {
   assert.match(js(), /function toggleAllDayFields\(\)/);
-  assert.match(js(), /timeFields\.hidden = allDay/);
-  assert.match(js(), /usCalendarAllDayInput'\)\?\.addEventListener\('change', ?toggleAllDayFields\)/);
+  assert.match(js(), /timeFields\.hidden = true/);
+  const saveBlock = js().match(/async function saveEntry\(event\)[\s\S]*?\n\}/)?.[0] || '';
+  assert.match(saveBlock, /const allDay = !startTime;/);
 });
 
 // (43) US 1.0 (N1): one "+" with three choices; a new entry starts as "Solo mio".
-test('M6B (43): the "+" chooses Solo mio, Nostro or Data speciale; ideas still create Nostro', () => {
+test('M6B (43): the "+" chooses Solo mio or Nostro; Ci vediamo and ideas create Nostro; Ogni anno is an Eventi date', () => {
   const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
-  for (const kind of ['personal', 'shared', 'event']) assert.match(formBlock, new RegExp(`data-us-calendar-kind="${kind}"`));
+  for (const kind of ['personal', 'shared']) assert.match(formBlock, new RegExp(`data-us-calendar-kind="${kind}"`));
+  assert.doesNotMatch(formBlock, /data-us-calendar-kind="event"/, '«Data speciale» became «Ogni anno»');
   assert.match(js(), /setFormKind\(mode === 'edit' \? entry\.entry_type : 'personal'\);/);
-  assert.match(js(), /const kind = ideaLink \? 'shared' : calendarKind;/);
-  assert.match(js(), /const open = window\.USNoiV2\?\.addSpecialDate;/);
+  assert.match(js(), /const kind = ideaLink \|\| meet \? 'shared' : calendarKind;/);
+  assert.match(js(), /if \(!editingFormEntry && !pendingIdeaLink && \$\('usCalendarYearlyInput'\)\?\.checked\) \{ await saveYearly\(\{ title, date, time: startTime \}\); return; \}/);
 });
 
 // (44) all-day create sets start_date == end_date == Giorno, timestamps null.
@@ -514,14 +525,14 @@ test('M6B (50): quickEntryError supports the legacy single-time helper and valid
 });
 
 // (51) saveEntry gates on the pure helper, before building the payload, via the existing error surface — and the old silent 00:00 default is gone.
-test('M6B (51): saveEntry validates Inizio/Fine through the pure helper before building the payload', () => {
+test('M6B (51): saveEntry reads Inizio and Fine, never invents an hour, and writes Ci vediamo when the database has it', () => {
   const saveBlock = js().match(/async function saveEntry\(event\)[\s\S]*?\n\}/)?.[0] || '';
-  assert.match(saveBlock, /quickEntryError\(\{ allDay, startTime, endTime \}\)/);
-  assert.match(saveBlock, /Inserisci l’ora di inizio/);
-  assert.match(saveBlock, /Inserisci l’ora di fine/);
-  const guardIdx = saveBlock.indexOf('quickEntryError');
-  const payloadIdx = saveBlock.indexOf('buildEntryPayload(');
-  assert.ok(guardIdx > 0 && payloadIdx > guardIdx);
+  assert.match(saveBlock, /const startTime = normalizeTimeField\('usCalendarStartTimeInput'\);/);
+  assert.match(saveBlock, /const endTime = normalizeTimeField\('usCalendarEndTimeInput'\);/);
+  assert.match(saveBlock, /const durationMinutes = allDay \? hidden\.durationMinutes : \(endMinutes \|\| US_CALENDAR_NO_END_MINUTES\);/);
+  assert.match(saveBlock, /La fine deve venire dopo l’inizio\./);
+  assert.match(saveBlock, /if \(ciVediamoColumn\) payload\.ci_vediamo = meet;/);
+  assert.ok(saveBlock.indexOf('normalizeTimeField') < saveBlock.indexOf('buildEntryPayload('));
   assert.doesNotMatch(saveBlock, /usCalendarTimeInput/);
 });
 
@@ -536,4 +547,27 @@ test('1.0 calendar: compact time parser is deterministic and preserves the same-
   assert.equal(cal.durationMinutesFromTimes('23:30', '01:00'), null);
   assert.equal(cal.durationMinutesFromTimes('09:00', '09:00'), null);
   assert.equal(cal.quickEntryError({ allDay: false, startTime: '09:00', endTime: '10:00' }), null);
+});
+
+
+test('Fine «se vuoi» (28/11/2026): an entry without an end reads as its start only, and still counts an hour for «now»', () => {
+  const start = new Date(2026, 10, 28, 10, 0).toISOString();
+  const noEnd = { id: 'a', title: 'Dentista', is_all_day: false, starts_at: start, ends_at: new Date(new Date(start).getTime() + 60000).toISOString() };
+  const withEnd = { id: 'b', title: 'Cena', is_all_day: false, starts_at: start, ends_at: new Date(new Date(start).getTime() + 90 * 60000).toISOString() };
+  assert.equal(cal.US_CALENDAR_NO_END_MINUTES, 1);
+  assert.equal(cal.entryHasNoEnd(noEnd), true);
+  assert.equal(cal.entryHasNoEnd(withEnd), false);
+  assert.equal(cal.entryHasNoEnd({ is_all_day: true, start_date: '2026-11-28', end_date: '2026-11-28' }), false);
+  const payload = cal.buildEntryPayload({ title: 'Dentista', allDay: false, date: '2026-11-28', time: '10:00', durationMinutes: cal.US_CALENDAR_NO_END_MINUTES });
+  assert.equal(new Date(payload.ends_at) - new Date(payload.starts_at), 60000, 'stored one minute long: the database wants ends_at > starts_at');
+  assert.equal(cal.entryHasNoEnd(payload), true);
+  const at = new Date(start).getTime();
+  assert.equal(cal.oggiEventLabel([noEnd], at - 3600e3), 'Dentista 10:00');
+  assert.equal(cal.oggiEventLabel([noEnd], at + 30 * 60000), 'Dentista 10:00', 'still «on» for the old hour');
+  assert.equal(cal.oggiEventLabel([noEnd], at + 61 * 60000), 'Libera');
+  assert.equal(cal.oggiEventLabel([withEnd], at - 3600e3), 'Cena 10:00–11:30');
+  const src = js();
+  assert.match(src, /entryHasNoEnd\(entry\) \? fmt\(s\) :/, 'entryTimeLabel: only the start');
+  assert.match(src, /entryHasNoEnd\(entry\) \? `\$\{longDayLabel\(startDay\)\} · \$\{hhmm\(entry\.starts_at\)\}`/, 'the detail: only the start');
+  assert.match(src, /endInput\.value = entryHasNoEnd\(entry\) \? '' :/, 'editing: Fine opens empty');
 });

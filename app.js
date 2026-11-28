@@ -62,6 +62,9 @@ function go(id,options={}){
     return;
   }
   if(current==='bond')window.closeNoiSection?.();
+  // Il Profilo (redesign definitivo, D6) opens from all four pages: its back
+  // arrow returns there (settings.js) and the bar keeps that page marked.
+  if(id==='settings'&&current&&current!=='settings'){window.usSettingsFrom=current;document.documentElement.dataset.usFrom=current;window.usPaintSettingsBack?.();}
   // Focus Photo is a state of Oggi only: left on, it kept Oggi's widgets inert
   // and the PET hidden on every other page until the user came back and tapped.
   if(current==='home'&&document.getElementById('homeHero')?.classList.contains('us-oggi-focus'))setOggiFocusPhoto(false);
@@ -101,19 +104,6 @@ function openQuizHub(options={}){go('quiz',options);window.USGameV2?.showHub();}
 function resetQuiz(){window.USGameV2?.showHub();}
 window.openQuizHub=openQuizHub;
 window.resetQuiz=resetQuiz;
-
-function updateTogetherDays(startedOn){
-  const el=document.getElementById('daysTogether');
-  if(!el)return;
-  if(!startedOn){el.textContent='—';return;}
-  const [year,month,day]=String(startedOn).split('-').map(Number);
-  if(!year||!month||!day){el.textContent='—';return;}
-  const start=Date.UTC(year,month-1,day);
-  const now=new Date();
-  const today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
-  const diff=Math.max(0,Math.floor((today-start)/86400000));
-  el.textContent=diff.toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
-}
 
 
 const SB_URL = 'https://iiakdfsxpywdkxravqjh.supabase.co';
@@ -172,7 +162,6 @@ function clearUsCoupleContext(){
   usCoupleContextState.couple=null;
   usCoupleContextState.profiles=[];
   usCoupleContextState.identityKey='';
-  updateTogetherDays(null);
   window.usBondProfiles=[];
   for(const id of ['pairAvatarFrancesco','pairAvatarBeatrice']){
     const root=document.getElementById(id),image=root?.querySelector('img');
@@ -196,7 +185,10 @@ async function hydrateUsCoupleContext(){
   try{
     [coupleResult,profilesResult]=await Promise.all([
       sb.from('couples').select('id,name,started_on,sky_city,sky_minutes,created_at').eq('id',coupleId).maybeSingle(),
-      sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true})
+      // The characters' shape and outfit (migrations 20261115183900 and 20261120232852):
+      // a server without them answers what it has, as before.
+      sb.from('profiles').select('id,display_name,role,couple_id,person_color,character_shape,character_head,character_face').eq('couple_id',coupleId).order('created_at',{ascending:true})
+        .then(r=>r?.error?sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true}):r)
     ]);
   }catch(error){
     if(window.usProfile===profile&&window.usProfile?.couple_id===coupleId&&generation===usCoupleContextState.generation)clearUsCoupleContext();
@@ -210,19 +202,38 @@ async function hydrateUsCoupleContext(){
     return null;
   }
   usCoupleContextState.couple=coupleResult.data||null;
+  const mineWas=uscLookKey(usCoupleContextState.profiles.filter(row=>row.id===profile.id));
   usCoupleContextState.profiles=(profilesResult.data||[]).filter(row=>row.couple_id===coupleId);
+  // My own look changed (27/11/2026): the other phone's widgets hear it even with US closed.
+  if(mineWas!=='[]'&&mineWas!==uscLookKey(usCoupleContextState.profiles.filter(row=>row.id===profile.id)))sendWebPushEvent('partner_look');
   // Colori a scelta (US Plus, 29/10/2026): each person in their colour, on both phones.
   window.UsPersonColors?.applyCoupleColors?.(usCoupleContextState.profiles);
   usCoupleContextState.identityKey=identityKey;
-  updateTogetherDays(usCoupleContextState.couple?.started_on);
   refreshUsIdentityLabels();
   return {
     couple:usCoupleContextState.couple?{...usCoupleContextState.couple}:null,
     profiles:usCoupleContextState.profiles.map(row=>({...row}))
   };
 }
+// The other person's character on this phone (audit 27/11/2026): their shape, colour and outfit
+// were read only at boot. Back in the foreground the looks are read again, and the whole couple
+// context (with us-identity-change: Oggi, angolo, widgets) only when one of them changed.
+const USC_LOOK_FIELDS=['id','role','person_color','character_shape','character_head','character_face'];
+const uscLookKey=rows=>JSON.stringify((rows||[]).map(row=>USC_LOOK_FIELDS.map(field=>row?.[field]??null)).sort());
+async function refreshUsCoupleLooks(){
+  const profile=window.usProfile,coupleId=profile?.couple_id;
+  if(!profile?.id||!coupleId||usCoupleContextState.identityKey!==`${profile.id}:${coupleId}`)return false;
+  try{
+    const {data,error}=await sb.from('profiles').select(USC_LOOK_FIELDS.join(',')).eq('couple_id',coupleId);
+    if(error||!Array.isArray(data)||window.usProfile!==profile)return false;
+    if(uscLookKey(data)===uscLookKey(usCoupleContextState.profiles))return false;
+    await hydrateUsCoupleContext();
+    return true;
+  }catch(_error){return false;}
+}
 window.UsCoupleContext=Object.freeze({
   hydrate:hydrateUsCoupleContext,
+  refreshLooks:refreshUsCoupleLooks,
   clear:clearUsCoupleContext,
   snapshot:()=>({
     couple:usCoupleContextState.couple?{...usCoupleContextState.couple}:null,
@@ -246,7 +257,7 @@ window.addEventListener('us-identity-change',event=>{
     for(const id of ['momentsGrid','ricordiRivivi','ricordiChapters']){
       const root=document.getElementById(id);if(root){root.innerHTML='';delete root.dataset.loaded;}
     }
-    window.UsTodayPriority?.render?.([]);
+    renderToccaATe();
     return;
   }
   window.UsTodayPriority?.refresh?.();
@@ -318,7 +329,7 @@ window.UsWidgetDataApi=Object.freeze({
     const result=await query(`${US_MOMENT_COLUMNS},${US_MOMENT_PLACE_COLUMNS}`).then(res=>res?.error?query(US_MOMENT_COLUMNS):res);
     if(window.usProfile!==profile)return null;
     if(result?.error)throw result.error;
-    return {today:localDateISO(),rows:(result?.data||[]).map(row=>({id:String(row.id),date:row.moment_date||'',path:ricordiPreviewPath(row),place:row.place_label||'',caption:row.caption||''}))};
+    return {today:localDateISO(),rows:(result?.data||[]).map(row=>({id:String(row.id),date:row.moment_date||'',path:ricordiPreviewPath(row),place:row.place_label||'',caption:row.caption||'',by:row.created_by===profile.id?'me':'partner'}))};
   },
   // Signed URLs for the stack's previews; they stay inside the WebView.
   async memoryUrls(paths){
@@ -671,52 +682,23 @@ async function refreshWebPushUi(){
     await usRetryRetiredWebPush(viewer.id);
     if(window.usProfile!==viewer||usAuthEpoch!==epoch)return;
   }
-  const card=document.getElementById('pushOptInCard'),title=document.getElementById('pushOptInTitle'),text=document.getElementById('pushOptInText'),button=document.getElementById('pushEnableBtn'),settings=document.getElementById('pushSettingsRow');
-  if(!card||!window.usProfile){if(card)card.hidden=true;if(settings)settings.hidden=true;return;}
-  card.classList.remove('install-only','denied');
-  if(window.UsNotifications?.supported?.()){
-    // Native app: the card only invites; the OS permission is asked after "Attiva".
-    // Denied / unavailable / settings states live in Settings › Notifiche.
-    const state=await window.UsNotifications.getState();
-    if(settings)settings.hidden=true;
-    if(state.kind!=='inactive'){card.hidden=true;return;}
-    card.hidden=false;
-    if(title)title.textContent='Attiva le notifiche';
-    // 25/10/2026: «Attiva» tapped but Google's token did not come (5G): US finishes by itself.
-    if(text)text.textContent=state.pending?'Le attivo appena la rete risponde. Con il Wi-Fi è subito.':'Ti penso, risposte e sfide, anche a US chiusa.';
-    if(button){button.hidden=false;button.disabled=false;button.textContent=state.pending?'Riprova':'Attiva';}
-    return;
-  }
-  if(!isWebPushSupported()){
-    card.hidden=true;if(settings)settings.hidden=true;return;
-  }
-  if(isIosDevice()&&!isStandaloneUs()){
-    card.hidden=false;card.classList.add('install-only');
-    if(title)title.textContent='Aggiungi US alla schermata Home';
-    if(text)text.textContent='Su iPhone le notifiche funzionano solo dall’app installata.';
-    if(button)button.hidden=true;
-    if(settings)settings.hidden=true;
-    return;
+  // Redesign D9: no invite on Oggi. The intro asks; Profilo › Notifiche
+  // (settings.js) shows the state and switches them on or off.
+  const settings=document.getElementById('pushSettingsRow');
+  // Native app: Profilo › Notifiche reads UsNotifications itself.
+  if(!window.usProfile||window.UsNotifications?.supported?.()||!isWebPushSupported()||(isIosDevice()&&!isStandaloneUs())){
+    if(settings)settings.hidden=true;return;
   }
   if(Notification.permission==='denied'){
-    card.hidden=false;card.classList.add('denied');
-    if(title)title.textContent='Notifiche disattivate';
-    if(text)text.textContent='Riattivale dalle impostazioni del telefono.';
-    if(button)button.hidden=true;
     setPushSettingsState('denied','Notifiche bloccate','Riattivale dalle impostazioni del telefono.','');
     return;
   }
   const subscription=await getCurrentPushSubscription();
   if(Notification.permission==='granted'&&subscription){
     await syncPushSubscriptionToSupabase(subscription);
-    card.hidden=true;
     setPushSettingsState('active','Notifiche attive','Anche a US chiusa.','Disattiva');
     return;
   }
-  card.hidden=false;
-  if(title)title.textContent='Attiva le notifiche';
-  if(text)text.textContent='Ti penso, risposte e sfide, anche a US chiusa.';
-  if(button){button.hidden=false;button.disabled=false;button.textContent=Notification.permission==='granted'?'Completa attivazione':'Attiva';}
   setPushSettingsState('inactive','Notifiche non attive','','Attiva');
 }
 window.refreshWebPushUi=refreshWebPushUi;
@@ -724,8 +706,6 @@ window.refreshWebPushUi=refreshWebPushUi;
 window.addEventListener('us-notifications-changed',()=>{refreshWebPushUi().catch(()=>{});toast('Notifiche attive ♡');});
 
 async function enableNativePush(){
-  const button=document.getElementById('pushEnableBtn');
-  if(button){button.disabled=true;button.textContent='Attivo…';}
   let result={ok:false,kind:'error'};
   try{result=await window.UsNotifications.enable();}catch(error){console.warn('[US Notifications] enable',error);}
   if(result.ok){toast('Notifiche attive ♡');setTimeout(()=>sendWebPushEvent('test'),350);}
@@ -735,7 +715,6 @@ async function enableNativePush(){
   else if(result.kind==='network'&&result.pending)toast(`La rete non risponde: le attivo appena torna${result.code?` · ${result.code}`:''}`);
   else if(result.kind==='network')toast(`Rete lenta: riprova tra poco, oppure con il Wi-Fi${result.code?` · ${result.code}`:''}`);
   else if(result.kind!=='busy')toast(`Non riesco ad attivare le notifiche${result.code?` · ${result.code}`:''}`);
-  if(button)button.disabled=false;
   try{await refreshWebPushUi();}catch(_e){}
   return result;
 }
@@ -747,11 +726,10 @@ async function enableWebPush(){
   const operation=usPushWaitScope();
   try{await operation.wait(usPushCleanup);}catch(_e){operation.finish();return;}
   if(usPushUiBusy||usPushSubscriptionPending||!operation.current()){operation.finish();return;}
-  const button=document.getElementById('pushEnableBtn');
   let finishOperation;
   const operationDone=new Promise(resolve=>{finishOperation=resolve;});
   usPushOperationInFlight=operationDone;
-  usPushUiBusy=true;if(button){button.disabled=true;button.textContent='Attivo…';}
+  usPushUiBusy=true;
   const profile=window.usProfile,epoch=usAuthEpoch;
   try{
     let permission=Notification.permission;
@@ -773,7 +751,7 @@ async function enableWebPush(){
   }catch(error){if(operation.current()){console.warn('[US Push] enable failed',error);toast('Non riesco ad attivare le notifiche');}}
   finally{
     operation.finish();
-    usPushUiBusy=false;if(button)button.disabled=false;
+    usPushUiBusy=false;
     if(usPushOperationInFlight===operationDone)usPushOperationInFlight=null;
     finishOperation();
     refreshWebPushUi().catch(()=>{});
@@ -829,7 +807,7 @@ window.disableWebPush=disableWebPush;
 // Native Notifications V1: one allow-listed target per notification (Web Push
 // and native alike), never a URL. `ref` (a UUID, native only) narrows the
 // surface; every surface re-reads its data through the normal RLS/RPC paths.
-const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar','events','lavagna']);
+const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar','events','lavagna','bacheca']);
 async function performPushNavigation(target,intent={}){
   if(!US_PUSH_TARGETS.includes(target))return;
   if(!window.usProfile){usPendingPushTarget=target;return;}
@@ -838,6 +816,7 @@ async function performPushNavigation(target,intent={}){
   if(target==='think'){
     // Ti penso and its "Ricambia" action: the one-tap reaction sheet, nothing is sent from here.
     if(document.querySelector('.page.active')?.id!=='home')go('home',{motionCommit:true});
+    if(ref)usMarkThinkNoticed(ref);
     try{await hydrateThink();}catch(error){console.warn('[US Push] think',error);}
     if(usIncomingThink&&(!ref||usIncomingThink.id===ref))openThinkArrival();
     return;
@@ -867,6 +846,13 @@ async function performPushNavigation(target,intent={}){
   if(target==='lavagna'){
     if(document.querySelector('.page.active')?.id!=='bond')go('bond',{motionCommit:true});
     setTimeout(()=>window.UsLavagna?.open?.(),120);
+    return;
+  }
+  // La bacheca, fase 2 (27/11/2026): a post-it of the partner on the board of
+  // Ricordi; the board opens centred on its thing (ref, the post-it, on iOS; the newest one elsewhere).
+  if(target==='bacheca'){
+    if(document.querySelector('.page.active')?.id!=='moments')go('moments',{motionCommit:true});
+    setTimeout(()=>window.UsBacheca?.openOn?.({noteId:ref||''}),120);
     return;
   }
   // Mesiversario and anniversary pushes: Eventi on Noi.
@@ -899,14 +885,16 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.UsYearRecap?.reset?.();
   window.UsCoupleNotes?.reset?.();
   window.UsLavagna?.reset?.();
-  window.UsCompanions?.reset?.();
   window.UsDistance?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
   const storageKeys=[
     'us:fix4:last-profile',
     US_SIGNED_URL_STORAGE_KEY,
     US_HOME_BOOT_CACHE_KEY,
-    'us:home-photo:boot:v1'
+    'us:home-photo:boot:v1',
+    // L'apertura che accoglie: the two characters of the opening, and your names for its hello.
+    'us:launch-duo:v1',
+    'us:launch-hello:v1'
   ];
   if(profileId)storageKeys.push(`us:push:subscription:${profileId}`);
   for(const key of storageKeys){
@@ -973,9 +961,9 @@ let usAuthEpoch=0;
 let usAuthUserId='';
 let usInitCloudAgain=false;
 const usOnboarding=window.UsOnboarding.mount({
-  readProfile:id=>usWithDeadline(sb.from('profiles').select('id,display_name,role,couple_id,avatar_path').eq('id',id).maybeSingle(),5000),
+  readProfile:id=>usWithDeadline(sb.from('profiles').select('id,display_name,role,couple_id,avatar_path,character_shape').eq('id',id).maybeSingle(),5000),
   // The first-run colour picker reads both of you, to leave the partner's colour taken.
-  readCouple:coupleId=>usWithDeadline(sb.from('profiles').select('id,role,person_color').eq('couple_id',coupleId),5000),
+  readCouple:coupleId=>usWithDeadline(sb.from('profiles').select('id,role,person_color,character_shape').eq('couple_id',coupleId),5000),
   // A mutation retains its guard until the real request settles: a local timer
   // cannot cancel a database transaction or safely authorize another rotation.
   rpc:(name,args)=>{
@@ -1056,6 +1044,18 @@ function usAfterForeground(task,delay=1200){
   setTimeout(()=>usRunWhenIdle(task,800),delay);
 }
 window.usAfterForeground=usAfterForeground;
+// Avvio più veloce (27/11/2026): back after a few seconds away (index.html,
+// UsForeground), what is on screen is still fresh: Realtime and the minute
+// refresh keep it. Only a real absence rereads.
+function usShortAway(){return Boolean(window.UsForeground?.shortAway?.());}
+window.usShortAway=usShortAway;
+// The hook of the entry animation (index.html, UsAppReady): marked once the
+// first content is painted, never later than capMs.
+function usMarkAppReadyAfter(tasks,reason,capMs=2500){
+  if(!window.UsAppReady||window.UsAppReady.ready)return;
+  Promise.race([Promise.allSettled(tasks),new Promise(resolve=>setTimeout(resolve,capMs))])
+    .then(()=>window.UsAppReady?.mark?.(reason));
+}
 
 const US_AUTH_SESSION_TIMEOUT_MS=3200;
 function usWithDeadline(promise,ms,label='operation timeout'){
@@ -1233,8 +1233,6 @@ async function initCloud(){
     window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:true}}));
     setCloudBadge(true, usIdentity().ownName);
     hydrateUsCoupleContext().catch(error=>console.warn('[US Couple] boot context',error));
-    const syncBadge=document.getElementById('syncReadyBadge');
-    if(syncBadge)syncBadge.textContent='SYNC ATTIVO';
 
     // First usable Home paint wins. Live subscriptions and device maintenance
     // start immediately after, but no longer compete with the first image/data.
@@ -1430,15 +1428,24 @@ function renderNoiDistance(model){
   link.setAttribute('aria-label',line.label);
 }
 
+// Come stai che conta (27/11/2026, D10): while the other person is «in
+// viaggio» the pill says so instead of the kilometres. The last model is kept
+// for member-status.js to repaint it when their Come stai changes.
+var usDistanceCapsuleModel=null;
+window.usRepaintDistanceCapsule=()=>{if(usDistanceCapsuleModel)renderDistanceCapsule(usDistanceCapsuleModel);};
 function renderDistanceCapsule(model){
+  usDistanceCapsuleModel=model;
   renderNoiDistance(model);
   const root=document.getElementById('distanceWidget');
   const value=document.getElementById('distanceValue');
   if(!root||!value)return;
   root.hidden=!model.visible;
   root.dataset.usDistanceState=model.state;
-  value.textContent=model.text||'';
-  root.setAttribute('aria-label',model.visible?(model.near?'Siete a meno di 3 km':`Distanza tra voi: ${model.text}`):'Distanza tra voi');
+  const trip=Boolean(model.visible&&window.UsMemberStatus?.partnerTraveling?.());
+  root.dataset.usTrip=trip?'true':'false';
+  value.textContent=trip?'🚗 in viaggio':(model.text||'');
+  const partner=window.UsIdentity?.current?.()?.partnerName||'La tua persona';
+  root.setAttribute('aria-label',trip?`${partner} è in viaggio`:model.visible?(model.near?'Siete a meno di 3 km':`Distanza tra voi: ${model.text}`):'Distanza tra voi');
   if(typeof syncOggiRow==='function')syncOggiRow();
   if (typeof Event === 'function' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(new Event('us:distance-changed'));
@@ -1745,8 +1752,13 @@ window.pickProfilePhoto=pickProfilePhoto;
 
 
 
-async function compressImageFile(file,{maxDimension=1920,quality=.82}={}){
+async function compressImageFile(file,options={}){
   if(!file)return null;
+  return (await compressImageVariants(file,[options]))[0];
+}
+// One decode of the photo, then one WebP for each size asked (the Ricordo
+// and its thumbnail come from the same picture, decoded once).
+async function compressImageVariants(file,variants){
   if(file.size>20*1024*1024)throw new Error('SOURCE_TOO_LARGE');
   let bitmap=null;
   try{
@@ -1759,20 +1771,27 @@ async function compressImageFile(file,{maxDimension=1920,quality=.82}={}){
     const img=await new Promise((resolve,reject)=>{const el=new Image();el.onload=()=>resolve(el);el.onerror=reject;el.src=url;});
     width=img.naturalWidth||img.width;height=img.naturalHeight||img.height;drawSource=img;
   }
-  if(!width||!height)throw new Error('INVALID_IMAGE');
-  const scale=Math.min(1,maxDimension/Math.max(width,height));
-  const outW=Math.max(1,Math.round(width*scale));
-  const outH=Math.max(1,Math.round(height*scale));
-  const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;
-  const ctx=canvas.getContext('2d',{alpha:false});
-  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  ctx.drawImage(drawSource,0,0,outW,outH);
-  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));
-  if(bitmap?.close)bitmap.close();
-  if(revokeUrl)URL.revokeObjectURL(revokeUrl);
-  if(!blob)throw new Error('COMPRESSION_FAILED');
-
-  return new File([blob],(file.name||'image').replace(/\.[^.]+$/,'')+'.webp',{type:'image/webp',lastModified:Date.now()});
+  try{
+    if(!width||!height)throw new Error('INVALID_IMAGE');
+    const out=[];
+    for(const variant of variants){
+      const {maxDimension=1920,quality=.82}=variant||{};
+      const scale=Math.min(1,maxDimension/Math.max(width,height));
+      const outW=Math.max(1,Math.round(width*scale));
+      const outH=Math.max(1,Math.round(height*scale));
+      const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;
+      const ctx=canvas.getContext('2d',{alpha:false});
+      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+      ctx.drawImage(drawSource,0,0,outW,outH);
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));
+      if(!blob)throw new Error('COMPRESSION_FAILED');
+      out.push(new File([blob],(file.name||'image').replace(/\.[^.]+$/,'')+'.webp',{type:'image/webp',lastModified:Date.now()}));
+    }
+    return out;
+  }finally{
+    if(bitmap?.close)bitmap.close();
+    if(revokeUrl)URL.revokeObjectURL(revokeUrl);
+  }
 }
 
 let usRicordiThumbnailBackfillBusy=false;
@@ -1859,8 +1878,6 @@ async function uploadProfilePhoto(file){
   if(!['image/jpeg','image/png','image/webp'].includes(file.type))return toast('Per ora usa JPG, PNG o WebP');
   if(file.size>20*1024*1024)return toast('Foto troppo grande: massimo 20 MB');
   const oldPath=window.usProfile.avatar_path||null;
-  const btn=document.getElementById('profileAvatarBtn');
-  if(btn)btn.disabled=true;
   try{
     const compressed=await compressImageFile(file,{maxDimension:512,quality:.82});
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/avatar-${Date.now()}-${crypto.randomUUID()}.webp`;
@@ -1873,7 +1890,7 @@ async function uploadProfilePhoto(file){
     toast('Foto profilo aggiornata ♡',{icon:'user'});
     await hydrateProfileAvatars();
   }catch(err){console.warn(err);toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Non riesco ad aggiornare la foto');}
-  finally{if(btn)btn.disabled=false;document.getElementById('profileAvatarFile').value='';}
+  finally{document.getElementById('profileAvatarFile').value='';}
 }
 
 const profileAvatarFile=document.getElementById('profileAvatarFile');
@@ -2143,9 +2160,31 @@ function syncOggiRow(){
   const next=document.getElementById('usOggiNext'),pill=document.getElementById('distanceWidget'),status=document.getElementById('usOggiStatus');
   row.hidden=Boolean((!next||next.hidden)&&(!pill||pill.hidden)&&(!status||status.hidden));
 }
+// Come stai che conta (27/11/2026, D10): the row may carry ONE light suggestion
+// from your two Come stai (member-status.js oggiHint), never over a commitment
+// of today. The last real model is kept, so the hint comes and goes by itself.
+var usOggiNextModel=null;
 function renderOggiNext(model){
   const button=document.getElementById('usOggiNext');
   if(!button)return;
+  usOggiNextModel=model||null;
+  const icon=button.querySelector('.us-icon');
+  // Only in place of a commitment that is not today: never a row more (tavola «Come stai di US»).
+  const hint=model&&model.date!==localDateISO()?window.UsMemberStatus?.oggiHint?.()||null:null;
+  if(hint){
+    document.getElementById('usOggiNextWhen').textContent='';
+    document.getElementById('usOggiNextTitle').textContent=hint.title;
+    button.dataset.usNextKind='hint';
+    button.dataset.usHint=hint.kind;
+    delete button.dataset.usEventId;button.dataset.usNextDate='';
+    if(icon)icon.hidden=true;
+    button.setAttribute('aria-label',hint.title.replace(/^[^\p{L}]+/u,''));
+    button.hidden=false;
+    syncOggiRow();
+    return;
+  }
+  delete button.dataset.usHint;
+  if(icon)icon.hidden=false;
   if(!model){button.hidden=true;button.removeAttribute('aria-label');syncOggiRow();return;}
   document.getElementById('usOggiNextWhen').textContent=model.when;
   document.getElementById('usOggiNextTitle').textContent=model.title;
@@ -2194,12 +2233,13 @@ async function refreshOggiNext({event,calendar}={}){
 // the event, or the Noi calendar on the mesiversario's day.
 document.getElementById('usOggiNext')?.addEventListener('click',event=>{
   const data=event.currentTarget?.dataset||{};
+  if(data.usNextKind==='hint'&&window.UsMemberStatus?.runHint?.(data.usHint))return;
   if(data.usNextKind==='calendar'&&data.usEventId&&window.UsCalendarLinks?.openEntry){window.UsCalendarLinks.openEntry(data.usEventId);return;}
   if(data.usNextKind==='event'&&data.usEventId&&typeof window.openEventEditor==='function'){window.go?.('bond',{nav:true});window.openEventEditor(data.usEventId,data.usNextDate||null);return;}
   if(data.usNextKind==='relationship'&&data.usNextDate&&window.openCalendarSurface){window.openCalendarSurface(data.usNextDate);return;}
   window.go?.('bond',{nav:true});
 });
-window.UsOggiNext=Object.freeze({viewModel:oggiNextEventViewModel,render:renderOggiNext,nearest:oggiNearestNext,refresh:refreshOggiNext});
+window.UsOggiNext=Object.freeze({viewModel:oggiNextEventViewModel,render:renderOggiNext,nearest:oggiNearestNext,refresh:refreshOggiNext,repaint:()=>renderOggiNext(usOggiNextModel)});
 
 // M6E — Oggi calendar widget + Focus Photo. A single small glass card, fed by
 // calendar.js's window.getOggiCalendarInsightSource() (which itself reuses
@@ -2261,10 +2301,10 @@ window.refreshOggiCalendarWidget=refreshOggiCalendarWidget;
 window.UsOggiCalendarWidget=Object.freeze({render:renderOggiCalendarWidget,refresh:refreshOggiCalendarWidget});
 
 // Focus Photo: a tap anywhere on the hero background toggles it; a tap on the
-// widget itself, the distance pill, the push card or the empty-state CTA
+// widget itself, the distance pill or the empty-state CTA
 // never does (they keep their own taps).
 function oggiIsWidgetTarget(target){
-  return Boolean(target&&typeof target.closest==='function'&&target.closest('#usTodayPriorityRegion,.us-oggi-dock,.us-oggi-stack,.us-oggi-widgets,.home-distance-pill,.push-optin-card,.home-empty-state,.us-countdown-display,.us-countdown-entry'));
+  return Boolean(target&&typeof target.closest==='function'&&target.closest('.us-oggi-dock,.us-oggi-stack,.us-oggi-widgets,.home-distance-pill,.home-empty-state,.us-countdown-display,.us-countdown-entry'));
 }
 let usOggiFocusPhotoActive=false;
 function setOggiFocusPhoto(active){
@@ -2272,7 +2312,7 @@ function setOggiFocusPhoto(active){
   const hero=document.getElementById('homeHero');
   hero?.classList.toggle('us-oggi-focus',active);
   document.getElementById('usOggiFocusToggle')?.setAttribute('aria-pressed',String(active));
-  const fadeTargets=[document.getElementById('usTodayPriorityRegion'),document.getElementById('usOggiCalendarWidget'),document.getElementById('usDailyRitual'),document.getElementById('distanceWidget'),document.getElementById('pushOptInCard'),document.getElementById('usCountdownDisplay'),document.getElementById('usCountdownEntry'),document.getElementById('usOggiNext')];
+  const fadeTargets=[document.getElementById('usOggiCalendarWidget'),document.getElementById('usDailyRitual'),document.getElementById('distanceWidget'),document.getElementById('usCountdownDisplay'),document.getElementById('usCountdownEntry'),document.getElementById('usOggiNext')];
   for(const el of fadeTargets){
     if(!el)continue;
     if(active)el.setAttribute('inert','');else el.removeAttribute('inert');
@@ -2282,13 +2322,16 @@ function setOggiFocusPhoto(active){
 let usOggiFocusTipShown=false;
 function toggleOggiFocusPhoto(){
   setOggiFocusPhoto(!usOggiFocusPhotoActive);
-  if(usOggiFocusPhotoActive&&!usOggiFocusTipShown){usOggiFocusTipShown=true;setTimeout(()=>{if(usOggiFocusPhotoActive)toast('Tocca di nuovo per tornare',{quiet:true});},300);}
+  if(usOggiFocusPhotoActive&&!usOggiFocusTipShown){usOggiFocusTipShown=true;setTimeout(()=>{if(usOggiFocusPhotoActive)toast(window.USOggiLook?.touchActive?.()?'Tocca la foto: l’effetto ti risponde':'Tocca di nuovo per tornare',{quiet:true});},300);}
 }
 window.toggleOggiFocusPhoto=toggleOggiFocusPhoto;
 document.getElementById('homeHero')?.addEventListener('click',event=>{
   // A card that re-rendered under the tap (e.g. a notice that opened its sheet) is no photo tap.
   if(event.target&&event.target.isConnected===false)return;
   if(oggiIsWidgetTarget(event.target))return;
+  // Premi di Oggi (grill D11): in Foto a fuoco with an effect on, a tap plays
+  // with the effect (oggi-look.js); «Torna a Oggi» and back leave.
+  if(window.USOggiLook?.touchActive?.())return;
   toggleOggiFocusPhoto();
 });
 // The US mark at the top of Oggi is not a control: as in the approved mockup
@@ -2326,8 +2369,11 @@ function layoutOggiEmptyState(){
     const rect=el&&!el.hidden?el.getBoundingClientRect():null;
     if(rect?.height)bottom=Math.min(bottom,rect.top-box.top-gap);
   }
-  empty.classList.remove('is-compact');
+  empty.classList.remove('is-compact','is-tiny');
   if(empty.offsetHeight>bottom-top)empty.classList.add('is-compact');
+  // Very short phones (320x568) with a countdown: even compact it covered the time and the
+  // daily card. Only the button stays; the invitation says the same thing (26/11/2026).
+  if(empty.offsetHeight>bottom-top)empty.classList.add('is-tiny');
   const half=empty.offsetHeight/2,preferred=box.height*.48;
   const center=top+half<=bottom-half?Math.min(Math.max(preferred,top+half),bottom-half):(top+bottom)/2;
   empty.style.top=`${Math.round(center)}px`;
@@ -2489,53 +2535,21 @@ let usIncomingThink=null;
 let usThinkOperationId=null;
 let usThinkReactionFinal=null;
 let usThinkReactionInFlight=false;
+// Ti penso ricevuto (tavola del 25/11/2026): the reply chosen at the tap, so the characters answer before the server does.
+let usThinkReactionPicked='';
+// I cuori: the taps on the reply heart of this Ti penso, and the sheet closing by itself.
+let usThinkHearts=0,usThinkCloseTimer=0;
 let usThinkKnownReactionSignature='';
 
-// 1.0 — what Oggi may put in its one priority card, in this order: something
-// that arrived for me (Ti penso, Lasciato per te), the answers ready, where
-// the other is waiting for me ("Tocca a te": a game round, the other one's
-// photo of the challenge), today's mesiversario, from Friday the challenge of
-// the week not done yet, and (never shown on Oggi) passive events.
-const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,left_ready:2,answers_ready:3,waiting_for_me:4,celebration:5,challenge:6,couple_context:7});
-const US_TODAY_PRIORITY_LABELS=Object.freeze({
-  received_ready:'Aspetta te',
-  left_ready:'Lasciato per te',
-  answers_ready:'Risposte pronte',
-  waiting_for_me:'Tocca a te',
-  celebration:'Tra voi oggi',
-  challenge:'Sfida · scade domenica',
-  couple_context:'Tra voi oggi'
-});
-const US_TODAY_PRIORITY_LIMIT=5;
+// Redesign definitivo, fase 5 (founder 23/11/2026, D9): Oggi has no cards of
+// suggestions. Each real thing has its own place: a Ti penso received → heart
+// eyes on the characters (personaggi.js reactionOf) and a short notice
+// (noticeIncomingThink); Lasciato per te → the dot on the envelope; the other
+// waiting for me in a game → a dot on Gioca (renderToccaATe); the mesiversario
+// → the characters' festa; the notifications → the intro, then the Profilo.
+// Oggi keeps the photo with the characters, the countdown, the row
+// event/distance/Come stai and the Domanda di oggi.
 let usTodayPriorityRefreshId=0;
-let usTodayPriorityQueue=[];
-// The notifications invite waits for the first load of what waits for me:
-// before it, it flashed on Oggi and gave way a moment later (03/11/2026).
-let usTodayPrioritiesKnown=false;
-const usTodayConsumedFacts=new Set();
-
-function usTodayPriorityNumber(value,fallback){
-  if(value===null||value===undefined||value==='')return fallback;
-  const number=Number(value);
-  return Number.isFinite(number)?number:fallback;
-}
-function composeTodayPriorities(candidates=[]){
-  const ordered=(Array.isArray(candidates)?candidates:[])
-    .filter(item=>item?.id&&US_TODAY_PRIORITY_ORDER[item.category]&&!usTodayConsumedFacts.has(String(item.factKey||item.id)))
-    .slice()
-    .sort((a,b)=>US_TODAY_PRIORITY_ORDER[a.category]-US_TODAY_PRIORITY_ORDER[b.category]
-      ||usTodayPriorityNumber(a.urgency,Number.MAX_SAFE_INTEGER)-usTodayPriorityNumber(b.urgency,Number.MAX_SAFE_INTEGER)
-      ||usTodayPriorityNumber(b.recency,0)-usTodayPriorityNumber(a.recency,0)
-      ||String(a.id).localeCompare(String(b.id)));
-  const categories=new Set(),facts=new Set(),result=[];
-  for(const item of ordered){
-    const factKey=String(item.factKey||item.id);
-    if(categories.has(item.category)||facts.has(factKey))continue;
-    categories.add(item.category);facts.add(factKey);result.push(item);
-    if(result.length===US_TODAY_PRIORITY_LIMIT)break;
-  }
-  return result;
-}
 // M10.2 — stato PERSONALE del reveal (get_daily_reveal_meta): l'avviso "Risposte
 // pronte" esiste solo per la domanda di OGGI (giorno Europe/Rome), a reveal
 // sbloccato, finché IO non l'ho né aperto né nascosto. Senza meta caricata
@@ -2546,20 +2560,6 @@ function dailyRevealAccess(source){
   const today=typeof usDailyQuestionDay==='function'?usDailyQuestionDay():null;
   if(today&&question.question_date&&String(question.question_date)!==today)return null;
   return {question,unread:!meta.my_reveal_seen_at&&!meta.my_notice_dismissed_at};
-}
-function dailyTodayPriorityViewModel(source){
-  const access=dailyRevealAccess(source);
-  if(!access?.unread)return null;
-  const question=access.question;
-  const urgency=Date.parse(`${question.question_date||''}T23:59:59`);
-  return {
-    id:`daily-ready:${question.id}`,factKey:`daily:${question.id}`,category:'answers_ready',
-    arrivalType:'daily-reveal-ready',questionId:question.id,
-    // Personale e reale finché non l'ho aperto o nascosto: stesso orbit M10.
-    attention:true,canonical:true,dismissLabel:'Nascondi avviso Risposte pronte',
-    urgency:Number.isFinite(urgency)?urgency:Number.MAX_SAFE_INTEGER,recency:0,
-    title:'Le vostre risposte sono pronte',detail:'',action:'today',actionLabel:'Scopri'
-  };
 }
 // Accesso secondario, passivo: reveal di oggi già aperto o avviso nascosto.
 function dailyRevealLinkViewModel(source){
@@ -2575,167 +2575,36 @@ function renderDailyRevealLink(model){
   link.dataset.usQuestionId=model.questionId;
   link.hidden=false;
 }
-function eventTodayPriorityViewModel(source){
-  if(source?.days_left===null||source?.days_left===undefined||!source?.effective_date)return null;
-  const days=Number(source?.days_left);
-  if(!source?.id||!source?.title||!Number.isFinite(days)||days<0||days>2)return null;
-  const time=source.event_time?String(source.event_time).slice(0,5):'';
-  const when=days===0?'Oggi':days===1?'Domani':'Entro 48 ore';
-  const detail=[when,time,source.location].filter(Boolean).join(' · ');
-  const urgency=Date.parse(`${source.effective_date}T${time||'23:59'}:00`);
-  const recency=Date.parse(source.updated_at||source.created_at||'');
-  return {
-    id:`event:${source.id}:${source.effective_date}`,
-    factKey:`event:${source.id}:${source.effective_date}`,
-    category:'couple_context',
-    // Un impegno è informazione, non un'azione personale: niente attenzione.
-    attention:false,
-    title:String(source.title),detail,action:'events',actionLabel:'Apri eventi',
-    urgency:Number.isFinite(urgency)?urgency:Number.MAX_SAFE_INTEGER,
-    recency:Number.isFinite(recency)?recency:0
-  };
-}
-function renderTodayPriorityItem(item,total=0){
-  const region=document.getElementById('usTodayPriorityRegion');
-  if(!region)return;
-  if(!item){region.innerHTML='';region.hidden=true;return;}
-  const queueLabel=total>1?` · 1/${total}`:'';
-  const card=`<button type="button" class="us-today-priority-card us-attention-orbit" data-us-attention="${item.attention?'on':'off'}" data-us-today-action="${escapeHtml(item.action)}" data-us-arrival-type="${escapeHtml(item.arrivalType||item.category||'arrival')}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="us-today-priority-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}${queueLabel}</span><span class="us-today-priority-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="us-today-priority-action">${escapeHtml(item.actionLabel)}</span></button>`;
-  // M10.2 — avviso nascondibile: swipe orizzontale O bottone accessibile, stessa autorità.
-  region.innerHTML=item.dismissLabel
-    ?`<div class="us-today-priority-swipe has-dismiss" data-us-swipe-item data-us-question-id="${escapeHtml(item.questionId||'')}">${card}<button type="button" class="us-today-priority-dismiss" data-us-today-dismiss aria-label="${escapeHtml(item.dismissLabel)}"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>`
-    :card;
-  region.hidden=false;
-}
-function renderTodayPriorities(priorities=[]){
-  // Oggi keeps only actionable personal notices. Passive calendar/event facts
-  // live in Noi/Lavagna after the Home cleanup.
-  usTodayPriorityQueue=(Array.isArray(priorities)?priorities:[]).filter(item=>item?.attention).slice();
-  renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
-  usTodayPrioritiesKnown=true;
-  applyOggiArbitration();
-}
 // The partner's name for Oggi copy. Defensive: the Oggi runtime is also
 // exercised on its own, without the identity resolver.
 function oggiPartnerName(){
   try{return (typeof usIdentity==='function'?usIdentity().partnerName:'')||'La tua persona';}catch(_){return 'La tua persona';}
 }
-// O6 — a Ti penso is a moment: the card says when it arrived ("2 ore fa") and
-// leaves Oggi 24 hours later (the heart keeps its history).
-const US_THINK_CARD_TTL_MS=24*60*60*1000;
-function thinkTodayPriorityViewModel(now=Date.now()){
-  const signal=typeof usIncomingThink!=='undefined'?usIncomingThink:null;
-  const finalReaction=typeof usThinkReactionFinal!=='undefined'?usThinkReactionFinal:null;
-  if(!signal?.id||finalReaction)return null;
-  const at=Date.parse(signal.created_at||'');
-  if(Number.isFinite(at)&&now-at>US_THINK_CARD_TTL_MS)return null;
-  const ago=Number.isFinite(at)&&typeof relativeSignalAge==='function'?relativeSignalAge(signal.created_at):'';
-  const age=ago?ago.charAt(0).toUpperCase()+ago.slice(1):'';
-  const partner=partnerFromProfiles(window.usBondProfiles||[]);
-  return {
-    id:`think-received:${signal.id}`,
-    factKey:`think:${signal.id}`,
-    arrivalType:'think-received',
-    category:'received_ready',
-    // M10E.3 — un Ti penso ricevuto e non ancora gestito (nessuna reazione
-    // finale) è un'azione reale per CHI lo riceve.
-    attention:true,
-    title:`${partner?.display_name||'La tua persona'} ti pensa`,
-    detail:age||'Ti ha mandato un Ti penso.',
-    recency:Number.isFinite(at)?at:0,
-    action:'think',
-    actionLabel:'Apri'
-  };
-}
-// L4 — something new in Lasciato per te. The envelope (left-for-you.js) is the
-// authority on "is there anything unseen"; Oggi only names who and what, from
-// the same unseen rows (oldest first, the one that opens first).
-const US_LEFT_KIND_COPY=Object.freeze({text:'un messaggio',photo:'una foto',audio:'un vocale',video:'un video',music:'una canzone'});
+// L4 — the unseen rows of Lasciato per te, for the widget (UsWidgets.publishLeft).
+// On Oggi the envelope says it with its dot (left-for-you.js).
 const usOggiLeft={items:[]};
-function leftTodayPriorityViewModel(items=usOggiLeft.items){
-  const list=(Array.isArray(items)?items:[]).filter(item=>item?.id);
-  if(!list.length)return null;
-  const first=list[0],name=oggiPartnerName();
-  const title=list.length>1?`${name} ti ha lasciato ${list.length} cose`:`${name} ti ha lasciato ${US_LEFT_KIND_COPY[first.kind]||'qualcosa'}`;
-  const at=Date.parse(first.created_at||'');
-  return {
-    id:`left:${first.id}`,factKey:`left:${list.map(item=>item.id).join(',')}`,
-    arrivalType:'left-for-you',category:'left_ready',attention:true,
-    title,detail:'',recency:Number.isFinite(at)?at:0,action:'left',actionLabel:'Apri'
-  };
-}
-// F2 — "Tocca a te": a game round where the other is waiting for me (read
-// from the Gioca hub that games.js renders).
+// F2 — a game round where the other is waiting for me (read from the Gioca hub
+// that games.js renders): the dot on Gioca.
 let usOggiGameTurn=null;
-function gameTurnTodayPriorityViewModel(turn=usOggiGameTurn){
-  if(!turn?.game)return null;
-  const key=turn.session||turn.game;
-  return {
-    id:`game-turn:${key}`,factKey:`game:${key}`,arrivalType:'game-turn',category:'waiting_for_me',attention:true,
-    title:`${oggiPartnerName()} ti aspetta`,detail:turn.game,action:'game',actionLabel:'Gioca',
-    session:turn.session||'',perVoi:Boolean(turn.perVoi)
-  };
-}
-// O10 — the mesiversario, on the day. A start on the 29th, 30th or 31st counts
-// on the last day of shorter months (same rule as Eventi).
-function oggiMonthiversary(startedOn,todayISO){
-  const s=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(startedOn||'')),t=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(todayISO||''));
-  if(!s||!t)return null;
-  const [sy,sm,sd]=s.slice(1).map(Number),[ty,tm,td]=t.slice(1).map(Number);
-  const months=(ty-sy)*12+(tm-sm);
-  if(months<=0)return null;
-  const last=new Date(Date.UTC(ty,tm,0)).getUTCDate();
-  if(Math.min(sd,last)!==td)return null;
-  return {months,years:months%12===0?months/12:0};
-}
-function celebrationTodayPriorityViewModel(startedOn,todayISO){
-  // Traguardi dei giorni (29/10/2026): every 100 days together, 1000 its own
-  // name. On a mesiversario too it takes the slot (the bigger day).
-  const daysMilestone=window.UsCalendarDomain?.daysMilestoneOn?.(startedOn,todayISO)||0;
-  if(daysMilestone)return {
-    id:`celebration:${todayISO}`,factKey:`celebration:${todayISO}`,arrivalType:'monthiversary',category:'celebration',attention:true,
-    title:daysMilestone===1000?'Oggi sono mille giorni ♡':`Oggi sono ${daysMilestone} giorni ♡`,
-    detail:daysMilestone===1000?'Un traguardo tutto vostro':'Un traguardo insieme',
-    action:'events',actionLabel:'Apri'
-  };
-  const day=oggiMonthiversary(startedOn,todayISO);
-  if(!day)return null;
-  const title=day.years
-    ?(day.years===1?'Oggi è un anno ♡':`Oggi sono ${day.years} anni ♡`)
-    :(day.months===1?'Oggi è un mese ♡':`Oggi sono ${day.months} mesi ♡`);
-  return {
-    id:`celebration:${todayISO}`,factKey:`celebration:${todayISO}`,arrivalType:'monthiversary',category:'celebration',attention:true,
-    title,detail:day.years?'Il vostro anniversario':'Il vostro mesiversario',
-    // Both open Eventi: Il vostro anno su US has its own day (year-recap.js usYear).
-    action:'events',actionLabel:'Apri'
-  };
-}
-function oggiStartedOn(){
-  try{return window.UsCoupleContext?.snapshot?.()?.couple?.started_on||null;}catch(_){return null;}
-}
 function oggiTodayISO(){
   return typeof usDailyQuestionDay==='function'?usDailyQuestionDay():new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome'}).format(new Date());
 }
-// F2 — a dot on the Oggi tab while the other is waiting for me: the Domanda di
-// oggi they already answered, a game round, the other one's photo of the challenge.
-function renderToccaATe({daily=false,game=false,challenge=false}={}){
-  const tab=document.querySelector?.('.nav button[data-page="home"]');
-  if(!tab)return false;
-  const on=Boolean(daily||game||challenge);
-  if(on)tab.setAttribute('data-us-tocca','on');else tab.removeAttribute('data-us-tocca');
-  tab.setAttribute('aria-label',on?'Oggi, tocca a te':'Oggi');
-  return on;
-}
-// S12 — Maudit hops once when something arrives for me (Ti penso, Lasciato
-// per te) and when the answers of the day are revealed. A blocked or switched
-// off Maudit does not hop, and the hop is tried again at the next refresh.
-const usOggiPetHops=new Set();
-function oggiPetHop(reason,key){
-  if(!key||usOggiPetHops.has(key))return false;
-  let hopped=false;
-  try{hopped=Boolean(window.USPet?.react?.(reason));}catch(_){hopped=false;}
-  if(hopped)usOggiPetHops.add(key);
-  return hopped;
+// F2, redesign D9 — "Tocca a te": a dot on Gioca while the other waits for me
+// in a game (a round or Per voi; the weekly challenge is hidden since fase 6,
+// D10); on Oggi while they answered the Domanda di oggi and I have not.
+function renderToccaATe({daily=false,game=false}={}){
+  const mark=(page,on,label)=>{
+    const tab=document.querySelector?.(`.nav button[data-page="${page}"]`);
+    if(!tab)return false;
+    if(on)tab.setAttribute('data-us-tocca','on');else tab.removeAttribute('data-us-tocca');
+    tab.setAttribute('aria-label',on?`${label}, tocca a te`:label);
+    return on;
+  };
+  const oggi=mark('home',Boolean(daily),'Oggi');
+  const gioca=mark('quiz',Boolean(game),'Gioca');
+  // US vi ricorda (25/11/2026): «ti aspetta» is said by your character too (us-ricorda.js).
+  if(typeof window!=='undefined')window.dispatchEvent?.(new CustomEvent('us:tocca-a-te',{detail:{daily:Boolean(daily),game:Boolean(game)}}));
+  return oggi||gioca;
 }
 // ===== M9B — Domanda di oggi: il rituale quotidiano su Oggi =====
 // Legge SOLO lo stato canonico di get_daily_state (window.todayState via
@@ -2763,25 +2632,32 @@ function dailyRitualViewModel(source){
     return {...base,state:'answer',meta:'Una domanda, due risposte',glyph:'none',cta:'Rispondi',attention:true};
   }
   if(!state.both_answered)return {...base,state:'waiting',meta:`Hai risposto · aspettiamo ${partner}`,glyph:'mine',cta:'Apri',attention:false};
-  // Both answered: while "Risposte pronte" waits in the priority card, that
-  // card speaks for the day (never two cards for one fact). Once seen or
-  // hidden, the card offers to read them again until tomorrow.
+  // Both answered: until I open them the card says the answers are ready
+  // (redesign D9: it was a card of its own above this one); once seen it
+  // offers to read them again until tomorrow. Without the reveal meta
+  // (error/offline) nothing is invented.
   const access=dailyRevealAccess(source);
-  if(!access||access.unread)return null;
+  if(!access)return null;
+  if(access.unread)return {...base,kicker:'Risposte pronte',state:'ready',meta:'Le vostre risposte sono pronte',glyph:'noi',cta:'Scopri',attention:false};
   const felt=typeof dailyPartnerReactionLine==='function'?dailyPartnerReactionLine(source.reveal,partner):'';
   return {...base,state:'revealed',meta:felt||'Svelate · domani una nuova domanda',glyph:'noi',cta:'Rivedi',attention:false};
 }
-// The two circles of the mockup (Oggi card): theirs on the right, mine on the
-// left, dashed until I answer and filled from below when I do; together they
-// become one circle of Noi with a heart (Phosphor heart-straight-fill, its own path).
+// The two characters (redesign definitivo, 23/11/2026, D2), where the two
+// circles of the mockup were: mine on the left, theirs on the right; the place
+// of who has not answered yet is dashed; when you have both answered they come
+// close and a heart rises between them (personaggi.js draws them).
 const US_DAILY_RING_STATE=Object.freeze({answer:'vuoto',invited:'tocca',waiting:'attesa',ready:'pronte',revealed:'svelate',error:'vuoto'});
 function dailyRitualRingMarkup(model){
   const st=US_DAILY_RING_STATE[model.state]||'vuoto';
-  return `<svg class="ring us-daily-ritual-ring" viewBox="0 0 48 30" data-st="${st}" data-glyph="${escapeHtml(model.glyph||'none')}" data-us-attention-icon aria-hidden="true" focusable="false"><defs><clipPath id="usDailyRingMe"><circle cx="17" cy="15" r="11"/></clipPath></defs><circle class="r-bloom" cx="24" cy="15" r="13" fill="none" stroke-width="1.5"/><g class="r-you"><circle class="r-you-full" cx="31" cy="15" r="11"/><circle class="r-you-wait" cx="31" cy="15" r="10.2" stroke-width="1.6" stroke-dasharray="3 2.6"/></g><g class="r-me"><circle class="r-me-ring" cx="17" cy="15" r="10.2" stroke-width="1.6" stroke-dasharray="3 2.6"/><g clip-path="url(#usDailyRingMe)"><rect class="r-fill" x="4" y="2" width="26" height="26"/></g></g><g class="r-noi"><circle cx="24" cy="15" r="13"/><path transform="translate(18.4 10.3) scale(.044)" d="M240,98a57.63,57.63,0,0,1-17,41L133.7,229.62a8,8,0,0,1-11.4,0L33,139a58,58,0,0,1,82-82.1L128,69.05l13.09-12.19A58,58,0,0,1,240,98Z"/></g></svg>`;
+  const P=window.UsPersonaggi;
+  const me=P?.myRole?.()||'francesco',you=me==='beatrice'?'francesco':'beatrice';
+  const mineIn=st==='attesa'||st==='pronte'||st==='svelate',theirsIn=st==='tocca'||st==='pronte'||st==='svelate';
+  const one=(role,on)=>!P?'':on?P.character(role,{size:26,reaction:''}):P.slot(P.shapeOf(role),26,false);
+  return '<span class="ring us-daily-ritual-ring us-daily-duo" data-st="'+st+'" data-glyph="'+escapeHtml(model.glyph||'none')+'" data-us-attention-icon aria-hidden="true"><span class="r-me">'+one(me,mineIn)+'</span><span class="r-you">'+one(you,theirsIn)+'</span><span class="r-noi"><svg viewBox="0 0 256 256" focusable="false"><path d="M240,98a57.63,57.63,0,0,1-17,41L133.7,229.62a8,8,0,0,1-11.4,0L33,139a58,58,0,0,1,82-82.1L128,69.05l13.09-12.19A58,58,0,0,1,240,98Z"/></svg></span></span>';
 }
-// Mockup motion (oggi.js setDQ after "Invia"): my circle fills from below,
-// the two circles meet, one circle of Noi blooms and the card breathes once.
-// Only when I just answered, on Oggi, with motion allowed.
+// When I have just answered: my character takes my place with a small hop;
+// when we have both answered the two come close and the heart rises. Only
+// when I just answered, on Oggi, with motion allowed.
 const US_DAILY_EASE={out:'cubic-bezier(.2,.8,.2,1)',io:'cubic-bezier(.7,0,.2,1)'};
 function dailyRitualReducedMotion(){
   try{return Boolean(window.UsUiFoundation?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);}catch(_){return false;}
@@ -2789,31 +2665,19 @@ function dailyRitualReducedMotion(){
 async function playDailyRitualAnswered(card,merge){
   const ring=card?.querySelector?.('.ring');
   if(!ring||typeof ring.animate!=='function')return false;
-  const me=ring.querySelector('.r-me'),you=ring.querySelector('.r-you'),fill=ring.querySelector('.r-fill'),noi=ring.querySelector('.r-noi'),bloom=ring.querySelector('.r-bloom');
-  const final=ring.dataset.st;
-  // Start from "tocca": my circle still empty, the two apart.
-  ring.dataset.st=merge?'tocca':'vuoto';
-  // The sheet goes away first, then the circles move (one thing at a time).
+  const me=ring.querySelector('.r-me'),you=ring.querySelector('.r-you'),noi=ring.querySelector('.r-noi');
+  // The sheet goes away first, then the characters move (one thing at a time).
   const sheet=document.getElementById('today');
   for(let waited=0;sheet?.classList.contains('open')&&waited<900;waited+=50)await new Promise(r=>setTimeout(r,50));
   if(!card.isConnected||card.querySelector('.ring')!==ring)return false;
   try{
-    await fill.animate([{transform:'translateY(26px)'},{transform:'translateY(0)'}],{duration:560,easing:US_DAILY_EASE.out,fill:'forwards'}).finished;
+    await me.animate([{transform:'translateY(0) scale(.7)'},{transform:'translateY(-6px) scale(1.12)',offset:.55},{transform:'translateY(0) scale(1)'}],{duration:560,easing:US_DAILY_EASE.out}).finished;
     if(merge){
-      await Promise.all([
-        me.animate([{transform:'translateX(0)'},{transform:'translateX(7px)'}],{duration:420,easing:US_DAILY_EASE.io,fill:'forwards'}).finished,
-        you.animate([{transform:'translateX(0)'},{transform:'translateX(-7px)'}],{duration:420,easing:US_DAILY_EASE.io,fill:'forwards'}).finished
-      ]);
+      noi.animate([{opacity:0,transform:'translateY(4px) scale(.6)'},{opacity:1,transform:'translateY(-2px) scale(1.15)',offset:.6},{opacity:1,transform:'none'}],{duration:520,easing:'ease-out'});
+      card.animate([{scale:1},{scale:1.02,offset:.4},{scale:1}],{duration:500,easing:'ease-out'});
     }
   }catch(_){/* cancelled by a newer render */}
-  if(!card.isConnected||card.querySelector('.ring')!==ring){return false;}
-  ring.dataset.st=final;
-  if(merge){
-    noi.animate([{opacity:0,transform:'scale(.7)'},{opacity:1,transform:'scale(1.12)',offset:.6},{opacity:1,transform:'scale(1)'}],{duration:520,easing:'ease-out'});
-    bloom.animate([{opacity:.9,transform:'scale(1)'},{opacity:0,transform:'scale(2.2)'}],{duration:800,easing:US_DAILY_EASE.out});
-    card.animate([{scale:1},{scale:1.02,offset:.4},{scale:1}],{duration:500,easing:'ease-out'});
-  }
-  [me,you,fill].forEach(el=>el.getAnimations?.().forEach(a=>a.cancel()));
+  [me,you,noi].forEach(el=>el?.getAnimations?.().forEach(a=>a.cancel()));
   return true;
 }
 let usDailyRitualAnswerPending=false;
@@ -2887,6 +2751,7 @@ function bindDailyRitualSwipe(card){
       card.style.transform='';card.style.opacity='';
       dailyRitualDropAbove(card);
       card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.dataset.usAttention='off';
+      if(typeof paintDailyRitualClose==='function')paintDailyRitualClose(card);
     };
     if(out?.finished)out.finished.then(finish,finish);else finish();
   };
@@ -2909,11 +2774,12 @@ function renderDailyRitual(model){
   const before=card.dataset.state||'';
   // La cosa di oggi (cosa-di-oggi.js): after the answers the next gesture,
   // the closed day or the first week's step; the streak in the foot. The
-  // server's state is read again when the card changes state.
-  if(model&&before!==model.state)window.UsCosaDiOggi?.refresh?.({force:true});
+  // server's state is read again when the card changes state. Not when it
+  // first appears (Avvio più veloce): refreshTodayPriorities has just read it.
+  if(model&&before&&before!==model.state)window.UsCosaDiOggi?.refresh?.({force:true});
   if(model&&window.UsCosaDiOggi?.decorate)model=window.UsCosaDiOggi.decorate(model);
   if(model?.state==='revealed'&&model.questionId&&typeof dailyRitualDismissedId==='function'&&dailyRitualDismissedId()===String(model.questionId))model=null;
-  if(!model){card.hidden=true;card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.removeAttribute('data-look');delete card.dataset.cdoAction;card.dataset.usAttention='off';return;}
+  if(!model){card.hidden=true;card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.removeAttribute('data-look');delete card.dataset.cdoAction;card.dataset.usAttention='off';if(typeof paintDailyRitualClose==='function')paintDailyRitualClose(card);return;}
   card.dataset.state=model.state;
   if(model.look)card.dataset.look=model.look;else card.removeAttribute('data-look');
   if(model.action)card.dataset.cdoAction=model.action;else delete card.dataset.cdoAction;
@@ -2928,21 +2794,47 @@ function renderDailyRitual(model){
   // Same words, same circles: leave the card (and a running animation) alone.
   if(card.hidden||card.usDailyHtml!==html){card.innerHTML=html;card.usDailyHtml=html;}
   card.hidden=false;
-  // I just sent my answer: the circles tell it (mockup), once.
-  const answered=usDailyRitualAnswerPending&&before==='answer'&&model.state==='waiting';
+  if(typeof paintDailyRitualClose==='function')paintDailyRitualClose(card);
+  // I just sent my answer: the characters tell it, once; if the other had
+  // already answered, the two come close (redesign definitivo, D2).
+  const answered=usDailyRitualAnswerPending&&(before==='answer'||before==='invited')&&['waiting','ready','revealed'].includes(model.state);
   if(answered){
     usDailyRitualAnswerPending=false;
     const onOggi=document.getElementById('home')?.classList?.contains?.('active');
-    if(onOggi&&!dailyRitualReducedMotion())playDailyRitualAnswered(card,false);
+    if(onOggi&&!dailyRitualReducedMotion())playDailyRitualAnswered(card,model.state!=='waiting');
   }
 }
 window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
+// «Togli» (27/11/2026): the answers read, the card can leave without the swipe too, with a visible
+// button on its corner (a swipe alone is not reachable by everyone). Same memory as the swipe.
+function paintDailyRitualClose(card=document.getElementById('usDailyRitual')){
+  const close=document.getElementById('usDailyRitualClose');
+  if(!close)return;
+  close.hidden=!(card&&!card.hidden&&card.dataset.state==='revealed'&&card.dataset.questionId);
+}
+document.getElementById('usDailyRitualClose')?.addEventListener('click',event=>{
+  const close=event.currentTarget,card=document.getElementById('usDailyRitual');
+  const questionId=card?.dataset.questionId||'';
+  if(!card||card.hidden||card.dataset.state!=='revealed'||!questionId)return;
+  dailyRitualDismiss(questionId);
+  const hadFocus=document.activeElement===close;
+  close.hidden=true;
+  const out=dailyRitualReducedMotion()?null:card.animate?.([{transform:'none',opacity:1},{transform:'translateX(48px)',opacity:0}],{duration:220,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'});
+  const finish=()=>{
+    out?.cancel?.();
+    dailyRitualDropAbove(card);
+    card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.dataset.usAttention='off';
+    paintDailyRitualClose(card);
+    // The keyboard focus does not fall to the page: the next thing of Oggi takes it.
+    if(hadFocus)[...document.querySelectorAll('#usOggiDock button, #thinkButton')].find(el=>!el.hidden&&!el.closest('[hidden]')&&el.getBoundingClientRect().height>0)?.focus({preventScroll:true});
+  };
+  if(out?.finished)out.finished.then(finish,finish);else finish();
+});
 async function refreshTodayPriorities({daily,freshEvents=false}={}){
   const refreshId=++usTodayPriorityRefreshId;
   // La domanda di oggi widget (widgets.js): the question and whose turn it is.
   window.UsWidgets?.syncDaily?.().catch?.(()=>{});
-  // La cosa di oggi: the streak and the first week (read at most every 20 s;
-  // a change paints Oggi again).
+  // La cosa di oggi: the streak (read at most every 20 s; a change paints Oggi again).
   window.UsCosaDiOggi?.refresh?.()?.catch?.(()=>{});
   const dailySource=daily===undefined&&window.todayQuestion?{
     question:window.todayQuestion,
@@ -2950,178 +2842,32 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
     reveal:window.todayRevealMeta,
     partnerName:oggiPartnerName()
   }:daily;
-  const candidates=[];
-  const thinkPriority=thinkTodayPriorityViewModel();
-  if(thinkPriority)candidates.push(thinkPriority);
-  const leftPriority=leftTodayPriorityViewModel();
-  if(leftPriority)candidates.push(leftPriority);
-  // M9B: la Domanda di oggi ha la sua card su Oggi (renderDailyRitual):
-  // non entra nella coda priority, così non compare due volte.
   renderDailyRitual(dailyRitualViewModel(dailySource));
-  // M10.2 — "Risposte pronte": piccolo avviso personale, mai la card Daily.
-  const revealNotice=dailyTodayPriorityViewModel(dailySource);
-  if(revealNotice)candidates.push(revealNotice);
-  const gameTurn=gameTurnTodayPriorityViewModel();
-  if(gameTurn)candidates.push(gameTurn);
-  // Compagni V1 (companions.js): a new companion, told once.
-  const companion=window.UsCompanions?.todayPriority?.();
-  if(companion)candidates.push(companion);
-  // Accoglienza V1 (distance.js): one question for the couple, asked once.
-  const distance=window.UsDistance?.todayPriority?.();
-  if(distance)candidates.push(distance);
-  const celebration=celebrationTodayPriorityViewModel(oggiStartedOn(),oggiTodayISO());
-  if(celebration)candidates.push(celebration);
-  let challenge=null;
+  renderDailyRevealLink(dailyRevealLinkViewModel(dailySource));
   try{
-    const eventSource=await window.getTodayEventPrioritySource?.({fresh:freshEvents});
-    const eventPriority=eventTodayPriorityViewModel(eventSource);
-    if(eventPriority)candidates.push(eventPriority);
-    // The pill above the Daily card (mockup og-next): this event and the Noi calendar's next
+    // The pill above the Daily card (mockup og-next): the next event and the Noi calendar's next
     // commitment (re-read at most every 30 s here; a calendar save or the way back to Oggi reads at once).
+    const eventSource=await window.getTodayEventPrioritySource?.({fresh:freshEvents});
     if(refreshId===usTodayPriorityRefreshId&&typeof refreshOggiNext==='function')refreshOggiNext({event:eventSource??null});
   }catch(error){
     console.warn('[US Oggi] Events priority',error);
     // The calendar's next commitment still reaches the pill when Events fails.
     if(refreshId===usTodayPriorityRefreshId&&typeof refreshOggiNext==='function')refreshOggiNext({event:'failed'});
   }
-  // La sfida della settimana (weekly-challenge.js): from Friday if not done.
-  try{challenge=await window.UsWeeklyChallenge?.todayPriority?.();}catch(_){challenge=null;}
-  if(challenge)candidates.push(challenge);
-  if(refreshId!==usTodayPriorityRefreshId)return [];
-  const priorities=composeTodayPriorities(candidates);
-  renderTodayPriorities(priorities);
-  if(thinkPriority)oggiPetHop('think',thinkPriority.factKey);
-  if(leftPriority)oggiPetHop('left-for-you',leftPriority.factKey);
-  if(revealNotice)oggiPetHop('daily-question',revealNotice.factKey);
-  // Un solo ingresso: il link passivo compare solo quando l'avviso non è in coda.
-  renderDailyRevealLink(priorities.some(item=>item.category==='answers_ready')?null:dailyRevealLinkViewModel(dailySource));
+  if(refreshId!==usTodayPriorityRefreshId)return;
   const dailyState=dailySource?.state;
-  renderToccaATe({daily:Boolean(dailyState&&dailyState.my_answer==null&&dailyState.partner_has_answer),game:Boolean(gameTurn),challenge:challenge?.category==='waiting_for_me'});
-  window.UsDailyQuestionHub?.paint?.();
-  return priorities;
+  renderToccaATe({daily:Boolean(dailyState&&dailyState.my_answer==null&&dailyState.partner_has_answer),game:Boolean(usOggiGameTurn?.game)});
 }
-document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event=>{
-  if(usTodaySwipeState.suppressClick){usTodaySwipeState.suppressClick=false;event.preventDefault?.();return;}
-  const control=event.target.closest?.('[data-us-today-action]');
-  const action=control?.dataset.usTodayAction;
-  if(!action){
-    // Bottone accessibile "Nascondi avviso": stessa autorità dello swipe.
-    const dismiss=event.target.closest?.('[data-us-today-dismiss]');
-    const questionId=dismiss?event.target.closest('[data-us-swipe-item]')?.dataset.usQuestionId:'';
-    if(questionId)window.dismissDailyRevealNotice?.(questionId);
-    return;
-  }
-  // M10.2: l'avviso Risposte pronte è stato canonico (server): sparisce solo
-  // quando il reveal è davvero aperto (hydrateToday → mark_daily_reveal_seen).
-  const current=usTodayPriorityQueue[0];
-  if(!current?.canonical){
-    usTodayPriorityQueue.shift();
-    if(current)usTodayConsumedFacts.add(String(current.factKey||current.id));
-    renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
-  }
-  if(action==='today')window.openToday?.();
-  if(action==='events')window.openEvents?.();
-  if(action==='think')window.openThinkArrival?.();
-  if(action==='left')window.openLeftForYou?.();
-  if(action==='game'){
-    // The round itself lives in Gioca: open the hub, then that round.
-    window.openQuizHub?.({nav:true});
-    if(current?.session)window.USGameV2?.openSession?.(current.session);
-    else if(current?.perVoi)window.USGameV2?.openPerVoi?.();
-  }
-  if(action==='challenge')window.UsWeeklyChallenge?.open?.();
-  if(action==='recap')window.UsYearRecap?.open?.();
-  if(action==='companion')window.UsCompanions?.open?.();
-  if(action==='distance')window.UsDistance?.open?.();
-});
-// M10.2 — nascondere l'avviso "Risposte pronte" = "non lo voglio più su Oggi",
-// MAI "ho visto le risposte". L'autorità è window.dismissDailyRevealNotice
-// (definita accanto al reveal, dove vive l'accesso al backend): solo dopo il
-// dismiss canonico l'avviso resta nascosto, altrimenti la card torna al suo posto.
-const usTodaySwipeState={gesture:null,suppressClick:false};
-const US_SWIPE_INTENT_PX=10,US_SWIPE_MIN_PX=50,US_SWIPE_MAX_PX=70;
-function usTodaySwipeThreshold(width){return Math.min(US_SWIPE_MAX_PX,Math.max(US_SWIPE_MIN_PX,(Number(width)||0)*0.2));}
-function usTodaySwipeMotion(item,{transform,opacity,animate}){
-  const reduced=Boolean(window.UsUiFoundation?.isReducedMotion?.());
-  item.style.transition=animate&&!reduced?'transform .2s ease-out,opacity .2s ease-out':'none';
-  item.style.transform=transform;
-  item.style.opacity=opacity;
-}
-function usTodaySwipeReset(item){usTodaySwipeMotion(item,{transform:'translateX(0)',opacity:'',animate:true});}
-function installTodayNoticeSwipe(region){
-  if(!region?.addEventListener)return;
-  const itemOf=event=>event.target?.closest?.('[data-us-swipe-item]')||null;
-  region.addEventListener('pointerdown',event=>{
-    const item=itemOf(event);
-    if(!item||(event.button!==undefined&&event.button!==0)||event.target.closest?.('[data-us-today-dismiss]'))return;
-    usTodaySwipeState.gesture={item,pointerId:event.pointerId,x:event.clientX,y:event.clientY,dx:0,phase:'pending'};
-  });
-  region.addEventListener('pointermove',event=>{
-    const g=usTodaySwipeState.gesture;
-    if(!g||g.pointerId!==event.pointerId||g.phase==='ignored')return;
-    const dx=event.clientX-g.x,dy=event.clientY-g.y;
-    if(g.phase==='pending'){
-      const ax=Math.abs(dx),ay=Math.abs(dy);
-      if(ax<US_SWIPE_INTENT_PX&&ay<US_SWIPE_INTENT_PX)return;
-      // Intento orizzontale chiaro, altrimenti è scroll verticale: non si tocca.
-      if(ax>ay*1.5){g.phase='drag';g.item.setPointerCapture?.(event.pointerId);}
-      else{g.phase='ignored';return;}
-    }
-    g.dx=dx;
-    const width=g.item.getBoundingClientRect?.().width||0;
-    const fade=width?Math.min(Math.abs(dx)/width,1)*0.55:0;
-    usTodaySwipeMotion(g.item,{transform:`translateX(${dx}px)`,opacity:String(1-fade),animate:false});
-    event.preventDefault?.();
-  });
-  const finish=async(event,cancelled)=>{
-    const g=usTodaySwipeState.gesture;
-    if(!g||g.pointerId!==event.pointerId)return;
-    usTodaySwipeState.gesture=null;
-    if(g.phase!=='drag')return;
-    // Il click sintetico dopo un drag non deve aprire il reveal.
-    usTodaySwipeState.suppressClick=true;
-    setTimeout(()=>{usTodaySwipeState.suppressClick=false;},0);
-    const width=g.item.getBoundingClientRect?.().width||0;
-    if(cancelled||Math.abs(g.dx)<usTodaySwipeThreshold(width)){usTodaySwipeReset(g.item);return;}
-    const exit=(g.dx<0?-1:1)*Math.max(width,1);
-    usTodaySwipeMotion(g.item,{transform:`translateX(${exit}px)`,opacity:'0',animate:true});
-    const result=(await window.dismissDailyRevealNotice?.(g.item.dataset.usQuestionId))||{status:'error'};
-    // Dismiss non riuscito → la card torna (se il DOM è ancora quello).
-    if(result.status!=='dismissed'&&g.item.isConnected!==false)usTodaySwipeReset(g.item);
-  };
-  region.addEventListener('pointerup',event=>finish(event,false));
-  region.addEventListener('pointercancel',event=>finish(event,true));
-}
-installTodayNoticeSwipe(document.getElementById('usTodayPriorityRegion'));
 window.UsTodayPriority=Object.freeze({
   revealLinkViewModel:dailyRevealLinkViewModel,
-  compose:composeTodayPriorities,
-  dailyViewModel:dailyTodayPriorityViewModel,
-  eventViewModel:eventTodayPriorityViewModel,
-  render:renderTodayPriorities,
   refresh:refreshTodayPriorities
 });
 
-// ===== M12A → 1.0 — Oggi arbitration =====
+// ===== M12A → redesign D9 — Oggi arbitration =====
 // The photo stays the dominant surface. Above the nav (#usOggiDock) Oggi shows
-// AT MOST ONE evidence card and the Domanda di oggi card. The choice is
-// deterministic (slot, then rank, then id); surfaces that lose are only
-// suppressed (display), never destroyed, so they return the moment the
-// winner is resolved. Distance is a tiny ambient capsule and does not count.
-//
-//   EVIDENCE (one at a time)                       DAILY
-//   10 Ti penso received                           the Domanda di oggi, until
-//   15 Lasciato per te                             both answered (O1), then
-//   20 "Risposte pronte" (reveal ready)            "Rivedi" until tomorrow
-//   30 Tocca a te (game round, the challenge's other photo)
-//   35 Mesiversario / anniversario
-//   40 La sfida della settimana, from Friday
-//   90 notifications invite, until enabled (O5)
-//
-// The legacy calendar widget and reveal link stay mounted in the hidden
-// stack: they never take a slot.
-const US_OGGI_PRIMARY_RANK=Object.freeze({received_ready:10,left_ready:15,answers_ready:20,waiting_for_me:30,celebration:35,challenge:40});
-const US_OGGI_PUSH_RANK=90;
+// one card, the Domanda di oggi (no cards of suggestions since fase 5). The
+// legacy calendar widget and reveal link stay mounted in the hidden stack:
+// they never take a slot, so they stay suppressed (display), never destroyed.
 function arbitrateOggi(candidates=[]){
   const best={evidence:null,daily:null};
   for(const item of Array.isArray(candidates)?candidates:[]){
@@ -3133,17 +2879,10 @@ function arbitrateOggi(candidates=[]){
   }
   return {evidence:best.evidence?.id||null,daily:best.daily?.id||null};
 }
-const US_OGGI_SURFACES=Object.freeze(['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink']);
+const US_OGGI_SURFACES=Object.freeze(['usDailyRitual','usOggiCalendarWidget','usDailyRevealLink']);
 function collectOggiCandidates(){
-  const live=id=>{const el=document.getElementById(id);return el&&!el.hidden?el:null;};
-  const candidates=[];
-  if(live('usTodayPriorityRegion')){
-    const head=usTodayPriorityQueue[0];
-    candidates.push({id:'usTodayPriorityRegion',slot:'evidence',rank:US_OGGI_PRIMARY_RANK[head?.category]||US_OGGI_PUSH_RANK-1});
-  }
-  if(usTodayPrioritiesKnown&&live('pushOptInCard'))candidates.push({id:'pushOptInCard',slot:'evidence',rank:US_OGGI_PUSH_RANK});
-  if(live('usDailyRitual'))candidates.push({id:'usDailyRitual',slot:'daily',rank:0});
-  return candidates;
+  const el=document.getElementById('usDailyRitual');
+  return el&&!el.hidden?[{id:'usDailyRitual',slot:'daily',rank:0}]:[];
 }
 function applyOggiArbitration(){
   const winner=arbitrateOggi(collectOggiCandidates());
@@ -3165,9 +2904,11 @@ window.UsOggi=Object.freeze({arbitrate:arbitrateOggi,apply:applyOggiArbitration,
   schedule();
 })();
 
+// Today as US counts it: the Europe/Rome day, as the server, Gioca and the
+// post-its do (the phone's own clock only if the browser has no time zones).
 function localDateISO(){
-  const d=new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
+  try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
+  catch(_e){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 }
 // Founder 15/10: once both answered (and the answers were read), the card can
 // be swiped away and stays away for that question on this phone. The new
@@ -3206,7 +2947,7 @@ function closeToday(){
 }
 window.closeToday=closeToday;
 
-// ===== 1.0 — La domanda di oggi in Gioca (was home-cleanup.js) =====
+// ===== 1.0 — La domanda di oggi in Gioca (was home-cleanup.js); since 23/11/2026 (D11) only its model stays =====
 // Same question, same sheet: the Gioca card opens it where you are, like the
 // Oggi card. It only reads the canonical state hydrateToday already loaded.
 function dailyHubModel(){
@@ -3221,27 +2962,8 @@ function dailyHubModel(){
   if(state.partner_has_answer)return {...base,state:'answer',meta:`${partner} ha già risposto · tocca a te`,cta:'Rispondi'};
   return {...base,state:'answer',meta:'Una domanda per voi oggi',cta:'Rispondi'};
 }
-function dailyHubMarkup(model){
-  if(!model)return '<div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">La domanda di oggi</span><small>La domanda di oggi non è ancora disponibile.</small></div>';
-  // Never the hidden answers here: question, state and the way in.
-  return `<button type="button" class="us-gv2-daily" data-us-daily-entry data-daily-state="${escapeHtml(model.state)}">
-   <span class="us-gv4-daily-art" aria-hidden="true"><span class="us-gv4-art-ring"></span><span class="us-gv4-art-heart"></span></span>
-   <span class="us-gv2-daily-copy"><small>La domanda di oggi</small><b>${escapeHtml(model.question)}</b><span class="us-gv2-daily-state">${escapeHtml(model.meta)}</span></span>
-   <span class="us-gv4-daily-footer"><span>Una domanda, due risposte</span><span class="us-gv2-daily-cta">${escapeHtml(model.cta)} <span aria-hidden="true">›</span></span></span>
-  </button>`;
-}
-function paintDailyInGioca(){
-  const hub=document.getElementById('quizHub');
-  if(!hub||hub.classList.contains('hidden'))return;
-  const slot=hub.querySelector('.us-gv2-daily-slot');
-  if(!slot)return;
-  window.USGameV2?.paintWeek?.();
-  const model=dailyHubModel();
-  const signature=model?`${model.questionId}:${model.state}:${model.cta}:${model.meta}`:'unavailable';
-  if(slot.dataset.usDailySignature===signature)return;
-  slot.dataset.usDailySignature=signature;
-  slot.innerHTML=dailyHubMarkup(model);
-}
+// La domanda di oggi left Gioca (redesign definitivo, 23/11/2026, D11): it
+// lives on Oggi only, and since fase 6 Gioca has no week strip either.
 // F2 — Gioca has no turn API: Oggi reads "Tocca a te" from the hub games.js
 // just rendered (a round where the other is waiting, or Per voi pending).
 let usOggiGameTurnTimer=0;
@@ -3257,23 +2979,16 @@ function readGameTurnFromHub(){
   clearTimeout(usOggiGameTurnTimer);
   usOggiGameTurnTimer=setTimeout(()=>{if(window.usProfile)refreshTodayPriorities();},120);
 }
-function paintDailyCardAndTurn(){paintDailyInGioca();readGameTurnFromHub();}
-document.getElementById('quizHub')?.addEventListener('click',event=>{
-  if(!event.target.closest?.('[data-us-daily-entry]'))return;
-  event.preventDefault();
-  openToday();
-});
-window.addEventListener('us-identity-change',()=>paintDailyInGioca());
-window.UsDailyQuestionHub=Object.freeze({model:dailyHubModel,paint:paintDailyInGioca,paintCard:paintDailyCardAndTurn,open:openToday});
+function paintDailyCardAndTurn(){readGameTurnFromHub();}
+window.UsDailyQuestionHub=Object.freeze({model:dailyHubModel,paintCard:paintDailyCardAndTurn,open:openToday});
 
 // L4 — who left what in Lasciato per te. left-for-you.js owns the envelope and
-// its unseen count; Oggi follows the envelope and reads only the unseen rows
-// (oldest first: the one that opens first) to name the kind.
+// its dot; Oggi follows the envelope and reads only the unseen rows (oldest
+// first) for the widget.
 let usOggiLeftTimer=0,usOggiLeftSeq=0;
 async function loadOggiLeftItems(){
   const seq=++usOggiLeftSeq,me=window.usProfile;
   const envelope=document.getElementById('leftForYouPartnerEntry');
-  const before=usOggiLeft.items.map(item=>item.id).join(',');
   if(!me?.id||!envelope?.classList.contains('is-closed')){usOggiLeft.items=[];}
   else{
     try{
@@ -3283,7 +2998,6 @@ async function loadOggiLeftItems(){
       usOggiLeft.items=(data||[]).filter(item=>item?.id);
     }catch(error){console.warn('[US Oggi] Lasciato per te',error);return;}
   }
-  if(before!==usOggiLeft.items.map(item=>item.id).join(','))refreshTodayPriorities();
   window.UsWidgets?.publishLeft?.(usOggiLeft.items)?.catch?.(()=>{});
 }
 (()=>{
@@ -3297,23 +3011,49 @@ async function loadOggiLeftItems(){
 
 
 function thinkReactionLabel(reaction){return ({heart:'con un cuore',hug:'con un abbraccio',miss_you:'con un pensiero'})[reaction]||reaction||'';}
+// Ti penso ricevuto (founder 25/11/2026, tavola «US · Ti penso ricevuto»): their character
+// with heart eyes, yours that arrives when you answer; the hug is the two of you cheek to
+// cheek with a heart above (founder 25/11: no hands).
+function thinkArrivalCast(root){
+  const P=window.UsPersonaggi;
+  if(!root||!P?.character)return;
+  const me=P.myRole?.()==='beatrice'?'beatrice':'francesco';
+  const them=me==='beatrice'?'francesco':'beatrice';
+  const meEl=root.querySelector('[data-think-me]'),themEl=root.querySelector('[data-think-them]'),hugEl=root.querySelector('[data-think-hug]');
+  if(meEl)meEl.innerHTML=P.character(me,{size:150,reaction:'',mood:''});
+  if(themEl)themEl.innerHTML=P.character(them,{size:170,reaction:'cuore',mood:''});
+  // L'abbraccio (founder, 27/11/2026, the drawing was «bruttissimo»): the button shows
+  // your two real characters snuggled, eyes shut and happy, a small heart in your two
+  // colours above them. Without the characters the two shapes of index.html stay.
+  const hugGlyph=root.querySelector('.think-reaction-hug');
+  if(hugGlyph){const hug=role=>P.character(role,{size:30,reaction:'',mood:'innamorato',className:'think-hug-char'});hugGlyph.innerHTML=`<span class="think-hug-me">${hug(me)}</span><span class="think-hug-them">${hug(them)}</span><svg class="think-hug-heart" viewBox="0 0 256 256" focusable="false"><path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32Z" style="fill:var(--us-tu)"/><path d="M128,80c8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z" style="fill:var(--us-partner)"/></svg>`;}
+  if(hugEl)hugEl.innerHTML=`<span class="think-arrival-hug-me">${P.character(me,{size:150,reaction:'',mood:'innamorato'})}</span><span class="think-arrival-hug-them">${P.character(them,{size:150,reaction:'',mood:'innamorato'})}</span><svg class="think-arrival-hug-heart" viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"/></svg>`;
+}
 function renderThinkReactionUi(){
   const root=document.getElementById('thinkArrival');
   if(!root)return;
   const title=document.getElementById('thinkArrivalTitle');
   const copy=document.getElementById('thinkArrivalCopy');
   const status=document.getElementById('thinkArrivalStatus');
+  const sheet=root.querySelector('.think-arrival-sheet');
   const buttons=root.querySelectorAll('[data-think-reaction]');
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
-  // Momento: the name on one line, "ti pensa" in italic in their colour (same words).
-  if(title)title.innerHTML=`<span class="think-arrival-name"${partner?.display_name?' translate="no"':''}>${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>ti pensa</em>`;
-  // Mockup: when it arrived, in plain words ("adesso", "5 min fa").
+  const chosen=usThinkReactionFinal||usThinkReactionPicked||'';
+  const state=({heart:'heart',hug:'hug',miss_you:'miss'})[chosen]||'ask';
+  if(sheet&&sheet.dataset.thinkState!==state)sheet.dataset.thinkState=state;
+  // The name on one line, then what happens in italic in their colour: «ti pensa», then your answer (no he/she needed).
+  // I cuori (27/11/2026): a Ti penso of several taps says how many (\u00abti pensa \u00d75\u00bb).
+  const taps=usThinkTaps(usIncomingThink);
+  const line=({heart:'e tu ricambi',hug:'e tu l\u2019abbracci',miss:'e vi pensate'})[state]||(taps>1?`ti pensa \u00d7${taps}`:'ti pensa');
+  if(title)title.innerHTML=`<span class="think-arrival-name"${partner?.display_name?' translate="no"':''}>${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>${line}</em>`;
+  // When it arrived, in plain words ("adesso", "5 min fa").
   if(copy){const at=usIncomingThink?.created_at;const fresh=at&&Date.now()-Date.parse(at)<60000;copy.textContent=at?(fresh?'adesso':relativeSignalAge(at)):'';copy.hidden=!copy.textContent;}
   buttons.forEach(button=>{
     const reaction=button.dataset.thinkReaction;
-    button.classList.toggle('selected',reaction===usThinkReactionFinal);
-    button.disabled=Boolean(usThinkReactionFinal||usThinkReactionInFlight);
-    button.setAttribute('aria-pressed',String(reaction===usThinkReactionFinal));
+    button.classList.toggle('selected',reaction===chosen);
+    // «Resta e cresce»: the heart given stays tappable, each tap one more burst.
+    button.disabled=Boolean(usThinkReactionFinal||usThinkReactionInFlight)&&!(reaction==='heart'&&chosen==='heart');
+    button.setAttribute('aria-pressed',String(reaction===chosen));
   });
   if(status)status.textContent=usThinkReactionFinal?`Hai risposto ${thinkReactionLabel(usThinkReactionFinal)}.`:usThinkReactionInFlight?'Invio…':'';
 }
@@ -3323,11 +3063,16 @@ function openThinkArrival(){
   window.UsUiFoundation?.cancelSurfaceExit?.(root);
   root.classList.add('open');
   root.setAttribute('aria-hidden','false');
+  thinkArrivalCast(root);
   renderThinkReactionUi();
+  // Premi, fase 2 (grill D20): the chosen Ti penso reward plays here, after the
+  // scene, every time a Ti penso is opened (think-reward.js, once per Ti penso).
+  window.UsThinkReward?.play?.(root,{id:usIncomingThink.id,created_at:usIncomingThink.created_at,name:partnerFromProfiles(window.usBondProfiles||[])?.display_name||'La tua persona'});
 }
 window.openThinkArrival=openThinkArrival;
 function closeThinkArrival(){
   const root=document.getElementById('thinkArrival');
+  clearTimeout(usThinkCloseTimer);
   if(!root)return;
   const finalize=()=>{root.classList.remove('open');root.setAttribute('aria-hidden','true');};
   if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(root,finalize);else finalize();
@@ -3336,8 +3081,8 @@ window.closeThinkArrival=closeThinkArrival;
 async function sendThinkReaction(reaction){
   if(!usIncomingThink?.id||usThinkReactionFinal||usThinkReactionInFlight)return false;
   if(!['heart','hug','miss_you'].includes(reaction))return false;
-  usThinkReactionInFlight=true;renderThinkReactionUi();
-  if(reaction==='heart')usHeartLike(document.querySelector('#thinkArrival [data-think-reaction="heart"]'));
+  usThinkReactionInFlight=true;usThinkReactionPicked=reaction;renderThinkReactionUi();
+  if(reaction==='heart'){const heart=document.querySelector('#thinkArrival [data-think-reaction="heart"]');usHeartLike(heart);usThinkHearts=1;window.UsUiFoundation?.heartSpray?.(heart?.querySelector('.think-reaction-glyph')||heart);}
   const {data,error}=await sb.rpc('set_think_reaction',{target_message_id:usIncomingThink.id,target_reaction:reaction});
   if(error){
     const terminal=error.code==='23505'&&String(error.message||'').includes('already_reacted');
@@ -3351,11 +3096,11 @@ async function sendThinkReaction(reaction){
         sendWebPushEvent('think_reaction',usIncomingThink.id,{reaction:usThinkReactionFinal}).catch(()=>{});
         window.UsTodayPriority?.refresh?.();
         toast('Reazione già inviata');
-        setTimeout(()=>closeThinkArrival(),620);
+        usThinkCloseSoon(620);
         return true;
       }
     }
-    console.warn('[US Think] reaction',error);usThinkReactionInFlight=false;renderThinkReactionUi();toast('Non riesco a inviare la reazione');return false;
+    console.warn('[US Think] reaction',error);usThinkReactionInFlight=false;usThinkReactionPicked='';renderThinkReactionUi();toast('Non riesco a inviare la reazione');return false;
   }
   const result=Array.isArray(data)?data[0]:data;
   if(result?.status==='saved'||result?.status==='duplicate'){
@@ -3368,14 +3113,26 @@ async function sendThinkReaction(reaction){
     // Fluidità 2: the chosen reaction answers the tap (the heart already has its own animation).
     if(usThinkReactionFinal!=='heart')window.UsUiFoundation?.done?.(document.querySelector(`[data-think-reaction="${usThinkReactionFinal}"]`),{feel:'action'});
     toast('Reazione inviata',{icon:'check',quiet:false});
-    setTimeout(()=>closeThinkArrival(),1300);
+    // The characters answer first (about 1.5 s), then it closes by itself.
+    usThinkCloseSoon(2300);
     return true;
   }
-  usThinkReactionInFlight=false;renderThinkReactionUi();return false;
+  usThinkReactionInFlight=false;usThinkReactionPicked='';renderThinkReactionUi();return false;
 }
 window.sendThinkReaction=sendThinkReaction;
+// I cuori («Resta e cresce», founder 27/11/2026): the heart given stays; every
+// further tap adds a burst and «×N» on it (visual only: one reaction, one push)
+// and keeps the sheet open a little longer. The reaction itself stays final.
+function usThinkCloseSoon(ms){clearTimeout(usThinkCloseTimer);usThinkCloseTimer=setTimeout(()=>closeThinkArrival(),ms);}
+function usThinkHeartMore(){
+  const button=document.querySelector('#thinkArrival [data-think-reaction="heart"]');
+  usThinkHearts=Math.max(1,usThinkHearts)+1;
+  window.UsUiFoundation?.heartMore?.(button,usThinkHearts,{status:document.getElementById('thinkArrivalStatus')});
+  if(usThinkReactionFinal)usThinkCloseSoon(2300);
+}
 document.getElementById('thinkArrival')?.addEventListener('click',event=>{
   const reaction=event.target.closest?.('[data-think-reaction]')?.dataset.thinkReaction;
+  if(reaction==='heart'&&(usThinkReactionFinal||usThinkReactionPicked)==='heart'){usThinkHeartMore();return;}
   if(reaction)sendThinkReaction(reaction);
 });
 
@@ -3549,17 +3306,30 @@ function usShowWhatsNew(returning){
   // After the first paint of Oggi, not over it.
   setTimeout(()=>{window.UsUiFoundation?.notice?.({kicker:'Novità',title:US_WHATS_NEW.title,items:US_WHATS_NEW.items,confirmLabel:'Ho capito',icon:'sparkle'});},1400);
 }
-// One tap = my reaction; the same tap again takes it back. The server
-// (set_daily_answer_reaction) decides; on error everything goes back.
+// One tap = my reaction. The heart («Resta e cresce», founder 27/11/2026)
+// stays: every further tap adds a burst and «×N» on it (visual only, nothing
+// is sent again); it goes away only when held (~650 ms) or with Backspace or
+// Delete ({remove:true}). «Mi hai commosso» still goes back with a second
+// tap. The server (set_daily_answer_reaction) decides; on error everything goes back.
 let usDailyReactionInFlight=false;
-async function setDailyAnswerReaction(reaction){
+let usDailyHearts={id:'',n:0};
+function usDailyHeartButton(){return document.querySelector('#todayReveal [data-daily-reaction="heart"]');}
+async function setDailyAnswerReaction(reaction,{remove=false}={}){
   const questionId=window.todayQuestion?.id,meta=window.todayRevealMeta;
-  if(!questionId||!meta||meta.question_id!==questionId||!window.todayState?.both_answered||usDailyReactionInFlight)return {status:'noop'};
+  if(!questionId||!meta||meta.question_id!==questionId||!window.todayState?.both_answered)return {status:'noop'};
   if(!US_DAILY_REACTIONS[reaction])return {status:'noop'};
-  const previous=meta,next=meta.my_reaction===reaction?null:reaction;
+  const mine=meta.my_reaction;
+  if(reaction==='heart'&&mine==='heart'&&!remove){
+    usDailyHearts={id:questionId,n:Math.max(1,usDailyHearts.id===questionId?usDailyHearts.n:0)+1};
+    window.UsUiFoundation?.heartMore?.(usDailyHeartButton(),usDailyHearts.n);
+    return {status:'more',count:usDailyHearts.n};
+  }
+  if(usDailyReactionInFlight||(remove&&mine!==reaction))return {status:'noop'};
+  const previous=meta,next=remove||mine===reaction?null:reaction;
   usDailyReactionInFlight=true;
+  usDailyHearts={id:questionId,n:next==='heart'?1:0};
   window.todayRevealMeta={...meta,my_reaction:next};renderTodayReveal();
-  if(next==='heart')usHeartLike(document.querySelector('#todayReveal [data-daily-reaction="heart"]'));
+  if(next==='heart'){const heart=usDailyHeartButton();usHeartLike(heart);window.UsUiFoundation?.heartSpray?.(heart?.querySelector('.us-icon')||heart);window.UsUiFoundation?.heartSay?.('Cuore mandato');}
   try{
     const {data,error}=await sb.rpc('set_daily_answer_reaction',{target_question_id:questionId,target_reaction:next});
     if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reaction_invalid');
@@ -3582,6 +3352,16 @@ document.getElementById('todayReveal')?.addEventListener?.('click',event=>{
   const button=event.target.closest?.('[data-daily-reaction]');
   if(button)setDailyAnswerReaction(button.dataset.dailyReaction);
 });
+// Hold the heart given to take it back; a hold never also counts as a tap.
+// ui-foundation.js comes after app.js: wired once both are there.
+function usWireDailyHeartPress(){
+  window.UsUiFoundation?.heartPress?.(document.getElementById('todayReveal'),{
+    selector:'[data-daily-reaction="heart"]',
+    held:()=>window.todayRevealMeta?.my_reaction==='heart',
+    onHold:()=>setDailyAnswerReaction('heart',{remove:true})
+  });
+}
+if(window.UsUiFoundation?.heartPress)usWireDailyHeartPress();else document.addEventListener?.('DOMContentLoaded',usWireDailyHeartPress,{once:true});
 
 // "Visto" = il reveal è davvero mostrato in un foglio Today aperto: non il push,
 // non l'hydrate della Home, non il solo both_answered.
@@ -3602,30 +3382,13 @@ async function markDailyRevealSeenIfVisible(questionId,seq){
     console.warn('[US Today] Reveal seen non salvato',error);
   }finally{usDailyRevealSeenInFlight=null;}
 }
-let usDailyRevealDismissInFlight=false;
-async function dismissDailyRevealNotice(questionId){
-  if(!questionId||usDailyRevealDismissInFlight)return {status:'busy'};
-  usDailyRevealDismissInFlight=true;
-  try{
-    const {data,error}=await sb.rpc('dismiss_daily_reveal_notice',{target_question_id:questionId});
-    if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reveal_dismiss_invalid');
-    if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
-    await refreshTodayPriorities();
-    return {status:'dismissed'};
-  }catch(error){
-    console.warn('[US Oggi] Dismiss Risposte pronte',error);
-    toast('Non riesco a nascondere l’avviso. Riprova.');
-    return {status:'error'};
-  }finally{usDailyRevealDismissInFlight=false;}
-}
-window.dismissDailyRevealNotice=dismissDailyRevealNotice;
 let usTodayHydrateSeq=0;
 let usTodayAnswerSave=null;
 function todayAnswerIsSaving(){
   return Boolean(usTodayAnswerSave&&usTodayAnswerSave.viewerId===window.usProfile?.id&&usTodayAnswerSave.coupleId===window.usProfile?.couple_id&&usTodayAnswerSave.questionId===window.todayQuestion?.id);
 }
 async function hydrateToday(){
-  if(!window.usProfile){window.UsTodayPriority?.render?.([]);return;}
+  if(!window.usProfile){renderToccaATe();return;}
   const viewer=window.usProfile;
   const seq=++usTodayHydrateSeq;
   const current=()=>seq===usTodayHydrateSeq&&window.usProfile?.id===viewer.id&&window.usProfile?.couple_id===viewer.couple_id;
@@ -3645,7 +3408,6 @@ async function hydrateToday(){
     // Un errore transitorio non cancella la domanda già valida di oggi.
     if(keepPrevious){renderTodaySyncError(true);return;}
     renderTodayQuestionUnavailable('error');
-    updateHomeStatus();
     window.UsTodayPriority?.refresh?.({daily:{status:'error'}});
     return;
   }
@@ -3695,7 +3457,6 @@ async function hydrateToday(){
     if(!current())return;
     if(meta)window.todayRevealMeta=meta;
     renderTodayReveal();
-    window.UsDailyQuestionHub?.paint?.();
     await markDailyRevealSeenIfVisible(q.id,seq);
     if(!current())return;
     // M12B.4 — Conserva solo qui, dove lo scambio è legittimamente visibile.
@@ -3718,26 +3479,12 @@ async function hydrateToday(){
       locked.innerHTML='<span class="dot" data-who="noi" aria-hidden="true"></span><span>Le risposte si svelano quando avete risposto voi due.</span>';
     }
   }
-  updateHomeStatus();
   window.UsTodayPriority?.refresh?.({daily:{
     question:q,
     state,
     reveal:window.todayRevealMeta,
     partnerName:dailyRitualPartnerName()
   }});
-}
-
-async function updateHomeStatus(){
-  if(!window.usProfile)return;
-  const todayPill=document.getElementById('todayStatusPill');
-  const st=window.todayState;
-  const partner=usIdentity().partnerName;
-  if(todayPill){
-    if(st?.both_answered) todayPill.textContent='💬 Today · reveal sbloccato';
-    else if(st?.my_answer) todayPill.textContent='💬 Today · in attesa di '+partner;
-    else if(st?.partner_has_answer) todayPill.textContent='💬 Today · risposta in attesa';
-    else todayPill.textContent='💬 Today · da fare';
-  }
 }
 
 let pendingMomentFile=null;
@@ -4055,8 +3802,7 @@ async function uploadMoment(){
   const total=1+extras.length;
   btn.disabled=true;btn.textContent='Ottimizzo…';momentUpBar('optimize');
   try{
-    const compressed=await compressImageFile(file,{maxDimension:1920,quality:.82});
-    const thumbnail=await compressImageFile(file,{maxDimension:720,quality:.72});
+    const [compressed,thumbnail]=await compressImageVariants(file,[{maxDimension:1920,quality:.82},{maxDimension:720,quality:.72}]);
     const safeName=`${Date.now()}-${crypto.randomUUID()}.webp`;
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/${safeName}`;
     const thumbnailPath=`${window.usProfile.couple_id}/${window.usProfile.id}/derived-thumbnails/${crypto.randomUUID()}.webp`;
@@ -4113,7 +3859,6 @@ async function uploadMoment(){
     const challengeNote=source?.kind==='challenge'&&!failed?window.UsWeeklyChallenge?.takeNote?.():'';
     toast(challengeNote||(failed?`Ricordo aggiunto. ${failed} foto non sono entrate: riprova dall’album`:total>1?`Ricordo aggiunto con ${total} foto ♡`:'Ricordo aggiunto ♡'));
     await hydrateMoments();
-    await hydrateHomeMemory();
     if(!homePhotoPath)await hydrateHomePhoto(true);
   }catch(err){console.warn(err);window.UsFeedback?.error?.();toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Caricamento non riuscito');}
   finally{btn.disabled=false;btn.textContent='Salva ricordo';momentUpBar('done');}
@@ -4254,7 +3999,7 @@ function ricordiMarkOpened(id){
 window.UsRicordiNew=Object.freeze({markOpened:ricordiMarkOpened,check:()=>ricordiCheckNew().catch(()=>{})});
 window.addEventListener('us-auth-resolved',()=>usRunWhenIdle(()=>ricordiCheckNew().catch(()=>{}),1800));
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden||!window.usProfile)return;
+  if(document.hidden||!window.usProfile||usShortAway())return;
   if(document.getElementById('moments')?.classList.contains('active'))ricordiCheckNew().catch(()=>{});
   else usAfterForeground(()=>ricordiCheckNew(),1800);
 });
@@ -4410,7 +4155,7 @@ function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priori
   const title=row.caption||sourceTitle;
   const kicker=done?`<small class="ricordi-moment-source ricordi-done-kicker" data-source-key="${escapeHtml(source.sourceKey)}">L’avete fatto${row.caption&&sourceTitle&&sourceTitle!==row.caption?`<span translate="no"> · ${escapeHtml(sourceTitle)}</span>`:''}</small>`:'';
   const freshLabel=fresh?`<span class="ricordi-new-label">${escapeHtml(ricordiNewLabel(author))}</span>`:'';
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}${done?' ricordi-done ricordi-wide':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}"${row.created_by==null?' data-moment-orphan="1"':''} data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(title)}"${ricordiPlaceAttrs(row)}${fresh?' data-ricordi-new':''} onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${freshLabel}${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${kicker}${title?`<p translate="no">${escapeHtml(title)}</p>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by" translate="no">${escapeHtml(author||'Noi')}</span></span></div></article>`;
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}${done?' ricordi-done ricordi-wide':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-moment-by="${row.created_by===window.usProfile?.id?'tu':'partner'}"${row.created_by==null?' data-moment-orphan="1"':''} data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(title)}"${ricordiPlaceAttrs(row)}${fresh?' data-ricordi-new':''} onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${freshLabel}${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${kicker}${title?`<p translate="no">${escapeHtml(title)}</p>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by" translate="no">${escapeHtml(author||'Noi')}</span></span></div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
@@ -4591,6 +4336,7 @@ function openRicordiExperience(id){
 document.getElementById('moments')?.addEventListener('click',event=>{
   const send=event.target.closest('[data-ricordi-send]');
   if(send){ricordiSendToPartner(send.dataset.sendTitle,send.dataset.sendDate);return;}
+  if(event.target.closest('[data-ricordi-first-photo]')){window.UsMomentComposer?.pick?.();return;}
   const addPhoto=event.target.closest('[data-ricordi-add-photo]');
   if(addPhoto){window.UsMomentComposer?.pick?.({source:{kind:addPhoto.dataset.ricordiAddPhoto,ref:addPhoto.dataset.sourceRef,date:addPhoto.dataset.sourceDate}});return;}
   const rivivi=event.target.closest('[data-ricordi-open]');
@@ -4607,7 +4353,6 @@ async function hydrateMomentsCore(){
   usForceMomentsMediaRefresh=false;
   if(!window.usProfile)return;
   const grid=document.getElementById('momentsGrid');
-  const pill=document.getElementById('momentsStatusPill');
   if(!grid)return;
   const profile=window.usProfile;
   if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="us-skeleton-tiles" role="status"><span class="us-sr">Carico i ricordi…</span><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i></div>';
@@ -4651,7 +4396,6 @@ async function hydrateMomentsCore(){
   const eventRows=eventsError?[]:(events||[]);
   if(provenanceError)console.warn(provenanceError);
   const provenanceRows=provenanceError?[]:(provenance||[]);
-  if(pill)pill.textContent=`Ricordi · ${rows?.length||0}`;
   const today=localDateISO();
   // R5 — before the "nothing changed" shortcut: the dot follows the visit.
   const freshIds=ricordiNewSync(rows||[]);
@@ -4660,7 +4404,8 @@ async function hydrateMomentsCore(){
   // Ricordi is the album (founder, 04/11/2026): only the photos, month by
   // month. Ideas, Events and questions lived without a photo stay saved, not here.
   if(!rows?.length){
-    grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
+    // First use: the same gallery as the + of Ricordi (founder, 27/11/2026).
+    grid.innerHTML='<div class="empty-state ricordi-empty"><b>La vostra storia parte da qui</b><button type="button" class="primary ricordi-empty-add" data-ricordi-first-photo>Aggiungi la prima foto</button></div>';
     renderRicordiRivivi(null,new Map(),new Map());
     renderRicordiChapters([],new Map(),today);
     grid.dataset.loaded='1';grid.dataset.signature=signature;window.dispatchEvent(new CustomEvent('us:moments-updated'));return;
@@ -4720,44 +4465,6 @@ async function hydrateMoments(options={}){
   return momentsHydrateInFlight;
 }
 window.hydrateMoments=hydrateMoments;
-
-let homeMemoryOffset=0;
-async function hydrateHomeMemory(forceNext=false){
-  if(!window.usProfile)return;
-  const section=document.getElementById('homeMemorySection');
-  const card=document.getElementById('homeMemoryCard');
-  if(!section||!card)return;
-  const [{data:rows,error},{data:profiles,error:profilesError}]=await Promise.all([
-    sb.from('moments').select('id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at').order('created_at',{ascending:false}).limit(24),
-    sb.from('profiles').select('id,display_name').eq('couple_id',window.usProfile.couple_id)
-  ]);
-  if(error){console.warn(error);section.hidden=true;return;}
-  if(profilesError)console.warn(profilesError);
-  if(!rows?.length){section.hidden=true;return;}
-  if(forceNext)homeMemoryOffset=(homeMemoryOffset+1)%rows.length;
-  const daySeed=Number(localDateISO().replaceAll('-',''))||0;
-  const row=rows[(daySeed+homeMemoryOffset)%rows.length];
-  const names=new Map((profiles||[]).map(profile=>[profile.id,profile.display_name||'Noi']));
-  const paths=[row.storage_path,row.thumbnail_path].filter(Boolean);
-  const urls=await usGetSignedUrls(paths,US_MEDIA_URL_TTL_S);
-  const signedUrl=urls.get(row.storage_path);
-  const previewUrl=urls.get(row.thumbnail_path)||signedUrl;
-  if(!signedUrl||!previewUrl){section.hidden=true;return;}
-  const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'long',year:'numeric'});
-  const author=names.get(row.created_by)||'Noi';
-  document.getElementById('homeMemoryImg').src=previewUrl;
-  document.getElementById('homeMemoryAuthor').textContent=author;
-  document.getElementById('homeMemoryDate').textContent=dateLabel;
-  const caption=document.getElementById('homeMemoryCaption');
-  caption.textContent=row.caption||'';
-  caption.hidden=!row.caption;
-  card.dataset.url=signedUrl;
-  card.dataset.author=author;
-  card.dataset.date=dateLabel;
-  card.dataset.caption=row.caption||'';
-  section.hidden=false;
-}
-window.hydrateHomeMemory=hydrateHomeMemory;
 
 let momentViewerMediaToken=0;
 function showMomentViewer(viewer){
@@ -4845,7 +4552,6 @@ async function commitMomentDeletion(id){
   if(data?.storage_cleanup===false)console.warn('[US Ricordi] moment deleted; storage cleanup will need recovery');
   try{
     await hydrateMoments();
-    await hydrateHomeMemory();
     homePhotoPath='';
     await hydrateHomePhoto(true);
   }catch(refreshError){console.warn('[US Ricordi] refresh after delete',refreshError);}
@@ -4876,15 +4582,21 @@ function weekStartISO(now=new Date()){
   d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));
   return d.toISOString().slice(0,10);
 }
+// Il grande bilanciamento (28/11/2026): the curve is a table, one reward per
+// level. Where level n starts (the same table as the server,
+// private.progression_level_start in 20261128104932_bilanciamento_v1); after
+// level 26, one level every 5000 points.
+function bondLevelStart(level){
+  const STARTS=[0,150,300,475,675,875,1100,1350,1625,1975,2375,2800,3250,3750,4275,4825,5425,6050,6700,7400,8125,8875,9675,12075,15475,20075];
+  const n=Math.max(1,Math.floor(Number(level)||1));
+  return n<=STARTS.length?STARTS[n-1]:STARTS[STARTS.length-1]+(Math.min(n,1000)-STARTS.length)*5000;
+}
 function bondLevelInfo(totalXp=0){
   const total=Math.max(0,Number(totalXp)||0);
-  let level=1,floor=0,needed=200;
-  while(total>=floor+needed){
-    floor+=needed;
-    level+=1;
-    needed=200+(level-1)*150;
-    if(level>999)break;
-  }
+  let level=1;
+  while(level<999&&total>=bondLevelStart(level+1))level+=1;
+  const floor=bondLevelStart(level);
+  const needed=Math.max(1,bondLevelStart(level+1)-floor);
   const current=total-floor;
   return {total,level,current,needed,progress:Math.max(0,Math.min(100,current/needed*100))};
 }
@@ -4926,12 +4638,6 @@ function renderBondProgress(totalXp){
   if(painted&&painted.__usTotal===totalXp)return;
   if(painted)painted.__usTotal=totalXp;
   const info=bondLevelInfo(totalXp);
-  const heroLevel=document.getElementById('heroBondLevel');
-  const heroXp=document.getElementById('heroBondXp');
-  const heroFill=document.getElementById('bondFill');
-  if(heroLevel)heroLevel.textContent=`Livello ${info.level}`;
-  if(heroXp)heroXp.textContent=`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} / ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))}`;
-  if(heroFill)heroFill.style.width=`${info.progress}%`;
   const levelEl=document.getElementById('bondLevelValue');if(levelEl)levelEl.textContent=info.level;
   const totalEl=document.getElementById('bondTotalXp');if(totalEl)totalEl.textContent=`${info.total.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} punti`;
   const rankEl=document.getElementById('bondRankTitle');if(rankEl)rankEl.textContent=bondRankTitle(info.level);
@@ -5160,7 +4866,7 @@ async function hydrateNoiIdeas(){
     list.innerHTML='<div class="empty-state" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div>';
   }
   const {data,error}=await sb.from('bucket_items')
-    .select('id,title,note,link_url,status,calendar_entry_id,completed_at,created_at,lived_proposed_by')
+    .select('id,title,note,link_url,status,calendar_entry_id,completed_at,created_at,lived_proposed_by,created_by')
     .eq('couple_id',coupleId)
     .neq('status','archived')
     .order('created_at',{ascending:false});
@@ -5516,7 +5222,8 @@ async function markNoiIdeaLivedFromBoard(id){
   try{
     const res=await confirmNoiIdeaLived(id);
     if(res===null){toast('È già cambiata: aggiorno la lista.');hydrateNoiIdeas();}
-    return Boolean(res);
+    // 'lived' once both said yes; 'proposed' when the other yes is still missing.
+    return res?(res.status==='lived'?'lived':'proposed'):false;
   }catch(e){
     console.warn(e);
     toast('Non riesco a salvarla. Riprova.');
@@ -5525,7 +5232,19 @@ async function markNoiIdeaLivedFromBoard(id){
     noiIdeaState.busy=false;
   }
 }
-window.UsDaVivere=Object.freeze({linkCalendarEntry:linkNoiIdeaToCalendar,snapshot:noiIdeaSnapshot,hydrate:hydrateNoiIdeas,add:addNoiIdeaFromBoard,markLived:markNoiIdeaLivedFromBoard});
+// Noi, Fase B.2 (D13): the board's ideas say when they are fixed, «Scegli il
+// giorno» starts the same calendar pick as the detail, «L'avete fatto?»
+// reads the day of the commitment.
+function noiIdeaEntry(id){const item=noiIdeaFindItem(id);return item?.calendar_entry_id?noiIdeaState.calendarById.get(item.calendar_entry_id)||null:null;}
+function scheduleNoiIdeaFromBoard(id){
+  const item=noiIdeaFindItem(id);
+  if(!item||item.status!=='idea')return false;
+  const opener=window.UsCalendarLinks?.openForIdea;
+  if(typeof opener!=='function'){toast('Il calendario non è pronto. Riprova.');return false;}
+  opener({id:item.id,title:item.title,note:item.note});
+  return true;
+}
+window.UsDaVivere=Object.freeze({linkCalendarEntry:linkNoiIdeaToCalendar,snapshot:noiIdeaSnapshot,hydrate:hydrateNoiIdeas,add:addNoiIdeaFromBoard,markLived:markNoiIdeaLivedFromBoard,when:id=>noiIdeaWhen(noiIdeaFindItem(id)),entry:noiIdeaEntry,schedule:scheduleNoiIdeaFromBoard});
 function scheduleNoiIdea(){
   const item=noiIdeaState.selectedId?noiIdeaFindItem(noiIdeaState.selectedId):null;
   if(!item||item.status!=='idea'||noiIdeaState.busy)return;
@@ -5738,16 +5457,24 @@ function relativeSignalAge(dateString){
   const h=Math.floor(min/60);if(h<24)return `${h} ${h===1?'ora':'ore'} fa`;
   const d=Math.floor(h/24);return `${d} ${d===1?'giorno':'giorni'} fa`;
 }
+// I cuori (27/11/2026): each Ti penso carries its taps (think_taps, null = 1);
+// before migration 20261127141307 the same list without them.
+async function usThinkRows(){
+  const read=columns=>sb.from('shared_messages').select(columns).eq('kind','think').order('created_at',{ascending:false}).limit(60);
+  const first=await read('id,sender_id,recipient_id,kind,created_at,think_taps');
+  return first.error&&/think_taps/.test(String(first.error.message||''))?read('id,sender_id,recipient_id,kind,created_at'):first;
+}
+function usThinkTaps(row){const n=Number(row?.think_taps);return Number.isFinite(n)?Math.min(99,Math.max(1,Math.round(n))):1;}
+window.usThinkTaps=usThinkTaps;
 async function hydrateThink(){
   const identityProfile=window.usProfile,identityCouple=identityProfile?.couple_id;
   if(!identityProfile)return;
-  const [profiles,{data:rows,error},{count,error:countError}]=await Promise.all([
+  const [profiles,{data:rows,error}]=await Promise.all([
     getCoupleProfiles(),
-    sb.from('shared_messages').select('id,sender_id,recipient_id,kind,created_at').eq('kind','think').order('created_at',{ascending:false}).limit(60),
-    sb.from('shared_messages').select('id',{count:'exact',head:true}).eq('kind','think').gte('created_at',new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString())
+    usThinkRows()
   ]);
   if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==identityCouple)return;
-  if(error){console.warn(error);return;}if(countError)console.warn(countError);
+  if(error){console.warn(error);return;}
   const messageIds=(rows||[]).map(row=>row.id).filter(Boolean);
   let reactionRows=[];
   if(messageIds.length){
@@ -5761,11 +5488,10 @@ async function hydrateThink(){
   const sent=(rows||[]).find(r=>r.sender_id===window.usProfile.id);
   const receivedReaction=received?reactions.get(received.id):null;
   const sentReaction=sent?reactions.get(sent.id):null;
-  if(received&&!receivedReaction){usIncomingThink=received;usThinkReactionFinal=null;}
+  if(received&&!receivedReaction){usIncomingThink=received;usThinkReactionFinal=null;noticeIncomingThink(received,{name:partnerName});}
   else if(!received||receivedReaction){usIncomingThink=null;usThinkReactionFinal=receivedReaction?.reaction||null;}
   const receivedEl=document.getElementById('thinkLastReceived');if(receivedEl)receivedEl.textContent=received?(receivedReaction?`${partnerName} ha reagito al tuo Ti penso`:`${partnerName} ti ha pensato ${relativeSignalAge(received.created_at)}`):'Ancora nessun Ti penso';
   const sentEl=document.getElementById('thinkLastSent');if(sentEl)sentEl.textContent=sent?(sentReaction?`${partnerName} ha reagito ${thinkReactionLabel(sentReaction.reaction)}`:`Hai pensato a ${partnerName} ${relativeSignalAge(sent.created_at)}`):'Non ne hai ancora inviati';
-  const monthEl=document.getElementById('thinkMonthCount');if(monthEl)monthEl.textContent=Number(count||0).toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
   const live=document.getElementById('thinkLiveText');if(live&&received)live.textContent=`Ultimo Ti penso da ${partnerName} · ${relativeSignalAge(received.created_at)}`;
   if(sentReaction){
     const signature=`${sent.id}:${sentReaction.reaction}:${sentReaction.updated_at||''}`;
@@ -5777,57 +5503,148 @@ async function hydrateThink(){
   const romeDay=at=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(at));}catch(_){return '';}};
   const todayDate=romeDay(Date.now());
   const todayCount=(rows||[]).filter(row=>romeDay(row.created_at)===todayDate).length;
-  window.UsWidgets?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||'',lastAnsweredAt:receivedReaction?.updated_at||'',todayCount,todayDate}).catch(()=>{});
+  // The characters' heart eyes (personaggi.js reactionOf): the last Ti penso received.
+  if(window.usThinkLastReceivedAt!==(received?.created_at||'')){window.usThinkLastReceivedAt=received?.created_at||'';window.dispatchEvent(new Event('us:think-updated'));}
+  // Ti penso ×N dai widget (27/11/2026): «Bea ti ha pensato 5 volte» on the widget of whoever receives.
+  window.UsWidgets?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastReceivedTaps:received?usThinkTaps(received):1,lastSentAt:sent?.created_at||'',lastAnsweredAt:receivedReaction?.updated_at||'',todayCount,todayDate}).catch(()=>{});
 }
 window.hydrateThink=hydrateThink;
-async function sendThinkSignal(){
+// I cuori (founder, 27/11/2026, «Uno solo ×N»): one send per combo, with its
+// taps; Gioca and «La cosa di oggi» send 1. The sends queue up instead of
+// disabling the heart, so a new combo can start while one is on its way.
+let usThinkQueue=Promise.resolve();
+function sendThinkSignal({taps=1}={}){
+  const run=usThinkQueue.then(()=>usSendThinkNow(taps));
+  usThinkQueue=run.catch(()=>false);
+  return run;
+}
+async function usSendThinkNow(taps){
   if(!window.usProfile){toast('Connessione non pronta. Riprova tra poco.');return false;}
-  const btn=document.getElementById('thinkButton');if(btn?.disabled)return false;
+  const n=Math.min(99,Math.max(1,Math.round(Number(taps))||1));
+  const btn=document.getElementById('thinkButton');
   const profiles=await getCoupleProfiles(),partner=partnerFromProfiles(profiles);
   if(!partner){toast('La tua persona non è ancora collegata');return false;}
   if(!usThinkOperationId)usThinkOperationId=globalThis.crypto?.randomUUID?.()||String(Date.now())+'-'+Math.random().toString(16).slice(2);
-  if(btn)btn.disabled=true;
-  const {data,error}=await sb.rpc('send_think',{operation_id:usThinkOperationId});
-  if(error){console.warn(error);window.UsFeedback?.error?.();toast('Non riesco a inviare il segnale');if(btn)btn.disabled=false;return false;}
+  let {data,error}=await sb.rpc('send_think',n>1?{operation_id:usThinkOperationId,p_taps:n}:{operation_id:usThinkOperationId});
+  // A server without 20261127141307 knows only operation_id: the combo still leaves, as one Ti penso.
+  if(error&&n>1&&(error.code==='PGRST202'||/p_taps/.test(String(error.message||''))))({data,error}=await sb.rpc('send_think',{operation_id:usThinkOperationId}));
+  if(error){console.warn(error);window.UsFeedback?.error?.();toast('Non riesco a inviare il segnale');return false;}
   const result=Array.isArray(data)?data[0]:data;
   const messageId=result?.message_id;
   usThinkOperationId=null;
   if(messageId)sendWebPushEvent('think',messageId).catch(()=>{});
-  // Mockup: the heart takes my colour for a moment and two sparks, mine and
-  // theirs, fly out of it; then "Ti penso inviato a …".
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),2400);
-  // Il cuore (founder, 29/10/2026): the same heart as the others, counted with them.
-  if(btn&&!result?.duplicate)usHeartLike(btn);else window.UsFeedback?.action?.();
-  if(result?.duplicate)toast('Già inviato',{quiet:true});
-  else toast(`Ti penso inviato a ${partner.display_name||usIdentity().partnerName}`,{icon:'heart',quiet:false});
+  // The heart of the bar already played at the taps (usNavHeartTap).
+  if(result?.duplicate){window.UsFeedback?.action?.();toast('Già inviato',{quiet:true});}
+  else{const name=partner.display_name||usIdentity().partnerName;toast(n>1?`Ti penso ×${n} inviato a ${name}`:`Ti penso inviato a ${name}`,{icon:'heart',quiet:false});}
   await hydrateThink();
   // La cosa di oggi: my Ti penso of today, at once.
   window.UsCosaDiOggi?.refresh?.({force:true})?.catch?.(()=>{});
-  setTimeout(()=>{if(btn)btn.disabled=false;},1800);
   return true;
 }
 window.sendThinkSignal=sendThinkSignal;
+// Ti penso in the middle of the bar (founder, 27/11/2026, prototype
+// https://claude.ai/artifact/2NXZSrS4EypVcsAVBNDRVy): rapid taps add up. Each
+// tap squashes the heart and springs it back, little hearts fly out in your
+// two colours and «×N» shows above it from the 2nd tap, stronger at 3, 6 and
+// 10 (ui-foundation.js). About 1.15 s after the last tap ONE Ti penso leaves
+// with the taps and the hearts fly to the other person. Reduced motion: the
+// light bounce and the number, no little hearts.
+const US_THINK_COMBO_MS=1150;
+const usThinkCombo={taps:0,timer:0};
+let usNavHeartTimer=0;
+function usThinkComboParts(btn){
+  let glow=btn.querySelector('.us-nav-glow'),label=btn.querySelector('.us-nav-combo');
+  if(!glow){glow=document.createElement('span');glow.className='us-nav-glow';glow.setAttribute('aria-hidden','true');btn.prepend(glow);}
+  if(!label){label=document.createElement('span');label.className='us-nav-combo';label.setAttribute('aria-hidden','true');label.hidden=true;btn.appendChild(label);}
+  return {glow,label};
+}
+function usNavHeartTap(btn){
+  if(!btn)return;
+  const F=window.UsUiFoundation,n=++usThinkCombo.taps,level=F?.heartLevel?.(n)??0;
+  const reduced=Boolean(F?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  clearTimeout(usNavHeartTimer);
+  btn.classList.add('is-full');
+  const heart=btn.querySelector('.us-nav-think-heart')||btn;
+  F?.heartSquash?.(heart,{level});
+  if(!reduced)F?.heartSpray?.(heart,{level,below:btn.closest('.us-nav')});
+  if(F?.heartCue)F.heartCue(n);else window.UsFeedback?.action?.();
+  const {glow,label}=usThinkComboParts(btn);
+  if(n>=2){
+    label.getAnimations?.().forEach(a=>a.cancel());
+    label.textContent=`×${n}`;label.hidden=false;
+    if(!reduced&&label.animate)label.animate([{transform:'translateX(-50%) scale(.6)',opacity:.4},{transform:`translateX(-50%) scale(${1.25+level*.08})`,opacity:1,offset:.45},{transform:`translateX(-50%) scale(${1+level*.06})`,opacity:1}],{duration:360,easing:'cubic-bezier(.2,1.3,.4,1)',fill:'forwards'});
+  }
+  if(!reduced&&glow.animate)glow.animate([{opacity:.35+level*.15,transform:'scale(1)'},{opacity:0,transform:`scale(${1.9+level*.35})`}],{duration:620+level*80,easing:'cubic-bezier(.16,1,.3,1)'});
+  clearTimeout(usThinkCombo.timer);
+  usThinkCombo.timer=setTimeout(()=>usThinkComboSend(btn),US_THINK_COMBO_MS);
+}
+function usThinkComboSend(btn){
+  const taps=usThinkCombo.taps;usThinkCombo.taps=0;
+  if(!taps)return;
+  const F=window.UsUiFoundation,label=btn.querySelector('.us-nav-combo');
+  const intoIsola=usThinkToIsola(btn.querySelector('.us-nav-think-heart')||btn,taps,btn.closest('.us-nav'));
+  if(label&&!label.hidden){
+    label.getAnimations?.().forEach(a=>a.cancel());
+    const hide=()=>{if(!usThinkCombo.taps){label.hidden=true;label.textContent='';}};
+    const fade=label.animate&&!F?.isReducedMotion?.()?label.animate([{opacity:1,transform:'translateX(-50%)'},{opacity:0,transform:'translateX(-50%) translateY(-20px) scale(.9)'}],{duration:380,fill:'forwards'}):null;
+    if(fade)fade.onfinish=hide;else hide();
+  }
+  Promise.resolve(sendThinkSignal({taps})).catch(()=>false).then((sent)=>{
+    // Not sent: the island does not pretend the other person got them.
+    if(!sent&&intoIsola&&document.getElementById('usIsola')?.classList.contains('is-receiving'))window.UsAngolo?.isola?.(false);
+  }).finally(()=>{usNavHeartTimer=setTimeout(()=>btn.classList.remove('is-full'),700);});
+}
+// I cuoricini volano nell'isola (founder, 27/11/2026): when the island is there to
+// see, the hearts rise in arcs into it and the other person's character receives
+// them (personaggi.js riceviCuori); otherwise the old flight, up on their side.
+// Reduced motion: no flight, only the island with their heart eyes for a moment.
+function usThinkToIsola(heart,taps,below){
+  const F=window.UsUiFoundation,A=window.UsAngolo;
+  const reduced=Boolean(F?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  const to=A?.cuoriVerso?.();
+  if(!to){if(!reduced)F?.heartFlight?.(heart,{count:taps,below});return false;}
+  const ms=reduced?0:Number(F?.heartFlight?.(heart,{count:taps,to,into:true,onArrive:()=>A.cuoriArrivo?.()}))||0;
+  return Boolean(A.riceviCuori?.({count:taps,ms:ms+2000}));
+}
+window.usNavHeartTap=usNavHeartTap;
+// Redesign D9 — a Ti penso received is a short notice with «Apri» (the
+// reactions), once per Ti penso on this phone: when it arrives with US open,
+// otherwise the first time US reads it, within a day.
+// Function declarations: hydrateThink may run before this line is reached.
+function usThinkNoticedKey(){return window.usProfile?.id?`us:think:noticed:v1:${window.usProfile.id}`:'';}
+function usMarkThinkNoticed(id){
+  const key=usThinkNoticedKey();
+  if(!key||!id)return;
+  try{localStorage.setItem(key,String(id));}catch(_){}
+}
+function noticeIncomingThink(row,{name='',now=Date.now()}={}){
+  const key=usThinkNoticedKey();
+  if(!row?.id||!key)return false;
+  try{if(localStorage.getItem(key)===String(row.id))return false;}catch(_){}
+  const at=Date.parse(row.created_at||'');
+  if(Number.isFinite(at)&&now-at>24*60*60*1000)return false;
+  usMarkThinkNoticed(row.id);
+  const who=name||partnerFromProfiles(window.usBondProfiles||[])?.display_name||'L’altra persona';
+  const taps=usThinkTaps(row);
+  toast(taps>1?`${who} ti ha pensato ${taps} volte ♡`:`${who} ti pensa ♡`,{action:{label:'Apri',onClick:()=>openThinkArrival()}});
+  return true;
+}
 function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
-  usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;
-  const partner=partnerFromProfiles(window.usBondProfiles||[]);
-  toast(`${partner?.display_name||'L’altra persona'} ti pensa ♡`);
+  usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;usThinkReactionPicked='';
+  noticeIncomingThink(row);
+  usThinkHearts=0;document.querySelector('#thinkArrival [data-think-reaction="heart"] .us-heart-count')?.remove();
   const heart=document.getElementById('thinkButton');heart?.classList.add('received');setTimeout(()=>heart?.classList.remove('received'),900);
   hydrateThink().catch(()=>{});
-  // M12A — the arrival is one calm event: the shared attention state (driven
-  // by the priority item), ONE soft halo on it, the aurora reaction and the
-  // attention tone — only because US is active right now.
+  // M12A — the arrival is one calm event: the notice, the aurora reaction and
+  // the attention tone — only because US is active right now.
   window.UsFeedback?.attention?.();
   window.UsUiFoundation?.auroraPulse?.();
-  // Ti penso animato (Sintonia V2, livello 5): hearts in your two colours, if this phone chose them;
-  // the letter (livello 15) opens on its heart.
-  const thinkFx=document.documentElement.dataset.usThinkFx;
-  if(thinkFx==='hearts')window.UsUiFoundation?.heartBurst?.();
-  else if(thinkFx==='letter')window.UsUiFoundation?.letterOpen?.();
-  Promise.resolve(window.UsTodayPriority?.refresh?.()).then(()=>{
-    const card=document.querySelector('#usTodayPriorityRegion [data-us-arrival-type="think-received"]');
-    window.UsUiFoundation?.playOnce?.(card,'us-attention-pulse',900);
-  }).catch(()=>{});
+  // Premi, fase 2 (grill D20): the Ti penso rewards («Cuori», «Lettera») now
+  // play when the Ti penso is opened (openThinkArrival), not over Oggi here.
+  // Premi di Oggi (grill D12): the effect on Oggi shines brighter, after the Ti penso's own moment.
+  setTimeout(()=>window.USOggiLook?.burst?.(),2800);
 }
 const usRealtimeRefreshTimers=new Map();
 function scheduleUsRealtimeRefresh(kind){
@@ -5865,6 +5682,8 @@ function usOnCoupleSync(payload){
   if(kind==='calendar')return scheduleUsRealtimeRefresh('calendar');
   if(kind==='notes')return window.UsCoupleNotes?.refresh?.();
   if(kind==='stories')return window.usRefreshStories?.();
+  // 27/11/2026: the other one changed colour, shape or outfit.
+  if(kind==='looks')return refreshUsCoupleLooks();
 }
 function startUsRealtime(){
   if(!window.usProfile)return;
@@ -5913,7 +5732,13 @@ async function hydrateCloud(){
 
     // Today starts with the Home image, not after it: its two small reads
     // would otherwise wait for the whole photo before the question shows.
-    usRunWhenIdle(()=>hydrateToday(),120);
+    const todayFirst=new Promise(resolve=>usRunWhenIdle(()=>hydrateToday().finally(resolve),120));
+    // Avvio più veloce: the first screen is ready when its photo (or its empty
+    // state) is painted and the question is on it, or after 2.5 s whatever
+    // the network does.
+    const firstScreen=[...critical,todayFirst];
+    if(!homePhotoHasPainted)firstScreen.push(new Promise(resolve=>window.addEventListener('us:home-photo-changed',resolve,{once:true})));
+    usMarkAppReadyAfter(firstScreen,'oggi');
 
     const results=await Promise.allSettled(critical);
     results.forEach(result=>{
@@ -5984,6 +5809,7 @@ async function refreshVisibleState(options={}){
   if(options.foreground)usAfterForeground(()=>hydrateProfileAvatars(),1500);
   if(options.foreground)usAfterForeground(()=>window.UsPartnerBattery?.onForeground?.('resume'),1700);
   if(options.foreground)usAfterForeground(()=>window.UsMemberStatus?.onForeground?.('resume'),1800);
+  if(options.foreground)usAfterForeground(()=>refreshUsCoupleLooks(),2000);
   if(active==='home'||todayOpen){
     if(options.foreground)hydrateHomePhoto(false).catch(()=>{});
     await hydrateToday();
@@ -5998,7 +5824,7 @@ async function refreshVisibleState(options={}){
   if(active==='settings'){await window.hydrateUsSettings?.();}
 }
 setInterval(()=>refreshVisibleState(),60000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)refreshVisibleState({foreground:true});});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile&&!usShortAway())refreshVisibleState({foreground:true});});
 sb.auth.onAuthStateChange((event,_session)=>{
   if(event==='PASSWORD_RECOVERY' && window.usS31Auth?.onRecoverySession?.()){
     usInvalidateAuth();
@@ -6033,6 +5859,9 @@ function normalizeAndroidNaturalTextInputs(root=document){
   root?.querySelectorAll?.('textarea,input')?.forEach?.(node=>nodes.push(node));
   for(const el of nodes){
     if(el.closest?.('.auth-overlay'))continue;
+    // A field that asked for a literal word (the CONFIRM words: capitals, no
+    // spellcheck) keeps what it asked for.
+    if(el.getAttribute?.('spellcheck')==='false'||el.getAttribute?.('autocapitalize')==='characters')continue;
     const tag=el.tagName?.toLowerCase();
     const type=String(el.getAttribute?.('type')||'text').toLowerCase();
     const mode=String(el.getAttribute?.('inputmode')||'').toLowerCase();
@@ -6063,3 +5892,36 @@ if (canUseUsServiceWorker()) {
 
 
 document.addEventListener('keydown',(event)=>{if(event.key==='Escape')closeToday();});
+
+// «Ricordi in volo» (Premi di Oggi, grill D14): six of the couple's own photos,
+// the same six all day (the day picks them), with who added each. Read once per
+// day and identity; the URLs are the usual signed ones and never leave US.
+let usOggiMemoriesFx={key:'',list:null};
+window.usOggiMemoriesForFx=async function(){
+  const profile=window.usProfile;
+  if(!profile?.couple_id)return [];
+  const key=`${profile.couple_id}:${localDateISO()}`;
+  if(usOggiMemoriesFx.key===key&&usOggiMemoriesFx.list)return usOggiMemoriesFx.list;
+  const {data,error}=await sb.from('moments').select('id,created_by,storage_path,thumbnail_path,moment_date').order('moment_date',{ascending:false}).order('created_at',{ascending:false}).limit(60);
+  if(window.usProfile!==profile||error)return [];
+  const rows=(data||[]).filter(row=>ricordiPreviewPath(row));
+  let seed=[...key].reduce((h,ch)=>Math.imul(h^ch.charCodeAt(0),16777619),2166136261)>>>0;
+  const rand=()=>{seed=(seed+0x6D2B79F5)>>>0;let t=seed;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};
+  for(let i=rows.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[rows[i],rows[j]]=[rows[j],rows[i]];}
+  const pick=rows.slice(0,6);
+  const urls=await usGetSignedUrls(pick.map(ricordiPreviewPath),US_MEDIA_URL_TTL_S);
+  if(window.usProfile!==profile)return [];
+  const list=pick.map(row=>({id:String(row.id),url:urls.get(ricordiPreviewPath(row))||'',mine:row.created_by===profile.id,date:row.moment_date||''}));
+  usOggiMemoriesFx={key,list};
+  return list;
+};
+// A touch on one of those little photos opens that memory in the usual viewer.
+document.addEventListener('us:oggi-fx-memory',event=>{
+  const memory=usOggiMemoriesFx.list?.find(m=>m.id===event.detail?.id);
+  if(!memory?.url)return;
+  const card=document.createElement('div');
+  card.dataset.url=memory.url;
+  card.dataset.author=memory.mine?(window.usProfile?.display_name||'Tu'):(window.UsIdentity?.current?.().partnerName||'Noi');
+  card.dataset.date=memory.date?new Date(`${memory.date}T12:00:00`).toLocaleDateString(window.UsI18n?.tag||'it-IT',{day:'numeric',month:'long',year:'numeric'}):'';
+  setTimeout(()=>openMomentViewer(card),450);
+});

@@ -30,7 +30,7 @@ import android.widget.RemoteViews;
  * the theme; the small text stays real text in the system font.
  */
 final class UsWidgetArt {
-    static final int INK = 0xFF1A1020;
+    static final int INK = 0xFF231B1D;
     static final int INK_NIGHT = 0xFFF7EFE9;
     static final int ROSA = 0xFFFF7C96;
     private static final int MAX_ART_EDGE_PX = 720;

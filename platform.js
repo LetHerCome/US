@@ -8,6 +8,27 @@
     document.documentElement?.classList?.add('us-native');
     if (platformName === 'android' || platformName === 'ios') document.documentElement?.classList?.add(`us-native-${platformName}`);
   }
+  // Accessibilità (20/11/2026): on iOS the WebView ignores the phone's text
+  // size (Dynamic Type). Read it from the system body font (17 px at the
+  // default size) and enlarge the text the way Android's text zoom does
+  // (UsWebView.java), from 85% to 200%; read again when US comes back.
+  function applyIosTextSize() {
+    if (platformName !== 'ios' || typeof document === 'undefined' || !document.body) return;
+    const probe = document.createElement('span');
+    probe.setAttribute('aria-hidden', 'true');
+    probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;font:-apple-system-body';
+    probe.textContent = 'x';
+    document.body.appendChild(probe);
+    const px = parseFloat(getComputedStyle(probe).fontSize) || 17;
+    probe.remove();
+    const pct = `${Math.max(85, Math.min(200, Math.round((px / 17) * 100)))}%`;
+    for (const el of [document.documentElement, document.body]) el.style.setProperty('-webkit-text-size-adjust', pct);
+  }
+  if (platformName === 'ios' && typeof document !== 'undefined') {
+    if (document.body) applyIosTextSize();
+    else document.addEventListener('DOMContentLoaded', applyIosTextSize, { once: true });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) applyIosTextSize(); });
+  }
   const plugins = new Map();
   let nativeBackListener = null;
   let nativeAppUrlListener = null;
@@ -67,6 +88,23 @@
     }
     if (!call) return Promise.resolve(vibrateFallback(fallbackPattern));
     return Promise.resolve(call()).catch(() => vibrateFallback(fallbackPattern));
+  }
+
+  // Il vostro mese (27/11/2026): images to the system share sheet through the
+  // official Filesystem and Share plugins (written to the app's cache folder,
+  // which the FileProvider already shares). null when this build has neither.
+  async function shareNativeFiles(files, title) {
+    const fsys = getNativePlugin('Filesystem'), share = getNativePlugin('Share');
+    if (!fsys || !share || !files?.length) return null;
+    const base64 = (blob) => new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result).split(',')[1] || ''); r.onerror = reject; r.readAsDataURL(blob); });
+    const uris = [];
+    for (const file of files) {
+      const out = await fsys.writeFile({ path: `us-share/${file.name}`, data: await base64(file), directory: 'CACHE', recursive: true });
+      uris.push(out.uri);
+    }
+    try { await share.share({ title, dialogTitle: title, files: uris }); }
+    catch (error) { if (!/cancel/i.test(String(error?.message || error))) throw error; }
+    return 'shared';
   }
 
   function listenForNativeBackButton(handler) {
@@ -135,6 +173,8 @@
       think: {
         partnerName: safeText(think.partnerName, 40),
         lastReceivedAt: safeInstant(think.lastReceivedAt),
+        // Ti penso ×N (27/11/2026): the taps of their last Ti penso, 1..99 (UsWidgetContract.java).
+        lastReceivedTaps: Number.isInteger(think.lastReceivedTaps) ? Math.max(1, Math.min(99, think.lastReceivedTaps)) : 1,
         lastSentAt: safeInstant(think.lastSentAt),
         lastAnsweredAt: safeInstant(think.lastAnsweredAt),
         // Ti penso of both that Rome day (UsWidgetContract.java).
@@ -156,7 +196,9 @@
         colors: {
           me: /^#[0-9a-f]{6}$/i.test(couple.colors?.me || '') ? couple.colors.me.toLowerCase() : '',
           partner: /^#[0-9a-f]{6}$/i.test(couple.colors?.partner || '') ? couple.colors.partner.toLowerCase() : ''
-        }
+        },
+        // Widget del redesign: each person's character, as the app draws it.
+        characters: { me: widgetCharacter(couple.characters?.me), partner: widgetCharacter(couple.characters?.partner) }
       },
       countdown: {
         active,
@@ -213,16 +255,39 @@
 
   // Post-it (04/11/2026): the newest post-it of the board, its paper, who
   // wrote it and how many others. The couple's own words, never an id or a URL.
+  // The 4x2 shows the one before it too (widget del redesign, 26/11/2026).
   function widgetPostit(postit = {}) {
     const text = safeText(postit?.text, 120);
-    if (postit?.state !== 'ready' || !text) return { state: 'none', text: '', color: '', by: '', more: 0, at: '' };
+    const paper = (value) => (['yellow', 'pink', 'blue', 'green'].includes(value) ? value : 'yellow');
+    const who = (value) => (['me', 'partner'].includes(value) ? value : '');
+    if (postit?.state !== 'ready' || !text) return { state: 'none', text: '', color: '', by: '', more: 0, at: '', second: { text: '', color: '', by: '' } };
+    const secondText = safeText(postit?.second?.text, 120);
     return {
       state: 'ready',
       text,
-      color: ['yellow', 'pink', 'blue', 'green'].includes(postit?.color) ? postit.color : 'yellow',
-      by: ['me', 'partner'].includes(postit?.by) ? postit.by : '',
+      color: paper(postit?.color),
+      by: who(postit?.by),
       more: Math.max(0, Math.min(99, Math.trunc(Number(postit?.more) || 0))),
-      at: safeInstant(postit?.at)
+      at: safeInstant(postit?.at),
+      second: secondText ? { text: secondText, color: paper(postit.second.color), by: who(postit.second.by) } : { text: '', color: '', by: '' }
+    };
+  }
+
+  // I personaggi (UsWidgetContract.character, personaggi.js SHAPES, LOOK_HEAD,
+  // LOOK_FACE): an unknown shape, piece or colour is left empty, and the
+  // widget draws the role's.
+  const CHARACTER_SHAPE = /^(palla|quadrato|triangolo|goccia|nuvola)$/;
+  const CHARACTER_HEAD = /^(cappello|fiocco|cuffie|corona|coroncina|festa|cento)$/;
+  const CHARACTER_FACE = /^(occhiali|sole|sciarpina|gala|macchinetta)$/;
+  function widgetCharacter(character = {}) {
+    const pick = (value, pattern) => (typeof value === 'string' && pattern.test(value) ? value : '');
+    const hex = (value) => (typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : '');
+    return {
+      shape: pick(character?.shape, CHARACTER_SHAPE),
+      head: pick(character?.head, CHARACTER_HEAD),
+      face: pick(character?.face, CHARACTER_FACE),
+      color: hex(character?.color),
+      day: hex(character?.day)
     };
   }
 
@@ -440,6 +505,7 @@
     isPluginAvailable,
     getNativePlugin,
     haptic,
+    shareNativeFiles,
     listenForNativeBackButton,
     exitNativeApp,
     hasWidgetBridge,

@@ -32,17 +32,17 @@ test('migration exists and is listed in the cutoff', () => {
 
 test('without Plus: nobody has it, and the colour cannot be changed', async () => {
   assert.deepEqual(await plus(h.F), { active: false, by: null, colors_free: false });
-  await assert.rejects(setColor(h.F, 'cielo'), /plus required/);
+  await assert.rejects(setColor(h.F, 'blu'), /plus required/);
   assert.equal(await colorOf(h.F), null, 'the usual rosa / lilla');
 });
 
 test('Plus of either partner opens it for both, and names who has it', async () => {
   await grant(h.B);
   assert.deepEqual(await plus(h.F), { active: true, by: 'Beatrice', colors_free: false });
-  assert.deepEqual(await setColor(h.F, 'cielo'), { color: 'cielo' });
-  assert.deepEqual(await setColor(h.B, 'oro'), { color: 'oro' });
+  assert.deepEqual(await setColor(h.F, 'blu'), { color: 'blu' });
+  assert.deepEqual(await setColor(h.B, 'prugna'), { color: 'prugna' });
   const both = await h.as(db, h.B, 'select id, person_color from public.profiles order by display_name');
-  assert.deepEqual(both.map((r) => r.person_color), ['oro', 'cielo'], 'each sees both colours');
+  assert.deepEqual(both.map((r) => r.person_color), ['prugna', 'blu'], 'each sees both colours');
 });
 
 test('a colour from the 8 only, never the partner\'s (their default counts too)', async () => {
@@ -61,7 +61,7 @@ test('back to the usual colour is always allowed; a chosen colour stays after Pl
   await db.query(`update public.plus_entitlements set status = 'expired'`);
   assert.equal((await plus(h.F)).active, false);
   assert.equal(await colorOf(h.F), 'pesca', 'what the couple made stays (D4)');
-  await assert.rejects(setColor(h.F, 'oro'), /plus required/);
+  await assert.rejects(setColor(h.F, 'prugna'), /plus required/);
   assert.deepEqual(await setColor(h.F, null), { color: null });
   assert.equal(await colorOf(h.F), null);
 });
@@ -78,7 +78,7 @@ test('entitlements: each reads only their own row and nobody writes from the app
   assert.equal((await h.as(db, h.F, 'select user_id from public.plus_entitlements')).length, 1);
   for (const role of ['authenticated', 'anon']) {
     await assert.rejects(h.as(db, h.F, `insert into public.plus_entitlements(user_id, source, product, status) values ($1, 'manuale', 'x', 'active')`, [h.F], role), /permission denied|row-level security/);
-    await assert.rejects(h.as(db, h.F, `update public.profiles set person_color = 'oro' where id = $1`, [h.F], role), /permission denied/);
+    await assert.rejects(h.as(db, h.F, `update public.profiles set person_color = 'blu' where id = $1`, [h.F], role), /permission denied/);
   }
   await assert.rejects(db.query(`insert into public.plus_entitlements(user_id, source, product, status) values ($1, 'regalo', 'x', 'active')`, [h.U2]), /check/);
 });

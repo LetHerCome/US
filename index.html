@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
+<!-- Aspetto (24/11/2026): Giorno or Notte before the first paint (aspetto.js keeps it in step). -->
+<script>(function(){try{var c=localStorage.getItem("us:aspetto:v1");var d=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches;var l=c==="giorno"||c==="notte"?c:(d?"notte":"giorno");document.documentElement.dataset.usLuce=l;if(l==="giorno"){document.querySelector('meta[name="theme-color"]').setAttribute("content","#f3ece1");document.querySelector('meta[name="color-scheme"]').setAttribute("content","light");}}catch(e){document.documentElement.dataset.usLuce="notte";}})();</script>
 <meta name="us-build" content="us-rilascio-20261114-109"/>
 <!-- Game V2 production rollout -->
 <link rel="manifest" href="/manifest.webmanifest?v=us-rilascio-20261114-109"/>
@@ -15,8 +17,8 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<script src="/i18n.js?v=us-rilascio-20261114-109"></script>
-<script src="/i18n-en.js?v=us-rilascio-20261114-109"></script>
+<!-- Avvio più veloce (27/11/2026): i18n.js writes the English dictionary in only for English. -->
+<script src="/i18n.js?v=us-rilascio-20261114-109" data-us-en="/i18n-en.js?v=us-rilascio-20261114-109"></script>
 <title>US — Il vostro spazio</title>
 <meta name="description" content="US è per due persone e basta: la domanda di oggi, i vostri Ricordi, i giochi e i piccoli gesti. Quello che condividete resta tra voi."/>
 <link rel="canonical" href="https://www.uscouple.app/"/>
@@ -48,15 +50,12 @@
 <link rel="stylesheet" href="/year-recap.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/couple-notes.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/lavagna.css?v=us-rilascio-20261114-109"/>
-<link rel="stylesheet" href="/companions.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/distance.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/member-status.css?v=us-rilascio-20261114-109"/>
-<link rel="stylesheet" href="/pet.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/settings.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/identity.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/settings2.css?v=us-rilascio-20261114-109" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/widget-hub.css?v=us-rilascio-20261114-109" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/stories.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/left-for-you.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/calendar.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/state-system.css?v=us-rilascio-20261114-109"/>
@@ -75,9 +74,13 @@
 <link rel="stylesheet" href="/dc-noi.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/dc-ricordi.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/dc-gioca.css?v=us-rilascio-20261114-109"/>
+<link rel="stylesheet" href="/play-us.css?v=us-rilascio-20261114-109" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/dc-popup.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/dc-primo.css?v=us-rilascio-20261114-109"/>
 <link rel="stylesheet" href="/dc-settings.css?v=us-rilascio-20261114-109"/>
+<link rel="stylesheet" href="/struttura.css?v=us-rilascio-20261114-109"/>
+<link rel="stylesheet" href="/colori.css?v=us-rilascio-20261114-109"/>
+<link rel="stylesheet" href="/giorno.css?v=us-rilascio-20261114-109"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -99,6 +102,49 @@
     if (document.documentElement.classList.contains('us-auth-ready')) return;
     document.documentElement.classList.remove('us-auth-pending', 'us-returning-device');
   }, 6000);
+})();
+</script>
+<script>
+// Avvio più veloce (27/11/2026). Two small facts every module reads the same way.
+// 1. UsForeground.awayMs(): how long US was in the background last time. A quick
+//    trip away (the photo picker, a reply on WhatsApp) does not reread everything.
+// 2. UsAppReady: the one moment the first screen is on display (Oggi with its
+//    question and photo, the login, or the lock). Class html.us-app-ready and
+//    event us:app-ready, once per launch: the hook for the entry animation.
+(() => {
+  const w = window, d = document;
+  let hiddenAt = 0, away = Infinity;
+  const onVisibility = () => {
+    if (d.hidden) { hiddenAt = Date.now(); return; }
+    if (!hiddenAt) return;
+    const ms = Date.now() - hiddenAt;
+    away = ms >= 0 ? ms : Infinity;
+    hiddenAt = 0;
+  };
+  d.addEventListener('visibilitychange', onVisibility);
+  const SHORT_AWAY_MS = 30000;
+  const awayMs = () => { if (!d.hidden && hiddenAt) onVisibility(); return away; };
+  w.UsForeground = Object.freeze({ SHORT_AWAY_MS, awayMs, shortAway: (limit = SHORT_AWAY_MS) => awayMs() < limit });
+
+  let ready = null, open;
+  const whenReady = new Promise((resolve) => { open = resolve; });
+  const mark = (reason) => {
+    if (ready) return;
+    ready = { reason: String(reason || 'ready'), at: 0 };
+    // Two frames: the first screen is painted, not only in the DOM.
+    const done = () => {
+      ready.at = Math.round(w.performance?.now?.() || 0);
+      d.documentElement.classList.add('us-app-ready');
+      open(ready);
+      w.dispatchEvent(new CustomEvent('us:app-ready', { detail: { ...ready } }));
+    };
+    if (w.requestAnimationFrame) w.requestAnimationFrame(() => w.requestAnimationFrame(done)); else setTimeout(done, 0);
+  };
+  w.UsAppReady = Object.freeze({ mark, whenReady, get ready() { return Boolean(ready?.at); }, get detail() { return ready ? { ...ready } : null; } });
+  // Not signed in or not paired: the login is the first screen. Locked: the lock is.
+  w.addEventListener('us-auth-resolved', (event) => { if (!event.detail?.paired) mark('auth'); });
+  w.addEventListener('us-app-lock-change', (event) => { if (event.detail?.locked) mark('lock'); });
+  setTimeout(() => mark('timeout'), 8000);
 })();
 </script>
 <script>
@@ -170,6 +216,10 @@ html.us-returning-device .auth-overlay{
 <script defer src="/platform.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/app-update.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/person-colors.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/aspetto.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/personaggi.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/us-ricorda.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/bacheca.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/app-lock.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/notifications.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/auth-first-run.js?v=us-rilascio-20261114-109"></script>
@@ -178,42 +228,212 @@ html.us-returning-device .auth-overlay{
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js" integrity="sha384-ysv13JVP3fufiEXfjML9OdCa/rRbMJvUBOWyor82wfuK8INNZAvmbxHgKIHi+oqz" crossorigin="anonymous"></script>
 <script>window.__US_LEFT_FOR_YOU_ACTIVE__ = true;</script>
 <style id="usLaunchIntroStyle">
-/* 19/10/2026 — opening animation (cold start only, never on resume): it starts
-   where the Android splash ends (same colour, same logo, same place), the two
-   colours meet behind the logo, then everything opens onto the app. ~0.9 s. */
-.us-launch-intro{position:fixed;inset:0;z-index:2147483000;display:none;place-items:center;background:var(--us-launch-bg,#26142E);pointer-events:none;contain:strict}
-html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cubic-bezier(.4,0,.2,1) .56s both}
-.us-launch-intro .c{position:absolute;left:50%;top:50%;width:148px;height:148px;margin:-74px 0 0 -74px;border-radius:50%;mix-blend-mode:screen;opacity:0;filter:blur(1px)}
-.us-launch-intro .c.a{background:#ff8fab;animation:usLaunchA .56s cubic-bezier(.2,.8,.2,1) both}
-.us-launch-intro .c.b{background:#a985ff;animation:usLaunchB .56s cubic-bezier(.2,.8,.2,1) both}
-.us-launch-intro .logo{position:relative;width:112px;height:112px;background:url("/icon-512.png") center/contain no-repeat;animation:usLaunchLogo .9s cubic-bezier(.2,.8,.2,1) both}
-@keyframes usLaunchA{0%{opacity:0;transform:translateX(-58px) scale(.55)}60%{opacity:.55}100%{opacity:.34;transform:translateX(-22px) scale(1)}}
-@keyframes usLaunchB{0%{opacity:0;transform:translateX(58px) scale(.55)}60%{opacity:.55}100%{opacity:.34;transform:translateX(22px) scale(1)}}
-@keyframes usLaunchLogo{0%{transform:scale(1)}55%{transform:scale(1.06)}100%{transform:scale(1.14)}}
-@keyframes usLaunchOut{to{opacity:0;transform:scale(1.04)}}
-@media (prefers-reduced-motion:reduce){html.us-launch-play .us-launch-intro{display:none}}
+/* L'apertura che accoglie (founder 27/11/2026, prototipo «L'apertura di US»; it
+   replaces Apertura A): cold start of the installed app only, never on resume. It
+   starts where the splash ends (same colour, same logo, same place); your two
+   characters lean out from behind the logo, turn to each other, a heart is born and
+   US says hello by name. It waits for the app (UsAppReady: 1.4 s at least, 3.2 s at
+   most), then the two fly into the island at the top and the app opens from behind.
+   The script below moves it: only transform and opacity, never a filter. */
+.us-launch-intro{position:fixed;inset:0;z-index:2147483000;display:none;pointer-events:none;contain:strict}
+html.us-launch-play .us-launch-intro{display:block}
+.us-launch-intro .bg{position:absolute;inset:0;background:var(--us-launch-bg,#26142E)}
+.us-launch-intro .bg::after{content:"";position:absolute;inset:0;background:radial-gradient(55% 32% at 50% 50%,rgba(225,125,213,.26),rgba(225,125,213,0));opacity:0;transition:opacity .6s}
+.us-launch-intro.is-halo .bg::after{opacity:1}
+.us-launch-intro .logo{position:absolute;left:50%;top:50%;width:112px;height:112px;margin:-56px 0 0 -56px;background:url("/icon-512.png") center/contain no-repeat}
+.us-launch-intro .duo{position:absolute;left:50%;top:50%;width:0;height:0;transform-origin:0 0;will-change:transform}
+.us-launch-intro .duo>span{position:absolute;bottom:-54px;width:62px;margin-left:-31px;opacity:0;transform-origin:50% 100%;will-change:transform,opacity}
+.us-launch-intro .duo>span svg{display:block;width:62px;height:auto;overflow:visible}
+.us-launch-intro .heart{position:absolute;left:-12px;top:-86px;width:24px;height:24px;fill:#ff7c96;opacity:0}
+.us-launch-intro .hello{position:absolute;left:16px;right:16px;top:calc(50% + 92px);display:flex;flex-direction:column;gap:6px;text-align:center}
+.us-launch-intro .hello b{font:italic 400 26px/1.15 var(--us-font-display,Georgia,serif);color:#f6dcf0;opacity:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.us-launch-intro .hello span{min-height:1.3em;font:600 14px/1.3 var(--us-font-ui,system-ui,sans-serif);color:rgba(240,179,232,.8);opacity:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.us-launch-intro .hello span:empty{visibility:hidden}
 </style>
 </head>
 <body>
-<!-- 19/10/2026: opening animation, cold start of the installed app only. -->
-<div class="us-launch-intro" id="usLaunchIntro" aria-hidden="true"><span class="c a"></span><span class="c b"></span><span class="logo"></span></div>
+<!-- L'apertura che accoglie (27/11/2026): cold start of the installed app only. -->
+<div class="us-launch-intro" id="usLaunchIntro" aria-hidden="true"><span class="bg"></span><span class="duo"><span class="me"></span><span class="them"></span><svg class="heart" viewBox="0 0 256 256" focusable="false"><path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/></svg></span><span class="logo"></span><span class="hello" translate="no"><b></b><span></span></span></div>
 <script>
 (() => {
   // Only the installed app (native shell or home-screen PWA), never a browser tab.
-  const native = Boolean(window.Capacitor?.isNativePlatform?.());
-  const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches || window.navigator.standalone === true;
-  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-  const intro = document.getElementById('usLaunchIntro');
-  if (!intro || (!native && !standalone) || reduced) { intro?.remove(); return; }
-  // The colour of the Android splash for the theme chosen last time (progression.js).
-  const colors = { rose: '#35131F', midnight: '#181A3C', film: '#2C1E13', blue_hour: '#132242', graphite: '#222226' };
-  let theme = '';
-  try { theme = localStorage.getItem('us:splash-theme:v1') || ''; } catch (_) {}
-  intro.style.setProperty('--us-launch-bg', colors[theme] || '#26142E');
-  document.documentElement.classList.add('us-launch-play');
-  const done = () => { document.documentElement.classList.remove('us-launch-play'); intro.remove(); };
-  intro.addEventListener('animationend', (event) => { if (event.animationName === 'usLaunchOut') done(); });
-  setTimeout(done, 1600);
+  const w = window, d = document, root = d.documentElement;
+  const intro = d.getElementById('usLaunchIntro');
+  const native = Boolean(w.Capacitor?.isNativePlatform?.());
+  const standalone = w.matchMedia?.('(display-mode: standalone)')?.matches || w.navigator.standalone === true;
+  if (!intro || (!native && !standalone)) { intro?.remove(); return; }
+  // Tempi del prototipo approvato (playNew): at least 1.4 s, at most 3.2 s; 0.9 s with Riduci movimento.
+  const MIN_MS = 1400, MAX_MS = 3200, CALM_MIN_MS = 900, FLY_MS = 600;
+  const SPRING = 'cubic-bezier(.22,1.45,.36,1)', OUT = 'cubic-bezier(.16,1,.3,1)';
+  const timers = [];
+  let over = false, landing = null;
+  // The one way out: the opening goes, the island's own two come back.
+  function done() {
+    if (over) return;
+    over = true;
+    timers.forEach(clearTimeout);
+    try { landing?.land?.(false); } catch (_) {}
+    root.classList.remove('us-launch-play');
+    intro.remove();
+  }
+  // Safety net: whatever throws or never resolves, the opening always goes away.
+  setTimeout(done, MAX_MS + 1600);
+  const later = (fn, ms) => { timers.push(setTimeout(() => { if (!over) { try { fn(); } catch (_) {} } }, ms)); };
+  const wait = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
+  const settle = (a, ms) => Promise.race([a?.finished?.catch?.(() => {}) || wait(ms), wait(ms + 150)]);
+  const t = (text, vars) => (typeof w.usT === 'function' ? w.usT(text, vars) : String(text).replace(/\{(\w+)\}/g, (all, k) => vars?.[k] ?? all));
+
+  // The hello, from what the app kept last time (personaggi.js): never the network.
+  function greeting(now) {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('us:launch-hello:v1') || 'null'); } catch (_) { saved = null; }
+    const clean = (v) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, 40) : '');
+    const name = clean(saved?.name), partner = clean(saved?.partner);
+    if (!name) return null;
+    const h = now.getHours();
+    const hello = t(h >= 5 && h < 12 ? 'Buongiorno, {name}' : h >= 12 && h < 18 ? 'Buon pomeriggio, {name}' : h >= 18 ? 'Buonasera, {name}' : 'Notte fonda, {name}', { name });
+    let sub = '';
+    if (partner) {
+      sub = t('tu e {name}', { name: partner });
+      // Days together as Oggi counts them: calendar days since «Insieme dal».
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(saved?.since || ''));
+      const days = m ? Math.floor((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - Date.UTC(+m[1], +m[2] - 1, +m[3])) / 864e5) : -1;
+      if (days === 1) sub += ` · ${t('1 giorno insieme')}`;
+      else if (days > 1) sub += ` · ${t(`${days.toLocaleString(w.UsI18n?.tag || 'it-IT')} giorni insieme`)}`;
+    }
+    return { hello, sub };
+  }
+
+  function play() {
+    // The colour of the splash for the theme chosen last time (progression.js).
+    const colors = { rose: '#35131F', midnight: '#181A3C', film: '#2C1E13', blue_hour: '#132242', graphite: '#222226' };
+    let theme = '';
+    try { theme = localStorage.getItem('us:splash-theme:v1') || ''; } catch (_) {}
+    intro.style.setProperty('--us-launch-bg', colors[theme] || '#26142E');
+    // Your two characters as they were last time (personaggi.js keeps them); none yet: the logo alone.
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('us:launch-duo:v1') || 'null'); } catch (_) { saved = null; }
+    const safe = (svg) => typeof svg === 'string' && svg.length < 20000 && svg.startsWith('<svg class="us-char') && !/<script|<foreignObject|<image|\son[a-z]+\s*=|javascript:|href\s*=/i.test(svg);
+    const bg = intro.querySelector('.bg'), logo = intro.querySelector('.logo'), duo = intro.querySelector('.duo');
+    const me = duo.querySelector('.me'), them = duo.querySelector('.them'), heart = duo.querySelector('.heart');
+    const two = Boolean(saved && safe(saved.me) && safe(saved.them));
+    if (two) { me.innerHTML = saved.me; them.innerHTML = saved.them; } else duo.remove();
+    const hello = intro.querySelector('.hello'), line = hello.querySelector('b'), sub = hello.querySelector('span');
+    const words = greeting(new Date());
+    if (words) { line.textContent = words.hello; sub.textContent = words.sub; } else hello.remove();
+    root.classList.add('us-launch-play');
+
+    const ready = Promise.resolve(w.UsAppReady?.whenReady);
+    const until = (min) => Promise.race([Promise.all([ready, wait(min)]), wait(MAX_MS)]);
+    const can = typeof intro.animate === 'function';
+    const A = (el, frames, opts) => (can && el?.isConnected ? el.animate(frames, { fill: 'both', ...opts }) : null);
+    // Still waiting after 2.1 s: a kind word instead of the small line.
+    const kind = (soft) => {
+      if (!words) return;
+      if (soft) A(sub, [{ opacity: 1 }, { opacity: 0 }, { opacity: 1 }], { duration: 500, fill: 'none' });
+      later(() => { sub.textContent = t('Un attimo, vi preparo la giornata'); }, soft ? 250 : 0);
+    };
+
+    // Riduci movimento: the logo and the hello, then a fade when the app is ready.
+    if (!can || w.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
+      if (!can) { line.style.opacity = '1'; sub.style.opacity = '1'; }
+      A(line, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 150 });
+      A(sub, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 250 });
+      later(() => kind(false), 2100);
+      return until(CALM_MIN_MS).then(() => settle(A(intro, [{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: 'ease-out' }), 300)).then(done, done);
+    }
+
+    // 1. The logo breathes where the splash left it, the glow opens.
+    A(logo, [{ transform: 'scale(1)' }, { transform: 'scale(1.07)', offset: 0.45 }, { transform: 'scale(1.03)' }], { duration: 760, easing: OUT });
+    (w.requestAnimationFrame || setTimeout)(() => intro.classList.add('is-halo'));
+    if (two) {
+      // 2. The two of you lean out from behind the logo, with a spring.
+      A(me, [{ opacity: 0, transform: 'translate(0, -6px) scale(.45) rotate(0)' }, { opacity: 1, transform: 'translate(-76px, 0) scale(1) rotate(-7deg)' }], { duration: 640, delay: 220, easing: SPRING });
+      A(them, [{ opacity: 0, transform: 'translate(0, -6px) scale(.45) rotate(0)' }, { opacity: 1, transform: 'translate(76px, 0) scale(1) rotate(7deg)' }], { duration: 640, delay: 290, easing: SPRING });
+      // 3. They turn to each other and a heart is born between them; the eyes blink.
+      A(me, [{ transform: 'translate(-76px, 0) scale(1) rotate(-7deg)' }, { transform: 'translate(-70px, -2px) scale(1) rotate(5deg)' }], { duration: 420, delay: 880, easing: OUT, fill: 'forwards' });
+      A(them, [{ transform: 'translate(76px, 0) scale(1) rotate(7deg)' }, { transform: 'translate(70px, -2px) scale(1) rotate(-5deg)' }], { duration: 420, delay: 920, easing: OUT, fill: 'forwards' });
+      A(heart, [{ opacity: 0, transform: 'translateY(16px) scale(.2)' }, { opacity: 1, transform: 'translateY(-4px) scale(1.25)', offset: 0.6 }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 520, delay: 1000, easing: OUT });
+      for (const [el, delay] of [[me, 1250], [them, 1310]]) {
+        const eyes = el.querySelector('.us-char-eyes');
+        if (!eyes) continue;
+        eyes.style.transformBox = 'fill-box';
+        eyes.style.transformOrigin = '50% 50%';
+        A(eyes, [{ transform: 'scaleY(1)' }, { transform: 'scaleY(.1)', offset: 0.5 }, { transform: 'scaleY(1)' }], { duration: 180, delay, fill: 'none' });
+      }
+      // On the phone, a light tap when the heart is born (UsFeedback: the haptics setting decides).
+      later(() => { if (native) w.UsFeedback?.landing?.(); }, 1000);
+    }
+    // 4. The hello.
+    A(line, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: 560, easing: OUT });
+    A(sub, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: 720, easing: OUT });
+    // 5. If the app takes longer: they breathe in turn, the heart beats, a kind word.
+    let idle = [];
+    later(() => {
+      if (!two) return;
+      idle = [
+        A(me, [{ translate: '0 0' }, { translate: '0 -3px' }], { duration: 900, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out', fill: 'none' }),
+        A(them, [{ translate: '0 -3px' }, { translate: '0 0' }], { duration: 900, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out', fill: 'none' }),
+        A(heart, [{ scale: '1' }, { scale: '1.14' }, { scale: '1' }], { duration: 820, iterations: Infinity, easing: 'ease-in-out', fill: 'none' })
+      ];
+    }, MIN_MS);
+    later(() => kind(true), 2100);
+
+    return until(MIN_MS).then(() => {
+      timers.forEach(clearTimeout);
+      timers.length = 0;
+      idle.forEach((a) => a?.cancel());
+      // 6. They fly into the island (personaggi.js opens it under the opening, its own two out of sight).
+      if (two) { try { landing = w.UsAngolo?.accogli?.({ ms: 3000 }) || null; } catch (_) { landing = null; } }
+      const path = landing && flight(landing);
+      if (!path) {
+        // No island to fly to: the plain way out, a fade and a slight scale.
+        landing?.land?.(false);
+        return settle(A(intro, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(1.05)' }], { duration: 400, easing: 'cubic-bezier(.4,0,.2,1)' }), 400);
+      }
+      A(logo, [{ opacity: 1, transform: 'scale(1.03)' }, { opacity: 0, transform: 'scale(.86)' }], { duration: 240, easing: 'ease-in' });
+      A(line, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-8px)' }], { duration: 200, easing: 'ease-in' });
+      A(sub, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-8px)' }], { duration: 180, easing: 'ease-in' });
+      A(heart, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-10px) scale(.6)' }], { duration: 220, easing: 'ease-in' });
+      A(me, path.me, { duration: FLY_MS, easing: 'linear' });
+      A(them, path.them, { duration: FLY_MS, easing: 'linear' });
+      const fly = A(duo, path.duo, { duration: FLY_MS, easing: 'linear' });
+      A(bg, [{ opacity: 1 }, { opacity: 1, offset: 0.15 }, { opacity: 0 }], { duration: 500, easing: 'ease-out' });
+      // The app opens from behind.
+      const app = d.querySelector('body > .app');
+      if (app?.animate) {
+        app.style.transformOrigin = `50% ${Math.round((w.innerHeight || 800) * 0.4)}px`;
+        const opening = app.animate([{ transform: 'scale(.96) translateY(12px)' }, { transform: 'none' }], { duration: 640, easing: OUT });
+        opening.onfinish = opening.oncancel = () => app.style.removeProperty('transform-origin');
+      }
+      // 7. Landing: the island takes them, with a little squash.
+      return settle(fly, FLY_MS).then(() => landing?.land?.(true));
+    }).then(done, done);
+
+    // One quadratic curve, sampled (30 samples, easeInOutCubic, linear in between), the
+    // same for the group and the two: scale and spacing end on the island's own two.
+    function flight(to) {
+      const from = duo.getBoundingClientRect();
+      const W = me.offsetWidth || 62, H = me.offsetHeight || 57;
+      const S = to.width / W, SEP = 70, SEP_END = (to.them.x - to.me.x) / 2 / S;
+      const cy = 54 - H / 2; // a character's centre, below the point of the group
+      const dx = (to.me.x + to.them.x) / 2 - from.left, dy = (to.me.y + to.them.y) / 2 - (from.top + S * cy);
+      if (![S, SEP_END, dx, dy].every(Number.isFinite) || S <= 0.1 || S > 2) return null;
+      const ease = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
+      const N = 30, ctrl = { x: dx * 0.12, y: dy * 0.72 }, out = { duo: [], me: [], them: [] };
+      for (let i = 0; i <= N; i++) {
+        const e = ease(i / N), u = 1 - e;
+        const x = 2 * u * e * ctrl.x + e * e * dx, y = 2 * u * e * ctrl.y + e * e * dy;
+        const k = 1 - (1 - S) * e, sep = SEP - (SEP - SEP_END) * e;
+        out.duo.push({ transform: `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${k.toFixed(4)})` });
+        out.me.push({ opacity: 1, transform: `translate(${(-sep).toFixed(2)}px, ${(-2 * u).toFixed(2)}px) rotate(${(5 * u).toFixed(2)}deg)` });
+        out.them.push({ opacity: 1, transform: `translate(${sep.toFixed(2)}px, ${(-2 * u).toFixed(2)}px) rotate(${(-5 * u).toFixed(2)}deg)` });
+      }
+      return out;
+    }
+  }
+
+  try { play(); } catch (_) { done(); }
 })();
 </script>
 <!-- Native Security V1: lock screen (native app only; app-lock.js). Painted before
@@ -243,17 +463,17 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <div class="us-tour-view" role="region" aria-roledescription="carosello" aria-label="Come funziona US">
         <div class="us-tour-track" id="usTourTrack" tabindex="0">
           <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="1 di 3">
-            <div class="us-tour-vis" aria-hidden="true"><svg viewBox="0 0 240 180" focusable="false"><circle class="t1-w" cx="120" cy="90" r="60"/><circle class="t1-a" cx="92" cy="90" r="54"/><circle class="t1-b" cx="148" cy="90" r="54"/><path class="t1-n" d="M120 43.83A54 54 0 0 1 120 136.17A54 54 0 0 1 120 43.83Z"/></svg></div>
-            <h2>Uno spazio <em>solo vostro</em></h2>
-            <p class="us-auth-lede">US è per due persone e basta. Niente pubblico e niente feed: quello che condividete resta tra voi.</p>
+            <div class="us-tour-vis us-tour-duo" aria-hidden="true"><svg viewBox="0 0 240 180" focusable="false"><circle class="t1-w" cx="120" cy="96" r="70"/><path class="t1-h" transform="translate(111.4 18) scale(1)" d="M8.6 14.4S0 9.8 0 4.6C0 1.9 2 0 4.4 0c1.8 0 3.4 1 4.2 2.6C9.4 1 11 0 12.8 0c2.4 0 4.4 1.9 4.4 4.6 0 5.2-8.6 9.8-8.6 9.8z"/></svg><span class="us-tour-char" data-tour-char="a" data-size="84" style="left:31%;top:60%"></span><span class="us-tour-char" data-tour-char="b" data-size="84" style="left:69%;top:60%"></span></div>
+            <h2>Un posto solo <em>per voi due</em></h2>
+            <p class="us-auth-lede">La domanda di oggi, i vostri Ricordi, qualche gioco. E un Ti penso quando l’altra persona ti manca.</p>
           </section>
           <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="2 di 3">
-            <div class="us-tour-vis" aria-hidden="true"><svg viewBox="0 0 240 170" focusable="false"><path class="t2-arc" d="M70 46Q120 2 170 46"/><circle class="t2-a" cx="46" cy="54" r="22"/><circle class="t2-b" cx="194" cy="54" r="22"/><path class="t2-h" transform="translate(108.4 14.3) scale(1.35)" d="M8.6 14.4S0 9.8 0 4.6C0 1.9 2 0 4.4 0c1.8 0 3.4 1 4.2 2.6C9.4 1 11 0 12.8 0c2.4 0 4.4 1.9 4.4 4.6 0 5.2-8.6 9.8-8.6 9.8z"/><rect class="t2-bl" x="8" y="100" width="108" height="62" rx="18"/><rect class="t2-br" x="124" y="100" width="108" height="62" rx="18"/><rect class="t2-l" x="22" y="117" width="74" height="8" rx="4"/><rect class="t2-l" x="22" y="133" width="50" height="8" rx="4"/><rect class="t2-l" x="138" y="117" width="78" height="8" rx="4"/><rect class="t2-l" x="138" y="133" width="56" height="8" rx="4"/><circle class="t2-d" cx="50" cy="131" r="3.5"/><circle class="t2-d" cx="62" cy="131" r="3.5"/><circle class="t2-d" cx="74" cy="131" r="3.5"/><circle class="t2-d" cx="166" cy="131" r="3.5"/><circle class="t2-d" cx="178" cy="131" r="3.5"/><circle class="t2-d" cx="190" cy="131" r="3.5"/></svg></div>
+            <div class="us-tour-vis" aria-hidden="true"><svg viewBox="0 0 240 170" focusable="false"><path class="t2-arc" d="M70 46Q120 2 170 46"/><path class="t2-h" transform="translate(108.4 14.3) scale(1.35)" d="M8.6 14.4S0 9.8 0 4.6C0 1.9 2 0 4.4 0c1.8 0 3.4 1 4.2 2.6C9.4 1 11 0 12.8 0c2.4 0 4.4 1.9 4.4 4.6 0 5.2-8.6 9.8-8.6 9.8z"/><rect class="t2-bl" x="8" y="100" width="108" height="62" rx="18"/><rect class="t2-br" x="124" y="100" width="108" height="62" rx="18"/><rect class="t2-l" x="22" y="117" width="74" height="8" rx="4"/><rect class="t2-l" x="22" y="133" width="50" height="8" rx="4"/><rect class="t2-l" x="138" y="117" width="78" height="8" rx="4"/><rect class="t2-l" x="138" y="133" width="56" height="8" rx="4"/><circle class="t2-d" cx="50" cy="131" r="3.5"/><circle class="t2-d" cx="62" cy="131" r="3.5"/><circle class="t2-d" cx="74" cy="131" r="3.5"/><circle class="t2-d" cx="166" cy="131" r="3.5"/><circle class="t2-d" cx="178" cy="131" r="3.5"/><circle class="t2-d" cx="190" cy="131" r="3.5"/></svg><span class="us-tour-char" data-tour-char="a" data-size="58" style="left:19%;top:30%"></span><span class="us-tour-char" data-tour-char="b" data-size="58" style="left:81%;top:30%"></span></div>
             <h2>Un gesto <em>al giorno</em></h2>
             <p class="us-auth-lede">Una domanda ogni giorno: le risposte si svelano quando avete risposto voi due. E un Ti penso quando volete, con un tocco.</p>
           </section>
           <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="3 di 3">
-            <div class="us-tour-vis" aria-hidden="true"><img class="t3-p t3-pl" alt=""><img class="t3-p t3-pr" alt=""><div class="t3-ring"><svg viewBox="0 0 150 150" focusable="false"><circle class="t3-tr" cx="75" cy="75" r="64"/><circle class="t3-r" cx="75" cy="75" r="64" pathLength="100"/><circle class="us-duo-a" cx="64" cy="75" r="19"/><circle class="us-duo-b" cx="86" cy="75" r="19"/><path class="us-duo-n" d="M75 59.51A19 19 0 0 1 75 90.49A19 19 0 0 1 75 59.51Z"/></svg></div><span class="t3-x">♡</span><span class="t3-c"><i></i>Livello 5 · Intesa rara</span></div>
+            <div class="us-tour-vis" aria-hidden="true"><img class="t3-p t3-pl" alt=""><img class="t3-p t3-pr" alt=""><div class="t3-ring"><svg viewBox="0 0 150 150" focusable="false"><circle class="t3-tr" cx="75" cy="75" r="64"/><circle class="t3-r" cx="75" cy="75" r="64" pathLength="100"/></svg><span class="us-tour-char" data-tour-char="a" data-size="50" style="left:38%;top:54%"></span><span class="us-tour-char" data-tour-char="b" data-size="50" style="left:62%;top:54%"></span></div><span class="t3-x">♡</span><span class="t3-c"><i></i>Livello 5 · Intesa rara</span></div>
             <h2>Crescete <em>insieme</em></h2>
             <p class="us-auth-lede">Ricordi, calendario e giochi. Più cose fate insieme, più cresce la vostra Sintonia e si sbloccano sorprese.</p>
           </section>
@@ -376,7 +596,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           </div>
         </fieldset>
         <p class="mc3-help us-sr-only" id="mc3DateHelp">La vostra data, per contare i giorni insieme. Scegli una data dal 1900 a oggi.</p>
-        <label class="us-auth-field" for="mc3CoupleName"><span>Nome del vostro spazio · facoltativo</span><input id="mc3CoupleName" placeholder="US." autocomplete="off"></label>
+        <label class="us-auth-field" for="mc3CoupleName"><span>Nome del vostro spazio · facoltativo</span><input id="mc3CoupleName" placeholder="US." autocapitalize="sentences" enterkeyhint="done"></label>
         <button type="submit" class="primary us-auth-primary">Crea il nostro spazio</button>
         <button type="button" id="mc3BackCreate" class="mc3-back" data-us-enter="with-prev">Indietro</button>
       </form>
@@ -389,11 +609,14 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       </form>
       <div id="mc3Color" class="us-ob-color" hidden>
         <div class="us-ob-venn" id="mc3Venn" aria-hidden="true"></div>
+        <div class="us-ob-shapes" id="mc3Shapes" role="group" aria-label="La forma" hidden></div>
         <div class="us-ob-colors" id="mc3Colors" role="group" aria-label="Il tuo colore" hidden></div>
         <p class="us-auth-lede" id="mc3ColorCopy"></p>
         <button type="button" id="mc3ColorNext" class="primary us-auth-primary">Invita la tua persona</button>
       </div>
       <div id="mc3Waiting" data-us-enter="flat" hidden>
+        <div class="us-ob-venn" id="mc3WaitDuo" aria-hidden="true"></div>
+        <p class="us-ob-wait-say" id="mc3WaitSay">Manda il codice: quando arriva l’altra persona, vi faccio fare il giro tutti e due.</p>
         <p id="mc3InviteStatus" class="us-inv-st"></p>
         <div id="mc3CodeArea" data-us-enter="flat" hidden>
           <label class="us-auth-field" for="mc3Code" data-us-enter="with-prev"><span>Il nuovo codice</span><textarea id="mc3Code" readonly autocomplete="off" spellcheck="false" rows="2"></textarea><code class="us-inv-code" id="mc3CodeShown" aria-hidden="true" translate="no"></code></label>
@@ -402,7 +625,8 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
             <button type="button" id="mc3CopyCode">Copia codice</button>
           </div>
         </div>
-        <p class="mc3-help us-ob-invite-help">Il codice resta qui finché non scade o chiudi US. Uno nuovo annulla il precedente. Condividilo solo con la tua persona.</p>
+        <p class="mc3-help us-ob-invite-help">Il codice vale 14 giorni e resta qui finché non chiudi US. Uno nuovo annulla il precedente. Condividilo solo con la tua persona.</p>
+        <button type="button" id="mc3Notify" class="us-ob-link us-ob-notify" hidden>Avvisami quando entra</button>
         <div class="mc3-actions us-ob-invite-actions">
           <button type="button" id="mc3Generate" class="primary us-auth-primary">Crea invito</button>
           <button type="button" id="mc3Revoke" class="us-ob-link" hidden>Revoca codice</button>
@@ -443,6 +667,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     <div class="us-setup-body" id="usSetupBody">
       <h2 id="usSetupTitle" tabindex="-1"></h2>
       <div class="us-ob-venn" id="usSetupVenn" aria-hidden="true" hidden></div>
+      <div class="us-ob-shapes" id="usSetupShapes" role="group" aria-label="La forma" hidden></div>
       <div class="us-ob-colors" id="usSetupColors" role="group" aria-label="Il tuo colore" hidden></div>
       <div class="us-setup-push" id="usSetupPushVis" aria-hidden="true" hidden>
         <div class="us-setup-note"><span class="us-setup-note-icon"></span><span><small>US · adesso</small><b id="usSetupPushPartner">La tua persona ti pensa ♡</b>Tocca per rispondere.</span></div>
@@ -468,7 +693,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 
 <div class="app">
 
-  <div class="top us-premium-top"><span class="us-aurora" aria-hidden="true"></span><div class="us-top-left"><button type="button" id="thinkButton" class="us-top-think us-premium-control" onclick="sendThinkSignal()" aria-label="Invia Ti penso" title="Ti penso"><span class="us-shell-icon us-shell-icon--think" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/think-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/think-on.svg" alt=""></span></button></div><div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true" decoding="async" draggable="false"></div><div class="top-actions"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon" data-us-attention-icon><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span><span class="beat" aria-hidden="true"><i></i><i></i></span></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top us-premium-top"><span class="us-aurora" aria-hidden="true"></span><div class="us-top-left"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon" data-us-attention-icon><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span><span class="beat" aria-hidden="true"><i></i><i></i></span></button></div><div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true" decoding="async" draggable="false"></div><button type="button" class="us-isola" id="usIsola" aria-expanded="false" aria-label="US: tocca per Il vostro angolo" data-us-isola hidden><span class="us-isola-window" aria-hidden="true" data-us-isola-duo></span><span class="us-isola-words" aria-hidden="true"><b>Il vostro angolo</b><span data-us-isola-level>Tocca qui</span></span></button><div class="us-fumetto" id="usFumetto" data-speaker="me" hidden><button type="button" class="us-fumetto-body" data-us-fumetto><span class="us-fumetto-text" data-us-fumetto-text></span><span class="us-fumetto-cta" data-us-fumetto-cta hidden></span></button></div><div class="top-actions"><button type="button" class="us-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -478,25 +703,33 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <span class="us-hero-sticker" id="usHeroSticker" aria-hidden="true" hidden></span>
       <button type="button" id="usCountdownEntry" class="us-countdown-entry" aria-label="Gestisci countdown" aria-haspopup="dialog" hidden><span class="us-icon" data-us-icon="clock-counter-clockwise" aria-hidden="true"></span><span class="us-countdown-entry-label">Countdown</span></button>
       <button type="button" id="usCountdownDisplay" class="us-countdown-display" aria-haspopup="dialog" hidden></button>
-      <!-- Oggi (parity with the approved mockup): one column above the nav,
-           top to bottom: the photo's caption, the next event and the distance
-           (they step aside while a card waits), what is waiting for me (or the
-           notifications invite), then the Domanda di oggi. A band above the
-           nav stays free for Maudit. -->
+      <!-- Oggi (redesign definitivo, fase 5, D9): one column above the nav, top to
+           bottom: the photo's caption, the row event/distance/Come stai, then the
+           Domanda di oggi. No cards of suggestions and no notifications invite:
+           each thing has its own place (the envelope, Gioca, the characters, the Profilo). -->
       <div class="us-oggi-dock og-bottom" id="usOggiDock">
         <p class="og-cap" id="usOggiCaption" hidden><em id="usOggiCaptionText" translate="no"></em><small><span class="dot" id="usOggiCaptionDot" aria-hidden="true"></span><span id="usOggiCaptionMeta"></span></small></p>
         <div class="og-row" id="usOggiRow" hidden>
           <button type="button" class="og-next" id="usOggiNext" hidden><span class="us-icon" data-us-icon="calendar-blank" aria-hidden="true"></span><b id="usOggiNextWhen"></b><span id="usOggiNextTitle" translate="no"></span></button>
           <button type="button" class="home-distance-pill us-distance-capsule og-pill" id="distanceWidget" onclick="openDistanceDetail()" aria-haspopup="dialog" aria-label="Distanza tra voi" data-us-distance-state="unknown" hidden><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><b id="distanceValue"></b><span class="us-distance-battery" id="distanceBattery" hidden><span class="us-sr-only">Batteria:</span> <span class="us-sr-only" data-battery-name translate="no"></span> <span class="us-icon" data-us-icon="battery-high" data-battery-icon aria-hidden="true"></span><b data-battery-level></b><span class="us-sr-only" data-battery-charging hidden>in carica</span></span></button>
-          <!-- Come stai (02/11/2026): the partner's state and mine; a tap opens the twelve. -->
-          <button type="button" class="og-pill us-status-pill" id="usOggiStatus" aria-haspopup="dialog" aria-label="Come stai? Scegli" hidden><span data-status-partner translate="no" hidden></span><span data-status-mine>Come stai?</span></button>
+          <!-- Come stai (02/11/2026; tavola «Come stai di US», 27/11/2026; ritocchi del 28/11): one glass pill
+               like the distance, in two halves, never on two lines. Left: the other person (face and short
+               word; a tap opens their sheet) and the gesture for their state. Right, after a line: me («＋ Tu»
+               or my emoji; a tap opens the twelve) and, for three hours, the gesture I received. -->
+          <div class="us-status-group" id="usOggiStatusGroup" data-fit="" hidden>
+            <span class="us-status-half us-status-half-her">
+              <button type="button" class="us-status-her" id="usOggiPartner" aria-haspopup="dialog" hidden><span class="us-status-face" data-status-face aria-hidden="true"></span><span class="us-status-her-text"><b data-status-name translate="no"></b><span data-status-her-word></span></span></button>
+              <button type="button" class="us-status-act" id="usOggiStatusReply" hidden><span data-act-icon aria-hidden="true"></span><span data-act-word></span></button>
+            </span>
+            <span class="us-status-sep" aria-hidden="true"></span>
+            <span class="us-status-half us-status-half-me">
+              <button type="button" class="us-status-pill" id="usOggiStatus" aria-haspopup="dialog" aria-label="Come stai? Scegli" data-mine="none" hidden><span class="us-status-plus" aria-hidden="true">＋</span><span data-status-mine-emoji aria-hidden="true"></span><span data-status-mine>Tu</span></button>
+              <button type="button" class="us-status-got" id="usOggiGot" aria-haspopup="dialog" hidden><span data-got-icon aria-hidden="true"></span><span class="us-status-got-word" data-got-word translate="no"></span></button>
+            </span>
+          </div>
         </div>
-        <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
-        <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
-          <span class="push-optin-icon" aria-hidden="true">♡</span>
-          <span class="push-optin-copy"><b id="pushOptInTitle">Attiva le notifiche</b><small id="pushOptInText">Ti penso, risposte e sfide, anche a US chiusa.</small></span>
-          <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva</button>
-        </aside>
+        <!-- The answers read, the card goes away with a swipe or with «Togli» (27/11/2026): it sits on the card's corner. -->
+        <button type="button" class="us-daily-ritual-close" id="usDailyRitualClose" hidden aria-label="Togli la domanda di oggi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span><span>Togli</span></button>
         <button type="button" class="us-daily-ritual us-attention-orbit" id="usDailyRitual" hidden onclick="openToday()" data-us-attention="off"></button>
       </div>
       <!-- Legacy Calendar/reveal anchors stay mounted but visually retired. -->
@@ -544,19 +777,54 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </div>
 
   <!-- Come stai (02/11/2026): the twelve states, or the words' form (Settings). -->
+  <!-- Il vostro angolo (redesign definitivo, 23/11/2026, D3): Sintonia, out of Gioca. noi-v2.js moves its blocks into
+       #usGiocaSintonia, progression.js paints them, personaggi.js opens and closes the sheet. -->
+  <div id="usAngolo" class="us-angolo-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+    <div class="us-modal-backdrop" data-angolo-close></div>
+    <section class="us-sheet is-bottom us-angolo-sheet" role="dialog" aria-modal="true" aria-labelledby="usAngoloHeading" data-us-modal-panel>
+      <header class="us-angolo-head"><h2 id="usAngoloHeading">Il vostro angolo</h2><button type="button" class="us-modal-close" data-us-modal-close data-angolo-close aria-label="Chiudi Il vostro angolo"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+      <div class="us-angolo-duo" data-us-duo="big"></div>
+      <!-- Tavola «US · Oggi e il vostro angolo» (founder, 25/11/2026): the level on top, then Voi, Guardaroba, Premi.
+           noi-v2.js moves the Sintonia blocks into their slots; the tabs are personaggi.js. -->
+      <section id="usGiocaSintonia" class="us-gioca-sintonia" aria-label="Sintonia">
+        <div class="us-angolo-livello" data-angolo-slot="livello"></div>
+        <div class="us-angolo-tabs" role="tablist" aria-label="Il vostro angolo">
+          <button type="button" role="tab" id="usAngoloTabVoi" aria-selected="true" aria-controls="usAngoloVoi" data-angolo-tab="voi">Voi</button>
+          <button type="button" role="tab" id="usAngoloTabLook" aria-selected="false" aria-controls="usAngoloLook" data-angolo-tab="look" tabindex="-1">Guardaroba</button>
+          <button type="button" role="tab" id="usAngoloTabPremi" aria-selected="false" aria-controls="usAngoloPremi" data-angolo-tab="premi" tabindex="-1">Premi</button>
+        </div>
+        <div class="us-angolo-panel" id="usAngoloVoi" role="tabpanel" aria-labelledby="usAngoloTabVoi" data-angolo-panel="voi" data-angolo-slot="voi">
+          <!-- US vi ricorda (25/11/2026): the line of today, until the evening (us-ricorda.js). -->
+          <section class="us-angolo-oggi" id="usAngoloOggi" aria-label="Oggi ti ho detto" hidden></section>
+          <section class="us-angolo-cresci" id="usAngoloCresci" aria-labelledby="usAngoloCresciTitle">
+            <h3 id="usAngoloCresciTitle">Per crescere insieme</h3>
+            <button type="button" data-sintonia-go="daily" data-tone="tu"><span class="us-angolo-cresci-mark" aria-hidden="true"><span class="us-icon" data-us-icon="question"></span></span><span><b>La domanda di oggi</b><small>Conta ogni risposta condivisa</small></span><em>Rispondi</em></button>
+            <button type="button" data-sintonia-go="games" data-tone="partner"><span class="us-angolo-cresci-mark" aria-hidden="true"><span class="us-icon" data-us-icon="game-controller"></span></span><span><b>Gioca</b><small>Conta ogni partita finita</small></span><em>Una partita</em></button>
+            <button type="button" data-sintonia-go="memory" data-tone="noi"><span class="us-angolo-cresci-mark" aria-hidden="true"><span class="us-icon" data-us-icon="camera"></span></span><span><b>Ricordi e Ti penso</b><small>Conta il primo gesto di ogni giorno</small></span><em>Un ricordo</em></button>
+            <button type="button" data-sintonia-go="ideas" data-tone="carta"><span class="us-angolo-cresci-mark" aria-hidden="true"><span class="us-icon" data-us-icon="list-bullets"></span></span><span><b>Le vostre idee</b><small>Contano quelle che fate davvero</small></span><em>Apri</em></button>
+          </section>
+        </div>
+        <section class="us-angolo-look us-angolo-panel" id="usAngoloLook" role="tabpanel" aria-labelledby="usAngoloTabLook" aria-label="Il tuo guardaroba" data-angolo-panel="look" hidden></section>
+        <div class="us-angolo-panel" id="usAngoloPremi" role="tabpanel" aria-labelledby="usAngoloTabPremi" data-angolo-panel="premi" data-angolo-slot="premi" hidden></div>
+      </section>
+    </section>
+  </div>
+
   <div id="usStatusSheet" class="us-status-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
     <div class="us-modal-backdrop" data-status-close></div>
     <section class="us-sheet is-bottom us-status-sheet" role="dialog" aria-modal="true" aria-labelledby="usStatusHeading" data-us-modal-panel>
       <header class="us-status-head"><div><span class="tiny">COME STAI</span><h2 id="usStatusHeading">Come stai?</h2></div><button type="button" class="us-modal-close" data-us-modal-close data-status-close aria-label="Chiudi come stai"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
       <div data-status-panel="status">
-        <p class="us-status-partner" id="usStatusPartnerLine" translate="no" hidden></p>
+        <p class="us-status-note" id="usStatusNote">La tua persona lo vede subito, anche nel widget. Dura 12 ore.</p>
         <div class="us-status-grid" role="group" aria-label="Come stai">
+          <span class="us-status-group-head" aria-hidden="true">Come ti senti</span>
           <button type="button" class="us-status-choice" data-status="innamorato" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🥰</span><span data-status-word>col cuore pieno</span></button>
           <button type="button" class="us-status-choice" data-status="felice" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😊</span><span data-status-word>felice</span></button>
           <button type="button" class="us-status-choice" data-status="stanco" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😴</span><span data-status-word>senza energie</span></button>
           <button type="button" class="us-status-choice" data-status="giu" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😔</span><span data-status-word>giù</span></button>
           <button type="button" class="us-status-choice" data-status="nervoso" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">😤</span><span data-status-word>nervi tesi</span></button>
           <button type="button" class="us-status-choice" data-status="malato" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🤒</span><span data-status-word>non sto bene</span></button>
+          <span class="us-status-group-head" aria-hidden="true">Cosa stai facendo</span>
           <button type="button" class="us-status-choice" data-status="festa" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🥳</span><span data-status-word>in festa</span></button>
           <button type="button" class="us-status-choice" data-status="lavoro" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">💼</span><span data-status-word>al lavoro</span></button>
           <button type="button" class="us-status-choice" data-status="studio" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">📚</span><span data-status-word>sui libri</span></button>
@@ -564,8 +832,12 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <button type="button" class="us-status-choice" data-status="viaggio" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🚗</span><span data-status-word>in viaggio</span></button>
           <button type="button" class="us-status-choice" data-status="tavola" aria-pressed="false"><span class="us-status-emoji" aria-hidden="true">🍝</span><span data-status-word>a tavola</span></button>
         </div>
-        <p class="us-status-note" id="usStatusNote">Lo vede solo la tua persona, per 12 ore.</p>
         <button type="button" class="us-status-clear" id="usStatusClear" hidden>Togli</button>
+        <!-- D14: «In viaggio» chosen, the Noi calendar offered once (dismissable). -->
+        <div class="us-status-trip" id="usStatusTrip" role="group" aria-labelledby="usStatusTripText" hidden>
+          <p id="usStatusTripText">Lo segno nel calendario di Noi?</p>
+          <div class="us-status-trip-actions"><button type="button" class="us-status-trip-yes" id="usStatusTripYes">Sì, segnalo</button><button type="button" class="us-status-trip-no" id="usStatusTripNo">No, grazie</button></div>
+        </div>
       </div>
       <div data-status-panel="form" hidden>
         <p class="us-status-lead">Come vuoi le parole di «Come stai»? Vale per te, nell’app e nel widget.</p>
@@ -575,6 +847,23 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <button type="button" class="us-status-form" data-status-form="" aria-pressed="false"><b>Senza scegliere</b><small>col cuore pieno, senza energie</small></button>
         </div>
       </div>
+    </section>
+  </div>
+
+  <!-- Come stai che conta (tavola «Come stai di US», 27/11/2026): the other person's sheet. Their
+       character big, how they are and until when, the gesture for it, Ti penso, a voice message. -->
+  <div id="usStatusPerson" class="us-status-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+    <div class="us-modal-backdrop" data-person-close></div>
+    <section class="us-sheet is-bottom us-status-sheet us-status-person" role="dialog" aria-modal="true" aria-labelledby="usStatusPersonTitle" data-us-modal-panel>
+      <header class="us-status-head"><div><span class="tiny">COME STA</span></div><button type="button" class="us-modal-close" data-us-modal-close data-person-close aria-label="Chiudi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+      <div class="us-status-person-card">
+        <span class="us-status-person-char" id="usStatusPersonChar" aria-hidden="true"></span>
+        <h2 id="usStatusPersonTitle"></h2>
+        <p id="usStatusPersonSince" hidden></p>
+      </div>
+      <button type="button" class="us-status-respond" id="usStatusRespond" hidden><span data-status-respond-label></span></button>
+      <button type="button" class="us-status-person-think" id="usStatusPersonThink">Ti penso</button>
+      <button type="button" class="us-status-person-voice" id="usStatusPersonVoice">Lascia un vocale</button>
     </section>
   </div>
 
@@ -602,8 +891,16 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   <div id="usNotesSheet" class="us-notes-overlay us-foglio" aria-hidden="true" data-us-modal data-us-motion-surface>
     <div class="us-notes-scrim us-modal-backdrop" data-notes-close></div>
     <section class="us-notes-panel" role="dialog" aria-modal="true" aria-labelledby="usNotesTitle" data-us-modal-panel>
-      <header class="us-notes-head"><div><h3 id="usNotesTitle">Bacheca</h3><small id="usNotesCount"></small></div><button type="button" class="us-modal-close" data-us-modal-close data-notes-close aria-label="Chiudi la bacheca"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+      <header class="us-notes-head"><div><h3 id="usNotesTitle">Tutti i post-it</h3><small id="usNotesCount"></small></div><button type="button" class="us-modal-close" data-us-modal-close data-notes-close aria-label="Chiudi i post-it"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
       <div id="usNotesBody" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <!-- Il post-it in primo piano (couple-notes.js, Noi Fase B): written on, over Noi or over the lavagna; also «Le vostre idee». -->
+  <div id="usPostitFocus" class="us-postit-focus" aria-hidden="true" data-us-modal>
+    <div class="us-postit-focus-scrim us-modal-backdrop" data-focus-close></div>
+    <section class="us-postit-focus-panel" role="dialog" aria-modal="true" aria-label="Post-it" data-us-modal-panel>
+      <ul class="us-postits is-focus" id="usPostitFocusList"></ul>
     </section>
   </div>
 
@@ -628,18 +925,35 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     </section>
   </main>
 
+  <!-- Ti penso ricevuto (founder 25/11/2026, tavola «US · Ti penso ricevuto», approvata):
+       their character drops in with heart eyes and says «Ti penso!» in a bubble; three
+       one-tone replies; at the tap your character arrives and answers (heart, hug, cloud). -->
   <main id="thinkArrival" class="think-arrival-overlay" aria-hidden="true" data-us-modal data-us-transient data-us-motion-surface>
     <div class="think-arrival-backdrop us-modal-backdrop" onclick="closeThinkArrival()"></div>
-    <section class="think-arrival-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="Ti penso ricevuto" data-us-modal-panel>
-      <header class="think-arrival-head"><div><span class="think-arrival-visual" aria-hidden="true"><i></i><i></i></span><div class="tiny">Ti penso</div><h2 id="thinkArrivalTitle">La tua persona ti pensa</h2></div></header>
-      <p id="thinkArrivalCopy" class="think-arrival-copy" hidden></p>
-      <div class="think-reaction-grid" role="group" aria-label="Rispondi con">
-        <button type="button" class="think-reaction-button" data-think-reaction="heart" aria-label="Rispondi con un cuore" aria-pressed="false"><span class="think-reaction-glyph think-reaction-heart" aria-hidden="true">♥</span><span class="sr-only">heart</span></button>
-        <button type="button" class="think-reaction-button" data-think-reaction="hug" aria-label="Rispondi con un abbraccio" aria-pressed="false"><span class="think-reaction-glyph think-reaction-hug" aria-hidden="true">🫂</span><span class="sr-only">hug</span></button>
-        <button type="button" class="think-reaction-button" data-think-reaction="miss_you" aria-label="Rispondi con un pensiero" aria-pressed="false"><span class="think-reaction-glyph think-reaction-miss" aria-hidden="true">💭</span><span class="sr-only">miss_you</span></button>
+    <section class="think-arrival-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="thinkArrivalTitle" data-us-modal-panel data-think-state="ask">
+      <button type="button" class="think-arrival-x" onclick="closeThinkArrival()" aria-label="Chiudi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+      <p class="think-arrival-kicker"><span>Ti penso</span><span id="thinkArrivalCopy" hidden></span></p>
+      <div class="think-arrival-stage" aria-hidden="true">
+        <span class="think-arrival-hearts"><svg viewBox="0 0 256 256" focusable="false"><path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"/></svg><svg viewBox="0 0 256 256" focusable="false"><path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"/></svg><svg viewBox="0 0 256 256" focusable="false"><path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"/></svg><svg viewBox="0 0 256 256" focusable="false"><path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"/></svg></span>
+        <span class="think-arrival-shadow"></span>
+        <span class="think-arrival-me" data-think-me></span>
+        <span class="think-arrival-them" data-think-them></span>
+        <span class="think-arrival-hug" data-think-hug></span>
+        <span class="think-arrival-fly"><svg viewBox="0 0 256 256" focusable="false"><path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"/></svg></span>
+        <span class="think-arrival-cloud"><svg viewBox="0 0 256 256" focusable="false"><path d="M160,40A88.09,88.09,0,0,0,81.29,88.67,64,64,0,1,0,72,216h88a88,88,0,0,0,0-176Z"/><path class="think-arrival-cloud-heart" d="M128,176S84,152,84,124a22,22,0,0,1,22-22c9.5,0,17.6,5.2,22,13,4.4-7.8,12.5-13,22-13a22,22,0,0,1,22,22C172,152,128,176,128,176Z"/></svg></span>
+        <span class="think-arrival-bubble">Ti penso!</span>
+      </div>
+      <h2 id="thinkArrivalTitle">La tua persona ti pensa</h2>
+      <div class="think-arrival-ask">
+        <p class="think-arrival-hint">Rispondi con un tocco</p>
+        <div class="think-reaction-grid" role="group" aria-label="Rispondi con">
+          <button type="button" class="think-reaction-button" data-think-reaction="heart" aria-label="Rispondi con un cuore" aria-pressed="false"><span class="think-reaction-glyph think-reaction-heart" aria-hidden="true"><svg viewBox="0 0 256 256" fill="currentColor" focusable="false"><path class="think-heart-fill" d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/><path d="M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40ZM128,214.8C109.74,204.16,32,155.69,32,102A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,155.61,146.24,204.15,128,214.8Z"/></svg></span><span class="think-reaction-label" aria-hidden="true">Un cuore</span></button>
+          <button type="button" class="think-reaction-button" data-think-reaction="hug" aria-label="Rispondi con un abbraccio" aria-pressed="false"><span class="think-reaction-glyph think-reaction-hug" aria-hidden="true"><svg class="think-hug-fallback" viewBox="0 0 56 42" focusable="false"><circle cx="19" cy="28" r="13" style="fill:var(--us-tu)"/><rect x="27" y="15" width="25" height="26" rx="8" style="fill:var(--us-partner)"/><path d="M13.5 28q2.5-3 5 0M20.5 28q2.5-3 5 0M33 26q2.5-3 5 0M41 26q2.5-3 5 0" fill="none" stroke="#1a1020" stroke-width="1.8" stroke-linecap="round"/><g transform="translate(21 -1) scale(.055)"><path d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32Z" style="fill:var(--us-tu)"/><path d="M128,80c8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z" style="fill:var(--us-partner)"/></g></svg></span><span class="think-reaction-label" aria-hidden="true">Un abbraccio</span></button>
+          <button type="button" class="think-reaction-button" data-think-reaction="miss_you" aria-label="Rispondi: anch'io ti penso" aria-pressed="false"><span class="think-reaction-glyph think-reaction-miss" aria-hidden="true"><svg viewBox="0 0 256 256" fill="currentColor" focusable="false"><path d="M160,40A88.09,88.09,0,0,0,81.29,88.67,64,64,0,1,0,72,216h88a88,88,0,0,0,0-176Zm0,160H72a48,48,0,0,1,0-96c1.1,0,2.2,0,3.29.11A88,88,0,0,0,72,128a8,8,0,0,0,16,0,72,72,0,1,1,72,72Z"/></svg></span><span class="think-reaction-label" aria-hidden="true">Anch'io</span></button>
+        </div>
       </div>
       <p id="thinkArrivalStatus" class="think-arrival-status" role="status" aria-live="polite"></p>
-      <div class="think-arrival-actions"><button type="button" class="think-arrival-close ghost" onclick="closeThinkArrival()">Chiudi</button></div>
+      <div class="think-arrival-actions"><button type="button" class="think-arrival-close ghost" onclick="closeThinkArrival()">Più tardi</button></div>
     </section>
   </main>
 
@@ -663,8 +977,11 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
         </div>
       </div>
-      <div class="ricordi-section-head ricordi-story-head"><h3 id="ricordiStoryTitle">Mese per mese</h3><button type="button" class="ricordi-map-switch" id="ricordiMapSwitch" aria-pressed="false" onclick="UsRicordiPlace.toggleMap()"><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><span data-switch-label>Mappa</span></button></div>
+      <div class="ricordi-section-head ricordi-story-head"><h3 id="ricordiStoryTitle" class="noi-sr">Mese per mese</h3><div class="ricordi-views" role="tablist" aria-label="Come vedere i Ricordi"><button type="button" role="tab" data-ricordi-view="story" aria-selected="true">Raccolta</button><button type="button" role="tab" data-ricordi-view="board" aria-selected="false">Bacheca</button><button type="button" role="tab" data-ricordi-view="map" aria-selected="false">Mappa</button><button type="button" role="tab" data-ricordi-view="carte" aria-selected="false" hidden>Carte</button></div><button type="button" class="ricordi-lens" data-ricordi-cerca aria-label="Cerca nei ricordi" aria-haspopup="dialog"><span class="us-icon" data-us-icon="magnifying-glass" aria-hidden="true"></span></button></div>
       <div class="ricordi-map" id="ricordiMap" aria-label="Mappa dei Ricordi" hidden></div>
+      <div class="ricordi-bacheca" id="ricordiBacheca" aria-label="La vostra bacheca, tenuta da US" hidden></div>
+      <!-- Il vostro mese (27/11/2026): Le vostre carte, an album a year (mese.js, loaded when tapped). -->
+      <div class="ricordi-carte" id="ricordiCarte" aria-label="Le vostre carte" hidden></div>
       <div id="momentsGrid" class="moment-grid ricordi-story" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div></div>
       <section class="ricordi-chapters" id="ricordiChapters" aria-label="Capitoli" hidden></section>
     </section>
@@ -674,7 +991,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
     <section class="section bond-page noi-canonical-page" data-noi-view="hub" style="margin-top:6px" aria-label="Noi">
       <header class="noi-canonical-head noi-couple-head">
         <h2 class="noi-sr">Noi</h2>
-        <div class="noi-couple-card" id="noiCoupleCard" role="group" aria-label="Voi due, distanza e impostazioni">
+        <div class="noi-couple-card" id="noiCoupleCard" role="group" aria-label="Voi due e la distanza">
           <div class="noi-couple" id="noiCouple" role="group" aria-label="Voi due">
           <span class="noi-couple-person" data-noi-couple-role="francesco">
             <span class="noi-couple-avatar" id="pairAvatarFrancesco"><img alt="" hidden><span class="fallback" aria-hidden="true">·</span></span>
@@ -689,9 +1006,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
             <small class="noi-couple-name" data-noi-couple-name="beatrice">La tua persona</small>
           </span>
         </div>
-          <button type="button" class="us-calendar-btn us-important-control us-premium-control noi-couple-settings" id="usSettingsEntry" onclick="go('settings',{nav:true})" aria-label="Apri impostazioni">
-          <span class="us-shell-icon" aria-hidden="true"><img class="us-shell-icon-off us-approved-custom-icon" src="/assets/derived/runtime/us-icon-settings-128-v1.png" alt=""><img class="us-shell-icon-on us-approved-custom-icon" src="/assets/derived/runtime/us-icon-settings-128-v1.png" alt=""></span>
-        </button>
         </div>
       </header>
 
@@ -708,13 +1022,11 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <h2>Noi</h2>
           <div class="us-noi-v2-tools">
             <button type="button" class="us-noi-v2-add" id="usNoiV2AddTop" data-noi-add aria-label="Aggiungi un impegno nel giorno selezionato" title="Aggiungi impegno"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
-            <button type="button" class="us-noi-v2-settings" onclick="go('settings',{nav:true})" aria-label="Impostazioni"><img class="us-approved-custom-icon" src="/assets/derived/runtime/us-icon-settings-128-v1.png" alt="" width="22" height="22" decoding="async"></button>
+            <button type="button" class="us-me us-noi-v2-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button>
           </div>
         </header>
-        <div class="us-noi-v2-toggle" role="group" aria-label="Vista del calendario">
-          <button type="button" id="usNoiV2ModeCalendar" class="is-active" aria-pressed="true">Mese</button>
-          <button type="button" id="usNoiV2ModeList" aria-pressed="false">Prossimi</button>
-        </div>
+        <!-- Noi, Fase A (24/11/2026): «Vi rivedete tra» for couples apart (noi-v2.js renderMeet). -->
+        <section class="us-noi-v2-meet" id="usNoiV2Meet" aria-label="Il prossimo incontro" hidden></section>
         <div class="us-noi-v2-monthbar">
           <h3 id="usNoiV2Month" aria-live="polite">—</h3>
           <div class="us-noi-v2-month-nav">
@@ -732,30 +1044,34 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <span class="us-noi-v2-sync" id="usNoiV2Sync" role="status" aria-live="polite"></span>
         </div>
         <div id="usNoiV2Content" class="us-noi-v2-content"><div class="us-skeleton-calendar" role="status"><span class="us-sr">Carico il calendario…</span><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i></div></div>
-        <section id="usNoiV2Detail" class="us-noi-v2-detail" aria-label="Giorno selezionato" aria-live="polite"></section>
       </section>
 
-      <!-- Bacheca (couple-notes.js): the Lavagna on top (phase 2 hooks it in the slot), then the post-its. -->
+      <!-- La lavagna (Noi, Fase B; lavagna.js draws in the slot, couple-notes.js pins the post-its on top). -->
       <section class="us-noi-board" id="usNoiBoard" aria-labelledby="usNoiBoardTitle">
         <header class="us-noi-board-head">
-          <div><h2 id="usNoiBoardTitle">Bacheca</h2><small>Per le cose senza data</small></div>
-          <button type="button" class="us-noi-board-new" data-board-new><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Post-it</span></button>
+          <div><h2 id="usNoiBoardTitle">La lavagna</h2><small>Disegni, post-it e le vostre idee</small></div>
+          <div class="us-noi-board-actions">
+            <button type="button" class="us-noi-board-new" data-board-new><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Post-it</span></button>
+            <button type="button" class="us-noi-board-open" data-lav-board-open>Apri</button>
+          </div>
         </header>
-        <div id="usNoiLavagnaSlot" class="us-lav-slot"></div>
-        <ul class="us-postits" id="usNoiBoardGrid" aria-label="Post-it" aria-live="polite"></ul>
+        <div class="us-noi-lav" id="usNoiLav">
+          <div id="usNoiLavagnaSlot" class="us-lav-slot"></div>
+          <ul class="us-postits is-board" id="usNoiBoardGrid" aria-label="Post-it" aria-live="polite"></ul>
+        </div>
         <button type="button" class="us-noi-board-all" id="usNoiBoardAll" data-board-all hidden><span>Tutti i post-it</span><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></button>
       </section>
 
       <article class="noi-resonance" aria-label="Sintonia attuale" data-s>
         <!-- Sintonia (moved into Gioca > Sintonia by noi-v2.js): the mockup's blocks, in its order. -->
-        <div class="noi-resonance-top"><div><div class="tiny">SINTONIA</div><svg class="us-sintonia-venn" viewBox="0 0 210 120" aria-hidden="true" focusable="false"><circle class="is-a" cx="62" cy="60" r="50"/><circle class="is-b" cx="148" cy="60" r="50"/><path class="is-noi"/><circle class="is-bloom" cx="105" cy="60" r="50"/></svg><b><span id="bondResonanceLevel" class="noi-resonance-level">Livello 1</span><span class="noi-resonance-dot" aria-hidden="true"> · </span><span id="bondRankTitle">Primo legame</span></b></div><span class="noi-resonance-mark" aria-hidden="true">∞</span></div>
-        <div class="bond-xp-track" id="bondProgressTrack" role="progressbar" aria-label="Progresso Sintonia verso il prossimo livello" aria-valuemin="0" aria-valuemax="200" aria-valuenow="0" aria-valuetext="0 di 200 punti nel livello 1"><div id="bondPageFill"></div></div>
-        <div class="noi-resonance-foot"><span id="bondLevelXp">0 / 200 punti</span><span id="bondNextXp">200 punti al livello 2</span><span id="bondCompletedCount" aria-hidden="true">0 esperienze</span></div>
+        <div class="noi-resonance-top"><div><div class="tiny">SINTONIA</div><b><span id="bondResonanceLevel" class="noi-resonance-level">Livello 1</span><span class="noi-resonance-dot" aria-hidden="true"> · </span><span id="bondRankTitle">Primo legame</span></b></div><span class="noi-resonance-mark" aria-hidden="true">∞</span></div>
+        <div class="bond-xp-track" id="bondProgressTrack" role="progressbar" aria-label="Progresso Sintonia verso il prossimo livello" aria-valuemin="0" aria-valuemax="150" aria-valuenow="0" aria-valuetext="0 di 150 punti nel livello 1"><div id="bondPageFill"></div></div>
+        <div class="noi-resonance-foot"><span id="bondLevelXp">0 / 150 punti</span><span id="bondNextXp">150 punti al livello 2</span><span id="bondCompletedCount" aria-hidden="true">0 esperienze</span></div>
         <div class="noi-resonance-legacy" aria-hidden="true"><span id="bondLevelValue">1</span><span id="bondTotalXp">0 punti</span><span id="bondRerollsLeft">3</span><span id="bondWeekReset">Nuove esperienze ogni lunedì</span><span id="bondBadges"></span></div>
       </article>
 
       <section class="us-progression-rhythm" id="usProgressionRhythm" aria-labelledby="usProgressionRhythmTitle" data-s>
-        <span class="us-progression-rhythm-kicker" id="usProgressionRhythmTitle">Ritmo</span>
+        <span class="us-progression-rhythm-kicker" id="usProgressionRhythmTitle">La vostra settimana</span>
         <p id="usProgressionRhythmCopy">Fate una piccola cosa insieme per iniziare.</p>
         <strong id="usProgressionRhythmValue">0 giorni</strong>
         <span class="us-progression-rhythm-days" id="usProgressionRhythmDays" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
@@ -865,9 +1181,18 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   <main id="settings" class="page">
     <section class="section us-settings-page us-settings2-page">
       <div class="us-settings2-head">
-        <div class="us-settings2-bar" data-s><button type="button" class="us-settings2-back" onclick="go('bond',{nav:true})"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span>Noi</button>
+        <div class="us-settings2-bar" data-s><button type="button" class="us-settings2-back" onclick="usSettingsReturn()"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span><span id="usSettingsFromLabel">Oggi</span></button>
         <div class="us-settings2-device-dot" id="usSettingsDeviceDot" role="status" aria-label="Stato sincronizzazione"><i aria-hidden="true"></i><span id="usSettingsSyncLabel">Sincronizzato</span></div></div>
-        <h2 data-s>Impostazioni</h2>
+        <h2 data-s>Profilo</h2>
+        <!-- Profilo (redesign definitivo, 23/11/2026, D6): your character, name, shape, colour and Come stai (personaggi.js). -->
+        <div class="us-profile-card" data-s>
+          <span class="us-profile-char" id="usProfileChar"></span>
+          <span class="us-profile-who">
+            <b id="usProfileName" translate="no">Tu</b>
+            <span class="us-profile-chips"><span id="usProfileShape">Tondo</span><span class="us-profile-color"><i aria-hidden="true"></i><span id="usProfileColor">Rosa</span></span><span id="usProfileMood" hidden></span></span>
+            <button type="button" class="us-profile-look" data-us-angolo="look">Cambia look</button>
+          </span>
+        </div>
       </div>
 
       <!-- US-SETTINGS-ORGANIZE-01: same action hooks, grouped by intent. -->
@@ -918,6 +1243,13 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <span class="us-settings2-switch" aria-hidden="true"><u></u></span>
         </button>
         </div>
+        <!-- Aspetto (24/11/2026): Giorno, the Quaderno, and Notte; per phone (aspetto.js). -->
+        <div class="us-settings2-label" data-s id="usAspettoTitle">ASPETTO</div>
+        <div class="us-aspetto" role="radiogroup" aria-labelledby="usAspettoTitle" data-s>
+          <button type="button" class="us-aspetto-choice" role="radio" aria-checked="true" data-us-aspetto="auto"><span class="us-aspetto-mini is-auto" aria-hidden="true"><i class="g"></i><i class="n"></i></span><b>Automatico</b><small>come il telefono</small></button>
+          <button type="button" class="us-aspetto-choice" role="radio" aria-checked="false" data-us-aspetto="giorno"><span class="us-aspetto-mini is-giorno" aria-hidden="true"><i class="g"></i></span><b>Giorno</b><small>sempre carta</small></button>
+          <button type="button" class="us-aspetto-choice" role="radio" aria-checked="false" data-us-aspetto="notte"><span class="us-aspetto-mini is-notte" aria-hidden="true"><i class="n"></i></span><b>Notte</b><small>sempre scuro</small></button>
+        </div>
         <div class="us-settings2-label" data-s>PERSONALIZZAZIONE</div>
         <div class="us-settings2-group" data-s>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="distance">
@@ -930,10 +1262,10 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <span class="us-setting-main"><b>Suoni e vibrazione</b></span>
           <span class="us-setting-value" id="usFeedbackValue">Attivi</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
-        <button type="button" class="us-setting-row us-settings2-row us-settings2-switch-row" data-us-setting="maudit" id="usMauditSetting" role="switch" aria-checked="true">
-          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="heart"></span></span>
-          <span class="us-setting-main"><b>Compagni</b><small>Il vostro compagno sopra la barra</small></span>
-          <span class="us-settings2-switch" aria-hidden="true"><u></u></span>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="intro">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="play"></span></span>
+          <span class="us-setting-main"><b>Rivedi l’intro</b></span>
+          <i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="widgets" hidden>
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="squares-four"></span></span>
@@ -1028,15 +1360,11 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 
   <main id="quiz" class="page">
     <section class="section us-gv2-page">
-      <div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia">
-        <button type="button" id="usGiocaTabGames" class="us-gioca-tab" role="tab" aria-controls="usGiocaGames" aria-selected="true" tabindex="0">Giochi</button>
-        <button type="button" id="usGiocaTabSintonia" class="us-gioca-tab" role="tab" aria-controls="usGiocaSintonia" aria-selected="false" tabindex="-1">Sintonia</button>
-      </div>
-      <div id="usGiocaGames" class="us-gioca-games" role="tabpanel" aria-labelledby="usGiocaTabGames">
+      <header class="us-page-head" data-s><h2>Gioca</h2><button type="button" class="us-me" data-us-self onclick="go('settings',{nav:true})" aria-label="Il tuo profilo e le Impostazioni" hidden></button></header>
+      <div id="usGiocaGames" class="us-gioca-games">
         <div id="quizHub" class="us-gv2-hub" aria-live="polite"><div class="us-gv2-empty" aria-busy="true">Carico…</div></div>
         <div id="usGameV2Panel" class="us-gv2-panel hidden" aria-live="polite"></div>
       </div>
-      <section id="usGiocaSintonia" class="us-gioca-sintonia" role="tabpanel" aria-labelledby="usGiocaTabSintonia" hidden></section>
     </section>
   </main>
 </div>
@@ -1045,11 +1373,10 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 <span class="us-nav-track" aria-hidden="true"><span class="us-nav-indicator"></span></span>
 <button data-us-feedback="tap" class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Oggi" aria-current="page"><span class="nicon"><span class="us-nav-icon us-nav-icon--home" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/house-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/house-fill.svg"></span></span></span><span class="nlabel">Oggi</span></button>
 <button data-us-feedback="tap" data-page="bond" onclick="go('bond',{nav:true})" aria-label="Noi"><span class="nicon"><span class="us-nav-icon us-nav-icon--bond" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/heart-straight-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/heart-straight-fill.svg"></span></span></span><span class="nlabel">Noi</span></button>
+<button type="button" id="thinkButton" class="us-nav-think" data-us-motion-tap="off" data-us-feedback="off" onclick="usNavHeartTap(this)" aria-label="Manda un Ti penso" title="Ti penso" hidden><span class="us-nav-think-heart" aria-hidden="true"><svg viewBox="0 0 256 256" focusable="false"><path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/></svg></span></button>
 <button data-us-feedback="tap" data-page="moments" onclick="go('moments',{nav:true})" aria-label="Ricordi"><span class="nicon"><span class="us-nav-icon us-nav-icon--moments" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/images-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/images-fill.svg"></span></span></span><span class="nlabel">Ricordi</span></button>
 <button data-us-feedback="tap" data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Gioca"><span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/game-controller-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/game-controller-fill.svg"></span></span></span><span class="nlabel">Gioca</span></button>
 </nav>
-<!-- US PET V1: decorative layer on the nav rim; unmounted until an approved asset exists. -->
-<div class="us-pet-layer" id="usPetLayer" aria-hidden="true" data-us-ambient hidden><span class="us-pet-actor"></span></div>
 
 
 <div class="us-events-overlay" id="usEventsOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
@@ -1101,7 +1428,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         <label class="us-event-field"><span>Che cosa?</span><input id="usEventTitleInput" type="text" maxlength="120" placeholder="Il nostro primo concerto" required></label>
         <label class="us-event-field"><span>Quando?</span><input id="usEventDateInput" type="date" required></label>
         <div class="us-event-row">
-          <label class="us-event-field"><span>Ora <i>· facoltativa</i></span><input id="usEventTimeInput" type="time"></label>
+          <label class="us-event-field"><span>Ora <i>· facoltativa</i></span><input id="usEventTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="next" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora, facoltativa"></label>
           <label class="us-event-field"><span>Dove? <i>· facoltativo</i></span><input id="usEventLocationInput" type="text" maxlength="160" placeholder="Milano"></label>
         </div>
         <label class="us-event-field"><span>Una nota <i>· facoltativa</i></span><textarea id="usEventNoteInput" rows="3" maxlength="500" placeholder="Biglietti nella mail"></textarea></label>
@@ -1151,10 +1478,12 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <div class="left-for-you-empty" id="leftForYouEmpty" hidden><h3>Lasciato per te</h3><p>Niente per ora.</p></div>
       <div class="left-for-you-error" id="leftForYouError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" data-action id="leftForYouRetry">Riprova</button></div>
       <div class="left-for-you-card" id="leftForYouCard" hidden>
+        <!-- Lasciato per te nuovo (tavola del 25/11/2026): who left it, painted by left-for-you.js. -->
+        <div class="left-for-you-cast" id="leftForYouCast" aria-hidden="true"></div>
         <div class="left-for-you-meta"><span class="left-for-you-from"><span class="left-for-you-from-avatar" id="leftForYouFromFallback">♡</span><span>Da <b id="leftForYouFromName" translate="no">la tua persona</b></span></span><span id="leftForYouCounter"></span></div>
         <div id="leftForYouContent"></div>
-        <p class="left-for-you-once" id="leftForYouOnce">Si apre una volta: conservalo se vuoi tenerlo.</p>
-        <div class="left-for-you-actions" id="leftForYouActions"><button type="button" id="leftForYouConserve">Conserva</button><button type="button" id="leftForYouReply">Rispondi</button><button type="button" id="leftForYouNext" hidden>Apri il prossimo</button></div>
+        <p class="left-for-you-once" id="leftForYouOnce">Si apre una volta sola. Se vuoi, tienila.</p>
+        <div class="left-for-you-actions" id="leftForYouActions"><button type="button" id="leftForYouConserve">Tienila</button><button type="button" id="leftForYouReply">Rispondi</button><button type="button" id="leftForYouNext" hidden>Apri il prossimo</button></div>
         <div class="left-for-you-status" id="leftForYouStatus" role="status" aria-live="polite"></div>
       </div>
       <button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
@@ -1171,20 +1500,22 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouComposerBackdrop"></div>
   <section class="left-for-you-sheet left-for-you-composer-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouComposerTitle" data-us-modal-panel>
     <header class="left-for-you-head">
-      <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouComposerTitle">Lascia qualcosa alla tua persona</h2></div>
+      <div><div class="tiny" id="leftForYouComposerKicker">PER VOI DUE</div><h2 id="leftForYouComposerTitle">Lascia qualcosa alla tua persona</h2></div>
       <button type="button" class="left-for-you-close us-modal-close" id="leftForYouComposerClose" aria-label="Chiudi il compositore" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="left-for-you-body left-for-you-composer-body">
       <p class="left-for-you-last" id="leftForYouComposerLast" hidden></p>
-      <div class="left-for-you-composer-kinds" role="tablist" aria-label="Tipo di messaggio">
-        <button type="button" role="tab" aria-selected="true" class="is-active" data-us-composer-kind="text">Testo</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="photo">Foto</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="audio">Vocale</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="video">Video</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="music">Musica</button>
-      </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="text">
         <label class="left-for-you-composer-label" for="leftForYouComposerText">Il tuo messaggio</label><textarea id="leftForYouComposerText" class="left-for-you-composer-text" maxlength="1000" rows="4" placeholder="Scrivi qualcosa per la tua persona…"></textarea><span class="left-for-you-composer-count" id="leftForYouComposerCount">0 / 1000</span>
+        <span class="left-for-you-sign" id="leftForYouComposerSign" translate="no"></span>
+      </div>
+      <p class="left-for-you-add-hint" id="leftForYouComposerAddHint">Aggiungi una cosa, se vuoi</p>
+      <div class="left-for-you-composer-kinds" role="tablist" aria-label="Aggiungi alla lettera">
+        <button type="button" role="tab" aria-selected="true" class="is-active" data-us-composer-kind="text" hidden>Testo</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="photo"><span class="us-icon" data-us-icon="image" aria-hidden="true"></span>Foto</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="audio"><span class="us-icon" data-us-icon="microphone" aria-hidden="true"></span>Vocale</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="video"><span class="us-icon" data-us-icon="video-camera" aria-hidden="true"></span>Video</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="music"><span class="us-icon" data-us-icon="music-note" aria-hidden="true"></span>Musica</button>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="photo" hidden>
         <div class="left-for-you-photo-preview" id="leftForYouComposerPhotoPreview" hidden><img id="leftForYouComposerPhotoPreviewImage" alt="Anteprima della foto scelta"><button type="button" class="left-for-you-photo-change" id="leftForYouComposerPhotoChange">Cambia foto</button></div>
@@ -1220,7 +1551,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         <input type="text" class="left-for-you-composer-url left-for-you-composer-caption" id="leftForYouComposerAudioCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia del vocale">
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="video" hidden>
-        <button type="button" class="left-for-you-composer-pick" id="leftForYouComposerVideoPick" data-pick="video"><b>Scegli un video</b><small class="left-for-you-composer-hint" id="leftForYouComposerVideoHint">Fino a 30 secondi e 20 MB.</small></button><input type="file" id="leftForYouComposerVideoFile" accept="video/mp4,video/webm,video/quicktime" hidden>
+        <div class="left-for-you-photo-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerVideoCamera" data-pick="video"><b>Fai un video</b><small>Resta privato, solo tra voi due</small></button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerVideoPick" data-pick="gallery"><b>Scegli un video</b><small class="left-for-you-composer-hint" id="leftForYouComposerVideoHint">Fino a 30 secondi e 20 MB.</small></button></div><input type="file" id="leftForYouComposerVideoFile" accept="video/mp4,video/webm,video/quicktime" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerVideoName"></span>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="music" hidden>
@@ -1238,7 +1569,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         </details>
       </div>
       <div class="left-for-you-actions left-for-you-composer-actions"><button type="button" id="leftForYouComposerSend" disabled>Lascia per la tua persona</button></div>
-      <div class="left-for-you-status" id="leftForYouComposerStatus" role="status" aria-live="polite"></div>
+      <div class="left-for-you-status" id="leftForYouComposerStatus" role="status" aria-live="polite"></div><button type="button" class="ghost left-for-you-composer-settings" id="leftForYouComposerSettings" hidden>Apri le impostazioni</button>
       <button type="button" class="us-conservati-entry left-for-you-kept" data-conservati-entry aria-label="Apri Conservati" hidden>
         <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span></span>
         <span class="us-conservati-entry-copy"><b>Conservati</b><small>Le cose che avete deciso di tenere</small></span>
@@ -1252,9 +1583,9 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 <div class="left-for-you-overlay left-for-you-camera-overlay" id="leftForYouCameraOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouCameraBackdrop"></div>
   <section class="left-for-you-sheet left-for-you-camera-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouCameraTitle" data-us-modal-panel>
-    <header class="left-for-you-head"><div><div class="tiny">FOTO PRIVATA</div><h2 id="leftForYouCameraTitle">Scatta una foto</h2></div><button type="button" class="left-for-you-close us-modal-close" id="leftForYouCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+    <header class="left-for-you-head"><div><div class="tiny" id="leftForYouCameraKicker">FOTO PRIVATA</div><h2 id="leftForYouCameraTitle">Scatta una foto</h2></div><button type="button" class="left-for-you-close us-modal-close" id="leftForYouCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
     <div class="left-for-you-body left-for-you-camera-body">
-      <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden><span class="left-for-you-camera-flash" id="leftForYouCameraFlash" aria-hidden="true"></span></div>
+      <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden><video id="leftForYouCameraRecorded" class="left-for-you-camera-recorded" controls playsinline preload="metadata" aria-label="Anteprima del video" hidden></video><span class="left-for-you-camera-flash" id="leftForYouCameraFlash" aria-hidden="true"></span><span class="left-for-you-camera-timer" id="leftForYouCameraTimer" role="timer" aria-label="Durata del video, massimo 30 secondi" data-recording="false" hidden>0:00 / 0:30</span></div>
       <div class="left-for-you-camera-status" id="leftForYouCameraStatus" role="status" aria-live="polite"></div>
       <div class="left-for-you-camera-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraSwitch">Cambia fotocamera</button><button type="button" class="left-for-you-camera-shutter" id="leftForYouCameraCapture" aria-label="Scatta foto"><span aria-hidden="true"></span></button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraUse" hidden>Usa foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraRetake" hidden>Rifai</button></div>
     </div>
@@ -1332,6 +1663,53 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
   </section>
 </div>
 
+<!-- US vi ricorda (founder, 25/11/2026): the sheet of the characters' line, with the gesture ready (us-ricorda.js). -->
+<div class="us-cal-sheet-overlay us-battuta" id="usBattuta" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-cal-sheet-backdrop us-modal-backdrop" data-battuta-close></div>
+  <section class="us-cal-sheet us-sheet is-bottom us-battuta-sheet" role="dialog" aria-modal="true" aria-labelledby="usBattutaText" data-us-modal-panel>
+    <div class="us-battuta-body" id="usBattutaBody"></div>
+  </section>
+</div>
+
+<!-- La lente di Ricordi (founder, 27/11/2026): the search, month by month, and a result with «Sulla bacheca» (ricordi-cerca.js).
+     Before the board's sheet, which opens over it. -->
+<div class="us-cal-sheet-overlay us-foglio us-ricordi-cerca" id="usRicordiCerca" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-cal-sheet-backdrop us-modal-backdrop" data-rc-close></div>
+  <section class="us-cal-sheet us-sheet is-bottom rc-sheet" role="dialog" aria-modal="true" aria-label="Cerca nei ricordi" data-us-modal-panel>
+    <div class="rc-bar">
+      <label class="rc-field"><span class="us-icon" data-us-icon="magnifying-glass" aria-hidden="true"></span><input id="usRicordiCercaInput" type="search" enterkeyhint="search" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Cerca un posto, una parola, un mese" aria-label="Cerca nei ricordi"></label>
+      <button type="button" class="rc-close" data-rc-close>Chiudi</button>
+    </div>
+    <div class="rc-body" id="usRicordiCercaBody"></div>
+  </section>
+</div>
+
+<!-- La vostra bacheca (founder, 25/11/2026): what to do with a thing on the board (bacheca.js). -->
+<div class="us-cal-sheet-overlay us-bacheca-sheet" id="usBachecaSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-cal-sheet-backdrop us-modal-backdrop" data-ub-act="close"></div>
+  <section class="us-cal-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usBachecaSheetTitle" data-us-modal-panel>
+    <h2 class="ub-sheet-title" id="usBachecaSheetTitle" translate="no"></h2>
+    <p class="ub-sheet-why" id="usBachecaSheetWhy"></p>
+    <div class="ub-sheet-actions">
+      <button type="button" data-ub-act="open">Apri il ricordo</button>
+      <button type="button" data-ub-act="fix">Fissa: US non la toglie più</button>
+      <button type="button" data-ub-act="unpin">Stacca: torna al suo posto</button>
+      <button type="button" class="is-never" data-ub-act="ban">Non appenderla più</button>
+    </div>
+    <!-- Fase 2 (27/11/2026): the post-its of the thing, and yours. -->
+    <div class="ub-notes-sec" id="usBachecaNotes"></div>
+  </section>
+</div>
+
+<!-- Il giorno (founder, 25/11/2026): a tap on a day of Noi opens its things here, over the calendar;
+     the day card under the calendar is gone. noi-v2.js fills it. -->
+<div class="us-cal-sheet-overlay us-noi-day" id="usNoiDay" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-cal-sheet-backdrop us-modal-backdrop" data-noi-day-close></div>
+  <section class="us-cal-sheet us-sheet is-bottom us-noi-day-sheet" role="dialog" aria-modal="true" aria-labelledby="usNoiDayTitle" data-us-modal-panel>
+    <section id="usNoiV2Detail" class="us-noi-v2-detail" aria-label="Giorno selezionato" aria-live="polite"></section>
+  </section>
+</div>
+
 <!-- Noi calendar editors: the day detail and the "+" form open over Noi. -->
 <div class="us-cal-sheet-overlay" id="usCalendarDetailSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarDetailBackdrop"></div>
@@ -1359,7 +1737,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
       <div class="us-cal-kind" id="usCalendarKind" role="group" aria-label="Che cosa aggiungi">
         <button type="button" data-us-calendar-kind="personal" data-owner="tu" aria-pressed="true"><span class="us-icon" data-us-icon="user-circle" aria-hidden="true"></span><span>Solo mio</span></button>
         <button type="button" data-us-calendar-kind="shared" data-owner="noi" aria-pressed="false"><span class="us-icon" data-us-icon="heart" aria-hidden="true"></span><span>Nostro</span></button>
-        <button type="button" data-us-calendar-kind="event" data-owner="noi" aria-pressed="false"><span class="us-icon" data-us-icon="calendar-heart" aria-hidden="true"></span><span>Data speciale</span></button>
       </div>
       <p class="us-cal-form-context" id="usCalendarFormContext" hidden>Le vostre idee · per voi due</p>
       <p class="us-cal-form-day" id="usCalendarFormDay" hidden></p>
@@ -1371,13 +1748,18 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
         <button type="button" class="us-cal-preset-add" id="usCalendarPresetAdd" aria-label="Aggiungi un titolo rapido"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
         <span class="us-cal-preset-new" id="usCalendarPresetNew" hidden><input id="usCalendarPresetNewInput" type="text" maxlength="30" enterkeyhint="done" placeholder="Nuovo titolo" aria-label="Nuovo titolo rapido"><button type="button" id="usCalendarPresetNewSave">Aggiungi</button></span>
       </div>
-      <label class="us-cal-field"><span>Che cosa fai?</span><input id="usCalendarTitleInput" type="text" maxlength="200" required placeholder="Che cosa fai?"></label>
-      <label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno</span><input id="usCalendarDateInput" type="date"></label>
-      <label class="us-cal-field us-cal-allday-field"><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
-      <div class="us-cal-time-fields" id="usCalendarTimeFields">
-        <label class="us-cal-field"><span>Inizio</span><input id="usCalendarStartTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="next" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di inizio"></label>
-        <span class="us-cal-time-arrow" aria-hidden="true">→</span>
-        <label class="us-cal-field"><span>Fine</span><input id="usCalendarEndTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di fine"></label>
+      <label class="us-cal-field"><span>Che cosa</span><input id="usCalendarTitleInput" type="text" maxlength="200" required placeholder="Che cosa fate?"></label>
+      <!-- Noi, Fase A (24/11/2026): Quando and Inizio «se c'è»; no time = all day. Fine «se vuoi» (28/11): none = only the start. -->
+      <div class="us-cal-when">
+        <label class="us-cal-field" id="usCalendarDateField"><span>Quando</span><input id="usCalendarDateInput" type="date"></label>
+        <label class="us-cal-field us-cal-when-time"><span>Inizio · se c’è</span><input id="usCalendarStartTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di inizio, se c’è"></label>
+        <label class="us-cal-field us-cal-when-time"><span>Fine · se vuoi</span><input id="usCalendarEndTimeInput" class="us-cal-time-input" type="text" inputmode="numeric" enterkeyhint="done" maxlength="5" autocomplete="off" placeholder="00:00" aria-label="Ora di fine, se vuoi"></label>
+      </div>
+      <label class="us-cal-field us-cal-allday-field" hidden><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
+      <!-- Ci vediamo: your next meeting («Vi rivedete tra» in Noi). Ogni anno: a date that comes back (Eventi). -->
+      <div class="us-cal-switches" id="usCalendarSwitches">
+        <label class="us-cal-switch" id="usCalendarMeetRow"><span class="us-cal-switch-copy"><b>Ci vediamo</b><small>diventa il vostro prossimo incontro</small></span><input id="usCalendarMeetInput" type="checkbox" role="switch" aria-label="Ci vediamo"></label>
+        <label class="us-cal-switch" id="usCalendarYearlyRow"><span class="us-cal-switch-copy"><b>Ogni anno</b><small>per compleanni e anniversari</small></span><input id="usCalendarYearlyInput" type="checkbox" role="switch" aria-label="Ogni anno"></label>
       </div>
       <div class="us-cal-form-status" id="usCalendarFormStatus" role="status" aria-live="polite"></div>
       <button type="submit" class="primary us-cal-form-save" id="usCalendarFormSave">Salva impegno</button>
@@ -1392,11 +1774,13 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 <script defer src="/google-auth.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/app.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/progression.js?v=us-rilascio-20261114-109"></script>
-<script defer src="/stories.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/fix4.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/left-for-you.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/events.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/gioca-insieme.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/games.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/play-us-maze.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/play-us.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/settings.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/widget-hub.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/identity.js?v=us-rilascio-20261114-109"></script>
@@ -1410,7 +1794,9 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 <script defer src="/calendar-domain.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/calendar.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/noi-v2.js?v=us-rilascio-20261114-109"></script>
-<script defer src="/sky.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/oggi-fx.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/intro.js?v=us-rilascio-20261114-109"></script>
+<script defer src="/think-reward.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/oggi-look.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/navigation.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/ui-foundation.js?v=us-rilascio-20261114-109"></script>
@@ -1418,8 +1804,6 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 <script defer src="/year-recap.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/couple-notes.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/lavagna.js?v=us-rilascio-20261114-109"></script>
-<script defer src="/pet.js?v=us-rilascio-20261114-109"></script>
-<script defer src="/companions.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/distance.js?v=us-rilascio-20261114-109"></script>
 <script defer src="/due-colori.js?v=us-rilascio-20261114-109"></script>
 </body></html>

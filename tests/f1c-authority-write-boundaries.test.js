@@ -350,6 +350,8 @@ test('F1C client contract: the shipped client writes only the columns F1C keeps'
     // Due colori first run (app.js insertEvent): the optional birthday from the "Tu" step.
     'shared_events.insert(row)',
     'shared_events.insert({...payload,couple_id:window.usProfile.couple_id,created_by:window.usProfile.id})',
+    // Noi, Fase A (24/11/2026): «Ogni anno» in the commitment form saves an Eventi date.
+    'shared_events.insert({title,event_date:date,event_time:time||null,recurs_yearly:true,couple_id:window.usProfile.couple_id,created_by:window.usProfile.id})',
     'shared_events.update(payload)',
   ]);
   const events = read('events.js');

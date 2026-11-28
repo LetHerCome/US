@@ -42,7 +42,7 @@ function runtime(options={}){
   const pending=new Promise(r=>{release=r;});
   const window={dispatchEvent(){},addEventListener(){}};
   const chain={select(){return this;},eq(){return this;},maybeSingle(){return pending.then(()=>({data:{id:'b'},error:null}));},order(){return pending.then(()=>{if(options.failure)throw new Error('offline');return {data:rows('b',['Alex','Sam']),error:null};});}};
-  const ctx=vm.createContext({window,document:{getElementById(){return null;},querySelector(){return null;},querySelectorAll(){return [];}},CustomEvent:class{},sb:{from(){return chain;}},updateTogetherDays(){},console});
+  const ctx=vm.createContext({window,document:{getElementById(){return null;},querySelector(){return null;},querySelectorAll(){return [];}},CustomEvent:class{},sb:{from(){return chain;}},console});
   vm.runInContext(source.slice(start,source.indexOf("window.addEventListener('us-app-lock-change'",start)),ctx);
   return {ctx,window,release};
 }
@@ -76,7 +76,8 @@ test('D5 late Think reactions cannot update a replacement session',async()=>{
   const window={usProfile:viewer};
   const builder={select(){return this;},eq(){return this;},order(){return this;},gte(){return this;},limit(){return this;},then(ok){return Promise.resolve({data:[{id:'msg'}],count:1,error:null}).then(ok);}};
   const ctx=vm.createContext({window,partnerFromProfiles:()=>null,getCoupleProfiles:async()=>rows('b',['Alex','Sam']),sb:{from(table){return table==='think_reactions'?{select(){return this;},in(){return pending;}}:builder;}},console,Date});
-  const a=source.indexOf('async function hydrateThink(){'),b=source.indexOf('window.hydrateThink=hydrateThink;',a);
+  // I cuori (27/11/2026): the Ti penso list (with its taps) is read just above hydrateThink.
+  const a=source.indexOf('async function usThinkRows(){'),b=source.indexOf('window.hydrateThink=hydrateThink;',a);
   vm.runInContext(source.slice(a,b),ctx);
   const task=vm.runInContext('hydrateThink()',ctx);
   await new Promise(r=>setImmediate(r));window.usProfile=null;release({data:[],error:null});

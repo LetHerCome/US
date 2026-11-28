@@ -26,4 +26,23 @@
     <color name="us_widget_on_rosa">#FF1A1020</color>
     <!-- The ink on a post-it's paper, in both themes (04/11/2026). -->
     <color name="us_widget_postit_ink">#FF3B2A10</color>
+    <!-- Widget del redesign (founder, 26/11/2026; tavola Hkj3ojVe3bwEHfg9XeJf6A):
+         the Quaderno on paper (giorno.css), the warm night in the dark theme
+         (values-night). The couple's colours live in the things, set from code. -->
+    <color name="us_w_surface">#FFFBF7F0</color>
+    <color name="us_w_board">#FFF3ECE1</color>
+    <color name="us_w_ink">#FF231B1D</color>
+    <color name="us_w_sub">#FF6B5F5A</color>
+    <color name="us_w_line">#1A231B1D</color>
+    <color name="us_w_filo">#FFB8452F</color>
+    <color name="us_w_label">#FFB8452F</color>
+    <color name="us_w_on_pill">#FFFBF7F0</color>
+    <color name="us_w_velo_start">#F0FBF7F0</color>
+    <color name="us_w_velo_center">#8CFBF7F0</color>
+    <color name="us_w_velo_end">#00FBF7F0</color>
+    <!-- Paper is paper in both themes: the envelope, the polaroid, the post-it ink. -->
+    <color name="us_w_paper">#FFF3ECE1</color>
+    <color name="us_w_polaroid">#FFFBF7F0</color>
+    <color name="us_w_ceralacca">#FFB8452F</color>
+    <color name="us_w_paper_ink">#FF1A1020</color>
 </resources>

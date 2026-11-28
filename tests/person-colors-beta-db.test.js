@@ -26,16 +26,16 @@ test('migration exists and is listed in the cutoff', () => {
 
 test('in beta (Plus not on sale) the colour is free for everyone, and the app is told', async () => {
   assert.deepEqual(await plus(h.F), { active: false, by: null, colors_free: true });
-  assert.deepEqual(await setColor(h.F, 'cielo'), { color: 'cielo' });
-  await assert.rejects(setColor(h.B, 'cielo'), /partner color/, 'never the partner\'s colour');
+  assert.deepEqual(await setColor(h.F, 'blu'), { color: 'blu' });
+  await assert.rejects(setColor(h.B, 'blu'), /partner color/, 'never the partner\'s colour');
 });
 
 test('the day Plus goes on sale: changing needs Plus again, the colour already chosen stays', async () => {
-  await setColor(h.F, 'oro');
+  await setColor(h.F, 'prugna');
   await onSale(true);
   assert.deepEqual(await plus(h.F), { active: false, by: null, colors_free: false });
   await assert.rejects(setColor(h.F, 'pesca'), /plus required/);
-  assert.equal((await db.query('select person_color from public.profiles where id = $1', [h.F])).rows[0].person_color, 'oro');
+  assert.equal((await db.query('select person_color from public.profiles where id = $1', [h.F])).rows[0].person_color, 'prugna');
 });
 
 test('the switch is the server\'s alone: clients cannot read or write it', async () => {

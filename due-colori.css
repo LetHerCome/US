@@ -178,8 +178,14 @@ input,textarea,select,button{font-family:inherit}
 body:has(#homeHero.us-oggi-focus) .us-nav.us-nav-premium{translate:0 120px}
 
 /* ---------- Colour flood between tabs (due-colori.js) ---------- */
-.us-flood{position:fixed;inset:0;z-index:19;pointer-events:none;background:var(--us-flood,var(--us-tab));clip-path:circle(0 at 50% 100%)}
-.us-flood[hidden]{display:none}
+/* Fluidità 2 (24/11/2026): a disc that grows with transform, on the compositor. */
+.us-flood{position:fixed;inset:0;z-index:19;pointer-events:none;overflow:hidden;contain:strict;opacity:0;will-change:opacity}
+.us-flood[data-on="1"]{opacity:1}
+/* The disc is invisible until its flood. No sharp edge (founder, 24/11/2026): solid to 52 % of the radius, then the
+   colour thins out to nothing, so it takes the page little by little. */
+.us-flood-disc{--c:var(--us-flood,var(--us-tab));position:absolute;display:block;width:480px;height:480px;left:0;top:0;border-radius:50%;background:radial-gradient(circle closest-side,var(--c) 52%,color-mix(in srgb,var(--c) 62%,transparent) 70%,color-mix(in srgb,var(--c) 26%,transparent) 85%,transparent 100%);transform:scale(1);opacity:0;will-change:transform}
+/* The new page opens through a soft hole from the tap (production's reveal, with a soft edge). */
+.us-flood.is-opening{-webkit-mask-image:radial-gradient(circle at var(--us-hole-x,50%) var(--us-hole-y,100%),transparent calc(var(--us-hole,0px) - 140px),#000 var(--us-hole,0px));mask-image:radial-gradient(circle at var(--us-hole-x,50%) var(--us-hole-y,100%),transparent calc(var(--us-hole,0px) - 140px),#000 var(--us-hole,0px))}
 /* Under the colour the new page opens fully opaque, as the mockup's view
    (its own short fade would show it translucent in the growing circle). */
 .page.us-marea-in{animation:none!important}

@@ -15,14 +15,15 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const res = (file) => read(`${PLUGIN}/res/${file}`);
 const exists = (file) => fs.existsSync(path.join(ROOT, file));
 
-// 04/11/2026 (founder): only the other person, her distance and her battery.
-test('layouts: illustration and grain, her portrait, the distance in Fraunces, her battery', () => {
+// Widget del redesign (founder, 26/11/2026): «Tra voi», the distance in
+// Fraunces, their character with their battery; the 4x2 puts you two at the
+// ends of a straight thread (no arc, founder 14/11/2026).
+test('layouts: the card, the distance in Fraunces, their character and battery, the thread in the 4x2', () => {
   for (const name of ['us_widget_noi', 'us_widget_noi_small', 'us_widget_noi_medium']) {
     const layout = res(`layout/${name}.xml`);
-    assert.match(layout, /android:background="@drawable\/us_widget_card"\s+android:clipToOutline="true"/, name);
-    assert.match(layout, /@drawable\/us_widget_art_noi_[sm]"/, name);
-    assert.doesNotMatch(layout, /us_noi_me|@string\/us_widget_noi_me"/, `${name}: never my portrait`);
-    for (const id of ['us_noi_root', 'us_noi_art', 'us_noi_grain', 'us_noi_partner', 'us_noi_partner_initial', 'us_noi_distance', 'us_noi_battery_icon', 'us_noi_battery']) {
+    assert.match(layout, /android:background="@drawable\/us_w_card"\s+android:clipToOutline="true"/, name);
+    assert.doesNotMatch(layout, /us_widget_art_|us_widget_grain|us_noi_partner_initial/, name);
+    for (const id of ['us_noi_root', 'us_noi_distance', 'us_noi_battery_icon', 'us_noi_battery']) {
       assert.match(layout, new RegExp(`@\\+id/${id}"`), `${name} ${id}`);
     }
     assert.match(layout, /<ImageView\s+android:id="@\+id\/us_noi_distance"/, name);
@@ -30,9 +31,12 @@ test('layouts: illustration and grain, her portrait, the distance in Fraunces, h
     assert.doesNotMatch(layout, /android:text="[^@]/, `${name}: text from strings.xml`);
   }
   const medium = res('layout/us_widget_noi_medium.xml');
-  for (const id of ['us_noi_partner_name', 'us_noi_caption']) assert.match(medium, new RegExp(`@\\+id/${id}"`), id);
-  assert.match(res('layout/us_widget_noi_small.xml'), /@\+id\/us_noi_partner"[\s\S]*@\+id\/us_noi_partner_name"[\s\S]*@\+id\/us_noi_battery_row"/);
+  for (const id of ['us_noi_me', 'us_noi_partner', 'us_noi_partner_name', 'us_noi_caption']) assert.match(medium, new RegExp(`@\\+id/${id}"`), id);
+  assert.match(medium, /@\+id\/us_noi_distance"[\s\S]*@drawable\/us_w_filo"[\s\S]*@\+id\/us_noi_caption"/, 'the distance over the thread, how old under it');
+  assert.match(res('drawable/us_w_filo.xml'), /android:shape="line"[\s\S]*android:dashWidth/);
+  assert.match(res('layout/us_widget_noi_small.xml'), /@string\/us_widget_noi_label"[\s\S]*@\+id\/us_noi_partner"[\s\S]*@\+id\/us_noi_partner_name"[\s\S]*@\+id\/us_noi_battery_row"/);
   assert.match(res('values/strings.xml'), /<string name="us_widget_noi_name">Distanza e batteria<\/string>/);
+  assert.match(res('values/strings.xml'), /<string name="us_widget_noi_label">Tra voi<\/string>/);
 });
 
 test('no map: the asset, its manifest entry, its attribution and the old layout are gone', () => {
@@ -61,10 +65,10 @@ test('provider: 2x1, 2x2 and 4x2 by size; older phones by the reported size', ()
   // "aggiornato 10 min fa" and the battery redraw themselves with the shared alarm.
   assert.match(provider, /state\.needsUpdateAt\(couple\.distanceNextChange\);/);
   assert.match(provider, /state\.needsUpdateAt\(couple\.batteryNextChange\);/);
-  assert.match(provider, /readNoiPortrait\("partner"\)/);
-  assert.doesNotMatch(provider, /readNoiPortrait\("me"\)/, 'never my portrait');
-  assert.doesNotMatch(provider, /readNoiPortrait\("pair"\)/);
-  assert.ok(provider.includes('UsWidgetArt.avatar(views, context, state.store.readNoiPortrait("partner"), R.id.us_noi_partner, R.id.us_noi_partner_initial, partner, portraitDp);'));
+  // The characters, not the photos (widget del redesign, 26/11/2026).
+  assert.doesNotMatch(provider, /readNoiPortrait/);
+  assert.ok(provider.includes('UsWidgetCharacter.put(small, context, R.id.us_noi_partner, them, theirFace, "", 30);'));
+  assert.ok(provider.includes('UsWidgetCharacter.put(medium, context, R.id.us_noi_me, me, UsWidgetCharacter.face(state, true), "", 52);'));
   assert.ok(provider.includes('UsWidgetArt.serif(views, context, R.id.us_noi_distance, distance(context, couple)'));
   assert.match(provider, /UsWidgets\.open\(context, "noi", 4401\)/);
   // "12 km" with a smaller unit, as on the board.

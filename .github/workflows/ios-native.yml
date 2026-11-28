@@ -270,7 +270,8 @@ jobs:
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$EXT/Info.plist")" = "app.uscouple.widgets"
           test "$(/usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionPointIdentifier' "$EXT/Info.plist")" = "com.apple.widgetkit-extension"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$EXT/Info.plist")" = "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist")"
-          for file in Fraunces.ttf Fraunces-Italic.ttf Figtree.ttf art_photo.webp art_photo_night.webp art_think_s.webp art_think_m_night.webp grain_tile.png; do test -f "$EXT/$file"; done
+          for file in Fraunces.ttf Fraunces-Italic.ttf Figtree.ttf; do test -f "$EXT/$file"; done
+          if ls "$EXT" | grep -Eiq '\.(png|jpe?g|webp|gif|heic)$'; then echo "::error::Immagini non usate nell'estensione dei widget"; exit 1; fi
 
       # Proof the app starts: the unsigned Debug build in a booted iPhone
       # simulator, a screenshot of what it shows (the sign-in screen: nothing
@@ -296,6 +297,43 @@ jobs:
           RUNNING=$(xcrun simctl spawn "$DEVICE" launchctl list)
           grep -q "UIKitApplication:app.uscouple" <<< "$RUNNING" || { echo "::error::US non è più in esecuzione dopo l'avvio"; exit 1; }
           xcrun simctl shutdown "$DEVICE" || true
+
+      # Widget del redesign (26/11/2026): the iPhone widget gallery, every
+      # widget and family by day and by night, drawn by the extension's real
+      # views with a sample couple (no real data); the pictures are an artifact.
+      - name: Widget gallery in the iOS Simulator
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          SDK=$(xcrun --sdk iphonesimulator --show-sdk-path)
+          ARCH=$(uname -m)
+          xcrun --sdk iphonesimulator swiftc -swift-version 5 -target "$ARCH-apple-ios17.0-simulator" -sdk "$SDK" \
+            ios/App/UsWidgets/UsWidgetTheme.swift ios/App/UsWidgets/UsCharacterView.swift ios/App/UsWidgets/UsCardWidgets.swift \
+            ios/App/UsWidgets/UsPhotoWidget.swift ios/App/UsWidgets/UsThinkWidget.swift ios/App/UsWidgets/UsThinkSender.swift \
+            native-plugins/us-widget-bridge/ios/Sources/UsWidgetBridgePlugin/Core/*.swift \
+            native-plugins/us-widget-bridge/ios/Tests/WidgetGallery/main.swift \
+            -o build/us-widget-gallery
+          codesign --force --sign - --timestamp=none build/us-widget-gallery
+          DEVICE=$(xcrun simctl list devices available -j | node -e '
+            const all = Object.entries(JSON.parse(require("fs").readFileSync(0, "utf8")).devices)
+              .filter(([runtime]) => /iOS/.test(runtime)).flatMap(([, list]) => list);
+            const pick = all.find((d) => /^iPhone 1[5-9] Pro$/.test(d.name)) || all.find((d) => /^iPhone/.test(d.name));
+            process.stdout.write(pick ? pick.udid : "");')
+          if [ -z "$DEVICE" ]; then echo "::warning::Nessun simulatore iPhone su questo runner"; exit 0; fi
+          xcrun simctl boot "$DEVICE" || true
+          xcrun simctl bootstatus "$DEVICE" -b
+          mkdir -p build/ios-widget-gallery
+          xcrun simctl spawn "$DEVICE" "$PWD/build/us-widget-gallery" "$PWD/build/ios-widget-gallery" \
+            "$PWD/ios/App/UsWidgets/Resources" "$PWD/native-plugins/us-widget-bridge/android/src/androidTest/assets"
+          xcrun simctl shutdown "$DEVICE" || true
+
+      - name: Upload widget gallery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-widget-gallery
+          path: build/ios-widget-gallery/*.png
+          if-no-files-found: ignore
 
       - name: Upload simulator screenshot
         if: always()

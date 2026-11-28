@@ -514,3 +514,236 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **«Aggiungi alla Home»:** iOS non lo permette; Impostazioni › Widget mostra i passi per iPhone (tieni premuto sulla Home › Modifica › Aggiungi widget › US). Il testo arriva dal ponte iOS e il JS lo mostra senza controlli di piattaforma: è l'unico cambio al JS condiviso.
 - **Procedura:** disegni SwiftUI Pastello e Midnight approvati prima del codice; ogni fase è una PR verde in `ios-native.yml` con la build TestFlight pronta, lanciata e unita solo col via del founder e dopo che Bea ha confermato la build 1.5.0 (457497).
 - **Disegni (founder, 14/11, «il resto tutto bello»):** tavola https://claude.ai/artifact/7r3PaBCzW1AP1sgqruCo71 approvata. su iPhone nessun disegno a tratto dietro ai widget (l'arco di Distanza e batteria «mi fa cacare», poi «anche tutti gli altri widget con quel disegnino»): Distanza e batteria piccolo e medio senza l'arco, La domanda di oggi senza il fumetto, Ricordi a pila senza le cornici disegnate; solo il fondo sfumato. Resta la busta chiusa di Lasciato per te, che è il soggetto del widget. Su Android i widget non cambiano finché il founder non lo chiede.
+
+## 2026-11-23 — Il redesign definitivo: staging riparte da main
+
+**Fonte:** founder, 23/11/2026: «dobbiamo buttare il progetto staging, dobbiamo riprendere il progetto principale che al momento è su main e riportarlo su staging» (personaggi al posto dei cerchi, Impostazioni nel profilo in alto a destra, intro coi personaggi, Sintonia rinominata senza mascotte e con il guardaroba, Gioca senza il gioco delle foto né la domanda, gettoni, Oggi senza suggerimenti, Ti penso al centro della barra, colori della coppia, Ricordi a polaroid con una bacheca da detective legata alla mappa); poi «concordo» alle risposte consigliate D1–D14. Piano e decisioni: [`missions/redesign-definitivo.md`](missions/redesign-definitivo.md).
+
+- **Base:** l'app di produzione (`main`). Il diario pulito di staging è archiviato nell'etichetta `archivio/staging-diario-pulito-20261123`; dei suoi pezzi restano solo i personaggi (con il loro database e la tavolozza del 15/11), il Ti penso al centro della barra, la busta e il profilo negli angoli in alto, e le correzioni senza grafica (D1).
+- **Sostituisce:** la direzione «Il diario, ma pulito» del 15/11; «Sintonia dentro Gioca» della governance V1 (ora «Il vostro angolo», aperto dai personaggi); i colori fissi delle schede (ora dai due colori della coppia, D7); la regola «niente si toglie mai» del 29/10 per i soli Compagni (D5).
+- **Procedura:** tavola approvata prima del codice, poi una fase alla volta su staging; push, unioni, SQL e produzione ciascuno col via del founder.
+
+## 2026-11-24 — Redesign: il guardaroba sui livelli vuoti, il Simbolo US resta
+
+**Fonte:** founder, 24/11/2026, sui numeri della scala dei premi: «il simbolo US il logo lo lasci, per il resto continua con proposta A».
+
+- **Guardaroba:** i primi cinque accessori restano a 150, 400, 700, 1000 e 1350 punti; gala, cuffie, coroncina e corona arrivano all'inizio dei livelli 8, 11, 14 e 19 (4550, 8750, 14300, 26550 punti), che dopo l'uscita di Atmosfere, Colore di Noi e compagni erano vuoti. Il server tiene la regola (migrazione `20261123231417_personaggi_scala_premi.sql`, solo staging finché il founder non dice altro). Il momento del nuovo livello nomina l'accessorio.
+- **Simbolo US:** resta tra i premi della Sintonia (effetti ai livelli 6, 9 e 13). Sostituisce la parte di D4 del 23/11 che lo faceva uscire.
+
+## 2026-11-25 — La crescita di US: US vi ricorda, i personaggi parlano
+
+**Fonte:** founder, 25/11/2026: «US deve essere un'app che cresce insieme alla coppia… al momento come cresce?», poi «tutto quanto US pian piano ricorda… e facciamo parlare i personaggini, raramente»; /grill-me D1–D22 confermato con «Tutto okay possiamo partire». Progetto: [`docs/product/2026-11-25-us-vi-ricorda.md`](product/2026-11-25-us-vi-ricorda.md).
+
+- **Crescere** vuol dire che US conosce sempre di più la coppia e le restituisce le sue cose (date, un anno fa, ti aspetta, traguardi, il gioco «Ti ricordi?») per bocca dei personaggi; la crescita si vede in «Cosa US sa di voi». È gratis per tutti.
+- **A regole, senza AI** nella prima versione: i dati non escono da US. L'AI si valuta dopo, col sì di tutti e due e un nuovo fornitore dichiarato.
+- **Regole fisse:** parla il tuo personaggio; al massimo una battuta al giorno, 9–21; solo dati che entrambi vedono già, con una lista di parole delicate; sorprese a senso unico; ogni battuta prepara il gesto, mai lo fa al posto di nessuno; «Non ora», «Non dirmelo più» e un interruttore unico.
+- **Staging e produzione:** su staging prova solo il founder; in produzione si va eventualmente direttamente con la seconda versione, perché US è in beta. Ogni passo con tavola prima, migrazione e lavoro notturno su staging col suo sì.
+- **Sostituisce** la parte di Cupido del 13/11 che legava la voce ai Compagni, a US Plus e al livello 3: i Compagni non ci sono più e la crescita è gratis.
+
+## 2026-11-25 — Ti penso ricevuto coi personaggi
+
+**Fonte:** founder, 25/11/2026, dall'APK: «studia la schermata di quando viene ricevuto il ti penso che é ancora quella vecchia… falla più carina nella nuova us fammela vedere prima»; tavola «US · Ti penso ricevuto» (https://claude.ai/artifact/YQ12MPCHsZUiqiRd4ZXCUL) approvata («Approvo»), icona dell'abbraccio A («La A»).
+
+- **La schermata:** il personaggio dell'altra persona scende dall'alto con gli occhi a cuore e dice «Ti penso!» in un fumetto; sotto il nome e «ti pensa». Tre risposte a un tono con il loro nome: Un cuore, Un abbraccio (i due personaggi guancia a guancia), Anch'io (la nuvola). Niente più cerchi e reazioni senza nome.
+- **La risposta:** al tocco arriva il tuo personaggio e risponde (un cuore che vola, l'abbraccio, una nuvoletta col cuore), poi la schermata si chiude da sola. Le parole non dicono lui o lei.
+- **Restano** le tre reazioni del server (`heart`, `hug`, `miss_you`) e il loro invio: cambia solo l'aspetto.
+
+## 2026-11-25 — Icona con la cornice e apertura coi personaggi
+
+**Fonte:** founder, 25/11/2026: «rifare anche sia la splash art… e anche l'icona prendendo questa che é quella della pwa di staging la voglio anche come icona dell'apk», poi «voglio il quadrato al confine dell'icona», «in quella tonda non si veda il quadrato esterno» e, sulla tavola «US · Icona e apertura» (https://claude.ai/artifact/JyMuw3y4fXnP3PCmQuxKbF), «La A».
+
+- **Icona Android:** il logo con la cornice su bianco, come la PWA, con la cornice sul bordo; l'icona tonda (`roundIcon`) tiene il logo senza cornice. Sostituisce la decisione del 29/10 sull'icona senza cornice, che resta solo per le icone tonde.
+- **Apertura A:** dopo la splash di Android, i due personaggi escono da dietro il logo, un cuore e «il vostro spazio», poi l'app (circa 2 s). I personaggi vengono dal telefono (salvati all'ultima apertura, cancellati all'uscita dall'account); senza, solo il logo. Il colore della splash resta #26142E, anche su iPhone.
+
+## 2026-11-25 — Lasciato per te nuovo
+
+**Fonte:** founder, 25/11/2026: «revamp di lasciato per te sempre nel nostro nuovo stile», tavola «US · Lasciato per te» (https://claude.ai/artifact/95kvj2AwMbwjXgRtiPbSmL), «perfetto puoi unire».
+
+- **Ricevere:** un momento a schermo intero col personaggio di chi l'ha lasciato; busta nel suo colore col sigillo della sua forma; la lettera diventa un foglio, la foto una polaroid, il vocale un fumetto. La busta si apre da sola dopo un attimo o al tocco del sigillo, così «si apre una volta» resta com'era (conta quando si vede).
+- **Scrivere:** un foglio sempre presente e una sola cosa da aggiungere (foto, vocale, video, musica); le parole del foglio vanno con la cosa aggiunta. Il server resta uguale (un tipo per messaggio, parole fino a 280 con una cosa aggiunta).
+- **Parole:** «Tienila/Tienilo» al posto di «Conserva»; niente lui/lei nelle frasi nuove.
+- **Dopo:** Conservati come scatola di lettere e polaroid (seconda fase, da disegnare).
+
+## 2026-11-25 — La vostra bacheca, tenuta da US
+
+**Fonte:** founder, 25/11/2026: «studiare bacheca dentro a ricordi… dargli più senso… può essere utilizzata anche dal nostro "cupido"», grill-me D1–D27 («Cupido… è il detentore della bacheca, poi noi abbiamo l'ultima parola»; «uno spazio 3D navigabile… un limite per i free… il resto con il premium»), tavola «US · La vostra bacheca» (https://claude.ai/artifact/8LuLvzRzMcVTDmsHdKnUWG), «Approvo, vai».
+
+- **Cos'è:** la Bacheca in Ricordi è l'anta del frigo della coppia, tenuta da US a regole (niente AI): la prima volta la storia (fino a 8), poi un anno fa, traguardi, il ricordo della settimana e le cose tenute; post-it del perché; fumetto dentro il limite di una battuta al giorno.
+- **Ultima parola alla coppia:** fissa, stacca, non appenderla più, sposta (diventa vostra); appendere da sé arriva con la ricerca.
+- **Spazio:** bacheca infinita con profondità (CSS 3D, niente motore 3D), strada nel tempo, «Adesso» e «Tutta la storia».
+- **Limite:** 12 cose gratis, US Plus senza limite. Sostituisce «la bacheca dei posti» del redesign fase 8 (D12) e, per la sola bacheca, «gratis per tutti» (D8 del grill).
+- **Dopo:** post-it vostri (fase 2), ricerca in Ricordi con «Appendi» (fase 3), «Da appuntare» nella Mappa, il gioco «Ti ricordi?».
+
+## 2026-11-25 — Gioca: gettoni che scendono davvero e la giostra dei giochi
+
+**Fonte:** founder, 25/11/2026: «nella sezione gioca i gettoni non vengono utilizzati quando parte un gioco… ne abbiamo 3 giornalieri, aggiungiamo poi una sorta di carosello per i giochi, o un card swapper… rendere la schermata un po' più interattiva».
+
+- **Gettoni:** il server li spendeva già (3 partite nuove al giorno, ora di Roma; riprendere una partita aperta non costa), ma l'app non rileggeva Gioca dopo l'avvio: la scritta restava «Ancora 3 su 3» e chiudendo la partita il gettone tornava acceso. Ora il gettone vola al tocco solo se il server può aprire una partita (ne resta uno e c'è posto fra le 3 aperte); il conto scende quando il server risponde `resumed: false`; con `resumed: true` o un errore il gettone torna acceso; Gioca si rilegge dietro il foglio. Il server resta l'autorità.
+- **La giostra, solo per pochi:** poi il founder: «non tutti a carosello… alcuni a carosello e gli altri come prima sono carini… se aggiungiamo dopo dei giochi non diventa un letamaio». In alto «Oggi per voi»: una fila di tre carte grandi da scorrere (agganciate al centro, quelle ai lati più piccole e inclinate, i pallini sotto): Per voi, «Il gioco di oggi» (uno dei giochi a domande, lo stesso per tutti e due tutto il giorno, il prossimo domani) e Questo o quello. Ogni carta dice cosa si fa, quanto dura e cosa costa il suo tasto («Gioca» col gettone, «Continua»/«Rispondi»/«Scopri» senza costo, «Domani» a zero); un tocco su una carta di lato la porta al centro, solo quella al centro parte. Sotto «Tutti i giochi»: le schede di prima, due per riga, ognuno dei giochi a domande una volta. Sostituisce «games are one grid (no sideways deck)» del 2026-10.
+- **Giochi nuovi:** ogni gioco a domande ha un genere (Per conoscervi, Per parlarvi, Per ridere, Per ricordare). Oltre sei, «Tutti i giochi» si divide da sola per genere, con un titolino ciascuno. I giochi con un modo di giocare loro (come Questo o quello) vanno nella giostra.
+- **Di giorno:** i gettoni spenti e il riquadro a zero hanno l'inchiostro tenue (prima erano tratteggi chiari invisibili sulla carta).
+
+## 2026-11-26 — L'intro col tuo personaggio
+
+**Fonte:** founder, 26/11/2026: «facciamo l'intro quando una persona entra per la prima volta in US deve avere una sorta di tutorial guidato dal suo personaggio e al massimo anche qualche battuta dall'altro». Quattro scelte, tutte col consiglio: subito su Oggi dopo «Entra in US», tappe con Avanti, due battute dell'altro, «Rivedi l'intro» nel Profilo. Poi sulla tavola (https://claude.ai/artifact/5bU5oAjgf9osRX8aumr1z4): «specifichiamo anche come funziona profilo/impostazioni e che la barra dei personaggi si deve toccare e che prima è solo il logo»; «Sì, vai al codice».
+
+- Otto tappe: benvenuto, domanda di oggi, Ti penso, Noi, Ricordi, Gioca, Profilo e Impostazioni, il logo che si tocca e si apre nella barra e nel vostro angolo.
+- Illumina e spiega, non fa al posto di nessuno; «Salta» e Indietro chiudono e non torna da sola.
+- Una volta per persona per telefono, solo al primo ingresso (non al rientro su un telefono nuovo); chi aspetta da solo ha una riga nella schermata del codice.
+- Chi ha già US (i beta tester) la vede una volta da sola al primo avvio dopo l'aggiornamento completo del redesign (founder, 26/11: «parte l'intro a tutti i betatester che hanno già l'app una sola volta»). La memoria è per telefono.
+- Parole neutre sull'altra persona (niente «la stai pensando», «mandale»).
+
+## 2026-11-26 — Temi di Oggi e countdown rifatti
+
+**Fonte:** founder, 26/11/2026, sulla tavola «Temi e countdown di Oggi» (https://claude.ai/artifact/Gh85EKBZ7bsKTJ72qNnZUY), sette giri: «I vostri colori mi fa cacare», «adoro» Ora d'oro, Stagioni «non deve rifare la neve» e poi «alberi in alto… falli più realistici»; i countdown «devono essere piccolini», Cartolina e Calendario no, al 9 «Biglietto»; infine «Sì, vai al codice».
+
+- **Temi:** Originale e Pellicola gratis, Ora d'oro 6, Stagioni 12. Escono Romantico e Chiaro di luna (chi li aveva torna su Originale). Notte blu tenuta da parte.
+- **Stagioni:** una cosa sui bordi della foto e una dietro la domanda di oggi, ferme: ciliegi e petali, sole e mare, alberi d'autunno, castagne e foglie, ghiaccio e neve. Niente che cade, per non doppiare gli effetti. Cambia da sola col mese di Roma.
+- **Countdown:** restano gratis Editoriale, Partenze, Vetro; i premi tengono gli id che il server valida (aurora, orbit, chrome) con disegno e nome nuovi: Post-it 3, Biglietto 9, Filo rosso 18. Tutti piccoli, alla misura vera di Oggi.
+- Sostituisce, per countdown e temi, la scala del 25/11 (Calendario 3, Partenze 9, Chiaro di luna 6).
+
+## 2026-11-25 — Premi: una scala che cresce e parla della coppia
+
+**Fonte:** founder, 25/11/2026: «i premi proprio non ci siamo… più avanti si sblocca più belli devono essere e anche un senso con l'app». Grill-me D1–D25 (tutte col consiglio, tranne: Costellazione resta, «è molto bello»; icone solo US Plus), tavola «Premi di Oggi» (https://claude.ai/artifact/M8dY8C3Rvu4Mwvb6Rnw362, v5) approvata: «Approvo, vai». Piano a fasi in `docs/missions/premi-oggi.md`.
+
+- **Effetti di Oggi in tre gradini**, disegnati a mano su canvas (`oggi-fx.js`), nei due colori della coppia, giorno e notte: Base gratis (Cuori, Petali), Natura (Soffioni 4, Neve 7, Foglie 10), Vostri (Stelle cadenti 13, Lanterne 16, Ricordi in volo 20 con le foto vere). Escono Stelle luminose, Lucciole, Luci sfocate, Aurora; temi Cinema, Sogno pastello e Il vostro cielo («non uscirà mai bene»). Niente GIF né immagini generate.
+- **Tocco:** in Foto a fuoco ogni effetto risponde al dito (i Vostri anche allo swipe); con un effetto acceso si esce con «Torna a Oggi» o Indietro.
+- **Momenti forti:** Ti penso ricevuto (dopo la sua scena), giorno speciale (una volta), livello nuovo; niente con Riduci movimento.
+- **Plus** non blocca mai un gradino; le icone dell'app (Notte, Oro, Neon) sono solo Plus, fuori scala; più avanti anche su iPhone.
+- **Scala:** subito Cuori/Petali/Romantico/primi accessori; 2 Battito; 3 Countdown Calendario; 4 Soffioni; 5 Ti penso Cuori; 6 Chiaro di luna; 7 Neve; 8 Gala + Due colori; 9 Countdown Partenze; 10 Foglie; 11 Cuffie; 12 Stagioni; 13 Stelle cadenti; 14 Coroncina; 15 Ti penso Lettera; 16 Lanterne; 17 Costellazione; 18 Countdown Filo rosso; 19 Corona; 20 Ricordi in volo.
+- **Fasi:** 1 effetti e temi di Oggi; 2 Ti penso (premio quando si apre, Cuori dagli occhi, Lettera vera); 3 countdown (Calendario, Partenze, Filo rosso) e Simbolo US (Battito, Due colori); 4 guardaroba (accessori alti più grandi e animati). Ogni fase porta la sua parte di catalogo, solo su staging e col sì.
+
+## 2026-11-26 — Widget col redesign, Android e iPhone, e il blocca schermo
+
+**Fonte:** founder, 26/11/2026: «dobbiamo rivedere con il nostro redesign i widget presenti su android dare okay e poi ripensarli uguali su ios e studiare anche quelli per il blocca schermo». Tavola «US · Widget del redesign» (https://claude.ai/artifact/Hkj3ojVe3bwEHfg9XeJf6A): «Android ok», poi «tutte okay», con la condizione «se i personaggi cambiano di forma, in tutte le cose dove sono presenti ci saranno quei personaggi».
+
+- **Linguaggio:** foglio del Quaderno di giorno, nero caldo di notte, col tema del telefono. Il colore della coppia sta nelle cose (nastri, tratti, personaggi); la sfumatura dei due solo sul cuore del Ti penso e sul tasto principale (ceralacca di giorno). Polaroid, post-it e busta restano di carta anche di notte.
+- **Personaggi:** i widget disegnano i personaggi dell'app, nativi (`UsCharacterShapes`/`UsWidgetCharacter` su Android, gli stessi tracciati di `personaggi.js`), non immagini fisse: l'app passa forma, testa, viso e i due colori (notte e carta) in `couple.characters` e li riscrive a ogni `us-identity-change`. Faccia: il Come stai, addormentati dalle 22 alle 6. Il cambio dell'altra persona arriva sul tuo widget quando la tua app si sincronizza; un avviso silenzioso per farlo arrivare ad app chiusa è rimandato.
+- **Set:** gli stessi nove widget su Android e iPhone (misure di ciascuno); Come stai diventa «Voi due»; Distanza senza arco (14/11); Lavagna e Post-it anche 4x2. Solo iPhone: il grande con la foto, i modi Colorata/Trasparente, StandBy.
+- **Blocca schermo (solo iPhone):** tinta unica con le sagome dei personaggi e il cuore pieno; sopra l'ora i giorni o l'ultima cosa arrivata; cerchi (Ti penso, Giorni, Distanza con l'anello della batteria, Come sta, busta) e rettangoli (Voi due, Lasciato per te, La domanda, Distanza); il Controllo «Ti penso» di iOS 18 al posto della torcia. Mai risposte, contenuti o posizioni.
+- **Ordine:** Android prima (fatto sul ramo `claude/widget-redesign-android-ios-fb63c1`), poi iPhone e blocca schermo dalla stessa tavola.
+
+## 2026-11-27 — Nell'intro prima si crea il personaggio
+
+**Fonte:** founder, 27/11/2026, dopo la prova dell'APK di staging. Chi ha solo aggiornato vedeva l'intro con il personaggio di partenza (tondo rosa per chi ha creato la coppia, quadrato lilla per chi è entrato) senza averlo mai scelto: «aggiungi nell'intro una parte che si spiega e ti fa scegliere il personaggio prima del tutorial e te lo fa creare e personalizzare il minimo senza il guardaroba che si sblocca dopo».
+
+- **Chi:** chi non ha né forma né colore scelti (`character_shape` e `person_color` vuoti). Chi li ha già scelti nella prima apertura va dritto al giro. «Rivedi l'intro» mostra sempre anche la scelta.
+- **Cosa:** forma (le cinque) e colore (gli otto, quello dell'altra persona escluso). Si salvano subito con le stesse funzioni della prima apertura e delle Impostazioni (`set_my_character_shape`, `set_my_color`), con le loro regole sul server. Niente accessori: il guardaroba resta nell'angolo, coi suoi sblocchi.
+## 2026-11-27 — L'invito dura 14 giorni e chi aspetta riceve un promemoria
+
+**Fonte:** founder, 27/11/2026, sulle idee del controllo generale: «per il resto va bene tutto».
+
+- **Scadenza:** 14 giorni invece di 48 ore. Il codice resta quello di MC2 (128 bit casuali, sul server solo l'impronta), quindi la sicurezza non cambia.
+- **Rinnovo:** un codice scaduto si rifà da solo, una volta per apertura, solo se era scaduto. Uno ancora valido non si tocca, perché ne annullerebbe uno già mandato.
+- **Notifiche per chi aspetta:** «Avvisami quando entra» le accende con un tocco, mai da sola. Promemoria al giorno 1 e al giorno 3 dalla creazione della coppia, alle 18 di Roma, solo a una coppia di una persona, una volta sola. L’interruttore «Ricorrenze» spento lo blocca.
+## 2026-11-27 — La prima settimana guidata, solo per le coppie nuove
+
+**Fonte:** founder, 27/11/2026: «la prima settimana di guida la farei ma solamente per gli account appena creati, quindi per i Beta tester no».
+
+- **Dove:** dentro «US vi ricorda», come un tipo di frase in più (`primi_passi`, priorità 2). Nessuna schermata nuova.
+- **Chi:** solo le coppie create dopo che la migrazione è stata applicata (`private.us_primi_passi_start`). Il giorno 1 è quello dopo l'ingresso dell'altra persona: il giorno stesso ci sono già l'intro e la presentazione.
+- **Sette passi**, uno al giorno: domanda di oggi, prima foto, una partita, un post-it, il Ti penso, i compleanni, la settimana. Un passo già fatto si salta. Si spengono con «Non dirmelo più», e compleanni e anniversario vincono.
+## 2026-11-27 — Avvisi di US vi ricorda e personaggi sempre aggiornati
+
+**Fonte:** founder, 27/11/2026 (via libera alla costruzione): le battute si vedevano solo aprendo l'app; il personaggio dell'altra persona e i widget devono seguire i cambi anche ad app chiusa.
+
+- **Avvisi di US vi ricorda:** solo le battute datate più forti diventano notifica: compleanno tra 7 giorni e il giorno stesso (solo all'altra persona), anniversario tra una settimana (a tutti e due), «un anno fa», e un ricordo appeso oggi da US in bacheca. Mai mesiversario, cento giorni e anniversario del giorno (li manda già «Ricorrenze»), mai le prime volte e le domande.
+- **Regole:** al massimo una al giorno a persona (`us-ricorda:<persona>:<giorno>` in `push_event_log`); solo alle 10 e alle 18 di Roma (mai di notte: non esistono ore di silenzio per persona, quindi l'orario è fisso e di giorno); mai una battuta già vista nell'app; rispettano «Non dirmelo più», «Le voci dei personaggi» spente e il nuovo interruttore **US vi ricorda** in Profilo › Notifiche (acceso di serie). Decide il server con le stesse regole delle battute (`us_ricorda_push_due_v1`), senza AI; il testo è nella lingua di chi riceve.
+- **Personaggio dell'altra persona dal vivo:** un cambio di colore, forma o vestiti muove `couple_sync` (tipo `looks`); l'app aperta dell'altra persona lo sente su Realtime e rilegge i look.
+- **Widget ad app chiusa (Android):** dopo il cambio l'app di chi l'ha fatto chiede a `send-web-push` (`partner_look`) un avviso silenzioso FCM v3 per i telefoni dell'altra persona, col look letto dal server (forma, testa, viso, due colori: niente nomi, foto o testo). Quando l'altra persona esce dalla coppia o cancella l'account, lo stesso avviso (`clear`) svuota i widget come al logout. v3 apposta: le app di prima accettano solo v2 e lo scartano senza mostrare nulla.
+- **iPhone:** per ora niente avviso silenzioso (l'app non dichiara `UIBackgroundModes`, scelta da fare a parte); il server è pronto (`apnsSignalRequest`, `IOS_WIDGET_SIGNALS` spento). Su iPhone il personaggio arriva con l'app aperta o al ritorno in primo piano.
+
+## 2026-11-27 — Widget dell'iPhone: avviso silenzioso in background
+
+**Fonte:** founder, 27/11/2026: «fai fix per ios».
+
+- L'app dichiara un solo modo in background, `remote-notification` (`UIBackgroundModes`), solo per i widget.
+- `AppDelegate` passa l'avviso a `UsWidgetSignals` (plugin dei widget). Il plugin controlla la versione (3) e che l'account sia quello dei widget (impronta = SHA-256 dell'id, come `widgets.js`). Poi scrive il personaggio dell'altra persona col contratto dei widget, oppure svuota tutto come al logout, e ricarica WidgetKit. Gli altri avvisi passano come prima da `@capacitor/push-notifications`.
+- Il server manda ora il segnale anche agli iPhone (`IOS_WIDGET_SIGNALS = true`) e calcola da sé l'impronta del proprietario. Limiti di iOS accettati: consegna quando vuole, mai ad app chiusa a mano.
+
+## 2026-11-27 — La bacheca: post-it vostri e ricerca
+
+**Fonte:** grill del founder del 27/11/2026 (D1–D16, «vai») e tavola https://claude.ai/artifact/7TZ8DkdQuApJZGeNhgEAiN approvata («Approvo»).
+
+- **Post-it:** attaccati a una cosa della bacheca (ricordo, lettera tenuta, risposta tenuta, traguardo), mai liberi. 80 caratteri, uno per persona per cosa, nel colore di chi scrive, accanto al perché di US. Ognuno cambia e toglie solo il suo; niente risposte a catena. Gratis, non contano nei 12. Scriverne uno rende la cosa «vostra»: US non la stacca più da sola.
+- **Legati alla cosa, non alla puntina** (`us_bacheca_notes.ref_key`): restano se la cosa si stacca e tornano quando si riappende; se ne vanno con il ricordo o la cosa tenuta (trigger). Anche il perché di US resta dopo lo stacco (`us_bacheca_why`), così il ricordo mostra «Sulla bacheca» anche quando non è appeso.
+- **Avviso:** «<Nome> ha scritto su un ricordo in bacheca», mai il testo; interruttore «Lavagna», al massimo uno ogni 2 ore con una finestra sua (`bacheca_postit`). Target `bacheca`: web e iPhone aprono la bacheca centrata sulla cosa; Android (FCM senza id per scelta) apre Ricordi.
+- **Ricerca:** sul server (`search_ricordi_v1`, SECURITY DEFINER, solo la coppia di chi chiede, al massimo 60, la query non si salva). Didascalie, posti, post-it, mese e anno, chi l'ha messo, lettere e risposte tenute; mai quello che non è stato tenuto. Senza accenti e senza differenza di maiuscole; `%` e `_` valgono come lettere. La lente è una sola per Raccolta, Bacheca e Mappa; il suo codice si carica al primo tocco (la ricerca vuole comunque la rete).
+- **Appendi e fai spazio:** `bacheca_pin_v1(p_source, p_source_id, p_replace)`: con la bacheca piena stacca la cosa scelta e appende la nuova nella stessa transazione; una cosa fissata non si stacca mai (`fixed`). Con US Plus il limite resta 500.
+- **Fuori:** «Da appuntare» nella Mappa, il gioco «Ti ricordi?».
+
+## 2026-11-27 — I cuori: «Uno solo ×N» e «Resta e cresce»
+
+**Fonte:** founder, 27/11/2026 («tutto ok» sul prototipo https://claude.ai/artifact/2NXZSrS4EypVcsAVBNDRVy).
+
+- **«Uno solo ×N» (Ti penso):** i tocchi rapidi sul cuore della barra si sommano; ~1,15 s dopo l'ultimo parte UN solo Ti penso con i tocchi (`send_think(operation_id, p_taps default 1)`, `shared_messages.think_taps` 1..99, null = 1). Idempotenza invariata (operation_id). App vecchie, widget, Gioca e «La cosa di oggi» mandano 1. La notifica somma i tocchi dei Ti penso nella finestra di 2 minuti («ti ha pensato N volte»); Android riceve solo il tipo `think_many` (mai numeri su FCM) e dice «tante volte». Il conteggio di oggi conta i Ti penso; i tocchi si vedono come «×N» dell'ultimo.
+- **«Resta e cresce» (cuore di risposta):** il primo tocco mette il cuore e lo salva; i tocchi dopo aggiungono cuoricini e «×N» solo a schermo, senza server né notifiche. Il cuore della domanda di oggi si toglie solo tenendolo premuto ~650 ms (o Canc/Backspace); la reazione al Ti penso resta finale come prima.
+- **Movimento:** un solo canvas di cuoricini sopra la pagina, solo mentre volano (`ui-foundation.js`); con movimento ridotto solo il rimbalzo leggero e il numero.
+- **Abbraccio:** il bottone mostra i due personaggi veri della coppia (forma, colore, vestiti) con il viso «innamorato» e un cuore nei due colori; senza personaggi, palla e quadrato nei colori delle persone.
+
+## 2026-11-27 — Ti penso ×N anche dai widget e nell'avviso Android
+
+**Fonte:** founder, 27/11/2026 («deve funzionare anche sul widget questa cosa ripetuta sia iOS che android»; il numero dei tocchi non è privato).
+
+- **Widget (Android, iPhone, Controllo iOS 18):** i tocchi di fila si contano sul telefono (stato `counting` con `taps` e un solo action id) e 1,5 s dopo l'ultimo parte UN solo Ti penso con i tocchi; il 99° parte subito. `widget-think-send` accetta `taps` (intero 1..99, assente = 1, altro: errore 400 `invalid_taps`) e `widget_send_think_internal(token, action, p_taps default 1)` lo salva in `think_taps`; idempotenza per (credenziale, action id) invariata.
+- **Android:** ogni tocco è un broadcast tenuto aperto con `goAsync()` finché la raffica non è partita; il timer da 1,5 s vive nel processo, che intanto ha priorità di receiver. Niente WorkManager (non è una dipendenza e JobScheduler può rimandare), niente allarmi esatti (permesso negato di default da Android 14). Se il processo muore, il tick del widget (allarme inesatto già esistente) manda la raffica dovuta con lo stesso id, entro 2 minuti.
+- **iOS:** ogni tocco è un'App Intent; si conta nell'App Group sotto un lock condiviso, aspetta 1,5 s, e solo l'intent del tocco più recente manda (`claimBurst`); le altre tornano senza inviare.
+- **Chi riceve:** lo snapshot porta `think.lastReceivedTaps` (1..99) e il widget dice «<Nome> ti ha pensato N volte»; sul blocca schermo «×N».
+- **Avviso Android:** il pacchetto FCM del solo tipo plurale `think_many` porta un campo in più, `n` (cifre, 2..99); il telefono lo legge solo per quel tipo e dice «<Nome> ti ha pensato N volte ♡». Nessun altro campo nuovo, mai nomi, testi, id o destinazioni.
+
+## 2026-11-27 — L'apertura che accoglie (sostituisce Apertura A)
+
+**Fonte:** founder, 27/11/2026 («molto carina», poi ok dopo il volo corretto) sul prototipo «L'apertura di US» (`playNew` = tempi e curve, `playBack` = ritorno).
+
+- **Quando:** solo all'avvio a freddo dell'app installata (nativa o PWA standalone), mai in una scheda del browser né al ritorno. Markup e script restano in `index.html`, prima di tutto il resto.
+- **Durata:** aspetta `UsAppReady.whenReady` (ramo avvio-veloce), almeno 1,4 s e al massimo 3,2 s; con «Riduci movimento» logo e saluto, almeno 0,9 s, poi dissolvenza di 300 ms (prima con movimento ridotto l'apertura veniva tolta). Una rete di sicurezza (`setTimeout`, 4,8 s) e ogni errore tolgono sempre l'apertura.
+- **Saluto:** «Buongiorno / Buon pomeriggio / Buonasera / Notte fonda, {nome}» (5–12, 12–18, 18–24, 0–5) e «tu e {partner} · N giorni insieme». Viene da `us:launch-hello:v1` (`{ name, partner, since }`, scritto da `personaggi.js` insieme a `us:launch-duo:v1`, cancellato all'uscita dall'account): i giorni si contano all'apertura da «Insieme dal» (`couples.started_on`, giorni di calendario come in Oggi), mai dalla rete. Il «12 giorni · Il nostro viaggio» del prototipo era un countdown, non i giorni insieme. Testi con `textContent`; inglese con `usT` (i18n è già caricato nel `<head>` prima dell'apertura).
+- **Volo:** una curva quadratica campionata (30 campioni, easeInOutCubic, 600 ms, lineare tra i campioni), uguale per gruppo e personaggi; solo transform e opacity. Scala e distanza finali non sono i numeri del prototipo (0,42 e 27, per personaggi di 26 px): si misurano sui due personaggi veri dell'isola (42 px, quindi circa 0,68), così atterrano esattamente su di loro. `UsAngolo.accogli()` apre l'isola subito sotto l'apertura con i suoi due nascosti (`data-us-arriving`), `land()` li rimostra con lo schiacciamento. Isola assente, coperta o con i cuoricini in arrivo: dissolvenza con leggero scale come Apertura A. Un'isola già aperta (prima occhiata, US vi ricorda) li accoglie lo stesso.
+- **Ritorno dopo più di un'ora** (`UsForeground.awayMs`): niente apertura; se l'isola è libera (niente fumetto, foglio, intro, Impostazioni, cuoricini) si apre, i personaggi saltellano e la scritta diventa «Eccoti, {nome}» per 2,6 s, poi si richiude com'era. Mai «Bentornato» (ha il genere), niente dati inventati.
+- **Vibrazione:** leggera (`UsFeedback.landing`) quando nasce il cuore, solo nell'app nativa e se le vibrazioni sono accese.
+## 2026-11-27 — Il sistema che vi ricorda si chiama «US»
+
+**Fonte:** founder, 27/11/2026: «il funzionamento di Cupido, a cui dobbiamo chiamare in un altro modo: penso si chiamerà il sistema proprio US, come l'app».
+
+- Verso la coppia, quello che nei documenti era «Cupido» si chiama US: le battute di US vi ricorda, la bacheca tenuta da US, gli avvisi. «Cupido» resta solo come nome storico nei documenti di progetto (docs/product/2026-11-13-cupido.md).
+- L'intro lo presenta con una tappa sua, dopo l'angolo, e chiude con una battuta su US Plus.
+## 2026-11-27 — Gioca più piena: voi due, cosa avete scoperto, i giorni insieme
+
+**Fonte:** grill del founder del 27/11/2026 su Gioca (D1–D6, D15, D18), tutte accettate («vai mi piace»).
+
+- **D1 Ordine:** gettoni e settimana, «Voi due», (Vi aspetta), Oggi per voi, Cosa avete scoperto, Tutti i giochi, in fondo il diario delle partite. A 360×640 il tasto della prima carta sta sopra la barra.
+- **D2 Cosa avete scoperto:** 2–3 risposte brevi da partite già aperte (mai uno spoiler), giochi leggeri prima, a rotazione per giorno; fuori previsioni, domande di profondità 3, domande scritte dalla coppia, risposte lunghe. Il tocco riapre il reveal. Le risposte dell'altra persona restano solo in memoria.
+- **D3/D18 Intesa, mai una gara:** «Su N domande avete risposto uguale M volte» sulle ultime 20 risposte confrontabili (scelte reciproche fatte da tutti e due). «Hai indovinato» resta solo nel reveal. Sotto 5 risposte la frase di attesa. Dati da `get_game_intesa_v1()` (sola lettura, stessa coppia via `m11a_actor`, solo conteggi e date, SECURITY DEFINER con search_path vuoto, solo authenticated).
+- **D4 Giorni insieme:** sette pallini della settimana di Roma, acceso il giorno con una partita finita da tutti e due; nessuna serie né penalità. A fine reveal «+15 per il vostro livello» (gli stessi 15 di `progression_award 'game'`).
+- **D5 Gettoni finiti:** «Intanto rileggete…» con l'ultima risposta diversa e la mossa del reveal (`revealMove`); la riga US Plus resta piccola.
+- **D6:** la sfida fotografica resta nascosta.
+- **D15 Umore:** tutti e due felici/innamorati/in festa → Ridete prima; uno giù/stanco/malato → Rivivete prima; altrimenti l'ordine di oggi. Il resto della giostra non si muove; con i gettoni finiti nessun cambio.
+- **Codice:** le scelte stanno in `gioca-insieme.js` (funzioni pure); `games.js` legge il server e dipinge.
+## 2026-11-27 — Come stai che conta
+
+**Fonte:** grill del founder del 27/11/2026, D7–D14, D16, D17, D19, tutte accettate. Oggi Come stai andava in un senso solo: nessuno lo leggeva tranne facce e widget, gli stati di attività sembravano tutti «felice» e il widget dell'altra persona si aggiornava solo aprendo l'app.
+
+- **Rispondere allo stato dell'altra persona (D7, D16):** sotto il suo stato, nella scheda e come piccolo bottone tondo accanto alla pillola di Oggi, un gesto che gli va bene, con un tocco: giù/non sto bene → «Ti mando un abbraccio», stanco → «Riposati», nervoso → «Respira, ci sono io», felice/innamorato → un cuore, festa → 🎉, lavoro/studio → «Forza!», palestra → «Spacca tutto!», viaggio → «Buon viaggio», tavola → «Buon appetito». Uno per stato mostrato (chiave: il suo `set_at`), poi «Mandato ♡». Chi lo riceve ha una push come un Ti penso («<Nome>: Ti mando un abbraccio», italiano e inglese, interruttore «Ti penso»), un avviso dentro l'app e per tre ore una reazione sul suo personaggio.
+  - **Eccezione alla decisione del 02/11 («Notifica: nessuna»):** quella regola parlava dei cambi di stato e resta così; la risposta a uno stato è un gesto di una persona all'altra e ha la sua notifica.
+  - **Server:** `respond_member_status(p_status_set_at, p_gesture)`, SECURITY DEFINER con `search_path` vuoto: la coppia di chi chiede dal server, l'altra persona ancora nella coppia, lo stato ancora visibile e della stessa istanza, solo il gesto di quello stato; una risposta per stato (un nuovo tentativo restituisce quella salvata), una ogni 2 minuti per persona. Minimo, senza storico: `reply_gesture`/`reply_at` sulla riga dello stato, che se ne vanno con lui (trigger), e `reply_sent_at` sulla riga di chi risponde solo per il limite; le scrive solo la RPC, mai un telefono.
+  - **Android (FCM):** solo il tipo `status_<gesto>` (nove tipi in elenco, `status_reply` se il gesto manca); il telefono scrive la frase col nome che già conosce. Mai testo libero.
+- **Facce e oggetti (D8):** valigetta (lavoro), libro (studio), fascia (palestra), valigia (viaggio), forchetta (tavola), termometro (non sto bene); la festa tiene la sua faccia. Stessi tracciati in `personaggi.js`, `UsCharacterShapes.java` e `.swift`, controllati dai test. I personaggi ascoltano `us:member-status-changed` (prima aspettavano fino a 60 s) e di notte chi non sta bene non si addormenta.
+- **US se ne accorge (D9, D17):** l'altra persona giù, non sta bene o nervosa da almeno 2 ore → US lo dice una volta per stato: «Bea è giù da 3 ore. Un pensiero?», con Ti penso o il gesto. Deciso nell'app come «ti aspetta» (`come_sta`), mai di notte (finestra 9–21 di US vi ricorda), dentro la battuta al giorno, spegnibile con «Non dirmelo più» (il vincolo di `us_battute_mute` tiene tutti i tipi di prima più `come_sta`). Non lo dice se il gesto è già stato mandato.
+- **Oggi si adatta (D10):** la riga del prossimo impegno può portare un solo suggerimento leggero: altra persona stanca o giù → «Lascia un vocale a <Nome>» (Lasciato per te, vocale); tutti e due felici o innamorati → «Una partita?» (Gioca). Mai sopra un impegno di oggi (sopra quello di domani sì). Altra persona in viaggio → la pillola della distanza dice «in viaggio».
+- **Lavoro e studio (D11, D19):** mentre lo stato di chi RICEVE è lavoro o studio (non scaduto) aspettano le push di Gioca (tutte quelle di Gioca), il promemoria serale della domanda di oggi e quelle di US vi ricorda. Scelta più semplice coi worker che già girano: si saltano **senza consumare la chiave di dedupe** e si riprovano. Gioca: il worker ogni 10 minuti 9–22 recupera le partite delle ultime 48 ore; promemoria serale: lo stesso run ogni 10 minuti fino alle 22 (se lo stato dura oltre, quel giorno salta); US vi ricorda: alle 10 e alle 18 chi è al lavoro riceve un segno `us-ricorda-wait:<fascia>:<persona>:<giorno>` in `push_event_log` e il run orario la riprova dalle 11 alle 21 appena lo stato è finito, con le stesse regole del server, sempre una al giorno. Una lettura fallita non trattiene mai una push. Ti penso, Lasciato per te, post-it e risposte a Come stai partono sempre.
+- **Niente storico (D12):** confermato.
+- **Widget subito anche ad app chiusa (D13):** al cambio di Come stai (o delle sue parole) l'app chiede a `send-web-push` (`partner_status`) lo stesso avviso silenzioso del look: segnale `status` con la chiave dei dodici, la forma e i due istanti del server, riletti dal server; FCM v3 su Android, APNs background su iPhone; uno per cambio della riga; validato di nuovo dal contratto dei widget (`statusPerson`).
+- **Ponte verso Noi (D14):** scegliendo «in viaggio» la scheda chiede «Lo segno nel calendario di Noi?» (si può dire di no); sì apre l'editor del calendario di Noi con «In viaggio», oggi, tutto il giorno, e lo salva la persona.
+- **Versione più chiara (founder, 27/11/2026, tavola «Come stai di US», «deve entrare tutto lì in Oggi senza spostare niente»):** la seconda riga di Oggi è la pillola dell'altra persona (faccina vera, «Beatrice · giù ›»), il bottone rosso del gesto con parola corta («✓ Mandato» dopo), la tua pillola («Come stai?» col puntino, o «😔 Tu · giù · Cambia») e per 3 ore «🤗 da Francesco». Tutto su una riga, che occupa le stesse righe di staging: se manca posto se ne vanno prima le tue parole, poi si accorcia il nome dell'altra persona, al limite restano faccina e puntino. La pillola dell'altra persona apre il suo foglio (personaggio grande, «Beatrice è stanca», da quanto e fino a quando, il gesto con la frase intera, Ti penso, Lascia un vocale). Il suggerimento di Oggi prende solo il posto di un impegno, mai una riga in più. Il foglio dei 12 stati ha due gruppi, «Come ti senti» e «Cosa stai facendo».
+## 2026-11-27 — Il vostro mese: il pacchetto di carte
+
+**Fonte:** founder, 27/11/2026, grill P1–P8 e C1–C6, tavola «Il vostro mese» approvata, ritocchi del 27/11 (buste, retro, cornice d'oro solo sulla rara, una carta alla volta); «La carta Il vostro Come stai NON va fatta».
+
+- **Cosa:** il primo del mese un pacchetto con al massimo 10 carte del mese finito, una rara; il 31 dicembre quello d'oro sull'anno. Gratis. Ognuno apre il suo; le carte sono le stesse per la coppia, scelte una volta sola alla prima richiesta dopo la fine del mese (niente cron). Un pacchetto non aperto resta per sempre.
+- **Scelta, a regole, nel database** (`private.us_mese_build`): fissata in bacheca +5, tenuta +4, prima volta in Noi +3, risposte lunghe di tutti e due +2, foto in un posto nuovo +2, ogni cuore +1 fino a 3; base 1 per ogni cosa vera. Varietà: 3 foto, 2 domande, una carta per gli altri tipi, mai due carte dello stesso giorno se c'è altro. La rara ha più punti (a pari punti una foto). Entrano solo le risposte lette da tutti e due e mai una didascalia con parole delicate (`us_ricorda_delicato`).
+- **Mese povero:** carte vere sui numeri del mese, sui posti e sull'intesa in Gioca; se non basta il pacchetto ha meno carte, mai inventate; un mese senza niente non ha pacchetto («nessuna carta»).
+- **Al posto di «Il vostro Come stai»** (Come stai non ha storico, 02/11): «L'intesa del mese», quante scelte uguali avete fatto nei giochi letti da tutti e due.
+- **Solo riferimenti** (C6): una carta tiene tipo, fonte, id, giorno, punti e, per numeri e intesa, i conti già fatti; mai copie di foto o testi; un ricordo cancellato spegne la carta. «Metti in bacheca» solo per le carte che la bacheca conosce (ricordo, lettera tenuta, risposta tenuta).
+- **Inizio:** il primo mese è quello in cui la coppia è nata su US; quelli prima sono «prima di voi». Al primo uso si creano anche i pacchetti dei mesi passati (al massimo 24).
+- **Condivisione:** immagini 1080×1920 fatte sul telefono (canvas; le foto private passano dall'URL firmato con CORS), foto e risposte nascoste di serie, «US · uscouple.app». Su Android servono i plugin ufficiali `@capacitor/share` e `@capacitor/filesystem` (AAB e TestFlight nuovi); sul web `navigator.share` coi file o il download.
+- **Avviso del primo del mese:** non c'è ancora. US vi ricorda ha un elenco chiuso di tipi e la notifica passa dal suo cron: aggiungerlo vuol dire riscrivere il suo pianificatore. Per ora lo dice la riga di Gioca («È arrivato il vostro novembre»).

@@ -1,0 +1,57 @@
+/* I colori della coppia (redesign definitivo, Fase 3, founder 23/11/2026,
+   D7 e D8; docs/missions/redesign-definitivo.md). The four pages are four
+   steps from your colour to the other person's: Oggi yours, Noi a third of the
+   way, Ricordi two thirds, Gioca theirs; each phone starts from its own.
+   person-colors.js mixes the steps in OKLCH from the two chosen colours and
+   puts them on <html>; below, the steps of the usual rosa and lilla. The bar,
+   the colour between pages, the glow of the night and the icons and words of
+   each page take its step; what each of you does keeps your own colour
+   (--us-tu, --us-partner); the main buttons are the two blended. Loaded last.
+   The Atmosfere and the Colore di Noi are retired (progression.js). */
+
+/* ---------- The steps of rosa and lilla (person-colors.js pageColors) ---------- */
+:root{--us-pg-home:#ff7c96;--us-pg-bond:#ee7bc2;--us-pg-moments:#d181e6;--us-pg-quiz:#a98bff;--us-noi:#e17dd5}
+:root[data-us-me="beatrice"]{--us-pg-home:#a98bff;--us-pg-bond:#d181e6;--us-pg-moments:#ee7bc2;--us-pg-quiz:#ff7c96}
+
+/* ---------- The main buttons: the two of you blended ---------- */
+:root{--us-accent-gradient:linear-gradient(90deg,var(--us-tu),var(--us-partner))}
+
+/* ---------- The tab colour: the step of the open page ---------- */
+:root:has(#home.page.active){--us-tab:var(--us-pg-home)}
+:root:has(#bond.page.active){--us-tab:var(--us-pg-bond)}
+:root:has(#moments.page.active){--us-tab:var(--us-pg-moments)}
+:root:has(#quiz.page.active){--us-tab:var(--us-pg-quiz)}
+
+/* --us-atmo: the old night (wine and a glow), still read by a few sheets. */
+:root{--us-atmo:radial-gradient(110% 45% at 50% 0%,color-mix(in srgb,var(--us-tu) 24%,transparent),transparent 70%),linear-gradient(180deg,#3a1426 0%,#22101d 50%,#140c14 100%)}
+/* Lo sfondo (founder, 24/11/2026): nessuno sfondo colorato, un nero appena caldo;
+   il colore della coppia sta nelle cose (personaggi, nastri). */
+html{background:#120d11!important;background-attachment:fixed!important}
+
+/* ---------- The bottom bar: each tab in its step; the blob in the open one's ---------- */
+.us-nav-premium button[data-page="home"]{--us-nav-c:var(--us-pg-home)}
+.us-nav-premium button[data-page="bond"]{--us-nav-c:var(--us-pg-bond)}
+.us-nav-premium button[data-page="moments"]{--us-nav-c:var(--us-pg-moments)}
+.us-nav-premium button[data-page="quiz"]{--us-nav-c:var(--us-pg-quiz)}
+.us-nav:has(> button[data-page="home"].active){--us-nav-blob:var(--us-pg-home)}
+.us-nav:has(> button[data-page="bond"].active){--us-nav-blob:var(--us-pg-bond)}
+.us-nav:has(> button[data-page="moments"].active){--us-nav-blob:var(--us-pg-moments)}
+.us-nav:has(> button[data-page="quiz"].active){--us-nav-blob:var(--us-pg-quiz)}
+
+/* ---------- Inside each page: its icons, words, rings and focus in its step ----------
+   The old fixed colours of the tabs (corallo, orchidea, ambra, menta) now
+   mean «this page's colour», so the existing rules follow without a rewrite. */
+#home,#today,#usCountdownSheet,.us-look-overlay{--us-pg:var(--us-pg-home);--us-corallo:var(--us-pg)}
+#bond,#usEventsOverlay{--us-pg:var(--us-pg-bond);--us-noi:var(--us-pg)}
+#moments,#ricordiChapterOverlay,#momentViewer,.us-moment-compose-overlay,#conservatiOverlay,#usAlbumOverlay{--us-pg:var(--us-pg-moments);--us-ambra:var(--us-pg)}
+#quiz{--us-pg:var(--us-pg-quiz);--us-menta:var(--us-pg);--us-noi:var(--us-pg)}
+/* Il vostro angolo is yours both: the colour of Noi, the middle of the two. */
+#usAngolo{--us-pg:var(--us-noi)}
+:is(#home,#today,#usCountdownSheet,.us-look-overlay,#bond,#usEventsOverlay,#moments,#ricordiChapterOverlay,#momentViewer,.us-moment-compose-overlay,#conservatiOverlay,#usAlbumOverlay,#quiz,#usAngolo){
+  --us-color-accent-ink:color-mix(in srgb,var(--us-pg) 62%,var(--us-latte));
+  --us-color-accent-soft:color-mix(in srgb,var(--us-pg) 14%,transparent);
+  --us-color-accent-line:color-mix(in srgb,var(--us-pg) 30%,transparent);
+  --us-color-accent-strong:var(--us-pg);
+}
+
+/* La barra (25/11/2026): the two tones are gone; each tab is its own icon again. */

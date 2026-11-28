@@ -75,3 +75,19 @@
 /* Impostazioni › Widget: the board as the dark widget shows it. */
 #usWidgetHub .us-wp-lavagna{display:grid;place-items:center;width:100%;height:100%;box-sizing:border-box;padding:8px;border-radius:inherit;background:#141416}
 #usWidgetHub .us-wp-lavagna img{display:block;width:100%;height:100%;object-fit:contain}
+
+/* ---------- Noi, Fase B: the lavagna under the calendar, the post-its on it ---------- */
+.us-noi-lav .us-lav-slot{margin:0}
+.us-noi-lav .us-lav-tile{height:280px;border-radius:22px;background:#1c1a1e;box-shadow:inset 0 0 0 6px #2a2128,0 12px 26px rgba(0,0,0,.4)}
+.us-noi-lav .us-lav-tile-empty{display:flex;flex-direction:column;align-items:center;gap:10px;left:18px;right:40%;top:auto;bottom:22px;transform:none;font-size:17px}
+.us-lav-tile-duo{display:flex;align-items:flex-end;gap:2px}
+.us-lav-tile-duo:empty{display:none}
+.us-lav-tile-duo .us-char+.us-char{margin-left:-6px}
+.us-noi-lav:has(.us-postit.is-pin:not(.is-ideas)) .us-lav-tile-empty{display:none!important}
+.us-lav-board:has(.us-postit.is-pin:not(.is-ideas)) .us-lav-hint{display:none!important}
+/* «+ Post-it» on the board, bottom right. */
+.us-lav-postit{position:absolute;right:14px;bottom:12px;z-index:3;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:#f7efe9;color:#1a1020;font:800 13.5px/1 var(--us-font-ui);box-shadow:0 8px 18px rgba(0,0,0,.4);--us-icon-size:16px}
+.us-lav-postit:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
+/* The board is black in both themes: its name tags stay light; the white pen keeps an edge on a light toolbar. */
+.us-lav-who>span{color:#f7efe9}
+.us-lav-swatch span{box-shadow:inset 0 0 0 1px rgba(26,16,32,.22)}

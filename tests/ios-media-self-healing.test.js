@@ -37,23 +37,21 @@ test('foreground ripara Home avatar e Ricordi senza richiedere un nuovo login', 
   assert.match(app, /if\(forceMedia\)mediaPaths\.forEach\(usInvalidateSignedUrl\);\s*const signedUrlsPromise=usGetSignedUrls\(mediaPaths,US_MEDIA_URL_TTL_S\);/);
 });
 
-test('Stories Left for You e album hanno recovery media esplicita', async () => {
-  const [stories, left, albums] = await Promise.all([
-    src('stories.js'),
+test('Left for You e album hanno recovery media esplicita', async () => {
+  const [left, albums] = await Promise.all([
     src('left-for-you.js'),
     src('moments-albums.js')
   ]);
-  assert.match(stories, /usInvalidateSignedUrl\?\.\(story\.media_path\)[\s\S]*force:true/);
   assert.match(left, /data-us-media-path=.*onerror="usRecoverPrivateImage\(this\)"/);
   // The album cover is one <img> whose path is set when a photo is shown.
   assert.match(albums, /<img id="usAlbumCover"[^>]*onerror="usRecoverPrivateImage\(this\)"/);
   assert.match(albums, /cover\.setAttribute\('data-us-media-path',item\.storage_path\)/);
 });
 
-test('Home Memory dead path uses the actual signedUrl variable', async () => {
+test('no dead signed.signedUrl path (the Home memory loader was removed on 27/11/2026)', async () => {
   const app = await src('app.js');
   assert.doesNotMatch(app, /signed\.signedUrl/);
-  assert.match(app, /card\.dataset\.url=signedUrl;/);
+  assert.doesNotMatch(app, /homeMemory/);
 });
 
 test('Service Worker cache writes after install are best effort', async () => {
