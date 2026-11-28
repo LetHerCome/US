@@ -1,6 +1,6 @@
 // US Plus in vetrina (founder, 28/11/2026): the Plus questions are played only with
-// Plus but seen in Gioca: a tile «Sbloccabili con US Plus» and a sheet with every
-// one of them, locked, by theme, with «Avvisatemi». With Plus the tile goes.
+// Plus but seen in Gioca: a tile «Sbloccabili con US Plus» with how many and of
+// which themes (never the questions), and «Avvisatemi». With Plus the tile goes.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -13,7 +13,11 @@ test('Gioca: the Plus tile, its sheet and the waitlist', () => {
   assert.match(src, /if \(!d \|\| d\.has_plus \|\| !Array\.isArray\(d\.items\) \|\| !d\.items\.length\) return '';/, 'no tile with Plus');
   assert.match(src, /\$\{plusTile\(\)\}/);
   assert.match(src, /Sbloccabili con US Plus/);
-  assert.match(src, /else if \(action === 'plus-preview'\) showPlusPreview\(\);/);
+  // 28/11/2026 (founder): only how many and of which themes, never the questions themselves.
+  assert.doesNotMatch(src, /showPlusPreview|plus-preview/);
+  assert.match(src, /function plusThemes\(items\)/);
+  assert.match(src, /piccante: 'Piccante', desideri: 'Desideri'/);
+  assert.match(src, /data-gv2-action="plus-join">Avvisatemi quando arriva/);
   assert.match(src, /sb\.rpc\('plus_waitlist', \{ join: true \}\)/);
   assert.match(read('games.css'), /data-gv2-icon="lock-simple"\]\{-webkit-mask-image:url\("\/assets\/icons\/phosphor\/lock-simple-fill\.svg"\)/);
   const sql = read('supabase/migrations/20261128113629_contenuti_plus_vetrina.sql');
