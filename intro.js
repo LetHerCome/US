@@ -10,7 +10,9 @@ if (window.UsIntro) return;
 const d = document, w = window;
 const $ = (id) => d.getElementById(id);
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const SEEN = () => `us:intro:v1:${w.usProfile?.id || ''}`;
+// v2 (28/11/2026): the intro tells everything now (Gioca, Play Us, the month pack, US Plus):
+// everyone sees it once more, beta testers included, on the app and on the web.
+const SEEN = () => `us:intro:v2:${w.usProfile?.id || ''}`;
 const reduced = () => d.documentElement?.dataset?.usMotion === 'reduced' || Boolean(w.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
 const store = { get: (k) => { try { return w.localStorage?.getItem(k); } catch (_) { return null; } }, set: (k, v) => { try { w.localStorage?.setItem(k, v); } catch (_) { /* private mode: it can show again */ } } };
 
@@ -46,14 +48,18 @@ function steps({ force = false } = {}) {
     { id: 'distanza', target: () => firstVisible('#distanceWidget'), pill: true, say: `Qui vedi quanto siete lontani. Se lo condividete, anche la batteria di ${theirs}: così sai se un silenzio è solo un telefono scarico.` },
     { id: 'comestai', target: () => firstVisible('#usOggiStatus'), pill: true, say: `Dimmi come stai con un tocco: la mia faccia cambia, anche sul telefono di ${theirs} e nei widget.` },
     { id: 'tipenso', target: () => firstVisible('#thinkButton'), round: true, say: `Questo è il Ti penso. Toccalo una volta, o tante di fila: più tocchi, più cuori. Quando ti fermi parte un solo Ti penso, e ${theirs} legge quante volte l’hai pensata.`, other: 'Io li conto tutti, eh.' },
-    { id: 'noi', target: () => firstVisible('.us-nav [data-page="bond"]'), say: 'In Noi c’è il vostro tempo: il calendario, la lavagna e i post-it che vi lasciate.' },
-    { id: 'ricordi', target: () => firstVisible('.us-nav [data-page="moments"]'), say: 'In Ricordi mettete le vostre foto, mese per mese. Diventano il vostro album.' },
-    { id: 'gioca', target: () => firstVisible('.us-nav [data-page="quiz"]'), say: 'In Gioca ci sono i giochi da fare in due: tre partite al giorno, per conoscervi ancora.' },
+    { id: 'noi', target: () => firstVisible('.us-nav [data-page="bond"]'), say: 'In Noi c’è il vostro tempo: il calendario con i vostri impegni, «Ci vediamo» che conta i giorni al prossimo incontro, la lavagna per disegnare e i post-it che vi lasciate.' },
+    { id: 'ricordi', target: () => firstVisible('.us-nav [data-page="moments"]'), say: 'In Ricordi mettete le vostre foto, mese per mese, e diventano il vostro album. C’è anche la bacheca, la mappa dei vostri posti e la lente per ritrovare un ricordo.' },
+    { id: 'gioca', target: () => firstVisible('.us-nav [data-page="quiz"]'), say: 'In Gioca ci sono i giochi da fare in due, a turni: ognuno risponde quando può e alla fine scoprite insieme le risposte. Avete tre gettoni al giorno, e ogni partita nuova ne usa uno.' },
+    // Play Us (28/11/2026): the one game played together, live.
+    { id: 'playus', target: () => firstVisible('.us-nav [data-page="quiz"]'), say: `E c’è Play Us, l’unico da fare insieme nello stesso momento: sfidi ${theirs}, accetta e giocate 8 tappe in 6 minuti, con domande lampo, una foto da ritoccare e un labirinto. Una partita al giorno.`, other: 'Ti batto io, vedrai.' },
     { id: 'profilo', target: () => firstVisible('#home [data-us-self], .top [data-us-self]'), round: true, say: 'Qui in alto a destra ci sono io: toccami e apri il tuo Profilo, con le Impostazioni, i colori, le notifiche e la vostra data.' },
     { id: 'angolo', target: () => firstVisible('#usIsola'), pill: true, island: true, say: 'Questo è il logo di US: toccalo e si apre la barra con voi due e il vostro livello. Tocca la barra ed entri nel vostro angolo: il guardaroba e i premi.', other: 'Ci vediamo qui ogni giorno!' },
     // US, the app that remembers (the rules behind US vi ricorda and the bacheca), and US Plus (27/11/2026).
     { id: 'us', target: () => firstVisible('#usIsola'), pill: true, keep: true, say: 'Ogni tanto parla anche US, l’app: si ricorda le vostre date, i ricordi di un anno fa, e vi tiene la bacheca in Ricordi. Mai più di una volta al giorno, promesso.', other: 'Una specie di amico che non dimentica niente.' },
-    { id: 'plus', say: 'Un giorno arriverà anche US Plus: più vestiti per me, più giochi, più cose vostre… Per ora non posso dire altro, è una sorpresa.', other: 'Io intanto mi prenoto un cappello nuovo.', cta: 'Fine', reaction: 'cuore' }
+    // Il vostro mese (28/11/2026): the pack at the end of each month, and the collection.
+    { id: 'mese', say: 'Alla fine di ogni mese arriva la vostra busta: la strappi e dentro ci sono le 10 carte del vostro mese, con una rara. Poi restano nella vostra collezione, in Ricordi.', other: 'Io faccio collezione di quelle rare.', reaction: 'festa' },
+    { id: 'plus', say: 'Un giorno arriverà anche US Plus: più partite e più Play Us al giorno, più vestiti per me, una bacheca più grande… E chi non lo prende non perde niente di quello che ha.', other: 'Io intanto mi prenoto un cappello nuovo.', cta: 'Fine', reaction: 'cuore' }
   ];
 }
 

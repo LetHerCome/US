@@ -2,6 +2,17 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Intro e collezione (28/11)
+
+- **L’intro spiega tutto:** Noi (calendario, «Ci vediamo», lavagna, post-it), Ricordi (album, bacheca, mappa, lente), Gioca a turni con i tre gettoni, una tappa nuova per Play Us («Ti batto io, vedrai»), una per la busta del mese («Io faccio collezione di quelle rare») e US Plus più preciso: più partite e Play Us, più vestiti, una bacheca più grande, e chi non lo prende non perde niente. Anche in inglese.
+- **«Carte» in Ricordi compare solo dopo la prima busta:** prima del primo mese la collezione non ha senso, quindi Ricordi ha tre schede.
+
+### Il vostro mese come evento (28/11)
+
+**Stato:** ramo `claude/bustine-evento`, da staging dopo la #324. Nessuna migrazione.
+
+- **Niente più riga «Il vostro mese» in Gioca.** Quando finisce il mese (o l’anno) e la busta vi aspetta, compare da sola su Oggi, a ogni apertura di US, finché non la strappate; mai sopra l’apertura, l’intro, il blocco dell’app o Play Us. Strappata, le carte restano in Ricordi, «Le vostre carte»: lì un mese aperto mostra le sue carte e non si strappa di nuovo; una busta mai aperta resta lì ad aspettarvi.
+
 ### Play Us: giocare insieme, dal vivo (28/11)
 
 **Stato:** ramo `claude/play-us-piano`, in staging. Migrazione `20261128090123_play_us_v1` (due tabelle, le funzioni `play_us_*`, le tabelle nella pubblicazione Realtime, regole sul canale privato `us-couple:<coppia>`), applicata su staging il 28/11. Edge `send-web-push` con il tipo `play_invite`, pubblicata su staging. **In produzione:** la migrazione a mano come le altre, `send-web-push`, un **AAB** (frase Android di `play_invite`: un’app vecchia mostra «Apri US per vedere le novità») e una build **TestFlight** con la stessa versione.

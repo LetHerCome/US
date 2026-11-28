@@ -198,7 +198,7 @@ test('real app: the intro waits for a stop that comes late and says «Fine» on 
     await page.waitForTimeout(120);
   }
   // Without the island, the angolo and US stops are left out; US Plus closes with «Fine».
-  assert.deepEqual(seen.map((s) => s[0]), ['crea', 'ciao', 'domanda', 'comestai', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo', 'plus']);
+  assert.deepEqual(seen.map((s) => s[0]), ['crea', 'ciao', 'domanda', 'comestai', 'tipenso', 'noi', 'ricordi', 'gioca', 'playus', 'profilo', 'mese', 'plus']);
   assert.equal(seen[seen.length - 1][1], 'Fine');
   assert.ok(seen.slice(0, -1).every((s) => s[1] !== 'Fine'));
   // A stop that is not on screen yet when the intro starts is waited for, not dropped.

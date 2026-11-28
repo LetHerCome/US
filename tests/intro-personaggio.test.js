@@ -20,8 +20,11 @@ test('intro: eight stops in the approved order, two lines of the other person, n
   const ids = [...intro.matchAll(/\{ id: '([a-z]+)'/g)].map((m) => m[1]);
   // «crea» comes first only for whoever never made their character (see below).
   // 27/11/2026: distance and battery, Come stai, the Ti penso ×N, US (the app that remembers) and US Plus.
-  assert.deepEqual(ids, ['crea', 'ciao', 'domanda', 'distanza', 'comestai', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo', 'angolo', 'us', 'plus']);
-  assert.equal((intro.match(/other: '/g) || []).length, 4);
+  assert.deepEqual(ids, ['crea', 'ciao', 'domanda', 'distanza', 'comestai', 'tipenso', 'noi', 'ricordi', 'gioca', 'playus', 'profilo', 'angolo', 'us', 'mese', 'plus']);
+  // 28/11/2026: Play Us and the month pack each bring a line of the other person.
+  assert.equal((intro.match(/other: '/g) || []).length, 6);
+  assert.match(intro, /other: 'Ti batto io, vedrai.'/);
+  assert.match(intro, /other: 'Io faccio collezione di quelle rare.'/);
   assert.match(intro, /other: 'Io li conto tutti, eh\.'/);
   assert.match(intro, /other: 'Una specie di amico che non dimentica niente\.'/);
   assert.match(intro, /other: 'Io intanto mi prenoto un cappello nuovo\.', cta: 'Fine'/);
@@ -37,7 +40,7 @@ test('intro: only the first entry starts it, on this phone, and the Profilo star
   const onboarding = read('onboarding.js');
   assert.match(onboarding, /const firstEntry=!silent&&mode!=='device';/);
   assert.match(onboarding, /if\(firstEntry\)setTimeout\(\(\)=>window\.UsIntro\?\.start\?\.\(\)/);
-  assert.match(intro, /const SEEN = \(\) => `us:intro:v1:\$\{w\.usProfile\?\.id \|\| ''\}`;/);
+  assert.match(intro, /const SEEN = \(\) => `us:intro:v2:\$\{w\.usProfile\?\.id \|\| ''\}`;/);
   assert.match(intro, /if \(!force && store\.get\(SEEN\(\)\)\) return false;/);
   assert.match(read('index.html'), /data-us-setting="intro"[\s\S]{0,260}Rivedi l’intro/);
   assert.match(read('settings.js'), /if\(name==='intro'\)\{window\.usSettingsReturn\?\.\(\);return window\.UsIntro\?\.start\?\.\(\{force:true\}\);\}/);
@@ -102,7 +105,7 @@ test('intro: in the real app it walks the eight stops and is not shown twice', a
     }
     // Nobody in the test couple made a character yet: first «crea», then the eight stops.
     // The test couple shares no distance: that stop is waited for, then left out.
-    assert.deepEqual(seen, ['crea', 'ciao', 'domanda', 'comestai', 'tipenso', 'noi', 'ricordi', 'gioca', 'profilo', 'angolo', 'us', 'plus']);
+    assert.deepEqual(seen, ['crea', 'ciao', 'domanda', 'comestai', 'tipenso', 'noi', 'ricordi', 'gioca', 'playus', 'profilo', 'angolo', 'us', 'mese', 'plus']);
     assert.deepEqual(await page.evaluate(() => ({ active: window.UsIntro.active(), seen: window.UsIntro.seen(), again: window.UsIntro.start() })), { active: false, seen: true, again: false });
     // «Salta» closes it at once.
     assert.equal(await page.evaluate(() => window.UsIntro.start({ force: true })), true);
@@ -159,7 +162,7 @@ test('intro: in the real app you make your character, then the tour; once made, 
     assert.equal(await page.evaluate(() => document.getElementById('usIntro').dataset.step), 'ciao');
     await page.click('[data-intro-skip]');
     // Made now: the next first time (another phone) starts from «ciao».
-    await page.evaluate(async () => { await window.UsCoupleContext?.hydrate?.(); localStorage.removeItem(`us:intro:v1:${window.usProfile.id}`); });
+    await page.evaluate(async () => { await window.UsCoupleContext?.hydrate?.(); localStorage.removeItem(`us:intro:v2:${window.usProfile.id}`); });
     assert.equal(await page.evaluate(() => window.UsIntro.start()), true);
     assert.equal(await page.evaluate(() => document.getElementById('usIntro').dataset.step), 'ciao');
     await page.click('[data-intro-skip]');

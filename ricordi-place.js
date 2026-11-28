@@ -504,6 +504,7 @@
   }
   // From Gioca or the end of an opening: Ricordi › Carte, and a pack to open if asked.
   async function openCarte(opts = {}) {
+    showCarteTab(true); carteKnown = carteKnown || Boolean(opts.pack);
     if (w.document.querySelector('.page.active')?.id !== 'moments') w.go?.('moments', { nav: true });
     setView('carte');
     const m = await loadMese().catch(() => null);
@@ -511,6 +512,31 @@
     else if (m && opts.latest) m.openLatest();
   }
   if (w) w.usOpenCarte = openCarte;
+  // Le vostre carte only once there is a pack (founder, 28/11/2026): before the
+  // first month ends the collection makes no sense, so its tab is not there.
+  let carteKnown = false;
+  function showCarteTab(on) {
+    const tab = w.document?.querySelector?.('#moments [data-ricordi-view="carte"]');
+    if (!tab) return;
+    tab.hidden = !on;
+    if (!on && tab.getAttribute('aria-selected') === 'true') setView('story');
+  }
+  async function checkCarte() {
+    if (carteKnown || !w.usProfile?.couple_id || typeof w.sb === 'undefined' && typeof sb === 'undefined') return;
+    try {
+      const client = typeof sb !== 'undefined' ? sb : w.sb;
+      const { data, error } = await client.rpc('get_carte_v1', { p_year: null });
+      if (error) return;
+      const has = Boolean(data && ((data.waiting || []).length || (data.months || []).some((m) => m.state === 'opened' || m.state === 'closed') || ['opened', 'closed'].includes(data.gold?.state)));
+      carteKnown = has;
+      showCarteTab(has);
+    } catch (_) { /* the tab stays as it is */ }
+  }
+  if (w?.document?.addEventListener) {
+    const later = (ms) => (typeof setTimeout === 'function' ? setTimeout(checkCarte, ms) : 0);
+    w.document.addEventListener('visibilitychange', () => { if (!w.document.hidden) later(1500); });
+    later(3000); later(12000);
+  }
   function setView(view, { focus = null } = {}) {
     const doc = w.document;
     const next = VIEWS.includes(view) ? view : 'story';

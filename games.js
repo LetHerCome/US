@@ -701,7 +701,6 @@ function renderHub() {
    <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2AllTitle">Tutti i giochi</h3><small>${spent?'tornano domani':'bastano pochi minuti'}</small></div>
    ${allGames(tiles)}
   </section>
-  ${meseRow()}
   ${weeklyCard(home?.weekly)}
   ${continueSection(home,onTiles)}
   ${doneSection(home)}`;
@@ -715,27 +714,34 @@ function renderHub() {
  window.UsPlayUs?.paintCard?.();
 }
 
-// Il vostro mese (27/11/2026): the shortcut to Le vostre carte, in Ricordi;
-// when a pack is waiting it says so and opens it.
-const mese = { note: '', pack: null, at: 0 };
-const MESE_MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
-function meseRow() {
-  return `<button type="button" class="us-gv2-mese" data-us-feedback="tap" data-gv2-action="mese"><span class="us-gv2-mese-pk" aria-hidden="true"></span><span class="us-gv2-mese-copy"><b>Il vostro mese</b><small>${esc(mese.note || 'Le vostre carte, in Ricordi')}</small></span></button>`;
+// Il vostro mese come evento (founder, 28/11/2026): no row in Gioca any more.
+// When a month (or the year) ends and its pack waits, the pack appears by
+// itself on Oggi, once each time US opens, until it is torn; the cards then
+// stay in Ricordi («Le vostre carte»), where an opened pack is never torn again.
+const meseEv = { shown: new Set(), timer: 0, tries: 0 };
+function meseBlocked() {
+  const root = document.documentElement;
+  if (document.hidden || !window.usProfile?.couple_id || typeof sb === 'undefined' || typeof document.querySelectorAll !== 'function') return true;
+  if (!byId('home')?.classList.contains('active')) return true;
+  if (['us-launch-play', 'us-intro-open', 'us-app-locked', 'us-play-open'].some((c) => root.classList.contains(c))) return true;
+  // An automated browser (the test suite) is not surprised by it, unless a test asks.
+  if (window.navigator?.webdriver && !window.__usMeseAuto) return true;
+  return [...document.querySelectorAll('[aria-modal="true"]')].some((el) => !el.closest('[hidden],[aria-hidden="true"]') && el.getBoundingClientRect().height > 0);
 }
-async function refreshMese() {
-  if (Date.now() - mese.at < 300000 || typeof sb === 'undefined') return;
-  mese.at = Date.now();
+const meseLater = (fn, ms) => (typeof setTimeout === 'function' ? setTimeout(fn, ms) : 0);
+async function meseEvento() {
+  if (typeof clearTimeout === 'function') clearTimeout(meseEv.timer);
+  if (meseBlocked()) { if (++meseEv.tries < 40) meseEv.timer = meseLater(meseEvento, 3000); return; }
+  meseEv.tries = 0;
   try {
     const { data, error } = await sb.rpc('get_carte_v1', { p_year: null });
-    if (error || !data) return;
-    const next = data.waiting?.[0];
-    const when = next ? (next.kind === 'anno' ? String(next.period_start).slice(0, 4) : MESE_MONTHS[Number(String(next.period_start).slice(5, 7)) - 1]) : '';
-    const note = next ? `È arrivato il vostro ${when}` : '';
-    if (note === mese.note && (next?.pack || null) === mese.pack) return;
-    mese.note = note; mese.pack = next?.pack || null;
-    if (view === 'hub') renderHub();
-  } catch (_) { /* the row keeps its quiet line */ }
+    const next = !error && data?.waiting?.[0];
+    if (!next?.pack || meseEv.shown.has(next.pack) || meseBlocked()) return;
+    meseEv.shown.add(next.pack);
+    window.usOpenCarte?.({ pack: next.pack });
+  } catch (_) { /* it tries again the next time US opens */ }
 }
+document.addEventListener?.('visibilitychange', () => { if (!document.hidden) { meseEv.shown.clear(); meseEv.timer = meseLater(meseEvento, 2500); } });
 
 function renderHubError() {
   const root = byId('quizHub');
@@ -756,7 +762,7 @@ async function load() {
     if (view === 'hub') renderHub();
     checkPerVoiQuestion();
     loadInsieme();
-    refreshMese();
+    meseEvento();
     return home;
   } catch (error) {
     console.warn('[US Gioca] home', error);
@@ -1593,7 +1599,6 @@ function onClick(event) {
   }
   else if (action === 'retry') load();
   else if (action === 'plus-soon') window.UsPlusSoon?.open?.({ from: 'gioca' });
-  else if (action === 'mese') window.usOpenCarte?.(mese.pack ? { pack: mese.pack } : {});
   else if (button.dataset.gv2Family) chooseMode(button.dataset.gv2Family, button);
   else if (button.dataset.gv2Session) openSession(button.dataset.gv2Session);
 }
