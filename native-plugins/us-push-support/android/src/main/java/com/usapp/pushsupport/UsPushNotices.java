@@ -35,7 +35,7 @@ public final class UsPushNotices {
     /** Every kind the server may send. Tests keep it equal to ANDROID_NOTICE_KINDS and ANDROID_PLURAL_KINDS. */
     public static final String[] KINDS = {
         "test", "think", "think_many", "think_reply", "daily_turn", "daily_ready", "daily_reaction", "daily_new",
-        "quest", "left_for_you", "game_turn", "game_ready", "game_weekly", "game_weekly_turn",
+        "quest", "left_for_you", "game_turn", "game_ready", "game_weekly", "game_weekly_turn", "play_invite",
         "calendar", "anniversary", "partner_joined", "lavagna", "postit", "bacheca_postit", "challenge", "challenge_reminder", "challenge_photo",
         "invite_reminder",
         "birthday_week", "birthday", "anniversary_week", "year_ago", "bacheca",
@@ -123,6 +123,10 @@ public final class UsPushNotices {
             case "game_weekly_turn":
                 return notice(en, "US. · Gioca", "US. · Play",
                     "Questa settimana la domanda la scegli tu.", "This week you choose the question.", "gioca");
+            // Play Us (28/11/2026): the live invite, valid 3 minutes.
+            case "play_invite":
+                return notice(en, "US. · Play Us", "US. · Play Us",
+                    who + " ti sfida a Play Us ♡", who + " challenges you to Play Us ♡", "gioca");
             case "calendar":
                 return notice(en, "US. · Calendario", "US. · Calendar",
                     "Hai un promemoria in calendario", "You have a calendar reminder", "noi");

@@ -132,6 +132,8 @@ export const ANDROID_NOTICE_KINDS = Object.freeze({
   game_reveal: 'game_ready',
   game_weekly_created: 'game_weekly',
   game_weekly_turn: 'game_weekly_turn',
+  // Play Us (28/11/2026): the live invite; the phone says it with the partner's name, it opens Gioca.
+  play_invite: 'play_invite',
   calendar_reminder: 'calendar',
   relationship: 'anniversary',
   partner_joined: 'partner_joined',

@@ -245,7 +245,9 @@ test('M11D migration: dedicated vault key, idempotent cron, service-role grants 
   const send = app.slice(app.indexOf('async function sendWebPushEvent'), app.indexOf('window.sendWebPushEvent=sendWebPushEvent'));
   assert.match(send, /const endpoint=String\(type\)\.startsWith\('game_'\)\?'game-v2-push':'send-web-push';/, 'one client helper, same auth and keepalive');
   assert.match(send, /keepalive:true/);
-  assert.doesNotMatch(read('supabase/functions/send-web-push/index.ts'), /game/, 'send-web-push untouched');
+  // Play Us (28/11/2026): its live invite (play_invite) lives in send-web-push and
+  // honours the same notification_preferences.games switch; nothing else of Gioca.
+  assert.doesNotMatch(read('supabase/functions/send-web-push/index.ts').replace(/\bgames\b/g, ''), /game/, 'send-web-push untouched');
   const settings = read('settings.js');
   assert.match(settings, /preferenceToggle\('games','Gioca',p\.games!==false\)/, 'the preference is reachable in Impostazioni > Notifiche');
   assert.match(settings, /key==='games'\?'Quando tocca a te'/);
