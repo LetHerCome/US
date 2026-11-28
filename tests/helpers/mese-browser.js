@@ -16,7 +16,7 @@ function installMese() {
   const cards = [
     { k: 'foto', path: 'c1/f1/tramonto.webp', caption: 'Il tramonto sul molo', place: 'Pescara', date: day(9), day: day(9), by: 'francesco', pin: { source: 'moment', id: P(1) }, pinned: false },
     { k: 'qa', day: day(3), question: 'Quale piccolo momento vorresti rivivere insieme a me?', mine: 'La colazione al bar sotto casa tua', theirs: 'Quando abbiamo riso in macchina sotto la pioggia' },
-    { k: 'posti', places: [{ label: 'Padova', nuovo: false }, { label: 'Venezia', nuovo: true }, { label: 'Pescara', nuovo: false }], nuovi: 1, count: 3 },
+    { k: 'posti', places: [{ label: 'Padova', nuovo: false, lat: 45.406, lon: 11.877, day: day(2) }, { label: 'Venezia', nuovo: true, lat: 45.438, lon: 12.327, day: day(16) }, { label: 'Pescara', nuovo: false, lat: 42.464, lon: 14.214, day: day(20) }], nuovi: 1, count: 3 },
     { k: 'numeri', thinks: 47, games: 12, questions: 18 },
     { k: 'foto', path: 'c1/b1/pizza.webp', caption: 'La pizza in Campo Santa Margherita', place: 'Venezia', date: day(16), day: day(16), by: 'beatrice', pin: { source: 'moment', id: P(2) }, pinned: true },
     { k: 'prima', day: day(19), title: 'Carbonara in videochiamata' },

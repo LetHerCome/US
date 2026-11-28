@@ -109,3 +109,48 @@ test('the approved images: in the manifest, out of the shell, English for every 
   const en = require('../i18n-en.js');
   for (const key of ['Il vostro mese', 'Le vostre carte', 'Condividi il mese', 'Questo ricordo non c’è più', 'Metti in bacheca', 'Salva come immagine', 'È arrivato il vostro {month}', 'Trascina il dito lungo la linea', 'Apri senza strappare', 'Mostra le foto', 'Mostra le risposte', 'Carte']) assert.ok(en[key], key);
 });
+
+// «Dove siete stati» (founder, 28/11/2026): a real map, from two towns 15 km
+// apart to the other side of the world, with the countries of Natural Earth
+// 1:110m in a small local file loaded with the module only.
+test('the places card: a real map, centred and zoomed on the month, the points in order of day', () => {
+  const W = M.decodeWorld(JSON.parse(read('assets/data/mondo-110m-v1.json')));
+  assert.ok(W.length > 200, 'the countries');
+  const inside = (p) => p.x >= M.MAP.x0 && p.x <= M.MAP.x1 && p.y >= M.MAP.y0 && p.y <= M.MAP.y1;
+  // Near: Chieti and Pescara, ~13 km apart.
+  const near = M.mapLayout([{ label: 'Chieti', nuovo: true, lat: 42.351, lon: 14.168 }, { label: 'Pescara', lat: '42.464', lon: '14.214' }]);
+  assert.ok(near.view && near.places.every(inside), 'both on the map');
+  assert.ok(near.places[1].y < near.places[0].y && near.places[1].x > near.places[0].x, 'Pescara north-east of Chieti');
+  assert.ok(Math.abs(near.places[0].ly - near.places[1].ly) >= 16, 'the names never on top of each other');
+  assert.ok(M.landPath(near.view, W).length > 200, 'the coast around them');
+  // Far: Pescara and Tokyo, ~9.800 km.
+  const far = M.mapLayout([{ label: 'Pescara', lat: 42.464, lon: 14.214 }, { label: 'Tokyo', lat: 35.68, lon: 139.69 }]);
+  assert.ok(far.places.every(inside));
+  assert.ok(far.view.s < near.view.s / 10, 'zoomed out');
+  assert.doesNotMatch(M.landPath(far.view, W), /NaN/);
+  // The pins: the other person on the first place, me on the last, standing on them.
+  assert.deepEqual(far.pins.map((p) => p.role), ['other', 'me']);
+  assert.equal(far.pins[1].x, Math.round((far.places[1].x - 17) * 10) / 10);
+  assert.equal(far.pins[1].y, Math.round((far.places[1].y - 37) * 10) / 10);
+  // A place without coordinates stays in the list, without a point.
+  const some = M.mapLayout([{ label: 'Padova', lat: 45.406, lon: 11.877 }, { label: 'Da qualche parte' }]);
+  assert.equal(some.places[1].x, null);
+  assert.deepEqual(some.missing, ['Da qualche parte']);
+  const none = M.mapLayout([{ label: 'Padova' }]);
+  assert.equal(none.view, null);
+  assert.equal(M.landPath(none.view, W), '');
+});
+
+test('the map is local, loaded with the month only, never in the precache; the server sends the coordinates', () => {
+  const src = read('mese.js');
+  assert.match(src, /w\.fetch\('\/assets\/data\/mondo-110m-v1\.json'\)/);
+  assert.doesNotMatch(src, /https?:\/\/(?!www\.w3\.org)/, 'no outside service');
+  assert.doesNotMatch(read('service-worker.js'), /mondo-110m/);
+  assert.doesNotMatch(read('index.html'), /mondo-110m/);
+  const size = fs.statSync(path.join(ROOT, 'assets/data/mondo-110m-v1.json')).size;
+  assert.ok(size < 70000, `small (${size} bytes)`);
+  const sql = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).find((f) => /_mese_posti_coordinate\.sql$/.test(f));
+  assert.match(read(`supabase/migrations/${sql}`), /'lat', mo\.place_lat, 'lon', mo\.place_lon, 'day', mo\.moment_date/);
+  assert.match(read('scripts/build-mondo-110m.mjs'), /Natural Earth 1:110m/);
+  assert.ok(require('../i18n-en.js')['Anche: {names}']);
+});

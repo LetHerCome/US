@@ -58,7 +58,86 @@
   // Where a card can go on the board (the board's own sources), when it can.
   const pinOf = (card) => (card && !card.gone && card.pin && ['moment', 'conserva', 'keepsake'].includes(card.pin.source) ? card.pin : null);
 
-  if (!w || !w.document) return Object.freeze({ MONTHS, period, fit, cardsLabel, normalize, shareable, pinOf, dayLabel, install() {} });
+  // ---- «Dove siete stati»: a real map (founder, 28/11/2026) -------------------
+  // The countries of Natural Earth 1:110m (assets/data/mondo-110m-v1.json,
+  // scripts/build-mondo-110m.mjs), loaded with this module only, never in the
+  // precache. A plain projection (longitudes narrowed by the cosine of the middle
+  // latitude), centred and zoomed on the month's places with a margin: from two
+  // towns 15 km apart (at least ~550 km across: the 1:110m coast reads as a country) to the
+  // other side of the world. The card is 240×360; the places live in MAP.
+  const MAP = Object.freeze({ x0: 24, x1: 206, y0: 100, y1: 292 });
+  const MIN_SPAN_DEG = 5;
+  // The packed rings ([lon, lat] × q, then deltas) as points with their box.
+  function decodeWorld(data) {
+    const q = Number(data?.q) || 10;
+    return (Array.isArray(data?.rings) ? data.rings : []).map((flat) => {
+      const pts = [];
+      let x = 0, y = 0, a = Infinity, b = Infinity, c = -Infinity, e = -Infinity;
+      for (let i = 0; i + 1 < flat.length; i += 2) {
+        x = i ? x + flat[i] : flat[0];
+        y = i ? y + flat[i + 1] : flat[1];
+        const lon = x / q, lat = y / q;
+        pts.push([lon, lat]);
+        if (lon < a) a = lon; if (lat < b) b = lat; if (lon > c) c = lon; if (lat > e) e = lat;
+      }
+      return { pts, box: [a, b, c, e] };
+    });
+  }
+  const coord = (v, max) => { const n = v === null || v === undefined || v === '' ? NaN : Number(v); return Number.isFinite(n) && Math.abs(n) <= max ? n : null; };
+  // Pure: where everything goes on the card. view: the projection (null without
+  // coordinates); places in order of day, with x/y (null: no point, listed below).
+  function mapLayout(places) {
+    const list = (Array.isArray(places) ? places : []).slice(0, 4).map((p) => ({ label: String(p?.label || '').trim().slice(0, 18), nuovo: Boolean(p?.nuovo), lat: coord(p?.lat, 90), lon: coord(p?.lon, 180), x: null, y: null }));
+    const geo = list.filter((p) => p.lat !== null && p.lon !== null);
+    if (!geo.length) return { view: null, places: list, pins: [], missing: list.map((p) => p.label).filter(Boolean) };
+    const lons = geo.map((p) => p.lon), lats = geo.map((p) => p.lat);
+    const minLon = Math.min(...lons), maxLon = Math.max(...lons), minLat = Math.min(...lats), maxLat = Math.max(...lats);
+    const lat0 = (minLat + maxLat) / 2, lonC = (minLon + maxLon) / 2;
+    const k = Math.max(0.2, Math.cos(lat0 * Math.PI / 180));
+    const spanX = Math.max(MIN_SPAN_DEG, (maxLon - minLon) * k * 1.3), spanY = Math.max(MIN_SPAN_DEG, (maxLat - minLat) * 1.3);
+    const s = Math.min((MAP.x1 - MAP.x0) / spanX, (MAP.y1 - MAP.y0) / spanY);
+    const cx = (MAP.x0 + MAP.x1) / 2, cy = (MAP.y0 + MAP.y1) / 2;
+    const view = { lonC, lat0, k, s, cx, cy };
+    const r1 = (v) => Math.round(v * 10) / 10;
+    for (const p of geo) { p.x = r1(cx + (p.lon - lonC) * k * s); p.y = r1(cy - (p.lat - lat0) * s); }
+    // The names in italics beside their point, never on top of each other.
+    const named = geo.filter((p) => p.label).sort((a, b) => a.y - b.y);
+    let last = -Infinity, lastNew = false;
+    for (const p of named) {
+      p.anchor = p.x > 140 ? 'end' : 'start';
+      p.lx = r1(p.x + (p.anchor === 'end' ? -9 : 9));
+      p.ly = r1(Math.max(p.y + 4, last + (lastNew ? 27 : 16)));
+      last = p.ly; lastNew = p.nuovo;
+    }
+    // The characters as pins: the other person on the first place, me on the last.
+    const first = geo[0], end = geo[geo.length - 1];
+    let pa = first.x - 17, pb = end.x - 17;
+    if (geo.length === 1 || Math.hypot(first.x - end.x, first.y - end.y) < 30) { pa = first.x - 34; pb = end.x; }
+    const pins = [{ role: 'other', x: r1(pa), y: r1(first.y - 37) }, { role: 'me', x: r1(pb), y: r1(end.y - 37) }];
+    return { view, places: list, pins, missing: list.filter((p) => p.x === null && p.label).map((p) => p.label) };
+  }
+  // Pure: the countries seen through a view, as one SVG path (the card only).
+  function landPath(view, rings) {
+    if (!view || !Array.isArray(rings) || !rings.length) return '';
+    const { lonC, lat0, k, s, cx, cy } = view;
+    const west = lonC - cx / (k * s), east = lonC + (240 - cx) / (k * s), north = lat0 + cy / s, south = lat0 - (360 - cy) / s;
+    let out = '';
+    for (const { pts, box } of rings) {
+      if (box[2] < west || box[0] > east || box[3] < south || box[1] > north) continue;
+      let px = NaN, py = NaN, plon = NaN, seg = '';
+      for (const [lon, lat] of pts) {
+        const x = Math.round((cx + (lon - lonC) * k * s) * 10) / 10, y = Math.round((cy - (lat - lat0) * s) * 10) / 10;
+        if (seg && Math.abs(x - px) < 0.5 && Math.abs(y - py) < 0.5) continue;
+        // Across the 180th meridian (Russia, Fiji, Antarctica): a new stroke, never a line over the world.
+        seg += `${seg && Math.abs(lon - plon) <= 180 ? 'L' : 'M'}${x} ${y}`;
+        px = x; py = y; plon = lon;
+      }
+      out += `${seg}Z`;
+    }
+    return out;
+  }
+
+  if (!w || !w.document) return Object.freeze({ MONTHS, period, fit, cardsLabel, normalize, shareable, pinOf, dayLabel, decodeWorld, mapLayout, landPath, MAP, install() {} });
 
   const d = w.document;
   const db = () => (typeof w.sb !== 'undefined' && w.sb) || (typeof sb !== 'undefined' ? sb : null); // eslint-disable-line no-undef
@@ -97,19 +176,52 @@
     return `<svg viewBox="0 0 100 100" aria-hidden="true"><defs><path id="${id}" d="M50 50 m-37 0 a37 37 0 1 1 74 0 a37 37 0 1 1 -74 0"/></defs><circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="50" cy="50" r="29" fill="none" stroke="currentColor" stroke-width="1"/><text font-family="Figtree, sans-serif" font-size="9.5" font-weight="800" fill="currentColor"><textPath href="#${id}" textLength="226" lengthAdjust="spacing">${esc(text)}</textPath></text><text x="50" y="${sub ? 50 : 55}" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-style="italic" font-size="${sub ? 14 : 16}" fill="currentColor">${esc(inner)}</text>${sub ? `<text x="50" y="63" text-anchor="middle" font-family="Figtree, sans-serif" font-size="7" font-weight="800" letter-spacing="1.5" fill="currentColor">${esc(sub)}</text>` : ''}</svg>`;
   }
   const TAGS = { foto: 'Una foto', qa: 'La domanda', lettera: 'Lasciato per te', prima: 'Una prima volta', scelta: 'Questo o quello', numeri: 'I vostri numeri', posti: 'Dove siete stati', intesa: 'L’intesa del mese' };
-  function placeMap(card) {
-    const places = (card.places || []).slice(0, 4);
-    const spots = [[66, 104, 'start'], [132, 200, 'start'], [112, 318, 'start'], [40, 250, 'start']];
-    const dots = [[58, 132], [132, 196], [196, 292], [70, 262]];
-    const labels = places.map((p, i) => {
-      const [x, y] = spots[i];
-      const name = String(p.label || '').slice(0, 18);
-      const color = p.nuovo ? '#b8432f' : '#2c2030';
-      return `<text x="${x}" y="${y}" font-family="Fraunces, Georgia, serif" font-style="italic" font-size="${fit(name, 17, 10, 11)}" fill="${color}">${esc(name)}</text>${p.nuovo ? `<text x="${x}" y="${y + 14}" font-family="Figtree, sans-serif" font-weight="800" font-size="7.5" letter-spacing="1.8" fill="#b8432f">${esc(T('LA PRIMA VOLTA'))}</text>` : ''}`;
+  // The countries, once per session (this module only; never in the precache).
+  let world = null, worldLoading = null;
+  function loadWorld() {
+    if (world) return Promise.resolve(world);
+    if (!worldLoading) {
+      worldLoading = w.fetch('/assets/data/mondo-110m-v1.json')
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`mondo ${r.status}`))))
+        .then((data) => { world = decodeWorld(data); repaintMaps(); return world; })
+        .catch((e) => { worldLoading = null; throw e; });
+    }
+    return worldLoading;
+  }
+  // Maps drawn before the countries arrived get them now.
+  function repaintMaps() {
+    d.querySelectorAll('.um-card svg[data-um-view]').forEach((svg) => {
+      const path = svg.querySelector('[data-um-land]');
+      if (!path || path.getAttribute('d')) return;
+      try { path.setAttribute('d', landPath(JSON.parse(svg.dataset.umView), world)); } catch (_) { /* a broken view: no countries */ }
+    });
+  }
+  const badgeOf = (card) => {
+    const nuovi = Number(card.nuovi) || 0, count = Number(card.count) || (card.places || []).length;
+    return nuovi ? (nuovi === 1 ? T('1 posto nuovo') : T('{n} posti nuovi', { n: nuovi })) : (count === 1 ? T('1 posto') : T('{n} posti', { n: count }));
+  };
+  // The card's map as one SVG (the card, the viewer and the 9:16 canvas): pink sea,
+  // cream land, thin borders, the places as points joined in order of day, the
+  // names in italics, the stamp. The pins (the characters) are mapLayout().pins.
+  function placeMap(card, layout = mapLayout(card.places)) {
+    const id = `umm${++uid}`;
+    const L = layout;
+    const serif = (size, color) => `font-family="Fraunces, Georgia, serif" font-style="italic" font-size="${size}" fill="${color}" stroke="#fbf5ef" stroke-width="3" stroke-linejoin="round" paint-order="stroke"`;
+    const geo = L.places.filter((p) => p.x !== null);
+    const land = L.view ? `<path data-um-land="1" d="${world ? landPath(L.view, world) : ''}" fill="#efe1cd" stroke="#a88b7c" stroke-opacity=".55" stroke-width=".6" stroke-linejoin="round"/>` : '';
+    const line = geo.length > 1 ? `<path d="M${geo.map((p) => `${p.x} ${p.y}`).join(' L ')}" fill="none" stroke="#b8432f" stroke-width="2.2" stroke-dasharray="1 6" stroke-linecap="round"/>` : '';
+    const marks = geo.map((p) => `<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="#b8432f" stroke="#fff" stroke-width="2"/>`).join('');
+    // Without coordinates the names keep the old places of the sheet, without points.
+    const spots = [[30, 118], [30, 160], [30, 202], [30, 244]];
+    const labels = L.places.filter((p) => p.label && (p.x !== null || !L.view)).map((p, i) => {
+      const x = p.x !== null ? p.lx : spots[i][0], y = p.x !== null ? p.ly : spots[i][1], anchor = p.x !== null ? p.anchor : 'start';
+      return `<text x="${x}" y="${y}" text-anchor="${anchor}" ${serif(fit(p.label, 15, 11, 10), p.nuovo ? '#b8432f' : '#2c2030')}>${esc(p.label)}</text>${p.nuovo ? `<text x="${x}" y="${y + 11}" text-anchor="${anchor}" font-family="Figtree, sans-serif" font-weight="800" font-size="6.5" letter-spacing="1.5" fill="#b8432f" stroke="#fbf5ef" stroke-width="2.4" paint-order="stroke">${esc(T('LA PRIMA VOLTA'))}</text>` : ''}`;
     }).join('');
-    const path = places.length > 1 ? `<path d="M${dots.slice(0, places.length).map(([x, y]) => `${x} ${y}`).join(' L ')}" fill="none" stroke="#b8432f" stroke-width="2.4" stroke-dasharray="1 7" stroke-linecap="round"/>` : '';
-    const marks = dots.slice(0, places.length).map(([x, y]) => `<circle cx="${x}" cy="${y}" r="6" fill="#b8432f" stroke="#fff" stroke-width="2.5"/>`).join('');
-    return `<svg viewBox="0 0 240 360" aria-hidden="true">${path}${marks}${labels}</svg>`;
+    const missing = L.view && L.missing.length ? `<text x="20" y="348" ${serif(10.5, '#75636b')}>${esc(T('Anche: {names}', { names: L.missing.join(', ') }))}</text>` : '';
+    const badge = badgeOf(card).toUpperCase();
+    const stamp = `<g transform="translate(20 ${L.missing.length && L.view ? 326 : 336}) rotate(-8)"><rect x="0" y="-11" width="${Math.round(badge.length * 6.1 + 14)}" height="17" rx="4" fill="#fbf5ef" fill-opacity=".85" stroke="#b8432f" stroke-width="1.4"/><text x="7" y="1.2" font-family="Figtree, sans-serif" font-weight="800" font-size="7.5" letter-spacing="1.3" fill="#b8432f">${esc(badge)}</text></g>`;
+    const view = L.view ? ` data-um-view="${esc(JSON.stringify(L.view))}"` : '';
+    return `<svg viewBox="0 0 240 360" preserveAspectRatio="xMidYMid slice" aria-hidden="true"${view}><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf5ef"/><stop offset=".7" stop-color="#fbf5ef" stop-opacity=".85"/><stop offset="1" stop-color="#fbf5ef" stop-opacity="0"/></linearGradient></defs><rect width="240" height="360" fill="#f2dfe6"/>${land}<rect width="240" height="96" fill="url(#${id})"/>${line}${marks}${labels}${missing}${stamp}</svg>`;
   }
   // The numbers: the biggest one in the middle, the other two at the side.
   function numbersOf(card) {
@@ -152,9 +264,10 @@
       const { hero, minis } = numbersOf(card);
       body = `<p class="lab47">${esc(hero[2])}<small>${esc(hero[3])}</small></p><div class="minis">${minis.map(([v, l]) => `<div><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join('')}</div><span class="sit47">${who(me, 58)}</span><span class="giant47" style="--g:${fit(String(hero[1]), 236, 2, 120)}px">${esc(hero[1])}</span>`;
     } else if (k === 'posti') {
-      const nuovi = Number(card.nuovi) || 0, count = Number(card.count) || (card.places || []).length;
-      const badge = nuovi ? (nuovi === 1 ? '1 posto nuovo' : `${nuovi} posti nuovi`) : (count === 1 ? '1 posto' : `${count} posti`);
-      body = `<div class="map">${placeMap(card)}</div><p class="q2">Dove siete stati</p><span class="pin" style="left:30px;top:80px">${who(other, 34)}</span><span class="pin" style="left:184px;top:262px">${who(me, 34)}</span><span class="badge2">${esc(badge)}</span>`;
+      const layout = mapLayout(card.places);
+      if (layout.view && !world) loadWorld().catch(() => {});
+      const pins = layout.pins.map((p) => `<span class="pin" style="left:${p.x}px;top:${p.y}px">${who(p.role === 'me' ? me : other, 34)}</span>`).join('');
+      body = `<div class="map">${placeMap(card, layout)}</div><p class="q2">Dove siete stati</p>${pins}`;
     } else if (k === 'intesa') {
       const same = Number(card.same) || 0, all = Number(card.total) || 0;
       const close = all && same / all >= 0.6;
@@ -253,7 +366,12 @@
     if (error) throw error;
     return data;
   }
-  async function loadPack(id) { return normalize(await rpc('get_pacchetto_v1', { p_pack: id })); }
+  // With a places card, the countries come with the pack (a failure only leaves the map without them).
+  async function loadPack(id) {
+    const pack = normalize(await rpc('get_pacchetto_v1', { p_pack: id }));
+    if (pack.cards.some((c) => c.k === 'posti' && !c.gone && mapLayout(c.places).view)) await loadWorld().catch(() => null);
+    return pack;
+  }
 
   // ---------------------------------------------------------------- 1. the pack
   async function openPack(id) {
@@ -784,15 +902,14 @@
       text(ctx, String(hero[1]), X(-14), Y(394), serif(fit(String(hero[1]), 236, 2, 120), false, 600), '#b8432f');
       await person(me, 34, 160, 58);
     } else if (kind === 'posti') {
-      head();
-      ctx.strokeStyle = 'rgba(184,67,47,.06)'; ctx.lineWidth = 1;
-      for (let v = 0; v < 360; v += 18) { ctx.beginPath(); ctx.moveTo(x, Y(v)); ctx.lineTo(x + cw, Y(v)); ctx.stroke(); }
-      for (let v = 0; v < 240; v += 18) { ctx.beginPath(); ctx.moveTo(X(v), y); ctx.lineTo(X(v), y + ch); ctx.stroke(); }
-      const svg = placeMap(card).replace('<svg ', `<svg xmlns="http://www.w3.org/2000/svg" width="${cw}" height="${ch}" `);
+      const layout = mapLayout(card.places);
+      if (layout.view) await loadWorld().catch(() => null);
+      const svg = placeMap(card, layout).replace('<svg ', `<svg xmlns="http://www.w3.org/2000/svg" width="${cw}" height="${ch}" `);
       const map = await loadImg(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
       if (map) ctx.drawImage(map, x, y, cw, ch);
+      head();
       text(ctx, T('Dove siete stati'), X(16), Y(58), serif(25), '#2c2030');
-      await person(other, 30, 80, 34); await person(me, 184, 262, 34);
+      for (const p of layout.pins) await person(p.role === 'me' ? me : other, p.x, p.y, 34);
     } else if (kind === 'intesa') {
       head();
       const glow = ctx.createRadialGradient(X(120), Y(370), F(10), X(120), Y(370), F(150)); glow.addColorStop(0, 'rgba(255,150,170,.55)'); glow.addColorStop(1, 'rgba(255,150,170,0)');
@@ -958,5 +1075,5 @@
     return false;
   }
 
-  return Object.freeze({ MONTHS, period, fit, cardsLabel, normalize, shareable, pinOf, dayLabel, install, showCollection, openPack, openMonth, openViewer: (i) => openViewer(i), openShare: () => openShare(), openLatest, close, back, isOpen, cardHTML, renderShare });
+  return Object.freeze({ MONTHS, period, fit, cardsLabel, normalize, shareable, pinOf, dayLabel, decodeWorld, mapLayout, landPath, MAP, loadWorld, install, showCollection, openPack, openMonth, openViewer: (i) => openViewer(i), openShare: () => openShare(), openLatest, close, back, isOpen, cardHTML, renderShare });
 });

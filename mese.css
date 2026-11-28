@@ -118,11 +118,10 @@
 .um-card .giant47{left:-14px;bottom:-34px;z-index:1;font:600 var(--g,236px)/0.8 "Fraunces",Georgia,serif;color:#b8432f;letter-spacing:-.08em;font-variant-numeric:lining-nums}
 .um-card .sit47{left:34px;bottom:146px;width:58px;z-index:2;transform:rotate(-6deg)}
 /* places */
-.um-card .map{inset:0;z-index:0;background:repeating-linear-gradient(0deg,rgba(184,67,47,.06) 0 1px,transparent 1px 18px),repeating-linear-gradient(90deg,rgba(184,67,47,.06) 0 1px,transparent 1px 18px)}
+.um-card .map{inset:0;z-index:0;background:#f2dfe6}
 .um-card .map svg{position:absolute;inset:0;width:100%;height:100%}
 .um-card.t-posti .q2{font:italic 400 25px/1.05 "Fraunces",Georgia,serif}
 .um-card .pin{width:34px;z-index:2}
-.um-card .badge2{left:20px;top:232px;z-index:2;transform:rotate(-9deg);border:1.5px solid #b8432f;color:#b8432f;border-radius:6px;padding:4px 7px;font:800 8px "Figtree",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;background:rgba(251,245,239,.75)}
 /* first time */
 .um-card .seal2{top:34px;left:50%;width:132px;height:132px;margin-left:-66px;z-index:1;color:var(--acc-ink);transform:rotate(-8deg)}
 .um-card .word3{left:10px;right:20px;top:178px;z-index:1;text-align:center;font:italic 600 var(--w,44px)/1 "Fraunces",Georgia,serif;color:var(--acc-ink);letter-spacing:-.03em;overflow-wrap:anywhere;text-wrap:balance}
