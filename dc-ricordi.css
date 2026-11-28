@@ -804,6 +804,8 @@
 
 /* The lens: one button next to Raccolta · Bacheca · Mappa. */
 #moments .ricordi-story-head:has(.ricordi-lens){grid-template-columns:minmax(0,1fr) auto!important;align-items:center}
+#moments .ricordi-views>[data-ricordi-view][hidden]{display:none}
+#moments .ricordi-views:has(>[data-ricordi-view="carte"][hidden]){grid-template-columns:repeat(3,minmax(0,1fr))}
 #moments .ricordi-story-head:has(.ricordi-lens) .ricordi-views{grid-column:1;grid-row:1;min-width:0}
 #moments .ricordi-lens{grid-column:2;grid-row:1;display:grid;place-items:center;width:52px;height:52px;margin:0;padding:0;border:1px solid var(--us-color-line-strong);border-radius:50%;background:color-mix(in srgb,var(--us-color-text) 6%,transparent);color:var(--us-color-text);box-shadow:none;--us-icon-size:21px}
 #moments .ricordi-lens:focus-visible{outline:2px solid var(--us-pg);outline-offset:2px}

@@ -2,6 +2,11 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Intro e collezione (28/11)
+
+- **L’intro spiega tutto:** Noi (calendario, «Ci vediamo», lavagna, post-it), Ricordi (album, bacheca, mappa, lente), Gioca a turni con i tre gettoni, una tappa nuova per Play Us («Ti batto io, vedrai»), una per la busta del mese («Io faccio collezione di quelle rare») e US Plus più preciso: più partite e Play Us, più vestiti, una bacheca più grande, e chi non lo prende non perde niente. Anche in inglese.
+- **«Carte» in Ricordi compare solo dopo la prima busta:** prima del primo mese la collezione non ha senso, quindi Ricordi ha tre schede.
+
 ### Il vostro mese come evento (28/11)
 
 **Stato:** ramo `claude/bustine-evento`, da staging dopo la #324. Nessuna migrazione.

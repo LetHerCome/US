@@ -41,7 +41,7 @@ test('helpers: sizes that fit, counts, what can be shared or pinned', () => {
 
 test('wiring: Ricordi › Carte loads the module when tapped; Back; builds; out of the offline shell', () => {
   const html = read('index.html');
-  assert.match(html, /data-ricordi-view="carte" aria-selected="false">Carte<\/button>/);
+  assert.match(html, /data-ricordi-view="carte" aria-selected="false" hidden>Carte<\/button>/);
   assert.match(html, /<div class="ricordi-carte" id="ricordiCarte" aria-label="Le vostre carte" hidden><\/div>/);
   assert.doesNotMatch(html, /src="\/mese\.js/, 'never loaded at start');
   const place = read('ricordi-place.js');
