@@ -12,6 +12,9 @@ const path = require('node:path');
 const { database } = require('./helpers/mc2-db');
 
 const FILE = '20261113232109_revisione_testi.sql';
+// Content 1.4 (domande a scelta, 28/11) turns some reviewed prompts into choice
+// with version + 1: the review is rehearsed on the chain as it stood before.
+const UNTIL = '20261128115152_contenuti_hot.sql';
 const SQL = () => fs.readFileSync(path.join(__dirname, '..', 'supabase/migrations', FILE), 'utf8');
 const rows = async (db, sql, params) => (await db.query(sql, params)).rows;
 
@@ -124,7 +127,7 @@ const fingerprint = async (db) => (await rows(db, `select md5(string_agg(x, '|' 
   union all select p::text from public.progression_reward_catalog p union all select w::text from public.couple_weekly_challenges w) z`))[0].h;
 
 test('the review: new texts in, no old text left among the active rows, inclusive and typographic', async () => {
-  const db = await database({ seed: false });
+  const db = await database({ seed: false, until: UNTIL });
   try {
     for (const row of await activeItalian(db)) {
       for (const old of OLD) assert.doesNotMatch(row.t, old, row.id);
@@ -176,7 +179,7 @@ test('the review: new texts in, no old text left among the active rows, inclusiv
 });
 
 test('the review bumps a version once and re-applying changes nothing', async () => {
-  const db = await database({ seed: false });
+  const db = await database({ seed: false, until: UNTIL });
   try {
     const versions = async () => rows(db, `select id, version from public.game_v2_catalog where id = any($1)
       union all select id, version from public.game_v2_recipes where id = 'calendar_upcoming-001'
@@ -196,7 +199,7 @@ test('the review bumps a version once and re-applying changes nothing', async ()
 });
 
 test('a future day takes the new daily text, a day already shown keeps what people answered', async () => {
-  const db = await database({ seed: false });
+  const db = await database({ seed: false, until: UNTIL });
   try {
     await db.exec(`insert into public.daily_questions (question_date, question, template_id)
       values ('2026-01-07', 'Ricordi una volta in cui ci siamo persi insieme? Dov’eravamo?', 'ricordi-40'),
@@ -213,7 +216,7 @@ test('a future day takes the new daily text, a day already shown keeps what peop
 });
 
 test('the hug, the hidden message and the perfect day are near only; challenges already created keep their title', async () => {
-  const db = await database({ seed: false });
+  const db = await database({ seed: false, until: UNTIL });
   try {
     const three = ['any-hug-twenty', 'any-hidden-note', 'any-perfect-day-plan'];
     const modes = await rows(db, 'select key, mode, challenge, two_places from public.bond_quest_templates where key = any($1) order by key', [three]);
