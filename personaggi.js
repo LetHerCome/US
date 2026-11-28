@@ -510,11 +510,16 @@
   function cuoriVerso() {
     const at = isolaInVista({ open: Boolean(receiving) });
     if (!at) return null;
-    // The other person's place in the open island (struttura.css: min(232 px, 100vw − 100)
-    // wide, the window 18 px in, two characters of 42 px overlapping by 12, centred): mine, then theirs.
+    // The other person, measured when the island is open and drawn; otherwise their place
+    // in the open island (struttura.css: min(232 px, 100vw − 100) wide, the window 72 px
+    // wide 18 px in, two characters of 38 px overlapping by 12, centred in it and in the
+    // bar's height since 28/11/2026): 4 + 26 + 19 px in.
+    const them = at.button?.getAttribute?.('aria-expanded') === 'true' ? at.button.querySelectorAll?.('[data-us-isola-duo] .us-char')?.[1] : null;
+    const r = them?.getBoundingClientRect?.();
+    if (r && r.width && r.height) return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) };
     const vw = d.documentElement?.clientWidth || w.innerWidth || 0;
     const open = Math.min(ISOLA_OPEN_W, vw ? vw - 100 : ISOLA_OPEN_W);
-    return { x: Math.round(at.x - open / 2 + ISOLA_WINDOW_LEFT + 30 + 21), y: Math.round(at.y + 4) };
+    return { x: Math.round(at.x - open / 2 + ISOLA_WINDOW_LEFT + 4 + 26 + 19), y: Math.round(at.y - 2) };
   }
   // Free for a moment of its own: there to see, no hearts arriving, no bubble, not in Impostazioni.
   function isolaLibera(options) {
