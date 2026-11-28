@@ -136,7 +136,7 @@ test('in the app: the sheet shows US\'s post-it and the other one\'s; yours is c
   } finally { await h.close(); }
 });
 
-test('in the app: the memory shows «Sulla bacheca» when it is not pinned, and «Riappendi in bacheca» pins it', async (t) => {
+test('in the app: the open photo has one small post-it top left, «Riappendi ›» pins it, and «Solo la foto» hides the rest', async (t) => {
   const h = await start();
   if (!h) return t.skip('Playwright unavailable');
   try {
@@ -149,17 +149,33 @@ test('in the app: the memory shows «Sulla bacheca» when it is not pinned, and 
     });
     await page.waitForSelector('#momentsGrid .moment-card[data-moment-id="m1"]');
     await page.evaluate(() => document.querySelector('#momentsGrid .moment-card[data-moment-id="m1"]').click());
-    await page.waitForSelector('#usAlbumBacheca.ub-row:not([hidden])');
-    assert.match(await page.locator('#usAlbumBacheca .ub-row-kicker').innerText(), /Sulla bacheca/i);
-    assert.deepEqual((await page.locator('#usAlbumBacheca .ub-pn p').allInnerTexts()), ['Il vostro primo ricordo', 'Torniamo a giugno?']);
-    assert.equal(await page.locator('#usAlbumBacheca .ub-row-say').innerText(), 'Ora non è appesa: i post-it restano qui e tornano con lei se la riappendete.');
-    await page.locator('#usAlbumBacheca [data-ub-row="pin"]').scrollIntoViewIfNeeded();
-    assert.equal(await page.locator('#usAlbumBacheca [data-ub-row="pin"]').innerText(), 'Riappendi in bacheca');
+    await page.waitForSelector('#usAlbumBacheca.ub-row.is-mini:not([hidden])');
+    // Founder, 28/11/2026: the photo first. One post-it (US's), «+1» for Bea's, top left.
+    assert.deepEqual(await page.locator('#usAlbumBacheca .ub-pn p').allInnerTexts(), ['Il vostro primo ricordo']);
+    assert.equal(await page.locator('#usAlbumBacheca .ub-mini-more').innerText(), '+1');
+    assert.equal(await page.getAttribute('#usAlbumBacheca [data-ub-row="write"]', 'aria-label'), 'Sulla bacheca: 2 post-it. Tocca per leggerli e scrivere il tuo');
+    const note = await page.locator('#usAlbumBacheca').boundingBox();
+    const save = await page.locator('#usAlbumSavePhoto').boundingBox();
+    assert.ok(note.x < 40 && note.y < save.y + save.height, 'top left, at the height of the buttons');
+    assert.ok(note.x + note.width < (await page.locator('#usAlbumSolo').boundingBox()).x, 'never under the buttons');
+    if (process.env.FOTO_SHOTS) await page.screenshot({ path: require('node:path').join(process.env.FOTO_SHOTS, 'foto-postit.png') });
+    assert.equal(await page.locator('#usAlbumBacheca [data-ub-row="pin"]').innerText(), 'Riappendi ›');
     await page.click('#usAlbumBacheca [data-ub-row="pin"]');
     await page.waitForSelector('#usAlbumBacheca [data-ub-row="see"]');
+    assert.equal(await page.locator('#usAlbumBacheca [data-ub-row="see"]').innerText(), 'In bacheca ›');
     assert.deepEqual(await page.evaluate(() => window.__QA.calls.find((c) => c[0] === 'pin')[1]), { p_source: 'moment', p_source_id: 'm1' });
     assert.ok((await page.evaluate(() => window.__toasts)).includes('Appesa in bacheca ♡ · 2 di 12'));
-    // «Scrivi il tuo» opens the post-it sheet over the memory.
+    // Solo la foto: the date, the post-it and the rest go; the close and the eye stay; a tap on the photo brings it all back.
+    await page.click('#usAlbumSolo');
+    assert.equal(await page.getAttribute('#usAlbumSolo', 'aria-pressed'), 'true');
+    assert.equal(await page.getAttribute('#usAlbumSolo', 'aria-label'), 'Mostra tutto');
+    for (const sel of ['#usAlbumBacheca', '#usAlbumTitle', '#usAlbumSavePhoto', '#usAlbumPlace']) assert.equal(await page.locator(sel).evaluate((el) => getComputedStyle(el).visibility), 'hidden', sel);
+    for (const sel of ['#usAlbumSolo', '#usAlbumClose', '#usAlbumCarousel']) assert.equal(await page.locator(sel).evaluate((el) => getComputedStyle(el).visibility), 'visible', sel);
+    if (process.env.FOTO_SHOTS) await page.screenshot({ path: require('node:path').join(process.env.FOTO_SHOTS, 'foto-solo.png') });
+    await page.click('#usAlbumCarousel', { position: { x: 120, y: 300 } });
+    assert.equal(await page.getAttribute('#usAlbumSolo', 'aria-pressed'), 'false');
+    assert.equal(await page.locator('#usAlbumBacheca').evaluate((el) => getComputedStyle(el).visibility), 'visible');
+    // The post-it opens the post-it sheet over the memory.
     await page.click('#usAlbumBacheca [data-ub-row="write"]');
     await page.waitForSelector('#usBachecaSheet.open #usBachecaNoteInput');
     assert.equal(await page.locator('#usBachecaSheet .ub-sheet-actions').isHidden(), true, 'only the post-its, from the memory');

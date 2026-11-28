@@ -218,6 +218,15 @@
 #usAlbumOverlay[data-us-galleria] .us-album-carousel-counter[hidden]{display:none!important}
 #usAlbumOverlay[data-us-galleria] .us-album-close,#usAlbumOverlay[data-us-galleria] .us-album-save-photo{position:absolute;z-index:6;left:auto;right:16px;top:calc(var(--us-safe-top,0px) + 16px);width:46px;height:46px;min-height:46px;margin:0;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid color-mix(in srgb,var(--us-latte) 17%,transparent);background:rgba(15,11,19,.42);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:none;color:var(--us-latte);font-size:0}
 #usAlbumOverlay[data-us-galleria] .us-album-save-photo{right:72px}
+/* Solo la foto (founder, 28/11/2026): the eye beside Salva; on, only the photo, the close and the eye stay. */
+#usAlbumOverlay[data-us-galleria] .us-album-solo{position:absolute;z-index:6;right:128px;top:calc(var(--us-safe-top,0px) + 16px);width:46px;height:46px;min-height:46px;margin:0;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid color-mix(in srgb,var(--us-latte) 22%,transparent);background:rgba(15,11,19,.48);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:none;color:var(--us-latte);cursor:pointer}
+#usAlbumOverlay[data-us-galleria] .us-album-solo .us-icon{--us-icon-size:22px}
+#usAlbumOverlay[data-us-galleria] .us-album-solo:focus-visible{outline:2px solid var(--us-ambra);outline-offset:3px}
+#usAlbumOverlay:not([data-us-galleria]) .us-album-solo{display:none}
+#usAlbumOverlay.is-solo-foto .us-album-scroll>:not(#usAlbumCarousel):not(.us-album-info),#usAlbumOverlay.is-solo-foto .us-album-info>:not(.us-album-photo-actions),#usAlbumOverlay.is-solo-foto .us-album-photo-actions>:not(.us-album-solo),#usAlbumOverlay.is-solo-foto #usAlbumCarousel>:not(img){visibility:hidden;pointer-events:none}
+#usAlbumOverlay.is-solo-foto .us-album-cover-stage::after{opacity:0}
+#usAlbumOverlay.is-solo-foto .us-album-scroll{overflow:hidden}
+#usAlbumOverlay.is-solo-foto[data-us-galleria] .us-album-solo{right:72px}
 #usAlbumOverlay[data-us-galleria] .us-album-save-photo>span:not(.us-icon){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 #usAlbumOverlay[data-us-galleria] :is(.us-album-close,.us-album-save-photo) .us-icon{--us-icon-size:22px}
 #usAlbumOverlay[data-us-galleria] .us-album-save-photo[hidden]{display:none!important}
@@ -780,6 +789,18 @@
 .ub-row :is(button):focus-visible{outline:2px solid var(--us-pg);outline-offset:3px}
 #usAlbumOverlay .us-album-bacheca{margin:16px 20px 24px}
 #usAlbumOverlay[data-us-galleria] .us-album-bacheca{grid-column:1;grid-row:11;position:relative;z-index:4;margin:18px 20px calc(24px + var(--us-safe-bottom,0px))}
+/* The open photo (28/11/2026): only a small post-it top left, «+N», and «In bacheca ›» / «Appendi ›» under it. */
+#usAlbumOverlay[data-us-galleria] .us-album-bacheca.is-mini{position:absolute;grid-area:auto;left:16px;top:calc(var(--us-safe-top,0px) + 18px);z-index:5;display:grid;justify-items:start;gap:4px;max-width:min(168px,calc(100% - 196px));margin:0;padding:0;border-radius:0;background:none}
+#usAlbumOverlay[data-us-galleria] .us-album-scroll:has(#usAlbumCarouselCounter:not([hidden])) .us-album-bacheca.is-mini{top:calc(var(--us-safe-top,0px) + 66px)}
+.ub-row.is-mini .ub-mini-note{position:relative;display:block;max-width:100%;min-height:44px;margin:0;padding:0;border:0;background:none;box-shadow:none;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ub-row.is-mini .ub-pn{max-width:100%;padding:7px 9px 8px;gap:3px;box-shadow:0 6px 16px rgba(0,0,0,.32)}
+.ub-row.is-mini .ub-pn p{font-size:13.5px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ub-row.is-mini .ub-pn b{font-size:10.5px}
+.ub-row.is-mini .ub-pn.is-empty{background:rgba(255,243,196,.16);border:1.5px dashed rgba(255,243,196,.6);box-shadow:none;color:var(--us-latte)}
+.ub-row.is-mini .ub-pn.is-empty p{font:700 12.5px/1.2 var(--us-font-ui);font-style:normal}
+.ub-row.is-mini .ub-mini-more{position:absolute;right:-8px;top:-8px;padding:2px 6px;border-radius:999px;background:var(--us-pg,#ff7c96);color:#2a1220;font:800 10.5px/1.2 var(--us-font-ui);font-style:normal}
+.ub-row.is-mini .ub-mini-link{min-height:32px;margin:0;padding:0 2px;border:0;background:none;box-shadow:none;color:var(--us-latte);font:700 12.5px/1 var(--us-font-ui);text-shadow:0 1px 6px rgba(0,0,0,.55);cursor:pointer}
+.ub-row.is-mini :is(button):focus-visible{outline:2px solid var(--us-ambra,#f3d27a);outline-offset:3px}
 
 /* The lens: one button next to Raccolta · Bacheca · Mappa. */
 #moments .ricordi-story-head:has(.ricordi-lens){grid-template-columns:minmax(0,1fr) auto!important;align-items:center}
