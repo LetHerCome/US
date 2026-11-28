@@ -17,8 +17,11 @@ const worn = async (user) => (await db.query('select character_head, character_f
 // Level n starts at 200·(n−1) + 150·(n−1)(n−2)/2 points (app.js bondLevelInfo).
 const levelStart = (n) => 200 * (n - 1) + 75 * (n - 1) * (n - 2);
 
+// The chain as it stood before il grande bilanciamento (28/11/2026), which
+// puts the wardrobe on levels: bilanciamento-v1-db.test.js owns that one.
+const UNTIL = '20261128101816_play_us_punti.sql';
 let db;
-test.beforeEach(async () => { db = await h.database(); });
+test.beforeEach(async () => { db = await h.database({ until: UNTIL }); });
 test.afterEach(async () => { await db?.close(); db = null; });
 
 test('migration exists, after the wardrobe, and is listed in the cutoff', () => {

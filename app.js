@@ -4582,15 +4582,21 @@ function weekStartISO(now=new Date()){
   d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));
   return d.toISOString().slice(0,10);
 }
+// Il grande bilanciamento (28/11/2026): the curve is a table, one reward per
+// level. Where level n starts (the same table as the server,
+// private.progression_level_start in 20261128104932_bilanciamento_v1); after
+// level 26, one level every 5000 points.
+function bondLevelStart(level){
+  const STARTS=[0,150,300,475,675,875,1100,1350,1625,1975,2375,2800,3250,3750,4275,4825,5425,6050,6700,7400,8125,8875,9675,12075,15475,20075];
+  const n=Math.max(1,Math.floor(Number(level)||1));
+  return n<=STARTS.length?STARTS[n-1]:STARTS[STARTS.length-1]+(Math.min(n,1000)-STARTS.length)*5000;
+}
 function bondLevelInfo(totalXp=0){
   const total=Math.max(0,Number(totalXp)||0);
-  let level=1,floor=0,needed=200;
-  while(total>=floor+needed){
-    floor+=needed;
-    level+=1;
-    needed=200+(level-1)*150;
-    if(level>999)break;
-  }
+  let level=1;
+  while(level<999&&total>=bondLevelStart(level+1))level+=1;
+  const floor=bondLevelStart(level);
+  const needed=Math.max(1,bondLevelStart(level+1)-floor);
   const current=total-floor;
   return {total,level,current,needed,progress:Math.max(0,Math.min(100,current/needed*100))};
 }

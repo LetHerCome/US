@@ -49,10 +49,10 @@ test('every countdown style, Oggi theme and Oggi effect with a reward says the l
   }
 });
 
-// Temi e countdown (26/11/2026): Post-it 3, Biglietto 9, Filo rosso 18 on the old ids.
-test('Post-it unlocks at 3, Biglietto at 9 and Filo rosso at 18, as on the server', () => {
+// Temi e countdown (26/11/2026) on the old ids; levels of il grande bilanciamento (28/11/2026): Post-it 5, Biglietto 15, Filo rosso 24.
+test('Post-it unlocks at 5, Biglietto at 15 and Filo rosso at 24, as on the server', () => {
   const level = (id) => Countdown.STYLES.find((s) => s.id === id).level;
-  assert.equal(level('aurora'), 3);
-  assert.equal(level('orbit'), 9);
-  assert.equal(level('chrome'), 18);
+  assert.equal(level('aurora'), 5);
+  assert.equal(level('orbit'), 15);
+  assert.equal(level('chrome'), 24);
 });

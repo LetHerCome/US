@@ -3596,6 +3596,8 @@
     'Un compagno sopra la barra': 'A companion above the bar',
     'con US Plus': 'with US Plus',
     '{title}, si sblocca al livello {n} con US Plus': '{title}, unlocks at level {n} with US Plus',
+    'Con US Plus': 'With US Plus',
+    '{title}, si sblocca con US Plus': '{title}, unlocks with US Plus',
 
     // Noi and the calendar
     'Apri Il vostro anno': 'Open Your year',

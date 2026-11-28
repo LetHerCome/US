@@ -29,7 +29,8 @@ test('Prossimo sblocco prefers the next headline reward, and adds the estimate',
 
 test('a locked Plus extra says so on its tile', () => {
   const tile = slice('function tileMarkup(', 'function rewardTile(');
-  assert.match(tile, /locked \? \(plus \? `Livello \$\{level\} · US Plus` : `Livello \$\{level\}`\)/);
+  // Out of the ladder (level 1, the app icons since 28/11/2026) it says only US Plus.
+  assert.match(tile, /locked \? \(plusOnly \? 'Con US Plus' : plus \? `Livello \$\{level\} · US Plus` : `Livello \$\{level\}`\)/);
   assert.match(slice('function rewardTile(', 'function defaultTile('), /plus: Boolean\(reward\.requires_plus\)/);
 });
 
@@ -53,7 +54,7 @@ test('Tema delle stagioni: one theme that follows the season in Rome', () => {
   vm.runInNewContext(look.slice(look.indexOf('function seasonFor('), look.indexOf('// ---------- applying to the real Oggi hero')) + ';this.f=seasonFor;', box);
   assert.deepEqual(['2026-03-01', '2026-05-31', '2026-06-01', '2026-08-31', '2026-09-01', '2026-11-30', '2026-12-01', '2027-02-28'].map((d) => box.f(d)),
     ['spring', 'spring', 'summer', 'summer', 'autumn', 'autumn', 'winter', 'winter']);
-  assert.match(look, /\{ id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: '[^']+', reward: 'oggi_theme_seasonal', level: 12 \}/);
+  assert.match(look, /\{ id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: '[^']+', reward: 'oggi_theme_seasonal', level: 18 \}/);
   assert.match(look, /if \(theme === 'seasonal'\) root\.dataset\.usOggiSeason = seasonFor\(\); else delete root\.dataset\.usOggiSeason;/);
   assert.match(look, /data-oggi-season="\$\{esc\(seasonFor\(\)\)\}"/, 'the preview shows this season too');
   for (const season of ['spring', 'summer', 'winter']) {

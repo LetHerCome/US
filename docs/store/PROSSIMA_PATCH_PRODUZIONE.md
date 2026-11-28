@@ -2,6 +2,17 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Il grande bilanciamento dei punti e dei premi (28/11)
+
+**Stato:** ramo `claude/bilanciamento-v1`, da staging dopo la #325, solo commit locali, niente push. Una migrazione, `20261128104932_bilanciamento_v1` (ridefinisce le funzioni dei punti e del livello, il catalogo dei premi e il guardaroba; nessuna tabella nuova, nessun permesso nuovo), da applicare su staging insieme al web. Edge `us-widget-state` con la curva nuova. Il pacchetto web dentro le app cambia: serve un AAB nuovo e una build TestFlight con la stessa versione. Deciso sulla tavola approvata dal founder il 28/11.
+
+**Cosa cambia:**
+- **I punti:** la domanda di oggi vale 15 (prima 10); le partite a turni 15 la prima del giorno, 8 la seconda e la terza, 0 le altre; Play Us 25 la prima del giorno (prima 30), 0 le altre, e il suo ricordo non dà più i +10 della foto; Ti penso 3 a testa al giorno (prima 2); la busta del mese +20 la prima volta che la coppia la apre. Foto, impegni e traguardi restano uguali.
+- **Livelli più vicini all’inizio:** il livello 2 arriva a 150 punti, poi 300, 475, 675… fino al 26 a 20075; dopo il 26 un livello ogni 5000 punti. Un premio per livello.
+- **Una scala sola:** 2 Occhiali, 3 Battito, 4 Cappello, 5 Countdown Post-it, 6 Soffioni, 7 Fiocco, 8 Ti penso Cuori, 9 Sciarpina, 10 Ora d’oro, 11 Neve, 12 Occhiali da sole, 13 Due colori, 14 Gala, 15 Countdown Biglietto, 16 Foglie, 17 Cuffie, 18 Stagioni, 19 Stelle cadenti, 20 Coroncina, 21 Ti penso Lettera, 22 Lanterne, 23 Costellazione, 24 Countdown Filo rosso, 25 Corona, 26 Ricordi in volo. Il guardaroba ora si sblocca a livelli («Livello 9» invece di «1000 punti»); macchinetta, cento e festa restano legati ai loro momenti.
+- **US Plus dà più gioco, non più punti:** le icone Neon, Notte e Oro sono solo per US Plus («Con US Plus»), fuori dalla scala.
+- **Per chi c’è già:** quello che una coppia sblocca di colpo con la curva nuova risulta già visto (niente raffica di annunci); un accessorio indossato che con la scala nuova non è ancora sbloccato si toglie.
+
 ### Intro e collezione (28/11)
 
 - **L’intro spiega tutto:** Noi (calendario, «Ci vediamo», lavagna, post-it), Ricordi (album, bacheca, mappa, lente), Gioca a turni con i tre gettoni, una tappa nuova per Play Us («Ti batto io, vedrai»), una per la busta del mese («Io faccio collezione di quelle rare») e US Plus più preciso: più partite e Play Us, più vestiti, una bacheca più grande, e chi non lo prende non perde niente. Anche in inglese.

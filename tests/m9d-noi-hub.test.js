@@ -70,7 +70,8 @@ test('M9D/Progression V1: Sintonia explains only server-backed meaningful action
   for (const kind of ['quest','event','daily','game','think','moment','milestone']) assert.match(migration, new RegExp(`'${kind}'`), kind);
   assert.match(migration, /progression_award/);
   assert.match(migration, /unique \(couple_id, source_kind, source_key\)/, 'one source cannot farm progression');
-  assert.match(app(), /needed=200\+\(level-1\)\*150/, 'level curve stays the existing Bond curve');
+  // Il grande bilanciamento (28/11/2026): the curve is the server's table (bilanciamento-v1-client.test.js).
+  assert.match(app(), /const needed=Math\.max\(1,bondLevelStart\(level\+1\)-floor\);/, 'level curve stays the one Bond curve');
   assert.match(app(), /const resTotal=document\.getElementById\('noiResonanceTotal'\);if\(resTotal\)resTotal\.textContent=info\.total/);
   assert.doesNotMatch(app(), /bond_xp\s*[+:]=|update\(\{bond_xp/, 'client never becomes progression authority');
 });

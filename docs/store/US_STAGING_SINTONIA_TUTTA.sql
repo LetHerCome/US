@@ -11,8 +11,8 @@
 with target as (
   select greatest(11, (select max(level_required) from public.progression_reward_catalog where active)) + 1 as level_no
 ), points as (
-  select sum(200 + (k - 1) * 150)::integer as total
-  from target, generate_series(1, (select level_no from target) - 1) as k
+  -- The curve is a table since 28/11/2026 (20261128104932_bilanciamento_v1).
+  select private.progression_level_start(level_no) as total from target
 )
 update public.couples c
 set bond_xp = greatest(coalesce(c.bond_xp, 0), (select total from points));

@@ -82,9 +82,9 @@ function fakeElement(id) {
 
 const catalog = [
   { id: 'badge_day_one', level_required: 1, category: 'badge', title: 'Day One', description: 'Spilla', token: 'badge_day_one' },
-  { id: 'frame_aurora', level_required: 3, category: 'frame', title: 'Countdown Post-it', description: 'Post-it', token: 'frame_aurora' },
-  { id: 'ring_orbit', level_required: 9, category: 'ring', title: 'Countdown Biglietto', description: 'Biglietto', token: 'ring_orbit' },
-  { id: 'frame_chrome', level_required: 18, category: 'frame', title: 'Countdown Filo rosso', description: 'Filo rosso', token: 'frame_chrome' }
+  { id: 'frame_aurora', level_required: 5, category: 'frame', title: 'Countdown Post-it', description: 'Post-it', token: 'frame_aurora' },
+  { id: 'ring_orbit', level_required: 15, category: 'ring', title: 'Countdown Biglietto', description: 'Biglietto', token: 'ring_orbit' },
+  { id: 'frame_chrome', level_required: 24, category: 'frame', title: 'Countdown Filo rosso', description: 'Filo rosso', token: 'frame_chrome' }
 ];
 
 function runProgression({ level, pending = [], withCountdown = true }) {
@@ -128,7 +128,7 @@ function runProgression({ level, pending = [], withCountdown = true }) {
 // one is never announced. A legacy reward that entitles a Countdown style is
 // announced as that style, where it really lives.
 test('Unlock moment: tells where the piece lives; retired pieces are never announced', async () => {
-  const { api, el, reactions, applied } = runProgression({ level: 4, pending: ['badge_day_one', 'frame_aurora'] });
+  const { api, el, reactions, applied } = runProgression({ level: 5, pending: ['badge_day_one', 'frame_aurora'] });
   await api.hydrate({ showUnlocks: true, force: true });
   assert.equal(el('usProgressionUnlock').dataset.category, 'countdown', 'the badge is skipped, Post-it comes first');
   assert.equal(el('usProgressionUnlockCount').textContent, '', 'a single real unlock, not "1 di 2"');
@@ -147,14 +147,14 @@ test('Unlock moment: tells where the piece lives; retired pieces are never annou
 });
 
 test('Collection: Countdown styles are a visible group whose locks follow the existing reward rows', async () => {
-  const { api, el, applied } = runProgression({ level: 9 });
+  const { api, el, applied } = runProgression({ level: 15 });
   await api.hydrate({ showUnlocks: false, force: true });
   let markup = el('usProgressionRewards').innerHTML;
   assert.match(markup, /data-category="countdown" aria-label="Countdown"/);
-  assert.match(markup, /<em>5\/6<\/em>/, 'three free + Post-it (L3) + Biglietto (L9); Filo rosso (L18) still locked');
-  // Round 3 (mockup parity): a locked tile still answers a tap ("Si sblocca al livello 18 di Sintonia").
-  assert.match(markup, /data-countdown-style-select="chrome" data-locked="true" data-level="18"/);
-  assert.match(markup, />Filo rosso<\/b><small>Livello 18<\/small>/);
+  assert.match(markup, /<em>5\/6<\/em>/, 'three free + Post-it (L5) + Biglietto (L15); Filo rosso (L24) still locked');
+  // Round 3 (mockup parity): a locked tile still answers a tap ("Si sblocca al livello 24 di Sintonia").
+  assert.match(markup, /data-countdown-style-select="chrome" data-locked="true" data-level="24"/);
+  assert.match(markup, />Filo rosso<\/b><small>Livello 24<\/small>/);
   assert.doesNotMatch(markup, /data-countdown-style-select="orbit" data-locked/);
   assert.match(markup, /class="[^"]*us-progression-countdown-style[^"]*is-equipped[^"]*"[^>]*data-countdown-style-select="editorial"[^>]*aria-pressed="true"/);
   assert.equal((markup.match(/us-progression-reward-plus/g) || []).length, 0, 'Post-it, Biglietto and Filo rosso are presented as the styles themselves, not as frames/rings');
@@ -168,7 +168,7 @@ test('Collection: Countdown styles are a visible group whose locks follow the ex
 });
 
 test('Collection: without the Countdown runtime the collection is unchanged', async () => {
-  const { api, el } = runProgression({ level: 9, withCountdown: false });
+  const { api, el } = runProgression({ level: 15, withCountdown: false });
   await api.hydrate({ showUnlocks: false, force: true });
   assert.doesNotMatch(el('usProgressionRewards').innerHTML, /data-category="countdown"|us-progression-reward-plus/);
 });

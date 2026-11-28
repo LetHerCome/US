@@ -16,8 +16,10 @@ let db, C2;
 const q = async (sql, p = []) => (await db.query(sql, p)).rows;
 const get = (user) => h.as(db, user, 'select public.get_companions_v1() r');
 const unlocked = async (user) => (await get(user)).companions.filter((c) => c.unlocked).map((c) => c.id);
-// The least Sintonia XP for a level (the curve of private.progression_level_info).
-const xpFor = (level) => { let floor = 0; for (let n = 1; n < level; n++) floor += 200 + (n - 1) * 150; return floor; };
+// The least Sintonia XP for a level: the table of private.progression_level_start
+// (il grande bilanciamento, 20261128104932_bilanciamento_v1).
+const STARTS = [0, 150, 300, 475, 675, 875, 1100, 1350, 1625, 1975, 2375, 2800, 3250, 3750, 4275, 4825, 5425, 6050, 6700, 7400, 8125, 8875, 9675, 12075, 15475, 20075];
+const xpFor = (level) => STARTS[level - 1];
 const setXp = (couple, xp) => q('update public.couples set bond_xp = $2 where id = $1', [couple, xp]);
 
 test.beforeEach(async () => {

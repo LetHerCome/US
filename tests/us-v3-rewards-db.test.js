@@ -106,7 +106,10 @@ test('US V3 rewards: client catalog and migration agree on reward ids and levels
   const premi = fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261126000000_premi_oggi_effetti.sql'), 'utf8');
   // Temi e countdown (26/11/2026): Ora d'oro arrives, Chiaro di luna leaves.
   const temi = fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261126020000_premi_temi_countdown.sql'), 'utf8');
+  // Il grande bilanciamento (28/11/2026): one reward per level, the last word on every look.
+  const bilancio = fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261128104932_bilanciamento_v1.sql'), 'utf8');
   for (const sql of [V3, v2, premi, temi]) for (const [, id, level] of sql.matchAll(/\('(oggi_[a-z_]+)',\s+(\d+),/g)) levels.set(id, level);
+  for (const [, id, level] of bilancio.matchAll(/\('(oggi_[a-z_]+)',\s+(\d+)\)/g)) levels.set(id, level);
   const off = premi.match(/set active = false, headline = false\s+where id in \(([^)]*)\)/)[1];
   for (const [, id] of off.matchAll(/'([a-z_]+)'/g)) levels.delete(id);
   for (const [, id] of temi.matchAll(/set active = false, headline = false\s+where id = '([a-z_]+)'/g)) levels.delete(id);
