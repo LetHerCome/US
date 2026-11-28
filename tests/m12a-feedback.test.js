@@ -444,3 +444,26 @@ test('settings exposes one row to switch sounds and haptics off', () => {
   assert.match(settings, /setSoundsEnabled/);
   assert.match(settings, /setHapticsEnabled/);
 });
+
+test('ready from the opening (28/11/2026): after load the audio is built silent, the first gesture only resumes it and the first tap sounds', async () => {
+  const audio = fakeAudio({ state: 'suspended' });
+  class Resuming extends audio.AudioContext { resume() { this.state = 'running'; return super.resume(); } }
+  const doc = fakeDocument();
+  doc.readyState = 'complete';
+  const feedback = createFeedback({ navigator: {}, document: doc, AudioContext: Resuming, localStorage: memoryStorage(), setTimeout, clearTimeout });
+  await new Promise((resolve) => setTimeout(resolve, 5)); // the idle build after load
+  assert.equal(audio.log.contexts, 1, 'built at the opening, before any gesture');
+  feedback.attention();
+  assert.equal(audio.log.oscillators, 0, 'nothing plays before a gesture');
+  doc.fire('pointerdown');
+  assert.ok(audio.log.resumes >= 1, 'the first gesture resumes it');
+  feedback.tap();
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.ok(audio.log.oscillators >= 1, 'the first tap already sounds');
+  // Sounds off in Settings: nothing is built at the opening.
+  const muted = fakeAudio();
+  const doc2 = fakeDocument(); doc2.readyState = 'complete';
+  createFeedback({ navigator: {}, document: doc2, AudioContext: muted.AudioContext, localStorage: memoryStorage({ 'us:feedback:sounds': '0' }), setTimeout, clearTimeout });
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.equal(muted.log.contexts, 0);
+});
