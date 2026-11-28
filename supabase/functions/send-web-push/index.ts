@@ -14,8 +14,8 @@ import { statusResponseEvent } from "../_shared/come-stai-push-core.mjs";
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,x-client-info,apikey,content-type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Content-Type": "application/json" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
-type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "lavagna" | "postit" | "bacheca_postit" | "challenge_photo" | "partner_look" | "partner_status" | "status_response";
-const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "postit", "bacheca_postit", "challenge_photo", "partner_look", "partner_status", "status_response"];
+type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "lavagna" | "postit" | "bacheca_postit" | "challenge_photo" | "partner_look" | "partner_status" | "status_response" | "play_invite";
+const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "lavagna", "postit", "bacheca_postit", "challenge_photo", "partner_look", "partner_status", "status_response", "play_invite"];
 // US 1.0 (A2): a join older than this is not "just joined" (legacy couples, stale retries).
 const PARTNER_JOINED_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -155,7 +155,7 @@ Deno.serve(async (request) => {
     let recipientIds: string[] = [];
     let compose: ((locale: string) => Promise<ReturnType<typeof buildNotification>>) | null = null;
     let dedupeKey: string | null = null;
-    let prefKey: "today" | "bond" | "think" | null = null;
+    let prefKey: "today" | "bond" | "think" | "games" | null = null;
     if (type === "test") {
       recipientIds = [sender.id];
       compose = async (locale) => buildNotification("test", { locale });
@@ -241,6 +241,24 @@ Deno.serve(async (request) => {
       dedupeKey = `challenge-photo:${challengeId}:${sender.id}`;
       prefKey = "bond";
     }
+    if (type === "play_invite") {
+      // Play Us (28/11/2026): the caller just invited the partner to play live.
+      // Read back from the server: this couple's session, invited by the
+      // caller, still waiting and not expired (the invite lasts 3 minutes).
+      if (!partner || typeof body.reference_id !== "string" || !UUID.test(body.reference_id)) return json({ error: "Missing play_invite reference" }, 400);
+      const sessionId = body.reference_id.toLowerCase();
+      const { data: session, error: sessionError } = await admin.from("play_us_sessions")
+        .select("id,couple_id,invited_by,status,invite_expires_at")
+        .eq("id", sessionId).maybeSingle();
+      if (sessionError) throw sessionError;
+      if (!session || session.couple_id !== sender.couple_id || session.invited_by !== sender.id) return json({ error: "Invalid play_invite event" }, 403);
+      const expiresAt = Date.parse(String(session.invite_expires_at || ""));
+      if (session.status !== "invited" || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) return json({ error: "Invite not waiting" }, 409);
+      recipientIds = [partner.id];
+      compose = async (locale) => buildNotification("play_invite", { senderName: sender.display_name, sessionId, locale });
+      dedupeKey = `play-invite:${sessionId}`;
+      prefKey = "games";
+    }
     if (type === "partner_joined") {
       // US 1.0 (A2): the joiner's own client, right after accept_partner_invite,
       // names its couple. Server-side: the caller used this couple's invite
@@ -278,7 +296,7 @@ Deno.serve(async (request) => {
     }
     if (!recipientIds.length || !compose) return json({ delivered: 0, reason: "no-recipient" });
     if (prefKey) {
-      const { data: preferences } = await admin.from("notification_preferences").select("user_id,think,today,bond,relationship").in("user_id", recipientIds);
+      const { data: preferences } = await admin.from("notification_preferences").select("user_id,think,today,bond,relationship,games").in("user_id", recipientIds);
       const byUser = new Map((preferences || []).map((preference: any) => [preference.user_id, preference]));
       recipientIds = recipientIds.filter((id) => byUser.has(id) ? Boolean(byUser.get(id)[prefKey!]) : true);
       if (!recipientIds.length) return json({ delivered: 0, reason: "disabled-by-preference" });

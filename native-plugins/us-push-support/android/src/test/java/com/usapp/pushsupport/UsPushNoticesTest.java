@@ -93,6 +93,16 @@ public class UsPushNoticesTest {
     }
 
     @Test
+    public void aPlayUsInviteSaysWhoChallengesAndOpensGioca() {
+        UsPushNotices.Notice it = UsPushNotices.forKind("play_invite", "Bea", IT);
+        assertEquals("US. · Play Us", it.title);
+        assertEquals("Bea ti sfida a Play Us ♡", it.body);
+        assertEquals("gioca", it.page);
+        assertEquals("Bea challenges you to Play Us ♡", UsPushNotices.forKind("play_invite", "Bea", EN).body);
+        assertEquals("La tua persona ti sfida a Play Us ♡", UsPushNotices.forKind("play_invite", null, IT).body);
+    }
+
+    @Test
     public void unknownOrMissingKindIsTheGenericNotice() {
         for (String kind : new String[] { null, "", "drop_table", "THINK" }) {
             UsPushNotices.Notice notice = UsPushNotices.forKind(kind, "Bea", IT);

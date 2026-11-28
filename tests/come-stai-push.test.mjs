@@ -141,7 +141,7 @@ test('the answer is read back from the partner\'s row: fresh, the state still sh
 
 test('send-web-push: status_response and partner_status are known; the answer always goes, with the think switch', () => {
   const fn = read('supabase/functions/send-web-push/index.ts');
-  assert.match(fn, /const EVENT_TYPES: EventType\[\] = \[[^\]]*"partner_status", "status_response"\];/);
+  assert.match(fn, /const EVENT_TYPES: EventType\[\] = \[[^\]]*"partner_status", "status_response", "play_invite"\];/);
   const answer = fn.slice(fn.indexOf('if (type === "status_response")'), fn.indexOf('if (!recipientIds.length || !compose)'));
   assert.match(answer, /statusResponseEvent\(admin, \{ sender, partner \}\)/);
   assert.match(answer, /buildNotification\("status_response", \{ senderName: sender\.display_name, gesture: event\.gesture, locale \}\)/);

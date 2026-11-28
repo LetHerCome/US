@@ -13,6 +13,8 @@ const PERSONAL_CASCADE=new Set([
   'auth.users>profiles.id','auth.users>daily_answers.user_id','auth.users>moods.user_id','auth.users>quiz_responses.user_id',
   // US Plus (29/10/2026): the entitlement goes with the account (Play's subscription is warned about before deletion, D4).
   'auth.users>plus_entitlements.user_id',
+  // Play Us (28/11/2026): a live game and its moves go with the account; the memory it made stays in Ricordi.
+  'profiles>play_us_sessions.invited_by','profiles>play_us_moves.user_id',
   'profiles>calendar_entries.owner_id','profiles>calendar_reminders.recipient_id','profiles>calendar_reminders.requested_by',
   'profiles>conserva_contributions.conserved_by','profiles>couple_locations.user_id',
   // Batteria del partner (31/10/2026): the last level reported goes with the person.
@@ -74,7 +76,8 @@ test('every user reference is classified, and shared content fails closed',async
     // La vostra bacheca (25/11/2026): +2 (who pinned, who banned).
     // La bacheca, fase 2 (27/11/2026): +1 (who wrote the post-it).
     // Il vostro mese (27/11/2026): +1 (who opened a pack).
-    assert.equal(seen.size,51);
+    // Play Us (28/11/2026): +2 (who invited, who moved).
+    assert.equal(seen.size,53);
   }finally{await db.close();}
 });
 

@@ -428,7 +428,8 @@ test('no scattered vibration or playback-audio APIs outside the feedback authori
   for (const file of fs.readdirSync(ROOT).filter((name) => /\.(js|mjs)$/.test(name))) {
     if (['ui-foundation.js', 'platform.js', 'service-worker.js'].includes(file)) continue;
     const source = read(file);
-    if (/navigator\.vibrate|new Audio\(/.test(source)) offenders.push(file);
+    // Play Us (28/11/2026): the other one's voice note, played on a tap, is content, not feedback.
+    if (/navigator\.vibrate/.test(source) || (/new Audio\(/.test(source) && file !== 'play-us.js')) offenders.push(file);
     if (/AudioContext/.test(source) && file !== 'left-for-you.js') offenders.push(file);
   }
   assert.deepEqual(offenders, []);

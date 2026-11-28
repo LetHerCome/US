@@ -79,7 +79,8 @@
     "20261127184637_come_stai_risposta.sql",
     "20261127184701_come_stai_muto.sql",
     "20261127202326_il_vostro_mese.sql",
-    "20261127230104_mese_posti_coordinate.sql"
+    "20261127230104_mese_posti_coordinate.sql",
+    "20261128090123_play_us_v1.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
@@ -154,7 +155,8 @@
     "20261127184637_come_stai_risposta.sql",
     "20261127184701_come_stai_muto.sql",
     "20261127202326_il_vostro_mese.sql",
-    "20261127230104_mese_posti_coordinate.sql"
+    "20261127230104_mese_posti_coordinate.sql",
+    "20261128090123_play_us_v1.sql"
   ],
   "counts": {
     "repo_files": 47,
