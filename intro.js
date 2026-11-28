@@ -10,7 +10,9 @@ if (window.UsIntro) return;
 const d = document, w = window;
 const $ = (id) => d.getElementById(id);
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const SEEN = () => `us:intro:v1:${w.usProfile?.id || ''}`;
+// v2 (28/11/2026): the intro tells everything now (Gioca, Play Us, the month pack, US Plus):
+// everyone sees it once more, beta testers included, on the app and on the web.
+const SEEN = () => `us:intro:v2:${w.usProfile?.id || ''}`;
 const reduced = () => d.documentElement?.dataset?.usMotion === 'reduced' || Boolean(w.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
 const store = { get: (k) => { try { return w.localStorage?.getItem(k); } catch (_) { return null; } }, set: (k, v) => { try { w.localStorage?.setItem(k, v); } catch (_) { /* private mode: it can show again */ } } };
 

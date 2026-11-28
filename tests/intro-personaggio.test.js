@@ -40,7 +40,7 @@ test('intro: only the first entry starts it, on this phone, and the Profilo star
   const onboarding = read('onboarding.js');
   assert.match(onboarding, /const firstEntry=!silent&&mode!=='device';/);
   assert.match(onboarding, /if\(firstEntry\)setTimeout\(\(\)=>window\.UsIntro\?\.start\?\.\(\)/);
-  assert.match(intro, /const SEEN = \(\) => `us:intro:v1:\$\{w\.usProfile\?\.id \|\| ''\}`;/);
+  assert.match(intro, /const SEEN = \(\) => `us:intro:v2:\$\{w\.usProfile\?\.id \|\| ''\}`;/);
   assert.match(intro, /if \(!force && store\.get\(SEEN\(\)\)\) return false;/);
   assert.match(read('index.html'), /data-us-setting="intro"[\s\S]{0,260}Rivedi l’intro/);
   assert.match(read('settings.js'), /if\(name==='intro'\)\{window\.usSettingsReturn\?\.\(\);return window\.UsIntro\?\.start\?\.\(\{force:true\}\);\}/);
@@ -162,7 +162,7 @@ test('intro: in the real app you make your character, then the tour; once made, 
     assert.equal(await page.evaluate(() => document.getElementById('usIntro').dataset.step), 'ciao');
     await page.click('[data-intro-skip]');
     // Made now: the next first time (another phone) starts from «ciao».
-    await page.evaluate(async () => { await window.UsCoupleContext?.hydrate?.(); localStorage.removeItem(`us:intro:v1:${window.usProfile.id}`); });
+    await page.evaluate(async () => { await window.UsCoupleContext?.hydrate?.(); localStorage.removeItem(`us:intro:v2:${window.usProfile.id}`); });
     assert.equal(await page.evaluate(() => window.UsIntro.start()), true);
     assert.equal(await page.evaluate(() => document.getElementById('usIntro').dataset.step), 'ciao');
     await page.click('[data-intro-skip]');
