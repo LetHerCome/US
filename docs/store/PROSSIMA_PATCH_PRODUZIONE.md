@@ -2,6 +2,10 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### US Plus in vetrina in Gioca (28/11)
+
+- Le 72 domande Plus del contenuto 1.2 si giocano solo con US Plus, ma si vedono: in Gioca, sotto «Tutti i giochi», il riquadro «Sbloccabili con US Plus · 72 domande in più · 8 temi» con tre domande d’assaggio; toccandolo si leggono tutte, col lucchetto, divise per tema, con «Avvisatemi quando arriva». Con US Plus il riquadro sparisce. Migrazione `20261128113629_contenuti_plus_vetrina` (`get_plus_preview_v1`: solo il testo delle domande, nella lingua di chi legge).
+
 ### Il grande bilanciamento dei punti e dei premi (28/11)
 
 **Stato:** ramo `claude/bilanciamento-v1`, da staging dopo la #325, solo commit locali, niente push. Una migrazione, `20261128104932_bilanciamento_v1` (ridefinisce le funzioni dei punti e del livello, il catalogo dei premi e il guardaroba; nessuna tabella nuova, nessun permesso nuovo), da applicare su staging insieme al web. Edge `us-widget-state` con la curva nuova. Il pacchetto web dentro le app cambia: serve un AAB nuovo e una build TestFlight con la stessa versione. Deciso sulla tavola approvata dal founder il 28/11.
@@ -12,6 +16,15 @@
 - **Una scala sola:** 2 Occhiali, 3 Battito, 4 Cappello, 5 Countdown Post-it, 6 Soffioni, 7 Fiocco, 8 Ti penso Cuori, 9 Sciarpina, 10 Ora d’oro, 11 Neve, 12 Occhiali da sole, 13 Due colori, 14 Gala, 15 Countdown Biglietto, 16 Foglie, 17 Cuffie, 18 Stagioni, 19 Stelle cadenti, 20 Coroncina, 21 Ti penso Lettera, 22 Lanterne, 23 Costellazione, 24 Countdown Filo rosso, 25 Corona, 26 Ricordi in volo. Il guardaroba ora si sblocca a livelli («Livello 9» invece di «1000 punti»); macchinetta, cento e festa restano legati ai loro momenti.
 - **US Plus dà più gioco, non più punti:** le icone Neon, Notte e Oro sono solo per US Plus («Con US Plus»), fuori dalla scala.
 - **Per chi c’è già:** quello che una coppia sblocca di colpo con la curva nuova risulta già visto (niente raffica di annunci); un accessorio indossato che con la scala nuova non è ancora sbloccato si toglie.
+
+### Contenuti 1.2: più domande in Gioca, di più con US Plus (28/11)
+
+**Stato:** ramo `claude/contenuti-1-2`, solo locale (niente push, niente staging). Migrazione `20261128104908_contenuti_1_2` da applicare prima su staging, poi in produzione a mano come le altre; si ferma da sola se una delle tre funzioni che riscrive (`private.game_v2_candidates`, `public.start_swipe_round`, `public.play_us_answer`) non è quella attesa. Va dopo Play Us (`20261128090123_play_us_v1`). Nessun cambio al client, nessuna build.
+
+**Cosa cambia:**
+- **188 carte nuove, italiano e inglese:** 32 per Quanto mi conosci?, 31 per Ridete, 32 per Scopritevi, 31 per Confrontatevi, 30 per Rivivete e 32 per Questo o quello, su otto temi: viaggi, casa, infanzia, cibo, musica e film, futuro, amici e famiglia, tenerezza. Ridete ha anche i «Se fossimo…». Molte sono brevi e a scelta, quindi arrivano anche in Play Us.
+- **US Plus:** 72 delle nuove (38%, in ogni gioco e in ogni tema) le riceve solo una coppia con Plus attivo (`private.couple_has_plus`), nelle partite, in Per voi, in Questo o quello e in Play Us. Nessuna carta che c’era già è diventata Plus. L’interruttore `plus_on_sale` qui non conta: chi ha un Plus «beta» le vede già.
+- **Play Us** non sceglie più le carte «Chi di noi due…» con i nomi nelle risposte: Play Us mostra il testo così com’è e si sarebbe letto `{francesco}`.
 
 ### Intro e collezione (28/11)
 

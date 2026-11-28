@@ -1,0 +1,517 @@
+{
+  "family": "swipe",
+  "new": [
+    {
+      "id": "swipe-103",
+      "tema": "viaggi",
+      "plus": false,
+      "topic": "viaggi_zaino_o_valigia",
+      "question_text": "In viaggio: zaino leggero o valigia per ogni evenienza?",
+      "options": [
+        "Zaino leggero",
+        "Valigia enorme"
+      ],
+      "question_text_en": "Travelling: a light backpack or a suitcase for every scenario?",
+      "options_en": [
+        "Light backpack",
+        "Huge suitcase"
+      ]
+    },
+    {
+      "id": "swipe-104",
+      "tema": "viaggi",
+      "plus": false,
+      "topic": "viaggi_un_posto_o_tante_tappe",
+      "question_text": "Una vacanza: tutto il tempo in un posto o tante tappe?",
+      "options": [
+        "Un posto solo",
+        "Tante tappe"
+      ],
+      "question_text_en": "A holiday: one place the whole time or lots of stops?",
+      "options_en": [
+        "One place",
+        "Lots of stops"
+      ]
+    },
+    {
+      "id": "swipe-105",
+      "tema": "viaggi",
+      "plus": true,
+      "topic": "viaggi_alba_o_dopo_pranzo",
+      "question_text": "Si parte: all’alba o con calma dopo pranzo?",
+      "options": [
+        "All’alba",
+        "Dopo pranzo"
+      ],
+      "question_text_en": "Setting off: at dawn or calmly after lunch?",
+      "options_en": [
+        "At dawn",
+        "After lunch"
+      ]
+    },
+    {
+      "id": "swipe-106",
+      "tema": "viaggi",
+      "plus": false,
+      "topic": "viaggi_treno_o_macchina",
+      "question_text": "Un viaggio insieme: in treno o in macchina?",
+      "options": [
+        "In treno",
+        "In macchina"
+      ],
+      "question_text_en": "A trip together: by train or by car?",
+      "options_en": [
+        "By train",
+        "By car"
+      ]
+    },
+    {
+      "id": "swipe-107",
+      "tema": "casa",
+      "plus": true,
+      "topic": "casa_colazione_a_letto_o_al_bar",
+      "question_text": "Una mattina libera: colazione a letto o al bar?",
+      "options": [
+        "A letto",
+        "Al bar"
+      ],
+      "question_text_en": "A free morning: breakfast in bed or at a café?",
+      "options_en": [
+        "In bed",
+        "At a café"
+      ]
+    },
+    {
+      "id": "swipe-108",
+      "tema": "casa",
+      "plus": false,
+      "topic": "casa_buio_o_filo_di_luce",
+      "question_text": "Per dormire: buio totale o un filo di luce?",
+      "options": [
+        "Buio totale",
+        "Un filo di luce"
+      ],
+      "question_text_en": "For sleeping: total darkness or a sliver of light?",
+      "options_en": [
+        "Total darkness",
+        "A sliver of light"
+      ]
+    },
+    {
+      "id": "swipe-109",
+      "tema": "casa",
+      "plus": false,
+      "topic": "casa_letto_rifatto_o_no",
+      "question_text": "Il letto la mattina: rifatto subito o lasciato così?",
+      "options": [
+        "Rifatto subito",
+        "Lasciato così"
+      ],
+      "question_text_en": "The bed in the morning: made right away or left as it is?",
+      "options_en": [
+        "Made right away",
+        "Left as it is"
+      ]
+    },
+    {
+      "id": "swipe-110",
+      "tema": "casa",
+      "plus": true,
+      "topic": "casa_piante_o_libri",
+      "question_text": "Una casa piena di piante o piena di libri?",
+      "options": [
+        "Piante",
+        "Libri"
+      ],
+      "question_text_en": "A home full of plants or full of books?",
+      "options_en": [
+        "Plants",
+        "Books"
+      ]
+    },
+    {
+      "id": "swipe-111",
+      "tema": "casa",
+      "plus": false,
+      "topic": "casa_tisana_o_vino",
+      "question_text": "La sera, sul divano: tisana o un bicchiere di vino?",
+      "options": [
+        "Tisana",
+        "Un bicchiere di vino"
+      ],
+      "question_text_en": "Evening on the couch: herbal tea or a glass of wine?",
+      "options_en": [
+        "Herbal tea",
+        "A glass of wine"
+      ]
+    },
+    {
+      "id": "swipe-112",
+      "tema": "infanzia",
+      "plus": true,
+      "topic": "infanzia_merenda_cioccolato_o_olio",
+      "question_text": "La merenda dell’infanzia: pane e cioccolato o pane e olio?",
+      "options": [
+        "Pane e cioccolato",
+        "Pane e olio"
+      ],
+      "question_text_en": "The snack of your childhood: bread and chocolate or bread and olive oil?",
+      "options_en": [
+        "Bread and chocolate",
+        "Bread and olive oil"
+      ]
+    },
+    {
+      "id": "swipe-113",
+      "tema": "infanzia",
+      "plus": false,
+      "topic": "infanzia_cartoni_o_cortile",
+      "question_text": "Il sabato mattina dell’infanzia: cartoni in TV o giochi in cortile?",
+      "options": [
+        "Cartoni in TV",
+        "Giochi in cortile"
+      ],
+      "question_text_en": "Childhood Saturday mornings: cartoons on TV or games outside?",
+      "options_en": [
+        "Cartoons",
+        "Games outside"
+      ]
+    },
+    {
+      "id": "swipe-114",
+      "tema": "infanzia",
+      "plus": false,
+      "topic": "infanzia_autoscontro_o_ruota",
+      "question_text": "Alle giostre: autoscontro o ruota panoramica?",
+      "options": [
+        "Autoscontro",
+        "Ruota panoramica"
+      ],
+      "question_text_en": "At the funfair: bumper cars or the Ferris wheel?",
+      "options_en": [
+        "Bumper cars",
+        "Ferris wheel"
+      ]
+    },
+    {
+      "id": "swipe-115",
+      "tema": "cibo",
+      "plus": true,
+      "topic": "cibo_primo_o_secondo",
+      "question_text": "Se dovessi scegliere una portata sola: primo o secondo?",
+      "options": [
+        "Primo",
+        "Secondo"
+      ],
+      "question_text_en": "If you could only have one course: pasta or the main?",
+      "options_en": [
+        "Pasta",
+        "The main"
+      ]
+    },
+    {
+      "id": "swipe-116",
+      "tema": "cibo",
+      "plus": false,
+      "topic": "cibo_cono_o_coppetta",
+      "question_text": "Il gelato: cono o coppetta?",
+      "options": [
+        "Cono",
+        "Coppetta"
+      ],
+      "question_text_en": "Ice cream: cone or cup?",
+      "options_en": [
+        "Cone",
+        "Cup"
+      ]
+    },
+    {
+      "id": "swipe-117",
+      "tema": "cibo",
+      "plus": true,
+      "topic": "cibo_caffe_al_bar_o_a_casa",
+      "question_text": "Il caffè: al bar o fatto in casa?",
+      "options": [
+        "Al bar",
+        "Fatto in casa"
+      ],
+      "question_text_en": "Coffee: at a café or made at home?",
+      "options_en": [
+        "At a café",
+        "Made at home"
+      ]
+    },
+    {
+      "id": "swipe-118",
+      "tema": "cibo",
+      "plus": false,
+      "topic": "cibo_piccante_o_delicato",
+      "question_text": "A tavola: piccante o delicato?",
+      "options": [
+        "Piccante",
+        "Delicato"
+      ],
+      "question_text_en": "At the table: spicy or mild?",
+      "options_en": [
+        "Spicy",
+        "Mild"
+      ]
+    },
+    {
+      "id": "swipe-119",
+      "tema": "musica_film",
+      "plus": false,
+      "topic": "musica_film_prima_o_ultima_fila",
+      "question_text": "Al cinema: prima fila o ultima fila?",
+      "options": [
+        "Prima fila",
+        "Ultima fila"
+      ],
+      "question_text_en": "At the cinema: front row or back row?",
+      "options_en": [
+        "Front row",
+        "Back row"
+      ]
+    },
+    {
+      "id": "swipe-120",
+      "tema": "musica_film",
+      "plus": true,
+      "topic": "musica_film_film_rivisto_o_nuovo",
+      "question_text": "Un film già visto cento volte o uno mai visto?",
+      "options": [
+        "Già visto",
+        "Mai visto"
+      ],
+      "question_text_en": "A film seen a hundred times or one never seen?",
+      "options_en": [
+        "Seen it",
+        "Never seen"
+      ]
+    },
+    {
+      "id": "swipe-121",
+      "tema": "musica_film",
+      "plus": false,
+      "topic": "musica_film_parole_o_ritornello",
+      "question_text": "Le canzoni: tutte le parole a memoria o solo il ritornello?",
+      "options": [
+        "Tutte le parole",
+        "Solo il ritornello"
+      ],
+      "question_text_en": "Songs: every word by heart or just the chorus?",
+      "options_en": [
+        "Every word",
+        "Just the chorus"
+      ]
+    },
+    {
+      "id": "swipe-122",
+      "tema": "musica_film",
+      "plus": true,
+      "topic": "musica_film_episodio_o_maratona",
+      "question_text": "Una serie nuova: un episodio a sera o tutta in un weekend?",
+      "options": [
+        "Uno a sera",
+        "Tutta in un weekend"
+      ],
+      "question_text_en": "A new series: one episode a night or all in one weekend?",
+      "options_en": [
+        "One a night",
+        "All in a weekend"
+      ]
+    },
+    {
+      "id": "swipe-123",
+      "tema": "futuro",
+      "plus": false,
+      "topic": "futuro_citta_o_campagna",
+      "question_text": "Tra dieci anni: città o campagna?",
+      "options": [
+        "Città",
+        "Campagna"
+      ],
+      "question_text_en": "Ten years from now: city or countryside?",
+      "options_en": [
+        "City",
+        "Countryside"
+      ]
+    },
+    {
+      "id": "swipe-124",
+      "tema": "futuro",
+      "plus": false,
+      "topic": "futuro_risparmi_viaggio_o_casa",
+      "question_text": "I risparmi: per un viaggio o per la casa?",
+      "options": [
+        "Per un viaggio",
+        "Per la casa"
+      ],
+      "question_text_en": "Savings: for a trip or for a home?",
+      "options_en": [
+        "For a trip",
+        "For a home"
+      ]
+    },
+    {
+      "id": "swipe-125",
+      "tema": "futuro",
+      "plus": true,
+      "topic": "futuro_progetto_pianificato_o_per_caso",
+      "question_text": "Un progetto insieme: deciso a tavolino o nato per caso?",
+      "options": [
+        "A tavolino",
+        "Per caso"
+      ],
+      "question_text_en": "A project together: carefully planned or born by chance?",
+      "options_en": [
+        "Planned",
+        "By chance"
+      ]
+    },
+    {
+      "id": "swipe-126",
+      "tema": "futuro",
+      "plus": false,
+      "topic": "futuro_anniversario_sorpresa_o_insieme",
+      "question_text": "Il prossimo anniversario: sorpresa o deciso insieme?",
+      "options": [
+        "Sorpresa",
+        "Deciso insieme"
+      ],
+      "question_text_en": "The next anniversary: a surprise or planned together?",
+      "options_en": [
+        "Surprise",
+        "Planned together"
+      ]
+    },
+    {
+      "id": "swipe-127",
+      "tema": "amici_famiglia",
+      "plus": true,
+      "topic": "amici_famiglia_gente_nuova_o_soliti_amici",
+      "question_text": "A una festa: tanta gente nuova o i soliti amici?",
+      "options": [
+        "Gente nuova",
+        "I soliti amici"
+      ],
+      "question_text_en": "At a party: lots of new people or the usual friends?",
+      "options_en": [
+        "New people",
+        "The usual friends"
+      ]
+    },
+    {
+      "id": "swipe-128",
+      "tema": "amici_famiglia",
+      "plus": false,
+      "topic": "amici_famiglia_festa_grande_o_cena",
+      "question_text": "Il compleanno: festa grande o cena con pochi intimi?",
+      "options": [
+        "Festa grande",
+        "Cena con pochi intimi"
+      ],
+      "question_text_en": "Birthdays: a big party or dinner with a close few?",
+      "options_en": [
+        "Big party",
+        "A close few"
+      ]
+    },
+    {
+      "id": "swipe-129",
+      "tema": "amici_famiglia",
+      "plus": false,
+      "topic": "amici_famiglia_notizia_amici_o_famiglia",
+      "question_text": "Una bella notizia: la dico prima agli amici o in famiglia?",
+      "options": [
+        "Agli amici",
+        "In famiglia"
+      ],
+      "question_text_en": "Good news: do I tell my friends or my family first?",
+      "options_en": [
+        "My friends",
+        "My family"
+      ]
+    },
+    {
+      "id": "swipe-130",
+      "tema": "tenerezza",
+      "plus": true,
+      "topic": "tenerezza_bacio_del_buongiorno",
+      "question_text": "Il bacio del buongiorno: subito o dopo il caffè?",
+      "options": [
+        "Subito",
+        "Dopo il caffè"
+      ],
+      "question_text_en": "The good-morning kiss: right away or after coffee?",
+      "options_en": [
+        "Right away",
+        "After coffee"
+      ]
+    },
+    {
+      "id": "swipe-131",
+      "tema": "tenerezza",
+      "plus": false,
+      "topic": "tenerezza_videochiamata_o_vocale",
+      "question_text": "A distanza: videochiamata o vocale lungo?",
+      "options": [
+        "Videochiamata",
+        "Vocale lungo"
+      ],
+      "question_text_en": "Apart: a video call or a long voice note?",
+      "options_en": [
+        "Video call",
+        "Voice note"
+      ]
+    },
+    {
+      "id": "swipe-132",
+      "tema": "tenerezza",
+      "plus": true,
+      "topic": "tenerezza_grattini_testa_o_schiena",
+      "question_text": "Grattini: sulla testa o sulla schiena?",
+      "options": [
+        "Sulla testa",
+        "Sulla schiena"
+      ],
+      "question_text_en": "Scratches: on the head or on the back?",
+      "options_en": [
+        "On the head",
+        "On the back"
+      ]
+    },
+    {
+      "id": "swipe-133",
+      "tema": "tenerezza",
+      "plus": false,
+      "topic": "tenerezza_ti_amo_a_voce_o_scritto",
+      "question_text": "Un «ti amo»: detto a voce o scritto a sorpresa?",
+      "options": [
+        "A voce",
+        "Scritto a sorpresa"
+      ],
+      "question_text_en": "An “I love you”: said out loud or written as a surprise?",
+      "options_en": [
+        "Out loud",
+        "Written surprise"
+      ]
+    },
+    {
+      "id": "swipe-134",
+      "tema": "tenerezza",
+      "plus": false,
+      "topic": "tenerezza_abbraccio_lento_o_stretto",
+      "question_text": "Un abbraccio: lungo e lento o forte e veloce?",
+      "options": [
+        "Lungo e lento",
+        "Forte e veloce"
+      ],
+      "question_text_en": "A hug: long and slow or tight and quick?",
+      "options_en": [
+        "Long and slow",
+        "Tight and quick"
+      ]
+    }
+  ]
+}

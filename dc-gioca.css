@@ -33,6 +33,24 @@
 #quiz #quizHub .us-gv2-game[data-gv2-family="scopritevi"]{grid-column:2;grid-row:2}
 #quiz #quizHub .us-gv2-game[data-gv2-family]:not([data-gv2-family="scopritevi"]){grid-column:auto;grid-row:auto}
 #quiz #quizHub .us-gv2-game::after{display:none}
+/* US Plus in vetrina (28/11/2026): the tile and the sheet of the locked questions. */
+#quiz .us-gv2-plus{display:grid;gap:10px;width:100%;margin:6px 0 18px;padding:16px;border:1px solid color-mix(in srgb,var(--us-ambra,#f3d27a) 55%,transparent);border-radius:22px;background:linear-gradient(150deg,color-mix(in srgb,var(--us-ambra,#f3d27a) 16%,var(--us-color-surface-2)),var(--us-color-surface-2));color:var(--us-color-text);text-align:left;font:inherit;cursor:pointer}
+#quiz .us-gv2-plus-top{display:grid;gap:4px}
+#quiz .us-gv2-plus-k{display:inline-flex;align-items:center;gap:6px;font:800 11px/1 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-color-text-2)}
+#quiz .us-gv2-plus b{font:600 19px/1.2 var(--us-font-display)}
+#quiz .us-gv2-plus-peek{display:grid;gap:6px}
+#quiz .us-gv2-plus-peek i{display:block;padding:8px 12px;border-radius:14px;background:color-mix(in srgb,var(--us-color-text) 6%,transparent);font:italic 400 14px/1.35 var(--us-font-display);color:var(--us-color-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#quiz .us-gv2-plus-go{font:800 13.5px var(--us-font-ui);color:var(--us-color-text)}
+#quiz .us-gv2-plus:focus-visible{outline:2px solid var(--us-ambra,#f3d27a);outline-offset:3px}
+#quiz .us-gv2-plus .us-gv2-icon,#quiz .us-gv2-plus-sheet .us-gv2-icon{width:14px;height:14px}
+#quiz .us-gv2-plus-lead{margin:0 0 6px;color:var(--us-color-text-2);font-size:14px}
+#quiz .us-gv2-plus-group h4{margin:14px 0 6px;font:600 17px/1.2 var(--us-font-display);color:var(--us-color-text)}
+#quiz .us-gv2-plus-group h4 small{font:700 12px var(--us-font-ui);color:var(--us-color-text-3)}
+#quiz .us-gv2-plus-group ul{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+#quiz .us-gv2-plus-group li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 8px;align-items:start;padding:10px 12px;border-radius:14px;background:var(--us-color-surface-2)}
+#quiz .us-gv2-plus-group li .us-gv2-icon{margin-top:3px;color:var(--us-color-text-3)}
+#quiz .us-gv2-plus-group li span{font:400 15px/1.35 var(--us-font-display);color:var(--us-color-text)}
+#quiz .us-gv2-plus-group li small{grid-column:2;font:700 11.5px var(--us-font-ui);color:var(--us-color-text-3)}
 /* Opening a round (28/11/2026): the tapped card says «Apro…» until the server answers. */
 #quiz #quizHub .us-gv2-game[aria-busy="true"]::after{content:"Apro…";display:grid;place-items:center;position:absolute;inset:0;z-index:3;width:auto;height:auto;border-radius:inherit;background:rgba(18,13,17,.55);color:#f7efe9;font:800 15px/1 var(--us-font-ui,'Figtree',sans-serif);pointer-events:none;animation:us-gv2-apro 1.2s ease-in-out infinite}
 @keyframes us-gv2-apro{50%{background:rgba(18,13,17,.4)}}
