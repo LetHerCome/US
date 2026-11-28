@@ -159,7 +159,7 @@ test('in the app: the open photo has one small post-it top left, «Riappendi ›
     assert.ok(note.x < 40 && note.y < save.y + save.height, 'top left, at the height of the buttons');
     assert.ok(note.x + note.width < (await page.locator('#usAlbumSolo').boundingBox()).x, 'never under the buttons');
     if (process.env.FOTO_SHOTS) await page.screenshot({ path: require('node:path').join(process.env.FOTO_SHOTS, 'foto-postit.png') });
-    assert.equal(await page.locator('#usAlbumBacheca [data-ub-row="pin"]').innerText(), 'Riappendi ›');
+    assert.equal(await page.locator('#usAlbumBacheca [data-ub-row="pin"]').innerText(), 'Appendi ›');
     await page.click('#usAlbumBacheca [data-ub-row="pin"]');
     await page.waitForSelector('#usAlbumBacheca [data-ub-row="see"]');
     assert.equal(await page.locator('#usAlbumBacheca [data-ub-row="see"]').innerText(), 'In bacheca ›');

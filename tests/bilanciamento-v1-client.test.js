@@ -75,5 +75,5 @@ test('US Plus extras are never the next unlock; a Plus-only tile says «Con US P
 test('Play Us shows the points it gave, nothing when it gave none', () => {
   const js = read('play-us.js');
   assert.doesNotMatch(js, /r\.xp \|\| 30/);
-  assert.match(js, /Number\(r\.xp\) > 0 \? `<p class="us-play-center-line"><b>\+\$\{Number\(r\.xp\)\}<\/b> per il vostro livello/);
+  assert.match(js, /Number\(r\.xp\) > 0 \? `<p class="us-play-center-line"><b>\+\$\{Number\(r\.xp\)\}<\/b> punti per il vostro livello/);
 });

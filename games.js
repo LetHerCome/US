@@ -742,7 +742,8 @@ async function meseEvento() {
     window.usOpenCarte?.({ pack: next.pack });
   } catch (_) { /* it tries again the next time US opens */ }
 }
-document.addEventListener?.('visibilitychange', () => { if (!document.hidden) { meseEv.shown.clear(); meseEv.timer = meseLater(meseEvento, 2500); } });
+// A short trip away (UsForeground.shortAway, «Avvio più veloce») rereads nothing.
+document.addEventListener?.('visibilitychange', () => { if (!document.hidden && !window.UsForeground?.shortAway?.()) { meseEv.shown.clear(); meseEv.timer = meseLater(meseEvento, 2500); } });
 
 // US Plus in vetrina (founder, 28/11/2026): the Plus questions are played only
 // with Plus, but they are seen here: a tile «Sbloccabili con US Plus» and,

@@ -44,15 +44,6 @@
 #quiz .us-gv2-plus-themes i.is-hot{background:color-mix(in srgb,#e2355d 18%,transparent);color:color-mix(in srgb,#e2355d 70%,var(--us-color-text))}
 #quiz .us-gv2-plus-go{justify-self:start;min-height:44px;padding:0 16px;border:1.5px solid var(--us-color-line-strong);border-radius:999px;background:transparent;color:var(--us-color-text);font:800 14px var(--us-font-ui);cursor:pointer}
 #quiz .us-gv2-plus:focus-visible{outline:2px solid var(--us-ambra,#f3d27a);outline-offset:3px}
-#quiz .us-gv2-plus .us-gv2-icon,#quiz .us-gv2-plus-sheet .us-gv2-icon{width:14px;height:14px}
-#quiz .us-gv2-plus-lead{margin:0 0 6px;color:var(--us-color-text-2);font-size:14px}
-#quiz .us-gv2-plus-group h4{margin:14px 0 6px;font:600 17px/1.2 var(--us-font-display);color:var(--us-color-text)}
-#quiz .us-gv2-plus-group h4 small{font:700 12px var(--us-font-ui);color:var(--us-color-text-3)}
-#quiz .us-gv2-plus-group ul{display:grid;gap:6px;margin:0;padding:0;list-style:none}
-#quiz .us-gv2-plus-group li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 8px;align-items:start;padding:10px 12px;border-radius:14px;background:var(--us-color-surface-2)}
-#quiz .us-gv2-plus-group li .us-gv2-icon{margin-top:3px;color:var(--us-color-text-3)}
-#quiz .us-gv2-plus-group li span{font:400 15px/1.35 var(--us-font-display);color:var(--us-color-text)}
-#quiz .us-gv2-plus-group li small{grid-column:2;font:700 11.5px var(--us-font-ui);color:var(--us-color-text-3)}
 /* Opening a round (28/11/2026): the tapped card says «Apro…» until the server answers. */
 #quiz #quizHub .us-gv2-game[aria-busy="true"]::after{content:"Apro…";display:grid;place-items:center;position:absolute;inset:0;z-index:3;width:auto;height:auto;border-radius:inherit;background:rgba(18,13,17,.55);color:#f7efe9;font:800 15px/1 var(--us-font-ui,'Figtree',sans-serif);pointer-events:none;animation:us-gv2-apro 1.2s ease-in-out infinite}
 @keyframes us-gv2-apro{50%{background:rgba(18,13,17,.4)}}

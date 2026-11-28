@@ -534,7 +534,8 @@
   }
   if (w?.document?.addEventListener) {
     const later = (ms) => (typeof setTimeout === 'function' ? setTimeout(checkCarte, ms) : 0);
-    w.document.addEventListener('visibilitychange', () => { if (!w.document.hidden) later(1500); });
+    // A short trip away (UsForeground.shortAway) rereads nothing.
+    w.document.addEventListener('visibilitychange', () => { if (!w.document.hidden && !w.UsForeground?.shortAway?.()) later(1500); });
     later(3000); later(12000);
   }
   function setView(view, { focus = null } = {}) {
