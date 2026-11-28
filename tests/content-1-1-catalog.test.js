@@ -220,9 +220,10 @@ test('content 1.1: applies on the full schema, twice, and the next Daily Questio
   try {
     const n = async (sql) => Number((await db.query(sql)).rows[0].n);
     assert.equal(await n('select count(*) n from public.daily_question_templates where active'), 364);
-    // + content 1.2 (28/11/2026): 156 prompts and 32 Questo o quello cards.
-    assert.equal(await n('select count(*) n from public.game_v2_catalog'), 212 + 84 + 156);
-    assert.equal(await n('select count(*) n from private.game_swipe_v1_catalog where active'), 67 + 30 + 32);
+    // + content 1.2 (28/11/2026): 156 prompts and 32 Questo o quello cards;
+    // + content 1.3 «hot» (28/11/2026): 42 prompts and 8 cards, all Plus.
+    assert.equal(await n('select count(*) n from public.game_v2_catalog'), 212 + 84 + 156 + 42);
+    assert.equal(await n('select count(*) n from private.game_swipe_v1_catalog where active'), 67 + 30 + 32 + 8);
     // + 10 challenges for two places (Sfida della settimana, 03/11/2026).
     assert.equal(await n('select count(*) n from public.bond_quest_templates where active'), 33 + 16 + 10);
     assert.equal(await n("select count(*) n from public.daily_question_templates where question_en is null or btrim(question_en) = ''"), 0);

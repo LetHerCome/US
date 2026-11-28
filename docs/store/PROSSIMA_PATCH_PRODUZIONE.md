@@ -2,6 +2,10 @@
 
 ## Dopo la 1.5.1 (in raccolta)
 
+### Contenuti 1.3: domande «hot» per US Plus (28/11)
+
+- **50 domande nuove, tutte US Plus, italiano e inglese**, su due temi più maliziosi per coppie adulte: **Piccante** (flirt, attrazione, baci, seduzione, appuntamenti audaci) e **Desideri** (vicinanza, fantasie romantiche, coccole, sorprese a letto), 25 per tema: 12 Quanto mi conosci?, 8 Ridete, 8 Scopritevi, 8 Confrontatevi, 6 Rivivete, 8 Questo o quello. Suggeriscono, non descrivono: niente volgarità né parole esplicite (il test ha una lista di parole vietate). Quasi tutte brevi e a scelta, quindi arrivano anche in Play Us; nella vetrina Plus di Gioca compaiono come «Piccante» e «Desideri». Migrazione `20261128115152_contenuti_hot` (solo inserimenti), dopo `20261128113629_contenuti_plus_vetrina`; ramo `claude/contenuti-hot`, solo locale.
+
 ### US Plus in vetrina in Gioca (28/11)
 
 - Le 72 domande Plus del contenuto 1.2 si giocano solo con US Plus, ma si vedono: in Gioca, sotto «Tutti i giochi», il riquadro «Sbloccabili con US Plus · 72 domande in più · 8 temi» con tre domande d’assaggio; toccandolo si leggono tutte, col lucchetto, divise per tema, con «Avvisatemi quando arriva». Con US Plus il riquadro sparisce. Migrazione `20261128113629_contenuti_plus_vetrina` (`get_plus_preview_v1`: solo il testo delle domande, nella lingua di chi legge).

@@ -84,7 +84,8 @@
     "20261128101816_play_us_punti.sql",
     "20261128104908_contenuti_1_2.sql",
     "20261128104932_bilanciamento_v1.sql",
-    "20261128113629_contenuti_plus_vetrina.sql"
+    "20261128113629_contenuti_plus_vetrina.sql",
+    "20261128115152_contenuti_hot.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
@@ -164,7 +165,8 @@
     "20261128101816_play_us_punti.sql",
     "20261128104908_contenuti_1_2.sql",
     "20261128104932_bilanciamento_v1.sql",
-    "20261128113629_contenuti_plus_vetrina.sql"
+    "20261128113629_contenuti_plus_vetrina.sql",
+    "20261128115152_contenuti_hot.sql"
   ],
   "counts": {
     "repo_files": 47,
