@@ -56,13 +56,14 @@ test('wiring: Ricordi › Carte loads the module when tapped; Back; builds; out 
   assert.match(read('dc-ricordi.css'), /#moments \.ricordi-views\{[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
 });
 
-test('Gioca: a shortcut to the cards that says when a pack is waiting', () => {
+test('Il vostro mese come evento (28/11/2026): no row in Gioca, the waiting pack appears by itself on Oggi', () => {
   const games = read('games.js');
-  assert.match(games, /\$\{meseRow\(\)\}/);
-  assert.match(games, /data-gv2-action="mese"/);
-  assert.match(games, /else if \(action === 'mese'\) window\.usOpenCarte\?\.\(mese\.pack \? \{ pack: mese\.pack \} : \{\}\);/);
-  assert.match(games, /const note = next \? `È arrivato il vostro \$\{when\}` : '';/);
-  assert.match(read('games.css'), /#quiz \.us-gv2-mese\{[^}]*min-height:72px/);
+  assert.doesNotMatch(games, /meseRow|data-gv2-action="mese"/, 'no shortcut in Gioca');
+  assert.match(games, /async function meseEvento\(\)/);
+  assert.match(games, /window\.usOpenCarte\?\.\(\{ pack: next\.pack \}\);/);
+  assert.match(games, /if \(!byId\('home'\)\?\.classList\.contains\('active'\)\) return true;/, 'only on Oggi');
+  assert.match(games, /\['us-launch-play', 'us-intro-open', 'us-app-locked', 'us-play-open'\]/, 'never over the opening, the intro, the lock or Play Us');
+  assert.match(games, /meseEv\.shown\.has\(next\.pack\)/, 'once each time US opens');
 });
 
 test('the module: no storage, no sounds, motion that can be reduced, no Come stai card, the board and the media authorities', () => {
