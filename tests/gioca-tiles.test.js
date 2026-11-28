@@ -158,11 +158,15 @@ test('Gioca: a new round flies a token instead of the confirm window (D11)', () 
   assert.doesNotMatch(src, /confirmSpend|Userete 1 delle|Userete la partita/);
   // 25/11/2026: it flies only when the server can open a round (one left and
   // room for another open round), and the count drops only on resumed === false.
-  assert.match(src, /if \(canSpend\(\)\) flyToken\(from\);\n  return startRound\(family\);/);
-  assert.match(src, /if \(canSpend\(\)\) flyToken\(from\);\n  return startSwipe\(\);/);
-  assert.match(src, /if \(canSpend\(\)\) flyToken\(from\);\n  return startRound\('per_voi'\);/);
+  assert.match(src, /if \(canSpend\(\)\) flyToken\(from\);\n  return startRound\(family, from\);/);
+  assert.match(src, /if \(canSpend\(\)\) flyToken\(from\);\n  return startSwipe\(from\);/);
+  assert.match(src, /if \(canSpend\(\)\) flyToken\(from\);\n  return startRound\('per_voi', from\);/);
   assert.match(src, /if \(a && state\?\.resumed === false\)/);
-  assert.match(src, /settleToken\(data\);\n    await present\(data\);\n    load\(\);/);
+  // 28/11/2026 (founder: «inizio un gioco, non viene, se ne va il gettone»): opened only
+  // while Gioca is on screen, «Apro…» on the card meanwhile, the hub read again after any failure.
+  assert.match(src, /settleToken\(data\);\n  if \(inGioca\(\)\) await present\(data\);\n  load\(\);/);
+  assert.match(src, /opening\(from, true\);/);
+  assert.doesNotMatch(src, /if \(\/weekly\|too many open rounds\/\.test\(msg\)\) load\(\);/);
   assert.match(src, /prefers-reduced-motion: reduce/, 'no flight with reduced motion: the token just goes out');
 });
 
