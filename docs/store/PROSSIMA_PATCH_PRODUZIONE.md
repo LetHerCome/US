@@ -28,7 +28,7 @@ Vincolo: dal 27/11 (in staging, entra in main con questa patch) i workflow «Sup
 
 0. **Controlli in sola lettura (fatti il 28/11, vedi sotto)** e via del founder.
 1. **Cloudflare Pages, progetto `us`:** sospendere le pubblicazioni automatiche della produzione (Impostazioni › Build › Production deployments). Lo fa il founder dal pannello.
-2. **Build id:** `npm run build:id -- us-rilascio-<AAAAMMGG>-110` sul ramo, test, commit.
+2. **Build id:** `us-rilascio-20261128-110` (28/11).
 3. **Merge su `main`** di `release/1.6.0` (PR, CI verde). Col punto 1 il sito di `www.uscouple.app` resta la 1.5.1.
 4. **34 migrazioni, una per run**, workflow «Supabase SQL (manual)», target production, ref `main`, conferma PRODUZIONE. Le funzioni Edge segnate vanno pubblicate nel punto indicato:
    1. `20261115183900_personaggi_forma_e_colori` (5 profili su 20 cambiano colore: 3 rubino → prugna, 2 cielo → blu; il sito vecchio non salva più oro, cielo e rubino)
