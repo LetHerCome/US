@@ -13,6 +13,15 @@
 - **US Plus dà più gioco, non più punti:** le icone Neon, Notte e Oro sono solo per US Plus («Con US Plus»), fuori dalla scala.
 - **Per chi c’è già:** quello che una coppia sblocca di colpo con la curva nuova risulta già visto (niente raffica di annunci); un accessorio indossato che con la scala nuova non è ancora sbloccato si toglie.
 
+### Contenuti 1.2: più domande in Gioca, di più con US Plus (28/11)
+
+**Stato:** ramo `claude/contenuti-1-2`, solo locale (niente push, niente staging). Migrazione `20261128104908_contenuti_1_2` da applicare prima su staging, poi in produzione a mano come le altre; si ferma da sola se una delle tre funzioni che riscrive (`private.game_v2_candidates`, `public.start_swipe_round`, `public.play_us_answer`) non è quella attesa. Va dopo Play Us (`20261128090123_play_us_v1`). Nessun cambio al client, nessuna build.
+
+**Cosa cambia:**
+- **188 carte nuove, italiano e inglese:** 32 per Quanto mi conosci?, 31 per Ridete, 32 per Scopritevi, 31 per Confrontatevi, 30 per Rivivete e 32 per Questo o quello, su otto temi: viaggi, casa, infanzia, cibo, musica e film, futuro, amici e famiglia, tenerezza. Ridete ha anche i «Se fossimo…». Molte sono brevi e a scelta, quindi arrivano anche in Play Us.
+- **US Plus:** 72 delle nuove (38%, in ogni gioco e in ogni tema) le riceve solo una coppia con Plus attivo (`private.couple_has_plus`), nelle partite, in Per voi, in Questo o quello e in Play Us. Nessuna carta che c’era già è diventata Plus. L’interruttore `plus_on_sale` qui non conta: chi ha un Plus «beta» le vede già.
+- **Play Us** non sceglie più le carte «Chi di noi due…» con i nomi nelle risposte: Play Us mostra il testo così com’è e si sarebbe letto `{francesco}`.
+
 ### Intro e collezione (28/11)
 
 - **L’intro spiega tutto:** Noi (calendario, «Ci vediamo», lavagna, post-it), Ricordi (album, bacheca, mappa, lente), Gioca a turni con i tre gettoni, una tappa nuova per Play Us («Ti batto io, vedrai»), una per la busta del mese («Io faccio collezione di quelle rare») e US Plus più preciso: più partite e Play Us, più vestiti, una bacheca più grande, e chi non lo prende non perde niente. Anche in inglese.

@@ -82,6 +82,7 @@
     "20261127230104_mese_posti_coordinate.sql",
     "20261128090123_play_us_v1.sql",
     "20261128101816_play_us_punti.sql",
+    "20261128104908_contenuti_1_2.sql",
     "20261128104932_bilanciamento_v1.sql"
   ],
   "forward_migrations": [
@@ -160,6 +161,7 @@
     "20261127230104_mese_posti_coordinate.sql",
     "20261128090123_play_us_v1.sql",
     "20261128101816_play_us_punti.sql",
+    "20261128104908_contenuti_1_2.sql",
     "20261128104932_bilanciamento_v1.sql"
   ],
   "counts": {
