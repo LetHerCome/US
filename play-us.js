@@ -578,6 +578,8 @@
     refresh();
   }
   w.addEventListener('us-identity-change', () => { stopLive(); today = session = null; boot(); });
-  if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot, { once: true }); else boot();
+  // After the first screen (UsAppReady), in an idle moment: Play Us never costs the opening.
+  const start = () => { const go = () => (typeof w.requestIdleCallback === 'function' ? w.requestIdleCallback(() => boot(), { timeout: 3000 }) : setTimeout(boot, 1200)); Promise.resolve(w.UsAppReady?.whenReady).then(go, go); };
+  if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', start, { once: true }); else start();
   w.UsPlayUs = { refresh, paintCard, open, close, isOpen, state: () => ({ today, session, partnerOnline }) };
 })();

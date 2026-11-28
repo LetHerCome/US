@@ -532,12 +532,9 @@
       showCarteTab(has);
     } catch (_) { /* the tab stays as it is */ }
   }
-  if (w?.document?.addEventListener) {
-    const later = (ms) => (typeof setTimeout === 'function' ? setTimeout(checkCarte, ms) : 0);
-    // A short trip away (UsForeground.shortAway) rereads nothing.
-    w.document.addEventListener('visibilitychange', () => { if (!w.document.hidden && !w.UsForeground?.shortAway?.()) later(1500); });
-    later(3000); later(12000);
-  }
+  // Checked when Ricordi draws its grid (and when a pack opens): only there the tab matters,
+  // so the opening of the app and a short trip away read nothing for it.
+  if (w?.addEventListener) w.addEventListener('us:moments-updated', () => { if (w.document?.querySelector?.('.page.active')?.id === 'moments') checkCarte(); });
   function setView(view, { focus = null } = {}) {
     const doc = w.document;
     const next = VIEWS.includes(view) ? view : 'story';

@@ -511,7 +511,7 @@
     // the first gesture (or by the first meaningful sound), and every later
     // gesture only resumes it, which is cheap and is what iOS needs.
     let warming = false;
-    function warmUp() {
+    function warmUp(force = true) {
       if (warming || context || !preferences.sounds) return;
       warming = true;
       // Never in the middle of a page change (Fluidità 2): it waits for the motion to end.
@@ -521,7 +521,10 @@
       if (typeof idle === 'function') {
         const started = now();
         const wait = (deadline) => {
-          if (deadline?.didTimeout || (deadline?.timeRemaining?.() ?? 50) >= 40 || now() - started > 4000) build();
+          const free = (deadline?.timeRemaining?.() ?? 50) >= 40;
+          // At load (force = false) only a really free moment builds it; after a gesture, 4 s at most.
+          if (free || (force && (deadline?.didTimeout || now() - started > 4000))) build();
+          else if (!force && now() - started > 20000) warming = false;
           else idle.call(environment, wait, { timeout: 4000 });
         };
         idle.call(environment, wait, { timeout: 4000 });
@@ -641,7 +644,7 @@
     // the page has loaded, so the first gesture only resumes it and the first taps
     // already sound. Nothing plays before a gesture.
     if (documentRef && preferences.sounds) {
-      const early = () => warmUp();
+      const early = () => warmUp(false);
       if (documentRef.readyState === 'complete') early();
       else environment.addEventListener?.('load', early, { once: true });
     }
